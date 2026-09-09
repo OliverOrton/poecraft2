@@ -595,3 +595,80 @@ bound additional strict continuation work while delivering the already verified
 candidate. Simply relaxing the extent guard, changing row ordering, or recopying
 the snapshot does not meet that obligation. The inaccessible fresh ZIP/plan is
 still not claimed as imported. No full-goal achievement is recorded.
+
+## Bounded-finish publication
+
+The next continuation rechecked clean local `0ddd7b1` and the unchanged latest
+research response. The generated package remains unavailable. The preceding
+turn made progress by classifying parent 4741, testing two constructions and
+preserving their failures; those rejected variants are not replayed here.
+
+The source and saved reports establish two different finish-request gaps.
+`SolveWork::request_bounded_finish` ignored new requests during finalization.
+More directly relevant to D3/D4/D5, all three runs had already latched the
+60-second request at 4411 expanded states, but the strict-lift loop continued
+optional proof work. A verified 5218.04095 candidate was available before that
+work. No new lower transport can repair that publication lifetime issue.
+
+The retained change latches requests throughout active finalization. At each
+strict suspension it checks the ordinary compatible verified portfolio. If that
+artifact's evaluated cost is no greater than strict work's best verified cost,
+the unpublished strict coroutine is released and the existing publication owner
+returns the artifact. A cheaper verified strict result awaiting publication
+prevents this early return. No unverified estimate, new snapshot entry, lower,
+action coverage or exactness authority is introduced. The requested stop is
+distinct from a cap and from a proof failure; an independently completed exact
+result may still return. This applies the existing CLM-0002 fixed-policy argument:
+stopping separate proof work does not change the checked graph or its prices.
+
+E1's initial synthetic fixture never entered strict work and failed setup; it
+is not a valid strict-interruption negative. The corrected E1b requests finish
+during ordinary finalization, before an executable upper exists. Old code fails
+the request-latching assertion (14 checks, one failure); E2 passes 14/0 and
+independently evaluates the returned exact graph. E7's existing policy-refinement
+checks pass 2536/0, including properness, competing-policy and cap controls.
+
+The decisive native measurements keep each existing fixture's complete input,
+priced action list and limits unchanged. Every reported graph is independently
+evaluated, with success 1 and zero off-policy mass, and is byte-identical to its
+named baseline:
+
+| Run | Population / matched baseline | Lower | Verified upper | Total seconds |
+|---|---|---:|---:|---:|
+| E3 | Empty Rare four-goal / D3 | 198.8334996747695 | 5218.040949685988 | 62.203 |
+| E4 | Empty Rare five-goal / D7 | 405.3694021063399 | 85558.70618560436 | 66.685 |
+| E5 | Partial three-to-five / C16 | 405.11164995948883 | 794067.4530398862 | 53.582 |
+| E6 | Existing exact three-suffix / C17 | 1101.15648683309 | 1101.15648683309 | 47.854 |
+
+E3's old control took 86.477 seconds. E3 returns with
+`requested_bounded_finish`, no cap, and no strict rows started. Its graph hash is
+`95e6215ecf67f8cdde3648fdcfd2a3c45af52c8dbc8d202da5dd2d8e43e3b22d`.
+It does not exercise or qualify the removed extent/ordering patches. The exact
+parent-4741 continuation remains open. E4 preserves the original primary's
+60-second finish, 90-second watchdog, 1 GiB, pinned Allflame/base-1 economy and
+full scope. This is improved bounded delivery, not a new primary bound gain or
+four/five-goal exact closure. Timing is one observation per arm.
+
+E8 rebuilds the production WASM; E9/E10 qualify the unchanged five/four-goal
+fixtures through that artifact. Both match their native endpoints and graph
+hashes, independently evaluate with success 1 and zero off-policy mass, and end
+with zero live handles after a separate unsupported-request abandon control.
+E9 solves in 63.842 seconds and the full fixture including cleanup takes 75.581;
+E10 solves in 61.871 seconds and the full fixture takes 66.805. Outer process
+times are 77.075 and 75.544 seconds respectively. E10 reports the requested
+strict stop with no exact closure or cap. E11 TypeScript checking passes.
+No rendered UI review is requested. The ordinary `npm test` script
+includes unrelated 5,000/10,000-trial Simulator checks; it is not used for this
+unchanged-strategy, focused qualification.
+
+[Finish comparison](finish-comparison.json), [provenance](finish-provenance.json)
+and [evidence archive](finish-evidence.zip) retain the matched inputs, graphs,
+failed fixture attempts, native/WASM results and process cleanup. The reproducible
+`summarize_finish.py` checks identities, unchanged native endpoints and graph
+bytes, WASM endpoint/hash parity, exact-anchor closure and zero-survivor receipts.
+All retained source and release-artifact hashes are recorded. Mathematical
+statements and claim statuses are unchanged; the existing resource and upper
+owners now state the implemented stop contract. This checkpoint is committed
+locally without a push. The full goal is not marked achieved: no additional
+primary causal gain or new exact closure is established, and the new generated
+implementation plan remains unavailable for its required acceptance audit.

@@ -4600,6 +4600,27 @@ SolveWork::Impl::run_publication_pipeline() {
                 while (!lift_work.progress().done) {
                     const refinement::PolicyExactLiftProgress
                         lift_progress = lift_work.progress();
+                    if (requested_bounded_finish) {
+                        const BoundedPolicyIncumbent* retained =
+                            best_current_certified_fallback();
+                        if (retained != nullptr &&
+                            retained->evaluated_policy_cost <=
+                                lift_progress.verified_executable_upper_bound) {
+                            /* This exact-scope graph is already independently
+                             * evaluated. A host finish request stops optional
+                             * strict work at this suspension, without claiming
+                             * closure or losing a cheaper verified strict
+                             * artifact that has not reached the portfolio yet.
+                             * Destroying lift_work releases only unpublished
+                             * coroutine/proof work; ordinary publication below
+                             * still selects the compatible verified artifact. */
+                            certificate.status = refinement::
+                                PolicyExactLiftStatus::RequestedBoundedFinish;
+                            certificate.solver_cost = result.evaluated_policy_cost;
+                            certificate.adapter = lift_work.live_adapter_telemetry();
+                            break;
+                        }
+                    }
                     switch (lift_progress.phase) {
                     case refinement::PolicyExactLiftPhase::Compiling:
                         phase = SolvePhase::Compiling;
@@ -4645,7 +4666,9 @@ SolveWork::Impl::run_publication_pipeline() {
                     co_await solve_detail::CooperativeCheckpoint{
                         lift_work.retained_bytes()};
                 }
-                certificate = lift_work.take_result();
+                if (lift_work.progress().done) {
+                    certificate = lift_work.take_result();
+                }
             } else {
                 certificate.status =
                     refinement::PolicyExactLiftStatus::ResourceCap;
@@ -5520,7 +5543,14 @@ SolveWork::Impl::run_publication_pipeline() {
                     }
                 }
             }
-            if (!lift_complete) {
+            if (certificate.status == refinement::
+                    PolicyExactLiftStatus::RequestedBoundedFinish) {
+                if (!publish_certified_fallback(
+                        SolveTermination::RequestedBoundedFinish)) {
+                    throw std::logic_error(
+                        "bounded strict finish lost its verified artifact");
+                }
+            } else if (!lift_complete) {
                 const std::string status =
                     refinement::policy_exact_lift_status_name(
                         certificate.status);

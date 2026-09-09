@@ -1,18 +1,21 @@
 // Explicit integration qualification, not part of the routine web suite.
-// npx tsx test/empty-start-retention-wasm.test.ts [--output <receipt.json>]
+// npx tsx test/empty-start-retention-wasm.test.ts [--four-goal] [--output <receipt.json>]
 // The fixture's 60-second finish and 90-second watchdog include preparation.
 // Run in an isolated process with an outer timeout for noncooperative native work.
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { createEngineBindings } from "../src/app/engine-wasm";
 import type { SolveOptions, SolverGoal } from "../src/app/engine-protocol";
 
 const root = new URL("../../../", import.meta.url);
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, root), "utf8"));
-const fixturePath = "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-5-goal-product8.json";
+const fourGoal = process.argv.includes("--four-goal");
+const fixturePath = `fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-${fourGoal ? 4 : 5}-goal-product8.json`;
 const fixture = read(fixturePath);
 assert.equal(fixture.start.mods.length, 0);
-assert.equal(fixture.goal.min_satisfied_slots, 5);
+assert.equal(fixture.goal.min_satisfied_slots, fourGoal ? 4 : 5);
+const expectedLower = fourGoal ? 198.8334996747695 : 405.3694021063399;
 const snapshot = read(fixture.economy.snapshot_path);
 assert.equal(snapshot.id, fixture.economy.id);
 assert.equal(snapshot.metadata.content_sha256, fixture.economy.content_sha256);
@@ -67,20 +70,27 @@ try {
     const telemetry = engine.solverTelemetry(solver) as unknown as {
         timings_ns: unknown;
         incremental_action_envelope: unknown;
+        policy_refinement: {
+            strict_lift: { status: string; global_lower_bound_closed: boolean };
+            publication: unknown;
+        };
         carrier_bound_attribution: { proof_pattern_manager: { patterns: Array<{
             id: string; converged: boolean; start_contribution: number | null; fallback_reason: string;
         }> } };
     };
     receipt.timings_ns = telemetry.timings_ns;
     receipt.incremental_action_envelope = telemetry.incremental_action_envelope;
+    receipt.strict_lift = telemetry.policy_refinement.strict_lift;
+    receipt.publication = telemetry.policy_refinement.publication;
     const pattern = telemetry.carrier_bound_attribution.proof_pattern_manager.patterns
         .find(entry => entry.id === "native_retention");
     receipt.pattern = pattern;
     assert.ok(pattern?.converged, pattern?.fallback_reason);
-    assert.ok(Math.abs((pattern.start_contribution ?? 0) - 405.3694021063399) < 1e-7);
+    assert.ok(Math.abs((pattern.start_contribution ?? 0) - expectedLower) < 1e-7);
     assert.ok((summary.lower_bound ?? 0) + 1e-7 >= pattern.start_contribution!);
     assert.ok(summary.policy_available, "bounded result must have an executable policy");
     const graph = engine.solverCompileStrategy(solver);
+    receipt.strategy_sha256 = createHash("sha256").update(graph).digest("hex");
     const strategy = engine.compileStrategy(session, graph);
     try {
         const v = fixture.verification;
@@ -109,8 +119,15 @@ try {
             // Frozen against B6 with the same retained root lower and finish
             // request. Assert useful continuation integration after evaluating
             // the actual graph, so a failed gate still retains its true cost.
-            assert.ok(summary.upper_bound <= 16997812.199227553 * 0.8,
-                "empty-start continuation misses the 20% policy improvement gate");
+            if (fourGoal) {
+                assert.equal(telemetry.policy_refinement.strict_lift.status, "requested_bounded_finish");
+                assert.equal(telemetry.policy_refinement.strict_lift.global_lower_bound_closed, false);
+                assert.ok(summary.upper_bound <= 5218.040949685988 + 1e-7,
+                    "bounded strict finish lost the verified four-goal incumbent");
+            } else {
+                assert.ok(summary.upper_bound <= 16997812.199227553 * 0.8,
+                    "empty-start continuation misses the 20% policy improvement gate");
+            }
         } finally {
             engine.closeStrategyEvaluation(evaluation);
         }

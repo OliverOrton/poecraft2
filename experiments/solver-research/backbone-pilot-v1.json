@@ -32,7 +32,17 @@
       "input_references": [
         "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-4-goal-product8.json"
       ],
-      "source_binding": "267e4f3 control and D4/D5 rejected patches/executable hashes in fresh-provenance.json"
+      "source_binding": "267e4f3 control and rejected D4/D5 patches in fresh-provenance.json; E3 bounded-publication repair in finish-provenance.json"
+    },
+    "empty-four-wasm-product8-v1": {
+      "semantic_version": "unchanged empty Rare four-goal quality-ladder fixture through the production WASM facade",
+      "property": "bounded publication of the independently evaluated incumbent after the host finish request",
+      "coefficient_semantics": "native WASM mechanics and independent compiled graph evaluation; no strict exact-closure claim",
+      "scope": "Conquest Lamellar empty Rare ilvl86, pinned Allflame/base-1 prices, full product scope, 60-second finish, 90-second watchdog and 1 GiB",
+      "input_references": [
+        "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-4-goal-product8.json"
+      ],
+      "source_binding": "E10 receipt and production WASM/source hashes in finish-provenance.json"
     },
     "empty-five-product8-v1": {
       "semantic_version": "unchanged repository quality-ladder empty Rare five-goal product8 fixture",
@@ -85,7 +95,7 @@
         "The focused fixture passes 177/0; old code fails two intended checks.",
         "D3 control returns 5218.04095 in 86.477 seconds; D4/D5 fail the native 90-second watchdog without final publication.",
         "Internally retained candidate values are not returned uppers for failed attempts.",
-        "Restored D7 primary independently reproduces 405.36940–85558.70619 in 66.886 seconds; no new root gain or exact closure."
+        "Restored D7 primary independently reproduces 405.36940â€“85558.70619 in 66.886 seconds; no new root gain or exact closure."
       ]
     },
     {
@@ -413,6 +423,66 @@
         "Checked lower stays 405.11164995948883; verified upper 470485192.50357205 to 794067.4530398862.",
         "Control total 46.345 seconds, final treatment 53.309 seconds including finalization; no elapsed-time speedup claim.",
         "No exact closure; source differs from the empty-start reference."
+      ]
+    },
+    {
+      "id": "bounded-finish-four-native-20260909",
+      "model": "empty-four-product8-v1",
+      "kind": "conditional_observation",
+      "producer": "existing native/WASM solver, compiler, independent evaluation and process receipts",
+      "validation": "docs/active/2026-09-09-empty-start-partial-continuation/README.md",
+      "evidence": "docs/active/2026-09-09-empty-start-partial-continuation/finish-comparison.json",
+      "pointer": "/runs/E3-four-finish",
+      "role": "Host-requested bounded delivery, matched to D3",
+      "treatment": "consume the latched finish request during optional strict work and preserve the cheapest compatible verified publication",
+      "limitations": [
+        "Same evaluated graph and endpoints; 62.203 versus 86.477 seconds. No strict rows start; parent 4741 and the removed new-row variants remain unresolved.",
+        "Single observations under unchanged fixture inputs; generated fresh implementation-plan package remains inaccessible."
+      ]
+    },
+    {
+      "id": "bounded-finish-five-native-20260909",
+      "model": "empty-five-product8-v1",
+      "kind": "conditional_observation",
+      "producer": "existing native/WASM solver, compiler, independent evaluation and process receipts",
+      "validation": "docs/active/2026-09-09-empty-start-partial-continuation/README.md",
+      "evidence": "docs/active/2026-09-09-empty-start-partial-continuation/finish-comparison.json",
+      "pointer": "/runs/E4-primary-finish",
+      "role": "Primary regression qualification, matched to D7",
+      "treatment": "consume the latched finish request during optional strict work and preserve the cheapest compatible verified publication",
+      "limitations": [
+        "Same 405.3694021063399–85558.70618560436 interval and graph. No additional primary causal gain or exact closure.",
+        "Single observations under unchanged fixture inputs; generated fresh implementation-plan package remains inaccessible."
+      ]
+    },
+    {
+      "id": "bounded-finish-five-wasm-20260909",
+      "model": "empty-five-wasm-product8-v1",
+      "kind": "conditional_observation",
+      "producer": "existing native/WASM solver, compiler, independent evaluation and process receipts",
+      "validation": "docs/active/2026-09-09-empty-start-partial-continuation/README.md",
+      "evidence": "docs/active/2026-09-09-empty-start-partial-continuation/finish-comparison.json",
+      "pointer": "/wasm/E9-wasm-primary",
+      "role": "Rebuilt production WASM primary qualification",
+      "treatment": "consume the latched finish request during optional strict work and preserve the cheapest compatible verified publication",
+      "limitations": [
+        "Same native graph hash and endpoints, independent evaluation and zero live handles after abandon cleanup. No exact closure.",
+        "Single observations under unchanged fixture inputs; generated fresh implementation-plan package remains inaccessible."
+      ]
+    },
+    {
+      "id": "bounded-finish-four-wasm-20260909",
+      "model": "empty-four-wasm-product8-v1",
+      "kind": "conditional_observation",
+      "producer": "existing native/WASM solver, compiler, independent evaluation and process receipts",
+      "validation": "docs/active/2026-09-09-empty-start-partial-continuation/README.md",
+      "evidence": "docs/active/2026-09-09-empty-start-partial-continuation/finish-comparison.json",
+      "pointer": "/wasm/E10-wasm-four",
+      "role": "Rebuilt production WASM bounded-finish qualification",
+      "treatment": "consume the latched finish request during optional strict work and preserve the cheapest compatible verified publication",
+      "limitations": [
+        "Same native graph hash and endpoints; requested strict stop, independent evaluation and zero live handles after abandon cleanup. No new continuation rows or exact closure.",
+        "Single observations under unchanged fixture inputs; generated fresh implementation-plan package remains inaccessible."
       ]
     }
   ],

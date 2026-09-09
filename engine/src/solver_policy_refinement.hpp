@@ -901,6 +901,7 @@ enum class PolicyExactLiftStatus : std::uint8_t {
     RefinementFailure,
     LocalReoptimizationRequired,
     CompiledAssertionFailure,
+    RequestedBoundedFinish,
 };
 
 const char* policy_exact_lift_status_name(PolicyExactLiftStatus status);

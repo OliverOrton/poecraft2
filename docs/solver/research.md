@@ -184,7 +184,14 @@ before publication. Both mutations were removed. The restored primary again
 returns 405.36940–85,558.70619 with independent evaluation, in 66.886 seconds
 total. [The failed treatments and restored result](../active/2026-09-09-empty-start-partial-continuation/fresh-comparison.json)
 separate internal candidate retention from a successfully returned artifact.
-Bounded strict continuation and publication remain the concrete open obligation.
+The subsequent finish-request repair returns the same four-goal graph in
+62.203 seconds versus the matched control's 86.477 seconds. Both runs had the
+host request latched; only the new finalizer consumes it before starting
+optional strict rows. The primary and two controls retain their verified
+graphs. This resolves that measured delivery failure, while bounded new-row
+construction and the parent-4741 continuation remain open. The
+[current receipt](../active/2026-09-09-empty-start-partial-continuation/README.md#bounded-finish-publication)
+keeps publication progress separate from exact closure and a new root gain.
 
 Dependencies: [CLM-0002](claims.md#clm-0002), [CLM-0004](claims.md#clm-0004),
 [CLM-0020](claims.md#clm-0020), [CLM-0021](claims.md#clm-0021),

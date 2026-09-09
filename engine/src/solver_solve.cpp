@@ -624,9 +624,7 @@ void SolveWork::step(const std::uint32_t max_work_items) {
 
 void SolveWork::request_bounded_finish() {
     if (impl_->phase == SolvePhase::Done ||
-        impl_->phase == SolvePhase::Refining ||
-        impl_->phase == SolvePhase::Compiling ||
-        impl_->phase == SolvePhase::Certifying) {
+        impl_->requested_bounded_finish) {
         return;
     }
     impl_->requested_bounded_finish = true;

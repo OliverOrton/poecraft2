@@ -1438,7 +1438,9 @@ class SolveWork {
 
     void step(std::uint32_t max_work_items);
     /* Stop graph/action discovery at the next cooperative step boundary and
-     * run normal bounded-policy finalization. Ordinary abandon remains the
+     * run normal bounded-policy finalization. During finalization, stop optional
+     * strict work once the cheapest verified artifact is available for return.
+     * Ordinary abandon remains the
      * prompt cancellation path and does not publish partial work. */
     void request_bounded_finish();
     SolveProgress progress() const;

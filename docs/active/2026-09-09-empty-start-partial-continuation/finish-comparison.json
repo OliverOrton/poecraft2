@@ -1,0 +1,2014 @@
+{
+  "schema": "empty_start_bounded_publication_v1",
+  "base": "0ddd7b191fdb1ab4e2e50bdbbf33e195f3910d8b",
+  "inputs": {
+    "conquest-lamellar-allflame-clean-4-goal-product8": {
+      "input": {
+        "native_retention_diagnostic": "reuse",
+        "comparison_profile": "calculator-product-quality-ladder-v1",
+        "watchdog_seconds": 90,
+        "requested_bounded_finish_seconds": 60,
+        "session": {
+          "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+          "base_name": "Conquest Lamellar",
+          "item_class_key": "Body Armour",
+          "item_level": 86,
+          "minimum_item_level": 86
+        },
+        "start": {
+          "rarity": "rare",
+          "with_implicits": false,
+          "mods": []
+        },
+        "goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 4,
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+              "min_tier": 1
+            }
+          ]
+        },
+        "corpus": {
+          "tier": "clean-four",
+          "stratum": "conquest-lamellar_clean_zero_to_4",
+          "goal_modifier_count": 4,
+          "start_goal_modifier_count": 0,
+          "product_worker_profile": "calculator_default_adaptive_max_8"
+        },
+        "product_action_envelope": {
+          "mode": "calculator_goal_relevant_priced_v1",
+          "envelope_goal": {
+            "version": "v1",
+            "rarity": "rare",
+            "action_mode": "goal_relevant",
+            "min_satisfied_slots": 4,
+            "slots": [
+              {
+                "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+                "min_tier": 1
+              }
+            ],
+            "fossil_mode": "goal_relevant",
+            "requested_fossil_actions": []
+          },
+          "pricing_filter": "all_declared_cost_keys_present",
+          "bench_goal_slots_forbidden": true
+        },
+        "allowed_mechanic_families": [
+          "calculator_goal_relevant_product_envelope"
+        ],
+        "bounded_best_policy_contract": {
+          "allow_exact": true,
+          "bounded_requires_named_stop": true,
+          "bounded_requires_strict_gap": true,
+          "bounded_requires_open_obligations": true,
+          "require_evaluated_upper": true,
+          "require_cheapest_independently_evaluated_incumbent": true
+        },
+        "economy": {
+          "version": "v1",
+          "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+          "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+          "league_key": "allflame",
+          "league_name": "Allflame",
+          "manual_overrides": {
+            "base": 1
+          },
+          "fallback_price": null,
+          "missing_price_decisions": {
+            "base": "quality_ladder_fixture_input_1_chaos"
+          }
+        },
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "verification": {
+          "runs": 0,
+          "seed": 20260826,
+          "max_actions_per_run": 100000,
+          "max_graph_steps_per_run": 4000000,
+          "exact_evaluation": true,
+          "exact_max_states": 1000000,
+          "exact_max_pairs": 5000000,
+          "exact_max_transitions": 20000000,
+          "exact_max_owned_bytes": 1073741824,
+          "exact_cost_absolute_tolerance": 1e-07,
+          "exact_cost_relative_tolerance": 1e-09
+        }
+      },
+      "actions": [
+        "transmute",
+        "augment",
+        "alteration",
+        "regal",
+        "alchemy",
+        "chaos",
+        "exalt",
+        "annul",
+        "scour",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "harvest_reforge:defences",
+        "harvest_augment:defences",
+        "fracture",
+        "restart"
+      ]
+    },
+    "conquest-lamellar-allflame-clean-5-goal-product8": {
+      "input": {
+        "native_retention_diagnostic": "reuse",
+        "comparison_profile": "calculator-product-quality-ladder-v1",
+        "watchdog_seconds": 90,
+        "requested_bounded_finish_seconds": 60,
+        "session": {
+          "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+          "base_name": "Conquest Lamellar",
+          "item_class_key": "Body Armour",
+          "item_level": 86,
+          "minimum_item_level": 86
+        },
+        "start": {
+          "rarity": "rare",
+          "with_implicits": false,
+          "mods": []
+        },
+        "goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 5,
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+              "min_tier": 1
+            }
+          ]
+        },
+        "corpus": {
+          "tier": "clean-five",
+          "stratum": "conquest-lamellar_clean_zero_to_5",
+          "goal_modifier_count": 5,
+          "start_goal_modifier_count": 0,
+          "product_worker_profile": "calculator_default_adaptive_max_8"
+        },
+        "product_action_envelope": {
+          "mode": "calculator_goal_relevant_priced_v1",
+          "envelope_goal": {
+            "version": "v1",
+            "rarity": "rare",
+            "action_mode": "goal_relevant",
+            "min_satisfied_slots": 5,
+            "slots": [
+              {
+                "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+                "min_tier": 1
+              }
+            ],
+            "fossil_mode": "goal_relevant",
+            "requested_fossil_actions": []
+          },
+          "pricing_filter": "all_declared_cost_keys_present",
+          "bench_goal_slots_forbidden": true
+        },
+        "allowed_mechanic_families": [
+          "calculator_goal_relevant_product_envelope"
+        ],
+        "bounded_best_policy_contract": {
+          "allow_exact": true,
+          "bounded_requires_named_stop": true,
+          "bounded_requires_strict_gap": true,
+          "bounded_requires_open_obligations": true,
+          "require_evaluated_upper": true,
+          "require_cheapest_independently_evaluated_incumbent": true
+        },
+        "economy": {
+          "version": "v1",
+          "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+          "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+          "league_key": "allflame",
+          "league_name": "Allflame",
+          "manual_overrides": {
+            "base": 1
+          },
+          "fallback_price": null,
+          "missing_price_decisions": {
+            "base": "quality_ladder_fixture_input_1_chaos"
+          }
+        },
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "verification": {
+          "runs": 0,
+          "seed": 20260826,
+          "max_actions_per_run": 100000,
+          "max_graph_steps_per_run": 4000000,
+          "exact_evaluation": true,
+          "exact_max_states": 1000000,
+          "exact_max_pairs": 5000000,
+          "exact_max_transitions": 20000000,
+          "exact_max_owned_bytes": 1073741824,
+          "exact_cost_absolute_tolerance": 1e-07,
+          "exact_cost_relative_tolerance": 1e-09
+        }
+      },
+      "actions": [
+        "transmute",
+        "augment",
+        "alteration",
+        "regal",
+        "alchemy",
+        "chaos",
+        "exalt",
+        "annul",
+        "scour",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "harvest_reforge:defences",
+        "harvest_reforge:physical",
+        "harvest_augment:defences",
+        "harvest_augment:physical",
+        "fracture",
+        "restart"
+      ]
+    },
+    "conquest-lamellar-allflame-partial-3-to-5-product8": {
+      "input": {
+        "native_retention_diagnostic": "reuse",
+        "comparison_profile": "calculator-product-quality-ladder-v1",
+        "watchdog_seconds": 75,
+        "requested_bounded_finish_seconds": 45,
+        "session": {
+          "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+          "base_name": "Conquest Lamellar",
+          "item_class_key": "Body Armour",
+          "item_level": 86,
+          "minimum_item_level": 86
+        },
+        "start": {
+          "rarity": "rare",
+          "with_implicits": false,
+          "mods": [
+            {
+              "key": "LocalIncreasedArmourAndEvasion8",
+              "flags": []
+            },
+            {
+              "key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+              "flags": []
+            },
+            {
+              "key": "LocalBaseArmourAndEvasionRating8",
+              "flags": []
+            }
+          ]
+        },
+        "goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 5,
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+              "min_tier": 1
+            }
+          ]
+        },
+        "corpus": {
+          "tier": "partial",
+          "stratum": "conquest_lamellar_partial_three_to_five",
+          "goal_modifier_count": 5,
+          "start_goal_modifier_count": 3,
+          "product_worker_profile": "calculator_default_adaptive_max_8"
+        },
+        "product_action_envelope": {
+          "mode": "calculator_goal_relevant_priced_v1",
+          "envelope_goal": {
+            "version": "v1",
+            "rarity": "rare",
+            "action_mode": "goal_relevant",
+            "min_satisfied_slots": 5,
+            "slots": [
+              {
+                "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+                "min_tier": 1
+              }
+            ],
+            "fossil_mode": "goal_relevant",
+            "requested_fossil_actions": []
+          },
+          "pricing_filter": "all_declared_cost_keys_present",
+          "bench_goal_slots_forbidden": true
+        },
+        "allowed_mechanic_families": [
+          "calculator_goal_relevant_product_envelope"
+        ],
+        "bounded_best_policy_contract": {
+          "allow_exact": true,
+          "bounded_requires_named_stop": true,
+          "bounded_requires_strict_gap": true,
+          "bounded_requires_open_obligations": true,
+          "require_evaluated_upper": true,
+          "require_cheapest_independently_evaluated_incumbent": true
+        },
+        "economy": {
+          "version": "v1",
+          "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+          "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+          "league_key": "allflame",
+          "league_name": "Allflame",
+          "manual_overrides": {
+            "base": 1
+          },
+          "fallback_price": null,
+          "missing_price_decisions": {
+            "base": "quality_ladder_fixture_input_1_chaos"
+          }
+        },
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "verification": {
+          "runs": 0,
+          "seed": 20260826,
+          "max_actions_per_run": 100000,
+          "max_graph_steps_per_run": 4000000,
+          "exact_evaluation": true,
+          "exact_max_states": 1000000,
+          "exact_max_pairs": 5000000,
+          "exact_max_transitions": 20000000,
+          "exact_max_owned_bytes": 1073741824,
+          "exact_cost_absolute_tolerance": 1e-07,
+          "exact_cost_relative_tolerance": 1e-09
+        }
+      },
+      "actions": [
+        "transmute",
+        "augment",
+        "alteration",
+        "regal",
+        "alchemy",
+        "chaos",
+        "exalt",
+        "annul",
+        "scour",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "harvest_reforge:defences",
+        "harvest_reforge:physical",
+        "harvest_augment:defences",
+        "harvest_augment:physical",
+        "fracture",
+        "restart"
+      ]
+    },
+    "conquest-lamellar-allflame-clean-3-suffix-product8": {
+      "input": {
+        "native_retention_diagnostic": "reuse",
+        "comparison_profile": "calculator-product-quality-ladder-v1",
+        "watchdog_seconds": 120,
+        "requested_bounded_finish_seconds": 90,
+        "session": {
+          "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+          "base_name": "Conquest Lamellar",
+          "item_class_key": "Body Armour",
+          "item_level": 86,
+          "minimum_item_level": 86
+        },
+        "start": {
+          "rarity": "rare",
+          "with_implicits": false,
+          "mods": []
+        },
+        "goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 3,
+          "slots": [
+            {
+              "family_mod_key": "FireResist8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ColdResist8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LightningResist8",
+              "min_tier": 1
+            }
+          ]
+        },
+        "corpus": {
+          "tier": "clean-three-suffix",
+          "stratum": "conquest_lamellar_clean_exact_three_suffix",
+          "goal_modifier_count": 3,
+          "start_goal_modifier_count": 0,
+          "product_worker_profile": "calculator_default_adaptive_max_8"
+        },
+        "product_action_envelope": {
+          "mode": "calculator_goal_relevant_priced_v1",
+          "envelope_goal": {
+            "version": "v1",
+            "rarity": "rare",
+            "action_mode": "goal_relevant",
+            "min_satisfied_slots": 3,
+            "slots": [
+              {
+                "family_mod_key": "FireResist8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "ColdResist8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LightningResist8",
+                "min_tier": 1
+              }
+            ],
+            "fossil_mode": "goal_relevant",
+            "requested_fossil_actions": []
+          },
+          "pricing_filter": "all_declared_cost_keys_present",
+          "bench_goal_slots_forbidden": true
+        },
+        "allowed_mechanic_families": [
+          "calculator_goal_relevant_product_envelope"
+        ],
+        "bounded_best_policy_contract": {
+          "allow_exact": true,
+          "bounded_requires_named_stop": true,
+          "bounded_requires_strict_gap": true,
+          "bounded_requires_open_obligations": true,
+          "require_evaluated_upper": true,
+          "require_cheapest_independently_evaluated_incumbent": true
+        },
+        "economy": {
+          "version": "v1",
+          "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+          "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+          "league_key": "allflame",
+          "league_name": "Allflame",
+          "manual_overrides": {
+            "base": 1
+          },
+          "fallback_price": null,
+          "missing_price_decisions": {
+            "base": "exact_same_side_fixture_input_1_chaos"
+          }
+        },
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "verification": {
+          "runs": 0,
+          "seed": 20260826,
+          "max_actions_per_run": 100000,
+          "max_graph_steps_per_run": 4000000,
+          "exact_evaluation": true,
+          "exact_max_states": 1000000,
+          "exact_max_pairs": 5000000,
+          "exact_max_transitions": 20000000,
+          "exact_max_owned_bytes": 1073741824,
+          "exact_cost_absolute_tolerance": 1e-07,
+          "exact_cost_relative_tolerance": 1e-09
+        }
+      },
+      "actions": [
+        "transmute",
+        "augment",
+        "alteration",
+        "regal",
+        "alchemy",
+        "chaos",
+        "exalt",
+        "annul",
+        "scour",
+        "essence:Metadata/Items/Currency/CurrencyEssenceAnger6",
+        "essence:Metadata/Items/Currency/CurrencyEssenceHatred7",
+        "essence:Metadata/Items/Currency/CurrencyEssenceWrath5",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingAbyss+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingAbyss+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "harvest_reforge:cold",
+        "harvest_reforge:elemental",
+        "harvest_reforge:fire",
+        "harvest_reforge:lightning",
+        "harvest_augment:cold",
+        "harvest_augment:fire",
+        "harvest_augment:lightning",
+        "harvest_resist:fire:cold",
+        "harvest_resist:fire:lightning",
+        "harvest_resist:cold:fire",
+        "harvest_resist:cold:lightning",
+        "harvest_resist:lightning:fire",
+        "harvest_resist:lightning:cold",
+        "fracture",
+        "restart"
+      ]
+    }
+  },
+  "baselines": {
+    "D3-four-control": {
+      "case": "conquest-lamellar-allflame-clean-4-goal-product8",
+      "report_sha256": "411439011af5e909bab9cbb14dc029cd72a3fa8406583d8bf58439d6f19af856",
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 5322.492987625119,
+        "expanded_states": 4411,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 179,
+          "candidate": 21,
+          "evaluator_supported": 21,
+          "supported_priced": 296,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 198.8334996747695,
+        "upper_bound": 5218.040949685988,
+        "evaluated_policy_cost": 5218.040949685988,
+        "absolute_optimality_gap": 5019.2074500112185,
+        "relative_optimality_gap": 25.243268655538927,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "status": "bounded_feasible",
+      "phase_wall_ms": {
+        "registry_layout": 40.0185,
+        "solve": 86089.251,
+        "compile": 2.4593,
+        "verification": null,
+        "total": 86476.8396
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33304576,
+        "process_working_set_after_bytes": 252121088,
+        "process_working_set_delta_bytes": 218816512,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 150533949,
+        "native_peak_owned_bytes": 644404814,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 1010093
+      },
+      "setup_ns": 6026033300,
+      "first_verified_upper_ms": 61493.575,
+      "strict_lift": {
+        "status": "coarse_mapping_failure",
+        "failure_reason": "strict carrier 113366 maps outside the solved coarse graph; indexed_parent=4741, current_parent=4741, indexed_states=6345, current_states=6345, policy_states=3923, strict_goal=0, coarse_goal=0",
+        "resource_cap": null,
+        "global_lower_bound_closed": false
+      },
+      "strict_states": 5403,
+      "strict_kernels": 5252,
+      "publication": {
+        "status": "bounded_core_policy",
+        "candidate_kind": "selected_coarse_policy"
+      },
+      "finish_request": {
+        "requested_bounded_finish": true,
+        "requested_bounded_finish_expanded_states": 4411,
+        "requested_bounded_finish_rows": 81845
+      },
+      "evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 175.8728,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 5218.040949685988,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "returned_graph_sha256": "95e6215ecf67f8cdde3648fdcfd2a3c45af52c8dbc8d202da5dd2d8e43e3b22d"
+    },
+    "D7-restored-primary": {
+      "case": "conquest-lamellar-allflame-clean-5-goal-product8",
+      "report_sha256": "edfa04c893df2b5bf818c7b82c20c3d6ae8f8bc18e757d92beb4aa73a03752a8",
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 85558.70618560436,
+        "expanded_states": 3398,
+        "sweeps": 4,
+        "residual": 1.6689300537109375e-06,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 186,
+          "candidate": 28,
+          "evaluator_supported": 28,
+          "supported_priced": 269,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436,
+        "absolute_optimality_gap": 85153.33678349802,
+        "relative_optimality_gap": 210.06355275221262,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "status": "bounded_feasible",
+      "phase_wall_ms": {
+        "registry_layout": 42.4668,
+        "solve": 64150.7275,
+        "compile": 5.5325,
+        "verification": null,
+        "total": 66886.0896
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33320960,
+        "process_working_set_after_bytes": 268713984,
+        "process_working_set_delta_bytes": 235393024,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 156921025,
+        "native_peak_owned_bytes": 260817566,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 811293
+      },
+      "setup_ns": 8478010200,
+      "first_verified_upper_ms": 64048.0933,
+      "strict_lift": {
+        "status": "not_run",
+        "failure_reason": null,
+        "resource_cap": null,
+        "global_lower_bound_closed": false
+      },
+      "strict_states": 0,
+      "strict_kernels": 0,
+      "publication": {
+        "status": "bounded_core_policy",
+        "candidate_kind": "direct_compiled_core_policy"
+      },
+      "finish_request": {
+        "requested_bounded_finish": true,
+        "requested_bounded_finish_expanded_states": 3398,
+        "requested_bounded_finish_rows": 41140
+      },
+      "evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 2546.7889,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 85558.70618560436,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "returned_graph_sha256": "9f20f8375939a50b8d8c8fc927b814ae0ddb07b3700ea237dcf04363ba8a1778"
+    },
+    "C16-final-partial": {
+      "case": "conquest-lamellar-allflame-partial-3-to-5-product8",
+      "report_sha256": "64564fcbce208ed7ef5ac7bbab2f8fd552d27f67ac9011d58b7cd91d6a4f7c7d",
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 794067.4530398862,
+        "expanded_states": 3121,
+        "sweeps": 0,
+        "residual": 5.960464477539063e-08,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 186,
+          "candidate": 28,
+          "evaluator_supported": 28,
+          "supported_priced": 181,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 405.11164995948883,
+        "upper_bound": 794067.4530398862,
+        "evaluated_policy_cost": 794067.4530398862,
+        "absolute_optimality_gap": 793662.3413899267,
+        "relative_optimality_gap": 1959.120014122756,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "status": "bounded_feasible",
+      "phase_wall_ms": {
+        "registry_layout": 38.4222,
+        "solve": 49940.7973,
+        "compile": 8.1911,
+        "verification": null,
+        "total": 53309.3565
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33374208,
+        "process_working_set_after_bytes": 252141568,
+        "process_working_set_delta_bytes": 218767360,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 148121291,
+        "native_peak_owned_bytes": 259946658,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 792928
+      },
+      "setup_ns": 8317719800,
+      "first_verified_upper_ms": 49846.2695,
+      "strict_lift": {
+        "status": "not_run",
+        "failure_reason": null,
+        "resource_cap": null,
+        "global_lower_bound_closed": false
+      },
+      "strict_states": 0,
+      "strict_kernels": 0,
+      "publication": {
+        "status": "bounded_core_policy",
+        "candidate_kind": "direct_compiled_core_policy"
+      },
+      "finish_request": {
+        "requested_bounded_finish": true,
+        "requested_bounded_finish_expanded_states": 3121,
+        "requested_bounded_finish_rows": 35013
+      },
+      "evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 3199.7398,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 794067.4530398862,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "returned_graph_sha256": "db4b4e6698b47251bdf3c48e81da4f47892aaaee0dd7063775fa731d7c03f248"
+    },
+    "C17-final-anchor": {
+      "case": "conquest-lamellar-allflame-clean-3-suffix-product8",
+      "report_sha256": "1341213deece8864054beeaca2bfa0a0448de9460d8f2ddf9a9ec1f4be3357ac",
+      "summary": {
+        "converged": true,
+        "start_state": 0,
+        "start_value": 1101.15648683309,
+        "expanded_states": 3882,
+        "sweeps": 16,
+        "residual": 9.094947017729282e-13,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "exact",
+        "termination": "exact_closed",
+        "stop_cause": "exact_closed",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 181,
+          "candidate": 40,
+          "evaluator_supported": 40,
+          "supported_priced": 195,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 1101.15648683309,
+        "upper_bound": 1101.15648683309,
+        "evaluated_policy_cost": 1101.15648683309,
+        "absolute_optimality_gap": 0,
+        "relative_optimality_gap": 0,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "status": "converged",
+      "phase_wall_ms": {
+        "registry_layout": 36.3051,
+        "solve": 45180.1581,
+        "compile": 2.3252,
+        "verification": null,
+        "total": 45843.2952
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33263616,
+        "process_working_set_after_bytes": 117993472,
+        "process_working_set_delta_bytes": 84729856,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 36642245,
+        "native_peak_owned_bytes": 115145685,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 635427
+      },
+      "setup_ns": 902750200,
+      "first_verified_upper_ms": null,
+      "strict_lift": {
+        "status": "not_run",
+        "failure_reason": null,
+        "resource_cap": null,
+        "global_lower_bound_closed": false
+      },
+      "strict_states": 0,
+      "strict_kernels": 0,
+      "publication": {
+        "status": "exact_core_policy",
+        "candidate_kind": "direct_compiled_core_policy"
+      },
+      "finish_request": {
+        "requested_bounded_finish": false,
+        "requested_bounded_finish_expanded_states": 0,
+        "requested_bounded_finish_rows": 0
+      },
+      "evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 564.8487,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 1101.15648683309,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "returned_graph_sha256": "40753d83674a6feebc39e92c826b25fc0096a6124ff20b64b02174189468da49"
+    }
+  },
+  "runs": {
+    "E3-four-finish": {
+      "case": "conquest-lamellar-allflame-clean-4-goal-product8",
+      "report_sha256": "f39b8707b9442f1b06a26cd10aaf7798a8e75ba0cb00da732af97a03f291d939",
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 5322.492987625119,
+        "expanded_states": 4411,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 179,
+          "candidate": 21,
+          "evaluator_supported": 21,
+          "supported_priced": 296,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 198.8334996747695,
+        "upper_bound": 5218.040949685988,
+        "evaluated_policy_cost": 5218.040949685988,
+        "absolute_optimality_gap": 5019.2074500112185,
+        "relative_optimality_gap": 25.243268655538927,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "status": "bounded_feasible",
+      "phase_wall_ms": {
+        "registry_layout": 34.8027,
+        "solve": 61831.0839,
+        "compile": 2.2274,
+        "verification": null,
+        "total": 62203.3927
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33292288,
+        "process_working_set_after_bytes": 232247296,
+        "process_working_set_delta_bytes": 198955008,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 150158196,
+        "native_peak_owned_bytes": 367448829,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 934785
+      },
+      "setup_ns": 5905017500,
+      "first_verified_upper_ms": 61477.6906,
+      "strict_lift": {
+        "status": "requested_bounded_finish",
+        "failure_reason": null,
+        "resource_cap": null,
+        "global_lower_bound_closed": false
+      },
+      "strict_states": 0,
+      "strict_kernels": 0,
+      "publication": {
+        "status": "bounded_core_policy",
+        "candidate_kind": "selected_coarse_policy"
+      },
+      "finish_request": {
+        "requested_bounded_finish": true,
+        "requested_bounded_finish_expanded_states": 4411,
+        "requested_bounded_finish_rows": 81597
+      },
+      "evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 171.9342,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 5218.040949685988,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "returned_graph_sha256": "95e6215ecf67f8cdde3648fdcfd2a3c45af52c8dbc8d202da5dd2d8e43e3b22d",
+      "matched_baseline": "D3-four-control"
+    },
+    "E4-primary-finish": {
+      "case": "conquest-lamellar-allflame-clean-5-goal-product8",
+      "report_sha256": "ec9d4162eddd0fb6d9da5b0c98e1647a0f533e4fcf8ad8f9244a65133fe46c29",
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 85558.70618560436,
+        "expanded_states": 3398,
+        "sweeps": 0,
+        "residual": 1.6689300537109375e-06,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 186,
+          "candidate": 28,
+          "evaluator_supported": 28,
+          "supported_priced": 269,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436,
+        "absolute_optimality_gap": 85153.33678349802,
+        "relative_optimality_gap": 210.06355275221262,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "status": "bounded_feasible",
+      "phase_wall_ms": {
+        "registry_layout": 37.741,
+        "solve": 63983.2257,
+        "compile": 5.847,
+        "verification": null,
+        "total": 66684.8467
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33312768,
+        "process_working_set_after_bytes": 261459968,
+        "process_working_set_delta_bytes": 228147200,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 156920997,
+        "native_peak_owned_bytes": 260817618,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 811128
+      },
+      "setup_ns": 8360815600,
+      "first_verified_upper_ms": 63876.3491,
+      "strict_lift": {
+        "status": "not_run",
+        "failure_reason": null,
+        "resource_cap": null,
+        "global_lower_bound_closed": false
+      },
+      "strict_states": 0,
+      "strict_kernels": 0,
+      "publication": {
+        "status": "bounded_core_policy",
+        "candidate_kind": "direct_compiled_core_policy"
+      },
+      "finish_request": {
+        "requested_bounded_finish": true,
+        "requested_bounded_finish_expanded_states": 3398,
+        "requested_bounded_finish_rows": 41143
+      },
+      "evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 2520.7352,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 85558.70618560436,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "returned_graph_sha256": "9f20f8375939a50b8d8c8fc927b814ae0ddb07b3700ea237dcf04363ba8a1778",
+      "matched_baseline": "D7-restored-primary"
+    },
+    "E5-partial-finish": {
+      "case": "conquest-lamellar-allflame-partial-3-to-5-product8",
+      "report_sha256": "2d6dbca4ca08b1539d05845cab5d1ef4e7a3e54be294bd957c5d9d06cb056128",
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 794067.4530398862,
+        "expanded_states": 3121,
+        "sweeps": 0,
+        "residual": 5.960464477539063e-08,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 186,
+          "candidate": 28,
+          "evaluator_supported": 28,
+          "supported_priced": 181,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 405.11164995948883,
+        "upper_bound": 794067.4530398862,
+        "evaluated_policy_cost": 794067.4530398862,
+        "absolute_optimality_gap": 793662.3413899267,
+        "relative_optimality_gap": 1959.120014122756,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "status": "bounded_feasible",
+      "phase_wall_ms": {
+        "registry_layout": 38.0404,
+        "solve": 50112.4265,
+        "compile": 8.4294,
+        "verification": null,
+        "total": 53582.44
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33296384,
+        "process_working_set_after_bytes": 251408384,
+        "process_working_set_delta_bytes": 218112000,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 148121227,
+        "native_peak_owned_bytes": 259946554,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 792952
+      },
+      "setup_ns": 8372268900,
+      "first_verified_upper_ms": 50021.2974,
+      "strict_lift": {
+        "status": "not_run",
+        "failure_reason": null,
+        "resource_cap": null,
+        "global_lower_bound_closed": false
+      },
+      "strict_states": 0,
+      "strict_kernels": 0,
+      "publication": {
+        "status": "bounded_core_policy",
+        "candidate_kind": "direct_compiled_core_policy"
+      },
+      "finish_request": {
+        "requested_bounded_finish": true,
+        "requested_bounded_finish_expanded_states": 3121,
+        "requested_bounded_finish_rows": 35011
+      },
+      "evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 3289.9183,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 794067.4530398862,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "returned_graph_sha256": "db4b4e6698b47251bdf3c48e81da4f47892aaaee0dd7063775fa731d7c03f248",
+      "matched_baseline": "C16-final-partial"
+    },
+    "E6-exact-anchor": {
+      "case": "conquest-lamellar-allflame-clean-3-suffix-product8",
+      "report_sha256": "d49ed7a2434b2c2baef721831ba7c216b5c34e571582ddc05be49d1e93c881ff",
+      "summary": {
+        "converged": true,
+        "start_state": 0,
+        "start_value": 1101.15648683309,
+        "expanded_states": 3882,
+        "sweeps": 16,
+        "residual": 9.094947017729282e-13,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "exact",
+        "termination": "exact_closed",
+        "stop_cause": "exact_closed",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 181,
+          "candidate": 40,
+          "evaluator_supported": 40,
+          "supported_priced": 195,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 1101.15648683309,
+        "upper_bound": 1101.15648683309,
+        "evaluated_policy_cost": 1101.15648683309,
+        "absolute_optimality_gap": 0,
+        "relative_optimality_gap": 0,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "status": "converged",
+      "phase_wall_ms": {
+        "registry_layout": 32.9073,
+        "solve": 47163.9502,
+        "compile": 2.4701,
+        "verification": null,
+        "total": 47854.0846
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33230848,
+        "process_working_set_after_bytes": 113389568,
+        "process_working_set_delta_bytes": 80158720,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 36642245,
+        "native_peak_owned_bytes": 115145693,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 635431
+      },
+      "setup_ns": 927139500,
+      "first_verified_upper_ms": null,
+      "strict_lift": {
+        "status": "not_run",
+        "failure_reason": null,
+        "resource_cap": null,
+        "global_lower_bound_closed": false
+      },
+      "strict_states": 0,
+      "strict_kernels": 0,
+      "publication": {
+        "status": "exact_core_policy",
+        "candidate_kind": "direct_compiled_core_policy"
+      },
+      "finish_request": {
+        "requested_bounded_finish": false,
+        "requested_bounded_finish_expanded_states": 0,
+        "requested_bounded_finish_rows": 0
+      },
+      "evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 589.963,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 1101.15648683309,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "returned_graph_sha256": "40753d83674a6feebc39e92c826b25fc0096a6124ff20b64b02174189468da49",
+      "matched_baseline": "C17-final-anchor"
+    }
+  },
+  "wasm": {
+    "E9-wasm-primary": {
+      "fixture": "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-5-goal-product8.json",
+      "status": "passed",
+      "finish_requested_ms": 60000.1916,
+      "solve_complete_ms": 63842.401,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 85558.70618560436,
+        "expanded_states": 3398,
+        "sweeps": 0,
+        "residual": 1.6689300537109375e-06,
+        "skipped_actions": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436,
+        "absolute_optimality_gap": 85153.33678349802,
+        "relative_optimality_gap": 210.06355275221262,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "registry_actions": 186,
+        "candidate_actions": 28,
+        "evaluator_supported_actions": 28,
+        "supported_priced_actions": 269,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 0
+      },
+      "timings_ns": {
+        "registry_generation": 1787700,
+        "abstract_layout": 47300,
+        "solve_setup": 12530019000,
+        "expansion": 556341600,
+        "expansion_phases": {
+          "prepare": 23853211900,
+          "prepare_detail": {
+            "byte_audit": 101034700,
+            "automatic_admission": 23664647100,
+            "diagnostics": 23122700,
+            "operator_pricing": 4608900
+          },
+          "kernel": 234211000,
+          "sparse_row": 89266000,
+          "row_byte_audit": 8273400,
+          "diagnostics": 6489400,
+          "cache_release": 12983500,
+          "periodic_cap_byte_audit": 25848200,
+          "finalize": 0,
+          "finalize_byte_audit": 0,
+          "attributed": 24230283400,
+          "unattributed": 0
+        },
+        "transition_calculation": 11728516000,
+        "optimization": 31355400,
+        "constructive_policy": 0,
+        "strict_clean_goal_cover": 0,
+        "extraction": 3602265800,
+        "compilation": null,
+        "verification": null
+      },
+      "strict_lift": {
+        "status": "not_run",
+        "failure_reason": null,
+        "resource_cap": null,
+        "global_lower_bound_closed": false
+      },
+      "publication": {
+        "status": "bounded_core_policy",
+        "candidate_kind": "direct_compiled_core_policy"
+      },
+      "pattern": {
+        "id": "native_retention",
+        "finite_projection": "paired regions x rarity x exact goals x occupancy x removable crafted categories",
+        "covered_action_shapes": "all priced primitives and caller programs with checked first-exit coverage",
+        "local_fallback": "existing independent maximum on incompatible members or refused preparation",
+        "immediate_price_authority": "native descriptor prices with downward arithmetic",
+        "optimistic_successor_authority": "native integer event bounds and simultaneously checked projected dependencies",
+        "solution": "monotone_subsolution",
+        "residual": 0,
+        "solution_sweeps": 5,
+        "converged": true,
+        "provenance": "opt_in_uniform_native_retention_potential",
+        "minimizing_action": null,
+        "fallback_reason": "",
+        "refinement_trace": null,
+        "optimistic_grants": "native integer event bounds and simultaneously checked projected dependencies",
+        "start_contribution": 405.3694021063399,
+        "selected_owner_calls": 28843
+      },
+      "strategy_sha256": "9f20f8375939a50b8d8c8fc927b814ae0ddb07b3700ea237dcf04363ba8a1778",
+      "total_ms": 75581.03730000001,
+      "memory_after_cleanup": {
+        "ok": true,
+        "live_handles": 0,
+        "native_live_owned_bytes": 80,
+        "native_peak_owned_bytes": 80,
+        "native_serialized_output_bytes": 15,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 577437696
+      },
+      "evaluation": {
+        "converged": true,
+        "terminals": {
+          "success": 1,
+          "failure": 0,
+          "stop": 0,
+          "action_not_applied": 0,
+          "no_matching_edge": 0,
+          "unresolved": 0
+        },
+        "totals": {
+          "expected_actions": 8407.202314771383,
+          "known_expected_cost": 85558.70618560436,
+          "total_expected_cost": 85558.70618560436,
+          "cost_complete": true
+        }
+      }
+    },
+    "E10-wasm-four": {
+      "fixture": "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-4-goal-product8.json",
+      "status": "passed",
+      "finish_requested_ms": 60015.6321,
+      "solve_complete_ms": 61871.267700000004,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 5322.492987625119,
+        "expanded_states": 4027,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_actions": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 198.8334996747695,
+        "upper_bound": 5218.040949685988,
+        "evaluated_policy_cost": 5218.040949685988,
+        "absolute_optimality_gap": 5019.2074500112185,
+        "relative_optimality_gap": 25.243268655538927,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "registry_actions": 179,
+        "candidate_actions": 21,
+        "evaluator_supported_actions": 21,
+        "supported_priced_actions": 296,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 0
+      },
+      "timings_ns": {
+        "registry_generation": 1756500,
+        "abstract_layout": 40600,
+        "solve_setup": 5902777700,
+        "expansion": 1006321500,
+        "expansion_phases": {
+          "prepare": 20392164300,
+          "prepare_detail": {
+            "byte_audit": 63337300,
+            "automatic_admission": 20248569900,
+            "diagnostics": 23458300,
+            "operator_pricing": 4450000
+          },
+          "kernel": 602660300,
+          "sparse_row": 135779400,
+          "row_byte_audit": 16759100,
+          "diagnostics": 6089900,
+          "cache_release": 22368000,
+          "periodic_cap_byte_audit": 20248800,
+          "finalize": 799000,
+          "finalize_byte_audit": 253600,
+          "attributed": 21196868800,
+          "unattributed": 0
+        },
+        "transition_calculation": 9292607600,
+        "optimization": 9637200,
+        "constructive_policy": 0,
+        "strict_clean_goal_cover": 0,
+        "extraction": 1681603800,
+        "compilation": null,
+        "verification": null
+      },
+      "strict_lift": {
+        "status": "requested_bounded_finish",
+        "failure_reason": null,
+        "resource_cap": null,
+        "global_lower_bound_closed": false
+      },
+      "publication": {
+        "status": "bounded_core_policy",
+        "candidate_kind": "selected_coarse_policy"
+      },
+      "pattern": {
+        "id": "native_retention",
+        "finite_projection": "paired regions x rarity x exact goals x occupancy x removable crafted categories",
+        "covered_action_shapes": "all priced primitives and caller programs with checked first-exit coverage",
+        "local_fallback": "existing independent maximum on incompatible members or refused preparation",
+        "immediate_price_authority": "native descriptor prices with downward arithmetic",
+        "optimistic_successor_authority": "native integer event bounds and simultaneously checked projected dependencies",
+        "solution": "monotone_subsolution",
+        "residual": 0,
+        "solution_sweeps": 4,
+        "converged": true,
+        "provenance": "opt_in_uniform_native_retention_potential",
+        "minimizing_action": null,
+        "fallback_reason": "",
+        "refinement_trace": null,
+        "optimistic_grants": "native integer event bounds and simultaneously checked projected dependencies",
+        "start_contribution": 198.8334996747695,
+        "selected_owner_calls": 53535123
+      },
+      "strategy_sha256": "95e6215ecf67f8cdde3648fdcfd2a3c45af52c8dbc8d202da5dd2d8e43e3b22d",
+      "total_ms": 66804.6165,
+      "memory_after_cleanup": {
+        "ok": true,
+        "live_handles": 0,
+        "native_live_owned_bytes": 80,
+        "native_peak_owned_bytes": 80,
+        "native_serialized_output_bytes": 15,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 481165312
+      },
+      "evaluation": {
+        "converged": true,
+        "terminals": {
+          "success": 1,
+          "failure": 0,
+          "stop": 0,
+          "action_not_applied": 0,
+          "no_matching_edge": 0,
+          "unresolved": 0
+        },
+        "totals": {
+          "expected_actions": 14152.339714597114,
+          "known_expected_cost": 5218.040949685988,
+          "total_expected_cost": 5218.040949685988,
+          "cost_complete": true
+        }
+      }
+    }
+  },
+  "processes": {
+    "E1-old-finish-fixture.process.json": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 39252,
+      "process_identity_token": "39252:134334567798994403",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 281.92870000202674,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-bounded-finish-only"
+      ],
+      "started_utc": "2026-09-09T19:46:19.690818+00:00",
+      "ended_utc": "2026-09-09T19:46:19.973661+00:00",
+      "timeout_seconds": 90.0
+    },
+    "E10-wasm-four.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 18784,
+      "process_identity_token": "18784:134334579342600879",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 75544.07410000567,
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "apps/web/node_modules/tsx/dist/cli.mjs",
+        "apps/web/test/empty-start-retention-wasm.test.ts",
+        "--four-goal",
+        "--output",
+        "out/2026-09-09-empty-start-partial-continuation/E10-wasm-four.json"
+      ],
+      "started_utc": "2026-09-09T20:05:34.259020+00:00",
+      "ended_utc": "2026-09-09T20:06:49.804042+00:00",
+      "timeout_seconds": 105.0
+    },
+    "E11-types.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 36704,
+      "process_identity_token": "36704:134334577769798050",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 7660.30480000336,
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-Command",
+        "Set-Location -LiteralPath apps/web; npx tsc --noEmit; exit $LASTEXITCODE"
+      ],
+      "started_utc": "2026-09-09T20:02:56.978112+00:00",
+      "ended_utc": "2026-09-09T20:03:04.639197+00:00",
+      "timeout_seconds": 120.0
+    },
+    "E1b-old-finish-fixture.process.json": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 13728,
+      "process_identity_token": "13728:134334569328369516",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 327.37279999855673,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-bounded-finish-only"
+      ],
+      "started_utc": "2026-09-09T19:48:52.583466+00:00",
+      "ended_utc": "2026-09-09T19:48:52.911632+00:00",
+      "timeout_seconds": 90.0
+    },
+    "E2-finish-fixture.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 13824,
+      "process_identity_token": "13824:134334570540012139",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 267.32060000358615,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-bounded-finish-only"
+      ],
+      "started_utc": "2026-09-09T19:50:53.783237+00:00",
+      "ended_utc": "2026-09-09T19:50:54.051364+00:00",
+      "timeout_seconds": 90.0
+    },
+    "E3-four-finish.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 19340,
+      "process_identity_token": "19340:134334570624689389",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 62759.92760000372,
+      "command": [
+        "build/engine/poecraft_solver_benchmark.exe",
+        "--artifact",
+        "data/compiled/current",
+        "--corpus",
+        "fixtures/solver-quality-ladder/v1/manifest.json",
+        "--case",
+        "conquest-lamellar-allflame-clean-4-goal-product8",
+        "--native-retention-diagnostic",
+        "reuse",
+        "--output",
+        "out/2026-09-09-empty-start-partial-continuation/E3-four-finish.json",
+        "--partial-output",
+        "out/2026-09-09-empty-start-partial-continuation/E3-four-finish-partial.json",
+        "--strategy-output",
+        "out/2026-09-09-empty-start-partial-continuation/E3-four-finish-strategy.json"
+      ],
+      "started_utc": "2026-09-09T19:51:02.290996+00:00",
+      "ended_utc": "2026-09-09T19:52:05.051782+00:00",
+      "timeout_seconds": 100.0
+    },
+    "E4-primary-finish.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 24016,
+      "process_identity_token": "24016:134334571486653374",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 67195.09860000107,
+      "command": [
+        "build/engine/poecraft_solver_benchmark.exe",
+        "--artifact",
+        "data/compiled/current",
+        "--corpus",
+        "fixtures/solver-quality-ladder/v1/manifest.json",
+        "--case",
+        "conquest-lamellar-allflame-clean-5-goal-product8",
+        "--native-retention-diagnostic",
+        "reuse",
+        "--output",
+        "out/2026-09-09-empty-start-partial-continuation/E4-primary-finish.json",
+        "--partial-output",
+        "out/2026-09-09-empty-start-partial-continuation/E4-primary-finish-partial.json",
+        "--strategy-output",
+        "out/2026-09-09-empty-start-partial-continuation/E4-primary-finish-strategy.json"
+      ],
+      "started_utc": "2026-09-09T19:52:28.664128+00:00",
+      "ended_utc": "2026-09-09T19:53:35.860158+00:00",
+      "timeout_seconds": 100.0
+    },
+    "E5-partial-finish.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 38072,
+      "process_identity_token": "38072:134334572786864780",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 54075.49370000197,
+      "command": [
+        "build/engine/poecraft_solver_benchmark.exe",
+        "--artifact",
+        "data/compiled/current",
+        "--corpus",
+        "fixtures/solver-quality-ladder/v1/manifest.json",
+        "--case",
+        "conquest-lamellar-allflame-partial-3-to-5-product8",
+        "--native-retention-diagnostic",
+        "reuse",
+        "--output",
+        "out/2026-09-09-empty-start-partial-continuation/E5-partial-finish.json",
+        "--partial-output",
+        "out/2026-09-09-empty-start-partial-continuation/E5-partial-finish-partial.json",
+        "--strategy-output",
+        "out/2026-09-09-empty-start-partial-continuation/E5-partial-finish-strategy.json"
+      ],
+      "started_utc": "2026-09-09T19:54:38.685343+00:00",
+      "ended_utc": "2026-09-09T19:55:32.761711+00:00",
+      "timeout_seconds": 85.0
+    },
+    "E6-exact-anchor.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 4448,
+      "process_identity_token": "4448:134334573651811023",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 48212.25820000109,
+      "command": [
+        "build/engine/poecraft_solver_benchmark.exe",
+        "--artifact",
+        "data/compiled/current",
+        "--corpus",
+        "fixtures/solver-exact-same-side/v1/manifest.json",
+        "--case",
+        "conquest-lamellar-allflame-clean-3-suffix-product8",
+        "--native-retention-diagnostic",
+        "reuse",
+        "--output",
+        "out/2026-09-09-empty-start-partial-continuation/E6-exact-anchor.json",
+        "--partial-output",
+        "out/2026-09-09-empty-start-partial-continuation/E6-exact-anchor-partial.json",
+        "--strategy-output",
+        "out/2026-09-09-empty-start-partial-continuation/E6-exact-anchor-strategy.json"
+      ],
+      "started_utc": "2026-09-09T19:56:05.179956+00:00",
+      "ended_utc": "2026-09-09T19:56:53.393011+00:00",
+      "timeout_seconds": 130.0
+    },
+    "E7-policy-contracts.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 6552,
+      "process_identity_token": "6552:134334574232044227",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 576.7149999956018,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-policy-refinement-only"
+      ],
+      "started_utc": "2026-09-09T19:57:03.203294+00:00",
+      "ended_utc": "2026-09-09T19:57:03.780943+00:00",
+      "timeout_seconds": 180.0
+    },
+    "E8-wasm-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 22764,
+      "process_identity_token": "22764:134334574283258947",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 325850.5195999969,
+      "command": [
+        "powershell",
+        "-File",
+        "scripts/build-wasm.ps1"
+      ],
+      "started_utc": "2026-09-09T19:57:08.323936+00:00",
+      "ended_utc": "2026-09-09T20:02:34.175492+00:00",
+      "timeout_seconds": 700.0
+    },
+    "E9-wasm-primary.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 35596,
+      "process_identity_token": "35596:134334578033218099",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 77074.96779999929,
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "apps/web/node_modules/tsx/dist/cli.mjs",
+        "apps/web/test/empty-start-retention-wasm.test.ts",
+        "--output",
+        "out/2026-09-09-empty-start-partial-continuation/E9-wasm-primary.json"
+      ],
+      "started_utc": "2026-09-09T20:03:23.320677+00:00",
+      "ended_utc": "2026-09-09T20:04:40.401155+00:00",
+      "timeout_seconds": 105.0
+    }
+  },
+  "disposition": "Honor a latched bounded finish during optional strict work and preserve verified publication.",
+  "limitations": [
+    "No new root-bound improvement or five/four-goal exact closure. All four native returned strategies match their prior verified artifacts.",
+    "E3 returns before strict rows start; it does not qualify the removed D4/D5 new-continuation patches or resolve parent 4741.",
+    "The native timing comparison is one observation per arm, not a timing distribution.",
+    "E1 did not exercise strict work and failed fixture setup. E1b is the valid old-code request-latching negative; E2 passes.",
+    "The latest research response is available, but its generated implementation-plan package remains inaccessible."
+  ]
+}

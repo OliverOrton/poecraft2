@@ -45,6 +45,7 @@ void run_solver_proof_pattern_tests();
 void run_solver_automatic_eldritch_tests();
 void run_solver_eldritch_side_fixture_tests();
 void run_solver_policy_refinement_tests();
+void run_solver_bounded_finish_tests();
 void run_solver_compile_tests(const char* artifact_dir);
 void run_solver_imprint_tests(const char* artifact_dir);
 void run_solver_eval_tests(const char* artifact_dir);

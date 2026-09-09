@@ -634,7 +634,9 @@ pc_result pc_solver_solve_step(
 /* Request a truthful anytime result from an active stepped solve. The next
  * step stops open graph/action discovery at its cooperative boundary and
  * enters the ordinary compile/certify/evaluate finalizer. This call does not
- * make an exactness claim and is distinct from abandon/cancellation. */
+ * make an exactness claim and is distinct from abandon/cancellation. Requests
+ * during finalization remain active: optional strict work yields to a compatible
+ * independently evaluated incumbent, preserving any cheaper verified result. */
 pc_result pc_solver_solve_request_bounded_finish(
     pc_solver_handle solver,
     pc_error_info* out_error);

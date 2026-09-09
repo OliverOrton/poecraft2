@@ -83,6 +83,13 @@ continuation-cost limit, not evidence that the old candidate lost that decision
 or that a snapshot extension would meet the budget. The next required contract
 is bounded continuation work with delivery of the independently retained upper.
 
+The subsequent finish-request repair delivers that retained upper when the host
+stops optional proof work. Its matched four-goal run returns before strict rows
+start, so parent 4741 remains unresolved and the rejected row-construction
+experiments remain rejected. A requested finish is not an alternative-action
+certificate. See the [bounded-finish contract](resources-resume-replay.md#cooperative-work)
+and the [current measurements](../active/2026-09-09-empty-start-partial-continuation/README.md#bounded-finish-publication).
+
 ## Source basis
 
 This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/strict-closure.md). Claim IDs are registered in [the ledger](claims.md); each history states its acceptance basis. The [backbone integration](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) is complete. Remaining native correspondence is scoped in [research](research.md#open-obligations); an argument link does not confer runtime authority.

@@ -3424,6 +3424,87 @@ void run_selected_fallback_successor_tests() {
     PC_CHECK(!capped.global_lower_bound_closed);
 }
 
+void run_bounded_finish_publication_tests() {
+    auto session = make_solve_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t family : {100u, 102u, 104u, 106u}) {
+        GoalSlot slot;
+        slot.family_id = family;
+        slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    const std::vector<std::uint32_t> candidates{
+        registry.index_by_id.at("alchemy"),
+        registry.index_by_id.at("chaos"),
+        registry.index_by_id.at("regal"),
+        registry.index_by_id.at("restart")};
+    CalcContext calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, true);
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_MAGIC;
+    place(&start, PC_SIDE_PREFIX, 0, 10);
+    const std::unordered_map<std::string, double> prices{
+        {"alchemy", 1.0}, {"chaos", 1.0},
+        {"regal", 0.01}, {"base", 10.0}};
+    SolveWork work(calc, start, prices);
+    bool requested = false;
+    double requested_upper = kInfinity;
+    std::uint64_t steps = 0;
+    while (!work.progress().done && steps++ < 100000) {
+        work.step(1);
+        const SolveProgress progress = work.progress();
+        if (!requested && !progress.done &&
+            (progress.phase == SolvePhase::Refining ||
+             progress.phase == SolvePhase::Compiling ||
+             progress.phase == SolvePhase::Certifying)) {
+            requested_upper = progress.upper_bound;
+            work.request_bounded_finish();
+            requested = true;
+        }
+    }
+    PC_CHECK(requested);
+    PC_CHECK(work.progress().done);
+    if (!work.progress().done) return;
+    const SolveResult result = work.finish();
+    std::printf(
+        "finish during finalization: requested=%d status=%s steps=%llu "
+        "upper=%.12g requested_upper=%.12g\n",
+        requested ? 1 : 0,
+        result.diagnostics.policy_refinement.strict_lift_status.c_str(),
+        static_cast<unsigned long long>(steps), result.upper_bound,
+        requested_upper);
+    PC_CHECK(result.diagnostics.requested_bounded_finish);
+    PC_CHECK(result.policy_available);
+    /* Complete independent closure may still finish during certification.
+     * The request cannot turn an unfinished graph into an executable upper. */
+    PC_CHECK(result.policy_status == SolvePolicyStatus::BoundedFeasible ||
+             result.policy_status == SolvePolicyStatus::Exact);
+    PC_CHECK(result.termination == SolveTermination::RequestedBoundedFinish ||
+             (result.converged && result.termination == SolveTermination::ExactClosed));
+    PC_CHECK(!result.diagnostics.resource_cap_hit);
+    PC_CHECK(result.upper_bound <= requested_upper);
+    PC_CHECK(!result.refined_policy_artifact.strategy_json.empty());
+    const auto strategy = compile_strategy_json(
+        session, result.refined_policy_artifact.strategy_json.data(),
+        result.refined_policy_artifact.strategy_json.size());
+    PC_CHECK(strategy != nullptr);
+    if (strategy == nullptr) return;
+    auto economy = std::make_shared<EconomyImpl>();
+    economy->id = "bounded-finish-fixture";
+    economy->prices = prices;
+    StrategyEvalOptions evaluation_options;
+    evaluation_options.economy = economy;
+    const auto evaluated = evaluate_strategy(*strategy, evaluation_options);
+    PC_CHECK(evaluated.converged);
+    PC_CHECK(evaluated.cost_complete);
+    PC_CHECK(evaluated.success_probability >= 1.0 - 1e-10);
+    PC_CHECK(near(evaluated.total_expected_cost, result.upper_bound, 1e-7));
+}
+
 void run_policy_guided_exact_lift_tests() {
     std::uint32_t unresolved_rounds = 0;
     PC_CHECK(!advance_unreconciled_stable_policy_latch(
@@ -12731,6 +12812,10 @@ void run_solver_selected_fallback_tests() {
     run_frontier_incumbent_epoch_skew_tests();
 }
 
+void run_solver_bounded_finish_tests() {
+    run_bounded_finish_publication_tests();
+}
+
 void run_solver_solve_tests(const char* artifact_dir) {
     const SolveOptions default_options;
     PC_CHECK(default_options.max_reforge_work == 50000000);
@@ -12746,6 +12831,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_automatic_sample_copy_ledger_tests();
     run_certified_fallback_contract_tests();
     run_direct_certification_contract_tests();
+    run_bounded_finish_publication_tests();
     run_alt_spam_tests();
     run_solver_policy_refinement_tests();
     run_constructive_state_certificate_tests();

@@ -136,6 +136,13 @@ int main(int argc, char** argv) {
             pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 &&
+        std::string(argv[1]) == "--solver-bounded-finish-only") {
+        run_solver_bounded_finish_tests();
+        std::printf("solver bounded-finish tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-calc-only") {
         run_solver_calc_tests(argc > 2 ? argv[2] : nullptr);
         std::printf("solver calc tests: %d checks, %d failures\n",

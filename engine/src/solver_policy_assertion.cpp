@@ -551,6 +551,8 @@ const char* policy_exact_lift_status_name(
         return "local_reoptimization_required";
     case PolicyExactLiftStatus::CompiledAssertionFailure:
         return "compiled_assertion_failure";
+    case PolicyExactLiftStatus::RequestedBoundedFinish:
+        return "requested_bounded_finish";
     }
     return "invalid_solve_state";
 }

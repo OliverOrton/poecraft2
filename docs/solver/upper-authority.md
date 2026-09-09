@@ -67,6 +67,17 @@ a failed process has no returned upper merely because its telemetry remembers
 one. The earlier verified artifacts remain preserved in the
 [same evidence record](../active/2026-09-09-empty-start-partial-continuation/README.md).
 
+The following bounded-finish repair makes that delivery obligation explicit.
+The failed runs had already latched the host's finish request; strict work did
+not consume it. The finalizer now yields to its cheapest compatible verified
+artifact at a cooperative suspension, provided strict work has not reported a
+cheaper verified cost awaiting publication. The unchanged four-goal run returns
+the same 5218.04095 graph before any strict rows start. This does not qualify the
+removed new-row variants or resolve their missing continuation. The five-goal,
+partial-start and exact-control graphs also remain identical to their previous
+verified artifacts. [Resource ownership](resources-resume-replay.md#cooperative-work)
+owns the stop contract; the living record owns measurements and browser evidence.
+
 For a class containing several exact items, scalar bounds and executable routing are different objects. Even when each member has some proper policy, the implementation still needs a valid common policy or observable selector to claim one executable class continuation. See [CLM-0006](claims.md#clm-0006).
 
 ## Recovery And Exact Terminal Success

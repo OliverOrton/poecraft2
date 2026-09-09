@@ -20,6 +20,19 @@ An unfinished exact row owns scratch and cannot install a normal cached distribu
 
 Cancellation abandons unpublished work. Previously verified evidence survives only where the owning publication contract permits it. A successful cancellation of a process or cursor is not a successful solve.
 
+A requested bounded finish remains latched during refinement, compilation and
+certification. At a strict-work suspension, a compatible portfolio artifact can
+return through ordinary publication when its independently evaluated cost is
+no greater than the best verified cost reported by strict work. A cheaper
+verified strict artifact must first reach publication; an unverified estimate
+cannot replace either one. This stop retains only the existing independent
+lower and reports `requested_bounded_finish`, without declaring unresolved
+alternatives closed or manufacturing a resource cap. When no verified artifact
+is available, the finalizer still needs compilation and evaluation. Completed
+exact closure remains an acceptable stronger result. The
+[bounded-publication measurements](../active/2026-09-09-empty-start-partial-continuation/README.md#bounded-finish-publication)
+separate this contract from construction of new continuation rows.
+
 Missing selected-policy continuations use the existing refinement queue. A
 candidate's prefix/publication walk discovers at most the current
 `q_refinement_batch` missing entries before yielding; byte-cap checks include
