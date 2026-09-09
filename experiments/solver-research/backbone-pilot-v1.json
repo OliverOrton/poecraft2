@@ -32,7 +32,27 @@
       "input_references": [
         "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-5-goal-product8.json"
       ],
-      "source_binding": "baseline 06d4c41 plus retained final engine patch/executable SHA; intermediate stage hashes unavailable and labelled"
+      "source_binding": "Original 06d4c41 checkpoint and resumed 19a41d88 baseline; each observation links its retained patch/report/executable identities. Missing intermediate identities remain labelled."
+    },
+    "empty-five-wasm-product8-v1": {
+      "semantic_version": "same repository empty Rare five-goal fixture through the production WASM facade",
+      "property": "same-final-goal checked lower consumption and independently evaluated executable upper; native exact closure remains open",
+      "coefficient_semantics": "WASM native checking and independently compiled graph evaluation under the fixture tolerances",
+      "scope": "Conquest Lamellar empty Rare ilvl86, full priced product scope, 60-second finish, 90-second watchdog and 1 GiB",
+      "input_references": [
+        "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-5-goal-product8.json"
+      ],
+      "source_binding": "C8 failed and C15 passed receipts, source patches and final WASM SHA in continuation-provenance.json; no rendered browser review or user-export reproduction"
+    },
+    "partial-three-to-five-product8-v1": {
+      "semantic_version": "existing native partial three-to-five quality-ladder fixture, unchanged",
+      "property": "same-final-goal checked lower consumption and independently evaluated executable upper; native exact closure remains open",
+      "coefficient_semantics": "complete native phase checking and compiled exact evaluation with fixture reconciliation",
+      "scope": "Conquest Lamellar three natural perfect prefixes, original final five goals; 45-second finish, 75-second watchdog and 1 GiB",
+      "input_references": [
+        "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-partial-3-to-5-product8.json"
+      ],
+      "source_binding": "C4 original-source control and C16 final treatment preserve exact input/action identities and independently evaluated graphs"
     }
   },
   "comparison_profiles": {
@@ -316,6 +336,56 @@
         "Same-preparation ablation has the same upper; observed policy gain is not attributed to lower consumption.",
         "Retention-disabled snapshot treatment hit its original watchdog without publication and was removed.",
         "Single observations; intermediate binary hashes unavailable. Required transfer controls remain open pending Astra review."
+      ]
+    },
+    {
+      "id": "empty-start-continuation-service-20260909",
+      "model": "empty-five-product8-v1",
+      "kind": "conditional_observation",
+      "producer": "bounded native continuation discovery, eager joint-retention construction, existing compiler and independent exact evaluation",
+      "validation": "docs/active/2026-09-09-empty-start-partial-continuation/README.md",
+      "evidence": "docs/active/2026-09-09-empty-start-partial-continuation/continuation-comparison.json",
+      "pointer": "/runs/C14-eager-primary",
+      "role": "matched empty Rare five-goal root; same 60-second finish, 90-second watchdog and retained root lower",
+      "treatment": "batch missing selected/publication continuations, service named entries, and construct supported joint-retention relations eagerly",
+      "limitations": [
+        "Root lower stays 405.3694021063399; verified upper falls from 16997812.199227553 to 85558.70618560436.",
+        "Not a lower-consumption gain or new five-goal exact closure; coarse estimate still fails reconciliation.",
+        "All finalization costs retained; one observation per variant. Partial-start upper improves; existing exact three-suffix anchor closes; four-goal strict mapping refusal remains.",
+        "Eager preparation reduces native primary setup from 27.353 to 8.278 seconds with the same interval; fixed finish request does not establish elapsed-time speedup."
+      ]
+    },
+    {
+      "kind": "conditional_observation",
+      "validation": "docs/active/2026-09-09-empty-start-partial-continuation/README.md",
+      "evidence": "docs/active/2026-09-09-empty-start-partial-continuation/continuation-comparison.json",
+      "id": "empty-start-continuation-wasm-20260909",
+      "model": "empty-five-wasm-product8-v1",
+      "producer": "rebuilt production WASM, existing facade fixture, independent compiled evaluation and abandon cleanup",
+      "pointer": "/wasm/C15-wasm-primary",
+      "role": "browser-engine delivery qualification under the unchanged request",
+      "treatment": "C3 continuation service plus eager joint-retention relations",
+      "limitations": [
+        "C8 missed the policy gate at 17029456.58585472; C15 passes at 85558.70618560436 with lower 405.3694021063399.",
+        "Setup 36.772 to 12.280 seconds; total test times differ in cleanup-control coverage and are not a speed comparison.",
+        "Zero live handles after the passed separate abandon control. Native/C ABI default distinctions remain unchanged.",
+        "No new five-goal exact closure or exact reproduction of the unprovided user export."
+      ]
+    },
+    {
+      "kind": "conditional_observation",
+      "validation": "docs/active/2026-09-09-empty-start-partial-continuation/README.md",
+      "evidence": "docs/active/2026-09-09-empty-start-partial-continuation/continuation-comparison.json",
+      "id": "partial-three-to-five-continuation-20260909",
+      "model": "partial-three-to-five-product8-v1",
+      "producer": "matched native benchmark and independent compiled evaluation",
+      "pointer": "/runs/C16-final-partial",
+      "role": "same-final-goal partial-start regression control; not a bound transplanted to the empty root",
+      "treatment": "bounded selected/publication continuation service plus eager retention construction",
+      "limitations": [
+        "Checked lower stays 405.11164995948883; verified upper 470485192.50357205 to 794067.4530398862.",
+        "Control total 46.345 seconds, final treatment 53.309 seconds including finalization; no elapsed-time speedup claim.",
+        "No exact closure; source differs from the empty-start reference."
       ]
     }
   ],

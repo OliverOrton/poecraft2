@@ -61,6 +61,16 @@ Inspect strict states/cells, kernels/transitions, frontier growth, splits, oblig
 
 Use the current source path and a matched witness when investigating a regression. Historical failures of reconstruct-then-merge or early quotient attempts remain evidence about those implementations and scopes, not declarations that the persistent current mechanism is absent.
 
+The September 9 continuation-service follow-through leaves two distinct limits.
+The empty-five compiled graph improves to 85,558.70618560436, but its coarse
+estimate does not reconcile, so that estimate cannot certify an optimum. The
+existing empty-four request reaches strict carrier 113366 / coarse parent 4741
+outside the saved policy's 3923 entries; both current and indexed coarse counts
+are 6232. That mapping guard still refuses. Before extending a snapshot, identify
+whether the needed decision belonged to its original candidate, a newer
+generation, or no completed continuation at all. Counts alone cannot decide.
+See [retained source and evidence](../active/2026-09-09-empty-start-partial-continuation/README.md).
+
 ## Source basis
 
 This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/strict-closure.md). Claim IDs are registered in [the ledger](claims.md); each history states its acceptance basis. The [backbone integration](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) is complete. Remaining native correspondence is scoped in [research](research.md#open-obligations); an argument link does not confer runtime authority.

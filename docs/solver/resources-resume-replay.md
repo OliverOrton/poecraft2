@@ -20,6 +20,14 @@ An unfinished exact row owns scratch and cannot install a normal cached distribu
 
 Cancellation abandons unpublished work. Previously verified evidence survives only where the owning publication contract permits it. A successful cancellation of a process or cursor is not a successful solve.
 
+Missing selected-policy continuations use the existing refinement queue. A
+candidate's prefix/publication walk discovers at most the current
+`q_refinement_batch` missing entries before yielding; byte-cap checks include
+the existing walk and request storage. The next batch services eligible named
+entries and retires them at selection, so requests do not become permanent
+head-of-line reservations. This changes work order only. At resource-stop
+finalization the first missing continuation still refuses immediately.
+
 ## Ownership and memory accounting
 
 Retained arrays, nested row capacities, active scratch, emitted strategy payload, and optional diagnostics have different lifetimes. Accounting must follow the actual owner, including storage grown before an allocation failure.

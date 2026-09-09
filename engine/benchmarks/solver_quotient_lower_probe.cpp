@@ -992,12 +992,83 @@ void ordinary_retention(SolveWorkTestAccess::Impl& owner, Clock::time_point bega
 }
 } // namespace
 
+// Diagnostic export of the ordinary empty-start checked model. The actual
+// request stays empty Rare, with no implicit phase or materialized anchor.
+// Exported optimistic relations are neither native rows nor policy uppers.
+void empty_retention_headroom(CalcContext& calc, SolveWorkTestAccess::Impl& owner,
+                             const pc_item_state& start) {
+    std::optional<PhaseLowerProducer::CoupledFractureFrame> frame;
+    const auto& session = calc.session();
+    for (const auto& slot : calc.layout().slots) {
+        for (unsigned mod=0; mod<session.mod_count; ++mod) {
+            if (!pc_bitset_test(slot.satisfying_mask.data(),mod) || session.metamod_type.at(mod)>=0 ||
+                modifier_is_veiled_template(session,mod) ||
+                !pc_bitset_test(session.normal_random_roll_mask.data(),mod)) continue;
+            frame=PhaseLowerProducer::CoupledFractureFrame{mod};
+            break;
+        }
+        if (frame) break;
+    }
+    if (!frame) throw std::runtime_error("empty probe has no natural goal frame");
+    QuotientLowerBudget budget; budget.max_scratch_bytes=32ull<<20;
+    const auto support=PhaseLowerProducer::prepare(calc,owner.prices,start,owner.phase_lower_proposal(false),budget);
+    const auto potential=PhaseLowerProducer::prepare_probabilistic(calc,owner.prices,start,
+        owner.phase_lower_proposal(true),support,PhaseLowerProducer::zero_restart_boundary(*support),
+        false,true,budget,true,{},PhaseContinuation::CoupledFresh,PhaseRetention::AnnulNonempty,
+        true,{true,true,3,true,true,false,0},frame);
+    const auto source=potential->whole_scope_source_lower(calc,owner.prices,start,false);
+    if (!source) throw std::runtime_error("empty source was not checked");
+    std::cout << "\"source_cell\":" << potential->projected_cell(calc,start)
+        << ",\"source_lower\":" << source->lower << ",\"frame_mod\":" << potential->fractured_mod
+        << ",\"model_rounds\":" << potential->model_rounds
+        << ",\"proof_peak_bytes\":" << potential->peak_additional_bytes
+        << ",\"checked_source_progress\":[";
+    bool first_progress=true;
+    const auto& stats=potential->preparation_stats;
+    for (unsigned i=0;i<stats.checked_source_ns.size();++i) {
+        if (!stats.checked_source_ns[i]) continue;
+        if (!first_progress) std::cout << ',';
+        first_progress=false;
+        std::cout << "{\"round\":" << i+1 << ",\"lower\":" << stats.checked_source_lowers[i]
+            << ",\"elapsed_ns\":" << stats.checked_source_ns[i] << '}';
+    }
+    std::cout << "],\"values\":[";
+    for (unsigned i=0;i<potential->values.size();++i) {
+        if (i) std::cout << ',';
+        std::cout << potential->values[i];
+    }
+    std::cout << "],\"coordinates\":[";
+    for (unsigned i=0;i<potential->coordinates.size();++i) {
+        if (i) std::cout << ',';
+        // Strings preserve all bits for downstream exact diagnostic tools.
+        std::cout << '"' << potential->coordinates[i] << '"';
+    }
+    std::cout << "],\"relations\":[";
+    for (unsigned i=0;i<potential->relations.size();++i) {
+        if (i) std::cout << ',';
+        const auto& row=potential->relations[i];
+        std::cout << "{\"cell\":" << row.cell << ",\"action\":"
+            << std::quoted(calc.registry().actions.at(row.action).id)
+            << ",\"cost\":" << row.cost << ",\"rhs\":" << row.rhs
+            << ",\"independent_price\":" << (row.independent_price ? "true" : "false")
+            << ",\"reason\":" << static_cast<unsigned>(row.reason)
+            << ",\"phase\":" << row.phase_branch << ",\"exits\":[";
+        for (unsigned j=0;j<row.targets.size();++j) {
+            if (j) std::cout << ',';
+            std::cout << '[' << row.targets[j] << ',' << row.probabilities[j] << ']';
+        }
+        std::cout << "]}";
+    }
+    std::cout << ']';
+}
+
 int main(int argc, char** argv) {
     try {
         if (argc != 5 && argc != 6) throw std::runtime_error("probe artifact-directory goal economy [checked-source-target] required");
         const bool is_micro = std::string(argv[1]) == "micro";
         const bool is_phase = std::string(argv[1]) == "uniform-phase";
         std::string selector = argv[1];
+        const bool empty_headroom=selector=="empty-retention-headroom";
         const bool ordinary_reuse=selector=="ordinary-retention-reuse";
         if (ordinary_reuse) selector="ordinary-retention-profile";
         const bool early = selector == "filter-both-early-32";
@@ -1020,7 +1091,7 @@ int main(int argc, char** argv) {
             (selector == "probabilistic-phase" ? PhaseContinuation::PriceOnly : PhaseContinuation::CoupledFresh);
         const std::uint64_t proof_cap = selector == "crafted-phase-64" || selector == "nonempty-phase-64" || selector=="filter-attack-64" ? 64ull << 20 :
             (selector == "coupled-phase-32" || retention != PhaseRetention::None ? 32ull << 20 : 16ull << 20);
-        if (!is_micro && !is_phase && !is_probability && !is_ordinary && std::string(argv[1]) != "medium-coverage") throw std::runtime_error("unknown bounded probe");
+        if (!is_micro && !is_phase && !is_probability && !is_ordinary && !empty_headroom && std::string(argv[1]) != "medium-coverage") throw std::runtime_error("unknown bounded probe");
         const auto began = Clock::now();
         Handles h;
         pc_error_info error{};
@@ -1042,7 +1113,7 @@ int main(int argc, char** argv) {
         io.struct_size = sizeof(io); io.abi_version = PC_ABI_VERSION;
         io.rarity = is_micro ? PC_RARITY_NORMAL : PC_RARITY_RARE;
         check(pc_item_init(h.session, &io, &start, &error), error);
-        if (!is_micro) {
+        if (!is_micro && !empty_headroom) {
             const std::vector<std::string> mods{"LocalIncreasedArmourAndEvasionAndStunRecovery6",
                 "LocalBaseArmourAndEvasionRating8", "LocalIncreasedArmourAndEvasion8", "ChanceToSuppressSpellsHigh5___"};
             for (std::size_t i = 0; i < mods.size(); ++i) {
@@ -1080,9 +1151,10 @@ int main(int argc, char** argv) {
         const auto prepare_ns = ns(prepare);
         if (std::isfinite(owner.envelope_bellman_lower))
             throw std::runtime_error("probe must bypass envelope helper");
-        std::cout << std::setprecision(17) << "{\"pilot\":\"" << (is_probability ? "native-side-boundary-lower-v1" : (is_phase ? "uniform-phase-lower-v1" : "operator-complete-frontier-v2"))
+        std::cout << std::setprecision(17) << "{\"pilot\":\"" << (empty_headroom ? "empty-retention-headroom-v1" : (is_probability ? "native-side-boundary-lower-v1" : (is_phase ? "uniform-phase-lower-v1" : "operator-complete-frontier-v2")))
             << "\",\"solver_steps\":0,\"production_authority\":false,";
-        if (is_micro) micro(calc, owner,
+        if (empty_headroom) empty_retention_headroom(calc,owner,start);
+        else if (is_micro) micro(calc, owner,
             key(goal + '\n' + economy + '\n' + read(manifest_path) + "\nlower-v2"), key(goal));
         else if (is_phase) uniform_phase(calc, owner, start, key(goal + '\n' + economy + '\n' + read(manifest_path)));
         else if (is_probability) probabilistic_phase(calc, owner, start, continuation, proof_cap, retention,

@@ -114,12 +114,24 @@ upper: the large upper gain over baseline is not caused by lower consumption.
 Accepting additional natural partial classes raises observed lower owners from
 681 to 4,049 but does not move the root interval. No new exact closure is claimed.
 
-The next question is the semantic/control domain of compressed zero-progress
-retry carriers. Their construction can omit direct modifiers and veiled state;
-a zero occupancy projection is not a physical-empty domain proof. Existing
-retention refuses these carriers. The [Astra review request](../active/2026-09-09-empty-start-partial-continuation/astra-review.md)
-asks for the smallest complete stopped-continuation consumer or a counterexample,
-including unchanged competitor constraints that would cap its gain.
+The returned review keeps the compressed retry refusal: direct modifiers,
+veiled state and renewal-only control cannot be reconstructed from the marker.
+Transfer must instead use a complete physical producing-action partition, as
+derived in the [lower chapter](mathematics/lower-bounds.md#composition).
+The resumed C0 preflight reproduces 405.36940 and exhibits an unchanged
+Scour/Alchemy/Fracture optimistic route with exact rational cost 405.36940214688.
+It contains no Chaos, so a Chaos-only refinement cannot lift this model's
+ceiling. This is auxiliary evidence, not a native upper. The resulting
+upper-side investigation completes the selected candidate's specifically missing
+partial continuations through the existing refinement owner. Batching selected
+and publication-kernel siblings improves the independently evaluated empty-five
+upper to 85,558.70619, with the same 405.36940 lower and requested resources.
+The certified absolute gap falls 99.499%. A subsequent eager construction of
+supported joint-retention relations preserves that interval while reducing
+ordinary native setup from 27.353 to 8.278 seconds. Finalization remains included;
+the fixed finish request is not an elapsed-time speedup claim.
+The [living record](../active/2026-09-09-empty-start-partial-continuation/README.md)
+retains the causal variants, browser qualification and still-open exact closure.
 
 <a id="rq-003"></a>
 ### RQ-003 — Can executable-policy quality be preserved while proof work scales?

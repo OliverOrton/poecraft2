@@ -8668,6 +8668,10 @@ void run_frontier_incumbent_epoch_skew_tests() {
     PC_CHECK(
         work.incremental_anytime_policy_last_failure.find(
             "missing_completed_row_and_certified_frontier:state=") == 0);
+    // One incomplete selected prefix can have several missing stochastic
+    // successors. Discover their ordinary work together without publishing
+    // the incomplete policy or borrowing current rows into its certificate.
+    PC_CHECK(work.incremental_anytime_missing_frontier_states.size() > 1);
     PC_CHECK(std::any_of(
         work.incremental_anytime_missing_frontier_states.begin(),
         work.incremental_anytime_missing_frontier_states.end(),
@@ -12724,6 +12728,7 @@ void run_solver_policy_refinement_tests() {
 
 void run_solver_selected_fallback_tests() {
     run_selected_fallback_successor_tests();
+    run_frontier_incumbent_epoch_skew_tests();
 }
 
 void run_solver_solve_tests(const char* artifact_dir) {

@@ -43,6 +43,21 @@ finalization watchdog without a policy. That mutation was removed. The
 [current campaign](../active/2026-09-09-empty-start-partial-continuation/README.md)
 retains its exact patch and failure; the implemented capture behavior is unchanged.
 
+The resumed continuation repair changes work discovery, not snapshot ownership.
+A selected-prefix walk and its publication-kernel closure collect missing
+siblings up to the existing refinement batch. Any missing continuation still
+refuses that candidate. Ordinary refinement services named entries without
+padding that batch with unrelated uncertainty, retires the requests, and then
+returns to assembly. Completed rows, certified frontiers, control memory,
+properness and compiled evaluation keep their existing authority boundaries.
+Finalization stops at the first missing entry; it does not launch another batch.
+
+The unchanged empty-five request's C3 compiled graph independently evaluates to
+85,558.70618560436 versus B6's 16,997,812.199227553, with the same 405.3694021063399
+lower. The coarse candidate estimate remains 358,209,179.6640102 and fails cost
+reconciliation. Only the evaluated graph supplies this upper; no new primary
+exact closure or causal lower-consumption gain is claimed.
+
 For a class containing several exact items, scalar bounds and executable routing are different objects. Even when each member has some proper policy, the implementation still needs a valid common policy or observable selector to claim one executable class continuation. See [CLM-0006](claims.md#clm-0006).
 
 ## Recovery And Exact Terminal Success

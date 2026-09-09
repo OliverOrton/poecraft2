@@ -1,0 +1,921 @@
+{
+  "base": "19a41d88234be4495fbe86cc4cc502ed0b2f8e89",
+  "files_sha256": {
+    "engine/src/solver_solve_constructive.cpp": "14a901fb1a34c5bac57aa4fbd96503146adf3f7dd4ab81c50c9f852f84fec3e5",
+    "engine/src/solver_solve_incremental.cpp": "b55c1559dcc3b1e82acb041a468618bc38d2f018f701200b9bd8d177e0ba3ced",
+    "engine/src/solver_phase_probability.cpp": "f461c37c0a0ad360ad2658174d93fd594153a2ab6441502321a4131466e3fd7a",
+    "engine/benchmarks/solver_quotient_lower_probe.cpp": "584100478a64a14c01452b5f4390c3b5872dda615fd48a7e7bd7c6d4fac7c5cc",
+    "engine/tests/test_solver_solve.cpp": "8399f0832494eeb59b1853762c4ea3b1012e6bae5fce44b346263e32143d1e3e",
+    "apps/web/test/empty-start-retention-wasm.test.ts": "8a27e58a453ec1195c4629b8949f39cde254f064a240c1762a0e3a74bbd328db",
+    "build/engine/poecraft_solver_benchmark.exe": "c04cd73c1b186ca34d81c654e875bf63d838661c9f83a978a247b2d9bfc5a88a",
+    "build/engine/poecraft_quotient_lower_probe.exe": "d09fb890d2dd2667afe8fd3f4332104ae81ec955c8ec571e63f89f0f624ffcba",
+    "build/engine/poecraft_engine_tests.exe": "39bdc484940791bfd9b8632375fecef02f892313899a7c4867a838eb3d801143",
+    "bindings/wasm/dist/poecraft_engine.wasm": "a1a309b0dc077936698e6f37f2171c7144359e76c77d9bc1074e6f4703d42147",
+    "bindings/wasm/dist/poecraft_engine.mjs": "92bc2b9d61c465b35c2b80c71f8b3ee125155755275e8d66cdc649792ab9f4ce"
+  },
+  "engine_patch_sha256": "c8903cc8dddcde625741b780edc40bfe870c53138b8e119be0b2e1d35fbc723b",
+  "native_timing_source_note": "C14/C16/C17 preceded restoration of two UTF-8 comments only; final rebuild uses identical executable code.",
+  "wasm_source_note": "C15 WASM built after final eager-retention source and UTF-8 comments were restored.",
+  "evidence_zip_sha256": "1b0b836e1f41ccd1df2083ba8e0ffe633f7a72e7bfb03047483b96d26cbde493",
+  "files": {
+    "C0-economy.json": {
+      "sha256": "dc795f3f80ddb7a78b838b65f3ac7ca977e6bf7210913e5fce5a781e115281da",
+      "bytes": 141956
+    },
+    "C0-exact-check.json": {
+      "sha256": "0018b32ffabb15967a5d12df3468aa3fd208b1df2fecb0182d2c6acf4f5ca628",
+      "bytes": 8333
+    },
+    "C0-goal.json": {
+      "sha256": "68158e02f61148e3fb3aefbe5e5128a56dce082bb372aa95dbf3007c3347d065",
+      "bytes": 2877
+    },
+    "C0-headroom-build.process.json": {
+      "sha256": "5cbfb1cb95b2f28a059946bd1455036cfb21b4f7f35acf0696b4ae4a4d28cfcc",
+      "bytes": 733
+    },
+    "C0-headroom-build.stdout.txt": {
+      "sha256": "42d2e5cf0067fbd69534a99c428144d2644b0b50bc3a3877d1e2f71e1240d7e1",
+      "bytes": 225
+    },
+    "C0-headroom-summary.json": {
+      "sha256": "e044da19552fae39742518b5cda4d444ce590c4265042918915e671149b6ea0b",
+      "bytes": 7312
+    },
+    "C0-headroom.process.json": {
+      "sha256": "e081797df82d2a1e544aaa2a687b439db2d282719776ff7927c508c68c716a66",
+      "bytes": 743
+    },
+    "C0-headroom.stdout.txt": {
+      "sha256": "9d49c6d57925af2c1aefc4b58a207833d8f5b94205343535eb1933293cdd220f",
+      "bytes": 8906115
+    },
+    "C1-frontier-build.process.json": {
+      "sha256": "33b1def7891c691596acac573a9de2eb837f40d8790e0d720868ad17b2463175",
+      "bytes": 758
+    },
+    "C1-frontier-build.stdout.txt": {
+      "sha256": "75c8d694e1150526e2b12bed459b40d072b1c78d0e38c8d33154f4015e71c3d9",
+      "bytes": 413
+    },
+    "C1-frontier-fixture-build.process.json": {
+      "sha256": "e4e172022e70a1b7ad078a91d5f06e238b7ad1035e96b46480741cad9ae50cff",
+      "bytes": 724
+    },
+    "C1-frontier-fixture-build.stdout.txt": {
+      "sha256": "c7b4bf04abbb629d64fb8c5fd9f216249acaaed4ea559921cb3379783fbe796a",
+      "bytes": 194
+    },
+    "C1-frontier-fixture.process.json": {
+      "sha256": "0a5f6fbca8cc6426e442bb18f2029d442cd0dd77a91e330ae209540ad75c84c2",
+      "bytes": 569
+    },
+    "C1-frontier-fixture.stdout.txt": {
+      "sha256": "2e68448e7de6ad833b5c5627cc4e186a684f74351342466537fc1dc0a6edebe1",
+      "bytes": 56
+    },
+    "C1-frontier-primary-partial.json": {
+      "sha256": "2545e1db8da012b3918dde10e8e094232d7ba7398f6e854ae3f6457ac368e451",
+      "bytes": 1148763
+    },
+    "C1-frontier-primary-strategy.json/conquest-lamellar-allflame-clean-5-goal-product8.strategy.json": {
+      "sha256": "8822c2eaf041b4028908551ff0ea6a5f9234e438cfdb0efe0ebea50de5a8d41f",
+      "bytes": 1737861
+    },
+    "C1-frontier-primary.json": {
+      "sha256": "c5d8e8ec77795a6551880192aa0f970d55cc68510545816246465a85d1491574",
+      "bytes": 1148736
+    },
+    "C1-frontier-primary.process.json": {
+      "sha256": "0ebc53c83c7f3d5c5153b57963be9c4e486e1beb7466be3fa74b187bfd638a3e",
+      "bytes": 1109
+    },
+    "C1-frontier-primary.stdout.txt": {
+      "sha256": "a8611b09a0e4041aa8c57ed388fa4cc74e93a7d9940c7907e5bbda4047c63218",
+      "bytes": 82
+    },
+    "C10-history-build.process.json": {
+      "sha256": "f602b42d6039adee6da07e5c848b66a293eb6bd9af4ca09d7d1d904d868ae62b",
+      "bytes": 733
+    },
+    "C10-history-build.stdout.txt": {
+      "sha256": "33896f0c8b6ff576747160b4f86db82fe4d4f5a37ec20d066ccc704c739c8e94",
+      "bytes": 383
+    },
+    "C10-history.process.json": {
+      "sha256": "5c4159fcab93d0cdfea746c6e422d5e5d8f98d50d21c3a4062d73c10522805d8",
+      "bytes": 742
+    },
+    "C10-history.stdout.txt": {
+      "sha256": "b3c54add861857737709797b2ff90eef6e8e0bd0a6916dbe5224722f09a5d768",
+      "bytes": 8907037
+    },
+    "C11-eager-build.process.json": {
+      "sha256": "1c2518e53adb503138ca27062ce1e73d9c038cd0abc8f22b202a929edd2768d1",
+      "bytes": 733
+    },
+    "C11-eager-build.stdout.txt": {
+      "sha256": "9e592c7402c52dbce8d5ea8c169c3abe63d2959fe7d58f4bdb86fc0b1c3cee14",
+      "bytes": 264
+    },
+    "C11-eager.patch": {
+      "sha256": "3f8b3c7b1decb7dd93b29a31be25290cefdcda4925fee2fce4473ed29e7934af",
+      "bytes": 1355
+    },
+    "C11-eager.process.json": {
+      "sha256": "02fac562d10d27b59067b5da84c28370572c3a48c26921298f458ed148eebaa0",
+      "bytes": 743
+    },
+    "C11-eager.stdout.txt": {
+      "sha256": "3ef8012d0e12c8fbf83cb8fb54bedded8494fa37970332931ac63b32f029f1c4",
+      "bytes": 8911148
+    },
+    "C11-source.json": {
+      "sha256": "9c10b4a851863515baedffe32b6fc24121be10f43fb87fc9a2e59ec87c6d0c28",
+      "bytes": 235
+    },
+    "C12-all-rows-build.process.json": {
+      "sha256": "da7004c1fd196f628160c8734ad763452dcfbfe8ac217ff616373e46c56724c2",
+      "bytes": 733
+    },
+    "C12-all-rows-build.stdout.txt": {
+      "sha256": "9e592c7402c52dbce8d5ea8c169c3abe63d2959fe7d58f4bdb86fc0b1c3cee14",
+      "bytes": 264
+    },
+    "C12-all-rows.patch": {
+      "sha256": "6d43de1f4bce4798cc9171be8bcd669f6a9256b264edcb648a5bc4b6dd013581",
+      "bytes": 2427
+    },
+    "C12-all-rows.process.json": {
+      "sha256": "1c7dd790af06ee72ebffb601b08a97a0ec3439b437177804f67266623019e60f",
+      "bytes": 742
+    },
+    "C12-all-rows.stdout.txt": {
+      "sha256": "16802374fd40feb904ed6027f5ee8f580678cb74a75f953b62af5140a8aa70f3",
+      "bytes": 9232344
+    },
+    "C12-source.json": {
+      "sha256": "26a70795cb65e6b7262692fa1ace047170b7cb24b59bc830d96035a9ec3a2081",
+      "bytes": 235
+    },
+    "C13-compact-control.process.json": {
+      "sha256": "d5661c9449846967063c01b5287cacf76c6b0d547546c4f5135ec002b9e4d4f1",
+      "bytes": 785
+    },
+    "C13-compact-control.stdout.txt": {
+      "sha256": "ada2b28d7a7608f907130445aa3850c67b9bf1408706c02de4691a922e9231ff",
+      "bytes": 21728783
+    },
+    "C13-compact-treatment.process.json": {
+      "sha256": "432e8007e3f54ffd49399d87a45c2fd30a2fef88d9386e7bfb7a5c911ceabc40",
+      "bytes": 742
+    },
+    "C13-compact-treatment.stdout.txt": {
+      "sha256": "d6fbfad92a4caa3b2a1d8a645bb0a9253bde9999560bc7398f50a8424a56d75f",
+      "bytes": 18574821
+    },
+    "C13-final-eager-build.process.json": {
+      "sha256": "d3cae7962b49befb965688d5c4b0002cabe0a15d6929bdb5158980b04dc4c4b2",
+      "bytes": 826
+    },
+    "C13-final-eager-build.stdout.txt": {
+      "sha256": "fffb7e92320a1c286cc3a4d069b253bc44fa90fac5effac2dc82ddf8a4cad7c3",
+      "bytes": 434
+    },
+    "C13-phase-fixture.process.json": {
+      "sha256": "5f441ee371c246df6104080e80f6e5f56b372a4109fe8c0cf31211fb5e8709fd",
+      "bytes": 561
+    },
+    "C13-phase-fixture.stdout.txt": {
+      "sha256": "0dc0e84b9ff7a429a7b4089a91bbfca80b25f1481d7a724e238e78b56e019009",
+      "bytes": 50
+    },
+    "C13-selected-fixture.process.json": {
+      "sha256": "dd4a8f3e0c01094c7277093eaa0f55d75644b97888885451f0981892b43a7b77",
+      "bytes": 569
+    },
+    "C13-selected-fixture.stdout.txt": {
+      "sha256": "2e68448e7de6ad833b5c5627cc4e186a684f74351342466537fc1dc0a6edebe1",
+      "bytes": 56
+    },
+    "C14-eager-primary-partial.json": {
+      "sha256": "ae59ea4ce82002112739c8167a7f8d778d1cb8427169dd6ffa08b4228ccd90c0",
+      "bytes": 1750278
+    },
+    "C14-eager-primary-strategy.json/conquest-lamellar-allflame-clean-5-goal-product8.strategy.json": {
+      "sha256": "9f20f8375939a50b8d8c8fc927b814ae0ddb07b3700ea237dcf04363ba8a1778",
+      "bytes": 408324
+    },
+    "C14-eager-primary.json": {
+      "sha256": "3524b47af5d88acbd76b9098b661394e59d9ab44934faa9d0ddf299e0a2db537",
+      "bytes": 1750251
+    },
+    "C14-eager-primary.process.json": {
+      "sha256": "125b64ec0172587a09c5f3de6d78f284e18aa5be8fbef807467df1dbac58058b",
+      "bytes": 1102
+    },
+    "C14-eager-primary.stdout.txt": {
+      "sha256": "8193a7cb4d7012eef0a163487f70ae1d189e36df50df62d15701639890da6470",
+      "bytes": 82
+    },
+    "C14-engine.patch": {
+      "sha256": "3cdc43301ea71fc41b31ede687f8b75c4ec893652441261341add42f52700a7a",
+      "bytes": 25005
+    },
+    "C14-source.json": {
+      "sha256": "37867cfb2b7e6b47a5fe0663b8d7a814d590762b87af59b43ca4cee815665c79",
+      "bytes": 234
+    },
+    "C15-wasm-build.process.json": {
+      "sha256": "946c18cf757c029f4239389ec46b7b16fd94ced9140e92ed069144204bed1aa4",
+      "bytes": 566
+    },
+    "C15-wasm-build.stdout.txt": {
+      "sha256": "44e5391698c39926fce42def13d0b116e7ceeceb6bed732cb2613babeacfdb99",
+      "bytes": 2141
+    },
+    "C15-wasm-primary.json": {
+      "sha256": "3aa75e99a5e4bf598363ca67a5a7ebdcf9c1097702019631473e450ed9bfd1da",
+      "bytes": 2481260
+    },
+    "C15-wasm-primary.process.json": {
+      "sha256": "3f4c002e37b636cfb25cf569868122a27639d2dfe1594a4442059bfd4479f058",
+      "bytes": 723
+    },
+    "C15-wasm-primary.stdout.txt": {
+      "sha256": "3bdcaf905fa89edfd4d24a40ad0b9fe5cbb0bccedd809f023a8233777f238c9c",
+      "bytes": 1104
+    },
+    "C16-final-partial-partial.json": {
+      "sha256": "a5b080e1c64a233766d35197a1dba57e2f2d21fc6f738d1ce1e837e6297a81e4",
+      "bytes": 1840705
+    },
+    "C16-final-partial-strategy.json/conquest-lamellar-allflame-partial-3-to-5-product8.strategy.json": {
+      "sha256": "db4b4e6698b47251bdf3c48e81da4f47892aaaee0dd7063775fa731d7c03f248",
+      "bytes": 818970
+    },
+    "C16-final-partial.json": {
+      "sha256": "64564fcbce208ed7ef5ac7bbab2f8fd552d27f67ac9011d58b7cd91d6a4f7c7d",
+      "bytes": 1840678
+    },
+    "C16-final-partial.process.json": {
+      "sha256": "6ec3427348b3a0aac0a222e9f65a196e5794fa8061ef196b4251586af4a14abf",
+      "bytes": 1100
+    },
+    "C16-final-partial.stdout.txt": {
+      "sha256": "22da0068ed4777dbf9f14cb8218e099f35a389773750a501d0ebae3c9ee942c8",
+      "bytes": 84
+    },
+    "C17-final-anchor-partial.json": {
+      "sha256": "37fc161dbae4fd2c4576ecd670e9965071e24fa72c49c6568ba58fa11e16882d",
+      "bytes": 924663
+    },
+    "C17-final-anchor-strategy.json/conquest-lamellar-allflame-clean-3-suffix-product8.strategy.json": {
+      "sha256": "40753d83674a6feebc39e92c826b25fc0096a6124ff20b64b02174189468da49",
+      "bytes": 174245
+    },
+    "C17-final-anchor.json": {
+      "sha256": "1341213deece8864054beeaca2bfa0a0448de9460d8f2ddf9a9ec1f4be3357ac",
+      "bytes": 924636
+    },
+    "C17-final-anchor.process.json": {
+      "sha256": "9463fa81375fa76327434f6ff1feda977569aa5420f26cdef9ca7425e1185001",
+      "bytes": 1102
+    },
+    "C17-final-anchor.stdout.txt": {
+      "sha256": "713f33aad8fabdb380d14ea93c2f9025e52e85d4dc4c93e75b964010ddacc844",
+      "bytes": 77
+    },
+    "C18-code-equivalence.json": {
+      "sha256": "45a43dd1aff9dd4ae33e836465b7abef9aa548e78512d00ee7a83451bbad2218",
+      "bytes": 1925
+    },
+    "C18-final-native-build.process.json": {
+      "sha256": "a2bc86908886dadb40d874847096aa8a950f442ab02453d97ee36624727e2fe7",
+      "bytes": 827
+    },
+    "C18-final-native-build.stdout.txt": {
+      "sha256": "fffb7e92320a1c286cc3a4d069b253bc44fa90fac5effac2dc82ddf8a4cad7c3",
+      "bytes": 434
+    },
+    "C18-web-types.process.json": {
+      "sha256": "7f7d0410e7b8b3e95e0697f719ce13975704be6c29dada10b6c2e11ae327b979",
+      "bytes": 632
+    },
+    "C18-web-types.stdout.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "C2-directed-build.process.json": {
+      "sha256": "512c5795b755c11716f8c62f278e3f2bfc44743759eff4a9601c65ff0c2ab724",
+      "bytes": 758
+    },
+    "C2-directed-build.stdout.txt": {
+      "sha256": "b4f64abacf38f6893c0cb29f4bfd5d129ada3c272797cbe4ecbb656000fc89ef",
+      "bytes": 316
+    },
+    "C2-directed-fixture.process.json": {
+      "sha256": "6a942a75e76e7ef42e01dedc77583a032b0d20a47ebcc9edbebe35cc23e0d5e6",
+      "bytes": 569
+    },
+    "C2-directed-fixture.stdout.txt": {
+      "sha256": "2e68448e7de6ad833b5c5627cc4e186a684f74351342466537fc1dc0a6edebe1",
+      "bytes": 56
+    },
+    "C2-directed-primary-partial.json": {
+      "sha256": "5b3004952adf69226d8088734a3724d557af9f617070b7e7c3cc351ac204eca0",
+      "bytes": 1175779
+    },
+    "C2-directed-primary-strategy.json/conquest-lamellar-allflame-clean-5-goal-product8.strategy.json": {
+      "sha256": "8d30d0223b5775fa8bb8d71a0579804839eaa10957a63960de3253a8c2210c65",
+      "bytes": 2987960
+    },
+    "C2-directed-primary.json": {
+      "sha256": "ef3e4e3226ce446dba9f00f0c85f51859de994d36f2897e7ded4b07989742e50",
+      "bytes": 1175752
+    },
+    "C2-directed-primary.process.json": {
+      "sha256": "7b8a9bb3eda59b15185a57f4d33feaf33ad52a7aa9f97e382f2749e42a17179e",
+      "bytes": 1108
+    },
+    "C2-directed-primary.stdout.txt": {
+      "sha256": "b7d6fd506ba2649307c3ff62fd1d9743d731a1290cf90dd9b084b5730fa70bee",
+      "bytes": 82
+    },
+    "C2-engine.patch": {
+      "sha256": "42912ad2edbc12926bcb3482e47ba4e47b79bf82b00e563e669f4a37c9d98381",
+      "bytes": 12089
+    },
+    "C2-source.json": {
+      "sha256": "317c08da4c160ddadc7ec44edbc24855020eec7033f2d37182d815420c4065e0",
+      "bytes": 718
+    },
+    "C3-engine.patch": {
+      "sha256": "aee4096cd9ada8f47d66274176becf50f4797104e74c907a8227a208be23485c",
+      "bytes": 15166
+    },
+    "C3-publication-build.process.json": {
+      "sha256": "25b3fb62fea3dcc7a781f2ecc35a297c00ccbfb5708ab86199719a8d30d06197",
+      "bytes": 760
+    },
+    "C3-publication-build.stdout.txt": {
+      "sha256": "3427b3d5a82e06d43f627ef2ed957798cf29034e01e5b230458b251710495129",
+      "bytes": 317
+    },
+    "C3-publication-fixture.process.json": {
+      "sha256": "dfcae7d7c4ae2da31baaafc577d17449ec059ff45c575c9c503b9b24262f3698",
+      "bytes": 567
+    },
+    "C3-publication-fixture.stdout.txt": {
+      "sha256": "2e68448e7de6ad833b5c5627cc4e186a684f74351342466537fc1dc0a6edebe1",
+      "bytes": 56
+    },
+    "C3-publication-primary-partial.json": {
+      "sha256": "6a54feafa31250083c496b4e63f2038bb81ad9748c6f06877d1d4a1ea086c0e6",
+      "bytes": 1699130
+    },
+    "C3-publication-primary-strategy.json/conquest-lamellar-allflame-clean-5-goal-product8.strategy.json": {
+      "sha256": "9f20f8375939a50b8d8c8fc927b814ae0ddb07b3700ea237dcf04363ba8a1778",
+      "bytes": 408324
+    },
+    "C3-publication-primary.json": {
+      "sha256": "355c323404ac2a82033f6863226bb1625b7c90560676bde942ee2f262418cb45",
+      "bytes": 1699103
+    },
+    "C3-publication-primary.process.json": {
+      "sha256": "9e23e20ecf16ebe2a34337acbac8fd7679386aad07041cbf8813b72c80c133a9",
+      "bytes": 1115
+    },
+    "C3-publication-primary.stdout.txt": {
+      "sha256": "55fc5512778cb746262bab3bbfd3ddf34986bb624c30a2522daafb22f1af5a0e",
+      "bytes": 82
+    },
+    "C3-source.json": {
+      "sha256": "0dc8815a2b070a437cf692283b51d5142a9cd8ebe57c0da7664bd0c0e4f2702f",
+      "bytes": 234
+    },
+    "C4-baseline-build.process.json": {
+      "sha256": "fcf2471570118223a282eb8ecef2b53cf9f65318a5a9ecad50e000115d659fed",
+      "bytes": 759
+    },
+    "C4-baseline-build.stdout.txt": {
+      "sha256": "1da8c76ed3a5df85933c8c3787c50f181b4c1df2a1f9d790dd51d390cc4e030c",
+      "bytes": 420
+    },
+    "C4-old-fixture-negative.process.json": {
+      "sha256": "aab88ce9793182874de9c11645c228cc35d4592aa945061b366559c2b217a92a",
+      "bytes": 567
+    },
+    "C4-old-fixture-negative.stdout.txt": {
+      "sha256": "77b588c1f714a0b073e8a22b88fb98e8844e4f91fb9c5cbb9365d67ff0529a4f",
+      "bytes": 199
+    },
+    "C4-partial-control-partial.json": {
+      "sha256": "951def2980258de12c0f5f44d50af9b60d762de4242a0a0d5726927cb2a2bedf",
+      "bytes": 815839
+    },
+    "C4-partial-control-strategy.json/conquest-lamellar-allflame-partial-3-to-5-product8.strategy.json": {
+      "sha256": "1cac4e22730ab3f08cc5549fe523553831c1123eb3b0541c3b1a2cc30fccd4f2",
+      "bytes": 3145
+    },
+    "C4-partial-control.json": {
+      "sha256": "5e47dbd14e52fa8f74f9401778780128d06dd3588c4200e24a60fc9780a4f1eb",
+      "bytes": 815812
+    },
+    "C4-partial-control.process.json": {
+      "sha256": "a1b2c7c9c9e8e63c78c0f34fb8434bd4376ca623a40b81c0d649f7edfba0dfbe",
+      "bytes": 1155
+    },
+    "C4-partial-control.stdout.txt": {
+      "sha256": "ab22f7de2b3e6c988ae4a3070fa19bb3cd359e31b9b487436975ea8550dfc674",
+      "bytes": 84
+    },
+    "C4-partial-treatment-partial.json": {
+      "sha256": "6724a49787c6946e179fd2bdeb1bdfdb059f7d854ff9fe2c152b55dcba109fb2",
+      "bytes": 1666903
+    },
+    "C4-partial-treatment-strategy.json/conquest-lamellar-allflame-partial-3-to-5-product8.strategy.json": {
+      "sha256": "db4b4e6698b47251bdf3c48e81da4f47892aaaee0dd7063775fa731d7c03f248",
+      "bytes": 818970
+    },
+    "C4-partial-treatment.json": {
+      "sha256": "dcbc33916d20d12509e65e97f5ed9155452ddabc6f0ea3fbee15cf2b4a81cbb4",
+      "bytes": 1666876
+    },
+    "C4-partial-treatment.process.json": {
+      "sha256": "260440b606d12bae89f3f0b0d7f225a4f8e3f9f4fed4ae39d7b45b9c36e739d8",
+      "bytes": 1152
+    },
+    "C4-partial-treatment.stdout.txt": {
+      "sha256": "f014883bf515491a84917549f11d222e62afeeb8f943a945d56c8793f75c9f8a",
+      "bytes": 84
+    },
+    "C5-exact-anchor-partial.json": {
+      "sha256": "92983625ba260336f4bd5575518c685a09331a6eb316809da39ab661ce753e35",
+      "bytes": 925366
+    },
+    "C5-exact-anchor-strategy.json/conquest-lamellar-allflame-clean-3-suffix-product8.strategy.json": {
+      "sha256": "40753d83674a6feebc39e92c826b25fc0096a6124ff20b64b02174189468da49",
+      "bytes": 174245
+    },
+    "C5-exact-anchor.json": {
+      "sha256": "f58ba83e59f8c6c55d1db6fe0006d0b67bb31405a24ec47e0f5e3afafeb4178e",
+      "bytes": 925339
+    },
+    "C5-exact-anchor.process.json": {
+      "sha256": "1ac3b491deeec6f466a28763a65590420eb2ab350cb6044daa2825e8cdbae987",
+      "bytes": 1140
+    },
+    "C5-exact-anchor.stdout.txt": {
+      "sha256": "25fcd47f2434d0ddc211c6a5298959d0b2911fd2179f45084fd47877bb18580e",
+      "bytes": 77
+    },
+    "C6-two-sided-partial.json": {
+      "sha256": "c668b77a63fdf633c1c621444fd9755579c4663b993f896e78069f3796213eed",
+      "bytes": 1303260
+    },
+    "C6-two-sided-strategy.json/conquest-lamellar-allflame-clean-4-goal-product8.strategy.json": {
+      "sha256": "95e6215ecf67f8cdde3648fdcfd2a3c45af52c8dbc8d202da5dd2d8e43e3b22d",
+      "bytes": 189363
+    },
+    "C6-two-sided.json": {
+      "sha256": "94a154a2789a10ef42927f8376e240e999a62f0625f0df3a46cde30d32d6982f",
+      "bytes": 1303233
+    },
+    "C6-two-sided.process.json": {
+      "sha256": "809fc10a24144e6778f5a40156d589187b197ef1087ce81dc9ee3d9834e6ddad",
+      "bytes": 1129
+    },
+    "C6-two-sided.stdout.txt": {
+      "sha256": "0fd3fdace19db086079de8e53f5ef7cd2b70eb85a1fb04bf392030df55c9f539",
+      "bytes": 82
+    },
+    "C7-final-fixture.process.json": {
+      "sha256": "89680da447e5b24cc35396fcc03a32fdd18c273f3a5548a921a4fce7574db202",
+      "bytes": 567
+    },
+    "C7-final-fixture.stdout.txt": {
+      "sha256": "2e68448e7de6ad833b5c5627cc4e186a684f74351342466537fc1dc0a6edebe1",
+      "bytes": 56
+    },
+    "C7-final-native-build.process.json": {
+      "sha256": "103bd0579d26e34d9aaea0d1be87efc7cadc73b62ccc0a88beec4c766895758d",
+      "bytes": 829
+    },
+    "C7-final-native-build.stdout.txt": {
+      "sha256": "5d7a5b1517d234da6df66821285b20f9be35d2a9b39f3292a99a6d0e1964d451",
+      "bytes": 538
+    },
+    "C7-joint-fixture.process.json": {
+      "sha256": "ff42c1ede70d3968ebbd9e5cfebb159b06315b8d059d213fb3931862a4d59ace",
+      "bytes": 576
+    },
+    "C7-joint-fixture.stdout.txt": {
+      "sha256": "a83af8acceb20a930236fb77e69ef71900c427d03ba2c39f3a1908e28691483a",
+      "bytes": 63
+    },
+    "C7-wasm-build.process.json": {
+      "sha256": "dba9962f2723c78b6eb83ca1f461360995664bc420a76c4a4c46760b6876579e",
+      "bytes": 567
+    },
+    "C7-wasm-build.stdout.txt": {
+      "sha256": "44e5391698c39926fce42def13d0b116e7ceeceb6bed732cb2613babeacfdb99",
+      "bytes": 2141
+    },
+    "C8-wasm-identity.json": {
+      "sha256": "e380df83d0cb14c474e447b8f318908bb480fd894458164e4652ee807c72a814",
+      "bytes": 304
+    },
+    "C8-wasm-primary.json": {
+      "sha256": "63521a546e0f39a0710e994ce4444d0580403f95fbabc8d2c45ba5e02f19098b",
+      "bytes": 1002229
+    },
+    "C8-wasm-primary.process.json": {
+      "sha256": "b6ce4a005a504490d2e942150d893752882e47a9e055455eb1912ad3ac269b70",
+      "bytes": 720
+    },
+    "C8-wasm-primary.stdout.txt": {
+      "sha256": "3c50513eb4d39cdb764e7ae9d95ebdfae6ed0c1922854d69cf8afcccb341a3fd",
+      "bytes": 1537
+    },
+    "C9-engine.patch": {
+      "sha256": "4235f47d2df5b49510418a36fc35bc65e88789860213df3e0fe99ac73725add0",
+      "bytes": 23365
+    },
+    "C9-readiness-build.process.json": {
+      "sha256": "f671f26e424e757a7c7e0307e49df5d8048eca62be349fddfc46241ba777f61c",
+      "bytes": 797
+    },
+    "C9-readiness-build.stdout.txt": {
+      "sha256": "78a845e634913ebcf118dfdcd967e97628b8daa6fa827fe72aee4299168be9a2",
+      "bytes": 499
+    },
+    "C9-readiness-fixture.process.json": {
+      "sha256": "b8b411b2877e785eaea9991f299017f9d47a4359ce03a97d1653824bdfac6067",
+      "bytes": 569
+    },
+    "C9-readiness-fixture.stdout.txt": {
+      "sha256": "2e68448e7de6ad833b5c5627cc4e186a684f74351342466537fc1dc0a6edebe1",
+      "bytes": 56
+    },
+    "C9-readiness-primary-partial.json": {
+      "sha256": "9cf4d554395da818467c84bc4bb880b68c46f3f3bddd2516a5ca9f12547a85ec",
+      "bytes": 1221747
+    },
+    "C9-readiness-primary-strategy.json/conquest-lamellar-allflame-clean-5-goal-product8.strategy.json": {
+      "sha256": "f4a7a95662fda25c276fe72407fc03aa3634602efa31554f89e6f21e081075f9",
+      "bytes": 2634815
+    },
+    "C9-readiness-primary.json": {
+      "sha256": "155a7dba01186b6b3e261c4452dab5bd2ac811d7d8bdd00b2630c7e754c71323",
+      "bytes": 1221720
+    },
+    "C9-readiness-primary.process.json": {
+      "sha256": "17abbc8b0cf3b565ac3d0d138155ecd7b91babe6ec8d4e96d1de3b8fe6f1a17d",
+      "bytes": 1111
+    },
+    "C9-readiness-primary.stdout.txt": {
+      "sha256": "add5535f4aa73dc2832669027cff11e8d293abe4bc1cea1936a7545a88f2c0d3",
+      "bytes": 82
+    },
+    "C9-source.json": {
+      "sha256": "c8da528c1aac2ab0235141fe6eef4284991ee85d6bc926513a0bf9ae594f1fba",
+      "bytes": 234
+    },
+    "continuation-final-source.json": {
+      "sha256": "eb1df1e680e73155c50016f56b709e5ec63b72cf2cf96068b70aa8ebc7ba7ce4",
+      "bytes": 1712
+    },
+    "continuation-final.patch": {
+      "sha256": "c8903cc8dddcde625741b780edc40bfe870c53138b8e119be0b2e1d35fbc723b",
+      "bytes": 25473
+    },
+    "package_continuation.py": {
+      "sha256": "af585436a1850445ddcbd2fc25eaffbd7df8ff70c71c22e4da2b8e4100e0c038",
+      "bytes": 4031
+    },
+    "run.py": {
+      "sha256": "5fb3027c0b7f0b6e40581d64a655d9195c1691f4b31cbd8cfe71c83c25f5ca67",
+      "bytes": 1848
+    }
+  },
+  "preserved_previous_evidence_sha256": "5540e60879919649a3d76921f12eaf6fa399a50d3e62a59dc7185d3074c4031e",
+  "subagents_spawned": 0,
+  "run_owned_processes_stopped": true,
+  "process_outcomes": {
+    "C0-headroom-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 7002.713100002438
+    },
+    "C0-headroom.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 28484.848799998872
+    },
+    "C1-frontier-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 20553.532899997663
+    },
+    "C1-frontier-fixture-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 20425.837499999034
+    },
+    "C1-frontier-fixture.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 560.8092000038596
+    },
+    "C1-frontier-primary.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 64764.979100000346
+    },
+    "C10-history-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 6908.750000002328
+    },
+    "C10-history.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 28170.74799999682
+    },
+    "C11-eager-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 8093.300999993517
+    },
+    "C11-eager.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 27460.710300001665
+    },
+    "C12-all-rows-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 7804.803699997137
+    },
+    "C12-all-rows.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 8984.765200002585
+    },
+    "C13-compact-control.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 31921.655099999043
+    },
+    "C13-compact-treatment.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 13907.887499997742
+    },
+    "C13-final-eager-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 8164.834099996369
+    },
+    "C13-phase-fixture.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 997.6251999978558
+    },
+    "C13-selected-fixture.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 304.2099000012968
+    },
+    "C14-eager-primary.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 67267.88559999841
+    },
+    "C15-wasm-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 305581.1606000061
+    },
+    "C15-wasm-primary.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 76562.32579999778
+    },
+    "C16-final-partial.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 53805.5530000056
+    },
+    "C17-final-anchor.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 46196.72770000034
+    },
+    "C18-final-native-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 1062.0939000000362
+    },
+    "C18-web-types.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 1958.2050999961211
+    },
+    "C2-directed-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 8192.83230000292
+    },
+    "C2-directed-fixture.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 541.5448999992805
+    },
+    "C2-directed-primary.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 65635.46219999989
+    },
+    "C3-publication-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 11197.640300000785
+    },
+    "C3-publication-fixture.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 548.3220000023721
+    },
+    "C3-publication-primary.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 66844.79229999852
+    },
+    "C4-baseline-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 712.6605000012205
+    },
+    "C4-old-fixture-negative.process.json": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 517.8309999973862
+    },
+    "C4-partial-control.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 46877.93480000255
+    },
+    "C4-partial-treatment.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 53356.76219999732
+    },
+    "C5-exact-anchor.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 47151.378399998066
+    },
+    "C6-two-sided.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 85011.95060000464
+    },
+    "C7-final-fixture.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 525.3986000025179
+    },
+    "C7-final-native-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 11245.127000001958
+    },
+    "C7-joint-fixture.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 14.967700000852346
+    },
+    "C7-wasm-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 311322.27460000286
+    },
+    "C8-wasm-primary.process.json": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 76377.43780000164
+    },
+    "C9-readiness-build.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 7868.072400000528
+    },
+    "C9-readiness-fixture.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 552.1183000018937
+    },
+    "C9-readiness-primary.process.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "survivor": false,
+      "wall_ms": 64607.99390000466
+    }
+  },
+  "limitations": [
+    "C8 WASM gate failed before its separate abandon control; cleanup completed.",
+    "C9 readiness treatment was rejected and removed; its policy was evaluated but worse.",
+    "C4 old-code fixture has one intentional failure; do not classify it as passing.",
+    "No primary five-goal exact closure, user-export reproduction, rendered UI review, broad suite or Simulator claimed."
+  ]
+}

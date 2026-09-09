@@ -5286,6 +5286,16 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
 
             const auto rebuild_reachable =
                 [&](std::uint64_t& choice_identity) {
+                    // Discover missing siblings of the SAME selected candidate
+                    // before rebuilding its whole prefix again. This only
+                    // queues ordinary refinement: an incomplete walk cannot
+                    // reach evaluation/publication. Bound discovery by the
+                    // existing refinement batch; finalization still stops at
+                    // the first unavailable continuation.
+                    std::uint32_t missing_count = 0;
+                    const std::uint32_t missing_limit = require_resource_stop
+                        ? 1 : std::max<std::uint32_t>(1,
+                            anytime_scheduler.profile().q_refinement_batch);
                     reachable.assign(state_count, 0);
                     materialized.assign(state_count, 0);
                     walk.clear();
@@ -5340,53 +5350,58 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                             incremental_anytime_missing_frontier_states
                                                 .size());
                                 }
-                                attempt_failure =
-                                    "missing_completed_row_and_certified_"
-                                    "frontier:state=" +
-                                    std::to_string(state) +
-                                    ":goal_mask=" + std::to_string(
-                                        satisfied_goal_mask_for_state(state)) +
-                                    ":broad_expanded=" +
-                                    std::to_string(
-                                        state < expanded.size() &&
-                                        expanded[state] ? 1 : 0) +
-                                    ":is_carrier=" +
-                                    std::to_string(
-                                        std::find(
-                                            incremental_carriers.begin(),
-                                            incremental_carriers.end(),
-                                            state) !=
-                                        incremental_carriers.end() ? 1 : 0) +
-                                    ":owner_rows=" +
-                                    std::to_string(
-                                        state < transition_cache
-                                                    ->state_rows.size()
-                                            ? transition_cache
-                                                  ->state_rows[state].count
-                                            : 0);
-                                std::uint64_t completed_identity =
-                                    1469598103934665603ULL;
-                                identity_mix_string(
-                                    completed_identity,
-                                    "resumable_joint_policy_completed_rows_v1");
-                                for (std::uint64_t completed_row = 0;
-                                     completed_row < completed.size();
-                                     ++completed_row) {
-                                    if (completed[completed_row]) {
-                                        identity_mix(
-                                            completed_identity,
-                                            completed_row);
+                                if (missing_count++ == 0) {
+                                    attempt_failure =
+                                        "missing_completed_row_and_certified_"
+                                        "frontier:state=" +
+                                        std::to_string(state) +
+                                        ":goal_mask=" + std::to_string(
+                                            satisfied_goal_mask_for_state(state)) +
+                                        ":broad_expanded=" +
+                                        std::to_string(
+                                            state < expanded.size() &&
+                                            expanded[state] ? 1 : 0) +
+                                        ":is_carrier=" +
+                                        std::to_string(
+                                            std::find(
+                                                incremental_carriers.begin(),
+                                                incremental_carriers.end(),
+                                                state) !=
+                                            incremental_carriers.end() ? 1 : 0) +
+                                        ":owner_rows=" +
+                                        std::to_string(
+                                            state < transition_cache
+                                                        ->state_rows.size()
+                                                ? transition_cache
+                                                      ->state_rows[state].count
+                                                : 0);
+                                    std::uint64_t completed_identity =
+                                        1469598103934665603ULL;
+                                    identity_mix_string(
+                                        completed_identity,
+                                        "resumable_joint_policy_completed_rows_v1");
+                                    for (std::uint64_t completed_row = 0;
+                                         completed_row < completed.size();
+                                         ++completed_row) {
+                                        if (completed[completed_row]) {
+                                            identity_mix(
+                                                completed_identity,
+                                                completed_row);
+                                        }
                                     }
+                                    capture_resumable_joint_policy_candidate(
+                                        state, result.values,
+                                        certified_boundary_values,
+                                        certified_frontier_operators,
+                                        certified_boundary_reachable,
+                                        certified_fallback, certified_renewal,
+                                        completed_identity);
+                                    capture_failed_prefix(state);
                                 }
-                                capture_resumable_joint_policy_candidate(
-                                    state, result.values,
-                                    certified_boundary_values,
-                                    certified_frontier_operators,
-                                    certified_boundary_reachable,
-                                    certified_fallback, certified_renewal,
-                                    completed_identity);
-                                capture_failed_prefix(state);
-                                return false;
+                                refresh_scratch_bytes();
+                                if (check_solver_byte_cap_fast() ||
+                                    missing_count >= missing_limit) return false;
+                                continue;
                             }
                             policy_rows[state] = no_row;
                             mix(state);
@@ -5446,7 +5461,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                             "reachable_walk_exceeds_byte_cap";
                         return false;
                     }
-                    return true;
+                    return missing_count == 0;
                 };
 
             const std::size_t maximum_rounds = std::min<std::size_t>(
@@ -5614,6 +5629,13 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         if (prior_reachable[state]) walk.push_back(state);
                     }
                     bool publication_complete = true;
+                    // Kernel closure can expose several strict-only siblings.
+                    // Queue their missing continuations in one bounded walk;
+                    // any missing entry still refuses this publication.
+                    std::uint32_t publication_missing = 0;
+                    const std::uint32_t publication_missing_limit =
+                        require_resource_stop ? 1 : std::max<std::uint32_t>(1,
+                            anytime_scheduler.profile().q_refinement_batch);
                     for (std::size_t cursor = 0;
                          cursor < walk.size() && publication_complete;
                          ++cursor) {
@@ -5651,7 +5673,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         }
                         if (operator_index == kNoId ||
                             operator_index >= calc.operators().size()) {
-                            publication_complete = false;
+                            ++publication_missing;
                             if (lineage_index.has_value()) {
                                 JointAnytimeAttemptLineage& lineage =
                                     joint_anytime_attempt_lineage.at(
@@ -5680,11 +5702,19 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                         incremental_anytime_missing_frontier_states
                                             .size());
                             }
-                            attempt_failure =
+                            if (publication_missing == 1) attempt_failure =
                                 "publication_successor_has_no_certified_"
                                 "action:state=" +
-                                std::to_string(state);
-                            break;
+                                std::to_string(state) + ":goal_mask=" +
+                                std::to_string(satisfied_goal_mask_for_state(state)) +
+                                ":retry=" + std::to_string(calc.state(state).goal_progress_retry_basin);
+                            refresh_scratch_bytes();
+                            if (check_solver_byte_cap_fast() ||
+                                publication_missing >= publication_missing_limit) {
+                                publication_complete = false;
+                                break;
+                            }
+                            continue;
                         }
                         const PlannerOperator& planner =
                             calc.operators()[operator_index];
@@ -5784,7 +5814,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                             }
                         }
                     }
-                    if (!publication_complete) {
+                    if (!publication_complete || publication_missing != 0) {
                         if (attempt_failure.empty()) {
                             attempt_failure =
                                 "publication_fixed_option_closure_failed";

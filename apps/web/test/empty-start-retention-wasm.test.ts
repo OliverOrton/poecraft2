@@ -66,11 +66,13 @@ try {
     receipt.summary = summary;
     const telemetry = engine.solverTelemetry(solver) as unknown as {
         timings_ns: unknown;
+        incremental_action_envelope: unknown;
         carrier_bound_attribution: { proof_pattern_manager: { patterns: Array<{
             id: string; converged: boolean; start_contribution: number | null; fallback_reason: string;
         }> } };
     };
     receipt.timings_ns = telemetry.timings_ns;
+    receipt.incremental_action_envelope = telemetry.incremental_action_envelope;
     const pattern = telemetry.carrier_bound_attribution.proof_pattern_manager.patterns
         .find(entry => entry.id === "native_retention");
     receipt.pattern = pattern;
@@ -104,6 +106,11 @@ try {
             assert.ok(summary.upper_bound !== null && totals.total_expected_cost !== null);
             assert.ok(Math.abs(totals.total_expected_cost - summary.upper_bound) <=
                 v.exact_cost_absolute_tolerance + v.exact_cost_relative_tolerance * Math.abs(summary.upper_bound));
+            // Frozen against B6 with the same retained root lower and finish
+            // request. Assert useful continuation integration after evaluating
+            // the actual graph, so a failed gate still retains its true cost.
+            assert.ok(summary.upper_bound <= 16997812.199227553 * 0.8,
+                "empty-start continuation misses the 20% policy improvement gate");
         } finally {
             engine.closeStrategyEvaluation(evaluation);
         }

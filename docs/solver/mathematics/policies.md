@@ -72,6 +72,16 @@ failed its ordinary no-retention qualification at the 90-second finalization
 watchdog. It was removed; this conditional argument is retained for the next
 bounded continuation repair. See the [failure and patch](../../active/2026-09-09-empty-start-partial-continuation/README.md).
 
+The resumed repair instead discovers missing siblings in a selected candidate's
+known prefix and publication kernel. It asks the ordinary work owner to complete
+their continuations and retries assembly; it does not fill a saved policy with
+new greedy actions. The proof obligation is unchanged: every positive-mass
+branch and required observed choice must have a compatible route, then the
+assembled controller must pass properness and independent compiled evaluation.
+Discovering several missing branches together grants no upper while any remains.
+The current [matched evidence](../../active/2026-09-09-empty-start-partial-continuation/README.md)
+demonstrates an improved empty-five executable upper, with unchanged lower.
+
 <a id="choices"></a>
 ## 3. Respect when a choice becomes available
 

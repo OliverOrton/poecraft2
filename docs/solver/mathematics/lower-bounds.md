@@ -141,6 +141,39 @@ L(s)\le V^*(s)\le Q^*(s,a).
 
 The same holds for an infimum over any action family. This inference requires the same original scope. A restricted-action optimum or one program's lower does not meet its premise. [CLM-0011](../claims.md#clm-0011).
 
+### Transport around a compressed retry marker
+
+A renewal row can combine several physical outcomes into a synthetic retry
+marker. For a complete disjoint physical event partition, a bound `b_i` valid
+for **every** member of event `i` gives the producing action lower
+`c + sum_i p_i b_i`. With a native-containing probability envelope, use its
+final-vector minimum as in [equation (3)](#events). Unsupported outcomes keep
+their mass and an independent fallback. Include early retry short circuits,
+direct modifiers and veiled state in the partition obligation.
+
+This expectation belongs to the source/action pair. Equal-probability exits
+with continuation costs 2 and 20 have expectation 11, which is not a uniform
+lower on the first member. Physical items under unrestricted control, physical
+items under a renewal-only retry restriction, and the compressed marker have
+different domains. A physical certificate does not identify them. The existing
+retry lookup refusal therefore remains necessary until a separate preimage and
+control-domain argument is established.
+
+Do not eliminate a self loop to create an unrestricted first-action lower.
+If A costs 1 and either finishes or returns to the source with equal probability,
+repeating A costs 2. If B finishes for 0.1, taking A once then B costs 1.05.
+Likewise, suppose A costs 1, finishes for free with probability one half, and
+otherwise offers the observed choice `{self, terminal-at-cost-100}`. Choosing
+self and repeating is proper and costs 2; a helper that forces the nonself
+alternative reports 51. Use a one-step expression at a valid potential
+or a jointly checked complete Bellman model, with observed-choice minima.
+
+These arguments were reaffirmed by the September 9
+[review](../../active/2026-09-09-empty-start-partial-continuation/research-inputs/astra_response.md).
+The scratch-envelope ownership and self-choice refusal were already identified
+in the [September 4 audit](../../archive/2026-09-04-free-value-bellman-research/ownership.md);
+the diagnostic's finite admitted-row count is not new complete-envelope authority.
+
 <a id="initialization"></a>
 ## 5. Admissible is not the same as feasible in this local model
 
@@ -330,6 +363,16 @@ At the applied-reforge snapshot, an exact policy of the **optimistic** model use
 Ties also matter. If two unresolved actions both impose \(h(s)\le10\), strengthening only one to 50 leaves the other ceiling at 10. A zero isolated gain does not establish that the first refinement is useless; a useful unit may be a set of tied constraints. Conversely, improving a row from 400 to 800 cannot help a state still constrained by another row at 40.
 
 Separate a genuine semantic exit from a temporary immediate-price shortcut. An action represented only by cost 10 may really continue for another certified 90. Keeping the shortcut forever can hide a 100 lower. It is safe but incomplete refinement. Recompute the changed model and distinguish why each cheap constraint remains. [CLM-0019](../claims.md#clm-0019).
+
+For nonnegative continuation values, an independently valid complete native
+relation `c + inf E[h]` is at least the temporary immediate-price floor `c`.
+Constructing the relation earlier therefore removes an extra optimistic
+computational restriction without removing the action. It still requires the
+native-containing probability set and final-vector minimum; an arbitrary
+feasible allocation is insufficient. Current joint retention uses this eager
+construction under the same proof-memory cap. The empty-five checked vector
+agrees with the deferred construction to 2.4e-12 and the root value is identical;
+fewer preparation rounds are a computational finding, not a new exact closure.
 
 <a id="mapping"></a>
 ## 11. Source correspondence and unresolved guarantees

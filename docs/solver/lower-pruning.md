@@ -87,6 +87,14 @@ Unsupported effects and outside-domain continuations can use deliberately favora
 
 A price-only relation needs a reason. An independent outside exit is a semantic relaxation; a candidate-price shortcut may merely defer expensive construction. Minimum-owning computational floors reactivate even at equality, and the changed model is solved before an older feasible vector ends refinement. [CLM-0019](claims.md#clm-0019) explains why a temporary floor is not necessarily a permanent ceiling.
 
+Joint retention preparation now constructs supported native relations immediately.
+On the current empty-five input, repeatedly deferring them behind immediate-price
+floors took 54 refinement rounds; eager construction takes five with the same
+checked root lower. This removes computational shortcuts, not native actions or
+independent outside-domain escapes. Non-retention/non-joint controls retain their
+existing deferral behavior. Complete coverage, final-vector minimization,
+numerical acceptance and the original proof-memory cap remain unchanged.
+
 ## Native probabilistic relations
 
 The support-only phase producer remains distinct from the probability-aware producer. A support-union model can intentionally grant all potentially introduced goals together and therefore be extremely weak; that limitation does not refute a richer stochastic lower.

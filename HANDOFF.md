@@ -1,46 +1,63 @@
 # Handoff
 
-Pause for Oliver's Astra Pro response. He conditionally authorized pushing a
-checked checkpoint and stopping when review input was needed; that review
-boundary has been invoked. Resume only after his response. No subagents or
-inherited deadline. The full goal is **unmet**, not marked achieved.
+Oliver resumed after the Astra response in **Native Solver Research**. This
+checkpoint completes the plan's material root-gap route and browser-engine
+qualification; it does not establish five-goal exact closure. Work remained
+sequential, with no inherited deadline or subagents. Preserve protected `0`.
+No automatic continuation or push. The last pushed review checkpoint is
+`19a41d88234be4495fbe86cc4cc502ed0b2f8e89`; the final reply names the new local commit.
 
 The [living record](docs/active/2026-09-09-empty-start-partial-continuation/README.md)
-and [concrete review request](docs/active/2026-09-09-empty-start-partial-continuation/astra-review.md)
-retain the owner plan, exact primary input, measurements and remaining obligations.
-Baseline main: `06d4c41d0cef62ec528bf22f25b122de230c913f`. The final handoff receipt
-identifies the checkpoint commit and actual push status; source/executable hashes
-are in the evidence manifest. Protected `0` and unrelated work are untouched.
+owns the plan, exact Astra response, causal variants and final evidence manifest.
+All prior B0–B6 evidence and the rejected broad snapshot patch remain unchanged.
+Do not repeat numerical reuse, revive the lookup cache, or remove retry refusal.
 
-Retained: separate certificate frame from the actual source; use observed native
-flags to establish complete member eligibility; private prepared-but-unconsumed
-ablation; bounded partial-consumer telemetry; rebuilt WASM and focused tests.
-Native/C ABI defaults remain separate from the existing WASM retention/reuse mode.
+Retained engine changes:
 
-For the authorized repository substitute empty Rare Conquest five-goal request,
-B6 returns 405.3694021063399–16,997,812.199227553, 27.258 s setup / 64.271 s total.
-WASM returns the same lower and independently matched upper (~16.998 million),
-37.159 s setup / 73.116 s including evaluation and cleanup. The original 60-second
-finish, 90-second watchdog, full product scope and 1 GiB remain unchanged.
-The user's exact browser export was unavailable; this substitution is explicit.
+- Bounded discovery of missing selected-prefix and publication-kernel siblings,
+  followed by existing named continuation refinement. Any missing entry still
+  refuses publication; finalization stops at its first missing entry. No policy
+  padding or changed row/properness/independent-evaluation authority.
+- Eager construction of supported joint-retention relations, replacing repeated
+  temporary price-only rounds. True domain exits, complete action coverage,
+  final-vector minimization, numerical reuse and the same proof cap remain.
+  Non-retention/non-joint controls keep their previous construction behavior.
 
-The same-preparation unconsumed control returns the identical compiled strategy
-and upper with lower 36.48853. Thus the large upper gain is not caused by lower
-consumption. The flag-domain change admits 4,049 expanded lower consumers without
-moving the root interval. Complete causal partial-to-root transfer is unproved.
+Empty Rare five-T1 Conquest Lamellar repository reference, pinned Allflame prices,
+base price 1, 60-second requested finish / 90-second watchdog / 1 GiB:
+checked lower **405.3694021063399**, verified upper **85,558.70618560436**, versus
+control upper **16,997,812.199227553** with the same lower. Certified absolute gap
+improves **99.499%**. This is executable continuation progress, not a gain caused
+by lower consumption. Native setup is **8.278 s**, total **66.561 s** including
+finalization/evaluation. The unchanged finish clock does not imply a speedup in
+total elapsed time. The exact user browser export was unavailable.
 
-The snapshot preservation-only attempt passed its focused fixture but its
-retention-disabled primary hit the 90-second finalization watchdog with no policy.
-Its mutation was removed and exact patch/failure preserved. B6 is after removal.
-The key review question is the compatible semantic/control domain of compressed
-retry carriers, which can omit direct modifiers and veiled state. The current
-lookup correctly refuses them; do not project them as ordinary empty items.
+The rebuilt production WASM passes with exactly the same interval. Setup falls
+from failed C8's **36.772 s** to final C15's **12.280 s**; solve finishes at 63.792 s.
+Independent evaluation and the separate abandon control pass; zero live handles
+remain. Final full test is 75.055 s, including that separate control. Existing
+browser activation and native/C ABI default distinctions remain intact.
 
-Native phase-lower 251/0, selected-fallback 159/0, TypeScript and the primary WASM
-facade/evaluation/cleanup checks pass. See the living record for all controls and
-process receipts. No broad suite or Simulator. Matched native partial-start and
-second empty/two-sided controls, full predecessor/root transfer and strict exact
-closure remain outstanding after review.
+Final partial three-to-five control retains **405.11164995948883–794,067.4530398862**,
+with setup 8.318 s / total 53.309 s. Existing empty three-suffix anchor remains
+exact at **1,101.15648683309**. Empty two-sided four-goal follow-through remains
+**198.83349967469428–5,218.040949685988** and refuses strict parent 4741 outside a
+3923-entry saved policy (current/indexed graph 6232). Counts do not prove ownership.
 
-The September 7 campaign is archived byte-for-byte; all nine files were verified
-against baseline. No automatic restart, continuation or scheduled work is intended.
+Preserved negative findings: the auxiliary Scour/Alchemy/Fracture route fixes a
+405.36940214687695 ceiling without Chaos; it is not a native upper. The earliest
+fully checked 405 root appears only at the final deferred round. Immediate
+single-dependency retries (C9) starved ordinary discovery and worsened the upper;
+that trigger is removed. The retry-marker transport argument remains conditional
+on complete physical producing-action partitions and control/member validity.
+
+Final checks: native lower 251/0, selected policy 171/0, joint continuation 64/0;
+old code fails exactly the new sibling assertion. Native/WASM builds, TypeScript,
+independent graph evaluations and final WASM qualification pass. Failed C8,
+rejected C9 and all actual process outcomes are retained. No broad suite,
+Simulator or rendered UI review. All run-owned processes ended; no workers exist.
+
+The single next exact-closure task is the concrete four-goal parent 4741:
+classify its required decision as owned, newer, or genuinely unavailable, then
+repair through existing continuation/strict machinery. Do not revive broad
+snapshot capture or claim the primary's unreconciled coarse estimate is exact.

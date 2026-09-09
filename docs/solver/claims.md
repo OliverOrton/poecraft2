@@ -99,6 +99,13 @@ For a small fix, this ledger need not change. For a mathematical change, follow 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
 
+**Scoped implementation observation (2026-09-09):** Bounded missing-continuation
+discovery preserves this obligation: an incomplete selected/publication walk
+cannot publish, and ordinary completion still goes through the existing
+properness/compiler/evaluator checks. The [C3 empty-five result](../active/2026-09-09-empty-start-partial-continuation/README.md)
+improves the verified upper while keeping the lower fixed. This application does
+not promote the general claim's open status or assert native optimality.
+
 <a id="clm-0005"></a>
 ## CLM-0005 — A behavioral quotient needs action-wise class-transition equality
 
@@ -267,6 +274,7 @@ For a small fix, this ledger need not change. For a mathematical change, follow 
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
 - 2026-09-06 — `accepted` — Codex, responsible integration self-review: conditional mathematical argument accepted on the bounded stopped-region proof with independent finite boundaries and complete simultaneous inequalities. Statement and preconditions unchanged; no independent reviewer or blanket native correspondence is claimed. Native applications still require the named GAP obligations.
 - 2026-09-09 — `accepted` — Codex, scoped constructor-domain application: a separate certificate frame admits an unchanged unfractured request into the already checked coupled region. All-member guards, independent first exits and same-final-goal semantics remain necessary. [Argument and implementation correspondence](mathematics/lower-bounds.md#retention); [current evidence](../active/2026-09-09-empty-start-partial-continuation/README.md). Component correctness does not establish campaign completion or native exact closure.
+- 2026-09-09 — `accepted` — Review integration: complete physical event expectations are source/action bounds, not uniform retry-marker values. The [transport argument and counterexamples](mathematics/lower-bounds.md#composition) retain control-domain identity, full mass, final-vector minimization and competing families. Native retry transport remains unimplemented; the current empty model's unchanged Scour/Alchemy/Fracture route defeats a Chaos-only refinement.
 
 <a id="clm-0013"></a>
 ## CLM-0013 — Admissibility does not imply feasibility in a changed local relaxation
@@ -408,6 +416,14 @@ For a small fix, this ledger need not change. For a mathematical change, follow 
 **Attempted falsification:** Two floors at 10: raising either alone to 50 leaves 10. A ten-cost action with a ninety-cost continuation remains artificially pinned if its temporary floor is never expanded.
 
 **Evidence and implementation correspondence:** [Candidate-price reactivation contract](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/lower-pruning.md).
+
+**Scoped implementation observation (2026-09-09):** Joint retention now builds
+supported native relations eagerly under the same proof cap, leaving genuine
+outside-domain escapes intact. On the empty-five model, this removes repeated
+temporary-price rounds (54 → 5) with the identical checked root lower. The
+anchored compact control preserves both checked source values. This computational
+result supports [early construction](mathematics/lower-bounds.md#ceilings), not
+removal of action coverage or promotion of an auxiliary optimum to a native upper.
 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.

@@ -697,6 +697,10 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
     unsigned accepted_rounds = 0;
     std::uint64_t accepted_relation_count = 0, accepted_report_bytes = 0, export_reservation = 0;
     const unsigned max_rounds=retention==PhaseRetention::None ? 32 : 64;
+    // Repeated price-only rounds cost more than building the retained native
+    // relations once. Keep the legacy non-retention/control models separate;
+    // full retention still re-minimizes every relation at the final vector.
+    const bool eager_relations = joint_refinement && retention != PhaseRetention::None;
     unsigned anchor_cell = static_cast<unsigned>((fresh_source ? fresh_offset : 0)+index(masks, anchor.rarity,
         item_mask(calc, anchor), anchor.prefix_count, anchor.suffix_count));
     if (retention != PhaseRetention::None) {
@@ -881,7 +885,7 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                     } else if (type == ActionType::Fracture || special_escape || (!setup_filter && (action.sets_flags & kProtectionFlags)) ||
                         type == ActionType::InfluenceExalt || type == ActionType::VeiledExalt || type == ActionType::VeiledChaos) {
                         escape(PhaseRelationReason::NativeDomainEscape);
-                    } else if (cost >= candidate[c.id] && !detailed.contains({c.id, a})) {
+                    } else if (!eager_relations && cost >= candidate[c.id] && !detailed.contains({c.id, a})) {
                         // A priced escape has an independent immediate-cost floor.
                         // Evaluating it first avoids constructing unused relations.
                         escape(PhaseRelationReason::CandidatePriceShortcut);

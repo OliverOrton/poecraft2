@@ -1561,6 +1561,11 @@ bool SolveWork::Impl::schedule_incremental_refinement(
             has_unresolved = true;
         }
     }
+    // A named missing continuation blocks a concrete selected candidate.
+    // Return to assembly after servicing those entries instead of padding
+    // this batch with unrelated uncertainty. Requests are retired below;
+    // ordinary Q-directed scheduling resumes when no eligible request remains.
+    const bool has_missing_continuation = has_unresolved;
 
     const auto state_width =
         [&](const std::uint32_t state) {
@@ -1571,7 +1576,7 @@ bool SolveWork::Impl::schedule_incremental_refinement(
             }
             return std::max(0.0, upper[state] - lower[state]);
         };
-    for (const IncrementalAlternativeRow& candidate :
+    if (!has_missing_continuation) for (const IncrementalAlternativeRow& candidate :
          incremental_alternative_rows) {
         if (candidate.status !=
             IncrementalAlternativeRow::Status::Unresolved) {
