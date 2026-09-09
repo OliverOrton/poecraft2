@@ -467,6 +467,7 @@ removal of action coverage or promotion of an auxiliary optimum to a native uppe
 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
+- 2026-09-09 — `open` — Codex, scoped continuation experiment: exact structural membership beyond a saved policy does not establish an owned decision. The [new-controller argument](mathematics/policies.md#properness) requires fresh rows, properness and evaluation. A focused out-of-snapshot completion fixture passes, but both ordinary variants fail the 90-second watchdog and are removed; [failure evidence](../active/2026-09-09-empty-start-partial-continuation/fresh-comparison.json) grants no native acceptance or exact closure.
 
 <a id="clm-0022"></a>
 ## CLM-0022 — Validity, eventual completion, and bounded performance are separate claims

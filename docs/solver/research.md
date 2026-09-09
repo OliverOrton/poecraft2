@@ -173,7 +173,18 @@ rows outside the coarse reachable walk without borrowing newer greedy actions.
 Its focused fixture passed, but the no-retention primary hit its 90-second
 finalization watchdog without publication. The mutation was removed and its patch
 and failed run retained. This distinguishes valid candidate preservation from a
-qualified bounded executable continuation repair; the latter remains open.
+qualified bounded executable continuation repair; that experiment did not
+establish the latter. C3's later sibling service is qualified under RQ-002.
+
+The fresh-session strict bridge then classifies parent 4741 as structurally
+matched but outside the selected table supplied to strict lift. Building new rows
+through quotient completion passes a focused fixture; direct completion and
+renewal-first ordering both fail the unchanged 90-second ordinary watchdog
+before publication. Both mutations were removed. The restored primary again
+returns 405.36940–85,558.70619 with independent evaluation, in 66.886 seconds
+total. [The failed treatments and restored result](../active/2026-09-09-empty-start-partial-continuation/fresh-comparison.json)
+separate internal candidate retention from a successfully returned artifact.
+Bounded strict continuation and publication remain the concrete open obligation.
 
 Dependencies: [CLM-0002](claims.md#clm-0002), [CLM-0004](claims.md#clm-0004),
 [CLM-0020](claims.md#clm-0020), [CLM-0021](claims.md#clm-0021),

@@ -3,10 +3,11 @@
 Active goal: implement the [owner-provided plan](research-inputs/implementation_plan.md)
 and reconcile [P1Ã¢â‚¬â€œP5](research-inputs/mathematical_delta.md). No subagents or inherited
 September 7 deadline. Preserve protected `0`, unrelated work and native authority.
-Local and remotely verified main start at `06d4c41d0cef62ec528bf22f25b122de230c913f`.
-The working tree was clean outside excluded `0`. This is a checked implementation
-checkpoint; the full goal is unmet. Oliver's conditional Astra Pro review handoff
-has been invoked: qualify and push the checkpoint, then stop for his response.
+The original intake began at `06d4c41d0cef62ec528bf22f25b122de230c913f`.
+Oliver has fulfilled the review pause. The latest fresh session reconciled newer
+local `267e4f3`, retained its qualified continuation implementation, and rejected
+two further strict-completion variants on measured watchdog failures. The full
+exact-closure goal remains open. Current work is local; no push or restart.
 
 ## Frozen primary comparison
 
@@ -478,3 +479,119 @@ final conversation receipt identifies the commit. The next exact-closure task
 is the four-goal strict parent 4741: establish whether its required continuation
 was owned by the saved candidate, belongs to newer work, or remains unavailable,
 then use the existing continuation/strict owner to resolve that concrete gap.
+
+## Fresh-session reconciliation and bounded continuation
+
+Oliver's fresh-session request arrived at local
+`267e4f349bddfbc76e76c4dc1f3809e635cb15be`, one commit beyond the reviewed
+`19a41d88234be4495fbe86cc4cc502ed0b2f8e89`. The worktree was clean outside
+excluded protected `0`. All eleven current source/native/WASM hashes in
+`continuation-provenance.json` match. Thus C0–C17 are retained evidence for the
+actual source, not a proposed patch to replay. No inherited Goal/deadline,
+delegation, restart or push authorization is used.
+
+The exact latest [fresh-session response](research-inputs/fresh-session-response.md)
+is imported from **Native Solver Research**, turn
+`01a9b2d0-4636-4066-a8d5-7a8cca63d8a7`, message
+`8df3840a-90dc-4d6b-ac00-d4350a240c28`. Its generated download links were not
+exposed by the thread reader and the available browser was signed out. The
+new package's `implementation_plan.md` and original rational scripts have not
+been obtained; the already imported September 8 plan, exact mathematical
+response and current owner instructions remain available. No missing attachment
+is represented as read or executed.
+
+| Finding | Current disposition |
+|---|---|
+| Retain empty-source admission and observed-flag guards | Incorporated in `19a41d8`; unchanged |
+| Keep compressed retry lookup refusal; producing expectation is action-scoped | Incorporated in the canonical lower chapter; unchanged |
+| Scratch Chaos is diagnostic, row counts do not prove complete coverage | Duplicate of the retained ownership result; rechecked against current source |
+| Check unchanged constraints before building an exit fold | Completed C0: the complete checked phase/quotient owner admits a Scour/Alchemy/Fracture auxiliary route near 405.3694 with no Chaos; no native upper is inferred |
+| Hold root lower/preparation in both causal arms | C1–C3 continuation ablation retains both; no new partial-exit consumption claim |
+| Use specifically missing continuation service if lower progress is masked | Implemented and qualified by C3/C14/C15; no broad snapshot patch restored |
+| Preserve scope, partial controls, native and WASM evidence | Existing C14–C17 plus C6 are current and source-bound |
+| Exact closure | Open; the measured next dependency is strict parent 4741 beyond the selected snapshot |
+
+The bounded source check identifies `prepare_native_retention_lower` and
+`completion_proof_lower_value` as the returned independent-root path; the
+phase producer's complete native relations enter `validate_canonical_action_coverage`
+and the quotient lower checker. `refresh_envelope_bellman_pattern` still excludes
+scratch `selected.lower` from its final maximum. The materialized-row helper's
+self/choice logic is not used as a new independent action proof. C0's exact
+acyclic route remains the decisive no-headroom witness for a Chaos-only change.
+
+The current implementation follow-through targets the existing four-goal
+strict bridge, retaining the empty Rare five-goal primary as the acceptance
+request. `capture_incumbent_policy` fixes its table to the candidate's values
+extent; current calculator membership does not extend that ownership. Parent
+4741 has exact structural correspondence but lies beyond that table, so its
+decision cannot be restored from that table. Separate fallback-witness coverage
+was not established; counts cannot settle that wider ownership question. A
+current graph row needs candidate/dependency checks or fresh certification.
+
+D1 extends the existing selected-successor fixture with a snapshot frozen before
+alternative-only Normal/Magic parents are discovered. Original code refuses
+parent 55 outside a 55-entry policy in a 140-state calculator (177 checks,
+two intended failures). D2 tests routing exactly matched out-of-snapshot
+parents through existing quotient bootstrap/selected-row certification. It
+does not resize the saved policy, copy greedy decisions, or admit unknown
+structural parents. Fixed-policy lifting keeps its extent guard. Existing row,
+properness, complete-alternative and compiled evaluation owners must certify
+the new candidate, with the prior executable artifact retained on failure.
+
+Predeclared qualification: pass the focused completion/refusal fixture, remove
+the concrete C6 mapping obstruction or identify the next precise cap without
+worsening its verified upper, then check the unchanged primary and affected
+WASM path if retained. The primary's already qualified 99.499% gap gain remains
+historical C3 evidence; a repaired local mapping alone is not a new root gain.
+
+D2's focused fixture passes 177/0. D3, the matched current-source four-goal
+control, returns lower 198.8334996747695 and verified upper 5218.040949685988
+in 86.477 s with the same parent-4741 refusal (current graph now 6345 states;
+saved policy still 3923). D4's direct completion treatment removes that refusal
+and reaches 5651 strict states / 5381 kernels instead of 5403 / 5252. It fails
+the unchanged native watchdog at 90.836 s without final publication. The
+selected candidate had already been independently verified at 5218.04095, but
+the attempt did not return it. Its process reports no survivor. This treatment
+is unqualified; its patch, executable and failed report are preserved.
+
+One bounded follow-through, D5, changes only new out-of-snapshot row ordering:
+prefer an admitted primitive renewal before automatically generated programs.
+The existing rank preferred programs even at entries with no owned continuation,
+potentially introducing more missing dependencies. This is a newly constructed
+native row, not a copy of a greedy action or extension of a renewal certificate;
+the full kernel and resulting controller must still pass the existing checks.
+Every competing alternative remains present. In-snapshot ordering is unchanged.
+D5's fixture passes 177/0; ordinary qualification is decisive.
+
+D5 also fails the native watchdog: 90.473 s total, strict proof still running,
+no returned graph. Both D4/D5 changes, including the experimental fixture, were
+removed after their patches and process outcomes were preserved. D6 rebuilds
+the original source and its focused selected-fallback checks pass 171/0.
+No broad snapshot patch, new retry lookup, or changed lower authority remains.
+
+D7 qualifies the restored empty Rare five-goal primary: lower
+**405.3694021063399**, independently evaluated upper **85558.70618560436**,
+success 1 and zero off-policy mass. Setup is **8.478 s**, solve **64.151 s**,
+total including compilation/evaluation **66.886 s** under the original
+60-second request, 90-second watchdog and 1 GiB. This reproduces C14; it is
+not a new causal root gain, speedup or exact closure.
+
+[Fresh comparison](fresh-comparison.json), [provenance](fresh-provenance.json)
+and [evidence](fresh-evidence.zip) preserve the matched control, both failed
+treatments, old-code failures, patches, returned baseline/restored strategies,
+builds and actual process outcomes. The small `summarize_fresh.py` checks input
+identity, failed publication, restored interval and cleanup. Initial and rebuilt
+native executable hashes differ, so D7 is a fresh independent qualification.
+Engine/test sources are restored to `267e4f3`; the production WASM bytes still
+match C15. No new WASM build/run, Simulator, full census or broad suite is needed
+for the retained documentation/research-only difference. All run-owned processes
+ended without survivors.
+
+Final dispositions: the table-extent diagnosis is incorporated; new-row
+construction has focused correctness evidence but is **rejected for ordinary
+qualification** in both tested variants. Its conditional argument is preserved
+in the policy chapter under CLM-0021. The remaining measured obligation is to
+bound additional strict continuation work while delivering the already verified
+candidate. Simply relaxing the extent guard, changing row ordering, or recopying
+the snapshot does not meet that obligation. The inaccessible fresh ZIP/plan is
+still not claimed as imported. No full-goal achievement is recorded.

@@ -58,6 +58,15 @@ lower. The coarse candidate estimate remains 358,209,179.6640102 and fails cost
 reconciliation. Only the evaluated graph supplies this upper; no new primary
 exact closure or causal lower-consumption gain is claimed.
 
+A later quotient-completion experiment went beyond the saved policy's extent
+by certifying new selected rows at structurally matched parents. Its ordinary
+four-goal runs still exceeded the watchdog before publication, despite retaining
+an independently evaluated 5218.04095 candidate internally. The change was
+removed. Internal retention and successful delivery are separate obligations;
+a failed process has no returned upper merely because its telemetry remembers
+one. The earlier verified artifacts remain preserved in the
+[same evidence record](../active/2026-09-09-empty-start-partial-continuation/README.md).
+
 For a class containing several exact items, scalar bounds and executable routing are different objects. Even when each member has some proper policy, the implementation still needs a valid common policy or observable selector to claim one executable class continuation. See [CLM-0006](claims.md#clm-0006).
 
 ## Recovery And Exact Terminal Success

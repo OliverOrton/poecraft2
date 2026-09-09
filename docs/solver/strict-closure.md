@@ -71,6 +71,18 @@ whether the needed decision belonged to its original candidate, a newer
 generation, or no completed continuation at all. Counts alone cannot decide.
 See [retained source and evidence](../active/2026-09-09-empty-start-partial-continuation/README.md).
 
+The fresh-session follow-through establishes that parent 4741 has exact
+structural correspondence but no entry in the 3923-entry selected-policy table
+supplied to strict lift. No broader fallback-witness coverage is inferred.
+A narrow quotient-bootstrap experiment constructed new rows beyond
+that table without changing it; its synthetic completion fixture passed.
+Both ordinary variants nevertheless hit the unchanged 90-second watchdog while
+strict proof remained open, so neither returned a new artifact. The extension
+and its renewal-first ordering variant were removed. This is a measured
+continuation-cost limit, not evidence that the old candidate lost that decision
+or that a snapshot extension would meet the budget. The next required contract
+is bounded continuation work with delivery of the independently retained upper.
+
 ## Source basis
 
 This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/strict-closure.md). Claim IDs are registered in [the ledger](claims.md); each history states its acceptance basis. The [backbone integration](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) is complete. Remaining native correspondence is scoped in [research](research.md#open-obligations); an argument link does not confer runtime authority.

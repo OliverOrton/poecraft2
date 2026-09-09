@@ -82,6 +82,20 @@ Discovering several missing branches together grants no upper while any remains.
 The current [matched evidence](../../active/2026-09-09-empty-start-partial-continuation/README.md)
 demonstrates an improved empty-five executable upper, with unchanged lower.
 
+An exact structural parent outside a saved policy's table has no decision in
+that table. Any separate fallback witness needs its own domain and identity
+check. The parent can still be an entry for **new** continuation construction:
+keep the saved controller fixed, obtain a legal complete native row at the
+missing entry through the existing strict action owner, and form a candidate
+on the resulting reachable closure. The fixed-policy equations apply to this
+new controller only after its full nonterminal chain is proper and priced; the old
+root value cannot be assigned to the added entry. Complete competing-action
+proof remains necessary for any optimality claim. This is construction and
+reevaluation, not extension of the old certificate. Fixed-policy lifting may
+still refuse the absent decision, while quotient completion can explicitly
+discharge it. Unknown structural parents and changed member/control semantics
+remain separate correspondence failures. [CLM-0021](../claims.md#clm-0021).
+
 <a id="choices"></a>
 ## 3. Respect when a choice becomes available
 

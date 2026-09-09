@@ -24,6 +24,16 @@
       ],
       "source_binding": "full input and selected internal diagnostic mode retained in both original benchmark reports"
     },
+    "empty-four-product8-v1": {
+      "semantic_version": "unchanged empty Rare four-goal quality-ladder strict bridge",
+      "property": "bounded new continuation construction and delivery of an independently evaluated strategy",
+      "coefficient_semantics": "native strict rows and ordinary compiled evaluation; failed publication supplies no returned upper",
+      "scope": "Conquest Lamellar empty Rare ilvl86, pinned Allflame prices with base 1, full product scope, 60-second finish, 90-second watchdog and 1 GiB",
+      "input_references": [
+        "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-4-goal-product8.json"
+      ],
+      "source_binding": "267e4f3 control and D4/D5 rejected patches/executable hashes in fresh-provenance.json"
+    },
     "empty-five-product8-v1": {
       "semantic_version": "unchanged repository quality-ladder empty Rare five-goal product8 fixture",
       "property": "same-final-goal checked lower consumption and independently evaluated executable upper; native exact closure remains open",
@@ -61,6 +71,23 @@
     "resource": "include native preparation and checking in end-to-end observation; same-target unequal-resource experiments are scaling evidence only"
   },
   "observations": [
+    {
+      "id": "out-of-snapshot-continuation-failures-20260909",
+      "model": "empty-four-product8-v1",
+      "kind": "conditional_observation",
+      "producer": "native quotient continuation experiment with matched control and preserved watchdog failures",
+      "validation": "docs/active/2026-09-09-empty-start-partial-continuation/README.md",
+      "evidence": "docs/active/2026-09-09-empty-start-partial-continuation/fresh-comparison.json",
+      "pointer": "/runs",
+      "role": "bounded strict bridge; not a substitute for the empty-five primary",
+      "treatment": "new checked rows beyond the saved policy extent, followed by a primitive-renewal ordering variant; both removed",
+      "limitations": [
+        "The focused fixture passes 177/0; old code fails two intended checks.",
+        "D3 control returns 5218.04095 in 86.477 seconds; D4/D5 fail the native 90-second watchdog without final publication.",
+        "Internally retained candidate values are not returned uppers for failed attempts.",
+        "Restored D7 primary independently reproduces 405.36940–85558.70619 in 66.886 seconds; no new root gain or exact closure."
+      ]
+    },
     {
       "id": "support",
       "model": "saved-anchored-v1",
