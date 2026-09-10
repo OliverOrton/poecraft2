@@ -1,0 +1,230 @@
+{
+  "allowed_mechanic_families": [
+    "calculator_goal_relevant_product_envelope"
+  ],
+  "approval_status": "generated_b3_2026_07_22",
+  "benchmark_enabled": true,
+  "caps": {
+    "cancel_ack_ms": 250,
+    "full_evidence": true,
+    "max_compiled_edges": 400000,
+    "max_compiled_nodes": 100000,
+    "max_diagnostic_samples": 64,
+    "max_discovered_states": 200000,
+    "max_expanded_states": 200000,
+    "max_reforge_work": 50000000,
+    "max_solver_owned_bytes": 1073741824,
+    "max_state_action_rows": 1215000,
+    "max_states": 200000,
+    "max_strategy_json_bytes": 67108864,
+    "max_sweeps": 100000,
+    "max_telemetry_json_bytes": 2097152,
+    "max_transitions": 10000000,
+    "solve_profile": "calculator_product_v1",
+    "solve_step_work_items": 8,
+    "worker_step_ms": 250
+  },
+  "category": "seeded_natural_t1",
+  "comparison_profile": "bounded-policy-natural-t1-v1",
+  "corpus": {
+    "geometric_mean_single_draw_probability": 0.007820136852394919,
+    "goal_modifier_count": 3,
+    "maximum_single_draw_probability": 0.007820136852394917,
+    "minimum_single_draw_probability": 0.007820136852394917,
+    "natural_pool_mod_count": 147,
+    "natural_pool_weight": 127875,
+    "prefix_goal_count": 2,
+    "side_mix": "PPS",
+    "stratum": "heldout-shield-pps",
+    "suffix_goal_count": 1,
+    "tier": "heldout"
+  },
+  "economy": {
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "fallback_price": null,
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "version": "v1"
+  },
+  "feasibility": {
+    "eligible_slot_count": 3,
+    "goal_slot_count": 3,
+    "natural_pool_mod_count": 147,
+    "natural_pool_weight": 127875,
+    "natural_prefix_mod_count": 57,
+    "natural_prefix_weight": 54000,
+    "natural_suffix_mod_count": 90,
+    "natural_suffix_weight": 73875,
+    "reason": "natural_reforge_witness",
+    "required_slot_count": 3,
+    "slot_natural_mod_counts": [
+      1,
+      1,
+      1
+    ],
+    "slot_natural_weights": [
+      1000,
+      1000,
+      1000
+    ],
+    "slot_single_draw_probabilities": [
+      0.007820136852394917,
+      0.007820136852394917,
+      0.007820136852394917
+    ],
+    "status": "feasible",
+    "witness_action_id": "chaos",
+    "witness_action_index": 5,
+    "witness_mod_ids": [
+      24,
+      202,
+      114
+    ]
+  },
+  "generation": {
+    "artifact_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+    "engine_binary_sha256": "2ee0839d911ec3728a46ed4c37b28fcc7faede9e734b632fed5609579b61bcbf",
+    "engine_commit": "be553608ecabde28a3dec07856255911459ec97d",
+    "generator_seed": 20260909,
+    "generator_version": "natural-t1-corpus-v1"
+  },
+  "goal": {
+    "action_mode": "goal_relevant",
+    "min_satisfied_slots": 3,
+    "rarity": "rare",
+    "slots": [
+      {
+        "family_mod_key": "AttackerTakesDamage4",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "Strength9",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "LocalIncreaseSocketedMeleeGemLevel",
+        "min_tier": 1
+      }
+    ],
+    "version": "v1"
+  },
+  "id": "natural-t1-heldout-shield-pps-8074995dad11",
+  "product_action_envelope": {
+    "bench_goal_slots_forbidden": true,
+    "envelope_goal": {
+      "action_mode": "goal_relevant",
+      "fossil_mode": "goal_relevant",
+      "min_satisfied_slots": 3,
+      "rarity": "rare",
+      "requested_fossil_actions": [],
+      "slots": [
+        {
+          "family_mod_key": "AttackerTakesDamage4",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "Strength9",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "LocalIncreaseSocketedMeleeGemLevel",
+          "min_tier": 1
+        }
+      ],
+      "version": "v1"
+    },
+    "mode": "calculator_goal_relevant_priced_v1",
+    "pricing_filter": "all_declared_cost_keys_present"
+  },
+  "resolved_natural_t1_goals": [
+    {
+      "classification_tags": [
+        "damage",
+        "physical",
+        "physical_damage"
+      ],
+      "family_id": 6,
+      "family_mod_key": "AttackerTakesDamage4",
+      "family_tier_index": 1,
+      "global_mod_id": 2946,
+      "natural_mod_count": 1,
+      "natural_weight": 1000,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 35,
+      "session_mod_id": 24,
+      "side": "prefix",
+      "single_draw_probability": 0.007820136852394917,
+      "slot": 0
+    },
+    {
+      "classification_tags": [
+        "attribute"
+      ],
+      "family_id": 60,
+      "family_mod_key": "Strength9",
+      "family_tier_index": 1,
+      "global_mod_id": 32196,
+      "natural_mod_count": 1,
+      "natural_weight": 1000,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 82,
+      "session_mod_id": 202,
+      "side": "suffix",
+      "single_draw_probability": 0.007820136852394917,
+      "slot": 1
+    },
+    {
+      "classification_tags": [
+        "attack",
+        "gem"
+      ],
+      "family_id": 33,
+      "family_mod_key": "LocalIncreaseSocketedMeleeGemLevel",
+      "family_tier_index": 1,
+      "global_mod_id": 20465,
+      "natural_mod_count": 1,
+      "natural_weight": 1000,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 63,
+      "session_mod_id": 114,
+      "side": "prefix",
+      "single_draw_probability": 0.007820136852394917,
+      "slot": 2
+    }
+  ],
+  "schema_version": "solver_benchmark_case_v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/Shields/ShieldStr17",
+    "base_name": "Pinnacle Tower Shield",
+    "item_class_key": "Shield",
+    "item_level": 86
+  },
+  "start": {
+    "mods": [],
+    "rarity": "rare",
+    "with_implicits": false
+  },
+  "verification": {
+    "exact_cost_absolute_tolerance": 1e-07,
+    "exact_cost_relative_tolerance": 1e-09,
+    "exact_evaluation": true,
+    "exact_max_owned_bytes": 1073741824,
+    "exact_max_pairs": 5000000,
+    "exact_max_states": 1000000,
+    "exact_max_transitions": 20000000,
+    "max_actions_per_run": 100000,
+    "max_graph_steps_per_run": 4000000,
+    "runs": 0,
+    "seed": 20260826
+  },
+  "watchdog_seconds": 300.0
+}

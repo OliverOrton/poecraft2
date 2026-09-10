@@ -1,0 +1,31 @@
+diff --git a/engine/src/solver_solve_incremental.cpp b/engine/src/solver_solve_incremental.cpp
+index 678f5e8..575d655 100644
+--- a/engine/src/solver_solve_incremental.cpp
++++ b/engine/src/solver_solve_incremental.cpp
+@@ -1735,6 +1735,26 @@ bool SolveWork::Impl::schedule_incremental_refinement(
+             }
+         }
+     }
++    if (!has_unresolved && force && !output_incumbent.has_value()) {
++        /* Delayed actions can all be inapplicable on the current carriers
++         * while the selected restricted route still reaches an unexpanded
++         * primitive successor (for example Scour's empty normal item). With
++         * no executable incumbent there is no upper pass to name that work.
++         * Service the selected fringe through ordinary exact refinement;
++         * its ordering values certify neither a policy nor a closed envelope.
++         * A partial walk may still name valid missing dependencies. */
++        std::vector<std::uint32_t> fringe;
++        std::vector<double> fringe_priority;
++        collect_focused_fringe(fringe, fringe_priority);
++        for (const std::uint32_t state : fringe) {
++            if (state < state_count &&
++                !calc.is_goal_state(calc.state(state)) &&
++                (state >= expanded.size() || !expanded[state])) {
++                priority[state] = unbounded_priority;
++                has_unresolved = true;
++            }
++        }
++    }
+     if (!has_unresolved) return false;
+ 
+     std::vector<std::uint32_t> ranked;

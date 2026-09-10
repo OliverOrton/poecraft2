@@ -1,0 +1,17 @@
+{
+  "reviewed_ref": "be553608ecabde28a3dec07856255911459ec97d",
+  "previous_reviewed_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+  "original_package_sha256": "9cd6ec63a83fb098ff950b5ecdf153f8bd8f16cec96793bce32b5a62314b5b03",
+  "files": {
+    "README.md": "fd731f9ac044eccd278137399b28fd083dae09161ac99060fc786ea5a8f554ff",
+    "audit_report.md": "f75c3d5ea05bcebf8fe64ecf1157c3764b246ebfe4db17fdb3e4a834289693f1",
+    "codex_start.txt": "a09f443eb19121438ba4ea3a10d7d6e6c600fd31e482823addfd162f8dd680f0",
+    "derived_arithmetic.json": "1b4f79cdecfb9a74e9371518408c72c974e5cf33795f053c510114605a33c4e9",
+    "diagnostic_cohort.csv": "256fdea20ae79fd93f9803ce99721630a2f04d84f08816afa5442baa70a97f80",
+    "diagnostic_cohort.json": "00586ade5a8c65304381ff632f15d50e0bf596c230a9d2661e8ff6af3a150f8b",
+    "main_update.md": "117615b4bc1758f62268a51d5ce43b96a43003ca30f8368e58676ba32b10ec97",
+    "next_program.md": "fcf128aa59efcc4967f7468e3a533cd2c76a981d87bd3a9993c88d861edac554",
+    "source_register.json": "ac32b2992884d9b4d432956dbf47747aab1adfdb641c80d353ed2e49d37f5293"
+  },
+  "validation": "Local artifact structure, references, CSV/JSON agreement and case counts only; no repository/native verification."
+}

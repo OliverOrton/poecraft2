@@ -41,7 +41,7 @@ Paths in this table are under `engine/src/` unless indicated otherwise.
 | Independent graph evaluation | `solver_eval.cpp`, `solver_eval_resolve.cpp`, `solver_eval_report.cpp`, supporting type/helper headers | Properness, full mass, resources, numerical endpoints; CLM-0002, CLM-0023 |
 | Result, telemetry, and replay | `solver_api.cpp`, `solver_solve_telemetry.cpp`, `solver_solve_telemetry_json.cpp`, `solver_development_checkpoint.cpp` | Provenance, semantic dependencies, final classification; CLM-0021, CLM-0024 |
 
-These claim numbers refer to the companion draft ledger. They are a review map, not runtime annotations already installed or a declaration that every source premise is discharged. See [claims](../solver/claims.md) and the explicit [research gaps](../solver/research.md).
+These registered claim IDs map implementation responsibilities to propositions in the [claim ledger](../solver/claims.md). Each claim's latest history records its status and scoped source correspondence; registration, source annotations and traceability lint do not discharge its mathematical or native premises. See the explicit [research gaps](../solver/research.md).
 
 ## Retained Authorities
 

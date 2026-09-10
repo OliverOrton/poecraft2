@@ -1,0 +1,67 @@
+You are a fresh Codex session in OliverOrton/poecraft2.
+
+Use the attached v2 audit package and next_program.md for the newly selected
+Cross-Base Capability Recovery programme. Reviewed remote main:
+be553608ecabde28a3dec07856255911459ec97d
+
+Reconcile actual local HEAD and preserve newer/unrelated work. Read current
+AGENTS, HANDOFF, main_update.md and the Useful Proof Time section of the existing
+living record. There is no missing-old-package pause to recreate. Work sequentially,
+without subagents, inherited deadline, automatic restart or push permission.
+Preserve protected path 0 without inspecting it.
+
+The earlier Useful Proof Time branch is complete as an experiment and stopped
+with its material goal unmet. KEEP its native-only proof handoff, complete
+demanded native rows beyond saved policy ownership, deferred option kernels,
+whole-cell prepared-lower consumer, open-scope guards and verified fallback.
+Do not implement those again, replay F1–F8 as routine startup, or describe
+parent 4741 as the present unpassed boundary.
+
+What the evidence now says:
+- Short four/five and the existing exact three-suffix graph remain unchanged.
+- Ordinary old-source 240-second controls did no strict work; four-goal policy
+  was worse than its separate short result.
+- F7 gives four-goal proof 178.287 seconds and strengthens 74,015 obligations,
+  but retires zero as noncompetitive and leaves the root unchanged.
+- F8 five-goal proof hits replay-backed partition memory with its policy retained.
+- The new consumer is max(price floor, whole-cell minimum source heuristic),
+  not an action-specific successor expectation. Do not optimize its 1.654 ms
+  lookup timer or count its hits as capability.
+- No new non-Conquest outcomes were established. The potential partial 3-to-5
+  historical loss (80.7k versus last retained 794k) remains to be reconciled.
+
+First use the existing runner/reporting tools to establish the deliberately
+diverse cohort. diagnostic_cohort.json is a selection map, NOT a runner manifest.
+Clone/derive new identities; preserve frozen cases and old evidence. Ordinary
+baseline handoff is disabled. Retain 240-second finish / 300-second native
+watchdog / 315-second outer cleanup and 1 GiB, with other caps/scopes explicit.
+Those are ceilings, not mandatory runtime. Keep actual short-finish controls.
+Use compatible existing receipts rather than repeated qualification; F1/F2
+belong to source 3174383 and are not fresh ordinary be55360 baselines.
+
+Select one shared obstruction from the diverse results. Leading hypotheses are
+bounded frontier completion/repeated work and partition-memory/rebuild overlap,
+not another general planner. If other bases fail before first policy, fix that
+earlier shared owner first. Trace one obligation through full row, all successors,
+proper continuation and usable proof completion. Distinguish necessary new work
+from repeated work before adding a cache/basin. Keep original paused-family and
+new-parent action coverage open until proved; do not flip a closure flag.
+
+A same-candidate ablation must match captured candidate/row/generation identity;
+a 60-second wall trigger alone does not guarantee that. No handoff-time grid.
+Run-local certified endgame reuse is conditional on measured compatible reuse,
+not authorization to create a permanent fragment library. Parallelism and learned
+guidance likewise require a measured cross-base consumer and held-out families.
+
+Continue into one evidence-selected implementation when authorized by this task;
+retain it only with the programme's broad capability/non-regression gates. A new
+exact capability or material same-budget gains on at least two non-Conquest
+families must not mask losses elsewhere. Stop a branch after two discriminating
+failures without a new premise; report intermediate gains without claiming the
+major goal complete.
+
+Update the existing mathematical owners and one living record with actual
+arguments, outcomes and dispositions. Clarify current status above the historical
+narratives in strict-closure.md. No new benchmark platform or documentation
+programme. Focused tests only when informative/needed; no routine Simulator or
+broad intermediate suite. Do not push.

@@ -1,0 +1,217 @@
+{
+  "reviewed_ref": "be553608ecabde28a3dec07856255911459ec97d",
+  "repository": {
+    "R01": {
+      "title": "Original-checkpoint handoff",
+      "path": "HANDOFF.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/HANDOFF.md"
+    },
+    "R02": {
+      "title": "August 22 carrier-ladder result",
+      "path": "docs/archive/2026-08-22-exact-goal-carrier-ladder/result.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/archive/2026-08-22-exact-goal-carrier-ladder/result.md"
+    },
+    "R03": {
+      "title": "August 26 cross-base quality matrix",
+      "path": "docs/archive/2026-08-26-solver-quality-debt-retirement/gate0-evidence.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/archive/2026-08-26-solver-quality-debt-retirement/gate0-evidence.md"
+    },
+    "R04": {
+      "title": "August 24 harmful ordering experiment",
+      "path": "docs/archive/2026-08-24-carrier-aware-control-authority/evidence/gate-b-result.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/archive/2026-08-24-carrier-aware-control-authority/evidence/gate-b-result.md"
+    },
+    "R05": {
+      "title": "August 30 candidate reclamation",
+      "path": "docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md"
+    },
+    "R06": {
+      "title": "September 9 continuation, preparation, and finish evidence",
+      "path": "docs/active/2026-09-09-empty-start-partial-continuation/README.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/active/2026-09-09-empty-start-partial-continuation/README.md"
+    },
+    "R07": {
+      "title": "Seeded corpus specification",
+      "path": "fixtures/solver-natural-t1/v1/README.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-natural-t1/v1/README.md"
+    },
+    "R08": {
+      "title": "Seeded corpus generator configuration",
+      "path": "fixtures/solver-natural-t1/v1/generator-config.json",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-natural-t1/v1/generator-config.json"
+    },
+    "R09": {
+      "title": "Seeded corpus evaluation roles",
+      "path": "fixtures/solver-natural-t1/v1/evaluation-roles.json",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-natural-t1/v1/evaluation-roles.json"
+    },
+    "R10": {
+      "title": "July complete-successor census",
+      "path": "fixtures/solver-natural-t1/v1/evidence/true-successor-frontier-census-summary.json",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-natural-t1/v1/evidence/true-successor-frontier-census-summary.json"
+    },
+    "R11": {
+      "title": "Quality-ladder manifest",
+      "path": "fixtures/solver-quality-ladder/v1/manifest.json",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-quality-ladder/v1/manifest.json"
+    },
+    "R12": {
+      "title": "Solver Lab manifest",
+      "path": "fixtures/solver-lab/v1/manifest.json",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-lab/v1/manifest.json"
+    },
+    "R13": {
+      "title": "Phase lower context/reuse implementation",
+      "path": "engine/src/solver_phase_lower.cpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/engine/src/solver_phase_lower.cpp"
+    },
+    "R14": {
+      "title": "Phase probability frame and model implementation",
+      "path": "engine/src/solver_phase_probability.cpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/engine/src/solver_phase_probability.cpp"
+    },
+    "R15": {
+      "title": "Retained scheduling contract",
+      "path": "docs/solver/scheduling-bellman.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/solver/scheduling-bellman.md"
+    },
+    "R16": {
+      "title": "Lower-bound retirement result",
+      "path": "docs/archive/2026-08-26-solver-quality-debt-retirement/gate5-evidence.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/archive/2026-08-26-solver-quality-debt-retirement/gate5-evidence.md"
+    },
+    "R17": {
+      "title": "Rejected full shared-reforge DAG",
+      "path": "docs/archive/2026-07-28-harvest-shared-reforge-frontier/report.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/archive/2026-07-28-harvest-shared-reforge-frontier/report.md"
+    },
+    "R18": {
+      "title": "Older five-base causal study",
+      "path": "docs/archive/2026-07-25-gap-directed-natural-t1-research/report.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/archive/2026-07-25-gap-directed-natural-t1-research/report.md"
+    },
+    "R19": {
+      "title": "Historical option/fragment audit",
+      "path": "docs/archive/2026-08-27-solver-research-audits/executable-options-audit.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/archive/2026-08-27-solver-research-audits/executable-options-audit.md"
+    },
+    "R20": {
+      "title": "Older ML planning proposal",
+      "path": "docs/future/ml.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/future/ml.md"
+    },
+    "R21": {
+      "title": "Native API lifetime/threading contract",
+      "path": "engine/include/poecraft/api.h",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/engine/include/poecraft/api.h"
+    },
+    "R22": {
+      "title": "Original-checkpoint benchmarking contract",
+      "path": "docs/solver/benchmarking.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/solver/benchmarking.md"
+    },
+    "R23": {
+      "title": "WASM execution model",
+      "path": "docs/engine/wasm.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/engine/wasm.md"
+    },
+    "R24": {
+      "title": "Shared working rules",
+      "path": "AGENTS.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/AGENTS.md"
+    },
+    "R25": {
+      "title": "Original-checkpoint strict closure contract",
+      "path": "docs/solver/strict-closure.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/docs/solver/strict-closure.md"
+    },
+    "R26": {
+      "title": "July constructive-policy acceptance and reuse",
+      "path": "fixtures/solver-natural-t1/v1/evidence/b6-acceptance-summary.json",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-natural-t1/v1/evidence/b6-acceptance-summary.json"
+    },
+    "R27": {
+      "title": "Candidate handoff and demanded-continuation commit and diff",
+      "url": "https://github.com/OliverOrton/poecraft2/commit/be553608ecabde28a3dec07856255911459ec97d",
+      "ref": "be553608ecabde28a3dec07856255911459ec97d"
+    },
+    "R28": {
+      "title": "Useful-proof-time living evidence, F0–F14",
+      "path": "docs/active/2026-09-09-empty-start-partial-continuation/README.md",
+      "anchor": "useful-proof-time",
+      "ref": "be553608ecabde28a3dec07856255911459ec97d",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/be553608ecabde28a3dec07856255911459ec97d/docs/active/2026-09-09-empty-start-partial-continuation/README.md#useful-proof-time"
+    },
+    "R29": {
+      "title": "Updated strict-closure contract",
+      "path": "docs/solver/strict-closure.md",
+      "ref": "be553608ecabde28a3dec07856255911459ec97d",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/be553608ecabde28a3dec07856255911459ec97d/docs/solver/strict-closure.md"
+    },
+    "R30": {
+      "title": "Updated benchmarking contract and native-only proof handoff",
+      "path": "docs/solver/benchmarking.md",
+      "ref": "be553608ecabde28a3dec07856255911459ec97d",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/be553608ecabde28a3dec07856255911459ec97d/docs/solver/benchmarking.md"
+    },
+    "R31": {
+      "title": "Retained proof-time comparison data",
+      "path": "docs/active/2026-09-09-empty-start-partial-continuation/proof-time-comparison.json",
+      "review_note": "Input/provenance fields inspected; measurements summarized from the complete F0–F14 living evidence. The full raw ZIP was not independently executed or re-evaluated.",
+      "ref": "be553608ecabde28a3dec07856255911459ec97d",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/be553608ecabde28a3dec07856255911459ec97d/docs/active/2026-09-09-empty-start-partial-continuation/proof-time-comparison.json"
+    },
+    "R32": {
+      "title": "Strict whole-cell completion-floor implementation",
+      "path": "engine/src/solver_policy_refinement.cpp",
+      "review_note": "Relevant changed implementation reviewed in commit diff; not a complete correctness audit of every function.",
+      "ref": "be553608ecabde28a3dec07856255911459ec97d",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/be553608ecabde28a3dec07856255911459ec97d/engine/src/solver_policy_refinement.cpp"
+    },
+    "R33": {
+      "title": "Current handoff and explicit stopped-experiment disposition",
+      "path": "HANDOFF.md",
+      "ref": "be553608ecabde28a3dec07856255911459ec97d",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/be553608ecabde28a3dec07856255911459ec97d/HANDOFF.md"
+    },
+    "R34": {
+      "title": "Existing immutable 240/300-second derived profile",
+      "path": "docs/active/2026-09-09-empty-start-partial-continuation/long-profile/manifest.json",
+      "ref": "be553608ecabde28a3dec07856255911459ec97d",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/be553608ecabde28a3dec07856255911459ec97d/docs/active/2026-09-09-empty-start-partial-continuation/long-profile/manifest.json"
+    }
+  },
+  "literature": {
+    "L01": {
+      "title": "QVBS: models, properties, and tool results",
+      "url": "https://qcomp.org/benchmarks/about.html"
+    },
+    "L02": {
+      "title": "QComp 2020: correctness tracks and no global ranking",
+      "url": "https://qcomp.org/competition/2020/"
+    },
+    "L03": {
+      "title": "Schmalz and Trevizan, Efficient Constraint Generation for SSPs, Artificial Intelligence 354 (2026), 104505",
+      "url": "https://arxiv.org/abs/2604.01855"
+    },
+    "L04": {
+      "title": "Sutton, Precup and Singh, Between MDPs and semi-MDPs, Artificial Intelligence 112 (1999), 181–211",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0004370299000521"
+    },
+    "L05": {
+      "title": "Han and Tschiatschek, Option Transfer and SMDP Abstraction with Successor Features, IJCAI 2022",
+      "url": "https://arxiv.org/abs/2110.09196"
+    },
+    "L06": {
+      "title": "Toyer et al., ASNets: Deep Learning for Generalised Planning, JAIR 68 (2020), 1–68",
+      "url": "https://arxiv.org/abs/1908.01362"
+    },
+    "L07": {
+      "title": "Kloessner, Seipp and Steinmetz, Cartesian Abstractions and Saturated Cost Partitioning in Probabilistic Planning, ECAI 2023",
+      "url": "https://fai.cs.uni-saarland.de/kloessner/papers/kloessner-etal-ecai23.pdf"
+    }
+  },
+  "previous_reviewed_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+  "update_scope": "One direct child commit reviewed against the original audit; no repository mutation or native execution. Existing literature references are carried forward, not a new literature search."
+}

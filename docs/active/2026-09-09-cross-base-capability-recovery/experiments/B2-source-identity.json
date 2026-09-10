@@ -1,0 +1,5 @@
+{
+  "path": "engine/src/solver_solve_incremental.cpp",
+  "sha256_during_run": "83c0fbd7585a55e6d5d3e3ba82959e695d5dfc4ec0aa6e30d14802ac0527d536",
+  "line_ending_note": "B2 preparation wrote CRLF; preserved patch omits line-ending-only changes. Native semantics identical under LF."
+}

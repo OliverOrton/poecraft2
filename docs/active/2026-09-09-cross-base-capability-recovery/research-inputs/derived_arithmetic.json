@@ -1,0 +1,46 @@
+{
+  "warning": "Arithmetic on recorded historical observations. These are NOT matched current native performance measurements.",
+  "nominal_five_policy_improvement_from_aug22_percent": 2.063231154310844,
+  "nominal_partial_3_to_5_cost_ratio_current_over_aug26": 9.837211120454672,
+  "current_empty_five_upper_over_lower": 211.06355275221262,
+  "current_empty_five_absolute_gap": 85153.33678349802,
+  "late_aug_conquest_four_to_current_nominal_upper_reduction_percent": 38.62348603999924,
+  "historical_onyx_to_spine_full_row_support_ratio": 14.396275496450714,
+  "cohort_bases": [
+    "Amethyst Ring",
+    "Conquest Lamellar",
+    "Dire Pelt",
+    "Jewelled Foil",
+    "Onyx Amulet",
+    "Spine Bow",
+    "Vaal Regalia"
+  ],
+  "quality_ladder_original_case_count": 18,
+  "quality_ladder_original_base_count": 3,
+  "quality_ladder_conquest_cases": 9,
+  "seeded_case_count": 146,
+  "seeded_base_count": 6,
+  "reviewed_ref": "be553608ecabde28a3dec07856255911459ec97d",
+  "partial_3_to_5_note": "The 794067.45 observation predates be55360 and was not freshly requalified in F9–F11.",
+  "four_goal_long_control_over_known_short_policy_cost": 1.6290088661278386,
+  "four_goal_short_and_handoff_absolute_gap": 5019.2074500112185,
+  "four_goal_existing_short_gap_20_percent_improvement_target": 4015.365960008975,
+  "f7_overview": {
+    "strict_seconds": 178.287,
+    "strengthened_obligations": 74015,
+    "noncompetitive_retirements": 0,
+    "unresolved_obligations": 90810,
+    "lookup_ms": 1.654,
+    "native_peak_bytes": 754247279,
+    "root_gain_claimed": false
+  },
+  "f8_overview": {
+    "strict_seconds": 117.089,
+    "total_seconds": 184.099,
+    "exact_states": 16010,
+    "strengthened_obligations": 191505,
+    "unresolved_obligations": 205396,
+    "stop": "replay-backed partition memory cap",
+    "root_gain_claimed": false
+  }
+}

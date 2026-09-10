@@ -1,0 +1,40 @@
+diff --git a/engine/src/solver_solve_incremental.cpp b/engine/src/solver_solve_incremental.cpp
+index 678f5e8..364bc26 100644
+--- a/engine/src/solver_solve_incremental.cpp
++++ b/engine/src/solver_solve_incremental.cpp
+@@ -1471,6 +1471,8 @@ bool SolveWork::Impl::continue_open_incremental_envelope() {
+     focused_lower_mode = false;
+     incremental_restricted_values_ready = true;
+     if (try_begin_candidate_proof_handoff()) return false;
++    if (!output_incumbent.has_value() &&
++        schedule_incremental_refinement(true)) return true;
+     if (begin_incremental_upper_policy_pass()) return true;
+     if (classify_incremental_alternatives()) {
+         restart_incremental_optimization();
+@@ -1587,6 +1589,26 @@ bool SolveWork::Impl::schedule_incremental_refinement(
+             has_unresolved = true;
+         }
+     }
++    if (!has_unresolved && !output_incumbent.has_value()) {
++        /* Delayed actions can all be inapplicable on the current carriers
++         * while the selected restricted route still reaches an unexpanded
++         * primitive successor (for example Scour's empty normal item). With
++         * no executable incumbent there is no upper pass to name that work.
++         * Service the selected fringe through ordinary exact refinement;
++         * its ordering values certify neither a policy nor a closed envelope.
++         * A partial walk may still name valid missing dependencies. */
++        std::vector<std::uint32_t> fringe;
++        std::vector<double> fringe_priority;
++        collect_focused_fringe(fringe, fringe_priority);
++        for (const std::uint32_t state : fringe) {
++            if (state < state_count &&
++                !calc.is_goal_state(calc.state(state)) &&
++                (state >= expanded.size() || !expanded[state])) {
++                priority[state] = unbounded_priority;
++                has_unresolved = true;
++            }
++        }
++    }
+     // A named missing continuation blocks a concrete selected candidate.
+     // Return to assembly after servicing those entries instead of padding
+     // this batch with unrelated uncertainty. Requests are retired below;

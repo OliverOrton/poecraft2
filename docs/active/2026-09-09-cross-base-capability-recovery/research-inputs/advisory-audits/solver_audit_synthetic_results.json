@@ -1,0 +1,60 @@
+{
+  "classification": "synthetic exact rational mathematical illustrations; no native execution",
+  "checks": {
+    "A_complete_subsolution": true,
+    "A_enumerated_root_costs": true,
+    "A_strict_action_separation": true,
+    "A_weak_model_ceiling": true,
+    "A_boundary_threshold": true,
+    "A_missing_action_refutes_certificate": true,
+    "A_missing_action_true_optimum": true,
+    "A_cheaper_candidate_not_a_proof_defect": true,
+    "A_local_option_exit_not_global_properness": true,
+    "B_all_action_subsolution": true,
+    "B_complete_mass": true,
+    "B_query_equals_full_expectation": true,
+    "B_root_strict_separation": true,
+    "B_repair_proper_cost": true,
+    "B_stale_query_must_not_be_relabelled": true,
+    "B_context_specific_values": true,
+    "B_average_is_not_uniform_lower": true,
+    "B_observation_timing": true,
+    "B_changed_value_minimizer": true
+  },
+  "number_of_checks": 19,
+  "A": {
+    "proper_stationary_root_costs": [
+      "10",
+      "23"
+    ],
+    "boundary_value_for_tie": "14",
+    "boundary_value_for_strict_retirement": ">14",
+    "weak_auxiliary_root_optimum": "5",
+    "omitted_action_native_toy_optimum": "5/2",
+    "genuinely_better_toy_policy": "6"
+  },
+  "B": {
+    "synthetic_labels": 256,
+    "cut_contributions": 2,
+    "exact_full_and_cut_Q": "7",
+    "changed_potential_query": "893/128",
+    "hidden_context_values": [
+      "5",
+      "7"
+    ],
+    "hidden_context_mixture_value": "6",
+    "post_observation_cost": "0",
+    "precommit_cost": "4",
+    "note": "An old independently valid native lower can survive as a separate certificate; it is not the changed-potential query."
+  },
+  "arithmetic_from_retained_reports_not_new_measurements": {
+    "F7_reported_strict_seconds": "178287/1000",
+    "F7_reported_total_seconds": "24069/100",
+    "other_time_seconds": "62403/1000",
+    "maximum_fraction_removable_by_eliminating_strict_phase": 0.7407328929328182,
+    "F7_root_gap": 5019.2074500112185,
+    "20_percent_gap_reduction_target": 4015.365960008975,
+    "historical_partial3to5_ratio_approx_using_rounded_old_cost": 9.83721112045467,
+    "warning": "Time ceiling holds only with the same other work and trajectory; no speedup or regression is established."
+  }
+}

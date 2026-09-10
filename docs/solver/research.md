@@ -104,49 +104,24 @@ The campaign establishes preparation savings, stronger scoped lowers and
 verified-policy recovery. No new native exact closure, empty clean-five lower
 or attainment of the historical development target is established.
 
-The [September 9 empty-start checkpoint](../active/2026-09-09-empty-start-partial-continuation/README.md)
-separates the actual source from its certificate construction frame and proves
-member eligibility from the complete observed state, including absent metamod
-flags. The final repository empty five-goal request returns a checked lower
-405.36940 and independently evaluated upper 16,997,812.19923. The same full
-preparation with consumption disabled returns the old 36.48853 lower and the same
-upper: the large upper gain over baseline is not caused by lower consumption.
-Accepting additional natural partial classes raises observed lower owners from
-681 to 4,049 but does not move the root interval. No new exact closure is claimed.
+The [September 9 living record](../active/2026-09-09-empty-start-partial-continuation/README.md)
+separates three findings: complete observed-state eligibility strengthens the
+consumed lower; selected-continuation service improves the executable upper;
+earlier relation construction reduces setup work. Matched controls do not
+attribute the upper gain to lower consumption. The compressed retry refusal
+remains: direct modifiers, veiled state and renewal-only control cannot be
+reconstructed from its marker. Transfer instead needs the complete physical
+producing-action argument in the [lower chapter](mathematics/lower-bounds.md#composition).
+The C0 Scour/Alchemy/Fracture auxiliary route costs 405.36940214688 and contains
+no Chaos, so Chaos-only refinement cannot lift that unchanged model's ceiling.
 
-The returned review keeps the compressed retry refusal: direct modifiers,
-veiled state and renewal-only control cannot be reconstructed from the marker.
-Transfer must instead use a complete physical producing-action partition, as
-derived in the [lower chapter](mathematics/lower-bounds.md#composition).
-The resumed C0 preflight reproduces 405.36940 and exhibits an unchanged
-Scour/Alchemy/Fracture optimistic route with exact rational cost 405.36940214688.
-It contains no Chaos, so a Chaos-only refinement cannot lift this model's
-ceiling. This is auxiliary evidence, not a native upper. The resulting
-upper-side investigation completes the selected candidate's specifically missing
-partial continuations through the existing refinement owner. Batching selected
-and publication-kernel siblings improves the independently evaluated empty-five
-upper to 85,558.70619, with the same 405.36940 lower and requested resources.
-The certified absolute gap falls 99.499%. A subsequent eager construction of
-supported joint-retention relations preserves that interval while reducing
-ordinary native setup from 27.353 to 8.278 seconds. Finalization remains included;
-the fixed finish request is not an elapsed-time speedup claim.
-The [living record](../active/2026-09-09-empty-start-partial-continuation/README.md)
-retains the causal variants, browser qualification and still-open exact closure.
-
-The subsequent useful-proof-time controls allow 240 seconds of work, with a
-300-second native watchdog and 315-second outer cleanup safeguard. Both spend
-the additional time in discovery and begin no strict rows before terminal
-finish. An optional handoff at an existing stable checkpoint establishes a real
-proof window. Demand-driven native rows then cross the saved-policy extent
-without extending its decisions, while conservative option descriptors avoid
-eager kernel enumeration. The prepared retention component strengthens 74,015
-strict alternative floors in the four-goal treatment, but the root interval
-remains 198.83350--5,218.04095. This does not meet the declared material root-gap
-criterion. The five-goal proof treatment retains its verified bounds but reaches
-the unchanged memory cap during partition reconstruction. The same [living record](../active/2026-09-09-empty-start-partial-continuation/README.md#useful-proof-time)
-owns final matched evidence and remaining continuation costs. These findings
-extend current source correspondence for existing claims, not their general
-status or exact-closure guarantee.
+The [useful-proof-time evidence](../active/2026-09-09-empty-start-partial-continuation/README.md#useful-proof-time)
+establishes a real proof window, demanded rows beyond saved-policy extent and
+deferred option kernels. Stronger local floors leave the four-goal root interval
+unchanged; the five-goal treatment stops during partition reconstruction at its
+existing memory cap. Local consumption and time spent in proof therefore do not
+establish root progress. Exact closure and general claim statuses remain open
+according to their individual histories; the living record owns run chronology.
 
 <a id="rq-003"></a>
 ### RQ-003 — Can executable-policy quality be preserved while proof work scales?
@@ -183,34 +158,35 @@ extent. Preserve that complete selected snapshot and its memory accounting as
 the next focused exact-closure task; no larger graph or weaker identity check is
 justified by the observed failure.
 
-The September 9 preservation-only follow-through kept existing same-candidate
-rows outside the coarse reachable walk without borrowing newer greedy actions.
-Its focused fixture passed, but the no-retention primary hit its 90-second
-finalization watchdog without publication. The mutation was removed and its patch
-and failed run retained. This distinguishes valid candidate preservation from a
-qualified bounded executable continuation repair; that experiment did not
-establish the latter. C3's later sibling service is qualified under RQ-002.
-
-The fresh-session strict bridge then classifies parent 4741 as structurally
-matched but outside the selected table supplied to strict lift. Building new rows
-through quotient completion passes a focused fixture; direct completion and
-renewal-first ordering both fail the unchanged 90-second ordinary watchdog
-before publication. Both mutations were removed. The restored primary again
-returns 405.36940–85,558.70619 with independent evaluation, in 66.886 seconds
-total. [The failed treatments and restored result](../active/2026-09-09-empty-start-partial-continuation/fresh-comparison.json)
-separate internal candidate retention from a successfully returned artifact.
-The subsequent finish-request repair returns the same four-goal graph in
-62.203 seconds versus the matched control's 86.477 seconds. Both runs had the
-host request latched; only the new finalizer consumes it before starting
-optional strict rows. The primary and two controls retain their verified
-graphs. This resolves that measured delivery failure, while bounded new-row
-construction and the parent-4741 continuation remain open. The
-[current receipt](../active/2026-09-09-empty-start-partial-continuation/README.md#bounded-finish-publication)
-keeps publication progress separate from exact closure and a new root gain.
+September's preservation and fresh-session treatments distinguish structural
+membership, immutable selected decisions and a successfully returned controller.
+The attempted continuations failed the unchanged watchdog and were removed;
+[their matched evidence](../active/2026-09-09-empty-start-partial-continuation/fresh-comparison.json)
+does not qualify a bounded repair. The later
+[finish-request repair](../active/2026-09-09-empty-start-partial-continuation/README.md#bounded-finish-publication)
+consumes the latched request before optional strict work and returns the same
+verified graph sooner. This resolves the measured delivery failure while new-row
+construction, continuation coverage and exact closure remain separate questions.
 
 Dependencies: [CLM-0002](claims.md#clm-0002), [CLM-0004](claims.md#clm-0004),
 [CLM-0020](claims.md#clm-0020), [CLM-0021](claims.md#clm-0021),
 [CLM-0022](claims.md#clm-0022).
+
+The [cross-base capability experiment](../active/2026-09-09-cross-base-capability-recovery/README.md)
+tests the earlier first-policy boundary on different pool families. Servicing a
+missing selected fringe and prioritizing that fringe both failed to produce a
+controller; the mutations were removed. The open question includes obtaining a
+first proper executable policy before broad carrier-local work, as well as
+preserving an incumbent once one exists. No exactness claim changed.
+
+The four [advisory audits](../active/2026-09-09-cross-base-capability-recovery/README.md#advisory-audits)
+are reconciled against that experiment. Their finite-region threshold and
+auxiliary-ceiling arguments now live in the [lower chapter](mathematics/lower-bounds.md#threshold-query);
+query-specific conditional integration and its counterexamples live under
+[probability evidence](mathematics/lower-bounds.md#stopping-line). These preserve
+applications of existing claims, without selecting a new subsystem. A next proof
+case needs a compatible source upper and root-relevant headroom; historical
+upper recovery and measured payload savings remain competing routes to progress.
 
 <a id="open-obligations"></a>
 ## 2. Correspondence obligations

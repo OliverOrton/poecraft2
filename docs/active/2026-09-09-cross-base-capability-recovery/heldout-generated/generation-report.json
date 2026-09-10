@@ -1,0 +1,51 @@
+{
+  "artifact": {
+    "artifact_schema_version": 4,
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+  },
+  "corpus_id": "cross-base-recovery-heldout-native-generation-v1",
+  "counters": {
+    "accepts": 2,
+    "attempts": 2,
+    "duplicates": 0,
+    "exhausted_strata": 0,
+    "group_slot_conflicts": 0,
+    "ineligible_bases": 0,
+    "infeasible": 0,
+    "unknown": 0,
+    "zero_weight_families": 0
+  },
+  "exhausted_strata": [],
+  "feasibility_probes": [],
+  "generator": {
+    "compiler": "gcc-14.2.0",
+    "engine_abi_version": 2,
+    "engine_binary_path": "build/engine/poecraft_engine.dll",
+    "engine_binary_sha256": "2ee0839d911ec3728a46ed4c37b28fcc7faede9e734b632fed5609579b61bcbf",
+    "engine_commit": "be553608ecabde28a3dec07856255911459ec97d",
+    "engine_dirty": true,
+    "engine_dirty_paths": [
+      "?? docs/active/2026-09-09-cross-base-capability-recovery/"
+    ],
+    "generator_version": "natural-t1-corpus-v1",
+    "seed": 20260909
+  },
+  "reason_counts": {
+    "natural_reforge_witness": 2
+  },
+  "rejection_examples": {},
+  "schema_version": "natural_t1_generation_report_v1",
+  "stratum_accepts": {
+    "heldout-shield-pps": 1,
+    "heldout-wand-pss": 1
+  },
+  "stratum_targets": {
+    "heldout-shield-pps": 1,
+    "heldout-wand-pss": 1
+  }
+}

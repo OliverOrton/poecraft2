@@ -1,0 +1,326 @@
+{
+  "schema": "poecraft_read_only_audit_cohort_v1",
+  "kind": "selection-and-evidence-map; NOT a ready-to-run native corpus or completed experiment",
+  "reviewed_ref": "be553608ecabde28a3dec07856255911459ec97d",
+  "cohort_size": 12,
+  "base_count": 7,
+  "item_class_count": 6,
+  "scope_notice": "Read-only: all source fixtures remain unchanged. Pool metadata is generation-time evidence, not a fresh pool census.",
+  "profiles": {
+    "historical_replay": "Preserve each original file and its source/economy/budget; compare only after checking semantic equivalence.",
+    "current_cross_base_development": {
+      "derivation": "Use existing clone/manifest mechanisms, create new immutable case IDs, record parent hashes and every override.",
+      "requested_finish_seconds": 240,
+      "native_watchdog_seconds": 300,
+      "outer_cleanup_seconds": 315,
+      "max_solver_owned_bytes": 1073741824,
+      "solve_step_work_items": 8,
+      "economy": "pinned Allflame snapshot de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0 with base override 1",
+      "policy_scope": "current calculator_product_v1; generated Imprint off, voluntary economic Restart off, existing gated reforge semantics disclosed",
+      "verification": "independent exact policy evaluation, no routine sampling; record all actual other caps and activation flags before both arms",
+      "caveat": "Moving legacy Mirage cases to this profile is a new benchmark target. Never compare its raw value to the old Mirage number as a solver improvement.",
+      "proof_handoff": "disabled in ordinary baseline; native-only optional treatment, separately identified",
+      "existing_profile_reference": "https://github.com/OliverOrton/poecraft2/blob/be553608ecabde28a3dec07856255911459ec97d/docs/active/2026-09-09-empty-start-partial-continuation/long-profile/manifest.json",
+      "reuse_note": "Reuse definition, not archived output directories or baseline-preservation scripts; no automatic handoff-time sweep."
+    },
+    "diagnostic_proof_handoff": {
+      "kind": "optional evidence-selected treatment, not default",
+      "native_benchmark_flag": "--proof-handoff-seconds",
+      "requested_and_actual_handoff_separate": true,
+      "candidate_identity_required_for_fixed_candidate_ablation": true,
+      "caveat": "Paused discovery and newly registered parents keep original action coverage open unless separately certified. The prior 60-second trigger is not a universal policy."
+    }
+  },
+  "additional_sentinels": [
+    {
+      "case": "fixtures/solver-exact-same-side/v1/cases/conquest-lamellar-allflame-clean-3-suffix-product8.json",
+      "purpose": "Existing exact anchor; preserve its declared profile and native proof source."
+    },
+    {
+      "case": "fixtures/solver-exact-same-side/v1/cases/conquest-lamellar-allflame-clean-4-pdr-product8.json",
+      "purpose": "Existing PDR exact-reference identity must be reconciled; do not interchange other fractured 4-to-5 requests."
+    },
+    {
+      "selection": "Existing non-armour partial-five Bow and Warlord influence controls in August control manifests",
+      "purpose": "Retain as rotating historical-mechanism sentinels; revalidate concrete requests before promotion."
+    }
+  ],
+  "holdout_design": "Before implementation, select two supported base/pool families outside this core with the native generator. Prefer one caster-weapon and one shield/belt-type family if supported. Hold out complete pool/mechanic families, not merely fresh goal masks. Record actual exposure. No current outcome is asserted.",
+  "cases": [
+    {
+      "id": "CB01",
+      "source_case": "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-5-goal-product8.json",
+      "base": "Conquest Lamellar",
+      "item_class": "Body Armour",
+      "goal_shape": "empty to five; three-prefix/two-suffix reference",
+      "goals": 5,
+      "evidence": "be55360 F10/F14 ordinary short native/WASM retain L=405.3694021063399, U=85558.70618560436. F8 long diagnostic strengthens 191505 obligations but hits replay-backed partition memory; same root interval, not exact.",
+      "reason": "Keep the familiar sentinel; distinguish default delivery from diagnostic proof-memory demand.",
+      "references": [
+        "R02",
+        "R03",
+        "R06",
+        "R28",
+        "R33"
+      ],
+      "origin_economy": "Allflame",
+      "source_role": "repeatedly exposed development",
+      "source_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+      "source_url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-5-goal-product8.json",
+      "executed_in_this_audit": false,
+      "native_revalidation_required": true,
+      "execution_ref_to_validate": "be553608ecabde28a3dec07856255911459ec97d"
+    },
+    {
+      "id": "CB02",
+      "source_case": "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-4-goal-product8.json",
+      "base": "Conquest Lamellar",
+      "item_class": "Body Armour",
+      "goal_shape": "empty to four; two-sided strict-closure bridge",
+      "goals": 4,
+      "evidence": "be55360 F9/F13 short results retain L=198.8334996747695, U=5218.040949685988. F7 gets 178.287 s strict work and 74015 stronger obligations, zero noncompetitive retirements, same root interval. Old parent-4741 boundary passed; frontier completion remains.",
+      "reason": "Demanded-frontier completion cost and source-floor utility after a working proof handoff; not another table-extent investigation.",
+      "references": [
+        "R03",
+        "R06",
+        "R28",
+        "R33"
+      ],
+      "origin_economy": "Allflame",
+      "source_role": "repeatedly exposed development",
+      "source_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+      "source_url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-4-goal-product8.json",
+      "executed_in_this_audit": false,
+      "native_revalidation_required": true,
+      "execution_ref_to_validate": "be553608ecabde28a3dec07856255911459ec97d"
+    },
+    {
+      "id": "CB03",
+      "source_case": "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-partial-3-to-5-product8.json",
+      "base": "Conquest Lamellar",
+      "item_class": "Body Armour",
+      "goal_shape": "partial three to original five-goal target",
+      "goals": 5,
+      "evidence": "August 26 U about 80720.79; last retained pre-be55360 U=794067.4530398862. Not freshly qualified by F9–F11; unresolved regression candidate, not a matched replay finding.",
+      "reason": "Expose loss hidden by comparison only with a much worse intermediate baseline",
+      "references": [
+        "R03",
+        "R06"
+      ],
+      "origin_economy": "Allflame",
+      "source_role": "repeatedly exposed development",
+      "source_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+      "source_url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-partial-3-to-5-product8.json",
+      "executed_in_this_audit": false,
+      "native_revalidation_required": true,
+      "execution_ref_to_validate": "be553608ecabde28a3dec07856255911459ec97d"
+    },
+    {
+      "id": "CB04",
+      "source_case": "fixtures/solver-quality-ladder/v1/cases/spine-bow-allflame-clean-4-goal-product8.json",
+      "base": "Spine Bow",
+      "item_class": "Bow",
+      "goal_shape": "empty to four; three-prefix/one-suffix",
+      "goals": 4,
+      "evidence": "August 26 state cap, U about 223349.00; latest outcome not established by this audit",
+      "reason": "Non-armour scope, weapon pool, generated programs, state-cap sensitivity",
+      "references": [
+        "R03"
+      ],
+      "origin_economy": "Allflame",
+      "source_role": "known regression/control case",
+      "source_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+      "source_url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-quality-ladder/v1/cases/spine-bow-allflame-clean-4-goal-product8.json",
+      "executed_in_this_audit": false,
+      "native_revalidation_required": true,
+      "execution_ref_to_validate": "be553608ecabde28a3dec07856255911459ec97d"
+    },
+    {
+      "id": "CB05",
+      "source_case": "fixtures/solver-quality-ladder/v1/cases/spine-bow-allflame-clean-5-goal-product8.json",
+      "base": "Spine Bow",
+      "item_class": "Bow",
+      "goal_shape": "empty to five; three-prefix/two-suffix",
+      "goals": 5,
+      "evidence": "August 26 state cap, U about 17073119024.23; latest outcome unmeasured here",
+      "reason": "Same goal count as Conquest without assuming the same mechanics or continuation structure",
+      "references": [
+        "R03"
+      ],
+      "origin_economy": "Allflame",
+      "source_role": "known development/reference",
+      "source_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+      "source_url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-quality-ladder/v1/cases/spine-bow-allflame-clean-5-goal-product8.json",
+      "executed_in_this_audit": false,
+      "native_revalidation_required": true,
+      "execution_ref_to_validate": "be553608ecabde28a3dec07856255911459ec97d"
+    },
+    {
+      "id": "CB06",
+      "source_case": "fixtures/solver-quality-ladder/v1/cases/amethyst-ring-allflame-clean-2-goal-product8.json",
+      "base": "Amethyst Ring",
+      "item_class": "Ring",
+      "goal_shape": "empty to two; preserve exact file goal ordering and native resolution",
+      "goals": 2,
+      "evidence": "August 26 memory cap at about 7.5 seconds, no policy; latest outcome unmeasured here",
+      "reason": "Few-goal early failure; tests whether a costly proof setup or eager kernels prevent any usable policy",
+      "references": [
+        "R03"
+      ],
+      "origin_economy": "Allflame",
+      "source_role": "known development/reference",
+      "source_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+      "source_url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-quality-ladder/v1/cases/amethyst-ring-allflame-clean-2-goal-product8.json",
+      "executed_in_this_audit": false,
+      "native_revalidation_required": true,
+      "execution_ref_to_validate": "be553608ecabde28a3dec07856255911459ec97d"
+    },
+    {
+      "id": "CB07",
+      "source_case": "fixtures/solver-quality-ladder/v1/cases/amethyst-ring-allflame-clean-4-goal-product8.json",
+      "base": "Amethyst Ring",
+      "item_class": "Ring",
+      "goal_shape": "empty to four; evasion, fire resistance, added cold, attributes; native-resolve sides",
+      "goals": 4,
+      "evidence": "August 26 memory cap at about 23.5 seconds, U about 3725358919.50; latest outcome unmeasured here",
+      "reason": "Different exclusions and pool shape, no assumed armour-side strategy",
+      "references": [
+        "R03"
+      ],
+      "origin_economy": "Allflame",
+      "source_role": "known development/reference",
+      "source_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+      "source_url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-quality-ladder/v1/cases/amethyst-ring-allflame-clean-4-goal-product8.json",
+      "executed_in_this_audit": false,
+      "native_revalidation_required": true,
+      "execution_ref_to_validate": "be553608ecabde28a3dec07856255911459ec97d"
+    },
+    {
+      "id": "CB08",
+      "source_case": "fixtures/solver-natural-t1/v1/cases/natural-t1-full-three-24920b3b28de.json",
+      "base": "Onyx Amulet",
+      "item_class": "Amulet",
+      "goal_shape": "SSS: lightning damage, chaos resistance, all resistances",
+      "goals": 3,
+      "pool_mod_count_at_generation": 264,
+      "pool_prefix_mods_at_generation": 112,
+      "pool_suffix_mods_at_generation": 152,
+      "minimum_single_draw_probability_at_generation": 0.0011646866992778943,
+      "evidence": "Historical complete Chaos support 3204323; actual current product runtime not measured",
+      "reason": "Very large successor support even though goals are same-side and only three",
+      "references": [
+        "R10",
+        "R18"
+      ],
+      "origin_economy": "Mirage",
+      "source_role": "validation stratum, already published/exposed",
+      "source_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+      "source_url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-natural-t1/v1/cases/natural-t1-full-three-24920b3b28de.json",
+      "executed_in_this_audit": false,
+      "native_revalidation_required": true,
+      "execution_ref_to_validate": "be553608ecabde28a3dec07856255911459ec97d"
+    },
+    {
+      "id": "CB09",
+      "source_case": "fixtures/solver-natural-t1/v1/cases/natural-t1-deep-three-low-probability-af4719c816f3.json",
+      "base": "Amethyst Ring",
+      "item_class": "Ring",
+      "goal_shape": "PSS: rare added-cold prefix, fire resistance and fire damage suffixes",
+      "goals": 3,
+      "pool_mod_count_at_generation": 207,
+      "pool_prefix_mods_at_generation": 81,
+      "pool_suffix_mods_at_generation": 126,
+      "minimum_single_draw_probability_at_generation": 0.0003051571559353067,
+      "evidence": "Historical complete Chaos support 712877; not a current product measurement",
+      "reason": "Probability skew and mixed sides distinct from the quality-ladder Ring goals",
+      "references": [
+        "R10",
+        "R18"
+      ],
+      "origin_economy": "Mirage",
+      "source_role": "frozen_test stratum, explicitly already published/exposed",
+      "source_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+      "source_url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-natural-t1/v1/cases/natural-t1-deep-three-low-probability-af4719c816f3.json",
+      "executed_in_this_audit": false,
+      "native_revalidation_required": true,
+      "execution_ref_to_validate": "be553608ecabde28a3dec07856255911459ec97d"
+    },
+    {
+      "id": "CB10",
+      "source_case": "fixtures/solver-natural-t1/v1/cases/natural-t1-deep-four-low-probability-1a1102b0e06b.json",
+      "base": "Jewelled Foil",
+      "item_class": "Thrusting One Hand Sword",
+      "goal_shape": "PPSS: physical %, added fire, accuracy, mana leech",
+      "goals": 4,
+      "pool_mod_count_at_generation": 153,
+      "pool_prefix_mods_at_generation": 65,
+      "pool_suffix_mods_at_generation": 88,
+      "minimum_single_draw_probability_at_generation": 0.00018919327985469957,
+      "evidence": "Historical complete Chaos support 222580; historical early expansion/state-cap problem",
+      "reason": "Rare target weight 25, weapon exclusion structure, balanced side goals",
+      "references": [
+        "R10",
+        "R18"
+      ],
+      "origin_economy": "Mirage",
+      "source_role": "frozen_test stratum, explicitly already published/exposed",
+      "source_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+      "source_url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-natural-t1/v1/cases/natural-t1-deep-four-low-probability-1a1102b0e06b.json",
+      "executed_in_this_audit": false,
+      "native_revalidation_required": true,
+      "execution_ref_to_validate": "be553608ecabde28a3dec07856255911459ec97d"
+    },
+    {
+      "id": "CB11",
+      "source_case": "fixtures/solver-natural-t1/v1/cases/natural-t1-smoke-dire-pelt-three.json",
+      "base": "Dire Pelt",
+      "item_class": "Helmet",
+      "goal_shape": "PPS: item rarity, life, chaos resistance",
+      "goals": 3,
+      "pool_mod_count_at_generation": 125,
+      "pool_prefix_mods_at_generation": 41,
+      "pool_suffix_mods_at_generation": 84,
+      "minimum_single_draw_probability_at_generation": 0.0021244954323348204,
+      "evidence": "July study obtained policy, then memory/cost and repeated properness bottlenecks; latest unmeasured",
+      "reason": "Eldritch-capable armour is not synonymous with Conquest; different pool and target geometry",
+      "references": [
+        "R18"
+      ],
+      "origin_economy": "Mirage",
+      "source_role": "development, repeatedly exposed historically",
+      "source_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+      "source_url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-natural-t1/v1/cases/natural-t1-smoke-dire-pelt-three.json",
+      "executed_in_this_audit": false,
+      "native_revalidation_required": true,
+      "execution_ref_to_validate": "be553608ecabde28a3dec07856255911459ec97d"
+    },
+    {
+      "id": "CB12",
+      "source_case": "fixtures/solver-natural-t1/v1/cases/natural-t1-smoke-one-armour-09767fd6f824.json",
+      "base": "Vaal Regalia",
+      "item_class": "Body Armour",
+      "goal_shape": "one suffix: FireResist8",
+      "goals": 1,
+      "pool_mod_count_at_generation": 125,
+      "pool_prefix_mods_at_generation": 62,
+      "pool_suffix_mods_at_generation": 63,
+      "minimum_single_draw_probability_at_generation": 0.008389261744966443,
+      "evidence": "Fixture and pool metadata established; no new exact value asserted",
+      "reason": "Easy second body-armour base detects fixed setup toll and initialization regressions",
+      "references": [
+        "R07",
+        "R08"
+      ],
+      "origin_economy": "Mirage",
+      "source_role": "development; not a claimed holdout",
+      "source_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+      "source_url": "https://github.com/OliverOrton/poecraft2/blob/317438392c88c0151f41e48b4b0323b06b1d0037/fixtures/solver-natural-t1/v1/cases/natural-t1-smoke-one-armour-09767fd6f824.json",
+      "executed_in_this_audit": false,
+      "native_revalidation_required": true,
+      "execution_ref_to_validate": "be553608ecabde28a3dec07856255911459ec97d"
+    }
+  ],
+  "previous_reviewed_ref": "317438392c88c0151f41e48b4b0323b06b1d0037",
+  "update_notice": "Same 12 selected fixtures; original fixture pins are preserved. Current execution must pin actual HEAD and all resolved inputs. F-series observations are retained repository evidence, not audit-run measurements.",
+  "measurement_status": "Cohort not executed by the audit. Reuse named compatible repository receipts; obtain missing current cross-base outcomes through the existing runner."
+}

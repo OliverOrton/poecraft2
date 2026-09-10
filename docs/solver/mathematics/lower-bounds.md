@@ -154,6 +154,60 @@ The lower 10 and the executable direct-finish upper 10 prove the root optimum. N
 
 This example explains why a failed arbitrary-entry policy evaluation is not a universal barrier to proof exploration. The lower and upper ask different questions.
 
+<a id="threshold-query"></a>
+### A finite query can target a useful action threshold
+
+To lower-bound choosing action \(a\) once at source \(s\), introduce a fresh
+entry with only that first action. Its successors enter the original problem,
+including every original action on a later return to \(s\). Equation (2) and
+the same stopping proof then give \(x(\mathrm{entry})\le Q_a^*(s)\).
+Forcing \(a\) on every future visit would instead restrict the continuation
+policy and need not give a lower on this first-action value.
+
+Choose threshold \(\tau\) so a checked \(x(\mathrm{entry})\ge\tau\) passes
+the existing safe comparison and tie rule against a compatible executable upper
+\(U(s)\). An upper at the root is insufficient for a
+different partial source. The useful question is whether the comparison can
+affect the current root bound or retire a root-relevant obligation; strengthening
+an arbitrary local row does not establish either outcome. Completing the
+outside policy graph is unnecessary when independent boundary lowers suffice.
+
+The query retains complete action/family coverage, including deferred families
+and obligations at newly generated states. Bind it to source or whole-member
+domain, target/control scope, native data and coefficient meaning, prices, model
+revision and independent boundary evidence. Changed actions, splits or boundary
+models require affected coverage and final inequalities to be checked again.
+An independently valid old native lower can remain in compatible maximum
+consumption; it need not be a feasible iterate of the changed query.
+Numerical checking of represented coefficients and their domination of native
+transitions remain separate obligations. This is an application of
+[CLM-0012](../claims.md#clm-0012), with the existing all-action and numerical
+contracts, not a new solver or a claim of native correspondence.
+
+Distinguish a checked threshold certificate, a
+[proper auxiliary-policy ceiling](#ceilings) below the threshold, and an
+unresolved query stopped by its budget. Only the first can justify the intended
+native comparison. The second says the unchanged relaxation is too weak.
+
+### Destructive exits and missing actions change the answer
+
+At root \(r\), finishing costs 10. A deviation costs 2 and reaches the goal
+or \(q\), each with probability \(1/2\). The sole action at \(q\) costs 1
+and returns to \(q\) or exits destructively to \(d\), each with probability
+\(1/2\); rebuilding from \(d\) costs 40. Thus
+\(V(q)=1+V(q)/2+40/2=42\), the deviation costs 23, and the root optimum is 10.
+Independent boundary \(b(d)=40\) suffices even if the direct-finish controller
+has no route from \(q\).
+
+With boundary \(b(d)=4\), the auxiliary retry value is 6 and the forced
+deviation costs 5. Generally it costs \(3+b(d)/2\), so reaching the comparison
+threshold 10 needs \(b(d)\ge14\). Numerical iteration cannot repair the weaker
+boundary. If a legal finish at \(q\) costing 1 was overlooked, the true root
+optimum is \(5/2\) and the alleged lower 10 is invalid. A finish at \(q\)
+costing 8 instead makes the native optimum 6: a cheaper controller is
+then possible. Neither missing action may be dismissed because it obstructs
+the intended certificate.
+
 ### Coupled regions are one simultaneous proof
 
 Several lower regions may use each other's variables if the complete joint inequalities are checked. For example,
@@ -270,6 +324,63 @@ With two capacities \(u_1=u_2=3/5\) and values \((0,10)\), the minimum is 4 at d
 Cache compatible native support and capacities if useful. Recompute choices and allocations after the values change, or independently establish a valid lower on the new minimum. These rows are not native transition kernels reusable for arbitrary vectors. [CLM-0014](../claims.md#clm-0014).
 
 The current phase producer and applied-reforge optimization explicitly preserve this distinction. The measured speedup reuses value-independent geometry/caps while rebuilding minima and allocations. [Applied-reforge evidence](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md).
+
+<a id="stopping-line"></a>
+### Stop a probability query before irrelevant draws
+
+In a finite action-history tree, let \(C\) contain exactly one prefix on every
+positive-probability completed path. Write \(w(h)\) for each prefix probability
+and \(Y\) for the full successor including continuation-relevant control
+information. For a frozen potential \(v\), conditioning gives
+
+\[
+\mathbb E[v(Y)]=\sum_{h\in C}w(h)\mathbb E[v(Y)\mid h]
+\ge\sum_{h\in C}w(h)\ell(h)
+\]
+
+when each \(\ell(h)\) is a certified lower on that conditional expectation.
+Add the complete mandatory action cost (or a proved lower on it). A merged
+prefix key needs the inequality for every represented history unless its
+authority is limited to the specific producing distribution. Equality for this
+one frozen query is weaker than a
+[universal behavioral quotient](representations.md#equivalence).
+
+For example, an action costs 1, reaches goal with probability \(1/4\), and
+otherwise draws eight fair bits to select one of 256 junk states. Each junk
+state has a repair costing 4 that reaches goal or retries in that state with
+equal probability. It also has a visible-label-dependent finish costing 100 or
+101. The uniform potential 8 satisfies every junk-state action inequality;
+repair is proper with cost 8. If that uniform fact is already certified, a
+two-prefix cut gives \(1+(3/4)8=7\), the same as full enumeration, without
+generating labels. This can exclude the action against a source finish costing
+\(13/2\), although unequal label-specific costs forbid the simple universal
+action-wise quotient.
+
+Change one label's queried potential to zero: the full expectation becomes
+\(893/128\), so reusing 7 fails for the new query. An old native lower may
+remain independently valid but cannot be called this query's Bellman evidence.
+If a hidden history bit changes success probability to \(1/2\) or \(1/4\),
+the conditional action values are 5 and 7. Their equally weighted average 6
+is not a uniform lower for the first entry. Retain the bit, prove a uniform
+minimum or refuse the merge.
+
+Choice timing must also survive: two equally likely offers with option costs
+\((0,8)\) and \((8,0)\) cost zero with permitted post-observation choice, but
+four with advance commitment. Moving the minimum outside the expectation can
+therefore overstate a lower; a fixed-policy query uses its actual decision map.
+A cut covering only 0.9 mass cannot renormalize away a 0.1 nonterminal or trap
+exit. The stale-capacity minimizer above supplies another failure even when
+probability geometry is unchanged.
+
+Reuse depends on source/control domain, action and forced-draw semantics,
+conditional pools/exclusions and denominators, stopping-line coverage, queried
+potential/boundary version and arithmetic meaning. Price-independent geometry
+may survive changed prices, but its priced certificate must be checked again.
+Any claimed saving must avoid native recurrence or denominator work before the
+full frontier is built, counting setup, checking and peak live payload. A small
+output alone proves no such saving. This conditional application of
+[CLM-0014](../claims.md#clm-0014) and
+[CLM-0015](../claims.md#clm-0015) does not select a query subsystem.
 
 ### A common two-exit bound
 
@@ -411,6 +522,21 @@ No 405-level value is assigned to that unproved domain.
 ## 10. Use the optimistic policy to identify a ceiling
 
 A proper executable policy in an auxiliary optimistic model gives an upper on **that model's optimum**. It may therefore prove that no amount of better numerical iteration can raise the model's lower beyond a certain value without changing the model.
+
+More precisely, let \(M_R\) be the finite optimistic model of a
+[threshold query](#threshold-query), including its explicit boundary and scalar
+stopping payments. For any proper finite-cost policy \(\mu\) of that model,
+the same bounded-potential stopping argument gives
+\(x(\mathrm{entry})\le J^\mu_{M_R}(\mathrm{entry})\) for every feasible
+subsolution. A checked \(J^\mu_{M_R}(\mathrm{entry})<\tau\) therefore proves
+that the query cannot reach \(\tau\) in this unchanged model. A supplied cheap
+policy can establish this without solving the whole auxiliary optimum.
+
+This ceiling is neither a native executable upper nor evidence that the native
+incumbent is suboptimal. It does not survive changes to the witness's action
+semantics, allowed decisions, boundaries or prices without rechecking. Local
+option termination alone does not establish its required global properness:
+the [two-option non-goal cycle](policies.md#programs) remains a counterexample.
 
 If an abstract action costs \(\varepsilon\) and jumps to an abstract goal with certainty, every feasible potential at that source satisfies \(h(s)\le\varepsilon\). A new candidate vector, cache, or Bellman solver cannot overcome that row. The documented support-only phase relaxation exhibited this kind of 0.01165 ceiling. [CLM-0018](../claims.md#clm-0018); [phase history](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/lower-pruning.md).
 

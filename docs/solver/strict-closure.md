@@ -4,6 +4,23 @@
 
 Strict closure connects the selected policy and competitive alternatives to exact carriers. It is not synonymous with exact evaluation of one fixed strategy. The conditional correctness argument is in [numerical closure](mathematics/numerical-closure.md#exactness); this page describes the retained mechanism.
 
+## Current status
+
+At `be55360`, native diagnostic handoff provides a proof window and complete
+demanded rows can extend beyond saved selected-policy ownership without changing
+that candidate. Deferred option kernels and compatible whole-cell prepared
+heuristic floors are retained. The former parent-4741/table-extent refusal is
+passed. Four-goal proof strengthens 74,015 obligations but retires none as
+noncompetitive and leaves the checked root interval unchanged; five-goal proof
+hits replay-backed partition memory while preserving the verified policy.
+Ordinary short four/five native/WASM results and the exact three-suffix anchor
+remain qualified. These are intermediate mechanisms, not new exact closure.
+The [cross-base measurements](../active/2026-09-09-cross-base-capability-recovery/README.md)
+now establish a simple Vaal Regalia exact baseline, incomplete Bow selected
+continuation, a Foil strict-state cap, and earlier Ring/Amulet no-policy failures.
+Two selected-fringe scheduling variants failed and were removed. No new exact
+capability or retained native repair follows from that experiment.
+
 ## Purpose And Inputs
 
 Inputs are the coarse solve result, concrete start, prices, declared action/program scope, refinement limits, and any independently verified rollback upper. The strict path must keep those identities separate from local state, cell, and compiled-node indices.
@@ -61,7 +78,12 @@ Inspect strict states/cells, kernels/transitions, frontier growth, splits, oblig
 
 Use the current source path and a matched witness when investigating a regression. Historical failures of reconstruct-then-merge or early quotient attempts remain evidence about those implementations and scopes, not declarations that the persistent current mechanism is absent.
 
-The September 9 continuation-service follow-through leaves two distinct limits.
+## Historical continuation boundaries
+
+The following accounts retain the evidence and failed approaches preceding the
+current status above. Their former next boundaries do not select current work.
+
+The September 9 continuation-service follow-through left two distinct limits.
 The empty-five compiled graph improves to 85,558.70618560436, but its coarse
 estimate does not reconcile, so that estimate cannot certify an optimum. The
 existing empty-four request reaches strict carrier 113366 / coarse parent 4741
@@ -88,9 +110,9 @@ stops optional proof work. Its matched four-goal run returns before strict rows
 start, so parent 4741 remains unresolved and the rejected row-construction
 experiments remain rejected. A requested finish is not an alternative-action
 certificate. See the [bounded-finish contract](resources-resume-replay.md#cooperative-work)
-and the [current measurements](../active/2026-09-09-empty-start-partial-continuation/README.md#bounded-finish-publication).
+and the [recorded measurements](../active/2026-09-09-empty-start-partial-continuation/README.md#bounded-finish-publication).
 
-The current useful-proof-time experiment separates candidate handoff from
+The subsequent useful-proof-time experiment separates candidate handoff from
 terminal delivery. After a restricted iteration reaches its existing stable
 checkpoint, the optional diagnostic freezes discovery through both the main
 recovery gate and publication preflight. The ordinary strict owner then runs

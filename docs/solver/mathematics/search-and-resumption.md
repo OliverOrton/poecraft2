@@ -138,3 +138,11 @@ Useful comparison questions include time to the same verified lower/gap/upper ta
 The benchmark already records step-boundary trajectories, identities, failures, and paired comparison controls. The research workflow should interpret those measurements, not reconstruct another runner. [Benchmarking](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/benchmarking.md); [research outcome profiles](../research.md#outcomes).
 
 A small nonsemantic fix needs no new research record. A scheduling experiment that changes the mechanism behind a result should preserve the question, evidence, and exactly which progress or performance claim changed.
+
+The [cross-base selected-fringe experiment](../../active/2026-09-09-cross-base-capability-recovery/README.md#causal-ranking-and-selected-experiment)
+illustrates this distinction before the first policy: servicing successors of a
+route chosen from optimistic continuation values does not establish that the route
+has a proper executable completion. Both bounded ordering variants expanded more
+states without producing a controller and were removed. That rejects their useful
+bounded-progress premise on the measured families; it does not refute eventual
+closure under the separate finiteness and fairness assumptions of CLM-0022.

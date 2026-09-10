@@ -59,6 +59,13 @@ Two items have the same satisfied mask and occupancy. Under the same named actio
 
 A hidden blocker can create precisely this *kind* of discrepancy. Whether a particular native blocker does so is a source/model fact to inspect, not a rule to infer from a generic example.
 
+Preserving one frozen continuation expectation has weaker requirements than
+this universal quotient contract. The [stopping-line argument and label
+counterexample](lower-bounds.md#stopping-line) show how a probability query can
+omit later draws when their conditional continuation value is already proved
+uniform. A changed potential, hidden conditional law or moved decision can
+invalidate that query even though its prefix key is unchanged.
+
 <a id="optimism"></a>
 ## 3. An optimistic abstraction need not be an exact quotient
 

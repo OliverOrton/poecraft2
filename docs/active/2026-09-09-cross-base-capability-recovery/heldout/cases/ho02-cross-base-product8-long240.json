@@ -1,0 +1,249 @@
+{
+  "allowed_mechanic_families": [
+    "calculator_goal_relevant_product_envelope"
+  ],
+  "approval_status": "selected_cross_base_programme_2026_09_09",
+  "benchmark_enabled": true,
+  "caps": {
+    "solve_profile": "calculator_product_v1",
+    "max_states": 200000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 8,
+    "max_discovered_states": 200000,
+    "max_expanded_states": 200000,
+    "max_state_action_rows": 1215000,
+    "max_transitions": 10000000,
+    "max_reforge_work": 50000000,
+    "max_solver_owned_bytes": 1073741824,
+    "max_diagnostic_samples": 64,
+    "max_telemetry_json_bytes": 2097152,
+    "max_compiled_nodes": 100000,
+    "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864,
+    "worker_step_ms": 250,
+    "cancel_ack_ms": 250,
+    "full_evidence": true
+  },
+  "category": "seeded_natural_t1",
+  "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+  "corpus": {
+    "geometric_mean_single_draw_probability": 0.00327871002432803,
+    "goal_modifier_count": 3,
+    "maximum_single_draw_probability": 0.006557420048656057,
+    "minimum_single_draw_probability": 0.0016393550121640143,
+    "natural_pool_mod_count": 288,
+    "natural_pool_weight": 152499,
+    "prefix_goal_count": 1,
+    "side_mix": "PSS",
+    "stratum": "heldout-wand-pss",
+    "suffix_goal_count": 2,
+    "tier": "heldout"
+  },
+  "economy": {
+    "version": "v1",
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "fallback_price": null,
+    "missing_price_decisions": {
+      "base": "quality_ladder_fixture_input_1_chaos"
+    }
+  },
+  "feasibility": {
+    "eligible_slot_count": 3,
+    "goal_slot_count": 3,
+    "natural_pool_mod_count": 288,
+    "natural_pool_weight": 152499,
+    "natural_prefix_mod_count": 146,
+    "natural_prefix_weight": 63907,
+    "natural_suffix_mod_count": 142,
+    "natural_suffix_weight": 88592,
+    "reason": "natural_reforge_witness",
+    "required_slot_count": 3,
+    "slot_natural_mod_counts": [
+      1,
+      1,
+      1
+    ],
+    "slot_natural_weights": [
+      500,
+      1000,
+      250
+    ],
+    "slot_single_draw_probabilities": [
+      0.0032787100243280285,
+      0.006557420048656057,
+      0.0016393550121640143
+    ],
+    "status": "feasible",
+    "witness_action_id": "chaos",
+    "witness_action_index": 5,
+    "witness_mod_ids": [
+      281,
+      390,
+      125
+    ]
+  },
+  "generation": {
+    "artifact_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+    "engine_binary_sha256": "2ee0839d911ec3728a46ed4c37b28fcc7faede9e734b632fed5609579b61bcbf",
+    "engine_commit": "be553608ecabde28a3dec07856255911459ec97d",
+    "generator_seed": 20260909,
+    "generator_version": "natural-t1-corpus-v1"
+  },
+  "goal": {
+    "action_mode": "goal_relevant",
+    "min_satisfied_slots": 3,
+    "rarity": "rare",
+    "slots": [
+      {
+        "family_mod_key": "LocalIncreasedAccuracyNew6",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "ProjectileSpeed5",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "GlobalLightningSpellGemsLevel1",
+        "min_tier": 1
+      }
+    ],
+    "version": "v1"
+  },
+  "id": "ho02-cross-base-product8-long240",
+  "product_action_envelope": {
+    "bench_goal_slots_forbidden": true,
+    "envelope_goal": {
+      "action_mode": "goal_relevant",
+      "fossil_mode": "goal_relevant",
+      "min_satisfied_slots": 3,
+      "rarity": "rare",
+      "requested_fossil_actions": [],
+      "slots": [
+        {
+          "family_mod_key": "LocalIncreasedAccuracyNew6",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "ProjectileSpeed5",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "GlobalLightningSpellGemsLevel1",
+          "min_tier": 1
+        }
+      ],
+      "version": "v1"
+    },
+    "mode": "calculator_goal_relevant_priced_v1",
+    "pricing_filter": "all_declared_cost_keys_present"
+  },
+  "resolved_natural_t1_goals": [
+    {
+      "classification_tags": [
+        "attack"
+      ],
+      "family_id": 76,
+      "family_mod_key": "LocalIncreasedAccuracyNew6",
+      "family_tier_index": 1,
+      "global_mod_id": 20518,
+      "natural_mod_count": 1,
+      "natural_weight": 500,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 85,
+      "session_mod_id": 281,
+      "side": "suffix",
+      "single_draw_probability": 0.0032787100243280285,
+      "slot": 0
+    },
+    {
+      "classification_tags": [
+        "speed"
+      ],
+      "family_id": 106,
+      "family_mod_key": "ProjectileSpeed5",
+      "family_tier_index": 1,
+      "global_mod_id": 29251,
+      "natural_mod_count": 1,
+      "natural_weight": 1000,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 82,
+      "session_mod_id": 390,
+      "side": "suffix",
+      "single_draw_probability": 0.006557420048656057,
+      "slot": 1
+    },
+    {
+      "classification_tags": [
+        "caster",
+        "elemental",
+        "gem",
+        "lightning"
+      ],
+      "family_id": 46,
+      "family_mod_key": "GlobalLightningSpellGemsLevel1",
+      "family_tier_index": 1,
+      "global_mod_id": 12059,
+      "natural_mod_count": 1,
+      "natural_weight": 250,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 2,
+      "session_mod_id": 125,
+      "side": "prefix",
+      "single_draw_probability": 0.0016393550121640143,
+      "slot": 2
+    }
+  ],
+  "schema_version": "solver_benchmark_case_v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Weapons/OneHandWeapons/Wands/Wand16",
+    "base_name": "Prophecy Wand",
+    "item_class_key": "Wand",
+    "item_level": 86
+  },
+  "start": {
+    "mods": [],
+    "rarity": "rare",
+    "with_implicits": false
+  },
+  "verification": {
+    "runs": 0,
+    "seed": 20260826,
+    "max_actions_per_run": 100000,
+    "max_graph_steps_per_run": 4000000,
+    "exact_evaluation": true,
+    "exact_max_states": 1000000,
+    "exact_max_pairs": 5000000,
+    "exact_max_transitions": 20000000,
+    "exact_max_owned_bytes": 1073741824,
+    "exact_cost_absolute_tolerance": 1e-07,
+    "exact_cost_relative_tolerance": 1e-09
+  },
+  "watchdog_seconds": 300,
+  "description": "HO02: natural-t1-heldout-wand-pss-5218abcfab21",
+  "requested_bounded_finish_seconds": 240,
+  "expected": {
+    "solve_status": "reliability_classified",
+    "optimality_status": "classified",
+    "compile_status": "compiled",
+    "verification_status": "not_required"
+  },
+  "bounded_best_policy_contract": {
+    "allow_exact": true,
+    "bounded_requires_named_stop": true,
+    "bounded_requires_strict_gap": true,
+    "bounded_requires_open_obligations": true,
+    "require_evaluated_upper": true,
+    "require_cheapest_independently_evaluated_incumbent": true
+  }
+}

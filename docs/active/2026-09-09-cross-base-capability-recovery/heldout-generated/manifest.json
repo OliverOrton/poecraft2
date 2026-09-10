@@ -1,0 +1,67 @@
+{
+  "artifact": {
+    "artifact_schema_version": 4,
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+  },
+  "case_counts": {
+    "heldout": 2
+  },
+  "cases": [
+    "cases/natural-t1-heldout-shield-pps-8074995dad11.json",
+    "cases/natural-t1-heldout-wand-pss-5218abcfab21.json"
+  ],
+  "configuration": {
+    "config_path": "docs/active/2026-09-09-cross-base-capability-recovery/heldout-generator-config.json",
+    "config_sha256": "99b17165245f9318f0ecd2781e876f3436a4662da2a66763914a63f28fef6b1b",
+    "item_level": 86,
+    "natural_filters": {
+      "excluded_tags": [],
+      "families": [],
+      "required_tags": [],
+      "tag_mode": "any"
+    },
+    "start": {
+      "mods": [],
+      "rarity": "rare",
+      "with_implicits": false
+    },
+    "watchdog_seconds": 60.0
+  },
+  "corpus_id": "cross-base-recovery-heldout-native-generation-v1",
+  "economy": {
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "fallback_price": null,
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "version": "v1"
+  },
+  "generator": {
+    "compiler": "gcc-14.2.0",
+    "engine_abi_version": 2,
+    "engine_binary_path": "build/engine/poecraft_engine.dll",
+    "engine_binary_sha256": "2ee0839d911ec3728a46ed4c37b28fcc7faede9e734b632fed5609579b61bcbf",
+    "engine_commit": "be553608ecabde28a3dec07856255911459ec97d",
+    "engine_dirty": true,
+    "engine_dirty_paths": [
+      "?? docs/active/2026-09-09-cross-base-capability-recovery/"
+    ],
+    "generator_version": "natural-t1-corpus-v1",
+    "seed": 20260909
+  },
+  "schema_version": "natural_t1_benchmark_corpus_v1",
+  "stratum_counts": {
+    "heldout-shield-pps": 1,
+    "heldout-wand-pss": 1
+  }
+}

@@ -131,6 +131,7 @@ switch ($Task) {
     }
     "TestAll" {
         Invoke-BuildPreset "tests-only"
+        Invoke-BuildPreset "benchmark-only"
         $CTestArgs = @(
             "--test-dir", $BuildDirectory, "--output-on-failure", "-L", "native",
             "--parallel"

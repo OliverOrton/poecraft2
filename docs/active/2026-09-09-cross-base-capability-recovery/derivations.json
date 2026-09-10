@@ -1,0 +1,1315 @@
+{
+  "source_commit": "be553608ecabde28a3dec07856255911459ec97d",
+  "entries": [
+    {
+      "id": "CB01",
+      "case_id": "cb01-cross-base-product8-long240",
+      "cohort": "core",
+      "parent_path": "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-5-goal-product8.json",
+      "parent_sha256": "9fd46c3ffc279d4e5cc2fedef5f1fbae6c9e5cbf743c9e61d973433216d7cd57",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb01-cross-base-product8-long240.json",
+      "derived_sha256": "4f6a901ff7a56f7319c5e19663d778106c0436af16573ff2786b30df5b4fd90b",
+      "source_role": "repeatedly exposed development",
+      "original_corpus_metadata": {
+        "tier": "clean-five",
+        "stratum": "conquest-lamellar_clean_zero_to_5",
+        "goal_modifier_count": 5,
+        "start_goal_modifier_count": 0,
+        "product_worker_profile": "calculator_default_adaptive_max_8"
+      },
+      "overrides": {
+        "id": {
+          "before": "conquest-lamellar-allflame-clean-5-goal-product8",
+          "after": "cb01-cross-base-product8-long240"
+        },
+        "approval_status": {
+          "before": "active_gate0_2026_08_26",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "description": {
+          "before": "conquest-lamellar_clean_zero_to_5",
+          "after": "CB01: conquest-lamellar-allflame-clean-5-goal-product8"
+        },
+        "comparison_profile": {
+          "before": "calculator-product-quality-ladder-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "watchdog_seconds": {
+          "before": 90,
+          "after": 300
+        },
+        "requested_bounded_finish_seconds": {
+          "before": 60,
+          "after": 240
+        }
+      }
+    },
+    {
+      "id": "CB02",
+      "case_id": "cb02-cross-base-product8-long240",
+      "cohort": "core",
+      "parent_path": "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-4-goal-product8.json",
+      "parent_sha256": "63bae0d07e33cb28cd698e337e6c777b08d70d9a28a4426e3b8ed420dc8f8413",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb02-cross-base-product8-long240.json",
+      "derived_sha256": "a3b2a59eb945fe458cb40dfc10b102b0c94d35fe116a748b494da1c918dd004b",
+      "source_role": "repeatedly exposed development",
+      "original_corpus_metadata": {
+        "tier": "clean-four",
+        "stratum": "conquest-lamellar_clean_zero_to_4",
+        "goal_modifier_count": 4,
+        "start_goal_modifier_count": 0,
+        "product_worker_profile": "calculator_default_adaptive_max_8"
+      },
+      "overrides": {
+        "id": {
+          "before": "conquest-lamellar-allflame-clean-4-goal-product8",
+          "after": "cb02-cross-base-product8-long240"
+        },
+        "approval_status": {
+          "before": "active_gate0_2026_08_26",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "description": {
+          "before": "conquest-lamellar_clean_zero_to_4",
+          "after": "CB02: conquest-lamellar-allflame-clean-4-goal-product8"
+        },
+        "comparison_profile": {
+          "before": "calculator-product-quality-ladder-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "watchdog_seconds": {
+          "before": 90,
+          "after": 300
+        },
+        "requested_bounded_finish_seconds": {
+          "before": 60,
+          "after": 240
+        }
+      }
+    },
+    {
+      "id": "CB03",
+      "case_id": "cb03-cross-base-product8-long240",
+      "cohort": "core",
+      "parent_path": "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-partial-3-to-5-product8.json",
+      "parent_sha256": "d88860aec54751644917fc3169104b357fb5bb45af1916529a41a443278bd508",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb03-cross-base-product8-long240.json",
+      "derived_sha256": "66f9d8a75b1fedddec177c9a89792f9aa09dd1aaab927626957ccf6d09737c58",
+      "source_role": "repeatedly exposed development",
+      "original_corpus_metadata": {
+        "tier": "partial",
+        "stratum": "conquest_lamellar_partial_three_to_five",
+        "goal_modifier_count": 5,
+        "start_goal_modifier_count": 3,
+        "product_worker_profile": "calculator_default_adaptive_max_8"
+      },
+      "overrides": {
+        "id": {
+          "before": "conquest-lamellar-allflame-partial-3-to-5-product8",
+          "after": "cb03-cross-base-product8-long240"
+        },
+        "approval_status": {
+          "before": "active_gate0_2026_08_26",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "description": {
+          "before": "conquest_lamellar_partial_three_to_five",
+          "after": "CB03: conquest-lamellar-allflame-partial-3-to-5-product8"
+        },
+        "comparison_profile": {
+          "before": "calculator-product-quality-ladder-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "watchdog_seconds": {
+          "before": 75,
+          "after": 300
+        },
+        "requested_bounded_finish_seconds": {
+          "before": 45,
+          "after": 240
+        }
+      }
+    },
+    {
+      "id": "CB04",
+      "case_id": "cb04-cross-base-product8-long240",
+      "cohort": "core",
+      "parent_path": "fixtures/solver-quality-ladder/v1/cases/spine-bow-allflame-clean-4-goal-product8.json",
+      "parent_sha256": "c0a6cb74d2f5d48dc1996fa35a1c123d0ceea333675d14eac5ebe8f1e50fd76c",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb04-cross-base-product8-long240.json",
+      "derived_sha256": "f2f1e117093eb8bfc398aecfffd2c4a50b609183f0c5ccb3838d05b708467599",
+      "source_role": "known regression/control case",
+      "original_corpus_metadata": {
+        "tier": "clean-four",
+        "stratum": "spine-bow_clean_zero_to_4",
+        "goal_modifier_count": 4,
+        "start_goal_modifier_count": 0,
+        "product_worker_profile": "calculator_default_adaptive_max_8"
+      },
+      "overrides": {
+        "id": {
+          "before": "spine-bow-allflame-clean-4-goal-product8",
+          "after": "cb04-cross-base-product8-long240"
+        },
+        "approval_status": {
+          "before": "active_gate0_2026_08_26",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "description": {
+          "before": "spine-bow_clean_zero_to_4",
+          "after": "CB04: spine-bow-allflame-clean-4-goal-product8"
+        },
+        "comparison_profile": {
+          "before": "calculator-product-quality-ladder-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "watchdog_seconds": {
+          "before": 90,
+          "after": 300
+        },
+        "requested_bounded_finish_seconds": {
+          "before": 60,
+          "after": 240
+        }
+      }
+    },
+    {
+      "id": "CB05",
+      "case_id": "cb05-cross-base-product8-long240",
+      "cohort": "core",
+      "parent_path": "fixtures/solver-quality-ladder/v1/cases/spine-bow-allflame-clean-5-goal-product8.json",
+      "parent_sha256": "dbdb9af4441608941a9cea7e74a5cb4c4cd080f64a7ca8f054ad4c2e2f644111",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb05-cross-base-product8-long240.json",
+      "derived_sha256": "21518c1634aa95d81baffbb5215866918a4a9f5ad443b174e38e18bc706d0e8d",
+      "source_role": "known development/reference",
+      "original_corpus_metadata": {
+        "tier": "clean-five",
+        "stratum": "spine-bow_clean_zero_to_5",
+        "goal_modifier_count": 5,
+        "start_goal_modifier_count": 0,
+        "product_worker_profile": "calculator_default_adaptive_max_8"
+      },
+      "overrides": {
+        "id": {
+          "before": "spine-bow-allflame-clean-5-goal-product8",
+          "after": "cb05-cross-base-product8-long240"
+        },
+        "approval_status": {
+          "before": "active_gate0_2026_08_26",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "description": {
+          "before": "spine-bow_clean_zero_to_5",
+          "after": "CB05: spine-bow-allflame-clean-5-goal-product8"
+        },
+        "comparison_profile": {
+          "before": "calculator-product-quality-ladder-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "watchdog_seconds": {
+          "before": 90,
+          "after": 300
+        },
+        "requested_bounded_finish_seconds": {
+          "before": 60,
+          "after": 240
+        }
+      }
+    },
+    {
+      "id": "CB06",
+      "case_id": "cb06-cross-base-product8-long240",
+      "cohort": "core",
+      "parent_path": "fixtures/solver-quality-ladder/v1/cases/amethyst-ring-allflame-clean-2-goal-product8.json",
+      "parent_sha256": "3498ec61be30c32d31acc3687bf1dcf8f5b4292f2bf57a680f54a5abbc47a1e5",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb06-cross-base-product8-long240.json",
+      "derived_sha256": "4ba88321b592d0dfb778a50ef54397122b0b8fb642b4a60621e145811f47b686",
+      "source_role": "known development/reference",
+      "original_corpus_metadata": {
+        "tier": "diversity-clean-small",
+        "stratum": "amethyst_ring_clean_zero_to_2",
+        "goal_modifier_count": 2,
+        "start_goal_modifier_count": 0,
+        "product_worker_profile": "calculator_default_adaptive_max_8"
+      },
+      "overrides": {
+        "id": {
+          "before": "amethyst-ring-allflame-clean-2-goal-product8",
+          "after": "cb06-cross-base-product8-long240"
+        },
+        "approval_status": {
+          "before": "active_gate0_2026_08_26",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "description": {
+          "before": "amethyst_ring_clean_zero_to_2",
+          "after": "CB06: amethyst-ring-allflame-clean-2-goal-product8"
+        },
+        "comparison_profile": {
+          "before": "calculator-product-quality-ladder-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "watchdog_seconds": {
+          "before": 50,
+          "after": 300
+        },
+        "requested_bounded_finish_seconds": {
+          "before": 20,
+          "after": 240
+        }
+      }
+    },
+    {
+      "id": "CB07",
+      "case_id": "cb07-cross-base-product8-long240",
+      "cohort": "core",
+      "parent_path": "fixtures/solver-quality-ladder/v1/cases/amethyst-ring-allflame-clean-4-goal-product8.json",
+      "parent_sha256": "f82700bcf65ec2b781132ac2942579cb07d9186a5cb3e4eac5335171235ae394",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb07-cross-base-product8-long240.json",
+      "derived_sha256": "b10d5f5a06aa9a47be782dc0ba671b2ead679e60e45689efab478513eaa1ab1b",
+      "source_role": "known development/reference",
+      "original_corpus_metadata": {
+        "tier": "diversity-clean-four",
+        "stratum": "amethyst_ring_clean_zero_to_4",
+        "goal_modifier_count": 4,
+        "start_goal_modifier_count": 0,
+        "product_worker_profile": "calculator_default_adaptive_max_8"
+      },
+      "overrides": {
+        "id": {
+          "before": "amethyst-ring-allflame-clean-4-goal-product8",
+          "after": "cb07-cross-base-product8-long240"
+        },
+        "approval_status": {
+          "before": "active_gate0_2026_08_26",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "description": {
+          "before": "amethyst_ring_clean_zero_to_4",
+          "after": "CB07: amethyst-ring-allflame-clean-4-goal-product8"
+        },
+        "comparison_profile": {
+          "before": "calculator-product-quality-ladder-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "watchdog_seconds": {
+          "before": 90,
+          "after": 300
+        },
+        "requested_bounded_finish_seconds": {
+          "before": 60,
+          "after": 240
+        }
+      }
+    },
+    {
+      "id": "CB08",
+      "case_id": "cb08-cross-base-product8-long240",
+      "cohort": "core",
+      "parent_path": "fixtures/solver-natural-t1/v1/cases/natural-t1-full-three-24920b3b28de.json",
+      "parent_sha256": "d5d924762d7fa945cd43c0a70c4787f5a37ccc1160d2d262e99c7a8c789b9294",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb08-cross-base-product8-long240.json",
+      "derived_sha256": "d7364d8077aa512fae195948af030161f474b11e6552474b8fc94e5f19f920cc",
+      "source_role": "validation stratum, already published/exposed",
+      "original_corpus_metadata": {
+        "geometric_mean_single_draw_probability": 0.0023293733985557895,
+        "goal_modifier_count": 3,
+        "maximum_single_draw_probability": 0.004658746797111577,
+        "minimum_single_draw_probability": 0.0011646866992778943,
+        "natural_pool_mod_count": 264,
+        "natural_pool_weight": 214650,
+        "prefix_goal_count": 0,
+        "side_mix": "SSS",
+        "stratum": "full-three",
+        "suffix_goal_count": 3,
+        "tier": "full_short"
+      },
+      "overrides": {
+        "approval_status": {
+          "before": "generated_b3_2026_07_22",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "caps": {
+          "before": {
+            "cancel_ack_ms": 250,
+            "full_evidence": true,
+            "max_absolute_optimality_gap": 5.0,
+            "max_compiled_edges": 400000,
+            "max_compiled_nodes": 100000,
+            "max_diagnostic_samples": 32,
+            "max_discovered_states": 25000,
+            "max_expanded_states": 25000,
+            "max_reforge_work": 3000000,
+            "max_relative_optimality_gap": 0.1,
+            "max_solver_owned_bytes": 268435456,
+            "max_state_action_rows": 300000,
+            "max_states": 25000,
+            "max_strategy_json_bytes": 67108864,
+            "max_sweeps": 100000,
+            "max_telemetry_json_bytes": 1048576,
+            "max_transitions": 3000000,
+            "solve_step_work_items": 1024,
+            "worker_step_ms": 1000
+          },
+          "after": {
+            "solve_profile": "calculator_product_v1",
+            "max_states": 200000,
+            "max_sweeps": 100000,
+            "solve_step_work_items": 8,
+            "max_discovered_states": 200000,
+            "max_expanded_states": 200000,
+            "max_state_action_rows": 1215000,
+            "max_transitions": 10000000,
+            "max_reforge_work": 50000000,
+            "max_solver_owned_bytes": 1073741824,
+            "max_diagnostic_samples": 64,
+            "max_telemetry_json_bytes": 2097152,
+            "max_compiled_nodes": 100000,
+            "max_compiled_edges": 400000,
+            "max_strategy_json_bytes": 67108864,
+            "worker_step_ms": 250,
+            "cancel_ack_ms": 250,
+            "full_evidence": true
+          }
+        },
+        "comparison_profile": {
+          "before": "bounded-policy-natural-t1-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "economy": {
+          "before": {
+            "content_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+            "fallback_price": null,
+            "id": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+            "league_key": "mirage",
+            "league_name": "Mirage",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+            "source_cutoff_at_utc": "2026-07-15T21:18:29Z",
+            "version": "v1"
+          },
+          "after": {
+            "version": "v1",
+            "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+            "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+            "league_key": "allflame",
+            "league_name": "Allflame",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "fallback_price": null,
+            "missing_price_decisions": {
+              "base": "quality_ladder_fixture_input_1_chaos"
+            }
+          }
+        },
+        "id": {
+          "before": "natural-t1-full-three-24920b3b28de",
+          "after": "cb08-cross-base-product8-long240"
+        },
+        "verification": {
+          "before": {
+            "max_actions_per_run": 100000,
+            "runs": 10000,
+            "seed": 20260827
+          },
+          "after": {
+            "runs": 0,
+            "seed": 20260826,
+            "max_actions_per_run": 100000,
+            "max_graph_steps_per_run": 4000000,
+            "exact_evaluation": true,
+            "exact_max_states": 1000000,
+            "exact_max_pairs": 5000000,
+            "exact_max_transitions": 20000000,
+            "exact_max_owned_bytes": 1073741824,
+            "exact_cost_absolute_tolerance": 1e-07,
+            "exact_cost_relative_tolerance": 1e-09
+          }
+        },
+        "watchdog_seconds": {
+          "before": 60.0,
+          "after": 300
+        },
+        "description": {
+          "before": null,
+          "after": "CB08: natural-t1-full-three-24920b3b28de"
+        },
+        "requested_bounded_finish_seconds": {
+          "before": null,
+          "after": 240
+        },
+        "expected": {
+          "before": null,
+          "after": {
+            "solve_status": "reliability_classified",
+            "optimality_status": "classified",
+            "compile_status": "compiled",
+            "verification_status": "not_required"
+          }
+        },
+        "bounded_best_policy_contract": {
+          "before": null,
+          "after": {
+            "allow_exact": true,
+            "bounded_requires_named_stop": true,
+            "bounded_requires_strict_gap": true,
+            "bounded_requires_open_obligations": true,
+            "require_evaluated_upper": true,
+            "require_cheapest_independently_evaluated_incumbent": true
+          }
+        }
+      }
+    },
+    {
+      "id": "CB09",
+      "case_id": "cb09-cross-base-product8-long240",
+      "cohort": "core",
+      "parent_path": "fixtures/solver-natural-t1/v1/cases/natural-t1-deep-three-low-probability-af4719c816f3.json",
+      "parent_sha256": "317d29285c1932ca20c90449db3f7664272cb986231a55550ea820fc65fcc95d",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb09-cross-base-product8-long240.json",
+      "derived_sha256": "b82d0d0a125687c376479c7e6e95574fd5a44d545ff24e9c8bd2d4bc6967e22e",
+      "source_role": "frozen_test stratum, explicitly already published/exposed",
+      "original_corpus_metadata": {
+        "geometric_mean_single_draw_probability": 0.0017845698737948533,
+        "goal_modifier_count": 3,
+        "maximum_single_draw_probability": 0.006103143118706134,
+        "minimum_single_draw_probability": 0.0003051571559353067,
+        "natural_pool_mod_count": 207,
+        "natural_pool_weight": 163850,
+        "prefix_goal_count": 1,
+        "side_mix": "PSS",
+        "stratum": "deep-three-low-probability",
+        "suffix_goal_count": 2,
+        "tier": "deep"
+      },
+      "overrides": {
+        "approval_status": {
+          "before": "generated_b3_2026_07_22",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "caps": {
+          "before": {
+            "cancel_ack_ms": 250,
+            "full_evidence": true,
+            "max_absolute_optimality_gap": 5.0,
+            "max_compiled_edges": 400000,
+            "max_compiled_nodes": 100000,
+            "max_diagnostic_samples": 32,
+            "max_discovered_states": 25000,
+            "max_expanded_states": 25000,
+            "max_reforge_work": 3000000,
+            "max_relative_optimality_gap": 0.1,
+            "max_solver_owned_bytes": 268435456,
+            "max_state_action_rows": 300000,
+            "max_states": 25000,
+            "max_strategy_json_bytes": 67108864,
+            "max_sweeps": 100000,
+            "max_telemetry_json_bytes": 1048576,
+            "max_transitions": 3000000,
+            "solve_step_work_items": 1024,
+            "worker_step_ms": 1000
+          },
+          "after": {
+            "solve_profile": "calculator_product_v1",
+            "max_states": 200000,
+            "max_sweeps": 100000,
+            "solve_step_work_items": 8,
+            "max_discovered_states": 200000,
+            "max_expanded_states": 200000,
+            "max_state_action_rows": 1215000,
+            "max_transitions": 10000000,
+            "max_reforge_work": 50000000,
+            "max_solver_owned_bytes": 1073741824,
+            "max_diagnostic_samples": 64,
+            "max_telemetry_json_bytes": 2097152,
+            "max_compiled_nodes": 100000,
+            "max_compiled_edges": 400000,
+            "max_strategy_json_bytes": 67108864,
+            "worker_step_ms": 250,
+            "cancel_ack_ms": 250,
+            "full_evidence": true
+          }
+        },
+        "comparison_profile": {
+          "before": "bounded-policy-natural-t1-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "economy": {
+          "before": {
+            "content_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+            "fallback_price": null,
+            "id": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+            "league_key": "mirage",
+            "league_name": "Mirage",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+            "source_cutoff_at_utc": "2026-07-15T21:18:29Z",
+            "version": "v1"
+          },
+          "after": {
+            "version": "v1",
+            "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+            "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+            "league_key": "allflame",
+            "league_name": "Allflame",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "fallback_price": null,
+            "missing_price_decisions": {
+              "base": "quality_ladder_fixture_input_1_chaos"
+            }
+          }
+        },
+        "id": {
+          "before": "natural-t1-deep-three-low-probability-af4719c816f3",
+          "after": "cb09-cross-base-product8-long240"
+        },
+        "verification": {
+          "before": {
+            "max_actions_per_run": 100000,
+            "runs": 10000,
+            "seed": 20260860
+          },
+          "after": {
+            "runs": 0,
+            "seed": 20260826,
+            "max_actions_per_run": 100000,
+            "max_graph_steps_per_run": 4000000,
+            "exact_evaluation": true,
+            "exact_max_states": 1000000,
+            "exact_max_pairs": 5000000,
+            "exact_max_transitions": 20000000,
+            "exact_max_owned_bytes": 1073741824,
+            "exact_cost_absolute_tolerance": 1e-07,
+            "exact_cost_relative_tolerance": 1e-09
+          }
+        },
+        "watchdog_seconds": {
+          "before": 180.0,
+          "after": 300
+        },
+        "description": {
+          "before": null,
+          "after": "CB09: natural-t1-deep-three-low-probability-af4719c816f3"
+        },
+        "requested_bounded_finish_seconds": {
+          "before": null,
+          "after": 240
+        },
+        "expected": {
+          "before": null,
+          "after": {
+            "solve_status": "reliability_classified",
+            "optimality_status": "classified",
+            "compile_status": "compiled",
+            "verification_status": "not_required"
+          }
+        },
+        "bounded_best_policy_contract": {
+          "before": null,
+          "after": {
+            "allow_exact": true,
+            "bounded_requires_named_stop": true,
+            "bounded_requires_strict_gap": true,
+            "bounded_requires_open_obligations": true,
+            "require_evaluated_upper": true,
+            "require_cheapest_independently_evaluated_incumbent": true
+          }
+        }
+      }
+    },
+    {
+      "id": "CB10",
+      "case_id": "cb10-cross-base-product8-long240",
+      "cohort": "core",
+      "parent_path": "fixtures/solver-natural-t1/v1/cases/natural-t1-deep-four-low-probability-1a1102b0e06b.json",
+      "parent_sha256": "5506dd22bfd1fdc69ae3c2dd8a1473546d9db752d8a2f713caba8b9ff62f4191",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb10-cross-base-product8-long240.json",
+      "derived_sha256": "acca09eb75d4fb6c24b0b50950d6279093e41c4fee09d4a1f4ce3cc4c21de14e",
+      "source_role": "frozen_test stratum, explicitly already published/exposed",
+      "original_corpus_metadata": {
+        "geometric_mean_single_draw_probability": 0.0019600575632748233,
+        "goal_modifier_count": 4,
+        "maximum_single_draw_probability": 0.007567731194187983,
+        "minimum_single_draw_probability": 0.00018919327985469957,
+        "natural_pool_mod_count": 153,
+        "natural_pool_weight": 132140,
+        "prefix_goal_count": 2,
+        "side_mix": "PPSS",
+        "stratum": "deep-four-low-probability",
+        "suffix_goal_count": 2,
+        "tier": "deep"
+      },
+      "overrides": {
+        "approval_status": {
+          "before": "generated_b3_2026_07_22",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "caps": {
+          "before": {
+            "cancel_ack_ms": 250,
+            "full_evidence": true,
+            "max_absolute_optimality_gap": 5.0,
+            "max_compiled_edges": 400000,
+            "max_compiled_nodes": 100000,
+            "max_diagnostic_samples": 32,
+            "max_discovered_states": 25000,
+            "max_expanded_states": 25000,
+            "max_reforge_work": 3000000,
+            "max_relative_optimality_gap": 0.1,
+            "max_solver_owned_bytes": 268435456,
+            "max_state_action_rows": 300000,
+            "max_states": 25000,
+            "max_strategy_json_bytes": 67108864,
+            "max_sweeps": 100000,
+            "max_telemetry_json_bytes": 1048576,
+            "max_transitions": 3000000,
+            "solve_step_work_items": 1024,
+            "worker_step_ms": 1000
+          },
+          "after": {
+            "solve_profile": "calculator_product_v1",
+            "max_states": 200000,
+            "max_sweeps": 100000,
+            "solve_step_work_items": 8,
+            "max_discovered_states": 200000,
+            "max_expanded_states": 200000,
+            "max_state_action_rows": 1215000,
+            "max_transitions": 10000000,
+            "max_reforge_work": 50000000,
+            "max_solver_owned_bytes": 1073741824,
+            "max_diagnostic_samples": 64,
+            "max_telemetry_json_bytes": 2097152,
+            "max_compiled_nodes": 100000,
+            "max_compiled_edges": 400000,
+            "max_strategy_json_bytes": 67108864,
+            "worker_step_ms": 250,
+            "cancel_ack_ms": 250,
+            "full_evidence": true
+          }
+        },
+        "comparison_profile": {
+          "before": "bounded-policy-natural-t1-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "economy": {
+          "before": {
+            "content_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+            "fallback_price": null,
+            "id": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+            "league_key": "mirage",
+            "league_name": "Mirage",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+            "source_cutoff_at_utc": "2026-07-15T21:18:29Z",
+            "version": "v1"
+          },
+          "after": {
+            "version": "v1",
+            "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+            "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+            "league_key": "allflame",
+            "league_name": "Allflame",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "fallback_price": null,
+            "missing_price_decisions": {
+              "base": "quality_ladder_fixture_input_1_chaos"
+            }
+          }
+        },
+        "id": {
+          "before": "natural-t1-deep-four-low-probability-1a1102b0e06b",
+          "after": "cb10-cross-base-product8-long240"
+        },
+        "verification": {
+          "before": {
+            "max_actions_per_run": 100000,
+            "runs": 10000,
+            "seed": 20260863
+          },
+          "after": {
+            "runs": 0,
+            "seed": 20260826,
+            "max_actions_per_run": 100000,
+            "max_graph_steps_per_run": 4000000,
+            "exact_evaluation": true,
+            "exact_max_states": 1000000,
+            "exact_max_pairs": 5000000,
+            "exact_max_transitions": 20000000,
+            "exact_max_owned_bytes": 1073741824,
+            "exact_cost_absolute_tolerance": 1e-07,
+            "exact_cost_relative_tolerance": 1e-09
+          }
+        },
+        "watchdog_seconds": {
+          "before": 180.0,
+          "after": 300
+        },
+        "description": {
+          "before": null,
+          "after": "CB10: natural-t1-deep-four-low-probability-1a1102b0e06b"
+        },
+        "requested_bounded_finish_seconds": {
+          "before": null,
+          "after": 240
+        },
+        "expected": {
+          "before": null,
+          "after": {
+            "solve_status": "reliability_classified",
+            "optimality_status": "classified",
+            "compile_status": "compiled",
+            "verification_status": "not_required"
+          }
+        },
+        "bounded_best_policy_contract": {
+          "before": null,
+          "after": {
+            "allow_exact": true,
+            "bounded_requires_named_stop": true,
+            "bounded_requires_strict_gap": true,
+            "bounded_requires_open_obligations": true,
+            "require_evaluated_upper": true,
+            "require_cheapest_independently_evaluated_incumbent": true
+          }
+        }
+      }
+    },
+    {
+      "id": "CB11",
+      "case_id": "cb11-cross-base-product8-long240",
+      "cohort": "core",
+      "parent_path": "fixtures/solver-natural-t1/v1/cases/natural-t1-smoke-dire-pelt-three.json",
+      "parent_sha256": "30e75291a63155779b1ee8907e3a3009e7d05952cf5eac4d6c0ac576612446fb",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb11-cross-base-product8-long240.json",
+      "derived_sha256": "bae0a43a69dc5350a77b18ae91859c1dda8434d7cb71d738f4ad0caa48ab2277",
+      "source_role": "development, repeatedly exposed historically",
+      "original_corpus_metadata": {
+        "geometric_mean_single_draw_probability": 0.0053533930312083,
+        "goal_modifier_count": 3,
+        "maximum_single_draw_probability": 0.008497981729339282,
+        "minimum_single_draw_probability": 0.0021244954323348204,
+        "natural_pool_mod_count": 125,
+        "natural_pool_weight": 117675,
+        "prefix_goal_count": 2,
+        "side_mix": "PPS",
+        "stratum": "smoke-three-dire-pelt",
+        "suffix_goal_count": 1,
+        "tier": "smoke"
+      },
+      "overrides": {
+        "approval_status": {
+          "before": "generated_b3_2026_07_22",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "caps": {
+          "before": {
+            "cancel_ack_ms": 250,
+            "full_evidence": true,
+            "max_absolute_optimality_gap": 5.0,
+            "max_compiled_edges": 400000,
+            "max_compiled_nodes": 100000,
+            "max_diagnostic_samples": 32,
+            "max_discovered_states": 25000,
+            "max_expanded_states": 25000,
+            "max_reforge_work": 3000000,
+            "max_relative_optimality_gap": 0.1,
+            "max_solver_owned_bytes": 268435456,
+            "max_state_action_rows": 300000,
+            "max_states": 25000,
+            "max_strategy_json_bytes": 67108864,
+            "max_sweeps": 100000,
+            "max_telemetry_json_bytes": 1048576,
+            "max_transitions": 3000000,
+            "solve_step_work_items": 1024,
+            "worker_step_ms": 1000
+          },
+          "after": {
+            "solve_profile": "calculator_product_v1",
+            "max_states": 200000,
+            "max_sweeps": 100000,
+            "solve_step_work_items": 8,
+            "max_discovered_states": 200000,
+            "max_expanded_states": 200000,
+            "max_state_action_rows": 1215000,
+            "max_transitions": 10000000,
+            "max_reforge_work": 50000000,
+            "max_solver_owned_bytes": 1073741824,
+            "max_diagnostic_samples": 64,
+            "max_telemetry_json_bytes": 2097152,
+            "max_compiled_nodes": 100000,
+            "max_compiled_edges": 400000,
+            "max_strategy_json_bytes": 67108864,
+            "worker_step_ms": 250,
+            "cancel_ack_ms": 250,
+            "full_evidence": true
+          }
+        },
+        "comparison_profile": {
+          "before": "bounded-policy-natural-t1-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "economy": {
+          "before": {
+            "content_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+            "fallback_price": null,
+            "id": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+            "league_key": "mirage",
+            "league_name": "Mirage",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+            "source_cutoff_at_utc": "2026-07-15T21:18:29Z",
+            "version": "v1"
+          },
+          "after": {
+            "version": "v1",
+            "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+            "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+            "league_key": "allflame",
+            "league_name": "Allflame",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "fallback_price": null,
+            "missing_price_decisions": {
+              "base": "quality_ladder_fixture_input_1_chaos"
+            }
+          }
+        },
+        "id": {
+          "before": "natural-t1-smoke-dire-pelt-three",
+          "after": "cb11-cross-base-product8-long240"
+        },
+        "verification": {
+          "before": {
+            "max_actions_per_run": 100000,
+            "runs": 10000,
+            "seed": 20260723
+          },
+          "after": {
+            "runs": 0,
+            "seed": 20260826,
+            "max_actions_per_run": 100000,
+            "max_graph_steps_per_run": 4000000,
+            "exact_evaluation": true,
+            "exact_max_states": 1000000,
+            "exact_max_pairs": 5000000,
+            "exact_max_transitions": 20000000,
+            "exact_max_owned_bytes": 1073741824,
+            "exact_cost_absolute_tolerance": 1e-07,
+            "exact_cost_relative_tolerance": 1e-09
+          }
+        },
+        "watchdog_seconds": {
+          "before": 60.0,
+          "after": 300
+        },
+        "description": {
+          "before": null,
+          "after": "CB11: natural-t1-smoke-dire-pelt-three"
+        },
+        "requested_bounded_finish_seconds": {
+          "before": null,
+          "after": 240
+        },
+        "expected": {
+          "before": null,
+          "after": {
+            "solve_status": "reliability_classified",
+            "optimality_status": "classified",
+            "compile_status": "compiled",
+            "verification_status": "not_required"
+          }
+        },
+        "bounded_best_policy_contract": {
+          "before": null,
+          "after": {
+            "allow_exact": true,
+            "bounded_requires_named_stop": true,
+            "bounded_requires_strict_gap": true,
+            "bounded_requires_open_obligations": true,
+            "require_evaluated_upper": true,
+            "require_cheapest_independently_evaluated_incumbent": true
+          }
+        }
+      }
+    },
+    {
+      "id": "CB12",
+      "case_id": "cb12-cross-base-product8-long240",
+      "cohort": "core",
+      "parent_path": "fixtures/solver-natural-t1/v1/cases/natural-t1-smoke-one-armour-09767fd6f824.json",
+      "parent_sha256": "9b300c87c55084708a0600ff1bdae382d0aff50aefce3ef928c86d391b0a888c",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb12-cross-base-product8-long240.json",
+      "derived_sha256": "1f7a1a56a78c7ba9280c3b883095b0559b3b596e18a8549eee109271be0a6306",
+      "source_role": "development; not a claimed holdout",
+      "original_corpus_metadata": {
+        "geometric_mean_single_draw_probability": 0.008389261744966443,
+        "goal_modifier_count": 1,
+        "maximum_single_draw_probability": 0.008389261744966443,
+        "minimum_single_draw_probability": 0.008389261744966443,
+        "natural_pool_mod_count": 125,
+        "natural_pool_weight": 119200,
+        "prefix_goal_count": 0,
+        "side_mix": "S",
+        "stratum": "smoke-one-armour",
+        "suffix_goal_count": 1,
+        "tier": "smoke"
+      },
+      "overrides": {
+        "approval_status": {
+          "before": "generated_b3_2026_07_22",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "caps": {
+          "before": {
+            "cancel_ack_ms": 250,
+            "full_evidence": true,
+            "max_absolute_optimality_gap": 5.0,
+            "max_compiled_edges": 400000,
+            "max_compiled_nodes": 100000,
+            "max_diagnostic_samples": 32,
+            "max_discovered_states": 25000,
+            "max_expanded_states": 25000,
+            "max_reforge_work": 3000000,
+            "max_relative_optimality_gap": 0.1,
+            "max_solver_owned_bytes": 268435456,
+            "max_state_action_rows": 300000,
+            "max_states": 25000,
+            "max_strategy_json_bytes": 67108864,
+            "max_sweeps": 100000,
+            "max_telemetry_json_bytes": 1048576,
+            "max_transitions": 3000000,
+            "solve_step_work_items": 1024,
+            "worker_step_ms": 1000
+          },
+          "after": {
+            "solve_profile": "calculator_product_v1",
+            "max_states": 200000,
+            "max_sweeps": 100000,
+            "solve_step_work_items": 8,
+            "max_discovered_states": 200000,
+            "max_expanded_states": 200000,
+            "max_state_action_rows": 1215000,
+            "max_transitions": 10000000,
+            "max_reforge_work": 50000000,
+            "max_solver_owned_bytes": 1073741824,
+            "max_diagnostic_samples": 64,
+            "max_telemetry_json_bytes": 2097152,
+            "max_compiled_nodes": 100000,
+            "max_compiled_edges": 400000,
+            "max_strategy_json_bytes": 67108864,
+            "worker_step_ms": 250,
+            "cancel_ack_ms": 250,
+            "full_evidence": true
+          }
+        },
+        "comparison_profile": {
+          "before": "bounded-policy-natural-t1-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "economy": {
+          "before": {
+            "content_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+            "fallback_price": null,
+            "id": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+            "league_key": "mirage",
+            "league_name": "Mirage",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+            "source_cutoff_at_utc": "2026-07-15T21:18:29Z",
+            "version": "v1"
+          },
+          "after": {
+            "version": "v1",
+            "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+            "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+            "league_key": "allflame",
+            "league_name": "Allflame",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "fallback_price": null,
+            "missing_price_decisions": {
+              "base": "quality_ladder_fixture_input_1_chaos"
+            }
+          }
+        },
+        "id": {
+          "before": "natural-t1-smoke-one-armour-09767fd6f824",
+          "after": "cb12-cross-base-product8-long240"
+        },
+        "verification": {
+          "before": {
+            "max_actions_per_run": 100000,
+            "runs": 10000,
+            "seed": 20260726
+          },
+          "after": {
+            "runs": 0,
+            "seed": 20260826,
+            "max_actions_per_run": 100000,
+            "max_graph_steps_per_run": 4000000,
+            "exact_evaluation": true,
+            "exact_max_states": 1000000,
+            "exact_max_pairs": 5000000,
+            "exact_max_transitions": 20000000,
+            "exact_max_owned_bytes": 1073741824,
+            "exact_cost_absolute_tolerance": 1e-07,
+            "exact_cost_relative_tolerance": 1e-09
+          }
+        },
+        "watchdog_seconds": {
+          "before": 60.0,
+          "after": 300
+        },
+        "description": {
+          "before": null,
+          "after": "CB12: natural-t1-smoke-one-armour-09767fd6f824"
+        },
+        "requested_bounded_finish_seconds": {
+          "before": null,
+          "after": 240
+        },
+        "expected": {
+          "before": null,
+          "after": {
+            "solve_status": "reliability_classified",
+            "optimality_status": "classified",
+            "compile_status": "compiled",
+            "verification_status": "not_required"
+          }
+        },
+        "bounded_best_policy_contract": {
+          "before": null,
+          "after": {
+            "allow_exact": true,
+            "bounded_requires_named_stop": true,
+            "bounded_requires_strict_gap": true,
+            "bounded_requires_open_obligations": true,
+            "require_evaluated_upper": true,
+            "require_cheapest_independently_evaluated_incumbent": true
+          }
+        }
+      }
+    },
+    {
+      "id": "HO01",
+      "case_id": "ho01-cross-base-product8-long240",
+      "cohort": "heldout",
+      "parent_path": "docs/active/2026-09-09-cross-base-capability-recovery/heldout-generated/cases/natural-t1-heldout-shield-pps-8074995dad11.json",
+      "parent_sha256": "85333a840141ec405e2c814dd7d208e2872399bc60e643d60dc2a19d6ac61146",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/heldout/cases/ho01-cross-base-product8-long240.json",
+      "derived_sha256": "8f159268316d143a976d871b875662f35594421f8e4e7958e0c3147630115e09",
+      "source_role": "new complete pool family reserved before implementation; no solver outcome exposed",
+      "original_corpus_metadata": {
+        "geometric_mean_single_draw_probability": 0.007820136852394919,
+        "goal_modifier_count": 3,
+        "maximum_single_draw_probability": 0.007820136852394917,
+        "minimum_single_draw_probability": 0.007820136852394917,
+        "natural_pool_mod_count": 147,
+        "natural_pool_weight": 127875,
+        "prefix_goal_count": 2,
+        "side_mix": "PPS",
+        "stratum": "heldout-shield-pps",
+        "suffix_goal_count": 1,
+        "tier": "heldout"
+      },
+      "overrides": {
+        "approval_status": {
+          "before": "generated_b3_2026_07_22",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "comparison_profile": {
+          "before": "bounded-policy-natural-t1-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "economy": {
+          "before": {
+            "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "fallback_price": null,
+            "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "league_key": "allflame",
+            "league_name": "Allflame",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+            "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+            "version": "v1"
+          },
+          "after": {
+            "version": "v1",
+            "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+            "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+            "league_key": "allflame",
+            "league_name": "Allflame",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "fallback_price": null,
+            "missing_price_decisions": {
+              "base": "quality_ladder_fixture_input_1_chaos"
+            }
+          }
+        },
+        "id": {
+          "before": "natural-t1-heldout-shield-pps-8074995dad11",
+          "after": "ho01-cross-base-product8-long240"
+        },
+        "description": {
+          "before": null,
+          "after": "HO01: natural-t1-heldout-shield-pps-8074995dad11"
+        },
+        "requested_bounded_finish_seconds": {
+          "before": null,
+          "after": 240
+        },
+        "expected": {
+          "before": null,
+          "after": {
+            "solve_status": "reliability_classified",
+            "optimality_status": "classified",
+            "compile_status": "compiled",
+            "verification_status": "not_required"
+          }
+        },
+        "bounded_best_policy_contract": {
+          "before": null,
+          "after": {
+            "allow_exact": true,
+            "bounded_requires_named_stop": true,
+            "bounded_requires_strict_gap": true,
+            "bounded_requires_open_obligations": true,
+            "require_evaluated_upper": true,
+            "require_cheapest_independently_evaluated_incumbent": true
+          }
+        }
+      }
+    },
+    {
+      "id": "HO02",
+      "case_id": "ho02-cross-base-product8-long240",
+      "cohort": "heldout",
+      "parent_path": "docs/active/2026-09-09-cross-base-capability-recovery/heldout-generated/cases/natural-t1-heldout-wand-pss-5218abcfab21.json",
+      "parent_sha256": "bc587fdbfd640e97306bd26d7a4eafb24e885c34aaa7da4008ecdeb8a5690eb4",
+      "derived_path": "docs/active/2026-09-09-cross-base-capability-recovery/heldout/cases/ho02-cross-base-product8-long240.json",
+      "derived_sha256": "6b2413df808d27021800084c594d0c113f38f45866dff8af1c01c8c1483329ba",
+      "source_role": "new complete pool family reserved before implementation; no solver outcome exposed",
+      "original_corpus_metadata": {
+        "geometric_mean_single_draw_probability": 0.00327871002432803,
+        "goal_modifier_count": 3,
+        "maximum_single_draw_probability": 0.006557420048656057,
+        "minimum_single_draw_probability": 0.0016393550121640143,
+        "natural_pool_mod_count": 288,
+        "natural_pool_weight": 152499,
+        "prefix_goal_count": 1,
+        "side_mix": "PSS",
+        "stratum": "heldout-wand-pss",
+        "suffix_goal_count": 2,
+        "tier": "heldout"
+      },
+      "overrides": {
+        "approval_status": {
+          "before": "generated_b3_2026_07_22",
+          "after": "selected_cross_base_programme_2026_09_09"
+        },
+        "comparison_profile": {
+          "before": "bounded-policy-natural-t1-v1",
+          "after": "cross-base-capability-recovery-product8-long240-v1"
+        },
+        "economy": {
+          "before": {
+            "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "fallback_price": null,
+            "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "league_key": "allflame",
+            "league_name": "Allflame",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+            "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+            "version": "v1"
+          },
+          "after": {
+            "version": "v1",
+            "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+            "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+            "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+            "league_key": "allflame",
+            "league_name": "Allflame",
+            "manual_overrides": {
+              "base": 1.0
+            },
+            "fallback_price": null,
+            "missing_price_decisions": {
+              "base": "quality_ladder_fixture_input_1_chaos"
+            }
+          }
+        },
+        "id": {
+          "before": "natural-t1-heldout-wand-pss-5218abcfab21",
+          "after": "ho02-cross-base-product8-long240"
+        },
+        "description": {
+          "before": null,
+          "after": "HO02: natural-t1-heldout-wand-pss-5218abcfab21"
+        },
+        "requested_bounded_finish_seconds": {
+          "before": null,
+          "after": 240
+        },
+        "expected": {
+          "before": null,
+          "after": {
+            "solve_status": "reliability_classified",
+            "optimality_status": "classified",
+            "compile_status": "compiled",
+            "verification_status": "not_required"
+          }
+        },
+        "bounded_best_policy_contract": {
+          "before": null,
+          "after": {
+            "allow_exact": true,
+            "bounded_requires_named_stop": true,
+            "bounded_requires_strict_gap": true,
+            "bounded_requires_open_obligations": true,
+            "require_evaluated_upper": true,
+            "require_cheapest_independently_evaluated_incumbent": true
+          }
+        }
+      }
+    }
+  ],
+  "gate_frozen_before_implementation": "New valid exact capability or >=20% same-budget target-time/gap improvement on two non-Conquest families; no lost policy/exact answer or material core/heldout regression.",
+  "holdout_use": "Native feasibility only before implementation; reserve solver outcomes for final qualification."
+}

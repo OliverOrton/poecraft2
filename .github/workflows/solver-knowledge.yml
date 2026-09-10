@@ -20,11 +20,11 @@ jobs:
           PYTHONPATH: tools/ingest
           KNOWLEDGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          python -m poecraft_ingest.solver_knowledge lint
           if git cat-file -e "$KNOWLEDGE_BASE:docs/solver/claims.md" 2>/dev/null; then
             python -m poecraft_ingest.solver_knowledge lint --base "$KNOWLEDGE_BASE"
           else
             echo 'No previous claim ledger is available; append-only comparison is not applicable.'
+            python -m poecraft_ingest.solver_knowledge lint
           fi
           python -m unittest discover -s tools/ingest/tests -p test_solver_knowledge.py
           python -m pytest tools/ingest/tests/test_solver_reports.py tools/ingest/tests/test_ci_changes.py -q
