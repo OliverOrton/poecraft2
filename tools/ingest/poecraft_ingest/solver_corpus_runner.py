@@ -18,6 +18,7 @@ from poecraft_ingest.solver_lab_contracts import canonical_sha256
 
 from poecraft_ingest.solver_worker import (
     AttemptPaths,
+    NATIVE_RETENTION_DIAGNOSTIC_MODES,
     capture_execution_provenance,
     classify_process_result,
     partial_observation_available,
@@ -364,6 +365,7 @@ def _run_case(
     attempt_paths: AttemptPaths | None = None,
     cancel_requested: Callable[[], bool] | None = None,
     on_process_started: Callable[[int, str | None], None] | None = None,
+    native_retention_diagnostic: str | None = None,
 ) -> dict[str, Any]:
     immutable_lab_attempt = bool(
         attempt_paths is not None
@@ -387,6 +389,7 @@ def _run_case(
         goal_progress_gated_reforges=goal_progress_gated_reforges,
         watchdog_seconds=watchdog_seconds,
         worker_headroom_bytes=worker_headroom_bytes,
+        native_retention_diagnostic=native_retention_diagnostic,
     )
     result = run_isolated_process(
         resolved.command.as_list(),
@@ -553,6 +556,10 @@ def _run_case(
         "failure_kind": classification.failure_kind,
         "evaluation_role": task.evaluation_role,
         "watchdog_seconds": resolved.watchdog_seconds,
+        "resolved_command": resolved.command.canonical_document(
+            host_watchdog_seconds=resolved.watchdog_seconds,
+            reservation=resolved.reservation.as_dict(),
+        ),
         **resolved.reservation.as_dict(),
         "native_expectations_met": classification.native_expectations_met,
         "report_path": str(resolved.paths.report_path.resolve()),
@@ -580,6 +587,8 @@ def run_corpus(
     goal_progress_gated_reforges: bool = False,
     evaluation_roles_path: Path | None = None,
     selected_evaluation_roles: set[str] | None = None,
+    native_retention_diagnostic: str | None = None,
+    host_watchdog_seconds: float | None = None,
 ) -> dict[str, Any]:
     root = root.resolve()
     executable = executable.resolve()
@@ -588,6 +597,13 @@ def run_corpus(
     output_directory = output_directory.resolve()
     if max_workers <= 0:
         raise ValueError("max_workers must be positive")
+    if (native_retention_diagnostic is not None
+            and native_retention_diagnostic not in NATIVE_RETENTION_DIAGNOSTIC_MODES):
+        raise ValueError("unsupported native retention diagnostic mode")
+    if host_watchdog_seconds is not None and not (
+        0.0 < host_watchdog_seconds <= DEFAULT_WATCHDOG_SECONDS
+    ):
+        raise ValueError("host watchdog must be in (0, 900] seconds")
     if not executable.is_file():
         raise FileNotFoundError(executable)
     ledger_path = output_directory / "ledger.json"
@@ -618,6 +634,11 @@ def run_corpus(
         "evaluation_roles": sorted(selected_evaluation_roles or []),
         "evaluation_roles_manifest": role_provenance,
     }
+    # Omitted controls preserve the legacy invocation and resume identity.
+    if native_retention_diagnostic is not None:
+        configuration["native_retention_diagnostic"] = native_retention_diagnostic
+    if host_watchdog_seconds is not None:
+        configuration["host_watchdog_seconds"] = host_watchdog_seconds
     current_resume_identity = provenance.resume_identity(configuration)
     previous_resume_identity = {
         key: previous.get(key)
@@ -692,6 +713,8 @@ def run_corpus(
                     exact_evaluation=exact_evaluation,
                     run_verification=run_verification,
                     goal_progress_gated_reforges=goal_progress_gated_reforges,
+                    native_retention_diagnostic=native_retention_diagnostic,
+                    watchdog_seconds=host_watchdog_seconds,
                 )
                 running[future] = task
                 reserved += requirement
@@ -747,6 +770,16 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_WATCHDOG_SECONDS,
     )
     parser.add_argument("--no-exact-evaluation", action="store_true")
+    parser.add_argument(
+        "--native-retention-diagnostic",
+        choices=NATIVE_RETENTION_DIAGNOSTIC_MODES,
+        help="Native-only activation; omitted preserves the case's ordinary behavior.",
+    )
+    parser.add_argument(
+        "--host-watchdog-seconds",
+        type=float,
+        help="Outer process cleanup deadline, in (0, 900]; does not change native caps or finish.",
+    )
     parser.add_argument("--run-verification", action="store_true")
     parser.add_argument(
         "--goal-progress-gated-reforges",
@@ -783,6 +816,8 @@ def main(argv: list[str] | None = None) -> int:
         goal_progress_gated_reforges=args.goal_progress_gated_reforges,
         evaluation_roles_path=args.evaluation_roles,
         selected_evaluation_roles=set(args.role) or None,
+        native_retention_diagnostic=args.native_retention_diagnostic,
+        host_watchdog_seconds=args.host_watchdog_seconds,
     )
     print(
         f"{len(ledger['cases'])} cases recorded; "

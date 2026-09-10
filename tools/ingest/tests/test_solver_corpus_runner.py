@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import sys
 
+import pytest
+
 from poecraft_ingest.solver_corpus_runner import (
     CaseTask,
     _ordinary_finalization_components,
@@ -12,6 +14,7 @@ from poecraft_ingest.solver_corpus_runner import (
     load_case_tasks,
     run_corpus,
     run_isolated_process,
+    main,
 )
 from poecraft_ingest.solver_worker import (
     AttemptPaths,
@@ -387,6 +390,64 @@ def test_factored_command_matches_legacy_argument_contract(tmp_path: Path) -> No
         "--goal-progress-gated-reforges",
     ]
     assert len(command.canonical_document()["identity_sha256"]) == 64
+
+
+def test_native_controls_reach_worker_and_reject_changed_resume(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    _write_json(manifest, {"cases": ["case.json"]})
+    _write_json(tmp_path / "case.json", {
+        "id": "one", "watchdog_seconds": 300,
+        "requested_bounded_finish_seconds": 240,
+        "caps": {"max_solver_owned_bytes": 1073741824},
+    })
+    before = (tmp_path / "case.json").read_bytes()
+    observed = []
+
+    def fake_process(command, **kwargs):
+        observed.append((command, kwargs))
+        _write_json(Path(command[command.index("--output") + 1]), {"cases": []})
+        return {"exit_code": 0, "timed_out": False, "survivor": False,
+                "survivor_check": "test", "wall_ms": 1.0, "output": ""}
+
+    monkeypatch.setattr(
+        "poecraft_ingest.solver_corpus_runner.run_isolated_process", fake_process,
+    )
+    args = ["--root", str(tmp_path), "--executable", sys.executable,
+            "--artifact", str(tmp_path), "--corpus", str(manifest),
+            "--output", str(tmp_path / "run"), "--case", "one",
+            "--native-retention-diagnostic", "reuse",
+            "--host-watchdog-seconds", "315"]
+    assert main(args) == 0
+    assert len(observed) == 1
+    command, controls = observed[0]
+    assert command[-2:] == ["--native-retention-diagnostic", "reuse"]
+    assert "--exact-strategy-evaluation" in command
+    assert "--skip-verification" in command
+    assert controls["watchdog_seconds"] == 315
+    assert (tmp_path / "case.json").read_bytes() == before
+    ledger = json.loads((tmp_path / "run/ledger.json").read_text())
+    execution = ledger["cases"]["one"]["resolved_command"]
+    assert execution["argv"] == command
+    assert execution["host_watchdog_seconds"] == 315
+    assert execution["host_reservation"]["solver_owned_cap_bytes"] == 1073741824
+    assert len(execution["identity_sha256"]) == 64
+    assert main(args) == 0
+    assert len(observed) == 1
+    for changed in (args[:-1] + ["316"], args[:-3] + ["cold"] + args[-2:]):
+        with pytest.raises(ValueError, match="provenance/configuration differs"):
+            main(changed)
+    assert len(observed) == 1
+
+
+@pytest.mark.parametrize("seconds", [0, -1, float("nan"), float("inf"), 901])
+def test_invalid_host_watchdog_refuses_before_output(tmp_path: Path, seconds: float) -> None:
+    with pytest.raises(ValueError, match="host watchdog"):
+        run_corpus(root=tmp_path, executable=Path(sys.executable), artifact=tmp_path,
+                   corpus=tmp_path / "absent.json", output_directory=tmp_path / "run",
+                   tasks=[], host_watchdog_seconds=seconds)
+    assert not (tmp_path / "run").exists()
 
 
 def test_immutable_attempt_paths_do_not_share_retry_outputs(tmp_path: Path) -> None:

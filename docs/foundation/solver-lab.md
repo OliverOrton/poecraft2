@@ -14,12 +14,9 @@ The Lab catalogue is separate from canonical game SQLite. Neither it nor an immu
 
 ## Install And Launch
 
-Use the repository's normal native build when the benchmark is missing or stale. Install optional GUI dependencies only when that surface is needed. The documented local module invocation avoids dependence on the console-script directory being on PATH:
-
-```powershell
-$env:PYTHONPATH = "tools/ingest;bindings/python"
-py -3 -m poecraft_ingest.solver_lab --root . --help
-```
+The [tooling map](tooling.md) owns module setup, build and task-to-command
+quick starts. Use its focused benchmark build when that executable is missing
+or stale. Install optional GUI dependencies only when that surface is needed.
 
 An installed console entry is `poecraft-solver-lab`. Optional GUI setup uses the existing `tools/ingest[solver-lab]` extra, and the GUI command is `... solver_lab --root . gui`.
 
@@ -43,16 +40,9 @@ Execution identity separates actual disabled native families from the profile's 
 
 ## JSON CLI
 
-Existing focused commands include:
-
-```powershell
-py -3 -m poecraft_ingest.solver_lab --root . profiles
-py -3 -m poecraft_ingest.solver_lab --root . cases
-py -3 -m poecraft_ingest.solver_lab --root . attempts
-py -3 -m poecraft_ingest.solver_lab --root . run --revision-id REVISION_ID --wait --summary-fields status,phase,lower,upper,states,rows,memory
-py -3 -m poecraft_ingest.solver_lab --root . strategy-summary --attempt-id ATTEMPT_ID
-py -3 -m poecraft_ingest.solver_lab --root . export-bundle --attempt-id ATTEMPT_ID --idempotency-key EXPORT_KEY
-```
+The [task-to-command map](tooling.md) lists focused run, summary, trajectory,
+strategy, comparison and export invocations. This page owns their operating
+contracts rather than duplicating the quick starts.
 
 Place common root/catalogue/attempt/executable/artifact/corpus/profile overrides before the operation. Inspect operation help when needed rather than guessing flags. These are the existing JSON operations, not a newly implemented human-table/`--json` interface.
 

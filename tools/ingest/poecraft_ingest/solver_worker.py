@@ -16,6 +16,9 @@ from typing import Any, Callable, Mapping, Protocol
 from poecraft_ingest.solver_lab_contracts import canonical_sha256
 
 
+NATIVE_RETENTION_DIAGNOSTIC_MODES = ("cold", "reuse", "reuse-unconsumed")
+
+
 class CaseTaskLike(Protocol):
     case_id: str
     watchdog_seconds: float
@@ -327,7 +330,11 @@ def build_solver_case_command(
     exact_evaluation: bool,
     run_verification: bool,
     goal_progress_gated_reforges: bool,
+    native_retention_diagnostic: str | None = None,
 ) -> SolverCaseCommand:
+    if (native_retention_diagnostic is not None
+            and native_retention_diagnostic not in NATIVE_RETENTION_DIAGNOSTIC_MODES):
+        raise ValueError("unsupported native retention diagnostic mode")
     argv = [
         str(executable),
         "--artifact",
@@ -349,6 +356,8 @@ def build_solver_case_command(
         argv.append("--exact-strategy-evaluation")
     if goal_progress_gated_reforges:
         argv.append("--goal-progress-gated-reforges")
+    if native_retention_diagnostic is not None:
+        argv.extend(("--native-retention-diagnostic", native_retention_diagnostic))
     return SolverCaseCommand(tuple(argv), root)
 
 
@@ -365,6 +374,7 @@ def resolve_case_execution(
     goal_progress_gated_reforges: bool,
     watchdog_seconds: float | None = None,
     worker_headroom_bytes: int = 0,
+    native_retention_diagnostic: str | None = None,
 ) -> ResolvedCaseExecution:
     paths.prepare()
     command = build_solver_case_command(
@@ -377,6 +387,7 @@ def resolve_case_execution(
         exact_evaluation=exact_evaluation,
         run_verification=run_verification,
         goal_progress_gated_reforges=goal_progress_gated_reforges,
+        native_retention_diagnostic=native_retention_diagnostic,
     )
     return ResolvedCaseExecution(
         case_id=task.case_id,

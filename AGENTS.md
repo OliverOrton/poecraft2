@@ -41,6 +41,9 @@ honestly. Rendered UI review belongs to Oliver unless explicitly requested.
 
 ## Navigation and commands
 
+- Before adding experiment infrastructure, consult [the tooling map](docs/foundation/tooling.md).
+  Reuse an owner that preserves the request; start investigation with compact
+  projections and expand raw evidence only for a specific unanswered question.
 - Architecture/cross-layer edits: docs/foundation/change-impact.md.
 - Solver contracts and mathematics: docs/solver/README.md and its relevant links.
 - Substantive research import: docs/solver/research.md; preserve the argument once,
