@@ -1,0 +1,37 @@
+Continue the attached Complete-Row Proper-Policy Synthesis and First-Incumbent
+Recovery v1.2 programme AFTER M0.
+
+The previous session implemented M0 and stopped. Preserve/reuse it. Check local
+HANDOFF, changes and the actual tool map; do not reset to the remote pin, rebuild
+M0, or stop after another tooling receipt. This request selects M1–M6 now.
+
+Read implementation_plan.md and the original research/reference files in this ZIP.
+Remote main checked for the handoff is 44fdca8ebf88b9b87b2bd832360cb62128e3968a;
+local M0 is not verified by the research session. m0_reference.md is backup only.
+
+Start with the fixed native completed-row/choice view for existing CB06 Ring-two
+and CB08 Onyx-three. At that same boundary, classify admitted reforge work as
+queued, complete, missing continuation, candidate-used or proof-retired. Establish
+whether a proper controller is already present or its support is still incomplete.
+
+Test the mutual-retry seed/repair hypothesis using real native helpers. If justified,
+implement the smallest candidate-only properness seed, independently evaluate and
+compile it, retain the verified artifact, and continue normal cost/proof improvement.
+If rows are missing, use the plan's one bounded coherent dependency follow-through.
+Do not restore B1/B2 priority alone or force a disproved selector into production.
+
+Continue through the native two-family outcomes, affected cross-base/heldout checks,
+WASM delivery and canonical research updates. Keep the matched 240/300/315-second
+profile, 1 GiB, actual action scope and all other caps. The RAM/adaptive-estimate
+notes are conditional follow-on ideas, not three new projects or an excuse to defer
+solver work. Preserve certified lower/upper/properness and complete probability.
+
+One sequential session, no subagents, inherited deadline, automatic restart or push.
+Preserve unrelated work and protected path 0 without inspecting it. Use focused
+validation and decisive runs, not routine Simulator or broad intermediate suites.
+
+Do not mark completion at M0, a helper, a toy test or an internal finite value.
+The target is actual independently evaluated policies on both previously failing
+families with no lost capability. Exact closure and policy quality remain separately
+reported. Real limits or falsification justify a precise paused checkpoint, not a
+false success. Begin the native continuation after the short local reconciliation.

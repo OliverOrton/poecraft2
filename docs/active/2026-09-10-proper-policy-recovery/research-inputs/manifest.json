@@ -1,0 +1,59 @@
+{
+  "schema": "research_handoff_files_v1",
+  "package_revision": "v1.2-post-m0-continuation",
+  "reviewed_main": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+  "date": "2026-09-10",
+  "repository_modified": false,
+  "public_actions_performed": false,
+  "native_execution_performed": false,
+  "new_external_research_performed": false,
+  "m0_status": {
+    "owner_report": "implemented; previous session stopped afterward",
+    "local_diff_inspected": false,
+    "local_checks_verified": false,
+    "instruction": "preserve/reuse; reference included only for missing pieces"
+  },
+  "read_this_first": "README.md",
+  "governing_plan": "implementation_plan.md",
+  "source_package": {
+    "filename": "poecraft_proper_policy_recovery_44fd_m0.zip",
+    "sha256": "a704e39726ec522c2097a1714f01a66fa71a3df203dd8f92b60658bbd9858e92"
+  },
+  "preserved_evidence_files": [
+    "research_report.md",
+    "mathematical_delta.md",
+    "proper_seed_reference.py",
+    "proper_seed_results.json",
+    "source_register.json"
+  ],
+  "files": {
+    "README.md": "76e4ab4cc70d2fb1b6d634828330be1116853202ae9d0e5466ad274d53a56fed",
+    "continuation_notes.md": "1028e6706cf4179ccbd20f8a3531b7a114a6b087863c21374d69e7ddc4ce7826",
+    "implementation_plan.md": "eca3a0227c8a1e3b4e94a9cee9d498be474b523993ae8026e34dc4535c516230",
+    "m0_reference.md": "5a37afc415aefa9ea911cf782ecda4d7eb563d1acd9222b48a0bdd0e16ebf41c",
+    "mathematical_delta.md": "8096b1d385d0aa797191512ef7df99f8b56be15837351af04b9ae958f3ad4822",
+    "proper_seed_reference.py": "169c91e77316c46b8688b6acc9473692609b34e33c3525d35bdaeb968416c847",
+    "proper_seed_results.json": "1e83dc943db408b0b9d90ed54350c90f7fb0eb084ad1b0fef81c0145b82ba239",
+    "research_report.md": "5a64ff5c94a93945115c653a9b9e71da2c56e98a069a65d02881cd3e9e9e1038",
+    "short_prompt.txt": "5ba07c5e3eaeac71467e71627ebbb922a46eb8e9abe438590ba95a46dea762de",
+    "source_register.json": "3fd4088ff794c978ddcf8b3acfd0ad1b63aae21d6045600a7e4f55f07c6f84e8",
+    "start_prompt.txt": "d0c950791a5e5290daf5340aee70c9b25d57e4bf3feea0defda4fa67313c2038"
+  },
+  "verification": {
+    "input_package_internal_hashes_match": true,
+    "original_scientific_payloads_byte_identical": true,
+    "original_M0_specification_retained_verbatim": true,
+    "local_markdown_file_links_exist": true,
+    "M0_through_M6_milestone_headers_unique": true,
+    "synthetic_reference_rerun": {
+      "performed": true,
+      "output_matches_original": true,
+      "named_checks": 26,
+      "finite_models": 512,
+      "controllers_enumerated": 24412,
+      "classification": "independent synthetic finite models; not native engine or PoE tests"
+    },
+    "native_tests_or_benchmarks_run": false,
+    "local_M0_implementation_reviewed": false
+  }
+}

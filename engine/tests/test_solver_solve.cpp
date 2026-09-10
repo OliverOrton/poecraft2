@@ -1642,6 +1642,104 @@ std::uint32_t satisfied_goal_count(
     return count;
 }
 
+void run_native_mutual_retry_seed_tests() {
+    // Research v1.2 mutual retry, using real native seed, repair and SCC owners.
+    auto session = make_solve_session();
+    auto registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 100;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    const auto transmute = registry.index_by_id.at("transmute");
+    const auto alteration = registry.index_by_id.at("alteration");
+    CalcContext calc(session, goal, registry, {transmute, alteration});
+    pc_item_state start;
+    pc_item_clear(&start);
+    SolveOptions options;
+    options.allow_economic_restart = false;
+    options.state_certificate_control = false;
+    SolveWorkTestAccess::Impl work(calc, start,
+        {{"transmute", 1.0}, {"alteration", 2.0}}, options);
+    const auto s = work.result.start_state;
+    pc_item_state returning = start;
+    returning.rarity = PC_RARITY_MAGIC;
+    const auto t = calc.intern_item(returning);
+    pc_item_state terminal = start;
+    terminal.rarity = PC_RARITY_RARE;
+    PC_CHECK(pc_item_add_mod(&terminal, PC_SIDE_PREFIX, 0,
+        static_cast<std::uint16_t>(session->primary_group[0]),
+        0, nullptr) == PC_RESULT_OK);
+    const auto g = calc.intern_item(terminal);
+    const auto n = calc.state_count();
+    work.transition_cache = std::make_shared<SolveTransitionCache>();
+    work.priced_rows.clear();
+    const auto add = [&](std::uint32_t owner, std::uint32_t op, double cost,
+                         std::vector<solve_detail::SparsePolicyTransitionInput> exits) {
+        solve_detail::SparsePolicyRowInput row;
+        row.owner_state = owner;
+        row.operator_index = op;
+        row.cost = cost;
+        row.transitions = std::move(exits);
+        return solve_detail::append_sparse_policy_row(*work.transition_cache,
+            work.priced_rows, row);
+    };
+    const auto bad = add(s, 0, 1, {{t, 1}});
+    const auto escape = add(s, 1, 2, {{g, .5}, {t, .5}});
+    const auto back = add(t, 0, 1, {{s, 1}});
+    work.result.values.assign(n, 0);
+    work.result.goal_states.assign(n, 0);
+    work.result.goal_states[g] = 1;
+    work.result.expanded.assign(n, 0);
+    work.result.expanded[s] = work.result.expanded[t] = 1;
+    work.expanded = work.result.expanded;
+    work.expanded_count = 2;
+    work.transition_cache->expanded = work.expanded;
+    work.policy_rows.assign(n, std::numeric_limits<std::uint64_t>::max());
+    work.incremental_upper_policy_pass = true;
+    PC_CHECK(work.initialize_focused_proper_policy());
+    PC_CHECK(work.policy_rows[s] == bad && work.policy_rows[t] == back);
+    const auto evaluate = [&] {
+        work.reset_policy_iteration_units();
+        for (std::size_t i = 0; i < 10000; ++i) {
+            if (work.evaluate_fixed_policy()) return true;
+            if (!work.policy_evaluation_incomplete) return false;
+        }
+        return false;
+    };
+    PC_CHECK(!evaluate());
+    PC_CHECK(!work.improper_policy_states.empty());
+    PC_CHECK(!work.repair_improper_policy());
+    // Evaluate the explicitly specified escape/return controller with the
+    // native SCC machinery. No qualitative helper is retained in production.
+    work.policy_rows[s] = escape;
+    work.policy_rows[t] = back;
+    PC_CHECK(evaluate());
+    PC_CHECK(near(work.result.values[s], 5, 1e-12));
+    PC_CHECK(near(work.result.values[t], 6, 1e-12));
+
+    // The complete ordinary numerical seed path is tested independently of
+    // the narrow initializer. Do not disable its Gauss-Seidel initialization.
+    work.result.values.assign(n, kValueCeiling);
+    work.result.values[g] = 0;
+    work.policy_initialized = false;
+    work.policy_iteration_failed = false;
+    work.policy_stable = false;
+    work.incremental_upper_fixed_policy_proved = false;
+    work.policy_rows.assign(n, std::numeric_limits<std::uint64_t>::max());
+    work.reset_policy_iteration_units();
+    for (std::size_t i = 0; i < 10000 &&
+         !work.incremental_upper_fixed_policy_proved &&
+         !work.policy_iteration_failed; ++i) work.run_policy_iteration_unit();
+    PC_CHECK(work.incremental_upper_fixed_policy_proved);
+    PC_CHECK(near(work.result.values[s], 5, 1e-12));
+    // Joint local-progress initialization also chooses the escaping row on
+    // this view; the toy alone cannot attribute the real no-policy failures.
+    PC_CHECK(work.select_joint_policy_seed_row(s, work.result.values) == escape);
+    PC_CHECK(work.select_joint_policy_seed_row(t, work.result.values) == back);
+}
+
 void run_retention_capacity_fracture_shadow_row_tests() {
     auto session = make_solve_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -13007,6 +13105,7 @@ void run_solver_carrier_bound_tests() {
 }
 
 void run_solver_joint_policy_continuation_tests() {
+    run_native_mutual_retry_seed_tests();
     run_resumable_joint_policy_continuation_fixture_tests();
 }
 
@@ -13063,6 +13162,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_anytime_scheduler_tests();
     run_proof_pattern_manager_tests();
     run_incumbent_portfolio_monotonicity_tests();
+    run_native_mutual_retry_seed_tests();
     run_resumable_joint_policy_continuation_fixture_tests();
     run_carrier_ladder_row_service_witness_classification_tests();
     run_bounded_policy_row_capture_tests();

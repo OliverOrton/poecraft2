@@ -1,0 +1,524 @@
+diff --git a/engine/src/solver_solve_constructive.cpp b/engine/src/solver_solve_constructive.cpp
+index d293a49..7bf9dfe 100644
+--- a/engine/src/solver_solve_constructive.cpp
++++ b/engine/src/solver_solve_constructive.cpp
+@@ -2060,6 +2060,139 @@ void SolveWork::Impl::capture_carrier_ladder_exact_boundary(
+     carrier_ladder_exact_boundary_capture.emplace(std::move(capture));
+ }
+ 
++void SolveWork::Impl::capture_completed_policy_support_diagnostic() {
++    // One immutable observation at the first publication boundary. No kernels,
++    // selected decisions, work queues or proof classifications are changed.
++    if (options.carrier_ladder_exact_boundary_mode !=
++            CarrierLadderExactBoundaryMode::Record ||
++        transition_cache == nullptr ||
++        completed_policy_support_observations >= 2 ||
++        completed_policy_support_row_generation == transition_cache->rows.size()) return;
++    const auto started = std::chrono::steady_clock::now();
++    const auto& limits = options.carrier_ladder_exact_boundary_limits;
++    const std::size_t n = calc.state_count();
++    const std::uint64_t scratch = n * 14ull +
++        transition_cache->rows.size() +
++        transition_cache->choices.size() * sizeof(std::uint32_t) + 262144;
++    const auto live = fast_estimated_owned_bytes();
++    if (scratch > limits.max_owned_bytes ||
++        (options.max_solver_owned_bytes != 0 &&
++         (live > options.max_solver_owned_bytes ||
++          scratch > options.max_solver_owned_bytes - live))) {
++        if (completed_policy_support_diagnostic.empty())
++            completed_policy_support_diagnostic =
++                "[{\"status\":\"unresolved_scratch_cap\"}]";
++        return;
++    }
++    std::vector<std::uint8_t> completed(transition_cache->rows.size(), 0);
++    for (std::size_t r = 0; r < completed.size(); ++r)
++        completed[r] = transition_cache->rows[r].admitted;
++    for (const auto& alternative : incremental_alternative_rows)
++        if (alternative.row_index < completed.size())
++            completed[alternative.row_index] = 1;
++    std::vector<std::uint8_t> terminals(n, 0);
++    for (std::uint32_t s = 0; s < n; ++s)
++        terminals[s] = calc.is_goal_state(calc.state(s));
++    // This initial diagnostic deliberately uses true goals only. An available
++    // incumbent is identified separately; its entry certificates need their
++    // existing compatibility/commitment checks before widening this view.
++    const auto support = construct_sparse_proper_policy_support(
++        *transition_cache, priced_rows, completed, terminals,
++        limits.max_exact_work);
++    std::string json = "{\"schema\":\"completed_policy_support_v1\",\"status\":";
++    append_json_string(json, support.complete ? "complete" : "unresolved_work_cap");
++    json += ",\"authority\":\"candidate_view_only\",\"graph_identity\":" +
++        std::to_string(graph_identity()) + ",\"states\":" + std::to_string(n) +
++        ",\"rows\":" + std::to_string(completed.size()) +
++        ",\"completed_rows\":" + std::to_string(std::count(completed.begin(), completed.end(), 1)) +
++        ",\"goals\":" + std::to_string(std::count(terminals.begin(), terminals.end(), 1)) +
++        ",\"winning_states\":" + std::to_string(std::count(support.winning.begin(), support.winning.end(), 1)) +
++        ",\"root_winning\":" + std::string(support.complete &&
++            result.start_state < n && support.winning[result.start_state] ? "true" : "false") +
++        ",\"incumbent_present\":" + std::string(output_incumbent.has_value() ? "true" : "false") +
++        ",\"work\":" + std::to_string(support.work) +
++        ",\"passes\":" + std::to_string(support.passes) +
++        ",\"scratch_reserved\":" + std::to_string(scratch) +
++        ",\"expanded\":" + std::to_string(expanded_count) + ",\"coverage\":[";
++    std::vector<std::uint32_t> samples{result.start_state};
++    const auto add_sample = [&](std::uint32_t s) {
++        if (s < n && samples.size() < 6 &&
++            std::find(samples.begin(), samples.end(), s) == samples.end())
++            samples.push_back(s);
++    };
++    // Normal missing continuation, then a few real partial row owners.
++    for (std::uint32_t s = 0; s < n; ++s)
++        if (!terminals[s] && calc.state(s).rarity == PC_RARITY_NORMAL &&
++            select_joint_policy_seed_row(s, result.values) ==
++                std::numeric_limits<std::uint64_t>::max()) { add_sample(s); break; }
++    for (const auto& row : transition_cache->rows)
++        if (satisfied_goal_mask_for_state(row.owner_state) != 0) add_sample(row.owner_state);
++    bool first_state = true;
++    for (const auto s : samples) {
++        if (!first_state) json += ',';
++        first_state = false;
++        json += "{\"state\":" + std::to_string(s) +
++            ",\"goal_mask\":" + std::to_string(satisfied_goal_mask_for_state(s)) +
++            ",\"rarity\":" + std::to_string(calc.state(s).rarity) +
++            ",\"expanded\":" + std::string(s < expanded.size() && expanded[s] ? "true" : "false") +
++            ",\"winning\":" + std::string(support.complete && support.winning[s] ? "true" : "false") +
++            ",\"operators\":[";
++        bool first_op = true;
++        for (std::uint32_t op = 0; op < calc.operators().size(); ++op) {
++            const auto& planner = calc.operators()[op];
++            if (planner.kind != PlannerOperatorKind::Primitive) continue;
++            const auto entry = action_envelope_ledger.find(s, op);
++            const bool requested = std::find(static_operator_indices.begin(), static_operator_indices.end(), op) != static_operator_indices.end() ||
++                std::find(delayed_operator_indices.begin(), delayed_operator_indices.end(), op) != delayed_operator_indices.end();
++            if (!requested && entry == nullptr) continue;
++            if (!first_op) json += ',';
++            first_op = false;
++            json += "{\"index\":" + std::to_string(op) + ",\"id\":";
++            append_json_string(json, planner.id);
++            json += ",\"requested\":" + std::string(requested ? "true" : "false") +
++                ",\"legal\":" + std::string(action_legal(session,
++                    calc.registry().actions.at(planner.primitive_action), calc.state(s)) ? "true" : "false") +
++                ",\"ledger_state\":" + (entry ? std::to_string(static_cast<int>(entry->lifecycle)) : "null") +
++                ",\"lane\":" + (entry ? std::to_string(static_cast<int>(entry->lane)) : "null") +
++                ",\"stop_owner\":" + (entry ? std::to_string(static_cast<int>(entry->stop_owner)) : "null") +
++                ",\"reason\":";
++            append_json_string(json, entry ? entry->detail : "no_ledger_entry");
++            std::uint64_t rows = 0, missing = 0;
++            bool selected = false;
++            if (s < transition_cache->state_rows.size())
++                for (const auto r : state_row_indices(*transition_cache, s)) {
++                    if (r >= priced_rows.size() || priced_rows[r].operator_index != op || !completed[r]) continue;
++                    ++rows;
++                    selected |= s < policy_rows.size() && policy_rows[s] == r;
++                    const auto& row = transition_cache->rows[r];
++                    for (std::uint32_t i = 0; i < row.transition_count; ++i) {
++                        const auto offset = row.transition_offset + i;
++                        const auto t = transition_cache->successors[offset];
++                        if (transition_cache->probabilities[offset] > 0 &&
++                            (t >= n || (!terminals[t] && (t >= transition_cache->state_rows.size() ||
++                                transition_cache->state_rows[t].count == 0)))) ++missing;
++                    }
++                }
++            json += ",\"completed_rows\":" + std::to_string(rows) +
++                ",\"direct_missing_rows\":" + std::to_string(missing) +
++                ",\"selected\":" + std::string(selected ? "true" : "false") + "}";
++        }
++        json += "]}";
++    }
++    json += "]}";
++    if (completed_policy_support_diagnostic.empty()) {
++        completed_policy_support_diagnostic = "[" + json + "]";
++    } else {
++        completed_policy_support_diagnostic.pop_back();
++        completed_policy_support_diagnostic += "," + json + "]";
++    }
++    completed_policy_support_row_generation = transition_cache->rows.size();
++    ++completed_policy_support_observations;
++    carrier_ladder_exact_boundary_private_wall_ns +=
++        std::chrono::duration_cast<std::chrono::nanoseconds>(
++            std::chrono::steady_clock::now() - started).count();
++}
++
+ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
+         SolveDiagnostics& diagnostics) const {
+     if (options.carrier_ladder_exact_boundary_mode ==
+@@ -2108,6 +2241,9 @@ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
+         std::to_string(limits.max_wall_time_ms);
+     json += ",\"max_samples\":" +
+         std::to_string(limits.max_samples) + "}";
++    json += ",\"completed_policy_support\":";
++    json += completed_policy_support_diagnostic.empty()
++        ? "null" : completed_policy_support_diagnostic;
+     json += ",\"resumable_joint_policy_continuation\":";
+     if (!resumable_joint_policy_candidate.has_value()) {
+         json += "null";
+diff --git a/engine/src/solver_solve_finish.cpp b/engine/src/solver_solve_finish.cpp
+index 4b3e584..94e715a 100644
+--- a/engine/src/solver_solve_finish.cpp
++++ b/engine/src/solver_solve_finish.cpp
+@@ -6039,6 +6039,24 @@ void SolveWork::Impl::begin_publication_pipeline() {
+             finalized_result.has_value()) {
+             return;
+         }
++        capture_completed_policy_support_diagnostic();
++        // Bounded recovery experiment: try the existing joint controller
++        // constructor before a no-incumbent publication, then service one
++        // batch of its actual selected dependencies. This is a different
++        // candidate from the optimistic Bellman fringe used by B1/B2.
++        if (!requested_bounded_finish && !result.diagnostics.resource_cap_hit &&
++            incremental_action_generation && !incremental_envelope_closed &&
++            options.high_impact_executable_uppers && !output_incumbent.has_value()) {
++            (void)try_install_reachable_incumbent(false,
++                JointAnytimeAttemptLineage::Trigger::PublicationPreflight);
++            if (!output_incumbent.has_value() &&
++                !first_policy_dependency_followthrough &&
++                !incremental_anytime_missing_frontier_states.empty()) {
++                first_policy_dependency_followthrough = true;
++                if (!expansion_active) incremental_refinement_active = false;
++                if (schedule_incremental_refinement(true)) return;
++            }
++        }
+         if (!requested_bounded_finish && !proof_handoff_started &&
+             incremental_action_generation &&
+             !incremental_envelope_closed &&
+diff --git a/engine/src/solver_solve_telemetry.cpp b/engine/src/solver_solve_telemetry.cpp
+index c17c1e0..44bbb53 100644
+--- a/engine/src/solver_solve_telemetry.cpp
++++ b/engine/src/solver_solve_telemetry.cpp
+@@ -2557,6 +2557,7 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
+             kIncumbentPortfolioAliasAccountingOffset +
+             calc_bytes;
+         bytes += native_retention_live_bytes + native_retention_junk_safe.capacity();
++        bytes += completed_policy_support_diagnostic.capacity() + 1;
+         bytes += native_retention_refusal.capacity()+1;
+         bytes += prices.bucket_count() * sizeof(void*);
+         bytes += prices.size() *
+@@ -2815,6 +2816,7 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
+             kIncumbentPortfolioAliasAccountingOffset +
+             calc_bytes;
+         bytes += native_retention_live_bytes + native_retention_junk_safe.capacity();
++        bytes += completed_policy_support_diagnostic.capacity() + 1;
+         bytes += native_retention_refusal.capacity()+1;
+         bytes += prices.bucket_count() * sizeof(void*);
+         bytes += prices.size() *
+diff --git a/engine/src/solver_solve_types.hpp b/engine/src/solver_solve_types.hpp
+index 7664e24..f858f8b 100644
+--- a/engine/src/solver_solve_types.hpp
++++ b/engine/src/solver_solve_types.hpp
+@@ -1634,6 +1634,12 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
+         carrier_ladder_exact_boundary_capture;
+     std::vector<JointAnytimeAttemptLineage>
+         joint_anytime_attempt_lineage;
++    std::string completed_policy_support_diagnostic;
++    std::uint64_t completed_policy_support_row_generation =
++        std::numeric_limits<std::uint64_t>::max();
++    std::uint32_t completed_policy_support_observations = 0;
++    bool first_policy_dependency_followthrough = false;
++    void capture_completed_policy_support_diagnostic();
+     std::uint64_t carrier_ladder_exact_boundary_private_wall_ns = 0;
+     bool target_gap_stop = false;
+     SolveGapTarget target_gap_fired = SolveGapTarget::None;
+diff --git a/engine/src/solver_sparse_policy.cpp b/engine/src/solver_sparse_policy.cpp
+index dd1f90c..0d71129 100644
+--- a/engine/src/solver_sparse_policy.cpp
++++ b/engine/src/solver_sparse_policy.cpp
+@@ -7,6 +7,102 @@
+ namespace poecraft {
+ namespace solver {
+ namespace solve_detail {
++
++SparseProperPolicySupport construct_sparse_proper_policy_support(
++        const SolveTransitionCache& graph,
++        const std::vector<PricedSparseRow>& priced,
++        const std::vector<std::uint8_t>& completed,
++        const std::vector<std::uint8_t>& terminals,
++        const std::uint64_t max_work) {
++    SparseProperPolicySupport out;
++    const auto no_row = std::numeric_limits<std::uint64_t>::max();
++    out.winning.assign(terminals.size(), 1);
++    out.rank.resize(terminals.size(), kNoId);
++    out.rows.resize(terminals.size(), no_row);
++    out.choices.resize(graph.choices.size(), kNoId);
++    const auto visit = [&] { return out.work++ < max_work; };
++    for (;;) {
++        ++out.passes;
++        std::fill(out.rank.begin(), out.rank.end(), kNoId);
++        std::fill(out.rows.begin(), out.rows.end(), no_row);
++        std::fill(out.choices.begin(), out.choices.end(), kNoId);
++        for (std::size_t s = 0; s < terminals.size(); ++s) {
++            if (!visit()) return out;
++            if (terminals[s] && out.winning[s]) out.rank[s] = 0;
++        }
++        bool grew = true;
++        std::uint32_t next_rank = 1;
++        while (grew) {
++            grew = false;
++            for (std::uint32_t s = 0; s < terminals.size(); ++s) {
++                if (!visit()) return out;
++                if (!out.winning[s] || out.rank[s] != kNoId ||
++                    s >= graph.state_rows.size()) continue;
++                for (const auto r : state_row_indices(graph, s)) {
++                    if (!visit()) return out;
++                    if (r >= completed.size() || !completed[r] ||
++                        r >= priced.size() ||
++                        priced[r].operator_index == kNoId ||
++                        !std::isfinite(priced[r].cost) || priced[r].cost < 0)
++                        continue;
++                    const auto& row = graph.rows.at(r);
++                    if (row.owner_state != s) continue;
++                    bool safe = true, progress = false;
++                    for (std::uint32_t i = 0; i < row.transition_count; ++i) {
++                        if (!visit()) return out;
++                        const auto offset = row.transition_offset + i;
++                        if (!(graph.probabilities.at(offset) > 0)) continue;
++                        const auto t = graph.successors.at(offset);
++                        if (t >= out.winning.size() || !out.winning[t]) {
++                            safe = false;
++                            break;
++                        }
++                        progress |= out.rank[t] != kNoId;
++                    }
++                    for (std::uint32_t i = 0; safe && i < row.choice_count; ++i) {
++                        if (!visit()) return out;
++                        const auto ci = row.choice_offset + i;
++                        const auto& group = graph.choices.at(ci);
++                        if (!(group.probability > 0)) continue;
++                        std::uint32_t selected = group.has_self ? s : kNoId;
++                        for (std::uint32_t j = 0; j < group.successor_count; ++j) {
++                            if (!visit()) return out;
++                            const auto t = graph.choice_successors.at(
++                                group.successor_offset + j);
++                            if (t >= out.winning.size() || !out.winning[t]) continue;
++                            if (selected == kNoId ||
++                                std::pair{out.rank[t], t} <
++                                    std::pair{out.rank[selected], selected}) {
++                                selected = t;
++                            }
++                        }
++                        safe = selected != kNoId;
++                        if (safe) progress |= out.rank[selected] != kNoId;
++                        out.choices[ci] = selected;
++                    }
++                    if (!safe || !progress) continue;
++                    out.rank[s] = next_rank++;
++                    out.rows[s] = r;
++                    grew = true;
++                    break;
++                }
++            }
++        }
++        bool removed = false;
++        for (std::size_t s = 0; s < out.winning.size(); ++s) {
++            if (!visit()) return out;
++            if (out.winning[s] && out.rank[s] == kNoId) {
++                out.winning[s] = 0;
++                removed = true;
++            }
++        }
++        if (!removed) {
++            out.complete = true;
++            return out;
++        }
++    }
++}
++
+ namespace {
+ 
+ std::uint64_t saturated_scratch_add(
+diff --git a/engine/src/solver_sparse_policy.hpp b/engine/src/solver_sparse_policy.hpp
+index 38c6265..b668639 100644
+--- a/engine/src/solver_sparse_policy.hpp
++++ b/engine/src/solver_sparse_policy.hpp
+@@ -38,6 +38,27 @@ struct SparsePolicyRowInput {
+     std::vector<SparsePolicyChoiceInput> choices;
+ };
+ 
++/* Bounded finite-view diagnostic/candidate construction. Completed rows and
++ * executable terminals are caller-owned evidence, never optimistic frontiers.
++ * This supplies no numerical, native routing, lower or exactness authority.
++ * A work-limit exit is unresolved; only complete=true classifies this view. */
++struct SparseProperPolicySupport {
++    bool complete = false;
++    std::uint64_t work = 0;
++    std::uint32_t passes = 0;
++    std::vector<std::uint8_t> winning;
++    std::vector<std::uint32_t> rank;
++    std::vector<std::uint64_t> rows;
++    std::vector<std::uint32_t> choices;
++};
++
++SparseProperPolicySupport construct_sparse_proper_policy_support(
++    const SolveTransitionCache& graph,
++    const std::vector<PricedSparseRow>& priced,
++    const std::vector<std::uint8_t>& completed,
++    const std::vector<std::uint8_t>& terminals,
++    std::uint64_t max_work);
++
+ struct SharedSparseTransitionSpan {
+     std::uint64_t offset = 0;
+     std::uint32_t count = 0;
+diff --git a/engine/tests/test_solver_solve.cpp b/engine/tests/test_solver_solve.cpp
+index c9175d8..58e6171 100644
+--- a/engine/tests/test_solver_solve.cpp
++++ b/engine/tests/test_solver_solve.cpp
+@@ -1642,6 +1642,152 @@ std::uint32_t satisfied_goal_count(
+     return count;
+ }
+ 
++void run_completed_policy_support_tests() {
++    // Research v1.2 mutual retry, using real native seed, repair and SCC owners.
++    auto session = make_solve_session();
++    auto registry = build_action_registry(*session);
++    GoalSpec goal;
++    goal.rarity = PC_RARITY_RARE;
++    GoalSlot slot;
++    slot.family_id = 100;
++    slot.min_tier = 1;
++    goal.slots.push_back(slot);
++    const auto transmute = registry.index_by_id.at("transmute");
++    const auto alteration = registry.index_by_id.at("alteration");
++    CalcContext calc(session, goal, registry, {transmute, alteration});
++    pc_item_state start;
++    pc_item_clear(&start);
++    SolveOptions options;
++    options.allow_economic_restart = false;
++    options.state_certificate_control = false;
++    SolveWorkTestAccess::Impl work(calc, start,
++        {{"transmute", 1.0}, {"alteration", 2.0}}, options);
++    const auto s = work.result.start_state;
++    pc_item_state returning = start;
++    returning.rarity = PC_RARITY_MAGIC;
++    const auto t = calc.intern_item(returning);
++    pc_item_state terminal = start;
++    terminal.rarity = PC_RARITY_RARE;
++    PC_CHECK(pc_item_add_mod(&terminal, PC_SIDE_PREFIX, 0,
++        static_cast<std::uint16_t>(session->primary_group[0]),
++        0, nullptr) == PC_RESULT_OK);
++    const auto g = calc.intern_item(terminal);
++    const auto n = calc.state_count();
++    work.transition_cache = std::make_shared<SolveTransitionCache>();
++    work.priced_rows.clear();
++    const auto add = [&](std::uint32_t owner, std::uint32_t op, double cost,
++                         std::vector<solve_detail::SparsePolicyTransitionInput> exits) {
++        solve_detail::SparsePolicyRowInput row;
++        row.owner_state = owner;
++        row.operator_index = op;
++        row.cost = cost;
++        row.transitions = std::move(exits);
++        return solve_detail::append_sparse_policy_row(*work.transition_cache,
++            work.priced_rows, row);
++    };
++    const auto bad = add(s, 0, 1, {{t, 1}});
++    const auto escape = add(s, 1, 2, {{g, .5}, {t, .5}});
++    const auto back = add(t, 0, 1, {{s, 1}});
++    work.result.values.assign(n, 0);
++    work.result.goal_states.assign(n, 0);
++    work.result.goal_states[g] = 1;
++    work.result.expanded.assign(n, 0);
++    work.result.expanded[s] = work.result.expanded[t] = 1;
++    work.expanded = work.result.expanded;
++    work.expanded_count = 2;
++    work.transition_cache->expanded = work.expanded;
++    work.policy_rows.assign(n, std::numeric_limits<std::uint64_t>::max());
++    work.incremental_upper_policy_pass = true;
++    PC_CHECK(work.initialize_focused_proper_policy());
++    PC_CHECK(work.policy_rows[s] == bad && work.policy_rows[t] == back);
++    const auto evaluate = [&] {
++        work.reset_policy_iteration_units();
++        for (std::size_t i = 0; i < 10000; ++i) {
++            if (work.evaluate_fixed_policy()) return true;
++            if (!work.policy_evaluation_incomplete) return false;
++        }
++        return false;
++    };
++    PC_CHECK(!evaluate());
++    PC_CHECK(!work.improper_policy_states.empty());
++    PC_CHECK(!work.repair_improper_policy());
++    const std::vector<std::uint8_t> complete(work.priced_rows.size(), 1);
++    const auto support = solve_detail::construct_sparse_proper_policy_support(
++        *work.transition_cache, work.priced_rows, complete,
++        work.result.goal_states, 10000);
++    PC_CHECK(support.complete && support.winning[s] && support.winning[t]);
++    PC_CHECK(support.rows[s] == escape && support.rows[t] == back);
++    work.policy_rows = support.rows;
++    PC_CHECK(evaluate());
++    PC_CHECK(near(work.result.values[s], 5, 1e-12));
++    PC_CHECK(near(work.result.values[t], 6, 1e-12));
++
++    // The complete ordinary numerical seed path is tested independently of
++    // the narrow initializer. Do not disable its Gauss-Seidel initialization.
++    work.result.values.assign(n, kValueCeiling);
++    work.result.values[g] = 0;
++    work.policy_initialized = false;
++    work.policy_iteration_failed = false;
++    work.policy_stable = false;
++    work.reset_policy_iteration_units();
++    for (std::size_t i = 0; i < 10000 &&
++         !work.incremental_upper_fixed_policy_proved &&
++         !work.policy_iteration_failed; ++i) work.run_policy_iteration_unit();
++    PC_CHECK(work.incremental_upper_fixed_policy_proved);
++    PC_CHECK(near(work.result.values[s], 5, 1e-12));
++    // Joint local-progress initialization also chooses the escaping row on
++    // this view; the toy alone cannot attribute the real no-policy failures.
++    PC_CHECK(work.select_joint_policy_seed_row(s, work.result.values) == escape);
++    PC_CHECK(work.select_joint_policy_seed_row(t, work.result.values) == back);
++
++    const auto check_view = [](std::vector<solve_detail::SparsePolicyRowInput> rows,
++                               bool expected) {
++        SolveTransitionCache graph;
++        std::vector<PricedSparseRow> prices;
++        for (auto& row : rows) {
++            row.operator_index = 0;
++            solve_detail::append_sparse_policy_row(graph, prices, row);
++        }
++        const std::vector<std::uint8_t> completed(rows.size(), 1);
++        const std::vector<std::uint8_t> goals{0, 0, 1, 0};
++        const auto result = solve_detail::construct_sparse_proper_policy_support(
++            graph, prices, completed, goals, 10000);
++        PC_CHECK(result.complete);
++        PC_CHECK((result.winning[0] != 0) == expected);
++        return result;
++    };
++    const auto row = [](std::uint32_t state, double cost,
++                        std::vector<solve_detail::SparsePolicyTransitionInput> exits) {
++        solve_detail::SparsePolicyRowInput value;
++        value.owner_state = state;
++        value.cost = cost;
++        value.transitions = std::move(exits);
++        return value;
++    };
++    check_view({row(0, 1, {{2, 1.0}, {3, 1e-300}}),
++                row(3, 0, {{3, 1}})}, false); // every stored positive trap edge
++    check_view({row(0, 1, {{2, .5}, {3, .5}}),
++                row(3, 0, {{3, 1}})}, false); // positive goal path is insufficient
++    check_view({row(0, 1, {{2, .5}, {7, .5}})}, false); // unknown is not terminal
++    check_view({row(0, 1, {{2, 1}}), row(3, 0, {{3, 1}})}, true);
++    check_view({row(0, 0, {{1, 1}}), row(1, 0, {{0, 1}})}, false);
++    check_view({row(0, 0, {{1, .5}, {2, .5}}), row(1, 0, {{0, 1}})}, true);
++    auto offers = row(0, 1, {});
++    offers.choices = {{.5, false, {2, 3}}, {.5, false, {1, 3}}};
++    const auto observed = check_view({offers, row(1, 1, {{2, 1}}),
++        row(3, 0, {{3, 1}})}, true);
++    PC_CHECK(observed.choices[0] == 2 && observed.choices[1] == 1);
++    check_view({row(0, 1, {{0, 1 - 1e-9}, {2, 1e-9}})}, true);
++    auto changed = row(0, 1, {{2, 1}});
++    check_view({changed}, true);
++    changed.transitions = {{3, 1}};
++    check_view({changed, row(3, 0, {{3, 1}})}, false);
++    const auto interrupted = solve_detail::construct_sparse_proper_policy_support(
++        *work.transition_cache, work.priced_rows, complete,
++        work.result.goal_states, 1);
++    PC_CHECK(!interrupted.complete);
++}
++
+ void run_retention_capacity_fracture_shadow_row_tests() {
+     auto session = make_solve_session();
+     ActionRegistry registry = build_action_registry(*session);
+@@ -13007,6 +13153,7 @@ void run_solver_carrier_bound_tests() {
+ }
+ 
+ void run_solver_joint_policy_continuation_tests() {
++    run_completed_policy_support_tests();
+     run_resumable_joint_policy_continuation_fixture_tests();
+ }
+ 

@@ -1,0 +1,61 @@
+{
+  "classification": "synthetic exact mathematical/reference checks; no native engine executed",
+  "source_reference": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+  "named_checks": {
+    "old_strict_rank_cannot_orient_mutual_cycle": true,
+    "old_first_row_fallback_is_improper": true,
+    "old_infinite_scc_exit_test_finds_no_finite_row": true,
+    "new_seed_covers_both_states": true,
+    "new_rank_verified_independently": true,
+    "proper_seed_cost_is_five": true,
+    "destructive_return_cost_is_six": true,
+    "full_enumeration_agrees_on_winning_set": true,
+    "positive_goal_path_is_not_almost_sure": true,
+    "tiny_positive_trap_mass_must_not_be_dropped": true,
+    "unreachable_losing_state_does_not_block_root": true,
+    "post_observation_choices_can_be_winning": true,
+    "offer_local_choice_identity_preserved": true,
+    "same_ordinal_precommit_is_not_equivalent": true,
+    "every_positive_offer_needs_a_safe_choice": true,
+    "unknown_frontier_is_not_success": true,
+    "new_row_can_change_prior_view_refusal": true,
+    "qualitative_result_does_not_bound_policy_quality": true,
+    "first_proper_seed_is_not_optimality": true,
+    "omitted_cheaper_action_keeps_upper_not_lower": true,
+    "changing_selected_decision_can_destroy_properness": true,
+    "rank_check_rejects_changed_controller": true,
+    "locally_terminating_options_can_cycle_globally": true,
+    "incomplete_mass_rejected": true,
+    "zero_cost_non_goal_trap_not_proper": true,
+    "all_exhaustive_randomized_view_comparisons_agree": true
+  },
+  "named_check_count": 26,
+  "finite_models_exhaustively_cross_checked": 512,
+  "deterministic_observation_resolved_controllers_enumerated": 24412,
+  "random_seed": 20260910,
+  "mutual_retry": {
+    "old_strict_rank_assigned": [
+      0
+    ],
+    "old_seed": "improper",
+    "old_finite_exit_candidates": [],
+    "new_root_cost": "5",
+    "new_return_entry_cost": "6",
+    "ranks": {
+      "0": 0,
+      "1": 1,
+      "2": 2
+    },
+    "work": {
+      "outer_rounds": 1,
+      "row_scans": 4
+    }
+  },
+  "limitations": [
+    "The old helpers are restricted independent semantic illustrations, not calls into compiled native code.",
+    "No claim the native CB06/CB08 stops instantiate this counterexample; the next plan requires a native discriminating fixture and matched root evidence.",
+    "Existence and completeness apply only to the finite supplied complete-row view with its declared decisions and targets.",
+    "The standard graph algorithm is not claimed novel or asymptotically optimal.",
+    "Reported counts are reproducibility checks, not timings or predictions of crafting performance."
+  ]
+}

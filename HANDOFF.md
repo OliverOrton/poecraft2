@@ -1,33 +1,38 @@
 # Handoff
 
-Oliver selected **Cross-Base Capability Recovery** through the v2 package's
-`codex_start`. The selected experiment is complete and stopped under its
-two-failed-variants rule; the broader capability objective remains unmet.
-The [living record](docs/active/2026-09-09-cross-base-capability-recovery/README.md)
-owns the full cohort, identities, reference reconciliation, failed patches and
-qualification. Baseline is `be553608ecabde28a3dec07856255911459ec97d`.
+The selected **Complete-Row Proper-Policy Synthesis and First-Incumbent Recovery
+v1.2** branch reached its bounded falsification stop. **The two-family policy
+recovery objective is unmet.** The [living record](docs/active/2026-09-10-proper-policy-recovery/README.md)
+owns the full plan, evidence, dispositions and remaining question.
 
-Both first-policy selected-fringe scheduling variants were rejected and removed.
-The engine source is byte-identical to baseline; the rebuilt benchmark reproduces
-the affected Ring/Amulet baseline summaries. The reserved Wand and Shield solver
-outcomes remain unexposed because no candidate survived core development.
-The next implementation requires a selected case and bottleneck, not another
-ordering retry.
+M0 is preserved. M1 measured native completed-row/choice views and bounded reforge
+coverage; M2 confirmed the narrow helper limitation but the full existing native
+numerical seed solves the mutual-retry fixture. Initial CB06/08 views contain no
+true goal or proper committed frontier. One joint-candidate dependency batch
+reaches later views with 1,331 / 1,639 complete rows, still zero goals: Ring hits
+admission `max_owned_bytes`; Amulet remains without a controller.
 
-Keep the previously retained handoff, demanded native rows, deferred kernels,
-whole-cell lower consumer, scope guards and verified fallback. The prior
-[Useful Proof Time record](docs/active/2026-09-09-empty-start-partial-continuation/README.md#useful-proof-time)
-contains its stopped experiment and unchanged short native/WASM controls.
-Work sequentially without subagents; preserve protected `0`. Oliver authorized
-pushing the completed work to `main`; no automatic restart is selected.
+M3 selector promotion is unsupported. M4's bounded completion failed; M5 returned
+no policies, finite gaps or new exact results. No useful treatment reached M6
+cross-base/holdout/WASM activation. All experimental runtime changes were saved
+as patches and removed. Rebuilt ordinary Ring/Amulet results exactly reproduce
+B5; the retained actual-native caller fixture passes 77 focused checks.
 
-Oliver's subsequent four-audit reconciliation is complete in the same
-[living record](docs/active/2026-09-09-cross-base-capability-recovery/README.md#advisory-audits).
-Build/lint and documentation corrections are retained; the threshold-query,
-auxiliary-ceiling and stopping-line arguments use existing mathematical owners.
-No new native experiment is selected: current results do not yet identify a
-root-binding query with a compatible source upper and useful headroom.
-Historical upper recovery and measured payload savings remain eligible leads.
-Veiled exact/sampling separation is deferred to its next relevant test edit,
-preserving explicit sampling coverage. The post-partition scans are unmeasured;
-no memory-cap repair or general strict checkpoint was added.
+Runtime remains identical to main `44fdca8ebf88b9b87b2bd832360cb62128e3968a`.
+The v1.2 package is available locally and preserved; no old package/access blocker
+remains. Current tooling: [task map](docs/foundation/tooling.md).
+
+Next question, if selected: identify the native goal-reaching row/continuation
+and its incomplete source/operator obligation. Start with `results.json` in the
+living record, CB06 initial graph identity 7641225684373328475 (root 0, missing
+Normal 2525), and CB08 root 0 / missing Normal 4177. Relevant owners are
+`solver_solve_incremental.cpp::schedule_next_incremental_alternative` and
+`solver_solve_expand.cpp::expand_one_unit`; the first-policy boundary is
+`solver_solve_finish.cpp::begin_publication_pipeline`. The saved projection is
+reproducible with `py -3 docs/active/2026-09-10-proper-policy-recovery/experiments/summarize.py`.
+Do not retry a selector on those unchanged goal-free views or revive B1/B2.
+
+Keep full scope, observations, probability, pricing and independent publication
+obligations. One sequential session, no subagents; preserve protected `0` without
+inspection. No larger-memory campaign, new scope, push or automatic restart is
+selected. The deferred Veiled split remains unrelated to this fixture edit.

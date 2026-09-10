@@ -33,6 +33,15 @@ True goals have zero value. A nonterminal row has its priced immediate cost plus
 
 A fixed policy must be proper from the relevant entry before its cost can supply an executable upper. An available Restart action is not a proof that the selected policy takes it or eventually reaches the goal.
 
+The strict-rank initializer is sufficient, not complete for mutual retries;
+the full numerical seed and the joint progress seed can handle examples that
+its isolated finite-Q repair misses. A complete-row support construction is
+only a candidate proposal under the [safe-progress contract](mathematics/policies.md#proper-seed).
+Before adding that proposal, distinguish missing native row/goal support from
+failed selection. The [bounded Ring/Amulet investigation](../active/2026-09-10-proper-policy-recovery/README.md)
+found the former; its selector and first-policy dependency experiment were
+removed. No new runtime activation or upper issuer follows from that work.
+
 The lower-only quotient is a different consumer of shared numerical machinery: it checks a declared complete optimistic model and cannot issue executable policy authority. See [lower/pruning](lower-pruning.md).
 
 ## Candidate-local continuation

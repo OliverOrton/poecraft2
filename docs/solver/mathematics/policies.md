@@ -56,6 +56,65 @@ A simple graph demonstrates the distinction: root \(r\) goes to the goal for cos
 
 Likewise, the fact that a strategy router refuses an off-policy item establishes a limitation of *that strategy*. It does not establish the native item's infeasibility and does not forbid lower-only analysis at the item. [Lower-only frontier proof](lower-bounds.md#frontier).
 
+<a id="proper-seed"></a>
+### Constructing a proper seed from complete rows
+
+On a finite fully observable domain D, let G contain true goals and only those
+additional entries with compatible, committed, independently executable proper
+continuations. Unknown states, heuristic values and implementation ceilings are
+not terminals. For X contained in Y, APre(Y,X) contains a state with an allowed
+complete row whose positive support stays in Y and has a positive edge into X.
+The almost-sure winning region of this supplied action view is
+
+\[
+W=\nu Y.\mu X.(G\cup\operatorname{APre}(Y,X)).
+\]
+
+Start Y at D, grow X from G using that predecessor rule, replace Y by X and
+repeat until stable. The final inner construction records a selected row and
+rank for each nonterminal. Outcomes may return to the same or a higher rank;
+all remain in W and at least one positive outcome reaches a lower rank.
+If the selected controller had a non-goal bottom SCC, a minimum-rank member
+would have a lower-rank edge leaving it, a contradiction. Its finite chain is
+therefore proper. Conversely, a proper controller's closed reachable region
+cannot be removed: each of its states has a finite positive-support path to G.
+This completeness argument applies to the supplied finite fully observable
+view, not an incomplete native graph or an unproved abstraction.
+
+For post-observation choices, every positive offer needs a permitted safe
+decision, and some direct outcome or offer must allow progress. Retain the
+actual owner-scoped choices; shared sparse group storage does not identify
+independent controller decisions. Indistinguishable observations cannot acquire
+different decisions from an unavailable distinction. A later numerical choice
+or row change needs another properness check. No tiny positive trap edge may
+be discarded. Native routing, numerical evaluation and pricing remain separate
+obligations, and unbuilt alternatives remain in the full-scope proof ledger.
+
+A stricter initializer can miss mutual retries. Suppose s has a first cost-1
+row to t and another cost-2 row to the goal with probability one-half and t
+otherwise; t returns to s for cost 1. Requiring every non-self successor to
+have an earlier rank assigns neither state. First-row completion cycles, and
+repair that temporarily makes the whole rejected SCC infinite rejects the
+mixed escape's infinite one-row Q. Yet the escape/return controller has
+J(s)=2+J(t)/2 and J(t)=1+J(s), hence costs 5 and 6.
+
+The [native caller fixture](../../../engine/tests/test_solver_solve.cpp) confirms
+that narrow initializer/repair limitation, while the complete existing numerical
+seed path and the joint progress seed handle the same example. This does not
+attribute every missing policy to that helper. In the September 10
+[Ring/Amulet experiment](../../active/2026-09-10-proper-policy-recovery/README.md),
+the initial and bounded later complete-row views contained no true goals or
+proper committed frontiers. A selector cannot recover a proper controller from
+those views. That negative is not native infeasibility.
+
+Finally, a cost-1 retry succeeding with probability 10^-9 is proper but costs
+10^9 in expectation. A support witness is neither an economical policy nor an
+upper issuer. The existing numerical/native publication chain must qualify it,
+and ordinary cost improvement and all-action proof must remain available.
+The nested fixed point may require many passes; no linear-time claim follows
+from the graph formulation. The imported [argument and synthetic oracle](../../active/2026-09-10-proper-policy-recovery/research-inputs/research_report.md)
+remain research evidence, with their native limits recorded above.
+
 ### Saved decisions and continuation authority
 
 A completed operation, its observed-choice payload, prices and immutable row

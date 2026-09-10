@@ -1,0 +1,135 @@
+Continue the selected Complete-Row Proper-Policy Synthesis and First-Incumbent
+Recovery programme AFTER M0. This is an implementation request, not another
+planning, audit or tooling-only task.
+
+Oliver reports the previous session implemented M0 and then stopped.
+Preserve/reuse that work. Do not implement M0 again or stop after reviewing it.
+This request explicitly selects M1–M6 and authorizes their normal sequential
+progression. No old thread, Goal object, extra push, or further ordinary task
+selection is required.
+
+Repository: OliverOrton/poecraft2
+Remote checkpoint checked for this packet:
+44fdca8ebf88b9b87b2bd832360cb62128e3968a
+
+The research session could not inspect local M0 changes. Check actual local
+AGENTS, HANDOFF, M0 record/map, relevant diff and commit history. Preserve newer
+or uncommitted work; do not reset to the reviewed commit. If solver work already
+exists, resume its first unfinished step. A stale old HANDOFF that says a prior
+cross-base experiment stopped does not cancel this new selected task.
+
+Read README.md and implementation_plan.md. The latter governs this continuation.
+research_report.md, mathematical_delta.md, source_register.json and the Python
+reference/results preserve the scientific argument. m0_reference.md is a recovery
+reference, not a todo list. continuation_notes.md preserves recent discussion
+without promoting it into extra prerequisite projects.
+
+WORK POLICY
+One sequential session; no subagents or delegated sessions. No inherited 6 p.m.
+deadline, automatic restart, background promise or push. Preserve unrelated work
+and protected root path 0 without inspecting, staging, changing or deleting it.
+Use one concise living record and normal HANDOFF; no repeated activation ceremony.
+
+START AT M1
+On the real first-policy failure boundary, inspect the completed native rows and
+permitted observed choices. Does this finite view already contain a proper root
+controller, or are necessary positive-mass continuations missing?
+
+At the same boundary, use the existing ledger for a bounded reforge-coverage slice:
+requested/eligible -> queued/started -> complete row -> continuation -> candidate
+use or certified retirement. Check root, selected Normal frontier and a few relevant
+partials. Catalogue counts do not establish search coverage. Do not build a new
+dashboard or enumerate every state/action simply to make the table.
+
+PRIMARY CASES
+Use the current local M0 invocation preserving:
+docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json
+cb06-cross-base-product8-long240  (Amethyst Ring, two goals)
+cb08-cross-base-product8-long240  (Onyx Amulet, three goals)
+
+Keep their actual final goals, start, Allflame/base-1 economy, action/control scope,
+retention reuse, step eight, 240 s requested finish, 300 s native watchdog,
+315 s outer cleanup, 1 GiB and all other native/evaluator caps. Proof handoff stays
+off; generated Imprint and voluntary economic Restart stay off; gating is unchanged.
+Use fresh output identities and existing worker/comparison/compact-reader owners.
+Do not omit controls to fit a generic interface. A faithful existing adapter is fine.
+
+CORE HYPOTHESIS AND NATIVE FALSIFICATION
+The prior research finds a restrictive rank initializer followed by first-row
+completion, and SCC repair that can reject a probabilistic escape because another
+successor inside the rejected component has temporary infinite value.
+Synthetic example:
+  s: first-listed cost1 -> t
+  s: escape cost2 -> goal with 1/2, t with 1/2
+  t: cost1 -> s
+The escape/return policy is proper and costs 5 at s and 6 at t.
+This has NOT been proved to cause CB06/CB08. Use actual native helpers and the full
+existing caller path. If that path already solves the toy, say so and use the real
+captured failure; do not disable working logic to manufacture a win.
+
+IMPLEMENTATION SEQUENCE
+M1: fixed complete-row/choice view and actual missing-work classification.
+M2: discriminating native fixture and negative cases.
+M3: only where justified, one bounded upper-candidate almost-sure reachability seed
+    through the existing owner. Select a safe region plus positive rank progress;
+    allow mutual retries. No second graph, planner or new upper issuer.
+M4: fixed-policy cost/properness, native routing, compile and independent evaluation;
+    preserve viable candidate identity and then the verified artifact before
+    speculative improvement. If evidence is missing, use one bounded coherent
+    dependency-completion follow-through through the existing ladder.
+M5: recover actual returned policies on both primary cases, then allow normal
+    expected-cost improvement and proof work to use them in the same run.
+M6: affected cross-base/exact controls, reserved Wand/Shield after core selection,
+    affected WASM/product delivery, and canonical mathematics/evidence updates.
+
+Do not stop after M0, M1, a new helper, one passing fixture, or an internal value.
+Continue to the next applicable milestone. Conversely, do not force the proposed
+selector if no relevant view supports it. Stop a branch after two discriminating
+failures without a new premise, as the plan specifies. Preserve a precise falsified
+or blocked checkpoint instead of claiming completion or starting unrelated work.
+
+AUTHORITY
+Unknown frontiers are not goals. Every selected action/offer needs complete positive
+mass and valid native semantics. Preserve offer-local choices, actual state domains,
+row generations, prices and controller ownership. An action subset may generate an
+upper candidate, never full-scope lower/exact authority. Proper is not necessarily
+cheap. The compiler/evaluator remain necessary. New choices need rechecking.
+Keep all uncomputed competitor obligations open; do not pad old policy snapshots
+with current greedy actions or pretend retry carriers are physical empty items.
+
+RECENT DISCUSSION
+Reforge coverage is part of M1. Larger-RAM scaling is a separately labelled,
+conditional investigation of a named cap using actual safe host capacity; it must
+not silently change the matched acceptance cases. Adaptive estimates remain
+ordering proposals, not admissible values or irreversible pruning. No NN project,
+new heuristic framework, full abstract-pool build or broader zero-goal policy-scope
+change is a prerequisite here. See continuation_notes.md.
+
+ACCEPTANCE
+Both previously no-policy cases must return properly routed compiled controllers,
+independently evaluated with complete pricing, no off-policy mass and honest named
+stop/status within the frozen controls. Report actual Chaos cost, bound/gap, timing
+and further improvement. Coverage recovery is not automatically new exact closure
+or a pass of the preceding cross-base programme's separate 20%/exactness gate.
+
+Preserve cross-base and existing exact capabilities. Use the real current source
+and compatible historical baselines, never seed search with the old strategy.
+A0's 80,720.78955 partial-Conquest reference and B1/B2 failures are already recorded;
+do not repeat that baseline programme or restore their priority patches unchanged.
+
+VALIDATION AND FINISH
+Reuse the original report/reference content if already imported. The 26 synthetic
+checks and 512 small-model comparisons are not native PoE qualification.
+Choose small tests for real uncertainty/retained changes and serial native probes
+for decisive comparisons. No routine Simulator, soak, full alternative census or
+broad intermediate suite. Rebuild/check affected WASM for actual product delivery.
+Consolidate only duplicate glue actually encountered, not a repository-wide purge.
+
+At completion report actual local commit/push status, M0 reused and M1–M6 status,
+native same-view finding, per-family returned policies and costs, certified proof
+outcome, resources, actual checks and unresolved gates. If an actual tool/usage limit,
+owner stop, unsafe conflict or falsified premise requires pausing, leave the exact
+next case/view identity, source location and executable step in HANDOFF. Never
+mark the whole goal achieved merely because the tooling milestone is complete.
+
+Begin the local reconciliation and then the native M1/M2 work now.

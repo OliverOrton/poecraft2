@@ -1,0 +1,179 @@
+{
+  "reviewed_main": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+  "sources": {
+    "R01": {
+      "title": "Current cross-base result, including A0, A3, B1/B2 and restoration",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/docs/active/2026-09-09-cross-base-capability-recovery/README.md",
+      "locator": "Phase A evidence; selected experiment; disposition",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R02": {
+      "title": "Advisory reconciliation: implemented cleanup and unselected ideas",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/docs/active/2026-09-09-cross-base-capability-recovery/README.md#advisory-audits",
+      "locator": "September 10 advisory reconciliation",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R03": {
+      "title": "Frozen current core and explicit activation",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+      "locator": "All 12 cases and execution_activation",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R04": {
+      "title": "Rank initializer and first-row completion",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/engine/src/solver_solve_bellman.cpp#L523-L665",
+      "locator": "initialize_focused_proper_policy",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R05": {
+      "title": "SCC detection and repair using infinite component values",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/engine/src/solver_solve_bellman.cpp#L1330-L1648",
+      "locator": "evaluate_fixed_policy; repair_improper_policy",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R06": {
+      "title": "Sparse nonowner infinity handling and owner self elimination",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/engine/src/solver_sparse_policy.cpp#L180-L320",
+      "locator": "evaluate_sparse_policy_row_impl",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R07": {
+      "title": "Canonical argmin rejects nonfinite candidates",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/engine/src/solver_sparse_policy.cpp#L340-L445",
+      "locator": "sparse_policy_row_precedes",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R08": {
+      "title": "Upper assembly borrows completed rows, including pending optimization classifications",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/engine/src/solver_solve_constructive.cpp#L4650-L4948",
+      "locator": "completed mask; temporary admission; frontier checks",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R09": {
+      "title": "Progress-aware upper seed and missing selected-prefix walk",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/engine/src/solver_solve_constructive.cpp#L5010-L5385",
+      "locator": "select_initial_row; rebuild_reachable",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R10": {
+      "title": "Proper numerical candidate followed by improvement and physical publication closure",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/engine/src/solver_solve_constructive.cpp#L5470-L5815",
+      "locator": "evaluation; advance_policy_selection; publication closure",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R11": {
+      "title": "Incumbent installation and existing root renewal witness",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/engine/src/solver_solve_constructive.cpp#L5815-L6175",
+      "locator": "install_output_incumbent; try_install_gated_root_renewal_incumbent",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R12": {
+      "title": "Existing properness, entry, observation, and fixed-controller arguments",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/docs/solver/mathematics/policies.md",
+      "locator": "fixed-policy, properness, choices, programs, improvement",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R13": {
+      "title": "Existing sparse numerical and selection interface",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/engine/src/solver_sparse_policy.hpp#L1-L230",
+      "locator": "row construction, evaluator, selection, components",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R14": {
+      "title": "Working rules",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/AGENTS.md",
+      "locator": "authority, protected 0, sequential work, proportionate validation",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R15": {
+      "title": "Earlier retry-signature audit: equal renewal kernel does not authorize general merging",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/docs/archive/2026-07-29-upper-cap-zero-progress-renewal/README.md",
+      "locator": "Outcome",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R16": {
+      "title": "Current work and completion status",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/HANDOFF.md",
+      "locator": "Current handoff",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R17": {
+      "title": "Existing experiment derivations",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/docs/active/2026-09-09-cross-base-capability-recovery/derivations.json",
+      "locator": "Frozen parent identities and overrides",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "R18": {
+      "title": "Current runtime receipts",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/44fdca8ebf88b9b87b2bd832360cb62128e3968a/docs/active/2026-09-09-cross-base-capability-recovery/evidence-summary.json",
+      "locator": "Available baseline and failed-treatment evidence; not independently rehashed here",
+      "revision": "44fdca8ebf88b9b87b2bd832360cb62128e3968a",
+      "coverage": "Source/retained narrative reviewed; raw native evidence was not rerun or independently rehashed."
+    },
+    "L01": {
+      "title": "PRISM: What is in PRISM",
+      "url": "https://www.prismmodelchecker.org/doc/whatsinprism.php",
+      "coverage": "Official algorithm documentation; MDP qualitative precomputation separately from quantitative analysis."
+    },
+    "L02": {
+      "title": "Junges, Jansen and Seshia. Enforcing Almost-Sure Reachability in POMDPs. CAV 2021, 602–625.",
+      "url": "https://link.springer.com/chapter/10.1007/978-3-030-81688-9_28",
+      "doi": "10.1007/978-3-030-81688-9_28",
+      "coverage": "Open full HTML; productive/deadlock-free regions and incremental construction. POMDP-specific algorithm is not imported."
+    },
+    "L03": {
+      "title": "Tomas Geffner and Hector Geffner. Compact Policies for Fully Observable Non-Deterministic Planning as SAT. ICAPS 2018, 88–96.",
+      "url": "https://ojs.aaai.org/index.php/ICAPS/article/view/13880",
+      "doi": "10.1609/icaps.v28i1.13880",
+      "coverage": "Publisher metadata/abstract and parsed primary preprint. PDF screenshot attempts failed; no figure/table evidence used."
+    },
+    "L04": {
+      "title": "Kolobov, Mausam, Weld and Geffner. Heuristic Search for Generalized Stochastic Shortest Path MDPs. ICAPS 2011, 130–137.",
+      "url": "https://ojs.aaai.org/index.php/ICAPS/article/view/13452",
+      "doi": "10.1609/icaps.v21i1.13452",
+      "coverage": "Publisher abstract/metadata; trap-elimination motivation, not an implementation-level review of FRET."
+    },
+    "L05": {
+      "title": "Rodriguez, Bonet, Sardiña and Geffner. Flexible FOND Planning with Explicit Fairness Assumptions. ICAPS 2021, 290–298.",
+      "url": "https://ojs.aaai.org/index.php/ICAPS/article/view/15973",
+      "doi": "10.1609/icaps.v31i1.15973",
+      "coverage": "Publisher abstract/metadata; fairness distinctions."
+    },
+    "L06": {
+      "title": "Heck, Macák, Češka and Junges. Constrained and Robust Policy Synthesis with Satisfiability-Modulo-Probabilistic-Model-Checking. AAAI 2026, 40(43), 36253–36261.",
+      "url": "https://ojs.aaai.org/index.php/AAAI/article/view/40944",
+      "primary_text": "https://arxiv.org/html/2511.08078v1",
+      "doi": "10.1609/aaai.v40i43.40944",
+      "coverage": "Publisher metadata and full preprint HTML, including partial assignment/MDP abstraction reasoning. No SMT dependency recommended."
+    },
+    "L07": {
+      "title": "Anders Hansson and Bo Wahlberg. Performance Bounds for Rollout Policies in Stochastic Shortest Path Problems. Preprint, May 21, 2026.",
+      "url": "https://arxiv.org/abs/2605.22965",
+      "primary_text": "https://arxiv.org/html/2605.22965v1",
+      "coverage": "Abstract and HTML; performance-error dependence on expected hitting time. Preprint, not asserted peer-reviewed."
+    },
+    "L08": {
+      "title": "Fraga Pereira, Pereira, Messa and De Giacomo. Iterative Depth-First Search for FOND Planning. ICAPS 2022, 90–99.",
+      "url": "https://ojs.aaai.org/index.php/ICAPS/article/view/19789",
+      "doi": "10.1609/icaps.v32i1.19789",
+      "coverage": "Publisher abstract/metadata; bounded-memory competing design, not a recommendation to replace the solver."
+    }
+  }
+}

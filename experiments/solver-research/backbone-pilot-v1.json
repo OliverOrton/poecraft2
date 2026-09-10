@@ -73,6 +73,28 @@
         "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-partial-3-to-5-product8.json"
       ],
       "source_binding": "C4 original-source control and C16 final treatment preserve exact input/action identities and independently evaluated graphs"
+    },
+    "cb06-complete-row-diagnostic-v1": {
+      "semantic_version": "unchanged frozen cross-base product8 request plus explicit observational boundary record control",
+      "property": "proper-controller existence in the measured completed-row view and actual returned native policy coverage",
+      "coefficient_semantics": "complete native priced sparse rows, stored positive support and true goals; unknown continuations remain unsafe",
+      "scope": "Amethyst Ring two-goal; 240-second requested finish, 300-second native watchdog, 315-second host cleanup, 1 GiB; retention reuse, no economic Restart or generated Imprint",
+      "input_references": [
+        "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb06-cross-base-product8-long240.json",
+        "docs/active/2026-09-10-proper-policy-recovery/diagnostic-cases/cb06-cross-base-product8-long240.json"
+      ],
+      "source_binding": "native binary, command, input and patch identities in docs/active/2026-09-10-proper-policy-recovery/results.json"
+    },
+    "cb08-complete-row-diagnostic-v1": {
+      "semantic_version": "unchanged frozen cross-base product8 request plus explicit observational boundary record control",
+      "property": "proper-controller existence in the measured completed-row view and actual returned native policy coverage",
+      "coefficient_semantics": "complete native priced sparse rows, stored positive support and true goals; unknown continuations remain unsafe",
+      "scope": "Onyx Amulet three-goal; 240-second requested finish, 300-second native watchdog, 315-second host cleanup, 1 GiB; retention reuse, no economic Restart or generated Imprint",
+      "input_references": [
+        "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb08-cross-base-product8-long240.json",
+        "docs/active/2026-09-10-proper-policy-recovery/diagnostic-cases/cb08-cross-base-product8-long240.json"
+      ],
+      "source_binding": "native binary, command, input and patch identities in docs/active/2026-09-10-proper-policy-recovery/results.json"
     }
   },
   "comparison_profiles": {
@@ -483,6 +505,66 @@
       "limitations": [
         "Same native graph hash and endpoints; requested strict stop, independent evaluation and zero live handles after abandon cleanup. No new continuation rows or exact closure.",
         "Single observations under unchanged fixture inputs; generated fresh implementation-plan package remains inaccessible."
+      ]
+    },
+    {
+      "id": "cb06-m1-first-view-20260910",
+      "model": "cb06-complete-row-diagnostic-v1",
+      "kind": "conditional_observation",
+      "producer": "existing native solver, bounded complete-row support probe, isolated corpus worker and saved-report projection",
+      "validation": "docs/active/2026-09-10-proper-policy-recovery/README.md",
+      "evidence": "docs/active/2026-09-10-proper-policy-recovery/results.json",
+      "pointer": "/research_observations/cb06-cross-base-product8-long240:m1-first-view",
+      "role": "Initial native completed-row view",
+      "treatment": "bounded observation before first no-policy publication; no new kernels",
+      "limitations": [
+        "No true goal or proper committed frontier in this measured view; negative is not full native infeasibility.",
+        "No compiled controller, first verified-policy time, finite gap or new exact result. Cross-base/WASM activation was not reached."
+      ]
+    },
+    {
+      "id": "cb06-m1-joint-dependency-20260910",
+      "model": "cb06-complete-row-diagnostic-v1",
+      "kind": "conditional_observation",
+      "producer": "existing native solver, bounded complete-row support probe, isolated corpus worker and saved-report projection",
+      "validation": "docs/active/2026-09-10-proper-policy-recovery/README.md",
+      "evidence": "docs/active/2026-09-10-proper-policy-recovery/results.json",
+      "pointer": "/research_observations/cb06-cross-base-product8-long240:m1-joint-dependency",
+      "role": "One bounded selected-dependency follow-through",
+      "treatment": "existing joint constructor before no-incumbent publication, followed by one native refinement batch; mutation removed",
+      "limitations": [
+        "No true goal or proper committed frontier in this measured view; negative is not full native infeasibility.",
+        "No compiled controller, first verified-policy time, finite gap or new exact result. Cross-base/WASM activation was not reached."
+      ]
+    },
+    {
+      "id": "cb08-m1-first-view-20260910",
+      "model": "cb08-complete-row-diagnostic-v1",
+      "kind": "conditional_observation",
+      "producer": "existing native solver, bounded complete-row support probe, isolated corpus worker and saved-report projection",
+      "validation": "docs/active/2026-09-10-proper-policy-recovery/README.md",
+      "evidence": "docs/active/2026-09-10-proper-policy-recovery/results.json",
+      "pointer": "/research_observations/cb08-cross-base-product8-long240:m1-first-view",
+      "role": "Initial native completed-row view",
+      "treatment": "bounded observation before first no-policy publication; no new kernels",
+      "limitations": [
+        "No true goal or proper committed frontier in this measured view; negative is not full native infeasibility.",
+        "No compiled controller, first verified-policy time, finite gap or new exact result. Cross-base/WASM activation was not reached."
+      ]
+    },
+    {
+      "id": "cb08-m1-joint-dependency-20260910",
+      "model": "cb08-complete-row-diagnostic-v1",
+      "kind": "conditional_observation",
+      "producer": "existing native solver, bounded complete-row support probe, isolated corpus worker and saved-report projection",
+      "validation": "docs/active/2026-09-10-proper-policy-recovery/README.md",
+      "evidence": "docs/active/2026-09-10-proper-policy-recovery/results.json",
+      "pointer": "/research_observations/cb08-cross-base-product8-long240:m1-joint-dependency",
+      "role": "One bounded selected-dependency follow-through",
+      "treatment": "existing joint constructor before no-incumbent publication, followed by one native refinement batch; mutation removed",
+      "limitations": [
+        "No true goal or proper committed frontier in this measured view; negative is not full native infeasibility.",
+        "No compiled controller, first verified-policy time, finite gap or new exact result. Cross-base/WASM activation was not reached."
       ]
     }
   ],
