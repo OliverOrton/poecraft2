@@ -1,0 +1,47 @@
+{
+  "source_zip": "C:\\Users\\Oliver\\Downloads\\poecraft_first_return_improvement_codex.zip",
+  "zip_sha256": "8f5e828e945f48727c57656945afa450ac251288ae82a48af52ba023849c6f53",
+  "reviewed_main": "84f02ee3b603fe3879ac2c4a885d1b81ba67772f",
+  "members": [
+    {
+      "member": "README.md",
+      "sha256": "57149736cc69bd81ddaa13677fcd5582571a5d655a029199fc98596d02b89b9d",
+      "bytes": 2332
+    },
+    {
+      "member": "first_exit_reference.py",
+      "sha256": "0caafeaee4c940ee8c241700c80350e9f8a28dcb802d1c95bd4d1ca155a8d098",
+      "bytes": 13855
+    },
+    {
+      "member": "first_exit_results.json",
+      "sha256": "babb33675ac9615751077ee4b43844a06907264d76e61bb373d2ab4620fa3712",
+      "bytes": 2797
+    },
+    {
+      "member": "implementation_plan.md",
+      "sha256": "078d225776b33e52af0a9a7b5a8d48a1b97270a4fa89ff38ee2bfb2df308b957",
+      "bytes": 22075
+    },
+    {
+      "member": "manifest.sha256",
+      "sha256": "7b61451198003e5bd7dfcb5bca2ce23908a517615d14b5426bb063146ad3ab80",
+      "bytes": 600
+    },
+    {
+      "member": "research_report.md",
+      "sha256": "2bf766b976147316d456be29bc54f58aa1a960c9787ddb80dea64ea6123089f2",
+      "bytes": 28043
+    },
+    {
+      "member": "source_register.json",
+      "sha256": "d47d053475d1fbce00e66671c3f97f5cdf684a56b5eadf6e98a487d458beab61",
+      "bytes": 8261
+    },
+    {
+      "member": "start_prompt.txt",
+      "sha256": "422da905f08796a65c8d8581fd9b3174800571913c9c2c7622fc3b85cedc800f",
+      "bytes": 6967
+    }
+  ]
+}

@@ -6082,64 +6082,71 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
     SolveOptions scoped = options;
     scoped.max_solver_owned_bytes = options.max_solver_owned_bytes - external;
     proof.options = scoped;
-    refinement::CompiledPolicyAssertionWork work(
-        calc, proof, prices, scoped, "first reachable proper policy");
-    update_lineage([](auto& lineage) {
-        lineage.compilation_attempted = true;
-        lineage.compilation_result = "initial_candidate_compilation";
-        lineage.independent_evaluation_attempted = true;
-    });
-    while (!work.progress().done) {
-        const auto progress = work.progress();
-        phase = progress.phase == refinement::CompiledPolicyAssertionPhase::Compiling
-            ? SolvePhase::Compiling : SolvePhase::Certifying;
-        finalization_evaluation_progress = progress.evaluation;
-        work.step(kCooperativePolicyLiftBatch);
-        co_await solve_detail::CooperativeCheckpoint{work.retained_bytes()};
+    { // Release the completed first-policy checker before return construction.
+        refinement::CompiledPolicyAssertionWork work(
+            calc, proof, prices, scoped, "first reachable proper policy");
+        update_lineage([](auto& lineage) {
+            lineage.compilation_attempted = true;
+            lineage.compilation_result = "initial_candidate_compilation";
+            lineage.independent_evaluation_attempted = true;
+        });
+        while (!work.progress().done) {
+            const auto progress = work.progress();
+            phase = progress.phase == refinement::CompiledPolicyAssertionPhase::Compiling
+                ? SolvePhase::Compiling : SolvePhase::Certifying;
+            finalization_evaluation_progress = progress.evaluation;
+            work.step(kCooperativePolicyLiftBatch);
+            co_await solve_detail::CooperativeCheckpoint{work.retained_bytes()};
+        }
+        auto assertion = work.take_result();
+        auto& telemetry = result.diagnostics.policy_refinement;
+        telemetry.strategy_compilation_ns += assertion.compilation_ns;
+        telemetry.exact_graph_evaluation_ns += assertion.exact_evaluation_ns;
+        const bool verified = assertion.executable && assertion.proper &&
+            assertion.evaluation.cost_complete && assertion.zero_off_policy &&
+            std::isfinite(assertion.exact_cost) && assertion.exact_cost >= 0.0;
+        update_lineage([&](auto& lineage) {
+            lineage.compilation_succeeded = !assertion.strategy_json.empty();
+            lineage.compiled_nodes = assertion.compilation.nodes;
+            lineage.compiled_edges = assertion.compilation.edges;
+            lineage.compilation_result = "initial_candidate_compiled";
+            lineage.independent_evaluation_succeeded = verified;
+            lineage.independently_evaluated_cost = assertion.exact_cost;
+            lineage.independent_evaluation_result = verified
+                ? "verified_before_improvement" : assertion.failure_reason;
+        });
+        if (!verified) co_return false;
+        candidate.certified_upper_bound = assertion.exact_cost;
+        candidate.evaluated_policy_cost = assertion.exact_cost;
+        candidate.compiled_artifact = retained_artifact_from_assertion(assertion);
+        candidate.compilation_provenance = "initial_compiled_policy_assertion_v1";
+        candidate.independently_certified = true;
+        candidate.independently_evaluated = true;
+        candidate.proper = true;
+        candidate.executable = true;
+        candidate.reconciliation_absolute_delta = assertion.absolute_cost_delta;
+        candidate.reconciliation_relative_delta = assertion.relative_cost_delta;
+        identity_mix(candidate.portfolio_identity,
+            std::bit_cast<std::uint64_t>(candidate.evaluated_policy_cost));
+        identity_mix_string(candidate.portfolio_identity, candidate.compilation_provenance);
+        candidate.retained_owned_bytes = incumbent_owned_bytes(candidate);
+        // The selected output already owns this candidate's bytes. The portfolio
+        // admits the additional retained copy through its existing shared cap.
+        const bool retained = retain_current_certified_incumbent();
+        incumbent_portfolio.observe_verified(candidate);
+        record_upper_attribution_milestone(candidate.certified_upper_bound, true);
+        update_lineage([&](auto& lineage) {
+            lineage.candidate_portfolio_identity = candidate.portfolio_identity;
+            lineage.portfolio_decision = retained ? "verified_retained_before_improvement"
+                                                 : "verified_in_selected_output";
+            lineage.portfolio_reason = "independent native graph evaluation";
+        });
     }
-    auto assertion = work.take_result();
-    auto& telemetry = result.diagnostics.policy_refinement;
-    telemetry.strategy_compilation_ns += assertion.compilation_ns;
-    telemetry.exact_graph_evaluation_ns += assertion.exact_evaluation_ns;
-    const bool verified = assertion.executable && assertion.proper &&
-        assertion.evaluation.cost_complete && assertion.zero_off_policy &&
-        std::isfinite(assertion.exact_cost) && assertion.exact_cost >= 0.0;
-    update_lineage([&](auto& lineage) {
-        lineage.compilation_succeeded = !assertion.strategy_json.empty();
-        lineage.compiled_nodes = assertion.compilation.nodes;
-        lineage.compiled_edges = assertion.compilation.edges;
-        lineage.compilation_result = "initial_candidate_compiled";
-        lineage.independent_evaluation_succeeded = verified;
-        lineage.independently_evaluated_cost = assertion.exact_cost;
-        lineage.independent_evaluation_result = verified
-            ? "verified_before_improvement" : assertion.failure_reason;
-    });
-    if (!verified) co_return false;
-    candidate.certified_upper_bound = assertion.exact_cost;
-    candidate.evaluated_policy_cost = assertion.exact_cost;
-    candidate.compiled_artifact = retained_artifact_from_assertion(assertion);
-    candidate.compilation_provenance = "initial_compiled_policy_assertion_v1";
-    candidate.independently_certified = true;
-    candidate.independently_evaluated = true;
-    candidate.proper = true;
-    candidate.executable = true;
-    candidate.reconciliation_absolute_delta = assertion.absolute_cost_delta;
-    candidate.reconciliation_relative_delta = assertion.relative_cost_delta;
-    identity_mix(candidate.portfolio_identity,
-        std::bit_cast<std::uint64_t>(candidate.evaluated_policy_cost));
-    identity_mix_string(candidate.portfolio_identity, candidate.compilation_provenance);
-    candidate.retained_owned_bytes = incumbent_owned_bytes(candidate);
-    // The selected output already owns this candidate's bytes. The portfolio
-    // admits the additional retained copy through its existing shared cap.
-    const bool retained = retain_current_certified_incumbent();
-    incumbent_portfolio.observe_verified(candidate);
-    record_upper_attribution_milestone(candidate.certified_upper_bound, true);
-    update_lineage([&](auto& lineage) {
-        lineage.candidate_portfolio_identity = candidate.portfolio_identity;
-        lineage.portfolio_decision = retained ? "verified_retained_before_improvement"
-                                             : "verified_in_selected_output";
-        lineage.portfolio_reason = "independent native graph evaluation";
-    });
+    auto returns = try_initial_return_bridges(proof);
+    while (!returns.resume()) {
+        co_await solve_detail::CooperativeCheckpoint{returns.retained_bytes()};
+    }
+    (void)returns.take_result();
     co_return true;
 }
 

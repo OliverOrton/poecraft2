@@ -335,6 +335,121 @@ If a successor has no compatible fixed-policy route, \(Q_\pi\) has not been esta
 
 Any new qualified strategy changes policy-tied entry values and certificate identities. Old optimality arguments about \(J_\pi\) cannot silently become arguments about \(J_{\pi'}\).
 
+<a id="return-bridges"></a>
+### Constructive return domains and complete excursions
+
+Fix a finite native controller \(\beta\) which stops at the true goal or a
+declared entry \(z\) of a fixed, independently proper old policy \(\pi\).
+An entry includes the exact item, operation, controller phase, checkpoint and
+observed-choice context. A root certificate or a node's cost annotation is not
+an arbitrary-entry certificate. Every positive-mass exit must have a compatible
+executable route, complete prices and finite continuation cost.
+
+If the stopping time \(\tau\) is almost surely finite with integrable internal
+cost, define \(r_\beta(x)=\mathbb E_x[\sum_{t<\tau}c_t]\) and
+\(K_\beta(x,z)=\Pr_x(X_\tau=z)\). Conditioning on the first exit gives
+
+\[
+J_{\beta;\pi}(x)=r_\beta(x)+\sum_z K_\beta(x,z)J_\pi(z).
+\]
+
+Goal exits contribute zero. For a finite transient interior \(R\), the existing
+fixed-policy equations give \(r=(I-P_{RR})^{-1}c_R\) and
+\(K=(I-P_{RR})^{-1}P_{RD}\). These summarize one complete selected controller;
+changing any action or observed choice invalidates its stopped law. A physical
+visit to an entry during mandatory program work is not a control return.
+This is an application of [CLM-0002](../claims.md#clm-0002),
+[CLM-0003](../claims.md#clm-0003) and [CLM-0004](../claims.md#clm-0004), with no
+lower, action-retirement or all-action optimality authority.
+
+One constructive native domain is an ordinary Rare item with no fractured
+affix, locked side, unresolved offer/checkpoint or incompatible persistent
+context, together with an independently certified identical empty-Rare entry.
+The native Annul application and calculator both choose uniformly among
+eligible affixes; `pc_item_remove_at` removes one slot without changing rarity.
+Thus stop at a true goal or an approved entry, otherwise pay for Annul and
+retain every removal outcome. Remaining affix count strictly decreases, so
+the fallback reaches that anchor in at most the initial affix count. Losing a
+desired modifier remains a paid branch. A concrete six-affix input has at most
+64 deletion subsets; this is not a bound on the union of a broad reforge's
+outputs. Every represented class member still needs coverage or a proved
+common law under [CLM-0006](../claims.md#clm-0006).
+
+This argument does not admit raw Annul salvage on compressed zero-progress
+reforge carriers. Existing retry restrictions and mandatory first-exit programs
+remain in force. Fractures, locks, differing flags/influence/implicit context,
+or an unavailable exact empty-Rare route refuse this witness. Normal-item
+Annul and double-lock Scour are outside the argument. The supplied
+[research and native application](../../active/2026-09-11-first-return-improvement/README.md)
+separate this conditional construction from its measured native eligibility.
+
+<a id="first-return-improvement"></a>
+### One-shot and repeated return controllers
+
+Choose one exact decision entry \(s\). Begin the proposed trial, complete its
+bridges, then follow frozen old decisions until the first return to precisely
+\(s\) or the true goal. The initial trial is not an immediate time-zero return.
+Suppose this complete excursion is transient, has finite expected cost \(r\),
+return probability \(q\), and goal probability \(1-q\). With
+\(J=J_\pi(s)\), taking it once and then using the old policy costs
+
+\[
+Q_{\mathrm{once}}=r+qJ.
+\]
+
+The one-shot graph stores the phase distinction: after entering old \(\pi\),
+revisiting the physical item does not restart the trial. A separately constructed
+controller which repeats the same excursion at each return is proper when
+\(q<1\), and has
+
+\[
+J_{\mathrm{repeat}}=\frac{r}{1-q},\qquad
+J-J_{\mathrm{repeat}}=\frac{J-Q_{\mathrm{once}}}{1-q}.
+\]
+
+The multiplier is the new excursion's return law, not old-policy occupancy.
+For example, \(J=100,r=0.5,q=0.99\) gives one-shot cost 99.5 and repeated cost
+50. A material-improvement threshold applied only to the one-shot gain would
+miss this candidate. For at most \(k\) attempts followed by old \(\pi\), the
+cost is \(r(1-q^k)/(1-q)+q^kJ\); the emitted graph must actually remember the
+attempt count. A bounded exact entry set instead has \(u=r+Ku\), requiring
+transience of its complete selected return matrix.
+
+At \(q=1\), a one-shot trial may terminate through old \(\pi\) while repetition
+never reaches the goal. A cost-one trial followed by cost-one return and an old
+cost-ten finish has one-shot cost 12 and improper repetition. Unknown positive
+mass, even tiny, cannot be dropped or normalized away. An uncompetitive chosen
+bridge rejects that controller, not the underlying action. Near-one return
+probability amplifies numerical error; no convenient epsilon establishes
+\(q<1\). The existing coefficient, mass, properness, residual and full emitted
+controller reconciliation remain necessary. A private absorbing return used
+to measure \(q\) is not crafting success and must not alter the published goal.
+
+The supplied exact rational checks cover finite synthetic compositions and a
+separate deletion-order oracle. They test these formulations, not native
+mechanics, whole-engine correctness or a performance gain; no new accepted
+claim is introduced.
+
+The native Ring application distinguishes an unknown masked deviation from an
+unroutable physical tail. Its one uncovered coarse successor has one desired
+FireResist8 suffix. An actual-item request independently certifies the old graph
+there at \(J+9.69\): the existing router already pays Annul, loses that desired
+modifier and returns to the identical empty Rare. All eligible one-affix members
+share this deterministic removal law; this common law, rather than the one
+requested representative, establishes the bridge's class coverage.
+
+With the same frozen current-run old entry, the complete native excursion gives
+\(r=11.597499232757386\), \(q=0.9999226716107862\), and
+\(Q_{\mathrm{once}}=938003.6652244877\) against
+\(J=938064.6067502735\). Its separately emitted repeated controller evaluates
+to 149977.25092497544 with complete cost and zero off-policy mass. This is a
+native example of amplification, not a lower-bound or exact-closure result.
+The material comparison still uses the stronger frozen Ring reference
+204763.14825000268. Amulet's Exalt repeats its old policy and offers no gain;
+the additional admitted gated-reforge construction reaches the unchanged
+200,000-state checker cap on both families. Complete bridge rows alone therefore
+do not establish a finite excursion law or a better reforge controller.
+
 <a id="mapping"></a>
 ## 8. Correspondence and limits
 
@@ -342,4 +457,4 @@ Any new qualified strategy changes policy-tied entry values and certificate iden
 
 The candidate-continuation lifecycle can retain partial construction work without granting it upper authority. The archive of released-candidate reclamation records a case where a refused candidate retained memory and suppressed ordinary work; fixing that lifecycle restored useful policy discovery. That is a progress/performance finding, not a different upper theorem. [Reclamation evidence](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md).
 
-[CLM-0002](../claims.md#clm-0002), [CLM-0003](../claims.md#clm-0003), and [CLM-0004](../claims.md#clm-0004) hold the reusable statements. [GAP-03](../research.md#gap-03) and [GAP-05](../research.md#gap-05) retain the missing native correspondence and numerical reconciliation work. This draft has not independently re-evaluated any repository strategy.
+[CLM-0002](../claims.md#clm-0002), [CLM-0003](../claims.md#clm-0003), and [CLM-0004](../claims.md#clm-0004) hold the reusable statements. [GAP-03](../research.md#gap-03) and [GAP-05](../research.md#gap-05) retain the general native correspondence and numerical reconciliation obligations. The linked native applications establish only their recorded request and controller scopes; they do not close those general obligations.

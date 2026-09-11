@@ -1,0 +1,94 @@
+{
+  "recorded_at_utc": "2026-09-11T18:27:18.307666+00:00",
+  "reviewed_base": "84f02ee3b603fe3879ac2c4a885d1b81ba67772f",
+  "final_source_files": [
+    {
+      "path": "engine/engine-sources.txt",
+      "bytes": 1812,
+      "sha256": "3e1efef58941591362183b5fe14e479d7d2970b5cd468295351e9884ff6bb577"
+    },
+    {
+      "path": "engine/src/solver_compile.cpp",
+      "bytes": 187801,
+      "sha256": "f97870a99210a8e748bcf4fcb35963b9e29d0ff8c884850068268e280bf2d001"
+    },
+    {
+      "path": "engine/src/solver_compile_contracts.hpp",
+      "bytes": 2543,
+      "sha256": "bbc4e7b2f5855d42da79a6421d0bbec7b1e8092af1b8486327e5001149324bbc"
+    },
+    {
+      "path": "engine/src/solver_policy_assertion_work.cpp",
+      "bytes": 41003,
+      "sha256": "2e189a1256a02660482f22f156c9ac4f6f868ff3d6252656251210ed8245b6df"
+    },
+    {
+      "path": "engine/src/solver_policy_refinement.hpp",
+      "bytes": 45500,
+      "sha256": "42a45ece569d854ef4e04007deab24d47bf3cfded0215f95a1abcea4bb459bad"
+    },
+    {
+      "path": "engine/src/solver_solve_finish.cpp",
+      "bytes": 332832,
+      "sha256": "be08a46de45964e1d1e68dbaec4d4dd0d66dd844e64c54d35e8b950475145b49"
+    },
+    {
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "bytes": 25643,
+      "sha256": "a595536d425671c536c2e7f1b9d895a8c6c192b6cc586332843e1004003d3cce"
+    },
+    {
+      "path": "engine/src/solver_solve_types.hpp",
+      "bytes": 126911,
+      "sha256": "47b83d00138820060a3df72d2816f218040cad17f9a74ff2a0380e4b80b1d76a"
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "bytes": 12289,
+      "sha256": "fe0dddce0a4a4add58b5f2b08379ba112e882f2d907139a9e3d187533425f452"
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "bytes": 142449,
+      "sha256": "c818242c970bd720b3b25a88f60fcef21b2e6ba14fc52521817be023957a47a3"
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "bytes": 607771,
+      "sha256": "9f415a22f92dff67bfc7156a3144e83fabec5fbad5c7f316b55b18e3a23cd2a1"
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "bytes": 2436,
+      "sha256": "31f6dcf2e346f82fd7bcc1d3f3667c2f1d2b67ab93073001aeda2f8fc8f8d973"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "out/first-return-improvement/final-native.exe",
+      "bytes": 13123380,
+      "sha256": "614ce53a4a21b63c1d44556149fdde62e565115f1b803aeb3e1c2d3389b18909"
+    },
+    {
+      "path": "build/engine/poecraft_engine.dll",
+      "bytes": 12658319,
+      "sha256": "586246b942a9103fc1da1f8f6b2121af18283921cac1c90cd52e2e57731cf58c"
+    },
+    {
+      "path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "bytes": 7750975,
+      "sha256": "5549697a555723d98b260bd9da00c42a4fe5f919603046a6a79e7a82e9ac6fbb"
+    },
+    {
+      "path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "bytes": 20219,
+      "sha256": "92bc2b9d61c465b35c2b80c71f8b3ee125155755275e8d66cdc649792ab9f4ce"
+    }
+  ],
+  "artifact_manifest": {
+    "path": "data/compiled/current/manifest.json",
+    "bytes": 5810,
+    "sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb"
+  },
+  "scope": "No C ABI or public strategy vocabulary change; existing executable-upper activation, native restrictions and request caps retained."
+}

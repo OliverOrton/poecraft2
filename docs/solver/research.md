@@ -199,6 +199,17 @@ native capacity controls separate a cheaper Ring graph at 4 GiB from code
 improvement; the Amulet work-cap arm alone does not lower cost. The living record
 owns the frozen profiles, bounded treatment outcomes and final qualification.
 
+The [first-return application](../active/2026-09-11-first-return-improvement/README.md)
+adds the constructive paid-removal and complete-excursion argument to the same
+mathematical owner. A small native Ring one-shot gain amplifies under a separately
+evaluated repeated controller; its masked tail was certifiable at the actual
+item even though the saved coarse upper domain omitted it. Amulet does not
+improve, and gated-reforge checker closure fails at the unchanged state cap on
+both families. These findings qualify one narrow upper-side construction and
+leave efficient complete reforge excursions unresolved. General entry sets and
+permanent return libraries remain outside the implementation; no claim status
+or exactness authority changes.
+
 The four [advisory audits](../active/2026-09-09-cross-base-capability-recovery/README.md#advisory-audits)
 are reconciled against that experiment. Their finite-region threshold and
 auxiliary-ceiling arguments now live in the [lower chapter](mathematics/lower-bounds.md#threshold-query);

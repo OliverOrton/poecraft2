@@ -1,6 +1,7 @@
 #include "solver_compile_serialization.hpp"
 #include "solver_policy_route.hpp"
 #include "solver_solve_types.hpp"
+#include "json.hpp"
 
 /*
  * Compile an exact solver policy into the ordinary strategy graph format.
@@ -3864,6 +3865,194 @@ std::string compile_policy_strategy_json(
         }
     }
     return json;
+}
+
+namespace {
+
+json::Value& return_member(json::Value& value, const std::string& name) {
+    for (auto& [key, member] : value.object)
+        if (key == name) return member;
+    gap("first-return graph is missing " + name);
+}
+
+void return_emit_json(std::string& out, const json::Value& value) {
+    switch (value.type) {
+    case json::Type::Null: out += "null"; break;
+    case json::Type::Bool: out += value.boolean ? "true" : "false"; break;
+    case json::Type::Number: {
+        if (!std::isfinite(value.number)) gap("non-finite first-return JSON");
+        char buffer[64];
+        std::snprintf(buffer, sizeof(buffer), "%.17g", value.number);
+        out += buffer;
+        break;
+    }
+    case json::Type::String: out += '"' + json_escape(value.string) + '"'; break;
+    case json::Type::Array:
+        out += '[';
+        for (std::size_t i = 0; i < value.array.size(); ++i) {
+            if (i) out += ',';
+            return_emit_json(out, value.array[i]);
+        }
+        out += ']';
+        break;
+    case json::Type::Object:
+        out += '{';
+        for (std::size_t i = 0; i < value.object.size(); ++i) {
+            if (i) out += ',';
+            out += '"' + json_escape(value.object[i].first) + '"';
+            out += ':';
+            return_emit_json(out, value.object[i].second);
+        }
+        out += '}';
+        break;
+    }
+}
+
+void return_namespace_graph(json::Value& graph, const std::string& prefix) {
+    std::set<std::string> nodes;
+    for (auto& node : return_member(graph, "nodes").array) {
+        auto& id = return_member(node, "id").string;
+        if (!nodes.insert(id).second) gap("duplicate first-return node");
+        id = prefix + id;
+        if (return_member(node, "kind").string == "start")
+            return_member(node, "kind").string = "router";
+        // These annotations belong to the old phase and do not price return
+        // interception. The independent evaluation owns the new cost.
+        std::erase_if(node.object, [](const auto& member) {
+            return member.first == "expected_cost";
+        });
+    }
+    std::set<std::string> edges;
+    for (auto& edge : return_member(graph, "edges").array) {
+        auto& id = return_member(edge, "id").string;
+        if (!edges.insert(id).second) gap("duplicate first-return edge");
+        id = prefix + id;
+        for (const char* endpoint : {"from", "to"}) {
+            auto& target = return_member(edge, endpoint).string;
+            if (!nodes.contains(target)) gap("unbound first-return edge");
+            target = prefix + target;
+        }
+    }
+    return_member(graph, "start_node_id").string =
+        prefix + return_member(graph, "start_node_id").string;
+}
+
+} // namespace
+
+std::string compile_first_return_strategy_json(
+        const std::string& repeated_strategy_json,
+        const std::string& old_strategy_json,
+        const std::string& initial_operation_node,
+        const pc_item_state& exact_anchor,
+        const FirstReturnCompilationMode mode,
+        const SolveOptions& limits) {
+    // This first implementation admits only the exact context represented by
+    // the ordinary empty-Rare compiler entry. More general items need an
+    // explicit predicate/phase correspondence, not a weaker identity check.
+    pc_item_state empty;
+    pc_item_clear(&empty);
+    empty.rarity = PC_RARITY_RARE;
+    if (exact_item_state_key(exact_anchor) != exact_item_state_key(empty))
+        gap("first-return entry is not the admitted empty Rare context");
+    const auto input_bytes = repeated_strategy_json.size() + old_strategy_json.size();
+    if (input_bytes > limits.max_strategy_json_bytes ||
+        input_bytes > limits.max_solver_owned_bytes / 128)
+        throw SolverResourceLimit("max_solver_owned_bytes", limits.max_solver_owned_bytes);
+    auto candidate = json::Parser(repeated_strategy_json.data(), repeated_strategy_json.size()).parse();
+    auto old = json::Parser(old_strategy_json.data(), old_strategy_json.size()).parse();
+    // These operations preserve the admitted empty item's persistent context.
+    // An offer, restore/checkpoint, or arbitrary action needs a different entry
+    // correspondence; matching item counts alone would not establish return.
+    for (const auto* graph : {&candidate, &old}) {
+        for (const auto& node : graph->at("nodes").array) {
+            if (node.at("kind").string != "operation") continue;
+            const auto& type = node.at("operation").at("type").string;
+            if (type != "exalt" && type != "annul" && type != "chaos" &&
+                type != "harvest_augment" && type != "harvest_reforge" &&
+                type != "harvest_resist")
+                gap("first-return operation has unsupported context or observations");
+        }
+    }
+    std::string candidate_base, old_base;
+    return_emit_json(candidate_base, candidate.at("base_state"));
+    return_emit_json(old_base, old.at("base_state"));
+    if (candidate_base != old_base) gap("first-return base identity mismatch");
+    const auto same_field = [&](const char* key) {
+        std::string a, b;
+        return_emit_json(a, candidate.at(key)); return_emit_json(b, old.at(key));
+        return a == b;
+    };
+    if (!same_field("solver_policy_scope") ||
+        !same_field("solver_imprint_programs_considered"))
+        gap("first-return controller scope mismatch");
+    const auto goal_predicate = [&](const json::Value& graph) {
+        std::string predicate;
+        for (const auto& edge : graph.at("edges").array) {
+            if (edge.at("from").string != "policy_route_root" ||
+                edge.at("to").string != "goal") continue;
+            if (!predicate.empty()) gap("first-return graph has ambiguous goal control");
+            return_emit_json(predicate, edge.at("condition"));
+        }
+        if (predicate.empty()) gap("first-return graph has no native goal predicate");
+        return predicate;
+    };
+    if (goal_predicate(candidate) != goal_predicate(old))
+        gap("first-return native goal identity mismatch");
+    const auto& original_nodes = candidate.at("nodes").array;
+    const auto operation = std::find_if(original_nodes.begin(), original_nodes.end(),
+        [&](const auto& node) { return node.at("id").string == initial_operation_node; });
+    if (operation == original_nodes.end() || operation->at("kind").string != "operation")
+        gap("first-return initial entry is not a compiled operation");
+    const auto router = std::find_if(original_nodes.begin(), original_nodes.end(),
+        [](const auto& node) { return node.at("id").string == "policy_route_root"; });
+    if (router == original_nodes.end() || router->at("kind").string != "router")
+        gap("first-return graph has no compiler decision router");
+    const auto initial_kind = candidate.at("start_node_id").string;
+    bool initial_route = false;
+    for (const auto& edge : candidate.at("edges").array) {
+        if (edge.at("from").string == initial_kind) {
+            if (initial_route || edge.at("to").string != "policy_route_root" ||
+                !edge.at("is_default").boolean)
+                gap("first-return graph has unsupported initial control");
+            initial_route = true;
+        }
+    }
+    if (!initial_route) gap("first-return graph has no initial route");
+    return_namespace_graph(candidate, "exc_");
+    return_namespace_graph(old, "old_");
+    auto& nodes = return_member(candidate, "nodes").array;
+    auto& edges = return_member(candidate, "edges").array;
+    const auto parse = [](const std::string& text) {
+        return json::Parser(text.data(), text.size()).parse();
+    };
+    nodes.push_back(parse("{\"id\":\"return_begin\",\"kind\":\"start\"}"));
+    std::string target;
+    if (mode == FirstReturnCompilationMode::OneShot) {
+        target = old.at("start_node_id").string;
+        for (auto& node : return_member(old, "nodes").array) nodes.push_back(std::move(node));
+        for (auto& edge : return_member(old, "edges").array) edges.push_back(std::move(edge));
+    } else {
+        target = "return_boundary";
+        nodes.push_back(parse("{\"id\":\"return_boundary\",\"kind\":\"terminal\",\"terminal\":\"stop\"}"));
+    }
+    // The trial has started when this boundary becomes reachable. Mandatory
+    // local retries never visit policy_route_root and cannot be cut short.
+    edges.push_back(parse("{\"id\":\"return_intercept\",\"from\":\"exc_policy_route_root\",\"to\":\"" +
+        target + "\",\"priority\":-1,\"condition\":" +
+        all_of({rarity_condition(PC_RARITY_RARE),
+            count_condition("prefix_count_range", 0), count_condition("suffix_count_range", 0)}) + "}"));
+    edges.push_back(parse("{\"id\":\"return_initial_trial\",\"from\":\"return_begin\",\"to\":\"exc_" +
+        json_escape(initial_operation_node) + "\",\"priority\":0,\"is_default\":true}"));
+    return_member(candidate, "start_node_id").string = "return_begin";
+    return_member(candidate, "name").string = mode == FirstReturnCompilationMode::OneShot
+        ? "One-shot paid return candidate" : "Private first-return cost and exit calculation";
+    if (nodes.size() > limits.max_compiled_nodes || edges.size() > limits.max_compiled_edges)
+        throw SolverResourceLimit("max_compiled_nodes", limits.max_compiled_nodes);
+    std::string output;
+    return_emit_json(output, candidate);
+    if (output.size() > limits.max_strategy_json_bytes)
+        throw SolverResourceLimit("max_strategy_json_bytes", limits.max_strategy_json_bytes);
+    return output;
 }
 
 } // namespace solver

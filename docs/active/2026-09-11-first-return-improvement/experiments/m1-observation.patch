@@ -1,0 +1,83 @@
+diff --git a/engine/src/solver_solve_finish.cpp b/engine/src/solver_solve_finish.cpp
+index ff905bb..1bf7b8e 100644
+--- a/engine/src/solver_solve_finish.cpp
++++ b/engine/src/solver_solve_finish.cpp
+@@ -3,6 +3,7 @@
+ #include "solver_sparse_policy.hpp"
+ 
+ #include <cstring>
++#include <cstdio>
+ 
+ namespace poecraft {
+ namespace solver {
+@@ -6140,6 +6141,70 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
+                                              : "verified_in_selected_output";
+         lineage.portfolio_reason = "independent native graph evaluation";
+     });
++    // Temporary M1 snapshot: observation only, after independent verification.
++    // Full source keys and graph travel together; source values are not tails.
++    {
++        std::string probe = "{\"first_return_m1\":true,\"verified_cost\":";
++        const auto number = [&](double value) {
++            char buffer[64];
++            std::snprintf(buffer, sizeof(buffer), "%.17g", value);
++            probe += buffer;
++        };
++        number(candidate.evaluated_policy_cost);
++        probe += ",\"root_state\":" + std::to_string(result.start_state);
++        probe += ",\"graph\":" + candidate.compiled_artifact.strategy_json;
++        const auto key = [&](const auto& values) {
++            probe += '[';
++            for (std::size_t i = 0; i < values.size(); ++i) {
++                if (i != 0) probe += ',';
++                append_json_string(probe, std::to_string(values[i]));
++            }
++            probe += ']';
++        };
++        probe += ",\"root_exact_item_key\":";
++        key(exact_item_state_key(result.exact_start_item));
++        probe += ",\"bindings\":[";
++        bool first = true;
++        for (const auto& binding : candidate.compiled_artifact.policy_decision_bindings) {
++            if (!first) probe += ',';
++            first = false;
++            probe += "{\"node\":";
++            append_json_string(probe, binding.compiled_node_id);
++            probe += ",\"state\":" + std::to_string(binding.coarse_state);
++            probe += ",\"operator\":" + std::to_string(binding.selected_operator);
++            probe += ",\"state_key\":"; key(binding.coarse_state_identity);
++            probe += ",\"operator_key\":"; key(binding.selected_operator_identity);
++            probe += '}';
++        }
++        probe += "],\"exalt_rows\":[";
++        first = true;
++        for (const auto row_id : state_row_indices(*transition_cache, result.start_state)) {
++            const auto& row = transition_cache->rows[row_id];
++            const auto action = priced_rows[row_id].operator_index;
++            if (action >= calc.operators().size()) continue;
++            const auto& op = calc.operators().at(action);
++            if (op.kind != PlannerOperatorKind::Primitive ||
++                calc.registry().actions.at(op.primitive_action).params.type != ActionType::Exalt) continue;
++            if (!first) probe += ',';
++            first = false;
++            probe += "{\"action\":"; append_json_string(probe, op.id);
++            probe += ",\"outcomes\":[";
++            for (std::uint32_t edge = 0; edge < row.transition_count; ++edge) {
++                if (edge != 0) probe += ',';
++                const auto offset = row.transition_offset + edge;
++                const auto state = transition_cache->successors[offset];
++                probe += "{\"state\":" + std::to_string(state) + ",\"probability\":";
++                number(transition_cache->probabilities[offset]);
++                probe += ",\"selected_domain\":";
++                probe += state < candidate.policy_reachable.size() && candidate.policy_reachable[state] ? "true" : "false";
++                probe += ",\"coarse_key\":"; key(exact_abstract_state_key(calc.state(state), 0));
++                probe += '}';
++            }
++            probe += "]}";
++        }
++        probe += "]}";
++        std::fprintf(stderr, "%s\n", probe.c_str());
++    }
+     co_return true;
+ }
+ 

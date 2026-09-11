@@ -1,0 +1,130 @@
+{
+  "review_date": "2026-09-11",
+  "reviewed_main": "84f02ee3b603fe3879ac2c4a885d1b81ba67772f",
+  "posture": "read-only source/literature research plus independent synthetic calculations; no native execution",
+  "sources": {
+    "R01": {
+      "url": "https://github.com/OliverOrton/poecraft2/commit/84f02ee3b603fe3879ac2c4a885d1b81ba67772f",
+      "purpose": "Current remote main and last commit; checked twice during review.",
+      "coverage": "metadata"
+    },
+    "R02": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/docs/active/2026-09-10-goal-reaching-row-delivery/README.md",
+      "purpose": "Retained first-policy recovery, row coverage, native/WASM outcomes and limits.",
+      "coverage": "current record; retained measurements not rerun"
+    },
+    "R03": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/docs/active/2026-09-11-post-incumbent-cost/README.md",
+      "purpose": "Capacity arms, T1/T2 rejection, current preservation and cost attribution.",
+      "coverage": "current record; retained measurements not rerun"
+    },
+    "R04": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/docs/active/2026-09-11-post-incumbent-cost/m1-cost-and-continuation.json",
+      "purpose": "Selected original/capacity costs and specific missing tails. Historical snapshots retain their identities.",
+      "coverage": "selected structured-record excerpts"
+    },
+    "R05": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/docs/active/2026-09-11-post-incumbent-cost/implementation-profile.json",
+      "purpose": "Exact manifests, case IDs, caps, source/binary/report identity and material targets.",
+      "coverage": "full JSON"
+    },
+    "R06": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/docs/solver/upper-authority.md",
+      "purpose": "Existing candidate, entry, composition and publication contracts.",
+      "coverage": "full current mechanism page"
+    },
+    "R07": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/engine/src/solver_eval_types.hpp#L60-L495",
+      "purpose": "Continuation and policy-entry certificates; globally routable guard; fixed selected kernels and evaluator options.",
+      "coverage": "source range"
+    },
+    "R08": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/docs/solver/mathematics/policies.md",
+      "purpose": "Fixed-policy equations, performance difference, properness and stopped programs; existing claims.",
+      "coverage": "fixed-policy/entry/proper-seed sections and stopped-program start"
+    },
+    "R09": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/engine/src/actions_basic.cpp#L632-L780",
+      "purpose": "Actual Annul removal, locks/fractures, Scour and remove-crafted branches.",
+      "coverage": "native source range; not external mechanics ruling"
+    },
+    "R10": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/engine/src/item_state.cpp#L87-L111",
+      "purpose": "pc_item_remove_at swaps/clears slots and changes count without changing rarity.",
+      "coverage": "native source range"
+    },
+    "R11": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/docs/mechanics/ordinary-currency.md",
+      "purpose": "Implemented mechanic reference and open normal-Annul/double-lock-Scour questions deliberately avoided.",
+      "coverage": "full page; code checked for selected removal premise"
+    },
+    "R12": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/docs/archive/2026-08-31-clean-five-policy-potential-scc-cegar-v1/README.md",
+      "purpose": "Historical arbitrary-entry Scour refusal; existing selected-kernel facility and strict upper/lower distinction.",
+      "coverage": "full historical report"
+    },
+    "R13": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/docs/archive/2026-07-29-high-impact-executable-uppers/report.md",
+      "purpose": "Historical failure of broader upper work without complete useful per-carrier coverage.",
+      "coverage": "full historical report"
+    },
+    "R14": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/engine/src/solver_solve_constructive.cpp#L4100-L4330",
+      "purpose": "Current seed terminal debt/progress and missing-route construction, fixed semantic keys.",
+      "coverage": "source already inspected in preceding current-pin review"
+    },
+    "R15": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/engine/src/solver_solve_focused.cpp#L790-L900",
+      "purpose": "Upper-pass selected-domain masking and current incumbent decisions.",
+      "coverage": "source already inspected in preceding current-pin review"
+    },
+    "R16": {
+      "url": "https://github.com/OliverOrton/poecraft2/blob/84f02ee3b603fe3879ac2c4a885d1b81ba67772f/docs/foundation/tooling.md",
+      "purpose": "Existing M0 task-to-command owner, typed runner controls, recovery distinctions.",
+      "coverage": "current M0 reference; follow actual help for commands"
+    },
+    "L01": {
+      "title": "Dimitri P. Bertsekas and David A. Castañon. Rollout Algorithms for Stochastic Scheduling Problems. Journal of Heuristics 5, 89–108 (1999).",
+      "url": "https://link.springer.com/article/10.1023/A:1009634810396",
+      "coverage": "publisher metadata and abstract only",
+      "use": "base-policy lookahead context, no uninspected theorem imported"
+    },
+    "L02": {
+      "title": "Anders Hansson and Bo Wahlberg. Performance Bounds for Rollout Policies in Stochastic Shortest Path Problems. arXiv:2605.22965v1, 21 May 2026.",
+      "url": "https://arxiv.org/html/2605.22965v1",
+      "coverage": "full HTML, especially assumptions and hitting-time-dependent error bound",
+      "status": "preprint; not represented as peer-reviewed",
+      "use": "properness and approximation-error limits; no claim native estimates meet uniform-error premise"
+    },
+    "L03": {
+      "title": "Kazuki Watanabe, Marck van der Vegt, Sebastian Junges, and Ichiro Hasuo. Compositional Value Iteration with Pareto Caching. CAV 2024.",
+      "url": "https://link.springer.com/chapter/10.1007/978-3-031-65633-0_21",
+      "coverage": "full publisher HTML, interface/weighted-exit/cache sections",
+      "use": "boundary-query structure; no transfer of reachability algorithm or claimed native separator"
+    },
+    "L04": {
+      "title": "Dimitri P. Bertsekas. Proper Policies in Infinite-State Stochastic Shortest Path Problems. arXiv:1711.10129.",
+      "url": "https://arxiv.org/abs/1711.10129",
+      "coverage": "abstract and metadata only",
+      "use": "proper versus unrestricted solutions; no imported general guarantee"
+    },
+    "A01": {
+      "title": "Audit 3 — Retirement, duplication, and carrying cost",
+      "access": "supplied in current conversation; full report available",
+      "reviewed_source": "be553608ecabde28a3dec07856255911459ec97d",
+      "use": "preserve useful safety owners; source-reconcile old cleanup findings, already completed where recorded"
+    },
+    "A02": {
+      "title": "Audit 2 — Computation reuse, resumption, and research survival",
+      "access": "supplied in current conversation; full report available",
+      "reviewed_source": "be553608ecabde28a3dec07856255911459ec97d",
+      "use": "live/persistent/replay distinctions, full-entry and proof-use identity"
+    },
+    "A03": {
+      "title": "Whole-solver capability and falsifiable abstractions",
+      "access": "supplied in current conversation; full report available",
+      "reviewed_source": "be553608ecabde28a3dec07856255911459ec97d",
+      "use": "existing lower-only/first-exit ideas and local/global composition cautions; not current numeric evidence"
+    }
+  }
+}

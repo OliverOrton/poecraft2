@@ -10,7 +10,7 @@ A public executable upper belongs to a proper, fully priced strategy in the stat
 
 The mathematical relationship is [CLM-0002](claims.md#clm-0002). The numerical interpretation of a returned endpoint remains the native evaluation/reconciliation contract, not a claim of rational arithmetic merely because evaluation is called exact.
 
-Primary current owners are `solver_solve_constructive.cpp`, `solver_solve_finish.cpp`, `solver_policy_assertion.cpp`, the compiler/evaluator, and the incumbent portfolio in `solver_solve_types.hpp`. The old carrier-planner projection vocabulary is not an executable-upper issuer.
+Primary current owners are `solver_solve_constructive.cpp`, `solver_solve_finish.cpp`, `solver_solve_return_bridge.cpp`, `solver_policy_assertion.cpp`, the compiler/evaluator, and the incumbent portfolio in `solver_solve_types.hpp`. The old carrier-planner projection vocabulary is not an executable-upper issuer.
 
 ## Candidate Sources
 
@@ -100,6 +100,44 @@ owns the stop contract; the living record owns measurements and browser evidence
 For a class containing several exact items, scalar bounds and executable routing are different objects. Even when each member has some proper policy, the implementation still needs a valid common policy or observable selector to claim one executable class continuation. See [CLM-0006](claims.md#clm-0006).
 
 ## Recovery And Exact Terminal Success
+
+### Current-run first-return candidate
+
+After the first independently certified current-run policy is retained,
+`try_initial_return_bridges` may test one completed, admitted root Exalt row.
+The base graph, selected decisions and exact empty-Rare entry remain immutable.
+The feature requires executable-upper activation, no economic Restart, ordinary
+unprotected items with default persistent context, and context-preserving native
+primitive decisions. A root already choosing Exalt is skipped. There is no
+saved-policy seed or repeated trigger on an unchanged failed query.
+
+Old selected decisions remain fixed. An uncovered real state may use admitted
+Annul only when its complete native removal law preserves rarity and decreases
+affix count on every positive-mass exit. Flags, metamods, fractures, offers,
+incompatible persistent context and uncovered virtual retry carriers refuse
+this route. Existing mandatory retry edges remain internal. A representative
+item's certificate does not certify its entire coarse class; the complete native
+law and emitted-controller evaluation retain that obligation.
+
+The native evaluator independently certifies the exact old entry. The compiler
+then creates separate one-shot and private first-excursion graphs with checked
+namespaces and the unchanged native goal predicate. The initial trial precedes
+return detection. The private return STOP measures return probability only;
+it never appears as success or as a published crafting terminal. The
+[first-return identities](mathematics/policies.md#first-return-improvement)
+propose a repeated cost, which must reconcile with the separately compiled
+ordinary graph through the existing properness, complete-price and zero-off-
+policy checks. Only that graph enters the existing verified portfolio.
+
+Construction and evaluator work consume the parent request's remaining native
+work and memory budgets, with an independent evaluator allowance of at most
+1 GiB. Cooperative suspension accounts for retained scratch. Finish, abandon,
+refusal and resource caps release the attempt and preserve the best compatible
+verified artifact. The first-policy rules, lower authority, ordinary continuation
+service and upper-domain mask are unchanged. The broader gated-Chaos experiment
+failed its unchanged checker cap and has no active runtime proposal. The
+[application record](../active/2026-09-11-first-return-improvement/README.md)
+owns measured eligibility, costs and qualification.
 
 Product defaults do not voluntarily abandon a live item for a fresh base. Mechanic-owned paid recovery, such as the admitted Fracture-miss program, is separately scoped and priced. A lower model may use additional optimistic recovery without making that recovery a product action.
 

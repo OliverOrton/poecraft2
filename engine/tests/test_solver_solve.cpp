@@ -13427,6 +13427,107 @@ void run_artifact_solve_tests(const char* artifact_dir) {
 
 } // namespace
 
+void run_solver_return_bridge_lifecycle_tests() {
+    for (unsigned mode = 0; mode < 3; ++mode) {
+        auto session = make_solve_session();
+        auto registry = build_action_registry(*session);
+        const auto chaos = registry.index_by_id.at("chaos");
+        const auto annul = registry.index_by_id.at("annul");
+        const auto exalt = registry.index_by_id.at("exalt");
+        GoalSpec goal;
+        goal.rarity = PC_RARITY_RARE;
+        GoalSlot slot;
+        slot.family_id = 100;
+        slot.min_tier = 1;
+        goal.slots.push_back(slot);
+        CalcContext calc(session, goal, registry, {chaos, annul, exalt});
+        pc_item_state start;
+        pc_item_clear(&start);
+        start.rarity = PC_RARITY_RARE;
+        SolveOptions options;
+        options.goal_progress_gated_reforges = false;
+        options.high_impact_executable_uppers = true;
+        options.allow_economic_restart = false;
+        options.state_certificate_control = false;
+        SolveWorkTestAccess::Impl work(calc, start,
+            {{"chaos", 100}, {"annul", 5}, {"exalt", 2}}, options);
+        work.transition_cache = std::make_shared<SolveTransitionCache>();
+        work.priced_rows.clear();
+        const auto add_native = [&](const std::uint32_t state, const std::uint32_t action, const double cost) {
+            const auto row = calc.outcomes(state, action, false);
+            PC_CHECK(row.supported && row.applicable);
+            solve_detail::SparsePolicyRowInput selected;
+            selected.owner_state = state;
+            selected.operator_index = action;
+            selected.cost = cost;
+            for (const auto& exit : row.entries)
+                selected.transitions.push_back({exit.state, exit.probability});
+            solve_detail::append_sparse_policy_row(*work.transition_cache, work.priced_rows, selected);
+        };
+        for (std::uint32_t state = 0; state < calc.state_count(); ++state) {
+            PC_CHECK(state < 10000);
+            if (!calc.is_goal_state(calc.state(state)))
+                add_native(state, state == work.result.start_state ? chaos : annul,
+                    state == work.result.start_state ? 100 : 5);
+        }
+        const auto n = calc.state_count();
+        work.transition_cache->state_rows.resize(n);
+        work.result.values.assign(n, 0);
+        work.result.goal_states.assign(n, 0);
+        work.expanded.assign(n, 1);
+        work.result.expanded = work.expanded;
+        work.expanded_count = n;
+        for (std::uint32_t state = 0; state < n; ++state)
+            work.result.goal_states[state] = calc.is_goal_state(calc.state(state));
+        PC_CHECK(work.try_install_reachable_incumbent(false));
+        if (!work.output_incumbent) continue;
+        PC_CHECK(work.output_incumbent->policy[work.result.start_state].index == chaos);
+        // A newly completed trial is visible after the immutable seed was chosen.
+        add_native(work.result.start_state, exalt, 2);
+        work.publication_pipeline.initial_candidate_task.emplace(work.certify_initial_candidate());
+        bool active_return = false;
+        for (unsigned units = 0; units < 10000; ++units) {
+            if (!work.advance_initial_candidate_publication()) break;
+            if (work.output_incumbent->independently_evaluated) {
+                active_return = true;
+                break;
+            }
+        }
+        PC_CHECK(active_return);
+        if (!active_return) continue;
+        const auto identity = work.output_incumbent->portfolio_identity;
+        const auto cost = work.output_incumbent->evaluated_policy_cost;
+        const auto graph = work.output_incumbent->compiled_artifact.strategy_json;
+        PC_CHECK(!graph.empty() && std::isfinite(cost));
+        const auto live = work.estimated_owned_bytes();
+        PC_CHECK(work.publication_pipeline.initial_candidate_task->retained_bytes() > 0);
+        if (mode == 0) {
+            work.requested_bounded_finish = true;
+            PC_CHECK(!work.advance_initial_candidate_publication());
+        } else if (mode == 1) {
+            // Destruction is the same unpublished-frame release used by abandon.
+            work.publication_pipeline.initial_candidate_task.reset();
+            work.publication_pipeline.initial_candidate_proof_bytes = 0;
+        } else {
+            work.options.max_solver_owned_bytes = live + 32;
+            for (unsigned units = 0; units < 10000 &&
+                 work.publication_pipeline.initial_candidate_task; ++units)
+                work.advance_initial_candidate_publication();
+        }
+        PC_CHECK(!work.publication_pipeline.initial_candidate_task);
+        PC_CHECK(work.publication_pipeline.initial_candidate_proof_bytes == 0);
+        PC_CHECK(work.output_incumbent->portfolio_identity == identity);
+        PC_CHECK(work.output_incumbent->evaluated_policy_cost == cost);
+        PC_CHECK(work.output_incumbent->compiled_artifact.strategy_json == graph);
+        if (mode != 2) PC_CHECK(work.estimated_owned_bytes() < live);
+        // After a candidate cap the ordinary upper owner may allocate its own
+        // next pass. The released bridge contributes no frame or new upper.
+        PC_CHECK(calc.outcome_cursor_bytes() == 0);
+        for (const auto& retained : work.certified_fallback_portfolio)
+            PC_CHECK(retained.evaluated_policy_cost >= cost);
+    }
+}
+
 void run_solver_carrier_bound_tests() {
     run_automatic_eldritch_side_tests();
 }

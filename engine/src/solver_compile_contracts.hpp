@@ -42,6 +42,24 @@ std::string compile_policy_strategy_json(
         PolicyRouteDefaultMode::ProductSafeRestart,
     bool compile_closed_coarse_certification_domain = false);
 
+enum class FirstReturnCompilationMode : std::uint8_t {
+    OneShot,
+    PrivateExcursion,
+};
+
+/* Candidate construction only. The ordinary repeated controller has already
+ * been compiled from complete native decisions. Preserve its exact initial
+ * operation, intercept subsequent empty-Rare decision returns, and either
+ * enter a separately namespaced immutable old controller or a private STOP
+ * boundary. The latter is never a publishable crafting controller. */
+std::string compile_first_return_strategy_json(
+    const std::string& repeated_strategy_json,
+    const std::string& old_strategy_json,
+    const std::string& initial_operation_node,
+    const pc_item_state& exact_anchor,
+    FirstReturnCompilationMode mode,
+    const SolveOptions& limits);
+
 
 } // namespace solver
 } // namespace poecraft

@@ -5,6 +5,7 @@
 #include "../src/solver_policy_refinement.hpp"
 #include "../src/solver_policy_route.hpp"
 #include "../src/solver_solve_types.hpp"
+#include "../src/solver_compile_contracts.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -2876,6 +2877,7 @@ void run_imprint_gate(const char* artifact_dir) {
 
 void run_solver_compile_tests(const char* artifact_dir) {
     run_policy_description_test();
+    run_solver_return_bridge_tests();
     run_condition_expr_tests();
     run_policy_route_coalescing_tests();
     run_future_observed_choice_compile_test();
@@ -2884,6 +2886,263 @@ void run_solver_compile_tests(const char* artifact_dir) {
     run_closed_coarse_certification_domain_test();
     run_artifact_gate(artifact_dir);
     run_imprint_gate(artifact_dir);
+}
+
+void run_solver_return_bridge_lifecycle_tests();
+
+void run_solver_return_bridge_tests() {
+    auto session = make_compile_session();
+    auto registry = build_action_registry(*session);
+    const auto exalt = registry.index_by_id.at("exalt");
+    const auto annul = registry.index_by_id.at("annul");
+    GoalSpec goal;
+    GoalSlot slot;
+    slot.family_id = 100;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    goal.rarity = PC_RARITY_RARE;
+    CalcContext calc(session, goal, registry, {exalt, annul});
+    pc_item_state anchor;
+    pc_item_clear(&anchor);
+    anchor.rarity = PC_RARITY_RARE;
+    SolveResult authored;
+    authored.start_state = calc.intern_item(anchor);
+    authored.has_exact_start_item = authored.policy_available = true;
+    authored.exact_start_item = anchor;
+    authored.policy_status = SolvePolicyStatus::BoundedFeasible;
+    authored.options.allow_economic_restart = false;
+    std::vector<std::uint32_t> pending{authored.start_state};
+    std::set<std::uint32_t> seen{authored.start_state};
+    for (std::size_t cursor = 0; cursor < pending.size(); ++cursor) {
+        const auto state = pending[cursor];
+        authored.values.resize(calc.state_count(), kInfinity);
+        authored.policy.resize(calc.state_count());
+        authored.policy_reachable.resize(calc.state_count());
+        authored.goal_states.resize(calc.state_count());
+        authored.expanded.resize(calc.state_count());
+        authored.policy_reachable[state] = 1;
+        if (calc.is_goal_state(calc.state(state))) {
+            authored.values[state] = 0;
+            authored.goal_states[state] = 1;
+            continue;
+        }
+        const auto selected = state == authored.start_state ? exalt : annul;
+        authored.policy[state] = PolicyOperatorRef{selected};
+        authored.expanded[state] = 1;
+        const auto& row = calc.outcomes(state, selected, false);
+        PC_CHECK(row.supported && row.applicable);
+        double mass = 0;
+        for (const auto& outcome : row.entries) {
+            mass += outcome.probability;
+            if (selected == annul) {
+                PC_CHECK(calc.state(outcome.state).rarity == PC_RARITY_RARE);
+                PC_CHECK(outcome.state == authored.start_state);
+            }
+            if (seen.insert(outcome.state).second) pending.push_back(outcome.state);
+        }
+        PC_CHECK(std::abs(mass - 1) < 1e-12);
+    }
+    const std::unordered_map<std::string, double> prices{{"exalt", 2}, {"annul", 5}, {"base", 1}};
+    PolicyCompilationTelemetry compiled;
+    const auto repeat = compile_policy_strategy_json(calc, authored, "native return test", &compiled,
+        authored.options.max_strategy_json_bytes, nullptr, authored.options.max_solver_owned_bytes,
+        PolicyRouteDefaultMode::CertificationFailClosed);
+    std::string entry;
+    for (const auto& binding : compiled.policy_decision_bindings)
+        if (binding.coarse_state == authored.start_state) entry = binding.compiled_node_id;
+    PC_CHECK(!entry.empty());
+    const auto once = compile_first_return_strategy_json(repeat, repeat, entry, anchor,
+        FirstReturnCompilationMode::OneShot, authored.options);
+    const auto excursion = compile_first_return_strategy_json(repeat, repeat, entry, anchor,
+        FirstReturnCompilationMode::PrivateExcursion, authored.options);
+    const auto old_eval = evaluate_compiled(session, repeat, prices);
+    const auto once_eval = evaluate_compiled(session, once, prices);
+    const auto first_eval = evaluate_compiled(session, excursion, prices);
+    PC_CHECK(old_eval.converged && old_eval.cost_complete);
+    PC_CHECK(once_eval.converged && once_eval.cost_complete);
+    PC_CHECK(first_eval.converged && first_eval.cost_complete);
+    PC_CHECK(std::abs(old_eval.success_probability - 1) < 1e-12);
+    PC_CHECK(std::abs(once_eval.success_probability - 1) < 1e-12);
+    PC_CHECK(first_eval.stop_probability > 0 && first_eval.stop_probability < 1);
+    PC_CHECK(std::abs(first_eval.success_probability + first_eval.stop_probability - 1) < 1e-12);
+    PC_CHECK(first_eval.failure_probability == 0 && first_eval.unresolved_probability == 0);
+    PC_CHECK(std::abs(once_eval.total_expected_cost - first_eval.total_expected_cost -
+        first_eval.stop_probability * old_eval.total_expected_cost) < 1e-9);
+    PC_CHECK(std::abs(old_eval.total_expected_cost - first_eval.total_expected_cost /
+        first_eval.success_probability) < 1e-9);
+    PC_CHECK(first_eval.total_expected_cost > 2); // paid failed rolls; no time-zero return
+    auto wrong = anchor;
+    wrong.rarity = PC_RARITY_NORMAL;
+    bool refused = false;
+    try { (void)compile_first_return_strategy_json(repeat, repeat, entry, wrong,
+        FirstReturnCompilationMode::OneShot, authored.options); }
+    catch (const std::exception&) { refused = true; }
+    PC_CHECK(refused);
+    auto tiny = authored.options;
+    tiny.max_solver_owned_bytes = 128;
+    refused = false;
+    try { (void)compile_first_return_strategy_json(repeat, repeat, entry, anchor,
+        FirstReturnCompilationMode::OneShot, tiny); }
+    catch (const SolverResourceLimit&) { refused = true; }
+    PC_CHECK(refused);
+    // Actual removal law retains both a clean goal and loss of the target.
+    pc_item_state clean = anchor;
+    PC_CHECK(pc_item_add_mod(&clean, PC_SIDE_PREFIX, 0, session->primary_group[0],
+        0, nullptr) == PC_RESULT_OK);
+    PC_CHECK(calc.is_goal_state(calc.state(calc.intern_item(clean))));
+    auto dirty = clean;
+    PC_CHECK(pc_item_add_mod(&dirty, PC_SIDE_SUFFIX, 5, session->primary_group[5],
+        0, nullptr) == PC_RESULT_OK);
+    const auto dirty_id = calc.intern_item(dirty);
+    PC_CHECK(solve_detail::ordinary_return_bridge_item(*session, anchor));
+    PC_CHECK(solve_detail::ordinary_return_bridge_item(*session, clean));
+    PC_CHECK(solve_detail::ordinary_return_bridge_item(*session, dirty));
+    PC_CHECK(!calc.is_goal_state(calc.state(dirty_id)));
+    const auto removal = calc.outcomes(dirty_id, annul, false);
+    double clean_mass = 0, lost_mass = 0;
+    for (const auto& edge : removal.entries) {
+        PC_CHECK(calc.state(edge.state).rarity == PC_RARITY_RARE);
+        PC_CHECK(calc.state(edge.state).prefix_count + calc.state(edge.state).suffix_count == 1);
+        if (calc.is_goal_state(calc.state(edge.state))) clean_mass += edge.probability;
+        else {
+            lost_mass += edge.probability;
+            const auto next = calc.outcomes(edge.state, annul, false);
+            PC_CHECK(next.entries.size() == 1);
+            PC_CHECK(next.entries.front().state == authored.start_state);
+            PC_CHECK(next.entries.front().probability == 1);
+        }
+    }
+    PC_CHECK(clean_mass == 0.5 && lost_mass == 0.5);
+    auto protected_item = dirty;
+    protected_item.prefixes[0].flags = PC_MOD_SLOT_FRACTURED;
+    const auto protected_id = calc.intern_item(protected_item);
+    PC_CHECK(!solve_detail::ordinary_return_bridge_item(*session, protected_item));
+    PC_CHECK((calc.state(protected_id).flags & kFlagFractured) != 0);
+    const auto protected_row = calc.outcomes(protected_id, annul, false);
+    PC_CHECK(protected_row.entries.size() == 1);
+    PC_CHECK((calc.state(protected_row.entries.front().state).flags & kFlagFractured) != 0);
+    PC_CHECK(protected_row.entries.front().state != authored.start_state);
+    auto different_context = anchor;
+    different_context.quality = 20;
+    PC_CHECK(!solve_detail::ordinary_return_bridge_item(*session, different_context));
+    different_context = anchor;
+    different_context.generic_influence_bits = 1;
+    PC_CHECK(!solve_detail::ordinary_return_bridge_item(*session, different_context));
+    auto offer = dirty;
+    offer.prefixes[0].veiled_option_count = 1;
+    offer.prefixes[0].veiled_option_mod_ids[0] = 0;
+    PC_CHECK(!solve_detail::ordinary_return_bridge_item(*session, offer));
+    session->metamod_type[0] = 0;
+    PC_CHECK(!solve_detail::ordinary_return_bridge_item(*session, dirty));
+    session->metamod_type[0] = -1;
+
+    // An omitted positive-probability tail remains an actual failed route.
+    auto incomplete = authored;
+    incomplete.policy_reachable.assign(authored.policy_reachable.size(), 0);
+    incomplete.policy_reachable[authored.start_state] = 1;
+    const auto open_graph = compile_policy_strategy_json(calc, incomplete, "uncovered native mass", nullptr,
+        authored.options.max_strategy_json_bytes, nullptr, authored.options.max_solver_owned_bytes,
+        PolicyRouteDefaultMode::CertificationFailClosed);
+    const auto open_eval = evaluate_compiled(session, open_graph, prices);
+    PC_CHECK(open_eval.failure_probability + open_eval.no_matching_edge_probability +
+        open_eval.action_not_applied_probability + open_eval.unresolved_probability > 0);
+    PC_CHECK(open_eval.success_probability < 1);
+
+    auto stale = repeat;
+    const std::string scope_key = "\"solver_policy_scope\":\"";
+    const auto scope_at = stale.find(scope_key);
+    PC_CHECK(scope_at != std::string::npos);
+    const auto scope_end = stale.find('"', scope_at + scope_key.size());
+    stale.replace(scope_at + scope_key.size(), scope_end - scope_at - scope_key.size(), "stale");
+    refused = false;
+    try { (void)compile_first_return_strategy_json(repeat, stale, entry, anchor,
+        FirstReturnCompilationMode::OneShot, authored.options); }
+    catch (const std::exception&) { refused = true; }
+    PC_CHECK(refused);
+    auto stale_goal = repeat;
+    const auto goal_at = stale_goal.find("\"min_tier\":1");
+    PC_CHECK(goal_at != std::string::npos);
+    stale_goal.replace(goal_at, std::string("\"min_tier\":1").size(), "\"min_tier\":2");
+    refused = false;
+    try { (void)compile_first_return_strategy_json(repeat, stale_goal, entry, anchor,
+        FirstReturnCompilationMode::OneShot, authored.options); }
+    catch (const std::exception&) { refused = true; }
+    PC_CHECK(refused);
+
+    // Mandatory work removes even a freshly rolled target before control
+    // returns: q=1 is a finite one-shot policy but an improper repetition.
+    auto compulsory = repeat;
+    const std::string original_edge = "\"from\":\"" + entry + "\",\"to\":\"policy_route_root\"";
+    const auto edge_at = compulsory.find(original_edge);
+    PC_CHECK(edge_at != std::string::npos);
+    compulsory.replace(edge_at, original_edge.size(), "\"from\":\"" + entry + "\",\"to\":\"mandatory_remove\"");
+    const auto nodes_end = compulsory.find("],\"edges\":[");
+    PC_CHECK(nodes_end != std::string::npos);
+    compulsory.insert(nodes_end, ",{\"id\":\"mandatory_remove\",\"kind\":\"operation\",\"operation\":{\"type\":\"annul\"}}");
+    const auto edges_end = compulsory.rfind("]}");
+    PC_CHECK(edges_end != std::string::npos);
+    compulsory.insert(edges_end, ",{\"id\":\"mandatory_exit\",\"from\":\"mandatory_remove\",\"to\":\"policy_route_root\",\"priority\":0,\"is_default\":true}");
+    const auto q1_once = compile_first_return_strategy_json(compulsory, repeat, entry, anchor,
+        FirstReturnCompilationMode::OneShot, authored.options);
+    const auto q1_private = compile_first_return_strategy_json(compulsory, repeat, entry, anchor,
+        FirstReturnCompilationMode::PrivateExcursion, authored.options);
+    const auto q1_once_eval = evaluate_compiled(session, q1_once, prices);
+    const auto q1_private_eval = evaluate_compiled(session, q1_private, prices);
+    const auto q1_repeat_eval = evaluate_compiled(session, compulsory, prices);
+    PC_CHECK(q1_once_eval.converged && q1_once_eval.cost_complete);
+    PC_CHECK(std::abs(q1_once_eval.total_expected_cost - old_eval.total_expected_cost - 7) < 1e-9);
+    PC_CHECK(std::abs(q1_private_eval.stop_probability - 1) < 1e-12);
+    PC_CHECK(q1_private_eval.success_probability == 0);
+    PC_CHECK(std::abs(q1_private_eval.total_expected_cost - 7) < 1e-12);
+    PC_CHECK(q1_repeat_eval.success_probability == 0);
+    PC_CHECK(q1_repeat_eval.unresolved_probability > 0 || !q1_repeat_eval.cost_complete);
+
+    const auto chaos = registry.index_by_id.at("chaos");
+    CalcContext gated(session, goal, registry, {chaos, annul});
+    const auto gated_source = gated.intern_item(dirty);
+    const auto gated_row = gated.outcomes(gated_source, chaos, true);
+    PC_CHECK(gated_row.goal_progress_gated && gated_row.gated_retry_probability > 0);
+    PC_CHECK(gated.state(gated_row.gated_retry_state).goal_progress_retry_basin != 0);
+    PC_CHECK(gated.state(gated_row.gated_retry_state).prefix_count +
+        gated.state(gated_row.gated_retry_state).suffix_count == 0);
+    const auto raw_row = gated.outcomes(gated_source, chaos, false);
+    double raw_zero_mass = 0;
+    for (const auto& exit : raw_row.entries) {
+        const auto& state = gated.state(exit.state);
+        if (state.slot_status[0] == static_cast<std::uint8_t>(GoalSlotStatus::Satisfied)) continue;
+        raw_zero_mass += exit.probability;
+        PC_CHECK(state.goal_progress_retry_basin == 0);
+        PC_CHECK(state.prefix_count + state.suffix_count > 0);
+        PC_CHECK(action_legal(*session, registry.actions[annul], state));
+    }
+    PC_CHECK(std::abs(raw_zero_mass - gated_row.gated_retry_probability) < 1e-12);
+    // The actual positive-mass failed rolls can be annulled physically;
+    // their compressed retry carrier is a different, mandatory control state.
+
+    const auto unveil = registry.index_by_id.at("unveil");
+    CalcContext observed(session, goal, registry, {unveil});
+    pc_item_state veiled = anchor;
+    PC_CHECK(pc_item_add_mod(&veiled, PC_SIDE_PREFIX, 8, session->primary_group[8],
+        PC_MOD_SLOT_VEILED, nullptr) == PC_RESULT_OK);
+    const auto offer_row = observed.outcomes(observed.intern_item(veiled), unveil);
+    PC_CHECK(offer_row.supported && !offer_row.choice_groups.empty());
+    double offered_mass = 0;
+    for (const auto& group : offer_row.choice_groups) offered_mass += group.probability;
+    PC_CHECK(std::abs(offered_mass - 1) < 1e-12);
+    PC_CHECK(!solve_detail::ordinary_return_bridge_item(*session, veiled));
+    auto observed_graph = repeat;
+    const auto op_at = observed_graph.find("\"type\":\"exalt\"");
+    PC_CHECK(op_at != std::string::npos);
+    observed_graph.replace(op_at, std::string("\"type\":\"exalt\"").size(), "\"type\":\"unveil\"");
+    refused = false;
+    try { (void)compile_first_return_strategy_json(observed_graph, repeat, entry, anchor,
+        FirstReturnCompilationMode::OneShot, authored.options); }
+    catch (const std::exception&) { refused = true; }
+    PC_CHECK(refused);
+    std::printf("native first-return: old=%.12g once=%.12g r=%.12g q=%.12g\n",
+        old_eval.total_expected_cost, once_eval.total_expected_cost,
+        first_eval.total_expected_cost, first_eval.stop_probability);
+    run_solver_return_bridge_lifecycle_tests();
 }
 
 void run_solver_compile_metadata_tests() {

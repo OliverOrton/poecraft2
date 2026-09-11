@@ -1,30 +1,35 @@
 # Handoff
 
-Oliver selected **Post-Incumbent Cost Improvement and Native Headroom v1** at
-reviewed `edd8ec25f40b11c8ba4f4aaf157db9405b593ed2`, which is pushed. These
-follow-up changes are local and have not been pushed. The
-[living record](docs/active/2026-09-11-post-incumbent-cost/README.md) owns the
-supplied plan, frozen controls, cost attribution, treatments and qualification.
-The programme ended with both material cost targets unmet. The 4-GiB native
-Ring capacity gain is preserved as a verified controller. Neither solver
-treatment lowered matched primary cost; both were removed, including T1 after
-its Conquest-five regression. The retained compiler description is neutral
-about optimality because compilation can precede final classification.
+Oliver's **Certified Return Bridges and First-Return Policy Improvement v1**
+programme at reviewed/pushed `84f02ee3b603fe3879ac2c4a885d1b81ba67772f` is
+implemented and qualified. The [living record](docs/active/2026-09-11-first-return-improvement/README.md)
+owns the argument, native evidence, two-variant findings and final comparisons.
+The retained change is committed locally; no push is authorized or performed.
 
-All 14 core/exposed preservation pairs match their current costs and classes;
-104 focused native checks and final native/WASM publication checks pass.
-The unresolved capability is completing compatible cleanup/tails for competitive
-reforges within the frozen work/time controls. No successor implementation is
-selected.
+The ordinary current-run Exalt/paid-return candidate materially improves Ring;
+Amulet is unchanged, so the two-family objective remains unmet. Gated-reforge
+construction was stopped at the unchanged checker cap on both families and
+removed. No new exact closure or next implementation is selected.
 
-M0 and [first-policy recovery](docs/active/2026-09-10-goal-reaching-row-delivery/README.md)
-are done. Preserve the recovered Ring/Amulet policies, no-incumbent scheduler
-guard, selected continuation service, first-policy independent certification,
-upper-domain masking and bounded finish. Ordinary upper improvement exists;
-the selected question is materially cheaper policies with complete continuations.
-The previous goal-free selector investigation stays retired.
+All 14 original-profile controls preserve capability, with Ring improved and
+exact Regalia intact. Original Ring has measured time/peak-memory regressions
+within unchanged limits, recorded explicitly in the living receipt. CB05's
+stop-contract failure and CB09's no-policy result remain visible. Focused native
+and actual WASM delivery/finish/abandon checks pass. The new Ring graph's 1,000
+Simulator trials include 22 action-limit failures; no cap or failure was hidden.
 
-Current CB09 no-policy and CB05 stop-contract failures remain visible. Wand and
-Shield are now exposed regression controls. Work sequentially without subagents,
-inherited deadline, automatic restart or push. Preserve unrelated work and path
-`0` without inspection or staging. The deferred Veiled split is unrelated.
+M0, [first-policy recovery](docs/active/2026-09-10-goal-reaching-row-delivery/README.md)
+and [post-incumbent investigation](docs/active/2026-09-11-post-incumbent-cost/README.md)
+remain complete. Preserve their no-incumbent scheduler guard, selected
+continuation service, first-policy certification, upper-domain mask and bounded
+finish. T1/T2 stay removed. Wand/Shield are exposed controls. The deferred Veiled
+split is unrelated.
+
+The single unresolved capability question is certifying a complete admitted
+gated-reforge excursion without broad expansion beyond the existing 200,000-
+state checker cap, under unchanged entry, control, probability, pricing and
+properness obligations. This question is not a selected next task.
+
+Work sequentially without subagents, inherited deadline, automatic restart or
+push. Preserve unrelated work and protected `0` without inspection or staging.
+Rendered UI review belongs to Oliver unless explicitly requested.

@@ -1,0 +1,543 @@
+diff --git a/engine/engine-sources.txt b/engine/engine-sources.txt
+index 2c86aaf..7cb08c6 100644
+--- a/engine/engine-sources.txt
++++ b/engine/engine-sources.txt
+@@ -43,6 +43,7 @@ src/solver_quotient_lower.cpp
+ src/solver_phase_lower.cpp
+ src/solver_phase_probability.cpp
+ src/solver_solve_finish.cpp
++src/solver_solve_return_bridge.cpp
+ src/solver_solve_telemetry.cpp
+ src/solver_solve_telemetry_json.cpp
+ src/solver_refinement.cpp
+diff --git a/engine/src/solver_compile.cpp b/engine/src/solver_compile.cpp
+index c1fcab8..1cec87c 100644
+--- a/engine/src/solver_compile.cpp
++++ b/engine/src/solver_compile.cpp
+@@ -1,6 +1,7 @@
+ #include "solver_compile_serialization.hpp"
+ #include "solver_policy_route.hpp"
+ #include "solver_solve_types.hpp"
++#include "json.hpp"
+ 
+ /*
+  * Compile an exact solver policy into the ordinary strategy graph format.
+@@ -3866,5 +3867,167 @@ std::string compile_policy_strategy_json(
+     return json;
+ }
+ 
++namespace {
++
++json::Value& return_member(json::Value& value, const std::string& name) {
++    for (auto& [key, member] : value.object)
++        if (key == name) return member;
++    gap("first-return graph is missing " + name);
++}
++
++void return_emit_json(std::string& out, const json::Value& value) {
++    switch (value.type) {
++    case json::Type::Null: out += "null"; break;
++    case json::Type::Bool: out += value.boolean ? "true" : "false"; break;
++    case json::Type::Number: {
++        if (!std::isfinite(value.number)) gap("non-finite first-return JSON");
++        char buffer[64];
++        std::snprintf(buffer, sizeof(buffer), "%.17g", value.number);
++        out += buffer;
++        break;
++    }
++    case json::Type::String: out += '"' + json_escape(value.string) + '"'; break;
++    case json::Type::Array:
++        out += '[';
++        for (std::size_t i = 0; i < value.array.size(); ++i) {
++            if (i) out += ',';
++            return_emit_json(out, value.array[i]);
++        }
++        out += ']';
++        break;
++    case json::Type::Object:
++        out += '{';
++        for (std::size_t i = 0; i < value.object.size(); ++i) {
++            if (i) out += ',';
++            out += '"' + json_escape(value.object[i].first) + '"';
++            out += ':';
++            return_emit_json(out, value.object[i].second);
++        }
++        out += '}';
++        break;
++    }
++}
++
++void return_namespace_graph(json::Value& graph, const std::string& prefix) {
++    std::set<std::string> nodes;
++    for (auto& node : return_member(graph, "nodes").array) {
++        auto& id = return_member(node, "id").string;
++        if (!nodes.insert(id).second) gap("duplicate first-return node");
++        id = prefix + id;
++        if (return_member(node, "kind").string == "start")
++            return_member(node, "kind").string = "router";
++        // These annotations belong to the old phase and do not price return
++        // interception. The independent evaluation owns the new cost.
++        std::erase_if(node.object, [](const auto& member) {
++            return member.first == "expected_cost";
++        });
++    }
++    std::set<std::string> edges;
++    for (auto& edge : return_member(graph, "edges").array) {
++        auto& id = return_member(edge, "id").string;
++        if (!edges.insert(id).second) gap("duplicate first-return edge");
++        id = prefix + id;
++        for (const char* endpoint : {"from", "to"}) {
++            auto& target = return_member(edge, endpoint).string;
++            if (!nodes.contains(target)) gap("unbound first-return edge");
++            target = prefix + target;
++        }
++    }
++    return_member(graph, "start_node_id").string =
++        prefix + return_member(graph, "start_node_id").string;
++}
++
++} // namespace
++
++std::string compile_first_return_strategy_json(
++        const std::string& repeated_strategy_json,
++        const std::string& old_strategy_json,
++        const std::string& initial_operation_node,
++        const pc_item_state& exact_anchor,
++        const FirstReturnCompilationMode mode,
++        const SolveOptions& limits) {
++    // This first implementation admits only the exact context represented by
++    // the ordinary empty-Rare compiler entry. More general items need an
++    // explicit predicate/phase correspondence, not a weaker identity check.
++    pc_item_state empty;
++    pc_item_clear(&empty);
++    empty.rarity = PC_RARITY_RARE;
++    if (exact_item_state_key(exact_anchor) != exact_item_state_key(empty))
++        gap("first-return entry is not the admitted empty Rare context");
++    const auto input_bytes = repeated_strategy_json.size() + old_strategy_json.size();
++    if (input_bytes > limits.max_strategy_json_bytes ||
++        input_bytes > limits.max_solver_owned_bytes / 128)
++        throw SolverResourceLimit("max_solver_owned_bytes", limits.max_solver_owned_bytes);
++    auto candidate = json::Parser(repeated_strategy_json.data(), repeated_strategy_json.size()).parse();
++    auto old = json::Parser(old_strategy_json.data(), old_strategy_json.size()).parse();
++    std::string candidate_base, old_base;
++    return_emit_json(candidate_base, candidate.at("base_state"));
++    return_emit_json(old_base, old.at("base_state"));
++    if (candidate_base != old_base) gap("first-return base identity mismatch");
++    const auto same_field = [&](const char* key) {
++        std::string a, b;
++        return_emit_json(a, candidate.at(key)); return_emit_json(b, old.at(key));
++        return a == b;
++    };
++    if (!same_field("solver_policy_scope") ||
++        !same_field("solver_imprint_programs_considered"))
++        gap("first-return controller scope mismatch");
++    const auto& original_nodes = candidate.at("nodes").array;
++    const auto operation = std::find_if(original_nodes.begin(), original_nodes.end(),
++        [&](const auto& node) { return node.at("id").string == initial_operation_node; });
++    if (operation == original_nodes.end() || operation->at("kind").string != "operation")
++        gap("first-return initial entry is not a compiled operation");
++    const auto router = std::find_if(original_nodes.begin(), original_nodes.end(),
++        [](const auto& node) { return node.at("id").string == "policy_route_root"; });
++    if (router == original_nodes.end() || router->at("kind").string != "router")
++        gap("first-return graph has no compiler decision router");
++    const auto initial_kind = candidate.at("start_node_id").string;
++    bool initial_route = false;
++    for (const auto& edge : candidate.at("edges").array) {
++        if (edge.at("from").string == initial_kind) {
++            if (initial_route || edge.at("to").string != "policy_route_root" ||
++                !edge.at("is_default").boolean)
++                gap("first-return graph has unsupported initial control");
++            initial_route = true;
++        }
++    }
++    if (!initial_route) gap("first-return graph has no initial route");
++    return_namespace_graph(candidate, "exc_");
++    return_namespace_graph(old, "old_");
++    auto& nodes = return_member(candidate, "nodes").array;
++    auto& edges = return_member(candidate, "edges").array;
++    const auto parse = [](const std::string& text) {
++        return json::Parser(text.data(), text.size()).parse();
++    };
++    nodes.push_back(parse("{\"id\":\"return_begin\",\"kind\":\"start\"}"));
++    std::string target;
++    if (mode == FirstReturnCompilationMode::OneShot) {
++        target = old.at("start_node_id").string;
++        for (auto& node : return_member(old, "nodes").array) nodes.push_back(std::move(node));
++        for (auto& edge : return_member(old, "edges").array) edges.push_back(std::move(edge));
++    } else {
++        target = "return_boundary";
++        nodes.push_back(parse("{\"id\":\"return_boundary\",\"kind\":\"terminal\",\"terminal\":\"stop\"}"));
++    }
++    // The trial has started when this boundary becomes reachable. Mandatory
++    // local retries never visit policy_route_root and cannot be cut short.
++    edges.push_back(parse("{\"id\":\"return_intercept\",\"from\":\"exc_policy_route_root\",\"to\":\"" +
++        target + "\",\"priority\":-1,\"condition\":" +
++        all_of({rarity_condition(PC_RARITY_RARE),
++            count_condition("prefix_count_range", 0), count_condition("suffix_count_range", 0)}) + "}"));
++    edges.push_back(parse("{\"id\":\"return_initial_trial\",\"from\":\"return_begin\",\"to\":\"exc_" +
++        json_escape(initial_operation_node) + "\",\"priority\":0,\"is_default\":true}"));
++    return_member(candidate, "start_node_id").string = "return_begin";
++    return_member(candidate, "name").string = mode == FirstReturnCompilationMode::OneShot
++        ? "One-shot paid return candidate" : "Private first-return cost and exit calculation";
++    if (nodes.size() > limits.max_compiled_nodes || edges.size() > limits.max_compiled_edges)
++        throw SolverResourceLimit("max_compiled_nodes", limits.max_compiled_nodes);
++    std::string output;
++    return_emit_json(output, candidate);
++    if (output.size() > limits.max_strategy_json_bytes)
++        throw SolverResourceLimit("max_strategy_json_bytes", limits.max_strategy_json_bytes);
++    return output;
++}
++
+ } // namespace solver
+ } // namespace poecraft
+diff --git a/engine/src/solver_compile_contracts.hpp b/engine/src/solver_compile_contracts.hpp
+index c9cceb2..cd45cb0 100644
+--- a/engine/src/solver_compile_contracts.hpp
++++ b/engine/src/solver_compile_contracts.hpp
+@@ -42,6 +42,24 @@ std::string compile_policy_strategy_json(
+         PolicyRouteDefaultMode::ProductSafeRestart,
+     bool compile_closed_coarse_certification_domain = false);
+ 
++enum class FirstReturnCompilationMode : std::uint8_t {
++    OneShot,
++    PrivateExcursion,
++};
++
++/* Candidate construction only. The ordinary repeated controller has already
++ * been compiled from complete native decisions. Preserve its exact initial
++ * operation, intercept subsequent empty-Rare decision returns, and either
++ * enter a separately namespaced immutable old controller or a private STOP
++ * boundary. The latter is never a publishable crafting controller. */
++std::string compile_first_return_strategy_json(
++    const std::string& repeated_strategy_json,
++    const std::string& old_strategy_json,
++    const std::string& initial_operation_node,
++    const pc_item_state& exact_anchor,
++    FirstReturnCompilationMode mode,
++    const SolveOptions& limits);
++
+ 
+ } // namespace solver
+ } // namespace poecraft
+diff --git a/engine/src/solver_policy_assertion_work.cpp b/engine/src/solver_policy_assertion_work.cpp
+index 6ec760a..5d774be 100644
+--- a/engine/src/solver_policy_assertion_work.cpp
++++ b/engine/src/solver_policy_assertion_work.cpp
+@@ -898,6 +898,12 @@ CompiledPolicyAssertion CompiledPolicyAssertionWork::take_result() {
+     return std::move(impl_->result);
+ }
+ 
++const StrategyEvalResult& CompiledPolicyAssertionWork::diagnostic_evaluation() {
++    if (impl_->evaluation_work != nullptr)
++        return impl_->evaluation_work->diagnostic_result();
++    return impl_->result.evaluation;
++}
++
+ std::uint64_t CompiledPolicyAssertionWork::retained_bytes() const {
+     return impl_->retained_bytes();
+ }
+diff --git a/engine/src/solver_policy_refinement.hpp b/engine/src/solver_policy_refinement.hpp
+index f7398bc..b13325c 100644
+--- a/engine/src/solver_policy_refinement.hpp
++++ b/engine/src/solver_policy_refinement.hpp
+@@ -888,6 +888,7 @@ class CompiledPolicyAssertionWork {
+ 
+     void step(std::uint32_t max_work_items);
+     CompiledPolicyAssertionProgress progress() const;
++    const StrategyEvalResult& diagnostic_evaluation();
+     CompiledPolicyAssertion take_result();
+     std::uint64_t retained_bytes() const;
+     bool try_reuse_completed_evaluation(
+diff --git a/engine/src/solver_solve_finish.cpp b/engine/src/solver_solve_finish.cpp
+index ff905bb..931caa8 100644
+--- a/engine/src/solver_solve_finish.cpp
++++ b/engine/src/solver_solve_finish.cpp
+@@ -3,6 +3,7 @@
+ #include "solver_sparse_policy.hpp"
+ 
+ #include <cstring>
++#include <cstdio>
+ 
+ namespace poecraft {
+ namespace solver {
+@@ -6140,6 +6141,75 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
+                                              : "verified_in_selected_output";
+         lineage.portfolio_reason = "independent native graph evaluation";
+     });
++    // Temporary M1 snapshot: observation only, after independent verification.
++    // Full source keys and graph travel together; source values are not tails.
++    {
++        std::string probe = "{\"first_return_m1\":true,\"verified_cost\":";
++        const auto number = [&](double value) {
++            char buffer[64];
++            std::snprintf(buffer, sizeof(buffer), "%.17g", value);
++            probe += buffer;
++        };
++        number(candidate.evaluated_policy_cost);
++        probe += ",\"root_state\":" + std::to_string(result.start_state);
++        probe += ",\"graph\":" + candidate.compiled_artifact.strategy_json;
++        const auto key = [&](const auto& values) {
++            probe += '[';
++            for (std::size_t i = 0; i < values.size(); ++i) {
++                if (i != 0) probe += ',';
++                append_json_string(probe, std::to_string(values[i]));
++            }
++            probe += ']';
++        };
++        probe += ",\"root_exact_item_key\":";
++        key(exact_item_state_key(result.exact_start_item));
++        probe += ",\"bindings\":[";
++        bool first = true;
++        for (const auto& binding : candidate.compiled_artifact.policy_decision_bindings) {
++            if (!first) probe += ',';
++            first = false;
++            probe += "{\"node\":";
++            append_json_string(probe, binding.compiled_node_id);
++            probe += ",\"state\":" + std::to_string(binding.coarse_state);
++            probe += ",\"operator\":" + std::to_string(binding.selected_operator);
++            probe += ",\"state_key\":"; key(binding.coarse_state_identity);
++            probe += ",\"operator_key\":"; key(binding.selected_operator_identity);
++            probe += '}';
++        }
++        probe += "],\"exalt_rows\":[";
++        first = true;
++        for (const auto row_id : state_row_indices(*transition_cache, result.start_state)) {
++            const auto& row = transition_cache->rows[row_id];
++            const auto action = priced_rows[row_id].operator_index;
++            if (action >= calc.operators().size()) continue;
++            const auto& op = calc.operators().at(action);
++            if (op.kind != PlannerOperatorKind::Primitive ||
++                calc.registry().actions.at(op.primitive_action).params.type != ActionType::Exalt) continue;
++            if (!first) probe += ',';
++            first = false;
++            probe += "{\"action\":"; append_json_string(probe, op.id);
++            probe += ",\"outcomes\":[";
++            for (std::uint32_t edge = 0; edge < row.transition_count; ++edge) {
++                if (edge != 0) probe += ',';
++                const auto offset = row.transition_offset + edge;
++                const auto state = transition_cache->successors[offset];
++                probe += "{\"state\":" + std::to_string(state) + ",\"probability\":";
++                number(transition_cache->probabilities[offset]);
++                probe += ",\"selected_domain\":";
++                probe += state < candidate.policy_reachable.size() && candidate.policy_reachable[state] ? "true" : "false";
++                probe += ",\"coarse_key\":"; key(exact_abstract_state_key(calc.state(state), 0));
++                probe += '}';
++            }
++            probe += "]}";
++        }
++        probe += "]}";
++        std::fprintf(stderr, "%s\n", probe.c_str());
++    }
++    auto returns = try_initial_return_bridges(proof);
++    while (!returns.resume()) {
++        co_await solve_detail::CooperativeCheckpoint{returns.retained_bytes()};
++    }
++    (void)returns.take_result();
+     co_return true;
+ }
+ 
+diff --git a/engine/src/solver_solve_types.hpp b/engine/src/solver_solve_types.hpp
+index d2cdac7..223a88b 100644
+--- a/engine/src/solver_solve_types.hpp
++++ b/engine/src/solver_solve_types.hpp
+@@ -2714,6 +2714,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
+     audit_verified_policy_alternative_shadow(
+         const BoundedPolicyIncumbent& incumbent);
+ 
++    solve_detail::CooperativeTask<bool> try_initial_return_bridges(
++        const SolveResult& frozen_policy);
++
+     void retire_certified_unmaterialized_obligations();
+ 
+     void restart_incremental_optimization();
+diff --git a/engine/tests/test_main.cpp b/engine/tests/test_main.cpp
+index 30d2711..31922f4 100644
+--- a/engine/tests/test_main.cpp
++++ b/engine/tests/test_main.cpp
+@@ -8,6 +8,12 @@ int g_failures = 0;
+ } // namespace pctest
+ 
+ int main(int argc, char** argv) {
++    if (argc > 1 && std::string(argv[1]) == "--solver-return-bridge-only") {
++        run_solver_return_bridge_tests();
++        std::printf("solver return bridge tests: %d checks, %d failures\n",
++                    pctest::g_checks, pctest::g_failures);
++        return pctest::g_failures == 0 ? 0 : 1;
++    }
+     if (argc > 1 && std::string(argv[1]) == "--solver-proof-handoff-only") {
+         run_solver_proof_handoff_tests();
+         std::printf("solver proof-handoff tests: %d checks, %d failures\n",
+diff --git a/engine/tests/test_solver_compile.cpp b/engine/tests/test_solver_compile.cpp
+index 8f17ce2..54c94a4 100644
+--- a/engine/tests/test_solver_compile.cpp
++++ b/engine/tests/test_solver_compile.cpp
+@@ -5,6 +5,7 @@
+ #include "../src/solver_policy_refinement.hpp"
+ #include "../src/solver_policy_route.hpp"
+ #include "../src/solver_solve_types.hpp"
++#include "../src/solver_compile_contracts.hpp"
+ #include "poecraft/bitset.h"
+ #include "poecraft/item_state.h"
+ 
+@@ -2886,6 +2887,149 @@ void run_solver_compile_tests(const char* artifact_dir) {
+     run_imprint_gate(artifact_dir);
+ }
+ 
++void run_solver_return_bridge_tests() {
++    auto session = make_compile_session();
++    auto registry = build_action_registry(*session);
++    const auto exalt = registry.index_by_id.at("exalt");
++    const auto annul = registry.index_by_id.at("annul");
++    GoalSpec goal;
++    GoalSlot slot;
++    slot.family_id = 100;
++    slot.min_tier = 1;
++    goal.slots.push_back(slot);
++    goal.rarity = PC_RARITY_RARE;
++    CalcContext calc(session, goal, registry, {exalt, annul});
++    pc_item_state anchor;
++    pc_item_clear(&anchor);
++    anchor.rarity = PC_RARITY_RARE;
++    SolveResult authored;
++    authored.start_state = calc.intern_item(anchor);
++    authored.has_exact_start_item = authored.policy_available = true;
++    authored.exact_start_item = anchor;
++    authored.policy_status = SolvePolicyStatus::BoundedFeasible;
++    std::vector<std::uint32_t> pending{authored.start_state};
++    std::set<std::uint32_t> seen{authored.start_state};
++    for (std::size_t cursor = 0; cursor < pending.size(); ++cursor) {
++        const auto state = pending[cursor];
++        authored.values.resize(calc.state_count(), kInfinity);
++        authored.policy.resize(calc.state_count());
++        authored.policy_reachable.resize(calc.state_count());
++        authored.goal_states.resize(calc.state_count());
++        authored.expanded.resize(calc.state_count());
++        authored.policy_reachable[state] = 1;
++        if (calc.is_goal_state(calc.state(state))) {
++            authored.values[state] = 0;
++            authored.goal_states[state] = 1;
++            continue;
++        }
++        const auto selected = state == authored.start_state ? exalt : annul;
++        authored.policy[state] = PolicyOperatorRef{selected};
++        authored.expanded[state] = 1;
++        const auto& row = calc.outcomes(state, selected, false);
++        PC_CHECK(row.supported && row.applicable);
++        double mass = 0;
++        for (const auto& outcome : row.entries) {
++            mass += outcome.probability;
++            if (selected == annul) {
++                PC_CHECK(calc.state(outcome.state).rarity == PC_RARITY_RARE);
++                PC_CHECK(outcome.state == authored.start_state);
++            }
++            if (seen.insert(outcome.state).second) pending.push_back(outcome.state);
++        }
++        PC_CHECK(std::abs(mass - 1) < 1e-12);
++    }
++    const std::unordered_map<std::string, double> prices{{"exalt", 2}, {"annul", 5}, {"base", 1}};
++    PolicyCompilationTelemetry compiled;
++    const auto repeat = compile_policy_strategy_json(calc, authored, "native return test", &compiled,
++        authored.options.max_strategy_json_bytes, nullptr, authored.options.max_solver_owned_bytes,
++        PolicyRouteDefaultMode::CertificationFailClosed);
++    std::string entry;
++    for (const auto& binding : compiled.policy_decision_bindings)
++        if (binding.coarse_state == authored.start_state) entry = binding.compiled_node_id;
++    PC_CHECK(!entry.empty());
++    const auto once = compile_first_return_strategy_json(repeat, repeat, entry, anchor,
++        FirstReturnCompilationMode::OneShot, authored.options);
++    const auto excursion = compile_first_return_strategy_json(repeat, repeat, entry, anchor,
++        FirstReturnCompilationMode::PrivateExcursion, authored.options);
++    const auto old_eval = evaluate_compiled(session, repeat, prices);
++    const auto once_eval = evaluate_compiled(session, once, prices);
++    const auto first_eval = evaluate_compiled(session, excursion, prices);
++    PC_CHECK(old_eval.converged && old_eval.cost_complete);
++    PC_CHECK(once_eval.converged && once_eval.cost_complete);
++    PC_CHECK(first_eval.converged && first_eval.cost_complete);
++    PC_CHECK(std::abs(old_eval.success_probability - 1) < 1e-12);
++    PC_CHECK(std::abs(once_eval.success_probability - 1) < 1e-12);
++    PC_CHECK(first_eval.stop_probability > 0 && first_eval.stop_probability < 1);
++    PC_CHECK(std::abs(first_eval.success_probability + first_eval.stop_probability - 1) < 1e-12);
++    PC_CHECK(first_eval.failure_probability == 0 && first_eval.unresolved_probability == 0);
++    PC_CHECK(std::abs(once_eval.total_expected_cost - first_eval.total_expected_cost -
++        first_eval.stop_probability * old_eval.total_expected_cost) < 1e-9);
++    PC_CHECK(std::abs(old_eval.total_expected_cost - first_eval.total_expected_cost /
++        first_eval.success_probability) < 1e-9);
++    PC_CHECK(first_eval.total_expected_cost > 2); // paid failed rolls; no time-zero return
++    auto wrong = anchor;
++    wrong.rarity = PC_RARITY_NORMAL;
++    bool refused = false;
++    try { (void)compile_first_return_strategy_json(repeat, repeat, entry, wrong,
++        FirstReturnCompilationMode::OneShot, authored.options); }
++    catch (const std::exception&) { refused = true; }
++    PC_CHECK(refused);
++    auto tiny = authored.options;
++    tiny.max_solver_owned_bytes = 128;
++    refused = false;
++    try { (void)compile_first_return_strategy_json(repeat, repeat, entry, anchor,
++        FirstReturnCompilationMode::OneShot, tiny); }
++    catch (const SolverResourceLimit&) { refused = true; }
++    PC_CHECK(refused);
++    // Actual removal law retains both a clean goal and loss of the target.
++    pc_item_state clean = anchor;
++    PC_CHECK(pc_item_add_mod(&clean, PC_SIDE_PREFIX, 0, session->primary_group[0],
++        0, nullptr) == PC_RESULT_OK);
++    PC_CHECK(calc.is_goal_state(calc.state(calc.intern_item(clean))));
++    auto dirty = clean;
++    PC_CHECK(pc_item_add_mod(&dirty, PC_SIDE_SUFFIX, 5, session->primary_group[5],
++        0, nullptr) == PC_RESULT_OK);
++    const auto dirty_id = calc.intern_item(dirty);
++    PC_CHECK(!calc.is_goal_state(calc.state(dirty_id)));
++    const auto removal = calc.outcomes(dirty_id, annul, false);
++    double clean_mass = 0, lost_mass = 0;
++    for (const auto& edge : removal.entries) {
++        PC_CHECK(calc.state(edge.state).rarity == PC_RARITY_RARE);
++        PC_CHECK(calc.state(edge.state).prefix_count + calc.state(edge.state).suffix_count == 1);
++        if (calc.is_goal_state(calc.state(edge.state))) clean_mass += edge.probability;
++        else {
++            lost_mass += edge.probability;
++            const auto next = calc.outcomes(edge.state, annul, false);
++            PC_CHECK(next.entries.size() == 1);
++            PC_CHECK(next.entries.front().state == authored.start_state);
++            PC_CHECK(next.entries.front().probability == 1);
++        }
++    }
++    PC_CHECK(clean_mass == 0.5 && lost_mass == 0.5);
++    auto protected_item = dirty;
++    protected_item.prefixes[0].flags = PC_MOD_SLOT_FRACTURED;
++    const auto protected_id = calc.intern_item(protected_item);
++    PC_CHECK((calc.state(protected_id).flags & kFlagFractured) != 0);
++    const auto protected_row = calc.outcomes(protected_id, annul, false);
++    PC_CHECK(protected_row.entries.size() == 1);
++    PC_CHECK((calc.state(protected_row.entries.front().state).flags & kFlagFractured) != 0);
++    PC_CHECK(protected_row.entries.front().state != authored.start_state);
++
++    auto stale = repeat;
++    const auto scope_at = stale.find("\"solver_policy_scope\":\"unrestricted\"");
++    PC_CHECK(scope_at != std::string::npos);
++    stale.replace(scope_at, std::string("\"solver_policy_scope\":\"unrestricted\"").size(),
++        "\"solver_policy_scope\":\"stale\"");
++    refused = false;
++    try { (void)compile_first_return_strategy_json(repeat, stale, entry, anchor,
++        FirstReturnCompilationMode::OneShot, authored.options); }
++    catch (const std::exception&) { refused = true; }
++    PC_CHECK(refused);
++    std::printf("native first-return: old=%.12g once=%.12g r=%.12g q=%.12g\n",
++        old_eval.total_expected_cost, once_eval.total_expected_cost,
++        first_eval.total_expected_cost, first_eval.stop_probability);
++}
++
+ void run_solver_compile_metadata_tests() {
+     run_policy_description_test();
+ }
+diff --git a/engine/tests/tests.hpp b/engine/tests/tests.hpp
+index 1f4ecda..6ba5637 100644
+--- a/engine/tests/tests.hpp
++++ b/engine/tests/tests.hpp
+@@ -49,6 +49,7 @@ void run_solver_bounded_finish_tests();
+ void run_solver_proof_handoff_tests();
+ void run_solver_compile_tests(const char* artifact_dir);
+ void run_solver_compile_metadata_tests();
++void run_solver_return_bridge_tests();
+ void run_solver_imprint_tests(const char* artifact_dir);
+ void run_solver_eval_tests(const char* artifact_dir);
+ void run_solver_api_tests(const char* artifact_dir);

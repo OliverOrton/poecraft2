@@ -1,0 +1,93 @@
+{
+  "purpose": "Fresh native execution qualification of the changed Ring controller; sampling is not cost or properness authority.",
+  "case": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb06-cross-base-product8-long240.json",
+  "strategy_sha256": "585a3a04f53e9d6d88fbe1245d33fbcd0b20f6544630502f1dfa2758664fd454",
+  "native_dll_sha256": "586246b942a9103fc1da1f8f6b2121af18283921cac1c90cd52e2e57731cf58c",
+  "options": {
+    "target_runs": 1000,
+    "seed": 2026091101,
+    "max_actions_per_run": 100000,
+    "max_graph_steps_per_run": 4000000,
+    "max_cost_per_run": 0.0,
+    "retained_trace_count": 0,
+    "max_trace_entries": 512,
+    "retained_success_count": 5,
+    "retained_failure_count": 5
+  },
+  "summary": {
+    "completed_runs": 1000,
+    "success_count": 978,
+    "failure_count": 22,
+    "stop_count": 0,
+    "total_actions": 26190276,
+    "action_limit_count": 22,
+    "cost_limit_count": 0,
+    "step_limit_count": 0,
+    "no_matching_edge_count": 0,
+    "action_not_applied_count": 0,
+    "missing_price_run_count": 0,
+    "costed_action_count": 26190276,
+    "missing_price_action_count": 0,
+    "known_total_cost": 150062527.80002615,
+    "cost_status": "complete",
+    "seed": 2026091101,
+    "target_runs": 1000
+  },
+  "action_distribution": [
+    {
+      "node_id": "s0",
+      "action_type": 6,
+      "count": 13096117
+    },
+    {
+      "node_id": "s1",
+      "action_type": 7,
+      "count": 13094159
+    }
+  ],
+  "failure_summaries": [
+    {
+      "failure_reason": 2,
+      "node_id": "s1",
+      "detail": "action limit reached",
+      "count": 1
+    },
+    {
+      "failure_reason": 2,
+      "node_id": "s0",
+      "detail": "action limit reached",
+      "count": 21
+    }
+  ],
+  "missing_prices": {},
+  "sampled_accounting": {
+    "evidence_source": "simulator_sample",
+    "sample_count": 1000,
+    "seed": 2026091101,
+    "actions": [
+      {
+        "action_id": "annul",
+        "count": 13094159,
+        "average_per_invocation": 13094.159
+      },
+      {
+        "action_id": "exalt",
+        "count": 13096117,
+        "average_per_invocation": 13096.117
+      }
+    ],
+    "materials": [
+      {
+        "price_key": "annul",
+        "count": 13094159,
+        "average_per_invocation": 13094.159
+      },
+      {
+        "price_key": "exalt",
+        "count": 13096117,
+        "average_per_invocation": 13096.117
+      }
+    ]
+  },
+  "wall_ms": 23758.009499986656
+}

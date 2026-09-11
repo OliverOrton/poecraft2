@@ -1,0 +1,217 @@
+--- a/engine/src/solver_solve_return_bridge.cpp
++++ b/engine/src/solver_solve_return_bridge.cpp
+@@ -2,6 +2,8 @@
+ #include "solver_compile_contracts.hpp"
+ #include "solver_policy_refinement.hpp"
+ #include "solver_policy_refinement_helpers.hpp"
++
++#include <cstdio>
+ 
+ namespace poecraft::solver {
+ 
+@@ -49,6 +51,12 @@
+         return true;
+     default: return false;
+     }
++}
++
++std::string return_number(const double value) {
++    if (!std::isfinite(value)) return "null";
++    char buffer[64]; std::snprintf(buffer, sizeof(buffer), "%.17g", value);
++    return buffer;
+ }
+ 
+ solve_detail::CooperativeTask<StrategyEvalResult> evaluate_return_graph(
+@@ -155,6 +163,20 @@
+     {
+         constexpr ActionType trial_type = ActionType::Exalt;
+         if (requested_bounded_finish) co_return false;
++        const auto started = std::chrono::steady_clock::now();
++        const char* trial_name = "exalt";
++        std::string refusal;
++        std::uint64_t bridge_rows = 0, bridge_transitions = 0;
++        std::uint64_t evaluator_work = 0, evaluator_peak = 0;
++        std::uint64_t scratch_peak = 0;
++        const auto native_work_before = calc.telemetry().reforge_logical_work_v1;
++        const auto states_before = calc.state_count();
++        const auto checkpoint = [&](const std::uint64_t bytes) {
++            scratch_peak = std::max(scratch_peak, bytes);
++            return solve_detail::CooperativeCheckpoint{bytes};
++        };
++        double one_cost = kInfinity, r = kInfinity, q = kInfinity, repeated_cost = kInfinity;
++        double goal_probability = kInfinity;
+         try {
+             std::uint32_t trial = kNoId;
+             for (const auto row_id : state_row_indices(*transition_cache, result.start_state)) {
+@@ -246,7 +268,7 @@
+                 while (!calc.advance_outcomes(state, op.primitive_action,
+                         options.goal_progress_gated_reforges, law, 1)) {
+                     (void)available_limits(calc.outcome_cursor_bytes());
+-                    co_await solve_detail::CooperativeCheckpoint{scratch() + calc.outcome_cursor_bytes()};
++                    co_await checkpoint(scratch() + calc.outcome_cursor_bytes());
+                 }
+                 if (!law || !law->supported || !law->applicable ||
+                     !law->choice_groups.empty() || !law->choice_options.empty())
+@@ -273,6 +295,7 @@
+                             to.prefix_count + to.suffix_count + 1 != from.prefix_count + from.suffix_count ||
+                             to.goal_progress_retry_basin != 0)
+                             throw std::runtime_error("Annul row does not strictly remove one affix at the same rarity");
++                        ++bridge_transitions;
+                     }
+                     if (!proposal.policy_reachable[exit.state]) {
+                         proposal.policy_reachable[exit.state] = 1;
+@@ -281,8 +304,9 @@
+                 }
+                 if (std::abs(mass - 1.0) > 1e-12)
+                     throw std::runtime_error("incomplete native selected probability mass");
++                if (bridge) ++bridge_rows;
+                 (void)available_limits();
+-                co_await solve_detail::CooperativeCheckpoint{scratch()};
++                co_await checkpoint(scratch());
+             }
+ 
+             // Request only the exact root and one actual uncovered item needed
+@@ -301,8 +325,10 @@
+             auto entry_work = evaluate_return_graph(calc, prices, old_graph,
+                 available_limits(), std::move(requests), std::move(root_decision));
+             while (!entry_work.resume())
+-                co_await solve_detail::CooperativeCheckpoint{scratch() + entry_work.retained_bytes()};
++                co_await checkpoint(scratch() + entry_work.retained_bytes());
+             auto entry_eval = entry_work.take_result();
++            evaluator_peak = std::max(evaluator_peak, entry_eval.peak_owned_bytes_estimate);
++            evaluator_work += entry_eval.reforge_logical_work_v1;
+             if (entry_eval.continuation_upper.members.empty())
+                 throw std::runtime_error("exact anchor continuation is absent");
+             const auto& root_member = entry_eval.continuation_upper.members.front();
+@@ -314,6 +340,49 @@
+                 if (entry.exact_item_identity == exact_item_state_key(frozen_policy.exact_start_item))
+                     root_routable = root_routable || entry.globally_routable();
+             if (!root_routable) throw std::runtime_error("exact anchor operation is not globally routable");
++            // Temporary campaign evidence; retained graphs use existing native
++            // owners and do not consume this serialization.
++            {
++                std::string witness = "{\"return_bridge_witness\":true,\"members\":[";
++                const auto key = [&](const auto& words) {
++                    witness += '[';
++                    for (std::size_t i = 0; i < words.size(); ++i) {
++                        if (i) witness += ',';
++                        append_json_string(witness, std::to_string(words[i]));
++                    }
++                    witness += ']';
++                };
++                bool first = true;
++                for (const auto& member : entry_eval.continuation_upper.members) {
++                    if (!first) witness += ',';
++                    first = false;
++                    witness += "{\"request\":" + std::to_string(member.represented_state_identity) + ",\"item_key\":";
++                    key(exact_item_state_key(member.item));
++                    witness += ",\"entry_key\":"; key(member.exact_entry_identity);
++                    witness += ",\"modifiers\":[";
++                    bool first_mod = true;
++                    for (const auto side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
++                        const auto count = side == PC_SIDE_PREFIX ? member.item.prefix_count : member.item.suffix_count;
++                        const auto* slots = side == PC_SIDE_PREFIX ? member.item.prefixes : member.item.suffixes;
++                        for (std::uint8_t i = 0; i < count; ++i) {
++                            if (!first_mod) witness += ',';
++                            first_mod = false;
++                            const auto global = calc.session().global_index.at(slots[i].mod_id);
++                            const auto& data = *calc.session().data;
++                            witness += "{\"side\":" + std::to_string(side) + ",\"mod_key\":";
++                            append_json_string(witness, data.strings.at(data.mod_key_sid.at(global)));
++                            witness += '}';
++                        }
++                    }
++                    witness += "]}";
++                }
++                witness += "]}";
++                std::fprintf(stderr, "%s\n", witness.c_str());
++            }
++            std::fprintf(stderr, "{\"return_bridge_entry\":\"%s\",\"old_cost\":%.17g,\"root_routable\":true,\"actual_missing_item_status\":\"%s\",\"actual_missing_item_cost\":%s}\n",
++                trial_name, old_cost, entry_eval.continuation_upper.members.size() > 1 ?
++                    strategy_continuation_entry_status_name(entry_eval.continuation_upper.members[1].status) : "not_requested",
++                entry_eval.continuation_upper.members.size() > 1 ? return_number(entry_eval.continuation_upper.members[1].exact_continuation_upper).c_str() : "null");
+             entry_eval = {};
+ 
+             PolicyCompilationTelemetry compilation;
+@@ -332,11 +401,13 @@
+             auto one_work = evaluate_return_graph(calc, prices, one,
+                 available_limits(repeated.capacity() + one.capacity()));
+             while (!one_work.resume())
+-                co_await solve_detail::CooperativeCheckpoint{scratch() + repeated.capacity() + one.capacity() + one_work.retained_bytes()};
++                co_await checkpoint(scratch() + repeated.capacity() + one.capacity() + one_work.retained_bytes());
+             auto one_eval = one_work.take_result();
++            evaluator_peak = std::max(evaluator_peak, one_eval.peak_owned_bytes_estimate);
++            evaluator_work += one_eval.reforge_logical_work_v1;
+             if (!complete_return_evaluation(one_eval, false))
+                 throw std::runtime_error("one-shot native controller is not complete and proper");
+-            const double one_cost = one_eval.total_expected_cost;
++            one_cost = one_eval.total_expected_cost;
+             one_eval = {};
+             std::string excursion = compile_first_return_strategy_json(repeated, old_graph,
+                 initial_operation, frozen_policy.exact_start_item, FirstReturnCompilationMode::PrivateExcursion,
+@@ -344,15 +415,18 @@
+             auto excursion_work = evaluate_return_graph(calc, prices, excursion,
+                 available_limits(repeated.capacity() + one.capacity() + excursion.capacity()));
+             while (!excursion_work.resume())
+-                co_await solve_detail::CooperativeCheckpoint{scratch() + repeated.capacity() + one.capacity() + excursion.capacity() + excursion_work.retained_bytes()};
++                co_await checkpoint(scratch() + repeated.capacity() + one.capacity() + excursion.capacity() + excursion_work.retained_bytes());
+             auto excursion_eval = excursion_work.take_result();
++            evaluator_peak = std::max(evaluator_peak, excursion_eval.peak_owned_bytes_estimate);
++            evaluator_work += excursion_eval.reforge_logical_work_v1;
+             if (!complete_return_evaluation(excursion_eval, true))
+                 throw std::runtime_error("first-return excursion does not have a complete transient law");
+-            const double r = excursion_eval.total_expected_cost;
+-            const double q = excursion_eval.stop_probability;
++            r = excursion_eval.total_expected_cost;
++            q = excursion_eval.stop_probability;
+             if (std::abs(one_cost - (r + q * old_cost)) > 1e-9 * std::max(1.0, one_cost))
+                 throw std::runtime_error("one-shot and native first-return law disagree");
+             const double escape = excursion_eval.success_probability;
++            goal_probability = escape;
+             excursion_eval = {};
+             if (!(q < 1.0) || !(escape > 0.0) || !std::isfinite(r / escape))
+                 throw std::runtime_error("repetition has no certified goal escape");
+@@ -376,14 +450,18 @@
+                     used.reforge_logical_work_v1 - charged_logical);
+                 charged_active = used.reforge_work;
+                 charged_logical = used.reforge_logical_work_v1;
+-                co_await solve_detail::CooperativeCheckpoint{scratch() + repeated.capacity() + one.capacity() + excursion.capacity() + work.retained_bytes()};
++                co_await checkpoint(scratch() + repeated.capacity() + one.capacity() + excursion.capacity() + work.retained_bytes());
+             }
+             auto checked = work.take_result();
++            evaluator_peak = std::max(evaluator_peak, checked.evaluation.peak_owned_bytes_estimate);
++            evaluator_work += checked.evaluation.reforge_logical_work_v1;
+             if (!checked.executable || !checked.proper || !checked.zero_off_policy ||
+                 !checked.cost_reconciled || !checked.evaluation.cost_complete)
+                 throw std::runtime_error("repeated emitted controller refused: " + checked.failure_reason);
+-            const double repeated_cost = checked.exact_cost;
++            repeated_cost = checked.exact_cost;
+             if (!(repeated_cost < old_cost)) throw std::runtime_error("independent repeated controller does not improve");
++            std::fprintf(stderr, "{\"return_bridge_graphs\":\"%s\",\"one_shot\":%s,\"excursion\":%s,\"repeated\":%s}\n",
++                trial_name, one.c_str(), excursion.c_str(), checked.strategy_json.c_str());
+             BoundedPolicyIncumbent improved = base;
+             improved.kind = "certified_return_bridge";
+             improved.values = proposal.values;
+@@ -412,9 +490,21 @@
+             if (!retain_certified_incumbent(improved, scratch()))
+                 throw std::runtime_error("verified return graph did not fit the existing portfolio");
+             retained_any = true;
+-        } catch (const std::exception&) {
++        } catch (const std::exception& error) {
++            refusal = error.what();
+             calc.cancel_outcomes();
+         }
++        std::string escaped;
++        append_json_string(escaped, refusal);
++        std::fprintf(stderr, "{\"return_bridge_resources\":\"%s\",\"checkpoint_peak_bytes\":%llu,\"logical_reforge_debit\":%llu,\"new_coarse_states\":%u,\"goal_probability\":%s}\n",
++            trial_name, static_cast<unsigned long long>(scratch_peak),
++            static_cast<unsigned long long>(calc.telemetry().reforge_logical_work_v1 - native_work_before),
++            calc.state_count() - states_before, return_number(goal_probability).c_str());
++        const auto elapsed = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - started).count();
++        std::fprintf(stderr, "{\"return_bridge_result\":\"%s\",\"old_cost\":%.17g,\"bridge_rows\":%llu,\"bridge_transitions\":%llu,\"one_shot\":%s,\"r\":%s,\"q\":%s,\"repeated\":%s,\"evaluator_logical_reforge_work\":%llu,\"evaluator_peak_bytes\":%llu,\"elapsed_ms\":%.9g,\"refusal\":%s}\n",
++            trial_name, old_cost, static_cast<unsigned long long>(bridge_rows), static_cast<unsigned long long>(bridge_transitions),
++            return_number(one_cost).c_str(), return_number(r).c_str(), return_number(q).c_str(), return_number(repeated_cost).c_str(),
++            static_cast<unsigned long long>(evaluator_work), static_cast<unsigned long long>(evaluator_peak), elapsed, escaped.c_str());
+     }
+     co_return retained_any;
+ }

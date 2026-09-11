@@ -51,6 +51,9 @@ namespace refinement { struct CompiledPolicyAssertion; }
 
 namespace solve_detail {
 
+// Narrow paid-removal domain. This is eligibility, not an upper certificate.
+bool ordinary_return_bridge_item(const SessionImpl& session, const pc_item_state& item);
+
 constexpr double kInfinity = std::numeric_limits<double>::infinity();
 /* Finite upper-bound initialization (the restart bound makes every
  * goal-connected value finite; genuinely unreachable states stay here).
@@ -2713,6 +2716,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     solve_detail::CooperativeTask<bool>
     audit_verified_policy_alternative_shadow(
         const BoundedPolicyIncumbent& incumbent);
+
+    solve_detail::CooperativeTask<bool> try_initial_return_bridges(
+        const SolveResult& frozen_policy);
 
     void retire_certified_unmaterialized_obligations();
 

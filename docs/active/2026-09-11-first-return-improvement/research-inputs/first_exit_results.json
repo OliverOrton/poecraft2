@@ -1,0 +1,72 @@
+{
+  "classification": "exact synthetic controller checks; no native engine, PoE simulation or performance measurement",
+  "reviewed_source": "84f02ee3b603fe3879ac2c4a885d1b81ba67772f",
+  "named_checks": {
+    "complete_excursion_mass": true,
+    "one_shot_matches_full_controller": true,
+    "repeated_matches_full_controller": true,
+    "improvement_amplification": true,
+    "one_shot_and_permanent_are_different": true,
+    "small_advantage_large_total_gain": true,
+    "finite_attempt_formula": true,
+    "small_gain_not_small_effect": true,
+    "one_shot_can_be_proper_when_repetition_is_not": true,
+    "repetition_without_goal_escape_is_refused": true,
+    "zero_cost_equation_is_not_properness": true,
+    "rare_unknown_tail_is_not_success": true,
+    "rare_trap_is_not_removed": true,
+    "incomplete_mass_refused": true,
+    "unreachable_bad_component_does_not_poison_entry": true,
+    "tiny_escape_requires_large_cost": true,
+    "observed_decisions_preserved": true,
+    "dirty_full_goal_is_not_terminal": true,
+    "deletion_exact_value": true,
+    "deletion_orders_and_dp_match": true,
+    "all_goal_loss_exits_retained": true,
+    "subset_bound_not_order_tree": true,
+    "real_cleanup_not_free_reset": true,
+    "uncertified_empty_domain_refused": true,
+    "one_tail_budget": true,
+    "rare_mass_can_dominate_cost": true,
+    "nonimproving_bridge_does_not_retire_native_action": true,
+    "candidate_subset_not_lower_authority": true,
+    "randomized_first_exit_full_models_agree": true,
+    "randomized_deletion_permutation_oracles_agree": true
+  },
+  "named_check_count": 30,
+  "random_seed": 20260911,
+  "transient_models_compared_with_full_controllers": 256,
+  "deletion_models_compared_with_full_orders": 48,
+  "deletion_orders_enumerated": 11786,
+  "example": {
+    "old_cost": "10",
+    "excursion_cost": "2",
+    "return_probability": "1/2",
+    "one_shot_cost": "7",
+    "repeated_cost": "4"
+  },
+  "amplification_example": {
+    "old_cost": "100",
+    "excursion_cost": "1/2",
+    "return_probability": "99/100",
+    "one_shot_cost": "199/2",
+    "repeated_cost": "50"
+  },
+  "deletion_example": {
+    "internal_expected_cost": "2",
+    "composed_cost": "131/3",
+    "visited_subsets": 8,
+    "exit_mass": {
+      "empty": "1/3",
+      "B": "1/6",
+      "A": "1/6",
+      "A,B": "1/3"
+    }
+  },
+  "limits": [
+    "The report supplies the general argument; finite examples are not a machine-checked theorem.",
+    "Deletion examples use a synthetic uniform law; current native legality, rarity, locks, fractures, control and routing still need tests.",
+    "A policy-specific first-exit value supplies an upper candidate, never a native lower or all-action optimality.",
+    "No improvement of actual Ring/Amulet controllers or resource use is established here."
+  ]
+}

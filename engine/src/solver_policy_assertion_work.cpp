@@ -898,6 +898,12 @@ CompiledPolicyAssertion CompiledPolicyAssertionWork::take_result() {
     return std::move(impl_->result);
 }
 
+const StrategyEvalResult& CompiledPolicyAssertionWork::diagnostic_evaluation() {
+    if (impl_->evaluation_work != nullptr)
+        return impl_->evaluation_work->diagnostic_result();
+    return impl_->result.evaluation;
+}
+
 std::uint64_t CompiledPolicyAssertionWork::retained_bytes() const {
     return impl_->retained_bytes();
 }

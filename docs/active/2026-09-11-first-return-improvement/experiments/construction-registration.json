@@ -1,0 +1,16 @@
+{
+  "frozen_at_utc": "2026-09-11T17:08:24.058623+00:00",
+  "reviewed_main": "84f02ee3b603fe3879ac2c4a885d1b81ba67772f",
+  "profiles": "../../2026-09-11-post-incumbent-cost/implementation-profile.json",
+  "variants": [
+    "complete native Exalt excursion with paid Annul on uncovered ordinary Rare fringe",
+    "completed admitted gated Chaos excursion with the same paid return construction"
+  ],
+  "base_controller": "immutable first independently evaluated controller discovered by this ordinary run",
+  "promotion": "independent one-shot, complete private first-return law, then independent repeated graph; compare against unchanged base",
+  "limits": "two variants, unchanged caps/deadlines, no subagents/restart/push; native 4 GiB only",
+  "targets": {
+    "Ring": 163810.51860000216,
+    "Amulet": 32172343.196446717
+  }
+}

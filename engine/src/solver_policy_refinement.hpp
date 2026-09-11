@@ -888,6 +888,7 @@ class CompiledPolicyAssertionWork {
 
     void step(std::uint32_t max_work_items);
     CompiledPolicyAssertionProgress progress() const;
+    const StrategyEvalResult& diagnostic_evaluation();
     CompiledPolicyAssertion take_result();
     std::uint64_t retained_bytes() const;
     bool try_reuse_completed_evaluation(

@@ -1,0 +1,115 @@
+Implement Certified Return Bridges and First-Return Policy Improvement v1
+in OliverOrton/poecraft2 using this attached self-contained package.
+
+Reviewed remote main:
+84f02ee3b603fe3879ac2c4a885d1b81ba67772f
+
+You may be a fresh session. This message selects the successor task; no previous
+thread, live Goal state or inaccessible package is required. Reconcile actual
+local state first. Preserve newer/unrelated work. One sequential session, no
+subagents, inherited deadline, automatic restart or push. Protect root path 0
+without inspecting/staging/changing it.
+
+Read implementation_plan.md and research_report.md. Do not stop after writing
+another plan, acknowledging M0, adding a diagnostic callback or passing a toy.
+Continue through the bounded native tests, implementation and actual result gates.
+A genuine falsification can stop the hypothesis; intermediate work is not success.
+
+M0 is done. First-policy recovery and ordinary upper improvement are done.
+Keep the no-incumbent scheduler guard, complete selected-continuation service,
+first-policy independent evaluation, upper-domain masking and bounded finish.
+Keep both recovered Ring/Amulet artifacts available. T1 queue deduplication
+regressed Conquest and T2 cleanup-order preference missed both cost targets;
+both are removed. Do not reinstall either unchanged.
+
+The next hypothesis is that a small complete native RETURN BRIDGE can turn
+otherwise unknown alternative tails into executable continuation values without
+constructing another unrestricted continuation for every tail.
+
+Start from the recorded Ring root Exalt with one uncovered successor. Recover
+its exact current controller/entry/kernel identity; its historical ~0.0061 mass
+must not be mixed with a different final controller. Use existing native
+continuation-entry and globally-routable policy certificates, never saved lower
+values or node expected_cost annotations. The single tail is an integration
+witness, not an assertion that Exalt is best or will attain the material target.
+
+A first bridge to test is native Annul until a true goal or certified incumbent
+entry, for an eligible unlocked, nonfractured, ordinary Rare item with compatible
+persistent context and a certified identical empty-Rare fallback. Each eligible
+removal reduces affix count; there are at most 2^n deletion subsets per concrete
+n-affix item. Verify the actual registry/exact-calculator/application/route
+conditions. Keep every destructive outcome and paid removal. This is a chosen
+upper-side controller, NOT a lower or a universal state quotient.
+
+Do not turn a compressed zero-progress reforge carrier into a physical item or
+allow forbidden salvage. Broader reforge trials must preserve their existing
+admitted zero-progress retry law and mandatory operations before a real decision
+exit. Unsupported flags, fractures, locks, offers, checkpoints or scope refuse
+unless existing native evidence supplies the missing contract.
+
+First build and independently evaluate the one-shot controller:
+Trial -> complete bridge -> frozen old policy, with explicit phase ownership.
+Then, where useful, evaluate the complete excursion until the first exact return
+to the trial entry or true goal. With expected excursion cost r and return
+probability q:
+    Q_once = r + q * J_old
+    J_repeat = r / (1-q), only for a complete transient excursion with q < 1
+    J_old - J_repeat = (J_old - Q_once)/(1-q)
+A small one-shot gain can become material after valid repetition. Do not require
+the one-shot itself to clear the 20% target. Conversely, repetition is a NEW
+controller: q=1 or missing trap mass cannot be waved away. Final native compiled
+policy evaluation remains the authority. A private return boundary is not a
+successful craft terminal.
+
+Reuse existing selected-kernel/continuation/SCC/compiler/portfolio owners, and
+an existing compatible renewal witness where possible. No new generic planner,
+permanent basin library, external solver backend, opcode, unrestricted scope,
+or unbounded copied chain of prior graphs. Keep one accounted post-incumbent
+attempt and preserve ordinary discovery and cancellation.
+
+Continue from the small witness to a materially useful current-run candidate on
+both primaries. Include a relevant admitted reforge/program when its complete
+scoped return route is available; do not equate completed kernels with complete
+candidate exploration. Amulet's expensive zero-goal Annul region is a lead, not
+permission to change the control restriction. Estimates may rank work, not
+supply public lower/upper values or retire an action permanently.
+
+Use existing frozen implementation profiles:
+- Ring cb06-post-incumbent-memory4g-long240:
+  4 GiB solver / 50M reforge work, reference U=204763.14825000268,
+  material target U<=163810.51860000216.
+- Amulet cb08-post-incumbent-work100m-long240:
+  1 GiB / 100M work, reference U=40215428.995558396,
+  material target U<=32172343.196446717.
+Both keep 240/300/315-second finish/native/host limits, step eight, retention
+reuse, proof handoff off, Allflame/base-one, and other native/evaluator caps.
+Recheck safe host admission. Original 1-GiB/50M profiles remain preservation
+controls. No new capacity sweep or silently raised caps.
+
+An offline frozen-strategy prototype is research evidence; ordinary success
+requires an incumbent generated during that run and all preparation/evaluation
+inside its original resources. The full goal is both material targets or new
+exact capability with cross-base preservation, not another lookup or finite Q.
+Smaller/one-family gains must be labelled accurately. Two distinct failed
+construction variants without a new premise end the branch; do not expand it
+into arbitrary search or a third ordering tweak.
+
+Qualify original-profile Conquest-five early after a retained candidate, plus
+Ring/Amulet, exact controls and the existing small core/exposed report at final
+integration. Wand/Shield are exposed controls now. Keep CB09 no-policy and CB05
+stop-contract issues visible. Qualify the actual affected WASM delivery/finish/
+abandon path; a 4-GiB native outcome is not a changed browser default.
+
+Use focused tests and decisive comparisons. No routine Simulator, full census,
+soak or repeated broad suites. If compiled behavior genuinely needs current
+sampling qualification, use the current repository rule, not historical counts.
+
+Integrate the first-exit/first-return arguments and counterexamples into the
+existing mathematical owners and map actual native correspondence. Do not assign
+accepted claims automatically. Use one living record and normal completion reply.
+Correct stale HANDOFF sequencing/push prose without rewriting historical evidence.
+
+Report actual policy/entry identities, bridge cost/law, r/q and one-shot/repeated
+values, independent whole-controller evaluation, all-in resources, primary and
+preservation results, retained/rejected changes, checks unrun/failed/passed,
+local commit status and the single next unresolved question.
