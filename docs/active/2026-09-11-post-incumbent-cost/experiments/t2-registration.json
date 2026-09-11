@@ -1,0 +1,17 @@
+{
+  "treatment": "T2 compatible incumbent decisions and complete native removal tails after a root proposal",
+  "registered_at_utc": "2026-09-11T04:39:55.542509+00:00",
+  "source_base": "edd8ec25f40b11c8ba4f4aaf157db9405b593ed2",
+  "includes_T1": true,
+  "executable": "out/post-incumbent-cost/t2-incumbent-tails.exe",
+  "executable_sha256": "4f4286799047bda9ff4c7387af5d9de302b65fdb5ae357643866eb8408bca37c",
+  "patch_sha256": "9732ddbf68cf4b54692c23a4c3ebbedc098050a5a2cd8712034f028550807498",
+  "profile": "../implementation-profile.json",
+  "caps_changed": false,
+  "premise": "M1 Ring incumbent entry 2510 selects Annul while joint seed selects Chaos; every reached tail was allowed to start a new speculative reroll even when the incumbent decision was available. Unknown-tail complete same-rarity removal rows can provide finite cleanup toward compatible entries.",
+  "scope": "Existing joint-policy construction only, post-incumbent, non-root; root proposal and first-policy selection unchanged. All completed alternatives remain available for ordinary improvement.",
+  "authority": "No new tail values. Native completed rows supply every positive direct successor and offered choice; actual controller properness, full closure and independent evaluation remain required.",
+  "old_owner_fixture": "194 checks, 2 failures",
+  "candidate_fixture": "194 checks, 0 failures",
+  "disposition": "pending matched root results; second bounded treatment, no further weight variants on this premise"
+}

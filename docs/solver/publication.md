@@ -60,6 +60,20 @@ The final classifier must bind the evaluated artifact to the same target and pri
 
 Product callers transfer and validate the already asserted graph. Presentation cost annotations and editable board positions do not become numerical proof inputs.
 
+The compiler can run before independent evaluation and final classification.
+A preliminary `Exact` solve status can still produce a final bounded result,
+as the Conquest-four qualification demonstrated. Future graph descriptions
+therefore state that compilation does not establish policy optimality, with the
+actual scope retained. The final solver result owns optimality status. This
+wording changes no result status, certificate or bound. Previously retained
+artifacts keep their original bytes.
+For a general compiled operation region, `expected_cost` is the source
+`SolveResult.values` annotation only when all member values have the same finite
+serialized value; heterogeneous or nonfinite regions omit it. It is neither a
+fresh evaluation of that graph entry nor a copy of the independently evaluated
+root cost. Attribute policy spend using evaluator occupancy and priced actions,
+and require entry-scoped evidence before using any value as an upper tail.
+
 ## Failure And Telemetry
 
 Node, edge, JSON-size, pair, memory, or work caps can prevent a candidate from being certified. Invalid operations, missing prices, improperness, off-policy mass, incomplete accounting, stale identities, or cost mismatch are reported under the relevant refusal/classification contract.

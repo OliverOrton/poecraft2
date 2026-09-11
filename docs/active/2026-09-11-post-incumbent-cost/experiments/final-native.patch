@@ -1,0 +1,313 @@
+diff --git a/engine/src/solver_compile.cpp b/engine/src/solver_compile.cpp
+index bc2df8b..b6f6c6f 100644
+--- a/engine/src/solver_compile.cpp
++++ b/engine/src/solver_compile.cpp
+@@ -483,11 +483,12 @@ std::string compile_policy_strategy_json(
+             json_escape(name) +
+             "\",\"description\":\"" +
+             (exact
+-                 ? "Exact executable fixed destructive-renewal policy "
+-                   "within the zero-progress-reroll restriction"
+-                 : "Bounded executable fixed destructive-renewal policy "
+-                   "exact within the zero-progress-reroll restriction; "
+-                   "not a global optimum") +
++                 ? "Compiled policy; solver reports exact closure within the "
++                   "declared scope; fixed destructive-renewal policy within "
++                   "the zero-progress-reroll restriction"
++                 : "Compiled policy; bounded policy; optimality is not "
++                   "established; fixed destructive-renewal policy within "
++                   "the zero-progress-reroll restriction") +
+             (result.options.allow_economic_restart
+                  ? ""
+                  : "; ordinary fresh-base abandonment is excluded") +
+@@ -2820,9 +2821,15 @@ std::string compile_policy_strategy_json(
+     /* --- emit --------------------------------------------------------------- */
+     std::string json = "{\"version\":\"v1\",\"name\":\"";
+     json += json_escape(name);
++    // Compilation precedes independent evaluation. Describe the solver's
++    // status and scope without claiming an evaluated or globally optimal graph.
++    json += "\",\"description\":\"Compiled policy; ";
++    json += result.policy_status == SolvePolicyStatus::Exact
++        ? "solver reports exact closure within the declared scope"
++        : "bounded policy; optimality is not established";
+     if (result.options.goal_progress_gated_reforges) {
+         json +=
+-            "\",\"description\":\"Exact within the zero-progress-reroll "
++            "; zero-progress-reroll "
+             "policy restriction; excluded zero-progress salvage routes are "
+             "not globally optimized";
+         if (!result.options.allow_economic_restart) {
+@@ -2834,14 +2841,14 @@ std::string compile_policy_strategy_json(
+         }
+     } else if (!result.options.allow_economic_restart) {
+         json +=
+-            "\",\"description\":\"Exact within the current-carrier policy "
++            "; current-carrier policy "
+             "restriction; ordinary fresh-base abandonment is excluded";
+         if (!result.options.consider_imprint_programs) {
+             json += "; automatic Imprint programs are excluded";
+         }
+     } else if (!result.options.consider_imprint_programs) {
+         json +=
+-            "\",\"description\":\"Exact within an action scope excluding "
++            "; action scope excludes "
+             "automatic Imprint programs";
+     }
+     if (result.options.goal_progress_gated_reforges &&
+diff --git a/engine/src/solver_joint_policy_continuation.hpp b/engine/src/solver_joint_policy_continuation.hpp
+index 12d4a40..519a0e9 100644
+--- a/engine/src/solver_joint_policy_continuation.hpp
++++ b/engine/src/solver_joint_policy_continuation.hpp
+@@ -219,6 +219,9 @@ public:
+         candidate.walk.push_back(std::move(start));
+         candidate.processed.assign(state_capacity, 0);
+         candidate.reachable.assign(state_capacity, 0);
++        if (candidate.walk.front().locator < state_capacity) {
++            candidate.reachable[candidate.walk.front().locator] = 1;
++        }
+         candidate.capture_count = 1;
+         candidate.semantic_identity = candidate.compute_capture_identity();
+         candidate.refresh_retained_peak();
+@@ -366,6 +369,10 @@ public:
+                         return {lifecycle, refusal, work};
+                     }
+                     if (!reachable[successor.locator]) {
++                        // Mark discovery at enqueue, not processing. Many
++                        // completed reforge rows share the same waiting tail;
++                        // retain its full semantic node only once.
++                        reachable[successor.locator] = 1;
+                         walk.push_back(std::move(successor));
+                     }
+                 }
+@@ -378,6 +385,7 @@ public:
+                         return {lifecycle, refusal, work};
+                     }
+                     if (!reachable[choice.selected.locator]) {
++                        reachable[choice.selected.locator] = 1;
+                         walk.push_back(choice.selected);
+                     }
+                 }
+diff --git a/engine/src/solver_solve_constructive.cpp b/engine/src/solver_solve_constructive.cpp
+index 4935760..037fefa 100644
+--- a/engine/src/solver_solve_constructive.cpp
++++ b/engine/src/solver_solve_constructive.cpp
+@@ -4689,7 +4689,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
+         const std::uint64_t predicted_scratch =
+             static_cast<std::uint64_t>(state_count) *
+                 (3 * sizeof(double) + 2 * sizeof(std::uint64_t) +
+-                 6 * sizeof(std::uint8_t) + 3 * sizeof(std::uint32_t)) +
++                 7 * sizeof(std::uint8_t) + 3 * sizeof(std::uint32_t)) +
+             static_cast<std::uint64_t>(transition_cache->rows.size()) *
+                 (sizeof(std::uint8_t) + sizeof(std::uint64_t));
+         if (check_solver_byte_cap_fast(predicted_scratch)) {
+@@ -4816,6 +4816,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
+             policy_evaluation_incomplete;
+ 
+         std::vector<std::uint8_t> reachable(state_count, 0);
++        std::vector<std::uint8_t> queued(state_count, 0);
+         std::vector<std::uint8_t> materialized(state_count, 0);
+         std::vector<std::uint8_t> prior_reachable;
+         std::vector<std::uint32_t> walk;
+@@ -4844,6 +4845,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
+             add(certified_renewal.kernel_signature.capacity() *
+                 sizeof(std::uint64_t));
+             add(reachable.capacity() * sizeof(std::uint8_t));
++            add(queued.capacity() * sizeof(std::uint8_t));
+             add(materialized.capacity() * sizeof(std::uint8_t));
+             add(prior_reachable.capacity() * sizeof(std::uint8_t));
+             add(walk.capacity() * sizeof(std::uint32_t));
+@@ -5193,9 +5195,11 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
+                         ? 1 : std::max<std::uint32_t>(1,
+                             anytime_scheduler.profile().q_refinement_batch);
+                     reachable.assign(state_count, 0);
++                    queued.assign(state_count, 0);
+                     materialized.assign(state_count, 0);
+                     walk.clear();
+                     walk.push_back(result.start_state);
++                    queued[result.start_state] = 1;
+                     choice_identity = 1469598103934665603ULL;
+                     const auto mix = [&](const std::uint64_t value) {
+                         choice_identity ^= value;
+@@ -5313,7 +5317,8 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
+                         mix(row_index);
+                         const auto route = [&](const std::uint32_t successor) {
+                             if (successor >= state_count) return false;
+-                            if (!reachable[successor]) {
++                            if (!queued[successor]) {
++                                queued[successor] = 1;
+                                 walk.push_back(successor);
+                             }
+                             return true;
+diff --git a/engine/tests/test_main.cpp b/engine/tests/test_main.cpp
+index 040ee3d..30d2711 100644
+--- a/engine/tests/test_main.cpp
++++ b/engine/tests/test_main.cpp
+@@ -36,6 +36,12 @@ int main(int argc, char** argv) {
+                     pctest::g_checks, pctest::g_failures);
+         return pctest::g_failures == 0 ? 0 : 1;
+     }
++    if (argc > 1 && std::string(argv[1]) == "--solver-compile-metadata-only") {
++        run_solver_compile_metadata_tests();
++        std::printf("solver compile metadata tests: %d checks, %d failures\n",
++                    pctest::g_checks, pctest::g_failures);
++        return pctest::g_failures == 0 ? 0 : 1;
++    }
+     if (argc > 2 && std::string(argv[1]) == "--solver-compile-only") {
+         run_solver_compile_tests(argv[2]);
+         std::printf("solver compile tests: %d checks, %d failures\n",
+diff --git a/engine/tests/test_solver_compile.cpp b/engine/tests/test_solver_compile.cpp
+index 3cfb21b..7c27307 100644
+--- a/engine/tests/test_solver_compile.cpp
++++ b/engine/tests/test_solver_compile.cpp
+@@ -1136,6 +1136,48 @@ void run_closed_coarse_certification_domain_test() {
+         certification.closed_coarse_domain_route_states);
+ }
+ 
++void run_policy_description_test() {
++    auto session = make_compile_session();
++    ActionRegistry registry = build_action_registry(*session);
++    GoalSpec goal;
++    GoalSlot slot;
++    slot.family_id = 100;
++    slot.min_tier = 1;
++    goal.slots.push_back(slot);
++    goal.rarity = PC_RARITY_MAGIC;
++    pc_item_state start;
++    pc_item_clear(&start);
++    for (unsigned scope = 0; scope < 8; ++scope) {
++        CalcContext calc(session, goal, registry,
++            {registry.index_by_id.at("transmute"),
++             registry.index_by_id.at("alteration")});
++        SolveOptions options;
++        options.goal_progress_gated_reforges = (scope & 1) != 0;
++        options.allow_economic_restart = (scope & 2) != 0;
++        options.consider_imprint_programs = (scope & 4) != 0;
++        SolveResult solved = solve(calc, start,
++            {{"transmute", 1.0}, {"alteration", 1.0}, {"base", 10.0}}, options);
++        PC_CHECK(solved.converged);
++        // Exercise the metadata producer, not the already retained graph.
++        solved.refined_policy_artifact = {};
++        for (const bool bounded : {false, true}) {
++            solved.policy_status = bounded ? SolvePolicyStatus::BoundedFeasible
++                                           : SolvePolicyStatus::Exact;
++            const std::string json = compile_policy_strategy_json(
++                calc, solved, "policy description");
++            PC_CHECK(json.find(bounded
++                ? "bounded policy; optimality is not established"
++                : "solver reports exact closure within the declared scope") !=
++                std::string::npos);
++            PC_CHECK(json.find("Exact within") == std::string::npos);
++            PC_CHECK(json.find("independently evaluated") == std::string::npos);
++            PC_CHECK(json.find("\"solver_policy_scope\":") != std::string::npos);
++            // Parse the whole graph, including the new unrestricted description.
++            PC_CHECK(compile_strategy_json(session, json.c_str(), json.size()) != nullptr);
++        }
++    }
++}
++
+ void run_synthetic_gate() {
+     auto session = make_compile_session();
+     ActionRegistry registry = build_action_registry(*session);
+@@ -2832,6 +2874,7 @@ void run_imprint_gate(const char* artifact_dir) {
+ } // namespace
+ 
+ void run_solver_compile_tests(const char* artifact_dir) {
++    run_policy_description_test();
+     run_condition_expr_tests();
+     run_policy_route_coalescing_tests();
+     run_future_observed_choice_compile_test();
+@@ -2842,6 +2885,10 @@ void run_solver_compile_tests(const char* artifact_dir) {
+     run_imprint_gate(artifact_dir);
+ }
+ 
++void run_solver_compile_metadata_tests() {
++    run_policy_description_test();
++}
++
+ void run_solver_imprint_tests(const char* artifact_dir) {
+     run_imprint_gate(artifact_dir);
+ }
+diff --git a/engine/tests/test_solver_solve.cpp b/engine/tests/test_solver_solve.cpp
+index 65ee895..6505190 100644
+--- a/engine/tests/test_solver_solve.cpp
++++ b/engine/tests/test_solver_solve.cpp
+@@ -329,6 +329,55 @@ void run_resumable_joint_policy_continuation_fixture_tests() {
+     evaluator_refused.release(Refusal::ExactEvaluatorRefused);
+     PC_CHECK(compiler_refused.lifecycle == Lifecycle::Refused);
+     PC_CHECK(evaluator_refused.lifecycle == Lifecycle::Refused);
++
++    /* A dense reforge prefix shares pending outcomes. Queue each semantic
++     * state once: duplicate waiting nodes must not exhaust candidate memory
++     * or its work cap before the positive-mass cleanup tail is serviced. */
++    constexpr std::uint32_t shared_tail = 65;
++    bool shared_tail_ready = false;
++    const auto resolve_shared = [&](const Node& source) {
++        Resolved result;
++        result.source = source;
++        if (source.locator == shared_tail + 1) {
++            result.kind = Resolved::Kind::Goal;
++        } else if (source.locator == shared_tail && !shared_tail_ready) {
++            result.kind = Resolved::Kind::Missing;
++        } else {
++            result.kind = Resolved::Kind::Row;
++            result.row_locator = source.locator;
++            result.row_semantic_key = row_key(source.locator);
++            result.action_semantic_key = action_key(source.locator);
++            if (source.locator < shared_tail) {
++                for (std::uint32_t next = source.locator + 1;
++                     next <= shared_tail; ++next) {
++                    result.successors.push_back(node(next));
++                }
++                // An observation may select an already queued direct outcome.
++                result.observed_choices.push_back({0, node(shared_tail)});
++            } else {
++                result.successors.push_back(node(shared_tail + 1));
++            }
++        }
++        return result;
++    };
++    const auto validate_shared = [&](const Decision& decision) {
++        return decision.row_semantic_key == row_key(decision.source.locator)
++            ? Refusal::None : Refusal::StructuralPrefixInvalid;
++    };
++    Candidate shared = Candidate::capture(snapshot, node(0), {}, {}, {},
++        30.0, 21, shared_tail + 2);
++    shared.advance(resolve_shared, validate_shared, shared_tail + 2);
++    PC_CHECK(shared.lifecycle == Lifecycle::WaitingForExactContinuation);
++    PC_CHECK(shared.missing == node(shared_tail));
++    PC_CHECK(shared.walk_state_count() == shared_tail + 1);
++    PC_CHECK(shared.fixed_decision_count() == shared_tail);
++    shared_tail_ready = true;
++    PC_CHECK(shared.mark_resumable(node(shared_tail)));
++    shared.advance(resolve_shared, validate_shared, 2);
++    PC_CHECK(shared.lifecycle == Lifecycle::CompleteCandidate);
++    PC_CHECK(shared.walk_state_count() == shared_tail + 2);
++    PC_CHECK(shared.fixed_decision_count() == shared_tail + 1);
++    PC_CHECK(shared.retained_work == shared_tail + 3);
+ }
+ 
+ void run_carrier_ladder_row_service_witness_classification_tests() {
+@@ -8311,8 +8360,9 @@ void run_goal_progress_gated_reforge_tests() {
+                  "\"from\":\"renewal\",\"to\":\"renewal\"") !=
+              std::string::npos);
+     PC_CHECK(early_json.find(
+-                 "\"description\":\"Bounded executable fixed "
+-                 "destructive-renewal policy exact within the "
++                 "\"description\":\"Compiled policy; bounded policy; "
++                 "optimality is not established; fixed "
++                 "destructive-renewal policy within the "
+                  "zero-progress-reroll restriction") !=
+              std::string::npos);
+     PC_CHECK(early_json.find(
+diff --git a/engine/tests/tests.hpp b/engine/tests/tests.hpp
+index af2ee3c..1f4ecda 100644
+--- a/engine/tests/tests.hpp
++++ b/engine/tests/tests.hpp
+@@ -48,6 +48,7 @@ void run_solver_policy_refinement_tests();
+ void run_solver_bounded_finish_tests();
+ void run_solver_proof_handoff_tests();
+ void run_solver_compile_tests(const char* artifact_dir);
++void run_solver_compile_metadata_tests();
+ void run_solver_imprint_tests(const char* artifact_dir);
+ void run_solver_eval_tests(const char* artifact_dir);
+ void run_solver_api_tests(const char* artifact_dir);

@@ -189,6 +189,16 @@ gaps and open action obligations. The old goal-free selector result remains
 valid; the new evidence changes row delivery and candidate publication, with
 final control/WASM qualification tracked in the living record.
 
+The [post-incumbent application](../active/2026-09-11-post-incumbent-cost/README.md)
+imports the supplied performance-difference and common-entry-domain argument
+into [policies](mathematics/policies.md), without a new accepted theorem ID.
+Old-policy occupancy guides cost attribution; a replacement needs its own
+properness, new occupancy and complete compatible tails. Sixteen supplied
+synthetic arithmetic checks pass but do not qualify native mechanics. Current
+native capacity controls separate a cheaper Ring graph at 4 GiB from code
+improvement; the Amulet work-cap arm alone does not lower cost. The living record
+owns the frozen profiles, bounded treatment outcomes and final qualification.
+
 The four [advisory audits](../active/2026-09-09-cross-base-capability-recovery/README.md#advisory-audits)
 are reconciled against that experiment. Their finite-region threshold and
 auxiliary-ceiling arguments now live in the [lower chapter](mathematics/lower-bounds.md#threshold-query);

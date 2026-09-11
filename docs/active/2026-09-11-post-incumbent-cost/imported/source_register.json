@@ -1,0 +1,102 @@
+{
+  "reviewed_commit": "edd8ec25f40b11c8ba4f4aaf157db9405b593ed2",
+  "sources": [
+    {
+      "id": "R01",
+      "url": "https://github.com/OliverOrton/poecraft2/commit/edd8ec25f40b11c8ba4f4aaf157db9405b593ed2",
+      "kind": "pinned_repository_source",
+      "access": "selected source ranges or retained record; native execution not repeated"
+    },
+    {
+      "id": "R02",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/edd8ec25f40b11c8ba4f4aaf157db9405b593ed2/docs/active/2026-09-10-goal-reaching-row-delivery/README.md",
+      "kind": "pinned_repository_source",
+      "access": "selected source ranges or retained record; native execution not repeated"
+    },
+    {
+      "id": "R03",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/edd8ec25f40b11c8ba4f4aaf157db9405b593ed2/HANDOFF.md",
+      "kind": "pinned_repository_source",
+      "access": "selected source ranges or retained record; native execution not repeated"
+    },
+    {
+      "id": "R04",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/edd8ec25f40b11c8ba4f4aaf157db9405b593ed2/engine/src/solver_solve_constructive.cpp#L4095-L4295",
+      "kind": "pinned_repository_source",
+      "access": "selected source ranges or retained record; native execution not repeated"
+    },
+    {
+      "id": "R05",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/edd8ec25f40b11c8ba4f4aaf157db9405b593ed2/engine/src/solver_solve_incremental.cpp#L1458-L1540",
+      "kind": "pinned_repository_source",
+      "access": "selected source ranges or retained record; native execution not repeated"
+    },
+    {
+      "id": "R06",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/edd8ec25f40b11c8ba4f4aaf157db9405b593ed2/engine/src/solver_solve_finish.cpp#L6038-L6205",
+      "kind": "pinned_repository_source",
+      "access": "selected source ranges or retained record; native execution not repeated"
+    },
+    {
+      "id": "R07",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/edd8ec25f40b11c8ba4f4aaf157db9405b593ed2/engine/src/solver_solve_incremental.cpp#L695-L757",
+      "kind": "pinned_repository_source",
+      "access": "selected source ranges or retained record; native execution not repeated"
+    },
+    {
+      "id": "R08",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/edd8ec25f40b11c8ba4f4aaf157db9405b593ed2/docs/active/2026-09-10-goal-reaching-row-delivery/results.json",
+      "kind": "pinned_repository_source",
+      "access": "selected source ranges or retained record; native execution not repeated"
+    },
+    {
+      "id": "R09",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/edd8ec25f40b11c8ba4f4aaf157db9405b593ed2/docs/active/2026-09-10-goal-reaching-row-delivery/experiments/strategies/cb06-cross-base-product8-long240.strategy.json",
+      "kind": "pinned_repository_source",
+      "access": "selected source ranges or retained record; native execution not repeated"
+    },
+    {
+      "id": "R10",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/edd8ec25f40b11c8ba4f4aaf157db9405b593ed2/AGENTS.md",
+      "kind": "pinned_repository_source",
+      "access": "selected source ranges or retained record; native execution not repeated"
+    },
+    {
+      "id": "R11",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/edd8ec25f40b11c8ba4f4aaf157db9405b593ed2/docs/solver/upper-authority.md",
+      "kind": "pinned_repository_source",
+      "access": "selected source ranges or retained record; native execution not repeated"
+    },
+    {
+      "id": "R12",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/edd8ec25f40b11c8ba4f4aaf157db9405b593ed2/docs/foundation/tooling.md",
+      "kind": "pinned_repository_source",
+      "access": "selected source ranges or retained record; native execution not repeated"
+    },
+    {
+      "id": "E01",
+      "url": "https://arxiv.org/abs/1711.10129v2",
+      "kind": "primary_research",
+      "title": "Proper Policies in Infinite-State Stochastic Shortest Path Problems",
+      "authors": [
+        "Dimitri P. Bertsekas"
+      ],
+      "access": "abstract and metadata only in this review"
+    },
+    {
+      "id": "E02",
+      "url": "https://arxiv.org/abs/2501.11467v1",
+      "kind": "primary_research",
+      "title": "Fixed Point Certificates for Reachability and Expected Rewards in MDPs",
+      "authors": [
+        "Krishnendu Chatterjee",
+        "Tim Quatmann",
+        "Maximilian Schäffeler",
+        "Maximilian Weininger",
+        "Tobias Winkler",
+        "Daniel Zilken"
+      ],
+      "access": "abstract and metadata only in this review; extended TACAS 2025 paper"
+    }
+  ]
+}

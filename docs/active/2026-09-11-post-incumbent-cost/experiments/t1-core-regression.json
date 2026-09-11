@@ -1,0 +1,622 @@
+{
+  "disposition": "T1 rejected and removed after no primary cost gain and a Conquest-five original-profile cost regression. No third treatment selected.",
+  "comparison_owner": "poecraft_ingest.solver_reports.compare_runs",
+  "comparison": {
+    "baseline": "reviewed_baseline",
+    "candidate": "rejected_t1",
+    "shared_case_ids": 1,
+    "paired_cases": 1,
+    "missing_from_baseline": [],
+    "missing_from_candidate": [],
+    "excluded": [],
+    "delta_distributions": {
+      "wall_ms": {
+        "count": 1,
+        "min": -6669.922999999981,
+        "median": -6669.922999999981,
+        "p90": -6669.922999999981,
+        "p99": -6669.922999999981,
+        "max": -6669.922999999981
+      },
+      "solve_ms": {
+        "count": 1,
+        "min": -4144.315200000012,
+        "median": -4144.315200000012,
+        "p90": -4144.315200000012,
+        "p99": -4144.315200000012,
+        "max": -4144.315200000012
+      },
+      "solve_step_median_ms": {
+        "count": 1,
+        "min": -0.006,
+        "median": -0.006,
+        "p90": -0.006,
+        "p99": -0.006,
+        "max": -0.006
+      },
+      "solve_step_p95_ms": {
+        "count": 1,
+        "min": -0.0132,
+        "median": -0.0132,
+        "p90": -0.0132,
+        "p99": -0.0132,
+        "max": -0.0132
+      },
+      "solve_step_max_ms": {
+        "count": 1,
+        "min": -163.44670000000002,
+        "median": -163.44670000000002,
+        "p90": -163.44670000000002,
+        "p99": -163.44670000000002,
+        "max": -163.44670000000002
+      },
+      "peak_memory_bytes": {
+        "count": 1,
+        "min": 129922573.0,
+        "median": 129922573.0,
+        "p90": 129922573.0,
+        "p99": 129922573.0,
+        "max": 129922573.0
+      },
+      "time_to_incumbent_ms": {
+        "count": 1,
+        "min": -4309.926300000021,
+        "median": -4309.926300000021,
+        "p90": -4309.926300000021,
+        "p99": -4309.926300000021,
+        "max": -4309.926300000021
+      },
+      "time_to_target_ms": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p90": null,
+        "p99": null,
+        "max": null
+      },
+      "final_lower_bound": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_upper_bound": {
+        "count": 1,
+        "min": 470399636.85642874,
+        "median": 470399636.85642874,
+        "p90": 470399636.85642874,
+        "p99": 470399636.85642874,
+        "max": 470399636.85642874
+      },
+      "final_absolute_gap": {
+        "count": 1,
+        "min": 470399636.85642874,
+        "median": 470399636.85642874,
+        "p90": 470399636.85642874,
+        "p99": 470399636.85642874,
+        "max": 470399636.85642874
+      },
+      "final_relative_gap": {
+        "count": 1,
+        "min": 1160422.1591767538,
+        "median": 1160422.1591767538,
+        "p90": 1160422.1591767538,
+        "p99": 1160422.1591767538,
+        "max": 1160422.1591767538
+      },
+      "states": {
+        "count": 1,
+        "min": 2413.0,
+        "median": 2413.0,
+        "p90": 2413.0,
+        "p99": 2413.0,
+        "max": 2413.0
+      },
+      "expanded_states": {
+        "count": 1,
+        "min": 801.0,
+        "median": 801.0,
+        "p90": 801.0,
+        "p99": 801.0,
+        "max": 801.0
+      },
+      "rows": {
+        "count": 1,
+        "min": 13141.0,
+        "median": 13141.0,
+        "p90": 13141.0,
+        "p99": 13141.0,
+        "max": 13141.0
+      },
+      "transitions": {
+        "count": 1,
+        "min": 64824.0,
+        "median": 64824.0,
+        "p90": 64824.0,
+        "p99": 64824.0,
+        "max": 64824.0
+      },
+      "reforge_work": {
+        "count": 1,
+        "min": 620995.0,
+        "median": 620995.0,
+        "p90": 620995.0,
+        "p99": 620995.0,
+        "max": 620995.0
+      },
+      "compiled_nodes": {
+        "count": 1,
+        "min": -466.0,
+        "median": -466.0,
+        "p90": -466.0,
+        "p99": -466.0,
+        "max": -466.0
+      },
+      "compiled_edges": {
+        "count": 1,
+        "min": -1114.0,
+        "median": -1114.0,
+        "p90": -1114.0,
+        "p99": -1114.0,
+        "max": -1114.0
+      },
+      "strategy_json_bytes": {
+        "count": 1,
+        "min": -318077.0,
+        "median": -318077.0,
+        "p90": -318077.0,
+        "p99": -318077.0,
+        "max": -318077.0
+      }
+    },
+    "status_transitions": {
+      "bounded_feasible->bounded_feasible": 1
+    },
+    "regressions": [
+      {
+        "id": "cb01-cross-base-product8-long240",
+        "reasons": [
+          "peak_memory_gt_10_percent"
+        ],
+        "deltas": {
+          "wall_ms": -6669.922999999981,
+          "solve_ms": -4144.315200000012,
+          "solve_step_median_ms": -0.006,
+          "solve_step_p95_ms": -0.0132,
+          "solve_step_max_ms": -163.44670000000002,
+          "peak_memory_bytes": 129922573.0,
+          "time_to_incumbent_ms": -4309.926300000021,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 470399636.85642874,
+          "final_absolute_gap": 470399636.85642874,
+          "final_relative_gap": 1160422.1591767538,
+          "states": 2413.0,
+          "expanded_states": 801.0,
+          "rows": 13141.0,
+          "transitions": 64824.0,
+          "reforge_work": 620995.0,
+          "compiled_nodes": -466.0,
+          "compiled_edges": -1114.0,
+          "strategy_json_bytes": -318077.0
+        }
+      }
+    ],
+    "pairs": [
+      {
+        "id": "cb01-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Conquest Lamellar",
+          "class": "Body Armour",
+          "base_class": "Body Armour / Conquest Lamellar",
+          "natural_t1_count": "5",
+          "side_mix": "unknown",
+          "pool_density": "unknown",
+          "goal_probability": "unknown",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+            "sha256": "d25d8a859ac7298af074ddd4aa2be20090f5091d18deb9a572a1448892b9a912"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\post-incumbent-cost\\final-native.exe",
+            "sha256": "e53144b489a85e17cd7e046f0e050e02994bdda11f9af939e8efd10ac6b4d44a"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_unsupported_action",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "candidate_status": {
+          "actual": "refused_unsupported_action",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "deltas": {
+          "wall_ms": -6669.922999999981,
+          "solve_ms": -4144.315200000012,
+          "solve_step_median_ms": -0.006,
+          "solve_step_p95_ms": -0.0132,
+          "solve_step_max_ms": -163.44670000000002,
+          "peak_memory_bytes": 129922573.0,
+          "time_to_incumbent_ms": -4309.926300000021,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 470399636.85642874,
+          "final_absolute_gap": 470399636.85642874,
+          "final_relative_gap": 1160422.1591767538,
+          "states": 2413.0,
+          "expanded_states": 801.0,
+          "rows": 13141.0,
+          "transitions": 64824.0,
+          "reforge_work": 620995.0,
+          "compiled_nodes": -466.0,
+          "compiled_edges": -1114.0,
+          "strategy_json_bytes": -318077.0
+        }
+      }
+    ]
+  },
+  "cases": {
+    "baseline": {
+      "solve_summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 85558.70618560436,
+        "expanded_states": 3274,
+        "sweeps": 0,
+        "residual": 1.6689300537109375e-06,
+        "skipped_action_count": 1,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 186,
+          "candidate": 28,
+          "evaluator_supported": 28,
+          "supported_priced": 252,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 1
+        },
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436,
+        "absolute_optimality_gap": 85153.33678349802,
+        "relative_optimality_gap": 210.06355275221262,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "phase_wall_ms": {
+        "registry_layout": 38.9429,
+        "solve": 245118.8336,
+        "compile": 4.8732,
+        "verification": null,
+        "total": 247881.6396
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33280000,
+        "process_working_set_after_bytes": 333684736,
+        "process_working_set_delta_bytes": 300404736,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 153270453,
+        "native_peak_owned_bytes": 255808012,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 791066
+      },
+      "states": {
+        "discovered": 11329,
+        "strict_discovered": 11329,
+        "quotient": 11329,
+        "expanded": 3274,
+        "frontier": 8055,
+        "goal": 0,
+        "policy_reachable": 1735
+      },
+      "work": {
+        "state_action_rows": 39707,
+        "transition_entries": 202944,
+        "outcome_entries": 281545752,
+        "choice_groups": 0,
+        "choice_successor_entries": 0,
+        "reforge_work": 1047952,
+        "legacy_reforge_active_work": 914276,
+        "bellman_backups": 12620,
+        "bellman_action_evaluations": 145249,
+        "extraction_action_evaluations": 0,
+        "bellman_work_units": 0,
+        "max_bellman_unit_transitions": 0,
+        "algebraic_self_loops": 0,
+        "transition_bits_hash": "6f021c4659275c90",
+        "policy_bits_hash": "6edd962378268547"
+      },
+      "joint": {
+        "attempts": 8,
+        "successes": 1,
+        "last_completed_rows": 16393,
+        "best_upper": 358209179.66401,
+        "last_failure": "resumable_candidate_released"
+      },
+      "upper_passes": {
+        "requested": 296,
+        "started": 296,
+        "proper": 34,
+        "rejected": 262,
+        "fixed_policy_proofs": 34,
+        "last_failure": "policy_reaches_unexpanded_frontier"
+      },
+      "missing_frontier": {
+        "discovered": 243,
+        "priority_offers": 243,
+        "service_completions": 243,
+        "max_open": 125,
+        "open": 0
+      },
+      "exact_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 2576.8596,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 85558.70618560436,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "errors": [],
+      "runner": {
+        "status": "completed",
+        "observation_kind": "completed_report",
+        "watchdog_seconds": 315.0,
+        "wall_ms": 249094.79070000816,
+        "exit_code": 0,
+        "evaluation_role": null,
+        "partial_observation_available": true,
+        "run_identity": {
+          "corpus": {
+            "sha256": "4f8d6ec386e7b65a8a1975bf762e9da020a3a3593c0dbc6d861de7372264c9fe",
+            "corpus_id": "cross-base-capability-recovery-core-v1",
+            "schema_version": "solver_benchmark_corpus_v1",
+            "generator_config_sha256": null
+          },
+          "artifact": {
+            "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+            "identity": {
+              "artifact_schema_version": 4,
+              "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+              "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+              "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+            }
+          },
+          "machine": {
+            "logical_cpu_count": 24,
+            "machine": "AMD64",
+            "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+            "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+            "python": "3.14.2",
+            "release": "11",
+            "system": "Windows"
+          },
+          "configuration": {
+            "evaluation_roles": [],
+            "evaluation_roles_manifest": null,
+            "exact_evaluation": true,
+            "goal_progress_gated_reforges": false,
+            "hard_case_default_concurrency": 1,
+            "host_watchdog_seconds": 315.0,
+            "max_workers": 1,
+            "memory_budget_bytes": null,
+            "native_retention_diagnostic": "reuse",
+            "run_verification": false
+          },
+          "executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+            "sha256": "d25d8a859ac7298af074ddd4aa2be20090f5091d18deb9a572a1448892b9a912"
+          }
+        }
+      }
+    },
+    "t1": {
+      "solve_summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 470485195.5626143,
+        "expanded_states": 4075,
+        "sweeps": 0,
+        "residual": 1000000000000,
+        "skipped_action_count": 1,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 186,
+          "candidate": 28,
+          "evaluator_supported": 28,
+          "supported_priced": 269,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 1
+        },
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 470485195.5626143,
+        "evaluated_policy_cost": 470485195.5626143,
+        "absolute_optimality_gap": 470484790.1932122,
+        "relative_optimality_gap": 1160632.222729506,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "phase_wall_ms": {
+        "registry_layout": 38.3409,
+        "solve": 240974.5184,
+        "compile": 0.5422,
+        "verification": null,
+        "total": 241211.7166
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33800192,
+        "process_working_set_after_bytes": 496545792,
+        "process_working_set_delta_bytes": 462745600,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 176924576,
+        "native_peak_owned_bytes": 385730585,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 794335
+      },
+      "states": {
+        "discovered": 13742,
+        "strict_discovered": 13742,
+        "quotient": 13742,
+        "expanded": 4075,
+        "frontier": 9667,
+        "goal": 0,
+        "policy_reachable": 868
+      },
+      "work": {
+        "state_action_rows": 52848,
+        "transition_entries": 267768,
+        "outcome_entries": 498987600,
+        "choice_groups": 0,
+        "choice_successor_entries": 0,
+        "reforge_work": 379480,
+        "legacy_reforge_active_work": 124837,
+        "bellman_backups": 128,
+        "bellman_action_evaluations": 1878,
+        "extraction_action_evaluations": 0,
+        "bellman_work_units": 0,
+        "max_bellman_unit_transitions": 0,
+        "algebraic_self_loops": 0,
+        "transition_bits_hash": "bb6058abe9e20135",
+        "policy_bits_hash": "80e5e657122493d4"
+      },
+      "joint": {
+        "attempts": 5,
+        "successes": 0,
+        "last_completed_rows": 23354,
+        "best_upper": null,
+        "last_failure": "resumable_candidate_waiting_for_next_continuation"
+      },
+      "upper_passes": {
+        "requested": 550,
+        "started": 550,
+        "proper": 549,
+        "rejected": 1,
+        "fixed_policy_proofs": 549,
+        "last_failure": "requested_bounded_finish"
+      },
+      "missing_frontier": {
+        "discovered": 21,
+        "priority_offers": 20,
+        "service_completions": 20,
+        "max_open": 16,
+        "open": 1
+      },
+      "exact_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 34.1438,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 470485195.5626143,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "errors": [],
+      "runner": {
+        "status": "completed",
+        "observation_kind": "completed_report",
+        "watchdog_seconds": 315.0,
+        "wall_ms": 242710.82189999288,
+        "exit_code": 0,
+        "evaluation_role": null,
+        "partial_observation_available": true,
+        "run_identity": {
+          "corpus": {
+            "sha256": "4f8d6ec386e7b65a8a1975bf762e9da020a3a3593c0dbc6d861de7372264c9fe",
+            "corpus_id": "cross-base-capability-recovery-core-v1",
+            "schema_version": "solver_benchmark_corpus_v1",
+            "generator_config_sha256": null
+          },
+          "artifact": {
+            "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+            "identity": {
+              "artifact_schema_version": 4,
+              "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+              "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+              "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+            }
+          },
+          "machine": {
+            "logical_cpu_count": 24,
+            "machine": "AMD64",
+            "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+            "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+            "python": "3.14.2",
+            "release": "11",
+            "system": "Windows"
+          },
+          "configuration": {
+            "evaluation_roles": [],
+            "evaluation_roles_manifest": null,
+            "exact_evaluation": true,
+            "goal_progress_gated_reforges": false,
+            "hard_case_default_concurrency": 1,
+            "host_watchdog_seconds": 315.0,
+            "max_workers": 1,
+            "memory_budget_bytes": null,
+            "native_retention_diagnostic": "reuse",
+            "run_verification": false
+          },
+          "executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\post-incumbent-cost\\final-native.exe",
+            "sha256": "e53144b489a85e17cd7e046f0e050e02994bdda11f9af939e8efd10ac6b4d44a"
+          }
+        }
+      }
+    }
+  },
+  "stop": {
+    "reason": "Stopped T1 qualification after a material Conquest-five returned-cost regression; no further cohort results are claimed. CB02 may have only partial evidence.",
+    "runner_pid": 21416,
+    "identities": {
+      "21416": "21416:134335763077973395",
+      "47860": "47860:134335765507712411"
+    },
+    "termination_confirmed": true,
+    "observations": {
+      "21416": "proved_absent",
+      "47860": "proved_absent"
+    }
+  }
+}

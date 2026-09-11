@@ -32,6 +32,15 @@ The early-closure archive demonstrates this distinction. Its numerical values ar
 
 Root evaluation proves the cost of the strategy from that root. It does not establish properness or finite values at root-unreachable entries.
 
+For post-incumbent improvement, old-policy occupancy locates expensive actions
+but does not certify the gain from replacing them. A one-time deviation and a
+permanent replacement are different controllers. Unknown positive-mass exits
+keep the deviation Q unknown until their compatible tails are completed. The
+[performance-difference argument](mathematics/policies.md) requires the new
+controller's occupancy for its actual cost difference, plus properness and the
+complete common entry domain. Source-node annotations supply none of these
+missing obligations.
+
 The continuation-certificate facility explicitly requests and validates entries. A copied coarse `values` vector is not equivalent to a vector of independently certified executable continuations. A compatible operation/item/checkpoint mapping and complete reachable route remain necessary.
 
 Completed decisions in the same immutable snapshot can be candidate evidence at

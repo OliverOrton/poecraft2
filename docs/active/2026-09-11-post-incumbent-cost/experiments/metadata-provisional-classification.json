@@ -1,0 +1,13 @@
+{
+  "source_report": "out/post-incumbent-cost/final-metadata-core/cases/cb02-cross-base-product8-long240.json",
+  "report_sha256": "8796b83022e763630374e5c93bafee0bdecbc4996086f87c5fbee21967b07edf",
+  "source_executable_sha256": "9c32922f04b043503459db78868829e45198618a30999cc68c74233f3656a9d9",
+  "compiled_graph_sha256": "b877f9a32fde632930647cae38f2edd7aa66a6b0e64cf13e36ed3a80da41e1c9",
+  "final_policy_status": "bounded_feasible",
+  "final_lower": 198.8334996747695,
+  "final_verified_upper": 3746.1319409485764,
+  "preliminary_description": "Compiled policy; solver reports exact closure within the declared scope; zero-progress-reroll policy restriction; excluded zero-progress salvage routes are not globally optimized; ordinary fresh-base abandonment is also excluded; automatic Imprint programs are excluded",
+  "declared_scope": "zero_progress_reroll_and_no_economic_restart_restrictions",
+  "independent_evaluation": "matched",
+  "disposition": "Correct future producer text to be neutral about optimality, because compilation may precede final classification. Final solver status remains authoritative; previously saved graph bytes remain untouched."
+}

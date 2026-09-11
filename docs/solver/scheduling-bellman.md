@@ -48,6 +48,15 @@ The lower-only quotient is a different consumer of shared numerical machinery: i
 
 A retained joint-policy candidate can preserve its selected prefix and current missing continuation across ordinary interleaving. Compatible completed row evidence permits it to resume rather than rebuilding the entire selection walk.
 
+The [post-incumbent experiment](../active/2026-09-11-post-incumbent-cost/README.md)
+found duplicate pending semantic nodes shared by many parents. Deduplicating
+their storage reduced the Ring peak at the selected native profile, but also
+changed candidate work and first-policy construction. It produced no primary
+cost gain and regressed Conquest-five at the original limits, so the mutation
+was removed. Storage or work savings alone do not establish controller-quality
+preservation. Any future repair must preserve the first-policy path and qualify
+the actual returned controller across affected families.
+
 There are separate consequences for yield and terminal refusal. Active yield retains its bounded candidate preference. Terminal refusal must release active payload and allow ordinary joint-policy work to continue; a refused object is not an owner of the next schedule. The reclamation archive records this concrete distinction without making the old failed experiment a permanent scheduler rule.
 
 New value estimates need not make a fixed executable candidate invalid merely because it is no longer greedy. Changed rows, prices, routes, scope, or other semantic dependencies require the appropriate revalidation or discard. See [CLM-0021](claims.md#clm-0021).

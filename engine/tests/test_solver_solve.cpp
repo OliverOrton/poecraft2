@@ -8311,8 +8311,9 @@ void run_goal_progress_gated_reforge_tests() {
                  "\"from\":\"renewal\",\"to\":\"renewal\"") !=
              std::string::npos);
     PC_CHECK(early_json.find(
-                 "\"description\":\"Bounded executable fixed "
-                 "destructive-renewal policy exact within the "
+                 "\"description\":\"Compiled policy; compilation does not "
+                 "establish policy optimality; fixed "
+                 "destructive-renewal policy within the "
                  "zero-progress-reroll restriction") !=
              std::string::npos);
     PC_CHECK(early_json.find(

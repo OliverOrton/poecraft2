@@ -1,0 +1,173 @@
+diff --git a/engine/src/solver_compile.cpp b/engine/src/solver_compile.cpp
+index bc2df8b..b6f6c6f 100644
+--- a/engine/src/solver_compile.cpp
++++ b/engine/src/solver_compile.cpp
+@@ -483,11 +483,12 @@ std::string compile_policy_strategy_json(
+             json_escape(name) +
+             "\",\"description\":\"" +
+             (exact
+-                 ? "Exact executable fixed destructive-renewal policy "
+-                   "within the zero-progress-reroll restriction"
+-                 : "Bounded executable fixed destructive-renewal policy "
+-                   "exact within the zero-progress-reroll restriction; "
+-                   "not a global optimum") +
++                 ? "Compiled policy; solver reports exact closure within the "
++                   "declared scope; fixed destructive-renewal policy within "
++                   "the zero-progress-reroll restriction"
++                 : "Compiled policy; bounded policy; optimality is not "
++                   "established; fixed destructive-renewal policy within "
++                   "the zero-progress-reroll restriction") +
+             (result.options.allow_economic_restart
+                  ? ""
+                  : "; ordinary fresh-base abandonment is excluded") +
+@@ -2820,9 +2821,15 @@ std::string compile_policy_strategy_json(
+     /* --- emit --------------------------------------------------------------- */
+     std::string json = "{\"version\":\"v1\",\"name\":\"";
+     json += json_escape(name);
++    // Compilation precedes independent evaluation. Describe the solver's
++    // status and scope without claiming an evaluated or globally optimal graph.
++    json += "\",\"description\":\"Compiled policy; ";
++    json += result.policy_status == SolvePolicyStatus::Exact
++        ? "solver reports exact closure within the declared scope"
++        : "bounded policy; optimality is not established";
+     if (result.options.goal_progress_gated_reforges) {
+         json +=
+-            "\",\"description\":\"Exact within the zero-progress-reroll "
++            "; zero-progress-reroll "
+             "policy restriction; excluded zero-progress salvage routes are "
+             "not globally optimized";
+         if (!result.options.allow_economic_restart) {
+@@ -2834,14 +2841,14 @@ std::string compile_policy_strategy_json(
+         }
+     } else if (!result.options.allow_economic_restart) {
+         json +=
+-            "\",\"description\":\"Exact within the current-carrier policy "
++            "; current-carrier policy "
+             "restriction; ordinary fresh-base abandonment is excluded";
+         if (!result.options.consider_imprint_programs) {
+             json += "; automatic Imprint programs are excluded";
+         }
+     } else if (!result.options.consider_imprint_programs) {
+         json +=
+-            "\",\"description\":\"Exact within an action scope excluding "
++            "; action scope excludes "
+             "automatic Imprint programs";
+     }
+     if (result.options.goal_progress_gated_reforges &&
+diff --git a/engine/tests/test_main.cpp b/engine/tests/test_main.cpp
+index 040ee3d..30d2711 100644
+--- a/engine/tests/test_main.cpp
++++ b/engine/tests/test_main.cpp
+@@ -36,6 +36,12 @@ int main(int argc, char** argv) {
+                     pctest::g_checks, pctest::g_failures);
+         return pctest::g_failures == 0 ? 0 : 1;
+     }
++    if (argc > 1 && std::string(argv[1]) == "--solver-compile-metadata-only") {
++        run_solver_compile_metadata_tests();
++        std::printf("solver compile metadata tests: %d checks, %d failures\n",
++                    pctest::g_checks, pctest::g_failures);
++        return pctest::g_failures == 0 ? 0 : 1;
++    }
+     if (argc > 2 && std::string(argv[1]) == "--solver-compile-only") {
+         run_solver_compile_tests(argv[2]);
+         std::printf("solver compile tests: %d checks, %d failures\n",
+diff --git a/engine/tests/test_solver_compile.cpp b/engine/tests/test_solver_compile.cpp
+index 3cfb21b..7c27307 100644
+--- a/engine/tests/test_solver_compile.cpp
++++ b/engine/tests/test_solver_compile.cpp
+@@ -1136,6 +1136,48 @@ void run_closed_coarse_certification_domain_test() {
+         certification.closed_coarse_domain_route_states);
+ }
+ 
++void run_policy_description_test() {
++    auto session = make_compile_session();
++    ActionRegistry registry = build_action_registry(*session);
++    GoalSpec goal;
++    GoalSlot slot;
++    slot.family_id = 100;
++    slot.min_tier = 1;
++    goal.slots.push_back(slot);
++    goal.rarity = PC_RARITY_MAGIC;
++    pc_item_state start;
++    pc_item_clear(&start);
++    for (unsigned scope = 0; scope < 8; ++scope) {
++        CalcContext calc(session, goal, registry,
++            {registry.index_by_id.at("transmute"),
++             registry.index_by_id.at("alteration")});
++        SolveOptions options;
++        options.goal_progress_gated_reforges = (scope & 1) != 0;
++        options.allow_economic_restart = (scope & 2) != 0;
++        options.consider_imprint_programs = (scope & 4) != 0;
++        SolveResult solved = solve(calc, start,
++            {{"transmute", 1.0}, {"alteration", 1.0}, {"base", 10.0}}, options);
++        PC_CHECK(solved.converged);
++        // Exercise the metadata producer, not the already retained graph.
++        solved.refined_policy_artifact = {};
++        for (const bool bounded : {false, true}) {
++            solved.policy_status = bounded ? SolvePolicyStatus::BoundedFeasible
++                                           : SolvePolicyStatus::Exact;
++            const std::string json = compile_policy_strategy_json(
++                calc, solved, "policy description");
++            PC_CHECK(json.find(bounded
++                ? "bounded policy; optimality is not established"
++                : "solver reports exact closure within the declared scope") !=
++                std::string::npos);
++            PC_CHECK(json.find("Exact within") == std::string::npos);
++            PC_CHECK(json.find("independently evaluated") == std::string::npos);
++            PC_CHECK(json.find("\"solver_policy_scope\":") != std::string::npos);
++            // Parse the whole graph, including the new unrestricted description.
++            PC_CHECK(compile_strategy_json(session, json.c_str(), json.size()) != nullptr);
++        }
++    }
++}
++
+ void run_synthetic_gate() {
+     auto session = make_compile_session();
+     ActionRegistry registry = build_action_registry(*session);
+@@ -2832,6 +2874,7 @@ void run_imprint_gate(const char* artifact_dir) {
+ } // namespace
+ 
+ void run_solver_compile_tests(const char* artifact_dir) {
++    run_policy_description_test();
+     run_condition_expr_tests();
+     run_policy_route_coalescing_tests();
+     run_future_observed_choice_compile_test();
+@@ -2842,6 +2885,10 @@ void run_solver_compile_tests(const char* artifact_dir) {
+     run_imprint_gate(artifact_dir);
+ }
+ 
++void run_solver_compile_metadata_tests() {
++    run_policy_description_test();
++}
++
+ void run_solver_imprint_tests(const char* artifact_dir) {
+     run_imprint_gate(artifact_dir);
+ }
+diff --git a/engine/tests/test_solver_solve.cpp b/engine/tests/test_solver_solve.cpp
+index 65ee895..de67ec6 100644
+--- a/engine/tests/test_solver_solve.cpp
++++ b/engine/tests/test_solver_solve.cpp
+@@ -8311,8 +8311,9 @@ void run_goal_progress_gated_reforge_tests() {
+                  "\"from\":\"renewal\",\"to\":\"renewal\"") !=
+              std::string::npos);
+     PC_CHECK(early_json.find(
+-                 "\"description\":\"Bounded executable fixed "
+-                 "destructive-renewal policy exact within the "
++                 "\"description\":\"Compiled policy; bounded policy; "
++                 "optimality is not established; fixed "
++                 "destructive-renewal policy within the "
+                  "zero-progress-reroll restriction") !=
+              std::string::npos);
+     PC_CHECK(early_json.find(
+diff --git a/engine/tests/tests.hpp b/engine/tests/tests.hpp
+index af2ee3c..1f4ecda 100644
+--- a/engine/tests/tests.hpp
++++ b/engine/tests/tests.hpp
+@@ -48,6 +48,7 @@ void run_solver_policy_refinement_tests();
+ void run_solver_bounded_finish_tests();
+ void run_solver_proof_handoff_tests();
+ void run_solver_compile_tests(const char* artifact_dir);
++void run_solver_compile_metadata_tests();
+ void run_solver_imprint_tests(const char* artifact_dir);
+ void run_solver_eval_tests(const char* artifact_dir);
+ void run_solver_api_tests(const char* artifact_dir);

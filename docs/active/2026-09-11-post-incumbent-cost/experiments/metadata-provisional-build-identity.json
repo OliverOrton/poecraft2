@@ -1,0 +1,71 @@
+{
+  "recorded_at_utc": "2026-09-11T05:12:59.259068+00:00",
+  "reviewed_source": "edd8ec25f40b11c8ba4f4aaf157db9405b593ed2",
+  "retained": "Compiler descriptions and focused metadata tests only; both solver treatments rejected and removed.",
+  "source_patch": {
+    "path": "docs/active/2026-09-11-post-incumbent-cost/experiments/final-metadata.patch",
+    "sha256": "3725ee6462d1a0d0378fcaedc0d182ffc9c7a8bcaab0031ef24920e5e0c0a365",
+    "bytes": 8423
+  },
+  "sources": [
+    {
+      "path": "engine/src/solver_compile.cpp",
+      "sha256": "476afdd437b2f296dc6ad97ed45ef6c89ff336883aabfdbbee4b46f76c5b429a",
+      "bytes": 178653
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "26c553311dfb75f0240be7b9924df70130965225a023014e015e3fb1a28cf312",
+      "bytes": 127556
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "sha256": "fa0bac002e787aa036395aff498f10a1321e66936a79cdf559f15c507b4b98bc",
+      "bytes": 602413
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "sha256": "4e7bbc6e39325f9e92a9b1e243c7f82937726e782a659c0641d4c4d112e7db70",
+      "bytes": 11981
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "sha256": "0b2c4fc0776792f095328f5c4c6aa85fbe3a0c07595fa9af9f38892bdb56fc39",
+      "bytes": 2397
+    }
+  ],
+  "restored_solver_files": [
+    {
+      "path": "engine/src/solver_joint_policy_continuation.hpp",
+      "sha256": "37228aa06dd2d56f6496c9400bb3149cae8711b9fe9430f9e0ba68f44dff9968",
+      "bytes": 28538
+    },
+    {
+      "path": "engine/src/solver_solve_constructive.cpp",
+      "sha256": "b460b2d7c1d2f61136d542b5bbf91e09542f925e0dec6e2d790c9dc068fe4887",
+      "bytes": 404005
+    }
+  ],
+  "restored_solver_git_diff_empty": true,
+  "executable": {
+    "path": "out/post-incumbent-cost/final-metadata.exe",
+    "sha256": "9c32922f04b043503459db78868829e45198618a30999cc68c74233f3656a9d9",
+    "bytes": 13024666
+  },
+  "wasm": {
+    "path": "bindings/wasm/dist/poecraft_engine.wasm",
+    "sha256": "f8748420da0234c00c7d206f8956f3b8e2f91c6a88730d1c85bc304604f74459",
+    "bytes": 7677542
+  },
+  "wasm_module": {
+    "path": "bindings/wasm/dist/poecraft_engine.mjs",
+    "sha256": "92bc2b9d61c465b35c2b80c71f8b3ee125155755275e8d66cdc649792ab9f4ce",
+    "bytes": 20219
+  },
+  "metadata_checks": 88,
+  "wasm_adapter_patch": {
+    "path": "docs/active/2026-09-11-post-incumbent-cost/experiments/wasm-adapter.patch",
+    "sha256": "a43c0b9e652d57569667ccf4510af9420c7704b3e2a8bbebea472a4817358fe3",
+    "bytes": 9131
+  }
+}

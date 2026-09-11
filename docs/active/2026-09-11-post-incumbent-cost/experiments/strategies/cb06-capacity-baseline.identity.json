@@ -1,0 +1,10 @@
+{
+  "role": "Unmodified Ring capacity-baseline graph; original historical description retained. Independently evaluated at the selected 4 GiB native profile.",
+  "source_report": "out/post-incumbent-cost/m2-baseline-memory4g/cases/cb06-post-incumbent-memory4g-long240.json",
+  "source_graph": "out/post-incumbent-cost/m2-baseline-memory4g/strategies/cb06-post-incumbent-memory4g-long240.strategy.json",
+  "stored_graph": "docs/active/2026-09-11-post-incumbent-cost/experiments/strategies/cb06-capacity-baseline.strategy.json",
+  "sha256": "374f08f3254912e0f5fffe6fc35b4ac58cb433165b17e329f56c33b0b41db12f",
+  "verified_cost": 204763.14825000268,
+  "success_probability": 1,
+  "off_policy_mass": 0
+}

@@ -1,0 +1,108 @@
+You are a fresh Codex session working on OliverOrton/poecraft2.
+
+Implement the attached Post-Incumbent Cost Improvement and Native Headroom v1
+plan. Reviewed main:
+edd8ec25f40b11c8ba4f4aaf157db9405b593ed2
+
+Read implementation_plan.md and review_and_knowledge.md. This message selects
+this next programme; do not wait on the previous thread or a historical review
+pause. Reconcile actual local work before editing. One sequential session,
+no subagents, inherited deadline, automatic restart or push. Preserve unrelated
+work and protected path 0 without inspecting or staging it.
+
+The goal-reaching programme is DONE. M0 is DONE. Both CB06 Ring-two and CB08
+Onyx-three now return independently evaluated policies, including actual Ring
+WASM delivery. Do not repeat first-policy recovery or the falsified generic
+proper-selector experiment.
+
+KEEP: the no-incumbent scheduler guard, terminal-debt/missing-route seed,
+selected continuation service, first-policy independent certification/retention,
+outside-selected-domain upper masking, bounded finish, existing lower/checkers,
+and current browser/native activation distinctions. The earlier unguarded
+post-incumbent re-entry regressed Bow-five; do not restore it.
+
+Our next goal is materially cheaper verified policies, not more completed rows.
+Current recorded costs:
+- CB06: 582,192.807187538 Chaos; stops on memory after about 7.4 seconds.
+- CB08: 40,215,428.995558396 Chaos; reforge-work cap near the 240-second finish.
+- CB09 remains without a policy due to admission memory.
+
+Use existing core cases and M0's typed runner. Preserve target, Allflame/base-one,
+full requested actions/control, retention reuse, proof handoff off, step eight,
+and 240/300/315-second finish/native-watchdog/outer-cleanup distinctions.
+
+First attribute the current evaluated policy cost and inspect the real
+post-incumbent path at expensive/repeated entries. Ordinary policy improvement
+already exists and already sees completed alternative rows. Determine whether
+useful alternatives are unscheduled, interrupted, missing compatible tails,
+rejected by selection/publication, or genuinely expensive.
+
+Use existing summaries/evaluator projections before adding telemetry. A compact
+strategy graph does not imply a small evaluator product graph. A root value or
+provisional per-node expected_cost is not a verified value at every entry.
+
+Before a new memory-compression project, this plan authorizes one separately
+identified 4 GiB native diagnostic on the binding Ring memory path, and CB09
+when it informs the same owner. Check actual available host memory and existing
+reservation first; serialize runs, preserve safe headroom, and never bypass
+admission. Initially keep all other caps fixed. If a different cap then binds,
+record it and derive a separate targeted profile only as allowed by the plan.
+No automatic 8 GiB/multiworker sweep or browser-limit increase.
+
+For Amulet, a single 100-million-reforge-work diagnostic is allowed only when
+the current 50-million cap demonstrably blocks the chosen improvement; keep
+the same time/memory. Skip it if time or another owner already decides the run.
+Capacity results are useful, but are not algorithmic speedups.
+
+Freeze the implementation comparison profile after that diagnostic and before
+the code treatment. It may be the original profile or a safe higher-cap native
+profile. Always compare old/new code at identical selected resources and keep
+the original profile as a preservation check. Use current runner/baseline pairs;
+do not weaken identity checks to join incompatible pre-M0 ledgers.
+
+Then implement the smallest demonstrated post-incumbent repair through the
+existing candidate/refinement/upper-pass owners. For a promising action with
+missing tails, complete one coherent bounded improvement candidate rather than
+rebuilding the entire frontier. Preserve every positive-probability outcome,
+observed choice, retry and native cost. Unknown continuation is not free success.
+Keep the last independently verified graph through any failed/capped attempt.
+
+A cost estimate may guide ordering; it may not retire actions or raise a public
+lower. An old fixed-policy value may price a one-time deviation only at genuinely
+covered compatible entries. Changing repeated decisions creates a new controller
+that requires properness, compilation and independent evaluation. Do not undo
+the new upper-domain mask to make candidates appear finite.
+
+Preferred completion is new exact closure or at least 20% same-budget evaluated
+cost improvement on BOTH primary families, with no weakened lower or lost policy.
+For the recorded one-GiB controls the 20% cost targets are approximately
+465,754.2457500304 (Ring) and 32,172,343.196446717 (Amulet). These remain expensive;
+report practical quality separately. For a higher-cap implementation profile,
+freeze targets against a baseline with that same cap. Do not relabel capacity-only
+gains, CB09 coverage, or one-family success as meeting the two-family code goal.
+
+Continue into a root-level result and one meaningful cost/proof follow-through;
+do not stop at attribution, a helper, or a successful allocation. Follow the
+bounded failure rules instead of forcing a speculative design.
+
+Qualify actual affected native/WASM paths and cross-base preservation. Previously
+reserved Wand/Shield cases are now exposed regression controls, not unseen tests.
+CB05's pre-existing stop-contract failure stays visible. Preserve all old artifacts.
+
+Fix only relevant small presentation/documentation issues: current HANDOFF push
+status, bounded strategy wording that misleadingly says 'Exact within ...', and
+actual cost/entry/provenance labels if their meaning is established. Do not
+rewrite archived graphs or change every node cost to the root value. No new
+benchmark platform, broad cleanup, selector, model training or permanent basin
+library. Preserve useful mathematics in the existing owners, not another registry.
+
+Use focused native fixtures and decisive measurements; no routine Simulator,
+soak, broad intermediate suite or repeated whole baseline census. The supplied
+16 checks are synthetic arithmetic, not native tests. Report all passes, failures,
+canceled/unrun checks and unmet targets honestly.
+
+Begin with local reconciliation and the current result's cost/cap question,
+then continue into the smallest qualified implementation. Return source/experiment
+identities, retained/rejected changes, per-case bounds and policies, capacity
+versus algorithm attribution, qualification, actual commit/push state, and the
+single next unresolved capability bottleneck.

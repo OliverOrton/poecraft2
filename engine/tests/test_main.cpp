@@ -36,6 +36,12 @@ int main(int argc, char** argv) {
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-compile-metadata-only") {
+        run_solver_compile_metadata_tests();
+        std::printf("solver compile metadata tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 2 && std::string(argv[1]) == "--solver-compile-only") {
         run_solver_compile_tests(argv[2]);
         std::printf("solver compile tests: %d checks, %d failures\n",

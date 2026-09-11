@@ -482,12 +482,9 @@ std::string compile_policy_strategy_json(
             "{\"version\":\"v1\",\"name\":\"" +
             json_escape(name) +
             "\",\"description\":\"" +
-            (exact
-                 ? "Exact executable fixed destructive-renewal policy "
-                   "within the zero-progress-reroll restriction"
-                 : "Bounded executable fixed destructive-renewal policy "
-                   "exact within the zero-progress-reroll restriction; "
-                   "not a global optimum") +
+            "Compiled policy; compilation does not establish policy "
+            "optimality; fixed destructive-renewal policy within "
+            "the zero-progress-reroll restriction" +
             (result.options.allow_economic_restart
                  ? ""
                  : "; ordinary fresh-base abandonment is excluded") +
@@ -2820,9 +2817,13 @@ std::string compile_policy_strategy_json(
     /* --- emit --------------------------------------------------------------- */
     std::string json = "{\"version\":\"v1\",\"name\":\"";
     json += json_escape(name);
+    // Compilation can precede the final classifier. A coarse Exact status
+    // can still publish a bounded result, so it cannot own artifact optimality.
+    json += "\",\"description\":\"Compiled policy; compilation does not "
+            "establish policy optimality";
     if (result.options.goal_progress_gated_reforges) {
         json +=
-            "\",\"description\":\"Exact within the zero-progress-reroll "
+            "; zero-progress-reroll "
             "policy restriction; excluded zero-progress salvage routes are "
             "not globally optimized";
         if (!result.options.allow_economic_restart) {
@@ -2834,14 +2835,14 @@ std::string compile_policy_strategy_json(
         }
     } else if (!result.options.allow_economic_restart) {
         json +=
-            "\",\"description\":\"Exact within the current-carrier policy "
+            "; current-carrier policy "
             "restriction; ordinary fresh-base abandonment is excluded";
         if (!result.options.consider_imprint_programs) {
             json += "; automatic Imprint programs are excluded";
         }
     } else if (!result.options.consider_imprint_programs) {
         json +=
-            "\",\"description\":\"Exact within an action scope excluding "
+            "; action scope excludes "
             "automatic Imprint programs";
     }
     if (result.options.goal_progress_gated_reforges &&

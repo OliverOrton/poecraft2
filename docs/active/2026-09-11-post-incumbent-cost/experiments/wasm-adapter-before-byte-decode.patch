@@ -1,0 +1,158 @@
+--- a/apps/web/test/empty-start-retention-wasm.test.ts
++++ b/apps/web/test/.post-incumbent-wasm.ts
+@@ -1,7 +1,7 @@
+-// Explicit integration qualification, not part of the routine web suite.
+-// npx tsx test/empty-start-retention-wasm.test.ts [--four-goal] [--output <receipt.json>]
+-// The fixture's 60-second finish and 90-second watchdog include preparation.
+-// Run in an isolated process with an outer timeout for noncooperative native work.
++// Post-incumbent qualification derived from the existing retention test.
++// npx tsx test/.post-incumbent-wasm.ts --mode normal|abandon|finish --output <receipt.json>
++// Normal keeps frozen CB06 240/300 controls; interruptions wait for a verified incumbent.
++// The shared isolated worker owns the 315-second outer deadline.
+ import assert from "node:assert/strict";
+ import { createHash } from "node:crypto";
+ import { readFileSync, writeFileSync } from "node:fs";
+@@ -10,12 +10,14 @@
+ 
+ const root = new URL("../../../", import.meta.url);
+ const read = (path: string) => JSON.parse(readFileSync(new URL(path, root), "utf8"));
+-const fourGoal = process.argv.includes("--four-goal");
+-const fixturePath = `fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-clean-${fourGoal ? 4 : 5}-goal-product8.json`;
++const modeIndex = process.argv.indexOf("--mode");
++const mode = modeIndex < 0 ? "normal" : process.argv[modeIndex + 1];
++assert.ok(["normal", "abandon", "finish"].includes(mode));
++const fixturePath = "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb06-cross-base-product8-long240.json";
+ const fixture = read(fixturePath);
+ assert.equal(fixture.start.mods.length, 0);
+-assert.equal(fixture.goal.min_satisfied_slots, fourGoal ? 4 : 5);
+-const expectedLower = fourGoal ? 198.8334996747695 : 405.3694021063399;
++assert.equal(fixture.goal.min_satisfied_slots, 2);
++const expectedLower = 1.2829877569854051;
+ const snapshot = read(fixture.economy.snapshot_path);
+ assert.equal(snapshot.id, fixture.economy.id);
+ assert.equal(snapshot.metadata.content_sha256, fixture.economy.content_sha256);
+@@ -34,7 +36,8 @@
+ let solver: number | undefined;
+ const began = performance.now();
+ const elapsed = () => performance.now() - began;
+-const receipt: Record<string, unknown> = { fixture: fixturePath, input: fixture, status: "running" };
++const receipt: Record<string, unknown> = { fixture: fixturePath, input: fixture, status: "running", mode };
++function runQualification() {
+ try {
+     // Ask the native registry for the same priced product envelope as the benchmark.
+     const envelope = engine.openSolver(session, fixture.product_action_envelope.envelope_goal);
+@@ -55,6 +58,7 @@
+     engine.beginSolverSolve(solver, item, economy, caps as SolveOptions);
+     let requested = false;
+     let done = false;
++    let firstVerifiedCost: number | undefined;
+     while (!done) {
+         assert.ok(elapsed() < fixture.watchdog_seconds * 1000, "fixture watchdog expired");
+         if (!requested && elapsed() >= fixture.requested_bounded_finish_seconds * 1000) {
+@@ -62,11 +66,47 @@
+             requested = true;
+             receipt.finish_requested_ms = elapsed();
+         }
+-        done = engine.stepSolverSolve(solver, solve_step_work_items).done;
+-    }
++        const progress = engine.stepSolverSolve(solver, solve_step_work_items);
++        done = progress.done;
++        if (!receipt.initial_publication && progress.phase === "compiling") {
++            const current = engine.solverTelemetry(solver) as any;
++            const joint = current.incremental_action_envelope.joint_anytime_policy;
++            const verified = current.incumbent_portfolio.verified_executable_upper;
++            assert.ok(joint.successes > 0, "the new joint first-policy path must own this compilation");
++            assert.equal(verified.present, false, "observe the first candidate before independent qualification");
++            receipt.initial_publication = { elapsed_ms: elapsed(), progress, joint, verified };
++        }
++        if (receipt.initial_publication && firstVerifiedCost === undefined) {
++            const current = engine.solverTelemetry(solver) as any;
++            const verified = current.incumbent_portfolio.verified_executable_upper;
++            if (!verified.present) continue;
++            assert.ok(Number.isFinite(verified.cost));
++            firstVerifiedCost = verified.cost;
++            receipt.first_verified = { elapsed_ms: elapsed(), progress, verified };
++            if (mode === "abandon") {
++                const before = performance.now();
++                engine.abandonSolverSolve(solver);
++                receipt.abandon_ms = performance.now() - before;
++                engine.closeSolver(solver);
++                solver = undefined;
++                receipt.status = "passed";
++                return;
++            }
++            if (mode === "finish") {
++                engine.requestSolverSolveBoundedFinish(solver);
++                requested = true;
++                receipt.finish_requested_ms = elapsed();
++            }
++        }
++    }
++    assert.ok(receipt.initial_publication, "initial candidate compilation was not exposed");
++    assert.ok(firstVerifiedCost !== undefined, "a verified incumbent was not exposed");
+     const summary = engine.finishSolverSolve(solver);
+     receipt.solve_complete_ms = elapsed();
+     receipt.summary = summary;
++    if (mode === "finish") assert.ok(summary.upper_bound !== null &&
++        summary.upper_bound <= firstVerifiedCost! * (1 + 1e-9) + 1e-7,
++        "finish lost the independently verified incumbent");
+     const telemetry = engine.solverTelemetry(solver) as unknown as {
+         timings_ns: unknown;
+         incremental_action_envelope: unknown;
+@@ -90,6 +130,11 @@
+     assert.ok((summary.lower_bound ?? 0) + 1e-7 >= pattern.start_contribution!);
+     assert.ok(summary.policy_available, "bounded result must have an executable policy");
+     const graph = engine.solverCompileStrategy(solver);
++    const compiled = JSON.parse(graph);
++    assert.ok(compiled.description.startsWith("Compiled policy; compilation does not establish policy optimality"));
++    assert.equal(compiled.solver_policy_scope, "zero_progress_reroll_and_no_economic_restart_restrictions");
++    receipt.description = compiled.description;
++    receipt.solver_policy_scope = compiled.solver_policy_scope;
+     receipt.strategy_sha256 = createHash("sha256").update(graph).digest("hex");
+     const strategy = engine.compileStrategy(session, graph);
+     try {
+@@ -116,17 +161,13 @@
+             assert.ok(summary.upper_bound !== null && totals.total_expected_cost !== null);
+             assert.ok(Math.abs(totals.total_expected_cost - summary.upper_bound) <=
+                 v.exact_cost_absolute_tolerance + v.exact_cost_relative_tolerance * Math.abs(summary.upper_bound));
+-            // Frozen against B6 with the same retained root lower and finish
+-            // request. Assert useful continuation integration after evaluating
+-            // the actual graph, so a failed gate still retains its true cost.
+-            if (fourGoal) {
+-                assert.equal(telemetry.policy_refinement.strict_lift.status, "requested_bounded_finish");
+-                assert.equal(telemetry.policy_refinement.strict_lift.global_lower_bound_closed, false);
+-                assert.ok(summary.upper_bound <= 5218.040949685988 + 1e-7,
+-                    "bounded strict finish lost the verified four-goal incumbent");
++            if (mode === "normal") {
++                assert.ok(summary.upper_bound <= 582192.807187538 * (1 + 1e-9) + 1e-7,
++                    "normal WASM continuation lost the recovered native Ring policy");
+             } else {
+-                assert.ok(summary.upper_bound <= 16997812.199227553 * 0.8,
+-                    "empty-start continuation misses the 20% policy improvement gate");
++                assert.equal(summary.termination, "requested_bounded_finish");
++                assert.ok(summary.upper_bound <= 938064.6067502735 * (1 + 1e-9) + 1e-7,
++                    "finish during first compilation lost the materialized proper candidate");
+             }
+         } finally {
+             engine.closeStrategyEvaluation(evaluation);
+@@ -138,13 +179,6 @@
+     engine.closeSolver(solver);
+     solver = undefined;
+ 
+-    // Abandon a separately scoped setup with control memory and check release.
+-    // Native focused fixtures own retention-domain refusal assertions.
+-    solver = engine.openSolver(session, goal);
+-    engine.beginSolverSolve(solver, item, economy, {
+-        ...caps, consider_imprint_programs: true,
+-    } as SolveOptions);
+-    engine.abandonSolverSolve(solver);
+     receipt.status = "passed";
+ } catch (error) {
+     receipt.status = "failed";
+@@ -167,3 +201,6 @@
+         total_ms: receipt.total_ms, memory_after_cleanup: receipt.memory_after_cleanup }));
+     assert.equal(engine.memoryStats().live_handles, 0);
+ }
++
++}
++runQualification();

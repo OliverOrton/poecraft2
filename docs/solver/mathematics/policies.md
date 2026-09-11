@@ -29,6 +29,50 @@ The series explanation is useful: \(Q^nr\) is the expected cost paid at the \(n\
 
 The same inverse gives expected visits and resource uses. If \(e_s\) selects the start, the row vector \(e_s^\top(I-Q)^{-1}\) records expected visits to nonterminal states. Multiplying by per-visit resource expectations yields totals whose price-weighted sum should reconcile with monetary cost. That is a consistency check, not an optimality proof.
 
+### Cost attribution and a changed controller
+
+For the evaluated controller, let \(d_\pi^\top=e_s^\top(I-P_\pi)^{-1}\).
+Then \(J_\pi(s)=\sum_t d_\pi(t)c_\pi(t)\). Aggregate by priced action or
+retry region only after retaining the operation, item and controller-memory
+identity. Compiled node counts and source `expected_cost` annotations are not
+independent occupancy or entry-cost evaluations. The old controller's largest
+cost contributions can guide which alternative to investigate; they do not
+certify how much a changed controller saves.
+
+For a complete legal action at an entry whose every positive-mass exit has a
+compatible route and value under the same proper controller,
+\(Q_\pi(t,a)=c(t,a)+\sum_u P(u\mid t,a)J_\pi(u)\) prices taking that action
+once and then following \(\pi\). This is an executable upper candidate, not
+a lower on all possible continuations. Uncovered exits remain unknown. A saved
+lower or the old root scalar cannot supply an absent entry value. Choices must
+remain at their native observation boundary. Replacing the action on every
+revisit describes a different controller and requires its own evaluation.
+
+For two proper controllers on a common finite represented domain, define
+\(A_\mu^\pi=c_\mu+P_\mu J_\pi-J_\pi\). Subtracting their fixed-policy
+equations gives
+
+\[
+J_\mu-J_\pi=(I-P_\mu)^{-1}A_\mu^\pi.
+\]
+
+The inverse is nonnegative. Nonpositive advantage throughout the relevant
+domain therefore suffices for non-increase; a negative term reached with
+positive expected visits under \(\mu\) gives strict root improvement. This
+condition is sufficient, not necessary: complete candidate evaluation may
+accept changes with compensating local advantages. Exact root change uses
+the **new** controller's visits. For example, the supplied two-state calculation
+has \(J_\pi=(12,10)\), \(J_\mu=(6,5)\), and \(A=(-1,-5)\). Old visits
+\((2,1)\) predict -7; new visits \((1,1)\) correctly give -6.
+
+Properness is an explicit premise. A zero-cost self loop has zero advantage
+against a cost-10 finish and never terminates. Complete transitions, observed
+choices, pricing, entry compatibility and independent evaluation of the actual
+emitted controller remain necessary. A better upper may help existing certified
+pruning; full competitor coverage still owns optimality. This elementary
+derivation is imported from the [post-incumbent review](../../active/2026-09-11-post-incumbent-cost/imported/review_and_knowledge.md),
+without a new theorem ID or native correspondence claim from its synthetic tests.
+
 Because \(\pi\) is one allowed proper policy,
 
 \[

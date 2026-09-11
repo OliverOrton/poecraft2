@@ -1,0 +1,1129 @@
+{
+  "recorded_at_utc": "2026-09-11T06:01:37.109078+00:00",
+  "build": {
+    "path": "docs/active/2026-09-11-post-incumbent-cost/build-identity.json",
+    "sha256": "3b3ba6e4e7ea975585803245615ce03d260753f0a5e96b3bdff2c68b3b9bd26e",
+    "bytes": 3026
+  },
+  "final_native_publication_comparison": {
+    "baseline": "baseline",
+    "candidate": "final_publication",
+    "shared_case_ids": 2,
+    "paired_cases": 2,
+    "missing_from_baseline": [],
+    "missing_from_candidate": [],
+    "excluded": [],
+    "delta_distributions": {
+      "wall_ms": {
+        "count": 2,
+        "min": -557.5281999999997,
+        "median": -180.31110000000035,
+        "p90": 121.46257999999918,
+        "p99": 189.36165799999904,
+        "max": 196.90599999999904
+      },
+      "solve_ms": {
+        "count": 2,
+        "min": -508.22569999999996,
+        "median": -156.73630000000094,
+        "p90": 124.45521999999829,
+        "p99": 187.72331199999812,
+        "max": 194.75309999999808
+      },
+      "solve_step_median_ms": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "solve_step_p95_ms": {
+        "count": 2,
+        "min": -0.0001999999999999988,
+        "median": -9.99999999999994e-05,
+        "p90": -1.9999999999999873e-05,
+        "p99": -1.9999999999999897e-06,
+        "max": 0.0
+      },
+      "solve_step_max_ms": {
+        "count": 2,
+        "min": -402.39180000000033,
+        "median": -201.78765000000016,
+        "p90": -41.30433000000002,
+        "p99": -5.195583000000003,
+        "max": -1.1834999999999951
+      },
+      "peak_memory_bytes": {
+        "count": 2,
+        "min": 300.0,
+        "median": 400.0,
+        "p90": 480.0,
+        "p99": 498.0,
+        "max": 500.0
+      },
+      "time_to_incumbent_ms": {
+        "count": 2,
+        "min": -11.115700000000004,
+        "median": 93.46959999999959,
+        "p90": 177.13783999999927,
+        "p99": 195.9631939999992,
+        "max": 198.05489999999918
+      },
+      "time_to_target_ms": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p90": null,
+        "p99": null,
+        "max": null
+      },
+      "final_lower_bound": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_upper_bound": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_absolute_gap": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_relative_gap": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "states": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "expanded_states": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "rows": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "transitions": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "reforge_work": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "compiled_nodes": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "compiled_edges": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "strategy_json_bytes": {
+        "count": 2,
+        "min": 50.0,
+        "median": 50.0,
+        "p90": 50.0,
+        "p99": 50.0,
+        "max": 50.0
+      }
+    },
+    "status_transitions": {
+      "bounded_feasible->bounded_feasible": 1,
+      "exact->exact": 1
+    },
+    "regressions": [],
+    "pairs": [
+      {
+        "id": "cb06-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Amethyst Ring",
+          "class": "Ring",
+          "base_class": "Ring / Amethyst Ring",
+          "natural_t1_count": "2",
+          "side_mix": "unknown",
+          "pool_density": "unknown",
+          "goal_probability": "unknown",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "refused_resource_cap",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+            "sha256": "d25d8a859ac7298af074ddd4aa2be20090f5091d18deb9a572a1448892b9a912"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\post-incumbent-cost\\final-publication.exe",
+            "sha256": "d251c303e6f3e3fba746a387f35d274b6b7be15ca1bd7aef4b18b7a740374401"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "candidate_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "deltas": {
+          "wall_ms": -557.5281999999997,
+          "solve_ms": -508.22569999999996,
+          "solve_step_median_ms": 0.0,
+          "solve_step_p95_ms": 0.0,
+          "solve_step_max_ms": -402.39180000000033,
+          "peak_memory_bytes": 500.0,
+          "time_to_incumbent_ms": -11.115700000000004,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 50.0
+        }
+      },
+      {
+        "id": "cb12-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Vaal Regalia",
+          "class": "Body Armour",
+          "base_class": "Body Armour / Vaal Regalia",
+          "natural_t1_count": "1",
+          "side_mix": "S",
+          "pool_density": "dense_ge_100",
+          "goal_probability": "moderate_le_0.02",
+          "incumbent": "other",
+          "policy_status": "exact",
+          "termination": "exact_closed",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+            "sha256": "d25d8a859ac7298af074ddd4aa2be20090f5091d18deb9a572a1448892b9a912"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\post-incumbent-cost\\final-publication.exe",
+            "sha256": "d251c303e6f3e3fba746a387f35d274b6b7be15ca1bd7aef4b18b7a740374401"
+          }
+        },
+        "baseline_status": {
+          "actual": "converged",
+          "policy": "exact",
+          "termination": "exact_closed"
+        },
+        "candidate_status": {
+          "actual": "converged",
+          "policy": "exact",
+          "termination": "exact_closed"
+        },
+        "deltas": {
+          "wall_ms": 196.90599999999904,
+          "solve_ms": 194.75309999999808,
+          "solve_step_median_ms": 0.0,
+          "solve_step_p95_ms": -0.0001999999999999988,
+          "solve_step_max_ms": -1.1834999999999951,
+          "peak_memory_bytes": 300.0,
+          "time_to_incumbent_ms": 198.05489999999918,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 50.0
+        }
+      }
+    ]
+  },
+  "preservation_graph_comparison": {
+    "scope": "Timed restored-solver core and exposed qualification on 9c32922. Final neutral description is qualified separately; descriptions are metadata and excluded only for this explicit graph-content comparison.",
+    "cases": [
+      {
+        "id": "cb01-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "a76ee78ea5612131028ce5cf68b2b9367315d7d22432b75b7021550d0a6417ff",
+        "preservation_graph_sha256": "570ddf8d3a8f2d3d8c818b7fa7065888740ced63b1158af4d18991c979d5b8e7"
+      },
+      {
+        "id": "cb02-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "7588f32b5c14084fd6dfd45bc2d991d860b00112de0845c9bdf70126940b58dc",
+        "preservation_graph_sha256": "b877f9a32fde632930647cae38f2edd7aa66a6b0e64cf13e36ed3a80da41e1c9"
+      },
+      {
+        "id": "cb03-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "b4ca34946339124dc42a6447752e9aea8faedf1d732c688fb70857d491abcd90",
+        "preservation_graph_sha256": "927734790209269fda94acfa947d962b67ada63070aacd34570013cb556ff693"
+      },
+      {
+        "id": "cb04-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "2495f75d6042e09976dbaafa27586ea435bb07b2fd7015da1720fb8427e6f0aa",
+        "preservation_graph_sha256": "45b008ab171c16419273414e45ce3e6ac107b23bfcc37ef9e1fe8580546426c3"
+      },
+      {
+        "id": "cb05-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "2b51314847d1a0508c6a9e613d873d1bceada1755e20ac8eec817d6dd06b33b8",
+        "preservation_graph_sha256": "5428496f11d1f644dee163f8a5a9512c5cdd62f22521754b407b3050c7a82e7a"
+      },
+      {
+        "id": "cb06-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "a4aef73d337b0336e062fac86fc5baebd854e85b06a8b8dce91991ad09c363e8",
+        "preservation_graph_sha256": "e4d4fbe94294c64ae1f755c0e868cc0b201909fe70b2d668787b79e14b05e78f"
+      },
+      {
+        "id": "cb07-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "68e2abd648511f1a018d8729d26654916a8aabd131bd61298abca76b82d601c8",
+        "preservation_graph_sha256": "ae6e6b588e3aa3c2ad4dc05e2e32cf42a62f564872644d3bfa8ad1a5c09963cc"
+      },
+      {
+        "id": "cb08-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "922580ffc4aee8c7cb004ab150f0be573281e7798e7dcf5dbfa4676119b1f585",
+        "preservation_graph_sha256": "f90f605fbedf12c0fa9cc782963c165dca0b1e8e20215fb4e46712a892167d59"
+      },
+      {
+        "id": "cb09-cross-base-product8-long240",
+        "policy_available": false,
+        "graph_comparison": "no_policy_in_both"
+      },
+      {
+        "id": "cb10-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "32d010cdadb4c6fe91539b940326cc80a8c30b23d1854d58cafa43dad3a24214",
+        "preservation_graph_sha256": "bf271109f7bdc5d390043d23bf266a1e59ec10f5bf88f0b520a37fdbc33fb684"
+      },
+      {
+        "id": "cb11-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "91accda0ecd4aa0ae4dd95d03924a2f75e48af54e55ddd78b877688afcbab16b",
+        "preservation_graph_sha256": "e05ad07dc587ca671a93570be59f2fd3af5f645873361f8b62ead60badbc3bf0"
+      },
+      {
+        "id": "cb12-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "82d6847f2898328221ca40ba16607a93fc37a454415fda2203ba5f927e125d32",
+        "preservation_graph_sha256": "2748c5b0634650b87fa242d0558a59bc575de6a91a600a26dbd6124881daaee9"
+      },
+      {
+        "id": "ho01-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "af9cdb1c680bc97a8412235545e78f42fa6c8c3da17a89fa2e7ad3b0a23a7f9e",
+        "preservation_graph_sha256": "548e1df292cffeb67bcba839e57a07dfc07a0ddf975284d46273a955cd960def"
+      },
+      {
+        "id": "ho02-cross-base-product8-long240",
+        "policy_available": true,
+        "same_graph_except_description": true,
+        "baseline_graph_sha256": "eab9184fc958a47efbb4995cd3795664896afe19c6b4e5cbb54452065f0b9e3f",
+        "preservation_graph_sha256": "7feb7b70b2ccad0f712c70ccf47e292fdd9655579c0fc119acc6b487394d6075"
+      }
+    ]
+  },
+  "native_checks": {
+    "metadata": 104,
+    "failures": 0,
+    "log": {
+      "path": "out/post-incumbent-cost/final-publication-metadata-tests.txt",
+      "sha256": "0bf46bdb52593dc6d116390fd5d58db8a062255671dfb60e82a98df81b735371",
+      "bytes": 55
+    },
+    "preservation_core_cases": 12,
+    "preservation_exposed_cases": 2,
+    "final_publication_cases": 2
+  },
+  "web_checks": {
+    "typecheck": "passed",
+    "typecheck_log": {
+      "path": "out/post-incumbent-cost/final-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "focused_test_files": [
+      "engine-client-transfer.test.ts",
+      "solver-result-presentation.test.ts"
+    ],
+    "focused_tests_log": {
+      "path": "out/post-incumbent-cost/final-web-focused.log",
+      "sha256": "1c2d048b7f70489f14eabb19582e7c195833aefa060a3336f25dec554a0fc079",
+      "bytes": 1430
+    }
+  },
+  "wasm": [
+    {
+      "mode": "normal",
+      "status": "passed",
+      "receipt": {
+        "path": "out/post-incumbent-cost/wasm-final-normal.json",
+        "sha256": "b065a6f56fbb6af0038d0d124c04acd232cb9c18074ca40f76839dec8db6863e",
+        "bytes": 179322
+      },
+      "process_receipt": {
+        "path": "out/post-incumbent-cost/wasm-final-normal-process.json",
+        "sha256": "d9af44b3514314032096e1adc87ea030719f09ddde6487d540c0f9f8925cf006",
+        "bytes": 328
+      },
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 36676,
+        "process_identity_token": "36676:134335799072890760",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 16408.668399992166
+      },
+      "initial_publication_observation": {
+        "elapsed_ms": 4080.5064,
+        "progress": {
+          "phase": "compiling",
+          "phase_owner": "compilation",
+          "done": false,
+          "expanded_states": 58,
+          "sweeps": 2,
+          "residual": 1.2754242106893798e-12,
+          "start_value_bound": 10.169847833384168,
+          "lower_bound": 10.169847833384168,
+          "upper_bound": null,
+          "absolute_optimality_gap": null,
+          "relative_optimality_gap": null,
+          "focused_round": 4,
+          "incumbent_kind": "other",
+          "discovered_states": 2832,
+          "frontier_states": 2774,
+          "state_action_rows": 447,
+          "transition_entries": 3582,
+          "reforge_work": 4009536,
+          "live_owned_bytes": 16140658,
+          "peak_owned_bytes": 24253719,
+          "finalization_work_items": 1,
+          "refinement_states": 0,
+          "refinement_kernels": 0,
+          "refinement_transitions": 0,
+          "refinement_rounds": 0,
+          "refinement_classes": 0,
+          "certification_discovered_pairs": 0,
+          "certification_pending_pairs": 0,
+          "certification_solved_sccs": 0,
+          "certification_total_sccs": 0
+        },
+        "joint": {
+          "attempts": 4,
+          "successes": 1,
+          "last_completed_rows": 0,
+          "best_upper": 938064.60675,
+          "last_failure": ""
+        },
+        "verified": {
+          "present": false,
+          "cost": null,
+          "portfolio_identity": "0000000000000000",
+          "identity": {
+            "portfolio": "0000000000000000",
+            "goal": "0000000000000000",
+            "economy": "0000000000000000",
+            "action_vocabulary": "0000000000000000",
+            "caller_scope": "0000000000000000",
+            "graph_prefix": "0000000000000000",
+            "artifact": "0000000000000000",
+            "source_generation": 0
+          },
+          "observations": 0,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        }
+      },
+      "first_verified_observation": {
+        "elapsed_ms": 4131.9218,
+        "progress": {
+          "phase": "expanding",
+          "phase_owner": "ladder_scheduling",
+          "done": false,
+          "expanded_states": 58,
+          "sweeps": 0,
+          "residual": 1000000000000,
+          "start_value_bound": 938064.6067501592,
+          "lower_bound": 10.169847833384168,
+          "upper_bound": 938064.6067502735,
+          "absolute_optimality_gap": 938054.4369024402,
+          "relative_optimality_gap": 92238.78786299289,
+          "focused_round": 4,
+          "incumbent_kind": "other",
+          "discovered_states": 2832,
+          "frontier_states": 2774,
+          "state_action_rows": 447,
+          "transition_entries": 3582,
+          "reforge_work": 4009536,
+          "live_owned_bytes": 15561949,
+          "peak_owned_bytes": 24253719,
+          "finalization_work_items": 4,
+          "refinement_states": 0,
+          "refinement_kernels": 0,
+          "refinement_transitions": 0,
+          "refinement_rounds": 0,
+          "refinement_classes": 0,
+          "certification_discovered_pairs": 63,
+          "certification_pending_pairs": 9,
+          "certification_solved_sccs": 0,
+          "certification_total_sccs": 0
+        },
+        "verified": {
+          "present": true,
+          "cost": 938064.6067502735,
+          "portfolio_identity": "a873a1ae1af46137",
+          "identity": {
+            "portfolio": "a873a1ae1af46137",
+            "goal": "783ea5d09f610dc3",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "3092207605a9f8c7",
+            "caller_scope": "ef3fa952d71607ec",
+            "graph_prefix": "ec356a73cf2291ba",
+            "artifact": "c35a92dc098d207f",
+            "source_generation": 447
+          },
+          "observations": 2,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        }
+      },
+      "finish_requested_ms": null,
+      "solve_complete_ms": 15658.1966,
+      "adapter_total_ms": 15870.949999999999,
+      "abandon_ms": null,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 582192.807187538,
+        "expanded_states": 58,
+        "sweeps": 0,
+        "residual": 24.917142857215367,
+        "skipped_actions": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "refused_resource_cap",
+        "lower_bound": 10.169847833384168,
+        "upper_bound": 582192.807187538,
+        "evaluated_policy_cost": 582192.807187538,
+        "absolute_optimality_gap": 582182.6373397047,
+        "relative_optimality_gap": 57245.95361482166,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "memory_cap",
+        "cap_hit_mask": 4,
+        "registry_actions": 168,
+        "candidate_actions": 27,
+        "evaluator_supported_actions": 27,
+        "supported_priced_actions": 27,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 0
+      },
+      "description": "Compiled policy; compilation does not establish policy optimality; zero-progress-reroll policy restriction; excluded zero-progress salvage routes are not globally optimized; ordinary fresh-base abandonment is also excluded; automatic Imprint programs are excluded",
+      "solver_policy_scope": "zero_progress_reroll_and_no_economic_restart_restrictions",
+      "strategy_sha256": "56e4ee9df626ec43370fad8e284f74ae746d63ad818750670793239668c49ccb",
+      "independent_evaluation": {
+        "performed": true,
+        "converged": true,
+        "terminals": {
+          "success": 1.0000000000000653,
+          "failure": 0,
+          "stop": 0,
+          "action_not_applied": 0,
+          "no_matching_edge": 0,
+          "unresolved": 0,
+          "by_node": [
+            {
+              "node_id": "goal",
+              "kind": "success",
+              "p": 1.0000000000000653
+            },
+            {
+              "node_id": "offpolicy",
+              "kind": "failure",
+              "p": 0
+            }
+          ]
+        },
+        "totals": {
+          "expected_actions": 1672.9875000001082,
+          "known_expected_cost": 582192.807187538,
+          "total_expected_cost": 582192.807187538,
+          "cost_complete": true
+        }
+      },
+      "memory_after_cleanup": {
+        "ok": true,
+        "live_handles": 0,
+        "native_live_owned_bytes": 41408,
+        "native_peak_owned_bytes": 41408,
+        "native_serialized_output_bytes": 41343,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 1342439424
+      }
+    },
+    {
+      "mode": "finish",
+      "status": "passed",
+      "receipt": {
+        "path": "out/post-incumbent-cost/wasm-final-finish.json",
+        "sha256": "d4b34c4e56ba3a789f2279a35e7e5f8bceb307a09cf0426947a87e74d6e4f399",
+        "bytes": 180663
+      },
+      "process_receipt": {
+        "path": "out/post-incumbent-cost/wasm-final-finish-process.json",
+        "sha256": "7a46dc7007d046c5135a7a5f813653cff75bdead8de1401313391a9a5653e4fd",
+        "bytes": 328
+      },
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 33724,
+        "process_identity_token": "33724:134335799589470003",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 17343.390099995304
+      },
+      "initial_publication_observation": {
+        "elapsed_ms": 4139.6772,
+        "progress": {
+          "phase": "compiling",
+          "phase_owner": "compilation",
+          "done": false,
+          "expanded_states": 58,
+          "sweeps": 2,
+          "residual": 1.2754242106893798e-12,
+          "start_value_bound": 10.169847833384168,
+          "lower_bound": 10.169847833384168,
+          "upper_bound": null,
+          "absolute_optimality_gap": null,
+          "relative_optimality_gap": null,
+          "focused_round": 4,
+          "incumbent_kind": "other",
+          "discovered_states": 2832,
+          "frontier_states": 2774,
+          "state_action_rows": 447,
+          "transition_entries": 3582,
+          "reforge_work": 4009536,
+          "live_owned_bytes": 16140658,
+          "peak_owned_bytes": 24253719,
+          "finalization_work_items": 1,
+          "refinement_states": 0,
+          "refinement_kernels": 0,
+          "refinement_transitions": 0,
+          "refinement_rounds": 0,
+          "refinement_classes": 0,
+          "certification_discovered_pairs": 0,
+          "certification_pending_pairs": 0,
+          "certification_solved_sccs": 0,
+          "certification_total_sccs": 0
+        },
+        "joint": {
+          "attempts": 4,
+          "successes": 1,
+          "last_completed_rows": 0,
+          "best_upper": 938064.60675,
+          "last_failure": ""
+        },
+        "verified": {
+          "present": false,
+          "cost": null,
+          "portfolio_identity": "0000000000000000",
+          "identity": {
+            "portfolio": "0000000000000000",
+            "goal": "0000000000000000",
+            "economy": "0000000000000000",
+            "action_vocabulary": "0000000000000000",
+            "caller_scope": "0000000000000000",
+            "graph_prefix": "0000000000000000",
+            "artifact": "0000000000000000",
+            "source_generation": 0
+          },
+          "observations": 0,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        }
+      },
+      "first_verified_observation": {
+        "elapsed_ms": 4194.9017,
+        "progress": {
+          "phase": "expanding",
+          "phase_owner": "ladder_scheduling",
+          "done": false,
+          "expanded_states": 58,
+          "sweeps": 0,
+          "residual": 1000000000000,
+          "start_value_bound": 938064.6067501592,
+          "lower_bound": 10.169847833384168,
+          "upper_bound": 938064.6067502735,
+          "absolute_optimality_gap": 938054.4369024402,
+          "relative_optimality_gap": 92238.78786299289,
+          "focused_round": 4,
+          "incumbent_kind": "other",
+          "discovered_states": 2832,
+          "frontier_states": 2774,
+          "state_action_rows": 447,
+          "transition_entries": 3582,
+          "reforge_work": 4009536,
+          "live_owned_bytes": 15561949,
+          "peak_owned_bytes": 24253719,
+          "finalization_work_items": 4,
+          "refinement_states": 0,
+          "refinement_kernels": 0,
+          "refinement_transitions": 0,
+          "refinement_rounds": 0,
+          "refinement_classes": 0,
+          "certification_discovered_pairs": 63,
+          "certification_pending_pairs": 9,
+          "certification_solved_sccs": 0,
+          "certification_total_sccs": 0
+        },
+        "verified": {
+          "present": true,
+          "cost": 938064.6067502735,
+          "portfolio_identity": "a873a1ae1af46137",
+          "identity": {
+            "portfolio": "a873a1ae1af46137",
+            "goal": "783ea5d09f610dc3",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "3092207605a9f8c7",
+            "caller_scope": "ef3fa952d71607ec",
+            "graph_prefix": "ec356a73cf2291ba",
+            "artifact": "c35a92dc098d207f",
+            "source_generation": 447
+          },
+          "observations": 2,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        }
+      },
+      "finish_requested_ms": 4195.0497000000005,
+      "solve_complete_ms": 4699.748500000001,
+      "adapter_total_ms": 4731.3335,
+      "abandon_ms": null,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 938064.6067501592,
+        "expanded_states": 58,
+        "sweeps": 0,
+        "residual": 1000000000000,
+        "skipped_actions": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 10.169847833384168,
+        "upper_bound": 938064.6067502735,
+        "evaluated_policy_cost": 938064.6067502735,
+        "absolute_optimality_gap": 938054.4369024402,
+        "relative_optimality_gap": 92238.78786299289,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "registry_actions": 168,
+        "candidate_actions": 27,
+        "evaluator_supported_actions": 27,
+        "supported_priced_actions": 27,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 0
+      },
+      "description": "Compiled policy; compilation does not establish policy optimality; zero-progress-reroll policy restriction; excluded zero-progress salvage routes are not globally optimized; ordinary fresh-base abandonment is also excluded; automatic Imprint programs are excluded",
+      "solver_policy_scope": "zero_progress_reroll_and_no_economic_restart_restrictions",
+      "strategy_sha256": "1d9aa6881cbf8591df8227f7e176c0812a5af37c220baf94e0719272664071d5",
+      "independent_evaluation": {
+        "performed": true,
+        "converged": true,
+        "terminals": {
+          "success": 1.0000000000002918,
+          "failure": 0,
+          "stop": 0,
+          "action_not_applied": 0,
+          "no_matching_edge": 0,
+          "unresolved": 0,
+          "by_node": [
+            {
+              "node_id": "goal",
+              "kind": "success",
+              "p": 1.0000000000002918
+            },
+            {
+              "node_id": "offpolicy",
+              "kind": "failure",
+              "p": 0
+            }
+          ]
+        },
+        "totals": {
+          "expected_actions": 3153.0000000009195,
+          "known_expected_cost": 938064.6067502735,
+          "total_expected_cost": 938064.6067502735,
+          "cost_complete": true
+        }
+      },
+      "memory_after_cleanup": {
+        "ok": true,
+        "live_handles": 0,
+        "native_live_owned_bytes": 41920,
+        "native_peak_owned_bytes": 41920,
+        "native_serialized_output_bytes": 41855,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 278396928
+      }
+    },
+    {
+      "mode": "abandon",
+      "status": "passed",
+      "receipt": {
+        "path": "out/post-incumbent-cost/wasm-final-abandon.json",
+        "sha256": "502f034c91659bd551eb3e00fbdca48577650145d951088b003a7c1ce640c6d1",
+        "bytes": 10164
+      },
+      "process_receipt": {
+        "path": "out/post-incumbent-cost/wasm-final-abandon-process.json",
+        "sha256": "20f1f8e73dcd9d6608a57a8f3c98f6cb2f5f360896e4338d8e15e74d4b56c8af",
+        "bytes": 328
+      },
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 14544,
+        "process_identity_token": "14544:134335799762953984",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 14928.501199989114
+      },
+      "initial_publication_observation": {
+        "elapsed_ms": 4150.9911,
+        "progress": {
+          "phase": "compiling",
+          "phase_owner": "compilation",
+          "done": false,
+          "expanded_states": 58,
+          "sweeps": 2,
+          "residual": 1.2754242106893798e-12,
+          "start_value_bound": 10.169847833384168,
+          "lower_bound": 10.169847833384168,
+          "upper_bound": null,
+          "absolute_optimality_gap": null,
+          "relative_optimality_gap": null,
+          "focused_round": 4,
+          "incumbent_kind": "other",
+          "discovered_states": 2832,
+          "frontier_states": 2774,
+          "state_action_rows": 447,
+          "transition_entries": 3582,
+          "reforge_work": 4009536,
+          "live_owned_bytes": 16140658,
+          "peak_owned_bytes": 24253719,
+          "finalization_work_items": 1,
+          "refinement_states": 0,
+          "refinement_kernels": 0,
+          "refinement_transitions": 0,
+          "refinement_rounds": 0,
+          "refinement_classes": 0,
+          "certification_discovered_pairs": 0,
+          "certification_pending_pairs": 0,
+          "certification_solved_sccs": 0,
+          "certification_total_sccs": 0
+        },
+        "joint": {
+          "attempts": 4,
+          "successes": 1,
+          "last_completed_rows": 0,
+          "best_upper": 938064.60675,
+          "last_failure": ""
+        },
+        "verified": {
+          "present": false,
+          "cost": null,
+          "portfolio_identity": "0000000000000000",
+          "identity": {
+            "portfolio": "0000000000000000",
+            "goal": "0000000000000000",
+            "economy": "0000000000000000",
+            "action_vocabulary": "0000000000000000",
+            "caller_scope": "0000000000000000",
+            "graph_prefix": "0000000000000000",
+            "artifact": "0000000000000000",
+            "source_generation": 0
+          },
+          "observations": 0,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        }
+      },
+      "first_verified_observation": {
+        "elapsed_ms": 4201.448,
+        "progress": {
+          "phase": "expanding",
+          "phase_owner": "ladder_scheduling",
+          "done": false,
+          "expanded_states": 58,
+          "sweeps": 0,
+          "residual": 1000000000000,
+          "start_value_bound": 938064.6067501592,
+          "lower_bound": 10.169847833384168,
+          "upper_bound": 938064.6067502735,
+          "absolute_optimality_gap": 938054.4369024402,
+          "relative_optimality_gap": 92238.78786299289,
+          "focused_round": 4,
+          "incumbent_kind": "other",
+          "discovered_states": 2832,
+          "frontier_states": 2774,
+          "state_action_rows": 447,
+          "transition_entries": 3582,
+          "reforge_work": 4009536,
+          "live_owned_bytes": 15561949,
+          "peak_owned_bytes": 24253719,
+          "finalization_work_items": 4,
+          "refinement_states": 0,
+          "refinement_kernels": 0,
+          "refinement_transitions": 0,
+          "refinement_rounds": 0,
+          "refinement_classes": 0,
+          "certification_discovered_pairs": 63,
+          "certification_pending_pairs": 9,
+          "certification_solved_sccs": 0,
+          "certification_total_sccs": 0
+        },
+        "verified": {
+          "present": true,
+          "cost": 938064.6067502735,
+          "portfolio_identity": "a873a1ae1af46137",
+          "identity": {
+            "portfolio": "a873a1ae1af46137",
+            "goal": "783ea5d09f610dc3",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "3092207605a9f8c7",
+            "caller_scope": "ef3fa952d71607ec",
+            "graph_prefix": "ec356a73cf2291ba",
+            "artifact": "c35a92dc098d207f",
+            "source_generation": 447
+          },
+          "observations": 2,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        }
+      },
+      "finish_requested_ms": null,
+      "solve_complete_ms": null,
+      "adapter_total_ms": 4205.7164,
+      "abandon_ms": 1.300799999999981,
+      "summary": null,
+      "description": null,
+      "solver_policy_scope": null,
+      "strategy_sha256": null,
+      "independent_evaluation": {
+        "performed": false,
+        "converged": null,
+        "terminals": null,
+        "totals": null
+      },
+      "memory_after_cleanup": {
+        "ok": true,
+        "live_handles": 0,
+        "native_live_owned_bytes": 337776,
+        "native_peak_owned_bytes": 337776,
+        "native_serialized_output_bytes": 337727,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 278396928
+      }
+    }
+  ],
+  "adapter_failure": {
+    "receipt": {
+      "path": "out/post-incumbent-cost/wasm-normal-adapter-error.json",
+      "sha256": "c2f4340c4edb8ad097ab8adc3c81b829e40fc1f9464055b195aac20a5660e117",
+      "bytes": 136121
+    },
+    "process_receipt": {
+      "path": "out/post-incumbent-cost/wasm-normal-adapter-error-process.json",
+      "sha256": "8855774e926606202f74e4612d784ba8458037a29fa48de5b23ca441ca32dd46",
+      "bytes": 328
+    },
+    "error": "SyntaxError: Unexpected non-whitespace character after JSON at position 3",
+    "native_returned_upper": 582192.807187538,
+    "disposition": "Adapter passed Uint8Array directly to JSON.parse. Confirmed facade return type, decoded UTF-8, then reran all modes successfully with unchanged native/WASM binaries. This was a harness conversion error, not a baseline-flake inference.",
+    "survivor": false,
+    "live_handles_after_cleanup": 0
+  },
+  "stopped_rejected_t1_core": {
+    "reason": "Stopped T1 qualification after a material Conquest-five returned-cost regression; no further cohort results are claimed. CB02 may have only partial evidence.",
+    "runner_pid": 21416,
+    "identities": {
+      "21416": "21416:134335763077973395",
+      "47860": "47860:134335765507712411"
+    },
+    "termination_confirmed": true,
+    "observations": {
+      "21416": "proved_absent",
+      "47860": "proved_absent"
+    }
+  },
+  "qualification_limits": [
+    "Full timed core/exposed preservation uses the restored solver with provisional metadata text; all 13 available graphs equal their baseline except description. Final neutral text is checked on fresh native Ring and exact Regalia plus the actual WASM Ring facade.",
+    "WASM uses the original 1 GiB solver profile. The native 4 GiB capacity graph is not claimed as separately qualified browser delivery.",
+    "Adapter times begin after native data/session/economy/item creation. Process wall includes startup and cleanup. Verification times are observations of the native verified portfolio after a step, not an instrumented in-engine event timestamp.",
+    "Zero live handles does not imply an empty WASM heap; retained serialization buffers and heap capacity are reported separately.",
+    "No Simulator, full acceptance suite, full web suite, soak or rendered UI review was run. There is no retained strategy-execution change."
+  ],
+  "documentation_checks": {
+    "knowledge_claims": 25,
+    "errors": [],
+    "warnings": [
+      "CLM-0004: open",
+      "CLM-0005: open",
+      "CLM-0013: open",
+      "CLM-0016: open",
+      "CLM-0017: open",
+      "CLM-0018: open",
+      "CLM-0019: open",
+      "CLM-0019: prerequisite CLM-0018 is open",
+      "CLM-0020: open",
+      "CLM-0021: open",
+      "CLM-0022: open",
+      "CLM-0023: open",
+      "CLM-0024: open",
+      "CLM-0024: prerequisite CLM-0020 is open",
+      "CLM-0024: prerequisite CLM-0023 is open",
+      "CLM-0025: open",
+      "engine/src/solver_quotient_lower.cpp:250 obligation: CLM-0023 is open; review its premises",
+      "tools/ingest/poecraft_ingest/solver_reports.py:995 obligation: CLM-0024 is open; review its premises"
+    ],
+    "warnings_unchanged": true,
+    "lint_receipt": {
+      "path": "out/post-incumbent-cost/final-knowledge-lint.json",
+      "sha256": "cb93ebc8667bb115bbd6915d0f5488b1e361394d38c2665ac97d132b3aa2adfd"
+    },
+    "checked_markdown_files": 7,
+    "broken_file_links": [],
+    "build_hashes_verified_against_final_files": true,
+    "whitespace": {
+      "current_authored_files": "passed with CRLF-aware check",
+      "preserved_import_and_patch_files": "excluded from whitespace cleanup to retain exact bytes and valid diff context; full CRLF-aware check flags 44 existing/imported or patch-context whitespace lines",
+      "git_configuration_changed": false
+    },
+    "staged_import_hashes_match_original_zip": true
+  },
+  "observed_stop_difference": {
+    "case": "ho02-cross-base-product8-long240",
+    "observations": [
+      {
+        "label": "baseline",
+        "case": "ho02-cross-base-product8-long240",
+        "stop": "memory_cap",
+        "cap_hit_mask": 4,
+        "phase_total_ms": 247358.6228,
+        "native_peak_owned_bytes": 781149376,
+        "expectation_met": true,
+        "same_graph_except_description": true,
+        "verified_upper": 3963.671015833939
+      },
+      {
+        "label": "preservation",
+        "case": "ho02-cross-base-product8-long240",
+        "stop": "state_cap",
+        "cap_hit_mask": 5,
+        "phase_total_ms": 193597.236,
+        "native_peak_owned_bytes": 849051024,
+        "expectation_met": true,
+        "same_graph_except_description": true,
+        "verified_upper": 3963.671015833939
+      }
+    ],
+    "interpretation": "Same controller and cost; resource-stop evidence differs. No algorithmic gain or identical stop claimed."
+  }
+}

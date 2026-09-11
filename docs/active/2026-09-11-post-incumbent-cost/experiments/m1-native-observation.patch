@@ -1,0 +1,286 @@
+diff --git a/engine/src/solver_calc.cpp b/engine/src/solver_calc.cpp
+index ef4e9fc..2907a74 100644
+--- a/engine/src/solver_calc.cpp
++++ b/engine/src/solver_calc.cpp
+@@ -5,6 +5,7 @@
+ #include <algorithm>
+ #include <array>
+ #include <chrono>
++#include <cstdio>
+ #include <functional>
+ #include <limits>
+ #include <map>
+@@ -2160,11 +2161,16 @@ ScopedReforgeRowProvenance::~ScopedReforgeRowProvenance() {
+ }
+ 
+ void CalcContext::require_reforge_scratch_bytes(
+-    const std::uint64_t scratch_bytes) const {
++    const std::uint64_t scratch_bytes, const std::source_location origin) const {
+     if (!solve_owned_bytes_cap_.has_value()) return;
+     const std::uint64_t cap = *solve_owned_bytes_cap_;
+     const std::uint64_t owned = fast_estimated_owned_bytes();
+     if (owned >= cap || scratch_bytes > cap - owned) {
++        std::fprintf(stderr, "{\"reforge_scratch_refusal\":true,\"line\":%u,\"owned\":%llu,\"scratch\":%llu,\"cap\":%llu,\"owner\":%u,\"family_override\":%d}\n",
++            origin.line(), static_cast<unsigned long long>(owned),
++            static_cast<unsigned long long>(scratch_bytes), static_cast<unsigned long long>(cap),
++            static_cast<unsigned>(reforge_row_owner_), reforge_row_family_override_
++                ? static_cast<int>(*reforge_row_family_override_) : -1);
+         throw SolverResourceLimit("max_owned_bytes", cap);
+     }
+ }
+diff --git a/engine/src/solver_calc_types.hpp b/engine/src/solver_calc_types.hpp
+index 205f7c9..5717920 100644
+--- a/engine/src/solver_calc_types.hpp
++++ b/engine/src/solver_calc_types.hpp
+@@ -1,4 +1,5 @@
+ #pragma once
++#include <source_location>
+ 
+ #include "solver_model.hpp"
+ #include "solver_cooperative_task.hpp"
+@@ -1233,7 +1234,8 @@ class CalcContext {
+     bool can_retain_reforge_distribution(
+         const OutcomeDistribution& value) const;
+     void require_reforge_scratch_bytes(
+-        std::uint64_t scratch_bytes) const;
++        std::uint64_t scratch_bytes,
++        std::source_location origin = std::source_location::current()) const;
+ 
+     std::shared_ptr<const OutcomeDistribution> evaluate(
+         std::uint32_t state_id,
+diff --git a/engine/src/solver_solve_constructive.cpp b/engine/src/solver_solve_constructive.cpp
+index 4935760..f8261ba 100644
+--- a/engine/src/solver_solve_constructive.cpp
++++ b/engine/src/solver_solve_constructive.cpp
+@@ -1,6 +1,7 @@
+ #include "solver_solve_types.hpp"
+ #include "solver_compile_contracts.hpp"
+ #include "solver_sparse_policy.hpp"
++#include <cstdio>
+ 
+ namespace poecraft {
+ namespace solver {
+@@ -4571,6 +4572,21 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
+         const JointAnytimeAttemptLineage::Trigger trigger) {
+         std::optional<std::size_t> lineage_index;
+         const auto record_attempt_failure = [&](std::string failure) {
++            if (output_incumbent.has_value() &&
++                incremental_anytime_policy_attempts <= 32) {
++                std::string probe = "{\"post_incumbent_refusal\":true,\"attempt\":" +
++                    std::to_string(incremental_anytime_policy_attempts) +
++                    ",\"rows\":" + std::to_string(transition_cache ? transition_cache->rows.size() : 0) +
++                    ",\"failure\":";
++                append_json_string(probe, failure);
++                if (resumable_joint_policy_candidate) {
++                    probe += ",\"retained_refusal\":";
++                    append_json_string(probe, std::string(joint_policy_continuation_refusal_name(
++                        resumable_joint_policy_candidate->continuation.refusal)));
++                }
++                probe += '}';
++                std::fprintf(stderr, "%s\n", probe.c_str());
++            }
+             if (lineage_index.has_value()) {
+                 JointAnytimeAttemptLineage& lineage =
+                     joint_anytime_attempt_lineage.at(*lineage_index);
+@@ -5247,6 +5263,40 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
+                                                 .size());
+                                 }
+                                 if (missing_count++ == 0) {
++                                    if (output_incumbent.has_value() &&
++                                        incremental_anytime_policy_attempts <= 16) {
++                                        // Temporary native path observation; no continuation is admitted.
++                                        std::string probe = "{\"post_incumbent_missing\":true,\"attempt\":" +
++                                            std::to_string(incremental_anytime_policy_attempts) +
++                                            ",\"rows\":" + std::to_string(transition_cache->rows.size()) +
++                                            ",\"root_row\":" + std::to_string(policy_rows[result.start_state]) +
++                                            ",\"state\":" + std::to_string(state) +
++                                            ",\"semantic_key\":[";
++                                        for (auto value : exact_abstract_state_key(calc.state(state), 0)) {
++                                            if (probe.back() != '[') probe += ',';
++                                            append_json_string(probe, std::to_string(value));
++                                        }
++                                        probe += "],\"parents_from_first_256_walk_entries\":[";
++                                        unsigned parents = 0;
++                                        for (std::size_t at = 0; at < std::min<std::size_t>(walk.size(), 256) && parents < 3; ++at) {
++                                            auto parent = walk[at];
++                                            if (parent >= policy_rows.size() || policy_rows[parent] >= completed.size()) continue;
++                                            const auto& row = transition_cache->rows[policy_rows[parent]];
++                                            for (std::uint32_t edge = 0; edge < row.transition_count; ++edge) {
++                                                auto offset = row.transition_offset + edge;
++                                                if (transition_cache->successors[offset] != state ||
++                                                    !(transition_cache->probabilities[offset] > 0.0)) continue;
++                                                if (parents++) probe += ',';
++                                                probe += "{\"state\":" + std::to_string(parent) +
++                                                    ",\"row\":" + std::to_string(policy_rows[parent]) + ",\"action\":";
++                                                append_json_string(probe, calc.operators()[priced_rows[policy_rows[parent]].operator_index].id);
++                                                probe += '}';
++                                                break;
++                                            }
++                                        }
++                                        probe += "],\"walk_size\":" + std::to_string(walk.size()) + '}';
++                                        std::fprintf(stderr, "%s\n", probe.c_str());
++                                    }
+                                     attempt_failure =
+                                         "missing_completed_row_and_certified_"
+                                         "frontier:state=" +
+diff --git a/engine/src/solver_solve_incremental.cpp b/engine/src/solver_solve_incremental.cpp
+index eeb08d8..e399f73 100644
+--- a/engine/src/solver_solve_incremental.cpp
++++ b/engine/src/solver_solve_incremental.cpp
+@@ -1,6 +1,7 @@
+ #include "solver_solve_types.hpp"
+ #include "solver_action_family_contract.hpp"
+ #include "solver_sparse_policy.hpp"
++#include <cstdio>
+ 
+ namespace poecraft {
+ namespace solver {
+@@ -691,6 +692,127 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
+     return false;
+ }
+ 
++void SolveWork::Impl::trace_post_incumbent_diagnostic(const char* stage) {
++    // Temporary bounded observation of existing evidence; no row or value mutation.
++    const auto pass = incremental_upper_policy_passes_requested;
++    if (!output_incumbent || transition_cache == nullptr || pass == 0 ||
++        pass > 16 || (pass & (pass - 1)) != 0 || calc.state_count() > 50000)
++        return;
++    const auto numeric = [](double value) {
++        if (!std::isfinite(value) || value >= kValueCeiling) return std::string("null");
++        char text[64]; std::snprintf(text, sizeof(text), "%.17g", value);
++        return std::string(text);
++    };
++    const auto quoted = [](const std::string& text) {
++        std::string json; append_json_string(json, text); return json;
++    };
++    const auto semantic = [&](std::uint32_t state) {
++        std::string json = "[";
++        for (auto value : exact_abstract_state_key(calc.state(state), 0)) {
++            if (json.size() > 1) json += ',';
++            json += quoted(std::to_string(value));
++        }
++        return json + ']';
++    };
++    const auto& incumbent = *output_incumbent;
++    std::vector<double> boundary = incumbent.values;
++    boundary.resize(calc.state_count(), kInfinity);
++    const auto covered = [&](std::uint32_t state) {
++        return calc.is_goal_state(calc.state(state)) ||
++            (state < incumbent.policy_reachable.size() &&
++             incumbent.policy_reachable[state]);
++    };
++    for (std::uint32_t state = 0; state < boundary.size(); ++state) {
++        if (calc.is_goal_state(calc.state(state))) boundary[state] = 0.0;
++        else if (!covered(state)) boundary[state] = kInfinity;
++    }
++    std::vector<std::uint32_t> sources{result.start_state};
++    std::set<std::pair<std::uint32_t, std::uint32_t>> selected_shapes;
++    for (std::uint32_t state = 0; state < incumbent.policy_rows.size() &&
++         sources.size() < 6; ++state) {
++        if (state >= calc.state_count() || !covered(state) ||
++            calc.is_goal_state(calc.state(state))) continue;
++        auto row = incumbent.policy_rows[state];
++        if (row >= priced_rows.size()) continue;
++        if (selected_shapes.emplace(satisfied_goal_mask_for_state(state),
++                priced_rows[row].operator_index).second && state != result.start_state)
++            sources.push_back(state);
++    }
++    std::string json = "{\"post_incumbent_probe\":" + quoted(stage) +
++        ",\"pass\":" + std::to_string(pass) +
++        ",\"graph_identity\":" + quoted(std::to_string(graph_identity())) +
++        ",\"graph_rows\":" + std::to_string(transition_cache->rows.size()) +
++        ",\"expanded\":" + std::to_string(expanded_count) +
++        ",\"incumbent_cost\":" + numeric(incumbent.certified_upper_bound) +
++        ",\"incumbent_independent\":" + (incumbent.independently_evaluated ? "true" : "false") +
++        ",\"missing_requests\":" + std::to_string(incremental_anytime_missing_frontier_states.size()) +
++        ",\"sources\":[";
++    bool first_source = true;
++    for (auto state : sources) {
++        if (!first_source) json += ','; first_source = false;
++        const auto& item = calc.state(state);
++        const auto selected = state < incumbent.policy_rows.size()
++            ? incumbent.policy_rows[state] : std::numeric_limits<std::uint64_t>::max();
++        const auto seed = select_joint_policy_seed_row(state, result.values);
++        json += "{\"state\":" + std::to_string(state) + ",\"semantic_key\":" + semantic(state) +
++            ",\"goal_mask\":" + std::to_string(satisfied_goal_mask_for_state(state)) +
++            ",\"prefixes\":" + std::to_string(item.prefix_count) +
++            ",\"suffixes\":" + std::to_string(item.suffix_count) +
++            ",\"selected_row\":" + quoted(std::to_string(selected)) +
++            ",\"joint_seed_row\":" + quoted(std::to_string(seed)) +
++            ",\"incumbent_source_value\":" + numeric(boundary[state]) + ",\"rows\":[";
++        bool first_row = true; unsigned count = 0;
++        for (auto row_id : state_row_indices(*transition_cache, state)) {
++            if (++count > 32) break;
++            const auto& row = transition_cache->rows[row_id];
++            const auto& priced = priced_rows[row_id];
++            if (priced.operator_index >= calc.operators().size()) continue;
++            double unknown_mass = 0.0, missing_mass = 0.0, goal_mass = 0.0;
++            std::uint32_t unknown = 0, missing = 0;
++            std::string examples = "[";
++            for (std::uint32_t i = 0; i < row.transition_count; ++i) {
++                const auto at = row.transition_offset + i;
++                const auto next = transition_cache->successors[at];
++                const auto p = transition_cache->probabilities[at];
++                if (!(p > 0.0)) continue;
++                if (calc.is_goal_state(calc.state(next))) goal_mass += p;
++                if (next == state || covered(next)) continue;
++                ++unknown; unknown_mass += p;
++                if (next >= transition_cache->state_rows.size() ||
++                    transition_cache->state_rows[next].count == 0) {
++                    ++missing; missing_mass += p;
++                    if (missing <= 2) {
++                        if (examples.size() > 1) examples += ',';
++                        examples += "{\"state\":" + std::to_string(next) +
++                            ",\"semantic_key\":" + semantic(next) + '}';
++                    }
++                }
++            }
++            examples += ']';
++            const auto* entry = action_envelope_ledger.find(state, priced.operator_index);
++            if (!first_row) json += ','; first_row = false;
++            json += "{\"row\":" + std::to_string(row_id) +
++                ",\"action\":" + quoted(calc.operators()[priced.operator_index].id) +
++                ",\"immediate_cost\":" + numeric(priced.cost) +
++                ",\"admitted\":" + (row.admitted ? "true" : "false") +
++                ",\"masked_incumbent_q\":" + numeric(sparse_row_q_for_values(row_id, boundary)) +
++                ",\"direct_count\":" + std::to_string(row.transition_count) +
++                ",\"choice_groups\":" + std::to_string(row.choice_count) +
++                ",\"direct_goal_mass\":" + numeric(goal_mass) +
++                ",\"direct_outside_domain\":" + std::to_string(unknown) +
++                ",\"direct_outside_mass\":" + numeric(unknown_mass) +
++                ",\"direct_no_row\":" + std::to_string(missing) +
++                ",\"direct_no_row_mass\":" + numeric(missing_mass) +
++                ",\"missing_examples\":" + examples +
++                ",\"ledger_state\":" + std::to_string(entry ? static_cast<int>(entry->lifecycle) : -1) +
++                ",\"ledger_detail\":" + quoted(entry ? entry->detail : "absent") + '}';
++        }
++        json += "]}";
++    }
++    json += "]}";
++    std::fprintf(stderr, "%s\n", json.c_str());
++}
++
+ bool SolveWork::Impl::begin_incremental_upper_policy_pass() {
+     if (!options.high_impact_executable_uppers ||
+         !incremental_action_generation ||
+@@ -701,6 +823,7 @@ bool SolveWork::Impl::begin_incremental_upper_policy_pass() {
+         return false;
+     }
+     ++incremental_upper_policy_passes_requested;
++    trace_post_incumbent_diagnostic("before_upper_pass");
+     retain_action_reason(
+         "included:high_impact_executable_uppers:policy_pass_requested");
+     incremental_upper_policy_pass = true;
+diff --git a/engine/src/solver_solve_types.hpp b/engine/src/solver_solve_types.hpp
+index d2cdac7..50aeb7e 100644
+--- a/engine/src/solver_solve_types.hpp
++++ b/engine/src/solver_solve_types.hpp
+@@ -2686,6 +2686,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
+ 
+     bool begin_incremental_upper_policy_pass();
+ 
++    void trace_post_incumbent_diagnostic(const char* stage);
++
+     void begin_incremental_post_upper_scheduling();
+ 
+     bool advance_incremental_post_upper_scheduling();

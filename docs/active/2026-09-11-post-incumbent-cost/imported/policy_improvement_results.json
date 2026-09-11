@@ -1,0 +1,52 @@
+{
+  "classification": "synthetic exact arithmetic; no native solver, tests, or simulation executed",
+  "reviewed_source": "edd8ec25f40b11c8ba4f4aaf157db9405b593ed2",
+  "checks": {
+    "old_policy_values": true,
+    "new_policy_values": true,
+    "complete_domain_advantage": true,
+    "performance_difference_identity": true,
+    "old_visitation": true,
+    "new_visitation": true,
+    "root_cost_attribution": true,
+    "new_visits_give_actual_gain": true,
+    "old_visits_are_not_the_new_gain": true,
+    "one_time_switch_cost": true,
+    "repeated_switch_cost": true,
+    "one_time_and_repeated_are_distinct": true,
+    "lower_tail_cannot_certify_upper": true,
+    "improper_tie_can_have_zero_residual": true,
+    "zero_cost_trap_has_no_finite_absorption_system": true,
+    "observed_choice_timing": true
+  },
+  "check_count": 16,
+  "performance_difference": {
+    "old_values": [
+      "12",
+      "10"
+    ],
+    "new_values": [
+      "6",
+      "5"
+    ],
+    "advantage": [
+      "-1",
+      "-5"
+    ],
+    "root_actual_difference": "-6",
+    "old_visitation_weighted_advantage_not_actual_difference": "-7"
+  },
+  "proposed_20_percent_same_budget_cost_targets": {
+    "ring": "291096403593769/625000000",
+    "ring_decimal": 465754.2457500304,
+    "amulet": "10053857248889599/312500000",
+    "amulet_decimal": 32172343.196446717,
+    "status": "engineering targets, not predicted native outcomes; freeze against the matched control"
+  },
+  "recorded_N2_allocation_arithmetic_not_final_refusal": {
+    "required_bytes": 1246891066,
+    "required_GiB": 1.1612577978521585,
+    "excess_above_1_GiB_bytes": 173149242,
+    "warning": "Does not predict the final run's peak or show that a higher cap yields a better policy."
+  }
+}

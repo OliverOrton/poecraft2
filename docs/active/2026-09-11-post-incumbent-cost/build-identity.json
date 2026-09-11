@@ -1,0 +1,74 @@
+{
+  "recorded_at_utc": "2026-09-11T05:56:14.666844+00:00",
+  "reviewed_source": "edd8ec25f40b11c8ba4f4aaf157db9405b593ed2",
+  "retained": "Status-neutral compiler descriptions and focused metadata tests; both solver treatments removed. Final classifier owns optimality.",
+  "source_patch": {
+    "path": "docs/active/2026-09-11-post-incumbent-cost/experiments/final-publication.patch",
+    "sha256": "6e49c40506fafbcf82d85d35b6ba9641543bd6160636083a1ed8620605c4ef6b",
+    "bytes": 8193
+  },
+  "sources": [
+    {
+      "path": "engine/src/solver_compile.cpp",
+      "sha256": "37821d2436bc481276468cb28b9de63cbf646fa92a9e23db499cb58f719245a5",
+      "bytes": 178277
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "61028e1e682521a9aa634d9757f0db446be473c4630663e3a79be616ee517bc3",
+      "bytes": 127636
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "sha256": "3315dd201265b21ba5ae361cdcb6402990ff32b4e4f1d7fb9e54ee876263b631",
+      "bytes": 602416
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "sha256": "4e7bbc6e39325f9e92a9b1e243c7f82937726e782a659c0641d4c4d112e7db70",
+      "bytes": 11981
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "sha256": "0b2c4fc0776792f095328f5c4c6aa85fbe3a0c07595fa9af9f38892bdb56fc39",
+      "bytes": 2397
+    }
+  ],
+  "restored_solver_files": [
+    {
+      "path": "engine/src/solver_joint_policy_continuation.hpp",
+      "sha256": "37228aa06dd2d56f6496c9400bb3149cae8711b9fe9430f9e0ba68f44dff9968",
+      "bytes": 28538
+    },
+    {
+      "path": "engine/src/solver_solve_constructive.cpp",
+      "sha256": "b460b2d7c1d2f61136d542b5bbf91e09542f925e0dec6e2d790c9dc068fe4887",
+      "bytes": 404005
+    }
+  ],
+  "restored_solver_git_diff_empty": true,
+  "executable": {
+    "path": "out/post-incumbent-cost/final-publication.exe",
+    "sha256": "d251c303e6f3e3fba746a387f35d274b6b7be15ca1bd7aef4b18b7a740374401",
+    "bytes": 13024154
+  },
+  "wasm": {
+    "path": "bindings/wasm/dist/poecraft_engine.wasm",
+    "sha256": "fb48b3ae34ec9ceb194e726796ed22ac6f356bd61b4a89caa2ebcaf6b6d78e28",
+    "bytes": 7677122
+  },
+  "wasm_module": {
+    "path": "bindings/wasm/dist/poecraft_engine.mjs",
+    "sha256": "92bc2b9d61c465b35c2b80c71f8b3ee125155755275e8d66cdc649792ab9f4ce",
+    "bytes": 20219
+  },
+  "metadata_checks": 104,
+  "wasm_adapter_patch": {
+    "path": "docs/active/2026-09-11-post-incumbent-cost/experiments/wasm-adapter.patch",
+    "sha256": "8a98c27c90bf3883644fce2f77ab2ad34c9471ff92fb603094e2b54898ecc412",
+    "bytes": 9160
+  },
+  "preservation_cohort_build_receipt": "experiments/metadata-provisional-build-identity.json",
+  "preservation_to_final_change": "Compiler text no longer trusts preliminary Exact status; solver logic and controller structure unchanged.",
+  "wasm_adapter_correction": "Decode solverCompileStrategy Uint8Array as UTF-8 before checking description; failed adapter run preserved separately."
+}

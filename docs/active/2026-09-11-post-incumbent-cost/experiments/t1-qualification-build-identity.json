@@ -1,0 +1,72 @@
+{
+  "recorded_at_utc": "2026-09-11T04:58:27.687698+00:00",
+  "source_base": "edd8ec25f40b11c8ba4f4aaf157db9405b593ed2",
+  "retained": "T1 pending-state deduplication and compiler descriptions; T2 construction removed",
+  "source_patch_sha256": "49c468dc49f08c10c077808e1933a40118945b693086fa111e421b60c2d9461f",
+  "sources": [
+    {
+      "path": "engine/src/solver_joint_policy_continuation.hpp",
+      "sha256": "82a6044847caf2e64e6084f719936f615bceabf55097ca071c59635200bdf79e",
+      "bytes": 29024
+    },
+    {
+      "path": "engine/src/solver_solve_constructive.cpp",
+      "sha256": "c74ffcd1adf2df4f1f24660e6b4ec6b7c717a85b705124de352438b4ad64af79",
+      "bytes": 404277
+    },
+    {
+      "path": "engine/src/solver_compile.cpp",
+      "sha256": "476afdd437b2f296dc6ad97ed45ef6c89ff336883aabfdbbee4b46f76c5b429a",
+      "bytes": 178653
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "sha256": "fbda573e980d4291edb72c667fb815b581cb6c36cdd5a266aacefcb29aec7a1d",
+      "bytes": 604867
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "26c553311dfb75f0240be7b9924df70130965225a023014e015e3fb1a28cf312",
+      "bytes": 127556
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "sha256": "4e7bbc6e39325f9e92a9b1e243c7f82937726e782a659c0641d4c4d112e7db70",
+      "bytes": 11981
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "sha256": "0b2c4fc0776792f095328f5c4c6aa85fbe3a0c07595fa9af9f38892bdb56fc39",
+      "bytes": 2397
+    }
+  ],
+  "t1_executable": {
+    "path": "out/post-incumbent-cost/t1-deduplicated.exe",
+    "sha256": "43a2a301b7752e49bce29472ac41eceba72112e34081505889d216d502e6608b",
+    "bytes": 13025708
+  },
+  "final_executable": {
+    "path": "out/post-incumbent-cost/final-native.exe",
+    "sha256": "e53144b489a85e17cd7e046f0e050e02994bdda11f9af939e8efd10ac6b4d44a",
+    "bytes": 13025708
+  },
+  "differing_byte_offsets": [
+    136,
+    137,
+    216,
+    217
+  ],
+  "only_coff_timestamp_and_checksum_differ": true,
+  "wasm": {
+    "path": "bindings/wasm/dist/poecraft_engine.wasm",
+    "sha256": "ba55df1ae6bc31d2efa129bce45becfdcd0801c8e51a9fbebc96671d44e0b801",
+    "bytes": 7677815
+  },
+  "wasm_module": {
+    "path": "bindings/wasm/dist/poecraft_engine.mjs",
+    "sha256": "92bc2b9d61c465b35c2b80c71f8b3ee125155755275e8d66cdc649792ab9f4ce",
+    "bytes": 20219
+  },
+  "wasm_build_warnings": 3,
+  "test_maintenance": "Existing broad-suite renewal-description assertion aligned; focused producer already passes. No runtime change from T1."
+}

@@ -1,0 +1,15 @@
+{
+  "treatment": "T1 pending-state deduplication in existing joint/retained walks",
+  "registered_at_utc": "2026-09-11T04:27:16.282464+00:00",
+  "source_base": "edd8ec25f40b11c8ba4f4aaf157db9405b593ed2",
+  "executable": "out\\post-incumbent-cost\\t1-deduplicated.exe",
+  "executable_sha256": "43a2a301b7752e49bce29472ac41eceba72112e34081505889d216d502e6608b",
+  "patch_sha256": "ffabb28a855b2e79ed7dcb6b40a562fd9db858df73bef9b898c8cacc1dccb7a2",
+  "profile": "../implementation-profile.json",
+  "caps_changed": false,
+  "prediction": "same unique positive-mass continuation obligations with bounded queue size; a complete proper candidate may reach evaluation sooner",
+  "old_owner_fixture": "190 checks, 3 failures",
+  "candidate_fixture": "190 checks, 0 failures",
+  "metadata_fixture": "88 checks, 0 failures",
+  "runtime_disposition": "pending matched root results"
+}

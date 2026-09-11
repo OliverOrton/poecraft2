@@ -1,0 +1,61 @@
+{
+  "source_zip": "C:/Users/Oliver/Downloads/poecraft_post_incumbent_next_codex.zip",
+  "source_zip_sha256": "c780f7c1583a9428f95d70afc568bdcfee2788b5c1ce96217f4bce2cccc35835",
+  "byte_exact": true,
+  "files": [
+    {
+      "file": "docs/active/2026-09-11-post-incumbent-cost/imported/documentation_updates.md",
+      "archive_member": "documentation_updates.md",
+      "sha256": "9608cab5171b57c399d05fee09ca476bd9ace3f5e778ca1ed55a5b4e01be6b97",
+      "bytes": 3430
+    },
+    {
+      "file": "docs/active/2026-09-11-post-incumbent-cost/imported/implementation_plan.md",
+      "archive_member": "implementation_plan.md",
+      "sha256": "8e5da44c9c6bc067c504b619c592c364f143ecac23099b0c498940e91216e2a6",
+      "bytes": 19472
+    },
+    {
+      "file": "docs/active/2026-09-11-post-incumbent-cost/imported/manifest.json",
+      "archive_member": "manifest.json",
+      "sha256": "3173a9244cb69241731ad1aa580628bc4191b764de85549b10425d1205e1f42d",
+      "bytes": 1499
+    },
+    {
+      "file": "docs/active/2026-09-11-post-incumbent-cost/imported/policy_improvement_checks.py",
+      "archive_member": "policy_improvement_checks.py",
+      "sha256": "2abc013e057e2d5e33fdf9c27f30ce71100f1fc6ce108c441e38573661a3f1ac",
+      "bytes": 5716
+    },
+    {
+      "file": "docs/active/2026-09-11-post-incumbent-cost/imported/policy_improvement_results.json",
+      "archive_member": "policy_improvement_results.json",
+      "sha256": "97edd7dd3de49b8b244f65f50c195a83f74629cc1249842a2ceffbbae3bd1e0d",
+      "bytes": 1734
+    },
+    {
+      "file": "docs/active/2026-09-11-post-incumbent-cost/imported/README.md",
+      "archive_member": "README.md",
+      "sha256": "2c6e808516a34b6a7d524f5baf4d380d7ea0832e2541df23c8bd4980b4d636bf",
+      "bytes": 1458
+    },
+    {
+      "file": "docs/active/2026-09-11-post-incumbent-cost/imported/review_and_knowledge.md",
+      "archive_member": "review_and_knowledge.md",
+      "sha256": "60be238e2dfa800f3fc0d11f4137596ec9cb0e6da2c93a2e42834fb4fa9a69e3",
+      "bytes": 17463
+    },
+    {
+      "file": "docs/active/2026-09-11-post-incumbent-cost/imported/source_register.json",
+      "archive_member": "source_register.json",
+      "sha256": "f6a96f36ee97e969151a4096e43f6a2fded029327fcb47e8c8768f2f17c83b53",
+      "bytes": 4645
+    },
+    {
+      "file": "docs/active/2026-09-11-post-incumbent-cost/imported/start_prompt.txt",
+      "archive_member": "start_prompt.txt",
+      "sha256": "52a7f00d69b5c3f19a75d87a4b1ec731e89a609ccd0b9384551b12b41292ce81",
+      "bytes": 6592
+    }
+  ]
+}

@@ -1136,6 +1136,49 @@ void run_closed_coarse_certification_domain_test() {
         certification.closed_coarse_domain_route_states);
 }
 
+void run_policy_description_test() {
+    auto session = make_compile_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    GoalSlot slot;
+    slot.family_id = 100;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    goal.rarity = PC_RARITY_MAGIC;
+    pc_item_state start;
+    pc_item_clear(&start);
+    for (unsigned scope = 0; scope < 8; ++scope) {
+        CalcContext calc(session, goal, registry,
+            {registry.index_by_id.at("transmute"),
+             registry.index_by_id.at("alteration")});
+        SolveOptions options;
+        options.goal_progress_gated_reforges = (scope & 1) != 0;
+        options.allow_economic_restart = (scope & 2) != 0;
+        options.consider_imprint_programs = (scope & 4) != 0;
+        SolveResult solved = solve(calc, start,
+            {{"transmute", 1.0}, {"alteration", 1.0}, {"base", 10.0}}, options);
+        PC_CHECK(solved.converged);
+        // Exercise the metadata producer, not the already retained graph.
+        solved.refined_policy_artifact = {};
+        for (const bool bounded : {false, true}) {
+            solved.policy_status = bounded ? SolvePolicyStatus::BoundedFeasible
+                                           : SolvePolicyStatus::Exact;
+            const std::string json = compile_policy_strategy_json(
+                calc, solved, "policy description");
+            PC_CHECK(json.find(
+                "compilation does not establish policy optimality") !=
+                std::string::npos);
+            PC_CHECK(json.find("Exact within") == std::string::npos);
+            // A preliminary Exact status may be classified bounded later.
+            PC_CHECK(json.find("solver reports exact closure") == std::string::npos);
+            PC_CHECK(json.find("independently evaluated") == std::string::npos);
+            PC_CHECK(json.find("\"solver_policy_scope\":") != std::string::npos);
+            // Parse the whole graph, including the new unrestricted description.
+            PC_CHECK(compile_strategy_json(session, json.c_str(), json.size()) != nullptr);
+        }
+    }
+}
+
 void run_synthetic_gate() {
     auto session = make_compile_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -2832,6 +2875,7 @@ void run_imprint_gate(const char* artifact_dir) {
 } // namespace
 
 void run_solver_compile_tests(const char* artifact_dir) {
+    run_policy_description_test();
     run_condition_expr_tests();
     run_policy_route_coalescing_tests();
     run_future_observed_choice_compile_test();
@@ -2840,6 +2884,10 @@ void run_solver_compile_tests(const char* artifact_dir) {
     run_closed_coarse_certification_domain_test();
     run_artifact_gate(artifact_dir);
     run_imprint_gate(artifact_dir);
+}
+
+void run_solver_compile_metadata_tests() {
+    run_policy_description_test();
 }
 
 void run_solver_imprint_tests(const char* artifact_dir) {
