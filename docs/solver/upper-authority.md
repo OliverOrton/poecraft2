@@ -52,6 +52,16 @@ returns to assembly. Completed rows, certified frontiers, control memory,
 properness and compiled evaluation keep their existing authority boundaries.
 Finalization stops at the first missing entry; it does not launch another batch.
 
+The first no-incumbent joint candidate now reaches the existing cooperative
+compiled-graph assertion before cost improvement. Successful independent
+evaluation stores its actual graph and cost in the same bounded portfolio used
+by final publication. A finish request can discard in-flight verification
+scratch while preserving the materialized candidate for normal publication.
+Upper-pass initialization masks states outside the candidate's selected domain
+as unknown; finite saved lower estimates there are not executable terminals.
+The [goal-reaching application](../active/2026-09-10-goal-reaching-row-delivery/README.md)
+records the native qualification and remaining cost/closure limits.
+
 The unchanged empty-five request's C3 compiled graph independently evaluates to
 85,558.70618560436 versus B6's 16,997,812.199227553, with the same 405.3694021063399
 lower. The coarse candidate estimate remains 358,209,179.6640102 and fails cost

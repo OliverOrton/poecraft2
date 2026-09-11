@@ -1918,6 +1918,11 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
         std::uint32_t remaining = std::max<std::uint32_t>(
             1, std::min(max_work_items, kMaxCooperativeUnitsPerStep));
         while (remaining > 0 && phase != SolvePhase::Done) {
+            if (publication_pipeline.initial_candidate_task.has_value()) {
+                if (advance_initial_candidate_publication()) break;
+                // Finish discarded only the in-flight verification scratch;
+                // the materialized candidate still belongs to publication.
+            }
             if (requested_bounded_finish &&
                 incremental_upper_policy_pass) {
                 abort_incremental_upper_policy_pass_for_bounded_finish();
@@ -1981,6 +1986,20 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                     }
                     if (schedule_incremental_refinement(true)) {
                         incremental_restricted_values_ready = false;
+                        continue;
+                    }
+                    /* Finishing automatic preparation may consume the last
+                     * carrier of a frozen epoch and yield its scheduler call.
+                     * If no completed alternative needs refinement, re-enter
+                     * the ordinary boundary once so still-pending delayed
+                     * primitives can run. A yielded epoch is not exhaustion;
+                     * the existing checkpoint and final closure scan still
+                     * decide whether that next dispatch has actual work.
+                     * Existing incumbents retain their publication opportunity
+                     * at this boundary, including strict cost improvement. */
+                    if (!output_incumbent.has_value() &&
+                        !result.diagnostics.resource_cap_hit &&
+                        schedule_next_incremental_alternative()) {
                         continue;
                     }
                     phase = SolvePhase::Done;

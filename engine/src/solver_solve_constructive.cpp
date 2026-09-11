@@ -4113,6 +4113,19 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
     const std::uint64_t no_row =
         std::numeric_limits<std::uint64_t>::max();
     if (state >= transition_cache->state_rows.size()) return no_row;
+    const bool first_policy = options.high_impact_executable_uppers &&
+        incremental_action_generation && !output_incumbent.has_value();
+    // A construction preference, never an admissible value or a new terminal
+    // predicate. Full goal masks can still owe cleanup or rarity completion.
+    const auto terminal_debt = [&](const std::uint32_t id) {
+        const auto& item = calc.state(id);
+        if (calc.is_goal_state(item)) return 0u;
+        const unsigned satisfied = std::popcount(satisfied_goal_mask_for_state(id));
+        const unsigned required = calc.goal().required_satisfied_slots();
+        const unsigned missing = required > satisfied ? required - satisfied : 0;
+        const unsigned extra = item.prefix_count + item.suffix_count - satisfied;
+        return std::max(1u, missing + extra + (item.rarity != calc.goal().rarity));
+    };
     const auto goal_probability = [&](const std::uint64_t row_index) {
         const SparseRow& row = transition_cache->rows.at(row_index);
         WideFloat probability{0.0};
@@ -4148,7 +4161,8 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
             satisfied_goal_mask_for_state(state));
         const auto advances = [&](const std::uint32_t successor) {
             return successor < result.goal_states.size() &&
-                (result.goal_states[successor] ||
+                (first_policy ? terminal_debt(successor) < terminal_debt(state) :
+                 result.goal_states[successor] ||
                  std::popcount(satisfied_goal_mask_for_state(successor)) >
                      owner_progress);
         };
@@ -4175,9 +4189,9 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
         return probability.value();
     };
     std::uint64_t best = no_row;
-    std::tuple<int, double, double, double, std::uint64_t> best_key{
-        std::numeric_limits<int>::max(), kInfinity, kInfinity, kInfinity,
-        no_row};
+    std::tuple<int, std::uint64_t, double, double, double, std::uint64_t> best_key{
+        std::numeric_limits<int>::max(), no_row, kInfinity, kInfinity,
+        kInfinity, no_row};
     for (const std::uint64_t row_index :
          state_row_indices(*transition_cache, state)) {
         if (!joint_policy_row_completed(row_index)) continue;
@@ -4193,8 +4207,29 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
         const double attempt_cost = progress > 0.0
             ? priced.cost / progress
             : priced.cost;
+        std::uint64_t pending_routes = 0;
+        if (first_policy) {
+            const auto pending = [&](const std::uint32_t next) {
+                return next != state && !calc.is_goal_state(calc.state(next)) &&
+                    (next >= transition_cache->state_rows.size() ||
+                     transition_cache->state_rows[next].count == 0);
+            };
+            const auto& row = transition_cache->rows.at(row_index);
+            for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+                const auto at = row.transition_offset + i;
+                if (transition_cache->probabilities.at(at) > 0.0)
+                    pending_routes += pending(transition_cache->successors.at(at));
+            }
+            for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+                const auto& group = transition_cache->choices.at(row.choice_offset + i);
+                if (!(group.probability > 0.0)) continue;
+                for (std::uint32_t j = 0; j < group.successor_count; ++j)
+                    pending_routes += pending(transition_cache->choice_successors.at(
+                        group.successor_offset + j));
+            }
+        }
         const auto key = std::tuple{
-            class_rank, attempt_cost, -goal, -progress, row_index};
+            class_rank, pending_routes, attempt_cost, -goal, -progress, row_index};
         if (key < best_key) {
             best_key = key;
             best = row_index;
@@ -4940,150 +4975,11 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                     return installed_renewal;
                 };
 
-            const auto row_goal_probability =
-                [&](const std::uint32_t owner,
-                    const std::uint64_t row_index) {
-                    const SparseRow& row =
-                        transition_cache->rows.at(row_index);
-                    WideFloat probability{0.0};
-                    for (std::uint32_t i = 0;
-                         i < row.transition_count; ++i) {
-                        const std::uint64_t offset =
-                            row.transition_offset + i;
-                        const std::uint32_t successor =
-                            transition_cache->successors.at(offset);
-                        if (successor < result.goal_states.size() &&
-                            result.goal_states[successor]) {
-                            probability += WideFloat{
-                                transition_cache->probabilities.at(offset)};
-                        }
-                    }
-                    for (std::uint32_t i = 0; i < row.choice_count; ++i) {
-                        const SparseChoiceGroup& group =
-                            transition_cache->choices.at(
-                                row.choice_offset + i);
-                        bool can_choose_goal = false;
-                        for (std::uint32_t option = 0;
-                             option < group.successor_count; ++option) {
-                            const std::uint32_t successor =
-                                transition_cache->choice_successors.at(
-                                    group.successor_offset + option);
-                            can_choose_goal |=
-                                successor < result.goal_states.size() &&
-                                result.goal_states[successor];
-                        }
-                        if (can_choose_goal) {
-                            probability += WideFloat{group.probability};
-                        }
-                    }
-                    (void)owner;
-                    return probability.value();
-                };
-
-            const auto row_progress_probability =
-                [&](const std::uint32_t owner,
-                    const std::uint64_t row_index) {
-                    const SparseRow& row =
-                        transition_cache->rows.at(row_index);
-                    const std::uint32_t owner_progress = std::popcount(
-                        satisfied_goal_mask_for_state(owner));
-                    const auto advances = [&](const std::uint32_t successor) {
-                        return successor < result.goal_states.size() &&
-                            (result.goal_states[successor] ||
-                             std::popcount(
-                                 satisfied_goal_mask_for_state(successor)) >
-                                 owner_progress);
-                    };
-                    WideFloat probability{0.0};
-                    for (std::uint32_t i = 0;
-                         i < row.transition_count; ++i) {
-                        const std::uint64_t offset =
-                            row.transition_offset + i;
-                        if (advances(
-                                transition_cache->successors.at(offset))) {
-                            probability += WideFloat{
-                                transition_cache->probabilities.at(offset)};
-                        }
-                    }
-                    for (std::uint32_t i = 0; i < row.choice_count; ++i) {
-                        const SparseChoiceGroup& group =
-                            transition_cache->choices.at(
-                                row.choice_offset + i);
-                        bool can_choose_progress = false;
-                        for (std::uint32_t option = 0;
-                             option < group.successor_count; ++option) {
-                            can_choose_progress |= advances(
-                                transition_cache->choice_successors.at(
-                                    group.successor_offset + option));
-                        }
-                        if (can_choose_progress) {
-                            probability += WideFloat{group.probability};
-                        }
-                    }
-                    return probability.value();
-                };
-
-            const auto select_initial_row =
-                [&](const std::uint32_t state) {
-                    std::uint64_t best = no_row;
-                    /* CalcContext may discover strict/frontier carriers after
-                     * the current sparse transition epoch was materialized.
-                     * Such a state has no row span yet. It is an ordinary
-                     * missing-frontier condition owned by the certified
-                     * boundary/grow-in-place path below, not a cache error and
-                     * not evidence for a free terminal continuation. */
-                    if (state >= transition_cache->state_rows.size()) {
-                        return best;
-                    }
-                    std::tuple<int, double, double, double, std::uint64_t>
-                        best_key{
-                        std::numeric_limits<int>::max(), kInfinity,
-                        kInfinity, kInfinity, no_row};
-                    for (const std::uint64_t row_index :
-                         state_row_indices(*transition_cache, state)) {
-                        if (row_index >= completed.size() ||
-                            !completed[row_index] ||
-                            row_index >= priced_rows.size()) {
-                            continue;
-                        }
-                        const PricedSparseRow& priced =
-                            priced_rows[row_index];
-                        if (priced.operator_index == kNoId ||
-                            priced.operator_index >= calc.operators().size() ||
-                            !std::isfinite(priced.cost) || priced.cost < 0.0) {
-                            continue;
-                        }
-                        const double goal_probability =
-                            row_goal_probability(state, row_index);
-                        const double progress_probability =
-                            row_progress_probability(state, row_index);
-                        const bool restart =
-                            priced.operator_index == restart_operator_index;
-                        /* This is only a seed for the existing exact proper-
-                         * policy evaluator. Prefer rows that can advance to
-                         * any larger requested subset (or exact terminal),
-                         * then rank them by cost per advancement. Treating
-                         * only direct five-mod success as useful caused tiny-
-                         * probability renewal spam to hide already-completed
-                         * 0 -> ... -> 4 -> 5 carrier ladders. */
-                        const int class_rank = progress_probability > 0.0
-                            ? 0
-                            : restart ? 1 : 2;
-                        const double attempt_cost =
-                            progress_probability > 0.0
-                                ? priced.cost / progress_probability
-                                : priced.cost;
-                        const auto key = std::tuple{
-                            class_rank, attempt_cost,
-                            -goal_probability, -progress_probability,
-                            row_index};
-                        if (key < best_key) {
-                            best_key = key;
-                            best = row_index;
-                        }
-                    }
-                    return best;
-                };
+            const auto select_initial_row = [&](const std::uint32_t state) {
+                // Same complete-row seed for initial construction and retained
+                // candidate resumption; qualification still owns properness.
+                return select_joint_policy_seed_row(state, result.values);
+            };
 
             const auto row_is_completed = [&](const std::uint32_t state,
                                                const std::uint64_t row) {
@@ -5496,26 +5392,25 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                         evaluated_choice_identity != prior_choice_identity) {
                         continue;
                     }
-                    /* The progress-aware row ranking is only a proper seed.
-                     * Once that complete policy has exact values, run the
-                     * ordinary strict row selection over the same completed
-                     * joint envelope. Without this step the first feasible
-                     * Fossil/Harvest ladder was published or rejected as-is,
-                     * even when another completed row was much cheaper at a
-                     * 3/5 or 4/5 carrier. Every replacement is re-evaluated by
-                     * the same SCC proof on the next round. */
-                    bool improved = false;
-                    while (!advance_policy_selection(improved)) {
-                        if (check_solver_byte_cap_fast()) {
-                            attempt_failure =
-                                "policy_selection_exceeds_byte_cap";
-                            break;
+                    /* Deliver the first complete proper candidate to the
+                     * publication owner before cost improvement can select
+                     * a cheaper row whose continuations are still missing.
+                     * Once an incumbent exists, ordinary strict improvement
+                     * remains active over this same completed joint envelope. */
+                    if (output_incumbent.has_value()) {
+                        bool improved = false;
+                        while (!advance_policy_selection(improved)) {
+                            if (check_solver_byte_cap_fast()) {
+                                attempt_failure =
+                                    "policy_selection_exceeds_byte_cap";
+                                break;
+                            }
                         }
-                    }
-                    if (!attempt_failure.empty()) break;
-                    if (improved) {
-                        reset_policy_iteration_units();
-                        continue;
+                        if (!attempt_failure.empty()) break;
+                        if (improved) {
+                            reset_policy_iteration_units();
+                            continue;
+                        }
                     }
                     const double upper =
                         result.values.at(result.start_state);

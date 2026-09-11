@@ -56,6 +56,15 @@ A simple graph demonstrates the distinction: root \(r\) goes to the goal for cos
 
 Likewise, the fact that a strategy router refuses an off-policy item establishes a limitation of *that strategy*. It does not establish the native item's infeasibility and does not forbid lower-only analysis at the item. [Lower-only frontier proof](lower-bounds.md#frontier).
 
+A finite vector saved beside a root policy does not expand that policy's entry
+domain. For example, a cost-3 action from r to a true goal is a complete policy;
+a separate unresolved state x may carry a lower estimate 0. A cost-1 alternative
+from r to x then has optimistic one-step value 1, but supplies no executable
+improvement until x has a complete proper continuation. Upper-policy reuse must
+mark the unselected domain unknown and retain the first verified artifact while
+testing that alternative. The [goal-reaching delivery application](../../active/2026-09-10-goal-reaching-row-delivery/README.md)
+exercises this boundary with native rows and independent emitted-graph evaluation.
+
 <a id="proper-seed"></a>
 ### Constructing a proper seed from complete rows
 
@@ -106,6 +115,17 @@ attribute every missing policy to that helper. In the September 10
 the initial and bounded later complete-row views contained no true goals or
 proper committed frontiers. A selector cannot recover a proper controller from
 those views. That negative is not native infeasibility.
+
+Native terminal debt is a separate construction question. Satisfying all target
+slots can leave extra explicit affixes or the wrong rarity. A work preference
+using missing goals, extra affixes and rarity can request cleanup or acquisition,
+but it is neither an admissible cost nor a monotone property of all outcomes.
+Only the native goal predicate creates a goal leaf. A complete candidate still
+retains failures that remove acquired goals, every positive stochastic exit and
+the permitted observed choices, then passes the existing properness, compiler
+and independent evaluator. The later native delivery application found such
+continuations; it does not overturn the earlier goal-free-view falsification
+or introduce the removed generic support selector.
 
 Finally, a cost-1 retry succeeding with probability 10^-9 is proper but costs
 10^9 in expectation. A support witness is neither an economical policy nor an

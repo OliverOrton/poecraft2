@@ -1,0 +1,3677 @@
+{
+  "run": "n3-candidate-failure-resume-ring",
+  "executable": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+    "sha256": "882c5fbab6e1a7f616cab8dfa8e905072001c855436012d8dd04e4b9b6cb23fa"
+  },
+  "ledger_sha256": "99bb515e29f725881072af21421c6dfb0481ca83720068a3438565db2cff9892",
+  "report_sha256": "dc1a7da0f11f1c799c34d6f11c4787f58a4b0281fe56ce3747a4de85cc2ed8d1",
+  "solve_summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 1491.3981448854881,
+    "expanded_states": 11427,
+    "sweeps": 4918,
+    "residual": 7.287701464520069e-07,
+    "skipped_action_count": 0,
+    "policy_available": false,
+    "policy_status": "none",
+    "termination": "requested_bounded_finish",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "action_counts": {
+      "registry": 168,
+      "candidate": 27,
+      "evaluator_supported": 27,
+      "supported_priced": 27,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 0
+    },
+    "lower_bound": 10.169847833384168,
+    "upper_bound": null,
+    "evaluated_policy_cost": null,
+    "absolute_optimality_gap": null,
+    "relative_optimality_gap": null,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  },
+  "phase_wall_ms": {
+    "registry_layout": 24.5656,
+    "solve": 240491.9886,
+    "compile": null,
+    "verification": null,
+    "total": 240568.7429
+  },
+  "execution": {
+    "solve_steps": 6234698,
+    "max_solve_step_ms": 421.0945,
+    "max_solve_step_phase": 1,
+    "max_solve_step_expanded_states": 8533,
+    "max_solve_step_sweeps": 2,
+    "max_solve_step_finalization_work_item": 0,
+    "solve_step_wall_ms": {
+      "percentile_method": "nearest_rank_ceiling",
+      "count": 6234698,
+      "total": 220742.0928994654,
+      "median": 0.0415,
+      "p95": 0.0578,
+      "maximum": 421.0945
+    },
+    "diagnostic_work_limit": null,
+    "diagnostic_time_limit_seconds": null,
+    "watchdog_seconds": 300,
+    "watchdog_mode": "cooperative_case_deadline",
+    "watchdog_expired": false,
+    "diagnostic_stop_reason": null,
+    "worker_max_slice_ms": null,
+    "cancellation_ack_ms": null,
+    "cancellation_mode": null,
+    "cooperative_abandon_ms": null
+  },
+  "memory": {
+    "measurement_kind": "working_set_snapshots_not_peak",
+    "process_working_set_before_bytes": 33308672,
+    "process_working_set_after_bytes": 110354432,
+    "process_working_set_delta_bytes": 77045760,
+    "process_working_set_peak_bytes": null,
+    "wasm_heap_before_bytes": null,
+    "wasm_heap_after_bytes": null,
+    "wasm_heap_growth_bytes": null,
+    "native_live_owned_bytes": 18374705,
+    "native_peak_owned_bytes": 62877341,
+    "native_serialized_output_bytes": 45,
+    "solver_telemetry_json_bytes": 816919
+  },
+  "goal_delivery": {
+    "schema": "goal_delivery_observation_v1",
+    "status": "complete",
+    "graph_identity": 10857535978788088756,
+    "states": 11427,
+    "rows": 70272,
+    "expanded": 11427,
+    "live_owned_bytes": 57911972,
+    "scheduler": {
+      "incumbent": false,
+      "carriers": 11424,
+      "alternatives": 0,
+      "refinement_active": false,
+      "refinement_target": 8533,
+      "queue": 0,
+      "expansion_active": false,
+      "restricted_values_ready": false,
+      "envelope_closed": false,
+      "finish_requested": true,
+      "cap_hit": false,
+      "cooperative_high_progress": false
+    },
+    "population": [
+      {
+        "satisfied": 0,
+        "extra_affixes": 0,
+        "rarity": 0,
+        "retry_basin": 0,
+        "count": 1
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 0,
+        "rarity": 1,
+        "retry_basin": 0,
+        "count": 1
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 0,
+        "rarity": 1,
+        "retry_basin": 1,
+        "count": 1
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 0,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 1
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 0,
+        "rarity": 2,
+        "retry_basin": 1,
+        "count": 1
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 1,
+        "rarity": 1,
+        "retry_basin": 0,
+        "count": 14
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 1,
+        "rarity": 1,
+        "retry_basin": 1,
+        "count": 1
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 1,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 14
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 1,
+        "rarity": 2,
+        "retry_basin": 1,
+        "count": 1
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 2,
+        "rarity": 1,
+        "retry_basin": 0,
+        "count": 45
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 2,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 94
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 3,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 405
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 4,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 1058
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 5,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 1681
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 6,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 1515
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 0,
+        "rarity": 1,
+        "retry_basin": 0,
+        "count": 4
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 0,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 4
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 1,
+        "rarity": 1,
+        "retry_basin": 0,
+        "count": 27
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 1,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 50
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 2,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 300
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 3,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 1023
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 4,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 1972
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 5,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 1999
+      },
+      {
+        "satisfied": 2,
+        "extra_affixes": 0,
+        "rarity": 1,
+        "retry_basin": 0,
+        "count": 3
+      },
+      {
+        "satisfied": 2,
+        "extra_affixes": 0,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 3
+      },
+      {
+        "satisfied": 2,
+        "extra_affixes": 1,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 34
+      },
+      {
+        "satisfied": 2,
+        "extra_affixes": 2,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 185
+      },
+      {
+        "satisfied": 2,
+        "extra_affixes": 3,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 458
+      },
+      {
+        "satisfied": 2,
+        "extra_affixes": 4,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 532
+      }
+    ],
+    "root_rows": [
+      {
+        "row": 0,
+        "action": "chaos",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 456,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 1,
+            "routes": 1,
+            "mass": 0.9366512326382891
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 454,
+            "mass": 0.0161404524230256
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 852,
+            "mass": 0.020664893672177127
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 5,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 842,
+            "mass": 0.02556102275905775
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 58,
+            "mass": 0.00017777774217323682
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 141,
+            "mass": 0.00032023521476119574
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 161,
+            "mass": 0.0004843855505159872
+          }
+        ]
+      },
+      {
+        "row": 1,
+        "action": "exalt",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 2520,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9877937137625876
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 2,
+            "mass": 0.012206286237412267
+          }
+        ]
+      },
+      {
+        "row": 2,
+        "action": "scour",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 2525,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 0,
+            "rarity": 0,
+            "retry_basin": 0,
+            "routes": 1,
+            "mass": 1
+          }
+        ]
+      },
+      {
+        "row": 3,
+        "action": "harvest_augment:defences",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 2522,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 2,
+            "mass": 0.9444444444444446
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1,
+            "mass": 0.05555555555555555
+          }
+        ]
+      },
+      {
+        "row": 4,
+        "action": "harvest_augment:fire",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 2520,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.9245283018867925
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1,
+            "mass": 0.07547169811320754
+          }
+        ]
+      },
+      {
+        "row": 5,
+        "action": "harvest_resist:cold:fire",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 0,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1,
+            "mass": 1
+          }
+        ]
+      }
+    ],
+    "samples": [
+      {
+        "source": {
+          "id": 0,
+          "hash": 1169588405,
+          "goal_mask": 0,
+          "terminal": false,
+          "rarity": 2,
+          "prefixes": 0,
+          "suffixes": 0,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": true,
+          "slot_status": [
+            0,
+            0
+          ],
+          "junk": []
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 10,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 159,
+            "id": "harvest_reforge:defences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 160,
+            "id": "harvest_reforge:elemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 161,
+            "id": "harvest_reforge:fire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 162,
+            "id": "harvest_augment:defences",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 163,
+            "id": "harvest_augment:fire",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 164,
+            "id": "harvest_resist:cold:fire",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 165,
+            "id": "harvest_resist:lightning:fire",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 166,
+            "id": "fracture",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 167,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": 2705,
+          "hash": 3136941691,
+          "goal_mask": 3,
+          "terminal": true,
+          "rarity": 2,
+          "prefixes": 1,
+          "suffixes": 1,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": true,
+          "slot_status": [
+            2,
+            2
+          ],
+          "junk": []
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 10,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 159,
+            "id": "harvest_reforge:defences",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 160,
+            "id": "harvest_reforge:elemental",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 161,
+            "id": "harvest_reforge:fire",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 162,
+            "id": "harvest_augment:defences",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 163,
+            "id": "harvest_augment:fire",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 164,
+            "id": "harvest_resist:cold:fire",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 165,
+            "id": "harvest_resist:lightning:fire",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 166,
+            "id": "fracture",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 167,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": 456,
+          "hash": 808907051,
+          "goal_mask": 3,
+          "terminal": false,
+          "rarity": 2,
+          "prefixes": 1,
+          "suffixes": 3,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": true,
+          "slot_status": [
+            2,
+            2
+          ],
+          "junk": [
+            [
+              9,
+              2
+            ]
+          ]
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 10,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 159,
+            "id": "harvest_reforge:defences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 160,
+            "id": "harvest_reforge:elemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 161,
+            "id": "harvest_reforge:fire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 162,
+            "id": "harvest_augment:defences",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 163,
+            "id": "harvest_augment:fire",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 164,
+            "id": "harvest_resist:cold:fire",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 165,
+            "id": "harvest_resist:lightning:fire",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 166,
+            "id": "fracture",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 167,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": 2520,
+          "hash": 1350748600,
+          "goal_mask": 2,
+          "terminal": false,
+          "rarity": 2,
+          "prefixes": 0,
+          "suffixes": 1,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": true,
+          "slot_status": [
+            0,
+            2
+          ],
+          "junk": []
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 10,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 159,
+            "id": "harvest_reforge:defences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 160,
+            "id": "harvest_reforge:elemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 161,
+            "id": "harvest_reforge:fire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 162,
+            "id": "harvest_augment:defences",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 163,
+            "id": "harvest_augment:fire",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 164,
+            "id": "harvest_resist:cold:fire",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 165,
+            "id": "harvest_resist:lightning:fire",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 166,
+            "id": "fracture",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 167,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": 2525,
+          "hash": 2368301191,
+          "goal_mask": 0,
+          "terminal": false,
+          "rarity": 0,
+          "prefixes": 0,
+          "suffixes": 0,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": true,
+          "slot_status": [
+            0,
+            0
+          ],
+          "junk": []
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 10,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 159,
+            "id": "harvest_reforge:defences",
+            "legal": false,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 160,
+            "id": "harvest_reforge:elemental",
+            "legal": false,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 161,
+            "id": "harvest_reforge:fire",
+            "legal": false,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 162,
+            "id": "harvest_augment:defences",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 163,
+            "id": "harvest_augment:fire",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 164,
+            "id": "harvest_resist:cold:fire",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 165,
+            "id": "harvest_resist:lightning:fire",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 166,
+            "id": "fracture",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 167,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": 2522,
+          "hash": 3318101886,
+          "goal_mask": 1,
+          "terminal": false,
+          "rarity": 2,
+          "prefixes": 1,
+          "suffixes": 0,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": true,
+          "slot_status": [
+            2,
+            0
+          ],
+          "junk": []
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 10,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 159,
+            "id": "harvest_reforge:defences",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 160,
+            "id": "harvest_reforge:elemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 161,
+            "id": "harvest_reforge:fire",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 162,
+            "id": "harvest_augment:defences",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 163,
+            "id": "harvest_augment:fire",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 164,
+            "id": "harvest_resist:cold:fire",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 165,
+            "id": "harvest_resist:lightning:fire",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 166,
+            "id": "fracture",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 167,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          }
+        ]
+      }
+    ]
+  },
+  "joint_anytime_policy": {
+    "attempts": 81,
+    "successes": 0,
+    "last_completed_rows": 0,
+    "best_upper": null,
+    "last_failure": "publication_fixed_option_closure_failed:frontier_uses=0:renewal_boundaries=0/0"
+  },
+  "attempts": [
+    {
+      "ordinal": 1,
+      "rows": 261,
+      "states": 2669,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 4,
+      "failure": "missing_completed_row_and_certified_frontier:state=2513:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/3",
+      "first_missing_continuation": {
+        "state": 2513,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 2,
+      "rows": 282,
+      "states": 2708,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 16,
+      "failure": "missing_completed_row_and_certified_frontier:state=2681:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/12",
+      "first_missing_continuation": {
+        "state": 2681,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 3,
+      "rows": 368,
+      "states": 2802,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 27,
+      "failure": "missing_completed_row_and_certified_frontier:state=2510:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/11",
+      "first_missing_continuation": {
+        "state": 2510,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 4,
+      "rows": 447,
+      "states": 2832,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 2,
+      "failure": "missing_completed_row_and_certified_frontier:state=2525:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/1",
+      "first_missing_continuation": {
+        "state": 2525,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 5,
+      "rows": 449,
+      "states": 2849,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 19,
+      "failure": "missing_completed_row_and_certified_frontier:state=2832:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/17",
+      "first_missing_continuation": {
+        "state": 2832,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 6,
+      "rows": 537,
+      "states": 2909,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 147,
+      "failure": "missing_completed_row_and_certified_frontier:state=2527:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 2527,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 7,
+      "rows": 1451,
+      "states": 3148,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 248,
+      "failure": "missing_completed_row_and_certified_frontier:state=2818:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/93",
+      "first_missing_continuation": {
+        "state": 2818,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 8,
+      "rows": 2116,
+      "states": 3226,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 272,
+      "failure": "missing_completed_row_and_certified_frontier:state=2912:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/23",
+      "first_missing_continuation": {
+        "state": 2912,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 9,
+      "rows": 2277,
+      "states": 3226,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 160,
+      "failure": "missing_completed_row_and_certified_frontier:state=32:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 32,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 10,
+      "rows": 3347,
+      "states": 3676,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 288,
+      "failure": "missing_completed_row_and_certified_frontier:state=160:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 160,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 11,
+      "rows": 4327,
+      "states": 3876,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 416,
+      "failure": "missing_completed_row_and_certified_frontier:state=288:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 288,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 12,
+      "rows": 5331,
+      "states": 4162,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 544,
+      "failure": "missing_completed_row_and_certified_frontier:state=416:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 416,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 13,
+      "rows": 6256,
+      "states": 4378,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 672,
+      "failure": "missing_completed_row_and_certified_frontier:state=544:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 544,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 14,
+      "rows": 6972,
+      "states": 4634,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 800,
+      "failure": "missing_completed_row_and_certified_frontier:state=672:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 672,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 15,
+      "rows": 7697,
+      "states": 4890,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 928,
+      "failure": "missing_completed_row_and_certified_frontier:state=800:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 800,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 16,
+      "rows": 8372,
+      "states": 5146,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 1056,
+      "failure": "missing_completed_row_and_certified_frontier:state=928:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 928,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 17,
+      "rows": 9012,
+      "states": 5402,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 1184,
+      "failure": "missing_completed_row_and_certified_frontier:state=1056:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 1056,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 18,
+      "rows": 9652,
+      "states": 5658,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 1312,
+      "failure": "missing_completed_row_and_certified_frontier:state=1184:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 1184,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 19,
+      "rows": 10292,
+      "states": 5914,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 1440,
+      "failure": "missing_completed_row_and_certified_frontier:state=1312:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 1312,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 20,
+      "rows": 11206,
+      "states": 6123,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 1568,
+      "failure": "missing_completed_row_and_certified_frontier:state=1440:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 1440,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 21,
+      "rows": 12242,
+      "states": 6287,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 1696,
+      "failure": "missing_completed_row_and_certified_frontier:state=1568:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 1568,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 22,
+      "rows": 13045,
+      "states": 6495,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 1824,
+      "failure": "missing_completed_row_and_certified_frontier:state=1696:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 1696,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 23,
+      "rows": 13848,
+      "states": 6687,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 1952,
+      "failure": "missing_completed_row_and_certified_frontier:state=1824:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 1824,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 24,
+      "rows": 14770,
+      "states": 6838,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 2080,
+      "failure": "missing_completed_row_and_certified_frontier:state=1952:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 1952,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 25,
+      "rows": 15713,
+      "states": 6966,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 2208,
+      "failure": "missing_completed_row_and_certified_frontier:state=2080:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 2080,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 26,
+      "rows": 16652,
+      "states": 7094,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 2336,
+      "failure": "missing_completed_row_and_certified_frontier:state=2208:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 2208,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 27,
+      "rows": 17612,
+      "states": 7222,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 2464,
+      "failure": "missing_completed_row_and_certified_frontier:state=2336:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 2336,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 28,
+      "rows": 18572,
+      "states": 7445,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 2679,
+      "failure": "missing_completed_row_and_certified_frontier:state=2464:goal_mask=3:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/46",
+      "first_missing_continuation": {
+        "state": 2464,
+        "goal_mask": 3
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 29,
+      "rows": 18887,
+      "states": 7537,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 2895,
+      "failure": "missing_completed_row_and_certified_frontier:state=2526:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 2526,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 30,
+      "rows": 19848,
+      "states": 7585,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3053,
+      "failure": "missing_completed_row_and_certified_frontier:state=3209:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 3209,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 31,
+      "rows": 20767,
+      "states": 7692,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3181,
+      "failure": "missing_completed_row_and_certified_frontier:state=3910:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 3910,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 32,
+      "rows": 21642,
+      "states": 7778,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3309,
+      "failure": "missing_completed_row_and_certified_frontier:state=3141:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 3141,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 33,
+      "rows": 22514,
+      "states": 7931,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3437,
+      "failure": "missing_completed_row_and_certified_frontier:state=4326:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 4326,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 34,
+      "rows": 23423,
+      "states": 8374,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3565,
+      "failure": "missing_completed_row_and_certified_frontier:state=4582:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 4582,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 35,
+      "rows": 24330,
+      "states": 8636,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3693,
+      "failure": "missing_completed_row_and_certified_frontier:state=4838:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 4838,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 36,
+      "rows": 25250,
+      "states": 8850,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3821,
+      "failure": "missing_completed_row_and_certified_frontier:state=5094:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 5094,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 37,
+      "rows": 26086,
+      "states": 8990,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3949,
+      "failure": "missing_completed_row_and_certified_frontier:state=5350:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 5350,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 38,
+      "rows": 26920,
+      "states": 9208,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4077,
+      "failure": "missing_completed_row_and_certified_frontier:state=5606:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 5606,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 39,
+      "rows": 27758,
+      "states": 9245,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4205,
+      "failure": "missing_completed_row_and_certified_frontier:state=5862:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 5862,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 40,
+      "rows": 28650,
+      "states": 9245,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4333,
+      "failure": "missing_completed_row_and_certified_frontier:state=3379:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 3379,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 41,
+      "rows": 29486,
+      "states": 9245,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4461,
+      "failure": "missing_completed_row_and_certified_frontier:state=6300:goal_mask=3:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 6300,
+        "goal_mask": 3
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 42,
+      "rows": 30146,
+      "states": 9245,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4589,
+      "failure": "missing_completed_row_and_certified_frontier:state=6433:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 6433,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 43,
+      "rows": 30808,
+      "states": 9245,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4717,
+      "failure": "missing_completed_row_and_certified_frontier:state=6572:goal_mask=3:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 6572,
+        "goal_mask": 3
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 44,
+      "rows": 31417,
+      "states": 9245,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4845,
+      "failure": "missing_completed_row_and_certified_frontier:state=6722:goal_mask=3:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 6722,
+        "goal_mask": 3
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 45,
+      "rows": 32228,
+      "states": 9245,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4973,
+      "failure": "missing_completed_row_and_certified_frontier:state=3692:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 3692,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 46,
+      "rows": 33130,
+      "states": 9245,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5101,
+      "failure": "missing_completed_row_and_certified_frontier:state=4025:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 4025,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 47,
+      "rows": 33970,
+      "states": 9245,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5229,
+      "failure": "missing_completed_row_and_certified_frontier:state=7369:goal_mask=3:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 7369,
+        "goal_mask": 3
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 48,
+      "rows": 34800,
+      "states": 9245,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5357,
+      "failure": "missing_completed_row_and_certified_frontier:state=7497:goal_mask=3:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 7497,
+        "goal_mask": 3
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 49,
+      "rows": 35672,
+      "states": 9279,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5448,
+      "failure": "missing_completed_row_and_certified_frontier:state=7845:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/91",
+      "first_missing_continuation": {
+        "state": 7845,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 50,
+      "rows": 36308,
+      "states": 9310,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5462,
+      "failure": "missing_completed_row_and_certified_frontier:state=9288:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/14",
+      "first_missing_continuation": {
+        "state": 9288,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 51,
+      "rows": 36386,
+      "states": 9310,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5464,
+      "failure": "missing_completed_row_and_certified_frontier:state=9291:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/2",
+      "first_missing_continuation": {
+        "state": 9291,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 52,
+      "rows": 36400,
+      "states": 9310,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 710,
+      "failure": "missing_completed_row_and_certified_frontier:state=3149:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 3149,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 53,
+      "rows": 37317,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 2678,
+      "failure": "missing_completed_row_and_certified_frontier:state=2530:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 2530,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 54,
+      "rows": 38278,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 2806,
+      "failure": "missing_completed_row_and_certified_frontier:state=3584:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 3584,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 55,
+      "rows": 39138,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 2950,
+      "failure": "missing_completed_row_and_certified_frontier:state=3817:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 3817,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 56,
+      "rows": 40005,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3213,
+      "failure": "missing_completed_row_and_certified_frontier:state=4140:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 4140,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 57,
+      "rows": 40670,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3341,
+      "failure": "missing_completed_row_and_certified_frontier:state=4489:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 4489,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 58,
+      "rows": 41268,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3469,
+      "failure": "missing_completed_row_and_certified_frontier:state=4745:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 4745,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 59,
+      "rows": 41861,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3710,
+      "failure": "missing_completed_row_and_certified_frontier:state=5001:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 5001,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 60,
+      "rows": 42373,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3890,
+      "failure": "missing_completed_row_and_certified_frontier:state=5487:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 5487,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 61,
+      "rows": 42885,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4018,
+      "failure": "missing_completed_row_and_certified_frontier:state=5843:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 5843,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 62,
+      "rows": 43552,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4139,
+      "failure": "missing_completed_row_and_certified_frontier:state=6005:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 6005,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 63,
+      "rows": 44495,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4355,
+      "failure": "missing_completed_row_and_certified_frontier:state=6149:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 6149,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 64,
+      "rows": 45398,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4677,
+      "failure": "missing_completed_row_and_certified_frontier:state=6464:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 6464,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 65,
+      "rows": 46246,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4805,
+      "failure": "missing_completed_row_and_certified_frontier:state=6788:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 6788,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 66,
+      "rows": 47055,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4939,
+      "failure": "missing_completed_row_and_certified_frontier:state=6188:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 6188,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 67,
+      "rows": 47862,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5491,
+      "failure": "missing_completed_row_and_certified_frontier:state=7112:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/84",
+      "first_missing_continuation": {
+        "state": 7112,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 68,
+      "rows": 48395,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 3636,
+      "failure": "missing_completed_row_and_certified_frontier:state=4014:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 4014,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 69,
+      "rows": 48988,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 4932,
+      "failure": "missing_completed_row_and_certified_frontier:state=5433:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 5433,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 70,
+      "rows": 49672,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5576,
+      "failure": "missing_completed_row_and_certified_frontier:state=7092:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/88",
+      "first_missing_continuation": {
+        "state": 7092,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 71,
+      "rows": 50247,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5583,
+      "failure": "missing_completed_row_and_certified_frontier:state=9279:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/8",
+      "first_missing_continuation": {
+        "state": 9279,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 72,
+      "rows": 50287,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5547,
+      "failure": "missing_completed_row_and_certified_frontier:state=8783:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/112",
+      "first_missing_continuation": {
+        "state": 8783,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 73,
+      "rows": 50963,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5217,
+      "failure": "missing_completed_row_and_certified_frontier:state=7947:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 7947,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 74,
+      "rows": 51575,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5226,
+      "failure": "missing_completed_row_and_certified_frontier:state=8003:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 8003,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 75,
+      "rows": 52187,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5503,
+      "failure": "missing_completed_row_and_certified_frontier:state=7622:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/1",
+      "first_missing_continuation": {
+        "state": 7622,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 76,
+      "rows": 52194,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5217,
+      "failure": "missing_completed_row_and_certified_frontier:state=7948:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 7948,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 77,
+      "rows": 52806,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5459,
+      "failure": "missing_completed_row_and_certified_frontier:state=7626:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/3",
+      "first_missing_continuation": {
+        "state": 7626,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 78,
+      "rows": 52827,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5210,
+      "failure": "missing_completed_row_and_certified_frontier:state=8300:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 8300,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 79,
+      "rows": 53439,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5436,
+      "failure": "missing_completed_row_and_certified_frontier:state=9178:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/1",
+      "first_missing_continuation": {
+        "state": 9178,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 80,
+      "rows": 53445,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": null,
+      "reachable_states": 5150,
+      "failure": "missing_completed_row_and_certified_frontier:state=9196:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/83",
+      "first_missing_continuation": {
+        "state": 9196,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    },
+    {
+      "ordinal": 81,
+      "rows": 53840,
+      "states": 9350,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": 1960.0890578712215,
+      "reachable_states": 4677,
+      "failure": "publication_fixed_option_closure_failed:frontier_uses=0:renewal_boundaries=0/0",
+      "first_missing_continuation": null,
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      }
+    }
+  ],
+  "last_attempt": {
+    "ordinal": 81,
+    "trigger": "incremental_checkpoint",
+    "source_generation": 53840,
+    "target_generation": 9350,
+    "completed_rows": {
+      "ordinary_admitted": 53840,
+      "available": 53840,
+      "identity": "2755f282807ef819",
+      "delta": 395,
+      "monotone": true,
+      "completed_alternatives": 0,
+      "alternative_identity": "53e15ee02317672c",
+      "alternative_delta": 0,
+      "terminal_sees_all_completed_alternatives": false
+    },
+    "incumbent_before": {
+      "present": false,
+      "identity": null,
+      "estimate": null,
+      "independently_evaluated": false,
+      "exact_cost": null
+    },
+    "candidate_root_estimate": 1960.0890578712215,
+    "selection": {
+      "identity": "ace6c12fffd8bf5c",
+      "reachable_non_goal_states": 4677,
+      "samples_omitted": 4645,
+      "decisions": [
+        {
+          "state": 0,
+          "row": 2,
+          "operator_index": 8,
+          "action": "scour"
+        },
+        {
+          "state": 1,
+          "row": 6,
+          "operator_index": 5,
+          "action": "chaos"
+        },
+        {
+          "state": 2,
+          "row": 14,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 3,
+          "row": 22,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 4,
+          "row": 30,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 5,
+          "row": 39,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 6,
+          "row": 47,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 7,
+          "row": 55,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 8,
+          "row": 64,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 9,
+          "row": 72,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 10,
+          "row": 80,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 11,
+          "row": 89,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 12,
+          "row": 97,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 13,
+          "row": 105,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 14,
+          "row": 114,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 15,
+          "row": 123,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 16,
+          "row": 131,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 17,
+          "row": 139,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 18,
+          "row": 148,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 19,
+          "row": 157,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 20,
+          "row": 166,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 21,
+          "row": 175,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 22,
+          "row": 183,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 23,
+          "row": 192,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 24,
+          "row": 201,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 25,
+          "row": 209,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 26,
+          "row": 218,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 27,
+          "row": 226,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 28,
+          "row": 234,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 29,
+          "row": 243,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 30,
+          "row": 252,
+          "operator_index": 166,
+          "action": "fracture"
+        },
+        {
+          "state": 31,
+          "row": 260,
+          "operator_index": 166,
+          "action": "fracture"
+        }
+      ]
+    },
+    "frontier_uses": 0,
+    "renewal_boundaries": {
+      "successes": 0,
+      "attempts": 0
+    },
+    "fixed_policy_proper": true,
+    "online_handoff": {
+      "requested_bounded_finish_at_attempt": false,
+      "refinement_selected": false,
+      "refinement_selected_at_expanded_states": null,
+      "terminal_state": null
+    },
+    "first_missing_continuation": null,
+    "failure": "publication_fixed_option_closure_failed:frontier_uses=0:renewal_boundaries=0/0",
+    "candidate": {
+      "installed_for_finalization": false,
+      "portfolio_identity": null,
+      "kind": null
+    },
+    "compilation": {
+      "attempted": false,
+      "succeeded": false,
+      "nodes": 0,
+      "edges": 0,
+      "result": null
+    },
+    "independent_exact_evaluation": {
+      "attempted": false,
+      "succeeded": false,
+      "cost": null,
+      "result": null
+    },
+    "portfolio": {
+      "decision": "not_installed_for_finalization",
+      "reason": "publication_fixed_option_closure_failed:frontier_uses=0:renewal_boundaries=0/0"
+    }
+  },
+  "errors": [
+    "bounded best-policy contract failed: the solve did not publish an executable policy"
+  ]
+}

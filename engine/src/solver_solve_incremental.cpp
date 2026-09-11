@@ -1455,6 +1455,48 @@ bool SolveWork::Impl::try_begin_candidate_proof_handoff() {
     return true;
 }
 
+bool SolveWork::Impl::continue_initial_candidate() {
+    if (!options.high_impact_executable_uppers ||
+        !incremental_action_generation || incremental_envelope_closed ||
+        output_incumbent.has_value() || requested_bounded_finish ||
+        result.diagnostics.resource_cap_hit || incremental_refinement_active ||
+        transition_cache == nullptr) {
+        return false;
+    }
+    const auto generation = transition_cache->rows.size();
+    if (generation != initial_candidate_last_row_generation) {
+        initial_candidate_last_row_generation = generation;
+        ++incremental_anytime_policy_attempts;
+        incremental_anytime_policy_last_completed_rows =
+            incremental_alternative_rows.size();
+        incremental_anytime_policy_last_failure.clear();
+        if (try_install_reachable_incumbent(false)) {
+            ++incremental_anytime_policy_successes;
+            incremental_anytime_policy_best_upper = std::min(
+                incremental_anytime_policy_best_upper,
+                output_incumbent->certified_upper_bound);
+            // Verify and retain this first controller before ordinary upper
+            // improvement can replace its materialized row decisions.
+            focus_optimizing = false;
+            focused_lower_mode = false;
+            publication_pipeline.initial_candidate_task.emplace(
+                certify_initial_candidate());
+            phase = SolvePhase::Expanding;
+            return true;
+        }
+    }
+    // The ordinary joint walk names every selected positive-mass missing
+    // continuation. Service those entries through the existing exact batch
+    // owner, then retry on new completed evidence. No arbitrary single-batch
+    // stop, unknown terminal, or unselected priority padding is introduced.
+    if (incremental_anytime_missing_frontier_states.empty() ||
+        !schedule_incremental_refinement(true)) return false;
+    focus_optimizing = false;
+    focused_lower_mode = false;
+    incremental_restricted_values_ready = false;
+    return true;
+}
+
 bool SolveWork::Impl::continue_open_incremental_envelope() {
     if (!incremental_action_generation || incremental_envelope_closed ||
         requested_bounded_finish || result.diagnostics.resource_cap_hit) {
@@ -1472,6 +1514,7 @@ bool SolveWork::Impl::continue_open_incremental_envelope() {
     incremental_restricted_values_ready = true;
     if (try_begin_candidate_proof_handoff()) return false;
     if (begin_incremental_upper_policy_pass()) return true;
+    if (continue_initial_candidate()) return true;
     if (classify_incremental_alternatives()) {
         restart_incremental_optimization();
         return true;

@@ -1,0 +1,98 @@
+{
+  "repository": "OliverOrton/poecraft2",
+  "reviewed_main": "a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72",
+  "status": "source/record review, no native execution or repository modification",
+  "sources": [
+    {
+      "id": "R01",
+      "title": "Current handoff",
+      "path": "HANDOFF.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/HANDOFF.md",
+      "inspection_note": "Current stop, runtime disposition, next owner."
+    },
+    {
+      "id": "R02",
+      "title": "Completed proper-policy investigation",
+      "path": "docs/active/2026-09-10-proper-policy-recovery/README.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/docs/active/2026-09-10-proper-policy-recovery/README.md",
+      "inspection_note": "Full record; same-view results, native fixture, M0 and removal."
+    },
+    {
+      "id": "R03",
+      "title": "Tooling map",
+      "path": "docs/foundation/tooling.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/docs/foundation/tooling.md",
+      "inspection_note": "Current actual commands, identity and recovery distinctions."
+    },
+    {
+      "id": "R04",
+      "title": "Native results: initial Ring excerpt",
+      "path": "docs/active/2026-09-10-proper-policy-recovery/results.json",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/docs/active/2026-09-10-proper-policy-recovery/results.json#L1-L250",
+      "inspection_note": "Bounded report excerpt read directly; full results should be queried compactly by Codex."
+    },
+    {
+      "id": "R05",
+      "title": "Native terminal and representation contract",
+      "path": "docs/solver/states-carriers.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/docs/solver/states-carriers.md",
+      "inspection_note": "Terminal rarity/coverage/no-extra-affix rule."
+    },
+    {
+      "id": "R06",
+      "title": "Basic action source",
+      "path": "engine/src/actions_basic.cpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/engine/src/actions_basic.cpp#L1-L290",
+      "inspection_note": "Native source inspected at this range; no external mechanic ruling."
+    },
+    {
+      "id": "R07",
+      "title": "Ring-two case",
+      "path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb06-cross-base-product8-long240.json",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb06-cross-base-product8-long240.json",
+      "inspection_note": "Frozen primary, complete file read."
+    },
+    {
+      "id": "R08",
+      "title": "Onyx-three case",
+      "path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb08-cross-base-product8-long240.json",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb08-cross-base-product8-long240.json#L1-L100",
+      "inspection_note": "Frozen primary, inspected metadata/feasibility excerpt; native resolver remains authority."
+    },
+    {
+      "id": "R09",
+      "title": "Incremental scheduler",
+      "path": "engine/src/solver_solve_incremental.cpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/engine/src/solver_solve_incremental.cpp#L420-L710",
+      "inspection_note": "Warm-start return, lanes, and incumbent-dependent policy-pass entry."
+    },
+    {
+      "id": "R10",
+      "title": "Work-order profiles",
+      "path": "engine/src/solver_anytime_scheduler.hpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/engine/src/solver_anytime_scheduler.hpp#L1-L160",
+      "inspection_note": "Legacy checkpoint and scheduler definitions; not proof authority."
+    },
+    {
+      "id": "R11",
+      "title": "Priority activation",
+      "path": "engine/src/solver_solve_priority.cpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/engine/src/solver_solve_priority.cpp#L1-L240",
+      "inspection_note": "cooperative_high_progress_ordering_enabled returns false."
+    },
+    {
+      "id": "R12",
+      "title": "Publication preconditions",
+      "path": "engine/src/solver_solve_finish.cpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/engine/src/solver_solve_finish.cpp#L330-L555",
+      "inspection_note": "Current open-incremental candidate attempt requires incumbent; not a claim this is the actual sole blocker."
+    },
+    {
+      "id": "R13",
+      "title": "Current shared instructions",
+      "path": "AGENTS.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72/AGENTS.md",
+      "inspection_note": "Sequential work, validation, safety and tooling route."
+    }
+  ]
+}

@@ -1,0 +1,441 @@
+diff --git a/engine/src/solver_solve_constructive.cpp b/engine/src/solver_solve_constructive.cpp
+index d293a49..ffa89d4 100644
+--- a/engine/src/solver_solve_constructive.cpp
++++ b/engine/src/solver_solve_constructive.cpp
+@@ -1,6 +1,8 @@
+ #include "solver_solve_types.hpp"
+ #include "solver_compile_contracts.hpp"
+ #include "solver_sparse_policy.hpp"
++#include <iomanip>
++#include <sstream>
+ 
+ namespace poecraft {
+ namespace solver {
+@@ -2060,6 +2062,242 @@ void SolveWork::Impl::capture_carrier_ladder_exact_boundary(
+     carrier_ladder_exact_boundary_capture.emplace(std::move(capture));
+ }
+ 
++void SolveWork::Impl::capture_goal_delivery_diagnostic() {
++    // Temporary bounded observation: no kernels, selection or scheduling changes.
++    if (options.carrier_ladder_exact_boundary_mode !=
++            CarrierLadderExactBoundaryMode::Record ||
++        !goal_delivery_diagnostic.empty() || transition_cache == nullptr) return;
++    const auto began = std::chrono::steady_clock::now();
++    const auto& limits = options.carrier_ladder_exact_boundary_limits;
++    constexpr std::uint64_t scratch = 1048576;
++    const auto live = fast_estimated_owned_bytes();
++    if (scratch > limits.max_owned_bytes || calc.state_count() > 20000 ||
++        (options.max_solver_owned_bytes != 0 &&
++         (live > options.max_solver_owned_bytes ||
++          scratch > options.max_solver_owned_bytes - live))) {
++        goal_delivery_diagnostic = "{\"status\":\"observation_cap\"}";
++        return;
++    }
++    const auto truth = [](bool b) { return b ? "true" : "false"; };
++    const auto format_double = [](double value) {
++        std::ostringstream out;
++        out << std::setprecision(17) << value;
++        return out.str();
++    };
++    const auto state_json = [&](std::uint32_t id) {
++        const auto& s = calc.state(id);
++        std::string j = "{\"id\":" + std::to_string(id) +
++            ",\"hash\":" + std::to_string(abstract_state_hash(s)) +
++            ",\"goal_mask\":" + std::to_string(satisfied_goal_mask_for_state(id)) +
++            ",\"terminal\":" + truth(calc.is_goal_state(s)) +
++            ",\"rarity\":" + std::to_string(s.rarity) +
++            ",\"prefixes\":" + std::to_string(s.prefix_count) +
++            ",\"suffixes\":" + std::to_string(s.suffix_count) +
++            ",\"flags\":" + std::to_string(s.flags) +
++            ",\"fractured_goals\":" + std::to_string(s.fractured_goal_mask) +
++            ",\"crafted_goals\":" + std::to_string(s.crafted_goal_mask) +
++            ",\"blocked\":" + std::to_string(s.blocked_mask) +
++            ",\"retry_basin\":" + std::to_string(s.goal_progress_retry_basin) +
++            ",\"expanded\":" + truth(id < expanded.size() && expanded[id]) +
++            ",\"slot_status\":[";
++        for (std::size_t i = 0; i < calc.layout().slots.size(); ++i) {
++            if (i) j += ',';
++            j += std::to_string(s.slot_status[i]);
++        }
++        j += "],\"junk\":[";
++        bool first = true;
++        for (std::size_t i = 0; i < s.junk_counts.size(); ++i) {
++            if (!s.junk_counts[i]) continue;
++            if (!first) j += ',';
++            first = false;
++            j += '[' + std::to_string(i) + ',' + std::to_string(s.junk_counts[i]) + ']';
++        }
++        return j + "]}";
++    };
++    using Debt = std::tuple<unsigned, unsigned, unsigned, unsigned>;
++    const auto debt = [&](std::uint32_t id) {
++        const auto& s = calc.state(id);
++        const unsigned goals = std::popcount(satisfied_goal_mask_for_state(id));
++        return Debt{goals, s.prefix_count + s.suffix_count - goals,
++                    s.rarity, s.goal_progress_retry_basin};
++    };
++    const auto debt_json = [](const Debt& d) {
++        const auto [g, j, r, b] = d;
++        return "{\"satisfied\":" + std::to_string(g) +
++            ",\"extra_affixes\":" + std::to_string(j) +
++            ",\"rarity\":" + std::to_string(r) +
++            ",\"retry_basin\":" + std::to_string(b);
++    };
++    std::map<Debt, std::uint32_t> population;
++    std::vector<std::uint32_t> samples{result.start_state};
++    const auto sample = [&](std::uint32_t id) {
++        if (id != kNoId && samples.size() < 10 &&
++            std::find(samples.begin(), samples.end(), id) == samples.end())
++            samples.push_back(id);
++    };
++    std::uint32_t best_full = kNoId;
++    for (std::uint32_t s = 0; s < calc.state_count(); ++s) {
++        ++population[debt(s)];
++        if (std::popcount(satisfied_goal_mask_for_state(s)) >=
++                calc.goal().required_satisfied_slots() &&
++            (best_full == kNoId || std::get<1>(debt(s)) <
++                std::get<1>(debt(best_full)))) best_full = s;
++    }
++    sample(best_full);
++    std::string json = "{\"schema\":\"goal_delivery_observation_v1\",\"status\":\"complete\",\"graph_identity\":" +
++        std::to_string(graph_identity()) + ",\"states\":" + std::to_string(calc.state_count()) +
++        ",\"rows\":" + std::to_string(transition_cache->rows.size()) +
++        ",\"expanded\":" + std::to_string(expanded_count) +
++        ",\"live_owned_bytes\":" + std::to_string(live) +
++        ",\"scheduler\":{\"incumbent\":" + truth(output_incumbent.has_value()) +
++        ",\"carriers\":" + std::to_string(incremental_carriers.size()) +
++        ",\"alternatives\":" + std::to_string(incremental_alternative_rows.size()) +
++        ",\"refinement_active\":" + truth(incremental_refinement_active) +
++        ",\"refinement_target\":" + std::to_string(incremental_refinement_target_expanded) +
++        ",\"queue\":" + std::to_string(queue.size()) +
++        ",\"expansion_active\":" + truth(expansion_active) +
++        ",\"restricted_values_ready\":" + truth(incremental_restricted_values_ready) +
++        ",\"envelope_closed\":" + truth(incremental_envelope_closed) +
++        ",\"finish_requested\":" + truth(requested_bounded_finish) +
++        ",\"cap_hit\":" + truth(result.diagnostics.resource_cap_hit) +
++        ",\"cooperative_high_progress\":" + truth(cooperative_high_progress_ordering_enabled()) +
++        "},\"population\":[";
++    bool first = true;
++    for (const auto& [d, count] : population) {
++        if (!first) json += ',';
++        first = false;
++        json += debt_json(d) + ",\"count\":" + std::to_string(count) + '}';
++    }
++    json += "],\"root_rows\":[";
++    std::uint32_t best_exalt = kNoId;
++    first = true;
++    for (const auto r : state_row_indices(*transition_cache, result.start_state)) {
++        const auto& row = transition_cache->rows.at(r);
++        if (r >= priced_rows.size()) continue;
++        const auto op = priced_rows[r].operator_index;
++        if (op >= calc.operators().size()) continue;
++        std::map<Debt, std::pair<std::uint32_t, double>> outcomes;
++        std::uint32_t best = kNoId, missing = 0;
++        double terminal_mass = 0;
++        for (std::uint32_t i = 0; i < row.transition_count; ++i) {
++            const auto offset = row.transition_offset + i;
++            const auto t = transition_cache->successors.at(offset);
++            const auto p = transition_cache->probabilities.at(offset);
++            if (!(p > 0)) continue;
++            auto& out = outcomes[debt(t)]; ++out.first; out.second += p;
++            if (calc.is_goal_state(calc.state(t))) terminal_mass += p;
++            else if (t >= transition_cache->state_rows.size() ||
++                transition_cache->state_rows[t].count == 0) ++missing;
++            if (best == kNoId || std::get<0>(debt(t)) > std::get<0>(debt(best)) ||
++                (std::get<0>(debt(t)) == std::get<0>(debt(best)) &&
++                 std::get<1>(debt(t)) < std::get<1>(debt(best)))) best = t;
++        }
++        sample(best);
++        if (calc.operators()[op].id == "exalt") best_exalt = best;
++        if (!first) json += ',';
++        first = false;
++        json += "{\"row\":" + std::to_string(r) + ",\"action\":";
++        append_json_string(json, calc.operators()[op].id);
++        json += ",\"admitted\":" + std::string(truth(row.admitted)) +
++            ",\"direct_missing\":" + std::to_string(missing) +
++            ",\"choices\":" + std::to_string(row.choice_count) +
++            ",\"terminal_mass\":" + format_double(terminal_mass) +
++            ",\"best_successor\":" + (best == kNoId ? "null" : std::to_string(best)) +
++            ",\"outcomes\":[";
++        bool first_debt = true;
++        for (const auto& [d, out] : outcomes) {
++            if (!first_debt) json += ',';
++            first_debt = false;
++            json += debt_json(d) + ",\"routes\":" + std::to_string(out.first) +
++                ",\"mass\":" + format_double(out.second) + '}';
++        }
++        json += "]}";
++    }
++    json += "],\"samples\":[";
++    first = true;
++    for (const auto s : samples) {
++        if (!first) json += ',';
++        first = false;
++        json += "{\"source\":" + state_json(s) + ",\"operators\":[";
++        bool first_op = true;
++        for (std::uint32_t op = 0; op < calc.operators().size(); ++op) {
++            const auto& planner = calc.operators()[op];
++            if (planner.kind != PlannerOperatorKind::Primitive) continue;
++            const bool requested = std::find(static_operator_indices.begin(), static_operator_indices.end(), op) != static_operator_indices.end() ||
++                std::find(delayed_operator_indices.begin(), delayed_operator_indices.end(), op) != delayed_operator_indices.end();
++            if (!requested) continue;
++            if (!first_op) json += ',';
++            first_op = false;
++            const auto* entry = action_envelope_ledger.find(s, op);
++            json += "{\"index\":" + std::to_string(op) + ",\"id\":";
++            append_json_string(json, planner.id);
++            json += ",\"legal\":" + std::string(truth(action_legal(session,
++                calc.registry().actions.at(planner.primitive_action), calc.state(s)))) +
++                ",\"lifecycle\":" + (entry ? std::to_string(static_cast<int>(entry->lifecycle)) : "null") +
++                ",\"lane\":" + (entry ? std::to_string(static_cast<int>(entry->lane)) : "null") +
++                ",\"reason\":";
++            append_json_string(json, entry ? entry->detail : "no_entry");
++            json += '}';
++        }
++        json += "]}";
++    }
++    json += "],\"native_witness_probes\":[";
++    // Diagnostic witnesses only. These native kernels are not installed as
++    // solver rows or injected into a policy. The immutable observation above
++    // identifies their actually reached source before this bounded probe.
++    bool first_probe = true;
++    for (const auto& [entry, action_id] :
++         std::array<std::pair<std::uint32_t, const char*>, 2>{{
++             {best_full, "annul"}, {best_exalt, "exalt"}}}) {
++        if (entry == kNoId) continue;
++        const auto action_it = calc.registry().index_by_id.find(action_id);
++        if (action_it == calc.registry().index_by_id.end() ||
++            std::find(calc.candidates().begin(), calc.candidates().end(),
++                      action_it->second) == calc.candidates().end()) continue;
++        const auto action = action_it->second;
++        std::uint32_t source = entry;
++        for (unsigned depth = 0; depth < 2; ++depth) {
++            if (!first_probe) json += ',';
++            first_probe = false;
++            json += "{\"depth\":" + std::to_string(depth) +
++                ",\"source\":" + state_json(source) + ",\"action\":";
++            append_json_string(json, action_id);
++            json += ",\"exits\":[";
++            try {
++                const auto& distribution = calc.outcomes(
++                    source, action, options.goal_progress_gated_reforges);
++                std::uint32_t next = kNoId;
++                bool first_exit = true;
++                for (const auto& exit : distribution.entries) {
++                    if (!first_exit) json += ',';
++                    first_exit = false;
++                    json += "{\"probability\":" + format_double(exit.probability) +
++                        ",\"state\":" + state_json(exit.state) + '}';
++                    if (!(exit.probability > 0)) continue;
++                    if (next == kNoId || std::get<0>(debt(exit.state)) > std::get<0>(debt(next)) ||
++                        (std::get<0>(debt(exit.state)) == std::get<0>(debt(next)) &&
++                         std::get<1>(debt(exit.state)) < std::get<1>(debt(next)))) next = exit.state;
++                }
++                json += "],\"supported\":" + std::string(truth(distribution.supported)) +
++                    ",\"legal\":" + truth(action_legal(session, calc.registry().actions.at(action), calc.state(source))) +
++                    ",\"choice_groups\":" + std::to_string(distribution.choice_groups.size()) + '}';
++                if (next == kNoId || calc.is_goal_state(calc.state(next))) break;
++                source = next;
++            } catch (const SolverResourceLimit& limit) {
++                json += "],\"refused_cap\":";
++                append_json_string(json, limit.cap_name());
++                json += '}';
++                break;
++            }
++        }
++    }
++    json += "]}";
++    goal_delivery_diagnostic = std::move(json);
++    carrier_ladder_exact_boundary_private_wall_ns +=
++        std::chrono::duration_cast<std::chrono::nanoseconds>(
++            std::chrono::steady_clock::now() - began).count();
++}
++
+ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
+         SolveDiagnostics& diagnostics) const {
+     if (options.carrier_ladder_exact_boundary_mode ==
+@@ -2108,6 +2346,8 @@ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
+         std::to_string(limits.max_wall_time_ms);
+     json += ",\"max_samples\":" +
+         std::to_string(limits.max_samples) + "}";
++    json += ",\"goal_delivery\":";
++    json += goal_delivery_diagnostic.empty() ? "null" : goal_delivery_diagnostic;
+     json += ",\"resumable_joint_policy_continuation\":";
+     if (!resumable_joint_policy_candidate.has_value()) {
+         json += "null";
+diff --git a/engine/src/solver_solve_finish.cpp b/engine/src/solver_solve_finish.cpp
+index 4b3e584..13b7f5a 100644
+--- a/engine/src/solver_solve_finish.cpp
++++ b/engine/src/solver_solve_finish.cpp
+@@ -6035,6 +6035,7 @@ SolveWork::Impl::run_publication_pipeline() {
+     }
+ 
+ void SolveWork::Impl::begin_publication_pipeline() {
++        capture_goal_delivery_diagnostic();
+         if (finalization_task.has_value() ||
+             finalized_result.has_value()) {
+             return;
+diff --git a/engine/src/solver_solve_incremental.cpp b/engine/src/solver_solve_incremental.cpp
+index 678f5e8..45b1608 100644
+--- a/engine/src/solver_solve_incremental.cpp
++++ b/engine/src/solver_solve_incremental.cpp
+@@ -1,6 +1,7 @@
+ #include "solver_solve_types.hpp"
+ #include "solver_action_family_contract.hpp"
+ #include "solver_sparse_policy.hpp"
++#include <cstdio>
+ 
+ namespace poecraft {
+ namespace solver {
+@@ -114,8 +115,20 @@ bool SolveWork::Impl::advance_incremental_dynamic_preparation() {
+ 
+ bool SolveWork::Impl::schedule_next_incremental_alternative(
+         const bool continue_current_epoch_request) {
+-    if (!incremental_action_generation || incremental_envelope_closed) {
++    const auto diagnostic_yield = [&](int line) {
++        if (options.carrier_ladder_exact_boundary_mode == CarrierLadderExactBoundaryMode::Record)
++            std::fprintf(stderr, "GOAL_DELIVERY yield line=%d continuation=%d resume=%d auto=%zu/%zu order=%zu/%zu carrier=%zu/%zu op=%zu/%zu alternatives=%zu highimpact=%d\n",
++                line, continue_current_epoch_request, incremental_resume_epoch_after_dynamic_prepare,
++                incremental_automatic_carrier_cursor, incremental_automatic_epoch_end,
++                incremental_automatic_order_cursor, incremental_automatic_carrier_order.size(),
++                incremental_carrier_cursor, incremental_carriers.size(),
++                incremental_operator_cursor, delayed_operator_indices.size(),
++                incremental_alternative_rows.size(), options.high_impact_executable_uppers);
+         return false;
++    };
++
++    if (!incremental_action_generation || incremental_envelope_closed) {
++        return diagnostic_yield(__LINE__);
+     }
+     const bool continue_current_epoch =
+         continue_current_epoch_request ||
+@@ -381,10 +394,10 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
+             if (continue_current_epoch &&
+                 incremental_automatic_carrier_cursor >=
+                     incremental_automatic_epoch_end) {
+-                return false;
++                return diagnostic_yield(__LINE__);
+             }
+           }
+-          return false;
++          return diagnostic_yield(__LINE__);
+         };
+         const auto service_fairness = [&]() {
+             while (incremental_fairness_operator_cursor <
+@@ -406,7 +419,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
+                 incremental_fairness_carrier_cursor = 0;
+                 ++incremental_fairness_operator_cursor;
+             }
+-            return false;
++            return diagnostic_yield(__LINE__);
+         };
+         const auto service_high_progress = [&]() {
+             while (incremental_high_progress_operator_cursor <
+@@ -440,7 +453,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
+                 ++incremental_high_progress_operator_cursor;
+             }
+             incremental_high_progress_operator_order.clear();
+-            return false;
++            return diagnostic_yield(__LINE__);
+         };
+         const auto service_closure = [&]() {
+             while (incremental_closure_operator_cursor <
+@@ -461,7 +474,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
+                 incremental_closure_carrier_cursor = 0;
+                 ++incremental_closure_operator_cursor;
+             }
+-            return false;
++            return diagnostic_yield(__LINE__);
+         };
+ 
+         /* The matched control corpus has no cooperative quota that preserves
+@@ -476,13 +489,13 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
+                 incremental_carriers.size() < std::min<std::size_t>(
+                     options.max_expanded_states,
+                     profile.carrier_checkpoint)) {
+-                return false;
++                return diagnostic_yield(__LINE__);
+             }
+             if (service_automatic()) return true;
+             if (continue_current_epoch &&
+                 incremental_automatic_carrier_cursor >=
+                     incremental_automatic_epoch_end) {
+-                return false;
++                return diagnostic_yield(__LINE__);
+             }
+             while (incremental_priority_task_cursor <
+                    incremental_priority_tasks.size()) {
+@@ -495,7 +508,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
+                     ActionEnvelopeLane::IncrementalPriority);
+                 return true;
+             }
+-            if (continue_current_epoch) return false;
++            if (continue_current_epoch) return diagnostic_yield(__LINE__);
+             if (!incremental_priority_tasks.empty()) {
+                 incremental_priority_tasks.clear();
+                 incremental_priority_task_cursor = 0;
+@@ -552,7 +565,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
+                 }
+             }
+             incremental_unevaluated_actions = 0;
+-            return false;
++            return diagnostic_yield(__LINE__);
+         }
+ 
+         SolveScheduler::Availability available{};
+@@ -608,10 +621,10 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
+         if (lane != AnytimeSchedulerLane::Count) {
+             anytime_scheduler.record_yield(lane);
+         }
+-        if (continue_current_epoch) return false;
+-        if (lane_work_remains) return false;
++        if (continue_current_epoch) return diagnostic_yield(__LINE__);
++        if (lane_work_remains) return diagnostic_yield(__LINE__);
+         incremental_unevaluated_actions = 0;
+-        return false;
++        return diagnostic_yield(__LINE__);
+     }
+     while (incremental_carrier_cursor < incremental_carriers.size()) {
+         const std::uint32_t state =
+@@ -688,7 +701,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
+         phase = SolvePhase::Expanding;
+         return true;
+     }
+-    return false;
++    return diagnostic_yield(__LINE__);
+ }
+ 
+ bool SolveWork::Impl::begin_incremental_upper_policy_pass() {
+diff --git a/engine/src/solver_solve_telemetry.cpp b/engine/src/solver_solve_telemetry.cpp
+index c17c1e0..8626607 100644
+--- a/engine/src/solver_solve_telemetry.cpp
++++ b/engine/src/solver_solve_telemetry.cpp
+@@ -2557,6 +2557,7 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
+             kIncumbentPortfolioAliasAccountingOffset +
+             calc_bytes;
+         bytes += native_retention_live_bytes + native_retention_junk_safe.capacity();
++        bytes += goal_delivery_diagnostic.capacity() + 1;
+         bytes += native_retention_refusal.capacity()+1;
+         bytes += prices.bucket_count() * sizeof(void*);
+         bytes += prices.size() *
+@@ -2815,6 +2816,7 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
+             kIncumbentPortfolioAliasAccountingOffset +
+             calc_bytes;
+         bytes += native_retention_live_bytes + native_retention_junk_safe.capacity();
++        bytes += goal_delivery_diagnostic.capacity() + 1;
+         bytes += native_retention_refusal.capacity()+1;
+         bytes += prices.bucket_count() * sizeof(void*);
+         bytes += prices.size() *
+diff --git a/engine/src/solver_solve_types.hpp b/engine/src/solver_solve_types.hpp
+index 7664e24..77387d0 100644
+--- a/engine/src/solver_solve_types.hpp
++++ b/engine/src/solver_solve_types.hpp
+@@ -1634,6 +1634,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
+         carrier_ladder_exact_boundary_capture;
+     std::vector<JointAnytimeAttemptLineage>
+         joint_anytime_attempt_lineage;
++    std::string goal_delivery_diagnostic;
++    void capture_goal_delivery_diagnostic();
+     std::uint64_t carrier_ladder_exact_boundary_private_wall_ns = 0;
+     bool target_gap_stop = false;
+     SolveGapTarget target_gap_fired = SolveGapTarget::None;

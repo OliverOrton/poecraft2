@@ -312,10 +312,19 @@ void write_file_atomic(const fs::path& path, const std::string& text) {
     temporary += ".tmp";
     write_file(temporary, text);
 #if defined(_WIN32)
-    if (!MoveFileExW(
-            temporary.c_str(), path.c_str(),
-            MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+    // Progress readers and filesystem observers can briefly hold the previous
+    // snapshot without delete sharing. Keep the complete temporary payload and
+    // retry only these transient Windows refusals, at most 20 waits of 10 ms.
+    // Persistent or unrelated I/O errors remain an explicit harness failure.
+    for (unsigned attempt = 0;; ++attempt) {
+        if (MoveFileExW(temporary.c_str(), path.c_str(),
+                MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) break;
         const DWORD error = GetLastError();
+        if (attempt < 20 && (error == ERROR_ACCESS_DENIED ||
+                error == ERROR_SHARING_VIOLATION || error == ERROR_LOCK_VIOLATION)) {
+            Sleep(10);
+            continue;
+        }
         std::error_code ignored;
         fs::remove(temporary, ignored);
         throw std::runtime_error(

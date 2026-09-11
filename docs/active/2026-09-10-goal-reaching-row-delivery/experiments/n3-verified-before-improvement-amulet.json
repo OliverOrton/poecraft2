@@ -1,0 +1,6123 @@
+{
+  "run": "n3-verified-before-improvement-amulet",
+  "executable": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+    "sha256": "57a389a6f5731a87620119dcf8a022316397c640778c6afd7f1d67e24eb120cd"
+  },
+  "ledger_sha256": "72959ce382ef7c80e85615a1855ec3e32be073a49e86210b5c710f37a46207f4",
+  "report_sha256": "b98e36beca408ebe908ef1fef46d5336ee8f8c85e51931ea78a23088218b8d55",
+  "solve_summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 40215428.995558396,
+    "expanded_states": 1401,
+    "sweeps": 78046,
+    "residual": 7643477.1716918945,
+    "skipped_action_count": 0,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "refused_resource_cap",
+    "stop_cause": "reforge_work_cap",
+    "cap_hit_mask": 16,
+    "action_counts": {
+      "registry": 164,
+      "candidate": 31,
+      "evaluator_supported": 31,
+      "supported_priced": 532,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 0
+    },
+    "lower_bound": 174.79327321907147,
+    "upper_bound": 40215428.995558396,
+    "evaluated_policy_cost": 40215428.995558396,
+    "absolute_optimality_gap": 40215254.20228518,
+    "relative_optimality_gap": 230073.23715417067,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  },
+  "phase_wall_ms": {
+    "registry_layout": 29.9823,
+    "solve": 240603.4907,
+    "compile": 1.3571,
+    "verification": null,
+    "total": 240712.2177
+  },
+  "execution": {
+    "solve_steps": 4131782,
+    "max_solve_step_ms": 418.5804,
+    "max_solve_step_phase": 1,
+    "max_solve_step_expanded_states": 1,
+    "max_solve_step_sweeps": 0,
+    "max_solve_step_finalization_work_item": 0,
+    "solve_step_wall_ms": {
+      "percentile_method": "nearest_rank_ceiling",
+      "count": 4131782,
+      "total": 224335.65090024506,
+      "median": 0.0501,
+      "p95": 0.071,
+      "maximum": 418.5804
+    },
+    "diagnostic_work_limit": null,
+    "diagnostic_time_limit_seconds": null,
+    "watchdog_seconds": 300,
+    "watchdog_mode": "cooperative_case_deadline",
+    "watchdog_expired": false,
+    "diagnostic_stop_reason": null,
+    "worker_max_slice_ms": null,
+    "cancellation_ack_ms": null,
+    "cancellation_mode": null,
+    "cooperative_abandon_ms": null
+  },
+  "memory": {
+    "measurement_kind": "working_set_snapshots_not_peak",
+    "process_working_set_before_bytes": 33308672,
+    "process_working_set_after_bytes": 115281920,
+    "process_working_set_delta_bytes": 81973248,
+    "process_working_set_peak_bytes": null,
+    "wasm_heap_before_bytes": null,
+    "wasm_heap_after_bytes": null,
+    "wasm_heap_growth_bytes": null,
+    "native_live_owned_bytes": 19620671,
+    "native_peak_owned_bytes": 46181138,
+    "native_serialized_output_bytes": 45,
+    "solver_telemetry_json_bytes": 881306
+  },
+  "goal_delivery": {
+    "schema": "goal_delivery_observation_v1",
+    "status": "complete",
+    "graph_identity": 10192805154664778026,
+    "states": 8188,
+    "rows": 21088,
+    "expanded": 1400,
+    "live_owned_bytes": 32514279,
+    "scheduler": {
+      "incumbent": true,
+      "carriers": 1416,
+      "alternatives": 11210,
+      "refinement_active": false,
+      "refinement_target": 1400,
+      "queue": 2999,
+      "expansion_active": false,
+      "restricted_values_ready": true,
+      "envelope_closed": false,
+      "finish_requested": false,
+      "cap_hit": true,
+      "cooperative_high_progress": false
+    },
+    "population": [
+      {
+        "satisfied": 0,
+        "extra_affixes": 0,
+        "rarity": 0,
+        "retry_basin": 0,
+        "count": 1
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 0,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 1
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 0,
+        "rarity": 2,
+        "retry_basin": 1,
+        "count": 1
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 1,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 13
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 2,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 85
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 3,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 255
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 4,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 463
+      },
+      {
+        "satisfied": 0,
+        "extra_affixes": 5,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 185
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 0,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 3
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 1,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 36
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 2,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 219
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 3,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 1278
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 4,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 1812
+      },
+      {
+        "satisfied": 1,
+        "extra_affixes": 5,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 2341
+      },
+      {
+        "satisfied": 2,
+        "extra_affixes": 0,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 3
+      },
+      {
+        "satisfied": 2,
+        "extra_affixes": 1,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 33
+      },
+      {
+        "satisfied": 2,
+        "extra_affixes": 2,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 342
+      },
+      {
+        "satisfied": 2,
+        "extra_affixes": 3,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 442
+      },
+      {
+        "satisfied": 2,
+        "extra_affixes": 4,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 599
+      },
+      {
+        "satisfied": 3,
+        "extra_affixes": 0,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 1
+      },
+      {
+        "satisfied": 3,
+        "extra_affixes": 1,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 16
+      },
+      {
+        "satisfied": 3,
+        "extra_affixes": 2,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 21
+      },
+      {
+        "satisfied": 3,
+        "extra_affixes": 3,
+        "rarity": 2,
+        "retry_basin": 0,
+        "count": 38
+      }
+    ],
+    "root_rows": [
+      {
+        "row": 0,
+        "action": "chaos",
+        "admitted": true,
+        "direct_missing": 2849,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 755,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 1,
+            "routes": 1,
+            "mass": 0.9628530313238359
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 639,
+            "mass": 0.010551850532194157
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1278,
+            "mass": 0.012417869205523957
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 5,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1479,
+            "mass": 0.013902784675199141
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 114,
+            "mass": 6.697925837620376e-05
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 261,
+            "mass": 9.12969298801615e-05
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 357,
+            "mass": 0.00011589632037450578
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 4,
+            "mass": 6.263433037506314e-08
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 10,
+            "mass": 9.365568861822899e-08
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 17,
+            "mass": 1.3546459688376794e-07
+          }
+        ]
+      },
+      {
+        "row": 1,
+        "action": "exalt",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9918471931050555
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00815280689494526
+          }
+        ]
+      },
+      {
+        "row": 2,
+        "action": "scour",
+        "admitted": true,
+        "direct_missing": 1,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4177,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 0,
+            "rarity": 0,
+            "retry_basin": 0,
+            "routes": 1,
+            "mass": 1
+          }
+        ]
+      },
+      {
+        "row": 3,
+        "action": "harvest_augment:chaos",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4169,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 2,
+            "mass": 0.8529411764705883
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1,
+            "mass": 0.14705882352941177
+          }
+        ]
+      },
+      {
+        "row": 4,
+        "action": "harvest_augment:lightning",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4175,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.9665551839464882
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1,
+            "mass": 0.033444816053511704
+          }
+        ]
+      },
+      {
+        "row": 5,
+        "action": "harvest_resist:fire:lightning",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 0,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1,
+            "mass": 1
+          }
+        ]
+      },
+      {
+        "row": 2147,
+        "action": "option:temporary_bench_repeat:bench:JunMaster2BaseManaAndLifeRegen2:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9913215968261839
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008678403173816018
+          }
+        ]
+      },
+      {
+        "row": 2148,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterGlobalEnergyShield1:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9915723573320494
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008427642667950878
+          }
+        ]
+      },
+      {
+        "row": 2149,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAddedFireDamage1:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916825095057034
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008317490494296578
+          }
+        ]
+      },
+      {
+        "row": 2150,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAddedColdDamage1_:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916825095057034
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008317490494296578
+          }
+        ]
+      },
+      {
+        "row": 2151,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAddedLightningDamage1:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916825095057034
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008317490494296578
+          }
+        ]
+      },
+      {
+        "row": 2152,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAllResist1:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4169,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9964054636951831
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 2,
+            "mass": 0.0035945363048166786
+          }
+        ]
+      },
+      {
+        "row": 2153,
+        "action": "option:temporary_bench_repeat:bench:JunMaster2BaseManaAndLifeRegen2:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9913215968261839
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008678403173816018
+          }
+        ]
+      },
+      {
+        "row": 2154,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterManaRegeneration2:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916127486220943
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008387251377905584
+          }
+        ]
+      },
+      {
+        "row": 2155,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterFireDamage1:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9917511194909261
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00824888050907377
+          }
+        ]
+      },
+      {
+        "row": 2156,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAddedFireDamage1:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916825095057034
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008317490494296578
+          }
+        ]
+      },
+      {
+        "row": 2157,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAddedColdDamage1_:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916825095057034
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008317490494296578
+          }
+        ]
+      },
+      {
+        "row": 2158,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAddedLightningDamage1:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916825095057034
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008317490494296578
+          }
+        ]
+      },
+      {
+        "row": 2159,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterGlobalCriticalStrikeChance2:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916127486220944
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008387251377905584
+          }
+        ]
+      },
+      {
+        "row": 2160,
+        "action": "option:temporary_bench_repeat:bench:JunMaster2BaseManaAndLifeRegen2:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9913215968261839
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008678403173816018
+          }
+        ]
+      },
+      {
+        "row": 2161,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterManaRegeneration2:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916127486220943
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008387251377905584
+          }
+        ]
+      },
+      {
+        "row": 2162,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterFireDamage1:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9917511194909261
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00824888050907377
+          }
+        ]
+      },
+      {
+        "row": 2163,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAddedFireDamage1:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916825095057034
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008317490494296578
+          }
+        ]
+      },
+      {
+        "row": 2164,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAddedColdDamage1_:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916825095057034
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008317490494296578
+          }
+        ]
+      },
+      {
+        "row": 2165,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAddedLightningDamage1:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916825095057034
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008317490494296578
+          }
+        ]
+      },
+      {
+        "row": 2166,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterGlobalCriticalStrikeChance2:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916127486220944
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008387251377905584
+          }
+        ]
+      },
+      {
+        "row": 2167,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterIncreasedLife2:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2168,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterStrength1:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2169,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterDexterity1:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2170,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterIntelligence1:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2171,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterWeaponElementalDamage1_:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.991778247592201
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008221752407798918
+          }
+        ]
+      },
+      {
+        "row": 2172,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterIncreasedCastSpeedJewelry1:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916923807263234
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008307619273676714
+          }
+        ]
+      },
+      {
+        "row": 2173,
+        "action": "option:temporary_bench_repeat:bench:IntMasterItemGenerationCannotRollAttackAffixes:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9902642559109878
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.009735744089012517
+          }
+        ]
+      },
+      {
+        "row": 2174,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterIncreasedLife2:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2175,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterStrength1:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2176,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterDexterity1:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2177,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterIntelligence1:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2178,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterWeaponElementalDamage1_:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.991778247592201
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008221752407798918
+          }
+        ]
+      },
+      {
+        "row": 2179,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterIncreasedCastSpeedJewelry1:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916923807263234
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008307619273676714
+          }
+        ]
+      },
+      {
+        "row": 2180,
+        "action": "option:temporary_bench_repeat:bench:IntMasterItemGenerationCannotRollAttackAffixes:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9902642559109878
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.009735744089012517
+          }
+        ]
+      },
+      {
+        "row": 2181,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterFireResist1:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9915315751270262
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008468424872973626
+          }
+        ]
+      },
+      {
+        "row": 2182,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterColdResist1_:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9915315751270262
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008468424872973626
+          }
+        ]
+      },
+      {
+        "row": 2183,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterLightningResist1:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9915315751270262
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008468424872973626
+          }
+        ]
+      },
+      {
+        "row": 2184,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAllResist1:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4169,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9964054636951831
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 2,
+            "mass": 0.0035945363048166786
+          }
+        ]
+      },
+      {
+        "row": 2185,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterManaRegeneration2:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916127486220943
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008387251377905584
+          }
+        ]
+      },
+      {
+        "row": 2186,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterFireDamage1:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9917511194909261
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00824888050907377
+          }
+        ]
+      },
+      {
+        "row": 2187,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterColdDamage1_:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9917511194909261
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00824888050907377
+          }
+        ]
+      },
+      {
+        "row": 2188,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAccuracyRating1:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916686503213521
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008331349678647942
+          }
+        ]
+      },
+      {
+        "row": 2189,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterMaximumEnergyShield1_:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9913644214162348
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00863557858376511
+          }
+        ]
+      },
+      {
+        "row": 2190,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAddedPhysicalDamage1:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2191,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterGlobalCriticalStrikeChance2:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916127486220944
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008387251377905584
+          }
+        ]
+      },
+      {
+        "row": 2192,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterFlatLifeAndManaRegeneration1:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9915315751270263
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008468424872973626
+          }
+        ]
+      },
+      {
+        "row": 2193,
+        "action": "option:temporary_bench_repeat:bench:JunMaster2StrengthAndDexterity2:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9911009407576917
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00889905924230867
+          }
+        ]
+      },
+      {
+        "row": 2194,
+        "action": "option:temporary_bench_repeat:bench:JunMaster2DexterityAndIntelligence2:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9911009407576916
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00889905924230867
+          }
+        ]
+      },
+      {
+        "row": 2195,
+        "action": "option:temporary_bench_repeat:bench:JunMaster2StrengthAndIntelligence2:exalt:until:1:0",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9911009407576917
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00889905924230867
+          }
+        ]
+      },
+      {
+        "row": 2196,
+        "action": "option:temporary_bench_repeat:bench:StrDexMasterItemGenerationCannotRollCasterAffixes:exalt:until:1:0",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2197,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterFireResist1:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9915315751270262
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008468424872973626
+          }
+        ]
+      },
+      {
+        "row": 2198,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterColdResist1_:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9915315751270262
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008468424872973626
+          }
+        ]
+      },
+      {
+        "row": 2199,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterLightningResist1:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9915315751270262
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008468424872973626
+          }
+        ]
+      },
+      {
+        "row": 2200,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterColdDamage1_:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9917511194909261
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00824888050907377
+          }
+        ]
+      },
+      {
+        "row": 2201,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterLightningDamage1:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9941079424935185
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 2,
+            "mass": 0.005892057506481263
+          }
+        ]
+      },
+      {
+        "row": 2202,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAccuracyRating1:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916686503213521
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008331349678647942
+          }
+        ]
+      },
+      {
+        "row": 2203,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterGlobalEnergyShield1:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9915723573320494
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008427642667950878
+          }
+        ]
+      },
+      {
+        "row": 2204,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterMaximumEnergyShield1_:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9913644214162348
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00863557858376511
+          }
+        ]
+      },
+      {
+        "row": 2205,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAddedPhysicalDamage1:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2206,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterFlatLifeAndManaRegeneration1:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9915315751270263
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008468424872973626
+          }
+        ]
+      },
+      {
+        "row": 2207,
+        "action": "option:temporary_bench_repeat:bench:JunMaster2StrengthAndDexterity2:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9911009407576917
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00889905924230867
+          }
+        ]
+      },
+      {
+        "row": 2208,
+        "action": "option:temporary_bench_repeat:bench:JunMaster2DexterityAndIntelligence2:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9911009407576916
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00889905924230867
+          }
+        ]
+      },
+      {
+        "row": 2209,
+        "action": "option:temporary_bench_repeat:bench:JunMaster2StrengthAndIntelligence2:exalt:until:1:1",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9911009407576917
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00889905924230867
+          }
+        ]
+      },
+      {
+        "row": 2210,
+        "action": "option:temporary_bench_repeat:bench:StrDexMasterItemGenerationCannotRollCasterAffixes:exalt:until:1:1",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2211,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterIncreasedLife2:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2212,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterFireResist1:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9915315751270262
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008468424872973626
+          }
+        ]
+      },
+      {
+        "row": 2213,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterColdResist1_:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9915315751270262
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008468424872973626
+          }
+        ]
+      },
+      {
+        "row": 2214,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterLightningResist1:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9915315751270262
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008468424872973626
+          }
+        ]
+      },
+      {
+        "row": 2215,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterStrength1:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2216,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterDexterity1:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2217,
+        "action": "option:temporary_bench_repeat:bench:HelenaMasterIntelligence1:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2218,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterWeaponElementalDamage1_:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.991778247592201
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008221752407798918
+          }
+        ]
+      },
+      {
+        "row": 2219,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterColdDamage1_:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9917511194909261
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00824888050907377
+          }
+        ]
+      },
+      {
+        "row": 2220,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterLightningDamage1:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 12,
+            "mass": 0.9941079424935185
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 2,
+            "mass": 0.005892057506481263
+          }
+        ]
+      },
+      {
+        "row": 2221,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAccuracyRating1:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916686503213521
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008331349678647942
+          }
+        ]
+      },
+      {
+        "row": 2222,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterGlobalEnergyShield1:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9915723573320494
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008427642667950878
+          }
+        ]
+      },
+      {
+        "row": 2223,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterMaximumEnergyShield1_:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9913644214162348
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00863557858376511
+          }
+        ]
+      },
+      {
+        "row": 2224,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterAddedPhysicalDamage1:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 2225,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterIncreasedCastSpeedJewelry1:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9916923807263234
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008307619273676714
+          }
+        ]
+      },
+      {
+        "row": 2226,
+        "action": "option:temporary_bench_repeat:bench:EinharMasterFlatLifeAndManaRegeneration1:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9915315751270263
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008468424872973626
+          }
+        ]
+      },
+      {
+        "row": 2227,
+        "action": "option:temporary_bench_repeat:bench:JunMaster2StrengthAndDexterity2:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9911009407576917
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00889905924230867
+          }
+        ]
+      },
+      {
+        "row": 2228,
+        "action": "option:temporary_bench_repeat:bench:JunMaster2DexterityAndIntelligence2:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9911009407576916
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00889905924230867
+          }
+        ]
+      },
+      {
+        "row": 2229,
+        "action": "option:temporary_bench_repeat:bench:JunMaster2StrengthAndIntelligence2:exalt:until:1:2",
+        "admitted": true,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9911009407576917
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.00889905924230867
+          }
+        ]
+      },
+      {
+        "row": 2230,
+        "action": "option:temporary_bench_repeat:bench:IntMasterItemGenerationCannotRollAttackAffixes:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9902642559109878
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.009735744089012517
+          }
+        ]
+      },
+      {
+        "row": 2231,
+        "action": "option:temporary_bench_repeat:bench:StrDexMasterItemGenerationCannotRollCasterAffixes:exalt:until:1:2",
+        "admitted": false,
+        "direct_missing": 0,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 4167,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 13,
+            "mass": 0.9914903963044008
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 3,
+            "mass": 0.008509603695599319
+          }
+        ]
+      },
+      {
+        "row": 4378,
+        "action": "harvest_reforge:chaos",
+        "admitted": false,
+        "direct_missing": 2074,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 755,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 1,
+            "routes": 1,
+            "mass": 0.8329475901366106
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 403,
+            "mass": 0.05373612019304704
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 874,
+            "mass": 0.05466762242997266
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 5,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1039,
+            "mass": 0.055382725472842065
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 90,
+            "mass": 0.0009449709923071378
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 215,
+            "mass": 0.0011001982336476454
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 297,
+            "mass": 0.0012126883832897575
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 4,
+            "mass": 2.0857429243553274e-06
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 10,
+            "mass": 2.7101838200800625e-06
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 17,
+            "mass": 3.2882315383405292e-06
+          }
+        ]
+      },
+      {
+        "row": 12608,
+        "action": "harvest_reforge:elemental",
+        "admitted": false,
+        "direct_missing": 2849,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 755,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 1,
+            "routes": 1,
+            "mass": 0.9453635939833173
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 639,
+            "mass": 0.01655845311636188
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1278,
+            "mass": 0.01814741599579919
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 5,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1479,
+            "mass": 0.019415205539383276
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 114,
+            "mass": 0.00013959997320828177
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 261,
+            "mass": 0.0001726904463647374
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 357,
+            "mass": 0.00020243903044842417
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 4,
+            "mass": 1.4590389470808147e-07
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 10,
+            "mass": 1.983720885210427e-07
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 17,
+            "mass": 2.576391336027712e-07
+          }
+        ]
+      },
+      {
+        "row": 15424,
+        "action": "harvest_reforge:lightning",
+        "admitted": false,
+        "direct_missing": 2383,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 755,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 1,
+            "routes": 1,
+            "mass": 0.9397173121238872
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 455,
+            "mass": 0.018331722441231796
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 990,
+            "mass": 0.0199567660122821
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 5,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1223,
+            "mass": 0.021254734440148335
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 93,
+            "mass": 0.00020480870083867738
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 223,
+            "mass": 0.00024828701824058426
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 317,
+            "mass": 0.0002853748765136965
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 4,
+            "mass": 2.4731059135272494e-07
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 10,
+            "mass": 3.3002315497051515e-07
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 17,
+            "mass": 4.1705311122239644e-07
+          }
+        ]
+      },
+      {
+        "row": 16840,
+        "action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+        "admitted": false,
+        "direct_missing": 1174,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 755,
+        "outcomes": [
+          {
+            "satisfied": 1,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 213,
+            "mass": 0.3280220374961733
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 426,
+            "mass": 0.3271672018438327
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 5,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 493,
+            "mass": 0.32655802420044305
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 76,
+            "mass": 0.005304151466810582
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 174,
+            "mass": 0.006156846889261482
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 238,
+            "mass": 0.0067640448797756944
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 4,
+            "mass": 7.144370350302285e-06
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 10,
+            "mass": 9.28460023923149e-06
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 17,
+            "mass": 1.1264253113284112e-05
+          }
+        ]
+      },
+      {
+        "row": 18256,
+        "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "admitted": false,
+        "direct_missing": 2849,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 755,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 1,
+            "routes": 1,
+            "mass": 0.9154382866932523
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 639,
+            "mass": 0.024405957428309623
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1278,
+            "mass": 0.028268063915540906
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 5,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 1479,
+            "mass": 0.030994469148262888
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 114,
+            "mass": 0.00022558701344243376
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 261,
+            "mass": 0.00029951358550709935
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 357,
+            "mass": 0.00036743571425467173
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 1,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 4,
+            "mass": 1.6545532130307204e-07
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 10,
+            "mass": 2.322726722929166e-07
+          },
+          {
+            "satisfied": 3,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 17,
+            "mass": 2.887734365886206e-07
+          }
+        ]
+      },
+      {
+        "row": 19672,
+        "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+        "admitted": false,
+        "direct_missing": 466,
+        "choices": 0,
+        "terminal_mass": 0,
+        "best_successor": 717,
+        "outcomes": [
+          {
+            "satisfied": 0,
+            "extra_affixes": 0,
+            "rarity": 2,
+            "retry_basin": 1,
+            "routes": 1,
+            "mass": 0.9312406690950378
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 184,
+            "mass": 0.019817210673488062
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 288,
+            "mass": 0.022937103390363797
+          },
+          {
+            "satisfied": 1,
+            "extra_affixes": 5,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 256,
+            "mass": 0.025246885229070766
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 2,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 21,
+            "mass": 0.00018814914647178636
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 3,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 38,
+            "mass": 0.0002535311943111886
+          },
+          {
+            "satisfied": 2,
+            "extra_affixes": 4,
+            "rarity": 2,
+            "retry_basin": 0,
+            "routes": 40,
+            "mass": 0.0003164512712564902
+          }
+        ]
+      }
+    ],
+    "samples": [
+      {
+        "source": {
+          "id": 0,
+          "hash": 3634516757,
+          "goal_mask": 0,
+          "terminal": false,
+          "rarity": 2,
+          "prefixes": 0,
+          "suffixes": 0,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": true,
+          "slot_status": [
+            0,
+            0,
+            0
+          ],
+          "junk": []
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 10,
+            "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 19,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 20,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": 4,
+            "lane": 5,
+            "reason": "max_reforge_work"
+          },
+          {
+            "index": 21,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 22,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 155,
+            "id": "harvest_reforge:chaos",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 156,
+            "id": "harvest_reforge:elemental",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 157,
+            "id": "harvest_reforge:lightning",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 158,
+            "id": "harvest_augment:chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 159,
+            "id": "harvest_augment:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 160,
+            "id": "harvest_resist:fire:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 161,
+            "id": "harvest_resist:cold:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 162,
+            "id": "fracture",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 163,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": 4461,
+          "hash": 3013888102,
+          "goal_mask": 7,
+          "terminal": true,
+          "rarity": 2,
+          "prefixes": 0,
+          "suffixes": 3,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": false,
+          "slot_status": [
+            2,
+            2,
+            2
+          ],
+          "junk": []
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 10,
+            "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 19,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 20,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 21,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 22,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 155,
+            "id": "harvest_reforge:chaos",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 156,
+            "id": "harvest_reforge:elemental",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 157,
+            "id": "harvest_reforge:lightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 158,
+            "id": "harvest_augment:chaos",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 159,
+            "id": "harvest_augment:lightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 160,
+            "id": "harvest_resist:fire:lightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 161,
+            "id": "harvest_resist:cold:lightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 162,
+            "id": "fracture",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 163,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": 755,
+          "hash": 2930858446,
+          "goal_mask": 7,
+          "terminal": false,
+          "rarity": 2,
+          "prefixes": 1,
+          "suffixes": 3,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": true,
+          "slot_status": [
+            2,
+            2,
+            2
+          ],
+          "junk": [
+            [
+              2,
+              1
+            ]
+          ]
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 10,
+            "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 19,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 20,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 21,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 22,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 155,
+            "id": "harvest_reforge:chaos",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 156,
+            "id": "harvest_reforge:elemental",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 157,
+            "id": "harvest_reforge:lightning",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 158,
+            "id": "harvest_augment:chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 159,
+            "id": "harvest_augment:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 160,
+            "id": "harvest_resist:fire:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 161,
+            "id": "harvest_resist:cold:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 162,
+            "id": "fracture",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 163,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": 4167,
+          "hash": 968818224,
+          "goal_mask": 4,
+          "terminal": false,
+          "rarity": 2,
+          "prefixes": 0,
+          "suffixes": 1,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": true,
+          "slot_status": [
+            0,
+            0,
+            2
+          ],
+          "junk": []
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 10,
+            "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 19,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 20,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 21,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 22,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 155,
+            "id": "harvest_reforge:chaos",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 156,
+            "id": "harvest_reforge:elemental",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 157,
+            "id": "harvest_reforge:lightning",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 158,
+            "id": "harvest_augment:chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 159,
+            "id": "harvest_augment:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 160,
+            "id": "harvest_resist:fire:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 161,
+            "id": "harvest_resist:cold:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 162,
+            "id": "fracture",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 163,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": 4177,
+          "hash": 1721440935,
+          "goal_mask": 0,
+          "terminal": false,
+          "rarity": 0,
+          "prefixes": 0,
+          "suffixes": 0,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": false,
+          "slot_status": [
+            0,
+            0,
+            0
+          ],
+          "junk": []
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 10,
+            "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 19,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 20,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 21,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 22,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 155,
+            "id": "harvest_reforge:chaos",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 156,
+            "id": "harvest_reforge:elemental",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 157,
+            "id": "harvest_reforge:lightning",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 158,
+            "id": "harvest_augment:chaos",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 159,
+            "id": "harvest_augment:lightning",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 160,
+            "id": "harvest_resist:fire:lightning",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 161,
+            "id": "harvest_resist:cold:lightning",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 162,
+            "id": "fracture",
+            "legal": false,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          },
+          {
+            "index": 163,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": null,
+            "lane": null,
+            "reason": "no_entry"
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": 4169,
+          "hash": 1384852152,
+          "goal_mask": 2,
+          "terminal": false,
+          "rarity": 2,
+          "prefixes": 0,
+          "suffixes": 1,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": true,
+          "slot_status": [
+            0,
+            2,
+            0
+          ],
+          "junk": []
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 10,
+            "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 19,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 20,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 21,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 22,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 155,
+            "id": "harvest_reforge:chaos",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 156,
+            "id": "harvest_reforge:elemental",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 157,
+            "id": "harvest_reforge:lightning",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 158,
+            "id": "harvest_augment:chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 159,
+            "id": "harvest_augment:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 160,
+            "id": "harvest_resist:fire:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 161,
+            "id": "harvest_resist:cold:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 162,
+            "id": "fracture",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 163,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": 4175,
+          "hash": 3240169632,
+          "goal_mask": 1,
+          "terminal": false,
+          "rarity": 2,
+          "prefixes": 0,
+          "suffixes": 1,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": true,
+          "slot_status": [
+            2,
+            0,
+            0
+          ],
+          "junk": []
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 10,
+            "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 19,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 20,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 21,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 22,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 155,
+            "id": "harvest_reforge:chaos",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 156,
+            "id": "harvest_reforge:elemental",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 157,
+            "id": "harvest_reforge:lightning",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 158,
+            "id": "harvest_augment:chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 159,
+            "id": "harvest_augment:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 160,
+            "id": "harvest_resist:fire:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 161,
+            "id": "harvest_resist:cold:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 162,
+            "id": "fracture",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 163,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": 717,
+          "hash": 61899849,
+          "goal_mask": 6,
+          "terminal": false,
+          "rarity": 2,
+          "prefixes": 1,
+          "suffixes": 3,
+          "flags": 0,
+          "fractured_goals": 0,
+          "crafted_goals": 0,
+          "blocked": 0,
+          "retry_basin": 0,
+          "expanded": true,
+          "slot_status": [
+            0,
+            2,
+            2
+          ],
+          "junk": [
+            [
+              2,
+              1
+            ],
+            [
+              8,
+              1
+            ]
+          ]
+        },
+        "operators": [
+          {
+            "index": 0,
+            "id": "transmute",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 1,
+            "id": "augment",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 2,
+            "id": "alteration",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 3,
+            "id": "regal",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 4,
+            "id": "alchemy",
+            "legal": false,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 5,
+            "id": "chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 6,
+            "id": "exalt",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 7,
+            "id": "annul",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 8,
+            "id": "scour",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 10,
+            "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 11,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 12,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 13,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 14,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 15,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 16,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 17,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 18,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 19,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 20,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 21,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 0,
+            "lane": 2,
+            "reason": ""
+          },
+          {
+            "index": 22,
+            "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 155,
+            "id": "harvest_reforge:chaos",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 156,
+            "id": "harvest_reforge:elemental",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 157,
+            "id": "harvest_reforge:lightning",
+            "legal": true,
+            "lifecycle": 6,
+            "lane": 5,
+            "reason": "missing_verified_carrier_upper"
+          },
+          {
+            "index": 158,
+            "id": "harvest_augment:chaos",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 159,
+            "id": "harvest_augment:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 160,
+            "id": "harvest_resist:fire:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 161,
+            "id": "harvest_resist:cold:lightning",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 162,
+            "id": "fracture",
+            "legal": true,
+            "lifecycle": 1,
+            "lane": 1,
+            "reason": ""
+          },
+          {
+            "index": 163,
+            "id": "restart",
+            "legal": true,
+            "lifecycle": 2,
+            "lane": 1,
+            "reason": ""
+          }
+        ]
+      }
+    ]
+  },
+  "joint_anytime_policy": {
+    "attempts": 14,
+    "successes": 1,
+    "last_completed_rows": 4507,
+    "best_upper": 48896520.189269,
+    "last_failure": "missing_completed_row_and_certified_frontier:state=1316:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128"
+  },
+  "verified_upper": {
+    "present": true,
+    "cost": 40215428.995558396,
+    "portfolio_identity": "714e7d140f4903d7",
+    "identity": {
+      "portfolio": "714e7d140f4903d7",
+      "goal": "84d474fb296c8f82",
+      "economy": "ad2373d65bde3138",
+      "action_vocabulary": "a80ba34348b777c8",
+      "caller_scope": "9c263950e5b78cea",
+      "graph_prefix": "07abe408d26f154d",
+      "artifact": "f73ba2dc35a0d0cb",
+      "source_generation": 21089
+    },
+    "observations": 3,
+    "strictly_cheaper_replacements": 1,
+    "monotone": true
+  },
+  "attempts": [
+    {
+      "ordinal": 1,
+      "rows": 260,
+      "states": 4327,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 4,
+      "failure": "missing_completed_row_and_certified_frontier:state=4164:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/3",
+      "first_missing_continuation": {
+        "state": 4164,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=4164:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/3"
+      }
+    },
+    {
+      "ordinal": 2,
+      "rows": 281,
+      "states": 4369,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 18,
+      "failure": "missing_completed_row_and_certified_frontier:state=4334:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/14",
+      "first_missing_continuation": {
+        "state": 4334,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=4334:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/14"
+      }
+    },
+    {
+      "ordinal": 3,
+      "rows": 381,
+      "states": 4507,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 51,
+      "failure": "missing_completed_row_and_certified_frontier:state=4161:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/33",
+      "first_missing_continuation": {
+        "state": 4161,
+        "goal_mask": 0
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=4161:goal_mask=0:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/33"
+      }
+    },
+    {
+      "ordinal": 4,
+      "rows": 618,
+      "states": 4591,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 73,
+      "failure": "missing_completed_row_and_certified_frontier:state=4332:goal_mask=4:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/22",
+      "first_missing_continuation": {
+        "state": 4332,
+        "goal_mask": 4
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=4332:goal_mask=4:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/22"
+      }
+    },
+    {
+      "ordinal": 5,
+      "rows": 776,
+      "states": 4673,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 75,
+      "failure": "missing_completed_row_and_certified_frontier:state=4167:goal_mask=4:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/2",
+      "first_missing_continuation": {
+        "state": 4167,
+        "goal_mask": 4
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=4167:goal_mask=4:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/2"
+      }
+    },
+    {
+      "ordinal": 6,
+      "rows": 790,
+      "states": 4673,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 78,
+      "failure": "missing_completed_row_and_certified_frontier:state=4348:goal_mask=4:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/3",
+      "first_missing_continuation": {
+        "state": 4348,
+        "goal_mask": 4
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=4348:goal_mask=4:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/3"
+      }
+    },
+    {
+      "ordinal": 7,
+      "rows": 811,
+      "states": 4674,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 89,
+      "failure": "missing_completed_row_and_certified_frontier:state=4550:goal_mask=5:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/11",
+      "first_missing_continuation": {
+        "state": 4550,
+        "goal_mask": 5
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=4550:goal_mask=5:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/11"
+      }
+    },
+    {
+      "ordinal": 8,
+      "rows": 890,
+      "states": 4674,
+      "fixed_policy_proper": true,
+      "candidate_root_estimate": 48896520.18926918,
+      "reachable_states": 89,
+      "failure": null,
+      "first_missing_continuation": null,
+      "candidate": {
+        "installed_for_finalization": true,
+        "portfolio_identity": "49e5ce742470ca5c",
+        "kind": "anytime_reachable_proper_policy"
+      },
+      "compilation": {
+        "attempted": true,
+        "succeeded": true,
+        "nodes": 13,
+        "edges": 32,
+        "result": "initial_candidate_compiled"
+      },
+      "independent_exact_evaluation": {
+        "attempted": true,
+        "succeeded": true,
+        "cost": 48896520.03536156,
+        "result": "verified_before_improvement"
+      },
+      "portfolio": {
+        "decision": "not_selected",
+        "reason": "a cheaper independently evaluated candidate won publication"
+      }
+    },
+    {
+      "ordinal": 9,
+      "rows": 891,
+      "states": 4674,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 160,
+      "failure": "missing_completed_row_and_certified_frontier:state=32:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 32,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=32:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128"
+      }
+    },
+    {
+      "ordinal": 10,
+      "rows": 4379,
+      "states": 5199,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 288,
+      "failure": "missing_completed_row_and_certified_frontier:state=160:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 160,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=160:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128"
+      }
+    },
+    {
+      "ordinal": 11,
+      "rows": 6856,
+      "states": 6617,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 544,
+      "failure": "missing_completed_row_and_certified_frontier:state=416:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 416,
+        "goal_mask": 2
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=416:goal_mask=2:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128"
+      }
+    },
+    {
+      "ordinal": 12,
+      "rows": 9318,
+      "states": 6968,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 800,
+      "failure": "missing_completed_row_and_certified_frontier:state=544:goal_mask=4:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 544,
+        "goal_mask": 4
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=544:goal_mask=4:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128"
+      }
+    },
+    {
+      "ordinal": 13,
+      "rows": 11136,
+      "states": 7284,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 1056,
+      "failure": "missing_completed_row_and_certified_frontier:state=819:goal_mask=4:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 819,
+        "goal_mask": 4
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=819:goal_mask=4:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128"
+      }
+    },
+    {
+      "ordinal": 14,
+      "rows": 13685,
+      "states": 8060,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 1312,
+      "failure": "missing_completed_row_and_certified_frontier:state=1184:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 1184,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=1184:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128"
+      }
+    },
+    {
+      "ordinal": 15,
+      "rows": 21088,
+      "states": 8188,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 606,
+      "failure": "missing_completed_row_and_certified_frontier:state=1313:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 1313,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=1313:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128"
+      }
+    },
+    {
+      "ordinal": 16,
+      "rows": 21089,
+      "states": 8188,
+      "fixed_policy_proper": false,
+      "candidate_root_estimate": null,
+      "reachable_states": 607,
+      "failure": "missing_completed_row_and_certified_frontier:state=1316:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128",
+      "first_missing_continuation": {
+        "state": 1316,
+        "goal_mask": 1
+      },
+      "candidate": {
+        "installed_for_finalization": false,
+        "portfolio_identity": null,
+        "kind": null
+      },
+      "compilation": {
+        "attempted": false,
+        "succeeded": false,
+        "nodes": 0,
+        "edges": 0,
+        "result": null
+      },
+      "independent_exact_evaluation": {
+        "attempted": false,
+        "succeeded": false,
+        "cost": null,
+        "result": null
+      },
+      "portfolio": {
+        "decision": "not_installed_for_finalization",
+        "reason": "missing_completed_row_and_certified_frontier:state=1316:goal_mask=1:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0:renewal_boundaries=0/128"
+      }
+    }
+  ],
+  "publication_candidates": {
+    "samples": [
+      {
+        "identity": "8164600699578549207",
+        "kind": "direct_compiled_core_policy",
+        "stage": "direct_certification",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 40215428.995558396,
+        "estimate_cost": 40215428.995558396,
+        "reconciliation_absolute_delta": 0.013102322816848755,
+        "reconciliation_relative_delta": 3.258033829261666e-10,
+        "disposition": "eligible_verified_candidate",
+        "selection_reason": "final graph cost reconciled"
+      },
+      {
+        "identity": "8164600699578549207",
+        "kind": "direct_compiled_core_policy",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 40215428.995558396,
+        "estimate_cost": 40215428.995558396,
+        "reconciliation_absolute_delta": 0.013102322816848755,
+        "reconciliation_relative_delta": 3.258033829261666e-10,
+        "disposition": "selected_for_publication",
+        "selection_reason": "strict cheapest independently evaluated candidate"
+      },
+      {
+        "identity": "5324889132658379356",
+        "kind": "anytime_reachable_proper_policy",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 48896520.03536156,
+        "estimate_cost": 48896520.03536156,
+        "reconciliation_absolute_delta": 0.15390761941671371,
+        "reconciliation_relative_delta": 3.147619070252166e-09,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      }
+    ],
+    "retained": 3,
+    "omitted": 0,
+    "retained_bytes": 1266,
+    "limit": 64
+  },
+  "errors": []
+}

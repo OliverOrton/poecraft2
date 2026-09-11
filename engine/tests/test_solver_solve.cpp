@@ -1642,6 +1642,332 @@ std::uint32_t satisfied_goal_count(
     return count;
 }
 
+void run_incremental_automatic_epoch_yield_tests() {
+    // Exact pool exhaustion makes this delayed native Essence terminal. The
+    // test concerns a completed automatic epoch, not a mocked action kernel.
+    const auto run = [](bool pending, bool finish_requested, bool capped,
+                        bool has_incumbent = false) {
+        auto session = make_solve_session({"epoch_yield_goal"});
+        session->essence_guaranteed_mod_ids = {0};
+        auto& data = const_cast<DataImpl&>(*session->data);
+        for (std::uint32_t mod = 1; mod < session->mod_count; ++mod) {
+            pc_bitset_clear(session->normal_random_roll_mask.data(), mod);
+            pc_bitset_clear(session->positive_spawn_weight_mask.data(), mod);
+            pc_bitset_clear(session->positive_base_weight_mask.data(), mod);
+            session->base_spawn_weight[mod] = 0;
+            session->base_roll_weight[mod] = 0;
+            data.spawn_weights[mod] = 0;
+        }
+        auto registry = build_action_registry(*session);
+        const auto delayed = registry.index_by_id.at("essence:epoch_yield_goal");
+        const auto annul = registry.index_by_id.at("annul");
+        GoalSpec goal;
+        goal.rarity = PC_RARITY_RARE;
+        GoalSlot slot;
+        slot.family_id = 100;
+        slot.min_tier = 1;
+        goal.slots.push_back(slot);
+        CalcContext calc(session, goal, registry, {annul, delayed});
+        pc_item_state start;
+        pc_item_clear(&start);
+        start.rarity = PC_RARITY_RARE;
+        SolveOptions options;
+        options.goal_progress_gated_reforges = true;
+        options.high_impact_executable_uppers = true;
+        options.allow_economic_restart = false;
+        options.state_certificate_control = false;
+        if (capped) options.max_discovered_states = 1;
+        SolveWorkTestAccess::Impl work(calc, start,
+            {{"annul", 1.0}, {"essence:epoch_yield_goal", 10.0}}, options);
+        const auto root = work.result.start_state;
+        PC_CHECK(work.incremental_action_generation);
+        PC_CHECK(work.delayed_operator_indices.size() == 1);
+        const auto delayed_op = work.delayed_operator_indices.front();
+        PC_CHECK(calc.operators()[delayed_op].primitive_action == delayed);
+        // This is the real retained checkpoint immediately before automatic
+        // preparation finishes its last carrier and yields the epoch.
+        work.queue.clear();
+        work.expanded.assign(calc.state_count(), 1);
+        work.expanded_count = 1;
+        work.transition_cache->state_rows.resize(calc.state_count());
+        work.transition_cache->expanded = work.expanded;
+        work.transition_cache->discovered_states = calc.state_count();
+        work.incremental_carriers = {root};
+        work.incremental_automatic_carrier_order = {root};
+        work.incremental_automatic_carrier_cursor = 0;
+        work.incremental_automatic_order_cursor = 0;
+        work.incremental_automatic_epoch_end = 1;
+        work.incremental_dynamic_prepare_active = true;
+        work.incremental_resume_epoch_after_dynamic_prepare = true;
+        work.incremental_restricted_values_ready = true;
+        work.result.values.assign(calc.state_count(), 0.0);
+        work.result.goal_states.assign(calc.state_count(), 0);
+        work.requested_bounded_finish = finish_requested;
+        // Presence alone is the dispatch guard; this fixture never publishes
+        // this placeholder as an executable policy. The native corpus checks
+        // preservation of actual independently evaluated incumbents.
+        if (has_incumbent) work.output_incumbent.emplace();
+        if (!pending) work.incremental_completed_pairs.insert(
+            (static_cast<std::uint64_t>(root) << 32) | delayed_op);
+        for (unsigned units = 0; units < 128 &&
+             work.incremental_dynamic_prepare_active &&
+             work.phase != SolvePhase::Done; ++units) work.step(1);
+        if (pending && !finish_requested && !has_incumbent) {
+            PC_CHECK(work.phase == SolvePhase::Expanding);
+            PC_CHECK(work.expansion_active);
+            PC_CHECK(work.expansion_is_incremental_alternative);
+            if (!work.expansion_active ||
+                !work.expansion_is_incremental_alternative) return;
+            PC_CHECK(work.expansion_operator_indices ==
+                     std::vector<std::uint32_t>{delayed_op});
+            PC_CHECK(work.expand_one_unit());
+            if (capped) {
+                PC_CHECK(work.result.diagnostics.resource_cap_hit);
+                PC_CHECK(work.incremental_alternative_rows.empty());
+                PC_CHECK(!work.output_incumbent.has_value());
+                return;
+            }
+            PC_CHECK(work.incremental_alternative_rows.size() == 1);
+            if (work.incremental_alternative_rows.empty()) return;
+            const auto& row = work.transition_cache->rows.at(
+                work.incremental_alternative_rows.back().row_index);
+            double mass = 0.0;
+            for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+                const auto at = row.transition_offset + i;
+                const auto state = work.transition_cache->successors.at(at);
+                PC_CHECK(calc.is_goal_state(calc.state(state)));
+                mass += work.transition_cache->probabilities.at(at);
+            }
+            PC_CHECK(near(mass, 1.0, 1e-12));
+            PC_CHECK(!work.output_incumbent.has_value());
+        } else {
+            PC_CHECK(work.incremental_alternative_rows.empty());
+            PC_CHECK(!work.expansion_active);
+            if (capped) PC_CHECK(work.result.diagnostics.resource_cap_hit);
+        }
+        if (!capped) {
+            // Every requested goal can be present while junk still blocks the
+            // actual native terminal predicate. Cleanup is a priced action.
+            pc_item_state dirty = start;
+            PC_CHECK(pc_item_add_mod(&dirty, PC_SIDE_PREFIX, 0,
+                session->primary_group[0], 0, nullptr) == PC_RESULT_OK);
+            PC_CHECK(pc_item_add_mod(&dirty, PC_SIDE_SUFFIX, 5,
+                session->primary_group[5], 0, nullptr) == PC_RESULT_OK);
+            const auto id = calc.intern_item(dirty);
+            PC_CHECK(satisfied_goal_count(calc.state(id), goal) == 1);
+            PC_CHECK(!calc.is_goal_state(calc.state(id)));
+
+        }
+    };
+    run(true, false, false);
+    run(false, false, false);
+    run(true, true, false);
+    run(true, false, true);
+    run(true, false, false, true);
+}
+
+void run_initial_terminal_debt_continuation_tests() {
+    auto session = make_solve_session({"terminal_debt"});
+    session->essence_guaranteed_mod_ids = {3};
+    auto registry = build_action_registry(*session);
+    const auto annul = registry.index_by_id.at("annul");
+    const auto scour = registry.index_by_id.at("scour");
+    const auto delayed = registry.index_by_id.at("essence:terminal_debt");
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 100;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    CalcContext calc(session, goal, registry, {annul, scour, delayed});
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    for (const auto mod : {0u, 5u, 6u}) {
+        PC_CHECK(pc_item_add_mod(&start, mod == 0 ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX,
+            mod, session->primary_group[mod], 0, nullptr) == PC_RESULT_OK);
+    }
+    SolveOptions options;
+    options.goal_progress_gated_reforges = true;
+    options.high_impact_executable_uppers = true;
+    options.allow_economic_restart = false;
+    options.state_certificate_control = false;
+    SolveWorkTestAccess::Impl work(calc, start,
+        {{"annul", 1.0}, {"scour", .01}, {"essence:terminal_debt", 10.0}}, options);
+    const auto root = work.result.start_state;
+    PC_CHECK(satisfied_goal_count(calc.state(root), goal) == 1);
+    PC_CHECK(!calc.is_goal_state(calc.state(root)));
+    work.transition_cache = std::make_shared<SolveTransitionCache>();
+    work.priced_rows.clear();
+    const auto add_native = [&](std::uint32_t action, double price) {
+        const auto& exits = calc.outcomes(root, action, true);
+        PC_CHECK(exits.supported && exits.applicable);
+        solve_detail::SparsePolicyRowInput row;
+        row.owner_state = root;
+        row.operator_index = action;
+        row.cost = price;
+        double total = 0;
+        for (const auto& exit : exits.entries) {
+            row.transitions.push_back({exit.state, exit.probability});
+            total += exit.probability;
+        }
+        PC_CHECK(near(total, 1.0, 1e-12));
+        return solve_detail::append_sparse_policy_row(
+            *work.transition_cache, work.priced_rows, row);
+    };
+    const auto clean = add_native(annul, 1.0);
+    const auto reset = add_native(scour, .01);
+    work.result.values.assign(calc.state_count(), 0.0);
+    work.result.goal_states.assign(calc.state_count(), 0);
+    for (std::uint32_t s = 0; s < calc.state_count(); ++s)
+        work.result.goal_states[s] = calc.is_goal_state(calc.state(s));
+    work.expanded.assign(calc.state_count(), 0);
+    work.expanded[root] = 1;
+    work.result.expanded = work.expanded;
+    work.expanded_count = 1;
+    work.queue.clear();
+    work.incremental_restricted_values_ready = true;
+    PC_CHECK(work.select_joint_policy_seed_row(root, work.result.values) == clean);
+    // Candidate row delivery is independent of convergence of the lower
+    // policy; its own complete controller is still required for any upper.
+    work.focus_optimizing = true;
+    work.focused_lower_mode = true;
+    work.incremental_restricted_values_ready = false;
+    PC_CHECK(work.continue_initial_candidate());
+    PC_CHECK(work.incremental_refinement_active);
+    PC_CHECK(!work.focus_optimizing);
+    PC_CHECK(!work.focused_lower_mode);
+    PC_CHECK(!work.output_incumbent.has_value());
+    const auto& selected = work.transition_cache->rows.at(clean);
+    for (std::uint32_t i = 0; i < selected.transition_count; ++i) {
+        const auto at = selected.transition_offset + i;
+        const auto next = work.transition_cache->successors.at(at);
+        if (work.transition_cache->probabilities.at(at) > 0)
+            PC_CHECK(std::find(work.queue.begin(), work.queue.end(), next) != work.queue.end());
+    }
+    const auto& unselected = work.transition_cache->rows.at(reset);
+    const auto normal = work.transition_cache->successors.at(unselected.transition_offset);
+    PC_CHECK(std::find(work.queue.begin(), work.queue.end(), normal) == work.queue.end());
+    const auto attempts = work.incremental_anytime_policy_attempts;
+    PC_CHECK(!work.continue_initial_candidate());
+    PC_CHECK(work.incremental_anytime_policy_attempts == attempts);
+    // Incumbent work retains the previous cost/progress seed ordering.
+    work.output_incumbent.emplace();
+    PC_CHECK(work.select_joint_policy_seed_row(root, work.result.values) == reset);
+}
+
+void run_first_proper_candidate_retention_tests() {
+    auto session = make_solve_session({"candidate_retention"});
+    session->essence_guaranteed_mod_ids = {0};
+    auto& data = const_cast<DataImpl&>(*session->data);
+    for (std::uint32_t mod = 1; mod < session->mod_count; ++mod) {
+        if (mod == 5) continue;
+        pc_bitset_clear(session->normal_random_roll_mask.data(), mod);
+        pc_bitset_clear(session->positive_spawn_weight_mask.data(), mod);
+        pc_bitset_clear(session->positive_base_weight_mask.data(), mod);
+        session->base_spawn_weight[mod] = 0;
+        session->base_roll_weight[mod] = 0;
+        data.spawn_weights[mod] = 0;
+    }
+    auto registry = build_action_registry(*session);
+    const auto annul = registry.index_by_id.at("annul");
+    const auto exalt = registry.index_by_id.at("exalt");
+    const auto scour = registry.index_by_id.at("scour");
+    const auto delayed = registry.index_by_id.at("essence:candidate_retention");
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 100;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    CalcContext calc(session, goal, registry, {annul, exalt, scour, delayed});
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    PC_CHECK(pc_item_add_mod(&start, PC_SIDE_PREFIX, 0,
+        session->primary_group[0], 0, nullptr) == PC_RESULT_OK);
+    PC_CHECK(pc_item_add_mod(&start, PC_SIDE_SUFFIX, 5,
+        session->primary_group[5], 0, nullptr) == PC_RESULT_OK);
+    SolveOptions options;
+    options.goal_progress_gated_reforges = true;
+    options.high_impact_executable_uppers = true;
+    options.allow_economic_restart = false;
+    options.state_certificate_control = false;
+    SolveWorkTestAccess::Impl work(calc, start,
+        {{"annul", 1.0}, {"exalt", 1.0}, {"scour", .001},
+         {"essence:candidate_retention", 10.0}}, options);
+    work.transition_cache = std::make_shared<SolveTransitionCache>();
+    work.priced_rows.clear();
+    const auto add_native = [&](std::uint32_t source, std::uint32_t action, double price) {
+        const auto& exits = calc.outcomes(source, action, true);
+        if (!exits.supported || !exits.applicable) return;
+        solve_detail::SparsePolicyRowInput row;
+        row.owner_state = source;
+        row.operator_index = action;
+        row.cost = price;
+        double total = 0;
+        for (const auto& exit : exits.entries) {
+            row.transitions.push_back({exit.state, exit.probability});
+            total += exit.probability;
+        }
+        PC_CHECK(near(total, 1.0, 1e-12));
+        solve_detail::append_sparse_policy_row(*work.transition_cache,
+            work.priced_rows, row);
+    };
+    for (std::uint32_t source = 0; source < calc.state_count(); ++source) {
+        PC_CHECK(source < 32);
+        if (calc.is_goal_state(calc.state(source))) continue;
+        add_native(source, annul, 1.0);
+        add_native(source, exalt, 1.0);
+    }
+    // Scour is a legal cheaper-looking alternative with an unexpanded Normal
+    // successor. It must not displace the complete Annul/Exalt policy before
+    // the first candidate reaches publication.
+    add_native(work.result.start_state, scour, .001);
+    const auto n = calc.state_count();
+    work.transition_cache->state_rows.resize(n);
+    work.result.values.assign(n, 0.0);
+    work.result.goal_states.assign(n, 0);
+    work.expanded.assign(n, 1);
+    work.expanded.back() = 0;
+    work.result.expanded = work.expanded;
+    work.expanded_count = n - 1;
+    for (std::uint32_t state = 0; state < n; ++state)
+        work.result.goal_states[state] = calc.is_goal_state(calc.state(state));
+    PC_CHECK(work.try_install_reachable_incumbent(false));
+    PC_CHECK(work.output_incumbent.has_value());
+    if (work.output_incumbent) {
+        const auto& candidate = *work.output_incumbent;
+        // The row proof permits a candidate, while compiled properness and
+        // executable upper authority still belong to independent evaluation.
+        PC_CHECK(!candidate.proper);
+        PC_CHECK(std::isfinite(candidate.certified_upper_bound));
+        PC_CHECK(!candidate.independently_evaluated);
+        PC_CHECK(candidate.policy_rows[work.result.start_state] !=
+            std::numeric_limits<std::uint64_t>::max());
+        PC_CHECK(work.priced_rows[candidate.policy_rows[work.result.start_state]]
+            .operator_index == annul);
+        work.incremental_upper_policy_dirty = true;
+        PC_CHECK(work.begin_incremental_upper_policy_pass());
+        PC_CHECK(!std::isfinite(work.result.values.back()));
+        PC_CHECK(!work.result.expanded.back());
+        PC_CHECK(near(work.result.values[work.result.start_state],
+            candidate.certified_upper_bound, 1e-10));
+        work.abort_incremental_upper_policy_pass_for_bounded_finish();
+        const auto identity = candidate.portfolio_identity;
+        work.publication_pipeline.initial_candidate_task.emplace(
+            work.certify_initial_candidate());
+        work.publication_pipeline.initial_candidate_proof_bytes = 123;
+        work.phase = SolvePhase::Compiling;
+        work.requested_bounded_finish = true;
+        PC_CHECK(!work.advance_initial_candidate_publication());
+        PC_CHECK(!work.publication_pipeline.initial_candidate_task.has_value());
+        PC_CHECK(work.publication_pipeline.initial_candidate_proof_bytes == 0);
+        PC_CHECK(work.phase == SolvePhase::Expanding);
+        PC_CHECK(work.output_incumbent->portfolio_identity == identity);
+    }
+}
+
 void run_native_mutual_retry_seed_tests() {
     // Research v1.2 mutual retry, using real native seed, repair and SCC owners.
     auto session = make_solve_session();
@@ -13105,6 +13431,9 @@ void run_solver_carrier_bound_tests() {
 }
 
 void run_solver_joint_policy_continuation_tests() {
+    run_incremental_automatic_epoch_yield_tests();
+    run_initial_terminal_debt_continuation_tests();
+    run_first_proper_candidate_retention_tests();
     run_native_mutual_retry_seed_tests();
     run_resumable_joint_policy_continuation_fixture_tests();
 }
@@ -13162,6 +13491,9 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_anytime_scheduler_tests();
     run_proof_pattern_manager_tests();
     run_incumbent_portfolio_monotonicity_tests();
+    run_incremental_automatic_epoch_yield_tests();
+    run_initial_terminal_debt_continuation_tests();
+    run_first_proper_candidate_retention_tests();
     run_native_mutual_retry_seed_tests();
     run_resumable_joint_policy_continuation_fixture_tests();
     run_carrier_ladder_row_service_witness_classification_tests();

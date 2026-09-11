@@ -1,0 +1,642 @@
+--- a/engine/src/solver_calc.cpp
++++ b/engine/src/solver_calc.cpp
+@@ -5,6 +5,7 @@
+ #include <algorithm>
+ #include <array>
+ #include <chrono>
++#include <cstdio>
+ #include <functional>
+ #include <limits>
+ #include <map>
+@@ -2165,6 +2166,12 @@
+     const std::uint64_t cap = *solve_owned_bytes_cap_;
+     const std::uint64_t owned = fast_estimated_owned_bytes();
+     if (owned >= cap || scratch_bytes > cap - owned) {
++        std::fprintf(stderr,
++            "GOAL_DELIVERY allocation_refused owner=%s retained=%llu requested_scratch=%llu cap=%llu states=%zu\n",
++            reforge_row_owner_name(reforge_row_owner_),
++            static_cast<unsigned long long>(owned),
++            static_cast<unsigned long long>(scratch_bytes),
++            static_cast<unsigned long long>(cap), states_.size());
+         throw SolverResourceLimit("max_owned_bytes", cap);
+     }
+ }
+@@ -2765,7 +2772,7 @@
+         case ActionType::HarvestAugment: {
+             /* Add one tag-targeted naturally rollable mod, then
+              * remove one uniform other non-fractured mod on an unlocked
+-             * side — the add-then-remove semantics are intentional. */
++             * side â€” the add-then-remove semantics are intentional. */
+             result.supported = true;
+             PoolBuildRequest request;
+             request.weight_kind = PoolWeightKind::TargetedNatural;
+@@ -3158,7 +3165,7 @@
+ /*
+  * Exact single-add distribution: enumerate the same weighted pool the
+  * engine's add_random_mod samples (open_side_filter semantics: caps and the
+- * request's side filter only — metamod locks never close a side for adds)
++ * request's side filter only â€” metamod locks never close a side for adds)
+  * and accumulate each candidate's projected successor at weight/total.
+  * Returns false when no side is open or the pool is empty, which the engine
+  * reports as an unapplied action.
+--- a/engine/src/solver_solve_bellman.cpp
++++ b/engine/src/solver_solve_bellman.cpp
+@@ -1902,6 +1902,7 @@
+     }
+ 
+ void SolveWork::Impl::step(std::uint32_t max_work_items) {
++
+     try {
+         if (setup_resource_limit.has_value()) {
+             const auto [cap_name, limit] =
+@@ -1981,6 +1982,17 @@
+                     }
+                     if (schedule_incremental_refinement(true)) {
+                         incremental_restricted_values_ready = false;
++                        continue;
++                    }
++                    /* Finishing automatic preparation may consume the last
++                     * carrier of a frozen epoch and yield its scheduler call.
++                     * If no completed alternative needs refinement, re-enter
++                     * the ordinary boundary once so still-pending delayed
++                     * primitives can run. A yielded epoch is not exhaustion;
++                     * the existing checkpoint and final closure scan still
++                     * decide whether that next dispatch has actual work. */
++                    if (!result.diagnostics.resource_cap_hit &&
++                        schedule_next_incremental_alternative()) {
+                         continue;
+                     }
+                     phase = SolvePhase::Done;
+--- a/engine/src/solver_solve_constructive.cpp
++++ b/engine/src/solver_solve_constructive.cpp
+@@ -1,6 +1,8 @@
+ #include "solver_solve_types.hpp"
+ #include "solver_compile_contracts.hpp"
+ #include "solver_sparse_policy.hpp"
++#include <iomanip>
++#include <sstream>
+ 
+ namespace poecraft {
+ namespace solver {
+@@ -2060,6 +2062,190 @@
+     carrier_ladder_exact_boundary_capture.emplace(std::move(capture));
+ }
+ 
++void SolveWork::Impl::capture_goal_delivery_diagnostic() {
++    // Temporary bounded observation: no kernels, selection or scheduling changes.
++    if (options.carrier_ladder_exact_boundary_mode !=
++            CarrierLadderExactBoundaryMode::Record ||
++        !goal_delivery_diagnostic.empty() || transition_cache == nullptr) return;
++    const auto began = std::chrono::steady_clock::now();
++    const auto& limits = options.carrier_ladder_exact_boundary_limits;
++    constexpr std::uint64_t scratch = 1048576;
++    const auto live = fast_estimated_owned_bytes();
++    if (scratch > limits.max_owned_bytes || calc.state_count() > 20000 ||
++        (options.max_solver_owned_bytes != 0 &&
++         (live > options.max_solver_owned_bytes ||
++          scratch > options.max_solver_owned_bytes - live))) {
++        goal_delivery_diagnostic = "{\"status\":\"observation_cap\"}";
++        return;
++    }
++    const auto truth = [](bool b) { return b ? "true" : "false"; };
++    const auto format_double = [](double value) {
++        std::ostringstream out;
++        out << std::setprecision(17) << value;
++        return out.str();
++    };
++    const auto state_json = [&](std::uint32_t id) {
++        const auto& s = calc.state(id);
++        std::string j = "{\"id\":" + std::to_string(id) +
++            ",\"hash\":" + std::to_string(abstract_state_hash(s)) +
++            ",\"goal_mask\":" + std::to_string(satisfied_goal_mask_for_state(id)) +
++            ",\"terminal\":" + truth(calc.is_goal_state(s)) +
++            ",\"rarity\":" + std::to_string(s.rarity) +
++            ",\"prefixes\":" + std::to_string(s.prefix_count) +
++            ",\"suffixes\":" + std::to_string(s.suffix_count) +
++            ",\"flags\":" + std::to_string(s.flags) +
++            ",\"fractured_goals\":" + std::to_string(s.fractured_goal_mask) +
++            ",\"crafted_goals\":" + std::to_string(s.crafted_goal_mask) +
++            ",\"blocked\":" + std::to_string(s.blocked_mask) +
++            ",\"retry_basin\":" + std::to_string(s.goal_progress_retry_basin) +
++            ",\"expanded\":" + truth(id < expanded.size() && expanded[id]) +
++            ",\"slot_status\":[";
++        for (std::size_t i = 0; i < calc.layout().slots.size(); ++i) {
++            if (i) j += ',';
++            j += std::to_string(s.slot_status[i]);
++        }
++        j += "],\"junk\":[";
++        bool first = true;
++        for (std::size_t i = 0; i < s.junk_counts.size(); ++i) {
++            if (!s.junk_counts[i]) continue;
++            if (!first) j += ',';
++            first = false;
++            j += '[' + std::to_string(i) + ',' + std::to_string(s.junk_counts[i]) + ']';
++        }
++        return j + "]}";
++    };
++    using Debt = std::tuple<unsigned, unsigned, unsigned, unsigned>;
++    const auto debt = [&](std::uint32_t id) {
++        const auto& s = calc.state(id);
++        const unsigned goals = std::popcount(satisfied_goal_mask_for_state(id));
++        return Debt{goals, s.prefix_count + s.suffix_count - goals,
++                    s.rarity, s.goal_progress_retry_basin};
++    };
++    const auto debt_json = [](const Debt& d) {
++        const auto [g, j, r, b] = d;
++        return "{\"satisfied\":" + std::to_string(g) +
++            ",\"extra_affixes\":" + std::to_string(j) +
++            ",\"rarity\":" + std::to_string(r) +
++            ",\"retry_basin\":" + std::to_string(b);
++    };
++    std::map<Debt, std::uint32_t> population;
++    std::vector<std::uint32_t> samples{result.start_state};
++    const auto sample = [&](std::uint32_t id) {
++        if (id != kNoId && samples.size() < 10 &&
++            std::find(samples.begin(), samples.end(), id) == samples.end())
++            samples.push_back(id);
++    };
++    std::uint32_t best_full = kNoId;
++    for (std::uint32_t s = 0; s < calc.state_count(); ++s) {
++        ++population[debt(s)];
++        if (std::popcount(satisfied_goal_mask_for_state(s)) >=
++                calc.goal().required_satisfied_slots() &&
++            (best_full == kNoId || std::get<1>(debt(s)) <
++                std::get<1>(debt(best_full)))) best_full = s;
++    }
++    sample(best_full);
++    std::string json = "{\"schema\":\"goal_delivery_observation_v1\",\"status\":\"complete\",\"graph_identity\":" +
++        std::to_string(graph_identity()) + ",\"states\":" + std::to_string(calc.state_count()) +
++        ",\"rows\":" + std::to_string(transition_cache->rows.size()) +
++        ",\"expanded\":" + std::to_string(expanded_count) +
++        ",\"live_owned_bytes\":" + std::to_string(live) +
++        ",\"scheduler\":{\"incumbent\":" + truth(output_incumbent.has_value()) +
++        ",\"carriers\":" + std::to_string(incremental_carriers.size()) +
++        ",\"alternatives\":" + std::to_string(incremental_alternative_rows.size()) +
++        ",\"refinement_active\":" + truth(incremental_refinement_active) +
++        ",\"refinement_target\":" + std::to_string(incremental_refinement_target_expanded) +
++        ",\"queue\":" + std::to_string(queue.size()) +
++        ",\"expansion_active\":" + truth(expansion_active) +
++        ",\"restricted_values_ready\":" + truth(incremental_restricted_values_ready) +
++        ",\"envelope_closed\":" + truth(incremental_envelope_closed) +
++        ",\"finish_requested\":" + truth(requested_bounded_finish) +
++        ",\"cap_hit\":" + truth(result.diagnostics.resource_cap_hit) +
++        ",\"cooperative_high_progress\":" + truth(cooperative_high_progress_ordering_enabled()) +
++        "},\"population\":[";
++    bool first = true;
++    for (const auto& [d, count] : population) {
++        if (!first) json += ',';
++        first = false;
++        json += debt_json(d) + ",\"count\":" + std::to_string(count) + '}';
++    }
++    json += "],\"root_rows\":[";
++    first = true;
++    for (const auto r : state_row_indices(*transition_cache, result.start_state)) {
++        const auto& row = transition_cache->rows.at(r);
++        if (r >= priced_rows.size()) continue;
++        const auto op = priced_rows[r].operator_index;
++        if (op >= calc.operators().size()) continue;
++        std::map<Debt, std::pair<std::uint32_t, double>> outcomes;
++        std::uint32_t best = kNoId, missing = 0;
++        double terminal_mass = 0;
++        for (std::uint32_t i = 0; i < row.transition_count; ++i) {
++            const auto offset = row.transition_offset + i;
++            const auto t = transition_cache->successors.at(offset);
++            const auto p = transition_cache->probabilities.at(offset);
++            if (!(p > 0)) continue;
++            auto& out = outcomes[debt(t)]; ++out.first; out.second += p;
++            if (calc.is_goal_state(calc.state(t))) terminal_mass += p;
++            else if (t >= transition_cache->state_rows.size() ||
++                transition_cache->state_rows[t].count == 0) ++missing;
++            if (best == kNoId || std::get<0>(debt(t)) > std::get<0>(debt(best)) ||
++                (std::get<0>(debt(t)) == std::get<0>(debt(best)) &&
++                 std::get<1>(debt(t)) < std::get<1>(debt(best)))) best = t;
++        }
++        sample(best);
++        if (!first) json += ',';
++        first = false;
++        json += "{\"row\":" + std::to_string(r) + ",\"action\":";
++        append_json_string(json, calc.operators()[op].id);
++        json += ",\"admitted\":" + std::string(truth(row.admitted)) +
++            ",\"direct_missing\":" + std::to_string(missing) +
++            ",\"choices\":" + std::to_string(row.choice_count) +
++            ",\"terminal_mass\":" + format_double(terminal_mass) +
++            ",\"best_successor\":" + (best == kNoId ? "null" : std::to_string(best)) +
++            ",\"outcomes\":[";
++        bool first_debt = true;
++        for (const auto& [d, out] : outcomes) {
++            if (!first_debt) json += ',';
++            first_debt = false;
++            json += debt_json(d) + ",\"routes\":" + std::to_string(out.first) +
++                ",\"mass\":" + format_double(out.second) + '}';
++        }
++        json += "]}";
++    }
++    json += "],\"samples\":[";
++    first = true;
++    for (const auto s : samples) {
++        if (!first) json += ',';
++        first = false;
++        json += "{\"source\":" + state_json(s) + ",\"operators\":[";
++        bool first_op = true;
++        for (std::uint32_t op = 0; op < calc.operators().size(); ++op) {
++            const auto& planner = calc.operators()[op];
++            if (planner.kind != PlannerOperatorKind::Primitive) continue;
++            const bool requested = std::find(static_operator_indices.begin(), static_operator_indices.end(), op) != static_operator_indices.end() ||
++                std::find(delayed_operator_indices.begin(), delayed_operator_indices.end(), op) != delayed_operator_indices.end();
++            if (!requested) continue;
++            if (!first_op) json += ',';
++            first_op = false;
++            const auto* entry = action_envelope_ledger.find(s, op);
++            json += "{\"index\":" + std::to_string(op) + ",\"id\":";
++            append_json_string(json, planner.id);
++            json += ",\"legal\":" + std::string(truth(action_legal(session,
++                calc.registry().actions.at(planner.primitive_action), calc.state(s)))) +
++                ",\"lifecycle\":" + (entry ? std::to_string(static_cast<int>(entry->lifecycle)) : "null") +
++                ",\"lane\":" + (entry ? std::to_string(static_cast<int>(entry->lane)) : "null") +
++                ",\"reason\":";
++            append_json_string(json, entry ? entry->detail : "no_entry");
++            json += '}';
++        }
++        json += "]}";
++    }
++    json += "]}";
++    goal_delivery_diagnostic = std::move(json);
++    carrier_ladder_exact_boundary_private_wall_ns +=
++        std::chrono::duration_cast<std::chrono::nanoseconds>(
++            std::chrono::steady_clock::now() - began).count();
++}
++
+ void SolveWork::Impl::refresh_carrier_ladder_exact_boundary_diagnostics(
+         SolveDiagnostics& diagnostics) const {
+     if (options.carrier_ladder_exact_boundary_mode ==
+@@ -2108,6 +2294,8 @@
+         std::to_string(limits.max_wall_time_ms);
+     json += ",\"max_samples\":" +
+         std::to_string(limits.max_samples) + "}";
++    json += ",\"goal_delivery\":";
++    json += goal_delivery_diagnostic.empty() ? "null" : goal_delivery_diagnostic;
+     json += ",\"resumable_joint_policy_continuation\":";
+     if (!resumable_joint_policy_candidate.has_value()) {
+         json += "null";
+@@ -4113,6 +4301,19 @@
+     const std::uint64_t no_row =
+         std::numeric_limits<std::uint64_t>::max();
+     if (state >= transition_cache->state_rows.size()) return no_row;
++    const bool first_policy = options.high_impact_executable_uppers &&
++        incremental_action_generation && !output_incumbent.has_value();
++    // A construction preference, never an admissible value or a new terminal
++    // predicate. Full goal masks can still owe cleanup or rarity completion.
++    const auto terminal_debt = [&](const std::uint32_t id) {
++        const auto& item = calc.state(id);
++        if (calc.is_goal_state(item)) return 0u;
++        const unsigned satisfied = std::popcount(satisfied_goal_mask_for_state(id));
++        const unsigned required = calc.goal().required_satisfied_slots();
++        const unsigned missing = required > satisfied ? required - satisfied : 0;
++        const unsigned extra = item.prefix_count + item.suffix_count - satisfied;
++        return std::max(1u, missing + extra + (item.rarity != calc.goal().rarity));
++    };
+     const auto goal_probability = [&](const std::uint64_t row_index) {
+         const SparseRow& row = transition_cache->rows.at(row_index);
+         WideFloat probability{0.0};
+@@ -4148,7 +4349,8 @@
+             satisfied_goal_mask_for_state(state));
+         const auto advances = [&](const std::uint32_t successor) {
+             return successor < result.goal_states.size() &&
+-                (result.goal_states[successor] ||
++                (first_policy ? terminal_debt(successor) < terminal_debt(state) :
++                 result.goal_states[successor] ||
+                  std::popcount(satisfied_goal_mask_for_state(successor)) >
+                      owner_progress);
+         };
+@@ -4175,9 +4377,9 @@
+         return probability.value();
+     };
+     std::uint64_t best = no_row;
+-    std::tuple<int, double, double, double, std::uint64_t> best_key{
+-        std::numeric_limits<int>::max(), kInfinity, kInfinity, kInfinity,
+-        no_row};
++    std::tuple<int, std::uint64_t, double, double, double, std::uint64_t> best_key{
++        std::numeric_limits<int>::max(), no_row, kInfinity, kInfinity,
++        kInfinity, no_row};
+     for (const std::uint64_t row_index :
+          state_row_indices(*transition_cache, state)) {
+         if (!joint_policy_row_completed(row_index)) continue;
+@@ -4193,8 +4395,29 @@
+         const double attempt_cost = progress > 0.0
+             ? priced.cost / progress
+             : priced.cost;
++        std::uint64_t pending_routes = 0;
++        if (first_policy) {
++            const auto pending = [&](const std::uint32_t next) {
++                return next != state && !calc.is_goal_state(calc.state(next)) &&
++                    (next >= transition_cache->state_rows.size() ||
++                     transition_cache->state_rows[next].count == 0);
++            };
++            const auto& row = transition_cache->rows.at(row_index);
++            for (std::uint32_t i = 0; i < row.transition_count; ++i) {
++                const auto at = row.transition_offset + i;
++                if (transition_cache->probabilities.at(at) > 0.0)
++                    pending_routes += pending(transition_cache->successors.at(at));
++            }
++            for (std::uint32_t i = 0; i < row.choice_count; ++i) {
++                const auto& group = transition_cache->choices.at(row.choice_offset + i);
++                if (!(group.probability > 0.0)) continue;
++                for (std::uint32_t j = 0; j < group.successor_count; ++j)
++                    pending_routes += pending(transition_cache->choice_successors.at(
++                        group.successor_offset + j));
++            }
++        }
+         const auto key = std::tuple{
+-            class_rank, attempt_cost, -goal, -progress, row_index};
++            class_rank, pending_routes, attempt_cost, -goal, -progress, row_index};
+         if (key < best_key) {
+             best_key = key;
+             best = row_index;
+@@ -4940,150 +5163,11 @@
+                     return installed_renewal;
+                 };
+ 
+-            const auto row_goal_probability =
+-                [&](const std::uint32_t owner,
+-                    const std::uint64_t row_index) {
+-                    const SparseRow& row =
+-                        transition_cache->rows.at(row_index);
+-                    WideFloat probability{0.0};
+-                    for (std::uint32_t i = 0;
+-                         i < row.transition_count; ++i) {
+-                        const std::uint64_t offset =
+-                            row.transition_offset + i;
+-                        const std::uint32_t successor =
+-                            transition_cache->successors.at(offset);
+-                        if (successor < result.goal_states.size() &&
+-                            result.goal_states[successor]) {
+-                            probability += WideFloat{
+-                                transition_cache->probabilities.at(offset)};
+-                        }
+-                    }
+-                    for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+-                        const SparseChoiceGroup& group =
+-                            transition_cache->choices.at(
+-                                row.choice_offset + i);
+-                        bool can_choose_goal = false;
+-                        for (std::uint32_t option = 0;
+-                             option < group.successor_count; ++option) {
+-                            const std::uint32_t successor =
+-                                transition_cache->choice_successors.at(
+-                                    group.successor_offset + option);
+-                            can_choose_goal |=
+-                                successor < result.goal_states.size() &&
+-                                result.goal_states[successor];
+-                        }
+-                        if (can_choose_goal) {
+-                            probability += WideFloat{group.probability};
+-                        }
+-                    }
+-                    (void)owner;
+-                    return probability.value();
+-                };
+-
+-            const auto row_progress_probability =
+-                [&](const std::uint32_t owner,
+-                    const std::uint64_t row_index) {
+-                    const SparseRow& row =
+-                        transition_cache->rows.at(row_index);
+-                    const std::uint32_t owner_progress = std::popcount(
+-                        satisfied_goal_mask_for_state(owner));
+-                    const auto advances = [&](const std::uint32_t successor) {
+-                        return successor < result.goal_states.size() &&
+-                            (result.goal_states[successor] ||
+-                             std::popcount(
+-                                 satisfied_goal_mask_for_state(successor)) >
+-                                 owner_progress);
+-                    };
+-                    WideFloat probability{0.0};
+-                    for (std::uint32_t i = 0;
+-                         i < row.transition_count; ++i) {
+-                        const std::uint64_t offset =
+-                            row.transition_offset + i;
+-                        if (advances(
+-                                transition_cache->successors.at(offset))) {
+-                            probability += WideFloat{
+-                                transition_cache->probabilities.at(offset)};
+-                        }
+-                    }
+-                    for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+-                        const SparseChoiceGroup& group =
+-                            transition_cache->choices.at(
+-                                row.choice_offset + i);
+-                        bool can_choose_progress = false;
+-                        for (std::uint32_t option = 0;
+-                             option < group.successor_count; ++option) {
+-                            can_choose_progress |= advances(
+-                                transition_cache->choice_successors.at(
+-                                    group.successor_offset + option));
+-                        }
+-                        if (can_choose_progress) {
+-                            probability += WideFloat{group.probability};
+-                        }
+-                    }
+-                    return probability.value();
+-                };
+-
+-            const auto select_initial_row =
+-                [&](const std::uint32_t state) {
+-                    std::uint64_t best = no_row;
+-                    /* CalcContext may discover strict/frontier carriers after
+-                     * the current sparse transition epoch was materialized.
+-                     * Such a state has no row span yet. It is an ordinary
+-                     * missing-frontier condition owned by the certified
+-                     * boundary/grow-in-place path below, not a cache error and
+-                     * not evidence for a free terminal continuation. */
+-                    if (state >= transition_cache->state_rows.size()) {
+-                        return best;
+-                    }
+-                    std::tuple<int, double, double, double, std::uint64_t>
+-                        best_key{
+-                        std::numeric_limits<int>::max(), kInfinity,
+-                        kInfinity, kInfinity, no_row};
+-                    for (const std::uint64_t row_index :
+-                         state_row_indices(*transition_cache, state)) {
+-                        if (row_index >= completed.size() ||
+-                            !completed[row_index] ||
+-                            row_index >= priced_rows.size()) {
+-                            continue;
+-                        }
+-                        const PricedSparseRow& priced =
+-                            priced_rows[row_index];
+-                        if (priced.operator_index == kNoId ||
+-                            priced.operator_index >= calc.operators().size() ||
+-                            !std::isfinite(priced.cost) || priced.cost < 0.0) {
+-                            continue;
+-                        }
+-                        const double goal_probability =
+-                            row_goal_probability(state, row_index);
+-                        const double progress_probability =
+-                            row_progress_probability(state, row_index);
+-                        const bool restart =
+-                            priced.operator_index == restart_operator_index;
+-                        /* This is only a seed for the existing exact proper-
+-                         * policy evaluator. Prefer rows that can advance to
+-                         * any larger requested subset (or exact terminal),
+-                         * then rank them by cost per advancement. Treating
+-                         * only direct five-mod success as useful caused tiny-
+-                         * probability renewal spam to hide already-completed
+-                         * 0 -> ... -> 4 -> 5 carrier ladders. */
+-                        const int class_rank = progress_probability > 0.0
+-                            ? 0
+-                            : restart ? 1 : 2;
+-                        const double attempt_cost =
+-                            progress_probability > 0.0
+-                                ? priced.cost / progress_probability
+-                                : priced.cost;
+-                        const auto key = std::tuple{
+-                            class_rank, attempt_cost,
+-                            -goal_probability, -progress_probability,
+-                            row_index};
+-                        if (key < best_key) {
+-                            best_key = key;
+-                            best = row_index;
+-                        }
+-                    }
+-                    return best;
+-                };
++            const auto select_initial_row = [&](const std::uint32_t state) {
++                // Same complete-row seed for initial construction and retained
++                // candidate resumption; qualification still owns properness.
++                return select_joint_policy_seed_row(state, result.values);
++            };
+ 
+             const auto row_is_completed = [&](const std::uint32_t state,
+                                                const std::uint64_t row) {
+--- a/engine/src/solver_solve_finish.cpp
++++ b/engine/src/solver_solve_finish.cpp
+@@ -3315,8 +3315,8 @@
+                             } else {
+                                 /* Direct graph evaluation can be too broad
+                                  * even when the selected row policy is useful.
+-                                 * Give that same immutable candidate—not the
+-                                 * restored fallback—to strict quotient lift. */
++                                 * Give that same immutable candidateâ€”not the
++                                 * restored fallbackâ€”to strict quotient lift. */
+                                 std::string{}.swap(assertion.strategy_json);
+                                 assertion.evaluation = {};
+                                 const bool defer_to_current_direct_candidate =
+@@ -6035,6 +6035,7 @@
+     }
+ 
+ void SolveWork::Impl::begin_publication_pipeline() {
++        capture_goal_delivery_diagnostic();
+         if (finalization_task.has_value() ||
+             finalized_result.has_value()) {
+             return;
+--- a/engine/src/solver_solve_focused.cpp
++++ b/engine/src/solver_solve_focused.cpp
+@@ -1431,6 +1431,11 @@
+                     finish_focused_upper_solve(false);
+                     return;
+                 }
++                /* Candidate construction consumes completed exact rows and
++                 * re-evaluates its own fixed decisions. A failed restricted
++                 * lower policy need not release its named continuation to
++                 * broad fringe expansion before those rows can be serviced. */
++                if (continue_initial_candidate()) return;
+                 /*
+                  * An incomplete lower policy is still a valid lower-bound
+                  * snapshot. The high-impact experiment can independently
+--- a/engine/src/solver_solve_incremental.cpp
++++ b/engine/src/solver_solve_incremental.cpp
+@@ -1455,6 +1455,41 @@
+     return true;
+ }
+ 
++bool SolveWork::Impl::continue_initial_candidate() {
++    if (!options.high_impact_executable_uppers ||
++        !incremental_action_generation || incremental_envelope_closed ||
++        output_incumbent.has_value() || requested_bounded_finish ||
++        result.diagnostics.resource_cap_hit || incremental_refinement_active ||
++        transition_cache == nullptr) {
++        return false;
++    }
++    const auto generation = transition_cache->rows.size();
++    if (generation != initial_candidate_last_row_generation) {
++        initial_candidate_last_row_generation = generation;
++        ++incremental_anytime_policy_attempts;
++        incremental_anytime_policy_last_completed_rows =
++            incremental_alternative_rows.size();
++        incremental_anytime_policy_last_failure.clear();
++        if (try_install_reachable_incumbent(false)) {
++            ++incremental_anytime_policy_successes;
++            incremental_anytime_policy_best_upper = std::min(
++                incremental_anytime_policy_best_upper,
++                output_incumbent->certified_upper_bound);
++            return begin_incremental_upper_policy_pass();
++        }
++    }
++    // The ordinary joint walk names every selected positive-mass missing
++    // continuation. Service those entries through the existing exact batch
++    // owner, then retry on new completed evidence. No arbitrary single-batch
++    // stop, unknown terminal, or unselected priority padding is introduced.
++    if (incremental_anytime_missing_frontier_states.empty() ||
++        !schedule_incremental_refinement(true)) return false;
++    focus_optimizing = false;
++    focused_lower_mode = false;
++    incremental_restricted_values_ready = false;
++    return true;
++}
++
+ bool SolveWork::Impl::continue_open_incremental_envelope() {
+     if (!incremental_action_generation || incremental_envelope_closed ||
+         requested_bounded_finish || result.diagnostics.resource_cap_hit) {
+@@ -1472,6 +1507,7 @@
+     incremental_restricted_values_ready = true;
+     if (try_begin_candidate_proof_handoff()) return false;
+     if (begin_incremental_upper_policy_pass()) return true;
++    if (continue_initial_candidate()) return true;
+     if (classify_incremental_alternatives()) {
+         restart_incremental_optimization();
+         return true;
+--- a/engine/src/solver_solve_telemetry.cpp
++++ b/engine/src/solver_solve_telemetry.cpp
+@@ -2557,6 +2557,7 @@
+             kIncumbentPortfolioAliasAccountingOffset +
+             calc_bytes;
+         bytes += native_retention_live_bytes + native_retention_junk_safe.capacity();
++        bytes += goal_delivery_diagnostic.capacity() + 1;
+         bytes += native_retention_refusal.capacity()+1;
+         bytes += prices.bucket_count() * sizeof(void*);
+         bytes += prices.size() *
+@@ -2815,6 +2816,7 @@
+             kIncumbentPortfolioAliasAccountingOffset +
+             calc_bytes;
+         bytes += native_retention_live_bytes + native_retention_junk_safe.capacity();
++        bytes += goal_delivery_diagnostic.capacity() + 1;
+         bytes += native_retention_refusal.capacity()+1;
+         bytes += prices.bucket_count() * sizeof(void*);
+         bytes += prices.size() *
+--- a/engine/src/solver_solve_types.hpp
++++ b/engine/src/solver_solve_types.hpp
+@@ -909,6 +909,7 @@
+         solve_detail::kAnytimeSchedulingProfile
+             .first_incumbent_checkpoint_rows;
+     std::uint64_t incremental_anytime_policy_attempts = 0;
++    std::uint64_t initial_candidate_last_row_generation = 0;
+     std::uint64_t incremental_anytime_policy_successes = 0;
+     std::array<
+         std::uint64_t,
+@@ -1634,6 +1635,8 @@
+         carrier_ladder_exact_boundary_capture;
+     std::vector<JointAnytimeAttemptLineage>
+         joint_anytime_attempt_lineage;
++    std::string goal_delivery_diagnostic;
++    void capture_goal_delivery_diagnostic();
+     std::uint64_t carrier_ladder_exact_boundary_private_wall_ns = 0;
+     bool target_gap_stop = false;
+     SolveGapTarget target_gap_fired = SolveGapTarget::None;
+@@ -2690,6 +2693,7 @@
+     void capture_initial_incremental_selected_policy();
+ 
+     bool continue_open_incremental_envelope();
++    bool continue_initial_candidate();
+     bool try_begin_candidate_proof_handoff();
+ 
+     bool retire_unmaterialized_by_operator_proof(

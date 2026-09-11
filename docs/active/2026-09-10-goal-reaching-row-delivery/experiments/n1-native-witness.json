@@ -1,0 +1,5078 @@
+{
+  "source_revision": "a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72",
+  "diagnostic": "n1-native-witness",
+  "ledger_sha256": "d72ff6d2e20ababe52e2e6519d775bbcddadabaeb8a145fd3f0eba61133474b9",
+  "executable": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+    "sha256": "5fce9c56344d21109f3b1bf7fcdfc8c59b8a9eeaf9e41eba7e7991edc9409aa4"
+  },
+  "cases": {
+    "cb06-cross-base-product8-long240": {
+      "schema": "goal_delivery_observation_v1",
+      "status": "complete",
+      "graph_identity": 7641225684373328475,
+      "states": 2686,
+      "rows": 261,
+      "expanded": 32,
+      "live_owned_bytes": 15238184,
+      "scheduler": {
+        "incumbent": false,
+        "carriers": 32,
+        "alternatives": 0,
+        "refinement_active": false,
+        "refinement_target": 0,
+        "queue": 2637,
+        "expansion_active": false,
+        "restricted_values_ready": true,
+        "envelope_closed": false,
+        "finish_requested": false,
+        "cap_hit": false,
+        "cooperative_high_progress": false
+      },
+      "population": [
+        {
+          "satisfied": 0,
+          "extra_affixes": 0,
+          "rarity": 0,
+          "retry_basin": 0,
+          "count": 1
+        },
+        {
+          "satisfied": 0,
+          "extra_affixes": 0,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 1
+        },
+        {
+          "satisfied": 0,
+          "extra_affixes": 0,
+          "rarity": 2,
+          "retry_basin": 1,
+          "count": 1
+        },
+        {
+          "satisfied": 0,
+          "extra_affixes": 1,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 13
+        },
+        {
+          "satisfied": 0,
+          "extra_affixes": 3,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 30
+        },
+        {
+          "satisfied": 0,
+          "extra_affixes": 4,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 60
+        },
+        {
+          "satisfied": 1,
+          "extra_affixes": 0,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 2
+        },
+        {
+          "satisfied": 1,
+          "extra_affixes": 2,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 23
+        },
+        {
+          "satisfied": 1,
+          "extra_affixes": 3,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 484
+        },
+        {
+          "satisfied": 1,
+          "extra_affixes": 4,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 856
+        },
+        {
+          "satisfied": 1,
+          "extra_affixes": 5,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 855
+        },
+        {
+          "satisfied": 2,
+          "extra_affixes": 2,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 58
+        },
+        {
+          "satisfied": 2,
+          "extra_affixes": 3,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 141
+        },
+        {
+          "satisfied": 2,
+          "extra_affixes": 4,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 161
+        }
+      ],
+      "root_rows": [
+        {
+          "row": 0,
+          "action": "chaos",
+          "admitted": true,
+          "direct_missing": 2478,
+          "choices": 0,
+          "terminal_mass": 0,
+          "best_successor": 456,
+          "outcomes": [
+            {
+              "satisfied": 0,
+              "extra_affixes": 0,
+              "rarity": 2,
+              "retry_basin": 1,
+              "routes": 1,
+              "mass": 0.9366512326382891
+            },
+            {
+              "satisfied": 1,
+              "extra_affixes": 3,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 454,
+              "mass": 0.0161404524230256
+            },
+            {
+              "satisfied": 1,
+              "extra_affixes": 4,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 852,
+              "mass": 0.020664893672177127
+            },
+            {
+              "satisfied": 1,
+              "extra_affixes": 5,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 842,
+              "mass": 0.02556102275905775
+            },
+            {
+              "satisfied": 2,
+              "extra_affixes": 2,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 58,
+              "mass": 0.00017777774217323682
+            },
+            {
+              "satisfied": 2,
+              "extra_affixes": 3,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 141,
+              "mass": 0.00032023521476119574
+            },
+            {
+              "satisfied": 2,
+              "extra_affixes": 4,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 161,
+              "mass": 0.0004843855505159872
+            }
+          ]
+        },
+        {
+          "row": 1,
+          "action": "exalt",
+          "admitted": true,
+          "direct_missing": 15,
+          "choices": 0,
+          "terminal_mass": 0,
+          "best_successor": 2520,
+          "outcomes": [
+            {
+              "satisfied": 0,
+              "extra_affixes": 1,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 13,
+              "mass": 0.9877937137625876
+            },
+            {
+              "satisfied": 1,
+              "extra_affixes": 0,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 2,
+              "mass": 0.012206286237412267
+            }
+          ]
+        },
+        {
+          "row": 2,
+          "action": "scour",
+          "admitted": true,
+          "direct_missing": 1,
+          "choices": 0,
+          "terminal_mass": 0,
+          "best_successor": 2525,
+          "outcomes": [
+            {
+              "satisfied": 0,
+              "extra_affixes": 0,
+              "rarity": 0,
+              "retry_basin": 0,
+              "routes": 1,
+              "mass": 1
+            }
+          ]
+        },
+        {
+          "row": 3,
+          "action": "harvest_augment:defences",
+          "admitted": true,
+          "direct_missing": 3,
+          "choices": 0,
+          "terminal_mass": 0,
+          "best_successor": 2522,
+          "outcomes": [
+            {
+              "satisfied": 0,
+              "extra_affixes": 1,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 2,
+              "mass": 0.9444444444444446
+            },
+            {
+              "satisfied": 1,
+              "extra_affixes": 0,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 1,
+              "mass": 0.05555555555555555
+            }
+          ]
+        },
+        {
+          "row": 4,
+          "action": "harvest_augment:fire",
+          "admitted": true,
+          "direct_missing": 4,
+          "choices": 0,
+          "terminal_mass": 0,
+          "best_successor": 2520,
+          "outcomes": [
+            {
+              "satisfied": 0,
+              "extra_affixes": 1,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 3,
+              "mass": 0.9245283018867925
+            },
+            {
+              "satisfied": 1,
+              "extra_affixes": 0,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 1,
+              "mass": 0.07547169811320754
+            }
+          ]
+        },
+        {
+          "row": 5,
+          "action": "harvest_resist:cold:fire",
+          "admitted": true,
+          "direct_missing": 0,
+          "choices": 0,
+          "terminal_mass": 0,
+          "best_successor": 0,
+          "outcomes": [
+            {
+              "satisfied": 0,
+              "extra_affixes": 0,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 1,
+              "mass": 1
+            }
+          ]
+        }
+      ],
+      "samples": [
+        {
+          "source": {
+            "id": 0,
+            "hash": 1169588405,
+            "goal_mask": 0,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 0,
+            "suffixes": 0,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": true,
+            "slot_status": [
+              0,
+              0
+            ],
+            "junk": []
+          },
+          "operators": [
+            {
+              "index": 0,
+              "id": "transmute",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 1,
+              "id": "augment",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 2,
+              "id": "alteration",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 3,
+              "id": "regal",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 4,
+              "id": "alchemy",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 5,
+              "id": "chaos",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 6,
+              "id": "exalt",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 7,
+              "id": "annul",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 8,
+              "id": "scour",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 10,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 11,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 12,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 13,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 14,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 15,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 16,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 17,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 18,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 159,
+              "id": "harvest_reforge:defences",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 160,
+              "id": "harvest_reforge:elemental",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 161,
+              "id": "harvest_reforge:fire",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 162,
+              "id": "harvest_augment:defences",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 163,
+              "id": "harvest_augment:fire",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 164,
+              "id": "harvest_resist:cold:fire",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 165,
+              "id": "harvest_resist:lightning:fire",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 166,
+              "id": "fracture",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 167,
+              "id": "restart",
+              "legal": true,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            }
+          ]
+        },
+        {
+          "source": {
+            "id": 456,
+            "hash": 808907051,
+            "goal_mask": 3,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 1,
+            "suffixes": 3,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              2,
+              2
+            ],
+            "junk": [
+              [
+                9,
+                2
+              ]
+            ]
+          },
+          "operators": [
+            {
+              "index": 0,
+              "id": "transmute",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 1,
+              "id": "augment",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 2,
+              "id": "alteration",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 3,
+              "id": "regal",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 4,
+              "id": "alchemy",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 5,
+              "id": "chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 6,
+              "id": "exalt",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 7,
+              "id": "annul",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 8,
+              "id": "scour",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 10,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 11,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 12,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 13,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 14,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 15,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 16,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 17,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 18,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 159,
+              "id": "harvest_reforge:defences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 160,
+              "id": "harvest_reforge:elemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 161,
+              "id": "harvest_reforge:fire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 162,
+              "id": "harvest_augment:defences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 163,
+              "id": "harvest_augment:fire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 164,
+              "id": "harvest_resist:cold:fire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 165,
+              "id": "harvest_resist:lightning:fire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 166,
+              "id": "fracture",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 167,
+              "id": "restart",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            }
+          ]
+        },
+        {
+          "source": {
+            "id": 2520,
+            "hash": 1350748600,
+            "goal_mask": 2,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 0,
+            "suffixes": 1,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              0,
+              2
+            ],
+            "junk": []
+          },
+          "operators": [
+            {
+              "index": 0,
+              "id": "transmute",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 1,
+              "id": "augment",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 2,
+              "id": "alteration",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 3,
+              "id": "regal",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 4,
+              "id": "alchemy",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 5,
+              "id": "chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 6,
+              "id": "exalt",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 7,
+              "id": "annul",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 8,
+              "id": "scour",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 10,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 11,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 12,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 13,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 14,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 15,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 16,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 17,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 18,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 159,
+              "id": "harvest_reforge:defences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 160,
+              "id": "harvest_reforge:elemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 161,
+              "id": "harvest_reforge:fire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 162,
+              "id": "harvest_augment:defences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 163,
+              "id": "harvest_augment:fire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 164,
+              "id": "harvest_resist:cold:fire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 165,
+              "id": "harvest_resist:lightning:fire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 166,
+              "id": "fracture",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 167,
+              "id": "restart",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            }
+          ]
+        },
+        {
+          "source": {
+            "id": 2525,
+            "hash": 2368301191,
+            "goal_mask": 0,
+            "terminal": false,
+            "rarity": 0,
+            "prefixes": 0,
+            "suffixes": 0,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              0,
+              0
+            ],
+            "junk": []
+          },
+          "operators": [
+            {
+              "index": 0,
+              "id": "transmute",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 1,
+              "id": "augment",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 2,
+              "id": "alteration",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 3,
+              "id": "regal",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 4,
+              "id": "alchemy",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 5,
+              "id": "chaos",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 6,
+              "id": "exalt",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 7,
+              "id": "annul",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 8,
+              "id": "scour",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 10,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 11,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 12,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 13,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 14,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 15,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 16,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 17,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 18,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 159,
+              "id": "harvest_reforge:defences",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 160,
+              "id": "harvest_reforge:elemental",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 161,
+              "id": "harvest_reforge:fire",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 162,
+              "id": "harvest_augment:defences",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 163,
+              "id": "harvest_augment:fire",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 164,
+              "id": "harvest_resist:cold:fire",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 165,
+              "id": "harvest_resist:lightning:fire",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 166,
+              "id": "fracture",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 167,
+              "id": "restart",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            }
+          ]
+        },
+        {
+          "source": {
+            "id": 2522,
+            "hash": 3318101886,
+            "goal_mask": 1,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 1,
+            "suffixes": 0,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              2,
+              0
+            ],
+            "junk": []
+          },
+          "operators": [
+            {
+              "index": 0,
+              "id": "transmute",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 1,
+              "id": "augment",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 2,
+              "id": "alteration",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 3,
+              "id": "regal",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 4,
+              "id": "alchemy",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 5,
+              "id": "chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 6,
+              "id": "exalt",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 7,
+              "id": "annul",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 8,
+              "id": "scour",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 10,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 11,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 12,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 13,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 14,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 15,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 16,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 17,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 18,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 159,
+              "id": "harvest_reforge:defences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 160,
+              "id": "harvest_reforge:elemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 161,
+              "id": "harvest_reforge:fire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 162,
+              "id": "harvest_augment:defences",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 163,
+              "id": "harvest_augment:fire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 164,
+              "id": "harvest_resist:cold:fire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 165,
+              "id": "harvest_resist:lightning:fire",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 166,
+              "id": "fracture",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 167,
+              "id": "restart",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            }
+          ]
+        }
+      ],
+      "native_witness_probes": [
+        {
+          "depth": 0,
+          "source": {
+            "id": 456,
+            "hash": 808907051,
+            "goal_mask": 3,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 1,
+            "suffixes": 3,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              2,
+              2
+            ],
+            "junk": [
+              [
+                9,
+                2
+              ]
+            ]
+          },
+          "action": "annul",
+          "exits": [
+            {
+              "probability": 0.25,
+              "state": {
+                "id": 2527,
+                "hash": 851285382,
+                "goal_mask": 1,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  2,
+                  0
+                ],
+                "junk": [
+                  [
+                    9,
+                    2
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.25,
+              "state": {
+                "id": 2686,
+                "hash": 3817565104,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 3,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    9,
+                    2
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.5,
+              "state": {
+                "id": 2687,
+                "hash": 2703402533,
+                "goal_mask": 3,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  2,
+                  2
+                ],
+                "junk": [
+                  [
+                    9,
+                    1
+                  ]
+                ]
+              }
+            }
+          ],
+          "supported": true,
+          "legal": true,
+          "choice_groups": 0
+        },
+        {
+          "depth": 1,
+          "source": {
+            "id": 2687,
+            "hash": 2703402533,
+            "goal_mask": 3,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 1,
+            "suffixes": 2,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              2,
+              2
+            ],
+            "junk": [
+              [
+                9,
+                1
+              ]
+            ]
+          },
+          "action": "annul",
+          "exits": [
+            {
+              "probability": 0.3333333333333333,
+              "state": {
+                "id": 2688,
+                "hash": 3532927714,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    9,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.3333333333333333,
+              "state": {
+                "id": 2689,
+                "hash": 81051802,
+                "goal_mask": 1,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 1,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  2,
+                  0
+                ],
+                "junk": [
+                  [
+                    9,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.3333333333333333,
+              "state": {
+                "id": 2690,
+                "hash": 3136941691,
+                "goal_mask": 3,
+                "terminal": true,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 1,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  2,
+                  2
+                ],
+                "junk": []
+              }
+            }
+          ],
+          "supported": true,
+          "legal": true,
+          "choice_groups": 0
+        },
+        {
+          "depth": 0,
+          "source": {
+            "id": 2520,
+            "hash": 1350748600,
+            "goal_mask": 2,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 0,
+            "suffixes": 1,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              0,
+              2
+            ],
+            "junk": []
+          },
+          "action": "exalt",
+          "exits": [
+            {
+              "probability": 0.4305421880012832,
+              "state": {
+                "id": 2688,
+                "hash": 3532927714,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    9,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.006416426050689766,
+              "state": {
+                "id": 2690,
+                "hash": 3136941691,
+                "goal_mask": 3,
+                "terminal": true,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 1,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  2,
+                  2
+                ],
+                "junk": []
+              }
+            },
+            {
+              "probability": 0.02085338466474174,
+              "state": {
+                "id": 2691,
+                "hash": 628643338,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 1,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    3,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.02085338466474174,
+              "state": {
+                "id": 2692,
+                "hash": 2595123804,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 1,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    4,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.02085338466474174,
+              "state": {
+                "id": 2693,
+                "hash": 3297205124,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 1,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    6,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.2791145332050046,
+              "state": {
+                "id": 2694,
+                "hash": 2476830028,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 1,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    0,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.04170676932948347,
+              "state": {
+                "id": 2695,
+                "hash": 3417659850,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    15,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.012832852101379532,
+              "state": {
+                "id": 2696,
+                "hash": 635517594,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    11,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.051331408405518135,
+              "state": {
+                "id": 2697,
+                "hash": 3643066556,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    16,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.012832852101379532,
+              "state": {
+                "id": 2698,
+                "hash": 674047660,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    12,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.0384985563041386,
+              "state": {
+                "id": 2699,
+                "hash": 1214770806,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 1,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  1,
+                  2
+                ],
+                "junk": []
+              }
+            },
+            {
+              "probability": 0.012832852101379532,
+              "state": {
+                "id": 2700,
+                "hash": 1272044946,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    13,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.051331408405518135,
+              "state": {
+                "id": 2701,
+                "hash": 3205458380,
+                "goal_mask": 2,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    20,
+                    1
+                  ]
+                ]
+              }
+            }
+          ],
+          "supported": true,
+          "legal": true,
+          "choice_groups": 0
+        }
+      ]
+    },
+    "cb08-cross-base-product8-long240": {
+      "schema": "goal_delivery_observation_v1",
+      "status": "complete",
+      "graph_identity": 13517082324608220021,
+      "states": 4342,
+      "rows": 260,
+      "expanded": 32,
+      "live_owned_bytes": 15807907,
+      "scheduler": {
+        "incumbent": false,
+        "carriers": 32,
+        "alternatives": 0,
+        "refinement_active": false,
+        "refinement_target": 0,
+        "queue": 4295,
+        "expansion_active": false,
+        "restricted_values_ready": true,
+        "envelope_closed": false,
+        "finish_requested": false,
+        "cap_hit": false,
+        "cooperative_high_progress": false
+      },
+      "population": [
+        {
+          "satisfied": 0,
+          "extra_affixes": 0,
+          "rarity": 0,
+          "retry_basin": 0,
+          "count": 1
+        },
+        {
+          "satisfied": 0,
+          "extra_affixes": 0,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 1
+        },
+        {
+          "satisfied": 0,
+          "extra_affixes": 0,
+          "rarity": 2,
+          "retry_basin": 1,
+          "count": 1
+        },
+        {
+          "satisfied": 0,
+          "extra_affixes": 1,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 13
+        },
+        {
+          "satisfied": 0,
+          "extra_affixes": 3,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 30
+        },
+        {
+          "satisfied": 0,
+          "extra_affixes": 4,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 59
+        },
+        {
+          "satisfied": 1,
+          "extra_affixes": 0,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 3
+        },
+        {
+          "satisfied": 1,
+          "extra_affixes": 2,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 30
+        },
+        {
+          "satisfied": 1,
+          "extra_affixes": 3,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 669
+        },
+        {
+          "satisfied": 1,
+          "extra_affixes": 4,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 1281
+        },
+        {
+          "satisfied": 1,
+          "extra_affixes": 5,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 1491
+        },
+        {
+          "satisfied": 2,
+          "extra_affixes": 2,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 114
+        },
+        {
+          "satisfied": 2,
+          "extra_affixes": 3,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 261
+        },
+        {
+          "satisfied": 2,
+          "extra_affixes": 4,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 357
+        },
+        {
+          "satisfied": 3,
+          "extra_affixes": 1,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 4
+        },
+        {
+          "satisfied": 3,
+          "extra_affixes": 2,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 10
+        },
+        {
+          "satisfied": 3,
+          "extra_affixes": 3,
+          "rarity": 2,
+          "retry_basin": 0,
+          "count": 17
+        }
+      ],
+      "root_rows": [
+        {
+          "row": 0,
+          "action": "chaos",
+          "admitted": true,
+          "direct_missing": 4129,
+          "choices": 0,
+          "terminal_mass": 0,
+          "best_successor": 755,
+          "outcomes": [
+            {
+              "satisfied": 0,
+              "extra_affixes": 0,
+              "rarity": 2,
+              "retry_basin": 1,
+              "routes": 1,
+              "mass": 0.9628530313238359
+            },
+            {
+              "satisfied": 1,
+              "extra_affixes": 3,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 639,
+              "mass": 0.010551850532194157
+            },
+            {
+              "satisfied": 1,
+              "extra_affixes": 4,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 1278,
+              "mass": 0.012417869205523957
+            },
+            {
+              "satisfied": 1,
+              "extra_affixes": 5,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 1479,
+              "mass": 0.013902784675199141
+            },
+            {
+              "satisfied": 2,
+              "extra_affixes": 2,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 114,
+              "mass": 6.697925837620376e-05
+            },
+            {
+              "satisfied": 2,
+              "extra_affixes": 3,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 261,
+              "mass": 9.12969298801615e-05
+            },
+            {
+              "satisfied": 2,
+              "extra_affixes": 4,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 357,
+              "mass": 0.00011589632037450578
+            },
+            {
+              "satisfied": 3,
+              "extra_affixes": 1,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 4,
+              "mass": 6.263433037506314e-08
+            },
+            {
+              "satisfied": 3,
+              "extra_affixes": 2,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 10,
+              "mass": 9.365568861822899e-08
+            },
+            {
+              "satisfied": 3,
+              "extra_affixes": 3,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 17,
+              "mass": 1.3546459688376794e-07
+            }
+          ]
+        },
+        {
+          "row": 1,
+          "action": "exalt",
+          "admitted": true,
+          "direct_missing": 16,
+          "choices": 0,
+          "terminal_mass": 0,
+          "best_successor": 4167,
+          "outcomes": [
+            {
+              "satisfied": 0,
+              "extra_affixes": 1,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 13,
+              "mass": 0.9918471931050555
+            },
+            {
+              "satisfied": 1,
+              "extra_affixes": 0,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 3,
+              "mass": 0.00815280689494526
+            }
+          ]
+        },
+        {
+          "row": 2,
+          "action": "scour",
+          "admitted": true,
+          "direct_missing": 1,
+          "choices": 0,
+          "terminal_mass": 0,
+          "best_successor": 4177,
+          "outcomes": [
+            {
+              "satisfied": 0,
+              "extra_affixes": 0,
+              "rarity": 0,
+              "retry_basin": 0,
+              "routes": 1,
+              "mass": 1
+            }
+          ]
+        },
+        {
+          "row": 3,
+          "action": "harvest_augment:chaos",
+          "admitted": true,
+          "direct_missing": 3,
+          "choices": 0,
+          "terminal_mass": 0,
+          "best_successor": 4169,
+          "outcomes": [
+            {
+              "satisfied": 0,
+              "extra_affixes": 1,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 2,
+              "mass": 0.8529411764705883
+            },
+            {
+              "satisfied": 1,
+              "extra_affixes": 0,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 1,
+              "mass": 0.14705882352941177
+            }
+          ]
+        },
+        {
+          "row": 4,
+          "action": "harvest_augment:lightning",
+          "admitted": true,
+          "direct_missing": 4,
+          "choices": 0,
+          "terminal_mass": 0,
+          "best_successor": 4175,
+          "outcomes": [
+            {
+              "satisfied": 0,
+              "extra_affixes": 1,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 3,
+              "mass": 0.9665551839464882
+            },
+            {
+              "satisfied": 1,
+              "extra_affixes": 0,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 1,
+              "mass": 0.033444816053511704
+            }
+          ]
+        },
+        {
+          "row": 5,
+          "action": "harvest_resist:fire:lightning",
+          "admitted": true,
+          "direct_missing": 0,
+          "choices": 0,
+          "terminal_mass": 0,
+          "best_successor": 0,
+          "outcomes": [
+            {
+              "satisfied": 0,
+              "extra_affixes": 0,
+              "rarity": 2,
+              "retry_basin": 0,
+              "routes": 1,
+              "mass": 1
+            }
+          ]
+        }
+      ],
+      "samples": [
+        {
+          "source": {
+            "id": 0,
+            "hash": 3634516757,
+            "goal_mask": 0,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 0,
+            "suffixes": 0,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": true,
+            "slot_status": [
+              0,
+              0,
+              0
+            ],
+            "junk": []
+          },
+          "operators": [
+            {
+              "index": 0,
+              "id": "transmute",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 1,
+              "id": "augment",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 2,
+              "id": "alteration",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 3,
+              "id": "regal",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 4,
+              "id": "alchemy",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 5,
+              "id": "chaos",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 6,
+              "id": "exalt",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 7,
+              "id": "annul",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 8,
+              "id": "scour",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 10,
+              "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 11,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 12,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 13,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 14,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 15,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 16,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 17,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 18,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 19,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 20,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 21,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 22,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 155,
+              "id": "harvest_reforge:chaos",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 156,
+              "id": "harvest_reforge:elemental",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 157,
+              "id": "harvest_reforge:lightning",
+              "legal": true,
+              "lifecycle": 0,
+              "lane": 2,
+              "reason": ""
+            },
+            {
+              "index": 158,
+              "id": "harvest_augment:chaos",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 159,
+              "id": "harvest_augment:lightning",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 160,
+              "id": "harvest_resist:fire:lightning",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 161,
+              "id": "harvest_resist:cold:lightning",
+              "legal": true,
+              "lifecycle": 1,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 162,
+              "id": "fracture",
+              "legal": false,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            },
+            {
+              "index": 163,
+              "id": "restart",
+              "legal": true,
+              "lifecycle": 2,
+              "lane": 1,
+              "reason": ""
+            }
+          ]
+        },
+        {
+          "source": {
+            "id": 755,
+            "hash": 2930858446,
+            "goal_mask": 7,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 1,
+            "suffixes": 3,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              2,
+              2,
+              2
+            ],
+            "junk": [
+              [
+                2,
+                1
+              ]
+            ]
+          },
+          "operators": [
+            {
+              "index": 0,
+              "id": "transmute",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 1,
+              "id": "augment",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 2,
+              "id": "alteration",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 3,
+              "id": "regal",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 4,
+              "id": "alchemy",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 5,
+              "id": "chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 6,
+              "id": "exalt",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 7,
+              "id": "annul",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 8,
+              "id": "scour",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 10,
+              "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 11,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 12,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 13,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 14,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 15,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 16,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 17,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 18,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 19,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 20,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 21,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 22,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 155,
+              "id": "harvest_reforge:chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 156,
+              "id": "harvest_reforge:elemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 157,
+              "id": "harvest_reforge:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 158,
+              "id": "harvest_augment:chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 159,
+              "id": "harvest_augment:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 160,
+              "id": "harvest_resist:fire:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 161,
+              "id": "harvest_resist:cold:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 162,
+              "id": "fracture",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 163,
+              "id": "restart",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            }
+          ]
+        },
+        {
+          "source": {
+            "id": 4167,
+            "hash": 968818224,
+            "goal_mask": 4,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 0,
+            "suffixes": 1,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              0,
+              0,
+              2
+            ],
+            "junk": []
+          },
+          "operators": [
+            {
+              "index": 0,
+              "id": "transmute",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 1,
+              "id": "augment",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 2,
+              "id": "alteration",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 3,
+              "id": "regal",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 4,
+              "id": "alchemy",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 5,
+              "id": "chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 6,
+              "id": "exalt",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 7,
+              "id": "annul",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 8,
+              "id": "scour",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 10,
+              "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 11,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 12,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 13,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 14,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 15,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 16,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 17,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 18,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 19,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 20,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 21,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 22,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 155,
+              "id": "harvest_reforge:chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 156,
+              "id": "harvest_reforge:elemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 157,
+              "id": "harvest_reforge:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 158,
+              "id": "harvest_augment:chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 159,
+              "id": "harvest_augment:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 160,
+              "id": "harvest_resist:fire:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 161,
+              "id": "harvest_resist:cold:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 162,
+              "id": "fracture",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 163,
+              "id": "restart",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            }
+          ]
+        },
+        {
+          "source": {
+            "id": 4177,
+            "hash": 1721440935,
+            "goal_mask": 0,
+            "terminal": false,
+            "rarity": 0,
+            "prefixes": 0,
+            "suffixes": 0,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              0,
+              0,
+              0
+            ],
+            "junk": []
+          },
+          "operators": [
+            {
+              "index": 0,
+              "id": "transmute",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 1,
+              "id": "augment",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 2,
+              "id": "alteration",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 3,
+              "id": "regal",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 4,
+              "id": "alchemy",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 5,
+              "id": "chaos",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 6,
+              "id": "exalt",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 7,
+              "id": "annul",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 8,
+              "id": "scour",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 10,
+              "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 11,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 12,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 13,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 14,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 15,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 16,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 17,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 18,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 19,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 20,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 21,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 22,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 155,
+              "id": "harvest_reforge:chaos",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 156,
+              "id": "harvest_reforge:elemental",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 157,
+              "id": "harvest_reforge:lightning",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 158,
+              "id": "harvest_augment:chaos",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 159,
+              "id": "harvest_augment:lightning",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 160,
+              "id": "harvest_resist:fire:lightning",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 161,
+              "id": "harvest_resist:cold:lightning",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 162,
+              "id": "fracture",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 163,
+              "id": "restart",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            }
+          ]
+        },
+        {
+          "source": {
+            "id": 4169,
+            "hash": 1384852152,
+            "goal_mask": 2,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 0,
+            "suffixes": 1,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              0,
+              2,
+              0
+            ],
+            "junk": []
+          },
+          "operators": [
+            {
+              "index": 0,
+              "id": "transmute",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 1,
+              "id": "augment",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 2,
+              "id": "alteration",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 3,
+              "id": "regal",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 4,
+              "id": "alchemy",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 5,
+              "id": "chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 6,
+              "id": "exalt",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 7,
+              "id": "annul",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 8,
+              "id": "scour",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 10,
+              "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 11,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 12,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 13,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 14,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 15,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 16,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 17,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 18,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 19,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 20,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 21,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 22,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 155,
+              "id": "harvest_reforge:chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 156,
+              "id": "harvest_reforge:elemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 157,
+              "id": "harvest_reforge:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 158,
+              "id": "harvest_augment:chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 159,
+              "id": "harvest_augment:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 160,
+              "id": "harvest_resist:fire:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 161,
+              "id": "harvest_resist:cold:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 162,
+              "id": "fracture",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 163,
+              "id": "restart",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            }
+          ]
+        },
+        {
+          "source": {
+            "id": 4175,
+            "hash": 3240169632,
+            "goal_mask": 1,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 0,
+            "suffixes": 1,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              2,
+              0,
+              0
+            ],
+            "junk": []
+          },
+          "operators": [
+            {
+              "index": 0,
+              "id": "transmute",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 1,
+              "id": "augment",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 2,
+              "id": "alteration",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 3,
+              "id": "regal",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 4,
+              "id": "alchemy",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 5,
+              "id": "chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 6,
+              "id": "exalt",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 7,
+              "id": "annul",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 8,
+              "id": "scour",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 10,
+              "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 11,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 12,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 13,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 14,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 15,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 16,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 17,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 18,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 19,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 20,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 21,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 22,
+              "id": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 155,
+              "id": "harvest_reforge:chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 156,
+              "id": "harvest_reforge:elemental",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 157,
+              "id": "harvest_reforge:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 158,
+              "id": "harvest_augment:chaos",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 159,
+              "id": "harvest_augment:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 160,
+              "id": "harvest_resist:fire:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 161,
+              "id": "harvest_resist:cold:lightning",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 162,
+              "id": "fracture",
+              "legal": false,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            },
+            {
+              "index": 163,
+              "id": "restart",
+              "legal": true,
+              "lifecycle": null,
+              "lane": null,
+              "reason": "no_entry"
+            }
+          ]
+        }
+      ],
+      "native_witness_probes": [
+        {
+          "depth": 0,
+          "source": {
+            "id": 755,
+            "hash": 2930858446,
+            "goal_mask": 7,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 1,
+            "suffixes": 3,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              2,
+              2,
+              2
+            ],
+            "junk": [
+              [
+                2,
+                1
+              ]
+            ]
+          },
+          "action": "annul",
+          "exits": [
+            {
+              "probability": 0.25,
+              "state": {
+                "id": 4342,
+                "hash": 3013888102,
+                "goal_mask": 7,
+                "terminal": true,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 3,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  2,
+                  2,
+                  2
+                ],
+                "junk": []
+              }
+            },
+            {
+              "probability": 0.25,
+              "state": {
+                "id": 4343,
+                "hash": 776856611,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2,
+                  2
+                ],
+                "junk": [
+                  [
+                    2,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.25,
+              "state": {
+                "id": 4344,
+                "hash": 2632174091,
+                "goal_mask": 5,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  2,
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    2,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.25,
+              "state": {
+                "id": 4345,
+                "hash": 2216140163,
+                "goal_mask": 3,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  2,
+                  2,
+                  0
+                ],
+                "junk": [
+                  [
+                    2,
+                    1
+                  ]
+                ]
+              }
+            }
+          ],
+          "supported": true,
+          "legal": true,
+          "choice_groups": 0
+        },
+        {
+          "depth": 0,
+          "source": {
+            "id": 4167,
+            "hash": 968818224,
+            "goal_mask": 4,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 0,
+            "suffixes": 1,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              0,
+              0,
+              2
+            ],
+            "junk": []
+          },
+          "action": "exalt",
+          "exits": [
+            {
+              "probability": 0.021327582075245627,
+              "state": {
+                "id": 4346,
+                "hash": 327662060,
+                "goal_mask": 4,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 1,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    2,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.021327582075245627,
+              "state": {
+                "id": 4347,
+                "hash": 3272366658,
+                "goal_mask": 4,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 1,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    3,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.021327582075245627,
+              "state": {
+                "id": 4348,
+                "hash": 3908894010,
+                "goal_mask": 4,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 1,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    5,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.3606518092499402,
+              "state": {
+                "id": 4349,
+                "hash": 960795460,
+                "goal_mask": 4,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 1,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    0,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.4172058471123894,
+              "state": {
+                "id": 4350,
+                "hash": 3758186388,
+                "goal_mask": 4,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    8,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.0059908938413611315,
+              "state": {
+                "id": 4351,
+                "hash": 3237196780,
+                "goal_mask": 4,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  1,
+                  2
+                ],
+                "junk": []
+              }
+            },
+            {
+              "probability": 0.0011981787682722263,
+              "state": {
+                "id": 4352,
+                "hash": 503462295,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2,
+                  2
+                ],
+                "junk": []
+              }
+            },
+            {
+              "probability": 0.011981787682722263,
+              "state": {
+                "id": 4353,
+                "hash": 2051275068,
+                "goal_mask": 4,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    10,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.03834172058471124,
+              "state": {
+                "id": 4354,
+                "hash": 3783501314,
+                "goal_mask": 4,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    15,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.011981787682722263,
+              "state": {
+                "id": 4355,
+                "hash": 3538779346,
+                "goal_mask": 4,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    11,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.03834172058471124,
+              "state": {
+                "id": 4356,
+                "hash": 2265428148,
+                "goal_mask": 4,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    16,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.00958543014617781,
+              "state": {
+                "id": 4357,
+                "hash": 1425509998,
+                "goal_mask": 4,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  1,
+                  0,
+                  2
+                ],
+                "junk": []
+              }
+            },
+            {
+              "probability": 0.0023963575365444525,
+              "state": {
+                "id": 4358,
+                "hash": 2358779775,
+                "goal_mask": 5,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  2,
+                  0,
+                  2
+                ],
+                "junk": []
+              }
+            },
+            {
+              "probability": 0.03834172058471124,
+              "state": {
+                "id": 4359,
+                "hash": 2570739036,
+                "goal_mask": 4,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  0,
+                  2
+                ],
+                "junk": [
+                  [
+                    18,
+                    1
+                  ]
+                ]
+              }
+            }
+          ],
+          "supported": true,
+          "legal": true,
+          "choice_groups": 0
+        },
+        {
+          "depth": 1,
+          "source": {
+            "id": 4352,
+            "hash": 503462295,
+            "goal_mask": 6,
+            "terminal": false,
+            "rarity": 2,
+            "prefixes": 0,
+            "suffixes": 2,
+            "flags": 0,
+            "fractured_goals": 0,
+            "crafted_goals": 0,
+            "blocked": 0,
+            "retry_basin": 0,
+            "expanded": false,
+            "slot_status": [
+              0,
+              2,
+              2
+            ],
+            "junk": []
+          },
+          "action": "exalt",
+          "exits": [
+            {
+              "probability": 0.0024137098720733766,
+              "state": {
+                "id": 4342,
+                "hash": 3013888102,
+                "goal_mask": 7,
+                "terminal": true,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 3,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  2,
+                  2,
+                  2
+                ],
+                "junk": []
+              }
+            },
+            {
+              "probability": 0.021482017861453054,
+              "state": {
+                "id": 4343,
+                "hash": 776856611,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2,
+                  2
+                ],
+                "junk": [
+                  [
+                    2,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.021482017861453054,
+              "state": {
+                "id": 4360,
+                "hash": 2127119309,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2,
+                  2
+                ],
+                "junk": [
+                  [
+                    3,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.021482017861453054,
+              "state": {
+                "id": 4361,
+                "hash": 1490591957,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2,
+                  2
+                ],
+                "junk": [
+                  [
+                    5,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.36326333574704267,
+              "state": {
+                "id": 4362,
+                "hash": 143723211,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 1,
+                "suffixes": 2,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2,
+                  2
+                ],
+                "junk": [
+                  [
+                    0,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.4202268887279748,
+              "state": {
+                "id": 4363,
+                "hash": 1261182521,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 3,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2,
+                  2
+                ],
+                "junk": [
+                  [
+                    8,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.012068549360366883,
+              "state": {
+                "id": 4364,
+                "hash": 2968093841,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 3,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2,
+                  2
+                ],
+                "junk": [
+                  [
+                    10,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.038619357953174026,
+              "state": {
+                "id": 4365,
+                "hash": 1235867595,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 3,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2,
+                  2
+                ],
+                "junk": [
+                  [
+                    15,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.012068549360366883,
+              "state": {
+                "id": 4366,
+                "hash": 1480589563,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 3,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2,
+                  2
+                ],
+                "junk": [
+                  [
+                    11,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.038619357953174026,
+              "state": {
+                "id": 4367,
+                "hash": 2753940761,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 3,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2,
+                  2
+                ],
+                "junk": [
+                  [
+                    16,
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "probability": 0.009654839488293506,
+              "state": {
+                "id": 4368,
+                "hash": 695700331,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 3,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  1,
+                  2,
+                  2
+                ],
+                "junk": []
+              }
+            },
+            {
+              "probability": 0.038619357953174026,
+              "state": {
+                "id": 4369,
+                "hash": 2448629873,
+                "goal_mask": 6,
+                "terminal": false,
+                "rarity": 2,
+                "prefixes": 0,
+                "suffixes": 3,
+                "flags": 0,
+                "fractured_goals": 0,
+                "crafted_goals": 0,
+                "blocked": 0,
+                "retry_basin": 0,
+                "expanded": false,
+                "slot_status": [
+                  0,
+                  2,
+                  2
+                ],
+                "junk": [
+                  [
+                    18,
+                    1
+                  ]
+                ]
+              }
+            }
+          ],
+          "supported": true,
+          "legal": true,
+          "choice_groups": 0
+        }
+      ]
+    }
+  }
+}

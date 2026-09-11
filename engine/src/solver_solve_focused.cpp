@@ -814,6 +814,17 @@ bool SolveWork::Impl::begin_focused_upper_solve() {
         if (from_incremental_incumbent) {
             result.values = output_incumbent->values;
             result.values.resize(calc.state_count(), kInfinity);
+            // A root-reachable candidate supplies values only on its selected
+            // domain. Other saved numbers may be lower estimates; they cannot
+            // become executable frontier terminals in this upper pass.
+            if (!output_incumbent->policy_reachable.empty()) {
+                for (std::uint32_t state = 0; state < result.values.size(); ++state) {
+                    if (state >= output_incumbent->policy_reachable.size() ||
+                        !output_incumbent->policy_reachable[state])
+                        result.values[state] = kInfinity;
+                }
+                result.expanded = output_incumbent->policy_reachable;
+            }
             /* The upper pass owns one exact fixed-policy proof, so its
              * InitialSelect step must start from the incumbent's executable
              * row choices. Re-running the generic ranked initializer would
@@ -1431,6 +1442,11 @@ void SolveWork::Impl::run_focused_lower_unit() {
                     finish_focused_upper_solve(false);
                     return;
                 }
+                /* Candidate construction consumes completed exact rows and
+                 * re-evaluates its own fixed decisions. A failed restricted
+                 * lower policy need not release its named continuation to
+                 * broad fringe expansion before those rows can be serviced. */
+                if (continue_initial_candidate()) return;
                 /*
                  * An incomplete lower policy is still a valid lower-bound
                  * snapshot. The high-impact experiment can independently

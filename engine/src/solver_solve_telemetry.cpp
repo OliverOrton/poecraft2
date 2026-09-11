@@ -2793,6 +2793,10 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
             bytes += resumable_joint_policy_candidate
                          ->current_owned_payload_bytes;
         }
+        bytes += publication_pipeline.initial_candidate_proof_bytes;
+        if (publication_pipeline.initial_candidate_task.has_value()) {
+            bytes += publication_pipeline.initial_candidate_task->retained_bytes();
+        }
         if (finalization_task.has_value()) {
             bytes += finalization_task->retained_bytes();
         }
@@ -3078,6 +3082,10 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         if (resumable_joint_policy_candidate.has_value()) {
             bytes += resumable_joint_policy_candidate
                          ->current_owned_payload_bytes;
+        }
+        bytes += publication_pipeline.initial_candidate_proof_bytes;
+        if (publication_pipeline.initial_candidate_task.has_value()) {
+            bytes += publication_pipeline.initial_candidate_task->retained_bytes();
         }
         if (finalization_task.has_value()) {
             bytes += finalization_task->retained_bytes();

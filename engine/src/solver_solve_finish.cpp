@@ -2750,127 +2750,6 @@ SolveWork::Impl::run_publication_pipeline() {
                 }
                 return "not_run";
             };
-        const auto retained_artifact_from_assertion =
-            [&](refinement::CompiledPolicyAssertion& assertion) {
-                RetainedCompiledPolicyArtifact artifact;
-                artifact.strategy_json = std::move(assertion.strategy_json);
-                artifact.certification_strategy_json =
-                    std::move(assertion.certification_strategy_json);
-                artifact.continuation_upper.authority =
-                    executable_continuation_authority_context();
-                artifact.continuation_upper.evaluation =
-                    std::move(assertion.evaluation.continuation_upper);
-                artifact.continuation_upper.policy_entries =
-                    std::move(assertion.evaluation.policy_entries);
-                if (!artifact.certification_strategy_json.empty() &&
-                    artifact.continuation_upper.evaluation.requested) {
-                    std::uint64_t identity = 1469598103934665603ULL;
-                    identity_mix_string(
-                        identity,
-                        artifact.certification_strategy_json);
-                    artifact.continuation_upper
-                        .strategy_identity_digest = identity;
-                    artifact.continuation_upper
-                        .strategy_identity_bytes =
-                            artifact.certification_strategy_json.size();
-                }
-                artifact.working_states =
-                    assertion.compilation.working_states;
-                artifact.closed_coarse_domain_added_states =
-                    assertion.compilation
-                        .closed_coarse_domain_added_states;
-                artifact.closed_coarse_domain_route_states =
-                    assertion.compilation
-                        .closed_coarse_domain_route_states;
-                artifact.behavioral_classes =
-                    assertion.compilation.behavioral_classes;
-                artifact.policy_regions =
-                    assertion.compilation.policy_regions;
-                artifact.infrastructure_nodes =
-                    assertion.compilation.infrastructure_nodes;
-                artifact.policy_route_nodes =
-                    assertion.compilation.policy_route_nodes;
-                artifact.local_gated_route_nodes =
-                    assertion.compilation.local_gated_route_nodes;
-                artifact.primitive_region_nodes =
-                    assertion.compilation.primitive_region_nodes;
-                artifact.additional_recipe_nodes =
-                    assertion.compilation.additional_recipe_nodes;
-                artifact.policy_decision_bindings =
-                    assertion.compilation.policy_decision_bindings;
-                artifact.nodes = assertion.compilation.nodes;
-                artifact.edges = assertion.compilation.edges;
-                artifact.total_condition_bytes =
-                    assertion.compilation.total_condition_bytes;
-                artifact.max_condition_bytes =
-                    assertion.compilation.max_condition_bytes;
-                artifact.condition_edges =
-                    assertion.compilation.condition_edges;
-                artifact.unique_condition_literals =
-                    assertion.compilation.unique_condition_literals;
-                artifact.repeated_condition_occurrences =
-                    assertion.compilation.repeated_condition_occurrences;
-                artifact.repeated_condition_bytes =
-                    assertion.compilation.repeated_condition_bytes;
-                artifact.policy_route_nondefault_edges =
-                    assertion.compilation.policy_route_nondefault_edges;
-                artifact.policy_route_distinct_targets =
-                    assertion.compilation.policy_route_distinct_targets;
-                artifact.same_target_branch_groups =
-                    assertion.compilation.same_target_branch_groups;
-                artifact.same_target_branch_edges =
-                    assertion.compilation.same_target_branch_edges;
-                artifact.projected_same_target_edge_savings =
-                    assertion.compilation
-                        .projected_same_target_edge_savings;
-                artifact.max_policy_route_out_degree =
-                    assertion.compilation.max_policy_route_out_degree;
-                artifact.max_policy_route_distinct_targets =
-                    assertion.compilation
-                        .max_policy_route_distinct_targets;
-                artifact.exact_state_fallbacks =
-                    assertion.compilation.exact_state_fallbacks;
-                artifact.junk_predicates =
-                    assertion.compilation.junk_predicates;
-                artifact.policy_route_default_edges =
-                    assertion.compilation.policy_route_default_edges;
-                artifact.policy_route_restart_default_edges =
-                    assertion.compilation
-                        .policy_route_restart_default_edges;
-                artifact.policy_route_offpolicy_default_edges =
-                    assertion.compilation
-                        .policy_route_offpolicy_default_edges;
-                artifact.policy_route_root_default_edges =
-                    assertion.compilation
-                        .policy_route_root_default_edges;
-                artifact.policy_route_refined_parent_default_edges =
-                    assertion.compilation
-                        .policy_route_refined_parent_default_edges;
-                artifact.policy_route_internal_default_edges =
-                    assertion.compilation
-                        .policy_route_internal_default_edges;
-                artifact.policy_route_default_mode =
-                    assertion.compilation.policy_route_default_mode;
-                artifact.certification_policy_route_default_edges =
-                    assertion.certification_compilation
-                        .policy_route_default_edges;
-                artifact.certification_policy_route_offpolicy_default_edges =
-                    assertion.certification_compilation
-                        .policy_route_offpolicy_default_edges;
-                artifact.certification_policy_route_default_mode =
-                    assertion.certification_compilation
-                        .policy_route_default_mode;
-                artifact.paired_default_only =
-                    assertion.paired_default_only;
-                artifact.peak_owned_bytes =
-                    assertion.compilation.peak_owned_bytes;
-                artifact.previously_accounted_peak_owned_bytes =
-                    assertion.compilation
-                        .previously_accounted_peak_owned_bytes;
-                artifact.complete_peak_owned_bytes =
-                    assertion.compilation.complete_peak_owned_bytes;
-                return artifact;
-            };
         const auto retain_compiled_unverified =
             [&](refinement::CompiledPolicyAssertion& assertion,
                 const std::string& kind,
@@ -6033,6 +5912,269 @@ SolveWork::Impl::run_publication_pipeline() {
         consumed = true;
         co_return std::move(result);
     }
+
+RetainedCompiledPolicyArtifact SolveWork::Impl::retained_artifact_from_assertion(
+        refinement::CompiledPolicyAssertion& assertion) {
+    RetainedCompiledPolicyArtifact artifact;
+    artifact.strategy_json = std::move(assertion.strategy_json);
+    artifact.certification_strategy_json =
+        std::move(assertion.certification_strategy_json);
+    artifact.continuation_upper.authority =
+        executable_continuation_authority_context();
+    artifact.continuation_upper.evaluation =
+        std::move(assertion.evaluation.continuation_upper);
+    artifact.continuation_upper.policy_entries =
+        std::move(assertion.evaluation.policy_entries);
+    if (!artifact.certification_strategy_json.empty() &&
+        artifact.continuation_upper.evaluation.requested) {
+        std::uint64_t identity = 1469598103934665603ULL;
+        identity_mix_string(
+            identity,
+            artifact.certification_strategy_json);
+        artifact.continuation_upper
+            .strategy_identity_digest = identity;
+        artifact.continuation_upper
+            .strategy_identity_bytes =
+                artifact.certification_strategy_json.size();
+    }
+    artifact.working_states =
+        assertion.compilation.working_states;
+    artifact.closed_coarse_domain_added_states =
+        assertion.compilation
+            .closed_coarse_domain_added_states;
+    artifact.closed_coarse_domain_route_states =
+        assertion.compilation
+            .closed_coarse_domain_route_states;
+    artifact.behavioral_classes =
+        assertion.compilation.behavioral_classes;
+    artifact.policy_regions =
+        assertion.compilation.policy_regions;
+    artifact.infrastructure_nodes =
+        assertion.compilation.infrastructure_nodes;
+    artifact.policy_route_nodes =
+        assertion.compilation.policy_route_nodes;
+    artifact.local_gated_route_nodes =
+        assertion.compilation.local_gated_route_nodes;
+    artifact.primitive_region_nodes =
+        assertion.compilation.primitive_region_nodes;
+    artifact.additional_recipe_nodes =
+        assertion.compilation.additional_recipe_nodes;
+    artifact.policy_decision_bindings =
+        assertion.compilation.policy_decision_bindings;
+    artifact.nodes = assertion.compilation.nodes;
+    artifact.edges = assertion.compilation.edges;
+    artifact.total_condition_bytes =
+        assertion.compilation.total_condition_bytes;
+    artifact.max_condition_bytes =
+        assertion.compilation.max_condition_bytes;
+    artifact.condition_edges =
+        assertion.compilation.condition_edges;
+    artifact.unique_condition_literals =
+        assertion.compilation.unique_condition_literals;
+    artifact.repeated_condition_occurrences =
+        assertion.compilation.repeated_condition_occurrences;
+    artifact.repeated_condition_bytes =
+        assertion.compilation.repeated_condition_bytes;
+    artifact.policy_route_nondefault_edges =
+        assertion.compilation.policy_route_nondefault_edges;
+    artifact.policy_route_distinct_targets =
+        assertion.compilation.policy_route_distinct_targets;
+    artifact.same_target_branch_groups =
+        assertion.compilation.same_target_branch_groups;
+    artifact.same_target_branch_edges =
+        assertion.compilation.same_target_branch_edges;
+    artifact.projected_same_target_edge_savings =
+        assertion.compilation
+            .projected_same_target_edge_savings;
+    artifact.max_policy_route_out_degree =
+        assertion.compilation.max_policy_route_out_degree;
+    artifact.max_policy_route_distinct_targets =
+        assertion.compilation
+            .max_policy_route_distinct_targets;
+    artifact.exact_state_fallbacks =
+        assertion.compilation.exact_state_fallbacks;
+    artifact.junk_predicates =
+        assertion.compilation.junk_predicates;
+    artifact.policy_route_default_edges =
+        assertion.compilation.policy_route_default_edges;
+    artifact.policy_route_restart_default_edges =
+        assertion.compilation
+            .policy_route_restart_default_edges;
+    artifact.policy_route_offpolicy_default_edges =
+        assertion.compilation
+            .policy_route_offpolicy_default_edges;
+    artifact.policy_route_root_default_edges =
+        assertion.compilation
+            .policy_route_root_default_edges;
+    artifact.policy_route_refined_parent_default_edges =
+        assertion.compilation
+            .policy_route_refined_parent_default_edges;
+    artifact.policy_route_internal_default_edges =
+        assertion.compilation
+            .policy_route_internal_default_edges;
+    artifact.policy_route_default_mode =
+        assertion.compilation.policy_route_default_mode;
+    artifact.certification_policy_route_default_edges =
+        assertion.certification_compilation
+            .policy_route_default_edges;
+    artifact.certification_policy_route_offpolicy_default_edges =
+        assertion.certification_compilation
+            .policy_route_offpolicy_default_edges;
+    artifact.certification_policy_route_default_mode =
+        assertion.certification_compilation
+            .policy_route_default_mode;
+    artifact.paired_default_only =
+        assertion.paired_default_only;
+    artifact.peak_owned_bytes =
+        assertion.compilation.peak_owned_bytes;
+    artifact.previously_accounted_peak_owned_bytes =
+        assertion.compilation
+            .previously_accounted_peak_owned_bytes;
+    artifact.complete_peak_owned_bytes =
+        assertion.compilation.complete_peak_owned_bytes;
+    return artifact;
+}
+
+solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate() {
+    if (!output_incumbent.has_value()) co_return false;
+    BoundedPolicyIncumbent& candidate = *output_incumbent;
+    if (candidate.independently_evaluated) co_return true;
+    const std::uint64_t capture_identity = candidate.portfolio_identity;
+    const auto update_lineage = [&](const auto& update) {
+        for (auto& lineage : joint_anytime_attempt_lineage)
+            if (lineage.candidate_portfolio_identity == capture_identity)
+                update(lineage);
+    };
+    // Reuse the final-graph assertion owner with the whole immutable selected
+    // policy. Discovery is paused during this cooperative child, so its exact
+    // state, row, vocabulary, prices and observations cannot be replaced.
+    if (check_solver_byte_cap_fast(incumbent_owned_bytes(candidate)))
+        co_return false;
+    populate_incumbent_policy(candidate);
+    SolveResult proof;
+    proof.policy_available = true;
+    proof.policy_status = SolvePolicyStatus::BoundedFeasible;
+    proof.lower_bound = certified_global_lower_bound();
+    proof.upper_bound = candidate.certified_upper_bound;
+    proof.evaluated_policy_cost = candidate.certified_upper_bound;
+    proof.start_state = result.start_state;
+    proof.has_exact_start_item = result.has_exact_start_item;
+    proof.exact_start_item = result.exact_start_item;
+    proof.values = candidate.values;
+    proof.policy = candidate.policy;
+    proof.policy_reachable = candidate.policy_reachable;
+    proof.unveil_preferences = candidate.unveil_preferences;
+    proof.option_unveil_preferences = candidate.option_unveil_preferences;
+    proof.behavioral_representative_by_state =
+        candidate.behavioral_representative_by_state;
+    proof.primitive_renewal_witness = candidate.primitive_renewal_witness;
+    proof.goal_states.assign(proof.values.size(), 0);
+    proof.expanded.assign(proof.values.size(), 0);
+    for (std::uint32_t state = 0; state < proof.values.size(); ++state)
+        proof.goal_states[state] = calc.is_goal_state(calc.state(state));
+    publication_pipeline.initial_candidate_proof_bytes =
+        solve_result_owned_bytes(proof);
+    const auto live = estimated_owned_bytes();
+    const auto assertion_retained = estimated_retained_solver_bytes(calc, &proof);
+    const auto external = live > assertion_retained ? live - assertion_retained : 0;
+    if (live >= options.max_solver_owned_bytes ||
+        external >= options.max_solver_owned_bytes) co_return false;
+    SolveOptions scoped = options;
+    scoped.max_solver_owned_bytes = options.max_solver_owned_bytes - external;
+    proof.options = scoped;
+    refinement::CompiledPolicyAssertionWork work(
+        calc, proof, prices, scoped, "first reachable proper policy");
+    update_lineage([](auto& lineage) {
+        lineage.compilation_attempted = true;
+        lineage.compilation_result = "initial_candidate_compilation";
+        lineage.independent_evaluation_attempted = true;
+    });
+    while (!work.progress().done) {
+        const auto progress = work.progress();
+        phase = progress.phase == refinement::CompiledPolicyAssertionPhase::Compiling
+            ? SolvePhase::Compiling : SolvePhase::Certifying;
+        finalization_evaluation_progress = progress.evaluation;
+        work.step(kCooperativePolicyLiftBatch);
+        co_await solve_detail::CooperativeCheckpoint{work.retained_bytes()};
+    }
+    auto assertion = work.take_result();
+    auto& telemetry = result.diagnostics.policy_refinement;
+    telemetry.strategy_compilation_ns += assertion.compilation_ns;
+    telemetry.exact_graph_evaluation_ns += assertion.exact_evaluation_ns;
+    const bool verified = assertion.executable && assertion.proper &&
+        assertion.evaluation.cost_complete && assertion.zero_off_policy &&
+        std::isfinite(assertion.exact_cost) && assertion.exact_cost >= 0.0;
+    update_lineage([&](auto& lineage) {
+        lineage.compilation_succeeded = !assertion.strategy_json.empty();
+        lineage.compiled_nodes = assertion.compilation.nodes;
+        lineage.compiled_edges = assertion.compilation.edges;
+        lineage.compilation_result = "initial_candidate_compiled";
+        lineage.independent_evaluation_succeeded = verified;
+        lineage.independently_evaluated_cost = assertion.exact_cost;
+        lineage.independent_evaluation_result = verified
+            ? "verified_before_improvement" : assertion.failure_reason;
+    });
+    if (!verified) co_return false;
+    candidate.certified_upper_bound = assertion.exact_cost;
+    candidate.evaluated_policy_cost = assertion.exact_cost;
+    candidate.compiled_artifact = retained_artifact_from_assertion(assertion);
+    candidate.compilation_provenance = "initial_compiled_policy_assertion_v1";
+    candidate.independently_certified = true;
+    candidate.independently_evaluated = true;
+    candidate.proper = true;
+    candidate.executable = true;
+    candidate.reconciliation_absolute_delta = assertion.absolute_cost_delta;
+    candidate.reconciliation_relative_delta = assertion.relative_cost_delta;
+    identity_mix(candidate.portfolio_identity,
+        std::bit_cast<std::uint64_t>(candidate.evaluated_policy_cost));
+    identity_mix_string(candidate.portfolio_identity, candidate.compilation_provenance);
+    candidate.retained_owned_bytes = incumbent_owned_bytes(candidate);
+    // The selected output already owns this candidate's bytes. The portfolio
+    // admits the additional retained copy through its existing shared cap.
+    const bool retained = retain_current_certified_incumbent();
+    incumbent_portfolio.observe_verified(candidate);
+    record_upper_attribution_milestone(candidate.certified_upper_bound, true);
+    update_lineage([&](auto& lineage) {
+        lineage.candidate_portfolio_identity = candidate.portfolio_identity;
+        lineage.portfolio_decision = retained ? "verified_retained_before_improvement"
+                                             : "verified_in_selected_output";
+        lineage.portfolio_reason = "independent native graph evaluation";
+    });
+    co_return true;
+}
+
+bool SolveWork::Impl::advance_initial_candidate_publication() {
+    auto& task = publication_pipeline.initial_candidate_task;
+    if (!task.has_value()) return false;
+    if (requested_bounded_finish) {
+        task.reset();
+        publication_pipeline.initial_candidate_proof_bytes = 0;
+        phase = SolvePhase::Expanding;
+        return false;
+    }
+    try {
+        ++finalization_work_items;
+        if (!task->resume()) return true;
+        (void)task->take_result();
+    } catch (...) {
+        task.reset();
+        publication_pipeline.initial_candidate_proof_bytes = 0;
+        throw;
+    }
+    task.reset();
+    publication_pipeline.initial_candidate_proof_bytes = 0;
+    phase = SolvePhase::Expanding;
+    if (result.diagnostics.resource_cap_hit) {
+        phase = SolvePhase::Done;
+        begin_publication_pipeline();
+        return true;
+    }
+    if (begin_incremental_upper_policy_pass() || continue_open_incremental_envelope())
+        return true;
+    phase = SolvePhase::Done;
+    begin_publication_pipeline();
+    return true;
+}
 
 void SolveWork::Impl::begin_publication_pipeline() {
         if (finalization_task.has_value() ||

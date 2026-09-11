@@ -47,6 +47,8 @@
 namespace poecraft {
 namespace solver {
 
+namespace refinement { struct CompiledPolicyAssertion; }
+
 namespace solve_detail {
 
 constexpr double kInfinity = std::numeric_limits<double>::infinity();
@@ -909,6 +911,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         solve_detail::kAnytimeSchedulingProfile
             .first_incumbent_checkpoint_rows;
     std::uint64_t incremental_anytime_policy_attempts = 0;
+    std::uint64_t initial_candidate_last_row_generation = 0;
     std::uint64_t incremental_anytime_policy_successes = 0;
     std::array<
         std::uint64_t,
@@ -2126,6 +2129,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::uint32_t refinement_rounds = 0;
         std::uint32_t refinement_classes = 0;
         StrategyEvalProgress evaluation_progress;
+        std::optional<solve_detail::CooperativeTask<bool>> initial_candidate_task;
+        std::uint64_t initial_candidate_proof_bytes = 0;
         std::optional<solve_detail::CooperativeTask<SolveResult>> task;
         std::optional<SolveResult> result;
         bool consumed = false;
@@ -2690,6 +2695,12 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     void capture_initial_incremental_selected_policy();
 
     bool continue_open_incremental_envelope();
+    bool continue_initial_candidate();
+    solve_detail::CooperativeTask<bool> certify_initial_candidate();
+    bool advance_initial_candidate_publication();
+    RetainedCompiledPolicyArtifact retained_artifact_from_assertion(
+        refinement::CompiledPolicyAssertion& assertion);
+
     bool try_begin_candidate_proof_handoff();
 
     bool retire_unmaterialized_by_operator_proof(

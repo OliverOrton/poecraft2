@@ -52,6 +52,16 @@ There are separate consequences for yield and terminal refusal. Active yield ret
 
 New value estimates need not make a fixed executable candidate invalid merely because it is no longer greedy. Changed rows, prices, routes, scope, or other semantic dependencies require the appropriate revalidation or discard. See [CLM-0021](claims.md#clm-0021).
 
+With no incumbent, the existing joint walk can request every missing selected
+continuation after a restricted solve or its failed-policy boundary. Actual
+terminal debt and missing-row work are proposal preferences only. Completing a
+proper candidate starts cooperative compilation/evaluation before ordinary upper
+improvement; the portfolio retains the verified result. A dynamic automatic
+epoch's service yield receives one scheduler re-entry before exhaustion is
+considered, only while no incumbent exists. Existing incumbents retain their
+publication opportunity and strict improvement. Checkpoints, admission and cap
+guards remain active.
+
 ## Progress and interruption
 
 The retained scheduler exposes service and starvation observations. This page does not assert a general eventual-closure theorem for arbitrary generated grammars. Such a theorem needs its actual finiteness, row-completion, refinement, numerical termination, and fairness assumptions; [CLM-0022](claims.md#clm-0022) records that distinction.

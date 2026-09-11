@@ -146,3 +146,16 @@ has a proper executable completion. Both bounded ordering variants expanded more
 states without producing a controller and were removed. That rejects their useful
 bounded-progress premise on the measured families; it does not refute eventual
 closure under the separate finiteness and fairness assumptions of CLM-0022.
+
+The [goal-reaching row-delivery application](../../active/2026-09-10-goal-reaching-row-delivery/README.md)
+distinguishes a consumed automatic-epoch service yield from exhausted work. A
+single false scheduler return is not an exhaustion certificate when the caller
+has just completed a retained preparation boundary and delayed obligations are
+still queued. Re-entering the existing scheduler preserves its own closure and
+resource guards. This additional re-entry is limited to the no-incumbent case:
+an existing incumbent retains its ordinary publication opportunity, including
+strict cost improvement. Candidate-specific continuation service subsequently produced
+proper policies; goal count, extra rows and a finite estimate alone did not.
+The first verified candidate is retained before improvement so a newly cheaper
+but incomplete route cannot erase executable evidence. This is a scoped native
+progress result, not a general proof of the finiteness/fairness premises above.

@@ -1,0 +1,399 @@
+{
+  "question": "Did the epoch repair preserve the existing Bow-five publication opportunity?",
+  "observed_regression": "A proper returned policy remains, but expected cost rises from about 87.2 million to 17.1 billion when the second scheduler re-entry also applies to existing incumbents.",
+  "selected_followup": "Guard the additional re-entry with no existing output incumbent; verify the branch with the native epoch fixture and rerun Bow-five before selection.",
+  "runtime_patch": "n5-incumbent-epoch-regression.patch",
+  "cases": {
+    "baseline": {
+      "report": "out/2026-09-09-cross-base-capability-recovery/A3-ordinary-baseline/cases/cb05-cross-base-product8-long240.json",
+      "report_sha256": "ff46745e0cb159a387fe3ac1c510293046ce04a10f2be9d698e364b876b52812",
+      "solve_summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 87200457.42804676,
+        "expanded_states": 0,
+        "sweeps": 0,
+        "residual": 1.52587890625e-05,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "refused_resource_cap",
+        "stop_cause": "other_resource_cap",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 189,
+          "candidate": 41,
+          "evaluator_supported": 41,
+          "supported_priced": 209,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 297.7999999702199,
+        "upper_bound": 87200457.42804676,
+        "evaluated_policy_cost": 87200457.42804676,
+        "absolute_optimality_gap": 87200159.6280468,
+        "relative_optimality_gap": 292814.505160399,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 11055.1403,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 87200457.42804676,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "phase_wall_ms": {
+        "registry_layout": 31.9496,
+        "solve": 39153.4882,
+        "compile": 67.1578,
+        "verification": null,
+        "total": 50426.4644
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": false,
+        "path": "bounded",
+        "checks": {
+          "named_stop": false,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 8716,
+          "refinement_obligations": 0
+        },
+        "failure_reason": "one or more bounded-result proof obligations failed"
+      },
+      "portfolio": {
+        "candidate_estimate": {
+          "present": true,
+          "cost": 17073103620.241364,
+          "source": "anytime_reachable_proper_policy",
+          "stage": "materialized_policy",
+          "verified": false,
+          "identity": {
+            "portfolio": "8f7bf9e4c3a3be28",
+            "goal": "bc142fb4c394d5ac",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "43be0428715d7915",
+            "caller_scope": "83d05e74e48e8937",
+            "graph_prefix": "37c5982f72bd7db9",
+            "artifact": "bc76e0dc03b2c128",
+            "source_generation": 4059
+          }
+        },
+        "verified_executable_upper": {
+          "present": true,
+          "cost": 87200457.42804676,
+          "portfolio_identity": "138915437669ac36",
+          "identity": {
+            "portfolio": "138915437669ac36",
+            "goal": "bc142fb4c394d5ac",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "43be0428715d7915",
+            "caller_scope": "83d05e74e48e8937",
+            "graph_prefix": "37c5982f72bd7db9",
+            "artifact": "bc76e0dc03b2c128",
+            "source_generation": 4059
+          },
+          "observations": 1,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        },
+        "independent_global_lower": {
+          "value": 297.7999999702199,
+          "certified": true,
+          "provenance": "global_action_relaxation"
+        },
+        "restricted_search_lower": {
+          "value": 297.7999999702199,
+          "envelope_global": false
+        },
+        "exact_closure": {
+          "proved": false,
+          "value": null
+        }
+      },
+      "errors": [
+        "bounded best-policy contract failed: one or more bounded-result proof obligations failed"
+      ]
+    },
+    "initial_core": {
+      "report": "out/goal-reaching-row-delivery/n5-final-core/cases/cb05-cross-base-product8-long240.json",
+      "report_sha256": "2650eca81ab7a0e1bdd1b1187cc9dacf6693e87f7690601b855a0e88cffc174f",
+      "solve_summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 17073117543.410921,
+        "expanded_states": 1411,
+        "sweeps": 0,
+        "residual": 1.33514404296875e-05,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 189,
+          "candidate": 41,
+          "evaluator_supported": 41,
+          "supported_priced": 412,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 297.7999999702199,
+        "upper_bound": 17073119024.234255,
+        "evaluated_policy_cost": 17073119024.234255,
+        "absolute_optimality_gap": 17073118726.434256,
+        "relative_optimality_gap": 57330821.78690924,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 69.5868,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 17073119024.234255,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "phase_wall_ms": {
+        "registry_layout": 31.0284,
+        "solve": 242826.7474,
+        "compile": 0.5298,
+        "verification": null,
+        "total": 243104.5833
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 44619,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "portfolio": {
+        "candidate_estimate": {
+          "present": true,
+          "cost": 16938001653.420988,
+          "source": "anytime_reachable_proper_policy",
+          "stage": "materialized_policy",
+          "verified": false,
+          "identity": {
+            "portfolio": "fc0f1909264a2ac2",
+            "goal": "bc142fb4c394d5ac",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "d2635694653ad1c6",
+            "caller_scope": "83d05e74e48e8937",
+            "graph_prefix": "acbcd0c9ebe5254f",
+            "artifact": "bc76e0dc03b2c128",
+            "source_generation": 23488
+          }
+        },
+        "verified_executable_upper": {
+          "present": true,
+          "cost": 17073119024.234255,
+          "portfolio_identity": "7683cfb3ca002f7c",
+          "identity": {
+            "portfolio": "7683cfb3ca002f7c",
+            "goal": "bc142fb4c394d5ac",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "2c08386473768074",
+            "caller_scope": "83d05e74e48e8937",
+            "graph_prefix": "dced28cce7d9ea67",
+            "artifact": "bc76e0dc03b2c128",
+            "source_generation": 1
+          },
+          "observations": 1,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        },
+        "independent_global_lower": {
+          "value": 297.7999999702199,
+          "certified": true,
+          "provenance": "global_action_relaxation"
+        },
+        "restricted_search_lower": {
+          "value": 297.7999999702199,
+          "envelope_global": false
+        },
+        "exact_closure": {
+          "proved": false,
+          "value": null
+        }
+      },
+      "errors": []
+    },
+    "guarded": {
+      "report": "out/goal-reaching-row-delivery/n5-incumbent-guard-bow5/cases/cb05-cross-base-product8-long240.json",
+      "report_sha256": "34a4c7e3f42eeacf50a13d0222389210b2c7a20805a3dcd10d51e5223784a7b4",
+      "solve_summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 87200457.42804676,
+        "expanded_states": 0,
+        "sweeps": 0,
+        "residual": 1.52587890625e-05,
+        "skipped_action_count": 1,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "refused_resource_cap",
+        "stop_cause": "other_resource_cap",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 189,
+          "candidate": 41,
+          "evaluator_supported": 41,
+          "supported_priced": 209,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 1
+        },
+        "lower_bound": 297.7999999702199,
+        "upper_bound": 87200457.42804676,
+        "evaluated_policy_cost": 87200457.42804676,
+        "absolute_optimality_gap": 87200159.6280468,
+        "relative_optimality_gap": 292814.505160399,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 10625.5783,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 87200457.42804676,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "phase_wall_ms": {
+        "registry_layout": 31.3356,
+        "solve": 37567.9267,
+        "compile": 63.9911,
+        "verification": null,
+        "total": 48389.6726
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": false,
+        "path": "bounded",
+        "checks": {
+          "named_stop": false,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 8716,
+          "refinement_obligations": 0
+        },
+        "failure_reason": "one or more bounded-result proof obligations failed"
+      },
+      "portfolio": {
+        "candidate_estimate": {
+          "present": true,
+          "cost": 17073103620.241364,
+          "source": "anytime_reachable_proper_policy",
+          "stage": "materialized_policy",
+          "verified": false,
+          "identity": {
+            "portfolio": "259a321260e79692",
+            "goal": "bc142fb4c394d5ac",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "43be0428715d7915",
+            "caller_scope": "83d05e74e48e8937",
+            "graph_prefix": "37c5982f72bd7db9",
+            "artifact": "bc76e0dc03b2c128",
+            "source_generation": 4059
+          }
+        },
+        "verified_executable_upper": {
+          "present": true,
+          "cost": 87200457.42804676,
+          "portfolio_identity": "138915437669ac36",
+          "identity": {
+            "portfolio": "138915437669ac36",
+            "goal": "bc142fb4c394d5ac",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "43be0428715d7915",
+            "caller_scope": "83d05e74e48e8937",
+            "graph_prefix": "37c5982f72bd7db9",
+            "artifact": "bc76e0dc03b2c128",
+            "source_generation": 4059
+          },
+          "observations": 1,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        },
+        "independent_global_lower": {
+          "value": 297.7999999702199,
+          "certified": true,
+          "provenance": "global_action_relaxation"
+        },
+        "restricted_search_lower": {
+          "value": 297.7999999702199,
+          "envelope_global": false
+        },
+        "exact_closure": {
+          "proved": false,
+          "value": null
+        }
+      },
+      "errors": [
+        "bounded best-policy contract failed: one or more bounded-result proof obligations failed"
+      ]
+    }
+  },
+  "branch_fixture": {
+    "before_guard": {
+      "checks": 181,
+      "failures": 1,
+      "failure": "existing incumbent incorrectly schedules the delayed expansion"
+    },
+    "after_guard": {
+      "checks": 181,
+      "failures": 0
+    }
+  },
+  "disposition": "Guarded treatment restores the exact prior independently evaluated Bow-five cost. The baseline unnamed-stop contract failure remains; final cohort qualification follows."
+}

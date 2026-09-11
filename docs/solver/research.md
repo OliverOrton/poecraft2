@@ -179,6 +179,16 @@ controller; the mutations were removed. The open question includes obtaining a
 first proper executable policy before broad carrier-local work, as well as
 preserving an incumbent once one exists. No exactness claim changed.
 
+The subsequent [goal-reaching delivery application](../active/2026-09-10-goal-reaching-row-delivery/README.md)
+separates acquired-but-dirty items from native terminals, identifies an automatic-
+epoch yield mistaken for exhaustion, and completes selected acquisition/cleanup
+continuations through existing owners. Retaining the first independently compiled
+and evaluated policy before further improvement recovers both primary families
+at their original memory cap. These expensive upper policies leave very large
+gaps and open action obligations. The old goal-free selector result remains
+valid; the new evidence changes row delivery and candidate publication, with
+final control/WASM qualification tracked in the living record.
+
 The four [advisory audits](../active/2026-09-09-cross-base-capability-recovery/README.md#advisory-audits)
 are reconciled against that experiment. Their finite-region threshold and
 auxiliary-ceiling arguments now live in the [lower chapter](mathematics/lower-bounds.md#threshold-query);

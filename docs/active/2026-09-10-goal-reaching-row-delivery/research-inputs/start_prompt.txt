@@ -1,0 +1,101 @@
+You are a FRESH Codex session in OliverOrton/poecraft2.
+
+Oliver selects the attached Goal-Reaching Row Delivery and Reforge Coverage
+Recovery v1 plan. This is the NEXT task after the previous v1.2 experiment,
+not a request to resume its rejected selector.
+
+Reviewed main: a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72
+Reconcile actual local state and preserve newer/unrelated work. One sequential
+session, no subagents, inherited deadline, automatic restart or push. Preserve
+protected path 0 without inspecting or staging it. Follow applicable AGENTS.
+
+Read implementation_plan.md and review_and_knowledge.md. This package is
+self-contained; no old chat, unavailable ZIP or existing Goal object is required.
+Write only the concise living record needed for this work, then implement.
+
+WHAT IS DONE
+- M0 is implemented and pushed. Use docs/foundation/tooling.md and the typed
+  corpus controls --native-retention-diagnostic and --host-watchdog-seconds.
+  Do not redo M0 or restore the old adapter for controls now supported.
+- v1.2 was fully investigated and stopped under its falsification rule. The
+  initial Ring/Amulet views and the later 1,331/1,639-row views have ZERO true
+  goals and no proper committed frontier. A different selector cannot fix them.
+- The retained native fixture confirms a narrow helper limitation, but the FULL
+  existing numerical seed and joint selector solve the toy. Do not disable the
+  successful path to force the hypothesis to pass. Keep its 77-check regression.
+- Experimental runtime mutations were removed. Do not reinstall B1/B2, the
+  support selector, or the single-batch follow-through unchanged.
+
+START FROM CURRENT EVIDENCE
+  docs/active/2026-09-10-proper-policy-recovery/README.md
+  docs/active/2026-09-10-proper-policy-recovery/results.json
+  docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json
+Cases: cb06-cross-base-product8-long240 and cb08-cross-base-product8-long240.
+Use their original actual empty Rare starts and native terminal predicates.
+
+THE CONCRETE TASK
+Find and complete a true-goal-reaching native continuation, then make the
+ordinary root solve assemble, verify and return it. Do not stop at discovering
+one goal leaf, a successful action lookup, or more expanded states.
+
+First distinguish lack of acquired goals from full-goal items that still need
+junk removal or rarity/control completion. The native goal is junk-free; a full
+mask is not terminal. The record has not yet established which of those states
+exist. Inspect the reached states and the exact missing finishing operation.
+Prefer the existing native rows and a bounded local witness, not a whole-graph
+census or a newly invented recipe.
+
+The reforge coverage gap is already measured: requested/legal Harvest and Fossil
+rows remain queued at the root, and the Amulet's admitted Wrath Essence is also
+uncompleted. Trace a relevant pair through real scheduling and construction.
+Compare its closure burden with an existing additive/cleanup route; catalogue
+membership and nonappearance in the winner do not establish evaluation quality.
+
+At the actual early stop, trace schedule_next_incremental_alternative,
+expand_one_unit and begin_publication_pipeline. Inspect the legacy carrier
+checkpoint, disabled high-progress mode, incumbent prerequisites and yield versus
+exhaustion. These are source leads, not established causes. Do not simply enable
+old quotas, remove 128, or drain every family.
+
+Implement the smallest demonstrated liveness, finishing-row delivery, or
+candidate-completion repair through EXISTING owners. Selected failures and
+observed choices remain fully covered. No free cleanup, lost probability,
+implicit economic Restart, greedy snapshot padding or changed action scope.
+Use the existing full seed, properness, numerical, compiler and independent
+evaluator chain. Keep a verified artifact while improving subsequent candidates.
+
+RESOURCES AND VALIDATION
+Original matched cases retain 240-second finish, 300-second native watchdog,
+315-second host cleanup, 1 GiB/other native caps, step eight, retention reuse,
+proof handoff off, Allflame/base-one, generated Imprint and economic Restart off,
+and current gating. Use real binary/request identities and compact results.
+
+If a specifically necessary row is memory-refused, record its retained plus
+requested scratch and first cap owner. The plan permits a separately labelled
+4 GiB native diagnostic only with safe host admission/headroom. Never silently
+change the 1 GiB comparison, raise unrelated caps, or call a resource increase
+an algorithmic speedup. No large scaling matrix or default browser change.
+
+Use small discriminating fixtures and existing evidence first. Run primaries
+and affected controls only for live uncertainty, retained changes and necessary
+acceptance. Use reserved Wand/Shield outcomes only after a core treatment is
+selected. Qualify actual affected WASM/product delivery when a useful runtime
+change survives. No routine Simulator, soak or broad intermediate suites.
+
+FINISH LINE
+Both previously failing families should return independently evaluated proper
+policies under the original contract; record cost quality separately and keep
+exact closure as the stronger objective. Original-budget and capacity-only gains
+must be reported separately. Keep the earlier 20%/exact programme gate distinct.
+A goal leaf, counter, toy fixture, or new documentation page is not this result.
+
+Continue through implementation and root qualification. If the chosen mechanism
+fails twice without a new premise, or a real resource/semantic limit blocks it,
+preserve the exact blocker and remove rejected runtime work. Do not repeat a
+goal-free selector or artificially spend the whole time budget with no progress.
+
+Put the actual terminal/coverage/liveness findings and scoped arguments into
+existing mathematical/research owners. Return actual local commit/push status,
+per-case results, verification and cap evidence, rejected hypotheses, and the
+single next useful question. Do not claim native tests or performance from the
+review's source-only observations.

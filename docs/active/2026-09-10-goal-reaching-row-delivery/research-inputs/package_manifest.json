@@ -1,0 +1,25 @@
+{
+  "reviewed_main": "a5ef8a5b7d6263fdc60f94957b0b76f7978f8f72",
+  "contents": {
+    "README.md": {
+      "sha256": "e1a1da0a00eb57186bdca060452be2f8cf74867a5634fd996cbad9eec2ed9986",
+      "bytes": 872
+    },
+    "review_and_knowledge.md": {
+      "sha256": "af62dd2b6f91807e4e49a8c28112668a77aade0b24f6f0a321954621fe9f43b1",
+      "bytes": 9950
+    },
+    "implementation_plan.md": {
+      "sha256": "cc50cf4d2290b1b78a44ee081eac47d419aa697775cdd4cace252c66f3f10426",
+      "bytes": 16232
+    },
+    "start_prompt.txt": {
+      "sha256": "6c17e3fbb16899c6669adb268873ca4f8d0b80257d3383d4d45af741f22d0c6a",
+      "bytes": 6086
+    },
+    "source_register.json": {
+      "sha256": "562ffd8a5fc71a180b2b867362cbf9036bae8322fcd7eeab0eeef6524990009b",
+      "bytes": 5164
+    }
+  }
+}
