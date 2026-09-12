@@ -1,0 +1,98 @@
+{
+  "baseline": "original_core_control",
+  "candidate": "original_core_v14",
+  "shared_case_ids": 12,
+  "paired_cases": 0,
+  "missing_from_baseline": [],
+  "missing_from_candidate": [],
+  "excluded": [
+    {
+      "id": "cb01-cross-base-product8-long240",
+      "reason": "input_mismatch",
+      "fields": [
+        "runtime.configuration"
+      ]
+    },
+    {
+      "id": "cb02-cross-base-product8-long240",
+      "reason": "input_mismatch",
+      "fields": [
+        "runtime.configuration"
+      ]
+    },
+    {
+      "id": "cb03-cross-base-product8-long240",
+      "reason": "input_mismatch",
+      "fields": [
+        "runtime.configuration"
+      ]
+    },
+    {
+      "id": "cb04-cross-base-product8-long240",
+      "reason": "input_mismatch",
+      "fields": [
+        "runtime.configuration"
+      ]
+    },
+    {
+      "id": "cb05-cross-base-product8-long240",
+      "reason": "input_mismatch",
+      "fields": [
+        "runtime.configuration"
+      ]
+    },
+    {
+      "id": "cb06-cross-base-product8-long240",
+      "reason": "input_mismatch",
+      "fields": [
+        "runtime.configuration"
+      ]
+    },
+    {
+      "id": "cb07-cross-base-product8-long240",
+      "reason": "input_mismatch",
+      "fields": [
+        "runtime.configuration"
+      ]
+    },
+    {
+      "id": "cb08-cross-base-product8-long240",
+      "reason": "input_mismatch",
+      "fields": [
+        "runtime.configuration"
+      ]
+    },
+    {
+      "id": "cb09-cross-base-product8-long240",
+      "reason": "input_mismatch",
+      "fields": [
+        "runtime.configuration"
+      ]
+    },
+    {
+      "id": "cb10-cross-base-product8-long240",
+      "reason": "input_mismatch",
+      "fields": [
+        "runtime.configuration"
+      ]
+    },
+    {
+      "id": "cb11-cross-base-product8-long240",
+      "reason": "input_mismatch",
+      "fields": [
+        "runtime.configuration"
+      ]
+    },
+    {
+      "id": "cb12-cross-base-product8-long240",
+      "reason": "input_mismatch",
+      "fields": [
+        "runtime.configuration"
+      ]
+    }
+  ],
+  "delta_distributions": {},
+  "status_transitions": {},
+  "regressions": [],
+  "pairs": []
+}

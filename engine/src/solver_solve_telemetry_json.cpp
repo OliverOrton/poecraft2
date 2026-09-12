@@ -351,6 +351,18 @@ std::string serialize_solver_telemetry(
                 : std::to_string(
                       diagnostics->solve_profile_override_mask);
     json += "}";
+    json += ",\"native_continuation_search\":";
+    if (diagnostics == nullptr) json += "null";
+    else append_telemetry_json_string(json, native_continuation_search_name(diagnostics->native_continuation_search));
+    json += ",\"configured_candidate_evaluation_limits\":";
+    if (diagnostics == nullptr) json += "null";
+    else {
+        const auto& limits = diagnostics->configured_candidate_evaluation_limits;
+        json += "{\"max_states\":" + std::to_string(limits.max_states);
+        json += ",\"max_pairs\":" + std::to_string(limits.max_pairs);
+        json += ",\"max_transitions\":" + std::to_string(limits.max_transitions);
+        json += ",\"max_owned_bytes\":" + std::to_string(limits.max_owned_bytes) + "}";
+    }
     json += "}";
 
     const std::uint64_t registry_actions =

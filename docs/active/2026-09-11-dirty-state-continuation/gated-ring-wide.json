@@ -1,0 +1,589 @@
+{
+  "case_id": "cb06-cross-base-product8-long240",
+  "run": "out/dirty-state-continuation/gated-ring",
+  "summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 149977.25092497544,
+    "expanded_states": 58,
+    "sweeps": 2,
+    "residual": 1.2754242106893798e-12,
+    "skipped_action_count": 0,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "action_counts": {
+      "registry": 168,
+      "candidate": 27,
+      "evaluator_supported": 27,
+      "supported_priced": 27,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 0
+    },
+    "lower_bound": 10.169847833384168,
+    "upper_bound": 149977.25092497544,
+    "evaluated_policy_cost": 149977.25092497544,
+    "absolute_optimality_gap": 149967.08107714207,
+    "relative_optimality_gap": 14746.246309099226,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  },
+  "phase_wall_ms": {
+    "registry_layout": 23.824,
+    "solve": 300390.5538,
+    "compile": 0.9988,
+    "verification": null,
+    "total": 300454.8342
+  },
+  "memory": {
+    "measurement_kind": "working_set_snapshots_not_peak",
+    "process_working_set_before_bytes": 33800192,
+    "process_working_set_after_bytes": 69505024,
+    "process_working_set_delta_bytes": 35704832,
+    "process_working_set_peak_bytes": null,
+    "wasm_heap_before_bytes": null,
+    "wasm_heap_after_bytes": null,
+    "wasm_heap_growth_bytes": null,
+    "native_live_owned_bytes": 16110039,
+    "native_peak_owned_bytes": 114002011,
+    "native_serialized_output_bytes": 45,
+    "solver_telemetry_json_bytes": 453463
+  },
+  "samples": {
+    "samples": [
+      {
+        "kind": "dirty_return_decision",
+        "trial": "exalt",
+        "source_identity": [
+          "8098442395141633074",
+          "0",
+          "0",
+          "0",
+          "0",
+          "2",
+          "0",
+          "2",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "2",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "23",
+          "1",
+          "0",
+          "1",
+          "23",
+          "0",
+          "23",
+          "0",
+          "23",
+          "0"
+        ],
+        "goal_mask": 1,
+        "prefixes": 2,
+        "suffixes": 0,
+        "flags": 0,
+        "blocked_mask": 0,
+        "debt": 2,
+        "selected": "annul",
+        "selection_origin": "frozen_verified_policy",
+        "native_row_complete": true,
+        "loses_goal_probability": 0.5,
+        "gains_goal_probability": 0,
+        "true_goal_probability": 0,
+        "debt_progress_probability": 0.5,
+        "available": [
+          {
+            "action": "chaos",
+            "complete_search_row": true
+          },
+          {
+            "action": "exalt",
+            "complete_search_row": true
+          },
+          {
+            "action": "annul",
+            "complete_search_row": true
+          },
+          {
+            "action": "scour",
+            "complete_search_row": true
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "complete_search_row": false
+          },
+          {
+            "action": "harvest_reforge:defences",
+            "complete_search_row": false
+          },
+          {
+            "action": "harvest_reforge:elemental",
+            "complete_search_row": false
+          },
+          {
+            "action": "harvest_reforge:fire",
+            "complete_search_row": false
+          },
+          {
+            "action": "harvest_augment:defences",
+            "complete_search_row": true
+          },
+          {
+            "action": "harvest_augment:fire",
+            "complete_search_row": true
+          },
+          {
+            "action": "harvest_resist:cold:fire",
+            "complete_search_row": true
+          },
+          {
+            "action": "harvest_resist:lightning:fire",
+            "complete_search_row": false
+          },
+          {
+            "action": "restart",
+            "complete_search_row": false
+          }
+        ]
+      },
+      {
+        "kind": "current_run_return_trial",
+        "trial": "exalt",
+        "stage": "anchor_entries",
+        "disposition": "evaluation_complete",
+        "reason": "",
+        "old_cost": 938064.6067502735,
+        "one_cost": null,
+        "r": null,
+        "q": null,
+        "repeated_cost": null,
+        "bridge_rows": 1,
+        "bridge_transitions": 1,
+        "eval_states": 73,
+        "eval_pairs": 74,
+        "eval_transitions": 144,
+        "eval_peak_bytes": 1652934,
+        "eval_live_bytes": 1018569,
+        "eval_work": 0,
+        "eval_complete": true,
+        "eval_cost": 938064.6067502735,
+        "eval_success": 1.0000000000002918,
+        "eval_stop": 0,
+        "eval_subphase": "done",
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296,
+        "wall_seconds": 0.0051173
+      },
+      {
+        "kind": "current_run_return_trial",
+        "trial": "exalt",
+        "stage": "one_shot",
+        "disposition": "evaluation_complete",
+        "reason": "",
+        "old_cost": 938064.6067502735,
+        "one_cost": 938003.6652244877,
+        "r": null,
+        "q": null,
+        "repeated_cost": null,
+        "bridge_rows": 1,
+        "bridge_transitions": 1,
+        "eval_states": 73,
+        "eval_pairs": 144,
+        "eval_transitions": 318,
+        "eval_peak_bytes": 1892775,
+        "eval_live_bytes": 1058389,
+        "eval_work": 0,
+        "eval_complete": true,
+        "eval_cost": 938003.6652244877,
+        "eval_success": 1.0000000000002915,
+        "eval_stop": 0,
+        "eval_subphase": "done",
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296,
+        "wall_seconds": 0.020561
+      },
+      {
+        "kind": "current_run_return_trial",
+        "trial": "exalt",
+        "stage": "excursion",
+        "disposition": "evaluation_complete",
+        "reason": "",
+        "old_cost": 938064.6067502735,
+        "one_cost": 938003.6652244877,
+        "r": 11.597499232757386,
+        "q": 0.9999226716107862,
+        "repeated_cost": null,
+        "bridge_rows": 1,
+        "bridge_transitions": 1,
+        "eval_states": 73,
+        "eval_pairs": 73,
+        "eval_transitions": 177,
+        "eval_peak_bytes": 1635985,
+        "eval_live_bytes": 1005115,
+        "eval_work": 0,
+        "eval_complete": true,
+        "eval_cost": 11.597499232757386,
+        "eval_success": 7.732838921388831e-05,
+        "eval_stop": 0.9999226716107862,
+        "eval_subphase": "done",
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296,
+        "wall_seconds": 0.0266921
+      },
+      {
+        "kind": "current_run_return_trial",
+        "trial": "exalt",
+        "stage": "repeated_assertion",
+        "disposition": "retained",
+        "reason": "",
+        "old_cost": 938064.6067502735,
+        "one_cost": 938003.6652244877,
+        "r": 11.597499232757386,
+        "q": 0.9999226716107862,
+        "repeated_cost": 149977.25092497544,
+        "bridge_rows": 1,
+        "bridge_transitions": 1,
+        "eval_states": 0,
+        "eval_pairs": 0,
+        "eval_transitions": 0,
+        "eval_peak_bytes": 0,
+        "eval_live_bytes": 0,
+        "eval_work": 0,
+        "eval_complete": false,
+        "eval_cost": null,
+        "eval_success": 0,
+        "eval_stop": 0,
+        "eval_subphase": "model_setup",
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296,
+        "wall_seconds": 0.0436937
+      },
+      {
+        "kind": "dirty_return_decision",
+        "trial": "gated_chaos",
+        "source_identity": [
+          "8098442395141633074",
+          "0",
+          "0",
+          "0",
+          "0",
+          "1",
+          "3",
+          "2",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "2",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "23",
+          "1",
+          "9",
+          "3",
+          "23",
+          "0",
+          "23",
+          "0",
+          "23",
+          "0"
+        ],
+        "goal_mask": 1,
+        "prefixes": 1,
+        "suffixes": 3,
+        "flags": 0,
+        "blocked_mask": 0,
+        "debt": 4,
+        "selected": "annul",
+        "selection_origin": "uncovered_paid_return",
+        "native_row_complete": true,
+        "loses_goal_probability": 0.25,
+        "gains_goal_probability": 0,
+        "true_goal_probability": 0,
+        "debt_progress_probability": 0.75,
+        "available": [
+          {
+            "action": "chaos",
+            "complete_search_row": true
+          },
+          {
+            "action": "exalt",
+            "complete_search_row": true
+          },
+          {
+            "action": "annul",
+            "complete_search_row": true
+          },
+          {
+            "action": "scour",
+            "complete_search_row": true
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+            "complete_search_row": false
+          },
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+            "complete_search_row": false
+          },
+          {
+            "action": "harvest_reforge:defences",
+            "complete_search_row": false
+          },
+          {
+            "action": "harvest_reforge:elemental",
+            "complete_search_row": false
+          },
+          {
+            "action": "harvest_reforge:fire",
+            "complete_search_row": false
+          },
+          {
+            "action": "harvest_augment:defences",
+            "complete_search_row": true
+          },
+          {
+            "action": "harvest_augment:fire",
+            "complete_search_row": true
+          },
+          {
+            "action": "harvest_resist:cold:fire",
+            "complete_search_row": true
+          },
+          {
+            "action": "harvest_resist:lightning:fire",
+            "complete_search_row": false
+          },
+          {
+            "action": "fracture",
+            "complete_search_row": true
+          },
+          {
+            "action": "restart",
+            "complete_search_row": false
+          }
+        ]
+      },
+      {
+        "kind": "current_run_return_trial",
+        "trial": "gated_chaos",
+        "stage": "anchor_entries",
+        "disposition": "evaluation_complete",
+        "reason": "",
+        "old_cost": 938064.6067502735,
+        "one_cost": null,
+        "r": null,
+        "q": null,
+        "repeated_cost": null,
+        "bridge_rows": 4596,
+        "bridge_transitions": 20362,
+        "eval_states": 73,
+        "eval_pairs": 73,
+        "eval_transitions": 143,
+        "eval_peak_bytes": 1658790,
+        "eval_live_bytes": 1018752,
+        "eval_work": 0,
+        "eval_complete": true,
+        "eval_cost": 938064.6067502735,
+        "eval_success": 1.0000000000002918,
+        "eval_stop": 0,
+        "eval_subphase": "done",
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296,
+        "wall_seconds": 0.6373207
+      },
+      {
+        "kind": "current_run_return_trial",
+        "trial": "gated_chaos",
+        "stage": "one_shot",
+        "disposition": "evaluation_complete",
+        "reason": "",
+        "old_cost": 938064.6067502735,
+        "one_cost": 935331.1986587341,
+        "r": null,
+        "q": null,
+        "repeated_cost": null,
+        "bridge_rows": 4596,
+        "bridge_transitions": 20362,
+        "eval_states": 347545,
+        "eval_pairs": 347615,
+        "eval_transitions": 1985415,
+        "eval_peak_bytes": 655029583,
+        "eval_live_bytes": 342878563,
+        "eval_work": 9421644,
+        "eval_complete": true,
+        "eval_cost": 935331.1986587341,
+        "eval_success": 1,
+        "eval_stop": 0,
+        "eval_subphase": "done",
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296,
+        "wall_seconds": 211.0165758
+      },
+      {
+        "identity": "233850414138048871",
+        "kind": "direct_compiled_core_policy",
+        "stage": "direct_certification",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 938064.6067502735,
+        "estimate_cost": 938064.6067502735,
+        "reconciliation_absolute_delta": 0,
+        "reconciliation_relative_delta": 0,
+        "disposition": "eligible_verified_candidate",
+        "selection_reason": "final graph cost reconciled"
+      },
+      {
+        "identity": "13775804266489545179",
+        "kind": "certified_return_bridge",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 149977.25092497544,
+        "estimate_cost": 149977.25092497544,
+        "reconciliation_absolute_delta": 2.450542524456978e-08,
+        "reconciliation_relative_delta": 1.63394282088984e-13,
+        "disposition": "selected_for_publication",
+        "selection_reason": "strict cheapest independently evaluated candidate"
+      },
+      {
+        "identity": "12138223189842223415",
+        "kind": "anytime_reachable_proper_policy",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 938064.6067502735,
+        "estimate_cost": 938064.6067502735,
+        "reconciliation_absolute_delta": 1.1431984603404999e-07,
+        "reconciliation_relative_delta": 1.2186777457695676e-13,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      },
+      {
+        "identity": "233850414138048871",
+        "kind": "direct_compiled_core_policy",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 938064.6067502735,
+        "estimate_cost": 938064.6067502735,
+        "reconciliation_absolute_delta": 0,
+        "reconciliation_relative_delta": 0,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      }
+    ],
+    "retained": 12,
+    "omitted": 0,
+    "retained_bytes": 11221,
+    "limit": 64
+  },
+  "disposition": "one-shot complete at 347545 exact states; excursion interrupted by requested finish at 300 seconds; r/q and repeated cost unknown"
+}

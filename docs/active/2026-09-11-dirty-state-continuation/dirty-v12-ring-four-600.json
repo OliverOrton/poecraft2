@@ -1,0 +1,366 @@
+{
+  "run": "out/dirty-state-continuation/dirty-v12-ring-four-600",
+  "executable_sha256": "e735abba45008255407370842a9318fef431dbdcfb8a2caa9d0b9eb42b9c95a2",
+  "actual_status": "refused_unsupported_action",
+  "summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 3725358919.4984236,
+    "expanded_states": 32,
+    "sweeps": 2,
+    "residual": 0.0002541542053222656,
+    "skipped_action_count": 1,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "action_counts": {
+      "registry": 184,
+      "candidate": 43,
+      "evaluator_supported": 43,
+      "supported_priced": 43,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 1
+    },
+    "lower_bound": 201.85524142944053,
+    "upper_bound": 3725358919.4984236,
+    "evaluated_policy_cost": 3725358919.4984236,
+    "absolute_optimality_gap": 3725358717.6431823,
+    "relative_optimality_gap": 18455595.659850128,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  },
+  "phase_wall_ms": {
+    "registry_layout": 41.7423,
+    "solve": 609097.2188,
+    "compile": 0.4726,
+    "verification": null,
+    "total": 609392.9591
+  },
+  "exact_final": {
+    "completed": true,
+    "time_limited": false,
+    "status": "matched",
+    "wall_ms": 221.3409,
+    "converged": true,
+    "cost_complete": true,
+    "zero_off_policy_mass": true,
+    "cost_reconciled": true,
+    "success_probability": 1,
+    "off_policy_mass": 0,
+    "total_expected_cost": 3725358919.4984236,
+    "solver_cost_delta_absolute": 0,
+    "solver_cost_delta_relative": 0
+  },
+  "candidates": {
+    "samples": [
+      {
+        "kind": "current_run_return_trial",
+        "trial": "exalt",
+        "stage": "anchor_entries",
+        "disposition": "refused",
+        "reason": "exact anchor operation is not globally routable",
+        "old_cost": 3725358919.4984236,
+        "one_cost": null,
+        "r": null,
+        "q": null,
+        "repeated_cost": null,
+        "bridge_rows": 18,
+        "bridge_transitions": 18,
+        "eval_states": 416,
+        "eval_pairs": 10,
+        "eval_transitions": 3314,
+        "eval_peak_bytes": 1758124,
+        "eval_live_bytes": 1256918,
+        "eval_work": 5762097,
+        "eval_complete": true,
+        "eval_cost": 3725358919.4984236,
+        "eval_success": 1,
+        "eval_stop": 0,
+        "eval_subphase": "done",
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296,
+        "wall_seconds": 0.4868061
+      },
+      {
+        "kind": "dirty_continuation_candidate",
+        "root_action": "gated_chaos",
+        "disposition": "in_progress",
+        "reason": "",
+        "stage": "complete_dirty_controller",
+        "root_acquisition_ordering_estimate": 13.21477537270917,
+        "original_scope_preserved": true,
+        "private_lower_used": false,
+        "omitted": [
+          "harvest_resist:fire:cold",
+          "harvest_resist:lightning:cold"
+        ],
+        "full_layout_classes": 25,
+        "private_layout_classes": 25,
+        "private_states": 12469,
+        "constructed_rows": 17240,
+        "continued_dirty_entries": 4758,
+        "paid_cleanup_entries": 4559,
+        "paid_scour_entries": 0,
+        "paid_redraw_entries": 3135,
+        "shared_redraw_rows": 3136,
+        "cleanup_alternatives": 4772,
+        "improvement_rounds": 4,
+        "child_work": 5741784,
+        "child_peak_bytes": 38002029,
+        "seed_cost_estimate": 417420782.9923674,
+        "coarse_cost_estimate": 243945017.48992026,
+        "coarse_cost_entry": "original_root",
+        "evaluated_cost": null,
+        "nonempty_handoff": false,
+        "old_entry_cost": null,
+        "native_boundary_entries": 0,
+        "entry_responses": [],
+        "eval_limit_states": 2000000,
+        "eval_limit_pairs": 10000000,
+        "eval_limit_transitions": 40000000,
+        "eval_limit_owned_bytes": 4294967296,
+        "eval_complete": false,
+        "eval_states": 622404,
+        "eval_pairs": 438655,
+        "eval_transitions": 9121170,
+        "eval_peak_bytes": 1082249004,
+        "eval_subphase": "component_solve",
+        "wall_seconds": 587.5379348
+      },
+      {
+        "identity": "4698533922926951019",
+        "kind": "direct_compiled_core_policy",
+        "stage": "direct_certification",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 3725358919.4984236,
+        "estimate_cost": 3725358919.4984236,
+        "reconciliation_absolute_delta": 426.7772026062012,
+        "reconciliation_relative_delta": 1.1456000963581285e-07,
+        "disposition": "eligible_verified_candidate",
+        "selection_reason": "executable cost mismatch blocks exactness"
+      },
+      {
+        "identity": "4698533922926951019",
+        "kind": "direct_compiled_core_policy",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 3725358919.4984236,
+        "estimate_cost": 3725358919.4984236,
+        "reconciliation_absolute_delta": 426.7772026062012,
+        "reconciliation_relative_delta": 1.1456000963581285e-07,
+        "disposition": "selected_for_publication",
+        "selection_reason": "strict cheapest independently evaluated candidate"
+      },
+      {
+        "identity": "12927163954611232582",
+        "kind": "gated_primitive_destructive_renewal",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 3725358919.4984236,
+        "estimate_cost": 3725358919.4984236,
+        "reconciliation_absolute_delta": 426.7772059440613,
+        "reconciliation_relative_delta": 1.1456001053179613e-07,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      }
+    ],
+    "retained": 5,
+    "omitted": 0,
+    "retained_bytes": 3147,
+    "limit": 64
+  },
+  "memory": {
+    "measurement_kind": "working_set_snapshots_not_peak",
+    "process_working_set_before_bytes": 33792000,
+    "process_working_set_after_bytes": 92520448,
+    "process_working_set_delta_bytes": 58728448,
+    "process_working_set_peak_bytes": null,
+    "wasm_heap_before_bytes": null,
+    "wasm_heap_after_bytes": null,
+    "wasm_heap_growth_bytes": null,
+    "native_live_owned_bytes": 15802056,
+    "native_peak_owned_bytes": 29897657,
+    "native_serialized_output_bytes": 45,
+    "solver_telemetry_json_bytes": 392468
+  },
+  "time_to_first_incumbent_ms": 30414.3935,
+  "expected_actions": 3725358919.4984236,
+  "expected_consumption": [
+    {
+      "key": "chaos",
+      "quantity": 3725358919.4984236
+    }
+  ],
+  "action_accounting": {
+    "version": "s8.4_v1",
+    "semantics": {
+      "primary": "per_strategy_invocation",
+      "terminal_mass_separate": true,
+      "success_normalized_basis": null,
+      "success_normalized_is_conditional_path_expectation": false
+    },
+    "pricing": {
+      "status": "complete",
+      "economy_id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+      "missing_price_keys": []
+    },
+    "totals": {
+      "per_invocation": {
+        "expected_actions": 3725358919.4984236,
+        "known_expected_cost": 3725358919.4984236,
+        "total_expected_cost": 3725358919.4984236,
+        "cost_complete": true
+      },
+      "success_normalized": null
+    },
+    "actions": {
+      "per_invocation": [
+        {
+          "id": "chaos",
+          "display_name": "chaos",
+          "expected_visits": 3725358919.4984236,
+          "expected_applied": 3725358919.4984236,
+          "expected_spend_known": 3725358919.4984236,
+          "expected_spend_complete": true,
+          "known_cost_share": 1,
+          "probability_of_any_use": {
+            "status": "not_computable_from_occupancy",
+            "value": null
+          },
+          "reachable_states": 414,
+          "reachable_regions": 5,
+          "classifications": [
+            "ordinary_crafting"
+          ],
+          "materials": [
+            {
+              "price_key": "chaos",
+              "expected_quantity": 3725358919.4984236,
+              "price_status": "priced",
+              "unit_price": 1,
+              "cost_contribution": 3725358919.4984236
+            }
+          ],
+          "regions": [
+            {
+              "goal_progress": 0,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 89,
+              "expected_visits": 3443450313.3198295,
+              "expected_applied": 3443450313.3198295
+            },
+            {
+              "goal_progress": 1,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 168,
+              "expected_visits": 275546236.5505649,
+              "expected_applied": 275546236.5505649
+            },
+            {
+              "goal_progress": 2,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 118,
+              "expected_visits": 6325891.704818734,
+              "expected_applied": 6325891.704818734
+            },
+            {
+              "goal_progress": 3,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 36,
+              "expected_visits": 36439.95572355806,
+              "expected_applied": 36439.95572355806
+            },
+            {
+              "goal_progress": 4,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 3,
+              "expected_visits": 37.96748536439985,
+              "expected_applied": 37.96748536439985
+            }
+          ],
+          "raw_nodes": [
+            {
+              "node_id": "renewal",
+              "expected_visits": 3725358919.4984236,
+              "expected_applied": 3725358919.4984236
+            }
+          ]
+        }
+      ],
+      "success_normalized": null
+    },
+    "materials": {
+      "per_invocation": [
+        {
+          "price_key": "chaos",
+          "expected_quantity": 3725358919.4984236,
+          "price_status": "priced",
+          "unit_price": 1,
+          "cost_contribution": 3725358919.4984236
+        }
+      ],
+      "success_normalized": null
+    },
+    "techniques": {
+      "per_invocation": {
+        "base_consumptions": 0,
+        "crafted_mod_cleanup_or_replacement_actions": 0,
+        "deterministic_finishing_actions": 0,
+        "fracture_actions": 0,
+        "fracture_preparation_actions": 0,
+        "multimod_finishing_bench_actions": 0,
+        "multimod_setup_actions": 0,
+        "ordinary_crafting_actions": 3725358919.4984236,
+        "permanent_goal_bench_finishes": 0,
+        "protection_reapplications": 0,
+        "protection_setup_actions": 0,
+        "restart_actions": 0,
+        "retry_actions": 0,
+        "retry_count": 3725358918.4984236,
+        "temporary_blocker_applications": 0
+      },
+      "success_normalized": null
+    },
+    "review_sections": {
+      "enabled": false,
+      "items": []
+    },
+    "reconciliation": {
+      "action_descriptor_visits_difference": 0,
+      "action_descriptor_applied_difference": 0,
+      "node_operation_visits_difference": 0,
+      "material_quantity_differences": {
+        "chaos": 0
+      },
+      "cost_dot_product_difference": 0,
+      "section_actions_difference": 0,
+      "section_material_differences": {}
+    }
+  }
+}

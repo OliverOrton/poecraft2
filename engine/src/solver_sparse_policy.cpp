@@ -742,7 +742,21 @@ SparsePolicyComponentResult advance_sparse_policy_component(
     const bool can_resume =
         resume != nullptr &&
         resume->members == view.members &&
-        resume->b == b;
+        resume->b == b &&
+        resume->occupancy_stabilization_requested ==
+            (view.occupancy_column_exit != nullptr);
+    WideFloat rhs_mass = 0.0;
+    bool positive_occupancy_rhs = true;
+    if (view.occupancy_column_exit != nullptr)
+        for (const auto value : b) {
+            positive_occupancy_rhs &= finite_wide(value) && value.value() >= 0.0;
+            rhs_mass += value;
+        }
+    bool occupancy_stabilization_active = can_resume
+        ? resume->occupancy_stabilization_active
+        : view.occupancy_column_exit != nullptr &&
+            view.occupancy_column_exit->size() == n &&
+            positive_occupancy_rhs && finite_wide(rhs_mass) && rhs_mass.value() > 0.0;
     std::vector<WideFloat> x(n), r(n), r0(n), p(n, 0.0),
         v(n, 0.0), s(n), t(n);
     WideFloat rho_previous = 1.0;
@@ -779,11 +793,22 @@ SparsePolicyComponentResult advance_sparse_policy_component(
                        ? previous
                        : 0.0;
         }
+        if (occupancy_stabilization_active) {
+            WideFloat total = 0.0;
+            for (const auto value : x) total += value;
+            const auto scale = WideFloat{1.0} + total / rhs_mass;
+            for (auto& value : x) value = value / scale;
+        }
     }
 
     const auto multiply = [&](
         const std::vector<WideFloat>& input,
         std::vector<WideFloat>& output) {
+        WideFloat rank_one_sum = 0.0;
+        if (occupancy_stabilization_active) {
+            for (const auto value : input) rank_one_sum += value;
+            rank_one_sum = rank_one_sum / rhs_mass;
+        }
         for (std::size_t i = 0; i < n; ++i) {
             WideFloat internal_sum = 0.0;
             const PolicyRow& row =
@@ -801,6 +826,8 @@ SparsePolicyComponentResult advance_sparse_policy_component(
                 }
             }
             output[i] = input[i] - internal_sum;
+            if (occupancy_stabilization_active)
+                output[i] += b[i] * rank_one_sum;
         }
     };
     const auto true_residual = [&](std::vector<WideFloat>& output) {
@@ -819,8 +846,15 @@ SparsePolicyComponentResult advance_sparse_policy_component(
         omega = 1.0;
     };
 
-    const double tolerance =
+    const double original_tolerance =
         kFixedPolicyRelativeTolerance * std::max(1.0, wide_norm(b));
+    double tolerance = original_tolerance;
+    if (occupancy_stabilization_active) {
+        const auto denominator =
+            wide_dot(*view.occupancy_column_exit, x) / rhs_mass;
+        if (finite_wide(denominator) && denominator.value() > 0.0)
+            tolerance *= std::min(1.0, denominator.value());
+    }
     if (!can_resume) {
         last_true_residual = true_residual(r);
         r0 = r;
@@ -1008,6 +1042,36 @@ SparsePolicyComponentResult advance_sparse_policy_component(
         }
     }
 
+    /* For A=I-P^T, m=sum(b)>0 and u=b/m, solve
+     * (A+u*1^T)y=b, then recover x=y/d where d=(1^T A y)/m.
+     * The rank-one term separates the overall visit scale without
+     * changing any transition. Column deficits compute d without subtracting
+     * two near-unit totals. This is only numerical preparation: reconstruct
+     * and check A*x=b with the original strict tolerance, or resume the old
+     * solve from the finite seed. The ordinary Gauss-Seidel fallback is never
+     * applied to the rank-one modified matrix. */
+    if (occupancy_stabilization_active &&
+        (converged || mode == SparsePolicySolveMode::GaussSeidel ||
+         resumed_iterations + iterations >= max_iterations)) {
+        const auto denominator =
+            wide_dot(*view.occupancy_column_exit, x) / rhs_mass;
+        if (finite_wide(denominator) && denominator.value() > 0.0) {
+            for (auto& value : x) {
+                value = value / denominator;
+                if (!finite_wide(value)) value = 0.0;
+            }
+        } else {
+            std::fill(x.begin(), x.end(), WideFloat{0.0});
+        }
+        occupancy_stabilization_active = false;
+        tolerance = original_tolerance;
+        last_true_residual = true_residual(r);
+        converged = last_true_residual <= tolerance;
+        mode = SparsePolicySolveMode::BiCGSTAB;
+        true_residual_stagnation = 0;
+        reset_bicgstab();
+    }
+
     if (!converged &&
         mode == SparsePolicySolveMode::GaussSeidel) {
         for (; iterations < work_unit_iterations; ++iterations) {
@@ -1079,6 +1143,9 @@ SparsePolicyComponentResult advance_sparse_policy_component(
         resume->last_true_residual = last_true_residual;
         resume->true_residual_stagnation =
             true_residual_stagnation;
+        resume->occupancy_stabilization_requested =
+            view.occupancy_column_exit != nullptr;
+        resume->occupancy_stabilization_active = occupancy_stabilization_active;
         result.status =
             SparsePolicyComponentStatus::Incomplete;
         result.values.clear();

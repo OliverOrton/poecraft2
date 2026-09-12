@@ -1,0 +1,1454 @@
+{
+  "run": "out\\dirty-state-continuation\\dirty-v14-amulet-600",
+  "executable_sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96",
+  "source": {
+    "commit": "0ca76eb4a9f35a90299ecceeab740e5535804fd9",
+    "dirty": true,
+    "dirty_paths": [
+      {
+        "path": "ANDOFF.md",
+        "status": "M "
+      },
+      {
+        "path": "docs/active/2026-09-11-dirty-state-continuation/",
+        "status": "??"
+      },
+      {
+        "path": "docs/solver/mathematics/numerical-closure.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/mathematics/policies.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/mathematics/representations.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/mathematics/search-and-resumption.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/research-state.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/research.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/resources-resume-replay.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/upper-authority.md",
+        "status": " M"
+      },
+      {
+        "path": "engine/benchmarks/solver_benchmark.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/include/poecraft/solver.h",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_api.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_compile.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_compile_contracts.hpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_diagnostic_options.hpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_eval.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_eval_types.hpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_policy_assertion_work.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_constructive.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_contracts.hpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_finish.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_incremental.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_return_bridge.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_telemetry.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_telemetry_json.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_types.hpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_sparse_policy.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_sparse_policy.hpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/tests/test_main.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/tests/test_solver_api.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/tests/test_solver_compile.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/tests/test_solver_eval.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/tests/test_solver_solve.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/tests/tests.hpp",
+        "status": " M"
+      },
+      {
+        "path": "experiments/solver-research/backbone-pilot-v1.json",
+        "status": " M"
+      },
+      {
+        "path": "tools/ingest/poecraft_ingest/solver_corpus_runner.py",
+        "status": " M"
+      },
+      {
+        "path": "tools/ingest/poecraft_ingest/solver_lab_workflow.py",
+        "status": " M"
+      },
+      {
+        "path": "tools/ingest/tests/test_solver_corpus_runner.py",
+        "status": " M"
+      },
+      {
+        "path": "tools/ingest/tests/test_solver_lab_cli_workflow.py",
+        "status": " M"
+      }
+    ]
+  },
+  "input": {
+    "native_retention_diagnostic": "reuse",
+    "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+    "watchdog_seconds": 840,
+    "requested_bounded_finish_seconds": 600,
+    "session": {
+      "base_metadata_path": "Metadata/Items/Amulets/Amulet7",
+      "base_name": "Onyx Amulet",
+      "item_class_key": "Amulet",
+      "item_level": 86
+    },
+    "start": {
+      "mods": [],
+      "rarity": "rare",
+      "with_implicits": false
+    },
+    "goal": {
+      "action_mode": "goal_relevant",
+      "min_satisfied_slots": 3,
+      "rarity": "rare",
+      "slots": [
+        {
+          "family_mod_key": "LightningDamagePercent5",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "ChaosResist6",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "AllResistances6",
+          "min_tier": 1
+        }
+      ],
+      "version": "v1"
+    },
+    "corpus": {
+      "geometric_mean_single_draw_probability": 0.0023293733985557895,
+      "goal_modifier_count": 3,
+      "maximum_single_draw_probability": 0.004658746797111577,
+      "minimum_single_draw_probability": 0.0011646866992778943,
+      "natural_pool_mod_count": 264,
+      "natural_pool_weight": 214650,
+      "prefix_goal_count": 0,
+      "side_mix": "SSS",
+      "stratum": "full-three",
+      "suffix_goal_count": 3,
+      "tier": "full_short"
+    },
+    "feasibility": {
+      "eligible_slot_count": 3,
+      "goal_slot_count": 3,
+      "natural_pool_mod_count": 264,
+      "natural_pool_weight": 214650,
+      "natural_prefix_mod_count": 112,
+      "natural_prefix_weight": 88600,
+      "natural_suffix_mod_count": 152,
+      "natural_suffix_weight": 126050,
+      "reason": "natural_reforge_witness",
+      "required_slot_count": 3,
+      "slot_natural_mod_counts": [
+        1,
+        1,
+        1
+      ],
+      "slot_natural_weights": [
+        500,
+        250,
+        1000
+      ],
+      "slot_single_draw_probabilities": [
+        0.0023293733985557887,
+        0.0011646866992778943,
+        0.004658746797111577
+      ],
+      "status": "feasible",
+      "witness_action_id": "chaos",
+      "witness_action_index": 5,
+      "witness_mod_ids": [
+        290,
+        70,
+        52
+      ]
+    },
+    "generation": {
+      "artifact_manifest_sha256": "6b8bbfe77abf87373ec1782fb364500e064eb7539f1d3f0fdb210a807c927875",
+      "engine_binary_sha256": "ee8d3d97955e864b1018dd41b1f87891b1b4952aa8fa076c331dbf589539c89d",
+      "engine_commit": "4c99cd093ed85b9aa2ecb86c3c9117b0f356068b",
+      "generator_seed": 20260722,
+      "generator_version": "natural-t1-corpus-v1"
+    },
+    "product_action_envelope": {
+      "bench_goal_slots_forbidden": true,
+      "envelope_goal": {
+        "action_mode": "goal_relevant",
+        "fossil_mode": "goal_relevant",
+        "min_satisfied_slots": 3,
+        "rarity": "rare",
+        "requested_fossil_actions": [],
+        "slots": [
+          {
+            "family_mod_key": "LightningDamagePercent5",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ChaosResist6",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "AllResistances6",
+            "min_tier": 1
+          }
+        ],
+        "version": "v1"
+      },
+      "mode": "calculator_goal_relevant_priced_v1",
+      "pricing_filter": "all_declared_cost_keys_present"
+    },
+    "allowed_mechanic_families": [
+      "calculator_goal_relevant_product_envelope"
+    ],
+    "bounded_best_policy_contract": {
+      "allow_exact": true,
+      "bounded_requires_named_stop": true,
+      "bounded_requires_strict_gap": true,
+      "bounded_requires_open_obligations": true,
+      "require_evaluated_upper": true,
+      "require_cheapest_independently_evaluated_incumbent": true
+    },
+    "economy": {
+      "version": "v1",
+      "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+      "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+      "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+      "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+      "league_key": "allflame",
+      "league_name": "Allflame",
+      "manual_overrides": {
+        "base": 1
+      },
+      "fallback_price": null,
+      "missing_price_decisions": {
+        "base": "quality_ladder_fixture_input_1_chaos"
+      }
+    },
+    "caps": {
+      "solve_profile": "calculator_product_v1",
+      "max_states": 200000,
+      "max_sweeps": 100000,
+      "solve_step_work_items": 8,
+      "max_discovered_states": 200000,
+      "max_expanded_states": 200000,
+      "max_state_action_rows": 1215000,
+      "max_transitions": 10000000,
+      "max_reforge_work": 200000000,
+      "max_solver_owned_bytes": 8589934592,
+      "max_diagnostic_samples": 64,
+      "max_telemetry_json_bytes": 2097152,
+      "max_compiled_nodes": 100000,
+      "max_compiled_edges": 400000,
+      "max_strategy_json_bytes": 67108864,
+      "worker_step_ms": 250,
+      "cancel_ack_ms": 250,
+      "full_evidence": true,
+      "candidate_evaluation": {
+        "max_owned_bytes": 4294967296,
+        "max_pairs": 10000000,
+        "max_states": 2000000,
+        "max_transitions": 40000000
+      },
+      "native_continuation_search": "dirty_restricted_fresh"
+    },
+    "verification": {
+      "runs": 0,
+      "seed": 20260826,
+      "max_actions_per_run": 100000,
+      "max_graph_steps_per_run": 4000000,
+      "exact_evaluation": true,
+      "exact_max_states": 2000000,
+      "exact_max_pairs": 10000000,
+      "exact_max_transitions": 40000000,
+      "exact_max_owned_bytes": 4294967296,
+      "exact_cost_absolute_tolerance": 1e-07,
+      "exact_cost_relative_tolerance": 1e-09
+    }
+  },
+  "configuration": {
+    "evaluation_roles": [],
+    "evaluation_roles_manifest": null,
+    "exact_evaluation": true,
+    "goal_progress_gated_reforges": false,
+    "hard_case_default_concurrency": 1,
+    "host_watchdog_seconds": 870.0,
+    "max_workers": 1,
+    "memory_budget_bytes": 15032385536,
+    "native_retention_diagnostic": "reuse",
+    "run_verification": false,
+    "worker_headroom_bytes": 6442450944
+  },
+  "admission": {
+    "total_bytes": 68409442304,
+    "available_bytes": 42978037760,
+    "reservation_bytes": 15032385536,
+    "minimum_outside_bytes": 13681888461,
+    "utc": "2026-09-12T01:57:04.638672+00:00",
+    "admitted": true
+  },
+  "actual_status": "bounded_feasible",
+  "summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 1973847.6160810417,
+    "expanded_states": 4216,
+    "sweeps": 1,
+    "residual": 2.0372681319713593e-10,
+    "skipped_action_count": 0,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "action_counts": {
+      "registry": 164,
+      "candidate": 31,
+      "evaluator_supported": 31,
+      "supported_priced": 532,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 0
+    },
+    "lower_bound": 174.79327321907147,
+    "upper_bound": 1973847.6160810417,
+    "evaluated_policy_cost": 1973847.6160810417,
+    "absolute_optimality_gap": 1973672.8228078226,
+    "relative_optimality_gap": 11291.468981956668,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  },
+  "phase_wall_ms": {
+    "registry_layout": 30.8785,
+    "solve": 620474.292,
+    "compile": 1.0346,
+    "verification": null,
+    "total": 651860.8062
+  },
+  "exact_final": {
+    "completed": true,
+    "time_limited": false,
+    "status": "matched",
+    "wall_ms": 30758.282,
+    "converged": true,
+    "cost_complete": true,
+    "zero_off_policy_mass": true,
+    "cost_reconciled": true,
+    "success_probability": 1,
+    "off_policy_mass": 0,
+    "total_expected_cost": 1973847.6160810417,
+    "solver_cost_delta_absolute": 0,
+    "solver_cost_delta_relative": 0
+  },
+  "candidates": {
+    "samples": [
+      {
+        "kind": "dirty_continuation_candidate",
+        "root_action": "gated_chaos",
+        "disposition": "retained",
+        "reason": "",
+        "stage": "complete_dirty_controller",
+        "root_acquisition_ordering_estimate": 26.92009699950722,
+        "original_scope_preserved": true,
+        "private_lower_used": false,
+        "omitted": [
+          "harvest_resist:fire:lightning",
+          "harvest_resist:cold:lightning"
+        ],
+        "full_layout_classes": 21,
+        "private_layout_classes": 6,
+        "private_states": 185,
+        "constructed_rows": 244,
+        "continued_dirty_entries": 54,
+        "paid_cleanup_entries": 75,
+        "paid_scour_entries": 0,
+        "paid_redraw_entries": 47,
+        "shared_redraw_rows": 48,
+        "cleanup_alternatives": 60,
+        "improvement_rounds": 3,
+        "child_work": 2128588,
+        "child_peak_bytes": 14479150,
+        "seed_cost_estimate": 7218788.757756553,
+        "coarse_cost_estimate": 6196646.441331041,
+        "coarse_cost_entry": "original_root",
+        "evaluated_cost": 6146983.840380856,
+        "nonempty_handoff": false,
+        "old_entry_cost": null,
+        "native_boundary_entries": 0,
+        "entry_responses": [
+          {
+            "request_identity": "0",
+            "status": "complete",
+            "native_continuation_cost": 6146983.840381669,
+            "native_bellman_residual": 0,
+            "prefixes": 0,
+            "suffixes": 0,
+            "goal_mask": 0,
+            "first_policy_debt": 3,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "chaos",
+                "selected": true,
+                "full_continuation_cost_estimate": 6196646.441331043,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.03714696867616408,
+                "terminal_probability": 0
+              }
+            ]
+          },
+          {
+            "request_identity": "9223372036854775809",
+            "status": "complete",
+            "native_continuation_cost": 6146958.632974625,
+            "native_bellman_residual": 0,
+            "prefixes": 2,
+            "suffixes": 2,
+            "goal_mask": 1,
+            "first_policy_debt": 5,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "2",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "6",
+              "2",
+              "0",
+              "2",
+              "2",
+              "1",
+              "6",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "exalt",
+                "selected": false,
+                "full_continuation_cost_estimate": 6196624.8306333395,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.006362942224484602,
+                "terminal_probability": 0
+              },
+              {
+                "operator": "annul",
+                "selected": true,
+                "full_continuation_cost_estimate": 6196620.947928851,
+                "loses_goal_probability": 0.25,
+                "gains_goal_probability": 0,
+                "terminal_probability": 0
+              }
+            ]
+          },
+          {
+            "request_identity": "9223372036854775810",
+            "status": "complete",
+            "native_continuation_cost": 6146949.543438511,
+            "native_bellman_residual": 0,
+            "prefixes": 3,
+            "suffixes": 1,
+            "goal_mask": 1,
+            "first_policy_debt": 5,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "3",
+              "1",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "6",
+              "1",
+              "0",
+              "3",
+              "6",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "exalt",
+                "selected": true,
+                "full_continuation_cost_estimate": 6196611.724740242,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.010117361392148926,
+                "terminal_probability": 0
+              },
+              {
+                "operator": "annul",
+                "selected": false,
+                "full_continuation_cost_estimate": 6196620.394544396,
+                "loses_goal_probability": 0.25,
+                "gains_goal_probability": 0,
+                "terminal_probability": 0
+              }
+            ]
+          }
+        ],
+        "eval_limit_states": 2000000,
+        "eval_limit_pairs": 10000000,
+        "eval_limit_transitions": 40000000,
+        "eval_limit_owned_bytes": 4294967296,
+        "eval_complete": true,
+        "eval_states": 749498,
+        "eval_pairs": 562189,
+        "eval_transitions": 9625084,
+        "eval_peak_bytes": 1623207267,
+        "eval_solved_sccs": 1,
+        "eval_total_sccs": 1,
+        "eval_iterations": 41,
+        "eval_residual": 0,
+        "eval_subphase": "done",
+        "wall_seconds": 112.0477719
+      },
+      {
+        "kind": "dirty_continuation_candidate",
+        "root_action": "exalt",
+        "disposition": "deferred_by_cost_estimate",
+        "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+        "stage": "continuation_cost_improvement",
+        "root_acquisition_ordering_estimate": 217.10314285714284,
+        "original_scope_preserved": true,
+        "private_lower_used": false,
+        "omitted": [
+          "harvest_resist:fire:lightning",
+          "harvest_resist:cold:lightning"
+        ],
+        "full_layout_classes": 21,
+        "private_layout_classes": 6,
+        "private_states": 184,
+        "constructed_rows": 243,
+        "continued_dirty_entries": 54,
+        "paid_cleanup_entries": 122,
+        "paid_scour_entries": 0,
+        "paid_redraw_entries": 0,
+        "shared_redraw_rows": 0,
+        "cleanup_alternatives": 60,
+        "improvement_rounds": 1,
+        "child_work": 0,
+        "child_peak_bytes": 14475932,
+        "seed_cost_estimate": 47562244.05621567,
+        "coarse_cost_estimate": 47010517.53374138,
+        "coarse_cost_entry": "original_root",
+        "evaluated_cost": null,
+        "nonempty_handoff": false,
+        "old_entry_cost": null,
+        "native_boundary_entries": 0,
+        "entry_responses": [],
+        "eval_limit_states": 0,
+        "eval_limit_pairs": 0,
+        "eval_limit_transitions": 0,
+        "eval_limit_owned_bytes": 0,
+        "eval_complete": false,
+        "eval_states": 0,
+        "eval_pairs": 0,
+        "eval_transitions": 0,
+        "eval_peak_bytes": 0,
+        "eval_solved_sccs": 0,
+        "eval_total_sccs": 0,
+        "eval_iterations": 0,
+        "eval_residual": 0,
+        "eval_subphase": "model_setup",
+        "wall_seconds": 3.0751207
+      },
+      {
+        "kind": "dirty_continuation_candidate",
+        "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+        "disposition": "retained",
+        "reason": "",
+        "stage": "complete_dirty_controller",
+        "root_acquisition_ordering_estimate": 0.3947,
+        "original_scope_preserved": true,
+        "private_lower_used": false,
+        "omitted": [
+          "harvest_resist:fire:lightning",
+          "harvest_resist:cold:lightning"
+        ],
+        "full_layout_classes": 21,
+        "private_layout_classes": 6,
+        "private_states": 184,
+        "constructed_rows": 243,
+        "continued_dirty_entries": 54,
+        "paid_cleanup_entries": 75,
+        "paid_scour_entries": 0,
+        "paid_redraw_entries": 47,
+        "shared_redraw_rows": 47,
+        "cleanup_alternatives": 60,
+        "improvement_rounds": 3,
+        "child_work": 253734,
+        "child_peak_bytes": 14475951,
+        "seed_cost_estimate": 2852952.741981453,
+        "coarse_cost_estimate": 1984384.0623499798,
+        "coarse_cost_entry": "original_root",
+        "evaluated_cost": 1973847.6160810417,
+        "nonempty_handoff": false,
+        "old_entry_cost": null,
+        "native_boundary_entries": 0,
+        "entry_responses": [
+          {
+            "request_identity": "0",
+            "status": "complete",
+            "native_continuation_cost": 1973847.6160810133,
+            "native_bellman_residual": 0,
+            "prefixes": 0,
+            "suffixes": 0,
+            "goal_mask": 0,
+            "first_policy_debt": 3,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+                "selected": true,
+                "full_continuation_cost_estimate": 1984384.06234998,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.9999999999999999,
+                "terminal_probability": 0
+              }
+            ]
+          },
+          {
+            "request_identity": "9223372036854775809",
+            "status": "complete",
+            "native_continuation_cost": 1973858.346222557,
+            "native_bellman_residual": 0,
+            "prefixes": 2,
+            "suffixes": 2,
+            "goal_mask": 1,
+            "first_policy_debt": 5,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "2",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "6",
+              "2",
+              "0",
+              "2",
+              "2",
+              "1",
+              "6",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "exalt",
+                "selected": false,
+                "full_continuation_cost_estimate": 1984400.3091743744,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.006362942224484602,
+                "terminal_probability": 0
+              },
+              {
+                "operator": "annul",
+                "selected": true,
+                "full_continuation_cost_estimate": 1984394.7509872597,
+                "loses_goal_probability": 0.25,
+                "gains_goal_probability": 0,
+                "terminal_probability": 0
+              }
+            ]
+          },
+          {
+            "request_identity": "9223372036854775810",
+            "status": "complete",
+            "native_continuation_cost": 1973858.346222557,
+            "native_bellman_residual": 0,
+            "prefixes": 3,
+            "suffixes": 1,
+            "goal_mask": 1,
+            "first_policy_debt": 5,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "3",
+              "1",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "6",
+              "1",
+              "0",
+              "3",
+              "6",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "exalt",
+                "selected": false,
+                "full_continuation_cost_estimate": 1984396.5711919814,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.010117361392148926,
+                "terminal_probability": 0
+              },
+              {
+                "operator": "annul",
+                "selected": true,
+                "full_continuation_cost_estimate": 1984394.75098726,
+                "loses_goal_probability": 0.25,
+                "gains_goal_probability": 0,
+                "terminal_probability": 0
+              }
+            ]
+          }
+        ],
+        "eval_limit_states": 2000000,
+        "eval_limit_pairs": 10000000,
+        "eval_limit_transitions": 40000000,
+        "eval_limit_owned_bytes": 4294967296,
+        "eval_complete": true,
+        "eval_states": 418176,
+        "eval_pairs": 244238,
+        "eval_transitions": 3817202,
+        "eval_peak_bytes": 694527888,
+        "eval_solved_sccs": 2,
+        "eval_total_sccs": 2,
+        "eval_iterations": 38,
+        "eval_residual": 0,
+        "eval_subphase": "done",
+        "wall_seconds": 40.2667946
+      },
+      {
+        "identity": "10395865717195540112",
+        "kind": "direct_compiled_core_policy",
+        "stage": "direct_final_graph_evaluation",
+        "verification": "compiled_unverified",
+        "evaluated_cost": null,
+        "estimate_cost": 133899.4367328634,
+        "reconciliation_absolute_delta": null,
+        "reconciliation_relative_delta": null,
+        "disposition": "diagnostic_metadata_only",
+        "selection_reason": "compiled_unverified: policy_direct_certification_improper_policy: compiled policy is not a proper absorbing success policy (converged=true, success=0.695619, failure=0.000000, stop=0.000000, action_not_applied=0.304381, no_matching_edge=0.000000, unresolved=0.000000); terminals=goal:0.695619,offpolicy:0.000000"
+      },
+      {
+        "identity": "8262632636093498155",
+        "kind": "private_dirty_continuation",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 1973847.6160810417,
+        "estimate_cost": 1973847.6160810417,
+        "reconciliation_absolute_delta": 10536.446268938016,
+        "reconciliation_relative_delta": 0.005338024163110175,
+        "disposition": "selected_for_publication",
+        "selection_reason": "strict cheapest independently evaluated candidate"
+      },
+      {
+        "identity": "4536881004314961379",
+        "kind": "private_dirty_continuation",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 6146983.840380856,
+        "estimate_cost": 6146983.840380856,
+        "reconciliation_absolute_delta": 49662.60095018521,
+        "reconciliation_relative_delta": 0.00807918195976715,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      },
+      {
+        "identity": "5324889132658379356",
+        "kind": "anytime_reachable_proper_policy",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 48896520.03536156,
+        "estimate_cost": 48896520.03536156,
+        "reconciliation_absolute_delta": 0.15390761941671371,
+        "reconciliation_relative_delta": 3.147619070252166e-09,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      }
+    ],
+    "retained": 7,
+    "omitted": 0,
+    "retained_bytes": 10222,
+    "limit": 64
+  },
+  "memory": {
+    "measurement_kind": "working_set_snapshots_not_peak",
+    "process_working_set_before_bytes": 33792000,
+    "process_working_set_after_bytes": 267722752,
+    "process_working_set_delta_bytes": 233930752,
+    "process_working_set_peak_bytes": null,
+    "wasm_heap_before_bytes": null,
+    "wasm_heap_after_bytes": null,
+    "wasm_heap_growth_bytes": null,
+    "native_live_owned_bytes": 23873104,
+    "native_peak_owned_bytes": 449887194,
+    "native_serialized_output_bytes": 45,
+    "solver_telemetry_json_bytes": 1009863
+  },
+  "trace_max_owned_bytes": 1306112262,
+  "improvement_events": [
+    {
+      "elapsed_ms": 6829.6141,
+      "phase_owner": "exact_evaluation",
+      "lower_bound": 174.79327321907147,
+      "upper_bound": 48896520.03536156,
+      "incumbent_kind": "other"
+    },
+    {
+      "elapsed_ms": 118769.0629,
+      "phase_owner": "exact_evaluation",
+      "lower_bound": 174.79327321907147,
+      "upper_bound": 6146983.840380856,
+      "incumbent_kind": "other"
+    },
+    {
+      "elapsed_ms": 159230.6063,
+      "phase_owner": "ladder_scheduling",
+      "lower_bound": 174.79327321907147,
+      "upper_bound": 1973847.6160810417,
+      "incumbent_kind": "other"
+    }
+  ],
+  "strategy": "docs/active/2026-09-11-dirty-state-continuation/strategies/amulet.strategy.json",
+  "strategy_sha256": "5b31ab871df9e9b752fa665be7dc1a9dff9d47ae35dcdeb719e669a962aa5641",
+  "action_accounting": {
+    "version": "s8.4_v1",
+    "semantics": {
+      "primary": "per_strategy_invocation",
+      "terminal_mass_separate": true,
+      "success_normalized_basis": null,
+      "success_normalized_is_conditional_path_expectation": false
+    },
+    "pricing": {
+      "status": "complete",
+      "economy_id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+      "missing_price_keys": []
+    },
+    "totals": {
+      "per_invocation": {
+        "expected_actions": 283397.6295581825,
+        "known_expected_cost": 1973847.6160810417,
+        "total_expected_cost": 1973847.6160810417,
+        "cost_complete": true
+      },
+      "success_normalized": null
+    },
+    "actions": {
+      "per_invocation": [
+        {
+          "id": "annul",
+          "display_name": "annul",
+          "expected_visits": 196412.28334356012,
+          "expected_applied": 196412.28334356012,
+          "expected_spend_known": 1903235.0255990974,
+          "expected_spend_complete": true,
+          "known_cost_share": 0.9642259159690648,
+          "probability_of_any_use": {
+            "status": "not_computable_from_occupancy",
+            "value": null
+          },
+          "reachable_states": 242037,
+          "reachable_regions": 3,
+          "classifications": [
+            "ordinary_crafting"
+          ],
+          "materials": [
+            {
+              "price_key": "annul",
+              "expected_quantity": 196412.28334356012,
+              "price_status": "priced",
+              "unit_price": 9.69,
+              "cost_contribution": 1903235.0255990974
+            }
+          ],
+          "regions": [
+            {
+              "goal_progress": 1,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 201718,
+              "expected_visits": 193599.21017695387,
+              "expected_applied": 193599.21017695387
+            },
+            {
+              "goal_progress": 2,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 39744,
+              "expected_visits": 2807.254641289746,
+              "expected_applied": 2807.254641289746
+            },
+            {
+              "goal_progress": 3,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 575,
+              "expected_visits": 5.818525314270551,
+              "expected_applied": 5.818525314270551
+            }
+          ],
+          "raw_nodes": [
+            {
+              "node_id": "s10",
+              "expected_visits": 196412.28334356012,
+              "expected_applied": 196412.28334356012
+            }
+          ]
+        },
+        {
+          "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "display_name": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "expected_visits": 60606.02946117401,
+          "expected_applied": 60606.02946117401,
+          "expected_spend_known": 23921.19982832538,
+          "expected_spend_complete": true,
+          "known_cost_share": 0.012119071215750442,
+          "probability_of_any_use": {
+            "status": "not_computable_from_occupancy",
+            "value": null
+          },
+          "reachable_states": 173952,
+          "reachable_regions": 1,
+          "classifications": [
+            "ordinary_crafting"
+          ],
+          "materials": [
+            {
+              "price_key": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+              "expected_quantity": 60606.02946117401,
+              "price_status": "priced",
+              "unit_price": 0.3947,
+              "cost_contribution": 23921.19982832538
+            }
+          ],
+          "regions": [
+            {
+              "goal_progress": 0,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 173952,
+              "expected_visits": 60606.02946117401,
+              "expected_applied": 60606.02946117401
+            }
+          ],
+          "raw_nodes": [
+            {
+              "node_id": "s0",
+              "expected_visits": 60606.02946117401,
+              "expected_applied": 60606.02946117401
+            }
+          ]
+        },
+        {
+          "id": "exalt",
+          "display_name": "exalt",
+          "expected_visits": 26379.31675345717,
+          "expected_applied": 26379.31675345717,
+          "expected_spend_known": 46691.39065361919,
+          "expected_spend_complete": true,
+          "known_cost_share": 0.02365501281518489,
+          "probability_of_any_use": {
+            "status": "not_computable_from_occupancy",
+            "value": null
+          },
+          "reachable_states": 2186,
+          "reachable_regions": 2,
+          "classifications": [
+            "ordinary_crafting"
+          ],
+          "materials": [
+            {
+              "price_key": "exalt",
+              "expected_quantity": 26379.31675345717,
+              "price_status": "priced",
+              "unit_price": 1.77,
+              "cost_contribution": 46691.39065361919
+            }
+          ],
+          "regions": [
+            {
+              "goal_progress": 1,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 458,
+              "expected_visits": 25116.2047980002,
+              "expected_applied": 25116.2047980002
+            },
+            {
+              "goal_progress": 2,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 1728,
+              "expected_visits": 1263.1119554569739,
+              "expected_applied": 1263.1119554569739
+            }
+          ],
+          "raw_nodes": [
+            {
+              "node_id": "s3",
+              "expected_visits": 26379.31675345717,
+              "expected_applied": 26379.31675345717
+            }
+          ]
+        }
+      ],
+      "success_normalized": null
+    },
+    "materials": {
+      "per_invocation": [
+        {
+          "price_key": "annul",
+          "expected_quantity": 196412.28334356012,
+          "price_status": "priced",
+          "unit_price": 9.69,
+          "cost_contribution": 1903235.0255990974
+        },
+        {
+          "price_key": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "expected_quantity": 60606.02946117401,
+          "price_status": "priced",
+          "unit_price": 0.3947,
+          "cost_contribution": 23921.19982832538
+        },
+        {
+          "price_key": "exalt",
+          "expected_quantity": 26379.31675345717,
+          "price_status": "priced",
+          "unit_price": 1.77,
+          "cost_contribution": 46691.39065361919
+        }
+      ],
+      "success_normalized": null
+    },
+    "techniques": {
+      "per_invocation": {
+        "base_consumptions": 0,
+        "crafted_mod_cleanup_or_replacement_actions": 0,
+        "deterministic_finishing_actions": 0,
+        "fracture_actions": 0,
+        "fracture_preparation_actions": 0,
+        "multimod_finishing_bench_actions": 0,
+        "multimod_setup_actions": 0,
+        "ordinary_crafting_actions": 283397.6295581913,
+        "permanent_goal_bench_finishes": 0,
+        "protection_reapplications": 0,
+        "protection_setup_actions": 0,
+        "restart_actions": 0,
+        "retry_actions": 0,
+        "retry_count": 0,
+        "temporary_blocker_applications": 0
+      },
+      "success_normalized": null
+    },
+    "review_sections": {
+      "enabled": false,
+      "items": []
+    },
+    "reconciliation": {
+      "action_descriptor_visits_difference": 8.789356797933578e-09,
+      "action_descriptor_applied_difference": 0,
+      "node_operation_visits_difference": 8.789356797933578e-09,
+      "material_quantity_differences": {
+        "annul": 0,
+        "essence:Metadata/Items/Currency/CurrencyEssenceWrath3": 0,
+        "exalt": 0
+      },
+      "cost_dot_product_difference": 0,
+      "section_actions_difference": 0,
+      "section_material_differences": {}
+    }
+  },
+  "expected_actions": 283397.6295581825,
+  "expected_consumption": [
+    {
+      "key": "annul",
+      "quantity": 196412.28334356012
+    },
+    {
+      "key": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+      "quantity": 60606.02946117401
+    },
+    {
+      "key": "exalt",
+      "quantity": 26379.31675345717
+    }
+  ],
+  "exact_evaluator_memory": {
+    "owned_bytes_estimate": 421377018,
+    "peak_owned_bytes_estimate": 694189914,
+    "retained_output_owned_bytes_estimate": 0,
+    "max_owned_bytes": 4294967296,
+    "max_output_json_bytes": 67108864
+  },
+  "baseline_upper": 48896520.03536156,
+  "relative_cost_reduction": 0.9596321453008605,
+  "worker": {
+    "attempt_id": "1789178224956279900-54884",
+    "authority": "host_scheduler_only",
+    "canceled": false,
+    "cancellation_ack_ms": null,
+    "cancellation_mode": null,
+    "case_id": "cb08-cross-base-product8-long240",
+    "evaluation_role": null,
+    "exit_code": 0,
+    "failure_kind": null,
+    "fragment_shadow_v1": null,
+    "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-amulet-600\\logs\\cb08-cross-base-product8-long240.log",
+    "native_expectations_met": true,
+    "ordinary_finalization": null,
+    "partial_observation_available": true,
+    "partial_report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-amulet-600\\partials\\cb08-cross-base-product8-long240.1789178224956279900-54884.json",
+    "process_id": 60976,
+    "process_identity_token": "60976:134336518249582086",
+    "report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-amulet-600\\cases\\cb08-cross-base-product8-long240.json",
+    "reservation_policy_version": "solver_lab_host_reservation_v2",
+    "reservation_source": "solver_cap_plus_explicit_worker_headroom",
+    "reserved_memory_bytes": 15032385536,
+    "resolved_command": {
+      "argv": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+        "--artifact",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "--corpus",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-11-dirty-state-continuation\\native-600-final840\\amulet\\manifest.json",
+        "--output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-amulet-600\\cases\\cb08-cross-base-product8-long240.json",
+        "--partial-output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-amulet-600\\partials\\cb08-cross-base-product8-long240.1789178224956279900-54884.json",
+        "--strategy-output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-amulet-600\\strategies",
+        "--case",
+        "cb08-cross-base-product8-long240",
+        "--skip-verification",
+        "--exact-strategy-evaluation",
+        "--native-retention-diagnostic",
+        "reuse"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "host_reservation": {
+        "authority": "host_scheduler_only",
+        "reservation_policy_version": "solver_lab_host_reservation_v2",
+        "reservation_source": "solver_cap_plus_explicit_worker_headroom",
+        "reserved_memory_bytes": 15032385536,
+        "solver_owned_cap_bytes": 8589934592,
+        "worker_headroom_bytes": 6442450944
+      },
+      "host_watchdog_seconds": 870.0,
+      "identity_sha256": "15ba309fe4e0b8b09516030c4b7b95e69ab301ffaa106f6c6217db0efa5bc26e"
+    },
+    "solver_owned_cap_bytes": 8589934592,
+    "status": "completed",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "tier": "full_short",
+    "timed_out": false,
+    "wall_ms": 652962.7379000012,
+    "watchdog_seconds": 870.0,
+    "worker_headroom_bytes": 6442450944
+  },
+  "qualification_controls": {
+    "native_limit_seconds": 840,
+    "requested_finish_seconds": 600,
+    "host_watchdog_seconds": 870,
+    "public_native_flag": 128,
+    "public_mode": "dirty_restricted_fresh",
+    "final_cost_is_qualified": true
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "baseline": "control",
+  "candidate": "candidate",
+  "delta_distributions": {
+    "compiled_edges": {
+      "count": 1,
+      "max": 31.0,
+      "median": 31.0,
+      "min": 31.0,
+      "p90": 31.0,
+      "p99": 31.0
+    },
+    "compiled_nodes": {
+      "count": 1,
+      "max": 9.0,
+      "median": 9.0,
+      "min": 9.0,
+      "p90": 9.0,
+      "p99": 9.0
+    },
+    "expanded_states": {
+      "count": 1,
+      "max": -3968.0,
+      "median": -3968.0,
+      "min": -3968.0,
+      "p90": -3968.0,
+      "p99": -3968.0
+    },
+    "final_absolute_gap": {
+      "count": 1,
+      "max": -40441260.329148665,
+      "median": -40441260.329148665,
+      "min": -40441260.329148665,
+      "p90": -40441260.329148665,
+      "p99": -40441260.329148665
+    },
+    "final_lower_bound": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_relative_gap": {
+      "count": 1,
+      "max": -231366.2281411878,
+      "median": -231366.2281411878,
+      "min": -231366.2281411878,
+      "p90": -231366.2281411878,
+      "p99": -231366.2281411878
+    },
+    "final_upper_bound": {
+      "count": 1,
+      "max": -40441260.329148665,
+      "median": -40441260.329148665,
+      "min": -40441260.329148665,
+      "p90": -40441260.329148665,
+      "p99": -40441260.329148665
+    },
+    "peak_memory_bytes": {
+      "count": 1,
+      "max": -253465100.0,
+      "median": -253465100.0,
+      "min": -253465100.0,
+      "p90": -253465100.0,
+      "p99": -253465100.0
+    },
+    "reforge_work": {
+      "count": 1,
+      "max": -75243798.0,
+      "median": -75243798.0,
+      "min": -75243798.0,
+      "p90": -75243798.0,
+      "p99": -75243798.0
+    },
+    "rows": {
+      "count": 1,
+      "max": -94031.0,
+      "median": -94031.0,
+      "min": -94031.0,
+      "p90": -94031.0,
+      "p99": -94031.0
+    },
+    "solve_ms": {
+      "count": 1,
+      "max": -32358.128000000026,
+      "median": -32358.128000000026,
+      "min": -32358.128000000026,
+      "p90": -32358.128000000026,
+      "p99": -32358.128000000026
+    },
+    "solve_step_max_ms": {
+      "count": 1,
+      "max": 28382.958199999997,
+      "median": 28382.958199999997,
+      "min": 28382.958199999997,
+      "p90": 28382.958199999997,
+      "p99": 28382.958199999997
+    },
+    "solve_step_median_ms": {
+      "count": 1,
+      "max": -0.0070999999999999995,
+      "median": -0.0070999999999999995,
+      "min": -0.0070999999999999995,
+      "p90": -0.0070999999999999995,
+      "p99": -0.0070999999999999995
+    },
+    "solve_step_p95_ms": {
+      "count": 1,
+      "max": 0.7928999999999999,
+      "median": 0.7928999999999999,
+      "min": 0.7928999999999999,
+      "p90": 0.7928999999999999,
+      "p99": 0.7928999999999999
+    },
+    "states": {
+      "count": 1,
+      "max": -6550.0,
+      "median": -6550.0,
+      "min": -6550.0,
+      "p90": -6550.0,
+      "p99": -6550.0
+    },
+    "strategy_json_bytes": {
+      "count": 1,
+      "max": -10769.0,
+      "median": -10769.0,
+      "min": -10769.0,
+      "p90": -10769.0,
+      "p99": -10769.0
+    },
+    "time_to_incumbent_ms": {
+      "count": 1,
+      "max": 5116.0637,
+      "median": 5116.0637,
+      "min": 5116.0637,
+      "p90": 5116.0637,
+      "p99": 5116.0637
+    },
+    "time_to_target_ms": {
+      "count": 0,
+      "max": null,
+      "median": null,
+      "min": null,
+      "p90": null,
+      "p99": null
+    },
+    "transitions": {
+      "count": 1,
+      "max": -128695.0,
+      "median": -128695.0,
+      "min": -128695.0,
+      "p90": -128695.0,
+      "p99": -128695.0
+    },
+    "wall_ms": {
+      "count": 1,
+      "max": 108355.19539999997,
+      "median": 108355.19539999997,
+      "min": 108355.19539999997,
+      "p90": 108355.19539999997,
+      "p99": 108355.19539999997
+    }
+  },
+  "excluded": [],
+  "missing_from_baseline": [],
+  "missing_from_candidate": [],
+  "paired_cases": 1,
+  "pairs": [
+    {
+      "baseline_status": {
+        "actual": "bounded_feasible",
+        "policy": "bounded_feasible",
+        "termination": "requested_bounded_finish"
+      },
+      "candidate_status": {
+        "actual": "bounded_feasible",
+        "policy": "bounded_feasible",
+        "termination": "requested_bounded_finish"
+      },
+      "deltas": {
+        "compiled_edges": 31.0,
+        "compiled_nodes": 9.0,
+        "expanded_states": -3968.0,
+        "final_absolute_gap": -40441260.329148665,
+        "final_lower_bound": 0.0,
+        "final_relative_gap": -231366.2281411878,
+        "final_upper_bound": -40441260.329148665,
+        "peak_memory_bytes": -253465100.0,
+        "reforge_work": -75243798.0,
+        "rows": -94031.0,
+        "solve_ms": -32358.128000000026,
+        "solve_step_max_ms": 28382.958199999997,
+        "solve_step_median_ms": -0.0070999999999999995,
+        "solve_step_p95_ms": 0.7928999999999999,
+        "states": -6550.0,
+        "strategy_json_bytes": -10769.0,
+        "time_to_incumbent_ms": 5116.0637,
+        "time_to_target_ms": null,
+        "transitions": -128695.0,
+        "wall_ms": 108355.19539999997
+      },
+      "dimensions": {
+        "base": "Onyx Amulet",
+        "base_class": "Amulet / Onyx Amulet",
+        "class": "Amulet",
+        "evaluation_role": "unassigned",
+        "goal_probability": "low_le_0.005",
+        "incumbent": "other",
+        "natural_t1_count": "3",
+        "observation_status": "completed",
+        "policy_status": "bounded_feasible",
+        "pool_density": "dense_ge_100",
+        "side_mix": "SSS",
+        "termination": "requested_bounded_finish"
+      },
+      "id": "cb08-cross-base-product8-long240",
+      "treatments": {
+        "baseline_executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\budget-control.exe",
+          "sha256": "168acbaa242f4b6cd5f8f49c92f08e7b1810bd642f3c3b0ce74cb00ebba8b7b3"
+        },
+        "candidate_executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v11-public.exe",
+          "sha256": "fec7e666c2d0ff768bbf8eb8046dd2559b31b2f8a87738561a95eaab44196546"
+        }
+      }
+    }
+  ],
+  "regressions": [],
+  "shared_case_ids": 1,
+  "status_transitions": {
+    "bounded_feasible->bounded_feasible": 1
+  }
+}

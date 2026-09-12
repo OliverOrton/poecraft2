@@ -8,7 +8,48 @@ namespace solver {
 
 using namespace solve_detail;
 
+void SolveWork::Impl::retain_bounded_json_sample(std::vector<std::string>& samples,
+        std::uint64_t& omitted, std::uint64_t& retained_bytes, std::string sample) {
+    const auto& telemetry = result.diagnostics.policy_refinement;
+    const std::uint64_t shared_bytes = telemetry.publication_candidate_sample_bytes +
+        telemetry.structural_failure_sample_bytes + telemetry.evaluator_memory_sample_bytes +
+        telemetry.direct_offpolicy_state_sample_bytes;
+    const auto byte_limit = options.max_telemetry_json_bytes / 4;
+    if (samples.size() >= result.diagnostics.diagnostic_sample_limit ||
+        sample.size() > byte_limit || shared_bytes > byte_limit - sample.size()) {
+        ++omitted;
+        return;
+    }
+    retained_bytes += sample.size();
+    samples.push_back(std::move(sample));
+}
+
 namespace solve_detail {
+
+std::string diagnostic_json_escape(const std::string& value) {
+    std::string escaped;
+    escaped.reserve(value.size());
+    for (const unsigned char ch : value) {
+        switch (ch) {
+        case '\\': escaped += "\\\\"; break;
+        case '"': escaped += "\\\""; break;
+        case '\n': escaped += "\\n"; break;
+        case '\r': escaped += "\\r"; break;
+        case '\t': escaped += "\\t"; break;
+        default: if (ch >= 0x20) escaped.push_back(static_cast<char>(ch)); break;
+        }
+    }
+    return escaped;
+}
+
+std::string diagnostic_finite_double(const double value) {
+    if (!std::isfinite(value)) return "null";
+    char buffer[64];
+    const auto [end, error] = std::to_chars(buffer, buffer + sizeof(buffer), value,
+        std::chars_format::general, std::numeric_limits<double>::max_digits10);
+    return error == std::errc{} ? std::string(buffer, end) : "null";
+}
+
 
 constexpr std::uint64_t kUpperPolicyProvenanceStructuralBytes =
     sizeof(std::vector<std::string>) +

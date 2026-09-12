@@ -415,6 +415,8 @@ struct StrategyEvalProgress {
     StrategyEvalPhase phase = StrategyEvalPhase::Discovery;
     StrategyEvalSubphase subphase = StrategyEvalSubphase::ModelSetup;
     bool done = false;
+    std::uint64_t exact_states = 0;
+    std::uint64_t stored_transitions = 0;
     std::uint64_t discovered_pairs = 0;
     std::uint64_t pending_pairs = 0;
     std::uint64_t solved_sccs = 0;

@@ -12,6 +12,55 @@ A larger allowance in one dimension may expose a different first stop owner. A c
 
 Primary owners include `solver_solve_contracts.hpp`, `solver_calc_types.hpp`, `solver_solve_telemetry.cpp`, `solver_policy_refinement.cpp`, `solver_eval.cpp`, and the option parsing in `solver_api.cpp`.
 
+## Candidate checker and native headroom
+
+The additive public `pc_solve_options.candidate_max_states`,
+`candidate_max_pairs`, `candidate_max_transitions` and
+`candidate_max_owned_bytes` fields control the actual candidate evaluator.
+Zero preserves each owner's inheritance. `struct_size` guards old callers; the
+extension starts after the legacy aligned prefix. The return evaluator retains
+its historical 1-GiB ceiling when the memory field is omitted. Explicit checker
+memory still fits the aggregate remaining solver bytes after parsed graph,
+economy, parent, child and compiler overlap. It is not an additional allocation.
+Logical reforge work is debited cumulatively, including interrupted evaluation.
+
+`PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH` opts a native Calculator-profile
+request into fresh private search. It raises no limit itself. The selected large
+native profile uses 8 GiB aggregate solver memory, 4 GiB candidate/final checker
+ceilings, 2M physical states, 10M pairs, 40M transitions and 200M logical work.
+Ordinary search caps remain separate. Browser defaults retain their existing
+allowances; native measurements do not establish browser latency or capacity.
+
+A native caller can enable the mode on its existing initialized Calculator
+options before `pc_solver_solve_begin` (the remaining request fields retain
+the caller's declared settings):
+
+```c
+options.struct_size = sizeof(options);
+options.solve_profile = PC_SOLVE_PROFILE_CALCULATOR_PRODUCT_V1;
+options.solver_flags |= PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH;
+options.max_solver_owned_bytes = UINT64_C(8) << 30;
+options.max_reforge_work = UINT64_C(200000000);
+options.candidate_max_owned_bytes = UINT64_C(4) << 30;
+options.candidate_max_states = 2000000;
+options.candidate_max_pairs = 10000000;
+options.candidate_max_transitions = 40000000;
+```
+
+The host still owns bounded-finish timing, total watchdog, fresh memory
+admission and any separate final evaluator. The mode is optional; an exhausted
+candidate check preserves the compatible verified portfolio.
+
+Corpus `--worker-headroom-bytes` adds process/final-evaluator overlap to the
+solver reservation and records both terms in the resolved command and ledger.
+Wide runs reserve 14 GiB and retain at least the greater of 8 GiB or 20% of
+physical memory outside that reservation, using current host admission.
+Solver-owned estimates, checker peaks and process memory remain distinct.
+Time-only follow-throughs identify search finish, native total watchdog and
+outer cleanup independently. A final-check timeout remains unknown even when
+the solver retained a verified graph. The [living record](../active/2026-09-11-dirty-state-continuation/README.md)
+owns profiles and observations.
+
 ## Cooperative Work
 
 Solve work, automatic admission, broad exact reforge rows, strict refinement, compilation assertion, and evaluation retain explicit continuation state. A public step advances bounded logical work, but cancellation is observed only when the relevant cooperative boundary returns control.
@@ -95,3 +144,11 @@ Use the first named cap/stop owner, current phase, retained incumbent status, op
 ## Source basis
 
 This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/resources-resume-replay.md) and [2026-08-30-carrier-ladder-released-candidate-reclamation-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md), [2026-09-05-native-applied-reforge-preparation-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md), [solver-lab.md](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/foundation/solver-lab.md). Claim IDs are registered in [the ledger](claims.md); each history states its acceptance basis. The [backbone integration](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) is complete. Remaining native correspondence is scoped in [research](research.md#open-obligations); an argument link does not confer runtime authority.
+
+The exact evaluator can materialize an identity replay partition cooperatively
+under its declared memory limit. Every retained native outcome, route, state,
+observation and probability survives; the existing full-row mass check remains.
+Replay tokens and new concrete transition/absorption vectors overlap during
+conversion and are charged before allocation and across suspension. A cap during
+partial conversion cannot enter the ordinary identity-graph fallback. This
+replaces the former fixed 4096-pair refusal, not any numerical acceptance test.

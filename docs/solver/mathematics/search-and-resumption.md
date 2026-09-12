@@ -20,6 +20,39 @@ A heuristic can rank work badly and still publish only sound results. A fair sch
 
 The documented carrier ordering uses progress, side capacity, blockers, and other observations as priorities, while proof values have separate owners. This is the correct conceptual separation. It does not prove the current scheduling implementation fair. [Scheduling and Bellman Search](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/scheduling-bellman.md).
 
+### First-policy debt and later continuation cost
+
+For a nonterminal ordinary item at the requested rarity, with distinct required
+goals, let m be the required count, g the satisfying modifiers and k the explicit
+affix count. `joint_policy_terminal_debt` gives `max(1,m+k-2g)`; true terminal
+success is separately zero. From an empty Rare, redraw strictly reduces debt
+only when `2g>k`. Two goals among four affixes and three among six therefore tie
+their empty sources. Missing successor routes also precede cost in the startup
+seed. Neither preference is a lower or an economic dominance test.
+
+The complete synthetic dirty route costs 15 versus a clean alternative of 100,
+including losing branches and paid recoveries. It refutes a general inference
+from an immediate debt tie to economic uselessness; it is not native crafting
+evidence. The [imported derivation](../../active/2026-09-11-dirty-state-continuation/research-inputs/review_and_mathematics.md)
+preserves its premises and equations.
+
+The native dirty proposal begins after a current-run independently verified
+graph is retained. It completes acquisition and paid cleanup rows at nonempty
+entries and reuses sparse policy evaluation/selection for full continuation
+costs. Initial zero numerical seeds have no bound authority. Root price per
+positive goal-progress probability and private-layout values only order or defer
+proposals. They do not retire original actions, replace the independent lower or
+certify full-scope optimality. The emitted graph requires full native evaluation.
+
+The existing publication coroutines own this optional work, its private namespace
+and evaluator checkpoint. Both initial joint-controller and ordinary selected-policy
+certification can supply the first verified opportunity, with one attempt per
+solve. Finish or abandon releases the attempt and preserves compatible verified
+artifacts. This v1 uses that publication opportunity; it
+does not rescan unchanged rejected queries or maintain a permanent basin library.
+Reconsideration needs a changed candidate, entry, completed support or effective
+budget, with corresponding identity checks.
+
 <a id="pruning"></a>
 ## 2. A sufficient local dominance argument
 

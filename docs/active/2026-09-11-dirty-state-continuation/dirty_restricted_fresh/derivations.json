@@ -1,0 +1,9 @@
+{
+  "source": "docs\\active\\2026-09-11-dirty-state-continuation\\native-wide",
+  "patches": [
+    {
+      "path": "/caps/native_continuation_search",
+      "value": "dirty_restricted_fresh"
+    }
+  ]
+}

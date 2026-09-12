@@ -2890,7 +2890,115 @@ void run_solver_compile_tests(const char* artifact_dir) {
 
 void run_solver_return_bridge_lifecycle_tests();
 
+void run_nonempty_dirty_composition_tests() {
+    auto session = make_compile_session();
+    auto registry = build_action_registry(*session);
+    const auto exalt = registry.index_by_id.at("exalt");
+    const auto annul = registry.index_by_id.at("annul");
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    for (const auto family : {100u, 104u}) {
+        GoalSlot slot; slot.family_id = family; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    CalcContext calc(session, goal, registry, {exalt, annul});
+    pc_item_state frozen; pc_item_clear(&frozen); frozen.rarity = PC_RARITY_RARE;
+    PC_CHECK(pc_item_add_mod(&frozen, PC_SIDE_PREFIX, 0, session->primary_group[0],
+        PC_MOD_SLOT_FRACTURED, nullptr) == PC_RESULT_OK);
+    SolveResult old;
+    old.start_state = calc.intern_item(frozen);
+    old.has_exact_start_item = old.policy_available = true;
+    old.exact_start_item = frozen;
+    old.policy_status = SolvePolicyStatus::BoundedFeasible;
+    old.options.allow_economic_restart = false;
+    std::vector<std::uint32_t> walk{old.start_state};
+    std::set<std::uint32_t> seen{old.start_state};
+    for (std::size_t cursor = 0; cursor < walk.size(); ++cursor) {
+        const auto state = walk[cursor], n = calc.state_count();
+        old.values.resize(n, 0); old.policy.resize(n); old.policy_reachable.resize(n, 0);
+        old.goal_states.resize(n, 0); old.expanded.resize(n, 0); old.policy_reachable[state] = 1;
+        if (calc.is_goal_state(calc.state(state))) { old.goal_states[state] = 1; continue; }
+        const auto action = state == old.start_state ? exalt : annul;
+        old.policy[state] = PolicyOperatorRef{action}; old.expanded[state] = 1;
+        const auto law = calc.outcomes(state, action, false);
+        PC_CHECK(law.supported && law.applicable);
+        for (const auto& exit : law.entries)
+            if (exit.probability > 0 && seen.insert(exit.state).second) walk.push_back(exit.state);
+    }
+    auto dirty = frozen;
+    PC_CHECK(pc_item_add_mod(&dirty, PC_SIDE_SUFFIX, 6, session->primary_group[6], 0, nullptr) == PC_RESULT_OK);
+    const auto dirty_state = calc.intern_item(dirty);
+    PC_CHECK(seen.contains(dirty_state));
+    const auto removal = calc.outcomes(dirty_state, annul, false);
+    PC_CHECK(removal.supported && removal.applicable && removal.entries.size() == 1);
+    PC_CHECK(removal.entries.front().state == old.start_state);
+    PC_CHECK(std::abs(removal.entries.front().probability - 1) < 1e-12);
+    const auto scour = registry.index_by_id.at("scour");
+    const auto recovery = calc.outcomes(dirty_state, scour, false);
+    PC_CHECK(recovery.supported && recovery.applicable && recovery.entries.size() == 1);
+    pc_item_state recovered;
+    PC_CHECK(calc.materialize(recovery.entries.front().state, recovered));
+    PC_CHECK(recovered.rarity == PC_RARITY_MAGIC && recovered.prefix_count == 1 && recovered.suffix_count == 0);
+    PC_CHECK(recovered.prefixes[0].mod_id == frozen.prefixes[0].mod_id &&
+        recovered.prefixes[0].flags == PC_MOD_SLOT_FRACTURED);
+    PC_CHECK(std::abs(recovery.entries.front().probability - 1) < 1e-12);
+    old.values.resize(calc.state_count(), 0); old.policy.resize(calc.state_count());
+    old.policy_reachable.resize(calc.state_count(), 0); old.goal_states.resize(calc.state_count(), 0);
+    old.expanded.resize(calc.state_count(), 0);
+    const auto old_graph = compile_policy_strategy_json(calc, old, "native frozen-goal reference",
+        nullptr, old.options.max_strategy_json_bytes, nullptr, old.options.max_solver_owned_bytes,
+        PolicyRouteDefaultMode::CertificationFailClosed);
+    auto local = old;
+    local.start_state = dirty_state; local.exact_start_item = dirty;
+    local.policy_reachable.assign(calc.state_count(), 0);
+    local.policy_reachable[dirty_state] = 1;
+    const auto local_graph = compile_policy_strategy_json(calc, local, "native local paid removal",
+        nullptr, old.options.max_strategy_json_bytes, nullptr, old.options.max_solver_owned_bytes,
+        PolicyRouteDefaultMode::CertificationFailClosed);
+    const auto combined = compile_dirty_continuation_strategy_json(calc, local_graph, old_graph,
+        {dirty_state}, {old.start_state}, old.options);
+    const std::unordered_map<std::string, double> prices{{"exalt", 2}, {"annul", 5}, {"base", 1}};
+    const auto before = evaluate_compiled(session, old_graph, prices);
+    const auto after = evaluate_compiled(session, combined, prices);
+    PC_CHECK(before.converged && before.cost_complete && after.converged && after.cost_complete);
+    PC_CHECK(after.failure_probability == 0 && after.no_matching_edge_probability == 0 &&
+        after.action_not_applied_probability == 0 && after.stop_probability == 0);
+    PC_CHECK(std::abs(after.success_probability - 1) < 1e-12);
+    PC_CHECK(std::abs(after.total_expected_cost - before.total_expected_cost) < 1e-9);
+    PC_CHECK(after.total_expected_cost > 2); // all failed additions still pay native removal
+    bool refused = false;
+    auto wrong_goal = old_graph;
+    const auto goal_at = wrong_goal.find("\"min_tier\":1");
+    PC_CHECK(goal_at != std::string::npos);
+    if (goal_at != std::string::npos) {
+        wrong_goal.replace(goal_at, std::string("\"min_tier\":1").size(), "\"min_tier\":2");
+        try { (void)compile_dirty_continuation_strategy_json(calc, local_graph, wrong_goal,
+            {dirty_state}, {old.start_state}, old.options); }
+        catch (const std::exception&) { refused = true; }
+        PC_CHECK(refused);
+    }
+    refused = false;
+    try { (void)compile_dirty_continuation_strategy_json(calc, local_graph, old_graph,
+        {dirty_state}, {dirty_state}, old.options); }
+    catch (const std::exception&) { refused = true; }
+    PC_CHECK(refused);
+    auto virtual_state = calc.state(dirty_state); virtual_state.goal_progress_retry_basin = 1;
+    const auto virtual_id = calc.intern_state(virtual_state);
+    refused = false;
+    try { (void)compile_dirty_continuation_strategy_json(calc, local_graph, old_graph,
+        {virtual_id}, {old.start_state}, old.options); }
+    catch (const std::exception&) { refused = true; }
+    PC_CHECK(refused);
+    auto tiny = old.options; tiny.max_solver_owned_bytes = 128;
+    refused = false;
+    try { (void)compile_dirty_continuation_strategy_json(calc, local_graph, old_graph,
+        {dirty_state}, {old.start_state}, tiny); }
+    catch (const SolverResourceLimit&) { refused = true; }
+    PC_CHECK(refused);
+}
+
 void run_solver_return_bridge_tests() {
+    run_nonempty_dirty_composition_tests();
     auto session = make_compile_session();
     auto registry = build_action_registry(*session);
     const auto exalt = registry.index_by_id.at("exalt");
@@ -2971,6 +3079,27 @@ void run_solver_return_bridge_tests() {
     PC_CHECK(std::abs(old_eval.total_expected_cost - first_eval.total_expected_cost /
         first_eval.success_probability) < 1e-9);
     PC_CHECK(first_eval.total_expected_cost > 2); // paid failed rolls; no time-zero return
+    // The ordinary search state ceiling does not secretly cap an explicitly
+    // configured candidate evaluator. The full native checker still owns
+    // properness, prices, routing and the aggregate remaining-memory ceiling.
+    auto bounded_authored = authored;
+    bounded_authored.values[authored.start_state] = old_eval.total_expected_cost;
+    bounded_authored.upper_bound = bounded_authored.evaluated_policy_cost = old_eval.total_expected_cost;
+    auto checker_options = authored.options;
+    checker_options.max_discovered_states = 1;
+    checker_options.max_solver_owned_bytes = 8ull << 30;
+    const auto capped = refinement::assert_compiled_policy_exact(calc, bounded_authored,
+        prices, checker_options, "candidate checker inherited state cap");
+    PC_CHECK(capped.status == refinement::CompiledPolicyAssertionStatus::ResourceCap);
+    checker_options.candidate_evaluation_limits = {2000000,10000000,40000000,4ull<<30};
+    const auto independent = refinement::assert_compiled_policy_exact(calc, bounded_authored,
+        prices, checker_options, "candidate checker independent limits");
+    PC_CHECK(independent.executable && independent.proper && independent.zero_off_policy);
+    PC_CHECK(independent.cost_reconciled && independent.evaluation.cost_complete);
+    PC_CHECK(independent.evaluator_memory_budget == (4ull<<30));
+    PC_CHECK(checker_options.max_discovered_states == 1);
+    PC_CHECK(resolved_candidate_evaluation_limits(checker_options,128ull<<20,1ull<<30)
+        .max_owned_bytes == (128ull<<20));
     auto wrong = anchor;
     wrong.rarity = PC_RARITY_NORMAL;
     bool refused = false;

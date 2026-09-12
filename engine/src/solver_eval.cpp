@@ -163,6 +163,7 @@ struct StrategyEvalWork::Impl {
         std::vector<solve_detail::PolicyEdge> transpose_edges;
         std::vector<double> incoming;
         std::vector<double> previous_values;
+        std::vector<solve_detail::WideFloat> column_exit;
         std::unique_ptr<solve_detail::SparsePolicyResume> resume;
         double input_mass = 0.0;
     };
@@ -817,6 +818,7 @@ struct StrategyEvalWork::Impl {
                      sizeof(solve_detail::PolicyEdge);
             bytes += fallback->incoming.capacity() * sizeof(double);
             bytes += fallback->previous_values.capacity() * sizeof(double);
+            bytes += fallback->column_exit.capacity() * sizeof(solve_detail::WideFloat);
             if (fallback->resume != nullptr) {
                 bytes += sizeof(solve_detail::SparsePolicyResume);
                 bytes += fallback->resume->members.capacity() *
@@ -1008,6 +1010,7 @@ struct StrategyEvalWork::Impl {
                      sizeof(solve_detail::PolicyEdge);
             bytes += fallback->incoming.capacity() * sizeof(double);
             bytes += fallback->previous_values.capacity() * sizeof(double);
+            bytes += fallback->column_exit.capacity() * sizeof(solve_detail::WideFloat);
             if (fallback->resume != nullptr) {
                 bytes += sizeof(solve_detail::SparsePolicyResume);
                 bytes += fallback->resume->members.capacity() *
@@ -1940,8 +1943,12 @@ struct StrategyEvalWork::Impl {
             [](const EvalRow& row) { return row.replayable(); });
     }
 
-    void materialize_replay_rows_for_legacy_consumers() {
+    solve_detail::CooperativeTask<bool>
+    materialize_replay_rows_for_legacy_consumers() {
+        std::size_t row_index = 0;
         for (EvalRow& row : rows) {
+            if ((row_index++ & 255u) == 0u)
+                co_await solve_detail::CooperativeCheckpoint{};
             if (!row.replayable()) continue;
             const OutcomeDistribution& distribution =
                 *row.replay_distribution;
@@ -1954,15 +1961,35 @@ struct StrategyEvalWork::Impl {
                     "kernel authority");
             }
             std::size_t transition_count = 0;
+            std::size_t counted = 0;
             for (const std::uint32_t token : row.replay_route_tokens) {
                 if (replay_route_results.at(token).kind ==
                     ReplayRouteKind::Transition) {
                     ++transition_count;
                 }
+                if ((++counted & 1023u) == 0u)
+                    co_await solve_detail::CooperativeCheckpoint{};
             }
+            // Retain the complete replay authority until conversion succeeds.
+            // Its overlap with the concrete rows is part of the actual cap,
+            // rather than a fixed pair-count refusal.
+            const auto old_transition_capacity = row.transitions.capacity();
+            const auto old_absorption_capacity = row.absorptions.capacity();
+            check_owned_cap(capped_add(
+                capped_product(transition_count, sizeof(EvalTransition)),
+                capped_product(distribution.entries.size() - transition_count,
+                    sizeof(EvalAbsorption))));
             row.transitions.reserve(transition_count);
+            row_payload_owned_bytes = capped_add(row_payload_owned_bytes,
+                capped_product(row.transitions.capacity() - old_transition_capacity,
+                    sizeof(EvalTransition)));
+            check_owned_cap();
             row.absorptions.reserve(
                 distribution.entries.size() - transition_count);
+            row_payload_owned_bytes = capped_add(row_payload_owned_bytes,
+                capped_product(row.absorptions.capacity() - old_absorption_capacity,
+                    sizeof(EvalAbsorption)));
+            check_owned_cap();
             solve_detail::WideFloat mass = 0.0;
             for (std::size_t index = 0;
                  index < distribution.entries.size(); ++index) {
@@ -1970,6 +1997,8 @@ struct StrategyEvalWork::Impl {
                 const ReplayRouteResult& route =
                     replay_route_results.at(
                         row.replay_route_tokens[index]);
+                if ((index & 1023u) == 0u)
+                    co_await solve_detail::CooperativeCheckpoint{};
                 mass += solve_detail::WideFloat{outcome.probability};
                 if (route.kind == ReplayRouteKind::Transition) {
                     const std::uint32_t target = find_pair(
@@ -2021,6 +2050,8 @@ struct StrategyEvalWork::Impl {
             }
             row.replay_distribution = nullptr;
             row.replay_checkpoint_state = kNoId;
+            row_payload_owned_bytes -= capped_product(
+                row.replay_route_tokens.capacity(),sizeof(std::uint32_t));
             std::vector<std::uint32_t>().swap(row.replay_route_tokens);
             check_owned_cap();
         }
@@ -2029,6 +2060,7 @@ struct StrategyEvalWork::Impl {
         std::vector<ReplayRouteResult>().swap(replay_route_results);
         refresh_row_payload_owned_bytes();
         check_owned_cap();
+        co_return true;
     }
 
     const OutcomeDistribution& exact_outcomes(
@@ -4110,14 +4142,17 @@ struct StrategyEvalWork::Impl {
          * secondary attribution graph exists only when quotienting actually
          * merges concrete evaluator pairs. */
         if (refined.final_class_count == pairs.size()) {
+            refined = ClosedPartitionResult{};
             if (replayable_operation_rows) {
-                if (pairs.size() >= 4096) {
-                    throw std::length_error(
-                        "strategy evaluation replay partition remained "
-                        "identity and cannot materialize the scalable raw "
-                        "carrier");
-                }
-                materialize_replay_rows_for_legacy_consumers();
+                // A partially converted replay row cannot be consumed by the
+                // ordinary identity fallback after a memory refusal.
+                pair_refinement_identity_graph_intact = false;
+                auto materialization = materialize_replay_rows_for_legacy_consumers();
+                while (!materialization.resume())
+                    co_await solve_detail::CooperativeCheckpoint{
+                        materialization.retained_bytes()};
+                (void)materialization.take_result();
+                materialization.reset();
             }
             retire_pair_discovery_indexes();
             check_owned_cap();
@@ -5323,8 +5358,9 @@ struct StrategyEvalWork::Impl {
                     capped_product(
                         pairs.size(), sizeof(solve_detail::PolicyRow)),
                     capped_add(
-                        capped_product(
+                        capped_add(capped_product(
                             pairs.size(), sizeof(double)),
+                            capped_product(members.size(), sizeof(solve_detail::WideFloat))),
                         capped_product(
                             internal_edges,
                             sizeof(solve_detail::PolicyEdge))))));
@@ -5333,6 +5369,7 @@ struct StrategyEvalWork::Impl {
         fallback->transpose_edges.resize(
             static_cast<std::size_t>(internal_edges));
         fallback->previous_values.assign(pairs.size(), 0.0);
+        fallback->column_exit.assign(members.size(), solve_detail::WideFloat{1.0});
         std::vector<std::uint32_t> cursors(pairs.size(), 0);
         std::uint64_t offset = 0;
         for (const std::uint32_t target : members) {
@@ -5350,6 +5387,9 @@ struct StrategyEvalWork::Impl {
                 }
                 fallback->transpose_edges[cursors[transition.target]++] = {
                     source, transition.probability};
+                fallback->column_exit[static_cast<std::size_t>(
+                    fallback->local_index_by_pair[source])] -=
+                        solve_detail::WideFloat{transition.probability};
             }
         }
         check_owned_cap(capped_add(
@@ -5456,7 +5496,8 @@ struct StrategyEvalWork::Impl {
                     state.transpose_edges,
                     state.incoming,
                     state.previous_values,
-                    options.max_sweeps},
+                    options.max_sweeps,
+                    &state.column_exit},
                 state.resume);
         fallback_sweeps += solved.iterations;
         check_owned_cap();
@@ -9603,6 +9644,8 @@ struct StrategyEvalWork::Impl {
         value.phase = phase;
         value.subphase = subphase;
         value.done = phase == StrategyEvalPhase::Done;
+        value.exact_states = model.calc == nullptr ? 0 : model.calc->state_count();
+        value.stored_transitions = stored_transitions;
         value.discovered_pairs = discover_index;
         value.pending_pairs = pairs.size() - discover_index;
         value.solved_sccs = component_index;

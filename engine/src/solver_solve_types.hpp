@@ -51,8 +51,13 @@ namespace refinement { struct CompiledPolicyAssertion; }
 
 namespace solve_detail {
 
+std::string diagnostic_json_escape(const std::string& value);
+std::string diagnostic_finite_double(double value);
+
 // Narrow paid-removal domain. This is eligibility, not an upper certificate.
 bool ordinary_return_bridge_item(const SessionImpl& session, const pc_item_state& item);
+bool dirty_search_keeps_conversion(const SessionImpl& session,
+    const AbstractLayout& layout, const ActionDescriptor& action);
 
 constexpr double kInfinity = std::numeric_limits<double>::infinity();
 /* Finite upper-bound initialization (the restart bound makes every
@@ -382,6 +387,8 @@ struct SparsePolicyResume {
     double last_true_residual =
         std::numeric_limits<double>::infinity();
     std::uint8_t true_residual_stagnation = 0;
+    bool occupancy_stabilization_requested = false;
+    bool occupancy_stabilization_active = false;
 };
 
 } // namespace
@@ -1237,6 +1244,10 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         double reconciliation_absolute_delta = kInfinity;
         double reconciliation_relative_delta = kInfinity;
         bool strict_state_provenance = true;
+        /* A fully evaluated ordinary graph with an exact root-entry witness,
+         * constructed in a private namespace. It has no parent statewise
+         * policy, value table, or full-scope lower/optimality authority. */
+        bool compiled_root_entry_only = false;
         bool policy_materialized = false;
         bool independently_certified = false;
         bool independently_evaluated = false;
@@ -2134,6 +2145,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         StrategyEvalProgress evaluation_progress;
         std::optional<solve_detail::CooperativeTask<bool>> initial_candidate_task;
         std::uint64_t initial_candidate_proof_bytes = 0;
+        std::uint64_t renewal_candidate_attempted_identity = 0;
+        bool dirty_continuation_attempted = false;
         std::optional<solve_detail::CooperativeTask<SolveResult>> task;
         std::optional<SolveResult> result;
         bool consumed = false;
@@ -2203,7 +2216,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     std::uint64_t action_vocabulary_identity() const;
 
     ExecutableContinuationAuthorityContext
-    executable_continuation_authority_context() const;
+    executable_continuation_authority_context(
+        std::size_t vocabulary_prefix = std::numeric_limits<std::size_t>::max()) const;
 
     std::uint64_t graph_identity() const;
     std::uint64_t artifact_identity() const;
@@ -2350,6 +2364,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     joint_policy_continuation_node(std::uint32_t state) const;
 
     bool joint_policy_row_completed(std::uint64_t row) const;
+
+    unsigned joint_policy_terminal_debt(std::uint32_t state) const;
 
     std::uint64_t select_joint_policy_seed_row(
         std::uint32_t state,
@@ -2699,6 +2715,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
 
     bool continue_open_incremental_envelope();
     bool continue_initial_candidate();
+    bool try_begin_renewal_candidate_publication();
     solve_detail::CooperativeTask<bool> certify_initial_candidate();
     bool advance_initial_candidate_publication();
     RetainedCompiledPolicyArtifact retained_artifact_from_assertion(
@@ -2717,8 +2734,13 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     audit_verified_policy_alternative_shadow(
         const BoundedPolicyIncumbent& incumbent);
 
+    void retain_bounded_json_sample(std::vector<std::string>& samples,
+        std::uint64_t& omitted, std::uint64_t& retained_bytes, std::string sample);
+
     solve_detail::CooperativeTask<bool> try_initial_return_bridges(
         const SolveResult& frozen_policy);
+
+    solve_detail::CooperativeTask<bool> try_dirty_continuation_candidates();
 
     void retire_certified_unmaterialized_obligations();
 

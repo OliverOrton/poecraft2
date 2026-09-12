@@ -1,0 +1,758 @@
+{
+  "run": "out/dirty-state-continuation/dirty-v11-amulet-600",
+  "executable_sha256": "fec7e666c2d0ff768bbf8eb8046dd2559b31b2f8a87738561a95eaab44196546",
+  "actual_status": "bounded_feasible",
+  "summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 8455259.706212895,
+    "expanded_states": 120,
+    "sweeps": 4,
+    "residual": 2.575006874394603e-11,
+    "skipped_action_count": 0,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "action_counts": {
+      "registry": 164,
+      "candidate": 31,
+      "evaluator_supported": 31,
+      "supported_priced": 31,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 0
+    },
+    "lower_bound": 174.79327321907147,
+    "upper_bound": 8455259.706212895,
+    "evaluated_policy_cost": 8455259.706212895,
+    "absolute_optimality_gap": 8455084.912939675,
+    "relative_optimality_gap": 48371.91247252845,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  },
+  "phase_wall_ms": {
+    "registry_layout": 41.2897,
+    "solve": 601769.809,
+    "compile": 1.8035,
+    "verification": null,
+    "total": 742636.4567
+  },
+  "exact_final": {
+    "completed": true,
+    "time_limited": false,
+    "status": "matched",
+    "wall_ms": 140364.7879,
+    "converged": true,
+    "cost_complete": true,
+    "zero_off_policy_mass": true,
+    "cost_reconciled": true,
+    "success_probability": 1,
+    "off_policy_mass": 0,
+    "total_expected_cost": 8455259.706212897,
+    "solver_cost_delta_absolute": 1.862645149230957e-09,
+    "solver_cost_delta_relative": 2.2029425635055206e-16
+  },
+  "candidates": {
+    "samples": [
+      {
+        "kind": "dirty_continuation_candidate",
+        "root_action": "gated_chaos",
+        "disposition": "retained",
+        "reason": "",
+        "stage": "complete_dirty_controller",
+        "root_acquisition_ordering_estimate": 26.92009699950722,
+        "original_scope_preserved": true,
+        "private_lower_used": false,
+        "omitted": [
+          "harvest_resist:fire:lightning",
+          "harvest_resist:cold:lightning"
+        ],
+        "full_layout_classes": 21,
+        "private_layout_classes": 6,
+        "private_states": 185,
+        "constructed_rows": 244,
+        "continued_dirty_entries": 54,
+        "paid_cleanup_entries": 122,
+        "paid_scour_entries": 0,
+        "cleanup_alternatives": 60,
+        "improvement_rounds": 2,
+        "child_work": 2128588,
+        "child_peak_bytes": 14482065,
+        "seed_cost_estimate": 10457780.632884558,
+        "coarse_cost_estimate": 8519070.786670618,
+        "coarse_cost_entry": "original_root",
+        "evaluated_cost": 8455259.706212895,
+        "nonempty_handoff": false,
+        "old_entry_cost": null,
+        "native_boundary_entries": 0,
+        "entry_responses": [
+          {
+            "request_identity": "0",
+            "status": "complete",
+            "native_continuation_cost": 8455259.706212386,
+            "native_bellman_residual": 0,
+            "prefixes": 0,
+            "suffixes": 0,
+            "goal_mask": 0,
+            "first_policy_debt": 3,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "chaos",
+                "selected": true,
+                "full_continuation_cost_estimate": 8519070.786670616,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.03714696867616408,
+                "terminal_probability": 0
+              }
+            ]
+          },
+          {
+            "request_identity": "9223372036854775809",
+            "status": "complete",
+            "native_continuation_cost": 8455231.99578164,
+            "native_bellman_residual": 0,
+            "prefixes": 2,
+            "suffixes": 2,
+            "goal_mask": 1,
+            "first_policy_debt": 5,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "2",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "6",
+              "2",
+              "0",
+              "2",
+              "2",
+              "1",
+              "6",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "exalt",
+                "selected": false,
+                "full_continuation_cost_estimate": 8519050.16005818,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.006362942224484602,
+                "terminal_probability": 0
+              },
+              {
+                "operator": "annul",
+                "selected": true,
+                "full_continuation_cost_estimate": 8519042.738703912,
+                "loses_goal_probability": 0.25,
+                "gains_goal_probability": 0,
+                "terminal_probability": 0
+              }
+            ]
+          },
+          {
+            "request_identity": "9223372036854775810",
+            "status": "complete",
+            "native_continuation_cost": 8455221.898652809,
+            "native_bellman_residual": 0,
+            "prefixes": 3,
+            "suffixes": 1,
+            "goal_mask": 1,
+            "first_policy_debt": 5,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "3",
+              "1",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "6",
+              "1",
+              "0",
+              "3",
+              "6",
+              "0",
+              "6",
+              "0",
+              "6",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "exalt",
+                "selected": true,
+                "full_continuation_cost_estimate": 8519032.465618689,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.010117361392148926,
+                "terminal_probability": 0
+              },
+              {
+                "operator": "annul",
+                "selected": false,
+                "full_continuation_cost_estimate": 8519042.738703914,
+                "loses_goal_probability": 0.25,
+                "gains_goal_probability": 0,
+                "terminal_probability": 0
+              }
+            ]
+          }
+        ],
+        "eval_limit_states": 2000000,
+        "eval_limit_pairs": 10000000,
+        "eval_limit_transitions": 40000000,
+        "eval_limit_owned_bytes": 4294967296,
+        "eval_complete": true,
+        "eval_states": 749953,
+        "eval_pairs": 749954,
+        "eval_transitions": 4892474,
+        "eval_peak_bytes": 1817856411,
+        "eval_subphase": "done",
+        "wall_seconds": 173.4883942
+      },
+      {
+        "kind": "dirty_continuation_candidate",
+        "root_action": "exalt",
+        "disposition": "deferred_by_cost_estimate",
+        "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+        "stage": "continuation_cost_improvement",
+        "root_acquisition_ordering_estimate": 217.10314285714284,
+        "original_scope_preserved": true,
+        "private_lower_used": false,
+        "omitted": [
+          "harvest_resist:fire:lightning",
+          "harvest_resist:cold:lightning"
+        ],
+        "full_layout_classes": 21,
+        "private_layout_classes": 6,
+        "private_states": 184,
+        "constructed_rows": 243,
+        "continued_dirty_entries": 54,
+        "paid_cleanup_entries": 122,
+        "paid_scour_entries": 0,
+        "cleanup_alternatives": 60,
+        "improvement_rounds": 1,
+        "child_work": 0,
+        "child_peak_bytes": 14475932,
+        "seed_cost_estimate": 47562244.05621567,
+        "coarse_cost_estimate": 47010517.53374138,
+        "coarse_cost_entry": "original_root",
+        "evaluated_cost": null,
+        "nonempty_handoff": false,
+        "old_entry_cost": null,
+        "native_boundary_entries": 0,
+        "entry_responses": [],
+        "eval_limit_states": 0,
+        "eval_limit_pairs": 0,
+        "eval_limit_transitions": 0,
+        "eval_limit_owned_bytes": 0,
+        "eval_complete": false,
+        "eval_states": 0,
+        "eval_pairs": 0,
+        "eval_transitions": 0,
+        "eval_peak_bytes": 0,
+        "eval_subphase": "model_setup",
+        "wall_seconds": 5.2213932
+      },
+      {
+        "kind": "dirty_continuation_candidate",
+        "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+        "disposition": "in_progress",
+        "reason": "",
+        "stage": "complete_dirty_controller",
+        "root_acquisition_ordering_estimate": 0.3947,
+        "original_scope_preserved": true,
+        "private_lower_used": false,
+        "omitted": [
+          "harvest_resist:fire:lightning",
+          "harvest_resist:cold:lightning"
+        ],
+        "full_layout_classes": 21,
+        "private_layout_classes": 6,
+        "private_states": 184,
+        "constructed_rows": 243,
+        "continued_dirty_entries": 54,
+        "paid_cleanup_entries": 122,
+        "paid_scour_entries": 0,
+        "cleanup_alternatives": 60,
+        "improvement_rounds": 3,
+        "child_work": 253734,
+        "child_peak_bytes": 14478996,
+        "seed_cost_estimate": 4775361.887858958,
+        "coarse_cost_estimate": 3279947.911331925,
+        "coarse_cost_entry": "original_root",
+        "evaluated_cost": null,
+        "nonempty_handoff": false,
+        "old_entry_cost": null,
+        "native_boundary_entries": 0,
+        "entry_responses": [],
+        "eval_limit_states": 2000000,
+        "eval_limit_pairs": 10000000,
+        "eval_limit_transitions": 40000000,
+        "eval_limit_owned_bytes": 4294967296,
+        "eval_complete": false,
+        "eval_states": 418176,
+        "eval_pairs": 418178,
+        "eval_transitions": 2421594,
+        "eval_peak_bytes": 536985779,
+        "eval_subphase": "component_solve",
+        "wall_seconds": 416.1621104
+      },
+      {
+        "identity": "7368736730365052503",
+        "kind": "direct_compiled_core_policy",
+        "stage": "direct_certification",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 48896520.03536156,
+        "estimate_cost": 48896520.03536156,
+        "reconciliation_absolute_delta": 0,
+        "reconciliation_relative_delta": 0,
+        "disposition": "eligible_verified_candidate",
+        "selection_reason": "final graph cost reconciled"
+      },
+      {
+        "identity": "10384985467853653894",
+        "kind": "private_dirty_continuation",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 8455259.706212895,
+        "estimate_cost": 8455259.706212895,
+        "reconciliation_absolute_delta": 63811.08045772277,
+        "reconciliation_relative_delta": 0.007546909577577447,
+        "disposition": "selected_for_publication",
+        "selection_reason": "strict cheapest independently evaluated candidate"
+      },
+      {
+        "identity": "5324889132658379356",
+        "kind": "anytime_reachable_proper_policy",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 48896520.03536156,
+        "estimate_cost": 48896520.03536156,
+        "reconciliation_absolute_delta": 0.15390761941671371,
+        "reconciliation_relative_delta": 3.147619070252166e-09,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      },
+      {
+        "identity": "7368736730365052503",
+        "kind": "direct_compiled_core_policy",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 48896520.03536156,
+        "estimate_cost": 48896520.03536156,
+        "reconciliation_absolute_delta": 0,
+        "reconciliation_relative_delta": 0,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      }
+    ],
+    "retained": 7,
+    "omitted": 0,
+    "retained_bytes": 7306,
+    "limit": 64
+  },
+  "memory": {
+    "measurement_kind": "working_set_snapshots_not_peak",
+    "process_working_set_before_bytes": 33792000,
+    "process_working_set_after_bytes": 83054592,
+    "process_working_set_delta_bytes": 49262592,
+    "process_working_set_peak_bytes": null,
+    "wasm_heap_before_bytes": null,
+    "wasm_heap_after_bytes": null,
+    "wasm_heap_growth_bytes": null,
+    "native_live_owned_bytes": 14271684,
+    "native_peak_owned_bytes": 195380347,
+    "native_serialized_output_bytes": 45,
+    "solver_telemetry_json_bytes": 484472
+  },
+  "time_to_first_incumbent_ms": 11675.8475,
+  "expected_actions": 3384064.0595529154,
+  "expected_consumption": [
+    {
+      "key": "annul",
+      "quantity": 578354.369722884
+    },
+    {
+      "key": "chaos",
+      "quantity": 2746883.4901340576
+    },
+    {
+      "key": "exalt",
+      "quantity": 58826.199697227945
+    }
+  ],
+  "action_accounting": {
+    "version": "s8.4_v1",
+    "semantics": {
+      "primary": "per_strategy_invocation",
+      "terminal_mass_separate": true,
+      "success_normalized_basis": null,
+      "success_normalized_is_conditional_path_expectation": false
+    },
+    "pricing": {
+      "status": "complete",
+      "economy_id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+      "missing_price_keys": []
+    },
+    "totals": {
+      "per_invocation": {
+        "expected_actions": 3384064.0595529154,
+        "known_expected_cost": 8455259.706212897,
+        "total_expected_cost": 8455259.706212897,
+        "cost_complete": true
+      },
+      "success_normalized": null
+    },
+    "actions": {
+      "per_invocation": [
+        {
+          "id": "annul",
+          "display_name": "annul",
+          "expected_visits": 578354.369722884,
+          "expected_applied": 578354.369722884,
+          "expected_spend_known": 5604253.842614746,
+          "expected_spend_complete": true,
+          "known_cost_share": 0.6628127387378484,
+          "probability_of_any_use": {
+            "status": "not_computable_from_occupancy",
+            "value": null
+          },
+          "reachable_states": 737179,
+          "reachable_regions": 4,
+          "classifications": [
+            "ordinary_crafting"
+          ],
+          "materials": [
+            {
+              "price_key": "annul",
+              "expected_quantity": 578354.369722884,
+              "price_status": "priced",
+              "unit_price": 9.69,
+              "cost_contribution": 5604253.842614746
+            }
+          ],
+          "regions": [
+            {
+              "goal_progress": 0,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 187775,
+              "expected_visits": 236884.60583253292,
+              "expected_applied": 236884.60583253292
+            },
+            {
+              "goal_progress": 1,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 509085,
+              "expected_visits": 338922.0007976013,
+              "expected_applied": 338922.0007976013
+            },
+            {
+              "goal_progress": 2,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 39744,
+              "expected_visits": 2542.300185403502,
+              "expected_applied": 2542.300185403502
+            },
+            {
+              "goal_progress": 3,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 575,
+              "expected_visits": 5.462907280792773,
+              "expected_applied": 5.462907280792773
+            }
+          ],
+          "raw_nodes": [
+            {
+              "node_id": "s2",
+              "expected_visits": 578354.369722884,
+              "expected_applied": 578354.369722884
+            }
+          ]
+        },
+        {
+          "id": "chaos",
+          "display_name": "chaos",
+          "expected_visits": 2746883.4901340576,
+          "expected_applied": 2746883.4901340576,
+          "expected_spend_known": 2746883.4901340576,
+          "expected_spend_complete": true,
+          "known_cost_share": 0.3248727520593669,
+          "probability_of_any_use": {
+            "status": "not_computable_from_occupancy",
+            "value": null
+          },
+          "reachable_states": 2,
+          "reachable_regions": 1,
+          "classifications": [
+            "ordinary_crafting"
+          ],
+          "materials": [
+            {
+              "price_key": "chaos",
+              "expected_quantity": 2746883.4901340576,
+              "price_status": "priced",
+              "unit_price": 1,
+              "cost_contribution": 2746883.4901340576
+            }
+          ],
+          "regions": [
+            {
+              "goal_progress": 0,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 2,
+              "expected_visits": 2746883.4901340576,
+              "expected_applied": 2746883.4901340576
+            }
+          ],
+          "raw_nodes": [
+            {
+              "node_id": "s0",
+              "expected_visits": 2746883.4901340576,
+              "expected_applied": 2746883.4901340576
+            }
+          ]
+        },
+        {
+          "id": "exalt",
+          "display_name": "exalt",
+          "expected_visits": 58826.199697227945,
+          "expected_applied": 58826.199697227945,
+          "expected_spend_known": 104122.37346409346,
+          "expected_spend_complete": true,
+          "known_cost_share": 0.012314509202784709,
+          "probability_of_any_use": {
+            "status": "not_computable_from_occupancy",
+            "value": null
+          },
+          "reachable_states": 12771,
+          "reachable_regions": 2,
+          "classifications": [
+            "ordinary_crafting"
+          ],
+          "materials": [
+            {
+              "price_key": "exalt",
+              "expected_quantity": 58826.199697227945,
+              "price_status": "priced",
+              "unit_price": 1.77,
+              "cost_contribution": 104122.37346409346
+            }
+          ],
+          "regions": [
+            {
+              "goal_progress": 1,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 11043,
+              "expected_visits": 57518.78018888591,
+              "expected_applied": 57518.78018888591
+            },
+            {
+              "goal_progress": 2,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 1728,
+              "expected_visits": 1307.419508342015,
+              "expected_applied": 1307.419508342015
+            }
+          ],
+          "raw_nodes": [
+            {
+              "node_id": "s4",
+              "expected_visits": 58826.199697227945,
+              "expected_applied": 58826.199697227945
+            }
+          ]
+        }
+      ],
+      "success_normalized": null
+    },
+    "materials": {
+      "per_invocation": [
+        {
+          "price_key": "annul",
+          "expected_quantity": 578354.369722884,
+          "price_status": "priced",
+          "unit_price": 9.69,
+          "cost_contribution": 5604253.842614746
+        },
+        {
+          "price_key": "chaos",
+          "expected_quantity": 2746883.4901340576,
+          "price_status": "priced",
+          "unit_price": 1,
+          "cost_contribution": 2746883.4901340576
+        },
+        {
+          "price_key": "exalt",
+          "expected_quantity": 58826.199697227945,
+          "price_status": "priced",
+          "unit_price": 1.77,
+          "cost_contribution": 104122.37346409346
+        }
+      ],
+      "success_normalized": null
+    },
+    "techniques": {
+      "per_invocation": {
+        "base_consumptions": 0,
+        "crafted_mod_cleanup_or_replacement_actions": 0,
+        "deterministic_finishing_actions": 0,
+        "fracture_actions": 0,
+        "fracture_preparation_actions": 0,
+        "multimod_finishing_bench_actions": 0,
+        "multimod_setup_actions": 0,
+        "ordinary_crafting_actions": 3384064.05955417,
+        "permanent_goal_bench_finishes": 0,
+        "protection_reapplications": 0,
+        "protection_setup_actions": 0,
+        "restart_actions": 0,
+        "retry_actions": 0,
+        "retry_count": 2644845.0951689756,
+        "temporary_blocker_applications": 0
+      },
+      "success_normalized": null
+    },
+    "review_sections": {
+      "enabled": false,
+      "items": []
+    },
+    "reconciliation": {
+      "action_descriptor_visits_difference": 1.2544915080070496e-06,
+      "action_descriptor_applied_difference": 0,
+      "node_operation_visits_difference": 1.2544915080070496e-06,
+      "material_quantity_differences": {
+        "annul": 0,
+        "chaos": 0,
+        "exalt": 0
+      },
+      "cost_dot_product_difference": 0,
+      "section_actions_difference": 0,
+      "section_material_differences": {}
+    }
+  }
+}

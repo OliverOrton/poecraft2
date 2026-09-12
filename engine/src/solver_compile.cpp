@@ -4055,5 +4055,123 @@ std::string compile_first_return_strategy_json(
     return output;
 }
 
+std::string compile_dirty_continuation_strategy_json(
+        CalcContext& private_calc,
+        const std::string& local_strategy_json,
+        const std::string& old_strategy_json,
+        const std::vector<std::uint32_t>& local_states,
+        const std::vector<std::uint32_t>& return_states,
+        const SolveOptions& limits,
+        PolicyCompilationTelemetry* telemetry) {
+    const auto input_bytes = local_strategy_json.size() + old_strategy_json.size();
+    if (input_bytes > limits.max_strategy_json_bytes ||
+        input_bytes > limits.max_solver_owned_bytes / 128)
+        throw SolverResourceLimit("max_solver_owned_bytes", limits.max_solver_owned_bytes);
+    if (local_states.empty() || return_states.empty())
+        gap("dirty continuation needs both a local domain and a return domain");
+    auto local = json::Parser(local_strategy_json.data(), local_strategy_json.size()).parse();
+    auto old = json::Parser(old_strategy_json.data(), old_strategy_json.size()).parse();
+    const auto serialized = [&](const json::Value& value) {
+        std::string text; return_emit_json(text, value); return text;
+    };
+    for (const char* key : {"solver_policy_scope", "solver_imprint_programs_considered",
+                           "solver_profile_id", "solver_profile_override_mask"})
+        if (serialized(local.at(key)) != serialized(old.at(key)))
+            gap("dirty continuation controller scope mismatch");
+    // Only the explicit item differs at the private entry. Persistent context,
+    // base and item level remain the original request's exact identities.
+    auto local_base = local.at("base_state"), old_base = old.at("base_state");
+    for (auto* base : {&local_base, &old_base})
+        std::erase_if(base->object, [](const auto& member) {
+            return member.first == "prefixes" || member.first == "suffixes";
+        });
+    if (serialized(local_base) != serialized(old_base))
+        gap("dirty continuation base or persistent context mismatch");
+    const auto goal = [&](const json::Value& graph) {
+        std::string predicate;
+        for (const auto& edge : graph.at("edges").array)
+            if (edge.at("from").string == "policy_route_root" && edge.at("to").string == "goal") {
+                if (!predicate.empty()) gap("dirty continuation has ambiguous native goal");
+                predicate = serialized(edge.at("condition"));
+            }
+        if (predicate.empty()) gap("dirty continuation has no native goal predicate");
+        return predicate;
+    };
+    if (goal(local) != goal(old)) gap("dirty continuation native goal mismatch");
+    for (const auto* graph : {&local, &old}) {
+        bool router = false;
+        for (const auto& node : graph->at("nodes").array) {
+            const auto& id = node.at("id").string;
+            if (id == "policy_route_root" && node.at("kind").string == "router") router = true;
+            if (graph == &old && id.starts_with("dirty_"))
+                gap("dirty continuation namespace already occupied");
+            if (node.at("kind").string != "operation") continue;
+            const auto& type = node.at("operation").at("type").string;
+            // No saved checkpoint or revealed offer can outlive these native
+            // operations. Broader context/observation support needs its own
+            // explicit entry contract; a matching physical item is not enough.
+            if (type != "exalt" && type != "annul" && type != "chaos" &&
+                type != "harvest_augment" && type != "harvest_reforge" &&
+                type != "harvest_resist" && type != "alteration" && type != "augment" &&
+                type != "regal" && type != "scour" && type != "transmute" &&
+                type != "fracture" && type != "restart")
+                gap("dirty continuation has unsupported persistent control or observations");
+        }
+        if (!router) gap("dirty continuation has no global decision router");
+    }
+    std::vector<SlotVocabulary> vocabulary;
+    for (std::size_t i = 0; i < private_calc.layout().slots.size(); ++i)
+        vocabulary.push_back(slot_vocabulary(private_calc.session(), private_calc.layout().slots[i], i));
+    std::set<std::uint32_t> seen;
+    const auto predicate = [&](const auto& states) {
+        std::vector<std::string> parts;
+        for (const auto state : states) {
+            if (state >= private_calc.state_count() || !seen.insert(state).second ||
+                private_calc.is_goal_state(private_calc.state(state)) ||
+                private_calc.state(state).goal_progress_retry_basin != 0)
+                gap("dirty continuation domain has an invalid, overlapping or virtual entry");
+            parts.push_back(abstract_state_condition(private_calc.session(), private_calc.layout(),
+                vocabulary, private_calc.state(state)));
+        }
+        return any_of(parts);
+    };
+    const auto enter = predicate(local_states), leave = predicate(return_states);
+    return_namespace_graph(local, "dirty_");
+    auto& nodes = return_member(old, "nodes").array;
+    auto& edges = return_member(old, "edges").array;
+    // Remove old annotations too: their costs predate the new global cycles.
+    for (auto& node : nodes)
+        std::erase_if(node.object, [](const auto& member) { return member.first == "expected_cost"; });
+    for (auto& node : return_member(local, "nodes").array) nodes.push_back(std::move(node));
+    for (auto& edge : return_member(local, "edges").array) edges.push_back(std::move(edge));
+    const auto add_guard = [&](const char* id, const char* from, const char* to, const std::string& condition) {
+        double priority = 0;
+        for (const auto& edge : edges)
+            if (edge.at("from").string == from)
+                priority = std::min(priority, edge.at("priority").number);
+        if (!std::isfinite(priority) || priority < -1000000)
+            gap("dirty continuation route priority is unsupported");
+        const auto text = "{\"id\":\"" + std::string(id) + "\",\"from\":\"" + from +
+            "\",\"to\":\"" + to + "\",\"priority\":" + std::to_string(priority - 1) +
+            ",\"condition\":" + condition + "}";
+        edges.push_back(json::Parser(text.data(), text.size()).parse());
+    };
+    add_guard("dirty_enter", "policy_route_root", "dirty_policy_route_root", enter);
+    add_guard("dirty_return", "dirty_policy_route_root", "policy_route_root", leave);
+    return_member(old, "name").string = "Current-run nonempty dirty continuation";
+    if (nodes.size() > limits.max_compiled_nodes || edges.size() > limits.max_compiled_edges)
+        throw SolverResourceLimit("max_compiled_nodes", limits.max_compiled_nodes);
+    std::string output; return_emit_json(output, old);
+    if (output.size() > limits.max_strategy_json_bytes)
+        throw SolverResourceLimit("max_strategy_json_bytes", limits.max_strategy_json_bytes);
+    if (telemetry) {
+        *telemetry = {};
+        telemetry->nodes = static_cast<std::uint32_t>(nodes.size());
+        telemetry->edges = static_cast<std::uint32_t>(edges.size());
+        telemetry->strategy_json_bytes = output.size();
+    }
+    return output;
+}
+
 } // namespace solver
 } // namespace poecraft

@@ -1,0 +1,53 @@
+{
+  "classification": "Proposed resource authorization, NOT a native case/runner configuration schema",
+  "reviewed_main": "0ca76eb4a9f35a90299ecceeab740e5535804fd9",
+  "original_preservation": "Reuse exact existing case controls, without mutation",
+  "profiles": {
+    "native-wide-v1": {
+      "aggregate_solver_bytes": 8589934592,
+      "candidate_checker_bytes_ceiling_within_remaining": 4294967296,
+      "candidate_checker_states": 2000000,
+      "candidate_checker_pairs": 10000000,
+      "candidate_checker_transitions": 40000000,
+      "ordinary_states_ceiling_if_binding": 1000000,
+      "ordinary_rows_ceiling_if_binding": 5000000,
+      "ordinary_transitions_ceiling_if_binding": 40000000,
+      "shared_reforge_work_ceiling": 200000000,
+      "final_evaluator_bytes": 4294967296,
+      "final_evaluator_states": 2000000,
+      "final_evaluator_pairs": 10000000,
+      "final_evaluator_transitions": 40000000,
+      "finish_seconds": 300,
+      "native_watchdog_seconds": 420,
+      "outer_cleanup_seconds": 450,
+      "minimum_host_reservation_bytes": 15032385536
+    },
+    "targeted-deep-v1": {
+      "aggregate_solver_bytes": 17179869184,
+      "candidate_checker_bytes_ceiling_within_remaining": 8589934592,
+      "candidate_checker_states": 4000000,
+      "candidate_checker_pairs": 20000000,
+      "candidate_checker_transitions": 80000000,
+      "ordinary_states_ceiling_if_binding": 2000000,
+      "ordinary_rows_ceiling_if_binding": 10000000,
+      "ordinary_transitions_ceiling_if_binding": 80000000,
+      "shared_reforge_work_ceiling": 500000000,
+      "final_evaluator_bytes": 8589934592,
+      "final_evaluator_states": 4000000,
+      "final_evaluator_pairs": 20000000,
+      "final_evaluator_transitions": 80000000,
+      "finish_seconds": 600,
+      "native_watchdog_seconds": 720,
+      "outer_cleanup_seconds": 750,
+      "minimum_host_reservation_bytes": 30064771072
+    }
+  },
+  "conditions": [
+    "Resolve and record actual supported native fields; do not pass this document directly to the runner.",
+    "Candidate checker memory is also bounded by aggregate remaining solver memory, not additive free allowance.",
+    "Raise optional ordinary caps only when their actual owner blocks selected work; freeze the resulting comparison.",
+    "One timed native process; current host admission; reserve at least max(8 GiB,20% physical memory) for OS/other work beyond the process reservation.",
+    "Preserve precision, probability/observation/terminal/scope checks, original evidence, and browser defaults.",
+    "Larger output/compiler/sweep limits require a named observed owner; they are not silently changed by these profiles."
+  ]
+}

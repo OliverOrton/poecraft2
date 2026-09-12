@@ -541,19 +541,21 @@ struct CompiledPolicyAssertionWork::Impl {
                 return;
             }
 
-            result.evaluator_memory_budget = remaining_memory;
+            const auto candidate_limits = resolved_candidate_evaluation_limits(
+                options, remaining_memory, remaining_memory);
+            result.evaluator_memory_budget = candidate_limits.max_owned_bytes;
             StrategyEvalOptions evaluation_options;
             evaluation_options.epsilon = 1e-12;
             evaluation_options.max_sweeps =
                 std::max<std::uint32_t>(1, options.max_sweeps);
             evaluation_options.max_states =
                 std::max<std::uint32_t>(
-                    1, options.max_discovered_states);
+                    1, candidate_limits.max_states);
             evaluation_options.max_pairs = std::max<std::uint32_t>(
-                1, bounded_u32(options.max_state_action_rows));
+                1, candidate_limits.max_pairs);
             evaluation_options.max_transitions =
                 std::max<std::uint32_t>(
-                    1, bounded_u32(options.max_transitions));
+                    1, candidate_limits.max_transitions);
             evaluation_options.max_owned_bytes =
                 result.evaluator_memory_budget;
             evaluation_options.max_output_json_bytes =

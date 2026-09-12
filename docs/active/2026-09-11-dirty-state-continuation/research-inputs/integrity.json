@@ -1,0 +1,66 @@
+{
+  "schema": "download_package_integrity_v1",
+  "reviewed_main": "0ca76eb4a9f35a90299ecceeab740e5535804fd9",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2607,
+      "sha256": "af93d680ce7b06cd61419d79ad1edb74354e738f3aa5bcc508b658f8cfb5e7e5"
+    },
+    {
+      "path": "implementation_plan.md",
+      "bytes": 31755,
+      "sha256": "fa94b0e03b9bc654495f7585eda8d5cda78617f1f2932e4c47e64ff9c3e07bd6"
+    },
+    {
+      "path": "input_reports/action_layout_report.md",
+      "bytes": 15743,
+      "sha256": "a1f04ae3453282b861ef9a7e174baa5b1864a6316468af4b8eae952c13e7ec38"
+    },
+    {
+      "path": "input_reports/symbolic_actions_report.md",
+      "bytes": 22218,
+      "sha256": "84d9d86ba17d5c9d2c0fe23e89402970057e22b0ded01de32c23863ab8207d25"
+    },
+    {
+      "path": "resource_policy.md",
+      "bytes": 7739,
+      "sha256": "40177b8642da6b8e817277d8d31b77109fbf7f00b09683cdfc82af74eca6d406"
+    },
+    {
+      "path": "resource_profiles.json",
+      "bytes": 2670,
+      "sha256": "6d0bb2311f7d2c14f7aff88bfc100496f89d9ff50e3010836c75fd219e1c9327"
+    },
+    {
+      "path": "review_and_mathematics.md",
+      "bytes": 20257,
+      "sha256": "a753d448c958d820a110ff1e29381fe36a015161ff6309424e3be62b12542d0a"
+    },
+    {
+      "path": "source_register.json",
+      "bytes": 9345,
+      "sha256": "c6b48e8d60b42613d1fbbd96376097b8d9835427a43138fb9f5010f28471073e"
+    },
+    {
+      "path": "start_prompt.txt",
+      "bytes": 9069,
+      "sha256": "0e7ad36dd7879042f08fac8a97dc7aef9e813a69d0cdc9ea7dfd6b91e25bc080"
+    },
+    {
+      "path": "synthetic_checks.py",
+      "bytes": 10953,
+      "sha256": "30bae6efefe20b2e4da9373a35d04840673927a0a55ed5687c7db4dbd3b28c8e"
+    },
+    {
+      "path": "synthetic_results.json",
+      "bytes": 3397,
+      "sha256": "4599ff40182764c5d4d53dc03ff81dd4d43f86c18ec5a08c02d9ce556038be08"
+    },
+    {
+      "path": "validation_receipt.json",
+      "bytes": 409,
+      "sha256": "f06332964b95bbe2771a89c286bf1e0027210f1507791ee41993d407f71a087a"
+    }
+  ]
+}

@@ -130,14 +130,64 @@ ordinary graph through the existing properness, complete-price and zero-off-
 policy checks. Only that graph enters the existing verified portfolio.
 
 Construction and evaluator work consume the parent request's remaining native
-work and memory budgets, with an independent evaluator allowance of at most
-1 GiB. Cooperative suspension accounts for retained scratch. Finish, abandon,
+work and memory budgets. The default evaluator ceiling remains 1 GiB; explicit
+candidate limits follow the [aggregate resource contract](resources-resume-replay.md#candidate-checker-and-native-headroom).
+Cooperative suspension accounts for retained scratch. Finish, abandon,
 refusal and resource caps release the attempt and preserve the best compatible
 verified artifact. The first-policy rules, lower authority, ordinary continuation
-service and upper-domain mask are unchanged. The broader gated-Chaos experiment
-failed its unchanged checker cap and has no active runtime proposal. The
+service and upper-domain mask are unchanged. The historical gated-Chaos experiment
+failed its unchanged checker cap; its larger-checker diagnostic follow-through
+belongs to the dirty-continuation programme. The
 [application record](../active/2026-09-11-first-return-improvement/README.md)
 owns measured eligibility, costs and qualification.
+
+### Optional native dirty continuation
+
+The public dirty-continuation flag adds a proposal after the first verified
+current-run incumbent. Its private context preserves the original modifier
+universe, native goal, product mode and dependency closure. Only goal-neutral
+resistance-conversion observer candidates are eligible for temporary omission;
+conversion-positive goals retain them. Parent IDs never become private IDs.
+The caller's full action and lower-proof scope remains intact.
+
+A complete native primitive-renewal witness can enter the same cooperative
+first-policy checker before another open-envelope upper pass. Dirty mode alone
+enables this earlier opportunity; a finish, active row, cap or repeated captured
+identity prevents a fresh attempt. The graph must be verified and retained
+before its dirty continuation starts.
+
+For ordinary unprotected entries the proposal completes native Exalt and paid
+Annul alternatives, including losing outcomes. Root proposals include a priced,
+natively admitted Essence whose forced modifier satisfies an actual goal slot;
+price per guaranteed goal only orders that concrete action. A broad root redraw
+preserves mandatory retry. After complete goal loss, an admitted broad redraw
+can replace ordinary junk directly at the real entry. Identical native rows may
+share their exact transition span; each source retains its own action admission
+and pricing. Existing sparse policy selection compares complete continuation
+costs without clean intermediate requirements. The emitted controller receives
+full native evaluation from the root and selected actual nonempty entries.
+Local values order proposals; the evaluated graph cost supplies the upper even
+when the local estimate differs.
+
+The contained nonempty branch discovers an actual globally routable Rare entry
+with one fractured goal, mutable goal progress and junk in the current graph.
+It compares native Exalt, Annul and paid Scour rows. Losing mutable progress
+pays native Scour before returning to the existing Magic entry that retains the
+fracture. Old native entry costs guide the private fixed-policy solve only.
+The compiler preserves the original prefix and mandatory internal program
+routes, joins disjoint local/return domains at their global routers, and sends
+the whole composition through independent evaluation. That final check owns
+the cost and properness after repeated re-entry; it can reject a locally
+promising proposal. Other protected contexts and observed offers remain refused.
+
+The existing portfolio retains a root-entry compiled artifact with its executable
+continuation certificate. Parent policy/row references and reachable masks are
+empty; nonroot parent values stay unknown. The old parent statewise incumbent
+remains available. Admission binds graph bytes, actual root, goal/terminal
+semantics, prices, full scope, action vocabulary and generations. Public graph
+compilation returns that exact artifact; coarse state-value queries cannot
+pretend it supplies parent statewise values. A cheaper root policy does not
+close the original optimality gap.
 
 Product defaults do not voluntarily abandon a live item for a fresh base. Mechanic-owned paid recovery, such as the admitted Fracture-miss program, is separately scoped and priced. A lower model may use additional optimistic recovery without making that recovery a product action.
 

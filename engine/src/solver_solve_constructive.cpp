@@ -239,7 +239,8 @@ std::uint64_t SolveWork::Impl::action_vocabulary_identity() const {
     }
 
 ExecutableContinuationAuthorityContext
-SolveWork::Impl::executable_continuation_authority_context() const {
+SolveWork::Impl::executable_continuation_authority_context(
+        const std::size_t vocabulary_prefix) const {
         ExecutableContinuationAuthorityContext context;
         const auto append_string = [](
                 std::vector<std::uint64_t>& key,
@@ -317,9 +318,10 @@ SolveWork::Impl::executable_continuation_authority_context() const {
 
         context.action_vocabulary = {
             1, /* exact admitted planner-operator vocabulary schema */
-            operators.size(),
+            std::min(vocabulary_prefix, operators.size()),
         };
-        for (const PricedOperator& priced : operators) {
+        for (std::size_t i = 0; i < std::min(vocabulary_prefix, operators.size()); ++i) {
+            const PricedOperator& priced = operators[i];
             context.action_vocabulary.push_back(priced.index);
             context.action_vocabulary.push_back(
                 std::bit_cast<std::uint64_t>(priced.cost));
@@ -938,6 +940,7 @@ void SolveWork::Impl::capture_incumbent_policy(
 
 void SolveWork::Impl::populate_incumbent_policy(
         BoundedPolicyIncumbent& candidate) {
+        if (candidate.compiled_root_entry_only) return;
         if (candidate.policy_materialized) return;
         const std::size_t state_count = candidate.values.size();
         if (candidate.policy.size() != state_count) {
@@ -3084,6 +3087,41 @@ bool SolveWork::Impl::incumbent_precedes(
 
 const char* SolveWork::Impl::retained_incumbent_invalid_reason(
         const BoundedPolicyIncumbent& incumbent) const {
+        if (incumbent.compiled_root_entry_only) {
+            const auto& artifact = incumbent.compiled_artifact;
+            const auto& certificate = artifact.continuation_upper;
+            std::uint64_t digest = 1469598103934665603ULL;
+            identity_mix_string(digest, artifact.strategy_json);
+            if (!result.has_exact_start_item ||
+                result.start_state >= incumbent.values.size() ||
+                incumbent.policy.size() != incumbent.values.size() ||
+                incumbent.policy_rows.size() != incumbent.values.size() ||
+                incumbent.policy_reachable.size() != incumbent.values.size() ||
+                incumbent.values[result.start_state] != incumbent.evaluated_policy_cost ||
+                std::any_of(incumbent.policy.begin(), incumbent.policy.end(),
+                    [](const auto& op) { return op.index != kNoId; }) ||
+                std::any_of(incumbent.policy_rows.begin(), incumbent.policy_rows.end(),
+                    [](const auto row) { return row != std::numeric_limits<std::uint64_t>::max(); }) ||
+                std::any_of(incumbent.policy_reachable.begin(), incumbent.policy_reachable.end(),
+                    [](const auto reachable) { return reachable != 0; }) ||
+                !artifact.policy_decision_bindings.empty() ||
+                validate_executable_continuation_upper_reuse(certificate,
+                    executable_continuation_authority_context(incumbent.action_vocabulary_size),
+                    digest, artifact.strategy_json.size(),
+                    artifact.strategy_json == artifact.certification_strategy_json) !=
+                        ExecutableContinuationReuseStatus::Complete)
+                return "private_compiled_entry_witness_changed";
+            for (std::size_t state = 0; state < incumbent.values.size(); ++state)
+                if (state != result.start_state && std::isfinite(incumbent.values[state]))
+                    return "private_compiled_entry_has_parent_statewise_value";
+            const auto root_key = exact_item_state_key(result.exact_start_item);
+            bool root_certified = false;
+            for (const auto& member : certificate.evaluation.members)
+                if (member.available() && exact_item_state_key(member.item) == root_key &&
+                    std::abs(member.exact_continuation_upper - incumbent.evaluated_policy_cost) <=
+                        1e-9 * std::max(1.0, incumbent.evaluated_policy_cost)) root_certified = true;
+            if (!root_certified) return "private_compiled_root_entry_not_certified";
+        }
         CertifiedFallbackContract candidate;
         candidate.certified_upper_bound =
             incumbent.certified_upper_bound;
@@ -3103,7 +3141,8 @@ const char* SolveWork::Impl::retained_incumbent_invalid_reason(
         candidate.graph_prefix_identity =
             incumbent.graph_prefix_identity;
         candidate.complete_policy_or_witness =
-            incumbent.policy_materialized && !incumbent.policy.empty();
+            (incumbent.policy_materialized && !incumbent.policy.empty()) ||
+            incumbent.compiled_root_entry_only;
         candidate.compiled_payload_present =
             !incumbent.compiled_artifact.strategy_json.empty();
         candidate.compilation_provenance_present =
@@ -4107,6 +4146,18 @@ bool SolveWork::Impl::joint_policy_row_completed(
         });
 }
 
+unsigned SolveWork::Impl::joint_policy_terminal_debt(const std::uint32_t state) const {
+    // First-policy ordering only. Dirty goal coverage is not the true terminal,
+    // and this cleanliness preference has no economic or lower authority.
+    const auto& item = calc.state(state);
+    if (calc.is_goal_state(item)) return 0u;
+    const unsigned satisfied = std::popcount(satisfied_goal_mask_for_state(state));
+    const unsigned required = calc.goal().required_satisfied_slots();
+    const unsigned missing = required > satisfied ? required - satisfied : 0;
+    const unsigned extra = item.prefix_count + item.suffix_count - satisfied;
+    return std::max(1u, missing + extra + (item.rarity != calc.goal().rarity));
+}
+
 std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
         const std::uint32_t state,
         const std::vector<double>& selection_values) const {
@@ -4115,17 +4166,6 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
     if (state >= transition_cache->state_rows.size()) return no_row;
     const bool first_policy = options.high_impact_executable_uppers &&
         incremental_action_generation && !output_incumbent.has_value();
-    // A construction preference, never an admissible value or a new terminal
-    // predicate. Full goal masks can still owe cleanup or rarity completion.
-    const auto terminal_debt = [&](const std::uint32_t id) {
-        const auto& item = calc.state(id);
-        if (calc.is_goal_state(item)) return 0u;
-        const unsigned satisfied = std::popcount(satisfied_goal_mask_for_state(id));
-        const unsigned required = calc.goal().required_satisfied_slots();
-        const unsigned missing = required > satisfied ? required - satisfied : 0;
-        const unsigned extra = item.prefix_count + item.suffix_count - satisfied;
-        return std::max(1u, missing + extra + (item.rarity != calc.goal().rarity));
-    };
     const auto goal_probability = [&](const std::uint64_t row_index) {
         const SparseRow& row = transition_cache->rows.at(row_index);
         WideFloat probability{0.0};
@@ -4161,7 +4201,7 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
             satisfied_goal_mask_for_state(state));
         const auto advances = [&](const std::uint32_t successor) {
             return successor < result.goal_states.size() &&
-                (first_policy ? terminal_debt(successor) < terminal_debt(state) :
+                (first_policy ? joint_policy_terminal_debt(successor) < joint_policy_terminal_debt(state) :
                  result.goal_states[successor] ||
                  std::popcount(satisfied_goal_mask_for_state(successor)) >
                      owner_progress);

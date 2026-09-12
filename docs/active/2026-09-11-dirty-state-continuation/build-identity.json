@@ -1,0 +1,204 @@
+{
+  "recorded_at_utc": "2026-09-12T03:37:07.289092+00:00",
+  "reviewed_base": "0ca76eb4a9f35a90299ecceeab740e5535804fd9",
+  "final_source_files": [
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "bytes": 299945,
+      "sha256": "f59052c973015ece656da7af041c6cca45072b2d3674a8f5ee587b2be04ffc6a"
+    },
+    {
+      "path": "engine/include/poecraft/solver.h",
+      "bytes": 30897,
+      "sha256": "6ed3ec4c86c67b7813e13c73f7ff922d8e6fc97676a7cb57c46d96a97946edfc"
+    },
+    {
+      "path": "engine/src/solver_api.cpp",
+      "bytes": 108367,
+      "sha256": "c77766722f5ab2fc10a409fd4ddc49f28c39d49baf9397bc645e14486b0863d6"
+    },
+    {
+      "path": "engine/src/solver_compile.cpp",
+      "bytes": 194935,
+      "sha256": "1cdc86afa4b4cff59bc6d6159cdd97cf7ca8c3e76f98a3547ce08f6b0011b0fa"
+    },
+    {
+      "path": "engine/src/solver_compile_contracts.hpp",
+      "bytes": 3207,
+      "sha256": "12d35cbb1f7d72c5be37804c2effc02c1f615f74e5d6d080090c6fc880820300"
+    },
+    {
+      "path": "engine/src/solver_diagnostic_options.hpp",
+      "bytes": 3790,
+      "sha256": "634b3a5004ab690dcea380074acd586b1d3ad53661439de00f2014fe5a42c47f"
+    },
+    {
+      "path": "engine/src/solver_eval.cpp",
+      "bytes": 460287,
+      "sha256": "28ceaf0bb28fe5f6309cdcd9e81f9f596cb26a0cc050e9c0558a12a2317b5a50"
+    },
+    {
+      "path": "engine/src/solver_eval_types.hpp",
+      "bytes": 32887,
+      "sha256": "c0999983027539b2f589ad27740d6f1d709db60f5ccf7d9d9efdf02df1e78779"
+    },
+    {
+      "path": "engine/src/solver_policy_assertion_work.cpp",
+      "bytes": 41139,
+      "sha256": "47818e71ef8e297f0bc49c307bd2e1a249c2e29927479f42e6cb4108a5440be4"
+    },
+    {
+      "path": "engine/src/solver_solve.cpp",
+      "bytes": 31998,
+      "sha256": "06c7048be7903e42278284c84e4e2e163d5ee94942133b0b4714fcd7eb1bc45d"
+    },
+    {
+      "path": "engine/src/solver_solve_constructive.cpp",
+      "bytes": 406899,
+      "sha256": "9ccb6094f77a5f39b07d5617104b9188482f7f5c7506b6b97434a4dcfc104ff3"
+    },
+    {
+      "path": "engine/src/solver_solve_contracts.hpp",
+      "bytes": 77612,
+      "sha256": "83d70cd2a0e66ce0b50b59990d1386e1df8d44371d977699aba5a97e148661a0"
+    },
+    {
+      "path": "engine/src/solver_solve_finish.cpp",
+      "bytes": 331776,
+      "sha256": "9835c94c6e6e635db40f4ba6402a903a5b6be8ac995e4c8692c888e9207cb36f"
+    },
+    {
+      "path": "engine/src/solver_solve_incremental.cpp",
+      "bytes": 175318,
+      "sha256": "d26fab5a0f5222784446e7a40ad4dbdfa5e38ccb41211f70a822fa5f59997c42"
+    },
+    {
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "bytes": 95203,
+      "sha256": "e75445567e88acfd50bdb83abbe25a9e55123498cd76300db3148dde26c29a77"
+    },
+    {
+      "path": "engine/src/solver_solve_telemetry.cpp",
+      "bytes": 153132,
+      "sha256": "ff846ba205cda4523f3f613c05d0d7b5ce21bbe5aa8bf27de11f4d52ff0558dd"
+    },
+    {
+      "path": "engine/src/solver_solve_telemetry_json.cpp",
+      "bytes": 205818,
+      "sha256": "e40c73e49c347952b6775067a9ed88ba45726feb4f965e344f4997fd1ef54947"
+    },
+    {
+      "path": "engine/src/solver_solve_types.hpp",
+      "bytes": 128083,
+      "sha256": "5233e2408fc2c6d6377aa7437f011dc5dfecb5d4a3f343fe290769d028ea38ee"
+    },
+    {
+      "path": "engine/src/solver_sparse_policy.cpp",
+      "bytes": 46279,
+      "sha256": "e555b7a236b8c30f5e70e930595368c03afc77d6a338a36f50226d974862cf0b"
+    },
+    {
+      "path": "engine/src/solver_sparse_policy.hpp",
+      "bytes": 8926,
+      "sha256": "41fa963335b4bbd038d1bb0b1629a4373b82f9c39e3263a92e7aa20845501d5e"
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "bytes": 12634,
+      "sha256": "946968ca94c2986ae9be2e2d8f54f79e61a767b8705634bd0fab897d320a2eb5"
+    },
+    {
+      "path": "engine/tests/test_solver_api.cpp",
+      "bytes": 142363,
+      "sha256": "c6165cb441ed956d21525053e6a6bf1e4e908958c92563dda94fe72d2e4a7503"
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "bytes": 150489,
+      "sha256": "eb536a24ad5291e79b739df5f39c462013721ad636bd03c13ec2387dbc0130e7"
+    },
+    {
+      "path": "engine/tests/test_solver_eval.cpp",
+      "bytes": 167386,
+      "sha256": "9577d9864fd3e5b13d5a2f26e8d770e74cd514f3fabb74f99c9cdc5ce5c8a84c"
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "bytes": 628039,
+      "sha256": "8ae0b9b6426c34ee18a2c11537021e92d959220577bcd7cec5f40816fd486790"
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "bytes": 2509,
+      "sha256": "c1be867477a1653f2cc741f32f01390984e26e666adffc7c566849884c7016ce"
+    },
+    {
+      "path": "tools/ingest/poecraft_ingest/solver_corpus_runner.py",
+      "bytes": 32976,
+      "sha256": "38672b0ef0e3cd05c8aaa885cd71bb128d015dfa8345521f60b701fb2884279f"
+    },
+    {
+      "path": "tools/ingest/poecraft_ingest/solver_lab_workflow.py",
+      "bytes": 18071,
+      "sha256": "ace356fb0b917efea93fcef2552fb7cf90079ea2799cb533de8f8a0038c682f3"
+    },
+    {
+      "path": "tools/ingest/tests/test_solver_corpus_runner.py",
+      "bytes": 17065,
+      "sha256": "1310c7d4f02e09634a26534988d965af788fa26b09fbf68c0664bf45ca5ffab6"
+    },
+    {
+      "path": "tools/ingest/tests/test_solver_lab_cli_workflow.py",
+      "bytes": 15268,
+      "sha256": "3da08e6cba276efde353da823e3cc28e342c26363b9646b70e4f031ba9e22ddc"
+    }
+  ],
+  "changes_since_cost_qualification": [
+    "engine/tests/test_solver_api.cpp"
+  ],
+  "change_disposition": "Only the test telemetry reader now retries a larger reported buffer length. Solver, evaluator, benchmark and binding sources are unchanged from both v14 cost qualifications.",
+  "frozen_qualified_native": {
+    "path": "out/dirty-state-continuation/dirty-v14-public.exe",
+    "bytes": 13333679,
+    "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+  },
+  "rebuilt_native_benchmark": {
+    "path": "build/engine/poecraft_solver_benchmark.exe",
+    "bytes": 13333679,
+    "sha256": "8838c53e055c28dbaf298630d19b44be9ff57864199ffe095516203d19955012"
+  },
+  "native_dll": {
+    "path": "build/engine/poecraft_engine.dll",
+    "bytes": 12823360,
+    "sha256": "41950f9b05b68756900af25e6e450be4c5cec0cc19328f2fa442f6f3db8f76d0"
+  },
+  "native_tests": {
+    "path": "build/engine/poecraft_engine_tests.exe",
+    "bytes": 16980315,
+    "sha256": "6d26f0787a118a2dc22ba8efabcc63e9ed8d9ed1cfce01fdf15d1cd23131b1d4"
+  },
+  "wasm_module": {
+    "path": "bindings/wasm/dist/poecraft_engine.mjs",
+    "bytes": 20219,
+    "sha256": "92bc2b9d61c465b35c2b80c71f8b3ee125155755275e8d66cdc649792ab9f4ce"
+  },
+  "wasm_binary": {
+    "path": "bindings/wasm/dist/poecraft_engine.wasm",
+    "bytes": 7991252,
+    "sha256": "9d8b7505f915137cecfdb25ea0776a5cffc48fef6f80e8254b89a24e62520b26"
+  },
+  "artifact_manifest": {
+    "path": "data/compiled/current/manifest.json",
+    "bytes": 5810,
+    "sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb"
+  },
+  "build_commands": [
+    "powershell -File scripts/build.ps1",
+    "powershell -File scripts/build-wasm.ps1",
+    "powershell -File scripts/dev-engine.ps1 -Task Tests -Jobs 4"
+  ],
+  "build_notes": [
+    "Native and WASM builds succeeded. WASM retained its existing three uint64-max/32-bit-size_t warnings and existing isolated finalization O1 setting.",
+    "Frozen benchmark remains the exact cost-qualified executable; canonical rebuilding relinked the same runtime sources."
+  ]
+}

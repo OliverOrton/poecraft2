@@ -88,6 +88,40 @@ numerical acceptance contract remains in force; this argument supplies neither
 a new error bound nor native optimality. See [CLM-0002](../claims.md#clm-0002)
 and the [evaluation mechanism](../publication.md#evaluation-contract).
 
+### Rank-one preparation of a large occupancy solve
+
+For the same finite transient component, put \(A=I-Q^T\), let incoming
+mass \(b\ge0\) have \(m=\mathbf1^Tb>0\), and write \(u=b/m\). If
+\(Ax=b\), then
+\[
+(A+u\mathbf1^T)y=b,\qquad
+y=\frac{x}{1+\mathbf1^Tx/m},\qquad
+d=\frac{\mathbf1^TAy}{m}>0,\qquad x=y/d.
+\]
+Substitution proves the identities. The changed matrix is nonsingular because
+the determinant lemma gives the positive factor
+\(1+\mathbf1^TA^{-1}u\). Thus the preparation separates a possibly very
+large visit total from the bounded vector \(y\); it is not a new probability
+model, policy, value bound or proof of faster convergence on every component.
+
+The native sparse occupancy fallback computes the column deficits
+\(\mathbf1^TA\) from every stored internal coefficient, in `WideFloat`.
+This avoids recovering \(d\) by subtracting nearly equal unit totals. Stored
+mass defects remain part of those equations; native exits do not replace the
+deficits to renormalize the matrix. The rank-one term is applied as a vector
+operation, without a dense matrix or inverse. Its retained deficit vector is
+charged to the existing evaluator allowance.
+
+The existing four-iteration work unit and total iteration cap still apply.
+The modified system is numerical preparation only: reconstructed visits must
+pass the original \(Ax=b\) residual tolerance, unchanged at
+`1e-18 * max(1, norm(b))`, followed by the ordinary native flow, cost and
+properness checks. Failure can seed the original sparse solve, whose existing
+Gauss-Seidel fallback never runs on the modified matrix. A closed component
+does not gain a finite solution. No new accepted claim or error enclosure is
+inferred from this algebra; the [current application](../../active/2026-09-11-dirty-state-continuation/README.md)
+owns empirical qualification.
+
 <a id="probability"></a>
 ## 4. Probability coefficients and minimizing relations
 

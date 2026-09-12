@@ -1,0 +1,14 @@
+{
+  "source": "docs\\active\\2026-09-11-dirty-state-continuation\\ring-four\\dirty_restricted_fresh\\cb07-cross-base-product8-long240.json",
+  "source_sha256": "a543e8ee758e1ed1e634fe00207baeea8f0bfbb3ed3cfdf1490baefbe8262e3f",
+  "patches": [
+    {
+      "path": "/requested_bounded_finish_seconds",
+      "value": 600
+    },
+    {
+      "path": "/watchdog_seconds",
+      "value": 840
+    }
+  ]
+}

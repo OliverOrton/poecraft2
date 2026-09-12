@@ -453,6 +453,44 @@ do not establish a finite excursion law or a better reforge controller.
 <a id="mapping"></a>
 ## 8. Correspondence and limits
 
+### Dirty continuation entries and complete response costs
+
+A useful partial item may remain dirty between actions. Only the original
+terminal predicate determines success; an intermediate clean subgoal is an
+additional policy restriction unless its equivalence has been established.
+Paid removal can lose useful progress. Continued acquisition can exhaust space
+or change the native pool, so neither cleanliness nor goal count alone gives an
+economic ordering.
+
+For a fixed local controller on internal states \(R\), with actual executable
+boundary entries \(B\), assume almost-sure exit and finite expected internal
+cost. Its Bellman equations give
+\[
+g=(I-P_{RR})^{-1}c,\qquad H=(I-P_{RR})^{-1}P_{RB},\qquad J(v_B)=g+Hv_B.
+\]
+These expressions denote sparse linear solves, not a dense inverse to construct.
+Complete boundary coverage gives row exit mass one. A changed boundary value may
+reuse unchanged \(g,H\); changed internal decisions require reevaluation. If new
+decisions control returns among several boundaries, their complete joint system
+must also be proper: locally exiting components can form a non-goal cycle.
+
+An exact nonempty item/control entry with independently evaluated continuation
+is sufficient for that entry. A goal mask or one materialized class member is
+not a uniform class certificate. A private-layout controller can instead be
+compiled, evaluated over its complete native operation/item graph and retained
+as an original-scope root artifact. This grants no parent statewise values or
+private state-ID correspondence. Reuse must bind the complete graph, actual
+entry, terminal semantics, scope, vocabulary, mechanics and prices.
+
+One-shot advantage also need not rank repeated controllers. At old cost 10,
+an excursion with success probability .9 and repeated cost 8 gains 1.8 in a
+one-shot comparison; one with probability .01 and repeated cost 1 gains only .09.
+The second repeated controller is cheaper. This follows directly from the
+[existing identity](#first-return-improvement), not a new accepted claim.
+The [supplied argument and rational checks](../../active/2026-09-11-dirty-state-continuation/research-inputs/review_and_mathematics.md)
+also cover the complete multi-entry response; native correspondence and current
+qualification remain in the programme's living record.
+
 `IncumbentPortfolio` separates estimates from executable candidates. The compiler, policy assertion, and evaluator establish different parts of the upper chain. The source contract binds target, economy, action scope, graph identity, and relevant generations. [Executable Upper Authority](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/upper-authority.md).
 
 The candidate-continuation lifecycle can retain partial construction work without granting it upper authority. The archive of released-candidate reclamation records a case where a refused candidate retained memory and suppressed ordinary work; fixing that lifecycle restored useful policy discovery. That is a progress/performance finding, not a different upper theorem. [Reclamation evidence](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md).

@@ -1,0 +1,236 @@
+{
+  "baseline": "control",
+  "candidate": "candidate",
+  "delta_distributions": {
+    "compiled_edges": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "compiled_nodes": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "expanded_states": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_absolute_gap": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_lower_bound": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_relative_gap": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_upper_bound": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "peak_memory_bytes": {
+      "count": 1,
+      "max": -119874937.0,
+      "median": -119874937.0,
+      "min": -119874937.0,
+      "p90": -119874937.0,
+      "p99": -119874937.0
+    },
+    "reforge_work": {
+      "count": 1,
+      "max": 592368.0,
+      "median": 592368.0,
+      "min": 592368.0,
+      "p90": 592368.0,
+      "p99": 592368.0
+    },
+    "rows": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "solve_ms": {
+      "count": 1,
+      "max": -265.763399999938,
+      "median": -265.763399999938,
+      "min": -265.763399999938,
+      "p90": -265.763399999938,
+      "p99": -265.763399999938
+    },
+    "solve_step_max_ms": {
+      "count": 1,
+      "max": -138.83960000000002,
+      "median": -138.83960000000002,
+      "min": -138.83960000000002,
+      "p90": -138.83960000000002,
+      "p99": -138.83960000000002
+    },
+    "solve_step_median_ms": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "solve_step_p95_ms": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "states": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "strategy_json_bytes": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "time_to_incumbent_ms": {
+      "count": 1,
+      "max": -140.2492000000002,
+      "median": -140.2492000000002,
+      "min": -140.2492000000002,
+      "p90": -140.2492000000002,
+      "p99": -140.2492000000002
+    },
+    "time_to_target_ms": {
+      "count": 0,
+      "max": null,
+      "median": null,
+      "min": null,
+      "p90": null,
+      "p99": null
+    },
+    "transitions": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "wall_ms": {
+      "count": 1,
+      "max": -226.00919999997132,
+      "median": -226.00919999997132,
+      "min": -226.00919999997132,
+      "p90": -226.00919999997132,
+      "p99": -226.00919999997132
+    }
+  },
+  "excluded": [],
+  "missing_from_baseline": [],
+  "missing_from_candidate": [],
+  "paired_cases": 1,
+  "pairs": [
+    {
+      "baseline_status": {
+        "actual": "bounded_feasible",
+        "policy": "bounded_feasible",
+        "termination": "requested_bounded_finish"
+      },
+      "candidate_status": {
+        "actual": "bounded_feasible",
+        "policy": "bounded_feasible",
+        "termination": "requested_bounded_finish"
+      },
+      "deltas": {
+        "compiled_edges": 0.0,
+        "compiled_nodes": 0.0,
+        "expanded_states": 0.0,
+        "final_absolute_gap": 0.0,
+        "final_lower_bound": 0.0,
+        "final_relative_gap": 0.0,
+        "final_upper_bound": 0.0,
+        "peak_memory_bytes": -119874937.0,
+        "reforge_work": 592368.0,
+        "rows": 0.0,
+        "solve_ms": -265.763399999938,
+        "solve_step_max_ms": -138.83960000000002,
+        "solve_step_median_ms": 0.0,
+        "solve_step_p95_ms": 0.0,
+        "states": 0.0,
+        "strategy_json_bytes": 0.0,
+        "time_to_incumbent_ms": -140.2492000000002,
+        "time_to_target_ms": null,
+        "transitions": 0.0,
+        "wall_ms": -226.00919999997132
+      },
+      "dimensions": {
+        "base": "Dire Pelt",
+        "base_class": "Helmet / Dire Pelt",
+        "class": "Helmet",
+        "evaluation_role": "unassigned",
+        "goal_probability": "low_le_0.005",
+        "incumbent": "other",
+        "natural_t1_count": "3",
+        "observation_status": "completed",
+        "policy_status": "bounded_feasible",
+        "pool_density": "dense_ge_100",
+        "side_mix": "PPS",
+        "termination": "requested_bounded_finish"
+      },
+      "id": "cb11-cross-base-product8-long240",
+      "treatments": {
+        "baseline_executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\budget-control.exe",
+          "sha256": "168acbaa242f4b6cd5f8f49c92f08e7b1810bd642f3c3b0ce74cb00ebba8b7b3"
+        },
+        "candidate_executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v13-public.exe",
+          "sha256": "ddb0fd79ea91cfb05bad115f62110a1ebf2b7e7270b15772e8d8ac93080d05b2"
+        }
+      }
+    }
+  ],
+  "regressions": [],
+  "shared_case_ids": 1,
+  "status_transitions": {
+    "bounded_feasible->bounded_feasible": 1
+  }
+}

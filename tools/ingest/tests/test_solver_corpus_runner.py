@@ -336,8 +336,11 @@ def test_watchdog_preserves_valid_partial_report(
     assert Path(result["partial_report_path"]).is_file()
 
 
-def test_memory_budget_refuses_oversized_case_without_launch(tmp_path: Path) -> None:
-    task = CaseTask("large", tmp_path / "large.json", 1.0, 200, "deep")
+@pytest.mark.parametrize("solver_bytes,headroom", [(200, 0), (80, 21)])
+def test_memory_budget_refuses_oversized_case_without_launch(
+    tmp_path: Path, solver_bytes: int, headroom: int
+) -> None:
+    task = CaseTask("large", tmp_path / "large.json", 1.0, solver_bytes, "deep")
     manifest = tmp_path / "manifest.json"
     _write_json(manifest, {"cases": []})
 
@@ -350,11 +353,13 @@ def test_memory_budget_refuses_oversized_case_without_launch(tmp_path: Path) -> 
         tasks=[task],
         max_workers=2,
         memory_budget_bytes=100,
+        worker_headroom_bytes=headroom,
     )
 
     assert ledger["all_completed"] is False
     assert ledger["survivors"] == []
     assert ledger["cases"]["large"]["status"] == "memory_budget_refused"
+    assert ledger["cases"]["large"]["reserved_memory_bytes"] == solver_bytes + headroom
 
 
 def test_factored_command_matches_legacy_argument_contract(tmp_path: Path) -> None:

@@ -5,6 +5,7 @@
 #include "../src/solver_proof_pattern_manager.hpp"
 #include "../src/solver_refinement.hpp"
 #include "../src/solver_segmented_vector.hpp"
+#include "../src/solver_sparse_policy.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/solver.h"
 
@@ -26,6 +27,80 @@ using namespace poecraft;
 using namespace poecraft::solver;
 
 namespace {
+
+void run_occupancy_stabilization_tests() {
+    using namespace solve_detail;
+    constexpr std::uint32_t count = kDensePolicyComponentLimit + 1;
+    constexpr double hop = 0.5;
+    // Every source has the same rare exit, but different internal successors.
+    // This is a transposed occupancy system, not a cost-vector warm seed.
+    const auto check = [&](const bool closed, const bool mixed_input) {
+        const double restart = closed ? 0.5 : 0.5 - 1e-10;
+        const WideFloat exit = WideFloat{1.0} - WideFloat{hop} - WideFloat{restart};
+        std::vector<std::uint32_t> members(count), components(count,0);
+        std::vector<std::int32_t> local(count);
+        std::vector<PolicyRow> rows(count);
+        std::vector<PolicyEdge> edges;
+        std::vector<double> rhs(count,0), previous(count,0);
+        std::vector<WideFloat> deficits(count,exit);
+        rhs[0] = mixed_input ? 0.25 : 1.0;
+        if (mixed_input) rhs[37] = 0.75;
+        for (std::uint32_t target=0;target<count;++target) {
+            members[target]=target; local[target]=static_cast<std::int32_t>(target);
+            rows[target].edge_offset=edges.size();
+            edges.push_back({(target+count-1)%count,hop});
+            if (target==0)
+                for (std::uint32_t source=0;source<count;++source)
+                    edges.push_back({source,restart});
+            rows[target].edge_count=static_cast<std::uint32_t>(edges.size()-rows[target].edge_offset);
+        }
+        std::unique_ptr<SparsePolicyResume> resume;
+        SparsePolicyComponentResult solved;
+        std::vector<WideFloat> exact;
+        do {
+            solved=advance_sparse_policy_component(SparsePolicyComponentView{
+                members,0,components,local,rows,edges,rhs,previous,512,&deficits},resume,&exact);
+            PC_CHECK(solved.iterations<=4);
+        } while (solved.status==SparsePolicyComponentStatus::Incomplete);
+        if (closed) {
+            PC_CHECK(solved.status==SparsePolicyComponentStatus::DidNotConverge);
+            PC_CHECK(solved.values.empty());
+            PC_CHECK(exact.empty());
+            return;
+        }
+        PC_CHECK(solved.status==SparsePolicyComponentStatus::Complete);
+        PC_CHECK(exact.size()==count);
+        if (exact.size()!=count) return;
+        const WideFloat expected_total=WideFloat{1.0}/exit;
+        const WideFloat cycle_factor=WideFloat{1.0}-WideFloat{std::ldexp(1.0,-static_cast<int>(count))};
+        WideFloat total=0, squared_residual=0;
+        for (std::uint32_t target=0;target<count;++target) {
+            WideFloat expected=WideFloat{restart}*expected_total*
+                WideFloat{std::ldexp(1.0,-static_cast<int>(target))};
+            for (std::uint32_t source=0;source<count;++source)
+                expected += WideFloat{rhs[source]}*WideFloat{std::ldexp(
+                    1.0,-static_cast<int>((target+count-source)%count))};
+            expected=expected/cycle_factor;
+            PC_CHECK(std::abs((exact[target]-expected).value())<=
+                2e-15*std::max(1.0,std::abs(expected.value())));
+            WideFloat residual=exact[target]-WideFloat{rhs[target]};
+            const auto& row=rows[target];
+            for (std::uint32_t e=0;e<row.edge_count;++e) {
+                const auto& edge=edges[row.edge_offset+e];
+                residual-=WideFloat{edge.probability}*exact[edge.target];
+            }
+            squared_residual+=residual*residual;
+            total+=exact[target];
+        }
+        PC_CHECK(std::sqrt(std::max(0.0,squared_residual.value()))<=1e-18);
+        PC_CHECK(std::abs((total*exit-WideFloat{1.0}).value())<=1e-15);
+        std::printf("stabilized occupancy: mixed=%d iterations=%u visits=%.12g\n",
+            mixed_input,solved.total_iterations,total.value());
+    };
+    check(false,false);
+    check(false,true);
+    check(true,false);
+}
 
 void run_segmented_vector_tests() {
     solve_detail::SegmentedVector<std::uint32_t, 4> values;
@@ -3435,10 +3510,61 @@ void run_artifact_and_registry_tests(const char* artifact_dir) {
     PC_CHECK(compiled_types >= 20);
 }
 
+void run_identity_replay_materialization_test() {
+    auto session = make_eval_session();
+    // Distinct paid deterministic decisions give an identity carrier larger
+    // than the former 4096-pair refusal. The final native Alchemy row is replayed;
+    // every outcome terminates, so its complete accounting has a known answer.
+    constexpr unsigned count = 4097;
+    std::string nodes = R"({"id":"start","kind":"start"})";
+    std::string edges = R"({"id":"begin","from":"start","to":"r0","priority":0,"condition":{"type":"always"}})";
+    for (unsigned i=0;i<count;++i) {
+        const auto id = "r" + std::to_string(i);
+        const auto next = i+1<count ? "r"+std::to_string(i+1) : "alchemy";
+        nodes += ",{\"id\":\""+id+"\",\"kind\":\"operation\",\"operation\":{\"type\":\"restart\",\"params\":{}}}";
+        edges += ",{\"id\":\"e"+std::to_string(i)+"\",\"from\":\""+id+"\",\"to\":\""+next+"\",\"priority\":0,\"condition\":{\"type\":\"always\"}}";
+    }
+    nodes += R"(,{"id":"alchemy","kind":"operation","operation":{"type":"alchemy","params":{}}},{"id":"success","kind":"terminal","terminal":"success"})";
+    edges += R"(,{"id":"done","from":"alchemy","to":"success","priority":0,"condition":{"type":"always"}})";
+    const auto strategy = compile(session,shell("identity replay","rare",nodes,edges));
+    StrategyEvalOptions options;
+    options.max_pairs = 10000;
+    options.max_states = 10000;
+    options.max_transitions = 100000;
+    options.max_owned_bytes = 128ull*1024*1024;
+    auto economy = std::make_shared<EconomyImpl>();
+    economy->id = "identity-replay-prices";
+    economy->prices = {{"base",2},{"alchemy",3}};
+    options.economy = economy;
+    StrategyEvalWork work(strategy,options);
+    while (!work.progress().done) work.step(8);
+    const auto& exact = work.result();
+    std::printf("identity replay: pairs=%u refined=%u replay=%llu success=%.12g illegal=%.12g unresolved=%.12g cost=%.12g actions=%.12g\n",
+        exact.raw_pairs_discovered,exact.refined_pairs,
+        static_cast<unsigned long long>(exact.operation_row_census.replayable_rows),
+        exact.success_probability,exact.action_not_applied_probability,
+        exact.unresolved_probability,exact.total_expected_cost,exact.expected_actions);
+    PC_CHECK(exact.converged);
+    PC_CHECK(exact.cost_complete);
+    PC_CHECK(exact.raw_pairs_discovered > 4096);
+    PC_CHECK(exact.raw_pairs_discovered == exact.refined_pairs);
+    PC_CHECK(exact.operation_row_census.replayable_rows > 0);
+    PC_CHECK(near(exact.success_probability,1));
+    PC_CHECK(near(exact.expected_actions,count+1));
+    PC_CHECK(near(exact.total_expected_cost,2*count+3));
+    PC_CHECK(near(exact.expected_consumption.at("base"),count));
+    PC_CHECK(exact.expected_consumption.contains("alchemy") &&
+        near(exact.expected_consumption.at("alchemy"),1));
+    PC_CHECK(exact.max_mass_conservation_error < 1e-12);
+    PC_CHECK(exact.peak_owned_bytes_estimate <= options.max_owned_bytes);
+}
+
 } // namespace
 
 void run_solver_attribution_recovery_tests() {
     try {
+        run_occupancy_stabilization_tests();
+        run_identity_replay_materialization_test();
         run_refusal_and_unresolved_tests();
         run_destructive_refinement_cycle_test();
     } catch (const std::exception& ex) {
@@ -3457,6 +3583,10 @@ void run_solver_eval_tests(const char* artifact_dir) {
         }
     };
     stage("segmented vector", [&] { run_segmented_vector_tests(); });
+    stage("occupancy stabilization", [&] { run_occupancy_stabilization_tests(); });
+    stage("identity replay materialization", [&] {
+        run_identity_replay_materialization_test();
+    });
     stage("closed form", [&] { run_closed_form_tests(); });
     stage("continuation upper certificate", [&] {
         run_continuation_upper_certificate_tests();

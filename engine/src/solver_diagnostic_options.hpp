@@ -47,6 +47,11 @@ enum class NativeRetentionDiagnosticMode { Off, Cold, Reuse, CheckedTarget, Reus
 pc_result configure_solver_native_retention_diagnostic(pc_solver_handle handle,
     NativeRetentionDiagnosticMode mode, pc_error_info* out_error, double checked_target = 0);
 
+/* Comparison arms only. The retained fresh-layout method is available through
+ * the public PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH request flag. */
+pc_result configure_solver_native_continuation_search(pc_solver_handle handle,
+    NativeContinuationSearchMode mode, pc_error_info* out_error);
+
 /* One benchmark-only handoff to the existing stable-candidate proof path.
  * It does not request delivery or change any target/resource setting. */
 pc_result request_solver_proof_handoff(

@@ -1,0 +1,125 @@
+{
+  "purpose": "Read-only native session tier metadata audit of Essence proposals; action admission and complete policy evaluation remain native solver responsibilities.",
+  "native_dll_sha256": "586246b942a9103fc1da1f8f6b2121af18283921cac1c90cd52e2e57731cf58c",
+  "cases": [
+    {
+      "family": "ring-four",
+      "candidate_metadata": [
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "price": 0.3428,
+          "forced_mod": "AddedColdDamage9",
+          "family_tier": 1,
+          "member_goals": 1,
+          "satisfied_goals": 1
+        },
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceDoubt4",
+          "price": 0.3862,
+          "forced_mod": "IncreasedEvasionRating6",
+          "family_tier": 2,
+          "member_goals": 1,
+          "satisfied_goals": 0
+        },
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceDoubt3",
+          "price": 0.4245,
+          "forced_mod": "IncreasedEvasionRating5",
+          "family_tier": 3,
+          "member_goals": 1,
+          "satisfied_goals": 0
+        },
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering3",
+          "price": 0.4318,
+          "forced_mod": "AddedColdDamage7",
+          "family_tier": 3,
+          "member_goals": 1,
+          "satisfied_goals": 0
+        },
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering2",
+          "price": 0.7692,
+          "forced_mod": "AddedColdDamage6",
+          "family_tier": 4,
+          "member_goals": 1,
+          "satisfied_goals": 0
+        },
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceDoubt2",
+          "price": 4.76,
+          "forced_mod": "IncreasedEvasionRating4",
+          "family_tier": 4,
+          "member_goals": 1,
+          "satisfied_goals": 0
+        },
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceDoubt1",
+          "price": 8.26,
+          "forced_mod": "IncreasedEvasionRating3",
+          "family_tier": 5,
+          "member_goals": 1,
+          "satisfied_goals": 0
+        }
+      ]
+    },
+    {
+      "family": "amulet",
+      "candidate_metadata": [
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "price": 0.3947,
+          "forced_mod": "LightningDamagePercent5",
+          "family_tier": 1,
+          "member_goals": 1,
+          "satisfied_goals": 1
+        },
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath2",
+          "price": 0.8235,
+          "forced_mod": "LightningDamagePercent3",
+          "family_tier": 3,
+          "member_goals": 1,
+          "satisfied_goals": 0
+        },
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath1",
+          "price": 1.83,
+          "forced_mod": "LightningDamagePercent2",
+          "family_tier": 4,
+          "member_goals": 1,
+          "satisfied_goals": 0
+        }
+      ]
+    },
+    {
+      "family": "pelt",
+      "candidate_metadata": [
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceEnvy1",
+          "price": 0.6676,
+          "forced_mod": "ChaosResist4",
+          "family_tier": 3,
+          "member_goals": 1,
+          "satisfied_goals": 0
+        },
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceEnvy2",
+          "price": 2.84,
+          "forced_mod": "ChaosResist5",
+          "family_tier": 2,
+          "member_goals": 1,
+          "satisfied_goals": 0
+        },
+        {
+          "action": "essence:Metadata/Items/Currency/CurrencyEssenceEnvy3",
+          "price": 6.29,
+          "forced_mod": "ChaosResist6",
+          "family_tier": 1,
+          "member_goals": 1,
+          "satisfied_goals": 1
+        }
+      ]
+    }
+  ]
+}

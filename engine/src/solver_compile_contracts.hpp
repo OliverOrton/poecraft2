@@ -60,6 +60,19 @@ std::string compile_first_return_strategy_json(
     FirstReturnCompilationMode mode,
     const SolveOptions& limits);
 
+/* Compose a complete native local decision domain with an immutable current
+ * controller. Entry/return predicates belong to the private calculator's
+ * namespace and are tested only at global decision routers, after mandatory
+ * programs finish. The result remains an unevaluated upper proposal. */
+std::string compile_dirty_continuation_strategy_json(
+    CalcContext& private_calc,
+    const std::string& local_strategy_json,
+    const std::string& old_strategy_json,
+    const std::vector<std::uint32_t>& local_states,
+    const std::vector<std::uint32_t>& return_states,
+    const SolveOptions& limits,
+    PolicyCompilationTelemetry* telemetry = nullptr);
+
 
 } // namespace solver
 } // namespace poecraft

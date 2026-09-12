@@ -58,8 +58,16 @@ std::string solver_telemetry_json(
     PC_CHECK(pc_solver_telemetry(solver, nullptr, 0, &length, error) ==
              PC_RESULT_OK);
     std::string json(length + 1, '\0');
-    PC_CHECK(pc_solver_telemetry(solver, json.data(), json.size(), &length,
-                                 error) == PC_RESULT_OK);
+    pc_result result = PC_RESULT_OK;
+    for (;;) {
+        result = pc_solver_telemetry(
+            solver, json.data(), json.size(), &length, error);
+        if (result != PC_RESULT_OK || length < json.size()) break;
+        // Inspecting a live snapshot can advance cache counters. Honor the
+        // returned required length instead of parsing a truncated first read.
+        json.resize(std::max(length + 1, json.size() * 2), '\0');
+    }
+    PC_CHECK(result == PC_RESULT_OK);
     json.resize(length);
     return json;
 }
@@ -3001,11 +3009,73 @@ void run_development_checkpoint_replay_gate(const char* artifact_dir) {
 
 } // namespace
 
+void run_solver_native_continuation_api_tests(const char* artifact_dir) {
+    pc_error_info error{};
+    pc_error_info_init(&error);
+    pc_data_handle data = nullptr;
+    const auto manifest = std::string(artifact_dir) + "/manifest.json";
+    PC_CHECK(pc_data_load_file(manifest.c_str(), &data, &error) == PC_RESULT_OK);
+    if (!data) return;
+    pc_session_options session_options{};
+    session_options.struct_size = sizeof(session_options);
+    session_options.abi_version = PC_ABI_VERSION;
+    session_options.base_metadata_path = "Metadata/Items/Armours/BodyArmours/BodyInt17";
+    session_options.item_level = 86;
+    pc_session_handle session = nullptr;
+    PC_CHECK(pc_session_create(data, &session_options, &session, &error) == PC_RESULT_OK);
+    if (!session) { pc_data_destroy(data); return; }
+    const std::string goal = R"({"version":"v1","rarity":"magic","slots":[{"family_mod_key":"LocalIncreasedEnergyShield11","min_tier":1}],"actions":["transmute","alteration"]})";
+    const std::string prices = R"({"version":"v1","id":"native-continuation-api","prices":{"transmute":1,"alteration":1}})";
+    pc_economy_handle economy = nullptr;
+    PC_CHECK(pc_economy_load_json(prices.c_str(), prices.size(), &economy, &error) == PC_RESULT_OK);
+    pc_item_state start{};
+    pc_item_init_options init{};
+    init.struct_size = sizeof(init); init.abi_version = PC_ABI_VERSION;
+    init.rarity = PC_RARITY_NORMAL;
+    PC_CHECK(pc_item_init(session, &init, &start, &error) == PC_RESULT_OK);
+    for (const bool legacy : {true, false}) {
+        pc_solver_handle solver = nullptr;
+        PC_CHECK(pc_solver_create(session, goal.c_str(), goal.size(), &solver, &error) == PC_RESULT_OK);
+        if (!solver) continue;
+        pc_solve_options options{};
+        // Poison all extension fields, but exclude them from the legacy prefix.
+        // A previous caller's tail/padding cannot silently raise checker caps.
+        options.struct_size = legacy ? offsetof(pc_solve_options, candidate_max_owned_bytes) : sizeof(options);
+        options.abi_version = PC_ABI_VERSION;
+        options.solve_profile = PC_SOLVE_PROFILE_CALCULATOR_PRODUCT_V1;
+        options.max_solver_owned_bytes = 64ull * 1024 * 1024;
+        options.max_states = options.max_discovered_states = 1000;
+        options.candidate_max_states = 2000001;
+        options.candidate_max_pairs = 10000001;
+        options.candidate_max_transitions = 40000001;
+        options.candidate_max_owned_bytes = 4ull * 1024 * 1024 * 1024;
+        if (!legacy) options.solver_flags = PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH;
+        PC_CHECK(pc_solver_solve_begin(solver, &start, economy, &options, &error) == PC_RESULT_OK);
+        const auto report = parse_solver_api_fixture(solver_telemetry_json(solver, &error));
+        const auto& execution = report.at("execution");
+        PC_CHECK(execution.at("native_continuation_search").as_string() ==
+            (legacy ? "ordinary" : "dirty_restricted_fresh"));
+        const auto& limits = execution.at("configured_candidate_evaluation_limits");
+        PC_CHECK(limits.at("max_states").as_int() == (legacy ? 0 : 2000001));
+        PC_CHECK(limits.at("max_pairs").as_int() == (legacy ? 0 : 10000001));
+        PC_CHECK(limits.at("max_transitions").as_int() == (legacy ? 0 : 40000001));
+        PC_CHECK(limits.at("max_owned_bytes").as_number() == (legacy ? 0 : 4294967296.0));
+        pc_solver_solve_abandon(solver);
+        const auto abandoned = parse_solver_api_fixture(solver_telemetry_json(solver, &error));
+        PC_CHECK(abandoned.at("execution").at("status").as_string() == "abandoned");
+        pc_solver_destroy(solver);
+    }
+    pc_economy_destroy(economy);
+    pc_session_destroy(session);
+    pc_data_destroy(data);
+}
+
 void run_solver_api_tests(const char* artifact_dir) {
     if (artifact_dir == nullptr) {
         std::printf("solver api suite skipped (missing path)\n");
         return;
     }
+    run_solver_native_continuation_api_tests(artifact_dir);
     run_public_solver_gate(artifact_dir);
     run_public_product_imprint_current_gate(artifact_dir);
     run_public_product_eldritch_gate(artifact_dir);

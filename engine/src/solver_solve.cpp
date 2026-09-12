@@ -71,6 +71,8 @@ SolveWork::Impl::Impl(
             solve_profile_name(options.solve_profile);
         result.diagnostics.solve_profile_override_mask =
             options.solve_profile_override_mask;
+        result.diagnostics.native_continuation_search = options.native_continuation_search;
+        result.diagnostics.configured_candidate_evaluation_limits = options.candidate_evaluation_limits;
         result.diagnostics.full_evidence = options.full_evidence;
         result.diagnostics.consider_imprint_programs =
             options.consider_imprint_programs;

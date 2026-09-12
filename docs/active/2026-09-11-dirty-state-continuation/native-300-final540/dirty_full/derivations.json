@@ -1,0 +1,50 @@
+{
+  "source": "docs\\active\\2026-09-09-cross-base-capability-recovery\\core",
+  "patches": [
+    {
+      "path": "/caps/max_solver_owned_bytes",
+      "value": 8589934592
+    },
+    {
+      "path": "/caps/max_reforge_work",
+      "value": 200000000
+    },
+    {
+      "path": "/caps/candidate_evaluation",
+      "value": {
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296
+      }
+    },
+    {
+      "path": "/verification/exact_max_states",
+      "value": 2000000
+    },
+    {
+      "path": "/verification/exact_max_pairs",
+      "value": 10000000
+    },
+    {
+      "path": "/verification/exact_max_transitions",
+      "value": 40000000
+    },
+    {
+      "path": "/verification/exact_max_owned_bytes",
+      "value": 4294967296
+    },
+    {
+      "path": "/requested_bounded_finish_seconds",
+      "value": 300
+    },
+    {
+      "path": "/watchdog_seconds",
+      "value": 540
+    },
+    {
+      "path": "/caps/native_continuation_search",
+      "value": "dirty_full"
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+You are a fresh Codex implementation session in OliverOrton/poecraft2.
+
+Oliver selects the attached Dirty-State Continuation Search and Action-Scoped
+Abstraction v1 programme. This is a substantial implementation push, not another
+standalone audit or a prerequisite tooling milestone.
+
+Reviewed remote main:
+0ca76eb4a9f35a90299ecceeab740e5535804fd9
+
+Reconcile actual local source/HANDOFF and preserve newer or unrelated work.
+Follow applicable AGENTS: one sequential session, NO subagents, no inherited
+clock deadline or automatic restart, no push. Do not inspect/stage/change path 0.
+
+Read implementation_plan.md, review_and_mathematics.md and resource_policy.md.
+The two owner-supplied reports are preserved in input_reports/. The package is
+self-contained; no older thread, Goal object or ZIP is required.
+
+M0, first-policy recovery, first-candidate certification, upper-domain masking,
+bounded finish and the current first-return Exalt improvement are DONE.
+Do not repeat them. Use docs/foundation/tooling.md and existing native/corpus/
+worker/reporting/derivation owners. No new framework or documentation ceremony.
+
+Current Ring U is 149977.25092497544, not the old 204763 or 582193 reference.
+Amulet is still 40215428.995558396. Both remain bounded. The last gated Chaos
+candidate hit the actual 200000-state checker before its complete Q/r/q cost
+was known. That is not proof it is bad. Its source/patch is retained in the
+2026-09-11-first-return-improvement record. T1/T2 and the old generic selector
+remain rejected; do not restore them unchanged.
+
+CAP AUTHORIZATION:
+Oliver explicitly permits changing caps in this programme. Old HANDOFF/plan
+prohibitions on a larger-memory campaign or the unchanged checker ceiling are
+superseded. Preserve original cases as controls, not immutable ceilings for all
+new development. Never weaken probability, terminal, numerical or scope checks.
+
+Start with the actual blocked candidate checker. The existing return evaluator
+inherits search max_discovered_states and has a separate hard 1-GiB ceiling;
+raising main solver RAM alone does not fix this. Add/reuse typed native controls
+that reach the actual owner while respecting aggregate remaining memory.
+
+The planned native-wide envelope is 8 GiB aggregate solver, at most 4 GiB of
+candidate-checker memory within remaining aggregate headroom, 2M checker states,
+10M pairs/40M transitions, and up to 200M shared logical reforge work. Ordinary
+search/row limits may increase where actually binding. Requested finish is 300s,
+native watchdog 420s, outer cleanup 450s. See resource_policy.md for final
+evaluator and host reservation, and the conditional 16-GiB/4M-checker-state
+10-minute deep profile. These are proposed effective settings, not invented
+supported flags. Resolve and record them through existing owners.
+
+Inspect actual host memory/commit pressure before each large run. Use one timed
+native process, safe reservation for solver/checker/data/serialization overlap,
+and an OS margin. The prior machine observation was roughly 64 GiB physical;
+that is not today's guaranteed free RAM. No unbounded allocation or cap sweep.
+Keep browser defaults separate. Capacity-only gains are useful but not code
+speedups; freeze same-profile controls before algorithm treatment.
+
+JUNK HYPOTHESIS:
+The current first-policy score is missing goals + extra affixes + rarity debt.
+For these distinct-goal same-rarity states, D=max(1,m+k-2g). A primitive redraw
+from empty Rare is strict progress only when 2g>k. With TWO goals, a four-affix
+roll containing BOTH goals merely ties the root; no four-to-six-affix result can
+strictly reduce this debt. Missing-route count also precedes cost lexicographically.
+This is real startup guidance, not a global legality ban or a certified lower.
+Preserve its useful fast fallback, but determine where it prevents useful dirty
+continuations from reaching actual post-incumbent cost improvement.
+
+Use an actual native same-view fixture and one decision/continuation witness on
+Ring and Amulet. Distinguish unscheduled rows, complete rows with uncovered tails,
+invalid native routing, capped evaluation and genuinely costly controllers.
+Check for wrongly imposed clean intermediate subgoals. Final success remains the
+original junk-free target; do not erase failure mass or salvage virtual retry
+carriers arbitrarily.
+
+FIRST REPRESENTATION EXPERIMENT:
+Measure the CB08 conversion-pair hypothesis, not a new universal state pool.
+Compare full layout, each conversion omission, and the pair:
+harvest_resist:fire:lightning
+harvest_resist:cold:lightning
+Actual class/support reductions are UNMEASURED. Recompute fixed-program and
+conditional dependencies and preserve the reachable universe/observations.
+Targeted Harvest pool tags are not the same as persistent discriminators.
+
+Project complete existing row support through a full-member class map before
+paying for new broad kernels. Measure recurrence, interning, support and checker
+cost separately. A smaller output is not automatically faster construction.
+If useful, use one fresh PRIVATE restricted policy-search context, not in-place
+layout mutation or the split-only refinement-parent path. Keep original full
+scope and omitted conversion proof obligations. Only independently evaluated
+legal policies may cross back as uppers; restricted lowers do not.
+
+SUBSTANTIVE CONTINUATION WORK:
+Complete the capped broad candidate under justified headroom first. If it is
+costly, improve its dirty-item decisions instead of increasing time on that same
+fixed policy. Permit continued native acquisition, useful blockers/protection,
+paid cleanup when needed, and return to a useful partial entry rather than only
+the exact empty item. Retain old verified policies while attempting new ones.
+
+Use the existing first-exit/continuation/portfolio/compiler/evaluator owners.
+A fixed local controller can supply g and H with J(v_B)=g+H v_B when its complete
+native exit law is established. Every boundary needs a genuine compatible
+continuation or remains part of the jointly evaluated new controller. Local
+termination does not imply global properness. No permanent basin library or
+another global planner is selected.
+
+Compare final repeated/composed expected cost, not just debt reduction or raw
+one-shot advantage. For a goal-or-return excursion, Q=r+(1-p)J and J_repeat=r/p;
+this is already implemented for the current narrow Ring case. Do not redo it,
+assume p=0 is proper, or substitute root values at unknown entries.
+
+Only if the measured owner still needs it, implement ONE query-directed
+family/expectation extension. Retain actual parameter correlations, complete
+conditional draw mass and native decision timing. A lower-only query is not an
+exact kernel or executable policy. No blanket symbolic rewrite or new library
+installation is required by the supplied reports.
+
+COMPLETION:
+Continue past capacity, layout counts, helper tests and one-family success.
+Preferred result is broader exact closure. The practical programme criterion
+is >=25% lower independently evaluated expected cost on Amulet and another
+non-Conquest family at the same selected resources, with preserved capability.
+Set targets against the current same-profile baseline/high-water mark before
+treatment. A tenfold Amulet reduction is a stretch target, not a promised result.
+Keep smaller/capacity-only/scoped gains honestly labelled rather than discarding
+good work or relabelling an unmet goal.
+
+Use the existing CB06/CB08 primary cases, CB09 hostile memory case, Bow and the
+other existing core/exposed controls. Wand/Shield are exposed, not fresh holdouts.
+Keep CB05's stop-contract issue and CB09's remaining no-policy outcome visible.
+Preserve the best verified graph through every failed/capped improvement.
+
+A stopped hypothesis redirects to the next supported branch in this programme;
+it does not force a new owner prompt after two arbitrary experiments. Do not
+repeat unchanged negative runs. Stop the whole programme only at the goal, a real
+owner/tool limit, or a documented lack of useful justified follow-through after
+the independent avenues are tested. Preserve a coherent resumable checkpoint.
+
+Validate with focused native tests and decisive measurements. Qualify the final
+changed cross-base and WASM paths, plus finish/abandon. No full suite each phase,
+no routine Simulator for layout/unchanged graphs. The current Ring has 22/1000
+action-limit stops; preserve that fact. Sample the final changed strategy only
+when justified under current 1000-trial policy, keeping all failures and any
+extended-limit diagnostic separate.
+
+Preserve the reports once, import the actual arguments/counterexamples into the
+existing mathematical owners, update generated research through its source,
+and keep one living record. The supplied 38 synthetic checks are NOT native
+measurements or new layout counts. No automatic claim-status promotions.
+
+Begin with a short local reconciliation, then do the first discriminating native
+work and continue into implementation. Do not stop after writing another plan.

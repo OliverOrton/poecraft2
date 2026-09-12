@@ -1,0 +1,236 @@
+{
+  "baseline": "control",
+  "candidate": "candidate",
+  "delta_distributions": {
+    "compiled_edges": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "compiled_nodes": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "expanded_states": {
+      "count": 1,
+      "max": -133.0,
+      "median": -133.0,
+      "min": -133.0,
+      "p90": -133.0,
+      "p99": -133.0
+    },
+    "final_absolute_gap": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_lower_bound": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_relative_gap": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_upper_bound": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "peak_memory_bytes": {
+      "count": 1,
+      "max": -1487621183.0,
+      "median": -1487621183.0,
+      "min": -1487621183.0,
+      "p90": -1487621183.0,
+      "p99": -1487621183.0
+    },
+    "reforge_work": {
+      "count": 1,
+      "max": 19230877.0,
+      "median": 19230877.0,
+      "min": 19230877.0,
+      "p90": 19230877.0,
+      "p99": 19230877.0
+    },
+    "rows": {
+      "count": 1,
+      "max": -1917.0,
+      "median": -1917.0,
+      "min": -1917.0,
+      "p90": -1917.0,
+      "p99": -1917.0
+    },
+    "solve_ms": {
+      "count": 1,
+      "max": -2505.966199999908,
+      "median": -2505.966199999908,
+      "min": -2505.966199999908,
+      "p90": -2505.966199999908,
+      "p99": -2505.966199999908
+    },
+    "solve_step_max_ms": {
+      "count": 1,
+      "max": 9442.6677,
+      "median": 9442.6677,
+      "min": 9442.6677,
+      "p90": 9442.6677,
+      "p99": 9442.6677
+    },
+    "solve_step_median_ms": {
+      "count": 1,
+      "max": 1.4449,
+      "median": 1.4449,
+      "min": 1.4449,
+      "p90": 1.4449,
+      "p99": 1.4449
+    },
+    "solve_step_p95_ms": {
+      "count": 1,
+      "max": 5.1856,
+      "median": 5.1856,
+      "min": 5.1856,
+      "p90": 5.1856,
+      "p99": 5.1856
+    },
+    "states": {
+      "count": 1,
+      "max": -666.0,
+      "median": -666.0,
+      "min": -666.0,
+      "p90": -666.0,
+      "p99": -666.0
+    },
+    "strategy_json_bytes": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "time_to_incumbent_ms": {
+      "count": 1,
+      "max": -586689.1964,
+      "median": -586689.1964,
+      "min": -586689.1964,
+      "p90": -586689.1964,
+      "p99": -586689.1964
+    },
+    "time_to_target_ms": {
+      "count": 0,
+      "max": null,
+      "median": null,
+      "min": null,
+      "p90": null,
+      "p99": null
+    },
+    "transitions": {
+      "count": 1,
+      "max": -131889.0,
+      "median": -131889.0,
+      "min": -131889.0,
+      "p90": -131889.0,
+      "p99": -131889.0
+    },
+    "wall_ms": {
+      "count": 1,
+      "max": -4681.785099999979,
+      "median": -4681.785099999979,
+      "min": -4681.785099999979,
+      "p90": -4681.785099999979,
+      "p99": -4681.785099999979
+    }
+  },
+  "excluded": [],
+  "missing_from_baseline": [],
+  "missing_from_candidate": [],
+  "paired_cases": 1,
+  "pairs": [
+    {
+      "baseline_status": {
+        "actual": "refused_unsupported_action",
+        "policy": "bounded_feasible",
+        "termination": "requested_bounded_finish"
+      },
+      "candidate_status": {
+        "actual": "refused_unsupported_action",
+        "policy": "bounded_feasible",
+        "termination": "requested_bounded_finish"
+      },
+      "deltas": {
+        "compiled_edges": 0.0,
+        "compiled_nodes": 0.0,
+        "expanded_states": -133.0,
+        "final_absolute_gap": 0.0,
+        "final_lower_bound": 0.0,
+        "final_relative_gap": 0.0,
+        "final_upper_bound": 0.0,
+        "peak_memory_bytes": -1487621183.0,
+        "reforge_work": 19230877.0,
+        "rows": -1917.0,
+        "solve_ms": -2505.966199999908,
+        "solve_step_max_ms": 9442.6677,
+        "solve_step_median_ms": 1.4449,
+        "solve_step_p95_ms": 5.1856,
+        "states": -666.0,
+        "strategy_json_bytes": 0.0,
+        "time_to_incumbent_ms": -586689.1964,
+        "time_to_target_ms": null,
+        "transitions": -131889.0,
+        "wall_ms": -4681.785099999979
+      },
+      "dimensions": {
+        "base": "Amethyst Ring",
+        "base_class": "Ring / Amethyst Ring",
+        "class": "Ring",
+        "evaluation_role": "unassigned",
+        "goal_probability": "unknown",
+        "incumbent": "other",
+        "natural_t1_count": "4",
+        "observation_status": "completed",
+        "policy_status": "bounded_feasible",
+        "pool_density": "unknown",
+        "side_mix": "unknown",
+        "termination": "requested_bounded_finish"
+      },
+      "id": "cb07-cross-base-product8-long240",
+      "treatments": {
+        "baseline_executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\budget-control.exe",
+          "sha256": "168acbaa242f4b6cd5f8f49c92f08e7b1810bd642f3c3b0ce74cb00ebba8b7b3"
+        },
+        "candidate_executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v9-public.exe",
+          "sha256": "3a9e144d1a6053f058e69ff2376f9bfd0b5edf7b18d1ac10161b95e8b2efde34"
+        }
+      }
+    }
+  ],
+  "regressions": [],
+  "shared_case_ids": 1,
+  "status_transitions": {
+    "bounded_feasible->bounded_feasible": 1
+  }
+}

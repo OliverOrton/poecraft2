@@ -53,6 +53,7 @@ void run_solver_return_bridge_tests();
 void run_solver_imprint_tests(const char* artifact_dir);
 void run_solver_eval_tests(const char* artifact_dir);
 void run_solver_api_tests(const char* artifact_dir);
+void run_solver_native_continuation_api_tests(const char* artifact_dir);
 void run_solver_feasibility_tests(const char* artifact_dir);
 void run_solver_s8_3_tests();
 void run_solver_automatic_veiled_tests();

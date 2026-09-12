@@ -42,7 +42,42 @@ inline const char* solve_profile_name(const SolveProfile profile) {
     return "unknown";
 }
 
+struct CandidateEvaluationLimits {
+    /* Zero preserves each owner's current inheritance. These limits describe
+     * physical evaluator states/pairs, not the ordinary search namespace. */
+    std::uint32_t max_states = 0;
+    std::uint32_t max_pairs = 0;
+    std::uint32_t max_transitions = 0;
+    std::uint64_t max_owned_bytes = 0;
+};
+
+enum class NativeContinuationSearchMode : std::uint8_t {
+    Ordinary,
+    GatedReturnProbe,
+    DirtyFull,
+    DirtyRestrictedFullLayout,
+    DirtyRestrictedFreshLayout,
+};
+
+inline const char* native_continuation_search_name(const NativeContinuationSearchMode mode) {
+    switch (mode) {
+    case NativeContinuationSearchMode::Ordinary: return "ordinary";
+    case NativeContinuationSearchMode::GatedReturnProbe: return "gated_return";
+    case NativeContinuationSearchMode::DirtyFull: return "dirty_full";
+    case NativeContinuationSearchMode::DirtyRestrictedFullLayout: return "dirty_restricted_full";
+    case NativeContinuationSearchMode::DirtyRestrictedFreshLayout: return "dirty_restricted_fresh";
+    }
+    return "unknown";
+}
+
+inline bool dirty_continuation_search_enabled(const NativeContinuationSearchMode mode) {
+    return mode == NativeContinuationSearchMode::DirtyFull ||
+        mode == NativeContinuationSearchMode::DirtyRestrictedFullLayout ||
+        mode == NativeContinuationSearchMode::DirtyRestrictedFreshLayout;
+}
+
 struct SolveOptions {
+    NativeContinuationSearchMode native_continuation_search = NativeContinuationSearchMode::Ordinary;
     double epsilon = 1e-9;          /* max Bellman residual, cost units */
     std::uint32_t max_states = 200000;
     std::uint32_t max_sweeps = 100000;
@@ -61,6 +96,7 @@ struct SolveOptions {
      * optional post-solve policy certification/lift state space; exhausting
      * it must retain an already independently verified executable policy. */
     std::uint32_t max_policy_refinement_states = 0;
+    CandidateEvaluationLimits candidate_evaluation_limits;
     /* Exact work-scheduling controls. These do not change the admitted
      * action set, state identity, transition kernels, or production caps. */
     std::uint32_t focused_expansion_checkpoint = 32;
@@ -129,6 +165,22 @@ struct SolveOptions {
     SolveProfile solve_profile = SolveProfile::Default;
     std::uint32_t solve_profile_override_mask = 0;
 };
+
+inline CandidateEvaluationLimits resolved_candidate_evaluation_limits(
+        const SolveOptions& options, const std::uint64_t remaining_owned_bytes,
+        const std::uint64_t inherited_owned_ceiling) {
+    auto result = options.candidate_evaluation_limits;
+    if (result.max_states == 0) result.max_states = options.max_discovered_states;
+    if (result.max_pairs == 0) result.max_pairs = static_cast<std::uint32_t>(
+        std::min<std::uint64_t>(options.max_state_action_rows,
+            std::numeric_limits<std::uint32_t>::max()));
+    if (result.max_transitions == 0) result.max_transitions = static_cast<std::uint32_t>(
+        std::min<std::uint64_t>(options.max_transitions,
+            std::numeric_limits<std::uint32_t>::max()));
+    result.max_owned_bytes = std::min(remaining_owned_bytes,
+        result.max_owned_bytes == 0 ? inherited_owned_ceiling : result.max_owned_bytes);
+    return result;
+}
 
 inline void apply_solve_profile_defaults(
     SolveOptions& options,
@@ -777,6 +829,8 @@ struct SolveDiagnostics {
     std::string solution_scope = "globally_optimal_unrestricted";
     std::string solve_profile_id = "default";
     std::uint32_t solve_profile_override_mask = 0;
+    NativeContinuationSearchMode native_continuation_search = NativeContinuationSearchMode::Ordinary;
+    CandidateEvaluationLimits configured_candidate_evaluation_limits;
     /* Compact is the stable default aggregate document. Full evidence adds
      * bounded carrier/action/proof samples without changing calculations. */
     bool full_evidence = false;

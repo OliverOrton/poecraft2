@@ -404,6 +404,17 @@ typedef struct pc_solve_options {
      * overridden only when the corresponding override bit is present. */
     uint32_t solve_profile;
     uint32_t solve_profile_override_mask;
+    /* Optional candidate-checker limits, separate from ordinary search caps.
+     * Zero preserves each existing inherited limit. Checker memory also fits
+     * inside the aggregate remaining max_solver_owned_bytes; this is not an
+     * additional allocation. Large native requests must reserve process and
+     * final-evaluation headroom separately. Browser defaults are unchanged. */
+    /* Keep the first extension 64-bit aligned so legacy trailing padding
+     * cannot be mistaken for a caller-supplied field. */
+    uint64_t candidate_max_owned_bytes;
+    uint32_t candidate_max_states;
+    uint32_t candidate_max_pairs;
+    uint32_t candidate_max_transitions;
 } pc_solve_options;
 
 typedef enum pc_solve_profile {
@@ -437,7 +448,14 @@ typedef enum pc_solver_flag {
     PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS = 1u << 5,
     /* Public value for the exact operator-major delayed-action scheduler.
      * The former high diagnostic bit remains accepted for compatibility. */
-    PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS = 1u << 6
+    PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS = 1u << 6,
+    /* Optional post-incumbent dirty-continuation search. It searches a fresh
+     * private action-observer layout and admits only independently evaluated
+     * executable uppers into the original full-scope portfolio. It changes
+     * neither the caller's action scope nor lower/exactness authority.
+     * Intended for explicitly budgeted native requests; no cap is raised by
+     * the flag itself. Existing bounded finish/abandon retains the fallback. */
+    PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH = 1u << 7
 } pc_solver_flag;
 
 typedef enum pc_solve_policy_status {

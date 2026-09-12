@@ -1,0 +1,236 @@
+{
+  "baseline": "control",
+  "candidate": "candidate",
+  "delta_distributions": {
+    "compiled_edges": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "compiled_nodes": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "expanded_states": {
+      "count": 1,
+      "max": -3968.0,
+      "median": -3968.0,
+      "min": -3968.0,
+      "p90": -3968.0,
+      "p99": -3968.0
+    },
+    "final_absolute_gap": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_lower_bound": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_relative_gap": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_upper_bound": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "peak_memory_bytes": {
+      "count": 1,
+      "max": -253774951.0,
+      "median": -253774951.0,
+      "min": -253774951.0,
+      "p90": -253774951.0,
+      "p99": -253774951.0
+    },
+    "reforge_work": {
+      "count": 1,
+      "max": -93536837.0,
+      "median": -93536837.0,
+      "min": -93536837.0,
+      "p90": -93536837.0,
+      "p99": -93536837.0
+    },
+    "rows": {
+      "count": 1,
+      "max": -94031.0,
+      "median": -94031.0,
+      "min": -94031.0,
+      "p90": -94031.0,
+      "p99": -94031.0
+    },
+    "solve_ms": {
+      "count": 1,
+      "max": -27647.843300000066,
+      "median": -27647.843300000066,
+      "min": -27647.843300000066,
+      "p90": -27647.843300000066,
+      "p99": -27647.843300000066
+    },
+    "solve_step_max_ms": {
+      "count": 1,
+      "max": 10039.820500000002,
+      "median": 10039.820500000002,
+      "min": 10039.820500000002,
+      "p90": 10039.820500000002,
+      "p99": 10039.820500000002
+    },
+    "solve_step_median_ms": {
+      "count": 1,
+      "max": -0.0070999999999999995,
+      "median": -0.0070999999999999995,
+      "min": -0.0070999999999999995,
+      "p90": -0.0070999999999999995,
+      "p99": -0.0070999999999999995
+    },
+    "solve_step_p95_ms": {
+      "count": 1,
+      "max": 0.49600000000000005,
+      "median": 0.49600000000000005,
+      "min": 0.49600000000000005,
+      "p90": 0.49600000000000005,
+      "p99": 0.49600000000000005
+    },
+    "states": {
+      "count": 1,
+      "max": -6550.0,
+      "median": -6550.0,
+      "min": -6550.0,
+      "p90": -6550.0,
+      "p99": -6550.0
+    },
+    "strategy_json_bytes": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "time_to_incumbent_ms": {
+      "count": 1,
+      "max": 4732.278299999999,
+      "median": 4732.278299999999,
+      "min": 4732.278299999999,
+      "p90": 4732.278299999999,
+      "p99": 4732.278299999999
+    },
+    "time_to_target_ms": {
+      "count": 0,
+      "max": null,
+      "median": null,
+      "min": null,
+      "p90": null,
+      "p99": null
+    },
+    "transitions": {
+      "count": 1,
+      "max": -128695.0,
+      "median": -128695.0,
+      "min": -128695.0,
+      "p90": -128695.0,
+      "p99": -128695.0
+    },
+    "wall_ms": {
+      "count": 1,
+      "max": -27667.64300000004,
+      "median": -27667.64300000004,
+      "min": -27667.64300000004,
+      "p90": -27667.64300000004,
+      "p99": -27667.64300000004
+    }
+  },
+  "excluded": [],
+  "missing_from_baseline": [],
+  "missing_from_candidate": [],
+  "paired_cases": 1,
+  "pairs": [
+    {
+      "baseline_status": {
+        "actual": "bounded_feasible",
+        "policy": "bounded_feasible",
+        "termination": "requested_bounded_finish"
+      },
+      "candidate_status": {
+        "actual": "bounded_feasible",
+        "policy": "bounded_feasible",
+        "termination": "requested_bounded_finish"
+      },
+      "deltas": {
+        "compiled_edges": 0.0,
+        "compiled_nodes": 0.0,
+        "expanded_states": -3968.0,
+        "final_absolute_gap": 0.0,
+        "final_lower_bound": 0.0,
+        "final_relative_gap": 0.0,
+        "final_upper_bound": 0.0,
+        "peak_memory_bytes": -253774951.0,
+        "reforge_work": -93536837.0,
+        "rows": -94031.0,
+        "solve_ms": -27647.843300000066,
+        "solve_step_max_ms": 10039.820500000002,
+        "solve_step_median_ms": -0.0070999999999999995,
+        "solve_step_p95_ms": 0.49600000000000005,
+        "states": -6550.0,
+        "strategy_json_bytes": 0.0,
+        "time_to_incumbent_ms": 4732.278299999999,
+        "time_to_target_ms": null,
+        "transitions": -128695.0,
+        "wall_ms": -27667.64300000004
+      },
+      "dimensions": {
+        "base": "Onyx Amulet",
+        "base_class": "Amulet / Onyx Amulet",
+        "class": "Amulet",
+        "evaluation_role": "unassigned",
+        "goal_probability": "low_le_0.005",
+        "incumbent": "other",
+        "natural_t1_count": "3",
+        "observation_status": "completed",
+        "policy_status": "bounded_feasible",
+        "pool_density": "dense_ge_100",
+        "side_mix": "SSS",
+        "termination": "requested_bounded_finish"
+      },
+      "id": "cb08-cross-base-product8-long240",
+      "treatments": {
+        "baseline_executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\budget-control.exe",
+          "sha256": "168acbaa242f4b6cd5f8f49c92f08e7b1810bd642f3c3b0ce74cb00ebba8b7b3"
+        },
+        "candidate_executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v10-public.exe",
+          "sha256": "06b5a065222970ec933a9a65821c2b9f187f8b8508edf28bb8516cbb86b01b01"
+        }
+      }
+    }
+  ],
+  "regressions": [],
+  "shared_case_ids": 1,
+  "status_transitions": {
+    "bounded_feasible->bounded_feasible": 1
+  }
+}

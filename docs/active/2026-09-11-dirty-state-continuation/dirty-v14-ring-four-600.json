@@ -1,0 +1,1479 @@
+{
+  "run": "out\\dirty-state-continuation\\dirty-v14-ring-four-600",
+  "executable_sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96",
+  "source": {
+    "commit": "0ca76eb4a9f35a90299ecceeab740e5535804fd9",
+    "dirty": true,
+    "dirty_paths": [
+      {
+        "path": "ANDOFF.md",
+        "status": "M "
+      },
+      {
+        "path": "docs/active/2026-09-11-dirty-state-continuation/",
+        "status": "??"
+      },
+      {
+        "path": "docs/solver/mathematics/numerical-closure.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/mathematics/policies.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/mathematics/representations.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/mathematics/search-and-resumption.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/research-state.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/research.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/resources-resume-replay.md",
+        "status": " M"
+      },
+      {
+        "path": "docs/solver/upper-authority.md",
+        "status": " M"
+      },
+      {
+        "path": "engine/benchmarks/solver_benchmark.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/include/poecraft/solver.h",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_api.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_compile.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_compile_contracts.hpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_diagnostic_options.hpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_eval.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_eval_types.hpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_policy_assertion_work.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_constructive.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_contracts.hpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_finish.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_incremental.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_return_bridge.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_telemetry.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_telemetry_json.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_solve_types.hpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_sparse_policy.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/src/solver_sparse_policy.hpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/tests/test_main.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/tests/test_solver_api.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/tests/test_solver_compile.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/tests/test_solver_eval.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/tests/test_solver_solve.cpp",
+        "status": " M"
+      },
+      {
+        "path": "engine/tests/tests.hpp",
+        "status": " M"
+      },
+      {
+        "path": "experiments/solver-research/backbone-pilot-v1.json",
+        "status": " M"
+      },
+      {
+        "path": "tools/ingest/poecraft_ingest/solver_corpus_runner.py",
+        "status": " M"
+      },
+      {
+        "path": "tools/ingest/poecraft_ingest/solver_lab_workflow.py",
+        "status": " M"
+      },
+      {
+        "path": "tools/ingest/tests/test_solver_corpus_runner.py",
+        "status": " M"
+      },
+      {
+        "path": "tools/ingest/tests/test_solver_lab_cli_workflow.py",
+        "status": " M"
+      }
+    ]
+  },
+  "input": {
+    "native_retention_diagnostic": "reuse",
+    "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+    "watchdog_seconds": 840,
+    "requested_bounded_finish_seconds": 600,
+    "session": {
+      "base_metadata_path": "Metadata/Items/Rings/Ring10",
+      "base_name": "Amethyst Ring",
+      "item_class_key": "Ring",
+      "item_level": 86,
+      "minimum_item_level": 86
+    },
+    "start": {
+      "rarity": "rare",
+      "with_implicits": false,
+      "mods": []
+    },
+    "goal": {
+      "version": "v1",
+      "rarity": "rare",
+      "action_mode": "goal_relevant",
+      "min_satisfied_slots": 4,
+      "slots": [
+        {
+          "family_mod_key": "IncreasedEvasionRating7",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "FireResist8",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "AddedColdDamage9",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "AllAttributes4",
+          "min_tier": 1
+        }
+      ]
+    },
+    "corpus": {
+      "tier": "diversity-clean-four",
+      "stratum": "amethyst_ring_clean_zero_to_4",
+      "goal_modifier_count": 4,
+      "start_goal_modifier_count": 0,
+      "product_worker_profile": "calculator_default_adaptive_max_8"
+    },
+    "product_action_envelope": {
+      "mode": "calculator_goal_relevant_priced_v1",
+      "envelope_goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 4,
+        "slots": [
+          {
+            "family_mod_key": "IncreasedEvasionRating7",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "FireResist8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "AddedColdDamage9",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "AllAttributes4",
+            "min_tier": 1
+          }
+        ],
+        "fossil_mode": "goal_relevant",
+        "requested_fossil_actions": []
+      },
+      "pricing_filter": "all_declared_cost_keys_present",
+      "bench_goal_slots_forbidden": true
+    },
+    "allowed_mechanic_families": [
+      "calculator_goal_relevant_product_envelope"
+    ],
+    "bounded_best_policy_contract": {
+      "allow_exact": true,
+      "bounded_requires_named_stop": true,
+      "bounded_requires_strict_gap": true,
+      "bounded_requires_open_obligations": true,
+      "require_evaluated_upper": true,
+      "require_cheapest_independently_evaluated_incumbent": true
+    },
+    "economy": {
+      "version": "v1",
+      "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+      "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+      "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+      "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+      "league_key": "allflame",
+      "league_name": "Allflame",
+      "manual_overrides": {
+        "base": 1
+      },
+      "fallback_price": null,
+      "missing_price_decisions": {
+        "base": "quality_ladder_fixture_input_1_chaos"
+      }
+    },
+    "caps": {
+      "solve_profile": "calculator_product_v1",
+      "max_states": 200000,
+      "max_sweeps": 100000,
+      "solve_step_work_items": 8,
+      "max_discovered_states": 200000,
+      "max_expanded_states": 200000,
+      "max_state_action_rows": 1215000,
+      "max_transitions": 10000000,
+      "max_reforge_work": 200000000,
+      "max_solver_owned_bytes": 8589934592,
+      "max_diagnostic_samples": 64,
+      "max_telemetry_json_bytes": 2097152,
+      "max_compiled_nodes": 100000,
+      "max_compiled_edges": 400000,
+      "max_strategy_json_bytes": 67108864,
+      "worker_step_ms": 250,
+      "cancel_ack_ms": 250,
+      "full_evidence": true,
+      "candidate_evaluation": {
+        "max_owned_bytes": 4294967296,
+        "max_pairs": 10000000,
+        "max_states": 2000000,
+        "max_transitions": 40000000
+      },
+      "native_continuation_search": "dirty_restricted_fresh"
+    },
+    "verification": {
+      "runs": 0,
+      "seed": 20260826,
+      "max_actions_per_run": 100000,
+      "max_graph_steps_per_run": 4000000,
+      "exact_evaluation": true,
+      "exact_max_states": 2000000,
+      "exact_max_pairs": 10000000,
+      "exact_max_transitions": 40000000,
+      "exact_max_owned_bytes": 4294967296,
+      "exact_cost_absolute_tolerance": 1e-07,
+      "exact_cost_relative_tolerance": 1e-09
+    }
+  },
+  "configuration": {
+    "evaluation_roles": [],
+    "evaluation_roles_manifest": null,
+    "exact_evaluation": true,
+    "goal_progress_gated_reforges": false,
+    "hard_case_default_concurrency": 1,
+    "host_watchdog_seconds": 870.0,
+    "max_workers": 1,
+    "memory_budget_bytes": 15032385536,
+    "native_retention_diagnostic": "reuse",
+    "run_verification": false,
+    "worker_headroom_bytes": 6442450944
+  },
+  "admission": {
+    "total_bytes": 68409442304,
+    "reservation_bytes": 15032385536,
+    "available_bytes": 43118428160,
+    "minimum_outside_bytes": 13681888461,
+    "utc": "2026-09-12T01:45:31.9021897Z",
+    "admitted": true
+  },
+  "actual_status": "refused_unsupported_action",
+  "summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 10251920.398984343,
+    "expanded_states": 165,
+    "sweeps": 0,
+    "residual": 0.0002551078796386719,
+    "skipped_action_count": 1,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "action_counts": {
+      "registry": 184,
+      "candidate": 43,
+      "evaluator_supported": 43,
+      "supported_priced": 179,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 1
+    },
+    "lower_bound": 201.85524142944053,
+    "upper_bound": 10251920.398984343,
+    "evaluated_policy_cost": 10251920.398984343,
+    "absolute_optimality_gap": 10251718.543742914,
+    "relative_optimality_gap": 50787.47755641733,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  },
+  "phase_wall_ms": {
+    "registry_layout": 25.0299,
+    "solve": 612067.851,
+    "compile": 3.5138,
+    "verification": null,
+    "total": 641539.6318
+  },
+  "exact_final": {
+    "completed": true,
+    "time_limited": false,
+    "status": "matched",
+    "wall_ms": 27869.0238,
+    "converged": true,
+    "cost_complete": true,
+    "zero_off_policy_mass": true,
+    "cost_reconciled": true,
+    "success_probability": 1,
+    "off_policy_mass": 0,
+    "total_expected_cost": 10251920.398984343,
+    "solver_cost_delta_absolute": 0,
+    "solver_cost_delta_relative": 0
+  },
+  "candidates": {
+    "samples": [
+      {
+        "kind": "current_run_return_trial",
+        "trial": "exalt",
+        "stage": "anchor_entries",
+        "disposition": "refused",
+        "reason": "exact anchor operation is not globally routable",
+        "old_cost": 3725358919.4984236,
+        "one_cost": null,
+        "r": null,
+        "q": null,
+        "repeated_cost": null,
+        "bridge_rows": 18,
+        "bridge_transitions": 18,
+        "eval_states": 416,
+        "eval_pairs": 10,
+        "eval_transitions": 3314,
+        "eval_peak_bytes": 1758124,
+        "eval_live_bytes": 1256918,
+        "eval_work": 5762097,
+        "eval_complete": true,
+        "eval_cost": 3725358919.4984236,
+        "eval_success": 1,
+        "eval_stop": 0,
+        "eval_subphase": "done",
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296,
+        "wall_seconds": 0.1947641
+      },
+      {
+        "kind": "dirty_continuation_candidate",
+        "root_action": "gated_chaos",
+        "disposition": "retained",
+        "reason": "",
+        "stage": "complete_dirty_controller",
+        "root_acquisition_ordering_estimate": 13.21477537270917,
+        "original_scope_preserved": true,
+        "private_lower_used": false,
+        "omitted": [
+          "harvest_resist:fire:cold",
+          "harvest_resist:lightning:cold"
+        ],
+        "full_layout_classes": 25,
+        "private_layout_classes": 25,
+        "private_states": 12469,
+        "constructed_rows": 17240,
+        "continued_dirty_entries": 4758,
+        "paid_cleanup_entries": 4559,
+        "paid_scour_entries": 0,
+        "paid_redraw_entries": 3135,
+        "shared_redraw_rows": 3136,
+        "cleanup_alternatives": 4772,
+        "improvement_rounds": 4,
+        "child_work": 5741784,
+        "child_peak_bytes": 38002029,
+        "seed_cost_estimate": 417420782.9923674,
+        "coarse_cost_estimate": 243945017.48992026,
+        "coarse_cost_entry": "original_root",
+        "evaluated_cost": 223450050.40882382,
+        "nonempty_handoff": false,
+        "old_entry_cost": null,
+        "native_boundary_entries": 0,
+        "entry_responses": [
+          {
+            "request_identity": "0",
+            "status": "complete",
+            "native_continuation_cost": 223450050.40884244,
+            "native_bellman_residual": 0,
+            "prefixes": 0,
+            "suffixes": 0,
+            "goal_mask": 0,
+            "first_policy_debt": 4,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "25",
+              "0",
+              "25",
+              "0",
+              "25",
+              "0",
+              "25",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "chaos",
+                "selected": true,
+                "full_continuation_cost_estimate": 243945017.48992392,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.07567287159985901,
+                "terminal_probability": 2.6843048067288717e-10
+              }
+            ]
+          },
+          {
+            "request_identity": "9223372036854775809",
+            "status": "complete",
+            "native_continuation_cost": 223450067.38600558,
+            "native_bellman_residual": 0,
+            "prefixes": 1,
+            "suffixes": 3,
+            "goal_mask": 1,
+            "first_policy_debt": 6,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "1",
+              "3",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "25",
+              "1",
+              "10",
+              "3",
+              "25",
+              "0",
+              "25",
+              "0",
+              "25",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "exalt",
+                "selected": false,
+                "full_continuation_cost_estimate": 243945039.88680202,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.0009389671361502347,
+                "terminal_probability": 0
+              },
+              {
+                "operator": "annul",
+                "selected": true,
+                "full_continuation_cost_estimate": 243945033.9226057,
+                "loses_goal_probability": 0.25,
+                "gains_goal_probability": 0,
+                "terminal_probability": 0
+              }
+            ]
+          },
+          {
+            "request_identity": "9223372036854775810",
+            "status": "complete",
+            "native_continuation_cost": 223450067.38600558,
+            "native_bellman_residual": 0,
+            "prefixes": 1,
+            "suffixes": 3,
+            "goal_mask": 1,
+            "first_policy_debt": 6,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "1",
+              "3",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "25",
+              "2",
+              "10",
+              "2",
+              "17",
+              "1",
+              "25",
+              "0",
+              "25",
+              "0",
+              "25",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "exalt",
+                "selected": false,
+                "full_continuation_cost_estimate": 243945039.828908,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.0009389671361502347,
+                "terminal_probability": 0
+              },
+              {
+                "operator": "annul",
+                "selected": true,
+                "full_continuation_cost_estimate": 243945033.9226057,
+                "loses_goal_probability": 0.25,
+                "gains_goal_probability": 0,
+                "terminal_probability": 0
+              }
+            ]
+          }
+        ],
+        "eval_limit_states": 2000000,
+        "eval_limit_pairs": 10000000,
+        "eval_limit_transitions": 40000000,
+        "eval_limit_owned_bytes": 4294967296,
+        "eval_complete": true,
+        "eval_states": 622404,
+        "eval_pairs": 438655,
+        "eval_transitions": 9121170,
+        "eval_peak_bytes": 1361878504,
+        "eval_solved_sccs": 11,
+        "eval_total_sccs": 11,
+        "eval_iterations": 51,
+        "eval_residual": 0,
+        "eval_subphase": "done",
+        "wall_seconds": 147.0321738
+      },
+      {
+        "kind": "dirty_continuation_candidate",
+        "root_action": "exalt",
+        "disposition": "deferred_by_cost_estimate",
+        "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+        "stage": "continuation_cost_improvement",
+        "root_acquisition_ordering_estimate": 118.37326530612245,
+        "original_scope_preserved": true,
+        "private_lower_used": false,
+        "omitted": [
+          "harvest_resist:fire:cold",
+          "harvest_resist:lightning:cold"
+        ],
+        "full_layout_classes": 25,
+        "private_layout_classes": 25,
+        "private_states": 12468,
+        "constructed_rows": 17239,
+        "continued_dirty_entries": 4758,
+        "paid_cleanup_entries": 7694,
+        "paid_scour_entries": 0,
+        "paid_redraw_entries": 0,
+        "shared_redraw_rows": 0,
+        "cleanup_alternatives": 4772,
+        "improvement_rounds": 6,
+        "child_work": 0,
+        "child_peak_bytes": 39467359,
+        "seed_cost_estimate": 2142651074.184875,
+        "coarse_cost_estimate": 1890970873.0658107,
+        "coarse_cost_entry": "original_root",
+        "evaluated_cost": null,
+        "nonempty_handoff": false,
+        "old_entry_cost": null,
+        "native_boundary_entries": 0,
+        "entry_responses": [],
+        "eval_limit_states": 0,
+        "eval_limit_pairs": 0,
+        "eval_limit_transitions": 0,
+        "eval_limit_owned_bytes": 0,
+        "eval_complete": false,
+        "eval_states": 0,
+        "eval_pairs": 0,
+        "eval_transitions": 0,
+        "eval_peak_bytes": 0,
+        "eval_solved_sccs": 0,
+        "eval_total_sccs": 0,
+        "eval_iterations": 0,
+        "eval_residual": 0,
+        "eval_subphase": "model_setup",
+        "wall_seconds": 39.4630752
+      },
+      {
+        "kind": "dirty_continuation_candidate",
+        "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+        "disposition": "retained",
+        "reason": "",
+        "stage": "complete_dirty_controller",
+        "root_acquisition_ordering_estimate": 0.3428,
+        "original_scope_preserved": true,
+        "private_lower_used": false,
+        "omitted": [
+          "harvest_resist:fire:cold",
+          "harvest_resist:lightning:cold"
+        ],
+        "full_layout_classes": 25,
+        "private_layout_classes": 25,
+        "private_states": 12468,
+        "constructed_rows": 17239,
+        "continued_dirty_entries": 4758,
+        "paid_cleanup_entries": 4559,
+        "paid_scour_entries": 0,
+        "paid_redraw_entries": 3135,
+        "shared_redraw_rows": 3135,
+        "cleanup_alternatives": 4772,
+        "improvement_rounds": 3,
+        "child_work": 887040,
+        "child_peak_bytes": 37605231,
+        "seed_cost_estimate": 22480971.447525006,
+        "coarse_cost_estimate": 10679949.76795998,
+        "coarse_cost_entry": "original_root",
+        "evaluated_cost": 10251920.398984343,
+        "nonempty_handoff": false,
+        "old_entry_cost": null,
+        "native_boundary_entries": 0,
+        "entry_responses": [
+          {
+            "request_identity": "0",
+            "status": "complete",
+            "native_continuation_cost": 10251920.398984646,
+            "native_bellman_residual": 0,
+            "prefixes": 0,
+            "suffixes": 0,
+            "goal_mask": 0,
+            "first_policy_debt": 4,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "25",
+              "0",
+              "25",
+              "0",
+              "25",
+              "0",
+              "25",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+                "selected": true,
+                "full_continuation_cost_estimate": 10679949.76795995,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 1.0000000000000016,
+                "terminal_probability": 2.1500993063321716e-07
+              }
+            ]
+          },
+          {
+            "request_identity": "9223372036854775809",
+            "status": "complete",
+            "native_continuation_cost": 10251939.255608944,
+            "native_bellman_residual": 0,
+            "prefixes": 1,
+            "suffixes": 3,
+            "goal_mask": 4,
+            "first_policy_debt": 6,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "1",
+              "3",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "25",
+              "1",
+              "10",
+              "3",
+              "25",
+              "0",
+              "25",
+              "0",
+              "25",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "exalt",
+                "selected": false,
+                "full_continuation_cost_estimate": 10679974.881871656,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.017543859649122806,
+                "terminal_probability": 0
+              },
+              {
+                "operator": "annul",
+                "selected": true,
+                "full_continuation_cost_estimate": 10679968.547449041,
+                "loses_goal_probability": 0.25,
+                "gains_goal_probability": 0,
+                "terminal_probability": 0
+              }
+            ]
+          },
+          {
+            "request_identity": "9223372036854775810",
+            "status": "complete",
+            "native_continuation_cost": 10251939.255608944,
+            "native_bellman_residual": 0,
+            "prefixes": 1,
+            "suffixes": 3,
+            "goal_mask": 4,
+            "first_policy_debt": 6,
+            "native_abstract_identity": [
+              "8098442395141633074",
+              "0",
+              "0",
+              "0",
+              "0",
+              "1",
+              "3",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "2",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "25",
+              "2",
+              "10",
+              "2",
+              "17",
+              "1",
+              "25",
+              "0",
+              "25",
+              "0",
+              "25",
+              "0"
+            ],
+            "private_choices": [
+              {
+                "operator": "exalt",
+                "selected": false,
+                "full_continuation_cost_estimate": 10679974.852682568,
+                "loses_goal_probability": 0,
+                "gains_goal_probability": 0.017543859649122806,
+                "terminal_probability": 0
+              },
+              {
+                "operator": "annul",
+                "selected": true,
+                "full_continuation_cost_estimate": 10679968.547449041,
+                "loses_goal_probability": 0.25,
+                "gains_goal_probability": 0,
+                "terminal_probability": 0
+              }
+            ]
+          }
+        ],
+        "eval_limit_states": 2000000,
+        "eval_limit_pairs": 10000000,
+        "eval_limit_transitions": 40000000,
+        "eval_limit_owned_bytes": 4294967296,
+        "eval_complete": true,
+        "eval_states": 362156,
+        "eval_pairs": 241148,
+        "eval_transitions": 3483831,
+        "eval_peak_bytes": 666819057,
+        "eval_solved_sccs": 11,
+        "eval_total_sccs": 11,
+        "eval_iterations": 42,
+        "eval_residual": 0,
+        "eval_subphase": "done",
+        "wall_seconds": 83.6905251
+      },
+      {
+        "identity": "12327040716686757533",
+        "kind": "direct_compiled_core_policy",
+        "stage": "direct_certification",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 3725358919.4984236,
+        "estimate_cost": 3725358919.4984236,
+        "reconciliation_absolute_delta": 426.77720165252686,
+        "reconciliation_relative_delta": 1.1456000937981761e-07,
+        "disposition": "eligible_verified_candidate",
+        "selection_reason": "executable cost mismatch blocks exactness"
+      },
+      {
+        "identity": "15226112343028060546",
+        "kind": "private_dirty_continuation",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 10251920.398984343,
+        "estimate_cost": 10251920.398984343,
+        "reconciliation_absolute_delta": 428029.3689756375,
+        "reconciliation_relative_delta": 0.04175114050027567,
+        "disposition": "selected_for_publication",
+        "selection_reason": "strict cheapest independently evaluated candidate"
+      },
+      {
+        "identity": "11602358358380523692",
+        "kind": "private_dirty_continuation",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 223450050.40882382,
+        "estimate_cost": 223450050.40882382,
+        "reconciliation_absolute_delta": 20494967.08109644,
+        "reconciliation_relative_delta": 0.09172057488283795,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      },
+      {
+        "identity": "12327040716686757533",
+        "kind": "direct_compiled_core_policy",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 3725358919.4984236,
+        "estimate_cost": 3725358919.4984236,
+        "reconciliation_absolute_delta": 426.77720165252686,
+        "reconciliation_relative_delta": 1.1456000937981761e-07,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      },
+      {
+        "identity": "12927163954611232582",
+        "kind": "gated_primitive_destructive_renewal",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 3725358919.4984236,
+        "estimate_cost": 3725358919.4984236,
+        "reconciliation_absolute_delta": 426.7772059440613,
+        "reconciliation_relative_delta": 1.1456001053179613e-07,
+        "disposition": "not_selected",
+        "selection_reason": "a cheaper independently evaluated candidate won publication"
+      }
+    ],
+    "retained": 9,
+    "omitted": 0,
+    "retained_bytes": 11196,
+    "limit": 64
+  },
+  "memory": {
+    "measurement_kind": "working_set_snapshots_not_peak",
+    "process_working_set_before_bytes": 33710080,
+    "process_working_set_after_bytes": 2106531840,
+    "process_working_set_delta_bytes": 2072821760,
+    "process_working_set_peak_bytes": null,
+    "wasm_heap_before_bytes": null,
+    "wasm_heap_after_bytes": null,
+    "wasm_heap_growth_bytes": null,
+    "native_live_owned_bytes": 1462699152,
+    "native_peak_owned_bytes": 1484150747,
+    "native_serialized_output_bytes": 45,
+    "solver_telemetry_json_bytes": 645438
+  },
+  "improvement_events": [
+    {
+      "elapsed_ms": 18545.4785,
+      "phase_owner": "exact_evaluation",
+      "lower_bound": 201.85524142944053,
+      "upper_bound": 3725358919.4984236,
+      "incumbent_kind": "other"
+    },
+    {
+      "elapsed_ms": 164833.2608,
+      "phase_owner": "exact_evaluation",
+      "lower_bound": 201.85524142944053,
+      "upper_bound": 223450050.40882382,
+      "incumbent_kind": "other"
+    },
+    {
+      "elapsed_ms": 282182.5545,
+      "phase_owner": "state_local_automatic_synthesis",
+      "lower_bound": 201.85524142944053,
+      "upper_bound": 10251920.398984343,
+      "incumbent_kind": "other"
+    }
+  ],
+  "strategy": "docs/active/2026-09-11-dirty-state-continuation/strategies/ring-four.strategy.json",
+  "strategy_sha256": "78fd0bc1a2ae93ca921fb3191defbb76aaab165dd1cfd90e567401ffb549bdf7",
+  "action_accounting": {
+    "version": "s8.4_v1",
+    "semantics": {
+      "primary": "per_strategy_invocation",
+      "terminal_mass_separate": true,
+      "success_normalized_basis": null,
+      "success_normalized_is_conditional_path_expectation": false
+    },
+    "pricing": {
+      "status": "complete",
+      "economy_id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+      "missing_price_keys": []
+    },
+    "totals": {
+      "per_invocation": {
+        "expected_actions": 1476470.424415015,
+        "known_expected_cost": 10251920.398984343,
+        "total_expected_cost": 10251920.398984343,
+        "cost_complete": true
+      },
+      "success_normalized": null
+    },
+    "actions": {
+      "per_invocation": [
+        {
+          "id": "annul",
+          "display_name": "annul",
+          "expected_visits": 1019731.7691849164,
+          "expected_applied": 1019731.7691849164,
+          "expected_spend_known": 9881200.84340184,
+          "expected_spend_complete": true,
+          "known_cost_share": 0.9638390134574952,
+          "probability_of_any_use": {
+            "status": "not_computable_from_occupancy",
+            "value": null
+          },
+          "reachable_states": 238792,
+          "reachable_regions": 4,
+          "classifications": [
+            "ordinary_crafting"
+          ],
+          "materials": [
+            {
+              "price_key": "annul",
+              "expected_quantity": 1019731.7691849164,
+              "price_status": "priced",
+              "unit_price": 9.69,
+              "cost_contribution": 9881200.84340184
+            }
+          ],
+          "regions": [
+            {
+              "goal_progress": 1,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 173441,
+              "expected_visits": 970451.5223074275,
+              "expected_applied": 970451.5223074275
+            },
+            {
+              "goal_progress": 2,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 58374,
+              "expected_visits": 48068.23536554926,
+              "expected_applied": 48068.23536554926
+            },
+            {
+              "goal_progress": 3,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 6762,
+              "expected_visits": 1201.1749172308962,
+              "expected_applied": 1201.1749172308962
+            },
+            {
+              "goal_progress": 4,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 215,
+              "expected_visits": 10.83659470636067,
+              "expected_applied": 10.83659470636067
+            }
+          ],
+          "raw_nodes": [
+            {
+              "node_id": "s9",
+              "expected_visits": 1019731.7691849164,
+              "expected_applied": 1019731.7691849164
+            }
+          ]
+        },
+        {
+          "id": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "display_name": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "expected_visits": 306689.9272524718,
+          "expected_applied": 306689.9272524718,
+          "expected_spend_known": 105133.30706214733,
+          "expected_spend_complete": true,
+          "known_cost_share": 0.01025498667279575,
+          "probability_of_any_use": {
+            "status": "not_computable_from_occupancy",
+            "value": null
+          },
+          "reachable_states": 121012,
+          "reachable_regions": 1,
+          "classifications": [
+            "ordinary_crafting"
+          ],
+          "materials": [
+            {
+              "price_key": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+              "expected_quantity": 306689.9272524718,
+              "price_status": "priced",
+              "unit_price": 0.3428,
+              "cost_contribution": 105133.30706214733
+            }
+          ],
+          "regions": [
+            {
+              "goal_progress": 0,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 121012,
+              "expected_visits": 306689.9272524718,
+              "expected_applied": 306689.9272524718
+            }
+          ],
+          "raw_nodes": [
+            {
+              "node_id": "s0",
+              "expected_visits": 306689.9272524718,
+              "expected_applied": 306689.9272524718
+            }
+          ]
+        },
+        {
+          "id": "exalt",
+          "display_name": "exalt",
+          "expected_visits": 150048.72797760158,
+          "expected_applied": 150048.72797760158,
+          "expected_spend_known": 265586.2485203548,
+          "expected_spend_complete": true,
+          "known_cost_share": 0.02590599986970894,
+          "probability_of_any_use": {
+            "status": "not_computable_from_occupancy",
+            "value": null
+          },
+          "reachable_states": 2331,
+          "reachable_regions": 3,
+          "classifications": [
+            "ordinary_crafting"
+          ],
+          "materials": [
+            {
+              "price_key": "exalt",
+              "expected_quantity": 150048.72797760158,
+              "price_status": "priced",
+              "unit_price": 1.77,
+              "cost_contribution": 265586.2485203548
+            }
+          ],
+          "regions": [
+            {
+              "goal_progress": 1,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 1,
+              "expected_visits": 122460.75273288386,
+              "expected_applied": 122460.75273288386
+            },
+            {
+              "goal_progress": 2,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 1466,
+              "expected_visits": 26648.537189620423,
+              "expected_applied": 26648.537189620423
+            },
+            {
+              "goal_progress": 3,
+              "rarity": 2,
+              "blocker_count": 0,
+              "crafted_count": 0,
+              "fractured_goal_mask": 0,
+              "fractured_count": 0,
+              "reachable_states": 864,
+              "expected_visits": 939.4380550973501,
+              "expected_applied": 939.4380550973501
+            }
+          ],
+          "raw_nodes": [
+            {
+              "node_id": "s66",
+              "expected_visits": 150048.72797760158,
+              "expected_applied": 150048.72797760158
+            }
+          ]
+        }
+      ],
+      "success_normalized": null
+    },
+    "materials": {
+      "per_invocation": [
+        {
+          "price_key": "annul",
+          "expected_quantity": 1019731.7691849164,
+          "price_status": "priced",
+          "unit_price": 9.69,
+          "cost_contribution": 9881200.84340184
+        },
+        {
+          "price_key": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "expected_quantity": 306689.9272524718,
+          "price_status": "priced",
+          "unit_price": 0.3428,
+          "cost_contribution": 105133.30706214733
+        },
+        {
+          "price_key": "exalt",
+          "expected_quantity": 150048.72797760158,
+          "price_status": "priced",
+          "unit_price": 1.77,
+          "cost_contribution": 265586.2485203548
+        }
+      ],
+      "success_normalized": null
+    },
+    "techniques": {
+      "per_invocation": {
+        "base_consumptions": 0,
+        "crafted_mod_cleanup_or_replacement_actions": 0,
+        "deterministic_finishing_actions": 0,
+        "fracture_actions": 0,
+        "fracture_preparation_actions": 0,
+        "multimod_finishing_bench_actions": 0,
+        "multimod_setup_actions": 0,
+        "ordinary_crafting_actions": 1476470.4244149898,
+        "permanent_goal_bench_finishes": 0,
+        "protection_reapplications": 0,
+        "protection_setup_actions": 0,
+        "restart_actions": 0,
+        "retry_actions": 0,
+        "retry_count": 0,
+        "temporary_blocker_applications": 0
+      },
+      "success_normalized": null
+    },
+    "review_sections": {
+      "enabled": false,
+      "items": []
+    },
+    "reconciliation": {
+      "action_descriptor_visits_difference": -2.514570951461792e-08,
+      "action_descriptor_applied_difference": 0,
+      "node_operation_visits_difference": -2.514570951461792e-08,
+      "material_quantity_differences": {
+        "annul": 0,
+        "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4": 0,
+        "exalt": 0
+      },
+      "cost_dot_product_difference": 0,
+      "section_actions_difference": 0,
+      "section_material_differences": {}
+    }
+  },
+  "baseline_upper": 3725358919.4984236,
+  "relative_cost_reduction": 0.9972480717642195,
+  "expected_actions": 1476470.424415015,
+  "expected_consumption": [
+    {
+      "key": "annul",
+      "quantity": 1019731.7691849164
+    },
+    {
+      "key": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+      "quantity": 306689.9272524718
+    },
+    {
+      "key": "exalt",
+      "quantity": 150048.72797760158
+    }
+  ],
+  "trace_max_owned_bytes": 1615631062,
+  "exact_evaluator_memory": {
+    "owned_bytes_estimate": 389684158,
+    "peak_owned_bytes_estimate": 666778933,
+    "retained_output_owned_bytes_estimate": 0,
+    "max_owned_bytes": 4294967296,
+    "max_output_json_bytes": 67108864
+  },
+  "worker": {
+    "attempt_id": "1789177532232344600-37592",
+    "authority": "host_scheduler_only",
+    "canceled": false,
+    "cancellation_ack_ms": null,
+    "cancellation_mode": null,
+    "case_id": "cb07-cross-base-product8-long240",
+    "evaluation_role": null,
+    "exit_code": 0,
+    "failure_kind": null,
+    "fragment_shadow_v1": null,
+    "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-ring-four-600\\logs\\cb07-cross-base-product8-long240.log",
+    "native_expectations_met": true,
+    "ordinary_finalization": null,
+    "partial_observation_available": true,
+    "partial_report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-ring-four-600\\partials\\cb07-cross-base-product8-long240.1789177532232344600-37592.json",
+    "process_id": 57416,
+    "process_identity_token": "57416:134336511324241516",
+    "report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-ring-four-600\\cases\\cb07-cross-base-product8-long240.json",
+    "reservation_policy_version": "solver_lab_host_reservation_v2",
+    "reservation_source": "solver_cap_plus_explicit_worker_headroom",
+    "reserved_memory_bytes": 15032385536,
+    "resolved_command": {
+      "argv": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+        "--artifact",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "--corpus",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-11-dirty-state-continuation\\native-600-final840\\ring-four\\manifest.json",
+        "--output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-ring-four-600\\cases\\cb07-cross-base-product8-long240.json",
+        "--partial-output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-ring-four-600\\partials\\cb07-cross-base-product8-long240.1789177532232344600-37592.json",
+        "--strategy-output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-ring-four-600\\strategies",
+        "--case",
+        "cb07-cross-base-product8-long240",
+        "--skip-verification",
+        "--exact-strategy-evaluation",
+        "--native-retention-diagnostic",
+        "reuse"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "host_reservation": {
+        "authority": "host_scheduler_only",
+        "reservation_policy_version": "solver_lab_host_reservation_v2",
+        "reservation_source": "solver_cap_plus_explicit_worker_headroom",
+        "reserved_memory_bytes": 15032385536,
+        "solver_owned_cap_bytes": 8589934592,
+        "worker_headroom_bytes": 6442450944
+      },
+      "host_watchdog_seconds": 870.0,
+      "identity_sha256": "3c226603c31a227a7cb2987d7210ac1ff2dd4ebd42edf97a0b907e4decb88d64"
+    },
+    "solver_owned_cap_bytes": 8589934592,
+    "status": "completed",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "tier": "diversity-clean-four",
+    "timed_out": false,
+    "wall_ms": 642443.6915999977,
+    "watchdog_seconds": 870.0,
+    "worker_headroom_bytes": 6442450944
+  },
+  "qualification_controls": {
+    "native_limit_seconds": 840,
+    "requested_finish_seconds": 600,
+    "host_watchdog_seconds": 870,
+    "public_native_flag": 128,
+    "public_mode": "dirty_restricted_fresh",
+    "final_cost_is_qualified": true
+  }
+}

@@ -211,6 +211,11 @@ struct SparsePolicyComponentView {
     /* Caller-owned product limit. BiCGSTAB iterations and fallback
      * Gauss-Seidel sweeps consume the same deterministic counter. */
     std::uint32_t max_iterations;
+    /* Optional exact column deficits of the transposed occupancy system.
+     * The evaluator owns this stable vector, including every stored internal
+     * coefficient. Enables a rank-one numerical stabilization only; the
+     * original unmodified equations still own final acceptance. */
+    const std::vector<WideFloat>* occupancy_column_exit = nullptr;
 };
 
 struct SparsePolicyComponentResult {

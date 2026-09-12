@@ -1,0 +1,190 @@
+{
+  "reviewed_main": "0ca76eb4a9f35a90299ecceeab740e5535804fd9",
+  "review_date": "2026-09-11",
+  "repository_evidence": [
+    {
+      "id": "R01",
+      "path": "HANDOFF.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/HANDOFF.md",
+      "role": "Current work status; local-only wording is stale relative to verified remote main",
+      "inspection": "Complete file"
+    },
+    {
+      "id": "R02",
+      "path": "docs/active/2026-09-11-first-return-improvement/README.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/docs/active/2026-09-11-first-return-improvement/README.md",
+      "role": "Latest Ring gain, Amulet non-gain, checker-cap experiments, controls and sampling failures",
+      "inspection": "Complete file, two range fetches"
+    },
+    {
+      "id": "R03",
+      "path": "docs/active/2026-09-11-post-incumbent-cost/README.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/docs/active/2026-09-11-post-incumbent-cost/README.md",
+      "role": "Prior capacity outcomes, observed host memory, source/value coverage, T1/T2 failures",
+      "inspection": "Relevant outcome and qualification sections"
+    },
+    {
+      "id": "R04",
+      "path": "engine/src/solver_solve_constructive.cpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/engine/src/solver_solve_constructive.cpp",
+      "role": "select_joint_policy_seed_row; first-policy terminal debt and lexicographic preference",
+      "inspection": "Lines 4100–4270"
+    },
+    {
+      "id": "R05",
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/engine/src/solver_solve_return_bridge.cpp",
+      "role": "Fixed-root Exalt, paid Annul, native evaluation and actual inherited limits",
+      "inspection": "Lines 1–260"
+    },
+    {
+      "id": "R06",
+      "path": "engine/src/solver_registry.cpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/engine/src/solver_registry.cpp",
+      "role": "Target-tag admission; targeted Harvest versus resistance discriminator declarations",
+      "inspection": "Relevant admission and add_harvest sections including lines 2050–2260"
+    },
+    {
+      "id": "R07",
+      "path": "engine/src/solver_calc.cpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/engine/src/solver_calc.cpp",
+      "role": "Layout action/dependency closure and builder configuration",
+      "inspection": "Lines 500–640"
+    },
+    {
+      "id": "R08",
+      "path": "engine/src/solver_abstract.cpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/engine/src/solver_abstract.cpp",
+      "role": "Observer union, required universe and split-only parent class key",
+      "inspection": "Lines 1–220,315–490,700–850"
+    },
+    {
+      "id": "R09",
+      "path": "AGENTS.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/AGENTS.md",
+      "role": "Current work/validation/native authority and no-subagent policy",
+      "inspection": "Complete file"
+    },
+    {
+      "id": "R10",
+      "path": "docs/foundation/tooling.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/docs/foundation/tooling.md",
+      "role": "Existing task map and corpus/worker command owner",
+      "inspection": "Known current owner; not fully re-read in this review"
+    },
+    {
+      "id": "R11",
+      "path": "docs/solver/mathematics/policies.md",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/docs/solver/mathematics/policies.md",
+      "role": "Existing properness and return-bridge argument destination",
+      "inspection": "Owner identified by latest campaign; not fully re-read in this review"
+    },
+    {
+      "id": "R12",
+      "path": "engine/src/actions_basic.cpp",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/engine/src/actions_basic.cpp",
+      "role": "Native rare_count returns four/five/six; context for debt derivation",
+      "inspection": "Current code-search excerpt only; not independent game-mechanics research"
+    },
+    {
+      "id": "R13",
+      "path": "docs/active/2026-09-11-first-return-improvement/experiments/two-variant-native-return.cpp.txt",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/docs/active/2026-09-11-first-return-improvement/experiments/two-variant-native-return.cpp.txt",
+      "role": "Retained failed gated-candidate source for diagnostic reproduction",
+      "inspection": "Existence and role established by campaign; source not fully re-read"
+    },
+    {
+      "id": "R14",
+      "path": "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+      "role": "Existing selected cross-base cohort",
+      "inspection": "Known retained cohort; use actual local manifest"
+    },
+    {
+      "id": "R15",
+      "path": "docs/active/2026-09-11-first-return-improvement/results.json",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0ca76eb4a9f35a90299ecceeab740e5535804fd9/docs/active/2026-09-11-first-return-improvement/results.json",
+      "role": "Latest detailed comparison evidence",
+      "inspection": "Linked source; narrative inspected, raw full JSON not reprocessed here"
+    }
+  ],
+  "commit": {
+    "url": "https://github.com/OliverOrton/poecraft2/commit/0ca76eb4a9f35a90299ecceeab740e5535804fd9",
+    "message": "Add certified first-return policy improvement with paid Annul bridges"
+  },
+  "input_reports": [
+    {
+      "id": "I01",
+      "path": "input_reports/action_layout_report.md",
+      "original_name": "Pasted markdown(4).md",
+      "source_pin": "84f02ee3b603fe3879ac2c4a885d1b81ba67772f",
+      "status": "Owner-supplied source-based hypothesis; native leave-one-out measurements not performed by its author",
+      "sha256": "a1f04ae3453282b861ef9a7e174baa5b1864a6316468af4b8eae952c13e7ec38"
+    },
+    {
+      "id": "I02",
+      "path": "input_reports/symbolic_actions_report.md",
+      "original_name": "Pasted markdown (2)(2).md",
+      "source_pin": "84f02ee3b603fe3879ac2c4a885d1b81ba67772f",
+      "status": "Owner-supplied research proposals, not native implementation or measured improvement",
+      "sha256": "84d9d86ba17d5c9d2c0fe23e89402970057e22b0ded01de32c23863ab8207d25"
+    }
+  ],
+  "primary_literature": [
+    {
+      "id": "L01",
+      "title": "Planning in Factored Action Spaces with Symbolic Dynamic Programming",
+      "authors": [
+        "Aswin Raghavan",
+        "Saket Joshi",
+        "Alan Fern",
+        "Prasad Tadepalli",
+        "Roni Khardon"
+      ],
+      "venue": "AAAI 2012, 26(1),1802–1808",
+      "doi": "10.1609/aaai.v26i1.8364",
+      "url": "https://ojs.aaai.org/index.php/AAAI/article/view/8364",
+      "inspection": "Publisher abstract/metadata; issue year 2012 despite migration timestamp 2021",
+      "transfer": "Factored state/action choices with space/time tradeoff; no imported native SSP guarantee"
+    },
+    {
+      "id": "L02",
+      "title": "Compositional Value Iteration with Pareto Caching",
+      "authors": [
+        "Kazuki Watanabe",
+        "Marck van der Vegt",
+        "Sebastian Junges",
+        "Ichiro Hasuo"
+      ],
+      "venue": "CAV 2024",
+      "doi": "10.1007/978-3-031-65633-0_21",
+      "url": "https://link.springer.com/chapter/10.1007/978-3-031-65633-0_21",
+      "inspection": "Publisher HTML introduction, overview, component/boundary examples, section2.4 soundness/termination distinction",
+      "transfer": "Boundary-dependent component queries; supplied reachability composition is not automatically native expected-cost synthesis"
+    },
+    {
+      "id": "L03",
+      "title": "Scaling Exact Inference for Discrete Probabilistic Programs",
+      "authors": [
+        "Steven Holtzen",
+        "Guy Van den Broeck",
+        "Todd Millstein"
+      ],
+      "venue": "OOPSLA 2020, PACMPL4,Article140",
+      "doi": "10.1145/3428208",
+      "url": "https://arxiv.org/html/2005.09089v4",
+      "inspection": "HTML sections1–3,6.2,AppendixD; not a full proof-by-proof paper verification",
+      "transfer": "Bounded conditional query structure; variable-ordering and composition cost limits; not cyclic policy properness"
+    }
+  ],
+  "local_validation": {
+    "script": "synthetic_checks.py",
+    "output": "synthetic_results.json",
+    "classification": "38 exact synthetic checks, no native engine or real leave-one-out measurements"
+  },
+  "limitations": [
+    "No local Codex thread or current host access.",
+    "No repository edits, build, solver run, simulator run, native timing, new policy or native layout count.",
+    "GitHub connection supplied repository evidence; container checkout retrieval was unavailable."
+  ]
+}

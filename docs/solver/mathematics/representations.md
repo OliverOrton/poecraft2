@@ -159,6 +159,33 @@ The strict implementation uses split-only partitions and generation-bound rows a
 <a id="mapping"></a>
 ## 8. Correspondence and open obligations
 
+### Action-scoped private policy search
+
+For a legal candidate subset \(A'\subseteq A\),
+\(V_A^*\leq V_{A'}^*\). A proper compiled controller using \(A'\), independently
+evaluated under the original mechanics, prices and terminal predicate, therefore
+provides an upper for the original request. A private lower or optimum under
+\(A'\) does not provide a full-scope lower or retire omitted actions.
+
+Observer removal can permit merging only after recomputing fixed/conditional
+program dependencies and retaining the original modifier universe. Passing an
+old layout as `refinement_parent_layout` retains its class IDs as split-only
+distinctions; genuine coarsening requires a fresh calculator namespace. Existing
+state IDs, selected rows and incumbent vectors cannot be transplanted into it.
+Projection is a coarsening only when every old class's complete member set maps
+to one new class with all goal/tier, occupancy, blocker, four junk-count
+categories, persistent flags, retry and observation facts preserved.
+
+The [dirty-state native measurement](../../active/2026-09-11-dirty-state-continuation/README.md#actual-cb08-action-layout-measurement)
+reproduces CB08's 21-class full layout. Removing either selected resistance
+conversion yields 15 classes; removing both yields six, and removing Annul leaves
+21. Whole-member projection and fresh native row construction agree to numerical
+precision: Chaos support falls from 4160 to 85 and native recurrence work from
+10447875 to 2128588. The same-layout subset retains the original support and work.
+This measured search-row saving does not establish equivalent checker carriers,
+whole-policy speedup or full-scope equivalence. The imported report predicted a
+benefit but did not perform this measurement.
+
 | Mathematical duty | Documented implementation boundary |
 |---|---|
 | Retain future-observable fields | `AbstractLayout`, `AbstractState`, native exact item/control identity |

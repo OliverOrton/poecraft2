@@ -594,6 +594,8 @@ struct pc_solver {
         carrier_ladder_exact_boundary_diagnostic;
     solver::NativeRetentionDiagnosticMode native_retention_diagnostic = solver::NativeRetentionDiagnosticMode::Off;
     double native_retention_checked_target = 0;
+    solver::NativeContinuationSearchMode native_continuation_search =
+        solver::NativeContinuationSearchMode::Ordinary;
 };
 
 namespace poecraft::solver {
@@ -758,6 +760,9 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.max_telemetry_json_bytes = options->max_telemetry_json_bytes;
     }
     if (PC_SOLVE_OPTION_HAS(solver_flags)) {
+        if ((options->solver_flags & PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH) != 0)
+            value.native_continuation_search =
+                solver::NativeContinuationSearchMode::DirtyRestrictedFreshLayout;
         value.full_evidence =
             (options->solver_flags & PC_SOLVER_FLAG_FULL_EVIDENCE) != 0;
         value.strict_states =
@@ -823,6 +828,14 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.max_policy_refinement_states =
             options->max_policy_refinement_states;
     }
+    if (PC_SOLVE_OPTION_HAS(candidate_max_states))
+        value.candidate_evaluation_limits.max_states = options->candidate_max_states;
+    if (PC_SOLVE_OPTION_HAS(candidate_max_pairs))
+        value.candidate_evaluation_limits.max_pairs = options->candidate_max_pairs;
+    if (PC_SOLVE_OPTION_HAS(candidate_max_transitions))
+        value.candidate_evaluation_limits.max_transitions = options->candidate_max_transitions;
+    if (PC_SOLVE_OPTION_HAS(candidate_max_owned_bytes))
+        value.candidate_evaluation_limits.max_owned_bytes = options->candidate_max_owned_bytes;
     return value;
 #undef PC_SOLVE_OPTION_HAS
 }
@@ -837,6 +850,8 @@ solver::SolveOptions solve_options(
         holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::ReuseUnconsumed;
     value.native_retention_consume = holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::ReuseUnconsumed;
     value.native_retention_checked_target = holder.native_retention_checked_target;
+    if (holder.native_continuation_search != solver::NativeContinuationSearchMode::Ordinary)
+        value.native_continuation_search = holder.native_continuation_search;
     if (holder.carrier_ladder_exact_boundary_diagnostic.has_value()) {
         value.carrier_ladder_exact_boundary_mode =
             holder.carrier_ladder_exact_boundary_diagnostic->mode;
@@ -1175,6 +1190,20 @@ pc_result solver::configure_solver_native_retention_diagnostic(
     }
     handle->native_retention_diagnostic=mode;
     handle->native_retention_checked_target=checked_target;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result solver::configure_solver_native_continuation_search(
+        pc_solver_handle handle, NativeContinuationSearchMode mode,
+        pc_error_info* out_error) {
+    if (!handle || handle->solve_work || handle->solved.has_value() ||
+        mode > NativeContinuationSearchMode::DirtyRestrictedFreshLayout) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+            "native continuation mode requires an idle unsolved handle and a known mode");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    handle->native_continuation_search = mode;
     clear_error(out_error);
     return PC_RESULT_OK;
 }

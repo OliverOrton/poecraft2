@@ -1455,7 +1455,30 @@ bool SolveWork::Impl::try_begin_candidate_proof_handoff() {
     return true;
 }
 
+bool SolveWork::Impl::try_begin_renewal_candidate_publication() {
+    if (!dirty_continuation_search_enabled(options.native_continuation_search) ||
+        !options.high_impact_executable_uppers || requested_bounded_finish ||
+        result.diagnostics.resource_cap_hit || expansion_active ||
+        publication_pipeline.initial_candidate_task || !output_incumbent ||
+        output_incumbent->independently_evaluated ||
+        !output_incumbent->primitive_renewal_witness.valid ||
+        output_incumbent->portfolio_identity ==
+            publication_pipeline.renewal_candidate_attempted_identity) return false;
+    // The completed native renewal already owns a complete fixed controller.
+    // Certify it through the same cooperative first-policy owner before an
+    // open-envelope upper pass postpones it until final publication. A failed
+    // attempt is reconsidered only for a different captured candidate identity.
+    publication_pipeline.renewal_candidate_attempted_identity =
+        output_incumbent->portfolio_identity;
+    focus_optimizing = false;
+    focused_lower_mode = false;
+    publication_pipeline.initial_candidate_task.emplace(certify_initial_candidate());
+    phase = SolvePhase::Expanding;
+    return true;
+}
+
 bool SolveWork::Impl::continue_initial_candidate() {
+    if (try_begin_renewal_candidate_publication()) return true;
     if (!options.high_impact_executable_uppers ||
         !incremental_action_generation || incremental_envelope_closed ||
         output_incumbent.has_value() || requested_bounded_finish ||
@@ -1513,6 +1536,7 @@ bool SolveWork::Impl::continue_open_incremental_envelope() {
     focused_lower_mode = false;
     incremental_restricted_values_ready = true;
     if (try_begin_candidate_proof_handoff()) return false;
+    if (try_begin_renewal_candidate_publication()) return true;
     if (begin_incremental_upper_policy_pass()) return true;
     if (continue_initial_candidate()) return true;
     if (classify_incremental_alternatives()) {

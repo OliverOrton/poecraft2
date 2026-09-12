@@ -105,6 +105,28 @@ def _wait_for(predicate, timeout: float = 5.0) -> None:
     raise AssertionError("condition did not become true")
 
 
+def test_candidate_evaluator_resource_patch_keeps_native_widths() -> None:
+    value = {"max_states": 2_000_000, "max_pairs": 10_000_000,
+             "max_transitions": 40_000_000, "max_owned_bytes": 4 << 30}
+    patch = {"path": "/caps/candidate_evaluation", "value": value}
+    result = apply_case_patches({"caps": {"max_discovered_states": 200_000}}, [patch])
+    assert result["caps"]["candidate_evaluation"] == value
+    assert result["caps"]["max_discovered_states"] == 200_000
+    verification = {"verification": {"exact_max_states": 100, "exact_max_owned_bytes": 1024}}
+    raised = apply_case_patches(verification, [
+        {"path": "/verification/exact_max_states", "value": 2_000_000},
+        {"path": "/verification/exact_max_owned_bytes", "value": 4 << 30},
+    ])
+    assert raised["verification"]["exact_max_owned_bytes"] == 4 << 30
+    with pytest.raises(ValueError, match="outside the bounded"):
+        normalize_case_patches([{"path": "/verification/exact_cost_relative_tolerance", "value": .1}])
+    for invalid in (0, -1, True, 2**32):
+        with pytest.raises(ValueError, match="native-width"):
+            normalize_case_patches([{**patch, "value": {**value, "max_states": invalid}}])
+    with pytest.raises(ValueError, match="exactly four"):
+        normalize_case_patches([{**patch, "value": {**value, "epsilon": 0.1}}])
+
+
 def test_registered_case_patches_are_bounded_and_order_independent() -> None:
     source = {
         "watchdog_seconds": 300,

@@ -1,0 +1,91 @@
+{
+  "classification": "exact synthetic illustrations only; no native engine executed",
+  "reviewed_main": "0ca76eb4a9f35a90299ecceeab740e5535804fd9",
+  "checks": {
+    "ring_two_root_debt_is_two": true,
+    "ring_two_full_goal_four_affix_is_tie": true,
+    "ring_two_all_four_to_six_affix_outcomes_fail_strict_progress": true,
+    "amulet_two_of_three_in_four_affixes_is_tie": true,
+    "amulet_three_of_three_six_affixes_is_tie": true,
+    "amulet_three_goals_four_or_five_affixes_has_progress": true,
+    "cleanup_and_terminal_are_distinct": true,
+    "debt_formula_on_nonterminal_distinct_goal_domain": true,
+    "pending_route_priority_can_override_arbitrarily_cheaper_attempt": true,
+    "dirty_controller_is_proper": true,
+    "dirty_continuation_exact_cost_fourteen": true,
+    "dirty_root_exact_cost_fifteen": true,
+    "clean_short_controller_can_cost_more": true,
+    "dirty_acquisition_can_be_cheaper_without_debt_progress": true,
+    "lost_goal_failure_mass_cannot_be_omitted": true,
+    "zero_cost_mutual_cycle_is_not_proper": true,
+    "multi_boundary_cost_is_solved_jointly": true,
+    "returning_each_component_does_not_ensure_global_success": true,
+    "unknown_tail_is_not_free_success": true,
+    "first_return_improvement_identity": true,
+    "one_shot_ranking_can_miss_best_repeated_controller": true,
+    "threshold_residual_has_correct_sign": true,
+    "zero_goal_probability_is_not_a_finite_repeat": true,
+    "first_exit_complete_mass": true,
+    "response_operator_matches_direct_solve": true,
+    "response_changes_when_boundary_values_change": true,
+    "individual_observer_removals_can_show_no_gain": true,
+    "joint_observer_removal_can_merge_classes": true,
+    "coarsening_preserves_aggregated_positive_mass": true,
+    "retained_blocker_dimension_prevents_unsafe_merge": true,
+    "refinement_parent_identity_prevents_coarsening": true,
+    "family_winner_depends_on_boundary": true,
+    "family_switch_at_five": true,
+    "convex_hull_preserves_fixed_linear_minimum": true,
+    "mixing_cheapest_and_safest_can_invent_unavailable_action": true,
+    "action_hindsight_is_not_legal_precommitment": true,
+    "constant_tail_query_aggregates_exactly": true,
+    "cached_value_query_cannot_ignore_new_potential": true
+  },
+  "check_count": 38,
+  "dirty_controller_values": {
+    "r": "15",
+    "d": "14",
+    "e": "11",
+    "f": "15",
+    "h": "15",
+    "goal": "0"
+  },
+  "synthetic_observer_class_counts_full_single_single_pair": [
+    4,
+    4,
+    4,
+    1
+  ],
+  "multi_boundary_values": {
+    "r": "4",
+    "p": "3",
+    "goal": "0"
+  },
+  "response_operator": {
+    "g": [
+      "24/7",
+      "20/7"
+    ],
+    "H": [
+      [
+        "4/7",
+        "3/7"
+      ],
+      [
+        "1/7",
+        "6/7"
+      ]
+    ],
+    "value_at_boundary_3_9": [
+      "9",
+      "11"
+    ]
+  },
+  "limitations": [
+    "No new native layout counts, reforge timings, policies, or cap-scaling results.",
+    "The debt illustration assumes distinct physical goal modifiers, fixed correct rarity, and g <= required.",
+    "The dirty SSP deliberately has invented transitions; it is not a proposed native crafting recipe.",
+    "The convex grid check illustrates a separately proved linearity identity, not arbitrary hull verification.",
+    "Conditional native mass, executable observations, full member validity and numerical acceptance remain implementation obligations."
+  ]
+}

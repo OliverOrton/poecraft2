@@ -1,0 +1,876 @@
+{
+  "recorded_at_utc": "2026-09-12T03:37:07.337386+00:00",
+  "build_identity": {
+    "path": "docs/active/2026-09-11-dirty-state-continuation/build-identity.json",
+    "bytes": 7404,
+    "sha256": "f2253724b5dec796ddb4f6fceafdb73c756d6498d8e4d5b8dd0f6d38ac1432b1"
+  },
+  "focused_tests": [
+    {
+      "name": "solver-attribution-recovery",
+      "checks": 516,
+      "failures": 0,
+      "log": {
+        "path": "out/dirty-state-continuation/final-test-solver-attribution-recovery.log",
+        "bytes": 296,
+        "sha256": "412fabbee1e9a748c0e3454a4bf03950e5df572a9e2723764d9d128ac6a04c6f"
+      },
+      "binary_sha256": "78d27e70b6e4eb20233c95b2448705a4c02977bc9b18173b89636cf4a3fd3005"
+    },
+    {
+      "name": "solver-joint-policy-continuation",
+      "checks": 298,
+      "failures": 0,
+      "log": {
+        "path": "out/dirty-state-continuation/final-test-solver-joint-policy-continuation.log",
+        "bytes": 132,
+        "sha256": "70b12acc319a578bc4196ed6b6c5171baf640a8717631ea5ccb7e66abd481e68"
+      },
+      "binary_sha256": "78d27e70b6e4eb20233c95b2448705a4c02977bc9b18173b89636cf4a3fd3005"
+    },
+    {
+      "name": "solver-return-bridge",
+      "checks": 484,
+      "failures": 0,
+      "log": {
+        "path": "out/dirty-state-continuation/final-test-solver-return-bridge.log",
+        "bytes": 122,
+        "sha256": "d09d9e392463a787ea41e597f5adf7afba8cfdb4d4b64d272c5411be28bc1596"
+      },
+      "binary_sha256": "78d27e70b6e4eb20233c95b2448705a4c02977bc9b18173b89636cf4a3fd3005"
+    },
+    {
+      "name": "solver-native-continuation-api",
+      "checks": 28,
+      "failures": 0,
+      "log": {
+        "path": "out/dirty-state-continuation/final-test-solver-native-continuation-api.log",
+        "bytes": 61,
+        "sha256": "fe5cf9840e1b81ecda4cb3f8b114ae029c5faa360ee3971c8382d4425fc044ee"
+      },
+      "binary_sha256": "6d26f0787a118a2dc22ba8efabcc63e9ed8d9ed1cfce01fdf15d1cd23131b1d4"
+    },
+    {
+      "name": "python",
+      "status": "passed",
+      "log": {
+        "path": "out/dirty-state-continuation/final-test-python.log",
+        "bytes": 115,
+        "sha256": "a580915b49cf1abffeb78a463d466bde844f51a9643451cc51a7016cc193d9d8"
+      }
+    },
+    {
+      "name": "engine-client-transfer",
+      "status": "passed",
+      "log": {
+        "path": "out/dirty-state-continuation/final-test-engine-client-transfer.log",
+        "bytes": 82,
+        "sha256": "2f9a07a64c1b95b34ae100939a2cdb9d23f707a84dddd1ea3ad41e7b29b41c0e"
+      }
+    },
+    {
+      "name": "solver-result-presentation",
+      "status": "passed",
+      "log": {
+        "path": "out/dirty-state-continuation/final-test-solver-result-presentation.log",
+        "bytes": 717,
+        "sha256": "83cb320465a864bfe0eb60f453136e9749d17be6e707b14710ffb17d8f5a2eb8"
+      }
+    },
+    {
+      "name": "typescript",
+      "status": "passed",
+      "command": "npx tsc --noEmit",
+      "cwd": "apps/web",
+      "exit_code": 0,
+      "output": "",
+      "note": "Successful command produced no output, so Tee-Object created no log file."
+    }
+  ],
+  "test_reader_failure": {
+    "retained_diagnostic": {
+      "path": "out/dirty-state-continuation/final-test-native-api-diagnostic.log",
+      "bytes": 299,
+      "sha256": "062c5af604735d8d10a55154f97a7aabd950e46106aad353d1c05ec95a01e83c"
+    },
+    "disposition": "The first API fixture read parsed a truncated buffer after the required length grew. Its helper now honors the query-required-count contract and all 28 API assertions pass. No production source change was needed."
+  },
+  "not_run": [
+    "Full native acceptance suite",
+    "Full web suite with unchanged large Monte Carlo tests",
+    "Rendered UI review",
+    "Additional sampling of the cheaper CB03 Conquest graph selected during original-profile preservation; its complete native evaluation passed. Closeout adds no further benchmark runs."
+  ],
+  "wasm": {
+    "normal": {
+      "report": {
+        "path": "out/dirty-state-continuation/wasm/normal.json",
+        "bytes": 179721,
+        "sha256": "638213d479aed6f4ea01cdc04d4c5476cc532f74c74188ab22419ba60b400574"
+      },
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 46500,
+        "process_identity_token": "46500:134336552378764509",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 21723.226299975067,
+        "command": [
+          "C:/Program Files/nodejs/node.exe",
+          "--import",
+          "tsx",
+          "test/.dirty-state-preservation-wasm.ts",
+          "--mode",
+          "normal",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\wasm\\normal.json"
+        ],
+        "watchdog_seconds": 315
+      },
+      "status": "passed",
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 149977.25092497544,
+        "expanded_states": 58,
+        "sweeps": 0,
+        "residual": 24.917142857215367,
+        "skipped_actions": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "refused_resource_cap",
+        "lower_bound": 10.169847833384168,
+        "upper_bound": 149977.25092497544,
+        "evaluated_policy_cost": 149977.25092497544,
+        "absolute_optimality_gap": 149967.08107714207,
+        "relative_optimality_gap": 14746.246309099226,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "memory_cap",
+        "cap_hit_mask": 4,
+        "registry_actions": 168,
+        "candidate_actions": 27,
+        "evaluator_supported_actions": 27,
+        "supported_priced_actions": 27,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 0
+      },
+      "total_ms": 20977.6875,
+      "abandon_ms": null,
+      "finish_requested_ms": null,
+      "strategy_sha256": "585a3a04f53e9d6d88fbe1245d33fbcd0b20f6544630502f1dfa2758664fd454",
+      "first_verified": {
+        "elapsed_ms": 4304.5593,
+        "progress": {
+          "phase": "certifying",
+          "phase_owner": "exact_evaluation",
+          "done": false,
+          "expanded_states": 58,
+          "sweeps": 2,
+          "residual": 1.2754242106893798e-12,
+          "start_value_bound": 10.169847833384168,
+          "lower_bound": 10.169847833384168,
+          "upper_bound": 938064.6067502735,
+          "absolute_optimality_gap": 938054.4369024402,
+          "relative_optimality_gap": 92238.78786299289,
+          "focused_round": 4,
+          "incumbent_kind": "other",
+          "discovered_states": 2832,
+          "frontier_states": 2774,
+          "state_action_rows": 447,
+          "transition_entries": 3582,
+          "reforge_work": 4009536,
+          "live_owned_bytes": 16144977,
+          "peak_owned_bytes": 24253935,
+          "finalization_work_items": 4,
+          "refinement_states": 0,
+          "refinement_kernels": 0,
+          "refinement_transitions": 0,
+          "refinement_rounds": 0,
+          "refinement_classes": 0,
+          "certification_discovered_pairs": 63,
+          "certification_pending_pairs": 9,
+          "certification_solved_sccs": 0,
+          "certification_total_sccs": 0
+        },
+        "verified": {
+          "present": true,
+          "cost": 938064.6067502735,
+          "portfolio_identity": "a873a1ae1af46137",
+          "identity": {
+            "portfolio": "a873a1ae1af46137",
+            "goal": "783ea5d09f610dc3",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "3092207605a9f8c7",
+            "caller_scope": "ef3fa952d71607ec",
+            "graph_prefix": "ec356a73cf2291ba",
+            "artifact": "c35a92dc098d207f",
+            "source_generation": 447
+          },
+          "observations": 2,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        }
+      },
+      "return_verified": {
+        "elapsed_ms": 4481.1795,
+        "progress": {
+          "phase": "expanding",
+          "phase_owner": "ladder_scheduling",
+          "done": false,
+          "expanded_states": 58,
+          "sweeps": 0,
+          "residual": 1000000000000,
+          "start_value_bound": 938064.6067501592,
+          "lower_bound": 10.169847833384168,
+          "upper_bound": 149977.25092497544,
+          "absolute_optimality_gap": 149967.08107714207,
+          "relative_optimality_gap": 14746.246309099226,
+          "focused_round": 4,
+          "incumbent_kind": "other",
+          "discovered_states": 2832,
+          "frontier_states": 2774,
+          "state_action_rows": 447,
+          "transition_entries": 3582,
+          "reforge_work": 4009536,
+          "live_owned_bytes": 15889302,
+          "peak_owned_bytes": 24253935,
+          "finalization_work_items": 48,
+          "refinement_states": 0,
+          "refinement_kernels": 0,
+          "refinement_transitions": 0,
+          "refinement_rounds": 0,
+          "refinement_classes": 0,
+          "certification_discovered_pairs": 63,
+          "certification_pending_pairs": 9,
+          "certification_solved_sccs": 0,
+          "certification_total_sccs": 0
+        },
+        "verified": {
+          "present": true,
+          "cost": 149977.25092497544,
+          "portfolio_identity": "bf2d7cfe376b81db",
+          "identity": {
+            "portfolio": "bf2d7cfe376b81db",
+            "goal": "783ea5d09f610dc3",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "3092207605a9f8c7",
+            "caller_scope": "ef3fa952d71607ec",
+            "graph_prefix": "ec356a73cf2291ba",
+            "artifact": "c35a92dc098d207f",
+            "source_generation": 447
+          },
+          "observations": 3,
+          "strictly_cheaper_replacements": 1,
+          "monotone": true
+        }
+      },
+      "memory_after_cleanup": {
+        "ok": true,
+        "live_handles": 0,
+        "native_live_owned_bytes": 19848,
+        "native_peak_owned_bytes": 19848,
+        "native_serialized_output_bytes": 19783,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 1342701568
+      },
+      "exact_evaluation": {
+        "converged": true,
+        "terminals": {
+          "success": 0.9999999999998361,
+          "failure": 0,
+          "stop": 0,
+          "action_not_applied": 0,
+          "no_matching_edge": 0,
+          "unresolved": 0,
+          "by_node": [
+            {
+              "node_id": "goal",
+              "kind": "success",
+              "p": 0.9999999999998361
+            },
+            {
+              "node_id": "offpolicy",
+              "kind": "failure",
+              "p": 0
+            }
+          ]
+        },
+        "per_invocation": {
+          "expected_actions": 26175.422499995733,
+          "known_expected_cost": 149977.25092497544,
+          "total_expected_cost": 149977.25092497544,
+          "cost_complete": true
+        }
+      }
+    },
+    "finish": {
+      "report": {
+        "path": "out/dirty-state-continuation/wasm/finish.json",
+        "bytes": 180466,
+        "sha256": "5940039318d45d077061431e49203996ad50cdb8066a6747e5b6c3cda4e5b560"
+      },
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 45268,
+        "process_identity_token": "45268:134336552595999417",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 18620.54580001859,
+        "command": [
+          "C:/Program Files/nodejs/node.exe",
+          "--import",
+          "tsx",
+          "test/.dirty-state-preservation-wasm.ts",
+          "--mode",
+          "finish",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\wasm\\finish.json"
+        ],
+        "watchdog_seconds": 315
+      },
+      "status": "passed",
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 149977.25092497544,
+        "expanded_states": 58,
+        "sweeps": 0,
+        "residual": 1000000000000,
+        "skipped_actions": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 10.169847833384168,
+        "upper_bound": 149977.25092497544,
+        "evaluated_policy_cost": 149977.25092497544,
+        "absolute_optimality_gap": 149967.08107714207,
+        "relative_optimality_gap": 14746.246309099226,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "registry_actions": 168,
+        "candidate_actions": 27,
+        "evaluator_supported_actions": 27,
+        "supported_priced_actions": 27,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 0
+      },
+      "total_ms": 5033.5585,
+      "abandon_ms": null,
+      "finish_requested_ms": 4447.0769,
+      "strategy_sha256": "585a3a04f53e9d6d88fbe1245d33fbcd0b20f6544630502f1dfa2758664fd454",
+      "first_verified": {
+        "elapsed_ms": 4284.2206,
+        "progress": {
+          "phase": "certifying",
+          "phase_owner": "exact_evaluation",
+          "done": false,
+          "expanded_states": 58,
+          "sweeps": 2,
+          "residual": 1.2754242106893798e-12,
+          "start_value_bound": 10.169847833384168,
+          "lower_bound": 10.169847833384168,
+          "upper_bound": 938064.6067502735,
+          "absolute_optimality_gap": 938054.4369024402,
+          "relative_optimality_gap": 92238.78786299289,
+          "focused_round": 4,
+          "incumbent_kind": "other",
+          "discovered_states": 2832,
+          "frontier_states": 2774,
+          "state_action_rows": 447,
+          "transition_entries": 3582,
+          "reforge_work": 4009536,
+          "live_owned_bytes": 16144977,
+          "peak_owned_bytes": 24253935,
+          "finalization_work_items": 4,
+          "refinement_states": 0,
+          "refinement_kernels": 0,
+          "refinement_transitions": 0,
+          "refinement_rounds": 0,
+          "refinement_classes": 0,
+          "certification_discovered_pairs": 63,
+          "certification_pending_pairs": 9,
+          "certification_solved_sccs": 0,
+          "certification_total_sccs": 0
+        },
+        "verified": {
+          "present": true,
+          "cost": 938064.6067502735,
+          "portfolio_identity": "a873a1ae1af46137",
+          "identity": {
+            "portfolio": "a873a1ae1af46137",
+            "goal": "783ea5d09f610dc3",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "3092207605a9f8c7",
+            "caller_scope": "ef3fa952d71607ec",
+            "graph_prefix": "ec356a73cf2291ba",
+            "artifact": "c35a92dc098d207f",
+            "source_generation": 447
+          },
+          "observations": 2,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        }
+      },
+      "return_verified": {
+        "elapsed_ms": 4446.8817,
+        "progress": {
+          "phase": "expanding",
+          "phase_owner": "ladder_scheduling",
+          "done": false,
+          "expanded_states": 58,
+          "sweeps": 0,
+          "residual": 1000000000000,
+          "start_value_bound": 938064.6067501592,
+          "lower_bound": 10.169847833384168,
+          "upper_bound": 149977.25092497544,
+          "absolute_optimality_gap": 149967.08107714207,
+          "relative_optimality_gap": 14746.246309099226,
+          "focused_round": 4,
+          "incumbent_kind": "other",
+          "discovered_states": 2832,
+          "frontier_states": 2774,
+          "state_action_rows": 447,
+          "transition_entries": 3582,
+          "reforge_work": 4009536,
+          "live_owned_bytes": 15889302,
+          "peak_owned_bytes": 24253935,
+          "finalization_work_items": 48,
+          "refinement_states": 0,
+          "refinement_kernels": 0,
+          "refinement_transitions": 0,
+          "refinement_rounds": 0,
+          "refinement_classes": 0,
+          "certification_discovered_pairs": 63,
+          "certification_pending_pairs": 9,
+          "certification_solved_sccs": 0,
+          "certification_total_sccs": 0
+        },
+        "verified": {
+          "present": true,
+          "cost": 149977.25092497544,
+          "portfolio_identity": "bf2d7cfe376b81db",
+          "identity": {
+            "portfolio": "bf2d7cfe376b81db",
+            "goal": "783ea5d09f610dc3",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "3092207605a9f8c7",
+            "caller_scope": "ef3fa952d71607ec",
+            "graph_prefix": "ec356a73cf2291ba",
+            "artifact": "c35a92dc098d207f",
+            "source_generation": 447
+          },
+          "observations": 3,
+          "strictly_cheaper_replacements": 1,
+          "monotone": true
+        }
+      },
+      "memory_after_cleanup": {
+        "ok": true,
+        "live_handles": 0,
+        "native_live_owned_bytes": 19848,
+        "native_peak_owned_bytes": 19848,
+        "native_serialized_output_bytes": 19783,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 278396928
+      },
+      "exact_evaluation": {
+        "converged": true,
+        "terminals": {
+          "success": 0.9999999999998361,
+          "failure": 0,
+          "stop": 0,
+          "action_not_applied": 0,
+          "no_matching_edge": 0,
+          "unresolved": 0,
+          "by_node": [
+            {
+              "node_id": "goal",
+              "kind": "success",
+              "p": 0.9999999999998361
+            },
+            {
+              "node_id": "offpolicy",
+              "kind": "failure",
+              "p": 0
+            }
+          ]
+        },
+        "per_invocation": {
+          "expected_actions": 26175.422499995733,
+          "known_expected_cost": 149977.25092497544,
+          "total_expected_cost": 149977.25092497544,
+          "cost_complete": true
+        }
+      }
+    },
+    "abandon": {
+      "report": {
+        "path": "out/dirty-state-continuation/wasm/abandon.json",
+        "bytes": 10175,
+        "sha256": "34604328cc9e44873cae0acabcbae21ab4bb7435ab5d605ed324752cb7ca4033"
+      },
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 3572,
+        "process_identity_token": "3572:134336552782217261",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 16531.738299992867,
+        "command": [
+          "C:/Program Files/nodejs/node.exe",
+          "--import",
+          "tsx",
+          "test/.dirty-state-preservation-wasm.ts",
+          "--mode",
+          "abandon",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\wasm\\abandon.json"
+        ],
+        "watchdog_seconds": 315
+      },
+      "status": "passed",
+      "summary": null,
+      "total_ms": 4370.4329,
+      "abandon_ms": 4.854900000000271,
+      "finish_requested_ms": null,
+      "strategy_sha256": null,
+      "first_verified": {
+        "elapsed_ms": 4362.1666,
+        "progress": {
+          "phase": "certifying",
+          "phase_owner": "exact_evaluation",
+          "done": false,
+          "expanded_states": 58,
+          "sweeps": 2,
+          "residual": 1.2754242106893798e-12,
+          "start_value_bound": 10.169847833384168,
+          "lower_bound": 10.169847833384168,
+          "upper_bound": 938064.6067502735,
+          "absolute_optimality_gap": 938054.4369024402,
+          "relative_optimality_gap": 92238.78786299289,
+          "focused_round": 4,
+          "incumbent_kind": "other",
+          "discovered_states": 2832,
+          "frontier_states": 2774,
+          "state_action_rows": 447,
+          "transition_entries": 3582,
+          "reforge_work": 4009536,
+          "live_owned_bytes": 16144977,
+          "peak_owned_bytes": 24253935,
+          "finalization_work_items": 4,
+          "refinement_states": 0,
+          "refinement_kernels": 0,
+          "refinement_transitions": 0,
+          "refinement_rounds": 0,
+          "refinement_classes": 0,
+          "certification_discovered_pairs": 63,
+          "certification_pending_pairs": 9,
+          "certification_solved_sccs": 0,
+          "certification_total_sccs": 0
+        },
+        "verified": {
+          "present": true,
+          "cost": 938064.6067502735,
+          "portfolio_identity": "a873a1ae1af46137",
+          "identity": {
+            "portfolio": "a873a1ae1af46137",
+            "goal": "783ea5d09f610dc3",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "3092207605a9f8c7",
+            "caller_scope": "ef3fa952d71607ec",
+            "graph_prefix": "ec356a73cf2291ba",
+            "artifact": "c35a92dc098d207f",
+            "source_generation": 447
+          },
+          "observations": 2,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        }
+      },
+      "return_verified": null,
+      "memory_after_cleanup": {
+        "ok": true,
+        "live_handles": 0,
+        "native_live_owned_bytes": 168976,
+        "native_peak_owned_bytes": 168976,
+        "native_serialized_output_bytes": 168927,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 278396928
+      }
+    },
+    "conquest-five": {
+      "report": {
+        "path": "out/dirty-state-continuation/wasm/conquest-five.json",
+        "bytes": 2207173,
+        "sha256": "c7bbc4a05e0e5609745c7ae88d2f9f47ed3c51b38ed243ea22fd2397f4523651"
+      },
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 52040,
+        "process_identity_token": "52040:134336552947546390",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 77184.27639998845,
+        "command": [
+          "C:/Program Files/nodejs/node.exe",
+          "--import",
+          "tsx",
+          "test/empty-start-retention-wasm.test.ts",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\wasm\\conquest-five.json"
+        ],
+        "watchdog_seconds": 105
+      },
+      "status": "passed",
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 85558.70618560436,
+        "expanded_states": 3274,
+        "sweeps": 0,
+        "residual": 1.6689300537109375e-06,
+        "skipped_actions": 1,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436,
+        "absolute_optimality_gap": 85153.33678349802,
+        "relative_optimality_gap": 210.06355275221262,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "registry_actions": 186,
+        "candidate_actions": 28,
+        "evaluator_supported_actions": 28,
+        "supported_priced_actions": 252,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 1
+      },
+      "total_ms": 75344.77410000001,
+      "abandon_ms": null,
+      "finish_requested_ms": 60000.2434,
+      "strategy_sha256": "059f3d8057ea39609e7ca3a0993a476336a13b12cf63c7d6d914fbba983fe4cf",
+      "first_verified": null,
+      "return_verified": null,
+      "memory_after_cleanup": {
+        "ok": true,
+        "live_handles": 0,
+        "native_live_owned_bytes": 80,
+        "native_peak_owned_bytes": 80,
+        "native_serialized_output_bytes": 15,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 577437696
+      }
+    },
+    "exact-regalia": {
+      "report": {
+        "path": "out/dirty-state-continuation/wasm/exact-regalia.json",
+        "bytes": 2646277,
+        "sha256": "beb5e98e357e0b31914febc0277c79a48b292b08e6d2e54b2c8986da7aa3e76e"
+      },
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 60060,
+        "process_identity_token": "60060:134336553719396325",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 52016.2355999928,
+        "command": [
+          "C:/Program Files/nodejs/node.exe",
+          "--import",
+          "tsx",
+          "test/solver-benchmark.ts",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+          "--case",
+          "cb12-cross-base-product8-long240",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\wasm\\exact-regalia.json"
+        ],
+        "watchdog_seconds": 315
+      },
+      "status": "passed",
+      "summary": {
+        "converged": true,
+        "start_state": 0,
+        "start_value": 65.60036144971359,
+        "expanded_states": 1826,
+        "sweeps": 12,
+        "residual": 1.4210854715202004e-14,
+        "skipped_actions": 0,
+        "policy_available": true,
+        "policy_status": "exact",
+        "termination": "exact_closed",
+        "lower_bound": 65.60036144971359,
+        "upper_bound": 65.60036144971359,
+        "evaluated_policy_cost": 65.60036144971359,
+        "absolute_optimality_gap": 0,
+        "relative_optimality_gap": 0,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "exact_closed",
+        "cap_hit_mask": 0,
+        "registry_actions": 157,
+        "candidate_actions": 21,
+        "evaluator_supported_actions": 21,
+        "supported_priced_actions": 74,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 0,
+        "cancelled": false
+      },
+      "independent_graph_evaluation": "Not run in this WASM exact benchmark; native original-profile qualification evaluates the graph."
+    }
+  },
+  "sampling": {
+    "amulet": {
+      "report": {
+        "path": "docs/active/2026-09-11-dirty-state-continuation/sampling-amulet.json",
+        "bytes": 3177,
+        "sha256": "bc67a1695de0ae547b65e95f667e2af132bd3ade89d9908c44978959e4fe60df"
+      },
+      "options": {
+        "target_runs": 1000,
+        "seed": 2026091102,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 0.0,
+        "retained_trace_count": 0,
+        "max_trace_entries": 512,
+        "retained_success_count": 5,
+        "retained_failure_count": 5
+      },
+      "summary": {
+        "completed_runs": 1000,
+        "success_count": 330,
+        "failure_count": 670,
+        "stop_count": 0,
+        "total_actions": 82311455,
+        "action_limit_count": 670,
+        "cost_limit_count": 0,
+        "step_limit_count": 0,
+        "no_matching_edge_count": 0,
+        "action_not_applied_count": 0,
+        "missing_price_run_count": 0,
+        "costed_action_count": 82311455,
+        "missing_price_action_count": 0,
+        "known_total_cost": 573281481.8673407,
+        "cost_status": "complete",
+        "seed": 2026091102,
+        "target_runs": 1000
+      },
+      "failure_summaries": [
+        {
+          "failure_reason": 2,
+          "node_id": "s10",
+          "detail": "action limit reached",
+          "count": 447
+        },
+        {
+          "failure_reason": 2,
+          "node_id": "s3",
+          "detail": "action limit reached",
+          "count": 59
+        },
+        {
+          "failure_reason": 2,
+          "node_id": "s0",
+          "detail": "action limit reached",
+          "count": 164
+        }
+      ],
+      "wall_ms": 90651.90630001598
+    },
+    "ring-four": {
+      "report": {
+        "path": "docs/active/2026-09-11-dirty-state-continuation/sampling-ring-four.json",
+        "bytes": 3185,
+        "sha256": "799ef39aa3aaaa382d0d6bcc5bca9ded9a13192670bfbb5748aafc5c3f4121d3"
+      },
+      "options": {
+        "target_runs": 1000,
+        "seed": 2026091103,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 0.0,
+        "retained_trace_count": 0,
+        "max_trace_entries": 512,
+        "retained_success_count": 5,
+        "retained_failure_count": 5
+      },
+      "summary": {
+        "completed_runs": 1000,
+        "success_count": 55,
+        "failure_count": 945,
+        "stop_count": 0,
+        "total_actions": 97323995,
+        "action_limit_count": 945,
+        "cost_limit_count": 0,
+        "step_limit_count": 0,
+        "no_matching_edge_count": 0,
+        "action_not_applied_count": 0,
+        "missing_price_run_count": 0,
+        "costed_action_count": 97323995,
+        "missing_price_action_count": 0,
+        "known_total_cost": 675737134.5411538,
+        "cost_status": "complete",
+        "seed": 2026091103,
+        "target_runs": 1000
+      },
+      "failure_summaries": [
+        {
+          "failure_reason": 2,
+          "node_id": "s9",
+          "detail": "action limit reached",
+          "count": 664
+        },
+        {
+          "failure_reason": 2,
+          "node_id": "s0",
+          "detail": "action limit reached",
+          "count": 193
+        },
+        {
+          "failure_reason": 2,
+          "node_id": "s66",
+          "detail": "action limit reached",
+          "count": 88
+        }
+      ],
+      "wall_ms": 228520.66460001515
+    }
+  }
+}

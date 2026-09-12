@@ -1,0 +1,236 @@
+{
+  "baseline": "control",
+  "candidate": "candidate",
+  "delta_distributions": {
+    "compiled_edges": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "compiled_nodes": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "expanded_states": {
+      "count": 1,
+      "max": -133.0,
+      "median": -133.0,
+      "min": -133.0,
+      "p90": -133.0,
+      "p99": -133.0
+    },
+    "final_absolute_gap": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_lower_bound": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_relative_gap": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "final_upper_bound": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "peak_memory_bytes": {
+      "count": 1,
+      "max": -1487621183.0,
+      "median": -1487621183.0,
+      "min": -1487621183.0,
+      "p90": -1487621183.0,
+      "p99": -1487621183.0
+    },
+    "reforge_work": {
+      "count": 1,
+      "max": 3285335.0,
+      "median": 3285335.0,
+      "min": 3285335.0,
+      "p90": 3285335.0,
+      "p99": 3285335.0
+    },
+    "rows": {
+      "count": 1,
+      "max": -1917.0,
+      "median": -1917.0,
+      "min": -1917.0,
+      "p90": -1917.0,
+      "p99": -1917.0
+    },
+    "solve_ms": {
+      "count": 1,
+      "max": -9474.037399999914,
+      "median": -9474.037399999914,
+      "min": -9474.037399999914,
+      "p90": -9474.037399999914,
+      "p99": -9474.037399999914
+    },
+    "solve_step_max_ms": {
+      "count": 1,
+      "max": -2261.9017000000003,
+      "median": -2261.9017000000003,
+      "min": -2261.9017000000003,
+      "p90": -2261.9017000000003,
+      "p99": -2261.9017000000003
+    },
+    "solve_step_median_ms": {
+      "count": 1,
+      "max": 0.005699999999999999,
+      "median": 0.005699999999999999,
+      "min": 0.005699999999999999,
+      "p90": 0.005699999999999999,
+      "p99": 0.005699999999999999
+    },
+    "solve_step_p95_ms": {
+      "count": 1,
+      "max": 4.914700000000001,
+      "median": 4.914700000000001,
+      "min": 4.914700000000001,
+      "p90": 4.914700000000001,
+      "p99": 4.914700000000001
+    },
+    "states": {
+      "count": 1,
+      "max": -666.0,
+      "median": -666.0,
+      "min": -666.0,
+      "p90": -666.0,
+      "p99": -666.0
+    },
+    "strategy_json_bytes": {
+      "count": 1,
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p90": 0.0,
+      "p99": 0.0
+    },
+    "time_to_incumbent_ms": {
+      "count": 1,
+      "max": -585793.2443,
+      "median": -585793.2443,
+      "min": -585793.2443,
+      "p90": -585793.2443,
+      "p99": -585793.2443
+    },
+    "time_to_target_ms": {
+      "count": 0,
+      "max": null,
+      "median": null,
+      "min": null,
+      "p90": null,
+      "p99": null
+    },
+    "transitions": {
+      "count": 1,
+      "max": -131889.0,
+      "median": -131889.0,
+      "min": -131889.0,
+      "p90": -131889.0,
+      "p99": -131889.0
+    },
+    "wall_ms": {
+      "count": 1,
+      "max": -11588.328899999964,
+      "median": -11588.328899999964,
+      "min": -11588.328899999964,
+      "p90": -11588.328899999964,
+      "p99": -11588.328899999964
+    }
+  },
+  "excluded": [],
+  "missing_from_baseline": [],
+  "missing_from_candidate": [],
+  "paired_cases": 1,
+  "pairs": [
+    {
+      "baseline_status": {
+        "actual": "refused_unsupported_action",
+        "policy": "bounded_feasible",
+        "termination": "requested_bounded_finish"
+      },
+      "candidate_status": {
+        "actual": "refused_unsupported_action",
+        "policy": "bounded_feasible",
+        "termination": "requested_bounded_finish"
+      },
+      "deltas": {
+        "compiled_edges": 0.0,
+        "compiled_nodes": 0.0,
+        "expanded_states": -133.0,
+        "final_absolute_gap": 0.0,
+        "final_lower_bound": 0.0,
+        "final_relative_gap": 0.0,
+        "final_upper_bound": 0.0,
+        "peak_memory_bytes": -1487621183.0,
+        "reforge_work": 3285335.0,
+        "rows": -1917.0,
+        "solve_ms": -9474.037399999914,
+        "solve_step_max_ms": -2261.9017000000003,
+        "solve_step_median_ms": 0.005699999999999999,
+        "solve_step_p95_ms": 4.914700000000001,
+        "states": -666.0,
+        "strategy_json_bytes": 0.0,
+        "time_to_incumbent_ms": -585793.2443,
+        "time_to_target_ms": null,
+        "transitions": -131889.0,
+        "wall_ms": -11588.328899999964
+      },
+      "dimensions": {
+        "base": "Amethyst Ring",
+        "base_class": "Ring / Amethyst Ring",
+        "class": "Ring",
+        "evaluation_role": "unassigned",
+        "goal_probability": "unknown",
+        "incumbent": "other",
+        "natural_t1_count": "4",
+        "observation_status": "completed",
+        "policy_status": "bounded_feasible",
+        "pool_density": "unknown",
+        "side_mix": "unknown",
+        "termination": "requested_bounded_finish"
+      },
+      "id": "cb07-cross-base-product8-long240",
+      "treatments": {
+        "baseline_executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\budget-control.exe",
+          "sha256": "168acbaa242f4b6cd5f8f49c92f08e7b1810bd642f3c3b0ce74cb00ebba8b7b3"
+        },
+        "candidate_executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v10-public.exe",
+          "sha256": "06b5a065222970ec933a9a65821c2b9f187f8b8508edf28bb8516cbb86b01b01"
+        }
+      }
+    }
+  ],
+  "regressions": [],
+  "shared_case_ids": 1,
+  "status_transitions": {
+    "bounded_feasible->bounded_feasible": 1
+  }
+}

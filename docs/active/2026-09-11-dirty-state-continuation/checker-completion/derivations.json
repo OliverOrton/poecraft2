@@ -1,0 +1,14 @@
+{
+  "source": "../native-wide/manifest.json",
+  "patches": [
+    {
+      "path": "/requested_bounded_finish_seconds",
+      "value": 600
+    },
+    {
+      "path": "/watchdog_seconds",
+      "value": 720
+    }
+  ],
+  "resource_rationale": "Named wall owner, not memory; lowering allocation from targeted-deep retains actual wide bytes and 14-GiB admission."
+}

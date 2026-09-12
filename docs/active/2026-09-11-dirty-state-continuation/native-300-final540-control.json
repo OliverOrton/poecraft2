@@ -1,0 +1,260 @@
+{
+  "run": "out\\dirty-state-continuation\\control-final540-valid",
+  "executable_sha256": "168acbaa242f4b6cd5f8f49c92f08e7b1810bd642f3c3b0ce74cb00ebba8b7b3",
+  "profile": "8GiB aggregate/4GiB checker; 2M states/10M pairs/40M transitions; 200M logical work; 300s requested finish/540s native total/570s outer; 14GiB reservation",
+  "cases": [
+    {
+      "id": "cb04-cross-base-product8-long240",
+      "actual_status": "bounded_feasible",
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 233607.1839649838,
+        "expanded_states": 927,
+        "sweeps": 0,
+        "residual": 6.984919309616089e-10,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 184,
+          "candidate": 36,
+          "evaluator_supported": 36,
+          "supported_priced": 458,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 341.0345603014526,
+        "upper_bound": 223349.0000393144,
+        "evaluated_policy_cost": 223349.0000393144,
+        "absolute_optimality_gap": 223007.96547901293,
+        "relative_optimality_gap": 653.916029161057,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "phase_wall_ms": {
+        "registry_layout": 35.5162,
+        "solve": 300380.5236,
+        "compile": 6.8335,
+        "verification": null,
+        "total": 304014.9161
+      },
+      "final_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 3289.5937,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 223349.0000393144,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "first_incumbent_ms": 105585.956,
+      "expected_actions": 1404492.0069683318,
+      "action_accounting": [
+        {
+          "action": "alteration",
+          "expected_actions": 908324.4368865712,
+          "expected_spend": 138973.6388436454,
+          "spend_share": 0.6222263758475881
+        },
+        {
+          "action": "annul",
+          "expected_actions": 1546.8822256556145,
+          "expected_spend": 14989.288766602904,
+          "spend_share": 0.06711151052372948
+        },
+        {
+          "action": "augment",
+          "expected_actions": 460571.25112460786,
+          "expected_spend": 30397.70257422412,
+          "spend_share": 0.13609956869685313
+        },
+        {
+          "action": "exalt",
+          "expected_actions": 18831.99401429744,
+          "expected_spend": 33332.62940530647,
+          "spend_share": 0.14924011031810838
+        },
+        {
+          "action": "fracture",
+          "expected_actions": 3.9999525081175533,
+          "expected_spend": 1620.380761038421,
+          "spend_share": 0.007254927314441516
+        },
+        {
+          "action": "regal",
+          "expected_actions": 7604.506808484139,
+          "expected_spend": 1188.584414166071,
+          "spend_share": 0.005321646454458509
+        },
+        {
+          "action": "restart",
+          "expected_actions": 2.9999643810881738,
+          "expected_spend": 2.9999643810881738,
+          "spend_share": 1.3431734104742414e-05
+        },
+        {
+          "action": "scour",
+          "expected_actions": 7601.506844103155,
+          "expected_spend": 2843.7237103789903,
+          "spend_share": 0.012732198084067678
+        },
+        {
+          "action": "transmute",
+          "expected_actions": 4.429147716181492,
+          "expected_spend": 0.051599570893514385,
+          "spend_share": 2.310266483594362e-07
+        }
+      ],
+      "native_memory": {
+        "solver_owned_bytes_estimate": 963136340,
+        "solver_live_owned_bytes_estimate": 355204435,
+        "diagnostics_retained_bytes_estimate": 802640,
+        "telemetry_json_byte_limit": 2097152,
+        "estimate_kind": "selected_allocations_not_process_heap",
+        "abstract_state_bytes": 184,
+        "state_payload": "inline_sparse_junk_counts"
+      },
+      "checker_memory": {
+        "owned_bytes_estimate": 33698885,
+        "peak_owned_bytes_estimate": 64243259,
+        "retained_output_owned_bytes_estimate": 0,
+        "max_owned_bytes": 4294967296,
+        "max_output_json_bytes": 67108864
+      },
+      "process_memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33767424,
+        "process_working_set_after_bytes": 442658816,
+        "process_working_set_delta_bytes": 408891392,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 355219231,
+        "native_peak_owned_bytes": 963151121,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 810832
+      }
+    },
+    {
+      "id": "cb08-cross-base-product8-long240",
+      "actual_status": "bounded_feasible",
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 48896520.18926918,
+        "expanded_states": 4088,
+        "sweeps": 0,
+        "residual": 2.0372681319713593e-10,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 164,
+          "candidate": 31,
+          "evaluator_supported": 31,
+          "supported_priced": 532,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 174.79327321907147,
+        "upper_bound": 48896520.03536156,
+        "evaluated_policy_cost": 48896520.03536156,
+        "absolute_optimality_gap": 48896345.24208834,
+        "relative_optimality_gap": 279738.14061371627,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "phase_wall_ms": {
+        "registry_layout": 43.4646,
+        "solve": 326240.8472,
+        "compile": 2.2335,
+        "verification": null,
+        "total": 326425.3562
+      },
+      "final_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 23.3477,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1.0000000002122351,
+        "off_policy_mass": 0,
+        "total_expected_cost": 48896520.03536156,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "first_incumbent_ms": 6270.6221,
+      "expected_actions": 8533426.163239384,
+      "action_accounting": [
+        {
+          "action": "annul",
+          "expected_actions": 4266711.581619681,
+          "expected_spend": 41344435.225894704,
+          "spend_share": 0.8455496463959961
+        },
+        {
+          "action": "exalt",
+          "expected_actions": 4266714.581619691,
+          "expected_spend": 7552084.809466854,
+          "spend_share": 0.1544503536040039
+        }
+      ],
+      "native_memory": {
+        "solver_owned_bytes_estimate": 448826802,
+        "solver_live_owned_bytes_estimate": 23997663,
+        "diagnostics_retained_bytes_estimate": 675104,
+        "telemetry_json_byte_limit": 2097152,
+        "estimate_kind": "selected_allocations_not_process_heap",
+        "abstract_state_bytes": 184,
+        "state_payload": "inline_sparse_junk_counts"
+      },
+      "checker_memory": {
+        "owned_bytes_estimate": 1406214,
+        "peak_owned_bytes_estimate": 4591008,
+        "retained_output_owned_bytes_estimate": 0,
+        "max_owned_bytes": 4294967296,
+        "max_output_json_bytes": 67108864
+      },
+      "process_memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33759232,
+        "process_working_set_after_bytes": 156332032,
+        "process_working_set_delta_bytes": 122572800,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 24012467,
+        "native_peak_owned_bytes": 448841583,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 1002261
+      }
+    }
+  ],
+  "targets": {
+    "Amulet": 30161571.746668797,
+    "Bow": 167511.7500294858
+  },
+  "original_Bow_reference_check": "Original-profile upper 223349.0000393144 matches: docs/active/2026-09-11-post-incumbent-cost/README.md final core table."
+}

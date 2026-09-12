@@ -6,10 +6,12 @@
 
 #include "json.hpp"
 #include "solver_diagnostic_options.hpp"
+#include "solver_calc_types.hpp"
 #include "solver_executable_fragment_engine.hpp"
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -19,6 +21,8 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <sstream>
@@ -59,6 +63,7 @@ struct Arguments {
     double native_retention_target_lower = 0;
     double proof_handoff_seconds = 0;
     bool validate_only = false;
+    bool action_layout_diagnostic = false;
     bool fragment_contract_rejection_probes = false;
     bool fragment_shadow_only = false;
     bool resumable_joint_policy_continuation_diagnostic = false;
@@ -3065,6 +3070,224 @@ void create_case_objects(
     }
 }
 
+
+// Native-only attribution through the real request constructor. This never
+// changes the caller handle's candidate set or transplants a layout namespace.
+std::string run_action_layout_probe(pc_data_handle data, const Value& specification) {
+    using namespace poecraft::solver;
+    using poecraft::ActionType;
+    NativeHandles handles;
+    pc_item_state start;
+    create_case_objects(data, specification, handles, start);
+    auto& original = solver_lower_diagnostic_calculator(handles.solver);
+    constexpr std::uint64_t total_bytes = 8ull << 30;
+    constexpr std::uint64_t total_work = 200000000;
+    original.set_solve_resource_caps(2000000, total_work, false, total_bytes);
+    std::vector<std::uint64_t> universe;
+    const auto include = [&](const std::vector<std::uint64_t>& mask) {
+        universe.resize(std::max(universe.size(), mask.size()));
+        for (std::size_t i=0; i<mask.size(); ++i) universe[i] |= mask[i];
+    };
+    for (const auto& slot : original.layout().slots) include(slot.member_mask);
+    for (const auto& cls : original.layout().junk_classes) include(cls.member_mask);
+    const auto fresh = [&](const std::vector<std::uint32_t>& candidates,
+                           const AbstractLayout* parent = nullptr) {
+        return std::make_unique<CalcContext>(original.shared_session(), original.goal(),
+            original.registry(), candidates, false, false, false, std::nullopt,
+            original.layout().count_observations, original.product_solver_parent(),
+            universe, original.distinguishes_modifier_identity(), true, false,
+            false, false, parent, true);
+    };
+    struct Variant {
+        std::string name;
+        std::vector<std::string> omitted;
+        std::vector<std::uint32_t> candidates, mapping;
+        AbstractLayout layout;
+        std::uint32_t dependencies = 0, layout_primitives = 0;
+        bool coarsening = true;
+    };
+    const std::string fire = "harvest_resist:fire:lightning";
+    const std::string cold = "harvest_resist:cold:lightning";
+    std::vector<Variant> variants;
+    const auto add_variant = [&](std::string name, std::vector<std::string> omitted) {
+        Variant v;
+        v.name = std::move(name); v.omitted = std::move(omitted);
+        for (auto index : original.candidates())
+            if (std::find(v.omitted.begin(), v.omitted.end(), original.registry().actions[index].id) == v.omitted.end())
+                v.candidates.push_back(index);
+        auto context = fresh(v.candidates);
+        v.layout = context->layout();
+        v.dependencies = context->action_control().dependency_primitives;
+        v.layout_primitives = context->action_control().layout_primitives;
+        const auto& old = original.layout();
+        if (old.slots.size() != v.layout.slots.size()) v.coarsening = false;
+        for (std::size_t i=0; v.coarsening && i<old.slots.size(); ++i) {
+            const auto& a = old.slots[i]; const auto& b = v.layout.slots[i];
+            if (a.member_mask != b.member_mask || a.satisfying_mask != b.satisfying_mask ||
+                a.blocking_group_ids != b.blocking_group_ids ||
+                a.member_class_token_by_mod != b.member_class_token_by_mod) v.coarsening = false;
+        }
+        for (const auto& a : old.junk_classes) {
+            std::uint32_t mapped = kNoId;
+            for (std::size_t word=0; word<a.member_mask.size(); ++word) {
+                auto bits = a.member_mask[word];
+                while (bits) {
+                    const auto mod = word*64 + std::countr_zero(bits); bits &= bits-1;
+                    const auto next = v.layout.junk_class_by_mod.at(mod);
+                    if (next == kNoId || (mapped != kNoId && next != mapped)) v.coarsening = false;
+                    mapped = next;
+                }
+            }
+            if (mapped == kNoId) v.coarsening = false;
+            else {
+                const auto& b = v.layout.junk_classes.at(mapped);
+                if (a.gen_type != b.gen_type || a.goal_block_mask != b.goal_block_mask ||
+                    a.veiled_template != b.veiled_template || a.metamod_role != b.metamod_role ||
+                    a.observed_required_level != b.observed_required_level ||
+                    a.exclusion_effect_mask != b.exclusion_effect_mask ||
+                    a.count_observation_bits != b.count_observation_bits) v.coarsening = false;
+            }
+            v.mapping.push_back(mapped);
+        }
+        variants.push_back(std::move(v));
+    };
+    add_variant("full", {});
+    add_variant("omit_fire_to_lightning", {fire});
+    add_variant("omit_cold_to_lightning", {cold});
+    add_variant("omit_pair", {fire, cold});
+    add_variant("omit_annul_control", {"annul"});
+    std::ostringstream out;
+    out << std::setprecision(17) << "{\"schema_version\":\"native_action_layout_probe_v1\",\"case_id\":"
+        << escape_json(required_string(specification,"id"))
+        << ",\"authority\":\"policy_search_projection_only\",\"original_classes\":" << original.layout().junk_classes.size()
+        << ",\"product_parent\":" << (original.product_solver_parent() ? "true" : "false")
+        << ",\"original_candidates\":" << original.candidates().size() << ",\"variants\":[";
+    for (std::size_t i=0;i<variants.size();++i) {
+        const auto& v = variants[i];
+        if (i) out << ',';
+        out << "{\"namespace\":" << escape_json("fresh_private_"+v.name)
+            << ",\"candidates\":" << v.candidates.size() << ",\"dependency_primitives\":" << v.dependencies
+            << ",\"layout_primitives\":" << v.layout_primitives << ",\"coarsening\":" << (v.coarsening?"true":"false")
+            << ",\"tags\":[";
+        for(std::size_t t=0;t<v.layout.discriminating_tag_ids.size();++t) {
+            if(t) out << ',';
+            const auto id = v.layout.discriminating_tag_ids[t];
+            out << "{\"id\":" << id << ",\"name\":" << escape_json(original.session().data->tag_name_by_id.at(id)) << '}';
+        }
+        out << "],\"classes\":[";
+        for(std::size_t j=0;j<v.layout.junk_classes.size();++j) {
+            if(j) out << ',';
+            const auto& c=v.layout.junk_classes[j];
+            out << "{\"id\":" << j << ",\"side\":" << int(c.gen_type) << ",\"tag_bits\":" << c.tag_bits
+                << ",\"goal_block_mask\":" << c.goal_block_mask << ",\"metamod_role\":" << c.metamod_role
+                << ",\"veiled_template\":" << (c.veiled_template?"true":"false") << ",\"member_count\":" << c.member_count
+                << ",\"member_words\":[";
+            for(std::size_t w=0;w<c.member_mask.size();++w) { if(w) out << ','; out << escape_json(std::to_string(c.member_mask[w])); }
+            out << "]}";
+        }
+        out << "],\"old_to_new\":[";
+        for(std::size_t j=0;j<v.mapping.size();++j) { if(j) out << ','; out << v.mapping[j]; }
+        out << "]}";
+    }
+    out << "],\"rows\":[";
+    std::vector<std::uint32_t> actions;
+    for(auto a:original.candidates())
+        if(original.registry().actions[a].params.type==ActionType::Chaos) actions.push_back(a);
+    for(auto a:original.candidates())
+        if(original.registry().actions[a].params.type==ActionType::HarvestReforge) { actions.push_back(a); break; }
+    const auto root=original.intern_item(start);
+    std::uint64_t child_work=0;
+    const auto projected = [&](const OutcomeDistribution& law, const CalcContext& source, const Variant* v) {
+        std::map<std::vector<std::uint64_t>,double> result;
+        if(!law.supported || !law.applicable || !law.choice_groups.empty() || !law.choice_options.empty())
+            throw std::runtime_error("layout probe requires one complete unobserved native row");
+        for(const auto& e:law.entries) {
+            auto state=source.state(e.state);
+            if(v) {
+                const auto remap=[&](CompactCountVector& counts) {
+                    auto previous=counts; counts.assign(v->layout.junk_classes.size(),0);
+                    for(std::size_t j=0;j<previous.size();++j) if(previous[j]) counts[v->mapping.at(j)]+=previous[j];
+                };
+                remap(state.junk_counts); remap(state.fractured_junk_counts);
+                remap(state.crafted_junk_counts); remap(state.fractured_crafted_junk_counts);
+            }
+            result[exact_abstract_state_key(state,0)]+=e.probability;
+        }
+        return result;
+    };
+    for(std::size_t i=0;i<actions.size();++i) {
+        if(i) out << ',';
+        const auto action=actions[i];
+        const auto before=original.telemetry(); const auto begin=Clock::now();
+        const auto& law=original.outcomes(root,action,true);
+        const auto elapsed=milliseconds(begin,Clock::now());
+        out << "{\"action\":" << escape_json(original.registry().actions[action].id)
+            << ",\"gated\":" << (law.goal_progress_gated?"true":"false")
+            << ",\"full_support\":" << law.entries.size() << ",\"full_native_ms\":" << elapsed
+            << ",\"full_work\":" << original.telemetry().reforge_logical_work_v1-before.reforge_logical_work_v1
+            << ",\"full_interning\":" << original.telemetry().reforge_effort.state_interning_attempts-before.reforge_effort.state_interning_attempts
+            << ",\"projection\":[";
+        for(std::size_t j=0;j<variants.size();++j) {
+            if(j) out << ','; const auto& v=variants[j];
+            out << "{\"variant\":" << escape_json(v.name) << ",\"support\":";
+            if(v.coarsening) out << projected(law,original,&v).size(); else out << "null";
+            out << '}';
+        }
+        out << "],\"native_pair_arms\":[";
+        const auto& v=variants[3];
+        if(v.coarsening && projected(law,original,&v).size()<law.entries.size()) {
+            for(unsigned arm=0;arm<2;++arm) {
+                if(arm) out << ',';
+                auto child=fresh(v.candidates,arm==0?&original.layout():nullptr);
+                const auto held=original.estimated_owned_bytes();
+                if(held>=total_bytes || original.telemetry().reforge_logical_work_v1+child_work>=total_work)
+                    throw std::runtime_error("layout probe aggregate allowance exhausted");
+                child->set_solve_resource_caps(2000000,total_work-original.telemetry().reforge_logical_work_v1-child_work,false,total_bytes-held);
+                const auto child_root=child->intern_item(start); const auto child_begin=Clock::now();
+                const auto& actual=child->outcomes(child_root,action,true);
+                const auto child_ms=milliseconds(child_begin,Clock::now());
+                auto expected=projected(law,original,arm==0?nullptr:&v);
+                Variant parent_projection;
+                parent_projection.layout = original.layout();
+                if (arm == 0) {
+                    for (const auto& cls : child->layout().junk_classes) {
+                        std::uint32_t target = kNoId;
+                        for (std::size_t w=0;w<cls.member_mask.size();++w) {
+                            auto bits=cls.member_mask[w];
+                            while (bits) {
+                                const auto mod=w*64+std::countr_zero(bits); bits&=bits-1;
+                                const auto next=original.layout().junk_class_by_mod.at(mod);
+                                if (next==kNoId || (target!=kNoId && next!=target))
+                                    throw std::runtime_error("split-only layout did not preserve parent members");
+                                target=next;
+                            }
+                        }
+                        parent_projection.mapping.push_back(target);
+                    }
+                }
+                auto observed=projected(actual,*child,arm==0?&parent_projection:nullptr);
+                double delta=0, expected_mass=0, observed_mass=0;
+                for(const auto& [key,p]:expected) { expected_mass+=p; delta=std::max(delta,std::abs(p-observed[key])); }
+                for(const auto& [key,p]:observed) { observed_mass+=p; delta=std::max(delta,std::abs(p-expected[key])); }
+                const auto& t=child->telemetry(); child_work+=t.reforge_logical_work_v1;
+                out << "{\"arm\":" << escape_json(arm==0?"full_layout_subset":"coarser_layout_subset")
+                    << ",\"support\":" << actual.entries.size() << ",\"states\":" << child->state_count()
+                    << ",\"classes\":" << child->layout().junk_classes.size() << ",\"work\":" << t.reforge_logical_work_v1
+                    << ",\"native_ms\":" << child_ms << ",\"owned_bytes\":" << child->estimated_owned_bytes()
+                    << ",\"parent_child_owned_bytes\":" << held+child->estimated_owned_bytes()
+                    << ",\"interning\":" << t.reforge_effort.state_interning_attempts
+                    << ",\"frontier_nodes\":" << t.reforge_effort.frontier_nodes
+                    << ",\"terminal_contributions\":" << t.reforge_effort.terminal_contributions
+                    << ",\"expected_mass\":" << expected_mass << ",\"observed_mass\":" << observed_mass
+                    << ",\"max_probability_delta\":" << delta << '}';
+            }
+        }
+        out << "]}";
+    }
+    out << "],\"aggregate_work\":" << original.telemetry().reforge_logical_work_v1+child_work << "}\n";
+    return out.str();
+}
+
 CaseResult run_case(
     pc_data_handle data, const Value& specification,
     const bool skip_verification, const fs::path& strategy_output,
@@ -3315,6 +3538,33 @@ CaseResult run_case(
             optional_u32(caps, "solve_step_work_items", 1);
         pc_error_info error;
         pc_error_info_init(&error);
+        if (const Value* candidate = optional(caps, "candidate_evaluation", Type::Object)) {
+            if (candidate->object.size() != 4)
+                throw std::runtime_error("candidate_evaluation requires exactly four typed limits");
+            solve_options.candidate_max_states = optional_u32(*candidate, "max_states", 0);
+            solve_options.candidate_max_pairs = optional_u32(*candidate, "max_pairs", 0);
+            solve_options.candidate_max_transitions = optional_u32(*candidate, "max_transitions", 0);
+            solve_options.candidate_max_owned_bytes = optional_u64(*candidate, "max_owned_bytes", 0);
+            if (!solve_options.candidate_max_states || !solve_options.candidate_max_pairs ||
+                !solve_options.candidate_max_transitions || !solve_options.candidate_max_owned_bytes)
+                throw std::runtime_error("candidate_evaluation requires four positive limits");
+        }
+        if (const Value* mode = optional(caps, "native_continuation_search", Type::String)) {
+            using Mode = poecraft::solver::NativeContinuationSearchMode;
+            const std::map<std::string, Mode> modes{
+                {"ordinary", Mode::Ordinary}, {"gated_return", Mode::GatedReturnProbe},
+                {"dirty_full", Mode::DirtyFull},
+                {"dirty_restricted_full", Mode::DirtyRestrictedFullLayout},
+                {"dirty_restricted_fresh", Mode::DirtyRestrictedFreshLayout}};
+            if (!modes.contains(mode->string)) throw std::runtime_error("unknown native continuation search mode");
+            const bool public_mode = modes.at(mode->string) == Mode::DirtyRestrictedFreshLayout;
+            if (public_mode) solve_options.solver_flags |= PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH;
+            const auto configured = public_mode ? PC_RESULT_OK :
+                poecraft::solver::configure_solver_native_continuation_search(
+                    handles.solver, modes.at(mode->string), &error);
+            if (configured != PC_RESULT_OK)
+                throw std::runtime_error(api_error("configure native continuation search", configured, error));
+        }
         if (!native_retention_diagnostic.empty()) {
             const auto mode=native_retention_diagnostic=="reuse-unconsumed" ? poecraft::solver::NativeRetentionDiagnosticMode::ReuseUnconsumed :
                 native_retention_diagnostic=="checked" ? poecraft::solver::NativeRetentionDiagnosticMode::CheckedTarget :
@@ -3762,6 +4012,12 @@ CaseResult run_case(
                                 verification, "exact_evaluation", false);
                         if (exact_evaluation_required) {
                             report.exact_evaluation_status = "running";
+                            // Preserve the completed solver artifact and its
+                            // certification before the separate final checker
+                            // consumes the remaining case deadline.
+                            report.total_ms = milliseconds(total_begin, Clock::now());
+                            report.working_set_after = process_working_set();
+                            if (checkpoint) checkpoint(report);
                             const auto evaluation_started = Clock::now();
                             pc_strategy_eval_options evaluation_options{};
                             evaluation_options.struct_size =
@@ -5523,6 +5779,7 @@ Arguments parse_arguments(int argc, char** argv) {
             args.development_checkpoint_load =
                 value("--load-development-checkpoint");
         }
+        else if (argument == "--action-layout-diagnostic") args.action_layout_diagnostic = true;
         else if (argument == "--case") args.case_id = value("--case");
         else if (argument == "--native-retention-diagnostic") args.native_retention_diagnostic=value("--native-retention-diagnostic");
         else if (argument == "--native-retention-target-lower") args.native_retention_target_lower=std::stod(value("--native-retention-target-lower"));
@@ -5882,6 +6139,13 @@ int main(int argc, char** argv) {
                 }
                 std::cout << "Validated " << specifications.size()
                           << " solver benchmark specifications.\n";
+                pc_data_destroy(data);
+                return 0;
+            }
+
+            if (args.action_layout_diagnostic) {
+                if (specifications.size() != 1) throw std::runtime_error("action layout diagnostic requires one case");
+                write_file(fs::absolute(args.output), run_action_layout_probe(data, specifications.front()));
                 pc_data_destroy(data);
                 return 0;
             }

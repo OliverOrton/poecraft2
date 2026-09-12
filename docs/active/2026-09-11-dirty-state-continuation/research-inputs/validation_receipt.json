@@ -1,0 +1,11 @@
+{
+  "classification": "Artifact validation only; no native solver or repository tests run",
+  "source_pin": "0ca76eb4a9f35a90299ecceeab740e5535804fd9",
+  "synthetic_check_count": 38,
+  "synthetic_output_reproduced": true,
+  "original_reports_byte_exact": true,
+  "profile_consistency_checks": true,
+  "portable_reference_check": true,
+  "source_reference_ids_resolved": true,
+  "repository_modified": false
+}

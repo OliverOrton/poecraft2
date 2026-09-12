@@ -589,6 +589,7 @@ def run_corpus(
     selected_evaluation_roles: set[str] | None = None,
     native_retention_diagnostic: str | None = None,
     host_watchdog_seconds: float | None = None,
+    worker_headroom_bytes: int = 0,
 ) -> dict[str, Any]:
     root = root.resolve()
     executable = executable.resolve()
@@ -597,6 +598,9 @@ def run_corpus(
     output_directory = output_directory.resolve()
     if max_workers <= 0:
         raise ValueError("max_workers must be positive")
+    if (isinstance(worker_headroom_bytes, bool) or not isinstance(worker_headroom_bytes, int)
+            or not 0 <= worker_headroom_bytes <= 2**63 - 1):
+        raise ValueError("worker headroom must be a non-negative 64-bit byte count")
     if (native_retention_diagnostic is not None
             and native_retention_diagnostic not in NATIVE_RETENTION_DIAGNOSTIC_MODES):
         raise ValueError("unsupported native retention diagnostic mode")
@@ -639,6 +643,8 @@ def run_corpus(
         configuration["native_retention_diagnostic"] = native_retention_diagnostic
     if host_watchdog_seconds is not None:
         configuration["host_watchdog_seconds"] = host_watchdog_seconds
+    if worker_headroom_bytes:
+        configuration["worker_headroom_bytes"] = worker_headroom_bytes
     current_resume_identity = provenance.resume_identity(configuration)
     previous_resume_identity = {
         key: previous.get(key)
@@ -682,7 +688,7 @@ def run_corpus(
         while pending or running:
             while pending and len(running) < max_workers:
                 task = pending[0]
-                requirement = task.reserved_memory_bytes
+                requirement = task.reserved_memory_bytes + worker_headroom_bytes
                 if memory_budget_bytes and requirement > memory_budget_bytes:
                     pending.pop(0)
                     ledger["cases"][task.case_id] = {
@@ -715,6 +721,7 @@ def run_corpus(
                     goal_progress_gated_reforges=goal_progress_gated_reforges,
                     native_retention_diagnostic=native_retention_diagnostic,
                     watchdog_seconds=host_watchdog_seconds,
+                    worker_headroom_bytes=worker_headroom_bytes,
                 )
                 running[future] = task
                 reserved += requirement
@@ -723,7 +730,7 @@ def run_corpus(
             completed, _ = wait(running, return_when=FIRST_COMPLETED)
             for future in completed:
                 task = running.pop(future)
-                reserved -= task.reserved_memory_bytes
+                reserved -= task.reserved_memory_bytes + worker_headroom_bytes
                 try:
                     result = future.result()
                 except Exception as exc:  # preserve resumability on harness faults
@@ -764,6 +771,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--max-workers", type=int, default=1)
     parser.add_argument("--memory-budget-bytes", type=int, default=0)
+    parser.add_argument("--worker-headroom-bytes", type=int, default=0,
+        help="Per-process reservation beyond the solver cap, including evaluator overlap and overhead.")
     parser.add_argument(
         "--watchdog-ceiling-seconds",
         type=float,
@@ -818,6 +827,7 @@ def main(argv: list[str] | None = None) -> int:
         selected_evaluation_roles=set(args.role) or None,
         native_retention_diagnostic=args.native_retention_diagnostic,
         host_watchdog_seconds=args.host_watchdog_seconds,
+        worker_headroom_bytes=args.worker_headroom_bytes,
     )
     print(
         f"{len(ledger['cases'])} cases recorded; "

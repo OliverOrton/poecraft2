@@ -1,0 +1,14 @@
+{
+  "source": "docs\\active\\2026-09-11-dirty-state-continuation\\native-300-final540\\dirty_restricted_fresh\\cb08-cross-base-product8-long240.json",
+  "source_sha256": "497d90484fd9153fa86c91d91bbb7dcef19bcc2f312fb7f9461aa94b4a724c36",
+  "patches": [
+    {
+      "path": "/requested_bounded_finish_seconds",
+      "value": 600
+    },
+    {
+      "path": "/watchdog_seconds",
+      "value": 840
+    }
+  ]
+}

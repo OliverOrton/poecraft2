@@ -1,0 +1,86 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "dirty-state-native600-final840-amulet",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 2,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+  },
+  "source_checkpoint": {
+    "engine_product_commit": "be553608ecabde28a3dec07856255911459ec97d",
+    "mechanics_authority": "unchanged_current_implemented_contract",
+    "local_case_authoring": "existing_native_generator_and_lab_case_clone"
+  },
+  "benchmark_identity_contract": {
+    "id": "cross-base-capability-recovery-product8-long240-v1",
+    "trajectory_required": true,
+    "native_repetitions": 1,
+    "fixed_work_identity_required": false,
+    "compiled_exact_evaluation_required": true,
+    "general_product_scope": {
+      "action_mode": "goal_relevant",
+      "solve_step_work_items": 8,
+      "goal_progress_gated_reforges": true,
+      "allow_economic_restart": false,
+      "consider_imprint_programs": false
+    },
+    "explicit_imprint_scope": {
+      "consider_imprint_programs": false,
+      "disposition": "not_present_in_quality_ladder"
+    },
+    "required_disclosures": [
+      "artifact",
+      "source_checkpoint",
+      "economy",
+      "action_scope",
+      "terminal_goal",
+      "start_carrier",
+      "work_step",
+      "requested_finish",
+      "verification"
+    ]
+  },
+  "case_roles": {
+    "cb01-cross-base-product8-long240": "repeatedly exposed development",
+    "cb02-cross-base-product8-long240": "repeatedly exposed development",
+    "cb03-cross-base-product8-long240": "repeatedly exposed development",
+    "cb04-cross-base-product8-long240": "known regression/control case",
+    "cb05-cross-base-product8-long240": "known development/reference",
+    "cb06-cross-base-product8-long240": "known development/reference",
+    "cb07-cross-base-product8-long240": "known development/reference",
+    "cb08-cross-base-product8-long240": "validation stratum, already published/exposed",
+    "cb09-cross-base-product8-long240": "frozen_test stratum, explicitly already published/exposed",
+    "cb10-cross-base-product8-long240": "frozen_test stratum, explicitly already published/exposed",
+    "cb11-cross-base-product8-long240": "development, repeatedly exposed historically",
+    "cb12-cross-base-product8-long240": "development; not a claimed holdout"
+  },
+  "comparison_profile": {
+    "id": "cross-base-capability-recovery-product8-long240-v1",
+    "product_scope": "calculator_goal_relevant_exact_terminal_imprint_off_restart_off_product8",
+    "exact_required": false,
+    "maximum_wall_seconds": 840,
+    "compiled_exact_evaluation_required": true,
+    "verification_runs": 0
+  },
+  "owner_decisions": [
+    "Use the same 600-second search and 840-second total native profile as the Ring-four final comparison.",
+    "Keep every memory, state, row, transition, work, numerical and scope limit from the qualified 300/540 Amulet request.",
+    "Compare the same input using the preserved budget-only executable (dirty mode unimplemented) and the frozen v8 public-mode executable."
+  ],
+  "cases": [
+    "cb08-cross-base-product8-long240.json"
+  ],
+  "execution_activation": {
+    "native_retention_diagnostic": "reuse",
+    "proof_handoff_seconds": 0,
+    "outer_cleanup_seconds": 870,
+    "generated_imprint": false,
+    "economic_restart": false,
+    "goal_progress_gated_reforges": true
+  }
+}

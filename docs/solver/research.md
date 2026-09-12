@@ -210,6 +210,45 @@ leave efficient complete reforge excursions unresolved. General entry sets and
 permanent return libraries remain outside the implementation; no claim status
 or exactness authority changes.
 
+The [dirty-state application](../active/2026-09-11-dirty-state-continuation/README.md)
+measures the previously predicted CB08 observer effect natively: omitting the
+two non-acquiring resistance conversions in a fresh private context reduces
+21 junk classes to six and Chaos support from 4160 to 85, with complete
+probability reconciliation. Removing the actions while keeping the old layout
+does not produce that reduction. The contained dirty controller independently
+first qualified an Amulet upper of 8,455,259.706212897; both full-layout policy arms
+remain unfinished at their common time limit, so their candidate costs are
+unknown. A Bow controller composed at an actual fractured nonempty entry costs
+336,845.29994219844; adding the admitted paid Scour alternative reduces it to
+223,430.5583, still above the retained 223,349.0000393144. These complete
+evaluations distinguish an uncompetitive composition from an unknown capped
+candidate. Old boundary values guide private search but cannot certify cost
+after later returns also change. The Ring-four follow-through repaired an
+identity-replay materialization refusal, then an unchanged-tolerance rank-one
+preparation in the existing sparse occupancy owner completed both dirty
+controllers. Ring-four's selected Essence graph independently matches
+10,251,920.398984343, 99.7248% below its same-capacity 3,725,358,919.4984236
+control. The same final source completes Amulet's admitted Essence controller
+at 1,973,847.6160810417, 95.9632% below its matched 48,896,520.03536156 control;
+Amulet's lower remains 174.79327321907147. Ring-four's lower remains
+201.85524142944053; this is distinct from the
+Ring-two target. Earlier capped candidates remain unknown at their recorded
+boundaries. No exactness claim changes. No new query-directed action-family
+mechanism has been implemented.
+
+Fresh original-limit execution qualification retains all 1,000 trials per new
+graph: Amulet reaches 330 successes and 670 action-limit stops; Ring-four reaches
+55 successes and 945 action-limit stops. Neither has illegal actions, missing
+edges/prices or other limit failures. The complete native costs therefore remain
+distinct from finite-horizon completion; see the
+[product receipt](../active/2026-09-11-dirty-state-continuation/product-qualification.json).
+
+The [completed qualification](../active/2026-09-11-dirty-state-continuation/qualification.json)
+has 16 strict pairs with zero exclusions or reported regressions. Original
+profiles retain 12 identical graphs, one cheaper independently evaluated CB03
+Conquest graph and CB09's absent policy; CB12 remains exact. CB05/CB09's known
+failures remain visible. Additional CB03 sampling was not run at closeout.
+
 The four [advisory audits](../active/2026-09-09-cross-base-capability-recovery/README.md#advisory-audits)
 are reconciled against that experiment. Their finite-region threshold and
 auxiliary-ceiling arguments now live in the [lower chapter](mathematics/lower-bounds.md#threshold-query);

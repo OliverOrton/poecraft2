@@ -1,0 +1,118 @@
+{
+  "run": "out\\dirty-state-continuation\\control-shared-ring-four",
+  "executable_sha256": "168acbaa242f4b6cd5f8f49c92f08e7b1810bd642f3c3b0ce74cb00ebba8b7b3",
+  "mode_disposition": "Preserved budget-only executable predates dirty search; optional proposal-mode input is ignored. Numeric limits are implemented.",
+  "actual_status": "refused_unsupported_action",
+  "summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 3725358919.4984236,
+    "expanded_states": 165,
+    "sweeps": 0,
+    "residual": 0.0002551078796386719,
+    "skipped_action_count": 1,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "action_counts": {
+      "registry": 184,
+      "candidate": 43,
+      "evaluator_supported": 43,
+      "supported_priced": 173,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 1
+    },
+    "lower_bound": 201.85524142944053,
+    "upper_bound": 3725358919.4984236,
+    "evaluated_policy_cost": 3725358919.4984236,
+    "absolute_optimality_gap": 3725358717.6431823,
+    "relative_optimality_gap": 18455595.659850128,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  },
+  "phase_wall_ms": {
+    "registry_layout": 41.643,
+    "solve": 309572.1446,
+    "compile": 0.782,
+    "verification": null,
+    "total": 312231.5759
+  },
+  "exact_final": {
+    "completed": true,
+    "time_limited": false,
+    "status": "matched",
+    "wall_ms": 418.985,
+    "converged": true,
+    "cost_complete": true,
+    "zero_off_policy_mass": true,
+    "cost_reconciled": true,
+    "success_probability": 1,
+    "off_policy_mass": 0,
+    "total_expected_cost": 3725358919.4984236,
+    "solver_cost_delta_absolute": 0,
+    "solver_cost_delta_relative": 0
+  },
+  "candidates": {
+    "samples": [
+      {
+        "identity": "763439409282736704",
+        "kind": "direct_compiled_core_policy",
+        "stage": "direct_certification",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 3725358919.4984236,
+        "estimate_cost": 3725358919.4984236,
+        "reconciliation_absolute_delta": 426.77720165252686,
+        "reconciliation_relative_delta": 1.1456000937981761e-07,
+        "disposition": "eligible_verified_candidate",
+        "selection_reason": "executable cost mismatch blocks exactness"
+      },
+      {
+        "identity": "763439409282736704",
+        "kind": "direct_compiled_core_policy",
+        "stage": "publication",
+        "verification": "independently_evaluated",
+        "evaluated_cost": 3725358919.4984236,
+        "estimate_cost": 3725358919.4984236,
+        "reconciliation_absolute_delta": 426.77720165252686,
+        "reconciliation_relative_delta": 1.1456000937981761e-07,
+        "disposition": "selected_for_publication",
+        "selection_reason": "strict cheapest independently evaluated candidate"
+      },
+      {
+        "identity": "12451096819248420042",
+        "kind": "gated_primitive_destructive_renewal",
+        "stage": "publication",
+        "verification": "compiled_unverified",
+        "evaluated_cost": null,
+        "estimate_cost": 3725359346.2756295,
+        "reconciliation_absolute_delta": null,
+        "reconciliation_relative_delta": null,
+        "disposition": "not_selected",
+        "selection_reason": "final graph evaluation did not establish an executable cost"
+      }
+    ],
+    "retained": 3,
+    "omitted": 0,
+    "retained_bytes": 1228,
+    "limit": 64
+  },
+  "memory": {
+    "measurement_kind": "working_set_snapshots_not_peak",
+    "process_working_set_before_bytes": 33554432,
+    "process_working_set_after_bytes": 1450287104,
+    "process_working_set_delta_bytes": 1416732672,
+    "process_working_set_peak_bytes": null,
+    "wasm_heap_before_bytes": null,
+    "wasm_heap_after_bytes": null,
+    "wasm_heap_growth_bytes": null,
+    "native_live_owned_bytes": 1357590849,
+    "native_peak_owned_bytes": 1375277486,
+    "native_serialized_output_bytes": 45,
+    "solver_telemetry_json_bytes": 636381
+  },
+  "time_to_first_incumbent_ms": 309566.6086
+}

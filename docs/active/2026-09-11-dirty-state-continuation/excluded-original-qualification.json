@@ -1,0 +1,378 @@
+{
+  "recorded_at_utc": "2026-09-12T02:46:05.665748+00:00",
+  "disposition": "Native results remain valid; strict original-profile comparisons are excluded because the adapter serialized host_watchdog_seconds as integer 315 rather than the reference float 315.0. A separate corrected pass will supply matched preservation.",
+  "comparisons": [
+    {
+      "baseline": "original_core_control",
+      "candidate": "integer_watchdog_core",
+      "shared_case_ids": 12,
+      "paired_cases": 0,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [
+        {
+          "id": "cb01-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        },
+        {
+          "id": "cb02-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        },
+        {
+          "id": "cb03-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        },
+        {
+          "id": "cb04-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        },
+        {
+          "id": "cb05-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        },
+        {
+          "id": "cb06-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        },
+        {
+          "id": "cb07-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        },
+        {
+          "id": "cb08-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        },
+        {
+          "id": "cb09-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        },
+        {
+          "id": "cb10-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        },
+        {
+          "id": "cb11-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        },
+        {
+          "id": "cb12-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        }
+      ],
+      "delta_distributions": {},
+      "status_transitions": {},
+      "regressions": [],
+      "pairs": []
+    },
+    {
+      "baseline": "original_exposed_control",
+      "candidate": "integer_watchdog_exposed",
+      "shared_case_ids": 2,
+      "paired_cases": 0,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [
+        {
+          "id": "ho01-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        },
+        {
+          "id": "ho02-cross-base-product8-long240",
+          "reason": "input_mismatch",
+          "fields": [
+            "runtime.configuration"
+          ]
+        }
+      ],
+      "delta_distributions": {},
+      "status_transitions": {},
+      "regressions": [],
+      "pairs": []
+    }
+  ],
+  "cases": [
+    {
+      "id": "cb01-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 85558.70618560436,
+      "prior_upper": 85558.70618560436,
+      "policy_status": "bounded_feasible",
+      "exact_status": "matched",
+      "expectation_met": true,
+      "errors": [],
+      "phase_wall_ms": {
+        "registry_layout": 38.0097,
+        "solve": 245215.1689,
+        "compile": 4.373,
+        "verification": null,
+        "total": 248265.1092
+      }
+    },
+    {
+      "id": "cb02-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 3746.1319409485764,
+      "prior_upper": 3746.1319409485764,
+      "policy_status": "bounded_feasible",
+      "exact_status": "matched",
+      "expectation_met": false,
+      "errors": [
+        "bounded best-policy contract failed: one or more bounded-result proof obligations failed"
+      ],
+      "phase_wall_ms": {
+        "registry_layout": 37.1414,
+        "solve": 240713.2256,
+        "compile": 15.3848,
+        "verification": null,
+        "total": 243741.3449
+      }
+    },
+    {
+      "id": "cb03-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 794067.4530398862,
+      "prior_upper": 794067.4530398862,
+      "policy_status": "bounded_feasible",
+      "exact_status": "matched",
+      "expectation_met": true,
+      "errors": [],
+      "phase_wall_ms": {
+        "registry_layout": 45.6052,
+        "solve": 246945.8962,
+        "compile": 8.8231,
+        "verification": null,
+        "total": 250768.9739
+      }
+    },
+    {
+      "id": "cb04-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 223349.0000393144,
+      "prior_upper": 223349.0000393144,
+      "policy_status": "bounded_feasible",
+      "exact_status": "matched",
+      "expectation_met": true,
+      "errors": [],
+      "phase_wall_ms": {
+        "registry_layout": 25.5039,
+        "solve": 240477.4659,
+        "compile": 4.464,
+        "verification": null,
+        "total": 242628.2717
+      }
+    },
+    {
+      "id": "cb05-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 87200457.42804676,
+      "prior_upper": 87200457.42804676,
+      "policy_status": "bounded_feasible",
+      "exact_status": "matched",
+      "expectation_met": false,
+      "errors": [
+        "bounded best-policy contract failed: one or more bounded-result proof obligations failed"
+      ],
+      "phase_wall_ms": {
+        "registry_layout": 32.7609,
+        "solve": 39663.618,
+        "compile": 67.4833,
+        "verification": null,
+        "total": 50958.1311
+      }
+    },
+    {
+      "id": "cb06-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 149977.25092497544,
+      "prior_upper": 149977.25092497544,
+      "policy_status": "bounded_feasible",
+      "exact_status": "matched",
+      "expectation_met": true,
+      "errors": [],
+      "phase_wall_ms": {
+        "registry_layout": 23.9822,
+        "solve": 10662.5078,
+        "compile": 0.9053,
+        "verification": null,
+        "total": 11104.735
+      }
+    },
+    {
+      "id": "cb07-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 3725358919.4984236,
+      "prior_upper": 3725358919.4984236,
+      "policy_status": "bounded_feasible",
+      "exact_status": "matched",
+      "expectation_met": true,
+      "errors": [],
+      "phase_wall_ms": {
+        "registry_layout": 30.3931,
+        "solve": 19764.6372,
+        "compile": 0.572,
+        "verification": null,
+        "total": 20255.3157
+      }
+    },
+    {
+      "id": "cb08-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 40215428.995558396,
+      "prior_upper": 40215428.995558396,
+      "policy_status": "bounded_feasible",
+      "exact_status": "matched",
+      "expectation_met": true,
+      "errors": [],
+      "phase_wall_ms": {
+        "registry_layout": 27.1724,
+        "solve": 240535.5073,
+        "compile": 1.4946,
+        "verification": null,
+        "total": 240739.7356
+      }
+    },
+    {
+      "id": "cb09-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": null,
+      "prior_upper": null,
+      "policy_status": "none",
+      "exact_status": "not_applicable_no_policy",
+      "expectation_met": false,
+      "errors": [
+        "bounded best-policy contract failed: the solve did not publish an executable policy"
+      ],
+      "phase_wall_ms": {
+        "registry_layout": 25.7116,
+        "solve": 12786.821,
+        "compile": null,
+        "verification": null,
+        "total": 13071.7232
+      }
+    },
+    {
+      "id": "cb10-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 45635.96043201217,
+      "prior_upper": 45635.96043201217,
+      "policy_status": "bounded_feasible",
+      "exact_status": "matched",
+      "expectation_met": true,
+      "errors": [],
+      "phase_wall_ms": {
+        "registry_layout": 27.1763,
+        "solve": 125930.2979,
+        "compile": 2.6781,
+        "verification": null,
+        "total": 127374.5246
+      }
+    },
+    {
+      "id": "cb11-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 1934.63683986346,
+      "prior_upper": 1934.63683986346,
+      "policy_status": "bounded_feasible",
+      "exact_status": "matched",
+      "expectation_met": true,
+      "errors": [],
+      "phase_wall_ms": {
+        "registry_layout": 32.8789,
+        "solve": 213226.1025,
+        "compile": 2.328,
+        "verification": null,
+        "total": 214624.3069
+      }
+    },
+    {
+      "id": "cb12-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 65.60036144971359,
+      "prior_upper": 65.60036144971359,
+      "policy_status": "exact",
+      "exact_status": "matched",
+      "expectation_met": true,
+      "errors": [],
+      "phase_wall_ms": {
+        "registry_layout": 25.6931,
+        "solve": 20712.9813,
+        "compile": 1.4289,
+        "verification": null,
+        "total": 20814.4894
+      }
+    },
+    {
+      "id": "ho01-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 2071.736538384866,
+      "prior_upper": 2071.736538384866,
+      "policy_status": "bounded_feasible",
+      "exact_status": "matched",
+      "expectation_met": true,
+      "errors": [],
+      "phase_wall_ms": {
+        "registry_layout": 23.4278,
+        "solve": 240189.5587,
+        "compile": 2.6452,
+        "verification": null,
+        "total": 242912.8598
+      }
+    },
+    {
+      "id": "ho02-cross-base-product8-long240",
+      "graph_equal_or_both_absent": true,
+      "upper": 3963.671015833939,
+      "prior_upper": 3963.671015833939,
+      "policy_status": "bounded_feasible",
+      "exact_status": "matched",
+      "expectation_met": true,
+      "errors": [],
+      "phase_wall_ms": {
+        "registry_layout": 32.3945,
+        "solve": 195349.8668,
+        "compile": 3.1145,
+        "verification": null,
+        "total": 198620.5836
+      }
+    }
+  ]
+}

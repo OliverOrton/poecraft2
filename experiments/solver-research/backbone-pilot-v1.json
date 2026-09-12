@@ -95,6 +95,53 @@
         "docs/active/2026-09-10-proper-policy-recovery/diagnostic-cases/cb08-cross-base-product8-long240.json"
       ],
       "source_binding": "native binary, command, input and patch identities in docs/active/2026-09-10-proper-policy-recovery/results.json"
+    },
+    "cb08-dirty-continuation-native-wide-v1": {
+      "semantic_version": "Original CB08 Calculator goal, vocabulary and economy; optional private dirty continuation search with separately declared native checker limits.",
+      "property": "Independently evaluated original-scope executable upper; original lower and exactness remain separate.",
+      "coefficient_semantics": "Complete native fixed-policy evaluation, original terminal and observation semantics, recorded residual/cost reconciliation; no probability truncation.",
+      "scope": "Onyx Amulet three-goal, empty Rare ilvl86; 600-second requested finish, 840-second native watchdog, 870-second outer watchdog, 8 GiB solver / 4 GiB checker, 2M states / 10M pairs / 40M transitions, 200M shared logical work.",
+      "input_references": [
+        "docs/active/2026-09-11-dirty-state-continuation/native-600-final840/amulet/cb08-cross-base-product8-long240.json",
+        "docs/active/2026-09-11-dirty-state-continuation/comparison-amulet-600-v14.json",
+        "docs/active/2026-09-11-dirty-state-continuation/sampling-amulet.json"
+      ],
+      "source_binding": "Frozen budget-control and v14 public-native executable identities, shared request, fresh host admission and exact final evaluation in the linked receipts; earlier v3/v11 evidence remains in the living record."
+    },
+    "cb08-dirty-continuation-layout-consumer-v3": {
+      "semantic_version": "Original CB08 Calculator request; v3 private-controller comparison separates candidate omission from a fresh action-observer layout.",
+      "property": "Completed-controller or unknown-at-finish evidence for the three selected private-search arms; no original-scope lower or exactness claim.",
+      "coefficient_semantics": "Complete native rows and independent emitted-graph checking; private controller estimates do not supply policy uppers.",
+      "scope": "Onyx Amulet three-goal, empty Rare ilvl86; 300-second requested finish, 540-second native watchdog, 8 GiB solver / 4 GiB checker, 2M states / 10M pairs / 40M transitions, 200M shared logical work.",
+      "input_references": [
+        "docs/active/2026-09-11-dirty-state-continuation/native-300-final540/dirty_full/cb08-cross-base-product8-long240.json",
+        "docs/active/2026-09-11-dirty-state-continuation/native-300-final540/dirty_restricted_full/cb08-cross-base-product8-long240.json",
+        "docs/active/2026-09-11-dirty-state-continuation/native-300-final540/dirty_restricted_fresh/cb08-cross-base-product8-long240.json"
+      ],
+      "source_binding": "Frozen v3 executable and three actual policy-consumer receipts in the living record, separate from the final v14 600-second cost qualification."
+    },
+    "cb08-action-observer-layout-native-v1": {
+      "semantic_version": "Native current CB08 candidate/dependency layout rebuild with unchanged modifier universe, product parent, goal and count observations.",
+      "property": "Actual private-search class/support/work effect of each resistance conversion and their pair; no full-scope lower or universal equivalence claim.",
+      "coefficient_semantics": "Whole-class membership projection in all four junk-count categories, complete native Chaos and chaos-reforge probability reconciliation.",
+      "scope": "Full candidates; each single conversion omitted; pair omitted; nondiscriminating Annul omission control; matched full-layout subset and fresh-layout rebuild.",
+      "input_references": [
+        "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb08-cross-base-product8-long240.json",
+        "docs/active/2026-09-11-dirty-state-continuation/cb08-layout-probe.json"
+      ],
+      "source_binding": "Existing native benchmark action-layout diagnostic, exact class members, native row hashes/work and declared source artifact."
+    },
+    "cb07-dirty-continuation-native-wide-v1": {
+      "semantic_version": "Original CB07 Calculator goal, vocabulary and economy; optional private dirty continuation search with separately declared native checker limits.",
+      "property": "Independently evaluated original-scope executable upper; original lower and exactness remain separate.",
+      "coefficient_semantics": "Complete native fixed-policy evaluation, original terminal and observation semantics, recorded residual/cost reconciliation; no probability truncation.",
+      "scope": "Ring four-goal, empty Rare ilvl86; 600-second requested finish, 840-second native watchdog, 870-second outer watchdog, 8 GiB solver / 4 GiB checker, 2M states / 10M pairs / 40M transitions, 200M shared logical work.",
+      "input_references": [
+        "docs/active/2026-09-11-dirty-state-continuation/native-600-final840/ring-four/cb07-cross-base-product8-long240.json",
+        "docs/active/2026-09-11-dirty-state-continuation/comparison-ring-four-600-v14.json",
+        "docs/active/2026-09-11-dirty-state-continuation/sampling-ring-four.json"
+      ],
+      "source_binding": "Frozen budget-control and v14 public-native executable identities, strict matched request, fresh host admission and independent final evaluation in the linked receipt."
     }
   },
   "comparison_profiles": {
@@ -565,6 +612,66 @@
       "limitations": [
         "No true goal or proper committed frontier in this measured view; negative is not full native infeasibility.",
         "No compiled controller, first verified-policy time, finite gap or new exact result. Cross-base/WASM activation was not reached."
+      ]
+    },
+    {
+      "id": "cb08-dirty-native-upper-20260911",
+      "model": "cb08-dirty-continuation-native-wide-v1",
+      "kind": "verified_policy_upper",
+      "producer": "Public native solve mode, ordinary graph compiler and separate native final evaluator",
+      "validation": "docs/active/2026-09-11-dirty-state-continuation/README.md",
+      "evidence": "docs/active/2026-09-11-dirty-state-continuation/dirty-v14-amulet-600.json",
+      "pointer": "/exact_final/total_expected_cost",
+      "role": "Completed native dirty Amulet controller",
+      "treatment": "Complete private acquisition/removal policy, with paid broad redraw at actual zero-goal entries and an admitted forced-goal Essence proposal, independently evaluated from root and actual nonempty entries.",
+      "limitations": [
+        "1,973,847.6160810417 is 95.9632% below the same-profile 48,896,520.03536156 control and also beats the stronger original 40,215,428.995558396 reference; root lower remains 174.79327321907147, with no new exact closure.",
+        "Exact expected actions are 283,397.630. Original-limit sampling retains 330 successes and 670 action-limit stops out of 1000, with no other execution failures. Native large-profile evidence remains separate from browser/default preservation. Earlier capped evaluations remain unknown at their recorded boundaries."
+      ]
+    },
+    {
+      "id": "cb08-native-observer-pair-20260911",
+      "model": "cb08-action-observer-layout-native-v1",
+      "kind": "conditional_observation",
+      "producer": "Existing native action-layout diagnostic and complete native row construction",
+      "validation": "docs/active/2026-09-11-dirty-state-continuation/README.md",
+      "evidence": "docs/active/2026-09-11-dirty-state-continuation/cb08-layout-probe.json",
+      "pointer": "/variants",
+      "role": "Measured single/pair observer coarsening",
+      "treatment": "Rebuild fresh layouts and project all old class members; compare full native Chaos and targeted reforge rows.",
+      "limitations": [
+        "The native pair measurement, absent from the supplied report, gives 21 to 6 classes and Chaos support 4160 to 85; each single omission gives 15 classes and support 1806.",
+        "Search-layout projection is not an independent checker quotient or permission to remove full-scope proof obligations."
+      ]
+    },
+    {
+      "id": "cb08-native-full-layout-subset-20260911",
+      "model": "cb08-dirty-continuation-layout-consumer-v3",
+      "kind": "conditional_observation",
+      "producer": "Matched frozen v3 public/native diagnostic modes and existing corpus worker",
+      "validation": "docs/active/2026-09-11-dirty-state-continuation/README.md",
+      "evidence": "docs/active/2026-09-11-dirty-state-continuation/dirty-v3-restricted-full-amulet.json",
+      "pointer": "/candidates",
+      "role": "Full-layout subset policy-consumer control",
+      "treatment": "Remove the same two candidate conversions while retaining the full 21-class layout; compare with full candidate registration and fresh 6-class context.",
+      "limitations": [
+        "Both full-layout arms build 6597 private states / 7616 rows and reach 1164005 checker states, but candidate finalization remains unknown at requested finish; the 48.8965M verified fallback survives.",
+        "The fresh arm completes at 8.455M. Contained controller decisions compare selected acquisition/removal proposals; full candidate registration does not mean exhaustive optimization over all 31 actions."
+      ]
+    },
+    {
+      "id": "cb07-dirty-native-upper-20260911",
+      "model": "cb07-dirty-continuation-native-wide-v1",
+      "kind": "verified_policy_upper",
+      "producer": "Public native solve mode, ordinary graph compiler and separate native final evaluator",
+      "validation": "docs/active/2026-09-11-dirty-state-continuation/README.md",
+      "evidence": "docs/active/2026-09-11-dirty-state-continuation/dirty-v14-ring-four-600.json",
+      "pointer": "/exact_final/total_expected_cost",
+      "role": "Completed native dirty Ring-four controller",
+      "treatment": "Complete native Chaos and forced-goal Essence controllers with paid cleanup/redraw. Existing sparse occupancy equations close after rank-one numerical preparation, at the original tolerance.",
+      "limitations": [
+        "10,251,920.398984343 is 99.7248% below the matched 3,725,358,919.4984236 control; lower remains 201.85524142944053. This is the four-goal target, distinct from Ring-two, and does not close the root gap.",
+        "Exact expected actions are 1,476,470.424. Original-limit sampling retains 55 successes and 945 action-limit stops out of 1000, with no other execution failures. Final product preservation is a separate qualification; earlier capped evaluations remain unknown at their recorded boundaries."
       ]
     }
   ],

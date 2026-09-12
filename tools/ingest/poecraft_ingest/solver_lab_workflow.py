@@ -39,6 +39,7 @@ _INTEGER_CAPS = frozenset(
         "max_strategy_json_bytes",
         "max_diagnostic_samples",
         "max_telemetry_json_bytes",
+        "max_policy_refinement_states",
     }
 )
 _NUMBER_CAPS = frozenset(
@@ -159,6 +160,29 @@ def _normalize_carrier_ladder_exact_boundary(value: Any) -> dict[str, Any]:
 
 
 def _normalize_patch_value(segments: tuple[str, ...], value: Any) -> Any:
+    if segments == ("caps", "native_continuation_search"):
+        if not isinstance(value, str) or value not in {"ordinary", "gated_return", "dirty_full", "dirty_restricted_full", "dirty_restricted_fresh"}:
+            raise ValueError("unknown native continuation search mode")
+        return value
+    if len(segments) == 2 and segments[0] == "verification" and segments[1] in {
+        "exact_max_states", "exact_max_pairs", "exact_max_transitions", "exact_max_owned_bytes"
+    }:
+        maximum = 2**63 - 1 if segments[1] == "exact_max_owned_bytes" else 2**32 - 1
+        if not _is_integer(value) or not 0 < value <= maximum:
+            raise ValueError("exact verification limit must be a positive native-width integer")
+        return value
+    if segments == ("caps", "candidate_evaluation"):
+        fields = {"max_states", "max_pairs", "max_transitions", "max_owned_bytes"}
+        if not isinstance(value, Mapping) or set(value) != fields:
+            raise ValueError("candidate_evaluation requires exactly four typed limits")
+        normalized = {}
+        for key in sorted(fields):
+            limit = value[key]
+            maximum = 2**63 - 1 if key == "max_owned_bytes" else 2**32 - 1
+            if not _is_integer(limit) or not 0 < limit <= maximum:
+                raise ValueError(f"candidate_evaluation {key} must be a positive native-width integer")
+            normalized[key] = limit
+        return normalized
     if segments == ("watchdog_seconds",):
         if (
             isinstance(value, bool)
@@ -288,6 +312,9 @@ def apply_case_patches(
             if leaf not in parent and segments not in {
                 ("goal", "disabled_action_families"),
                 ("carrier_ladder_exact_boundary_v1",),
+                ("caps", "candidate_evaluation"),
+                ("caps", "native_continuation_search"),
+                ("caps", "max_policy_refinement_states"),
             }:
                 raise ValueError(f"patch path does not exist: {patch['path']}")
             parent[leaf] = deepcopy(patch["value"])

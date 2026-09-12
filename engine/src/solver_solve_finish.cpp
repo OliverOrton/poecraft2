@@ -2107,37 +2107,6 @@ SolveWork::Impl::run_publication_pipeline() {
                 result.absolute_optimality_gap = kInfinity;
                 result.relative_optimality_gap = kInfinity;
             };
-        const auto diagnostic_json_escape =
-            [](const std::string& value) {
-                std::string escaped;
-                escaped.reserve(value.size());
-                for (const unsigned char ch : value) {
-                    switch (ch) {
-                    case '\\': escaped += "\\\\"; break;
-                    case '"': escaped += "\\\""; break;
-                    case '\n': escaped += "\\n"; break;
-                    case '\r': escaped += "\\r"; break;
-                    case '\t': escaped += "\\t"; break;
-                    default:
-                        if (ch >= 0x20) {
-                            escaped.push_back(static_cast<char>(ch));
-                        }
-                        break;
-                    }
-                }
-                return escaped;
-            };
-        const auto diagnostic_finite_double =
-            [](const double value) {
-                if (!std::isfinite(value)) return std::string{"null"};
-                char buffer[64];
-                const auto [end, error] = std::to_chars(
-                    buffer, buffer + sizeof(buffer), value,
-                    std::chars_format::general,
-                    std::numeric_limits<double>::max_digits10);
-                if (error != std::errc{}) return std::string{"null"};
-                return std::string(buffer, end);
-            };
         const auto diagnostic_integral_array_json =
             [](const auto& values) {
                 std::string json = "[";
@@ -2148,30 +2117,6 @@ SolveWork::Impl::run_publication_pipeline() {
                 }
                 json.push_back(']');
                 return json;
-            };
-        const auto retain_bounded_json_sample =
-            [&](std::vector<std::string>& samples,
-                std::uint64_t& omitted,
-                std::uint64_t& retained_bytes,
-                std::string sample) {
-                PolicyRefinementTelemetry& telemetry =
-                    result.diagnostics.policy_refinement;
-                const std::uint64_t shared_bytes =
-                    telemetry.publication_candidate_sample_bytes +
-                    telemetry.structural_failure_sample_bytes +
-                    telemetry.evaluator_memory_sample_bytes +
-                    telemetry.direct_offpolicy_state_sample_bytes;
-                const std::uint64_t byte_limit =
-                    options.max_telemetry_json_bytes / 4;
-                if (samples.size() >=
-                        result.diagnostics.diagnostic_sample_limit ||
-                    sample.size() > byte_limit ||
-                    shared_bytes > byte_limit - sample.size()) {
-                    ++omitted;
-                    return;
-                }
-                retained_bytes += sample.size();
-                samples.push_back(std::move(sample));
             };
         const auto record_candidate_sample =
             [&](const BoundedPolicyIncumbent& candidate,
@@ -3545,6 +3490,22 @@ SolveWork::Impl::run_publication_pipeline() {
                     }
                 }
             }
+        }
+        if (dirty_continuation_search_enabled(options.native_continuation_search) &&
+            !publication_pipeline.dirty_continuation_attempted &&
+            !requested_bounded_finish && best_current_certified_fallback() != nullptr) {
+            publication_pipeline.dirty_continuation_attempted = true;
+            // Selected-policy certification can provide the first executable
+            // graph without using the initial joint-controller seam. Its
+            // checker/snapshot scope has ended here; preserve the artifact and
+            // give the same private improvement owner this real opportunity.
+            co_await solve_detail::CooperativeCheckpoint{0};
+            auto dirty = try_dirty_continuation_candidates();
+            while (!requested_bounded_finish && !dirty.resume())
+                co_await solve_detail::CooperativeCheckpoint{dirty.retained_bytes()};
+            if (!requested_bounded_finish) (void)dirty.take_result();
+            dirty.reset();
+            co_await solve_detail::CooperativeCheckpoint{0};
         }
         if (!result.policy_available &&
             best_current_certified_fallback() != nullptr) {
@@ -6147,6 +6108,14 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
         co_await solve_detail::CooperativeCheckpoint{returns.retained_bytes()};
     }
     (void)returns.take_result();
+    returns.reset();
+    if (dirty_continuation_search_enabled(options.native_continuation_search) &&
+        !publication_pipeline.dirty_continuation_attempted) {
+        publication_pipeline.dirty_continuation_attempted = true;
+        auto dirty = try_dirty_continuation_candidates();
+        while (!dirty.resume()) co_await solve_detail::CooperativeCheckpoint{dirty.retained_bytes()};
+        (void)dirty.take_result();
+    }
     co_return true;
 }
 

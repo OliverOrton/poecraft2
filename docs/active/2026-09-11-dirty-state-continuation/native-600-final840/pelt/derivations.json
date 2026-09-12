@@ -1,0 +1,51 @@
+{
+  "source": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb11-cross-base-product8-long240.json",
+  "source_sha256": "bae0a43a69dc5350a77b18ae91859c1dda8434d7cb71d738f4ad0caa48ab2277",
+  "patches": [
+    {
+      "path": "/caps/candidate_evaluation",
+      "value": {
+        "max_owned_bytes": 4294967296,
+        "max_pairs": 10000000,
+        "max_states": 2000000,
+        "max_transitions": 40000000
+      }
+    },
+    {
+      "path": "/caps/max_reforge_work",
+      "value": 200000000
+    },
+    {
+      "path": "/caps/max_solver_owned_bytes",
+      "value": 8589934592
+    },
+    {
+      "path": "/caps/native_continuation_search",
+      "value": "dirty_restricted_fresh"
+    },
+    {
+      "path": "/requested_bounded_finish_seconds",
+      "value": 600
+    },
+    {
+      "path": "/verification/exact_max_owned_bytes",
+      "value": 4294967296
+    },
+    {
+      "path": "/verification/exact_max_pairs",
+      "value": 10000000
+    },
+    {
+      "path": "/verification/exact_max_states",
+      "value": 2000000
+    },
+    {
+      "path": "/verification/exact_max_transitions",
+      "value": 40000000
+    },
+    {
+      "path": "/watchdog_seconds",
+      "value": 840
+    }
+  ]
+}
