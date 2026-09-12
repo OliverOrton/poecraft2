@@ -41,6 +41,20 @@ honestly. Rendered UI review belongs to Oliver unless explicitly requested.
 
 ## Navigation and commands
 
+Do not routinely poll long-running solver processes through LLM turns. Prefer
+blocking/event-driven execution or the longest supported empty-input wait,
+using existing deterministic supervision. Return for completion, an actionable
+failure or a decision that changes the experiment. Keep native cancellation,
+watchdog and telemetry polling active. If the outer client forces short yields,
+record that limitation and minimize model re-entry; a shell timeout does not
+change the outer tool contract.
+
+Batch independently specified runs and related reads/checks when practical.
+Timed solver cases run serially inside a deterministic batch. Preflight resolved
+inputs and typed comparison identity; reuse compatible completed evidence.
+Return compact results, exclusions/errors and artifact paths. Keep bulk evidence
+on disk; do not add another supervisor/comparison layer or an LLM polling proxy.
+
 - Before adding experiment infrastructure, consult [the tooling map](docs/foundation/tooling.md).
   Reuse an owner that preserves the request; start investigation with compact
   projections and expand raw evidence only for a specific unanswered question.

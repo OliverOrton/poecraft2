@@ -1,0 +1,90 @@
+Continue with the attached Adaptive Guidance for Costly Dirty Continuations
+and Efficient Campaigns v2 programme in OliverOrton/poecraft2.
+
+You are a fresh Codex session. This message selects implementation; no old thread,
+previous Goal object, review pause or earlier ZIP is required.
+
+Reviewed main:
+23e03ba9d3fef2f67f2bf1597f69c2c36422e5a7
+
+Oliver pushed the dirty-state work AFTER the preceding adaptive plan was written.
+Use THIS package, not the old 0ca7 plan. Reconcile newer/local changes; preserve them.
+
+DONE: M0, first-policy recovery/retention, fresh action-scoped dirty search,
+actual candidate limits/public native API, paid dirty redraw, complete private
+cost iteration, nonempty composition, cooperative replay materialization,
+and rank-one sparse occupancy preparation. Do not rebuild those features or
+repeat the old layout/headroom/selector experiments.
+
+Current verified native opt-in U:
+- Amulet CB08: 1,973,847.6160810417
+- Ring FOUR CB07: 10,251,920.398984343
+Ring TWO is a different case; its capacity high-water mark is 1620.317363896656.
+The new policies remain far from exact and long to execute. Annul supplies about
+96% of cost. Preserve their actual graphs and all original-profile capability.
+
+MAIN TASK
+Test real adaptive estimated-cost guidance at costly dirty continuations, coupled
+to the smallest useful expansion of actual candidate actions. Private policy
+iteration already exists. Better ranking alone cannot choose an admitted
+protection/cleanup program absent from the private builder's narrow repertoire.
+
+First identify a few native recurrent entries and candidate gaps using existing
+cost/row evidence. Expose complete already-authorized alternatives through current
+native program/continuation owners. Preserve setup, observers, prices, failure
+mass, protection context, retries and final junk-free goals. Do not hardcode a
+recipe or simply relax ordinary/protected-item guards.
+
+Implement one small native run-local estimator/correction model over existing
+values, complete expected row costs and bounded cyclic lookahead. Use it BEFORE
+expensive candidate construction or at the next real obligation. Update at
+meaningful new evidence; freeze in-flight candidate decisions. No LLM or neural
+service inside the solver. Keep deferred options revisitable.
+
+Keep estimated completion cost, computer-effort prediction, certified lower,
+private policy value and verified entry upper separate. A costly fixed policy
+is not a V* training label. A cap is censored computational evidence. New dirty
+graphs are root-only and clear parent bindings: do not invent statewise entry
+certificates or copy private IDs into the parent. Use actual native entries or
+live child evidence and independently evaluate every promoted graph.
+
+COMPARE
+B = current23e dirty mode; S = expanded candidate machinery with static estimated
+guidance; A = exactly the same eligibility/machinery with adaptive correction.
+S still receives ordinary completed-row/value updates. S versus A tests learning;
+B versus S also contains coverage/static changes. Retain the simpler static method
+if it wins; do not force adaptation. Main target is new exact closure or at least
+25% further verified cost improvement on Amulet plus another non-Conquest family,
+with Ring-four preselected. Do not use the old million/billion baselines.
+
+RESOURCES
+Reuse the now-qualified 600/840/870-second profile, 8-GiB aggregate, 4-GiB/2M-state
+candidate and final checkers, 200M work and 14-GiB host reservation. Relevant cap
+changes remain permitted after safe current host admission. The prior 28-GiB deep
+reservation did not fit with its margin; do not assume it fits now. Keep browser
+defaults and original-profile controls separate. Do not loosen numerical checks.
+
+M0A — SMALL, FIRST, NOT THE FINISH LINE
+Eliminate routine 30-second parent-model polling. Use the existing deterministic
+runner/wait/report owners and the actual installed blocking/event/long-await
+contract, including any outer code-mode limit. Preserve internal cancellation
+and watchdog polling. Batch independent runs, serially for timed comparisons,
+and return compact summaries plus failures/paths. No duplicate process, second
+LLM monitor or new supervisor. Add the durable AGENTS/tooling rules in this bundle.
+
+Preflight resolved typed comparison identity before expensive batches; the prior
+integer315/float315.0 exclusion must not waste another completed cohort. Preserve
+raw evidence and historical exclusions. Any metadata-only recovery needs explicit
+semantics/provenance, not edited hashes or a waived comparison.
+
+Continue through real policies and matched outcomes after M0A. Do not stop at
+another plan, diagnostic or score field. Use focused tests and decisive batches;
+no repeated full suites, unchanged simulations, stale gated candidates or archive
+tours. Final changed-graph sampling follows current1000-trial policy; keep every
+action-limit stop. Expected-cost optimization is not silently a risk objective.
+
+One sequential session, no subagents, inherited deadline, automatic restart or
+push. Preserve protected0 without inspection/staging and all unrelated work.
+Read main_update.md, implementation_plan.md and the relevant math/resource/tooling
+sections, then implement. End with actual B/S/A outcomes, capabilities, tradeoffs,
+remaining limits, documentation dispositions and local commit/push status.

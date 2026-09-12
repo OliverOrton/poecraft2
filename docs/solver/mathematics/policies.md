@@ -453,7 +453,30 @@ do not establish a finite excursion law or a better reforge controller.
 <a id="mapping"></a>
 ## 8. Correspondence and limits
 
+<a id="dirty-guidance"></a>
 ### Dirty continuation entries and complete response costs
+
+Candidate availability precedes guidance. If a builder presents only
+\(C(s)\subseteq A(s)\), even a perfect ranking can choose only inside \(C(s)\).
+Expanding that set can improve a restricted controller without changing any
+certified lower. A completed fixed-controller equation \(J=c+PJ\) evaluates
+that controller; it does not label the full-scope optimum \(V^*\).
+
+A private prediction may be calibrated against an independent native check of
+the **same frozen controller and entry**. A composed root result cannot label
+an earlier local entry, and resource-censored work is not a high-cost sample.
+Bounded residual correction can order the next construction/check obligation;
+it cannot supply a boundary tail, justify permanent pruning or mutate a graph
+while it is being checked. Static and adaptive comparisons need identical
+candidate eligibility and machinery. These distinctions and the exact-rational
+counterexamples are preserved in the [v2 mathematical input](../../active/2026-09-12-adaptive-dirty-guidance/research-inputs/mathematical_handoff.md).
+
+For spend attribution, use expected visits times the native immediate priced
+action cost. Visits times continuation cost overlap across successive entries.
+Exact policy savings use the new-controller occupancy in the
+[policy-difference identity](#first-return-improvement); old-controller visits
+are only an ordering proxy. None of these observations changes CLM-0002's
+entry, properness, scope or complete-cost preconditions.
 
 A useful partial item may remain dirty between actions. Only the original
 terminal predicate determines success; an intermediate clean subgoal is an

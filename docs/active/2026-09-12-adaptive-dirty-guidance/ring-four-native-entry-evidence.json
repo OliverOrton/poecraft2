@@ -1,0 +1,316 @@
+{
+  "source_report": "out\\dirty-state-continuation\\dirty-v14-ring-four-600\\cases\\cb07-cross-base-product8-long240.json",
+  "native_action_accounting": {
+    "id": "annul",
+    "display_name": "annul",
+    "expected_visits": 1019731.7691849164,
+    "expected_applied": 1019731.7691849164,
+    "expected_spend_known": 9881200.84340184,
+    "expected_spend_complete": true,
+    "known_cost_share": 0.9638390134574952,
+    "probability_of_any_use": {
+      "status": "not_computable_from_occupancy",
+      "value": null
+    },
+    "reachable_states": 238792,
+    "reachable_regions": 4,
+    "classifications": [
+      "ordinary_crafting"
+    ],
+    "materials": [
+      {
+        "price_key": "annul",
+        "expected_quantity": 1019731.7691849164,
+        "price_status": "priced",
+        "unit_price": 9.69,
+        "cost_contribution": 9881200.84340184
+      }
+    ],
+    "regions": [
+      {
+        "goal_progress": 1,
+        "rarity": 2,
+        "blocker_count": 0,
+        "crafted_count": 0,
+        "fractured_goal_mask": 0,
+        "fractured_count": 0,
+        "reachable_states": 173441,
+        "expected_visits": 970451.5223074275,
+        "expected_applied": 970451.5223074275
+      },
+      {
+        "goal_progress": 2,
+        "rarity": 2,
+        "blocker_count": 0,
+        "crafted_count": 0,
+        "fractured_goal_mask": 0,
+        "fractured_count": 0,
+        "reachable_states": 58374,
+        "expected_visits": 48068.23536554926,
+        "expected_applied": 48068.23536554926
+      },
+      {
+        "goal_progress": 3,
+        "rarity": 2,
+        "blocker_count": 0,
+        "crafted_count": 0,
+        "fractured_goal_mask": 0,
+        "fractured_count": 0,
+        "reachable_states": 6762,
+        "expected_visits": 1201.1749172308962,
+        "expected_applied": 1201.1749172308962
+      },
+      {
+        "goal_progress": 4,
+        "rarity": 2,
+        "blocker_count": 0,
+        "crafted_count": 0,
+        "fractured_goal_mask": 0,
+        "fractured_count": 0,
+        "reachable_states": 215,
+        "expected_visits": 10.83659470636067,
+        "expected_applied": 10.83659470636067
+      }
+    ],
+    "raw_nodes": [
+      {
+        "node_id": "s9",
+        "expected_visits": 1019731.7691849164,
+        "expected_applied": 1019731.7691849164
+      }
+    ]
+  },
+  "native_node_classes": {
+    "id": "s9",
+    "expected_visits": 1019731.7691849164,
+    "classes": [
+      {
+        "share": 0.01946465520505082,
+        "rarity": 2,
+        "prefixes": 2,
+        "suffixes": 0,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.016627846062403674,
+        "rarity": 2,
+        "prefixes": 2,
+        "suffixes": 0,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.013430630851064851,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.013430630851064851,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.013430630851064851,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.01225267520018895,
+        "rarity": 2,
+        "prefixes": 2,
+        "suffixes": 0,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.011965402645162097,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.011965402645162097,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.010578166815171635,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          1,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.010541581497773357,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.009353105106812656,
+        "rarity": 2,
+        "prefixes": 2,
+        "suffixes": 0,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          1,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.009263840328437052,
+        "rarity": 2,
+        "prefixes": 2,
+        "suffixes": 0,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.009076014630965686,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.007595438004236971,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.007001098366327311,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "share": 0.0062228186627927146,
+        "rarity": 2,
+        "prefixes": 2,
+        "suffixes": 0,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          0,
+          0,
+          2,
+          0
+        ]
+      }
+    ],
+    "classes_truncated_share": 0.8178000622763874
+  },
+  "entry_certificate": "node/class occupancy only; no parent binding or portable entry upper",
+  "missing_rows": "positive-progress paid redraw; protected cleanup"
+}

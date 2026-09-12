@@ -133,6 +133,17 @@ A strict-partition checkpoint remains a separate unimplemented contract in the r
 
 ## Native orchestration and host limits
 
+The optional dirty guidance queue uses the existing candidate checker and
+aggregate remaining ownership. Static and adaptive treatments have identical
+admission and checker limits; the run-local correction table reports 88 bytes.
+Lookup/update counters are computational telemetry, not crafting costs. Setup
+is not separately timed (the current zero setup field is not a measured zero).
+An interrupted construction is censored work evidence and supplies no cost
+label or executable continuation. The [matched v2 application](../active/2026-09-12-adaptive-dirty-guidance/README.md)
+keeps the qualified 600/840/870-second native profile separate from original
+profiles and browser defaults; it does not increase a capacity to obtain its
+policy improvement.
+
 The Lab adds process-level watchdog, cancellation, host reservation, and supervisor recovery. Its host headroom is separate from the native solver cap. See [Solver Lab](../foundation/solver-lab.md#statuses-resources-and-recovery).
 
 Pausing a queue stops new dispatch; it is not pausing and checkpointing a live solver. A terminated worker's valid partial report remains partial. PID identity, no-survivor checks, and lease release belong to the supervisor rather than to a numerical proof owner.

@@ -3,6 +3,8 @@
 #include "solver_policy_refinement.hpp"
 #include "solver_policy_refinement_helpers.hpp"
 #include "solver_sparse_policy.hpp"
+#include "solver_dirty_guidance.hpp"
+#include "solver_action_family_contract.hpp"
 
 namespace poecraft::solver {
 
@@ -97,6 +99,28 @@ bool dirty_fractured_bridge_item(const SessionImpl& session, const pc_item_state
             slots[i].flags &= ~PC_MOD_SLOT_FRACTURED;
     }
     return solve_detail::ordinary_return_bridge_item(session, ordinary);
+}
+
+bool dirty_paid_lock_cleanup_item(const SessionImpl& session, const pc_item_state& item) {
+    if (item.rarity!=PC_RARITY_RARE) return false;
+    auto remainder=item;
+    unsigned locks=0;
+    for (const auto side : {PC_SIDE_PREFIX,PC_SIDE_SUFFIX}) {
+        const auto count=side==PC_SIDE_PREFIX ? item.prefix_count : item.suffix_count;
+        const auto* slots=side==PC_SIDE_PREFIX ? item.prefixes : item.suffixes;
+        for (int i=count-1;i>=0;--i) {
+            const auto& slot=slots[i];
+            if (slot.mod_id>=session.metamod_type.size()) return false;
+            const auto code=session.metamod_type[slot.mod_id];
+            if (code!=session.data->metamod_prefixes_locked_code &&
+                code!=session.data->metamod_suffixes_locked_code) continue;
+            if (slot.flags!=PC_MOD_SLOT_CRAFTED || slot.veiled_option_count!=0 ||
+                slot.veiled_chosen_mod_id!=PC_MOD_NONE) return false;
+            ++locks;
+            if (pc_item_remove_at(&remainder,side,i)!=PC_RESULT_OK) return false;
+        }
+    }
+    return locks==1 && solve_detail::ordinary_return_bridge_item(session,remainder);
 }
 
 solve_detail::CooperativeTask<StrategyEvalResult> evaluate_return_graph(
@@ -652,6 +676,17 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
     const auto mode = options.native_continuation_search;
     const bool restricted = mode != NativeContinuationSearchMode::DirtyFull;
     const bool preserve_layout = mode == NativeContinuationSearchMode::DirtyRestrictedFullLayout;
+    const bool guided = mode == NativeContinuationSearchMode::DirtyGuidedStatic ||
+        mode == NativeContinuationSearchMode::DirtyGuidedAdaptive;
+    const bool adaptive = mode == NativeContinuationSearchMode::DirtyGuidedAdaptive;
+    const auto guide_setup_begin=std::chrono::steady_clock::now();
+    DirtyGuidance guide;
+    const auto guide_setup_ns=std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now()-guide_setup_begin).count();
+    std::array<double, 3> completed_private_cost{kInfinity,kInfinity,kInfinity};
+    const auto family_of = [](const ActionType type) -> unsigned {
+        return type == ActionType::Exalt ? 0 : type == ActionType::Chaos ? 1 : 2;
+    };
     std::optional<BoundedPolicyIncumbent> handoff_base;
     std::uint64_t handoff_base_bytes = 0;
     const auto parent_live_bytes = [&] {
@@ -725,6 +760,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
         unsigned minimum_progress = 0;
         double old_entry_cost = kInfinity;
         std::uint32_t root_registry_action = kNoId;
+        unsigned expansion = 0; // 0: preserved builder; 1: redraw; 2: protected cleanup too.
     };
     std::vector<Proposal> proposals;
     // A current compiled policy may have useful progress behind a prefix that
@@ -858,9 +894,43 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
     // ordinary continuation. The forced proposal remains available afterward.
     if (forced_action != kNoId)
         proposals.push_back({ActionType::Essence,exact_start_item,false,0,kInfinity,forced_action});
+    const auto preserved_proposals = proposals.size();
+    if (guided) {
+        for (unsigned expansion : {1u,2u}) {
+            for (std::size_t i=0;i<preserved_proposals;++i) {
+                if (proposals[i].nonempty_handoff ||
+                    (expansion == 1 && proposals[i].root_type == ActionType::Exalt)) continue;
+                auto added=proposals[i]; added.expansion=expansion;
+                proposals.push_back(added);
+            }
+        }
+    }
     bool retained = false;
-    for (const auto& proposal : proposals) {
+    for (std::size_t next_proposal=0;next_proposal<proposals.size();++next_proposal) {
         if (requested_bounded_finish) break;
+        const auto ordering_estimate = [&](const Proposal& value) {
+            const auto prior=completed_private_cost[family_of(value.root_type)];
+            // Frozen capability priors, subsequently based on completed
+            // private controllers in both arms. They order work only.
+            return prior * (value.expansion == 1 ? 0.5 : 0.6);
+        };
+        std::size_t static_next=next_proposal, selected_next=next_proposal;
+        const bool age_service=next_proposal>=preserved_proposals &&
+            (next_proposal-preserved_proposals)%3==2;
+        if (next_proposal>=preserved_proposals && !age_service) {
+            for (std::size_t i=next_proposal;i<proposals.size();++i) {
+                if (ordering_estimate(proposals[i])<ordering_estimate(proposals[static_next])) static_next=i;
+                if (guide.predict(ordering_estimate(proposals[i]),family_of(proposals[i].root_type),adaptive)<
+                    guide.predict(ordering_estimate(proposals[selected_next]),family_of(proposals[selected_next].root_type),adaptive))
+                    selected_next=i;
+            }
+        }
+        const bool corrected_choice=selected_next!=static_next;
+        std::swap(proposals[next_proposal],proposals[selected_next]);
+        const auto& proposal=proposals[next_proposal];
+        const auto prediction_version=guide.version;
+        const auto preconstruction_estimate=ordering_estimate(proposal);
+        const bool native_gating=proposal.expansion==0 && options.goal_progress_gated_reforges;
         const auto root_type = proposal.root_type;
         const bool broad_root = root_type == ActionType::Chaos || root_type == ActionType::Essence;
         const char* root_name = proposal.nonempty_handoff ? "nonempty_exalt_annul" :
@@ -872,6 +942,9 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
         std::uint64_t constructed_rows = 0, continued_dirty = 0, paid_cleanup = 0;
         std::uint64_t paid_scour = 0, paid_redraw = 0, shared_redraw_rows = 0;
         std::uint64_t cleanup_alternatives = 0, improvement_rounds = 0;
+        std::uint64_t redraw_alternatives = 0, protected_alternatives = 0, protected_refusals = 0;
+        std::uint64_t rarity_recoveries = 0;
+        std::uint64_t paid_lock_cleanups = 0;
         std::uint64_t child_work = 0, child_active = 0, child_peak = 0;
         double seed_cost = kInfinity, coarse_cost = kInfinity, exact_cost = kInfinity;
         std::uint64_t native_boundary_entries = 0;
@@ -897,7 +970,25 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             excluded += ']';
             std::string sample = "{\"kind\":\"dirty_continuation_candidate\",\"root_action\":\"" +
                 std::string(root_name) + "\",\"disposition\":\"" + disposition +
-                "\",\"reason\":\"" + diagnostic_json_escape(reason) + "\",\"stage\":\"" + evaluation.stage +
+                "\",\"expansion\":" + std::to_string(proposal.expansion) +
+                ",\"guidance_mode\":\"" + (adaptive ? "adaptive" : guided ? "static" : "off") +
+                "\",\"prediction_version\":" + std::to_string(prediction_version) +
+                ",\"guide_version\":" + std::to_string(guide.version) +
+                ",\"guide_updates\":" + std::to_string(guide.updates) +
+                ",\"guide_lookups\":" + std::to_string(guide.lookups) +
+                ",\"guide_owned_bytes\":" + std::to_string(sizeof(guide)) +
+                ",\"guide_setup_ns\":" + std::to_string(guide_setup_ns) +
+                ",\"guide_lookup_ns\":" + std::to_string(guide.lookup_ns) +
+                ",\"guide_update_ns\":" + std::to_string(guide.update_ns) +
+                ",\"adaptive_changed_next_obligation\":" + (corrected_choice ? "true" : "false") +
+                ",\"age_service\":" + (age_service ? "true" : "false") +
+                ",\"preconstruction_cost_estimate\":" + diagnostic_finite_double(preconstruction_estimate) +
+                ",\"redraw_alternatives\":" + std::to_string(redraw_alternatives) +
+                ",\"protected_alternatives\":" + std::to_string(protected_alternatives) +
+                ",\"protected_refusals\":" + std::to_string(protected_refusals) +
+                ",\"rarity_recoveries\":" + std::to_string(rarity_recoveries) +
+                ",\"paid_lock_cleanups\":" + std::to_string(paid_lock_cleanups) +
+                ",\"reason\":\"" + diagnostic_json_escape(reason) + "\",\"stage\":\"" + evaluation.stage +
                 "\",\"root_acquisition_ordering_estimate\":" + diagnostic_finite_double(
                     proposal.root_registry_action != kNoId ? forced_score : root_acquisition_score(root_type)) +
                 ",\"original_scope_preserved\":true,\"private_lower_used\":false,\"omitted\":" + excluded +
@@ -955,8 +1046,43 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             }
         };
         try {
-            private_calc = std::make_unique<CalcContext>(calc.shared_session(), calc.goal(),
-                calc.registry(), candidates, false, false, false, std::nullopt,
+            auto private_goal=calc.goal();
+            auto private_candidates=candidates;
+            if (proposal.expansion>=2 && private_goal.automatic_candidates &&
+                !solver_automatic_candidate_disabled(private_goal,AutomaticCandidateKind::ProtectedMetamod) &&
+                !solver_action_family_disabled(private_goal,SolverActionFamily::Metamod) &&
+                !solver_action_family_disabled(private_goal,SolverActionFamily::Bench)) {
+                for (const auto side : {PC_SIDE_PREFIX,PC_SIDE_SUFFIX}) {
+                    const auto code=side==PC_SIDE_PREFIX ? calc.session().data->metamod_prefixes_locked_code :
+                        calc.session().data->metamod_suffixes_locked_code;
+                    const bool lock_present=std::any_of(calc.registry().actions.begin(),calc.registry().actions.end(),
+                        [&](const auto& a) { return a.params.type==ActionType::Bench &&
+                            a.params.mod_id<calc.session().metamod_type.size() &&
+                            calc.session().metamod_type[a.params.mod_id]==code && !solver_action_disabled(private_goal,a); });
+                    if (!lock_present) continue;
+                    for (const char* id : {"scour","annul"}) {
+                        const auto found=calc.registry().index_by_id.find(id);
+                        if (found==calc.registry().index_by_id.end() ||
+                            std::find(candidates.begin(),candidates.end(),found->second)==candidates.end()) continue;
+                        if (std::string_view(id)=="annul" &&
+                            !calc.registry().index_by_id.contains("remove_crafted_modifiers")) continue;
+                        FixedOptionSpec spec;
+                        spec.kind=FixedOptionKind::ProtectedSide; spec.side=side; spec.action_id=id;
+                        spec.automatic_kind=std::string_view(id)=="annul" ? AutomaticCandidateKind::None :
+                            AutomaticCandidateKind::ProtectedMetamod;
+                        spec.relevant_goal_mask=(1u<<private_goal.slots.size())-1;
+                        private_goal.fixed_options.push_back(std::move(spec));
+                        if (std::string_view(id)=="annul") {
+                            const auto cleanup=calc.registry().index_by_id.at("remove_crafted_modifiers");
+                            if (!solver_action_disabled(private_goal,calc.registry().actions.at(cleanup)) &&
+                                std::find(private_candidates.begin(),private_candidates.end(),cleanup)==private_candidates.end())
+                                private_candidates.push_back(cleanup);
+                        }
+                    }
+                }
+            }
+            private_calc = std::make_unique<CalcContext>(calc.shared_session(), private_goal,
+                calc.registry(), private_candidates, false, false, false, std::nullopt,
                 calc.layout().count_observations, calc.product_solver_parent(), universe,
                 calc.distinguishes_modifier_identity(), false, false, false, false,
                 preserve_layout ? &calc.layout() : nullptr, true);
@@ -972,17 +1098,23 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             local_options.verified_policy_alternative_shadow_diagnostic=false;
             local_options.carrier_ladder_exact_boundary_mode=CarrierLadderExactBoundaryMode::Off;
             local_options.native_continuation_search=NativeContinuationSearchMode::Ordinary;
+            local_options.goal_progress_gated_reforges=native_gating;
             Impl child(*private_calc, proposal.start, prices, local_options);
             child.incremental_action_generation=true;
             const auto root=child.result.start_state;
-            std::uint32_t exalt=kNoId, annul=kNoId, scour=kNoId, root_action=kNoId;
+            std::uint32_t exalt=kNoId, annul=kNoId, scour=kNoId, regal=kNoId, remove_lock=kNoId, root_action=kNoId;
+            std::vector<std::uint32_t> protection;
             for (const auto& priced : child.operators) {
                 const auto& op=private_calc->operators().at(priced.index);
+                if (op.kind==PlannerOperatorKind::FixedOption && op.option_kind==FixedOptionKind::ProtectedSide)
+                    protection.push_back(priced.index);
                 if (op.kind!=PlannerOperatorKind::Primitive) continue;
                 const auto type=private_calc->registry().actions.at(op.primitive_action).params.type;
                 if (type==ActionType::Exalt) exalt=priced.index;
                 if (type==ActionType::Annul) annul=priced.index;
                 if (type==ActionType::Scour) scour=priced.index;
+                if (type==ActionType::Regal) regal=priced.index;
+                if (type==ActionType::RemoveCraftedModifiers) remove_lock=priced.index;
                 if (proposal.root_registry_action != kNoId) {
                     if (private_calc->registry().actions.at(op.primitive_action).id ==
                         calc.registry().actions.at(proposal.root_registry_action).id)
@@ -1013,7 +1145,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     candidates.capacity()*sizeof(std::uint32_t)+universe.capacity()*sizeof(std::uint64_t)+
                     entry_states.capacity()*sizeof(std::uint32_t)+entry_response.capacity()+
                     (boundary.capacity()+local_states.capacity())*sizeof(std::uint32_t)+
-                    proposals.capacity()*sizeof(Proposal);
+                    proposals.capacity()*sizeof(Proposal)+
+                    (private_candidates.capacity()+protection.capacity())*sizeof(std::uint32_t);
             };
             const auto observe_memory=[&](const std::uint64_t transient=0) {
                 const auto child_bytes=child.estimated_owned_bytes()+extra_bytes()+transient;
@@ -1030,16 +1163,39 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 const auto state=walk[cursor];
                 if (private_calc->is_goal_state(private_calc->state(state))) continue;
                 pc_item_state item;
+                const auto ordinary_exit = [&](const pc_item_state& exit) {
+                    auto check=exit;
+                    // Only complete protected programs can introduce Magic
+                    // exits here. The explicit seed below pays native Regal.
+                    if (proposal.expansion>=2 && check.rarity==PC_RARITY_MAGIC) check.rarity=PC_RARITY_RARE;
+                    return ordinary_return_bridge_item(private_calc->session(),check);
+                };
+                const bool materialized=private_calc->materialize(state,item);
+                const bool lock_cleanup=materialized && proposal.expansion>=2 &&
+                    dirty_paid_lock_cleanup_item(private_calc->session(),item);
                 if ((private_calc->state(state).flags &
-                     ~(proposal.nonempty_handoff ? kFlagFractured : 0u)) != 0 ||
-                    !private_calc->materialize(state,item) ||
+                     ~(proposal.nonempty_handoff ? kFlagFractured : lock_cleanup ?
+                         (kFlagPrefixesLocked|kFlagSuffixesLocked|kFlagCraftedMod) : 0u)) != 0 ||
+                    !materialized ||
                     !(proposal.nonempty_handoff ? dirty_fractured_bridge_item(private_calc->session(),item) :
-                      ordinary_return_bridge_item(private_calc->session(),item)))
-                    throw std::runtime_error("dirty controller encountered protected or unmaterializable state");
+                      lock_cleanup || ordinary_exit(item)))
+                    throw std::runtime_error("dirty controller encountered unsupported entry: flags="+
+                        std::to_string(private_calc->state(state).flags)+", materialized="+
+                        (materialized ? "true" : "false")+", paid_lock_context="+
+                        (lock_cleanup ? "true" : "false")+", rarity="+
+                        std::to_string(private_calc->state(state).rarity));
                 const auto goals=std::popcount(child.satisfied_goal_mask_for_state(state));
                 const auto count=item.prefix_count+item.suffix_count;
                 std::uint32_t selected=kNoId;
                 std::shared_ptr<const OutcomeDistribution> law;
+                if (lock_cleanup) {
+                    if (remove_lock==kNoId) throw std::runtime_error("surviving lock lacks admitted paid cleanup");
+                    selected=remove_lock; ++paid_lock_cleanups;
+                }
+                if (!proposal.nonempty_handoff && item.rarity==PC_RARITY_MAGIC) {
+                    if (regal==kNoId) throw std::runtime_error("protected cleanup has no admitted paid rarity recovery");
+                    selected=regal; ++rarity_recoveries;
+                }
                 if (proposal.nonempty_handoff && goals < proposal.minimum_progress) {
                     if (item.rarity == PC_RARITY_MAGIC) {
                         boundary.push_back(state);
@@ -1070,7 +1226,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                              private_calc->operators()[exalt].primitive_action],private_calc->state(state))) {
                     ReturnOutcomeScope pending{*private_calc};
                     while (!private_calc->advance_outcomes(state,private_calc->operators()[exalt].primitive_action,
-                            options.goal_progress_gated_reforges,law,1)) {
+                            native_gating,law,1)) {
                         charge_child();
                         co_await CooperativeCheckpoint{checkpoint_memory(private_calc->outcome_cursor_bytes())};
                     }
@@ -1088,7 +1244,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 const auto primitive=private_calc->operators().at(selected).primitive_action;
                 if (!law) {
                     ReturnOutcomeScope pending{*private_calc};
-                    while (!private_calc->advance_outcomes(state,primitive,options.goal_progress_gated_reforges,law,1)) {
+                    while (!private_calc->advance_outcomes(state,primitive,native_gating,law,1)) {
                         charge_child();
                         co_await CooperativeCheckpoint{checkpoint_memory(private_calc->outcome_cursor_bytes())};
                     }
@@ -1152,7 +1308,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     ReturnOutcomeScope pending{*private_calc};
                     while (!private_calc->advance_outcomes(state,
                             private_calc->operators()[annul].primitive_action,
-                            options.goal_progress_gated_reforges,cleanup,1)) {
+                            native_gating,cleanup,1)) {
                         charge_child();
                         co_await CooperativeCheckpoint{checkpoint_memory(private_calc->outcome_cursor_bytes())};
                     }
@@ -1169,7 +1325,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     ReturnOutcomeScope pending{*private_calc};
                     while (!private_calc->advance_outcomes(state,
                             private_calc->operators()[scour].primitive_action,
-                            options.goal_progress_gated_reforges,cleanup,1)) {
+                            native_gating,cleanup,1)) {
                         charge_child();
                         co_await CooperativeCheckpoint{checkpoint_memory(private_calc->outcome_cursor_bytes())};
                     }
@@ -1179,6 +1335,48 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                         throw std::runtime_error("dirty Scour alternative is not a complete native row");
                     (void)append(scour,*cleanup);
                     ++cleanup_alternatives;
+                }
+                if (!lock_cleanup && proposal.expansion>0 && broad_root && selected!=root_action &&
+                    item.rarity==PC_RARITY_RARE && goals>0) {
+                    // This is the actual destructive row at this dirty entry.
+                    // Lost goals and every zero-goal outcome re-enter the
+                    // paid controller; no entry borrows the old root upper.
+                    std::shared_ptr<const OutcomeDistribution> redraw;
+                    ReturnOutcomeScope pending{*private_calc};
+                    while (!private_calc->advance_outcomes(state,
+                            private_calc->operators()[root_action].primitive_action,false,redraw,1)) {
+                        charge_child();
+                        co_await CooperativeCheckpoint{checkpoint_memory(private_calc->outcome_cursor_bytes())};
+                    }
+                    charge_child();
+                    if (!redraw || !redraw->supported || !redraw->applicable ||
+                        !redraw->choice_groups.empty() || !redraw->choice_options.empty())
+                        throw std::runtime_error("positive-progress redraw lacks a complete native row");
+                    (void)append(root_action,*redraw);
+                    ++redraw_alternatives;
+                }
+                if (!lock_cleanup && proposal.expansion>=2 && goals>0 && count>goals && item.rarity==PC_RARITY_RARE) {
+                    for (const auto action : protection) {
+                        // These bounded deterministic/removal programs use
+                        // the existing option kernel and compiler. No observed
+                        // offer or protected intermediate becomes an outer row.
+                        const auto& kernel=private_calc->option_kernel(state,action);
+                        charge_child();
+                        if (!kernel.supported || !kernel.legal || !kernel.terminates_almost_surely ||
+                            !kernel.observation_choice_groups.empty() || !kernel.observation_choice_options.empty()) {
+                            ++protected_refusals;
+                        } else {
+                            OutcomeDistribution completed;
+                            completed.entries=kernel.exits;
+                            (void)append(action,completed);
+                            ++protected_alternatives;
+                        }
+                        co_await CooperativeCheckpoint{checkpoint_memory()};
+                    }
+                }
+                if (guided && selected==annul && goals>0 && entries.size()<5) {
+                    entries.push_back({(1ull<<63)+entries.size(),entries.size(),1,item,false});
+                    entry_states.push_back(state);
                 }
                 if (selected==exalt && goals>0 && count>goals) {
                     ++continued_dirty;
@@ -1281,13 +1479,17 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     co_await CooperativeCheckpoint{checkpoint_memory()};
                 }
             }
-            for (const auto state:walk)
-                if (!child.result.goal_states[state] && child.result.expanded[state])
-                    child.result.policy[state]=PolicyOperatorRef{child.priced_rows.at(child.policy_rows[state]).operator_index};
+            for (const auto state:walk) {
+                if (child.result.goal_states[state] || !child.result.expanded[state]) continue;
+                const auto index=child.priced_rows.at(child.policy_rows[state]).operator_index;
+                child.result.policy[state]=PolicyOperatorRef{private_calc->operators().at(index).kind,index};
+            }
             coarse_cost=child.result.values.at(root);
             if (!std::isfinite(coarse_cost) || coarse_cost<0)
                 throw std::runtime_error("coarse dirty fixed controller has no finite root estimate");
-            if (!proposal.nonempty_handoff && coarse_cost>=incumbent_portfolio.verified_executable_upper()) {
+            if (!proposal.nonempty_handoff) completed_private_cost[family_of(root_type)]=coarse_cost;
+            if (!proposal.nonempty_handoff && proposal.expansion==0 &&
+                coarse_cost>=incumbent_portfolio.verified_executable_upper()) {
                 record("deferred_by_cost_estimate",
                     "private estimate is not competitive; no numerical or action-retirement authority");
                 continue;
@@ -1309,6 +1511,15 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 graph=compile_dirty_continuation_strategy_json(*private_calc,graph,
                     handoff_base->compiled_artifact.strategy_json,local_states,boundary,compose_limits,&compilation);
             }
+            if (!proposal.nonempty_handoff) {
+                const auto* existing=best_current_certified_fallback();
+                if (existing && certified_incumbent_invalid_reason(*existing)==nullptr &&
+                    existing->compiled_artifact.strategy_json==graph) {
+                    exact_cost=existing->evaluated_policy_cost;
+                    record("reused_verified_identical_graph","same frozen graph, original root, scope and economy; no new training label");
+                    continue;
+                }
+            }
             SolveOptions check_limits=options;
             const auto held=parent_live_bytes()+observe_memory()+graph.capacity();
             if (held>=options.max_solver_owned_bytes) throw SolverResourceLimit("max_solver_owned_bytes",options.max_solver_owned_bytes);
@@ -1326,6 +1537,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             if (!complete_return_evaluation(evaluated,false))
                 throw std::runtime_error("complete emitted dirty controller failed native properness or cost checks");
             exact_cost=evaluated.total_expected_cost;
+            if (adaptive && !proposal.nonempty_handoff)
+                guide.observe(coarse_cost,exact_cost,family_of(root_type));
             entry_response="[";
             for (const auto& member:evaluated.continuation_upper.members) {
                 if (entry_response.size()>1) entry_response+=',';
@@ -1335,6 +1548,13 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     ",\"native_bellman_residual\":"+diagnostic_finite_double(member.bellman_residual)+
                     ",\"prefixes\":"+std::to_string(member.item.prefix_count)+
                     ",\"suffixes\":"+std::to_string(member.item.suffix_count);
+                entry_response+=",\"checkpoint_active\":false,\"observed_offer_active\":false,\"native_item_identity\":[";
+                bool first_item_word=true;
+                for (const auto word : exact_item_state_key(member.item)) {
+                    if (!first_item_word) entry_response+=',';
+                    first_item_word=false; entry_response+='\"'+std::to_string(word)+'\"';
+                }
+                entry_response+=']';
                 const auto ordinal=member.exact_member_identity;
                 if (ordinal<entry_states.size() && entry_states[ordinal]!=kNoId) {
                     const auto state=entry_states[ordinal];

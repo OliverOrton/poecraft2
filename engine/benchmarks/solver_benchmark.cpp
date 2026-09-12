@@ -59,6 +59,7 @@ struct Arguments {
     fs::path development_checkpoint_save;
     fs::path development_checkpoint_load;
     std::string case_id;
+    std::string native_dirty_guidance;
     std::string native_retention_diagnostic;
     double native_retention_target_lower = 0;
     double proof_handoff_seconds = 0;
@@ -3292,6 +3293,7 @@ CaseResult run_case(
     pc_data_handle data, const Value& specification,
     const bool skip_verification, const fs::path& strategy_output,
     const std::string& native_retention_diagnostic,
+    const std::string& native_dirty_guidance,
     const double native_retention_target_lower,
     const double proof_handoff_seconds,
     const bool emit_progress, const std::uint64_t verification_runs_override,
@@ -3564,6 +3566,16 @@ CaseResult run_case(
                     handles.solver, modes.at(mode->string), &error);
             if (configured != PC_RESULT_OK)
                 throw std::runtime_error(api_error("configure native continuation search", configured, error));
+        }
+        if (!native_dirty_guidance.empty()) {
+            using Mode=poecraft::solver::NativeContinuationSearchMode;
+            if ((solve_options.solver_flags & PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH)==0)
+                throw std::runtime_error("dirty guidance treatment requires the native dirty opt-in request");
+            const auto selected=native_dirty_guidance=="adaptive" ? Mode::DirtyGuidedAdaptive :
+                native_dirty_guidance=="static" ? Mode::DirtyGuidedStatic : Mode::DirtyRestrictedFreshLayout;
+            const auto configured=poecraft::solver::configure_solver_native_continuation_search(handles.solver,selected,&error);
+            if (configured!=PC_RESULT_OK)
+                throw std::runtime_error(api_error("configure dirty guidance treatment",configured,error));
         }
         if (!native_retention_diagnostic.empty()) {
             const auto mode=native_retention_diagnostic=="reuse-unconsumed" ? poecraft::solver::NativeRetentionDiagnosticMode::ReuseUnconsumed :
@@ -5782,6 +5794,7 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--action-layout-diagnostic") args.action_layout_diagnostic = true;
         else if (argument == "--case") args.case_id = value("--case");
         else if (argument == "--native-retention-diagnostic") args.native_retention_diagnostic=value("--native-retention-diagnostic");
+        else if (argument == "--native-dirty-guidance") args.native_dirty_guidance=value("--native-dirty-guidance");
         else if (argument == "--native-retention-target-lower") args.native_retention_target_lower=std::stod(value("--native-retention-target-lower"));
         else if (argument == "--proof-handoff-seconds") {
             args.proof_handoff_seconds = std::stod(value("--proof-handoff-seconds"));
@@ -5865,6 +5878,9 @@ Arguments parse_arguments(int argc, char** argv) {
          !args.development_checkpoint_load.empty())) {
         throw std::runtime_error("proof handoff requires one ordinary case without checkpoint or shadow diagnostics");
     }
+    if (!args.native_dirty_guidance.empty() && args.native_dirty_guidance!="legacy" &&
+        args.native_dirty_guidance!="static" && args.native_dirty_guidance!="adaptive")
+        throw std::runtime_error("native dirty guidance must be legacy, static or adaptive");
     if (!args.native_retention_diagnostic.empty() &&
         ((args.native_retention_diagnostic!="cold" && args.native_retention_diagnostic!="reuse" && args.native_retention_diagnostic!="checked" && args.native_retention_diagnostic!="reuse-unconsumed") ||
          args.case_id.empty() || args.validate_only || args.fragment_shadow_only ||
@@ -6183,6 +6199,7 @@ int main(int argc, char** argv) {
                 const CaseResult result = run_case(
                     data, specification, args.skip_verification,
                     args.strategy_output, args.native_retention_diagnostic,
+                    args.native_dirty_guidance,
                     args.native_retention_target_lower, args.proof_handoff_seconds,
                     args.emit_progress,
                     args.verification_runs, args.verification_seed,

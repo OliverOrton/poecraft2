@@ -1,0 +1,582 @@
+{
+  "cb03": {
+    "comparison": {
+      "baseline": "B",
+      "candidate": "S",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": -343.2398000000103,
+          "median": -343.2398000000103,
+          "p90": -343.2398000000103,
+          "p99": -343.2398000000103,
+          "max": -343.2398000000103
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": -366.5697999999975,
+          "median": -366.5697999999975,
+          "p90": -366.5697999999975,
+          "p99": -366.5697999999975,
+          "max": -366.5697999999975
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": -17.36290000000008,
+          "median": -17.36290000000008,
+          "p90": -17.36290000000008,
+          "p99": -17.36290000000008,
+          "max": -17.36290000000008
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 168.0,
+          "median": 168.0,
+          "p90": 168.0,
+          "p99": 168.0,
+          "max": 168.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": -375.8923000000068,
+          "median": -375.8923000000068,
+          "p90": -375.8923000000068,
+          "p99": -375.8923000000068,
+          "max": -375.8923000000068
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 3.0,
+          "median": 3.0,
+          "p90": 3.0,
+          "p99": 3.0,
+          "max": 3.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb03-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Conquest Lamellar",
+            "class": "Body Armour",
+            "base_class": "Body Armour / Conquest Lamellar",
+            "natural_t1_count": "5",
+            "side_mix": "unknown",
+            "pool_density": "unknown",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "requested_bounded_finish",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+              "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+              "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+            }
+          },
+          "baseline_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "wall_ms": -343.2398000000103,
+            "solve_ms": -366.5697999999975,
+            "solve_step_median_ms": 0.0,
+            "solve_step_p95_ms": 0.0,
+            "solve_step_max_ms": -17.36290000000008,
+            "peak_memory_bytes": 168.0,
+            "time_to_incumbent_ms": -375.8923000000068,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 3.0,
+            "transitions": 0.0,
+            "reforge_work": 0.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    },
+    "outcomes": {
+      "B": {
+        "upper": 794067.4530398862,
+        "lower": 405.11164995948883,
+        "status": "bounded_feasible",
+        "errors": [],
+        "contract": {
+          "checked": true,
+          "passed": true,
+          "path": "bounded",
+          "checks": {
+            "named_stop": true,
+            "strict_gap": true,
+            "open_obligations": true,
+            "evaluated_upper": true,
+            "cheapest_independently_evaluated_incumbent": true
+          },
+          "open_work": {
+            "incremental_actions": 65356,
+            "refinement_obligations": 0
+          },
+          "failure_reason": null
+        },
+        "wall_ms": 250464.1311,
+        "exact": "matched"
+      },
+      "S": {
+        "upper": 794067.4530398862,
+        "lower": 405.11164995948883,
+        "status": "bounded_feasible",
+        "errors": [],
+        "contract": {
+          "checked": true,
+          "passed": true,
+          "path": "bounded",
+          "checks": {
+            "named_stop": true,
+            "strict_gap": true,
+            "open_obligations": true,
+            "evaluated_upper": true,
+            "cheapest_independently_evaluated_incumbent": true
+          },
+          "open_work": {
+            "incremental_actions": 65353,
+            "refinement_obligations": 0
+          },
+          "failure_reason": null
+        },
+        "wall_ms": 250120.8913,
+        "exact": "matched"
+      }
+    }
+  },
+  "cb02": {
+    "comparison": {
+      "baseline": "B",
+      "candidate": "S",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": 58.09320000000298,
+          "median": 58.09320000000298,
+          "p90": 58.09320000000298,
+          "p99": 58.09320000000298,
+          "max": 58.09320000000298
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": 29.84880000000703,
+          "median": 29.84880000000703,
+          "p90": 29.84880000000703,
+          "p99": 29.84880000000703,
+          "max": 29.84880000000703
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": -9.999999999999983e-05,
+          "median": -9.999999999999983e-05,
+          "p90": -9.999999999999983e-05,
+          "p99": -9.999999999999983e-05,
+          "max": -9.999999999999983e-05
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": -45.55580000000009,
+          "median": -45.55580000000009,
+          "p90": -45.55580000000009,
+          "p99": -45.55580000000009,
+          "max": -45.55580000000009
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": -854.5432000000146,
+          "median": -854.5432000000146,
+          "p90": -854.5432000000146,
+          "p99": -854.5432000000146,
+          "max": -854.5432000000146
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb02-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Conquest Lamellar",
+            "class": "Body Armour",
+            "base_class": "Body Armour / Conquest Lamellar",
+            "natural_t1_count": "4",
+            "side_mix": "unknown",
+            "pool_density": "unknown",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "requested_bounded_finish",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+              "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+              "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+            }
+          },
+          "baseline_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "wall_ms": 58.09320000000298,
+            "solve_ms": 29.84880000000703,
+            "solve_step_median_ms": 0.0,
+            "solve_step_p95_ms": -9.999999999999983e-05,
+            "solve_step_max_ms": -45.55580000000009,
+            "peak_memory_bytes": 0.0,
+            "time_to_incumbent_ms": -854.5432000000146,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 0.0,
+            "transitions": 0.0,
+            "reforge_work": 0.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    },
+    "outcomes": {
+      "B": {
+        "upper": 3746.1319409485764,
+        "lower": 198.8334996747695,
+        "status": "bounded_feasible",
+        "errors": [],
+        "contract": {
+          "checked": true,
+          "passed": true,
+          "path": "bounded",
+          "checks": {
+            "named_stop": true,
+            "strict_gap": true,
+            "open_obligations": true,
+            "evaluated_upper": true,
+            "cheapest_independently_evaluated_incumbent": true
+          },
+          "open_work": {
+            "incremental_actions": 0,
+            "refinement_obligations": 147503
+          },
+          "failure_reason": null
+        },
+        "wall_ms": 243550.1822,
+        "exact": "matched"
+      },
+      "S": {
+        "upper": 3746.1319409485764,
+        "lower": 198.8334996747695,
+        "status": "bounded_feasible",
+        "errors": [],
+        "contract": {
+          "checked": true,
+          "passed": true,
+          "path": "bounded",
+          "checks": {
+            "named_stop": true,
+            "strict_gap": true,
+            "open_obligations": true,
+            "evaluated_upper": true,
+            "cheapest_independently_evaluated_incumbent": true
+          },
+          "open_work": {
+            "incremental_actions": 0,
+            "refinement_obligations": 147503
+          },
+          "failure_reason": null
+        },
+        "wall_ms": 243608.2754,
+        "exact": "matched"
+      }
+    }
+  }
+}

@@ -249,6 +249,29 @@ profiles retain 12 identical graphs, one cheaper independently evaluated CB03
 Conquest graph and CB09's absent policy; CB12 remains exact. CB05/CB09's known
 failures remain visible. Additional CB03 sampling was not run at closeout.
 
+The [adaptive dirty application](../active/2026-09-12-adaptive-dirty-guidance/README.md)
+starts from those improved policies. At the same native capacities, admitting
+paid redraw at useful dirty entries reduces Ring-four to 228,023.27997140243.
+Completing protection setup, native outcomes and paid cleanup further reduces
+Amulet to 13,159.724084639676. These are 97.7758% and 99.3333% below reviewed
+main, with unchanged lowers, complete reconciled prices, success probability one
+and zero off-policy mass. Root-only artifacts retain no forged parent bindings.
+Expected execution remains 592,244 and 26,656 actions respectively; finite-limit
+sampling and original-profile preservation are separate receipt fields.
+
+Matched static and adaptive arms have identical eligibility and final costs
+on Amulet, Ring-four and predeclared Bow. Correction never changes the next
+selected obligation; small observed timing differences do not pass the declared
+adaptation gate. Static expansion remains the native opt-in default, with
+adaptive correction retained only as a diagnostic treatment. Bow keeps
+223,349.0000393144 but reaches it later under expanded search. The completed
+399,941.55749789823 protected Bow proposal is economically worse; Ring's capped
+protection attempts remain unknown. These dispositions apply CLM-0002/CLM-0009
+and the existing numerical owner without adding an exactness claim. Imported
+counterexamples remain byte-preserved and their argument is integrated into
+the policy, scheduling, numerical and resource chapters. No new experimental
+runner, action-family proof or learned executable tail is introduced.
+
 The four [advisory audits](../active/2026-09-09-cross-base-capability-recovery/README.md#advisory-audits)
 are reconciled against that experiment. Their finite-region threshold and
 auxiliary-ceiling arguments now live in the [lower chapter](mathematics/lower-bounds.md#threshold-query);

@@ -1,0 +1,38 @@
+{
+  "executable": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v1.exe",
+  "sha256": "8d5f400d53c6964ecdc0398d53401a2fa0b6e037507d4546e521836a76d02f3c",
+  "modes": [
+    "static",
+    "adaptive"
+  ],
+  "sources": [
+    {
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "sha256": "b4e40c8335dda84176a88499ded1316d1352e96db8857cc387de0506fd19c98f"
+    },
+    {
+      "path": "engine/src/solver_dirty_guidance.hpp",
+      "sha256": "f772e169c70bdc6feabcf511a535dd1655a7b5815fe0a1d083815aee2af49120"
+    },
+    {
+      "path": "engine/src/solver_options.cpp",
+      "sha256": "ef5dd0feb2ae44d4bec8a1e3aa7bfbfd28d536aa325a2c14c57b08760e908c13"
+    },
+    {
+      "path": "engine/src/solver_options_build.cpp",
+      "sha256": "f03fafed3ff0e5c744edc01d01ea8f6cb99e4447681a86ecfb23ec378ff8e19a"
+    },
+    {
+      "path": "engine/src/solver_solve_contracts.hpp",
+      "sha256": "f066bb9562886605f729c8f6879d0de3f341fa36986e8d677bfa924692569d76"
+    },
+    {
+      "path": "engine/src/solver_api.cpp",
+      "sha256": "04dc435069322030444e4d7c1d4e4630465f1760fda63ce2b7407b99f7e6834c"
+    },
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "sha256": "06c8dede9be5617b9e9e42471f32529c56c1084b9495a9e3243f5083f410a49b"
+    }
+  ]
+}

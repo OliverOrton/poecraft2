@@ -6,6 +6,7 @@
 #include "../src/solver_policy_refinement.hpp"
 #include "../src/solver_sparse_policy.hpp"
 #include "../src/solver_solve_types.hpp"
+#include "../src/solver_dirty_guidance.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -13617,6 +13618,16 @@ void run_solver_return_bridge_lifecycle_tests() {
 
 void run_solver_dirty_continuation_tests() {
     {
+        solve_detail::DirtyGuidance guide;
+        PC_CHECK(guide.predict(100,0,false)<guide.predict(200,1,false));
+        for (unsigned i=0;i<8;++i) guide.observe(100,1000,0);
+        PC_CHECK(guide.predict(100,0,true)>guide.predict(200,1,true));
+        PC_CHECK(guide.predict(100,0,false)==100);
+        const auto version=guide.version;
+        guide.observe(kInfinity,1,0); guide.observe(1,kInfinity,0);
+        PC_CHECK(guide.version==version);
+    }
+    {
         auto renewal_session = make_solve_session();
         auto renewal_registry = build_action_registry(*renewal_session);
         const auto action = renewal_registry.index_by_id.at("chaos");
@@ -13824,6 +13835,7 @@ void run_solver_dirty_continuation_tests() {
         SolveWorkTestAccess::Impl forced_work(forced_calc,start,
             {{"exalt",2},{"annul",5},{"chaos",100},{"essence:dirty_forced_goal",1},
              {"essence:dirty_below_tier",0.01}},options);
+        forced_work.options.native_continuation_search=NativeContinuationSearchMode::DirtyGuidedAdaptive;
         auto forced_task = forced_work.try_dirty_continuation_candidates();
         bool finished = false;
         for (unsigned units=0;units<500000;++units)
@@ -13851,6 +13863,19 @@ void run_solver_dirty_continuation_tests() {
                 }));
             PC_CHECK(forced_work.incumbent_portfolio.verified_executable_upper() < candidate.evaluated_policy_cost);
             PC_CHECK(forced_work.transition_cache->rows.empty());
+            bool expanded_verified=false;
+            bool expanded_chaos_verified=false;
+            for (const auto& sample : forced_work.result.diagnostics.policy_refinement.publication_candidate_samples) {
+                const auto parsed=json::Parser(sample.data(),sample.size()).parse();
+                if (parsed.at("kind").as_string()!="dirty_continuation_candidate") continue;
+                if (parsed.at("expansion").as_number()>0 && parsed.at("eval_complete").as_bool() &&
+                    parsed.at("redraw_alternatives").as_number()>0) expanded_verified=true;
+                if (parsed.at("expansion").as_number()>0 && parsed.at("eval_complete").as_bool() &&
+                    parsed.at("root_action").as_string()=="gated_chaos") expanded_chaos_verified=true;
+                PC_CHECK(sample.find("selected gated reforge retry basin is outside")==std::string::npos);
+            }
+            PC_CHECK(expanded_verified);
+            PC_CHECK(expanded_chaos_verified);
         }
     }
 

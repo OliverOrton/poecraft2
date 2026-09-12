@@ -1,0 +1,1424 @@
+{
+  "amulet": {
+    "B_S": {
+      "baseline": "B",
+      "candidate": "S",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": -41092.02500000002,
+          "median": -41092.02500000002,
+          "p90": -41092.02500000002,
+          "p99": -41092.02500000002,
+          "max": -41092.02500000002
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": -19711.7304,
+          "median": -19711.7304,
+          "p90": -19711.7304,
+          "p99": -19711.7304,
+          "max": -19711.7304
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": 0.061599999999999995,
+          "median": 0.061599999999999995,
+          "p90": 0.061599999999999995,
+          "p99": 0.061599999999999995,
+          "max": 0.061599999999999995
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": 0.3747,
+          "median": 0.3747,
+          "p90": 0.3747,
+          "p99": 0.3747,
+          "max": 0.3747
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": 1061.4623000000029,
+          "median": 1061.4623000000029,
+          "p90": 1061.4623000000029,
+          "p99": 1061.4623000000029,
+          "max": 1061.4623000000029
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": -256389915.0,
+          "median": -256389915.0,
+          "p90": -256389915.0,
+          "p99": -256389915.0,
+          "max": -256389915.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": 308.8249999999998,
+          "median": 308.8249999999998,
+          "p90": 308.8249999999998,
+          "p99": 308.8249999999998,
+          "max": 308.8249999999998
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": -1901735.2123583,
+          "median": -1901735.2123583,
+          "p90": -1901735.2123583,
+          "p99": -1901735.2123583,
+          "max": -1901735.2123583
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": -1901735.2123583,
+          "median": -1901735.2123583,
+          "p90": -1901735.2123583,
+          "p99": -1901735.2123583,
+          "max": -1901735.2123583
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": -10879.910750197017,
+          "median": -10879.910750197017,
+          "p90": -10879.910750197017,
+          "p99": -10879.910750197017,
+          "max": -10879.910750197017
+        },
+        "states": {
+          "count": 1,
+          "min": -5909.0,
+          "median": -5909.0,
+          "p90": -5909.0,
+          "p99": -5909.0,
+          "max": -5909.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 105.0,
+          "median": 105.0,
+          "p90": 105.0,
+          "p99": 105.0,
+          "max": 105.0
+        },
+        "rows": {
+          "count": 1,
+          "min": -87607.0,
+          "median": -87607.0,
+          "p90": -87607.0,
+          "p99": -87607.0,
+          "max": -87607.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": -107492.0,
+          "median": -107492.0,
+          "p90": -107492.0,
+          "p99": -107492.0,
+          "max": -107492.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 74815167.0,
+          "median": 74815167.0,
+          "p90": 74815167.0,
+          "p99": 74815167.0,
+          "max": 74815167.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 5.0,
+          "median": 5.0,
+          "p90": 5.0,
+          "p99": 5.0,
+          "max": 5.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 12.0,
+          "median": 12.0,
+          "p90": 12.0,
+          "p99": 12.0,
+          "max": 12.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 3233.0,
+          "median": 3233.0,
+          "p90": 3233.0,
+          "p99": 3233.0,
+          "max": 3233.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb08-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Onyx Amulet",
+            "class": "Amulet",
+            "base_class": "Amulet / Onyx Amulet",
+            "natural_t1_count": "3",
+            "side_mix": "SSS",
+            "pool_density": "dense_ge_100",
+            "goal_probability": "low_le_0.005",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "refused_resource_cap",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+              "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v2.exe",
+              "sha256": "106bc5f7ea60ea39495590415cca76bc2b34ab95bc95c5974506137b61f5a39a"
+            }
+          },
+          "baseline_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "refused_resource_cap",
+            "policy": "bounded_feasible",
+            "termination": "refused_resource_cap"
+          },
+          "deltas": {
+            "wall_ms": -41092.02500000002,
+            "solve_ms": -19711.7304,
+            "solve_step_median_ms": 0.061599999999999995,
+            "solve_step_p95_ms": 0.3747,
+            "solve_step_max_ms": 1061.4623000000029,
+            "peak_memory_bytes": -256389915.0,
+            "time_to_incumbent_ms": 308.8249999999998,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": -1901735.2123583,
+            "final_absolute_gap": -1901735.2123583,
+            "final_relative_gap": -10879.910750197017,
+            "states": -5909.0,
+            "expanded_states": 105.0,
+            "rows": -87607.0,
+            "transitions": -107492.0,
+            "reforge_work": 74815167.0,
+            "compiled_nodes": 5.0,
+            "compiled_edges": 12.0,
+            "strategy_json_bytes": 3233.0
+          }
+        }
+      ]
+    },
+    "S_A": {
+      "baseline": "S",
+      "candidate": "A",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": 202.3178000000771,
+          "median": 202.3178000000771,
+          "p90": 202.3178000000771,
+          "p99": 202.3178000000771,
+          "max": 202.3178000000771
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": 12.215699999942444,
+          "median": 12.215699999942444,
+          "p90": 12.215699999942444,
+          "p99": 12.215699999942444,
+          "max": 12.215699999942444
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": -0.0006999999999999923,
+          "median": -0.0006999999999999923,
+          "p90": -0.0006999999999999923,
+          "p99": -0.0006999999999999923,
+          "max": -0.0006999999999999923
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": 0.015500000000000014,
+          "median": 0.015500000000000014,
+          "p90": 0.015500000000000014,
+          "p99": 0.015500000000000014,
+          "max": 0.015500000000000014
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": 760.3838999999971,
+          "median": 760.3838999999971,
+          "p90": 760.3838999999971,
+          "p99": 760.3838999999971,
+          "max": 760.3838999999971
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 30.0,
+          "median": 30.0,
+          "p90": 30.0,
+          "p99": 30.0,
+          "max": 30.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": -18.867699999999786,
+          "median": -18.867699999999786,
+          "p90": -18.867699999999786,
+          "p99": -18.867699999999786,
+          "max": -18.867699999999786
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb08-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Onyx Amulet",
+            "class": "Amulet",
+            "base_class": "Amulet / Onyx Amulet",
+            "natural_t1_count": "3",
+            "side_mix": "SSS",
+            "pool_density": "dense_ge_100",
+            "goal_probability": "low_le_0.005",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "refused_resource_cap",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v2.exe",
+              "sha256": "106bc5f7ea60ea39495590415cca76bc2b34ab95bc95c5974506137b61f5a39a"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v2.exe",
+              "sha256": "106bc5f7ea60ea39495590415cca76bc2b34ab95bc95c5974506137b61f5a39a"
+            }
+          },
+          "baseline_status": {
+            "actual": "refused_resource_cap",
+            "policy": "bounded_feasible",
+            "termination": "refused_resource_cap"
+          },
+          "candidate_status": {
+            "actual": "refused_resource_cap",
+            "policy": "bounded_feasible",
+            "termination": "refused_resource_cap"
+          },
+          "deltas": {
+            "wall_ms": 202.3178000000771,
+            "solve_ms": 12.215699999942444,
+            "solve_step_median_ms": -0.0006999999999999923,
+            "solve_step_p95_ms": 0.015500000000000014,
+            "solve_step_max_ms": 760.3838999999971,
+            "peak_memory_bytes": 30.0,
+            "time_to_incumbent_ms": -18.867699999999786,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 0.0,
+            "transitions": 0.0,
+            "reforge_work": 0.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    }
+  },
+  "ring-four": {
+    "B_S": {
+      "baseline": "B",
+      "candidate": "S",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": -26398.825899999938,
+          "median": -26398.825899999938,
+          "p90": -26398.825899999938,
+          "p99": -26398.825899999938,
+          "max": -26398.825899999938
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": -7475.892400000012,
+          "median": -7475.892400000012,
+          "p90": -7475.892400000012,
+          "p99": -7475.892400000012,
+          "max": -7475.892400000012
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": 1.5092,
+          "median": 1.5092,
+          "p90": 1.5092,
+          "p99": 1.5092,
+          "max": 1.5092
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": 6.783800000000001,
+          "median": 6.783800000000001,
+          "p90": 6.783800000000001,
+          "p99": 6.783800000000001,
+          "max": 6.783800000000001
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": -4534.233199999999,
+          "median": -4534.233199999999,
+          "p90": -4534.233199999999,
+          "p99": -4534.233199999999,
+          "max": -4534.233199999999
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": -1454253090.0,
+          "median": -1454253090.0,
+          "p90": -1454253090.0,
+          "p99": -1454253090.0,
+          "max": -1454253090.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": 644.9845999999998,
+          "median": 644.9845999999998,
+          "p90": 644.9845999999998,
+          "p99": 644.9845999999998,
+          "max": 644.9845999999998
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": -10023897.11901294,
+          "median": -10023897.11901294,
+          "p90": -10023897.11901294,
+          "p99": -10023897.11901294,
+          "max": -10023897.11901294
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": -10023897.11901294,
+          "median": -10023897.11901294,
+          "p90": -10023897.11901294,
+          "p99": -10023897.11901294,
+          "max": -10023897.11901294
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": -49658.83990937556,
+          "median": -49658.83990937556,
+          "p90": -49658.83990937556,
+          "p99": -49658.83990937556,
+          "max": -49658.83990937556
+        },
+        "states": {
+          "count": 1,
+          "min": -666.0,
+          "median": -666.0,
+          "p90": -666.0,
+          "p99": -666.0,
+          "max": -666.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": -133.0,
+          "median": -133.0,
+          "p90": -133.0,
+          "p99": -133.0,
+          "max": -133.0
+        },
+        "rows": {
+          "count": 1,
+          "min": -1863.0,
+          "median": -1863.0,
+          "p90": -1863.0,
+          "p99": -1863.0,
+          "max": -1863.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": -107145.0,
+          "median": -107145.0,
+          "p90": -107145.0,
+          "p99": -107145.0,
+          "max": -107145.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 156305962.0,
+          "median": 156305962.0,
+          "p90": 156305962.0,
+          "p99": 156305962.0,
+          "max": 156305962.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": -19.0,
+          "median": -19.0,
+          "p90": -19.0,
+          "p99": -19.0,
+          "max": -19.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": -81.0,
+          "median": -81.0,
+          "p90": -81.0,
+          "p99": -81.0,
+          "max": -81.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": -46751.0,
+          "median": -46751.0,
+          "p90": -46751.0,
+          "p99": -46751.0,
+          "max": -46751.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb07-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Amethyst Ring",
+            "class": "Ring",
+            "base_class": "Ring / Amethyst Ring",
+            "natural_t1_count": "4",
+            "side_mix": "unknown",
+            "pool_density": "unknown",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "requested_bounded_finish",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+              "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v2.exe",
+              "sha256": "106bc5f7ea60ea39495590415cca76bc2b34ab95bc95c5974506137b61f5a39a"
+            }
+          },
+          "baseline_status": {
+            "actual": "refused_unsupported_action",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "refused_unsupported_action",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "wall_ms": -26398.825899999938,
+            "solve_ms": -7475.892400000012,
+            "solve_step_median_ms": 1.5092,
+            "solve_step_p95_ms": 6.783800000000001,
+            "solve_step_max_ms": -4534.233199999999,
+            "peak_memory_bytes": -1454253090.0,
+            "time_to_incumbent_ms": 644.9845999999998,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": -10023897.11901294,
+            "final_absolute_gap": -10023897.11901294,
+            "final_relative_gap": -49658.83990937556,
+            "states": -666.0,
+            "expanded_states": -133.0,
+            "rows": -1863.0,
+            "transitions": -107145.0,
+            "reforge_work": 156305962.0,
+            "compiled_nodes": -19.0,
+            "compiled_edges": -81.0,
+            "strategy_json_bytes": -46751.0
+          }
+        }
+      ]
+    },
+    "S_A": {
+      "baseline": "S",
+      "candidate": "A",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": -1353.2225000000326,
+          "median": -1353.2225000000326,
+          "p90": -1353.2225000000326,
+          "p99": -1353.2225000000326,
+          "max": -1353.2225000000326
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": -474.11979999998584,
+          "median": -474.11979999998584,
+          "p90": -474.11979999998584,
+          "p99": -474.11979999998584,
+          "max": -474.11979999998584
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": -0.11640000000000006,
+          "median": -0.11640000000000006,
+          "p90": -0.11640000000000006,
+          "p99": -0.11640000000000006,
+          "max": -0.11640000000000006
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": 2.802199999999999,
+          "median": 2.802199999999999,
+          "p90": 2.802199999999999,
+          "p99": 2.802199999999999,
+          "max": 2.802199999999999
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": -18.01550000000134,
+          "median": -18.01550000000134,
+          "p90": -18.01550000000134,
+          "p99": -18.01550000000134,
+          "max": -18.01550000000134
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": -349.66140000000087,
+          "median": -349.66140000000087,
+          "p90": -349.66140000000087,
+          "p99": -349.66140000000087,
+          "max": -349.66140000000087
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb07-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Amethyst Ring",
+            "class": "Ring",
+            "base_class": "Ring / Amethyst Ring",
+            "natural_t1_count": "4",
+            "side_mix": "unknown",
+            "pool_density": "unknown",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "requested_bounded_finish",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v2.exe",
+              "sha256": "106bc5f7ea60ea39495590415cca76bc2b34ab95bc95c5974506137b61f5a39a"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v2.exe",
+              "sha256": "106bc5f7ea60ea39495590415cca76bc2b34ab95bc95c5974506137b61f5a39a"
+            }
+          },
+          "baseline_status": {
+            "actual": "refused_unsupported_action",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "refused_unsupported_action",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "wall_ms": -1353.2225000000326,
+            "solve_ms": -474.11979999998584,
+            "solve_step_median_ms": -0.11640000000000006,
+            "solve_step_p95_ms": 2.802199999999999,
+            "solve_step_max_ms": -18.01550000000134,
+            "peak_memory_bytes": 0.0,
+            "time_to_incumbent_ms": -349.66140000000087,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 0.0,
+            "transitions": 0.0,
+            "reforge_work": 0.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    }
+  },
+  "bow": {
+    "B_S": {
+      "baseline": "B",
+      "candidate": "S",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": -196.8514000000432,
+          "median": -196.8514000000432,
+          "p90": -196.8514000000432,
+          "p99": -196.8514000000432,
+          "max": -196.8514000000432
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": -235.9368999999715,
+          "median": -235.9368999999715,
+          "p90": -235.9368999999715,
+          "p99": -235.9368999999715,
+          "max": -235.9368999999715
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": 0.015399999999999983,
+          "median": 0.015399999999999983,
+          "p90": 0.015399999999999983,
+          "p99": 0.015399999999999983,
+          "max": 0.015399999999999983
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": -13.376000000000001,
+          "median": -13.376000000000001,
+          "p90": -13.376000000000001,
+          "p99": -13.376000000000001,
+          "max": -13.376000000000001
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": -605.097499999999,
+          "median": -605.097499999999,
+          "p90": -605.097499999999,
+          "p99": -605.097499999999,
+          "max": -605.097499999999
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 802317.0,
+          "median": 802317.0,
+          "p90": 802317.0,
+          "p99": 802317.0,
+          "max": 802317.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": 361.27340000000004,
+          "median": 361.27340000000004,
+          "p90": 361.27340000000004,
+          "p99": 361.27340000000004,
+          "max": 361.27340000000004
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 77116713.0,
+          "median": 77116713.0,
+          "p90": 77116713.0,
+          "p99": 77116713.0,
+          "max": 77116713.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb04-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Spine Bow",
+            "class": "Bow",
+            "base_class": "Bow / Spine Bow",
+            "natural_t1_count": "4",
+            "side_mix": "unknown",
+            "pool_density": "unknown",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "requested_bounded_finish",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+              "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v2.exe",
+              "sha256": "106bc5f7ea60ea39495590415cca76bc2b34ab95bc95c5974506137b61f5a39a"
+            }
+          },
+          "baseline_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "wall_ms": -196.8514000000432,
+            "solve_ms": -235.9368999999715,
+            "solve_step_median_ms": 0.015399999999999983,
+            "solve_step_p95_ms": -13.376000000000001,
+            "solve_step_max_ms": -605.097499999999,
+            "peak_memory_bytes": 802317.0,
+            "time_to_incumbent_ms": 361.27340000000004,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 0.0,
+            "transitions": 0.0,
+            "reforge_work": 77116713.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    },
+    "S_A": {
+      "baseline": "S",
+      "candidate": "A",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": 264.7402000000002,
+          "median": 264.7402000000002,
+          "p90": 264.7402000000002,
+          "p99": 264.7402000000002,
+          "max": 264.7402000000002
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": 150.72849999996834,
+          "median": 150.72849999996834,
+          "p90": 150.72849999996834,
+          "p99": 150.72849999996834,
+          "max": 150.72849999996834
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": 0.0018000000000000238,
+          "median": 0.0018000000000000238,
+          "p90": 0.0018000000000000238,
+          "p99": 0.0018000000000000238,
+          "max": 0.0018000000000000238
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": 0.1853000000000007,
+          "median": 0.1853000000000007,
+          "p90": 0.1853000000000007,
+          "p99": 0.1853000000000007,
+          "max": 0.1853000000000007
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": 377.48139999999967,
+          "median": 377.48139999999967,
+          "p90": 377.48139999999967,
+          "p99": 377.48139999999967,
+          "max": 377.48139999999967
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 20.0,
+          "median": 20.0,
+          "p90": 20.0,
+          "p99": 20.0,
+          "max": 20.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": -128.26050000000032,
+          "median": -128.26050000000032,
+          "p90": -128.26050000000032,
+          "p99": -128.26050000000032,
+          "max": -128.26050000000032
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb04-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Spine Bow",
+            "class": "Bow",
+            "base_class": "Bow / Spine Bow",
+            "natural_t1_count": "4",
+            "side_mix": "unknown",
+            "pool_density": "unknown",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "requested_bounded_finish",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v2.exe",
+              "sha256": "106bc5f7ea60ea39495590415cca76bc2b34ab95bc95c5974506137b61f5a39a"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v2.exe",
+              "sha256": "106bc5f7ea60ea39495590415cca76bc2b34ab95bc95c5974506137b61f5a39a"
+            }
+          },
+          "baseline_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "wall_ms": 264.7402000000002,
+            "solve_ms": 150.72849999996834,
+            "solve_step_median_ms": 0.0018000000000000238,
+            "solve_step_p95_ms": 0.1853000000000007,
+            "solve_step_max_ms": 377.48139999999967,
+            "peak_memory_bytes": 20.0,
+            "time_to_incumbent_ms": -128.26050000000032,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 0.0,
+            "transitions": 0.0,
+            "reforge_work": 0.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "classification": "synthetic exact rational checks only",
+  "number_of_checks": 11,
+  "checks": {
+    "old_fixed_policy_value": true,
+    "new_fixed_policy_value": true,
+    "first_action_advantage": true,
+    "new_occupancy_policy_difference": true,
+    "old_occupancy_is_not_exact_saving": true,
+    "perfect_restricted_ranking_cannot_choose_missing_action": true,
+    "higher_immediate_cost_can_reduce_expected_cost": true,
+    "expensive_protection_can_also_lose": true,
+    "unrelated_root_upper_not_entry_upper": true,
+    "estimate_may_exceed_verified_upper_without_changing_endpoints": true,
+    "local_exits_do_not_supply_goal_absorption": true
+  },
+  "old_J": "100",
+  "new_J": "20",
+  "A": "-8",
+  "old_occupancy_prediction": "-800",
+  "actual_change": "-80"
+}

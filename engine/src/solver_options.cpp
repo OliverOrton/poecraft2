@@ -1123,7 +1123,14 @@ const OptionKernel& CalcContext::option_kernel(
                 kAutomaticMetamodProtection;
             const bool carrier_relevant =
                 (satisfied_goal_mask(entry) & protected_mask) != 0;
-            const bool target_relevant = advances_goal_mask(
+            const auto unwanted = [&](const AbstractState& value) {
+                return value.prefix_count + value.suffix_count -
+                    std::popcount(satisfied_goal_mask(value));
+            };
+            const bool removes_unwanted = std::any_of(result->exits.begin(), result->exits.end(),
+                [&](const auto& exit) { return exit.probability > 0 &&
+                    unwanted(state(exit.state)) < unwanted(entry); });
+            const bool target_relevant = removes_unwanted || advances_goal_mask(
                 *this, entry, result->exits, target_mask) ||
                 clears_target_space(
                     *this, entry, result->exits, target_mask);

@@ -331,7 +331,10 @@ def build_solver_case_command(
     run_verification: bool,
     goal_progress_gated_reforges: bool,
     native_retention_diagnostic: str | None = None,
+    native_dirty_guidance: str | None = None,
 ) -> SolverCaseCommand:
+    if native_dirty_guidance not in (None, "legacy", "static", "adaptive"):
+        raise ValueError("unsupported native dirty guidance treatment")
     if (native_retention_diagnostic is not None
             and native_retention_diagnostic not in NATIVE_RETENTION_DIAGNOSTIC_MODES):
         raise ValueError("unsupported native retention diagnostic mode")
@@ -358,6 +361,8 @@ def build_solver_case_command(
         argv.append("--goal-progress-gated-reforges")
     if native_retention_diagnostic is not None:
         argv.extend(("--native-retention-diagnostic", native_retention_diagnostic))
+    if native_dirty_guidance is not None:
+        argv.extend(("--native-dirty-guidance", native_dirty_guidance))
     return SolverCaseCommand(tuple(argv), root)
 
 
@@ -375,6 +380,7 @@ def resolve_case_execution(
     watchdog_seconds: float | None = None,
     worker_headroom_bytes: int = 0,
     native_retention_diagnostic: str | None = None,
+    native_dirty_guidance: str | None = None,
 ) -> ResolvedCaseExecution:
     paths.prepare()
     command = build_solver_case_command(
@@ -388,6 +394,7 @@ def resolve_case_execution(
         run_verification=run_verification,
         goal_progress_gated_reforges=goal_progress_gated_reforges,
         native_retention_diagnostic=native_retention_diagnostic,
+        native_dirty_guidance=native_dirty_guidance,
     )
     return ResolvedCaseExecution(
         case_id=task.case_id,

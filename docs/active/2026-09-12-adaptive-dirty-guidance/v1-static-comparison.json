@@ -1,0 +1,614 @@
+{
+  "baseline_source_correspondence": [
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "recorded_sha256": "f59052c973015ece656da7af041c6cca45072b2d3674a8f5ee587b2be04ffc6a",
+      "matches_main": true
+    },
+    {
+      "path": "engine/include/poecraft/solver.h",
+      "recorded_sha256": "6ed3ec4c86c67b7813e13c73f7ff922d8e6fc97676a7cb57c46d96a97946edfc",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_api.cpp",
+      "recorded_sha256": "c77766722f5ab2fc10a409fd4ddc49f28c39d49baf9397bc645e14486b0863d6",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_compile.cpp",
+      "recorded_sha256": "1cdc86afa4b4cff59bc6d6159cdd97cf7ca8c3e76f98a3547ce08f6b0011b0fa",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_compile_contracts.hpp",
+      "recorded_sha256": "12d35cbb1f7d72c5be37804c2effc02c1f615f74e5d6d080090c6fc880820300",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_diagnostic_options.hpp",
+      "recorded_sha256": "634b3a5004ab690dcea380074acd586b1d3ad53661439de00f2014fe5a42c47f",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_eval.cpp",
+      "recorded_sha256": "28ceaf0bb28fe5f6309cdcd9e81f9f596cb26a0cc050e9c0558a12a2317b5a50",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_eval_types.hpp",
+      "recorded_sha256": "c0999983027539b2f589ad27740d6f1d709db60f5ccf7d9d9efdf02df1e78779",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_policy_assertion_work.cpp",
+      "recorded_sha256": "47818e71ef8e297f0bc49c307bd2e1a249c2e29927479f42e6cb4108a5440be4",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_solve.cpp",
+      "recorded_sha256": "06c7048be7903e42278284c84e4e2e163d5ee94942133b0b4714fcd7eb1bc45d",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_solve_constructive.cpp",
+      "recorded_sha256": "9ccb6094f77a5f39b07d5617104b9188482f7f5c7506b6b97434a4dcfc104ff3",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_solve_contracts.hpp",
+      "recorded_sha256": "83d70cd2a0e66ce0b50b59990d1386e1df8d44371d977699aba5a97e148661a0",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_solve_finish.cpp",
+      "recorded_sha256": "9835c94c6e6e635db40f4ba6402a903a5b6be8ac995e4c8692c888e9207cb36f",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_solve_incremental.cpp",
+      "recorded_sha256": "d26fab5a0f5222784446e7a40ad4dbdfa5e38ccb41211f70a822fa5f59997c42",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "recorded_sha256": "e75445567e88acfd50bdb83abbe25a9e55123498cd76300db3148dde26c29a77",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_solve_telemetry.cpp",
+      "recorded_sha256": "ff846ba205cda4523f3f613c05d0d7b5ce21bbe5aa8bf27de11f4d52ff0558dd",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_solve_telemetry_json.cpp",
+      "recorded_sha256": "e40c73e49c347952b6775067a9ed88ba45726feb4f965e344f4997fd1ef54947",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_solve_types.hpp",
+      "recorded_sha256": "5233e2408fc2c6d6377aa7437f011dc5dfecb5d4a3f343fe290769d028ea38ee",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_sparse_policy.cpp",
+      "recorded_sha256": "e555b7a236b8c30f5e70e930595368c03afc77d6a338a36f50226d974862cf0b",
+      "matches_main": true
+    },
+    {
+      "path": "engine/src/solver_sparse_policy.hpp",
+      "recorded_sha256": "41fa963335b4bbd038d1bb0b1629a4373b82f9c39e3263a92e7aa20845501d5e",
+      "matches_main": true
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "recorded_sha256": "946968ca94c2986ae9be2e2d8f54f79e61a767b8705634bd0fab897d320a2eb5",
+      "matches_main": true
+    },
+    {
+      "path": "engine/tests/test_solver_api.cpp",
+      "recorded_sha256": "c6165cb441ed956d21525053e6a6bf1e4e908958c92563dda94fe72d2e4a7503",
+      "matches_main": true
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "recorded_sha256": "eb536a24ad5291e79b739df5f39c462013721ad636bd03c13ec2387dbc0130e7",
+      "matches_main": true
+    },
+    {
+      "path": "engine/tests/test_solver_eval.cpp",
+      "recorded_sha256": "9577d9864fd3e5b13d5a2f26e8d770e74cd514f3fabb74f99c9cdc5ce5c8a84c",
+      "matches_main": true
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "recorded_sha256": "8ae0b9b6426c34ee18a2c11537021e92d959220577bcd7cec5f40816fd486790",
+      "matches_main": true
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "recorded_sha256": "c1be867477a1653f2cc741f32f01390984e26e666adffc7c566849884c7016ce",
+      "matches_main": true
+    }
+  ],
+  "comparisons": [
+    {
+      "family": "amulet",
+      "comparison": {
+        "baseline": "B-reviewed-main",
+        "candidate": "S-v1-static",
+        "shared_case_ids": 1,
+        "paired_cases": 1,
+        "missing_from_baseline": [],
+        "missing_from_candidate": [],
+        "excluded": [],
+        "delta_distributions": {
+          "wall_ms": {
+            "count": 1,
+            "min": -23907.87849999999,
+            "median": -23907.87849999999,
+            "p90": -23907.87849999999,
+            "p99": -23907.87849999999,
+            "max": -23907.87849999999
+          },
+          "solve_ms": {
+            "count": 1,
+            "min": -2847.0703000000212,
+            "median": -2847.0703000000212,
+            "p90": -2847.0703000000212,
+            "p99": -2847.0703000000212,
+            "max": -2847.0703000000212
+          },
+          "solve_step_median_ms": {
+            "count": 1,
+            "min": 0.0002000000000000001,
+            "median": 0.0002000000000000001,
+            "p90": 0.0002000000000000001,
+            "p99": 0.0002000000000000001,
+            "max": 0.0002000000000000001
+          },
+          "solve_step_p95_ms": {
+            "count": 1,
+            "min": 0.001899999999999999,
+            "median": 0.001899999999999999,
+            "p90": 0.001899999999999999,
+            "p99": 0.001899999999999999,
+            "max": 0.001899999999999999
+          },
+          "solve_step_max_ms": {
+            "count": 1,
+            "min": 1127.1178,
+            "median": 1127.1178,
+            "p90": 1127.1178,
+            "p99": 1127.1178,
+            "max": 1127.1178
+          },
+          "peak_memory_bytes": {
+            "count": 1,
+            "min": -40390.0,
+            "median": -40390.0,
+            "p90": -40390.0,
+            "p99": -40390.0,
+            "max": -40390.0
+          },
+          "time_to_incumbent_ms": {
+            "count": 1,
+            "min": 203.7498999999998,
+            "median": 203.7498999999998,
+            "p90": 203.7498999999998,
+            "p99": 203.7498999999998,
+            "max": 203.7498999999998
+          },
+          "time_to_target_ms": {
+            "count": 0,
+            "min": null,
+            "median": null,
+            "p90": null,
+            "p99": null,
+            "max": null
+          },
+          "final_lower_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_upper_bound": {
+            "count": 1,
+            "min": -1901735.2123583,
+            "median": -1901735.2123583,
+            "p90": -1901735.2123583,
+            "p99": -1901735.2123583,
+            "max": -1901735.2123583
+          },
+          "final_absolute_gap": {
+            "count": 1,
+            "min": -1901735.2123583,
+            "median": -1901735.2123583,
+            "p90": -1901735.2123583,
+            "p99": -1901735.2123583,
+            "max": -1901735.2123583
+          },
+          "final_relative_gap": {
+            "count": 1,
+            "min": -10879.910750197017,
+            "median": -10879.910750197017,
+            "p90": -10879.910750197017,
+            "p99": -10879.910750197017,
+            "max": -10879.910750197017
+          },
+          "states": {
+            "count": 1,
+            "min": -154.0,
+            "median": -154.0,
+            "p90": -154.0,
+            "p99": -154.0,
+            "max": -154.0
+          },
+          "expanded_states": {
+            "count": 1,
+            "min": -128.0,
+            "median": -128.0,
+            "p90": -128.0,
+            "p99": -128.0,
+            "max": -128.0
+          },
+          "rows": {
+            "count": 1,
+            "min": -3032.0,
+            "median": -3032.0,
+            "p90": -3032.0,
+            "p99": -3032.0,
+            "max": -3032.0
+          },
+          "transitions": {
+            "count": 1,
+            "min": -3371.0,
+            "median": -3371.0,
+            "p90": -3371.0,
+            "p99": -3371.0,
+            "max": -3371.0
+          },
+          "reforge_work": {
+            "count": 1,
+            "min": 18398806.0,
+            "median": 18398806.0,
+            "p90": 18398806.0,
+            "p99": 18398806.0,
+            "max": 18398806.0
+          },
+          "compiled_nodes": {
+            "count": 1,
+            "min": 5.0,
+            "median": 5.0,
+            "p90": 5.0,
+            "p99": 5.0,
+            "max": 5.0
+          },
+          "compiled_edges": {
+            "count": 1,
+            "min": 12.0,
+            "median": 12.0,
+            "p90": 12.0,
+            "p99": 12.0,
+            "max": 12.0
+          },
+          "strategy_json_bytes": {
+            "count": 1,
+            "min": 3328.0,
+            "median": 3328.0,
+            "p90": 3328.0,
+            "p99": 3328.0,
+            "max": 3328.0
+          }
+        },
+        "status_transitions": {
+          "bounded_feasible->bounded_feasible": 1
+        },
+        "regressions": [],
+        "pairs": [
+          {
+            "id": "cb08-cross-base-product8-long240",
+            "dimensions": {
+              "base": "Onyx Amulet",
+              "class": "Amulet",
+              "base_class": "Amulet / Onyx Amulet",
+              "natural_t1_count": "3",
+              "side_mix": "SSS",
+              "pool_density": "dense_ge_100",
+              "goal_probability": "low_le_0.005",
+              "incumbent": "other",
+              "policy_status": "bounded_feasible",
+              "termination": "requested_bounded_finish",
+              "evaluation_role": "unassigned",
+              "observation_status": "completed"
+            },
+            "treatments": {
+              "baseline_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+                "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+              },
+              "candidate_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v1.exe",
+                "sha256": "8d5f400d53c6964ecdc0398d53401a2fa0b6e037507d4546e521836a76d02f3c"
+              }
+            },
+            "baseline_status": {
+              "actual": "bounded_feasible",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "candidate_status": {
+              "actual": "bounded_feasible",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "deltas": {
+              "wall_ms": -23907.87849999999,
+              "solve_ms": -2847.0703000000212,
+              "solve_step_median_ms": 0.0002000000000000001,
+              "solve_step_p95_ms": 0.001899999999999999,
+              "solve_step_max_ms": 1127.1178,
+              "peak_memory_bytes": -40390.0,
+              "time_to_incumbent_ms": 203.7498999999998,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": -1901735.2123583,
+              "final_absolute_gap": -1901735.2123583,
+              "final_relative_gap": -10879.910750197017,
+              "states": -154.0,
+              "expanded_states": -128.0,
+              "rows": -3032.0,
+              "transitions": -3371.0,
+              "reforge_work": 18398806.0,
+              "compiled_nodes": 5.0,
+              "compiled_edges": 12.0,
+              "strategy_json_bytes": 3328.0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "family": "ring-four",
+      "comparison": {
+        "baseline": "B-reviewed-main",
+        "candidate": "S-v1-static",
+        "shared_case_ids": 1,
+        "paired_cases": 1,
+        "missing_from_baseline": [],
+        "missing_from_candidate": [],
+        "excluded": [],
+        "delta_distributions": {
+          "wall_ms": {
+            "count": 1,
+            "min": -27982.756799999974,
+            "median": -27982.756799999974,
+            "p90": -27982.756799999974,
+            "p99": -27982.756799999974,
+            "max": -27982.756799999974
+          },
+          "solve_ms": {
+            "count": 1,
+            "min": -7985.515100000077,
+            "median": -7985.515100000077,
+            "p90": -7985.515100000077,
+            "p99": -7985.515100000077,
+            "max": -7985.515100000077
+          },
+          "solve_step_median_ms": {
+            "count": 1,
+            "min": 1.3189,
+            "median": 1.3189,
+            "p90": 1.3189,
+            "p99": 1.3189,
+            "max": 1.3189
+          },
+          "solve_step_p95_ms": {
+            "count": 1,
+            "min": 5.621400000000001,
+            "median": 5.621400000000001,
+            "p90": 5.621400000000001,
+            "p99": 5.621400000000001,
+            "max": 5.621400000000001
+          },
+          "solve_step_max_ms": {
+            "count": 1,
+            "min": -4657.4373,
+            "median": -4657.4373,
+            "p90": -4657.4373,
+            "p99": -4657.4373,
+            "max": -4657.4373
+          },
+          "peak_memory_bytes": {
+            "count": 1,
+            "min": -1454253090.0,
+            "median": -1454253090.0,
+            "p90": -1454253090.0,
+            "p99": -1454253090.0,
+            "max": -1454253090.0
+          },
+          "time_to_incumbent_ms": {
+            "count": 1,
+            "min": 248.04780000000028,
+            "median": 248.04780000000028,
+            "p90": 248.04780000000028,
+            "p99": 248.04780000000028,
+            "max": 248.04780000000028
+          },
+          "time_to_target_ms": {
+            "count": 0,
+            "min": null,
+            "median": null,
+            "p90": null,
+            "p99": null,
+            "max": null
+          },
+          "final_lower_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_upper_bound": {
+            "count": 1,
+            "min": -10023897.11901294,
+            "median": -10023897.11901294,
+            "p90": -10023897.11901294,
+            "p99": -10023897.11901294,
+            "max": -10023897.11901294
+          },
+          "final_absolute_gap": {
+            "count": 1,
+            "min": -10023897.11901294,
+            "median": -10023897.11901294,
+            "p90": -10023897.11901294,
+            "p99": -10023897.11901294,
+            "max": -10023897.11901294
+          },
+          "final_relative_gap": {
+            "count": 1,
+            "min": -49658.83990937556,
+            "median": -49658.83990937556,
+            "p90": -49658.83990937556,
+            "p99": -49658.83990937556,
+            "max": -49658.83990937556
+          },
+          "states": {
+            "count": 1,
+            "min": -666.0,
+            "median": -666.0,
+            "p90": -666.0,
+            "p99": -666.0,
+            "max": -666.0
+          },
+          "expanded_states": {
+            "count": 1,
+            "min": -133.0,
+            "median": -133.0,
+            "p90": -133.0,
+            "p99": -133.0,
+            "max": -133.0
+          },
+          "rows": {
+            "count": 1,
+            "min": -1863.0,
+            "median": -1863.0,
+            "p90": -1863.0,
+            "p99": -1863.0,
+            "max": -1863.0
+          },
+          "transitions": {
+            "count": 1,
+            "min": -107145.0,
+            "median": -107145.0,
+            "p90": -107145.0,
+            "p99": -107145.0,
+            "max": -107145.0
+          },
+          "reforge_work": {
+            "count": 1,
+            "min": 21609710.0,
+            "median": 21609710.0,
+            "p90": 21609710.0,
+            "p99": 21609710.0,
+            "max": 21609710.0
+          },
+          "compiled_nodes": {
+            "count": 1,
+            "min": -19.0,
+            "median": -19.0,
+            "p90": -19.0,
+            "p99": -19.0,
+            "max": -19.0
+          },
+          "compiled_edges": {
+            "count": 1,
+            "min": -81.0,
+            "median": -81.0,
+            "p90": -81.0,
+            "p99": -81.0,
+            "max": -81.0
+          },
+          "strategy_json_bytes": {
+            "count": 1,
+            "min": -46656.0,
+            "median": -46656.0,
+            "p90": -46656.0,
+            "p99": -46656.0,
+            "max": -46656.0
+          }
+        },
+        "status_transitions": {
+          "bounded_feasible->bounded_feasible": 1
+        },
+        "regressions": [],
+        "pairs": [
+          {
+            "id": "cb07-cross-base-product8-long240",
+            "dimensions": {
+              "base": "Amethyst Ring",
+              "class": "Ring",
+              "base_class": "Ring / Amethyst Ring",
+              "natural_t1_count": "4",
+              "side_mix": "unknown",
+              "pool_density": "unknown",
+              "goal_probability": "unknown",
+              "incumbent": "other",
+              "policy_status": "bounded_feasible",
+              "termination": "requested_bounded_finish",
+              "evaluation_role": "unassigned",
+              "observation_status": "completed"
+            },
+            "treatments": {
+              "baseline_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+                "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+              },
+              "candidate_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v1.exe",
+                "sha256": "8d5f400d53c6964ecdc0398d53401a2fa0b6e037507d4546e521836a76d02f3c"
+              }
+            },
+            "baseline_status": {
+              "actual": "refused_unsupported_action",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "candidate_status": {
+              "actual": "refused_unsupported_action",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "deltas": {
+              "wall_ms": -27982.756799999974,
+              "solve_ms": -7985.515100000077,
+              "solve_step_median_ms": 1.3189,
+              "solve_step_p95_ms": 5.621400000000001,
+              "solve_step_max_ms": -4657.4373,
+              "peak_memory_bytes": -1454253090.0,
+              "time_to_incumbent_ms": 248.04780000000028,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": -10023897.11901294,
+              "final_absolute_gap": -10023897.11901294,
+              "final_relative_gap": -49658.83990937556,
+              "states": -666.0,
+              "expanded_states": -133.0,
+              "rows": -1863.0,
+              "transitions": -107145.0,
+              "reforge_work": 21609710.0,
+              "compiled_nodes": -19.0,
+              "compiled_edges": -81.0,
+              "strategy_json_bytes": -46656.0
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

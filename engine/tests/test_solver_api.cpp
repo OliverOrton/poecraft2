@@ -3033,6 +3033,22 @@ void run_solver_native_continuation_api_tests(const char* artifact_dir) {
     init.struct_size = sizeof(init); init.abi_version = PC_ABI_VERSION;
     init.rarity = PC_RARITY_NORMAL;
     PC_CHECK(pc_item_init(session, &init, &start, &error) == PC_RESULT_OK);
+    {
+        const std::string one_side=R"({"version":"v1","rarity":"rare","action_mode":"goal_relevant","slots":[{"family_mod_key":"LocalIncreasedEnergyShield11","min_tier":1}]})";
+        pc_solver_handle dependency=nullptr;
+        PC_CHECK(pc_solver_create(session,one_side.c_str(),one_side.size(),&dependency,&error)==PC_RESULT_OK);
+        if (dependency) {
+            std::uint32_t lock=0,cleanup=0,count=0;
+            PC_CHECK(pc_solver_find_action(dependency,"bench:StrMasterItemGenerationCannotChangePrefixes",&lock,&error)==PC_RESULT_OK);
+            PC_CHECK(pc_solver_find_action(dependency,"remove_crafted_modifiers",&cleanup,&error)==PC_RESULT_OK);
+            PC_CHECK(pc_solver_candidates(dependency,nullptr,0,&count,&error)==PC_RESULT_OK);
+            std::vector<std::uint32_t> indices(count);
+            PC_CHECK(pc_solver_candidates(dependency,indices.data(),count,&count,&error)==PC_RESULT_OK);
+            PC_CHECK(std::find(indices.begin(),indices.end(),lock)==indices.end());
+            PC_CHECK(std::find(indices.begin(),indices.end(),cleanup)==indices.end());
+            pc_solver_destroy(dependency);
+        }
+    }
     for (const bool legacy : {true, false}) {
         pc_solver_handle solver = nullptr;
         PC_CHECK(pc_solver_create(session, goal.c_str(), goal.size(), &solver, &error) == PC_RESULT_OK);
@@ -3054,7 +3070,7 @@ void run_solver_native_continuation_api_tests(const char* artifact_dir) {
         const auto report = parse_solver_api_fixture(solver_telemetry_json(solver, &error));
         const auto& execution = report.at("execution");
         PC_CHECK(execution.at("native_continuation_search").as_string() ==
-            (legacy ? "ordinary" : "dirty_restricted_fresh"));
+            (legacy ? "ordinary" : "dirty_guided_static"));
         const auto& limits = execution.at("configured_candidate_evaluation_limits");
         PC_CHECK(limits.at("max_states").as_int() == (legacy ? 0 : 2000001));
         PC_CHECK(limits.at("max_pairs").as_int() == (legacy ? 0 : 10000001));

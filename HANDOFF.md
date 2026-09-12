@@ -1,36 +1,25 @@
 # Handoff
 
-**Dirty-State Continuation Search and Action-Scoped Abstraction v1 is complete**
-against reviewed main `0ca76eb4a9f35a90299ecceeab740e5535804fd9`.
-The [living record](docs/active/2026-09-11-dirty-state-continuation/README.md)
-owns implementation, supplied research, profiles, experiments and limitations;
-the [qualification](docs/active/2026-09-11-dirty-state-continuation/qualification.json)
-binds the final source/build identities and strict comparisons.
+Adaptive Guidance for Costly Dirty Continuations and Efficient Campaigns v2 is
+complete against reviewed main `23e03ba9d3fef2f67f2bf1597f69c2c36422e5a7`.
+The [living record](docs/active/2026-09-12-adaptive-dirty-guidance/README.md) and
+[qualification](docs/active/2026-09-12-adaptive-dirty-guidance/qualification.json)
+own the implementation, original evidence, B/S/A results and limitations.
 
-Public native opt-in now delivers independently evaluated Amulet cost
-1,973,847.6160810417 and Ring-four cost 10,251,920.398984343: reductions of
-95.9632% and 99.7248% against identical-capacity controls. Both have success
-probability one and zero off-policy mass. Original lower bounds and optimality
-gaps remain open. The native profile uses 600/840/870-second time owners,
-8-GiB aggregate solver ownership, 4-GiB checkers and fresh 14-GiB host admission;
-browser defaults retain their prior capacities.
+Public native opt-in retains static expansion: Amulet U 13,159.724084639676 and
+Ring-four U 228,023.27997140243, 99.3333% / 97.7758% below reviewed main at the
+unchanged 600/840/870 profile. Adaptive correction did not improve the matched
+outcomes. No exact closure is claimed; browser defaults remain unchanged.
 
-All 16 strict pairs have zero exclusions or reported regressions. Original
-profiles retain 12 identical graphs, a cheaper independently evaluated CB03
-Conquest graph, and CB09's absent graph. CB12 remains exact. CB05/CB09's known
-failures and the earlier excluded watchdog-serialization attempt remain visible.
-All five WASM qualifications, 1,326 focused native assertions, seven focused
-Python tests, both affected web scripts, TypeScript and claim lint pass.
+All 22 strict pairs have zero exclusions. Original-profile preservation includes
+12 identical graphs and exact Regalia. CB03's earlier cheaper high-water graph
+was not reproduced by either arm in the targeted repeat; the initial CB02
+contract failure and known CB05/CB09 failures remain recorded. Native/WASM,
+focused product checks and lint pass. Original-limit sampling records 971/1000
+Amulet successes and 149/1000 Ring-four successes, with all action-limit stops.
 
-Original-limit sampling retains 330 Amulet successes / 670 action-limit stops
-and 55 Ring-four successes / 945 action-limit stops out of 1,000 each, with no
-other execution failures. Expected execution is 283,398 and 1,476,470 actions.
-Additional CB03 sampling was not run at closeout; native graph evaluation passed.
-The timed-out gated Amulet follow-through remains unknown. Completed Bow/Pelt
-compositions did not beat their retained incumbents. No M4 query-family mechanism
-or new exactness claim was needed.
-
-No further implementation is selected. The living record identifies one possible
-next experiment at Annul-dominated dirty entries. Preserve unrelated work and
-protected `0` without inspection or staging. Work remains sequential, local,
-without subagents, automatic restart or push. Rendered UI review belongs to Oliver.
+The [prior dirty-state programme](docs/active/2026-09-11-dirty-state-continuation/README.md)
+remains completed baseline authority. No further task or push is selected.
+Preserve unrelated work and protected `0` without inspection/staging. Continue
+sequentially without subagents or automatic restart if Oliver selects new work.
+Use deterministic long waits for running batches; no routine model polling.

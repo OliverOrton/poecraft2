@@ -67,6 +67,53 @@ workaround is no longer needed for these controls. Other native modes, such as
 
 ## Read compactly; distinguish recovery mechanisms
 
+### Waiting, batching and identity preflight
+
+The corpus runner's optional `--native-dirty-guidance legacy|static|adaptive`
+selects an explicit native algorithm treatment. Its ledger stores `treatment`
+separately from unchanged request/capacity configuration, while both treatment
+and the complete resolved argv bind resume. Strict input, artifact, corpus,
+machine and capacity comparisons are unchanged; executable/algorithm treatment
+is the intentional experiment difference.
+
+Declare independent cases, executables, activation and capacity arms before
+launch. Use the existing corpus runner or Lab wait/matrix owner, with timed
+native cases serial, then the compact reporter. Split at an engineering decision
+that depends on evidence; a routine 30-second model wake is not such a decision.
+Preserve the worker's internal cancellation/deadline polling.
+
+Inspect both the terminal and its outer code-mode contract. A session/cell ID
+means the same process may still be running: retain its handle, use empty-input
+waits and never relaunch merely after a yield. The current exposed terminal
+allows at most 300000 ms per empty `write_stdin` wait; its Windows initial wait
+is limited to 30000 ms. Code-mode has a separate default 30000-ms yield and an
+explicit yield override. A deterministic code-mode loop can await successive
+terminal windows without a model turn between them. Give the outer request a
+finite allowance appropriate to the whole batch, subject to the installed client.
+Do not claim automatic completion notifications or zero idle wakes without
+observing them. If the client clamps the outer wait, preserve the handle and
+minimize re-entry while continuing useful independent work.
+
+The [official configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference)
+documents `background_terminal_max_timeout` and its 300000-ms default. A supported
+project-local override only changes that maximum, not native deadlines or the
+outer client. Verify installed support before changing it; no security, approval,
+credential or global configuration change is needed for this workflow.
+
+Before expensive work, resolve through `resolve_case_execution` and the corpus
+configuration owner, then compare intended typed input/runtime identities with
+the saved reference. New explicit host watchdogs are canonical floating seconds.
+The historical `315`/`315.0` mismatch remains excluded evidence; changing a
+saved ledger is not recovery. A legacy typed mismatch refuses resume before
+writing. Any semantic recovery must preserve immutable raw evidence and use an
+explicit versioned comparison rather than waive a strict mismatch.
+
+Return actual mode, verified U/L, stop owner, relevant candidate/work/memory/time
+projections, graph identity, failures/exclusions and paths. Sparse traces may
+miss events; report observed verification times without backdating them. Qualify
+the waiting path with short process checks and the next required real batch,
+not a separate soak or another full solver campaign.
+
 Begin with status/stop reason, verified policy, bounds, time, memory and unfinished
 work. Programs may parse large raw reports to extract a named detail; keep bulk
 reports out of model context. Preserve truncation and sample limits: a sparse

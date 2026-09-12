@@ -143,6 +143,20 @@ owns measured eligibility, costs and qualification.
 
 ### Optional native dirty continuation
 
+The v2 candidate expansion additionally offers the admitted broad acquisition
+at actual dirty positive-progress entries. All lost goals and physical redraw
+outcomes return through the paid controller. Protected-side programs use fresh
+dependency-derived layouts. Protected Annul has two native operations and can
+leave its crafted lock: only that fully represented exit takes a separate paid
+crafted-removal row before ordinary continuation. The other exit already lost
+the lock and cannot legally take that cleanup. Protected Scour's Magic exits
+pay native Regal before returning to the Rare controller. The ordinary-entry
+guard is not removed; the extra phase accepts only the exact one-lock context.
+
+The [active v2 record](../active/2026-09-12-adaptive-dirty-guidance/README.md)
+owns qualification. Construction counters and private values are not native
+final-policy occupancy or certified statewise continuation values.
+
 The public dirty-continuation flag adds a proposal after the first verified
 current-run incumbent. Its private context preserves the original modifier
 universe, native goal, product mode and dependency closure. Only goal-neutral

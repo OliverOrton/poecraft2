@@ -323,9 +323,12 @@ ProductAdmissionDecision classify_goal_relevant_action(
                 suffix_goal |= goal_slot_side_for_admission(session, slot) == 1;
             }
             if (((metamod == data.metamod_prefixes_locked_code &&
-                  prefix_goal && suffix_goal) ||
+                  prefix_goal) ||
                  (metamod == data.metamod_suffixes_locked_code &&
-                  prefix_goal && suffix_goal))) {
+                  suffix_goal))) {
+                // Exact terminal cleanup can preserve a goal side even when
+                // there is no requested affix on the opposite side. Keep the
+                // lock as an automatic dependency, never a public primitive.
                 return {ProductActionRole::AutomaticDependency,
                         "automatic_protected_side_dependency"};
             }
@@ -417,11 +420,18 @@ ProductAdmissionDecision classify_goal_relevant_action(
                        }
                        const int metamod =
                            session.metamod_type[candidate.params.mod_id];
+                       const bool protected_goal_cleanup = std::any_of(
+                           options.fossil_goal_mod_ids.begin(), options.fossil_goal_mod_ids.end(),
+                           [&](const auto& slot) {
+                               const auto side=goal_slot_side_for_admission(session,slot);
+                               return (side==0 && metamod==session.data->metamod_prefixes_locked_code) ||
+                                   (side==1 && metamod==session.data->metamod_suffixes_locked_code);
+                           });
                        return (metamod < 0 &&
                                ordinary_bench_has_automatic_effect(
                                    session, options, registry, candidate)) ||
                               cannot_roll_metamod_has_automatic_effect(
-                                  session, options, metamod);
+                                  session, options, metamod) || protected_goal_cleanup;
                    })
                    ? ProductAdmissionDecision{
                          ProductActionRole::AutomaticDependency,

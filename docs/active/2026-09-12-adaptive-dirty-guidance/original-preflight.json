@@ -1,0 +1,22 @@
+[
+  {
+    "group": "core",
+    "strict_identity_preflight": {
+      "configuration": true,
+      "corpus": true,
+      "artifact": true,
+      "machine": true
+    },
+    "control": "out/dirty-state-continuation/final-compatible-core"
+  },
+  {
+    "group": "exposed",
+    "strict_identity_preflight": {
+      "configuration": true,
+      "corpus": true,
+      "artifact": true,
+      "machine": true
+    },
+    "control": "out/dirty-state-continuation/final-compatible-exposed"
+  }
+]

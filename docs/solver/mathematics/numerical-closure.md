@@ -19,6 +19,15 @@ For example, computing an exact dot product of stored binary floats proves an ex
 
 The current lower-only quotient separates coefficient declarations, native evidence, and exact binary inequality checking. Preserve that separation. [Lower and Pruning Authority](../lower-pruning.md); [CLM-0023](../claims.md#clm-0023).
 
+Run-local dirty cost correction stays in the candidate-calculation layer. Its
+bounded residual compares the completed private model and independent native
+evaluation of the same frozen controller at the same entry; neither number is
+a new optimal-value label. The [adaptive dirty application](../../active/2026-09-12-adaptive-dirty-guidance/README.md)
+retains the existing evaluator tolerances, complete-cost reconciliation,
+properness and entry checks. It improves feasible uppers without changing
+lower closure or numerical acceptance. Capped candidates do not train a cost
+correction or become executable boundary values.
+
 The fixed-point certificate literature independently emphasizes producing checkable witnesses rather than trusting a numerical algorithm merely because it is sophisticated. The paper by Chatterjee and colleagues formalizes certificates for finite MDP reachability and reward properties; its checker does not automatically verify poecraft2's implicit action or member-domain bridge. [Chatterjee et al., TACAS 2025](https://arxiv.org/abs/2501.11467).
 
 <a id="direction"></a>

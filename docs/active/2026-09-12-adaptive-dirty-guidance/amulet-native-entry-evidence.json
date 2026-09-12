@@ -1,0 +1,289 @@
+{
+  "source_report": "out\\dirty-state-continuation\\dirty-v14-amulet-600\\cases\\cb08-cross-base-product8-long240.json",
+  "native_action_accounting": {
+    "id": "annul",
+    "display_name": "annul",
+    "expected_visits": 196412.28334356012,
+    "expected_applied": 196412.28334356012,
+    "expected_spend_known": 1903235.0255990974,
+    "expected_spend_complete": true,
+    "known_cost_share": 0.9642259159690648,
+    "probability_of_any_use": {
+      "status": "not_computable_from_occupancy",
+      "value": null
+    },
+    "reachable_states": 242037,
+    "reachable_regions": 3,
+    "classifications": [
+      "ordinary_crafting"
+    ],
+    "materials": [
+      {
+        "price_key": "annul",
+        "expected_quantity": 196412.28334356012,
+        "price_status": "priced",
+        "unit_price": 9.69,
+        "cost_contribution": 1903235.0255990974
+      }
+    ],
+    "regions": [
+      {
+        "goal_progress": 1,
+        "rarity": 2,
+        "blocker_count": 0,
+        "crafted_count": 0,
+        "fractured_goal_mask": 0,
+        "fractured_count": 0,
+        "reachable_states": 201718,
+        "expected_visits": 193599.21017695387,
+        "expected_applied": 193599.21017695387
+      },
+      {
+        "goal_progress": 2,
+        "rarity": 2,
+        "blocker_count": 0,
+        "crafted_count": 0,
+        "fractured_goal_mask": 0,
+        "fractured_count": 0,
+        "reachable_states": 39744,
+        "expected_visits": 2807.254641289746,
+        "expected_applied": 2807.254641289746
+      },
+      {
+        "goal_progress": 3,
+        "rarity": 2,
+        "blocker_count": 0,
+        "crafted_count": 0,
+        "fractured_goal_mask": 0,
+        "fractured_count": 0,
+        "reachable_states": 575,
+        "expected_visits": 5.818525314270551,
+        "expected_applied": 5.818525314270551
+      }
+    ],
+    "raw_nodes": [
+      {
+        "node_id": "s10",
+        "expected_visits": 196412.28334356012,
+        "expected_applied": 196412.28334356012
+      }
+    ]
+  },
+  "native_node_classes": {
+    "id": "s10",
+    "expected_visits": 196412.28334356012,
+    "classes": [
+      {
+        "share": 0.01714441642783605,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.015909575267015672,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.01211736899585468,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.01211736899585468,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.009667151055934294,
+        "rarity": 2,
+        "prefixes": 0,
+        "suffixes": 2,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.009667151055934294,
+        "rarity": 2,
+        "prefixes": 0,
+        "suffixes": 2,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.009667151055934294,
+        "rarity": 2,
+        "prefixes": 0,
+        "suffixes": 2,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.00951789378047558,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.00951789378047558,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.00951789378047558,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.008608563080302351,
+        "rarity": 2,
+        "prefixes": 0,
+        "suffixes": 2,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.008608563080302351,
+        "rarity": 2,
+        "prefixes": 0,
+        "suffixes": 2,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.008608563080302351,
+        "rarity": 2,
+        "prefixes": 0,
+        "suffixes": 2,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.008608563080302351,
+        "rarity": 2,
+        "prefixes": 0,
+        "suffixes": 2,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.007758752703058879,
+        "rarity": 2,
+        "prefixes": 0,
+        "suffixes": 2,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "share": 0.006863415018037027,
+        "rarity": 2,
+        "prefixes": 1,
+        "suffixes": 1,
+        "flags": 0,
+        "blocked": 0,
+        "slots": [
+          2,
+          0,
+          0
+        ]
+      }
+    ],
+    "classes_truncated_share": 0.8360997157620168
+  },
+  "entry_certificate": "node/class occupancy only; no parent binding or portable entry upper",
+  "missing_rows": "positive-progress paid redraw; protected cleanup"
+}

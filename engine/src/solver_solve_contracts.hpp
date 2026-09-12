@@ -57,6 +57,8 @@ enum class NativeContinuationSearchMode : std::uint8_t {
     DirtyFull,
     DirtyRestrictedFullLayout,
     DirtyRestrictedFreshLayout,
+    DirtyGuidedStatic,
+    DirtyGuidedAdaptive,
 };
 
 inline const char* native_continuation_search_name(const NativeContinuationSearchMode mode) {
@@ -66,6 +68,8 @@ inline const char* native_continuation_search_name(const NativeContinuationSearc
     case NativeContinuationSearchMode::DirtyFull: return "dirty_full";
     case NativeContinuationSearchMode::DirtyRestrictedFullLayout: return "dirty_restricted_full";
     case NativeContinuationSearchMode::DirtyRestrictedFreshLayout: return "dirty_restricted_fresh";
+    case NativeContinuationSearchMode::DirtyGuidedStatic: return "dirty_guided_static";
+    case NativeContinuationSearchMode::DirtyGuidedAdaptive: return "dirty_guided_adaptive";
     }
     return "unknown";
 }
@@ -73,7 +77,9 @@ inline const char* native_continuation_search_name(const NativeContinuationSearc
 inline bool dirty_continuation_search_enabled(const NativeContinuationSearchMode mode) {
     return mode == NativeContinuationSearchMode::DirtyFull ||
         mode == NativeContinuationSearchMode::DirtyRestrictedFullLayout ||
-        mode == NativeContinuationSearchMode::DirtyRestrictedFreshLayout;
+        mode == NativeContinuationSearchMode::DirtyRestrictedFreshLayout ||
+        mode == NativeContinuationSearchMode::DirtyGuidedStatic ||
+        mode == NativeContinuationSearchMode::DirtyGuidedAdaptive;
 }
 
 struct SolveOptions {

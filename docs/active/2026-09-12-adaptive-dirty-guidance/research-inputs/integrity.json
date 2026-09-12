@@ -1,0 +1,76 @@
+{
+  "reviewed_main": "23e03ba9d3fef2f67f2bf1597f69c2c36422e5a7",
+  "classification": "downloadable handoff only; no repo mutations/native runs",
+  "files": [
+    {
+      "path": "START_HERE.md",
+      "bytes": 2782,
+      "sha256": "1174086ce7a8286fc5c0ff5099e2d01fa8ed6065e38e94ec90072ce6778a17a8"
+    },
+    {
+      "path": "implementation_plan.md",
+      "bytes": 20964,
+      "sha256": "97e4685e65d549783f905e87e5abdc68312c73bb0f34a71085c528ea3f69496b"
+    },
+    {
+      "path": "main_update.md",
+      "bytes": 8256,
+      "sha256": "ee2558223b67f8a9e44c4bcd0d3ef1e37232d6f76d740899c7c63a6710154ab4"
+    },
+    {
+      "path": "mathematical_handoff.md",
+      "bytes": 7120,
+      "sha256": "11a009022473a21ab50f4afcc2a0c72f7e709c8d5068e18d34b83df978e3c1fb"
+    },
+    {
+      "path": "resource_policy.md",
+      "bytes": 4874,
+      "sha256": "85ca4c85c6b965df177d8c70d26db4ca976a2b2a478dc0a2e75bc54a5ddc0717"
+    },
+    {
+      "path": "source_register.md",
+      "bytes": 3476,
+      "sha256": "95d017b20d855c7e3455caa3262276b79a270004a4a3394b4eca572f36558188"
+    },
+    {
+      "path": "start_prompt.txt",
+      "bytes": 5387,
+      "sha256": "9287c951fb502a92924fed8a51fe4eac3a262b348736ac77c00e9d23afa8f618"
+    },
+    {
+      "path": "supplemental_checks.py",
+      "bytes": 1982,
+      "sha256": "3ccb1d6ee7b72314cf988711bb4f955817594a5ef61e26ce39ff9c5abb11a73c"
+    },
+    {
+      "path": "supplemental_results.json",
+      "bytes": 776,
+      "sha256": "3101222bef348bb8fa0b345bd172d5a31ffab24048915a10ed1ca86c404c395b"
+    },
+    {
+      "path": "supporting/mathematical_handoff.md",
+      "bytes": 10914,
+      "sha256": "ff0d8a20f7840584a87c9f85a2fbdf74728633cd806e2253624d9d26a7354156"
+    },
+    {
+      "path": "supporting/research_checks.json",
+      "bytes": 2249,
+      "sha256": "69f3b8fe26d07b7537c01944d09955b63cb3386562217249ad1dce013316199f"
+    },
+    {
+      "path": "supporting/research_checks.py",
+      "bytes": 7739,
+      "sha256": "70e1095b1c37f09339a9c1be3743264cb7f8986c70fd4ce13ef200eef05d314e"
+    },
+    {
+      "path": "supporting/sources.md",
+      "bytes": 6327,
+      "sha256": "31a698923e9fdf6675c112b3f6a8771c03ac89189f92971af239eb6b04cc00f1"
+    },
+    {
+      "path": "tooling_and_doc_updates.md",
+      "bytes": 6862,
+      "sha256": "97a53de5b5f077e945c8ab671d7ad2c5d29e47dc00cac611550474122d18c4f3"
+    }
+  ]
+}

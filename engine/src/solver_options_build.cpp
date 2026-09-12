@@ -280,10 +280,10 @@ std::vector<PlannerOperator> build_planner_operators(
             std::uint32_t action_index = kNoId;
             const ActionDescriptor& action =
                 require_action(registry, spec.action_id, action_index);
-            if (action.params.type != ActionType::Scour &&
+            if (action.params.type != ActionType::Scour && action.params.type != ActionType::Annul &&
                 action.kind != TransitionKind::Reforge) {
                 throw std::runtime_error(
-                    "fixed option: protected-side action must be Scour or "
+                    "fixed option: protected-side action must be Scour, Annul or "
                     "an exact reforge");
             }
             if (!calc_supports(action)) {
@@ -299,6 +299,11 @@ std::vector<PlannerOperator> build_planner_operators(
             option.primitive_program = {lock, action_index};
             option.setup_action = lock;
             option.followup_action = action_index;
+            // Protected Annul has complete outer exits with or without the
+            // lock. Its caller must cover the surviving-lock exit explicitly;
+            // unconditional crafted removal would be illegal when Annul
+            // removed the lock. Ordinary automatic eligibility still requires
+            // cleanup_complete and therefore does not admit that open tail.
             if (spec.automatic_kind != AutomaticCandidateKind::None) {
                 option.id += ":goal:" +
                              std::to_string(spec.relevant_goal_mask);

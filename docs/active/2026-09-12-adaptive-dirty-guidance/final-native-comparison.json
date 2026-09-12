@@ -1,0 +1,2478 @@
+{
+  "pairs": {
+    "amulet": {
+      "B_S": {
+        "baseline": "B",
+        "candidate": "S",
+        "shared_case_ids": 1,
+        "paired_cases": 1,
+        "missing_from_baseline": [],
+        "missing_from_candidate": [],
+        "excluded": [],
+        "delta_distributions": {
+          "wall_ms": {
+            "count": 1,
+            "min": -41056.19940000004,
+            "median": -41056.19940000004,
+            "p90": -41056.19940000004,
+            "p99": -41056.19940000004,
+            "max": -41056.19940000004
+          },
+          "solve_ms": {
+            "count": 1,
+            "min": -19763.70319999999,
+            "median": -19763.70319999999,
+            "p90": -19763.70319999999,
+            "p99": -19763.70319999999,
+            "max": -19763.70319999999
+          },
+          "solve_step_median_ms": {
+            "count": 1,
+            "min": 0.0582,
+            "median": 0.0582,
+            "p90": 0.0582,
+            "p99": 0.0582,
+            "max": 0.0582
+          },
+          "solve_step_p95_ms": {
+            "count": 1,
+            "min": 0.4653,
+            "median": 0.4653,
+            "p90": 0.4653,
+            "p99": 0.4653,
+            "max": 0.4653
+          },
+          "solve_step_max_ms": {
+            "count": 1,
+            "min": 1728.4864000000016,
+            "median": 1728.4864000000016,
+            "p90": 1728.4864000000016,
+            "p99": 1728.4864000000016,
+            "max": 1728.4864000000016
+          },
+          "peak_memory_bytes": {
+            "count": 1,
+            "min": -256027295.0,
+            "median": -256027295.0,
+            "p90": -256027295.0,
+            "p99": -256027295.0,
+            "max": -256027295.0
+          },
+          "time_to_incumbent_ms": {
+            "count": 1,
+            "min": 563.8107,
+            "median": 563.8107,
+            "p90": 563.8107,
+            "p99": 563.8107,
+            "max": 563.8107
+          },
+          "time_to_target_ms": {
+            "count": 0,
+            "min": null,
+            "median": null,
+            "p90": null,
+            "p99": null,
+            "max": null
+          },
+          "final_lower_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_upper_bound": {
+            "count": 1,
+            "min": -1960687.891996402,
+            "median": -1960687.891996402,
+            "p90": -1960687.891996402,
+            "p99": -1960687.891996402,
+            "max": -1960687.891996402
+          },
+          "final_absolute_gap": {
+            "count": 1,
+            "min": -1960687.891996402,
+            "median": -1960687.891996402,
+            "p90": -1960687.891996402,
+            "p99": -1960687.891996402,
+            "max": -1960687.891996402
+          },
+          "final_relative_gap": {
+            "count": 1,
+            "min": -11217.181621966869,
+            "median": -11217.181621966869,
+            "p90": -11217.181621966869,
+            "p99": -11217.181621966869,
+            "max": -11217.181621966869
+          },
+          "states": {
+            "count": 1,
+            "min": -5910.0,
+            "median": -5910.0,
+            "p90": -5910.0,
+            "p99": -5910.0,
+            "max": -5910.0
+          },
+          "expanded_states": {
+            "count": 1,
+            "min": -860.0,
+            "median": -860.0,
+            "p90": -860.0,
+            "p99": -860.0,
+            "max": -860.0
+          },
+          "rows": {
+            "count": 1,
+            "min": -88832.0,
+            "median": -88832.0,
+            "p90": -88832.0,
+            "p99": -88832.0,
+            "max": -88832.0
+          },
+          "transitions": {
+            "count": 1,
+            "min": -109036.0,
+            "median": -109036.0,
+            "p90": -109036.0,
+            "p99": -109036.0,
+            "max": -109036.0
+          },
+          "reforge_work": {
+            "count": 1,
+            "min": 74815167.0,
+            "median": 74815167.0,
+            "p90": 74815167.0,
+            "p99": 74815167.0,
+            "max": 74815167.0
+          },
+          "compiled_nodes": {
+            "count": 1,
+            "min": 21.0,
+            "median": 21.0,
+            "p90": 21.0,
+            "p99": 21.0,
+            "max": 21.0
+          },
+          "compiled_edges": {
+            "count": 1,
+            "min": 54.0,
+            "median": 54.0,
+            "p90": 54.0,
+            "p99": 54.0,
+            "max": 54.0
+          },
+          "strategy_json_bytes": {
+            "count": 1,
+            "min": 174938.0,
+            "median": 174938.0,
+            "p90": 174938.0,
+            "p99": 174938.0,
+            "max": 174938.0
+          }
+        },
+        "status_transitions": {
+          "bounded_feasible->bounded_feasible": 1
+        },
+        "regressions": [],
+        "pairs": [
+          {
+            "id": "cb08-cross-base-product8-long240",
+            "dimensions": {
+              "base": "Onyx Amulet",
+              "class": "Amulet",
+              "base_class": "Amulet / Onyx Amulet",
+              "natural_t1_count": "3",
+              "side_mix": "SSS",
+              "pool_density": "dense_ge_100",
+              "goal_probability": "low_le_0.005",
+              "incumbent": "other",
+              "policy_status": "bounded_feasible",
+              "termination": "refused_resource_cap",
+              "evaluation_role": "unassigned",
+              "observation_status": "completed"
+            },
+            "treatments": {
+              "baseline_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+                "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+              },
+              "candidate_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              }
+            },
+            "baseline_status": {
+              "actual": "bounded_feasible",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "candidate_status": {
+              "actual": "refused_sweep_cap",
+              "policy": "bounded_feasible",
+              "termination": "refused_resource_cap"
+            },
+            "deltas": {
+              "wall_ms": -41056.19940000004,
+              "solve_ms": -19763.70319999999,
+              "solve_step_median_ms": 0.0582,
+              "solve_step_p95_ms": 0.4653,
+              "solve_step_max_ms": 1728.4864000000016,
+              "peak_memory_bytes": -256027295.0,
+              "time_to_incumbent_ms": 563.8107,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": -1960687.891996402,
+              "final_absolute_gap": -1960687.891996402,
+              "final_relative_gap": -11217.181621966869,
+              "states": -5910.0,
+              "expanded_states": -860.0,
+              "rows": -88832.0,
+              "transitions": -109036.0,
+              "reforge_work": 74815167.0,
+              "compiled_nodes": 21.0,
+              "compiled_edges": 54.0,
+              "strategy_json_bytes": 174938.0
+            }
+          }
+        ]
+      },
+      "S_A": {
+        "baseline": "S",
+        "candidate": "A",
+        "shared_case_ids": 1,
+        "paired_cases": 1,
+        "missing_from_baseline": [],
+        "missing_from_candidate": [],
+        "excluded": [],
+        "delta_distributions": {
+          "wall_ms": {
+            "count": 1,
+            "min": 55.284100000048056,
+            "median": 55.284100000048056,
+            "p90": 55.284100000048056,
+            "p99": 55.284100000048056,
+            "max": 55.284100000048056
+          },
+          "solve_ms": {
+            "count": 1,
+            "min": 68.39209999993909,
+            "median": 68.39209999993909,
+            "p90": 68.39209999993909,
+            "p99": 68.39209999993909,
+            "max": 68.39209999993909
+          },
+          "solve_step_median_ms": {
+            "count": 1,
+            "min": -0.0006999999999999992,
+            "median": -0.0006999999999999992,
+            "p90": -0.0006999999999999992,
+            "p99": -0.0006999999999999992,
+            "max": -0.0006999999999999992
+          },
+          "solve_step_p95_ms": {
+            "count": 1,
+            "min": -0.00269999999999998,
+            "median": -0.00269999999999998,
+            "p90": -0.00269999999999998,
+            "p99": -0.00269999999999998,
+            "max": -0.00269999999999998
+          },
+          "solve_step_max_ms": {
+            "count": 1,
+            "min": 448.33940000000075,
+            "median": 448.33940000000075,
+            "p90": 448.33940000000075,
+            "p99": 448.33940000000075,
+            "max": 448.33940000000075
+          },
+          "peak_memory_bytes": {
+            "count": 1,
+            "min": 54.0,
+            "median": 54.0,
+            "p90": 54.0,
+            "p99": 54.0,
+            "max": 54.0
+          },
+          "time_to_incumbent_ms": {
+            "count": 1,
+            "min": -106.5663999999997,
+            "median": -106.5663999999997,
+            "p90": -106.5663999999997,
+            "p99": -106.5663999999997,
+            "max": -106.5663999999997
+          },
+          "time_to_target_ms": {
+            "count": 0,
+            "min": null,
+            "median": null,
+            "p90": null,
+            "p99": null,
+            "max": null
+          },
+          "final_lower_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_upper_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_absolute_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_relative_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "expanded_states": {
+            "count": 1,
+            "min": 60.0,
+            "median": 60.0,
+            "p90": 60.0,
+            "p99": 60.0,
+            "max": 60.0
+          },
+          "rows": {
+            "count": 1,
+            "min": 60.0,
+            "median": 60.0,
+            "p90": 60.0,
+            "p99": 60.0,
+            "max": 60.0
+          },
+          "transitions": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "reforge_work": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_nodes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_edges": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "strategy_json_bytes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          }
+        },
+        "status_transitions": {
+          "bounded_feasible->bounded_feasible": 1
+        },
+        "regressions": [],
+        "pairs": [
+          {
+            "id": "cb08-cross-base-product8-long240",
+            "dimensions": {
+              "base": "Onyx Amulet",
+              "class": "Amulet",
+              "base_class": "Amulet / Onyx Amulet",
+              "natural_t1_count": "3",
+              "side_mix": "SSS",
+              "pool_density": "dense_ge_100",
+              "goal_probability": "low_le_0.005",
+              "incumbent": "other",
+              "policy_status": "bounded_feasible",
+              "termination": "refused_resource_cap",
+              "evaluation_role": "unassigned",
+              "observation_status": "completed"
+            },
+            "treatments": {
+              "baseline_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              },
+              "candidate_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              }
+            },
+            "baseline_status": {
+              "actual": "refused_sweep_cap",
+              "policy": "bounded_feasible",
+              "termination": "refused_resource_cap"
+            },
+            "candidate_status": {
+              "actual": "refused_sweep_cap",
+              "policy": "bounded_feasible",
+              "termination": "refused_resource_cap"
+            },
+            "deltas": {
+              "wall_ms": 55.284100000048056,
+              "solve_ms": 68.39209999993909,
+              "solve_step_median_ms": -0.0006999999999999992,
+              "solve_step_p95_ms": -0.00269999999999998,
+              "solve_step_max_ms": 448.33940000000075,
+              "peak_memory_bytes": 54.0,
+              "time_to_incumbent_ms": -106.5663999999997,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": 0.0,
+              "final_absolute_gap": 0.0,
+              "final_relative_gap": 0.0,
+              "states": 0.0,
+              "expanded_states": 60.0,
+              "rows": 60.0,
+              "transitions": 0.0,
+              "reforge_work": 0.0,
+              "compiled_nodes": 0.0,
+              "compiled_edges": 0.0,
+              "strategy_json_bytes": 0.0
+            }
+          }
+        ]
+      }
+    },
+    "ring-four": {
+      "B_S": {
+        "baseline": "B",
+        "candidate": "S",
+        "shared_case_ids": 1,
+        "paired_cases": 1,
+        "missing_from_baseline": [],
+        "missing_from_candidate": [],
+        "excluded": [],
+        "delta_distributions": {
+          "wall_ms": {
+            "count": 1,
+            "min": -27115.679599999916,
+            "median": -27115.679599999916,
+            "p90": -27115.679599999916,
+            "p99": -27115.679599999916,
+            "max": -27115.679599999916
+          },
+          "solve_ms": {
+            "count": 1,
+            "min": -7695.333199999994,
+            "median": -7695.333199999994,
+            "p90": -7695.333199999994,
+            "p99": -7695.333199999994,
+            "max": -7695.333199999994
+          },
+          "solve_step_median_ms": {
+            "count": 1,
+            "min": 1.5182,
+            "median": 1.5182,
+            "p90": 1.5182,
+            "p99": 1.5182,
+            "max": 1.5182
+          },
+          "solve_step_p95_ms": {
+            "count": 1,
+            "min": 6.4078,
+            "median": 6.4078,
+            "p90": 6.4078,
+            "p99": 6.4078,
+            "max": 6.4078
+          },
+          "solve_step_max_ms": {
+            "count": 1,
+            "min": -4226.0607,
+            "median": -4226.0607,
+            "p90": -4226.0607,
+            "p99": -4226.0607,
+            "max": -4226.0607
+          },
+          "peak_memory_bytes": {
+            "count": 1,
+            "min": -1454253090.0,
+            "median": -1454253090.0,
+            "p90": -1454253090.0,
+            "p99": -1454253090.0,
+            "max": -1454253090.0
+          },
+          "time_to_incumbent_ms": {
+            "count": 1,
+            "min": 1125.8466999999982,
+            "median": 1125.8466999999982,
+            "p90": 1125.8466999999982,
+            "p99": 1125.8466999999982,
+            "max": 1125.8466999999982
+          },
+          "time_to_target_ms": {
+            "count": 0,
+            "min": null,
+            "median": null,
+            "p90": null,
+            "p99": null,
+            "max": null
+          },
+          "final_lower_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_upper_bound": {
+            "count": 1,
+            "min": -10023897.11901294,
+            "median": -10023897.11901294,
+            "p90": -10023897.11901294,
+            "p99": -10023897.11901294,
+            "max": -10023897.11901294
+          },
+          "final_absolute_gap": {
+            "count": 1,
+            "min": -10023897.11901294,
+            "median": -10023897.11901294,
+            "p90": -10023897.11901294,
+            "p99": -10023897.11901294,
+            "max": -10023897.11901294
+          },
+          "final_relative_gap": {
+            "count": 1,
+            "min": -49658.83990937556,
+            "median": -49658.83990937556,
+            "p90": -49658.83990937556,
+            "p99": -49658.83990937556,
+            "max": -49658.83990937556
+          },
+          "states": {
+            "count": 1,
+            "min": -666.0,
+            "median": -666.0,
+            "p90": -666.0,
+            "p99": -666.0,
+            "max": -666.0
+          },
+          "expanded_states": {
+            "count": 1,
+            "min": -133.0,
+            "median": -133.0,
+            "p90": -133.0,
+            "p99": -133.0,
+            "max": -133.0
+          },
+          "rows": {
+            "count": 1,
+            "min": -1863.0,
+            "median": -1863.0,
+            "p90": -1863.0,
+            "p99": -1863.0,
+            "max": -1863.0
+          },
+          "transitions": {
+            "count": 1,
+            "min": -107145.0,
+            "median": -107145.0,
+            "p90": -107145.0,
+            "p99": -107145.0,
+            "max": -107145.0
+          },
+          "reforge_work": {
+            "count": 1,
+            "min": 156305962.0,
+            "median": 156305962.0,
+            "p90": 156305962.0,
+            "p99": 156305962.0,
+            "max": 156305962.0
+          },
+          "compiled_nodes": {
+            "count": 1,
+            "min": -19.0,
+            "median": -19.0,
+            "p90": -19.0,
+            "p99": -19.0,
+            "max": -19.0
+          },
+          "compiled_edges": {
+            "count": 1,
+            "min": -81.0,
+            "median": -81.0,
+            "p90": -81.0,
+            "p99": -81.0,
+            "max": -81.0
+          },
+          "strategy_json_bytes": {
+            "count": 1,
+            "min": -46751.0,
+            "median": -46751.0,
+            "p90": -46751.0,
+            "p99": -46751.0,
+            "max": -46751.0
+          }
+        },
+        "status_transitions": {
+          "bounded_feasible->bounded_feasible": 1
+        },
+        "regressions": [],
+        "pairs": [
+          {
+            "id": "cb07-cross-base-product8-long240",
+            "dimensions": {
+              "base": "Amethyst Ring",
+              "class": "Ring",
+              "base_class": "Ring / Amethyst Ring",
+              "natural_t1_count": "4",
+              "side_mix": "unknown",
+              "pool_density": "unknown",
+              "goal_probability": "unknown",
+              "incumbent": "other",
+              "policy_status": "bounded_feasible",
+              "termination": "requested_bounded_finish",
+              "evaluation_role": "unassigned",
+              "observation_status": "completed"
+            },
+            "treatments": {
+              "baseline_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+                "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+              },
+              "candidate_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              }
+            },
+            "baseline_status": {
+              "actual": "refused_unsupported_action",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "candidate_status": {
+              "actual": "refused_unsupported_action",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "deltas": {
+              "wall_ms": -27115.679599999916,
+              "solve_ms": -7695.333199999994,
+              "solve_step_median_ms": 1.5182,
+              "solve_step_p95_ms": 6.4078,
+              "solve_step_max_ms": -4226.0607,
+              "peak_memory_bytes": -1454253090.0,
+              "time_to_incumbent_ms": 1125.8466999999982,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": -10023897.11901294,
+              "final_absolute_gap": -10023897.11901294,
+              "final_relative_gap": -49658.83990937556,
+              "states": -666.0,
+              "expanded_states": -133.0,
+              "rows": -1863.0,
+              "transitions": -107145.0,
+              "reforge_work": 156305962.0,
+              "compiled_nodes": -19.0,
+              "compiled_edges": -81.0,
+              "strategy_json_bytes": -46751.0
+            }
+          }
+        ]
+      },
+      "S_A": {
+        "baseline": "S",
+        "candidate": "A",
+        "shared_case_ids": 1,
+        "paired_cases": 1,
+        "missing_from_baseline": [],
+        "missing_from_candidate": [],
+        "excluded": [],
+        "delta_distributions": {
+          "wall_ms": {
+            "count": 1,
+            "min": -109.02880000008736,
+            "median": -109.02880000008736,
+            "p90": -109.02880000008736,
+            "p99": -109.02880000008736,
+            "max": -109.02880000008736
+          },
+          "solve_ms": {
+            "count": 1,
+            "min": -101.61790000007022,
+            "median": -101.61790000007022,
+            "p90": -101.61790000007022,
+            "p99": -101.61790000007022,
+            "max": -101.61790000007022
+          },
+          "solve_step_median_ms": {
+            "count": 1,
+            "min": 0.017400000000000082,
+            "median": 0.017400000000000082,
+            "p90": 0.017400000000000082,
+            "p99": 0.017400000000000082,
+            "max": 0.017400000000000082
+          },
+          "solve_step_p95_ms": {
+            "count": 1,
+            "min": 0.4624000000000006,
+            "median": 0.4624000000000006,
+            "p90": 0.4624000000000006,
+            "p99": 0.4624000000000006,
+            "max": 0.4624000000000006
+          },
+          "solve_step_max_ms": {
+            "count": 1,
+            "min": 480.4259000000002,
+            "median": 480.4259000000002,
+            "p90": 480.4259000000002,
+            "p99": 480.4259000000002,
+            "max": 480.4259000000002
+          },
+          "peak_memory_bytes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "time_to_incumbent_ms": {
+            "count": 1,
+            "min": 65.29130000000077,
+            "median": 65.29130000000077,
+            "p90": 65.29130000000077,
+            "p99": 65.29130000000077,
+            "max": 65.29130000000077
+          },
+          "time_to_target_ms": {
+            "count": 0,
+            "min": null,
+            "median": null,
+            "p90": null,
+            "p99": null,
+            "max": null
+          },
+          "final_lower_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_upper_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_absolute_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_relative_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "expanded_states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "rows": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "transitions": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "reforge_work": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_nodes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_edges": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "strategy_json_bytes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          }
+        },
+        "status_transitions": {
+          "bounded_feasible->bounded_feasible": 1
+        },
+        "regressions": [],
+        "pairs": [
+          {
+            "id": "cb07-cross-base-product8-long240",
+            "dimensions": {
+              "base": "Amethyst Ring",
+              "class": "Ring",
+              "base_class": "Ring / Amethyst Ring",
+              "natural_t1_count": "4",
+              "side_mix": "unknown",
+              "pool_density": "unknown",
+              "goal_probability": "unknown",
+              "incumbent": "other",
+              "policy_status": "bounded_feasible",
+              "termination": "requested_bounded_finish",
+              "evaluation_role": "unassigned",
+              "observation_status": "completed"
+            },
+            "treatments": {
+              "baseline_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              },
+              "candidate_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              }
+            },
+            "baseline_status": {
+              "actual": "refused_unsupported_action",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "candidate_status": {
+              "actual": "refused_unsupported_action",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "deltas": {
+              "wall_ms": -109.02880000008736,
+              "solve_ms": -101.61790000007022,
+              "solve_step_median_ms": 0.017400000000000082,
+              "solve_step_p95_ms": 0.4624000000000006,
+              "solve_step_max_ms": 480.4259000000002,
+              "peak_memory_bytes": 0.0,
+              "time_to_incumbent_ms": 65.29130000000077,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": 0.0,
+              "final_absolute_gap": 0.0,
+              "final_relative_gap": 0.0,
+              "states": 0.0,
+              "expanded_states": 0.0,
+              "rows": 0.0,
+              "transitions": 0.0,
+              "reforge_work": 0.0,
+              "compiled_nodes": 0.0,
+              "compiled_edges": 0.0,
+              "strategy_json_bytes": 0.0
+            }
+          }
+        ]
+      }
+    },
+    "bow": {
+      "B_S": {
+        "baseline": "B",
+        "candidate": "S",
+        "shared_case_ids": 1,
+        "paired_cases": 1,
+        "missing_from_baseline": [],
+        "missing_from_candidate": [],
+        "excluded": [],
+        "delta_distributions": {
+          "wall_ms": {
+            "count": 1,
+            "min": -187.95429999998305,
+            "median": -187.95429999998305,
+            "p90": -187.95429999998305,
+            "p99": -187.95429999998305,
+            "max": -187.95429999998305
+          },
+          "solve_ms": {
+            "count": 1,
+            "min": -108.51760000002105,
+            "median": -108.51760000002105,
+            "p90": -108.51760000002105,
+            "p99": -108.51760000002105,
+            "max": -108.51760000002105
+          },
+          "solve_step_median_ms": {
+            "count": 1,
+            "min": 0.15810000000000002,
+            "median": 0.15810000000000002,
+            "p90": 0.15810000000000002,
+            "p99": 0.15810000000000002,
+            "max": 0.15810000000000002
+          },
+          "solve_step_p95_ms": {
+            "count": 1,
+            "min": -17.719,
+            "median": -17.719,
+            "p90": -17.719,
+            "p99": -17.719,
+            "max": -17.719
+          },
+          "solve_step_max_ms": {
+            "count": 1,
+            "min": 162.8734000000004,
+            "median": 162.8734000000004,
+            "p90": 162.8734000000004,
+            "p99": 162.8734000000004,
+            "max": 162.8734000000004
+          },
+          "peak_memory_bytes": {
+            "count": 1,
+            "min": 1706712.0,
+            "median": 1706712.0,
+            "p90": 1706712.0,
+            "p99": 1706712.0,
+            "max": 1706712.0
+          },
+          "time_to_incumbent_ms": {
+            "count": 1,
+            "min": -660.3459000000003,
+            "median": -660.3459000000003,
+            "p90": -660.3459000000003,
+            "p99": -660.3459000000003,
+            "max": -660.3459000000003
+          },
+          "time_to_target_ms": {
+            "count": 0,
+            "min": null,
+            "median": null,
+            "p90": null,
+            "p99": null,
+            "max": null
+          },
+          "final_lower_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_upper_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_absolute_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_relative_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "expanded_states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "rows": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "transitions": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "reforge_work": {
+            "count": 1,
+            "min": 78674319.0,
+            "median": 78674319.0,
+            "p90": 78674319.0,
+            "p99": 78674319.0,
+            "max": 78674319.0
+          },
+          "compiled_nodes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_edges": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "strategy_json_bytes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          }
+        },
+        "status_transitions": {
+          "bounded_feasible->bounded_feasible": 1
+        },
+        "regressions": [],
+        "pairs": [
+          {
+            "id": "cb04-cross-base-product8-long240",
+            "dimensions": {
+              "base": "Spine Bow",
+              "class": "Bow",
+              "base_class": "Bow / Spine Bow",
+              "natural_t1_count": "4",
+              "side_mix": "unknown",
+              "pool_density": "unknown",
+              "goal_probability": "unknown",
+              "incumbent": "other",
+              "policy_status": "bounded_feasible",
+              "termination": "requested_bounded_finish",
+              "evaluation_role": "unassigned",
+              "observation_status": "completed"
+            },
+            "treatments": {
+              "baseline_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+                "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+              },
+              "candidate_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              }
+            },
+            "baseline_status": {
+              "actual": "bounded_feasible",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "candidate_status": {
+              "actual": "bounded_feasible",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "deltas": {
+              "wall_ms": -187.95429999998305,
+              "solve_ms": -108.51760000002105,
+              "solve_step_median_ms": 0.15810000000000002,
+              "solve_step_p95_ms": -17.719,
+              "solve_step_max_ms": 162.8734000000004,
+              "peak_memory_bytes": 1706712.0,
+              "time_to_incumbent_ms": -660.3459000000003,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": 0.0,
+              "final_absolute_gap": 0.0,
+              "final_relative_gap": 0.0,
+              "states": 0.0,
+              "expanded_states": 0.0,
+              "rows": 0.0,
+              "transitions": 0.0,
+              "reforge_work": 78674319.0,
+              "compiled_nodes": 0.0,
+              "compiled_edges": 0.0,
+              "strategy_json_bytes": 0.0
+            }
+          }
+        ]
+      },
+      "S_A": {
+        "baseline": "S",
+        "candidate": "A",
+        "shared_case_ids": 1,
+        "paired_cases": 1,
+        "missing_from_baseline": [],
+        "missing_from_candidate": [],
+        "excluded": [],
+        "delta_distributions": {
+          "wall_ms": {
+            "count": 1,
+            "min": -34.991299999994226,
+            "median": -34.991299999994226,
+            "p90": -34.991299999994226,
+            "p99": -34.991299999994226,
+            "max": -34.991299999994226
+          },
+          "solve_ms": {
+            "count": 1,
+            "min": -101.24760000000242,
+            "median": -101.24760000000242,
+            "p90": -101.24760000000242,
+            "p99": -101.24760000000242,
+            "max": -101.24760000000242
+          },
+          "solve_step_median_ms": {
+            "count": 1,
+            "min": 0.0017999999999999683,
+            "median": 0.0017999999999999683,
+            "p90": 0.0017999999999999683,
+            "p99": 0.0017999999999999683,
+            "max": 0.0017999999999999683
+          },
+          "solve_step_p95_ms": {
+            "count": 1,
+            "min": -0.14590000000000014,
+            "median": -0.14590000000000014,
+            "p90": -0.14590000000000014,
+            "p99": -0.14590000000000014,
+            "max": -0.14590000000000014
+          },
+          "solve_step_max_ms": {
+            "count": 1,
+            "min": -871.4502999999995,
+            "median": -871.4502999999995,
+            "p90": -871.4502999999995,
+            "p99": -871.4502999999995,
+            "max": -871.4502999999995
+          },
+          "peak_memory_bytes": {
+            "count": 1,
+            "min": 44.0,
+            "median": 44.0,
+            "p90": 44.0,
+            "p99": 44.0,
+            "max": 44.0
+          },
+          "time_to_incumbent_ms": {
+            "count": 1,
+            "min": 644.9403000000002,
+            "median": 644.9403000000002,
+            "p90": 644.9403000000002,
+            "p99": 644.9403000000002,
+            "max": 644.9403000000002
+          },
+          "time_to_target_ms": {
+            "count": 0,
+            "min": null,
+            "median": null,
+            "p90": null,
+            "p99": null,
+            "max": null
+          },
+          "final_lower_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_upper_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_absolute_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_relative_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "expanded_states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "rows": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "transitions": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "reforge_work": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_nodes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_edges": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "strategy_json_bytes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          }
+        },
+        "status_transitions": {
+          "bounded_feasible->bounded_feasible": 1
+        },
+        "regressions": [],
+        "pairs": [
+          {
+            "id": "cb04-cross-base-product8-long240",
+            "dimensions": {
+              "base": "Spine Bow",
+              "class": "Bow",
+              "base_class": "Bow / Spine Bow",
+              "natural_t1_count": "4",
+              "side_mix": "unknown",
+              "pool_density": "unknown",
+              "goal_probability": "unknown",
+              "incumbent": "other",
+              "policy_status": "bounded_feasible",
+              "termination": "requested_bounded_finish",
+              "evaluation_role": "unassigned",
+              "observation_status": "completed"
+            },
+            "treatments": {
+              "baseline_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              },
+              "candidate_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              }
+            },
+            "baseline_status": {
+              "actual": "bounded_feasible",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "candidate_status": {
+              "actual": "bounded_feasible",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "deltas": {
+              "wall_ms": -34.991299999994226,
+              "solve_ms": -101.24760000000242,
+              "solve_step_median_ms": 0.0017999999999999683,
+              "solve_step_p95_ms": -0.14590000000000014,
+              "solve_step_max_ms": -871.4502999999995,
+              "peak_memory_bytes": 44.0,
+              "time_to_incumbent_ms": 644.9403000000002,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": 0.0,
+              "final_absolute_gap": 0.0,
+              "final_relative_gap": 0.0,
+              "states": 0.0,
+              "expanded_states": 0.0,
+              "rows": 0.0,
+              "transitions": 0.0,
+              "reforge_work": 0.0,
+              "compiled_nodes": 0.0,
+              "compiled_edges": 0.0,
+              "strategy_json_bytes": 0.0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "outcomes": [
+    {
+      "family": "amulet",
+      "arm": "B",
+      "upper": 1973847.6160810417,
+      "lower": 174.79327321907147,
+      "status": "bounded_feasible",
+      "stop": "requested_bounded_finish",
+      "exact": {
+        "completed": true,
+        "status": "matched",
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "cost_complete": true,
+        "cost_reconciled": true
+      },
+      "expected_actions": 283397.6295581825,
+      "trace_first_target_ms": null,
+      "candidates": [
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "evaluated_cost": 6146983.840380856,
+          "eval_complete": true,
+          "wall_seconds": 112.0477719
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "deferred_by_cost_estimate",
+          "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+          "stage": "continuation_cost_improvement",
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 3.0751207
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "disposition": "retained",
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "evaluated_cost": 1973847.6160810417,
+          "eval_complete": true,
+          "wall_seconds": 40.2667946
+        }
+      ]
+    },
+    {
+      "family": "amulet",
+      "arm": "S",
+      "upper": 13159.724084639676,
+      "lower": 174.79327321907147,
+      "status": "refused_sweep_cap",
+      "stop": "sweep_cap",
+      "exact": {
+        "completed": true,
+        "status": "matched",
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "cost_complete": true,
+        "cost_reconciled": true
+      },
+      "expected_actions": 26655.734445108934,
+      "trace_first_target_ms": 204305.4607,
+      "candidates": [
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "expansion": 0,
+          "guide_version": 0,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 6196646.441331041,
+          "evaluated_cost": 6146983.840380856,
+          "eval_complete": true,
+          "wall_seconds": 126.7867135
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "deferred_by_cost_estimate",
+          "expansion": 0,
+          "guide_version": 0,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+          "stage": "continuation_cost_improvement",
+          "coarse_cost_estimate": 47010517.53374138,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 3.9286938
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "disposition": "retained",
+          "expansion": 0,
+          "guide_version": 0,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 1984384.0623499798,
+          "evaluated_cost": 1973847.6160810417,
+          "eval_complete": true,
+          "wall_seconds": 45.4562197
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "disposition": "retained",
+          "expansion": 1,
+          "guide_version": 0,
+          "guide_lookup_ns": 200,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 992192.0311749899,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 72255.3454703689,
+          "evaluated_cost": 72112.40372274163,
+          "eval_complete": true,
+          "wall_seconds": 18.9513106
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "disposition": "retained",
+          "expansion": 2,
+          "guide_version": 0,
+          "guide_lookup_ns": 300,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 43353.207282221345,
+          "protected_alternatives": 163,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 68,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 13218.433823743073,
+          "evaluated_cost": 13159.724084639676,
+          "eval_complete": true,
+          "wall_seconds": 18.0001253
+        },
+        {
+          "root_action": "gated_chaos",
+          "disposition": "refused",
+          "expansion": 2,
+          "guide_version": 0,
+          "guide_lookup_ns": 300,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 3717987.8647986245,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "solver exceeded max_reforge_work (3189551)",
+          "stage": "construction",
+          "coarse_cost_estimate": null,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 0.6969842
+        },
+        {
+          "root_action": "gated_chaos",
+          "disposition": "refused",
+          "expansion": 1,
+          "guide_version": 0,
+          "guide_lookup_ns": 300,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 3098323.2206655205,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "solver exceeded max_reforge_work (15)",
+          "stage": "construction",
+          "coarse_cost_estimate": null,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 0.546664
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "independently_evaluated",
+          "expansion": 2,
+          "guide_version": 0,
+          "guide_lookup_ns": 300,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 28206310.520244826,
+          "protected_alternatives": 163,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 68,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 17026049.91827553,
+          "evaluated_cost": 16999624.133963943,
+          "eval_complete": true,
+          "wall_seconds": 117.5224142
+        }
+      ]
+    },
+    {
+      "family": "amulet",
+      "arm": "A",
+      "upper": 13159.724084639676,
+      "lower": 174.79327321907147,
+      "status": "refused_sweep_cap",
+      "stop": "sweep_cap",
+      "exact": {
+        "completed": true,
+        "status": "matched",
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "cost_complete": true,
+        "cost_reconciled": true
+      },
+      "expected_actions": 26655.734445108934,
+      "trace_first_target_ms": 204095.2235,
+      "candidates": [
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "expansion": 0,
+          "guide_version": 1,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 3400,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 6196646.441331041,
+          "evaluated_cost": 6146983.840380856,
+          "eval_complete": true,
+          "wall_seconds": 128.1739538
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "deferred_by_cost_estimate",
+          "expansion": 0,
+          "guide_version": 1,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 3400,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+          "stage": "continuation_cost_improvement",
+          "coarse_cost_estimate": 47010517.53374138,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 3.4651579
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "disposition": "retained",
+          "expansion": 0,
+          "guide_version": 2,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 3900,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 1984384.0623499798,
+          "evaluated_cost": 1973847.6160810417,
+          "eval_complete": true,
+          "wall_seconds": 44.3684393
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "disposition": "retained",
+          "expansion": 1,
+          "guide_version": 3,
+          "guide_lookup_ns": 700,
+          "guide_update_ns": 4200,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 992192.0311749899,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 72255.3454703689,
+          "evaluated_cost": 72112.40372274163,
+          "eval_complete": true,
+          "wall_seconds": 18.8444363
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "disposition": "retained",
+          "expansion": 2,
+          "guide_version": 4,
+          "guide_lookup_ns": 1400,
+          "guide_update_ns": 4500,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 43353.207282221345,
+          "protected_alternatives": 163,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 68,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 13218.433823743073,
+          "evaluated_cost": 13159.724084639676,
+          "eval_complete": true,
+          "wall_seconds": 18.1078237
+        },
+        {
+          "root_action": "gated_chaos",
+          "disposition": "refused",
+          "expansion": 2,
+          "guide_version": 4,
+          "guide_lookup_ns": 1400,
+          "guide_update_ns": 4500,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 3717987.8647986245,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "solver exceeded max_reforge_work (3189551)",
+          "stage": "construction",
+          "coarse_cost_estimate": null,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 0.7044694
+        },
+        {
+          "root_action": "gated_chaos",
+          "disposition": "refused",
+          "expansion": 1,
+          "guide_version": 4,
+          "guide_lookup_ns": 2300,
+          "guide_update_ns": 4500,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 3098323.2206655205,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "solver exceeded max_reforge_work (15)",
+          "stage": "construction",
+          "coarse_cost_estimate": null,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 0.5560235
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "independently_evaluated",
+          "expansion": 2,
+          "guide_version": 5,
+          "guide_lookup_ns": 2700,
+          "guide_update_ns": 4900,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 28206310.520244826,
+          "protected_alternatives": 163,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 68,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 17026049.91827553,
+          "evaluated_cost": 16999624.133963943,
+          "eval_complete": true,
+          "wall_seconds": 116.3846323
+        }
+      ]
+    },
+    {
+      "family": "ring-four",
+      "arm": "B",
+      "upper": 10251920.398984343,
+      "lower": 201.85524142944053,
+      "status": "refused_unsupported_action",
+      "stop": "requested_bounded_finish",
+      "exact": {
+        "completed": true,
+        "status": "matched",
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "cost_complete": true,
+        "cost_reconciled": true
+      },
+      "expected_actions": 1476470.424415015,
+      "trace_first_target_ms": null,
+      "candidates": [
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "evaluated_cost": 223450050.40882382,
+          "eval_complete": true,
+          "wall_seconds": 147.0321738
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "deferred_by_cost_estimate",
+          "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+          "stage": "continuation_cost_improvement",
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 39.4630752
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "disposition": "retained",
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "evaluated_cost": 10251920.398984343,
+          "eval_complete": true,
+          "wall_seconds": 83.6905251
+        }
+      ]
+    },
+    {
+      "family": "ring-four",
+      "arm": "S",
+      "upper": 228023.27997140243,
+      "lower": 201.85524142944053,
+      "status": "refused_unsupported_action",
+      "stop": "requested_bounded_finish",
+      "exact": {
+        "completed": true,
+        "status": "matched",
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "cost_complete": true,
+        "cost_reconciled": true
+      },
+      "expected_actions": 592244.4725920247,
+      "trace_first_target_ms": 426434.7593,
+      "candidates": [
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "expansion": 0,
+          "guide_version": 0,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 243945017.48992026,
+          "evaluated_cost": 223450050.40882382,
+          "eval_complete": true,
+          "wall_seconds": 173.830768
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "deferred_by_cost_estimate",
+          "expansion": 0,
+          "guide_version": 0,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+          "stage": "continuation_cost_improvement",
+          "coarse_cost_estimate": 1890970873.0658107,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 54.1250713
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "disposition": "retained",
+          "expansion": 0,
+          "guide_version": 0,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 10679949.76795998,
+          "evaluated_cost": 10251920.398984343,
+          "eval_complete": true,
+          "wall_seconds": 97.7466065
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "disposition": "retained",
+          "expansion": 1,
+          "guide_version": 0,
+          "guide_lookup_ns": 100,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 5339974.88397999,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 233807.37465309876,
+          "evaluated_cost": 228023.27997140243,
+          "eval_complete": true,
+          "wall_seconds": 83.1973801
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "disposition": "refused",
+          "expansion": 2,
+          "guide_version": 0,
+          "guide_lookup_ns": 400,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 140284.42479185926,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "solver exceeded max_reforge_work (9140737)",
+          "stage": "construction",
+          "coarse_cost_estimate": null,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 1.8779915
+        },
+        {
+          "root_action": "gated_chaos",
+          "disposition": "refused",
+          "expansion": 2,
+          "guide_version": 0,
+          "guide_lookup_ns": 400,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 146367010.49395216,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "solver exceeded max_reforge_work (7)",
+          "stage": "construction",
+          "coarse_cost_estimate": null,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 1.1641978
+        },
+        {
+          "root_action": "gated_chaos",
+          "disposition": "refused",
+          "expansion": 1,
+          "guide_version": 0,
+          "guide_lookup_ns": 500,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 121972508.74496013,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "solver exceeded max_reforge_work (7)",
+          "stage": "construction",
+          "coarse_cost_estimate": null,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 1.2147284
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "in_progress",
+          "expansion": 2,
+          "guide_version": 0,
+          "guide_lookup_ns": 700,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 1134582523.8394864,
+          "protected_alternatives": 8519,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 991,
+          "reason": "",
+          "stage": "construction",
+          "coarse_cost_estimate": null,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 173.8522372
+        }
+      ]
+    },
+    {
+      "family": "ring-four",
+      "arm": "A",
+      "upper": 228023.27997140243,
+      "lower": 201.85524142944053,
+      "status": "refused_unsupported_action",
+      "stop": "requested_bounded_finish",
+      "exact": {
+        "completed": true,
+        "status": "matched",
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "cost_complete": true,
+        "cost_reconciled": true
+      },
+      "expected_actions": 592244.4725920247,
+      "trace_first_target_ms": 420816.5404,
+      "candidates": [
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "expansion": 0,
+          "guide_version": 1,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 6900,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 243945017.48992026,
+          "evaluated_cost": 223450050.40882382,
+          "eval_complete": true,
+          "wall_seconds": 172.8109795
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "deferred_by_cost_estimate",
+          "expansion": 0,
+          "guide_version": 1,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 6900,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+          "stage": "continuation_cost_improvement",
+          "coarse_cost_estimate": 1890970873.0658107,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 49.4269832
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "disposition": "retained",
+          "expansion": 0,
+          "guide_version": 2,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 7100,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 10679949.76795998,
+          "evaluated_cost": 10251920.398984343,
+          "eval_complete": true,
+          "wall_seconds": 99.1487232
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "disposition": "retained",
+          "expansion": 1,
+          "guide_version": 3,
+          "guide_lookup_ns": 900,
+          "guide_update_ns": 7300,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 5339974.88397999,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 233807.37465309876,
+          "evaluated_cost": 228023.27997140243,
+          "eval_complete": true,
+          "wall_seconds": 81.7912614
+        },
+        {
+          "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "disposition": "refused",
+          "expansion": 2,
+          "guide_version": 3,
+          "guide_lookup_ns": 1400,
+          "guide_update_ns": 7300,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 140284.42479185926,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "solver exceeded max_reforge_work (9140737)",
+          "stage": "construction",
+          "coarse_cost_estimate": null,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 1.7149701
+        },
+        {
+          "root_action": "gated_chaos",
+          "disposition": "refused",
+          "expansion": 2,
+          "guide_version": 3,
+          "guide_lookup_ns": 1400,
+          "guide_update_ns": 7300,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 146367010.49395216,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "solver exceeded max_reforge_work (7)",
+          "stage": "construction",
+          "coarse_cost_estimate": null,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 1.1619696
+        },
+        {
+          "root_action": "gated_chaos",
+          "disposition": "refused",
+          "expansion": 1,
+          "guide_version": 3,
+          "guide_lookup_ns": 1900,
+          "guide_update_ns": 7300,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 121972508.74496013,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "solver exceeded max_reforge_work (7)",
+          "stage": "construction",
+          "coarse_cost_estimate": null,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 1.2373924
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "in_progress",
+          "expansion": 2,
+          "guide_version": 3,
+          "guide_lookup_ns": 2300,
+          "guide_update_ns": 7300,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 1134582523.8394864,
+          "protected_alternatives": 8819,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 1020,
+          "reason": "",
+          "stage": "construction",
+          "coarse_cost_estimate": null,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 179.9778483
+        }
+      ]
+    },
+    {
+      "family": "bow",
+      "arm": "B",
+      "upper": 223349.0000393144,
+      "lower": 341.0345603014526,
+      "status": "bounded_feasible",
+      "stop": "requested_bounded_finish",
+      "exact": {
+        "completed": true,
+        "status": "matched",
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "cost_complete": true,
+        "cost_reconciled": true
+      },
+      "expected_actions": 1404492.0069683318,
+      "trace_first_target_ms": 116960.0654,
+      "candidates": [
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "evaluated_cost": 114134825.7460756,
+          "eval_complete": true,
+          "wall_seconds": 36.7276594
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "deferred_by_cost_estimate",
+          "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+          "stage": "continuation_cost_improvement",
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 7.7525909
+        }
+      ]
+    },
+    {
+      "family": "bow",
+      "arm": "S",
+      "upper": 223349.0000393144,
+      "lower": 341.0345603014526,
+      "status": "bounded_feasible",
+      "stop": "requested_bounded_finish",
+      "exact": {
+        "completed": true,
+        "status": "matched",
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "cost_complete": true,
+        "cost_reconciled": true
+      },
+      "expected_actions": 1404492.0069683318,
+      "trace_first_target_ms": 218389.5851,
+      "candidates": [
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "expansion": 0,
+          "guide_version": 0,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 123356462.30074446,
+          "evaluated_cost": 114134825.7460756,
+          "eval_complete": true,
+          "wall_seconds": 34.4510657
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "deferred_by_cost_estimate",
+          "expansion": 0,
+          "guide_version": 0,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+          "stage": "continuation_cost_improvement",
+          "coarse_cost_estimate": 848315528.8695216,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 6.5812806
+        },
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "expansion": 1,
+          "guide_version": 0,
+          "guide_lookup_ns": 100,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 61678231.15037223,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 59068722.9426551,
+          "evaluated_cost": 53580860.12060689,
+          "eval_complete": true,
+          "wall_seconds": 36.0691941
+        },
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "expansion": 2,
+          "guide_version": 0,
+          "guide_lookup_ns": 200,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 35441233.76559306,
+          "protected_alternatives": 548,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 212,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 407622.98857490864,
+          "evaluated_cost": 399941.55749789823,
+          "eval_complete": true,
+          "wall_seconds": 37.3892457
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "independently_evaluated",
+          "expansion": 2,
+          "guide_version": 0,
+          "guide_lookup_ns": 200,
+          "guide_update_ns": 0,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 508989317.321713,
+          "protected_alternatives": 548,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 212,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 6657072.173631693,
+          "evaluated_cost": 6262182.497156643,
+          "eval_complete": true,
+          "wall_seconds": 36.4577852
+        }
+      ]
+    },
+    {
+      "family": "bow",
+      "arm": "A",
+      "upper": 223349.0000393144,
+      "lower": 341.0345603014526,
+      "status": "bounded_feasible",
+      "stop": "requested_bounded_finish",
+      "exact": {
+        "completed": true,
+        "status": "matched",
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "cost_complete": true,
+        "cost_reconciled": true
+      },
+      "expected_actions": 1404492.0069683318,
+      "trace_first_target_ms": 215792.7317,
+      "candidates": [
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "expansion": 0,
+          "guide_version": 1,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 8700,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 123356462.30074446,
+          "evaluated_cost": 114134825.7460756,
+          "eval_complete": true,
+          "wall_seconds": 34.312825
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "deferred_by_cost_estimate",
+          "expansion": 0,
+          "guide_version": 1,
+          "guide_lookup_ns": 0,
+          "guide_update_ns": 8700,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": null,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+          "stage": "continuation_cost_improvement",
+          "coarse_cost_estimate": 848315528.8695216,
+          "evaluated_cost": null,
+          "eval_complete": false,
+          "wall_seconds": 7.1498495
+        },
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "expansion": 1,
+          "guide_version": 2,
+          "guide_lookup_ns": 600,
+          "guide_update_ns": 9200,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 61678231.15037223,
+          "protected_alternatives": 0,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 0,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 59068722.9426551,
+          "evaluated_cost": 53580860.12060689,
+          "eval_complete": true,
+          "wall_seconds": 37.0441484
+        },
+        {
+          "root_action": "gated_chaos",
+          "disposition": "retained",
+          "expansion": 2,
+          "guide_version": 3,
+          "guide_lookup_ns": 1200,
+          "guide_update_ns": 9600,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 35441233.76559306,
+          "protected_alternatives": 548,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 212,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 407622.98857490864,
+          "evaluated_cost": 399941.55749789823,
+          "eval_complete": true,
+          "wall_seconds": 37.2070627
+        },
+        {
+          "root_action": "exalt",
+          "disposition": "independently_evaluated",
+          "expansion": 2,
+          "guide_version": 4,
+          "guide_lookup_ns": 1200,
+          "guide_update_ns": 9800,
+          "adaptive_changed_next_obligation": false,
+          "preconstruction_cost_estimate": 508989317.321713,
+          "protected_alternatives": 548,
+          "rarity_recoveries": 0,
+          "paid_lock_cleanups": 212,
+          "reason": "",
+          "stage": "complete_dirty_controller",
+          "coarse_cost_estimate": 6657072.173631693,
+          "evaluated_cost": 6262182.497156643,
+          "eval_complete": true,
+          "wall_seconds": 35.4743101
+        }
+      ]
+    }
+  ]
+}

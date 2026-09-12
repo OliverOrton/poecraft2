@@ -1361,6 +1361,54 @@ void run_protected_setup_capacity() {
     for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
         pc_bitset_set(carrier_mods.data(), mod);
     }
+    {
+        GoalSpec goal=automatic_goal(true,true);
+        goal.automatic_candidates=false;
+        FixedOptionSpec spec;
+        spec.kind=FixedOptionKind::ProtectedSide;
+        spec.side=PC_SIDE_PREFIX; spec.action_id="annul";
+        goal.fixed_options.push_back(spec);
+        CalcContext calc(session,goal,registry,{registry.index_by_id.at("annul")},
+            false,true,true,std::nullopt,{},false,carrier_mods,true);
+        const auto option=operator_by_fragment(calc,"option:protected_side:prefix:annul");
+        PC_CHECK(option!=kNoId);
+        if (option!=kNoId) {
+            const auto& planner=calc.operators().at(option);
+            PC_CHECK(planner.primitive_program.size()==2);
+            pc_item_state item;
+            pc_item_clear(&item); item.rarity=PC_RARITY_RARE;
+            add_mod(item,*session,kGoalPrefix); add_mod(item,*session,kSuffixJunk);
+            const auto entry=calc.intern_item(item);
+            const auto& kernel=calc.option_kernel(entry,option);
+            PC_CHECK(kernel.supported && kernel.legal && kernel.terminates_almost_surely);
+            PC_CHECK(kernel.expected_primitive_actions==2);
+            PC_CHECK(kernel.expected_resources==planner.resource_quantities);
+            PC_CHECK(kernel.exits.size()==2);
+            double mass=0, removed_junk=0, paid_cleanup_mass=0;
+            for (const auto& exit:kernel.exits) {
+                auto successor=exit.state;
+                if ((calc.state(successor).flags & kFlagPrefixesLocked)!=0) {
+                    const auto& cleanup=calc.outcomes(successor,registry.index_by_id.at("remove_crafted_modifiers"));
+                    PC_CHECK(cleanup.supported && cleanup.applicable && cleanup.entries.size()==1);
+                    if (cleanup.entries.size()!=1) continue;
+                    successor=cleanup.entries.front().state; paid_cleanup_mass+=exit.probability;
+                }
+                const auto& state=calc.state(successor);
+                mass+=exit.probability;
+                PC_CHECK(state.slot_status[0]==static_cast<std::uint8_t>(GoalSlotStatus::Satisfied));
+                PC_CHECK((state.flags & (kFlagPrefixesLocked|kFlagSuffixesLocked))==0);
+                PC_CHECK(state.crafted_goal_mask==0);
+                for (const auto count : state.crafted_junk_counts) PC_CHECK(count==0);
+                if (state.suffix_count==0) removed_junk+=exit.probability;
+            }
+            PC_CHECK(std::abs(mass-1)<1e-12);
+            // Native Annul chooses the junk or the lock with equal mass.
+            // Only the surviving-lock exit requires the paid cleanup action.
+            PC_CHECK(std::abs(removed_junk-0.5)<1e-12);
+            PC_CHECK(std::abs(paid_cleanup_mass-0.5)<1e-12);
+            check_owned_byte_ledger(calc);
+        }
+    }
 
     /* A side lock occupies the other side. Compare complete fixed-option
      * behavior with native execution, including the case where generic

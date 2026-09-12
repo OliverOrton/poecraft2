@@ -1,0 +1,236 @@
+{
+  "native_public_api": {
+    "checks": 35,
+    "failures": 0,
+    "log": "out/adaptive-dirty-guidance/final-native-api.log"
+  },
+  "protected_native_programs": {
+    "checks": 278,
+    "failures": 0
+  },
+  "joint_continuation": {
+    "checks": 312,
+    "failures": 0
+  },
+  "python_runner": {
+    "tests": 15,
+    "failures": 0
+  },
+  "wasm": {
+    "conquest-five": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 37224,
+      "process_identity_token": "37224:134337226923508842",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 78004.62229998084,
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "--import",
+        "tsx",
+        "test/empty-start-retention-wasm.test.ts",
+        "--output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\wasm\\conquest-five.json"
+      ],
+      "watchdog_seconds": 105,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 85558.70618560436,
+        "expanded_states": 3274,
+        "sweeps": 0,
+        "residual": 1.6689300537109375e-06,
+        "skipped_actions": 1,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436,
+        "absolute_optimality_gap": 85153.33678349802,
+        "relative_optimality_gap": 210.06355275221262,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "registry_actions": 186,
+        "candidate_actions": 28,
+        "evaluator_supported_actions": 28,
+        "supported_priced_actions": 252,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 1
+      },
+      "memory_after_cleanup": {
+        "ok": true,
+        "live_handles": 0,
+        "native_live_owned_bytes": 80,
+        "native_peak_owned_bytes": 80,
+        "native_serialized_output_bytes": 15,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 577437696
+      }
+    },
+    "exact-regalia": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 6292,
+      "process_identity_token": "6292:134337227703540437",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 53475.24910001084,
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "--import",
+        "tsx",
+        "test/solver-benchmark.ts",
+        "--corpus",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+        "--case",
+        "cb12-cross-base-product8-long240",
+        "--output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\wasm\\exact-regalia.json"
+      ],
+      "watchdog_seconds": 315,
+      "summary": {
+        "converged": true,
+        "start_state": 0,
+        "start_value": 65.60036144971359,
+        "expanded_states": 1826,
+        "sweeps": 12,
+        "residual": 1.4210854715202004e-14,
+        "skipped_actions": 0,
+        "policy_available": true,
+        "policy_status": "exact",
+        "termination": "exact_closed",
+        "lower_bound": 65.60036144971359,
+        "upper_bound": 65.60036144971359,
+        "evaluated_policy_cost": 65.60036144971359,
+        "absolute_optimality_gap": 0,
+        "relative_optimality_gap": 0,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "exact_closed",
+        "cap_hit_mask": 0,
+        "registry_actions": 158,
+        "candidate_actions": 21,
+        "evaluator_supported_actions": 21,
+        "supported_priced_actions": 74,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 0,
+        "cancelled": false
+      }
+    },
+    "retention-finish-abandon": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 20784,
+      "process_identity_token": "20784:134337226642254281",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 28124.379999993835,
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "--import",
+        "tsx",
+        "test/retention-wasm.test.ts"
+      ],
+      "watchdog_seconds": 315
+    }
+  },
+  "sampling": {
+    "amulet": {
+      "evidence": "sampling-amulet.json",
+      "strategy_sha256": "67e9b3bbe1d3d956395056a36f25b57af0f5871943ea9f7d35976bc7620061d9",
+      "options": {
+        "target_runs": 1000,
+        "seed": 2026091201,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 0.0,
+        "retained_trace_count": 0,
+        "max_trace_entries": 512,
+        "retained_success_count": 5,
+        "retained_failure_count": 5
+      },
+      "summary": {
+        "completed_runs": 1000,
+        "success_count": 971,
+        "failure_count": 29,
+        "stop_count": 0,
+        "total_actions": 26357740,
+        "action_limit_count": 29,
+        "cost_limit_count": 0,
+        "step_limit_count": 0,
+        "no_matching_edge_count": 0,
+        "action_not_applied_count": 0,
+        "missing_price_run_count": 0,
+        "costed_action_count": 26357740,
+        "missing_price_action_count": 0,
+        "known_total_cost": 12996075.432502778,
+        "cost_status": "complete",
+        "seed": 2026091201,
+        "target_runs": 1000
+      },
+      "expected_actions": 26655.734445108934
+    },
+    "ring-four": {
+      "evidence": "sampling-ring-four.json",
+      "strategy_sha256": "6ac8226080deeb57bb3952fcc107b84b4665fd8463afe3388977bae2eadc797e",
+      "options": {
+        "target_runs": 1000,
+        "seed": 2026091202,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 0.0,
+        "retained_trace_count": 0,
+        "max_trace_entries": 512,
+        "retained_success_count": 5,
+        "retained_failure_count": 5
+      },
+      "summary": {
+        "completed_runs": 1000,
+        "success_count": 149,
+        "failure_count": 851,
+        "stop_count": 0,
+        "total_actions": 92513277,
+        "action_limit_count": 851,
+        "cost_limit_count": 0,
+        "step_limit_count": 0,
+        "no_matching_edge_count": 0,
+        "action_not_applied_count": 0,
+        "missing_price_run_count": 0,
+        "costed_action_count": 92513277,
+        "missing_price_action_count": 0,
+        "known_total_cost": 35617957.18593562,
+        "cost_status": "complete",
+        "seed": 2026091202,
+        "target_runs": 1000
+      },
+      "expected_actions": 592244.4725920247
+    }
+  },
+  "builds": {
+    "build/engine/poecraft_engine.dll": "50f410c7cab0a1c2cd6eef4bc508fb4ac5813952a3201fd070450b4cb1b2d9bc",
+    "build/engine/poecraft_solver_benchmark.exe": "017baadbdb6ec3df6555363d124d34311042da6250c2747a9a8ac26328e78e23",
+    "bindings/wasm/dist/poecraft_engine.mjs": "92bc2b9d61c465b35c2b80c71f8b3ee125155755275e8d66cdc649792ab9f4ce",
+    "bindings/wasm/dist/poecraft_engine.wasm": "76a33cfa57e00d1a61aca862c376ebf5fa7c4f822da10138d3e64bb701e2eeb5"
+  },
+  "typescript": "passed",
+  "web_corpus": "passed",
+  "web_lab_export": "passed",
+  "limits": "Sampling preserves 1000 trials and original 100000-action/4000000-step limits. Sampled truncated cost is not unlimited expected cost. No Simulator on unchanged policies."
+}

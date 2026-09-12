@@ -46,6 +46,17 @@ The lower-only quotient is a different consumer of shared numerical machinery: i
 
 ## Candidate-local continuation
 
+The optional dirty expansion retains the original proposals first, then orders
+a finite queue of additional redraw/protection constructions. Both static and
+adaptive arms consume completed private controller costs. The adaptive arm's
+small run-local acquisition-family table applies a bounded, damped log residual
+from same-entry native controller checks. A changed evidence version can alter
+the next concrete job; an in-flight controller stays frozen. Every third queued
+expanded job takes the age path. Expanded jobs are not permanently discarded by
+an estimated cost, and no guide number enters the proof or executable-tail
+owners. The current implementation and measurements belong to the
+[v2 record](../active/2026-09-12-adaptive-dirty-guidance/README.md).
+
 A retained joint-policy candidate can preserve its selected prefix and current missing continuation across ordinary interleaving. Compatible completed row evidence permits it to resume rather than rebuilding the entire selection walk.
 
 The [post-incumbent experiment](../active/2026-09-11-post-incumbent-cost/README.md)

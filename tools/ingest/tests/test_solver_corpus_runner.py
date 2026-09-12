@@ -446,13 +446,49 @@ def test_native_controls_reach_worker_and_reject_changed_resume(
     assert len(observed) == 1
 
 
-@pytest.mark.parametrize("seconds", [0, -1, float("nan"), float("inf"), 901])
+@pytest.mark.parametrize("seconds", [0, -1, float("nan"), float("inf"), 901, True, "315"])
 def test_invalid_host_watchdog_refuses_before_output(tmp_path: Path, seconds: float) -> None:
     with pytest.raises(ValueError, match="host watchdog"):
         run_corpus(root=tmp_path, executable=Path(sys.executable), artifact=tmp_path,
                    corpus=tmp_path / "absent.json", output_directory=tmp_path / "run",
                    tasks=[], host_watchdog_seconds=seconds)
     assert not (tmp_path / "run").exists()
+
+
+def test_watchdog_identity_is_canonical_before_work_and_typed_on_resume(tmp_path: Path) -> None:
+    manifest = tmp_path / "manifest.json"
+    _write_json(manifest, {"cases": []})
+    arguments = dict(root=Path.cwd(), executable=Path(sys.executable), artifact=tmp_path,
+                     corpus=manifest, tasks=[])
+    output = tmp_path / "run"
+    first = run_corpus(**arguments, output_directory=output, host_watchdog_seconds=315)
+    resumed = run_corpus(**arguments, output_directory=output, host_watchdog_seconds=315.0)
+    assert type(first["configuration"]["host_watchdog_seconds"]) is float
+    assert first["configuration"] == resumed["configuration"]
+
+    # An old integer-typed receipt stays immutable: strict comparison would
+    # reject it, so resume must reject it before rewriting or starting work.
+    ledger_path = output / "ledger.json"
+    first["configuration"]["host_watchdog_seconds"] = 315
+    _write_json(ledger_path, first)
+    before = ledger_path.read_bytes()
+    with pytest.raises(ValueError, match="provenance/configuration differs"):
+        run_corpus(**arguments, output_directory=output, host_watchdog_seconds=315.0)
+    assert ledger_path.read_bytes() == before
+
+
+def test_guidance_treatment_binds_resume_without_changing_capacity(tmp_path: Path) -> None:
+    manifest=tmp_path / "manifest.json"
+    _write_json(manifest,{"cases": []})
+    args=dict(root=Path.cwd(), executable=Path(sys.executable), artifact=tmp_path,
+              corpus=manifest,tasks=[],host_watchdog_seconds=870)
+    static=run_corpus(**args,output_directory=tmp_path / "static",native_dirty_guidance="static")
+    adaptive=run_corpus(**args,output_directory=tmp_path / "adaptive",native_dirty_guidance="adaptive")
+    assert static["configuration"]==adaptive["configuration"]
+    assert static["treatment"] != adaptive["treatment"]
+    for changed in ("adaptive",None):
+        with pytest.raises(ValueError,match="provenance/configuration differs"):
+            run_corpus(**args,output_directory=tmp_path / "static",native_dirty_guidance=changed)
 
 
 def test_immutable_attempt_paths_do_not_share_retry_outputs(tmp_path: Path) -> None:

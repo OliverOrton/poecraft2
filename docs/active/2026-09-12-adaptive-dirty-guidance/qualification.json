@@ -1,0 +1,303 @@
+{
+  "reviewed_main": "23e03ba9d3fef2f67f2bf1597f69c2c36422e5a7",
+  "build": "build-v3.json",
+  "retained_method": "static",
+  "adaptive_advantage_established": false,
+  "capacity_change": false,
+  "families": {
+    "amulet": {
+      "evidence": "final-amulet.json",
+      "final_upper": 13159.724084639676,
+      "expected_actions": 26655.734445108934,
+      "strategy_sha256": "67e9b3bbe1d3d956395056a36f25b57af0f5871943ea9f7d35976bc7620061d9"
+    },
+    "ring-four": {
+      "evidence": "final-ring-four.json",
+      "final_upper": 228023.27997140243,
+      "expected_actions": 592244.4725920247,
+      "strategy_sha256": "6ac8226080deeb57bb3952fcc107b84b4665fd8463afe3388977bae2eadc797e"
+    },
+    "bow": {
+      "evidence": "final-bow.json",
+      "final_upper": 223349.0000393144,
+      "expected_actions": 1404492.0069683318,
+      "strategy_sha256": "8640a80a6183f372b7744f14a1f88a66d1ed3a8237d336115b5b3964153981fb"
+    }
+  },
+  "completed": true,
+  "source_matches_frozen_v3": [
+    {
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "sha256": "13ec576bc82e447c0a5c67aad143662c9bbd9fad0be9150ddfab4105519f2d19"
+    },
+    {
+      "path": "engine/src/solver_dirty_guidance.hpp",
+      "sha256": "9247414b87e412cf1b6c93117c35222bb759fd9633af7de1bd6685bf0b79cad3"
+    },
+    {
+      "path": "engine/src/solver_options.cpp",
+      "sha256": "ef5dd0feb2ae44d4bec8a1e3aa7bfbfd28d536aa325a2c14c57b08760e908c13"
+    },
+    {
+      "path": "engine/src/solver_options_build.cpp",
+      "sha256": "f03fafed3ff0e5c744edc01d01ea8f6cb99e4447681a86ecfb23ec378ff8e19a"
+    },
+    {
+      "path": "engine/src/solver_registry.cpp",
+      "sha256": "ea8ce4d2881b0521bf07395f936c5a02137f5557a5f183cd21c6220bde837e05"
+    },
+    {
+      "path": "engine/src/solver_solve_contracts.hpp",
+      "sha256": "f066bb9562886605f729c8f6879d0de3f341fa36986e8d677bfa924692569d76"
+    },
+    {
+      "path": "engine/src/solver_api.cpp",
+      "sha256": "04dc435069322030444e4d7c1d4e4630465f1760fda63ce2b7407b99f7e6834c"
+    },
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "sha256": "06c8dede9be5617b9e9e42471f32529c56c1084b9495a9e3243f5083f410a49b"
+    }
+  ],
+  "native_comparison": "final-native-comparison.json",
+  "original_comparison": "final-original-comparison.json",
+  "targeted_repeat": "preservation-repeat.json",
+  "product": "product-qualification.json",
+  "strict_paired_cases": 22,
+  "strict_exclusions": 0,
+  "reporter_regressions": 0,
+  "manual_preservation_caveats": [
+    "The existing reporter flags time, memory, policy rank and target attainment; it does not automatically flag a larger nonexact upper or a new bounded-contract error.",
+    "Initial CB03 U 794067.4530398862 is worse than saved 536407.1454418747. A single counterbalanced repeat gives 794067.4530398862 on both reviewed-main B and new S; the older high-water mark remains saved, not reproduced.",
+    "Initial CB02 retained the identical graph but failed the open-obligations assertion at finish; the paired repeat passes both arms. CB05 bounded-proof and CB09 no-policy failures remain."
+  ],
+  "wait_batches": {
+    "v1_static": {
+      "terminal_waits": 5,
+      "outer_completion_wait_seconds": 1046.5
+    },
+    "v2_matched": {
+      "terminal_waits": 15,
+      "outer_completion_wait_seconds": 3952.9
+    },
+    "v3_final_native": {
+      "terminal_waits": 13,
+      "outer_completion_wait_seconds": 3513.7
+    },
+    "final_preservation_product_sampling": {
+      "terminal_waits": 10,
+      "outer_completion_wait_seconds": 2619.3
+    },
+    "targeted_preservation_repeat": {
+      "terminal_waits": 4,
+      "outer_completion_wait_seconds": 882.0
+    }
+  },
+  "idle_model_status_polls": 0,
+  "worker_survivors": 0,
+  "not_run": [
+    "Full repository acceptance suite; focused changed-layer checks used.",
+    "Simulator on unchanged strategies.",
+    "Browser native-dirty capability qualification; browser defaults preserved.",
+    "Further adaptive timing repeats: no correction changed a next-job choice and no measured advantage reached the declared threshold."
+  ],
+  "publication": {
+    "push_authorized": false,
+    "pushed": false,
+    "revision_owner": "The local commit containing this receipt; see git log for the actual revision."
+  },
+  "original_case_audit": [
+    {
+      "id": "cb01-cross-base-product8-long240",
+      "baseline_upper": 85558.70618560436,
+      "final_upper": 85558.70618560436,
+      "lower": 405.3694021063399,
+      "status": "refused_unsupported_action",
+      "policy_status": "bounded_feasible",
+      "baseline_errors": [],
+      "final_errors": [],
+      "graph_identical": true,
+      "graph_available": true,
+      "source_report_sha256": "53399e8a455bb1cd0da5bd18b76b8db8a84a7070d292336b57eaeb593b79988e"
+    },
+    {
+      "id": "cb02-cross-base-product8-long240",
+      "baseline_upper": 3746.1319409485764,
+      "final_upper": 3746.1319409485764,
+      "lower": 198.8334996747695,
+      "status": "bounded_feasible",
+      "policy_status": "bounded_feasible",
+      "baseline_errors": [],
+      "final_errors": [
+        "bounded best-policy contract failed: one or more bounded-result proof obligations failed"
+      ],
+      "graph_identical": true,
+      "graph_available": true,
+      "source_report_sha256": "e31f9afe4bc39c55b6991b63eb087d9b5128750df35cada459898ce8eb8bf360"
+    },
+    {
+      "id": "cb03-cross-base-product8-long240",
+      "baseline_upper": 536407.1454418747,
+      "final_upper": 794067.4530398862,
+      "lower": 405.11164995948883,
+      "status": "bounded_feasible",
+      "policy_status": "bounded_feasible",
+      "baseline_errors": [],
+      "final_errors": [],
+      "graph_identical": false,
+      "graph_available": true,
+      "source_report_sha256": "3dc2d366a2e6f3e468cf5ae6275f72b65d4ecf70ef1eb6cc9881ea844982debc"
+    },
+    {
+      "id": "cb04-cross-base-product8-long240",
+      "baseline_upper": 223349.0000393144,
+      "final_upper": 223349.0000393144,
+      "lower": 341.0345603014526,
+      "status": "bounded_feasible",
+      "policy_status": "bounded_feasible",
+      "baseline_errors": [],
+      "final_errors": [],
+      "graph_identical": true,
+      "graph_available": true,
+      "source_report_sha256": "4690014067007742e036a64c6f766a52d976a83b9bb19f3958d8b9f1ab1042c1"
+    },
+    {
+      "id": "cb05-cross-base-product8-long240",
+      "baseline_upper": 87200457.42804676,
+      "final_upper": 87200457.42804676,
+      "lower": 297.7999999702199,
+      "status": "refused_resource_cap",
+      "policy_status": "bounded_feasible",
+      "baseline_errors": [
+        "bounded best-policy contract failed: one or more bounded-result proof obligations failed"
+      ],
+      "final_errors": [
+        "bounded best-policy contract failed: one or more bounded-result proof obligations failed"
+      ],
+      "graph_identical": true,
+      "graph_available": true,
+      "source_report_sha256": "babd8babef35220c3690cafffa88ab25d2ac5c6724159c2e8a5087a61924c313"
+    },
+    {
+      "id": "cb06-cross-base-product8-long240",
+      "baseline_upper": 149977.25092497544,
+      "final_upper": 149977.25092497544,
+      "lower": 10.169847833384168,
+      "status": "refused_resource_cap",
+      "policy_status": "bounded_feasible",
+      "baseline_errors": [],
+      "final_errors": [],
+      "graph_identical": true,
+      "graph_available": true,
+      "source_report_sha256": "9cdd2afbbd4d418f3a8bfb3acec26ab30ce6e8b9e11f3996fb1bbc8800e42bf0"
+    },
+    {
+      "id": "cb07-cross-base-product8-long240",
+      "baseline_upper": 3725358919.4984236,
+      "final_upper": 3725358919.4984236,
+      "lower": 201.85524142944053,
+      "status": "refused_resource_cap",
+      "policy_status": "bounded_feasible",
+      "baseline_errors": [],
+      "final_errors": [],
+      "graph_identical": true,
+      "graph_available": true,
+      "source_report_sha256": "218f0929e017dc469e2ddb2c3396917bdde6a0f3ea99e06ad4378980ee217c68"
+    },
+    {
+      "id": "cb08-cross-base-product8-long240",
+      "baseline_upper": 40215428.995558396,
+      "final_upper": 40215428.995558396,
+      "lower": 174.79327321907147,
+      "status": "refused_resource_cap",
+      "policy_status": "bounded_feasible",
+      "baseline_errors": [],
+      "final_errors": [],
+      "graph_identical": true,
+      "graph_available": true,
+      "source_report_sha256": "88ddd6a0b1b06b744b290e4b0f3c4dc0ac6aad7c1f38ec8708be1c20a2cb8b3f"
+    },
+    {
+      "id": "cb09-cross-base-product8-long240",
+      "baseline_upper": null,
+      "final_upper": null,
+      "lower": 172.4952745977795,
+      "status": "refused_resource_cap",
+      "policy_status": "none",
+      "baseline_errors": [
+        "bounded best-policy contract failed: the solve did not publish an executable policy"
+      ],
+      "final_errors": [
+        "bounded best-policy contract failed: the solve did not publish an executable policy"
+      ],
+      "graph_identical": false,
+      "graph_available": false,
+      "source_report_sha256": "9f30a931d883a0db659257032a6d82baf37ae68f8c7026b446cebc4b6df62d94"
+    },
+    {
+      "id": "cb10-cross-base-product8-long240",
+      "baseline_upper": 45635.96043201217,
+      "final_upper": 45635.96043201217,
+      "lower": 329.53999996704596,
+      "status": "refused_resource_cap",
+      "policy_status": "bounded_feasible",
+      "baseline_errors": [],
+      "final_errors": [],
+      "graph_identical": true,
+      "graph_available": true,
+      "source_report_sha256": "f5a0e3e5087db7ecdccec576390f870c67ad3658425942c3923b9a40fea71ccc"
+    },
+    {
+      "id": "cb11-cross-base-product8-long240",
+      "baseline_upper": 1934.63683986346,
+      "final_upper": 1934.63683986346,
+      "lower": 40.20377012689141,
+      "status": "refused_resource_cap",
+      "policy_status": "bounded_feasible",
+      "baseline_errors": [],
+      "final_errors": [],
+      "graph_identical": true,
+      "graph_available": true,
+      "source_report_sha256": "7a8dd8ea7d96ad32dce5199b41cdf45718970afbc1676a756941a1f27506a7c0"
+    },
+    {
+      "id": "cb12-cross-base-product8-long240",
+      "baseline_upper": 65.60036144971359,
+      "final_upper": 65.60036144971359,
+      "lower": 65.60036144971359,
+      "status": "converged",
+      "policy_status": "exact",
+      "baseline_errors": [],
+      "final_errors": [],
+      "graph_identical": true,
+      "graph_available": true,
+      "source_report_sha256": "32273368b406ea7d53dbc0704ae7fbc583227c1ac5e25bdb505b535998e28769"
+    },
+    {
+      "id": "ho01-cross-base-product8-long240",
+      "baseline_upper": 2071.736538384866,
+      "final_upper": 2071.736538384866,
+      "lower": 93.66114293680295,
+      "status": "bounded_feasible",
+      "policy_status": "bounded_feasible",
+      "baseline_errors": [],
+      "final_errors": [],
+      "graph_identical": true,
+      "graph_available": true,
+      "source_report_sha256": "1e1fbf3c998e4a267dee7f68b67b7ea3e6662c6ee9f96f6c75e9dc7d3c8f90a2"
+    },
+    {
+      "id": "ho02-cross-base-product8-long240",
+      "baseline_upper": 3963.671015833939,
+      "final_upper": 3963.671015833939,
+      "lower": 110.28721258971052,
+      "status": "refused_state_cap",
+      "policy_status": "bounded_feasible",
+      "baseline_errors": [],
+      "final_errors": [],
+      "graph_identical": true,
+      "graph_available": true,
+      "source_report_sha256": "da9043800b715a9a7dbb9b0f85ad91267f1d0bf300b90b39a7fdd5cff1a82ffb"
+    }
+  ]
+}

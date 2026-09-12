@@ -1,0 +1,1184 @@
+{
+  "core": {
+    "baseline": "reviewed-main",
+    "candidate": "final-static",
+    "shared_case_ids": 12,
+    "paired_cases": 12,
+    "missing_from_baseline": [],
+    "missing_from_candidate": [],
+    "excluded": [],
+    "delta_distributions": {
+      "wall_ms": {
+        "count": 12,
+        "min": -81.26310000001104,
+        "median": 557.7139000000025,
+        "p90": 1773.390370000004,
+        "p99": 7783.205192000007,
+        "max": 8516.930800000002
+      },
+      "solve_ms": {
+        "count": 12,
+        "min": -84.64340000000084,
+        "median": 477.87020000000666,
+        "p90": 1432.6559299999974,
+        "p99": 7706.059896,
+        "max": 8476.673299999995
+      },
+      "solve_step_median_ms": {
+        "count": 12,
+        "min": 0.0,
+        "median": 5.000000000000002e-05,
+        "p90": 0.0009300000000000012,
+        "p99": 0.001979000000000005,
+        "max": 0.0021000000000000046
+      },
+      "solve_step_p95_ms": {
+        "count": 12,
+        "min": -0.00010000000000000005,
+        "median": 0.0010999999999999998,
+        "p90": 0.32819000000000037,
+        "p99": 0.5656440000000006,
+        "max": 0.5920000000000005
+      },
+      "solve_step_max_ms": {
+        "count": 12,
+        "min": 0.1781000000000006,
+        "median": 103.46125000000006,
+        "p90": 610.6793000000002,
+        "p99": 865.2725910000003,
+        "max": 893.5549000000001
+      },
+      "peak_memory_bytes": {
+        "count": 12,
+        "min": -82976617.0,
+        "median": 0.0,
+        "p90": 5034.2,
+        "p99": 126316.83000000007,
+        "max": 141293.0
+      },
+      "time_to_incumbent_ms": {
+        "count": 11,
+        "min": -1581.0915999999997,
+        "median": 236.27140000002692,
+        "p90": 7006.128599999996,
+        "p99": 19801.030350000023,
+        "max": 21222.68610000002
+      },
+      "time_to_target_ms": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p90": null,
+        "p99": null,
+        "max": null
+      },
+      "final_lower_bound": {
+        "count": 12,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_upper_bound": {
+        "count": 11,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 231894.2768382104,
+        "max": 257660.30759801145
+      },
+      "final_absolute_gap": {
+        "count": 11,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 231894.2768382104,
+        "max": 257660.30759801145
+      },
+      "final_relative_gap": {
+        "count": 11,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 572.4206570247975,
+        "max": 636.0229522497748
+      },
+      "states": {
+        "count": 12,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "expanded_states": {
+        "count": 12,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "rows": {
+        "count": 12,
+        "min": -185.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "transitions": {
+        "count": 12,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "reforge_work": {
+        "count": 12,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "compiled_nodes": {
+        "count": 11,
+        "min": -3.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "compiled_edges": {
+        "count": 11,
+        "min": -4.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "strategy_json_bytes": {
+        "count": 11,
+        "min": -572.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      }
+    },
+    "status_transitions": {
+      "bounded_feasible->bounded_feasible": 10,
+      "exact->exact": 1,
+      "none->none": 1
+    },
+    "regressions": [],
+    "pairs": [
+      {
+        "id": "cb01-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Conquest Lamellar",
+          "class": "Body Armour",
+          "base_class": "Body Armour / Conquest Lamellar",
+          "natural_t1_count": "5",
+          "side_mix": "unknown",
+          "pool_density": "unknown",
+          "goal_probability": "unknown",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_unsupported_action",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "candidate_status": {
+          "actual": "refused_unsupported_action",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "deltas": {
+          "wall_ms": 354.61840000000666,
+          "solve_ms": 202.9481000000087,
+          "solve_step_median_ms": 0.00010000000000000026,
+          "solve_step_p95_ms": 0.0014000000000000002,
+          "solve_step_max_ms": 13.035799999999995,
+          "peak_memory_bytes": -10360.0,
+          "time_to_incumbent_ms": 201.7880999999761,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": -185.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      },
+      {
+        "id": "cb02-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Conquest Lamellar",
+          "class": "Body Armour",
+          "base_class": "Body Armour / Conquest Lamellar",
+          "natural_t1_count": "4",
+          "side_mix": "unknown",
+          "pool_density": "unknown",
+          "goal_probability": "unknown",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "bounded_feasible",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "candidate_status": {
+          "actual": "bounded_feasible",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "deltas": {
+          "wall_ms": 60.43510000000242,
+          "solve_ms": -12.24930000002496,
+          "solve_step_median_ms": 0.00010000000000000005,
+          "solve_step_p95_ms": 0.00010000000000000026,
+          "solve_step_max_ms": 91.87800000000016,
+          "peak_memory_bytes": -82976617.0,
+          "time_to_incumbent_ms": 21222.68610000002,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      },
+      {
+        "id": "cb03-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Conquest Lamellar",
+          "class": "Body Armour",
+          "base_class": "Body Armour / Conquest Lamellar",
+          "natural_t1_count": "5",
+          "side_mix": "unknown",
+          "pool_density": "unknown",
+          "goal_probability": "unknown",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "bounded_feasible",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "candidate_status": {
+          "actual": "bounded_feasible",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "deltas": {
+          "wall_ms": 322.0405000000028,
+          "solve_ms": 239.06400000001304,
+          "solve_step_median_ms": 0.0,
+          "solve_step_p95_ms": 0.0011000000000000003,
+          "solve_step_max_ms": 28.234199999999987,
+          "peak_memory_bytes": 141293.0,
+          "time_to_incumbent_ms": 236.27140000002692,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 257660.30759801145,
+          "final_absolute_gap": 257660.30759801145,
+          "final_relative_gap": 636.0229522497748,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": -11.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": -3.0,
+          "compiled_edges": -4.0,
+          "strategy_json_bytes": -572.0
+        }
+      },
+      {
+        "id": "cb04-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Spine Bow",
+          "class": "Bow",
+          "base_class": "Bow / Spine Bow",
+          "natural_t1_count": "4",
+          "side_mix": "unknown",
+          "pool_density": "unknown",
+          "goal_probability": "unknown",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "bounded_feasible",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "candidate_status": {
+          "actual": "bounded_feasible",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "deltas": {
+          "wall_ms": 171.336100000015,
+          "solve_ms": 99.06400000001304,
+          "solve_step_median_ms": 0.0021000000000000046,
+          "solve_step_p95_ms": 0.35240000000000027,
+          "solve_step_max_ms": 324.2421999999997,
+          "peak_memory_bytes": 0.0,
+          "time_to_incumbent_ms": 4946.089899999999,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      },
+      {
+        "id": "cb05-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Spine Bow",
+          "class": "Bow",
+          "base_class": "Bow / Spine Bow",
+          "natural_t1_count": "5",
+          "side_mix": "unknown",
+          "pool_density": "unknown",
+          "goal_probability": "unknown",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "refused_resource_cap",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "candidate_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "deltas": {
+          "wall_ms": 1846.698000000004,
+          "solve_ms": 1471.0968999999968,
+          "solve_step_median_ms": 0.0002999999999999999,
+          "solve_step_p95_ms": 0.11030000000000006,
+          "solve_step_max_ms": 115.04449999999997,
+          "peak_memory_bytes": 0.0,
+          "time_to_incumbent_ms": 1471.3435000000027,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      },
+      {
+        "id": "cb06-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Amethyst Ring",
+          "class": "Ring",
+          "base_class": "Ring / Amethyst Ring",
+          "natural_t1_count": "2",
+          "side_mix": "unknown",
+          "pool_density": "unknown",
+          "goal_probability": "unknown",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "refused_resource_cap",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "candidate_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "deltas": {
+          "wall_ms": 936.2223999999987,
+          "solve_ms": 905.8552,
+          "solve_step_median_ms": 0.0,
+          "solve_step_p95_ms": -0.00010000000000000005,
+          "solve_step_max_ms": 636.4430000000002,
+          "peak_memory_bytes": 0.0,
+          "time_to_incumbent_ms": 10.206900000000019,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      },
+      {
+        "id": "cb07-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Amethyst Ring",
+          "class": "Ring",
+          "base_class": "Ring / Amethyst Ring",
+          "natural_t1_count": "4",
+          "side_mix": "unknown",
+          "pool_density": "unknown",
+          "goal_probability": "unknown",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "refused_resource_cap",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "candidate_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "deltas": {
+          "wall_ms": 760.8093999999983,
+          "solve_ms": 716.6764000000003,
+          "solve_step_median_ms": 0.0,
+          "solve_step_p95_ms": 0.0010999999999999994,
+          "solve_step_max_ms": 378.80600000000004,
+          "peak_memory_bytes": 0.0,
+          "time_to_incumbent_ms": 716.8870999999999,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      },
+      {
+        "id": "cb08-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Onyx Amulet",
+          "class": "Amulet",
+          "base_class": "Amulet / Onyx Amulet",
+          "natural_t1_count": "3",
+          "side_mix": "SSS",
+          "pool_density": "dense_ge_100",
+          "goal_probability": "low_le_0.005",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "refused_resource_cap",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "candidate_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "deltas": {
+          "wall_ms": -81.26310000001104,
+          "solve_ms": -84.64340000000084,
+          "solve_step_median_ms": 0.00030000000000000165,
+          "solve_step_p95_ms": 0.0119,
+          "solve_step_max_ms": 36.375,
+          "peak_memory_bytes": 4028.0,
+          "time_to_incumbent_ms": 49.853999999999814,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      },
+      {
+        "id": "cb09-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Amethyst Ring",
+          "class": "Ring",
+          "base_class": "Ring / Amethyst Ring",
+          "natural_t1_count": "3",
+          "side_mix": "PSS",
+          "pool_density": "dense_ge_100",
+          "goal_probability": "very_low_le_0.001",
+          "incumbent": "other",
+          "policy_status": "none",
+          "termination": "refused_resource_cap",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_resource_cap",
+          "policy": "none",
+          "termination": "refused_resource_cap"
+        },
+        "candidate_status": {
+          "actual": "refused_resource_cap",
+          "policy": "none",
+          "termination": "refused_resource_cap"
+        },
+        "deltas": {
+          "wall_ms": 1113.6216999999997,
+          "solve_ms": 1086.6872000000003,
+          "solve_step_median_ms": 0.0,
+          "solve_step_p95_ms": 0.0,
+          "solve_step_max_ms": 893.5549000000001,
+          "peak_memory_bytes": 0.0,
+          "time_to_incumbent_ms": null,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": null,
+          "final_absolute_gap": null,
+          "final_relative_gap": null,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": null,
+          "compiled_edges": null,
+          "strategy_json_bytes": null
+        }
+      },
+      {
+        "id": "cb10-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Jewelled Foil",
+          "class": "Thrusting One Hand Sword",
+          "base_class": "Thrusting One Hand Sword / Jewelled Foil",
+          "natural_t1_count": "4",
+          "side_mix": "PPSS",
+          "pool_density": "dense_ge_100",
+          "goal_probability": "very_low_le_0.001",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "refused_resource_cap",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "candidate_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "deltas": {
+          "wall_ms": 8516.930800000002,
+          "solve_ms": 8476.673299999995,
+          "solve_step_median_ms": 0.0010000000000000009,
+          "solve_step_p95_ms": 0.5920000000000005,
+          "solve_step_max_ms": 224.88410000000022,
+          "peak_memory_bytes": 0.0,
+          "time_to_incumbent_ms": 7006.128599999996,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      },
+      {
+        "id": "cb11-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Dire Pelt",
+          "class": "Helmet",
+          "base_class": "Helmet / Dire Pelt",
+          "natural_t1_count": "3",
+          "side_mix": "PPS",
+          "pool_density": "dense_ge_100",
+          "goal_probability": "low_le_0.005",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "refused_resource_cap",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "candidate_status": {
+          "actual": "refused_resource_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "deltas": {
+          "wall_ms": 1035.8828999999969,
+          "solve_ms": 1012.0380000000005,
+          "solve_step_median_ms": 0.0,
+          "solve_step_p95_ms": 0.0,
+          "solve_step_max_ms": 5.0178999999999405,
+          "peak_memory_bytes": 0.0,
+          "time_to_incumbent_ms": -1581.0915999999997,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      },
+      {
+        "id": "cb12-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Vaal Regalia",
+          "class": "Body Armour",
+          "base_class": "Body Armour / Vaal Regalia",
+          "natural_t1_count": "1",
+          "side_mix": "S",
+          "pool_density": "dense_ge_100",
+          "goal_probability": "moderate_le_0.02",
+          "incumbent": "other",
+          "policy_status": "exact",
+          "termination": "exact_closed",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "converged",
+          "policy": "exact",
+          "termination": "exact_closed"
+        },
+        "candidate_status": {
+          "actual": "converged",
+          "policy": "exact",
+          "termination": "exact_closed"
+        },
+        "deltas": {
+          "wall_ms": -19.96860000000015,
+          "solve_ms": -18.07720000000336,
+          "solve_step_median_ms": 0.0,
+          "solve_step_p95_ms": 0.0,
+          "solve_step_max_ms": 0.1781000000000006,
+          "peak_memory_bytes": 5146.0,
+          "time_to_incumbent_ms": -21.101699999999255,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      }
+    ]
+  },
+  "exposed": {
+    "baseline": "reviewed-main",
+    "candidate": "final-static",
+    "shared_case_ids": 2,
+    "paired_cases": 2,
+    "missing_from_baseline": [],
+    "missing_from_candidate": [],
+    "excluded": [],
+    "delta_distributions": {
+      "wall_ms": {
+        "count": 2,
+        "min": 230.9020999999775,
+        "median": 11101.39079999998,
+        "p90": 19797.781759999983,
+        "p99": 21754.46972599998,
+        "max": 21971.87949999998
+      },
+      "solve_ms": {
+        "count": 2,
+        "min": 57.67480000000796,
+        "median": 10882.52045000001,
+        "p90": 19542.396970000016,
+        "p99": 21490.869187000015,
+        "max": 21707.366100000014
+      },
+      "solve_step_median_ms": {
+        "count": 2,
+        "min": 0.00010000000000000286,
+        "median": 0.0017500000000000016,
+        "p90": 0.0030700000000000007,
+        "p99": 0.003367,
+        "max": 0.0034000000000000002
+      },
+      "solve_step_p95_ms": {
+        "count": 2,
+        "min": 7.492799999999988,
+        "median": 17.43204999999999,
+        "p90": 25.383449999999993,
+        "p99": 27.17251499999999,
+        "max": 27.37129999999999
+      },
+      "solve_step_max_ms": {
+        "count": 2,
+        "min": 68.66070000000002,
+        "median": 426.14405000000016,
+        "p90": 712.1307300000003,
+        "p99": 776.4777330000003,
+        "max": 783.6274000000003
+      },
+      "peak_memory_bytes": {
+        "count": 2,
+        "min": 0.0,
+        "median": 666752.0,
+        "p90": 1200153.6,
+        "p99": 1320168.96,
+        "max": 1333504.0
+      },
+      "time_to_incumbent_ms": {
+        "count": 2,
+        "min": 325.0079999999998,
+        "median": 1833.635799999999,
+        "p90": 3040.5380399999985,
+        "p99": 3312.091043999998,
+        "max": 3342.2635999999984
+      },
+      "time_to_target_ms": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p90": null,
+        "p99": null,
+        "max": null
+      },
+      "final_lower_bound": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_upper_bound": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_absolute_gap": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_relative_gap": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "states": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "expanded_states": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "rows": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "transitions": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "reforge_work": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "compiled_nodes": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "compiled_edges": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "strategy_json_bytes": {
+        "count": 2,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      }
+    },
+    "status_transitions": {
+      "bounded_feasible->bounded_feasible": 2
+    },
+    "regressions": [],
+    "pairs": [
+      {
+        "id": "ho01-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Pinnacle Tower Shield",
+          "class": "Shield",
+          "base_class": "Shield / Pinnacle Tower Shield",
+          "natural_t1_count": "3",
+          "side_mix": "PPS",
+          "pool_density": "dense_ge_100",
+          "goal_probability": "moderate_le_0.02",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "bounded_feasible",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "candidate_status": {
+          "actual": "bounded_feasible",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "deltas": {
+          "wall_ms": 230.9020999999775,
+          "solve_ms": 57.67480000000796,
+          "solve_step_median_ms": 0.00010000000000000286,
+          "solve_step_p95_ms": 7.492799999999988,
+          "solve_step_max_ms": 68.66070000000002,
+          "peak_memory_bytes": 1333504.0,
+          "time_to_incumbent_ms": 325.0079999999998,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      },
+      {
+        "id": "ho02-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Prophecy Wand",
+          "class": "Wand",
+          "base_class": "Wand / Prophecy Wand",
+          "natural_t1_count": "3",
+          "side_mix": "PSS",
+          "pool_density": "dense_ge_100",
+          "goal_probability": "low_le_0.005",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "refused_resource_cap",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\dirty-v14-public.exe",
+            "sha256": "6e373a8a160971bf9a38f418c63fc7904ae4424dccced4cae63d5936f68c4a96"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+            "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_state_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "candidate_status": {
+          "actual": "refused_state_cap",
+          "policy": "bounded_feasible",
+          "termination": "refused_resource_cap"
+        },
+        "deltas": {
+          "wall_ms": 21971.87949999998,
+          "solve_ms": 21707.366100000014,
+          "solve_step_median_ms": 0.0034000000000000002,
+          "solve_step_p95_ms": 27.37129999999999,
+          "solve_step_max_ms": 783.6274000000003,
+          "peak_memory_bytes": 0.0,
+          "time_to_incumbent_ms": 3342.2635999999984,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 0.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      }
+    ]
+  }
+}

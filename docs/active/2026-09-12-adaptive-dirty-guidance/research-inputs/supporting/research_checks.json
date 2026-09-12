@@ -1,0 +1,67 @@
+{
+  "classification": "exact synthetic examples; no native solves, token-price measurement, or general learning guarantee",
+  "number_of_checks": 34,
+  "checks": {
+    "guidance_selects_B_initially": true,
+    "only_C_retired_by_certified_comparison": true,
+    "soft_deferred_A_can_still_be_best": true,
+    "lower_and_upper_not_changed_by_bad_prediction": true,
+    "mixing_estimate_with_lower_does_not_certify": true,
+    "ring_both_goals_four_affixes_ties_empty": true,
+    "ring_both_goals_five_affixes_looks_worse": true,
+    "amulet_three_goals_six_affixes_ties_empty": true,
+    "dirty_full_mask_not_terminal": true,
+    "clean_goal_is_terminal": true,
+    "dirty_controller_complete_cost": true,
+    "dirty_controller_beats_clean_100": true,
+    "one_shot_prefers_B": true,
+    "repetition_prefers_A": true,
+    "repeated_values": true,
+    "return_gain_identity_A": true,
+    "return_gain_identity_B": true,
+    "q_one_is_not_proper": true,
+    "singular_loop_refused": true,
+    "fixed_policy_residual_identity": true,
+    "residual_times_horizon_bound": true,
+    "small_escape_error_large_cost_error": true,
+    "truncated_spend_understates_true_cost": true,
+    "zero_sample_success_does_not_mean_impossible": true,
+    "simulator_action_cap_is_not_nontermination_proof": true,
+    "no_action_hindsight": true,
+    "all_outcomes_not_best_successor": true,
+    "unknown_mass_not_renormalized_away": true,
+    "estimate_can_relax": true,
+    "estimate_can_increase": true,
+    "fixed_policy_target_not_optimality_label": true,
+    "changed_controller_invalidates_calibration_label": true,
+    "reserved_regular_service_visits_deferred_A": true,
+    "regular_service_does_not_retire_actions": true
+  },
+  "dirty_route_cost": "44/3",
+  "one_shot": {
+    "A": "991",
+    "B": "900"
+  },
+  "repeated": {
+    "A": "100",
+    "B": "500"
+  },
+  "residual_example": {
+    "J": [
+      "115/4",
+      "35/2"
+    ],
+    "horizon": [
+      "55/4",
+      "15/2"
+    ]
+  },
+  "ten_step_censored_mean": "9955119790251790119955009999/1000000000000000000000000000",
+  "polling_illustration_not_observation": {
+    "run_seconds": 600,
+    "poll_seconds": 30,
+    "nominal_wait_calls": 20,
+    "blocking_final_returns": 1,
+    "pricing_claim": null
+  }
+}
