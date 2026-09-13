@@ -1,0 +1,13 @@
+[
+  {
+    "case": "witness-amulet-200m",
+    "utc": "2026-09-13T05:00:36.145292+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 38345121792,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 15032385536,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One qualified native request: 8-GiB aggregate plus 6-GiB runner headroom."
+  }
+]

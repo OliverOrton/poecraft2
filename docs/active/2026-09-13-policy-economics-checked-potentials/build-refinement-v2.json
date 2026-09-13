@@ -1,0 +1,63 @@
+{
+  "reviewed_main": "bf3b980041821acee1f1f8149afc912a22021884",
+  "executable": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\refinement-v2.exe",
+  "sha256": "92db16864e82681132bf6ae02a4390593af370b09ac6000a45db98920ec43b6d",
+  "sources": [
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "sha256": "7d78a5fc2308d3840a9b57807c2fa91318fdd7960f175f0bae9f8d3e70498330"
+    },
+    {
+      "path": "engine/src/solver_calc_types.hpp",
+      "sha256": "3f0bd16afca1c519029c66bef0549bc4011f353e4a9dd193f2c3fd3d1074903d"
+    },
+    {
+      "path": "engine/src/solver_eval.cpp",
+      "sha256": "1993c6fd16a4323148ec7660a9315d1f96e3bf82366b08336a14872abfd39dc6"
+    },
+    {
+      "path": "engine/src/solver_eval_types.hpp",
+      "sha256": "38ea9317cfd0dd822862921ff62bf7b4cfdbce7612c09b8ec584a783d0139de6"
+    },
+    {
+      "path": "engine/src/solver_options_semantics.cpp",
+      "sha256": "239fe840d592cee979fed6628946766a5c912d2c9f8fa3c0e6f1cf6b24f0c265"
+    },
+    {
+      "path": "engine/src/solver_phase_lower.hpp",
+      "sha256": "02b40493bab738e604cbe610fc45218a92c4d07624a41118616284dddd34d312"
+    },
+    {
+      "path": "engine/src/solver_phase_probability.cpp",
+      "sha256": "1005f264b045cd99363c995dfff16b93b3eefcfa54bf6fc5823e815ea22d38db"
+    },
+    {
+      "path": "engine/src/solver_solve_bounds.cpp",
+      "sha256": "7d843ea5454ffdfd1059417377e35948d00edbd32ee7f4294b16de9e5c874e3a"
+    },
+    {
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "sha256": "38a42895de0ccb2ecdee3c1ad6dce1ace0900509d70fdeea43b3283c44f33ad3"
+    },
+    {
+      "path": "engine/src/solver_solve_types.hpp",
+      "sha256": "4c5b02fe07040e00a5e6a3c5b54ef877df4811b01856940083dac47d258cb5a2"
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "sha256": "f2952df4911acfd387cb599b9921cf4534d4a6812b5f8edbe689eb33bfaf15da"
+    },
+    {
+      "path": "engine/tests/test_solver_calc.cpp",
+      "sha256": "aef0f7bfa1146020af414f8bc147b78ea1551d37ec740eac272419a8ff5a856d"
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "f2125ef8e29db9e2fd53eae4cc04b39d92050f06bf89e63b318a4cb1afadb6b5"
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "sha256": "63240a81bab90ba3a1ab965477a45ee4ff5f108d03492fec979b9440bfa2a869"
+    }
+  ]
+}

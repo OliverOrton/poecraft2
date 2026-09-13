@@ -87,6 +87,11 @@ int main(int argc, char** argv) {
         std::printf("solver attribution-recovery tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 2 && std::string(argv[1]) == "--solver-native-blocker-entry-only") {
+        run_solver_native_blocker_entry_tests(argv[2]);
+        std::printf("solver native blocker-entry tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-protected-setup-only") {
         run_solver_protected_setup_tests();
         std::printf("solver protected-setup tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

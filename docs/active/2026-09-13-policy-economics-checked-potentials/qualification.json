@@ -1,0 +1,685 @@
+{
+  "reviewed_main": "bf3b980041821acee1f1f8149afc912a22021884",
+  "status": "partial economic success; predeclared programme targets unmet",
+  "push_status": "reviewed main was previously pushed; this programme stays local",
+  "build": {
+    "reviewed_main": "bf3b980041821acee1f1f8149afc912a22021884",
+    "executable": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\final-v3.exe",
+    "sha256": "138bd85ece168e651a6e93e6cba6b97e784f3408e7c27fe76599ebfad31388f8",
+    "sources": [
+      {
+        "path": "engine/benchmarks/solver_benchmark.cpp",
+        "sha256": "4b88d04acabc54fe83848e414ce69a95a70b4f1336cb5f8c353cfcb6959d1197"
+      },
+      {
+        "path": "engine/src/solver_calc_types.hpp",
+        "sha256": "3f0bd16afca1c519029c66bef0549bc4011f353e4a9dd193f2c3fd3d1074903d"
+      },
+      {
+        "path": "engine/src/solver_eval.cpp",
+        "sha256": "1993c6fd16a4323148ec7660a9315d1f96e3bf82366b08336a14872abfd39dc6"
+      },
+      {
+        "path": "engine/src/solver_eval_types.hpp",
+        "sha256": "38ea9317cfd0dd822862921ff62bf7b4cfdbce7612c09b8ec584a783d0139de6"
+      },
+      {
+        "path": "engine/src/solver_options_semantics.cpp",
+        "sha256": "239fe840d592cee979fed6628946766a5c912d2c9f8fa3c0e6f1cf6b24f0c265"
+      },
+      {
+        "path": "engine/src/solver_phase_lower.hpp",
+        "sha256": "dd157ebbebcafc9645e1c682eb67bdad2e830aa8908d085ca2029b04b568c183"
+      },
+      {
+        "path": "engine/src/solver_phase_probability.cpp",
+        "sha256": "396827c3c07cc542f896c625b9c6d178dbce23e749a6bfbad36888ece5ad6c61"
+      },
+      {
+        "path": "engine/src/solver_solve_bounds.cpp",
+        "sha256": "7d843ea5454ffdfd1059417377e35948d00edbd32ee7f4294b16de9e5c874e3a"
+      },
+      {
+        "path": "engine/src/solver_solve_return_bridge.cpp",
+        "sha256": "962d380af526bf5685e1a56b0a20c825b5771dcc2b9284ebff870c431fb3e643"
+      },
+      {
+        "path": "engine/src/solver_solve_types.hpp",
+        "sha256": "4c5b02fe07040e00a5e6a3c5b54ef877df4811b01856940083dac47d258cb5a2"
+      },
+      {
+        "path": "engine/tests/test_main.cpp",
+        "sha256": "f2952df4911acfd387cb599b9921cf4534d4a6812b5f8edbe689eb33bfaf15da"
+      },
+      {
+        "path": "engine/tests/test_solver_calc.cpp",
+        "sha256": "a4f4d2de0a179bacf2891f6080e7fa66bca1eba74cc49dfdfaf7c0d98a186f2e"
+      },
+      {
+        "path": "engine/tests/test_solver_compile.cpp",
+        "sha256": "f2125ef8e29db9e2fd53eae4cc04b39d92050f06bf89e63b318a4cb1afadb6b5"
+      },
+      {
+        "path": "engine/tests/tests.hpp",
+        "sha256": "63240a81bab90ba3a1ab965477a45ee4ff5f108d03492fec979b9440bfa2a869"
+      }
+    ]
+  },
+  "native_dll_sha256": "b7f8e8695bbc89c08fc3006353cb30ccc6dcd809d5a825903397200812ea3b0a",
+  "sources_still_match_frozen_build": true,
+  "modes": {
+    "native_retention_diagnostic": "reuse",
+    "native_dirty_guidance": "selective-options",
+    "public_static_and_browser_defaults": "unchanged"
+  },
+  "resources": {
+    "requested_seconds": 600,
+    "native_final_seconds": 840,
+    "host_seconds": 870,
+    "aggregate_bytes": 8589934592,
+    "candidate_checker_bytes": 4294967296,
+    "final_states": 2000000,
+    "final_pairs": 10000000,
+    "final_transitions": 40000000,
+    "initial_work": {
+      "amulet": 200000000,
+      "ring_four": 400000000
+    },
+    "matched_amulet_derivative_work": 400000000,
+    "fresh_host_reservation_bytes": 15032385536,
+    "larger_time_profile_used": false
+  },
+  "families": [
+    {
+      "family": "Amulet CB08",
+      "U": 12541.579648544115,
+      "L": 174.79327321907147,
+      "expected_actions": 25518.491313143768,
+      "exact": false,
+      "qualification": "fresh matched final-v3 400M solve and independent native evaluation",
+      "gain_percent": 4.697244654369867,
+      "absolute_gap": 12366.786375325044
+    },
+    {
+      "family": "Ring FOUR CB07",
+      "U": 227989.251597418,
+      "L": 201.85524142944053,
+      "expected_actions": 585368.3255100878,
+      "exact": false,
+      "qualification": "fresh matched repair-v1 400M solve; preserved graph re-evaluated by final-v3 DLL",
+      "gain_percent": 0,
+      "absolute_gap": 227787.39635598857
+    },
+    {
+      "family": "Bow CB04",
+      "U": 223349.0000393144,
+      "L": 341.0345603014526,
+      "expected_actions": 1404492.0069683318,
+      "exact": false,
+      "qualification": "preserved graph re-evaluated by final-v3 DLL; no fresh final-v3 solve",
+      "gain_percent": 0,
+      "absolute_gap": 223007.96547901293
+    }
+  ],
+  "strategy_sha256": "805f6161caff50680a35b171cc3f2541a79f38ee01e1c1bf20d86a94a9ffb6bb",
+  "matched_400m_checks": "matched-400m-explicit-checks.json",
+  "preserved_graph_evaluations": [
+    {
+      "kind": "fresh_native_evaluation_of_preserved_root_policy",
+      "case": "docs/active/2026-09-12-adaptive-dirty-guidance/native-600-final840/bow/cb04-cross-base-product8-long240.json",
+      "case_sha256": "3477f5c22b163292ffa85a24213ef3e181bbf63a21f45bfe35d0f376abf7a18f",
+      "strategy": "out/selective-continuation-improvement/options-v3-bow-200m/strategies/cb04-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "8640a80a6183f372b7744f14a1f88a66d1ed3a8237d336115b5b3964153981fb",
+      "native_dll_sha256": "b7f8e8695bbc89c08fc3006353cb30ccc6dcd809d5a825903397200812ea3b0a",
+      "limits": {
+        "epsilon": 1e-12,
+        "max_sweeps": 100000,
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296
+      },
+      "reference_upper": 223349.0000393144,
+      "wall_ms": 3912.0938000269234,
+      "checks": {
+        "converged": true,
+        "complete_cost": true,
+        "goal_mass": true,
+        "zero_other_mass": true,
+        "same_upper": true
+      },
+      "full_evaluation": {
+        "path": "out/policy-economics-checked-potentials/recheck-bow-full.json",
+        "sha256": "39040897a3166ad8821253b9e16d4683e080af9b9836dde82e927e640f14e724"
+      },
+      "projection_scope": "Compact fixed-policy preservation check; full native node/edge accounting retained at full_evaluation."
+    },
+    {
+      "kind": "fresh_native_evaluation_of_preserved_root_policy",
+      "case": "docs/active/2026-09-13-selective-continuation-improvement/native-600-final840-ring-four-400m/cb07-cross-base-product8-long240.json",
+      "case_sha256": "3e3ea7b3bdf2fb1258a33e99c980c0b048fef34484d19951f34712bfb62178ed",
+      "strategy": "out/selective-continuation-improvement/options-v4-ring-four-400m/strategies/cb07-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "437931fe98e2162098795677c54d67b184d63ff0924ff8519c541f68fd3fdf3e",
+      "native_dll_sha256": "b7f8e8695bbc89c08fc3006353cb30ccc6dcd809d5a825903397200812ea3b0a",
+      "limits": {
+        "epsilon": 1e-12,
+        "max_sweeps": 100000,
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296
+      },
+      "reference_upper": 227989.251597418,
+      "wall_ms": 18504.619000013918,
+      "checks": {
+        "converged": true,
+        "complete_cost": true,
+        "goal_mass": true,
+        "zero_other_mass": true,
+        "same_upper": true
+      },
+      "full_evaluation": {
+        "path": "out/policy-economics-checked-potentials/recheck-ring-four-full.json",
+        "sha256": "2b66e47c8f3f7d1d6e1d9edad18e9861b6528a096fbc5de182205c85fe0691fb"
+      },
+      "projection_scope": "Compact fixed-policy preservation check; full native node/edge accounting retained at full_evaluation."
+    }
+  ],
+  "original_subset": {
+    "receipt": "original-preservation.json",
+    "cases": [
+      "cb03-cross-base-product8-long240",
+      "cb05-cross-base-product8-long240",
+      "cb09-cross-base-product8-long240",
+      "cb12-cross-base-product8-long240",
+      "ho01-cross-base-product8-long240",
+      "ho02-cross-base-product8-long240"
+    ],
+    "bounded_cost_regressions": [],
+    "new_contract_failures": [],
+    "known_failures": [
+      "CB05 named-stop contract fails",
+      "CB09 memory cap returns no policy"
+    ],
+    "historical_cb03_upper": 536407.1454,
+    "reproduced_cb03_upper": 794067.4530398862,
+    "full_fourteen_rerun": false
+  },
+  "estimates_effect": "Existing private continuation estimate selected the blocker; physical-entry priority after an observed closed seed completed it. No isolated ordering-only effect or new learner is claimed.",
+  "potentials": [
+    {
+      "kind": "checked_native_potential_pilot_v1",
+      "case": "cb08-cross-base-product8-long240",
+      "estimate": 13159.724084639676,
+      "useful_root_threshold": 2771.779435503191,
+      "prior_root_lower": 174.79327321907147,
+      "query_workspace_limit": 33554432,
+      "resistance_support_refinement": false,
+      "query": {
+        "states": 415,
+        "sources": 411,
+        "constraints": 6017,
+        "root_cell": 642,
+        "checked_base_root": 17.284999999999997,
+        "coefficient_model": "exact_binary_model",
+        "scalar_auxiliary_ceiling": 17.284999999999997,
+        "ceiling_action": "harvest_resist:fire:lightning",
+        "ceiling_scope": "one-step independent-exit policy of this optimistic query, not a native executable action tail"
+      },
+      "rays": [
+        {
+          "direction": "aggressive_square_root_shape",
+          "raw_root": 13159.724084639676,
+          "alpha_proposed": 0.00019323320728973457,
+          "alpha_checked": 0.00019323320728973457,
+          "checked_root": 2.542895691922891,
+          "trials": 1,
+          "limiting_cell": 808,
+          "limiting_action": "remove_crafted_modifiers",
+          "slack_proposal": 0.3741,
+          "slope_proposal": 1936.0026428535812,
+          "exact_maximal_alpha_claimed": false,
+          "native_minima_recheck_required": true
+        },
+        {
+          "direction": "changed_checked_shape",
+          "raw_root": 13159.724084639676,
+          "alpha_proposed": 0.0013134773866707004,
+          "alpha_checked": 0.0013134773866707004,
+          "checked_root": 17.284999999999997,
+          "trials": 1,
+          "limiting_cell": 145,
+          "limiting_action": "harvest_resist:fire:lightning",
+          "slack_proposal": 17.284999999999997,
+          "slope_proposal": 13159.724084639676,
+          "exact_maximal_alpha_claimed": false,
+          "native_minima_recheck_required": true
+        }
+      ],
+      "pilot_ns": 20207700,
+      "query_visited": true,
+      "fresh_native_minima_rechecked": true,
+      "ray_native_accepted": true,
+      "native_retention_lower": 17.284999999999997,
+      "ordinary_root_composition": 174.79327321907147,
+      "root_consumer_delta": 0,
+      "native_refusal": "",
+      "peak_proof_bytes": 13755329
+    },
+    {
+      "kind": "checked_native_potential_pilot_v1",
+      "case": "cb08-cross-base-product8-long240",
+      "estimate": 13159.724084639676,
+      "useful_root_threshold": 2771.779435503191,
+      "prior_root_lower": 174.79327321907147,
+      "query_workspace_limit": 33554432,
+      "resistance_support_refinement": true,
+      "query": {
+        "states": 415,
+        "sources": 411,
+        "constraints": 6551,
+        "root_cell": 642,
+        "checked_base_root": 28.971664555715726,
+        "coefficient_model": "exact_binary_model",
+        "scalar_auxiliary_ceiling": 424,
+        "ceiling_action": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "ceiling_scope": "one-step independent-exit policy of this optimistic query, not a native executable action tail"
+      },
+      "rays": [
+        {
+          "direction": "aggressive_square_root_shape",
+          "raw_root": 13159.724084639676,
+          "alpha_proposed": 0.0002501691739420063,
+          "alpha_checked": 0.0002501691739420063,
+          "checked_root": 3.292157303559033,
+          "trials": 1,
+          "limiting_cell": 808,
+          "limiting_action": "remove_crafted_modifiers",
+          "slack_proposal": 0.3741,
+          "slope_proposal": 1495.388077216592,
+          "exact_maximal_alpha_claimed": false,
+          "native_minima_recheck_required": true
+        },
+        {
+          "direction": "changed_checked_shape",
+          "raw_root": 13159.724084639676,
+          "alpha_proposed": 0.002201540425336171,
+          "alpha_checked": 0.002201540425336171,
+          "checked_root": 28.971664558604285,
+          "trials": 1,
+          "limiting_cell": 338,
+          "limiting_action": "bench:HelenaMasterFireResist1",
+          "slack_proposal": 0.01165,
+          "slope_proposal": 5.291749297867682,
+          "exact_maximal_alpha_claimed": false,
+          "native_minima_recheck_required": true
+        }
+      ],
+      "pilot_ns": 27517700,
+      "query_visited": true,
+      "fresh_native_minima_rechecked": true,
+      "ray_native_accepted": true,
+      "native_retention_lower": 28.971664558604285,
+      "ordinary_root_composition": 174.79327321907147,
+      "root_consumer_delta": 0,
+      "native_refusal": "",
+      "peak_proof_bytes": 14343353
+    },
+    {
+      "kind": "checked_native_potential_pilot_v1",
+      "case": "cb07-cross-base-product8-long240",
+      "estimate": 227989.251597418,
+      "useful_root_threshold": 45759.33451262713,
+      "prior_root_lower": 201.85524142944053,
+      "query_workspace_limit": 33554432,
+      "resistance_support_refinement": false,
+      "query": {
+        "states": 786,
+        "sources": 782,
+        "constraints": 8346,
+        "root_cell": 1282,
+        "checked_base_root": 9.504999999999999,
+        "coefficient_model": "exact_binary_model",
+        "scalar_auxiliary_ceiling": 9.504999999999999,
+        "ceiling_action": "harvest_resist:cold:fire",
+        "ceiling_scope": "one-step independent-exit policy of this optimistic query, not a native executable action tail"
+      },
+      "rays": [
+        {
+          "direction": "aggressive_square_root_shape",
+          "raw_root": 227989.251597418,
+          "alpha_proposed": 8.27095278680131e-06,
+          "alpha_checked": 8.270952293814108e-06,
+          "checked_root": 1.8856882234646262,
+          "trials": 25,
+          "limiting_cell": 1611,
+          "limiting_action": "remove_crafted_modifiers",
+          "slack_proposal": 0.3741,
+          "slope_proposal": 45230.58100355553,
+          "exact_maximal_alpha_claimed": false,
+          "native_minima_recheck_required": true
+        },
+        {
+          "direction": "changed_checked_shape",
+          "raw_root": 227989.251597418,
+          "alpha_proposed": 4.1690561872556466e-05,
+          "alpha_checked": 4.1690561872556466e-05,
+          "checked_root": 9.504999999999999,
+          "trials": 1,
+          "limiting_cell": 1611,
+          "limiting_action": "remove_crafted_modifiers",
+          "slack_proposal": 0.3741,
+          "slope_proposal": 8973.253973970972,
+          "exact_maximal_alpha_claimed": false,
+          "native_minima_recheck_required": true
+        }
+      ],
+      "pilot_ns": 189847600,
+      "query_visited": true,
+      "fresh_native_minima_rechecked": true,
+      "ray_native_accepted": true,
+      "native_retention_lower": 9.504999999999999,
+      "ordinary_root_composition": 201.85524142944053,
+      "root_consumer_delta": 0,
+      "native_refusal": "",
+      "peak_proof_bytes": 16336193
+    },
+    {
+      "kind": "checked_native_potential_pilot_v1",
+      "case": "cb07-cross-base-product8-long240",
+      "estimate": 227989.251597418,
+      "useful_root_threshold": 45759.33451262713,
+      "prior_root_lower": 201.85524142944053,
+      "query_workspace_limit": 33554432,
+      "resistance_support_refinement": true,
+      "query": {
+        "states": 786,
+        "sources": 782,
+        "constraints": 12045,
+        "root_cell": 1282,
+        "checked_base_root": 27.059999997293986,
+        "coefficient_model": "exact_binary_model",
+        "scalar_auxiliary_ceiling": 27.059999999999985,
+        "ceiling_action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingSockets+Metadata/Items/Currency/CurrencyDelveCraftingVaal",
+        "ceiling_scope": "one-step independent-exit policy of this optimistic query, not a native executable action tail"
+      },
+      "rays": [
+        {
+          "direction": "aggressive_square_root_shape",
+          "raw_root": 227989.251597418,
+          "alpha_proposed": 1.3955434967724932e-05,
+          "alpha_checked": 1.3955434967724932e-05,
+          "checked_root": 3.181689174008045,
+          "trials": 1,
+          "limiting_cell": 1611,
+          "limiting_action": "remove_crafted_modifiers",
+          "slack_proposal": 0.3741,
+          "slope_proposal": 26806.760295554384,
+          "exact_maximal_alpha_claimed": false,
+          "native_minima_recheck_required": true
+        },
+        {
+          "direction": "changed_checked_shape",
+          "raw_root": 227989.251597418,
+          "alpha_proposed": 0.00011868980581497875,
+          "alpha_checked": 0.00011868979874051503,
+          "checked_root": 27.05999838709819,
+          "trials": 25,
+          "limiting_cell": 1223,
+          "limiting_action": "regal",
+          "slack_proposal": 0.1563,
+          "slope_proposal": 1316.8780496924091,
+          "exact_maximal_alpha_claimed": false,
+          "native_minima_recheck_required": true
+        }
+      ],
+      "pilot_ns": 332481900,
+      "query_visited": true,
+      "fresh_native_minima_rechecked": true,
+      "ray_native_accepted": true,
+      "native_retention_lower": 27.059999997293986,
+      "ordinary_root_composition": 201.85524142944053,
+      "root_consumer_delta": 0,
+      "native_refusal": "",
+      "peak_proof_bytes": 18523489
+    }
+  ],
+  "potential_disposition": "Complete original/refined native queries accepted checked vectors; root delta zero. Refinement remains benchmark-only. Ray limits and auxiliary model ceilings do not establish native uppers.",
+  "sampling": {
+    "purpose": "Fresh native execution qualification of the changed controller; sampling is not cost or properness authority.",
+    "case": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb08-cross-base-product8-long240.json",
+    "strategy_sha256": "805f6161caff50680a35b171cc3f2541a79f38ee01e1c1bf20d86a94a9ffb6bb",
+    "native_dll_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_engine.dll",
+    "native_dll_sha256": "b7f8e8695bbc89c08fc3006353cb30ccc6dcd809d5a825903397200812ea3b0a",
+    "options": {
+      "target_runs": 1000,
+      "seed": 2026091303,
+      "max_actions_per_run": 100000,
+      "max_graph_steps_per_run": 4000000,
+      "max_cost_per_run": 0.0,
+      "retained_trace_count": 0,
+      "max_trace_entries": 512,
+      "retained_success_count": 5,
+      "retained_failure_count": 5
+    },
+    "summary": {
+      "completed_runs": 1000,
+      "success_count": 981,
+      "failure_count": 19,
+      "stop_count": 0,
+      "total_actions": 24625366,
+      "action_limit_count": 19,
+      "cost_limit_count": 0,
+      "step_limit_count": 0,
+      "no_matching_edge_count": 0,
+      "action_not_applied_count": 0,
+      "missing_price_run_count": 0,
+      "costed_action_count": 24625366,
+      "missing_price_action_count": 0,
+      "known_total_cost": 12114507.956703197,
+      "cost_status": "complete",
+      "seed": 2026091303,
+      "target_runs": 1000
+    },
+    "action_distribution": [
+      {
+        "node_id": "s0",
+        "action_type": 9,
+        "count": 24266113
+      },
+      {
+        "node_id": "s31",
+        "action_type": 7,
+        "count": 200577
+      },
+      {
+        "node_id": "s16",
+        "action_type": 6,
+        "count": 69711
+      },
+      {
+        "node_id": "s207",
+        "action_type": 11,
+        "count": 29017
+      },
+      {
+        "node_id": "s207_o1",
+        "action_type": 6,
+        "count": 29017
+      },
+      {
+        "node_id": "s207_o2",
+        "action_type": 25,
+        "count": 29017
+      },
+      {
+        "node_id": "s143",
+        "action_type": 11,
+        "count": 957
+      },
+      {
+        "node_id": "s143_o1",
+        "action_type": 8,
+        "count": 957
+      }
+    ],
+    "failure_summaries": [
+      {
+        "failure_reason": 2,
+        "node_id": "s0",
+        "detail": "action limit reached",
+        "count": 19
+      }
+    ],
+    "missing_prices": {},
+    "sampled_accounting": {
+      "evidence_source": "simulator_sample",
+      "sample_count": 1000,
+      "seed": 2026091303,
+      "actions": [
+        {
+          "action_id": "annul",
+          "count": 200577,
+          "average_per_invocation": 200.577
+        },
+        {
+          "action_id": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+          "count": 957,
+          "average_per_invocation": 0.957
+        },
+        {
+          "action_id": "bench:EinharMasterAddedLightningDamage1",
+          "count": 29017,
+          "average_per_invocation": 29.017
+        },
+        {
+          "action_id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "count": 24266113,
+          "average_per_invocation": 24266.113
+        },
+        {
+          "action_id": "exalt",
+          "count": 98728,
+          "average_per_invocation": 98.728
+        },
+        {
+          "action_id": "remove_crafted_modifiers",
+          "count": 29017,
+          "average_per_invocation": 29.017
+        },
+        {
+          "action_id": "scour",
+          "count": 957,
+          "average_per_invocation": 0.957
+        }
+      ],
+      "materials": [
+        {
+          "price_key": "annul",
+          "count": 200577,
+          "average_per_invocation": 200.577
+        },
+        {
+          "price_key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+          "count": 957,
+          "average_per_invocation": 0.957
+        },
+        {
+          "price_key": "bench:EinharMasterAddedLightningDamage1",
+          "count": 29017,
+          "average_per_invocation": 29.017
+        },
+        {
+          "price_key": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "count": 24266113,
+          "average_per_invocation": 24266.113
+        },
+        {
+          "price_key": "exalt",
+          "count": 98728,
+          "average_per_invocation": 98.728
+        },
+        {
+          "price_key": "scour",
+          "count": 29974,
+          "average_per_invocation": 29.974
+        }
+      ]
+    },
+    "wall_ms": 40679.414800019
+  },
+  "wasm_receipt": "wasm-preservation.json",
+  "focused_tests": [
+    {
+      "log": "out\\policy-economics-checked-potentials\\final-phase-lower-tests.log",
+      "sha256": "1c6f4ae40da37d7637e8a6a025370f07f79f72dfdce9178988e7bec4315968cf",
+      "final_lines": [
+        "solver phase-lower tests: 254 checks, 0 failures"
+      ]
+    },
+    {
+      "log": "out\\policy-economics-checked-potentials\\final-native-blocker-entry-tests.log",
+      "sha256": "9262b3706aee6720f6def8d6cd09eb396cec941b95c48169d95a7d4c850b55f0",
+      "final_lines": [
+        "native blocker decision Metadata/Items/Rings/Ring10: option:temporary_bench_repeat:bench:EinharMasterAddedLightningDamage1:exalt:until:1:1 / exact_kernel_unsupported",
+        "native blocker entry Metadata/Items/Rings/Ring10: coarse=0 observed=0 conflicting=1",
+        "solver native blocker-entry tests: 36 checks, 0 failures"
+      ]
+    },
+    {
+      "log": "out\\policy-economics-checked-potentials\\final-protected-setup-tests.log",
+      "sha256": "f87d5e1e9e71b4a8576b180837b40c09bf86f61bddce6f9240633f495c607048",
+      "final_lines": [
+        "native-options upper=15.0714285714",
+        "selective native growth: eager=15.0714285714 selective=15.0714285714",
+        "solver protected-setup tests: 372 checks, 0 failures"
+      ]
+    },
+    {
+      "log": "out\\policy-economics-checked-potentials\\final-eval-artifact-tests.log",
+      "sha256": "06506adf2a0131d988028ad4e8d1f425a0d7e35c82c08b5cb2864736c5b4e90b",
+      "final_lines": [
+        "solver eval mc scour: exact=4.149306 observed=4.094700 tol=0.267821",
+        "solver eval mc base: exact=4.149306 observed=4.094700 tol=0.267821",
+        "solver evaluator tests: 16927 checks, 0 failures"
+      ]
+    },
+    {
+      "log": "out\\policy-economics-checked-potentials\\final-quotient-proof-tests.log",
+      "sha256": "5adb397eb544c77ddc8a60001a7d204e0a487b2a587d1594e87dda304d5fcbeb",
+      "final_lines": [
+        "solver quotient-proof tests: 822 checks, 0 failures"
+      ]
+    },
+    {
+      "log": "out\\policy-economics-checked-potentials\\final-worker-tests.log",
+      "sha256": "e6e27b8fb6fb2f7fc4ca0ffef6c2987989372fc46d6ff58250b199fb965f8e51",
+      "final_lines": [
+        "..........................                                               [100%]",
+        "26 passed in 2.84s"
+      ]
+    }
+  ],
+  "knowledge_lint": "knowledge-lint.json",
+  "targets": {
+    "amulet_upper": 9869.793063479758,
+    "ring_four_upper": 170991.9386980635,
+    "amulet_proof_lower": 2771.779435503191,
+    "ring_four_proof_lower": 45759.33451262713,
+    "cost_targets_met": false,
+    "proof_targets_met": false
+  },
+  "limitations": [
+    "No primary exact result",
+    "No fresh final-v3 Ring or Bow 600-second solve; final checks evaluate preserved graphs",
+    "Eight original core cases and full native acceptance not rerun",
+    "No broad web suite or rendered UI review",
+    "Initial evaluator invocation skipped artifact suite; final artifact rerun passed",
+    "Amulet 19/1000 and earlier unchanged Ring 847/1000 action-limit stops retained",
+    "Maximum native solve slice remains about 20 seconds; no responsive cancellation bound claimed",
+    "Root-only dirty artifacts have no forged parent bindings",
+    "Ring local blocker option remains exact_kernel_unsupported; unfinished native alternatives stay unknown"
+  ],
+  "retained": "Native entry observation and targeted bounded patch, failure witness, verified cheaper Amulet graph, benchmark-only checked-potential diagnostic and one bounded support refinement, mathematical argument and historical failures",
+  "not_selected": "Another learner, inverse backend, lower-model campaign, larger time profile, automatic restart, push"
+}

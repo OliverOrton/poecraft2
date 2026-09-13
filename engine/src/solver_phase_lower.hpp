@@ -6,6 +6,19 @@
 namespace poecraft::solver {
 
 class SolveWork;
+namespace quotient { class QuotientBellmanGraph; struct QuotientBellmanCellInput; }
+
+// Bounded native-query experiment seam. Proposals remain untrusted and must
+// return through fresh native event/observation minimization before consumption.
+// Numerical experiment code lives with the benchmark, not the trusted checker.
+struct PhaseLowerQueryDiagnostic {
+    bool refine_resistance_support = false;
+    std::function<std::optional<std::vector<double>>(
+        const quotient::QuotientBellmanGraph&, const quotient::QuotientLowerQuery&,
+        const std::vector<quotient::QuotientBellmanCellInput>&,
+        const std::vector<double>&, const quotient::QuotientLowerBudget&)> propose;
+    std::function<void(const std::vector<double>&, bool)> rechecked;
+};
 
 using PhaseLowerPrices = std::unordered_map<std::string, double>;
 
@@ -295,7 +308,8 @@ public:
         PhaseContinuation continuation = PhaseContinuation::PriceOnly,
         PhaseRetention retention = PhaseRetention::None, bool retain_diagnostics = true,
         PhasePreparationOptions preparation_options = {},
-        std::optional<CoupledFractureFrame> frame = {});
+        std::optional<CoupledFractureFrame> frame = {},
+        const PhaseLowerQueryDiagnostic* query_diagnostic = nullptr);
     static PreparedPhaseRestartLower zero_restart_boundary(const PreparedPhaseLowerView&);
     static PhaseProgramLowerWitness compose(CalcContext&, const PhaseLowerPrices&,
         const pc_item_state&, const std::string&, const PreparedPhasePotential&,

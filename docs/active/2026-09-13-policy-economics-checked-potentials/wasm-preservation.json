@@ -1,0 +1,206 @@
+{
+  "sha256": "d8bb700ecf14c9f6b998975b6142d573ea25e9ba5755782aadf6c52ada7878d8",
+  "processes": [
+    {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 9596,
+      "process_identity_token": "9596:134337565961200611",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 27623.322100029327,
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "--import",
+        "tsx",
+        "test/retention-wasm.test.ts"
+      ],
+      "watchdog_seconds": 315
+    },
+    {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 59560,
+      "process_identity_token": "59560:134337566237439924",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 77302.09529999411,
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "--import",
+        "tsx",
+        "test/empty-start-retention-wasm.test.ts",
+        "--output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\wasm\\conquest-five.json"
+      ],
+      "watchdog_seconds": 105
+    },
+    {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 42804,
+      "process_identity_token": "42804:134337567010470294",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 52639.38040001085,
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "--import",
+        "tsx",
+        "test/solver-benchmark.ts",
+        "--corpus",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+        "--case",
+        "cb12-cross-base-product8-long240",
+        "--output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\wasm\\exact-regalia.json"
+      ],
+      "watchdog_seconds": 315
+    }
+  ],
+  "conquest": {
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 85558.70618560436,
+      "expanded_states": 3274,
+      "sweeps": 0,
+      "residual": null,
+      "skipped_actions": 1,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "lower_bound": 405.3694021063399,
+      "upper_bound": 85558.70618560436,
+      "evaluated_policy_cost": 85558.70618560436,
+      "absolute_optimality_gap": 85153.33678349802,
+      "relative_optimality_gap": 210.06355275221262,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "registry_actions": 186,
+      "candidate_actions": 28,
+      "evaluator_supported_actions": 28,
+      "supported_priced_actions": 252,
+      "skipped_missing_price_actions": 0,
+      "skipped_unsupported_actions": 1
+    },
+    "total_ms": 75800.33129999999,
+    "memory_after_cleanup": {
+      "ok": true,
+      "live_handles": 0,
+      "native_live_owned_bytes": 80,
+      "native_peak_owned_bytes": 80,
+      "native_serialized_output_bytes": 15,
+      "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+      "wasm_memory_bytes": 577437696
+    },
+    "evaluation": {
+      "converged": true,
+      "terminals": {
+        "success": 1,
+        "failure": 0,
+        "stop": 0,
+        "action_not_applied": 0,
+        "no_matching_edge": 0,
+        "unresolved": 0,
+        "by_node": [
+          {
+            "node_id": "goal",
+            "kind": "success",
+            "p": 1
+          },
+          {
+            "node_id": "offpolicy",
+            "kind": "failure",
+            "p": 0
+          }
+        ]
+      },
+      "expected_actions": 8407.202314771383,
+      "memory": {
+        "owned_bytes_estimate": 50155472,
+        "peak_owned_bytes_estimate": 66253175,
+        "retained_output_owned_bytes_estimate": 0,
+        "max_owned_bytes": 1073741824,
+        "max_output_json_bytes": 67108864
+      }
+    },
+    "report_sha256": "f7ce0248f097a716d3fa6b33d352b0b988409400de738a71c2f09d0fcbab4f7a"
+  },
+  "regalia": {
+    "solve_summary": {
+      "converged": true,
+      "start_state": 0,
+      "start_value": 65.60036144971359,
+      "expanded_states": 1826,
+      "sweeps": 12,
+      "residual": 1.4210854715202004e-14,
+      "skipped_actions": 0,
+      "policy_available": true,
+      "policy_status": "exact",
+      "termination": "exact_closed",
+      "lower_bound": 65.60036144971359,
+      "upper_bound": 65.60036144971359,
+      "evaluated_policy_cost": 65.60036144971359,
+      "absolute_optimality_gap": 0,
+      "relative_optimality_gap": 0,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none",
+      "stop_cause": "exact_closed",
+      "cap_hit_mask": 0,
+      "registry_actions": 158,
+      "candidate_actions": 21,
+      "evaluator_supported_actions": 21,
+      "supported_priced_actions": 74,
+      "skipped_missing_price_actions": 0,
+      "skipped_unsupported_actions": 0,
+      "cancelled": false
+    },
+    "bounded_best_policy_contract": {
+      "checked": true,
+      "passed": true,
+      "path": "exact",
+      "checks": {
+        "named_stop": null,
+        "strict_gap": null,
+        "open_obligations": null,
+        "evaluated_upper": null,
+        "cheapest_independently_evaluated_incumbent": null
+      },
+      "open_work": {
+        "incremental_actions": 0,
+        "refinement_obligations": 0
+      },
+      "failure_reason": null
+    },
+    "errors": [],
+    "evaluation": {
+      "converged": true,
+      "cost_complete": true,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "total_expected_cost": 65.60036144971359,
+      "solver_policy_cost": 65.60036144971359,
+      "cost_delta_absolute": 0,
+      "cost_delta_relative": 0,
+      "cost_reconciled": true
+    },
+    "report_sha256": "ae1269564991fd183c918ee916649e91ca05835068e8215ffede2ada39d81359"
+  },
+  "build_warnings": "Three pre-existing 32-bit size-limit comparisons in unchanged solver_options_automatic.cpp and solver_solve_bellman.cpp."
+}

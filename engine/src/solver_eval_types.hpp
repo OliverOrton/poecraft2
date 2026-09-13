@@ -548,6 +548,17 @@ struct StrategyEvalFailure {
     double probability = 0.0;
 };
 
+// One native representative at a positive failure absorption. Diagnostic only:
+// its physical item does not certify every member of the evaluator class.
+struct StrategyEvalFailureWitness {
+    std::string node_id;
+    std::string action_id;
+    std::string reason;
+    double incoming_mass = 0.0;
+    pc_item_state item{};
+    bool materialized = false;
+};
+
 struct StrategyEvalActionNode {
     std::string node_id;
     double expected_visits = 0.0;
@@ -653,6 +664,7 @@ struct StrategyEvalResult {
     std::vector<StrategyEvalTerminalNode> terminal_nodes;
     std::vector<StrategyEvalNodeMass> unresolved_by_node;
     std::vector<StrategyEvalFailure> failures_by_node;
+    std::optional<StrategyEvalFailureWitness> first_failure;
     std::vector<StrategyEvalNode> nodes;
     std::vector<StrategyEvalEdge> edges;
     std::vector<AbstractState> occupancy_states;

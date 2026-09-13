@@ -1,0 +1,66 @@
+[
+  {
+    "entry": "source",
+    "converged": true,
+    "terminals": {
+      "success": 0,
+      "failure": 0,
+      "stop": 1,
+      "action_not_applied": 0,
+      "no_matching_edge": 0,
+      "unresolved": 0,
+      "by_node": [
+        {
+          "node_id": "exit",
+          "kind": "stop",
+          "p": 1
+        }
+      ]
+    },
+    "failures": [],
+    "accounting": {
+      "per_invocation": {
+        "expected_actions": 2.999999999999999,
+        "known_expected_cost": 2.1907,
+        "total_expected_cost": 2.1907,
+        "cost_complete": true
+      },
+      "success_normalized": null
+    }
+  },
+  {
+    "entry": "conflicting_member",
+    "converged": true,
+    "terminals": {
+      "success": 0,
+      "failure": 0,
+      "stop": 0,
+      "action_not_applied": 1,
+      "no_matching_edge": 0,
+      "unresolved": 0,
+      "by_node": [
+        {
+          "node_id": "exit",
+          "kind": "stop",
+          "p": 0
+        }
+      ]
+    },
+    "failures": [
+      {
+        "node_id": "cleanup",
+        "reason": "action_not_applied",
+        "p": 1
+      }
+    ],
+    "accounting": {
+      "per_invocation": {
+        "expected_actions": 3,
+        "known_expected_cost": 1.8166,
+        "total_expected_cost": 1.8166,
+        "cost_complete": true
+      },
+      "success_normalized": null
+    }
+  }
+]

@@ -122,6 +122,54 @@ std::vector<std::uint64_t> exact_abstract_state_key(
     return key;
 }
 
+CountObservation temporary_bench_conflict_observation(
+        const SessionImpl& session, const ActionDescriptor& action) {
+    CountObservation observation;
+    observation.member_mask.assign(session.words,0);
+    if (action.params.type!=ActionType::Bench || action.params.mod_id>=session.mod_count)
+        throw std::invalid_argument("temporary bench observation requires a native bench modifier");
+    const auto blocker=action.params.mod_id;
+    for (std::uint32_t mod=0;mod<session.mod_count;++mod) {
+        bool conflict=false;
+        for (auto a=session.group_offsets[blocker];a<session.group_offsets[blocker+1];++a)
+            for (auto b=session.group_offsets[mod];b<session.group_offsets[mod+1];++b)
+                conflict |= session.group_ids[a]==session.group_ids[b];
+        if (conflict) {
+            observation.ids.push_back(mod);
+            pc_bitset_set(observation.member_mask.data(),mod);
+        }
+    }
+    return observation;
+}
+
+bool temporary_bench_source_observation_complete(
+        const CalcContext& calc, std::uint32_t source, const ActionDescriptor& action) {
+    const auto observation=temporary_bench_conflict_observation(calc.session(),action);
+    const auto& state=calc.state(source);
+    const auto uniform=[&](const std::vector<std::uint64_t>& mask,
+                          const std::vector<std::uint64_t>* exclude=nullptr) {
+        bool conflict=false,other=false;
+        for (std::uint32_t mod=0;mod<calc.session().mod_count;++mod) {
+            if (!pc_bitset_test(mask.data(),mod) || (exclude && pc_bitset_test(exclude->data(),mod))) continue;
+            if (pc_bitset_test(observation.member_mask.data(),mod)) conflict=true;
+            else other=true;
+            if (conflict && other) return false;
+        }
+        return true;
+    };
+    for (std::size_t slot=0;slot<calc.layout().slots.size();++slot) {
+        const auto& goal=calc.layout().slots[slot];
+        if (state.slot_status[slot]==static_cast<unsigned>(GoalSlotStatus::Satisfied)) {
+            if (!uniform(goal.satisfying_mask)) return false;
+        } else if (state.slot_status[slot]!=static_cast<unsigned>(GoalSlotStatus::Absent)) {
+            if (!uniform(goal.member_mask,&goal.satisfying_mask)) return false;
+        }
+    }
+    for (std::size_t c=0;c<state.junk_counts.size();++c)
+        if (state.junk_counts[c] && !uniform(calc.layout().junk_classes[c].member_mask)) return false;
+    return true;
+}
+
 std::vector<std::uint64_t> exact_item_state_key(
         const pc_item_state& item) {
     std::vector<std::uint64_t> key{

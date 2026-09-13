@@ -1,0 +1,15 @@
+{
+  "reason": "Observed fresh blocker layout exhausted its 68,846,313 remaining work before completing a seed; one authorized 400M identical-capacity main/treatment comparison.",
+  "source": "docs\\active\\2026-09-11-dirty-state-continuation\\native-600-final840\\amulet\\manifest.json",
+  "changes": [
+    {
+      "case": "cb08-cross-base-product8-long240",
+      "changed_field": "caps.max_reforge_work",
+      "from": 200000000,
+      "to": 400000000,
+      "other_request_fields_identical": true,
+      "original_sha256": "c53fc432bd03d547b8441069e3607cf6dae2a51e83c9f89bfa3e7a9d42330dce",
+      "effective_sha256": "dc99451d7534334e1ff9d3360ca97b8103d856c7ce0d4cb1a9db195b569c4346"
+    }
+  ]
+}

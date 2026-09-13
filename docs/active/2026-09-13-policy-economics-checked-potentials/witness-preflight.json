@@ -1,0 +1,74 @@
+[
+  {
+    "run": "witness-amulet-200m",
+    "mode": "selective-options",
+    "identity": {
+      "corpus": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-11-dirty-state-continuation\\native-600-final840\\amulet\\manifest.json",
+        "sha256": "a68b2e6a11d1b2ad7b06d5b12a65106584493dc8eddd9e77fa40c02294e4c94b",
+        "corpus_id": "dirty-state-native600-final840-amulet",
+        "schema_version": "solver_benchmark_corpus_v1",
+        "generator_config_sha256": null
+      },
+      "artifact": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+        "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+        "declared_files_verified": true,
+        "files": [
+          {
+            "path": "game-data.json",
+            "size_bytes": 16439442,
+            "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+          },
+          {
+            "path": "strings.json",
+            "size_bytes": 6534428,
+            "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+          }
+        ],
+        "identity": {
+          "artifact_schema_version": 4,
+          "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+          "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+          "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      },
+      "executable": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\witness-v1.exe",
+        "sha256": "bdd47e7bfa500c2e4eda605f7f1c18edf92ae08ab3c767a2f1f5fc747723ce6c"
+      },
+      "machine": {
+        "system": "Windows",
+        "release": "11",
+        "machine": "AMD64",
+        "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "logical_cpu_count": 24,
+        "python": "3.14.2"
+      },
+      "source": {
+        "commit": "bf3b980041821acee1f1f8149afc912a22021884",
+        "dirty": true,
+        "dirty_paths": [
+          {
+            "status": "??",
+            "path": "docs/active/2026-09-13-policy-economics-checked-potentials/"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_eval_types.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_return_bridge.cpp"
+          },
+          {
+            "status": "M ",
+            "path": "ngine/src/solver_eval.cpp"
+          }
+        ]
+      }
+    }
+  }
+]

@@ -4143,8 +4143,9 @@ void run_solver_phase_lower_tests() {
         typed_session->bench_mod_ids = {3,5};
         typed_session->flags[3] |= 1 << 1; typed_session->flags[5] |= 1 << 1;
         auto typed_registry = build_action_registry(*typed_session);
-        PhaseLowerPrices typed_prices{{"fixture:step",100},{"fixture:add",1},{"fixture:loss",2},{"fixture:cleanup",0.1}};
+        PhaseLowerPrices typed_prices{{"fixture:step",100},{"fixture:add",1},{"fixture:loss",2},{"fixture:cleanup",0.1},{"fixture:convert",100}};
         for (auto& a : typed_registry.actions) a.cost_keys = {"fixture:step"};
+        for (auto& a : typed_registry.actions) if (a.params.type==ActionType::HarvestResist) a.cost_keys={"fixture:convert"};
         typed_registry.actions[typed_registry.index_by_id.at("exalt")].cost_keys={"fixture:add"};
         typed_registry.actions[typed_registry.index_by_id.at("annul")].cost_keys={"fixture:loss"};
         typed_registry.actions[typed_registry.index_by_id.at("eldritch_annul")].cost_keys={"fixture:loss"};
@@ -4229,6 +4230,38 @@ void run_solver_phase_lower_tests() {
             loses_crafted_goal &= refined->projected_cell(typed_calc,exit)==refined->projected_cell(typed_calc,natural);
         }
         PC_CHECK(loses_crafted_goal);
+        auto conversion_prices=typed_prices; conversion_prices["fixture:convert"]=0.05;
+        const auto conversion_support=PhaseLowerProducer::prepare(typed_calc,conversion_prices,phase,
+            {PhaseTableRole::MaskCompletion,4,2,std::vector<double>(4,0)});
+        PhaseLowerQueryDiagnostic conversion_diagnostic; conversion_diagnostic.refine_resistance_support=true;
+        const auto conversion_view=PhaseLowerProducer::prepare_probabilistic(typed_calc,conversion_prices,phase,
+            {PhaseTableRole::CleanCompletion,4,2,std::vector<double>(192,100)},conversion_support,
+            PhaseLowerProducer::zero_restart_boundary(*conversion_support),false,true,budget,true,{},
+            PhaseContinuation::CoupledFresh,PhaseRetention::AnnulNonempty,true,{},{},&conversion_diagnostic);
+        auto cold_junk=natural; place(&cold_junk,PC_SIDE_SUFFIX,6,21);
+        auto cold_craft=cold_junk; cold_craft.suffixes[0].flags=PC_MOD_SLOT_CRAFTED;
+        bool conversion_coverage=true,conversion_inequalities=true; unsigned conversion_exits=0;
+        for (auto item:{natural,crafted_goal,cold_junk,cold_craft}) for (bool fresh:{false,true})
+            for (const char* action_id:{"harvest_resist:fire:cold","harvest_resist:cold:fire"}) {
+                if (fresh) item.prefixes[0].flags=0;
+                const auto& kernel=typed_calc.outcomes(typed_calc.intern_item(item),typed_registry.index_by_id.at(action_id));
+                long double rhs=0.05,total=0;
+                conversion_coverage &= kernel.supported && !kernel.entries.empty();
+                for (const auto& exit:kernel.entries) {
+                    pc_item_state native{};
+                    conversion_coverage &= typed_calc.materialize(exit.state,native);
+                    conversion_coverage &= native.prefix_count==item.prefix_count && native.suffix_count==item.suffix_count;
+                    if (!fresh) conversion_coverage &= item_contains_mod(native,0);
+                    const auto value=conversion_view->lookup(typed_calc,conversion_prices,native,false);
+                    conversion_coverage &= value.has_value();
+                    rhs+=exit.probability*value.value_or(0); total+=exit.probability; ++conversion_exits;
+                }
+                conversion_coverage &= std::abs(total-1)<1e-14L;
+                conversion_inequalities &= conversion_view->projected_value(typed_calc,item)<=rhs+1e-10L;
+            }
+        PC_CHECK(conversion_exits>0 && conversion_coverage);
+        PC_CHECK(conversion_inequalities);
+        PC_CHECK(conversion_view->projected_value(typed_calc,anchor)>0.05); // Old free conversion escape blocked this.
         bool loss_checked=true, native_category_mass=true;
         unsigned loss_exits=0, probabilistic_loss_rows=0;
         for (auto item : {natural,crafted,crafted_goal}) for (bool fresh : {false,true})

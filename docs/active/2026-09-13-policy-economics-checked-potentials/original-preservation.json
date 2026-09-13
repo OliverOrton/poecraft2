@@ -1,0 +1,1796 @@
+[
+  {
+    "case": "cb03-cross-base-product8-long240",
+    "report": "out\\policy-economics-checked-potentials\\final-original-core\\cases\\cb03-cross-base-product8-long240.json",
+    "report_sha256": "2212c6f664401f3f0a751bf6dad10f3d36349c365b03759cafb182114d7feb56",
+    "reference_report": "out\\adaptive-dirty-guidance\\final-original-core\\cases\\cb03-cross-base-product8-long240.json",
+    "reference_report_sha256": "3dc2d366a2e6f3e468cf5ae6275f72b65d4ecf70ef1eb6cc9881ea844982debc",
+    "input": {
+      "native_retention_diagnostic": "reuse",
+      "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+      "watchdog_seconds": 300,
+      "requested_bounded_finish_seconds": 240,
+      "session": {
+        "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+        "base_name": "Conquest Lamellar",
+        "item_class_key": "Body Armour",
+        "item_level": 86,
+        "minimum_item_level": 86
+      },
+      "start": {
+        "rarity": "rare",
+        "with_implicits": false,
+        "mods": [
+          {
+            "key": "LocalIncreasedArmourAndEvasion8",
+            "flags": []
+          },
+          {
+            "key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+            "flags": []
+          },
+          {
+            "key": "LocalBaseArmourAndEvasionRating8",
+            "flags": []
+          }
+        ]
+      },
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 5,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+            "min_tier": 1
+          }
+        ]
+      },
+      "corpus": {
+        "tier": "partial",
+        "stratum": "conquest_lamellar_partial_three_to_five",
+        "goal_modifier_count": 5,
+        "start_goal_modifier_count": 3,
+        "product_worker_profile": "calculator_default_adaptive_max_8"
+      },
+      "product_action_envelope": {
+        "mode": "calculator_goal_relevant_priced_v1",
+        "envelope_goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 5,
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+              "min_tier": 1
+            }
+          ],
+          "fossil_mode": "goal_relevant",
+          "requested_fossil_actions": []
+        },
+        "pricing_filter": "all_declared_cost_keys_present",
+        "bench_goal_slots_forbidden": true
+      },
+      "allowed_mechanic_families": [
+        "calculator_goal_relevant_product_envelope"
+      ],
+      "bounded_best_policy_contract": {
+        "allow_exact": true,
+        "bounded_requires_named_stop": true,
+        "bounded_requires_strict_gap": true,
+        "bounded_requires_open_obligations": true,
+        "require_evaluated_upper": true,
+        "require_cheapest_independently_evaluated_incumbent": true
+      },
+      "economy": {
+        "version": "v1",
+        "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+        "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+        "league_key": "allflame",
+        "league_name": "Allflame",
+        "manual_overrides": {
+          "base": 1
+        },
+        "fallback_price": null,
+        "missing_price_decisions": {
+          "base": "quality_ladder_fixture_input_1_chaos"
+        }
+      },
+      "caps": {
+        "solve_profile": "calculator_product_v1",
+        "max_states": 200000,
+        "max_sweeps": 100000,
+        "solve_step_work_items": 8,
+        "max_discovered_states": 200000,
+        "max_expanded_states": 200000,
+        "max_state_action_rows": 1215000,
+        "max_transitions": 10000000,
+        "max_reforge_work": 50000000,
+        "max_solver_owned_bytes": 1073741824,
+        "max_diagnostic_samples": 64,
+        "max_telemetry_json_bytes": 2097152,
+        "max_compiled_nodes": 100000,
+        "max_compiled_edges": 400000,
+        "max_strategy_json_bytes": 67108864,
+        "worker_step_ms": 250,
+        "cancel_ack_ms": 250,
+        "full_evidence": true
+      },
+      "verification": {
+        "runs": 0,
+        "seed": 20260826,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "exact_evaluation": true,
+        "exact_max_states": 1000000,
+        "exact_max_pairs": 5000000,
+        "exact_max_transitions": 20000000,
+        "exact_max_owned_bytes": 1073741824,
+        "exact_cost_absolute_tolerance": 1e-07,
+        "exact_cost_relative_tolerance": 1e-09
+      }
+    },
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 794067.4530398862,
+      "expanded_states": 3121,
+      "sweeps": 0,
+      "residual": 5.960464477539063e-08,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 186,
+        "candidate": 28,
+        "evaluator_supported": 28,
+        "supported_priced": 181,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 405.11164995948883,
+      "upper_bound": 794067.4530398862,
+      "evaluated_policy_cost": 794067.4530398862,
+      "absolute_optimality_gap": 793662.3413899267,
+      "relative_optimality_gap": 1959.120014122756,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "reference_upper": 794067.4530398862,
+    "cost_delta": 0.0,
+    "native_evaluation": {
+      "completed": true,
+      "time_limited": false,
+      "status": "matched",
+      "wall_ms": 3327.5864,
+      "converged": true,
+      "cost_complete": true,
+      "zero_off_policy_mass": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "total_expected_cost": 794067.4530398862,
+      "solver_cost_delta_absolute": 0,
+      "solver_cost_delta_relative": 0
+    },
+    "bounded_contract": {
+      "checked": true,
+      "passed": true,
+      "path": "bounded",
+      "checks": {
+        "named_stop": true,
+        "strict_gap": true,
+        "open_obligations": true,
+        "evaluated_upper": true,
+        "cheapest_independently_evaluated_incumbent": true
+      },
+      "open_work": {
+        "incremental_actions": 65357,
+        "refinement_obligations": 0
+      },
+      "failure_reason": null
+    },
+    "errors": [],
+    "checks": {
+      "identical_capacity_pair": true,
+      "finite_upper_independently_evaluated": true,
+      "bounded_cost_no_regression": true,
+      "upper_presence_preserved": true,
+      "bounded_contract_passed": true,
+      "bounded_contract_outcome_preserved": true,
+      "stop_contract_checks_preserved": true,
+      "stop_cause_preserved": true,
+      "errors_preserved": true,
+      "completed_without_survivor": true
+    },
+    "phase_wall_ms": {
+      "registry_layout": 37.2244,
+      "solve": 246759.3032,
+      "compile": 7.7966,
+      "verification": null,
+      "total": 250571.8569
+    },
+    "execution": {
+      "solve_steps": 17832444,
+      "max_solve_step_ms": 665.1683,
+      "max_solve_step_phase": 6,
+      "max_solve_step_expanded_states": 3121,
+      "max_solve_step_sweeps": 0,
+      "max_solve_step_finalization_work_item": 2030,
+      "solve_step_wall_ms": {
+        "percentile_method": "nearest_rank_ceiling",
+        "count": 17832444,
+        "total": 183076.1407027794,
+        "median": 0.007,
+        "p95": 0.0099,
+        "maximum": 665.1683
+      },
+      "diagnostic_work_limit": null,
+      "diagnostic_time_limit_seconds": null,
+      "watchdog_seconds": 300,
+      "watchdog_mode": "cooperative_case_deadline",
+      "watchdog_expired": false,
+      "diagnostic_stop_reason": null,
+      "worker_max_slice_ms": null,
+      "cancellation_ack_ms": null,
+      "cancellation_mode": null,
+      "cooperative_abandon_ms": null
+    },
+    "memory": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 34676736,
+      "process_working_set_after_bytes": 348835840,
+      "process_working_set_delta_bytes": 314159104,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 148128186,
+      "native_peak_owned_bytes": 259280381,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 793399
+    },
+    "reference_stop": "requested_bounded_finish"
+  },
+  {
+    "case": "cb05-cross-base-product8-long240",
+    "report": "out\\policy-economics-checked-potentials\\final-original-core\\cases\\cb05-cross-base-product8-long240.json",
+    "report_sha256": "e7ba20efa0eaf752f8dd32458613ee5946569675cdf6004443d2ca0cfd4412a0",
+    "reference_report": "out\\adaptive-dirty-guidance\\final-original-core\\cases\\cb05-cross-base-product8-long240.json",
+    "reference_report_sha256": "babd8babef35220c3690cafffa88ab25d2ac5c6724159c2e8a5087a61924c313",
+    "input": {
+      "native_retention_diagnostic": "reuse",
+      "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+      "watchdog_seconds": 300,
+      "requested_bounded_finish_seconds": 240,
+      "session": {
+        "base_metadata_path": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+        "base_name": "Spine Bow",
+        "item_class_key": "Bow",
+        "item_level": 86,
+        "minimum_item_level": 86
+      },
+      "start": {
+        "rarity": "rare",
+        "with_implicits": false,
+        "mods": []
+      },
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 5,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreaseSocketedGemLevel1",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalAddedPhysicalDamageTwoHand9",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalAddedColdDamageTwoHand10",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ManaGainedFromEnemyDeath6",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ProjectileSpeed5",
+            "min_tier": 1
+          }
+        ]
+      },
+      "corpus": {
+        "tier": "clean-five",
+        "stratum": "spine-bow_clean_zero_to_5",
+        "goal_modifier_count": 5,
+        "start_goal_modifier_count": 0,
+        "product_worker_profile": "calculator_default_adaptive_max_8"
+      },
+      "product_action_envelope": {
+        "mode": "calculator_goal_relevant_priced_v1",
+        "envelope_goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 5,
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreaseSocketedGemLevel1",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalAddedPhysicalDamageTwoHand9",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalAddedColdDamageTwoHand10",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ManaGainedFromEnemyDeath6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ProjectileSpeed5",
+              "min_tier": 1
+            }
+          ],
+          "fossil_mode": "goal_relevant",
+          "requested_fossil_actions": []
+        },
+        "pricing_filter": "all_declared_cost_keys_present",
+        "bench_goal_slots_forbidden": true
+      },
+      "allowed_mechanic_families": [
+        "calculator_goal_relevant_product_envelope"
+      ],
+      "bounded_best_policy_contract": {
+        "allow_exact": true,
+        "bounded_requires_named_stop": true,
+        "bounded_requires_strict_gap": true,
+        "bounded_requires_open_obligations": true,
+        "require_evaluated_upper": true,
+        "require_cheapest_independently_evaluated_incumbent": true
+      },
+      "economy": {
+        "version": "v1",
+        "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+        "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+        "league_key": "allflame",
+        "league_name": "Allflame",
+        "manual_overrides": {
+          "base": 1
+        },
+        "fallback_price": null,
+        "missing_price_decisions": {
+          "base": "quality_ladder_fixture_input_1_chaos"
+        }
+      },
+      "caps": {
+        "solve_profile": "calculator_product_v1",
+        "max_states": 200000,
+        "max_sweeps": 100000,
+        "solve_step_work_items": 8,
+        "max_discovered_states": 200000,
+        "max_expanded_states": 200000,
+        "max_state_action_rows": 1215000,
+        "max_transitions": 10000000,
+        "max_reforge_work": 50000000,
+        "max_solver_owned_bytes": 1073741824,
+        "max_diagnostic_samples": 64,
+        "max_telemetry_json_bytes": 2097152,
+        "max_compiled_nodes": 100000,
+        "max_compiled_edges": 400000,
+        "max_strategy_json_bytes": 67108864,
+        "worker_step_ms": 250,
+        "cancel_ack_ms": 250,
+        "full_evidence": true
+      },
+      "verification": {
+        "runs": 0,
+        "seed": 20260826,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "exact_evaluation": true,
+        "exact_max_states": 1000000,
+        "exact_max_pairs": 5000000,
+        "exact_max_transitions": 20000000,
+        "exact_max_owned_bytes": 1073741824,
+        "exact_cost_absolute_tolerance": 1e-07,
+        "exact_cost_relative_tolerance": 1e-09
+      }
+    },
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 87200457.42804676,
+      "expanded_states": 0,
+      "sweeps": 0,
+      "residual": 1.52587890625e-05,
+      "skipped_action_count": 1,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "refused_resource_cap",
+      "stop_cause": "other_resource_cap",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 189,
+        "candidate": 41,
+        "evaluator_supported": 41,
+        "supported_priced": 209,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 1
+      },
+      "lower_bound": 297.7999999702199,
+      "upper_bound": 87200457.42804676,
+      "evaluated_policy_cost": 87200457.42804676,
+      "absolute_optimality_gap": 87200159.6280468,
+      "relative_optimality_gap": 292814.505160399,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "reference_upper": 87200457.42804676,
+    "cost_delta": 0.0,
+    "native_evaluation": {
+      "completed": true,
+      "time_limited": false,
+      "status": "matched",
+      "wall_ms": 10636.5382,
+      "converged": true,
+      "cost_complete": true,
+      "zero_off_policy_mass": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "total_expected_cost": 87200457.42804676,
+      "solver_cost_delta_absolute": 0,
+      "solver_cost_delta_relative": 0
+    },
+    "bounded_contract": {
+      "checked": true,
+      "passed": false,
+      "path": "bounded",
+      "checks": {
+        "named_stop": false,
+        "strict_gap": true,
+        "open_obligations": true,
+        "evaluated_upper": true,
+        "cheapest_independently_evaluated_incumbent": true
+      },
+      "open_work": {
+        "incremental_actions": 8716,
+        "refinement_obligations": 0
+      },
+      "failure_reason": "one or more bounded-result proof obligations failed"
+    },
+    "errors": [
+      "bounded best-policy contract failed: one or more bounded-result proof obligations failed"
+    ],
+    "checks": {
+      "identical_capacity_pair": true,
+      "finite_upper_independently_evaluated": true,
+      "bounded_cost_no_regression": true,
+      "upper_presence_preserved": true,
+      "bounded_contract_passed": false,
+      "bounded_contract_outcome_preserved": true,
+      "stop_contract_checks_preserved": true,
+      "stop_cause_preserved": true,
+      "errors_preserved": true,
+      "completed_without_survivor": true
+    },
+    "phase_wall_ms": {
+      "registry_layout": 27.106,
+      "solve": 37668.4238,
+      "compile": 66.7972,
+      "verification": null,
+      "total": 48500.8647
+    },
+    "execution": {
+      "solve_steps": 19283,
+      "max_solve_step_ms": 1653.2106,
+      "max_solve_step_phase": 6,
+      "max_solve_step_expanded_states": 259,
+      "max_solve_step_sweeps": 0,
+      "max_solve_step_finalization_work_item": 5684,
+      "solve_step_wall_ms": {
+        "percentile_method": "nearest_rank_ceiling",
+        "count": 19283,
+        "total": 23482.453800000127,
+        "median": 0.0052,
+        "p95": 1.6196,
+        "maximum": 1653.2106
+      },
+      "diagnostic_work_limit": null,
+      "diagnostic_time_limit_seconds": null,
+      "watchdog_seconds": 300,
+      "watchdog_mode": "cooperative_case_deadline",
+      "watchdog_expired": false,
+      "diagnostic_stop_reason": null,
+      "worker_max_slice_ms": null,
+      "cancellation_ack_ms": null,
+      "cancellation_mode": null,
+      "cooperative_abandon_ms": null
+    },
+    "memory": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 34652160,
+      "process_working_set_after_bytes": 223203328,
+      "process_working_set_delta_bytes": 188551168,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 159792446,
+      "native_peak_owned_bytes": 378844599,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 651996
+    },
+    "reference_stop": "other_resource_cap"
+  },
+  {
+    "case": "cb09-cross-base-product8-long240",
+    "report": "out\\policy-economics-checked-potentials\\final-original-core\\cases\\cb09-cross-base-product8-long240.json",
+    "report_sha256": "09a0cfe3059cde7e137495633c841cf2f189863879e587d51538694eca03dd60",
+    "reference_report": "out\\adaptive-dirty-guidance\\final-original-core\\cases\\cb09-cross-base-product8-long240.json",
+    "reference_report_sha256": "9f30a931d883a0db659257032a6d82baf37ae68f8c7026b446cebc4b6df62d94",
+    "input": {
+      "native_retention_diagnostic": "reuse",
+      "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+      "watchdog_seconds": 300,
+      "requested_bounded_finish_seconds": 240,
+      "session": {
+        "base_metadata_path": "Metadata/Items/Rings/Ring10",
+        "base_name": "Amethyst Ring",
+        "item_class_key": "Ring",
+        "item_level": 86
+      },
+      "start": {
+        "mods": [],
+        "rarity": "rare",
+        "with_implicits": false
+      },
+      "goal": {
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 3,
+        "rarity": "rare",
+        "slots": [
+          {
+            "family_mod_key": "FireResist8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "AddedColdDamage9",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "FireDamagePercent4",
+            "min_tier": 1
+          }
+        ],
+        "version": "v1"
+      },
+      "corpus": {
+        "geometric_mean_single_draw_probability": 0.0017845698737948533,
+        "goal_modifier_count": 3,
+        "maximum_single_draw_probability": 0.006103143118706134,
+        "minimum_single_draw_probability": 0.0003051571559353067,
+        "natural_pool_mod_count": 207,
+        "natural_pool_weight": 163850,
+        "prefix_goal_count": 1,
+        "side_mix": "PSS",
+        "stratum": "deep-three-low-probability",
+        "suffix_goal_count": 2,
+        "tier": "deep"
+      },
+      "feasibility": {
+        "eligible_slot_count": 3,
+        "goal_slot_count": 3,
+        "natural_pool_mod_count": 207,
+        "natural_pool_weight": 163850,
+        "natural_prefix_mod_count": 81,
+        "natural_prefix_weight": 60250,
+        "natural_suffix_mod_count": 126,
+        "natural_suffix_weight": 103600,
+        "reason": "natural_reforge_witness",
+        "required_slot_count": 3,
+        "slot_natural_mod_counts": [
+          1,
+          1,
+          1
+        ],
+        "slot_natural_weights": [
+          1000,
+          50,
+          500
+        ],
+        "slot_single_draw_probabilities": [
+          0.006103143118706134,
+          0.0003051571559353067,
+          0.003051571559353067
+        ],
+        "status": "feasible",
+        "witness_action_id": "chaos",
+        "witness_action_index": 5,
+        "witness_mod_ids": [
+          134,
+          8,
+          126
+        ]
+      },
+      "generation": {
+        "artifact_manifest_sha256": "6b8bbfe77abf87373ec1782fb364500e064eb7539f1d3f0fdb210a807c927875",
+        "engine_binary_sha256": "ee8d3d97955e864b1018dd41b1f87891b1b4952aa8fa076c331dbf589539c89d",
+        "engine_commit": "4c99cd093ed85b9aa2ecb86c3c9117b0f356068b",
+        "generator_seed": 20260722,
+        "generator_version": "natural-t1-corpus-v1"
+      },
+      "product_action_envelope": {
+        "bench_goal_slots_forbidden": true,
+        "envelope_goal": {
+          "action_mode": "goal_relevant",
+          "fossil_mode": "goal_relevant",
+          "min_satisfied_slots": 3,
+          "rarity": "rare",
+          "requested_fossil_actions": [],
+          "slots": [
+            {
+              "family_mod_key": "FireResist8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "AddedColdDamage9",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "FireDamagePercent4",
+              "min_tier": 1
+            }
+          ],
+          "version": "v1"
+        },
+        "mode": "calculator_goal_relevant_priced_v1",
+        "pricing_filter": "all_declared_cost_keys_present"
+      },
+      "allowed_mechanic_families": [
+        "calculator_goal_relevant_product_envelope"
+      ],
+      "bounded_best_policy_contract": {
+        "allow_exact": true,
+        "bounded_requires_named_stop": true,
+        "bounded_requires_strict_gap": true,
+        "bounded_requires_open_obligations": true,
+        "require_evaluated_upper": true,
+        "require_cheapest_independently_evaluated_incumbent": true
+      },
+      "economy": {
+        "version": "v1",
+        "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+        "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+        "league_key": "allflame",
+        "league_name": "Allflame",
+        "manual_overrides": {
+          "base": 1
+        },
+        "fallback_price": null,
+        "missing_price_decisions": {
+          "base": "quality_ladder_fixture_input_1_chaos"
+        }
+      },
+      "caps": {
+        "solve_profile": "calculator_product_v1",
+        "max_states": 200000,
+        "max_sweeps": 100000,
+        "solve_step_work_items": 8,
+        "max_discovered_states": 200000,
+        "max_expanded_states": 200000,
+        "max_state_action_rows": 1215000,
+        "max_transitions": 10000000,
+        "max_reforge_work": 50000000,
+        "max_solver_owned_bytes": 1073741824,
+        "max_diagnostic_samples": 64,
+        "max_telemetry_json_bytes": 2097152,
+        "max_compiled_nodes": 100000,
+        "max_compiled_edges": 400000,
+        "max_strategy_json_bytes": 67108864,
+        "worker_step_ms": 250,
+        "cancel_ack_ms": 250,
+        "full_evidence": true
+      },
+      "verification": {
+        "runs": 0,
+        "seed": 20260826,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "exact_evaluation": true,
+        "exact_max_states": 1000000,
+        "exact_max_pairs": 5000000,
+        "exact_max_transitions": 20000000,
+        "exact_max_owned_bytes": 1073741824,
+        "exact_cost_absolute_tolerance": 1e-07,
+        "exact_cost_relative_tolerance": 1e-09
+      }
+    },
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 105190284.7657379,
+      "expanded_states": 113,
+      "sweeps": 0,
+      "residual": 2.9802322387695312e-08,
+      "skipped_action_count": 0,
+      "policy_available": false,
+      "policy_status": "none",
+      "termination": "refused_resource_cap",
+      "stop_cause": "memory_cap",
+      "cap_hit_mask": 4,
+      "action_counts": {
+        "registry": 172,
+        "candidate": 31,
+        "evaluator_supported": 31,
+        "supported_priced": 31,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 172.4952745977795,
+      "upper_bound": null,
+      "evaluated_policy_cost": null,
+      "absolute_optimality_gap": null,
+      "relative_optimality_gap": null,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "reference_upper": null,
+    "cost_delta": null,
+    "native_evaluation": {
+      "completed": false,
+      "time_limited": false,
+      "status": "not_applicable_no_policy",
+      "wall_ms": null
+    },
+    "bounded_contract": {
+      "checked": true,
+      "passed": false,
+      "path": "bounded",
+      "checks": {
+        "named_stop": false,
+        "strict_gap": false,
+        "open_obligations": false,
+        "evaluated_upper": false,
+        "cheapest_independently_evaluated_incumbent": false
+      },
+      "open_work": {
+        "incremental_actions": 0,
+        "refinement_obligations": 0
+      },
+      "failure_reason": "the solve did not publish an executable policy"
+    },
+    "errors": [
+      "bounded best-policy contract failed: the solve did not publish an executable policy"
+    ],
+    "checks": {
+      "identical_capacity_pair": true,
+      "finite_upper_independently_evaluated": false,
+      "bounded_cost_no_regression": true,
+      "upper_presence_preserved": true,
+      "bounded_contract_passed": false,
+      "bounded_contract_outcome_preserved": true,
+      "stop_contract_checks_preserved": true,
+      "stop_cause_preserved": true,
+      "errors_preserved": true,
+      "completed_without_survivor": true
+    },
+    "phase_wall_ms": {
+      "registry_layout": 25.2711,
+      "solve": 11483.4878,
+      "compile": null,
+      "verification": null,
+      "total": 11724.6833
+    },
+    "execution": {
+      "solve_steps": 75256,
+      "max_solve_step_ms": 7208.9261,
+      "max_solve_step_phase": 1,
+      "max_solve_step_expanded_states": 113,
+      "max_solve_step_sweeps": 0,
+      "max_solve_step_finalization_work_item": 10,
+      "solve_step_wall_ms": {
+        "percentile_method": "nearest_rank_ceiling",
+        "count": 75256,
+        "total": 8975.599300001497,
+        "median": 0.0002,
+        "p95": 0.0007,
+        "maximum": 7208.9261
+      },
+      "diagnostic_work_limit": null,
+      "diagnostic_time_limit_seconds": null,
+      "watchdog_seconds": 300,
+      "watchdog_mode": "cooperative_case_deadline",
+      "watchdog_expired": false,
+      "diagnostic_stop_reason": null,
+      "worker_max_slice_ms": null,
+      "cancellation_ack_ms": null,
+      "cancellation_mode": null,
+      "cooperative_abandon_ms": null
+    },
+    "memory": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 34463744,
+      "process_working_set_after_bytes": 362708992,
+      "process_working_set_delta_bytes": 328245248,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 277383261,
+      "native_peak_owned_bytes": 298258945,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 481827
+    },
+    "reference_stop": "memory_cap"
+  },
+  {
+    "case": "cb12-cross-base-product8-long240",
+    "report": "out\\policy-economics-checked-potentials\\final-original-core\\cases\\cb12-cross-base-product8-long240.json",
+    "report_sha256": "0910783c010bcfbcff569daaa57ea55e2891cd8a00f2cd5801d5e4591e605718",
+    "reference_report": "out\\adaptive-dirty-guidance\\final-original-core\\cases\\cb12-cross-base-product8-long240.json",
+    "reference_report_sha256": "32273368b406ea7d53dbc0704ae7fbc583227c1ac5e25bdb505b535998e28769",
+    "input": {
+      "native_retention_diagnostic": "reuse",
+      "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+      "watchdog_seconds": 300,
+      "requested_bounded_finish_seconds": 240,
+      "session": {
+        "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+        "base_name": "Vaal Regalia",
+        "item_class_key": "Body Armour",
+        "item_level": 86
+      },
+      "start": {
+        "mods": [],
+        "rarity": "rare",
+        "with_implicits": false
+      },
+      "goal": {
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 1,
+        "rarity": "rare",
+        "slots": [
+          {
+            "family_mod_key": "FireResist8",
+            "min_tier": 1
+          }
+        ],
+        "version": "v1"
+      },
+      "corpus": {
+        "geometric_mean_single_draw_probability": 0.008389261744966443,
+        "goal_modifier_count": 1,
+        "maximum_single_draw_probability": 0.008389261744966443,
+        "minimum_single_draw_probability": 0.008389261744966443,
+        "natural_pool_mod_count": 125,
+        "natural_pool_weight": 119200,
+        "prefix_goal_count": 0,
+        "side_mix": "S",
+        "stratum": "smoke-one-armour",
+        "suffix_goal_count": 1,
+        "tier": "smoke"
+      },
+      "feasibility": {
+        "eligible_slot_count": 1,
+        "goal_slot_count": 1,
+        "natural_pool_mod_count": 125,
+        "natural_pool_weight": 119200,
+        "natural_prefix_mod_count": 62,
+        "natural_prefix_weight": 61000,
+        "natural_suffix_mod_count": 63,
+        "natural_suffix_weight": 58200,
+        "reason": "natural_reforge_witness",
+        "required_slot_count": 1,
+        "slot_natural_mod_counts": [
+          1
+        ],
+        "slot_natural_weights": [
+          1000
+        ],
+        "slot_single_draw_probabilities": [
+          0.008389261744966443
+        ],
+        "status": "feasible",
+        "witness_action_id": "chaos",
+        "witness_action_index": 5,
+        "witness_mod_ids": [
+          53
+        ]
+      },
+      "generation": {
+        "artifact_manifest_sha256": "6b8bbfe77abf87373ec1782fb364500e064eb7539f1d3f0fdb210a807c927875",
+        "engine_binary_sha256": "ee8d3d97955e864b1018dd41b1f87891b1b4952aa8fa076c331dbf589539c89d",
+        "engine_commit": "4c99cd093ed85b9aa2ecb86c3c9117b0f356068b",
+        "generator_seed": 20260722,
+        "generator_version": "natural-t1-corpus-v1"
+      },
+      "product_action_envelope": {
+        "bench_goal_slots_forbidden": true,
+        "envelope_goal": {
+          "action_mode": "goal_relevant",
+          "fossil_mode": "goal_relevant",
+          "min_satisfied_slots": 1,
+          "rarity": "rare",
+          "requested_fossil_actions": [],
+          "slots": [
+            {
+              "family_mod_key": "FireResist8",
+              "min_tier": 1
+            }
+          ],
+          "version": "v1"
+        },
+        "mode": "calculator_goal_relevant_priced_v1",
+        "pricing_filter": "all_declared_cost_keys_present"
+      },
+      "allowed_mechanic_families": [
+        "calculator_goal_relevant_product_envelope"
+      ],
+      "bounded_best_policy_contract": {
+        "allow_exact": true,
+        "bounded_requires_named_stop": true,
+        "bounded_requires_strict_gap": true,
+        "bounded_requires_open_obligations": true,
+        "require_evaluated_upper": true,
+        "require_cheapest_independently_evaluated_incumbent": true
+      },
+      "economy": {
+        "version": "v1",
+        "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+        "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+        "league_key": "allflame",
+        "league_name": "Allflame",
+        "manual_overrides": {
+          "base": 1
+        },
+        "fallback_price": null,
+        "missing_price_decisions": {
+          "base": "quality_ladder_fixture_input_1_chaos"
+        }
+      },
+      "caps": {
+        "solve_profile": "calculator_product_v1",
+        "max_states": 200000,
+        "max_sweeps": 100000,
+        "solve_step_work_items": 8,
+        "max_discovered_states": 200000,
+        "max_expanded_states": 200000,
+        "max_state_action_rows": 1215000,
+        "max_transitions": 10000000,
+        "max_reforge_work": 50000000,
+        "max_solver_owned_bytes": 1073741824,
+        "max_diagnostic_samples": 64,
+        "max_telemetry_json_bytes": 2097152,
+        "max_compiled_nodes": 100000,
+        "max_compiled_edges": 400000,
+        "max_strategy_json_bytes": 67108864,
+        "worker_step_ms": 250,
+        "cancel_ack_ms": 250,
+        "full_evidence": true
+      },
+      "verification": {
+        "runs": 0,
+        "seed": 20260826,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "exact_evaluation": true,
+        "exact_max_states": 1000000,
+        "exact_max_pairs": 5000000,
+        "exact_max_transitions": 20000000,
+        "exact_max_owned_bytes": 1073741824,
+        "exact_cost_absolute_tolerance": 1e-07,
+        "exact_cost_relative_tolerance": 1e-09
+      }
+    },
+    "summary": {
+      "converged": true,
+      "start_state": 0,
+      "start_value": 65.60036144971359,
+      "expanded_states": 1826,
+      "sweeps": 12,
+      "residual": 1.4210854715202004e-14,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "exact",
+      "termination": "exact_closed",
+      "stop_cause": "exact_closed",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 158,
+        "candidate": 21,
+        "evaluator_supported": 21,
+        "supported_priced": 74,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 65.60036144971359,
+      "upper_bound": 65.60036144971359,
+      "evaluated_policy_cost": 65.60036144971359,
+      "absolute_optimality_gap": 0,
+      "relative_optimality_gap": 0,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "reference_upper": 65.60036144971359,
+    "cost_delta": 0.0,
+    "native_evaluation": {
+      "completed": true,
+      "time_limited": false,
+      "status": "matched",
+      "wall_ms": 11.6084,
+      "converged": true,
+      "cost_complete": true,
+      "zero_off_policy_mass": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "total_expected_cost": 65.60036144971359,
+      "solver_cost_delta_absolute": 0,
+      "solver_cost_delta_relative": 0
+    },
+    "bounded_contract": {
+      "checked": true,
+      "passed": true,
+      "path": "exact",
+      "checks": {
+        "named_stop": null,
+        "strict_gap": null,
+        "open_obligations": null,
+        "evaluated_upper": null,
+        "cheapest_independently_evaluated_incumbent": null
+      },
+      "open_work": {
+        "incremental_actions": 0,
+        "refinement_obligations": 0
+      },
+      "failure_reason": null
+    },
+    "errors": [],
+    "checks": {
+      "identical_capacity_pair": true,
+      "finite_upper_independently_evaluated": true,
+      "bounded_cost_no_regression": true,
+      "upper_presence_preserved": true,
+      "bounded_contract_passed": true,
+      "bounded_contract_outcome_preserved": true,
+      "stop_contract_checks_preserved": true,
+      "stop_cause_preserved": true,
+      "errors_preserved": true,
+      "completed_without_survivor": true
+    },
+    "phase_wall_ms": {
+      "registry_layout": 24.7809,
+      "solve": 20080.8552,
+      "compile": 1.2665,
+      "verification": null,
+      "total": 20178.6466
+    },
+    "execution": {
+      "solve_steps": 2299815,
+      "max_solve_step_ms": 34.751,
+      "max_solve_step_phase": 4,
+      "max_solve_step_expanded_states": 1826,
+      "max_solve_step_sweeps": 12,
+      "max_solve_step_finalization_work_item": 27,
+      "solve_step_wall_ms": {
+        "percentile_method": "nearest_rank_ceiling",
+        "count": 2299815,
+        "total": 19460.465700517183,
+        "median": 0.0002,
+        "p95": 0.012,
+        "maximum": 34.751
+      },
+      "diagnostic_work_limit": null,
+      "diagnostic_time_limit_seconds": null,
+      "watchdog_seconds": 300,
+      "watchdog_mode": "cooperative_case_deadline",
+      "watchdog_expired": false,
+      "diagnostic_stop_reason": null,
+      "worker_max_slice_ms": null,
+      "cancellation_ack_ms": null,
+      "cancellation_mode": null,
+      "cooperative_abandon_ms": null
+    },
+    "memory": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 34664448,
+      "process_working_set_after_bytes": 73609216,
+      "process_working_set_delta_bytes": 38944768,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 16628842,
+      "native_peak_owned_bytes": 33075335,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 561090
+    },
+    "reference_stop": "exact_closed"
+  },
+  {
+    "case": "ho01-cross-base-product8-long240",
+    "report": "out\\policy-economics-checked-potentials\\final-original-exposed\\cases\\ho01-cross-base-product8-long240.json",
+    "report_sha256": "7c5f935e015561da45f776cbc67df024cbb9aa738427087291b71247c1823f4c",
+    "reference_report": "out\\adaptive-dirty-guidance\\final-original-exposed\\cases\\ho01-cross-base-product8-long240.json",
+    "reference_report_sha256": "1e1fbf3c998e4a267dee7f68b67b7ea3e6662c6ee9f96f6c75e9dc7d3c8f90a2",
+    "input": {
+      "native_retention_diagnostic": "reuse",
+      "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+      "watchdog_seconds": 300,
+      "requested_bounded_finish_seconds": 240,
+      "session": {
+        "base_metadata_path": "Metadata/Items/Armours/Shields/ShieldStr17",
+        "base_name": "Pinnacle Tower Shield",
+        "item_class_key": "Shield",
+        "item_level": 86
+      },
+      "start": {
+        "mods": [],
+        "rarity": "rare",
+        "with_implicits": false
+      },
+      "goal": {
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 3,
+        "rarity": "rare",
+        "slots": [
+          {
+            "family_mod_key": "AttackerTakesDamage4",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "Strength9",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalIncreaseSocketedMeleeGemLevel",
+            "min_tier": 1
+          }
+        ],
+        "version": "v1"
+      },
+      "corpus": {
+        "geometric_mean_single_draw_probability": 0.007820136852394919,
+        "goal_modifier_count": 3,
+        "maximum_single_draw_probability": 0.007820136852394917,
+        "minimum_single_draw_probability": 0.007820136852394917,
+        "natural_pool_mod_count": 147,
+        "natural_pool_weight": 127875,
+        "prefix_goal_count": 2,
+        "side_mix": "PPS",
+        "stratum": "heldout-shield-pps",
+        "suffix_goal_count": 1,
+        "tier": "heldout"
+      },
+      "feasibility": {
+        "eligible_slot_count": 3,
+        "goal_slot_count": 3,
+        "natural_pool_mod_count": 147,
+        "natural_pool_weight": 127875,
+        "natural_prefix_mod_count": 57,
+        "natural_prefix_weight": 54000,
+        "natural_suffix_mod_count": 90,
+        "natural_suffix_weight": 73875,
+        "reason": "natural_reforge_witness",
+        "required_slot_count": 3,
+        "slot_natural_mod_counts": [
+          1,
+          1,
+          1
+        ],
+        "slot_natural_weights": [
+          1000,
+          1000,
+          1000
+        ],
+        "slot_single_draw_probabilities": [
+          0.007820136852394917,
+          0.007820136852394917,
+          0.007820136852394917
+        ],
+        "status": "feasible",
+        "witness_action_id": "chaos",
+        "witness_action_index": 5,
+        "witness_mod_ids": [
+          24,
+          202,
+          114
+        ]
+      },
+      "generation": {
+        "artifact_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+        "engine_binary_sha256": "2ee0839d911ec3728a46ed4c37b28fcc7faede9e734b632fed5609579b61bcbf",
+        "engine_commit": "be553608ecabde28a3dec07856255911459ec97d",
+        "generator_seed": 20260909,
+        "generator_version": "natural-t1-corpus-v1"
+      },
+      "product_action_envelope": {
+        "bench_goal_slots_forbidden": true,
+        "envelope_goal": {
+          "action_mode": "goal_relevant",
+          "fossil_mode": "goal_relevant",
+          "min_satisfied_slots": 3,
+          "rarity": "rare",
+          "requested_fossil_actions": [],
+          "slots": [
+            {
+              "family_mod_key": "AttackerTakesDamage4",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "Strength9",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalIncreaseSocketedMeleeGemLevel",
+              "min_tier": 1
+            }
+          ],
+          "version": "v1"
+        },
+        "mode": "calculator_goal_relevant_priced_v1",
+        "pricing_filter": "all_declared_cost_keys_present"
+      },
+      "allowed_mechanic_families": [
+        "calculator_goal_relevant_product_envelope"
+      ],
+      "bounded_best_policy_contract": {
+        "allow_exact": true,
+        "bounded_requires_named_stop": true,
+        "bounded_requires_strict_gap": true,
+        "bounded_requires_open_obligations": true,
+        "require_evaluated_upper": true,
+        "require_cheapest_independently_evaluated_incumbent": true
+      },
+      "economy": {
+        "version": "v1",
+        "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+        "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+        "league_key": "allflame",
+        "league_name": "Allflame",
+        "manual_overrides": {
+          "base": 1
+        },
+        "fallback_price": null,
+        "missing_price_decisions": {
+          "base": "quality_ladder_fixture_input_1_chaos"
+        }
+      },
+      "caps": {
+        "solve_profile": "calculator_product_v1",
+        "max_states": 200000,
+        "max_sweeps": 100000,
+        "solve_step_work_items": 8,
+        "max_discovered_states": 200000,
+        "max_expanded_states": 200000,
+        "max_state_action_rows": 1215000,
+        "max_transitions": 10000000,
+        "max_reforge_work": 50000000,
+        "max_solver_owned_bytes": 1073741824,
+        "max_diagnostic_samples": 64,
+        "max_telemetry_json_bytes": 2097152,
+        "max_compiled_nodes": 100000,
+        "max_compiled_edges": 400000,
+        "max_strategy_json_bytes": 67108864,
+        "worker_step_ms": 250,
+        "cancel_ack_ms": 250,
+        "full_evidence": true
+      },
+      "verification": {
+        "runs": 0,
+        "seed": 20260826,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "exact_evaluation": true,
+        "exact_max_states": 1000000,
+        "exact_max_pairs": 5000000,
+        "exact_max_transitions": 20000000,
+        "exact_max_owned_bytes": 1073741824,
+        "exact_cost_absolute_tolerance": 1e-07,
+        "exact_cost_relative_tolerance": 1e-09
+      }
+    },
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 2112.534554200355,
+      "expanded_states": 493,
+      "sweeps": 0,
+      "residual": 1.8189894035458565e-12,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 201,
+        "candidate": 29,
+        "evaluator_supported": 29,
+        "supported_priced": 189,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 93.66114293680295,
+      "upper_bound": 2071.736538384866,
+      "evaluated_policy_cost": 2071.736538384866,
+      "absolute_optimality_gap": 1978.075395448063,
+      "relative_optimality_gap": 21.11948811881094,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "reference_upper": 2071.736538384866,
+    "cost_delta": 0.0,
+    "native_evaluation": {
+      "completed": true,
+      "time_limited": false,
+      "status": "matched",
+      "wall_ms": 2618.0943,
+      "converged": true,
+      "cost_complete": true,
+      "zero_off_policy_mass": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "total_expected_cost": 2071.736538384866,
+      "solver_cost_delta_absolute": 0,
+      "solver_cost_delta_relative": 0
+    },
+    "bounded_contract": {
+      "checked": true,
+      "passed": true,
+      "path": "bounded",
+      "checks": {
+        "named_stop": true,
+        "strict_gap": true,
+        "open_obligations": true,
+        "evaluated_upper": true,
+        "cheapest_independently_evaluated_incumbent": true
+      },
+      "open_work": {
+        "incremental_actions": 8402,
+        "refinement_obligations": 2941
+      },
+      "failure_reason": null
+    },
+    "errors": [],
+    "checks": {
+      "identical_capacity_pair": true,
+      "finite_upper_independently_evaluated": true,
+      "bounded_cost_no_regression": true,
+      "upper_presence_preserved": true,
+      "bounded_contract_passed": true,
+      "bounded_contract_outcome_preserved": true,
+      "stop_contract_checks_preserved": true,
+      "stop_cause_preserved": true,
+      "errors_preserved": true,
+      "completed_without_survivor": true
+    },
+    "phase_wall_ms": {
+      "registry_layout": 22.2911,
+      "solve": 240326.796,
+      "compile": 2.4565,
+      "verification": null,
+      "total": 243067.6972
+    },
+    "execution": {
+      "solve_steps": 11308,
+      "max_solve_step_ms": 709.6392,
+      "max_solve_step_phase": 5,
+      "max_solve_step_expanded_states": 493,
+      "max_solve_step_sweeps": 9,
+      "max_solve_step_finalization_work_item": 1,
+      "solve_step_wall_ms": {
+        "percentile_method": "nearest_rank_ceiling",
+        "count": 11308,
+        "total": 237946.246600007,
+        "median": 0.0746,
+        "p95": 211.8072,
+        "maximum": 709.6392
+      },
+      "diagnostic_work_limit": null,
+      "diagnostic_time_limit_seconds": null,
+      "watchdog_seconds": 300,
+      "watchdog_mode": "cooperative_case_deadline",
+      "watchdog_expired": false,
+      "diagnostic_stop_reason": null,
+      "worker_max_slice_ms": null,
+      "cancellation_ack_ms": null,
+      "cancellation_mode": null,
+      "cooperative_abandon_ms": null
+    },
+    "memory": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 34635776,
+      "process_working_set_after_bytes": 195424256,
+      "process_working_set_delta_bytes": 160788480,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 163726793,
+      "native_peak_owned_bytes": 620990487,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 659747
+    },
+    "reference_stop": "requested_bounded_finish"
+  },
+  {
+    "case": "ho02-cross-base-product8-long240",
+    "report": "out\\policy-economics-checked-potentials\\final-original-exposed\\cases\\ho02-cross-base-product8-long240.json",
+    "report_sha256": "6286048f55c3304ae6d85ddcdae46ff3025ccc47b1f82bb2aa0acba324f8d767",
+    "reference_report": "out\\adaptive-dirty-guidance\\final-original-exposed\\cases\\ho02-cross-base-product8-long240.json",
+    "reference_report_sha256": "da9043800b715a9a7dbb9b0f85ad91267f1d0bf300b90b39a7fdd5cff1a82ffb",
+    "input": {
+      "native_retention_diagnostic": "reuse",
+      "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+      "watchdog_seconds": 300,
+      "requested_bounded_finish_seconds": 240,
+      "session": {
+        "base_metadata_path": "Metadata/Items/Weapons/OneHandWeapons/Wands/Wand16",
+        "base_name": "Prophecy Wand",
+        "item_class_key": "Wand",
+        "item_level": 86
+      },
+      "start": {
+        "mods": [],
+        "rarity": "rare",
+        "with_implicits": false
+      },
+      "goal": {
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 3,
+        "rarity": "rare",
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreasedAccuracyNew6",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ProjectileSpeed5",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "GlobalLightningSpellGemsLevel1",
+            "min_tier": 1
+          }
+        ],
+        "version": "v1"
+      },
+      "corpus": {
+        "geometric_mean_single_draw_probability": 0.00327871002432803,
+        "goal_modifier_count": 3,
+        "maximum_single_draw_probability": 0.006557420048656057,
+        "minimum_single_draw_probability": 0.0016393550121640143,
+        "natural_pool_mod_count": 288,
+        "natural_pool_weight": 152499,
+        "prefix_goal_count": 1,
+        "side_mix": "PSS",
+        "stratum": "heldout-wand-pss",
+        "suffix_goal_count": 2,
+        "tier": "heldout"
+      },
+      "feasibility": {
+        "eligible_slot_count": 3,
+        "goal_slot_count": 3,
+        "natural_pool_mod_count": 288,
+        "natural_pool_weight": 152499,
+        "natural_prefix_mod_count": 146,
+        "natural_prefix_weight": 63907,
+        "natural_suffix_mod_count": 142,
+        "natural_suffix_weight": 88592,
+        "reason": "natural_reforge_witness",
+        "required_slot_count": 3,
+        "slot_natural_mod_counts": [
+          1,
+          1,
+          1
+        ],
+        "slot_natural_weights": [
+          500,
+          1000,
+          250
+        ],
+        "slot_single_draw_probabilities": [
+          0.0032787100243280285,
+          0.006557420048656057,
+          0.0016393550121640143
+        ],
+        "status": "feasible",
+        "witness_action_id": "chaos",
+        "witness_action_index": 5,
+        "witness_mod_ids": [
+          281,
+          390,
+          125
+        ]
+      },
+      "generation": {
+        "artifact_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+        "engine_binary_sha256": "2ee0839d911ec3728a46ed4c37b28fcc7faede9e734b632fed5609579b61bcbf",
+        "engine_commit": "be553608ecabde28a3dec07856255911459ec97d",
+        "generator_seed": 20260909,
+        "generator_version": "natural-t1-corpus-v1"
+      },
+      "product_action_envelope": {
+        "bench_goal_slots_forbidden": true,
+        "envelope_goal": {
+          "action_mode": "goal_relevant",
+          "fossil_mode": "goal_relevant",
+          "min_satisfied_slots": 3,
+          "rarity": "rare",
+          "requested_fossil_actions": [],
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreasedAccuracyNew6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ProjectileSpeed5",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "GlobalLightningSpellGemsLevel1",
+              "min_tier": 1
+            }
+          ],
+          "version": "v1"
+        },
+        "mode": "calculator_goal_relevant_priced_v1",
+        "pricing_filter": "all_declared_cost_keys_present"
+      },
+      "allowed_mechanic_families": [
+        "calculator_goal_relevant_product_envelope"
+      ],
+      "bounded_best_policy_contract": {
+        "allow_exact": true,
+        "bounded_requires_named_stop": true,
+        "bounded_requires_strict_gap": true,
+        "bounded_requires_open_obligations": true,
+        "require_evaluated_upper": true,
+        "require_cheapest_independently_evaluated_incumbent": true
+      },
+      "economy": {
+        "version": "v1",
+        "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+        "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+        "league_key": "allflame",
+        "league_name": "Allflame",
+        "manual_overrides": {
+          "base": 1
+        },
+        "fallback_price": null,
+        "missing_price_decisions": {
+          "base": "quality_ladder_fixture_input_1_chaos"
+        }
+      },
+      "caps": {
+        "solve_profile": "calculator_product_v1",
+        "max_states": 200000,
+        "max_sweeps": 100000,
+        "solve_step_work_items": 8,
+        "max_discovered_states": 200000,
+        "max_expanded_states": 200000,
+        "max_state_action_rows": 1215000,
+        "max_transitions": 10000000,
+        "max_reforge_work": 50000000,
+        "max_solver_owned_bytes": 1073741824,
+        "max_diagnostic_samples": 64,
+        "max_telemetry_json_bytes": 2097152,
+        "max_compiled_nodes": 100000,
+        "max_compiled_edges": 400000,
+        "max_strategy_json_bytes": 67108864,
+        "worker_step_ms": 250,
+        "cancel_ack_ms": 250,
+        "full_evidence": true
+      },
+      "verification": {
+        "runs": 0,
+        "seed": 20260826,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "exact_evaluation": true,
+        "exact_max_states": 1000000,
+        "exact_max_pairs": 5000000,
+        "exact_max_transitions": 20000000,
+        "exact_max_owned_bytes": 1073741824,
+        "exact_cost_absolute_tolerance": 1e-07,
+        "exact_cost_relative_tolerance": 1e-09
+      }
+    },
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 3997.94015942427,
+      "expanded_states": 493,
+      "sweeps": 0,
+      "residual": 2.9103830456733704e-11,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "refused_resource_cap",
+      "stop_cause": "state_cap",
+      "cap_hit_mask": 5,
+      "action_counts": {
+        "registry": 231,
+        "candidate": 35,
+        "evaluator_supported": 35,
+        "supported_priced": 258,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 110.28721258971052,
+      "upper_bound": 3963.671015833939,
+      "evaluated_policy_cost": 3963.671015833939,
+      "absolute_optimality_gap": 3853.383803244228,
+      "relative_optimality_gap": 34.93953390208121,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "reference_upper": 3963.671015833939,
+    "cost_delta": 0.0,
+    "native_evaluation": {
+      "completed": true,
+      "time_limited": false,
+      "status": "matched",
+      "wall_ms": 2911.2356,
+      "converged": true,
+      "cost_complete": true,
+      "zero_off_policy_mass": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "total_expected_cost": 3963.671015833939,
+      "solver_cost_delta_absolute": 0,
+      "solver_cost_delta_relative": 0
+    },
+    "bounded_contract": {
+      "checked": true,
+      "passed": true,
+      "path": "bounded",
+      "checks": {
+        "named_stop": true,
+        "strict_gap": true,
+        "open_obligations": true,
+        "evaluated_upper": true,
+        "cheapest_independently_evaluated_incumbent": true
+      },
+      "open_work": {
+        "incremental_actions": 10537,
+        "refinement_obligations": 17280
+      },
+      "failure_reason": null
+    },
+    "errors": [],
+    "checks": {
+      "identical_capacity_pair": true,
+      "finite_upper_independently_evaluated": true,
+      "bounded_cost_no_regression": true,
+      "upper_presence_preserved": true,
+      "bounded_contract_passed": true,
+      "bounded_contract_outcome_preserved": true,
+      "stop_contract_checks_preserved": true,
+      "stop_cause_preserved": true,
+      "errors_preserved": true,
+      "completed_without_survivor": true
+    },
+    "phase_wall_ms": {
+      "registry_layout": 28.1108,
+      "solve": 188795.487,
+      "compile": 3.0618,
+      "verification": null,
+      "total": 191950.4204
+    },
+    "execution": {
+      "solve_steps": 6837,
+      "max_solve_step_ms": 7100.8446,
+      "max_solve_step_phase": 5,
+      "max_solve_step_expanded_states": 493,
+      "max_solve_step_sweeps": 8,
+      "max_solve_step_finalization_work_item": 1,
+      "solve_step_wall_ms": {
+        "percentile_method": "nearest_rank_ceiling",
+        "count": 6837,
+        "total": 185454.84510000632,
+        "median": 0.084,
+        "p95": 254.2224,
+        "maximum": 7100.8446
+      },
+      "diagnostic_work_limit": null,
+      "diagnostic_time_limit_seconds": null,
+      "watchdog_seconds": 300,
+      "watchdog_mode": "cooperative_case_deadline",
+      "watchdog_expired": false,
+      "diagnostic_stop_reason": null,
+      "worker_max_slice_ms": null,
+      "cancellation_ack_ms": null,
+      "cancellation_mode": null,
+      "cooperative_abandon_ms": null
+    },
+    "memory": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 34652160,
+      "process_working_set_after_bytes": 354566144,
+      "process_working_set_delta_bytes": 319913984,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 359774787,
+      "native_peak_owned_bytes": 849061684,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 681724
+    },
+    "reference_stop": "state_cap"
+  }
+]

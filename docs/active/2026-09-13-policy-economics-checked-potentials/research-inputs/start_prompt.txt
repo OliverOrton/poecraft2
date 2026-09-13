@@ -1,0 +1,76 @@
+/goal Improve materially different native solver cases by interpreting their current
+policy economics, recovering the failed native continuation where justified, and
+testing aggressive completion estimates as inputs to the existing lower checker.
+
+You are a fresh Codex session in OliverOrton/poecraft2.
+Reviewed main: bf3b980041821acee1f1f8149afc912a22021884.
+
+Use implementation_plan.md, research_and_mathematics.md and resource_policy.md
+in this package. This explicitly selects the next programme; no prior thread,
+old ZIP or Goal state is required. Reconcile local work and preserve newer edits.
+
+The previous selective pass is PARTIAL: current Amulet U 13159.724084639676;
+Ring FOUR selective 400M U 227989.251597418, only 0.014923% below matched B.
+No new exact closure. Public opt-in remains static; selective modes diagnostic.
+M0/no-idle-polling, typed preflight, candidate caps, fresh layouts, protected
+cleanup, sparse occupancy preparation, selective row reuse and controller-check
+reuse are done. Do not repeat them or the falsified forcing-identity census.
+
+Use the existing compiled-policy/failed-candidate summaries as an ECONOMIC
+FEEDBACK LOOP. After meaningful new results inspect immediate spend, actual
+visits/retries, lost goals, native entry/control, offered/unfinished alternatives
+and estimate-versus-native differences. Update at most two causal hypotheses.
+Do not keep pursuing an old Annul explanation after a new strategy changes it.
+These are compact interpretations at batch completion, not a dashboard or polling.
+
+First localize the TemporaryBenchRepeat failure:
+option:temporary_bench_repeat:bench:EinharMasterAddedLightningDamage1:exalt:until:1:2.
+Its private estimate 12482.58479 is not an upper. The checked graph reaches only
+0.271775 goal mass; partial cost 3481.17167 is not goal-completion cost. Capture
+one exact first native divergence through setup, operation, cleanup/retry and
+compiled continuation. Distinguish kernel, member/layout, control, serialization
+and route coverage. Repair the actual existing owner only when evidenced.
+No free reset, normalized-away failure, relaxed checker or guessed mechanic.
+
+Continue beyond a fixed fixture into complete controller evaluation and cost
+improvement. The known private estimate alone would miss the programme's major
+target even if valid. Reinspect the resulting economics and follow one further
+concrete high-leverage intervention; do not stop at the first small repair.
+
+Keep aggressive estimates for revisitable search. The old three-family
+multiplicative correction had no observed selection leverage; do not repeat it.
+Do not treat current-policy cost, a timeout or missing coverage as a V* label.
+
+Perform the bounded CHECKED-ESTIMATED-POTENTIAL pilot in M3 using existing
+QuotientLowerQuery/solve_lower/check_lower and full native action coverage.
+The current checker already accepts untrusted vectors; its tiny contraction/
+zero fallback is not a general estimate repair. Try a justified feasible step
+from a base feasible for THIS query toward the estimate, identify limiting
+constraints, and finally check the actual vector with unchanged exact arithmetic
+and native correspondence. Goals/boundaries stay fixed; current observed/event
+minimizers must be regenerated. Private selected rows are not full-scope proof.
+
+A ray ceiling is not a model ceiling; a proper auxiliary-policy ceiling is not
+the native optimum. An unchanged optimistic model cannot exceed its own cheap
+escape by receiving a larger guess. Use the limiting evidence to tighten one
+relevant boundary/direction or choose a better native action, not loop forever.
+Retain only useful certificate consumption at the root or a relevant proof entry;
+otherwise record the precise negative result and keep policy work moving.
+
+Aim for new exact closure or the plan's material verified-cost result on Ring-four
+and another predeclared non-Conquest family. Amulet is the initial second target.
+Preserve stronger compatible high-water references, original/default behaviour,
+CB05/CB09 and unreproduced CB03 evidence. Local certificates and higher estimates
+alone are not completion.
+
+Use current 600/840/870-second and 8/4-GiB profiles, exact mode identities, Amulet 200M
+and Ring 400M matching the chosen references. Useful further caps remain authorized
+with safe host admission and matched controls; failures of semantics are not caps.
+No broad sweeps, routine Simulator or full intermediate suites. Batch independent
+jobs serially, await completion deterministically, and return compact results.
+
+One sequential session, no subagents, inherited deadline, automatic restart or
+push. Preserve unrelated work and protected root path 0 without inspecting/staging it.
+Update existing canonical mathematics with real arguments and actual native
+dispositions. One living record and short HANDOFF. Proceed into implementation,
+not another standalone plan or preparation-only closeout.

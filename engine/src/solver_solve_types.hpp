@@ -2441,7 +2441,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         const std::uint32_t operator_index);
 
     void prepare_goal_cover_cost();
-    void prepare_native_retention_lower();
+    void prepare_native_retention_lower(const struct PhaseLowerQueryDiagnostic* diagnostic = nullptr);
     double native_retention_lower_value(std::uint32_t state);
     std::optional<double> project_native_retention_lower(std::uint32_t state) const;
 

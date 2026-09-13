@@ -6,7 +6,7 @@ namespace solver {
 
 using namespace solve_detail;
 
-void SolveWork::Impl::prepare_native_retention_lower() {
+void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagnostic* diagnostic) {
     if (!options.native_retention_lower || native_retention_attempted) return;
     native_retention_attempted = true;
     const auto began = std::chrono::steady_clock::now();
@@ -52,7 +52,7 @@ void SolveWork::Impl::prepare_native_retention_lower() {
             proposal,support,zero,false,true,budget,true,{},PhaseContinuation::CoupledFresh,
             PhaseRetention::AnnulNonempty,false,{true,true,3,
                 options.native_retention_numerical_reuse,options.native_retention_numerical_reuse,
-                options.native_retention_checked_target>0,options.native_retention_checked_target},frame);
+                options.native_retention_checked_target>0,options.native_retention_checked_target},frame,diagnostic);
         const auto safe_member = [&](unsigned mod) {
             // A class mask is only one part of its member domain. The query
             // also requires absence of every metamod flag. project_item adds

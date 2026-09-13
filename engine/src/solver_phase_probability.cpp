@@ -308,7 +308,8 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         bool consider_imprint, bool retain_scour, const QuotientLowerBudget& budget,
         bool joint_refinement, std::shared_ptr<const PreparedPhasePotential> reuse_draws, PhaseContinuation continuation,
         PhaseRetention retention, bool retain_diagnostics, PhasePreparationOptions preparation_options,
-        std::optional<CoupledFractureFrame> frame) {
+        std::optional<CoupledFractureFrame> frame,
+        const PhaseLowerQueryDiagnostic* query_diagnostic) {
     const auto preparation_start = PreparationClock::now();
     PhasePreparationStats stats;
     checkpoint(budget);
@@ -451,6 +452,44 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
             for (unsigned produced = 0; produced < masks; ++produced)
                 if (((produced | m) & side_mask) == (produced & side_mask))
                     minimum[m][side] = std::min(minimum[m][side], costs[produced]);
+        }
+    }
+    // Harvest resistance conversion replaces exactly one unfractured affix
+    // on the same side, at the same required level, or returns the old item.
+    // Enumerate a support SUPERSET from native metadata, ignoring pool weights,
+    // target-tag restrictions and exclusion conflicts. A minimum over this
+    // larger support is a lower relation, never a native executable kernel.
+    // The existing native scratch reservation covers this small mask support.
+    std::map<unsigned,std::vector<std::array<unsigned,4>>> resistance_support;
+    const bool refine_resistance=query_diagnostic && query_diagnostic->refine_resistance_support &&
+        retention!=PhaseRetention::None;
+    if (refine_resistance) {
+        const auto& session=calc.session();
+        const auto resistance=session.data->tag_id_by_name.find("resistance");
+        const auto has_tag=[&](unsigned mod,unsigned tag) {
+            return std::find(session.class_tag_ids.begin()+session.class_offsets[mod],
+                session.class_tag_ids.begin()+session.class_offsets[mod+1],tag)!=
+                session.class_tag_ids.begin()+session.class_offsets[mod+1];
+        };
+        for (unsigned a=0;a<calc.registry().actions.size();++a) {
+            const auto& action=calc.registry().actions[a];
+            if (action.params.type!=ActionType::HarvestResist) continue;
+            std::set<std::array<unsigned,4>> support;
+            if (resistance!=session.data->tag_id_by_name.end())
+                for (unsigned from=0;from<session.mod_count;++from) {
+                    checkpoint(budget);
+                    const auto side=session.gen_type[from];
+                    if (side<0 || side>1 || !has_tag(from,resistance->second) ||
+                        !has_tag(from,action.params.source_tag_id)) continue;
+                    unsigned filter=0;
+                    for (unsigned mode=0;mode<filter_mods.size();++mode)
+                        if (filter_mods[mode]==from) filter=mode+1;
+                    for (unsigned to=0;to<session.mod_count;++to)
+                        if (session.gen_type[to]==side && session.required_level[to]==session.required_level[from] &&
+                            has_tag(to,resistance->second) && !has_tag(to,action.params.source_tag_id))
+                            support.insert({mod_goals[from],mod_goals[to],static_cast<unsigned>(side),filter});
+                }
+            resistance_support.emplace(a,std::vector<std::array<unsigned,4>>(support.begin(),support.end()));
         }
     }
     std::vector<Cell> cells;
@@ -709,6 +748,7 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
             crafted.jp, crafted.js, filter_observation(anchor, filter_mods)));
     }
     bool last_checked=false; double last_improvement=0;
+    bool diagnostic_proposed=false, diagnostic_pending=false;
     stats.projection_ns = elapsed_ns(preparation_start);
     for (; rounds < max_rounds || exporting; ++rounds) {
         const auto relation_start = PreparationClock::now();
@@ -890,6 +930,23 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                         // Evaluating it first avoids constructing unused relations.
                         escape(PhaseRelationReason::CandidatePriceShortcut);
                         shortcuts.push_back({c.id, a, rounds, cost, candidate[c.id]});
+                    } else if (type==ActionType::HarvestResist && refine_resistance) {
+                        add_group(c.mask,c.p,c.s,c.rarity); // Every failed/unsupported carrier remains a no-op.
+                        for (const auto& [lost,gained,side,removed_filter]:resistance_support.at(a)) {
+                            if ((lost & c.mask)!=lost || (lost & frame_mask)) continue;
+                            const auto next=(c.mask & ~lost) | gained;
+                            if (lost) {
+                                add_typed_group(next,c.p,c.s,c.rarity,c.crafted & ~lost,c.jp,c.js,c.filter);
+                            } else {
+                                const auto junk=(side ? c.s : c.p)-minimum[c.mask][side];
+                                const auto crafted=side ? c.js : c.jp;
+                                if (junk>crafted) add_group(next,c.p,c.s,c.rarity);
+                                // A converted crafted junk affix becomes natural.
+                                if (crafted) add_typed_group(next,c.p,c.s,c.rarity,c.crafted,
+                                    c.jp-(side==0),c.js-(side==1),
+                                    c.filter==removed_filter ? 0 : c.filter);
+                            }
+                        }
                     } else if (type == ActionType::HarvestAugment || type == ActionType::HarvestResist) {
                         escape();
                     } else if (type == ActionType::EldritchEmber || type == ActionType::EldritchIchor) {
@@ -1254,6 +1311,11 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
             break;
         }
         if (reactivated) continue;
+        if (diagnostic_pending) {
+            if (query_diagnostic->rechecked)
+                query_diagnostic->rechecked(dense_candidate,static_cast<bool>(checked.checked));
+            diagnostic_pending=false;
+        }
         if (checked.checked) {
             stats.checked_source_lowers[rounds] = candidate[anchor_cell];
             stats.checked_source_ns[rounds] = elapsed_ns(preparation_start);
@@ -1321,6 +1383,18 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 improves |= next > candidate[c.id] + 64*std::numeric_limits<double>::epsilon()*std::max(1.0, next);
             }
             if (!improves) {
+                if (query_diagnostic && !diagnostic_proposed && query_diagnostic->propose) {
+                    diagnostic_proposed=true;
+                    auto trial=query_diagnostic->propose(graph,query,graph_cells,dense_candidate,local_budget);
+                    if (trial) {
+                        if (trial->size()!=graph_cells.size())
+                            throw std::invalid_argument("native query diagnostic has incompatible coordinates");
+                        for (unsigned i=0;i<graph_cells.size();++i)
+                            candidate[graph_cells[i].cell_id]=trial->at(i);
+                        diagnostic_pending=true;
+                        continue; // Rebuild EVERY native value-dependent relation at the actual trial.
+                    }
+                }
                 accepted_rounds=rounds+1;
                 accepted_relation_count=relation_count;
                 accepted_report_bytes=relation_payload_bytes;

@@ -1,0 +1,287 @@
+[
+  {
+    "name": "recheck-bow",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\recheck_policy.py",
+      "--case",
+      "docs/active/2026-09-12-adaptive-dirty-guidance/native-600-final840/bow/cb04-cross-base-product8-long240.json",
+      "--strategy",
+      "out/selective-continuation-improvement/options-v3-bow-200m/strategies/cb04-cross-base-product8-long240.strategy.json",
+      "--upper",
+      "223349.0000393144",
+      "--output",
+      "docs/active/2026-09-13-policy-economics-checked-potentials/recheck-bow.json"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "case": "recheck-bow",
+      "utc": "2026-09-13T06:56:19.505358+00:00",
+      "total_bytes": 68409442304,
+      "available_bytes": 37403533312,
+      "minimum_outside_bytes": 13681888461,
+      "external_reservation_bytes": 15032385536,
+      "legacy_runner_headroom_bytes": 0,
+      "admitted": true,
+      "purpose": "One native process; 14-GiB reservation covers the 8-GiB aggregate and 6-GiB runner headroom, with additional physical and commit headroom checks."
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 61528,
+      "process_identity_token": "61528:134337561795059657",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 4230.077899992466
+    }
+  },
+  {
+    "name": "recheck-ring-four",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\recheck_policy.py",
+      "--case",
+      "docs/active/2026-09-13-selective-continuation-improvement/native-600-final840-ring-four-400m/cb07-cross-base-product8-long240.json",
+      "--strategy",
+      "out/selective-continuation-improvement/options-v4-ring-four-400m/strategies/cb07-cross-base-product8-long240.strategy.json",
+      "--upper",
+      "227989.251597418",
+      "--output",
+      "docs/active/2026-09-13-policy-economics-checked-potentials/recheck-ring-four.json"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "case": "recheck-ring-four",
+      "utc": "2026-09-13T06:56:23.736139+00:00",
+      "total_bytes": 68409442304,
+      "available_bytes": 37438447616,
+      "minimum_outside_bytes": 13681888461,
+      "external_reservation_bytes": 15032385536,
+      "legacy_runner_headroom_bytes": 0,
+      "admitted": true,
+      "purpose": "One native process; 14-GiB reservation covers the 8-GiB aggregate and 6-GiB runner headroom, with additional physical and commit headroom checks."
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 61212,
+      "process_identity_token": "61212:134337561837371189",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 18645.654499996454
+    }
+  },
+  {
+    "name": "sampling-amulet",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\qualify_sampling_amulet.py",
+      "--strategy",
+      "docs/active/2026-09-13-policy-economics-checked-potentials/strategies/amulet-cb08-400m.strategy.json",
+      "--output",
+      "docs/active/2026-09-13-policy-economics-checked-potentials/sampling-amulet.json",
+      "--seed",
+      "2026091303"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "case": "sampling-amulet",
+      "utc": "2026-09-13T06:56:42.382555+00:00",
+      "total_bytes": 68409442304,
+      "available_bytes": 37256908800,
+      "minimum_outside_bytes": 13681888461,
+      "external_reservation_bytes": 15032385536,
+      "legacy_runner_headroom_bytes": 0,
+      "admitted": true,
+      "purpose": "One native process; 14-GiB reservation covers the 8-GiB aggregate and 6-GiB runner headroom, with additional physical and commit headroom checks."
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 42768,
+      "process_identity_token": "42768:134337562023831719",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 40820.03449997865
+    }
+  },
+  {
+    "name": "potential-final-amulet-original",
+    "command": [
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\final-v3.exe",
+      "--artifact",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-11-dirty-state-continuation\\native-600-final840\\amulet\\manifest.json",
+      "--case",
+      "cb08-cross-base-product8-long240",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-policy-economics-checked-potentials\\potential-final-amulet-original.json",
+      "--checked-potential-estimate",
+      "13159.724084639676",
+      "--checked-potential-target",
+      "2771.779435503191"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "case": "potential-final-amulet-original",
+      "utc": "2026-09-13T06:57:23.203369+00:00",
+      "total_bytes": 68409442304,
+      "available_bytes": 37451403264,
+      "minimum_outside_bytes": 13681888461,
+      "external_reservation_bytes": 15032385536,
+      "legacy_runner_headroom_bytes": 0,
+      "admitted": true,
+      "purpose": "One native process; 14-GiB reservation covers the 8-GiB aggregate and 6-GiB runner headroom, with additional physical and commit headroom checks."
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 50868,
+      "process_identity_token": "50868:134337562432041514",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 3435.1102999644354
+    }
+  },
+  {
+    "name": "potential-final-amulet-refined",
+    "command": [
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\final-v3.exe",
+      "--artifact",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-11-dirty-state-continuation\\native-600-final840\\amulet\\manifest.json",
+      "--case",
+      "cb08-cross-base-product8-long240",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-policy-economics-checked-potentials\\potential-final-amulet-refined.json",
+      "--checked-potential-estimate",
+      "13159.724084639676",
+      "--checked-potential-target",
+      "2771.779435503191",
+      "--checked-potential-refine-resistance"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "case": "potential-final-amulet-refined",
+      "utc": "2026-09-13T06:57:26.639183+00:00",
+      "total_bytes": 68409442304,
+      "available_bytes": 37437218816,
+      "minimum_outside_bytes": 13681888461,
+      "external_reservation_bytes": 15032385536,
+      "legacy_runner_headroom_bytes": 0,
+      "admitted": true,
+      "purpose": "One native process; 14-GiB reservation covers the 8-GiB aggregate and 6-GiB runner headroom, with additional physical and commit headroom checks."
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 38752,
+      "process_identity_token": "38752:134337562466397702",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 3755.5295000202022
+    }
+  },
+  {
+    "name": "potential-final-ring-four-original",
+    "command": [
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\final-v3.exe",
+      "--artifact",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-selective-continuation-improvement\\native-600-final840-ring-four-400m\\manifest.json",
+      "--case",
+      "cb07-cross-base-product8-long240",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-policy-economics-checked-potentials\\potential-final-ring-four-original.json",
+      "--checked-potential-estimate",
+      "227989.251597418",
+      "--checked-potential-target",
+      "45759.33451262713"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "case": "potential-final-ring-four-original",
+      "utc": "2026-09-13T06:57:30.395561+00:00",
+      "total_bytes": 68409442304,
+      "available_bytes": 37219741696,
+      "minimum_outside_bytes": 13681888461,
+      "external_reservation_bytes": 15032385536,
+      "legacy_runner_headroom_bytes": 0,
+      "admitted": true,
+      "purpose": "One native process; 14-GiB reservation covers the 8-GiB aggregate and 6-GiB runner headroom, with additional physical and commit headroom checks."
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 56952,
+      "process_identity_token": "56952:134337562503962297",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 7608.250899997074
+    }
+  },
+  {
+    "name": "potential-final-ring-four-refined",
+    "command": [
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\final-v3.exe",
+      "--artifact",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-selective-continuation-improvement\\native-600-final840-ring-four-400m\\manifest.json",
+      "--case",
+      "cb07-cross-base-product8-long240",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-policy-economics-checked-potentials\\potential-final-ring-four-refined.json",
+      "--checked-potential-estimate",
+      "227989.251597418",
+      "--checked-potential-target",
+      "45759.33451262713",
+      "--checked-potential-refine-resistance"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "case": "potential-final-ring-four-refined",
+      "utc": "2026-09-13T06:57:38.004788+00:00",
+      "total_bytes": 68409442304,
+      "available_bytes": 37230960640,
+      "minimum_outside_bytes": 13681888461,
+      "external_reservation_bytes": 15032385536,
+      "legacy_runner_headroom_bytes": 0,
+      "admitted": true,
+      "purpose": "One native process; 14-GiB reservation covers the 8-GiB aggregate and 6-GiB runner headroom, with additional physical and commit headroom checks."
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 28648,
+      "process_identity_token": "28648:134337562580053860",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 8052.882399992086
+    }
+  }
+]

@@ -1,0 +1,24 @@
+[
+  {
+    "run": "out/policy-economics-checked-potentials/final-v3-amulet-400m",
+    "upper": 12541.579648544115,
+    "lower": 174.79327321907147,
+    "stop": "sweep_cap",
+    "expected_actions": 25518.491313143768,
+    "comparison": {
+      "paired_cases": 1,
+      "excluded": [],
+      "cost_delta": -618.1444360955611,
+      "cost_reduction_percent": 4.697244654369867,
+      "graph_identical": false
+    },
+    "explicit_checks": {
+      "finite_upper": true,
+      "native_upper_matches": true,
+      "stop_named": true,
+      "bounded_contract_passed": true,
+      "completed_no_survivor": true
+    },
+    "best_policy_observed_ms": 211897.6736
+  }
+]

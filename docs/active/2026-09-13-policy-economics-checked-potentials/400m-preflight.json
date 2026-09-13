@@ -1,0 +1,258 @@
+[
+  {
+    "run": "main-bf3-amulet-400m",
+    "mode": "selective-options",
+    "identity": {
+      "corpus": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-policy-economics-checked-potentials\\native-600-final840-amulet-400m\\manifest.json",
+        "sha256": "13bc46bd3dbc0ece2c80d0b7a36283fb2905ca216faf692089de45688a26b48a",
+        "corpus_id": "policy-economics-native600-final840-amulet-400m",
+        "schema_version": "solver_benchmark_corpus_v1",
+        "generator_config_sha256": null
+      },
+      "artifact": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+        "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+        "declared_files_verified": true,
+        "files": [
+          {
+            "path": "game-data.json",
+            "size_bytes": 16439442,
+            "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+          },
+          {
+            "path": "strings.json",
+            "size_bytes": 6534428,
+            "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+          }
+        ],
+        "identity": {
+          "artifact_schema_version": 4,
+          "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+          "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+          "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      },
+      "executable": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\main-bf3.exe",
+        "sha256": "c7c5fd0429a8a59e53959ab9fcccac95e7fb626bc63caa4087faa40f0568a65a"
+      },
+      "machine": {
+        "system": "Windows",
+        "release": "11",
+        "machine": "AMD64",
+        "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "logical_cpu_count": 24,
+        "python": "3.14.2"
+      },
+      "source": {
+        "commit": "bf3b980041821acee1f1f8149afc912a22021884",
+        "dirty": true,
+        "dirty_paths": [
+          {
+            "status": "??",
+            "path": "docs/active/2026-09-13-policy-economics-checked-potentials/"
+          },
+          {
+            "status": " M",
+            "path": "docs/solver/mathematics/numerical-closure.md"
+          },
+          {
+            "status": " M",
+            "path": "docs/solver/research.md"
+          },
+          {
+            "status": " M",
+            "path": "engine/benchmarks/solver_benchmark.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_calc_types.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_eval.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_eval_types.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_options_semantics.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_phase_lower.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_phase_probability.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_bounds.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_return_bridge.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_types.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/tests/test_main.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/tests/test_solver_calc.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/tests/test_solver_compile.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/tests/tests.hpp"
+          },
+          {
+            "status": "M ",
+            "path": "ocs/solver/mathematics/lower-bounds.md"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "run": "final-v3-amulet-400m",
+    "mode": "selective-options",
+    "identity": {
+      "corpus": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-policy-economics-checked-potentials\\native-600-final840-amulet-400m\\manifest.json",
+        "sha256": "13bc46bd3dbc0ece2c80d0b7a36283fb2905ca216faf692089de45688a26b48a",
+        "corpus_id": "policy-economics-native600-final840-amulet-400m",
+        "schema_version": "solver_benchmark_corpus_v1",
+        "generator_config_sha256": null
+      },
+      "artifact": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+        "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+        "declared_files_verified": true,
+        "files": [
+          {
+            "path": "game-data.json",
+            "size_bytes": 16439442,
+            "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+          },
+          {
+            "path": "strings.json",
+            "size_bytes": 6534428,
+            "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+          }
+        ],
+        "identity": {
+          "artifact_schema_version": 4,
+          "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+          "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+          "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      },
+      "executable": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\final-v3.exe",
+        "sha256": "138bd85ece168e651a6e93e6cba6b97e784f3408e7c27fe76599ebfad31388f8"
+      },
+      "machine": {
+        "system": "Windows",
+        "release": "11",
+        "machine": "AMD64",
+        "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "logical_cpu_count": 24,
+        "python": "3.14.2"
+      },
+      "source": {
+        "commit": "bf3b980041821acee1f1f8149afc912a22021884",
+        "dirty": true,
+        "dirty_paths": [
+          {
+            "status": "??",
+            "path": "docs/active/2026-09-13-policy-economics-checked-potentials/"
+          },
+          {
+            "status": " M",
+            "path": "docs/solver/mathematics/numerical-closure.md"
+          },
+          {
+            "status": " M",
+            "path": "docs/solver/research.md"
+          },
+          {
+            "status": " M",
+            "path": "engine/benchmarks/solver_benchmark.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_calc_types.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_eval.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_eval_types.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_options_semantics.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_phase_lower.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_phase_probability.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_bounds.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_return_bridge.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_types.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/tests/test_main.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/tests/test_solver_calc.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/tests/test_solver_compile.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/tests/tests.hpp"
+          },
+          {
+            "status": "M ",
+            "path": "ocs/solver/mathematics/lower-bounds.md"
+          }
+        ]
+      }
+    }
+  }
+]

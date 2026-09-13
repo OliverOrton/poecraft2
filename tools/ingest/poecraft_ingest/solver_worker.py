@@ -58,7 +58,9 @@ def git_provenance(root: Path) -> dict[str, Any]:
                     "status": line[:2],
                     "path": line[3:],
                 }
-                for line in git("status", "--short").splitlines()
+                # The repository's owner-protected root file is outside
+                # source-provenance inspection, including status refresh.
+                for line in git("status", "--short", "--", ".", ":(exclude,top)0").splitlines()
                 if line
             ),
             key=lambda item: (item["path"], item["status"]),

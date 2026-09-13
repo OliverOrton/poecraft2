@@ -1,0 +1,52 @@
+{
+  "programme": "Policy Economics, Native Continuation Recovery, and Checked Estimated Potentials v1",
+  "reviewed_main": "bf3b980041821acee1f1f8149afc912a22021884",
+  "evidence": "Read-only repository/source review and exact synthetic tests; no native solver execution",
+  "files": [
+    {
+      "name": "README.md",
+      "bytes": 1508,
+      "sha256": "45b9c1b9237dd2654d32c7fda8d545d35a49bd01f2a19fe74961fa005fb67042"
+    },
+    {
+      "name": "checked_estimate_examples.py",
+      "bytes": 12050,
+      "sha256": "b6f6be7fc7ae75e23269b5d79d442b0dabfd34c6b8bb86d5e90a900224c1b528"
+    },
+    {
+      "name": "checked_estimate_results.json",
+      "bytes": 2344,
+      "sha256": "536b86591ef4c1de00991441954353430f6b449a117c81078ac681c7fe6a9d49"
+    },
+    {
+      "name": "documentation_updates.md",
+      "bytes": 4519,
+      "sha256": "6da885a803dce8675558b831c146f988241ed803f5080b612fefcab9dd8b61ae"
+    },
+    {
+      "name": "implementation_plan.md",
+      "bytes": 27164,
+      "sha256": "faeabdd0767c94fe101c229dfaa5d46a31026c61d3ab36149bdf9a6753eac7b7"
+    },
+    {
+      "name": "research_and_mathematics.md",
+      "bytes": 17240,
+      "sha256": "307297044d8f64e7c8e12140e7305b03431134911e18aa9d0e6c4d5021d8e98e"
+    },
+    {
+      "name": "resource_policy.md",
+      "bytes": 3785,
+      "sha256": "9b9d5e5843394b7825b501b126a26124bcd1fd75ac4606317de7d0bfb7cf8def"
+    },
+    {
+      "name": "source_register.json",
+      "bytes": 5768,
+      "sha256": "32963422cf42999df7e611a5a2c8a75f159a6c66c6aa925029a1e42c6c174664"
+    },
+    {
+      "name": "start_prompt.txt",
+      "bytes": 4942,
+      "sha256": "966f693ed91c8cf41532e48f91176e47428faa2955364e0aa9d561a9c13fa3ec"
+    }
+  ]
+}

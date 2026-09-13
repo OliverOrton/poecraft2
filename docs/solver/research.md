@@ -285,6 +285,18 @@ backend or adaptive-learning campaign is selected. Original CB05/CB09 failures,
 CB03 historical high-water evidence and finite execution tails remain separate
 fields in the living record.
 
+The [policy-economics application](../active/2026-09-13-policy-economics-checked-potentials/README.md)
+classifies the temporary-bench failure as an unobserved native group-conflict
+entry distinction. A fresh observed seed and selected physical-entry patch
+complete a cheaper independently evaluated Amulet controller; repeated Essence
+acquisition still dominates its cost. Its checked-estimate pilot validates current-query bases,
+rechecks final native minima and separately exhibits cheap auxiliary ceilings.
+A single Harvest-support refinement raises a component but neither root lower;
+it remains a benchmark diagnostic. The ray calculation and model-ceiling
+argument are incorporated under existing lower/coverage premises. Ordinary
+models, static opt-in guidance and historical failed qualification remain
+separate from these diagnostic findings. No new accepted claim is assigned.
+
 The four [advisory audits](../active/2026-09-09-cross-base-capability-recovery/README.md#advisory-audits)
 are reconciled against that experiment. Their finite-region threshold and
 auxiliary-ceiling arguments now live in the [lower chapter](mathematics/lower-bounds.md#threshold-query);
@@ -387,6 +399,14 @@ validation without double-counting clock origins.
 A source's first optimistic policy action is not necessarily the mathematical
 bottleneck. Report the selected action, a justified limiting constraint or ceiling,
 and the attribution separately. Missing attribution stays missing.
+
+After a materially changed evaluated policy or a newly classified failed
+candidate, inspect immediate priced spend, action/visit counts, lost progress,
+actual native entries and unfinished alternatives before selecting more work.
+Currency shares are leads, not dominance proofs; continuation values are not
+additive spend. Keep this review at deterministic batch boundaries. Retire an
+obsolete explanation when the policy changes, rather than turn the review
+into live polling or another dashboard.
 
 <a id="handoff"></a>
 ## 4. Research outside the checkout, integration inside it

@@ -1,0 +1,1092 @@
+[
+  {
+    "run": "main-bf3-amulet-400m",
+    "report_sha256": "a4769a265b7193d98a6c7213826107f73726d978fb6ebe2123511f6c2ea00564",
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 13159.724084639676,
+      "expanded_states": 4216,
+      "sweeps": 0,
+      "residual": 2.0372681319713593e-10,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 165,
+        "candidate": 31,
+        "evaluator_supported": 31,
+        "supported_priced": 532,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 174.79327321907147,
+      "upper_bound": 13159.724084639676,
+      "evaluated_policy_cost": 13159.724084639676,
+      "absolute_optimality_gap": 12984.930811420605,
+      "relative_optimality_gap": 74.28735998979985,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "contract": {
+      "checked": true,
+      "passed": true,
+      "path": "bounded",
+      "checks": {
+        "named_stop": true,
+        "strict_gap": true,
+        "open_obligations": true,
+        "evaluated_upper": true,
+        "cheapest_independently_evaluated_incumbent": true
+      },
+      "open_work": {
+        "incremental_actions": 66534,
+        "refinement_obligations": 0
+      },
+      "failure_reason": null
+    },
+    "input": {
+      "native_retention_diagnostic": "reuse",
+      "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+      "watchdog_seconds": 840,
+      "requested_bounded_finish_seconds": 600,
+      "session": {
+        "base_metadata_path": "Metadata/Items/Amulets/Amulet7",
+        "base_name": "Onyx Amulet",
+        "item_class_key": "Amulet",
+        "item_level": 86
+      },
+      "start": {
+        "mods": [],
+        "rarity": "rare",
+        "with_implicits": false
+      },
+      "goal": {
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 3,
+        "rarity": "rare",
+        "slots": [
+          {
+            "family_mod_key": "LightningDamagePercent5",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ChaosResist6",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "AllResistances6",
+            "min_tier": 1
+          }
+        ],
+        "version": "v1"
+      },
+      "corpus": {
+        "geometric_mean_single_draw_probability": 0.0023293733985557895,
+        "goal_modifier_count": 3,
+        "maximum_single_draw_probability": 0.004658746797111577,
+        "minimum_single_draw_probability": 0.0011646866992778943,
+        "natural_pool_mod_count": 264,
+        "natural_pool_weight": 214650,
+        "prefix_goal_count": 0,
+        "side_mix": "SSS",
+        "stratum": "full-three",
+        "suffix_goal_count": 3,
+        "tier": "full_short"
+      },
+      "feasibility": {
+        "eligible_slot_count": 3,
+        "goal_slot_count": 3,
+        "natural_pool_mod_count": 264,
+        "natural_pool_weight": 214650,
+        "natural_prefix_mod_count": 112,
+        "natural_prefix_weight": 88600,
+        "natural_suffix_mod_count": 152,
+        "natural_suffix_weight": 126050,
+        "reason": "natural_reforge_witness",
+        "required_slot_count": 3,
+        "slot_natural_mod_counts": [
+          1,
+          1,
+          1
+        ],
+        "slot_natural_weights": [
+          500,
+          250,
+          1000
+        ],
+        "slot_single_draw_probabilities": [
+          0.0023293733985557887,
+          0.0011646866992778943,
+          0.004658746797111577
+        ],
+        "status": "feasible",
+        "witness_action_id": "chaos",
+        "witness_action_index": 5,
+        "witness_mod_ids": [
+          290,
+          70,
+          52
+        ]
+      },
+      "generation": {
+        "artifact_manifest_sha256": "6b8bbfe77abf87373ec1782fb364500e064eb7539f1d3f0fdb210a807c927875",
+        "engine_binary_sha256": "ee8d3d97955e864b1018dd41b1f87891b1b4952aa8fa076c331dbf589539c89d",
+        "engine_commit": "4c99cd093ed85b9aa2ecb86c3c9117b0f356068b",
+        "generator_seed": 20260722,
+        "generator_version": "natural-t1-corpus-v1"
+      },
+      "product_action_envelope": {
+        "bench_goal_slots_forbidden": true,
+        "envelope_goal": {
+          "action_mode": "goal_relevant",
+          "fossil_mode": "goal_relevant",
+          "min_satisfied_slots": 3,
+          "rarity": "rare",
+          "requested_fossil_actions": [],
+          "slots": [
+            {
+              "family_mod_key": "LightningDamagePercent5",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChaosResist6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "AllResistances6",
+              "min_tier": 1
+            }
+          ],
+          "version": "v1"
+        },
+        "mode": "calculator_goal_relevant_priced_v1",
+        "pricing_filter": "all_declared_cost_keys_present"
+      },
+      "allowed_mechanic_families": [
+        "calculator_goal_relevant_product_envelope"
+      ],
+      "bounded_best_policy_contract": {
+        "allow_exact": true,
+        "bounded_requires_named_stop": true,
+        "bounded_requires_strict_gap": true,
+        "bounded_requires_open_obligations": true,
+        "require_evaluated_upper": true,
+        "require_cheapest_independently_evaluated_incumbent": true
+      },
+      "economy": {
+        "version": "v1",
+        "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+        "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+        "league_key": "allflame",
+        "league_name": "Allflame",
+        "manual_overrides": {
+          "base": 1
+        },
+        "fallback_price": null,
+        "missing_price_decisions": {
+          "base": "quality_ladder_fixture_input_1_chaos"
+        }
+      },
+      "caps": {
+        "solve_profile": "calculator_product_v1",
+        "max_states": 200000,
+        "max_sweeps": 100000,
+        "solve_step_work_items": 8,
+        "max_discovered_states": 200000,
+        "max_expanded_states": 200000,
+        "max_state_action_rows": 1215000,
+        "max_transitions": 10000000,
+        "max_reforge_work": 400000000,
+        "max_solver_owned_bytes": 8589934592,
+        "max_diagnostic_samples": 64,
+        "max_telemetry_json_bytes": 2097152,
+        "max_compiled_nodes": 100000,
+        "max_compiled_edges": 400000,
+        "max_strategy_json_bytes": 67108864,
+        "worker_step_ms": 250,
+        "cancel_ack_ms": 250,
+        "full_evidence": true,
+        "candidate_evaluation": {
+          "max_owned_bytes": 4294967296,
+          "max_pairs": 10000000,
+          "max_states": 2000000,
+          "max_transitions": 40000000
+        },
+        "native_continuation_search": "dirty_restricted_fresh"
+      },
+      "verification": {
+        "runs": 0,
+        "seed": 20260826,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "exact_evaluation": true,
+        "exact_max_states": 2000000,
+        "exact_max_pairs": 10000000,
+        "exact_max_transitions": 40000000,
+        "exact_max_owned_bytes": 4294967296,
+        "exact_cost_absolute_tolerance": 1e-07,
+        "exact_cost_relative_tolerance": 1e-09
+      }
+    },
+    "artifact": {
+      "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+      "manifest": {
+        "artifact_kind": "runtime_dataset",
+        "artifact_schema_version": 4,
+        "complete_dataset": true,
+        "engine_loadable": true,
+        "enums": {
+          "base_flags": {
+            "cluster": 1,
+            "ordinary_session": 2
+          },
+          "bestiary_checkpoint_effect": {
+            "consume": 1,
+            "create": 0
+          },
+          "bestiary_checkpoint_requirement": {
+            "absent": 0,
+            "present": 1
+          },
+          "bestiary_classification": {
+            "checkpoint/restore": 2,
+            "explicitly unsupported in B1": 4,
+            "multi-output or multi-item": 3,
+            "ordinary one-item deterministic": 0,
+            "ordinary one-item stochastic": 1
+          },
+          "bestiary_identity_requirement": {
+            "current_item": 0,
+            "same_item": 1
+          },
+          "bestiary_operation": {
+            "create": 0,
+            "restore": 1
+          },
+          "bestiary_support": {
+            "selected": 0,
+            "unsupported": 1
+          },
+          "bestiary_transition": {
+            "deterministic": 0
+          },
+          "domain": {
+            "abyss_jewel": 0,
+            "affliction_charm": 1,
+            "affliction_jewel": 2,
+            "area": 3,
+            "atlas": 4,
+            "brequel_graft": 5,
+            "chest": 6,
+            "crafted": 7,
+            "crucible_remnant": 8,
+            "delve": 9,
+            "delve_area": 10,
+            "dummy": 11,
+            "expedition_relic": 12,
+            "flask": 13,
+            "heist_area": 14,
+            "heist_npc": 15,
+            "heist_trinket": 16,
+            "item": 17,
+            "leaguestone": 18,
+            "map_device": 19,
+            "map_relic": 20,
+            "memory_lines": 21,
+            "misc": 22,
+            "monster": 23,
+            "necropolis_monster": 24,
+            "primordial_altar": 25,
+            "sanctum_relic": 26,
+            "sentinel": 27,
+            "synthesis_a": 28,
+            "synthesis_bonus": 29,
+            "synthesis_globals": 30,
+            "templar_relic": 31,
+            "tincture": 32,
+            "undefined": 33,
+            "unveiled": 34,
+            "veiled": 35,
+            "watchstone": 36
+          },
+          "flags": {
+            "corrupted_implicit": 64,
+            "crafted": 2,
+            "delve": 16,
+            "eldritch_implicit": 128,
+            "essence_only": 1,
+            "implicit": 32,
+            "influence": 8,
+            "metamod": 4,
+            "unveiled": 512,
+            "veiled_template": 256
+          },
+          "fossil_mod_kind": {
+            "added": 0,
+            "forced": 1,
+            "sell_price": 2
+          },
+          "fossil_tag_kind": {
+            "allowed": 0,
+            "forbidden": 1
+          },
+          "fossil_weight_kind": {
+            "negative": 0,
+            "positive": 1
+          },
+          "generation_type": {
+            "azmeri_empowered_monster": 0,
+            "bestiary": 1,
+            "blight": 2,
+            "blight_tower": 3,
+            "bloodlines": 4,
+            "corrupted": 5,
+            "crucible_tree": 6,
+            "crucible_unique_tree": 7,
+            "delve_area": 8,
+            "eater_of_worlds_implicit": 9,
+            "enchantment": 10,
+            "essence": 11,
+            "expedition_logbook": 12,
+            "flask_enchantment_enkindling": 13,
+            "flask_enchantment_instilling": 14,
+            "memory_altar": 15,
+            "monster_affliction": 16,
+            "necropolis_devoted_monster": 17,
+            "necropolis_monster": 18,
+            "nemesis": 19,
+            "prefix": 20,
+            "scourge_benefit": 21,
+            "scourge_detriment": 22,
+            "scourge_gimmick": 23,
+            "searing_exarch_implicit": 24,
+            "suffix": 25,
+            "synthesis_a": 26,
+            "synthesis_bonus": 27,
+            "synthesis_globals": 28,
+            "talisman": 29,
+            "tempest": 30,
+            "torment": 31,
+            "unique": 32
+          },
+          "influence": {
+            "adjudicator": 1,
+            "basilisk": 2,
+            "crusader": 3,
+            "elder": 4,
+            "eyrie": 5,
+            "none": 0,
+            "shaper": 6
+          },
+          "metamod_type": {
+            "multimod": 0,
+            "no_attack": 1,
+            "no_caster": 2,
+            "prefixes_locked": 3,
+            "suffixes_locked": 4
+          },
+          "session_support": {
+            "cluster_unsupported": 1,
+            "ordinary": 0,
+            "unsupported_domain": 2
+          },
+          "special_kind": {
+            "base_implicit": 0,
+            "corrupted_implicit": 1,
+            "delve": 2,
+            "eldritch_implicit": 3,
+            "unveiled": 4,
+            "veiled_template": 5
+          }
+        },
+        "files": {
+          "game-data.json": {
+            "byte_size": 16439442,
+            "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+          },
+          "strings.json": {
+            "byte_size": 6534428,
+            "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+          }
+        },
+        "generated_at_utc": "2026-08-30T02:54:53Z",
+        "row_counts": {
+          "adds_tag_links": 5052,
+          "base_item_implicit_links": 760,
+          "base_item_tag_links": 17150,
+          "base_items": 4974,
+          "bench_cost_rows": 789,
+          "bench_item_class_links": 4975,
+          "bench_options": 774,
+          "bestiary_action_cost_rows": 4,
+          "bestiary_actions": 2,
+          "bestiary_beast_inputs": 2,
+          "bestiary_recipes": 3,
+          "bestiary_selected_recipes": 1,
+          "bestiary_unsupported_recipes": 2,
+          "classification_tag_links": 68322,
+          "cluster_jewels": 3,
+          "cluster_notables": 309,
+          "cluster_passives": 55,
+          "cluster_unsupported_bases": 3,
+          "essence_mod_links": 2310,
+          "essences": 106,
+          "fossil_mod_links": 24,
+          "fossil_tag_links": 18,
+          "fossil_weight_rows": 877,
+          "fossils": 445,
+          "generation_weight_rows": 4074,
+          "groups": 7169,
+          "item_classes": 99,
+          "mod_group_links": 39527,
+          "mods": 39292,
+          "ordinary_session_bases": 979,
+          "spawn_weight_rows": 70196,
+          "stat_rows": 59112,
+          "tags": 1355,
+          "unsupported_domain_bases": 3992
+        },
+        "scope": {
+          "base_items": "all released canonical bases",
+          "cluster_runtime_support": "unsupported",
+          "mods": "complete normalized global mod catalog",
+          "session_source": "ordinary sessions are derived from this artifact; SQLite is not required at runtime"
+        },
+        "source": {
+          "data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+          "database_schema_version": "2",
+          "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+          "source_version": "repoe-e4eaf06c20e1ddb4"
+        }
+      }
+    },
+    "configuration": {
+      "evaluation_roles": [],
+      "evaluation_roles_manifest": null,
+      "exact_evaluation": true,
+      "goal_progress_gated_reforges": false,
+      "hard_case_default_concurrency": 1,
+      "host_watchdog_seconds": 870.0,
+      "max_workers": 1,
+      "memory_budget_bytes": 15032385536,
+      "native_retention_diagnostic": "reuse",
+      "run_verification": false,
+      "worker_headroom_bytes": 6442450944
+    },
+    "execution": {
+      "solve_steps": 22273341,
+      "max_solve_step_ms": 20234.0431,
+      "max_solve_step_phase": 6,
+      "max_solve_step_expanded_states": 120,
+      "max_solve_step_sweeps": 4,
+      "max_solve_step_finalization_work_item": 25009,
+      "solve_step_wall_ms": {
+        "percentile_method": "nearest_rank_ceiling",
+        "count": 22273341,
+        "total": 516445.3769366185,
+        "median": 0.0007,
+        "p95": 0.032,
+        "maximum": 20234.0431
+      },
+      "diagnostic_work_limit": null,
+      "diagnostic_time_limit_seconds": null,
+      "watchdog_seconds": 840,
+      "watchdog_mode": "cooperative_case_deadline",
+      "watchdog_expired": false,
+      "diagnostic_stop_reason": null,
+      "worker_max_slice_ms": null,
+      "cancellation_ack_ms": null,
+      "cancellation_mode": null,
+      "cooperative_abandon_ms": null
+    },
+    "memory": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 34586624,
+      "process_working_set_after_bytes": 288518144,
+      "process_working_set_delta_bytes": 253931520,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 24590200,
+      "native_peak_owned_bytes": 450684202,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 1258805
+    },
+    "phase_wall_ms": {
+      "registry_layout": 24.916,
+      "solve": 618926.4165,
+      "compile": 1.4658,
+      "verification": null,
+      "total": 628583.587
+    },
+    "evaluation": {
+      "completed": true,
+      "time_limited": false,
+      "status": "matched",
+      "wall_ms": 9096.3106,
+      "converged": true,
+      "cost_complete": true,
+      "zero_off_policy_mass": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "total_expected_cost": 13159.724084639676,
+      "solver_cost_delta_absolute": 0,
+      "solver_cost_delta_relative": 0
+    }
+  },
+  {
+    "run": "final-v3-amulet-400m",
+    "report_sha256": "17f5cd6bda643e8e01c820785209c16d438ddc5a2d026d56fb1998858f237061",
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 12541.579648544115,
+      "expanded_states": 2235,
+      "sweeps": 100000,
+      "residual": 4954712.459716797,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "refused_resource_cap",
+      "stop_cause": "sweep_cap",
+      "cap_hit_mask": 24,
+      "action_counts": {
+        "registry": 165,
+        "candidate": 31,
+        "evaluator_supported": 31,
+        "supported_priced": 532,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 174.79327321907147,
+      "upper_bound": 12541.579648544115,
+      "evaluated_policy_cost": 12541.579648544115,
+      "absolute_optimality_gap": 12366.786375325044,
+      "relative_optimality_gap": 70.75092849726279,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "contract": {
+      "checked": true,
+      "passed": true,
+      "path": "bounded",
+      "checks": {
+        "named_stop": true,
+        "strict_gap": true,
+        "open_obligations": true,
+        "evaluated_upper": true,
+        "cheapest_independently_evaluated_incumbent": true
+      },
+      "open_work": {
+        "incremental_actions": 38979,
+        "refinement_obligations": 0
+      },
+      "failure_reason": null
+    },
+    "input": {
+      "native_retention_diagnostic": "reuse",
+      "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+      "watchdog_seconds": 840,
+      "requested_bounded_finish_seconds": 600,
+      "session": {
+        "base_metadata_path": "Metadata/Items/Amulets/Amulet7",
+        "base_name": "Onyx Amulet",
+        "item_class_key": "Amulet",
+        "item_level": 86
+      },
+      "start": {
+        "mods": [],
+        "rarity": "rare",
+        "with_implicits": false
+      },
+      "goal": {
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 3,
+        "rarity": "rare",
+        "slots": [
+          {
+            "family_mod_key": "LightningDamagePercent5",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ChaosResist6",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "AllResistances6",
+            "min_tier": 1
+          }
+        ],
+        "version": "v1"
+      },
+      "corpus": {
+        "geometric_mean_single_draw_probability": 0.0023293733985557895,
+        "goal_modifier_count": 3,
+        "maximum_single_draw_probability": 0.004658746797111577,
+        "minimum_single_draw_probability": 0.0011646866992778943,
+        "natural_pool_mod_count": 264,
+        "natural_pool_weight": 214650,
+        "prefix_goal_count": 0,
+        "side_mix": "SSS",
+        "stratum": "full-three",
+        "suffix_goal_count": 3,
+        "tier": "full_short"
+      },
+      "feasibility": {
+        "eligible_slot_count": 3,
+        "goal_slot_count": 3,
+        "natural_pool_mod_count": 264,
+        "natural_pool_weight": 214650,
+        "natural_prefix_mod_count": 112,
+        "natural_prefix_weight": 88600,
+        "natural_suffix_mod_count": 152,
+        "natural_suffix_weight": 126050,
+        "reason": "natural_reforge_witness",
+        "required_slot_count": 3,
+        "slot_natural_mod_counts": [
+          1,
+          1,
+          1
+        ],
+        "slot_natural_weights": [
+          500,
+          250,
+          1000
+        ],
+        "slot_single_draw_probabilities": [
+          0.0023293733985557887,
+          0.0011646866992778943,
+          0.004658746797111577
+        ],
+        "status": "feasible",
+        "witness_action_id": "chaos",
+        "witness_action_index": 5,
+        "witness_mod_ids": [
+          290,
+          70,
+          52
+        ]
+      },
+      "generation": {
+        "artifact_manifest_sha256": "6b8bbfe77abf87373ec1782fb364500e064eb7539f1d3f0fdb210a807c927875",
+        "engine_binary_sha256": "ee8d3d97955e864b1018dd41b1f87891b1b4952aa8fa076c331dbf589539c89d",
+        "engine_commit": "4c99cd093ed85b9aa2ecb86c3c9117b0f356068b",
+        "generator_seed": 20260722,
+        "generator_version": "natural-t1-corpus-v1"
+      },
+      "product_action_envelope": {
+        "bench_goal_slots_forbidden": true,
+        "envelope_goal": {
+          "action_mode": "goal_relevant",
+          "fossil_mode": "goal_relevant",
+          "min_satisfied_slots": 3,
+          "rarity": "rare",
+          "requested_fossil_actions": [],
+          "slots": [
+            {
+              "family_mod_key": "LightningDamagePercent5",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChaosResist6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "AllResistances6",
+              "min_tier": 1
+            }
+          ],
+          "version": "v1"
+        },
+        "mode": "calculator_goal_relevant_priced_v1",
+        "pricing_filter": "all_declared_cost_keys_present"
+      },
+      "allowed_mechanic_families": [
+        "calculator_goal_relevant_product_envelope"
+      ],
+      "bounded_best_policy_contract": {
+        "allow_exact": true,
+        "bounded_requires_named_stop": true,
+        "bounded_requires_strict_gap": true,
+        "bounded_requires_open_obligations": true,
+        "require_evaluated_upper": true,
+        "require_cheapest_independently_evaluated_incumbent": true
+      },
+      "economy": {
+        "version": "v1",
+        "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+        "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+        "league_key": "allflame",
+        "league_name": "Allflame",
+        "manual_overrides": {
+          "base": 1
+        },
+        "fallback_price": null,
+        "missing_price_decisions": {
+          "base": "quality_ladder_fixture_input_1_chaos"
+        }
+      },
+      "caps": {
+        "solve_profile": "calculator_product_v1",
+        "max_states": 200000,
+        "max_sweeps": 100000,
+        "solve_step_work_items": 8,
+        "max_discovered_states": 200000,
+        "max_expanded_states": 200000,
+        "max_state_action_rows": 1215000,
+        "max_transitions": 10000000,
+        "max_reforge_work": 400000000,
+        "max_solver_owned_bytes": 8589934592,
+        "max_diagnostic_samples": 64,
+        "max_telemetry_json_bytes": 2097152,
+        "max_compiled_nodes": 100000,
+        "max_compiled_edges": 400000,
+        "max_strategy_json_bytes": 67108864,
+        "worker_step_ms": 250,
+        "cancel_ack_ms": 250,
+        "full_evidence": true,
+        "candidate_evaluation": {
+          "max_owned_bytes": 4294967296,
+          "max_pairs": 10000000,
+          "max_states": 2000000,
+          "max_transitions": 40000000
+        },
+        "native_continuation_search": "dirty_restricted_fresh"
+      },
+      "verification": {
+        "runs": 0,
+        "seed": 20260826,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "exact_evaluation": true,
+        "exact_max_states": 2000000,
+        "exact_max_pairs": 10000000,
+        "exact_max_transitions": 40000000,
+        "exact_max_owned_bytes": 4294967296,
+        "exact_cost_absolute_tolerance": 1e-07,
+        "exact_cost_relative_tolerance": 1e-09
+      }
+    },
+    "artifact": {
+      "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+      "manifest": {
+        "artifact_kind": "runtime_dataset",
+        "artifact_schema_version": 4,
+        "complete_dataset": true,
+        "engine_loadable": true,
+        "enums": {
+          "base_flags": {
+            "cluster": 1,
+            "ordinary_session": 2
+          },
+          "bestiary_checkpoint_effect": {
+            "consume": 1,
+            "create": 0
+          },
+          "bestiary_checkpoint_requirement": {
+            "absent": 0,
+            "present": 1
+          },
+          "bestiary_classification": {
+            "checkpoint/restore": 2,
+            "explicitly unsupported in B1": 4,
+            "multi-output or multi-item": 3,
+            "ordinary one-item deterministic": 0,
+            "ordinary one-item stochastic": 1
+          },
+          "bestiary_identity_requirement": {
+            "current_item": 0,
+            "same_item": 1
+          },
+          "bestiary_operation": {
+            "create": 0,
+            "restore": 1
+          },
+          "bestiary_support": {
+            "selected": 0,
+            "unsupported": 1
+          },
+          "bestiary_transition": {
+            "deterministic": 0
+          },
+          "domain": {
+            "abyss_jewel": 0,
+            "affliction_charm": 1,
+            "affliction_jewel": 2,
+            "area": 3,
+            "atlas": 4,
+            "brequel_graft": 5,
+            "chest": 6,
+            "crafted": 7,
+            "crucible_remnant": 8,
+            "delve": 9,
+            "delve_area": 10,
+            "dummy": 11,
+            "expedition_relic": 12,
+            "flask": 13,
+            "heist_area": 14,
+            "heist_npc": 15,
+            "heist_trinket": 16,
+            "item": 17,
+            "leaguestone": 18,
+            "map_device": 19,
+            "map_relic": 20,
+            "memory_lines": 21,
+            "misc": 22,
+            "monster": 23,
+            "necropolis_monster": 24,
+            "primordial_altar": 25,
+            "sanctum_relic": 26,
+            "sentinel": 27,
+            "synthesis_a": 28,
+            "synthesis_bonus": 29,
+            "synthesis_globals": 30,
+            "templar_relic": 31,
+            "tincture": 32,
+            "undefined": 33,
+            "unveiled": 34,
+            "veiled": 35,
+            "watchstone": 36
+          },
+          "flags": {
+            "corrupted_implicit": 64,
+            "crafted": 2,
+            "delve": 16,
+            "eldritch_implicit": 128,
+            "essence_only": 1,
+            "implicit": 32,
+            "influence": 8,
+            "metamod": 4,
+            "unveiled": 512,
+            "veiled_template": 256
+          },
+          "fossil_mod_kind": {
+            "added": 0,
+            "forced": 1,
+            "sell_price": 2
+          },
+          "fossil_tag_kind": {
+            "allowed": 0,
+            "forbidden": 1
+          },
+          "fossil_weight_kind": {
+            "negative": 0,
+            "positive": 1
+          },
+          "generation_type": {
+            "azmeri_empowered_monster": 0,
+            "bestiary": 1,
+            "blight": 2,
+            "blight_tower": 3,
+            "bloodlines": 4,
+            "corrupted": 5,
+            "crucible_tree": 6,
+            "crucible_unique_tree": 7,
+            "delve_area": 8,
+            "eater_of_worlds_implicit": 9,
+            "enchantment": 10,
+            "essence": 11,
+            "expedition_logbook": 12,
+            "flask_enchantment_enkindling": 13,
+            "flask_enchantment_instilling": 14,
+            "memory_altar": 15,
+            "monster_affliction": 16,
+            "necropolis_devoted_monster": 17,
+            "necropolis_monster": 18,
+            "nemesis": 19,
+            "prefix": 20,
+            "scourge_benefit": 21,
+            "scourge_detriment": 22,
+            "scourge_gimmick": 23,
+            "searing_exarch_implicit": 24,
+            "suffix": 25,
+            "synthesis_a": 26,
+            "synthesis_bonus": 27,
+            "synthesis_globals": 28,
+            "talisman": 29,
+            "tempest": 30,
+            "torment": 31,
+            "unique": 32
+          },
+          "influence": {
+            "adjudicator": 1,
+            "basilisk": 2,
+            "crusader": 3,
+            "elder": 4,
+            "eyrie": 5,
+            "none": 0,
+            "shaper": 6
+          },
+          "metamod_type": {
+            "multimod": 0,
+            "no_attack": 1,
+            "no_caster": 2,
+            "prefixes_locked": 3,
+            "suffixes_locked": 4
+          },
+          "session_support": {
+            "cluster_unsupported": 1,
+            "ordinary": 0,
+            "unsupported_domain": 2
+          },
+          "special_kind": {
+            "base_implicit": 0,
+            "corrupted_implicit": 1,
+            "delve": 2,
+            "eldritch_implicit": 3,
+            "unveiled": 4,
+            "veiled_template": 5
+          }
+        },
+        "files": {
+          "game-data.json": {
+            "byte_size": 16439442,
+            "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+          },
+          "strings.json": {
+            "byte_size": 6534428,
+            "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+          }
+        },
+        "generated_at_utc": "2026-08-30T02:54:53Z",
+        "row_counts": {
+          "adds_tag_links": 5052,
+          "base_item_implicit_links": 760,
+          "base_item_tag_links": 17150,
+          "base_items": 4974,
+          "bench_cost_rows": 789,
+          "bench_item_class_links": 4975,
+          "bench_options": 774,
+          "bestiary_action_cost_rows": 4,
+          "bestiary_actions": 2,
+          "bestiary_beast_inputs": 2,
+          "bestiary_recipes": 3,
+          "bestiary_selected_recipes": 1,
+          "bestiary_unsupported_recipes": 2,
+          "classification_tag_links": 68322,
+          "cluster_jewels": 3,
+          "cluster_notables": 309,
+          "cluster_passives": 55,
+          "cluster_unsupported_bases": 3,
+          "essence_mod_links": 2310,
+          "essences": 106,
+          "fossil_mod_links": 24,
+          "fossil_tag_links": 18,
+          "fossil_weight_rows": 877,
+          "fossils": 445,
+          "generation_weight_rows": 4074,
+          "groups": 7169,
+          "item_classes": 99,
+          "mod_group_links": 39527,
+          "mods": 39292,
+          "ordinary_session_bases": 979,
+          "spawn_weight_rows": 70196,
+          "stat_rows": 59112,
+          "tags": 1355,
+          "unsupported_domain_bases": 3992
+        },
+        "scope": {
+          "base_items": "all released canonical bases",
+          "cluster_runtime_support": "unsupported",
+          "mods": "complete normalized global mod catalog",
+          "session_source": "ordinary sessions are derived from this artifact; SQLite is not required at runtime"
+        },
+        "source": {
+          "data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+          "database_schema_version": "2",
+          "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+          "source_version": "repoe-e4eaf06c20e1ddb4"
+        }
+      }
+    },
+    "configuration": {
+      "evaluation_roles": [],
+      "evaluation_roles_manifest": null,
+      "exact_evaluation": true,
+      "goal_progress_gated_reforges": false,
+      "hard_case_default_concurrency": 1,
+      "host_watchdog_seconds": 870.0,
+      "max_workers": 1,
+      "memory_budget_bytes": 15032385536,
+      "native_retention_diagnostic": "reuse",
+      "run_verification": false,
+      "worker_headroom_bytes": 6442450944
+    },
+    "execution": {
+      "solve_steps": 5213922,
+      "max_solve_step_ms": 20167.5156,
+      "max_solve_step_phase": 6,
+      "max_solve_step_expanded_states": 120,
+      "max_solve_step_sweeps": 4,
+      "max_solve_step_finalization_work_item": 25009,
+      "solve_step_wall_ms": {
+        "percentile_method": "nearest_rank_ceiling",
+        "count": 5213922,
+        "total": 564878.4714023366,
+        "median": 0.0478,
+        "p95": 0.0736,
+        "maximum": 20167.5156
+      },
+      "diagnostic_work_limit": null,
+      "diagnostic_time_limit_seconds": null,
+      "watchdog_seconds": 840,
+      "watchdog_mode": "cooperative_case_deadline",
+      "watchdog_expired": false,
+      "diagnostic_stop_reason": null,
+      "worker_max_slice_ms": null,
+      "cancellation_ack_ms": null,
+      "cancellation_mode": null,
+      "cooperative_abandon_ms": null
+    },
+    "memory": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 34689024,
+      "process_working_set_after_bytes": 324046848,
+      "process_working_set_delta_bytes": 289357824,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 20649604,
+      "native_peak_owned_bytes": 194459477,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 1126055
+    },
+    "phase_wall_ms": {
+      "registry_layout": 24.6721,
+      "solve": 600963.2263,
+      "compile": 2.21,
+      "verification": null,
+      "total": 610367.098
+    },
+    "evaluation": {
+      "completed": true,
+      "time_limited": false,
+      "status": "matched",
+      "wall_ms": 9147.4456,
+      "converged": true,
+      "cost_complete": true,
+      "zero_off_policy_mass": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "total_expected_cost": 12541.579648544115,
+      "solver_cost_delta_absolute": 0,
+      "solver_cost_delta_relative": 0
+    }
+  }
+]

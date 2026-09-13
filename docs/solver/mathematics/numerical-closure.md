@@ -30,6 +30,15 @@ correction or become executable boundary values.
 
 The fixed-point certificate literature independently emphasizes producing checkable witnesses rather than trusting a numerical algorithm merely because it is sophisticated. The paper by Chatterjee and colleagues formalizes certificates for finite MDP reachability and reward properties; its checker does not automatically verify poecraft2's implicit action or member-domain bridge. [Chatterjee et al., TACAS 2025](https://arxiv.org/abs/2501.11467).
 
+The benchmark-only checked-potential pilot proposes bounded rays against a
+complete current native query. Its hook is inactive in ordinary requests.
+After quotient checking, the phase producer rebuilds every value-dependent
+native minimum and repeats the existing check at the actual vector. The
+[ray argument](lower-bounds.md#checked-estimate-rays) distinguishes a proposed
+step size, an accepted model vector, native correspondence and its root
+consumer. Neither a larger raw estimate nor convergence overrides a scalar
+auxiliary ceiling or missing executable continuation.
+
 <a id="direction"></a>
 ## 2. The direction of the check is part of the proof
 

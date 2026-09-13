@@ -1,0 +1,108 @@
+{
+  "reviewed_main": "bf3b980041821acee1f1f8149afc912a22021884",
+  "evidence_posture": "Read-only source/retained-evidence review; synthetic exact-rational checks only",
+  "sources": [
+    {
+      "id": "R1",
+      "type": "pinned repository",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/bf3b980041821acee1f1f8149afc912a22021884/HANDOFF.md",
+      "reading_scope": "Current complete text; partial selective outcome and remaining blocker."
+    },
+    {
+      "id": "R2",
+      "type": "pinned repository",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/bf3b980041821acee1f1f8149afc912a22021884/AGENTS.md",
+      "reading_scope": "Current task, native authority, protected path, validation and no-idle-model-polling rules."
+    },
+    {
+      "id": "R3",
+      "type": "pinned repository",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/bf3b980041821acee1f1f8149afc912a22021884/docs/active/2026-09-13-selective-continuation-improvement/README.md",
+      "reading_scope": "Living record through final disposition, 242 lines; retained native measurements, not independently rerun."
+    },
+    {
+      "id": "R4",
+      "type": "pinned repository",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/bf3b980041821acee1f1f8149afc912a22021884/docs/active/2026-09-13-selective-continuation-improvement/options-v4-amulet-200m.json",
+      "reading_scope": "Focused failure search and late opportunity/status section, not every raw native graph."
+    },
+    {
+      "id": "R5",
+      "type": "pinned repository",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/bf3b980041821acee1f1f8149afc912a22021884/docs/active/2026-09-13-selective-continuation-improvement/coverage-amulet-observed-open-slot.json",
+      "reading_scope": "Native metadata-only action and automatic spec coverage in latest commit diff."
+    },
+    {
+      "id": "R6",
+      "type": "pinned repository",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/bf3b980041821acee1f1f8149afc912a22021884/docs/active/2026-09-13-selective-continuation-improvement/coverage-ring-four-observed.json",
+      "reading_scope": "Native metadata-only scope/pricing/forcing/program distinctions from latest diff."
+    },
+    {
+      "id": "R7",
+      "type": "pinned repository",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/bf3b980041821acee1f1f8149afc912a22021884/engine/src/solver_solve_return_bridge.cpp",
+      "reading_scope": "Current selective option installation and closure 1390–1650 plus focused failure reporting, and relevant latest diff."
+    },
+    {
+      "id": "R8",
+      "type": "pinned repository",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/bf3b980041821acee1f1f8149afc912a22021884/engine/src/solver_quotient_lower.cpp",
+      "reading_scope": "Current untrusted-coordinate, feasibility, proposal and repair/zero-fallback code 550–840."
+    },
+    {
+      "id": "R9",
+      "type": "pinned repository",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/bf3b980041821acee1f1f8149afc912a22021884/engine/src/solver_quotient_lower.hpp",
+      "reading_scope": "Current input/result/certificate contract 1–230."
+    },
+    {
+      "id": "R10",
+      "type": "pinned repository",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/bf3b980041821acee1f1f8149afc912a22021884/docs/solver/lower-pruning.md",
+      "reading_scope": "Current producer/consumer, scope, initialization, probability-envelope contracts 1–225."
+    },
+    {
+      "id": "R11",
+      "type": "pinned repository",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/bf3b980041821acee1f1f8149afc912a22021884/docs/solver/mathematics/lower-bounds.md",
+      "reading_scope": "Finite subsolution, complete coverage, finite region, threshold/ceilings and combination sections; full response was truncated, no claim of reading unseen suffix."
+    },
+    {
+      "id": "P1",
+      "type": "primary research",
+      "title": "Fixed Point Certificates for Reachability and Expected Rewards in MDPs",
+      "authors": "Chatterjee et al.",
+      "year": 2025,
+      "url": "https://link.springer.com/chapter/10.1007/978-3-031-90653-4_7",
+      "reading_scope": "Publisher HTML sections 5.1–5.3, 6 and framework/background; lemma 6 / proposition 7; no formal verification of poecraft."
+    },
+    {
+      "id": "P2",
+      "type": "primary research",
+      "title": "Optimistic Value Iteration",
+      "authors": "Arnd Hartmanns and Benjamin Lucien Kaminski",
+      "year": 2020,
+      "url": "https://link.springer.com/chapter/10.1007/978-3-030-53291-8_26",
+      "reading_scope": "Publisher abstract and section 4 guess-and-verify mathematical text; not a transplant of upper-to-lower semantics."
+    },
+    {
+      "id": "P3",
+      "type": "primary research",
+      "title": "Cost Partitioning Heuristics for Stochastic Shortest Path Problems",
+      "authors": "Thorsten Klößner, Florian Pommerening, Thomas Keller, Gabriele Röger",
+      "year": 2022,
+      "url": "https://ojs.aaai.org/index.php/ICAPS/article/download/19802/19561/23815",
+      "reading_scope": "Parsed PDF SSP/LP and approximate-linear-programming/potential sections, especially LP 6/7. Screenshot call failed; no table/figure claim."
+    },
+    {
+      "id": "P4",
+      "type": "primary research",
+      "title": "Efficient Constraint Generation for Stochastic Shortest Path Problems",
+      "authors": "Johannes Schmalz and Felipe Trevizan",
+      "year": 2026,
+      "url": "https://schmlz.github.io/downloads/cgilao/cgilao_aij26_paper.pdf",
+      "reading_scope": "Author PDF text on consistency/error, LP/partial constraints, expansion and action elimination. Screenshot calls failed; no graphical/timing-data claims."
+    }
+  ]
+}

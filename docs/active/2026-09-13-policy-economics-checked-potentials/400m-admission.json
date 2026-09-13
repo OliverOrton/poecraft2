@@ -1,0 +1,24 @@
+[
+  {
+    "case": "main-bf3-amulet-400m",
+    "utc": "2026-09-13T06:17:09.813811+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 37270720512,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 15032385536,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One native process; 14-GiB reservation covers the 8-GiB aggregate and 6-GiB runner headroom, with additional physical and commit headroom checks."
+  },
+  {
+    "case": "final-v3-amulet-400m",
+    "utc": "2026-09-13T06:27:39.854968+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 37444661248,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 15032385536,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One native process; 14-GiB reservation covers the 8-GiB aggregate and 6-GiB runner headroom, with additional physical and commit headroom checks."
+  }
+]

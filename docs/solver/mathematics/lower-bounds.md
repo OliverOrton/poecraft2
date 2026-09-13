@@ -35,6 +35,38 @@ must therefore be identified before attributing a root gain to the heuristic.
 The [September 9 review](../../active/2026-09-09-empty-start-partial-continuation/research-inputs/useful-proof-time-review.md)
 clarifies these existing authorities; it supplies no new native closure result.
 
+<a id="checked-estimate-rays"></a>
+### Checked estimate rays and optimistic ceilings
+
+An aggressive estimate may propose a potential without being a lower. First
+check a feasible base `l` in the **current complete query**; a stronger independent
+native lower can fail a weaker query and must remain separate in maximum
+composition. Keep goals and independent boundaries fixed. With nonnegative
+variable direction `d`, propose `h = l + alpha*d`, `0 <= alpha <= 1`.
+For an affine constraint `h(s) <= c + P*h`, define
+`b = c + P*l - l(s)` and `a = d(s) - P*d`. Feasibility requires
+`alpha*a <= b`. Positive `a` gives a limiting ratio `b/a`; nonpositive `a`
+adds no upper restriction on this ray. Scalar family constraints participate
+with zero continuation. This follows by substitution into the original
+inequality, under the same coverage and stopping premises below.
+
+Floating ratios propose only: the unchanged complete checker accepts the
+actual stored vector in its declared coefficient model. No maximal-alpha claim
+or acceptance tolerance follows from a rounded ratio. Observed choices must
+be minimized again at that vector. Value-specific native event allocations
+must also be rebuilt by their producer before a quotient certificate can
+become a native lower. A failed proposal preserves the checked base and any
+independent native bounds; estimates never discharge missing native actions.
+
+A limiting constraint proves only a limitation of the chosen direction.
+A proper auxiliary policy of cost `C` instead proves that this unchanged
+optimistic model cannot have a feasible root potential above `C`: apply the
+same subsolution stopping argument to that auxiliary policy. An independent
+scalar escape is its one-step case. Such an escape can be fictitious in the
+native problem and therefore supplies no executable native upper. The
+[checked-potential application](../../active/2026-09-13-policy-economics-checked-potentials/README.md)
+uses these existing premises, without a new accepted claim or numerical backend.
+
 <a id="subsolution"></a>
 ## 1. A finite subsolution is a lower: the stopping argument
 

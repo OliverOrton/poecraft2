@@ -141,6 +141,21 @@ belongs to the dirty-continuation programme. The
 [application record](../active/2026-09-11-first-return-improvement/README.md)
 owns measured eligibility, costs and qualification.
 
+A state-local native temporary-bench admission at a materialized representative
+is not a certificate for every member of a coarse source. The
+[policy-economics application](../active/2026-09-13-policy-economics-checked-potentials/README.md)
+finds a source class mixing natural modifiers that do and do not conflict with
+the selected bench. The conflicting native member does not acquire the craft;
+its later cleanup fails. A converged partial-execution cost cannot normalize
+that missing goal-reaching mass into an upper.
+
+Selected private proposals now require a uniform bench-conflict observation on
+occupied classes and may rebuild one fresh observed layout. Only a physical
+entry witness crosses that rebuild; private IDs, rows and entry uppers do not.
+Existing complete compilation and native evaluation remain necessary after the
+representation change. A bounded failure witness diagnoses one native member;
+it does not establish whole-class equivalence or universal continuation value.
+
 ### Optional native dirty continuation
 
 The selective diagnostics add bounded source/operator patches after a closed

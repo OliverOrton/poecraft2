@@ -3274,6 +3274,113 @@ void run_solver_return_bridge_tests() {
     run_solver_return_bridge_lifecycle_tests();
 }
 
+void run_solver_native_blocker_entry_tests(const char* artifact_dir) {
+    std::string manifest,strings,game;
+    PC_CHECK(read_text_file(std::string(artifact_dir)+"/manifest.json",manifest));
+    PC_CHECK(read_text_file(std::string(artifact_dir)+"/strings.json",strings));
+    PC_CHECK(read_text_file(std::string(artifact_dir)+"/game-data.json",game));
+    const auto data=load_data_impl(manifest,strings,game);
+    for (const char* base:{"Metadata/Items/Amulets/Amulet7","Metadata/Items/Rings/Ring10"}) {
+        auto session=std::make_shared<SessionImpl>(); session->data=data;
+        session->base_index=data->base_by_path.at(base); session->item_level=86; build_session(*session);
+        const auto mod=[&](const char* key) {
+            const auto found=data->mod_pos_by_key.find(key);
+            if (found==data->mod_pos_by_key.end()) throw std::runtime_error(std::string("missing native modifier: ")+key);
+            const auto pos=found->second;
+            const auto local=session->session_id_by_global_id.find(data->mod_global_ids.at(pos));
+            if (local==session->session_id_by_global_id.end()) throw std::runtime_error(std::string("modifier outside native pool: ")+base+" / "+key);
+            return local->second;
+        };
+        auto registry=build_action_registry(*session);
+        const bool amulet=std::string_view(base).find("Amulets")!=std::string_view::npos;
+        GoalSpec goal; goal.rarity=PC_RARITY_RARE; goal.automatic_candidates=true;
+        for (const char* key:{"ChaosResist6",amulet ? "AllResistances6" : "FireResist8"}) {
+            GoalSlot slot; slot.family_id=session->family_id.at(mod(key)); slot.min_tier=1; goal.slots.push_back(slot);
+        }
+        {
+            GoalSlot slot; slot.family_id=session->family_id.at(mod(amulet ? "LightningDamagePercent5" : "AllAttributes4")); slot.min_tier=1;
+            goal.slots.push_back(slot);
+        }
+        const auto add=[&](pc_item_state& item,const char* key) {
+            const auto id=mod(key);
+            PC_CHECK(pc_item_add_mod(&item,session->gen_type[id],id,session->primary_group[id],0,nullptr)==PC_RESULT_OK);
+        };
+        pc_item_state source; pc_item_clear(&source); source.rarity=PC_RARITY_RARE;
+        add(source,"AddedColdDamage1"); add(source,"AddedFireDamage1"); add(source,"ChaosResist6");
+        add(source,amulet ? "LightningDamagePercent5" : "AllAttributes4");
+        auto conflict=source;
+        PC_CHECK(pc_item_remove_at(&conflict,PC_SIDE_PREFIX,1)==PC_RESULT_OK);
+        add(conflict,"AddedLightningDamage1");
+        std::vector<std::uint32_t> candidates;
+        for (const char* key:{"exalt","annul","scour","regal","chaos"}) {
+            const auto found=registry.index_by_id.find(key);
+            if (found==registry.index_by_id.end()) throw std::runtime_error(std::string("missing native action: ")+key);
+            candidates.push_back(found->second);
+        }
+        const auto& bench=registry.actions.at(registry.index_by_id.at("bench:EinharMasterAddedLightningDamage1"));
+        std::vector<std::uint64_t> universe(session->words,0);
+        for (std::uint32_t m=0;m<session->mod_count;++m) pc_bitset_set(universe.data(),m);
+        CalcContext coarse(session,goal,registry,candidates,false,false,false,std::nullopt,{},true,universe);
+        const auto old_source=coarse.intern_item(source),old_conflict=coarse.intern_item(conflict);
+        PC_CHECK(old_source==old_conflict);
+        PC_CHECK(!temporary_bench_source_observation_complete(coarse,old_source,bench));
+        const auto observation=temporary_bench_conflict_observation(*session,bench);
+        CalcContext observed(session,goal,registry,candidates,false,false,false,std::nullopt,{observation},true,universe);
+        const auto entry=observed.intern_item(source),blocked=observed.intern_item(conflict);
+        PC_CHECK(entry!=blocked);
+        PC_CHECK(temporary_bench_source_observation_complete(observed,entry,bench));
+        PC_CHECK(temporary_bench_source_observation_complete(observed,blocked,bench));
+        PC_CHECK(observed.candidates()==coarse.candidates());
+        std::unordered_map<std::string,double> prices{{"exalt",1},{"annul",5},{"scour",1},{"regal",1},{"chaos",20},
+            {"bench:EinharMasterAddedLightningDamage1",0.1},{"remove_crafted_modifiers",0.1}};
+        for (const auto& priced:registry.actions) if (priced.params.type==ActionType::Bench)
+            for (const auto& key:priced.cost_keys) if (!prices.contains(key)) prices[key]=1000;
+        const auto admit=[&](std::uint32_t state) {
+            AutomaticAdmissionLimits limits; limits.prices=&prices;
+            StateLocalAutomaticBatch batch;
+            while (!observed.advance_state_local_automatic_candidates(state,limits,batch,1)) {}
+            return batch;
+        };
+        const auto admitted=admit(entry);
+        bool offered=false;
+        for (auto index:admitted.admitted_operators) {
+            const auto& op=observed.operators().at(index);
+            if (op.option_kind!=FixedOptionKind::TemporaryBenchRepeat || op.setup_action==kNoId ||
+                registry.actions.at(op.setup_action).id!=bench.id) continue;
+            offered=true;
+            const auto& kernel=observed.option_kernel(entry,index);
+            PC_CHECK(kernel.supported && kernel.legal && kernel.terminates_almost_surely);
+            double mass=0;
+            for (const auto& exit:kernel.exits) {
+                mass+=exit.probability;
+                if (exit.state==kNoId) continue;
+                PC_CHECK((observed.state(exit.state).flags & kFlagCraftedMod)==0);
+            }
+            PC_CHECK(std::abs(mass-1)<1e-12);
+        }
+        if (!offered) for (const auto& decision:admitted.decisions)
+            if (decision.id.find("EinharMasterAddedLightningDamage1")!=std::string::npos)
+                std::printf("native blocker decision %s: %s / %s\n",base,decision.id.c_str(),decision.evidence.reason.c_str());
+        if (amulet) PC_CHECK(offered);
+        else {
+            // This actual Ring pool preserves the entry distinction, but its
+            // existing automatic owner refuses the complete option kernel.
+            // Keep that unknown outcome; it is not a cross-pool upper fixture.
+            PC_CHECK(offered || std::any_of(admitted.decisions.begin(),admitted.decisions.end(),[&](const auto& decision) {
+                return decision.id.find("EinharMasterAddedLightningDamage1")!=std::string::npos &&
+                    decision.evidence.reason=="exact_kernel_unsupported" && !decision.admitted;
+            }));
+        }
+        const auto refused=admit(blocked);
+        PC_CHECK(std::none_of(refused.admitted_operators.begin(),refused.admitted_operators.end(),[&](auto index) {
+            const auto& op=observed.operators().at(index);
+            return op.option_kind==FixedOptionKind::TemporaryBenchRepeat && op.setup_action!=kNoId &&
+                registry.actions.at(op.setup_action).id==bench.id;
+        }));
+        std::printf("native blocker entry %s: coarse=%u observed=%u conflicting=%u\n",base,old_source,entry,blocked);
+    }
+}
+
 void run_solver_compile_metadata_tests() {
     run_policy_description_test();
 }

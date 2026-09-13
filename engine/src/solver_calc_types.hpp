@@ -713,6 +713,11 @@ struct ReforgeProvenanceCheckpoint {
  * private worker context for pool construction. One CalcContext belongs to
  * one thread at a time.
  */
+CountObservation temporary_bench_conflict_observation(
+    const SessionImpl&, const ActionDescriptor&);
+bool temporary_bench_source_observation_complete(
+    const class CalcContext&, std::uint32_t state, const ActionDescriptor&);
+
 class CalcContext {
   public:
     CalcContext(

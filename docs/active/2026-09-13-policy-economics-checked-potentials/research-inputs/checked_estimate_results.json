@@ -1,0 +1,69 @@
+{
+  "classification": "Exact rational synthetic illustrations only; no native solver measurements or universal performance claim",
+  "checks": {
+    "estimate_100_is_not_a_lower": true,
+    "ray_accepts_24": true,
+    "alpha_is_5_over_24": true,
+    "retry_is_limiting": true,
+    "matches_enumerated_optimum": true,
+    "saturated_model_does_not_improve": true,
+    "arbitrary_safety_factor_not_valid": true,
+    "old_independent_bound_may_be_infeasible_here": true,
+    "omitted_action_refutes_24": true,
+    "full_scope_repairs_to_1": true,
+    "global_ray_can_be_weak": true,
+    "changed_direction_can_recover": true,
+    "pointwise_max_compatible_subsolutions": true,
+    "auxiliary_weak_model_ceiling_5": true,
+    "stronger_boundary_changes_model": true,
+    "old_accepted_strong_vector_not_weak_feasible": true,
+    "boundary_mutation_refused": true,
+    "choice_crossover_rechecked": true,
+    "frozen_choice_can_accept_false_vector": true,
+    "decision_timing_min_expectation": true,
+    "finite_subsolution_can_escape_zero_iteration": true,
+    "zero_loop_is_not_proper": true,
+    "proper_optimum_with_zero_loop": true,
+    "rare_retry_expected_cost": true,
+    "small_residual_not_acceptance": true,
+    "missing_mass_refused": true,
+    "immediate_spend_adds_to_root": true,
+    "overlapping_continuation_costs_double_count": true,
+    "one_shot_vs_repeat": true,
+    "two_cooperating_decisions_can_win": true,
+    "generated_all_action_validity_and_optimality_comparison": true,
+    "generated_nontrivial_limited_rays": true
+  },
+  "named_checks": 32,
+  "generated_models": 128,
+  "enumerated_complete_policies": 1024,
+  "limited_rays": 128,
+  "worked_example": {
+    "base": "4",
+    "estimate": "100",
+    "accepted": "24",
+    "alpha": "5/24",
+    "limiting_constraints": [
+      {
+        "state": "s",
+        "action": "retry",
+        "slack": "10",
+        "slope": "48",
+        "alpha": "5/24"
+      }
+    ]
+  },
+  "ray_vs_model_example": {
+    "global_ray": {
+      "x": "1",
+      "y": "1",
+      "g": "0"
+    },
+    "changed_direction": {
+      "x": "100",
+      "y": "1",
+      "g": "0"
+    }
+  },
+  "scope": "All constraints in these tiny models are supplied explicitly. Native action coverage, member-uniformity, numerical/native coefficient correspondence and performance remain implementation obligations."
+}

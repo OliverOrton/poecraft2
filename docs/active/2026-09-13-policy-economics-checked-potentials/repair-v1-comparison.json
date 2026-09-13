@@ -1,0 +1,46 @@
+[
+  {
+    "run": "out/policy-economics-checked-potentials/repair-v1-amulet-200m",
+    "upper": 13159.724084639676,
+    "lower": 174.79327321907147,
+    "stop": "reforge_work_cap",
+    "expected_actions": 26655.734445108934,
+    "comparison": {
+      "paired_cases": 1,
+      "excluded": [],
+      "cost_delta": 0.0,
+      "cost_reduction_percent": 0.0,
+      "graph_identical": true
+    },
+    "explicit_checks": {
+      "finite_upper": true,
+      "native_upper_matches": true,
+      "stop_named": true,
+      "bounded_contract_passed": true,
+      "completed_no_survivor": true
+    },
+    "best_policy_observed_ms": 207893.5366
+  },
+  {
+    "run": "out/policy-economics-checked-potentials/repair-v1-ring-four-400m",
+    "upper": 227989.251597418,
+    "lower": 201.85524142944053,
+    "stop": "requested_bounded_finish",
+    "expected_actions": 585368.3255100878,
+    "comparison": {
+      "paired_cases": 1,
+      "excluded": [],
+      "cost_delta": 0.0,
+      "cost_reduction_percent": 0.0,
+      "graph_identical": true
+    },
+    "explicit_checks": {
+      "finite_upper": true,
+      "native_upper_matches": true,
+      "stop_named": true,
+      "bounded_contract_passed": true,
+      "completed_no_survivor": true
+    },
+    "best_policy_observed_ms": 427772.0924
+  }
+]

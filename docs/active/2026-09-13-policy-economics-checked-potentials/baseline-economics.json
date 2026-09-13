@@ -1,0 +1,723 @@
+[
+  {
+    "family": "Amulet",
+    "upper": 13159.724084639676,
+    "materials": [
+      {
+        "price_key": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+        "expected_quantity": 26311.196415246326,
+        "price_status": "priced",
+        "unit_price": 0.3947,
+        "cost_contribution": 10385.029225097725
+      },
+      {
+        "price_key": "annul",
+        "expected_quantity": 221.8946998733404,
+        "price_status": "priced",
+        "unit_price": 9.69,
+        "cost_contribution": 2150.1596417726682
+      },
+      {
+        "price_key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "expected_quantity": 0.9682117577642475,
+        "price_status": "priced",
+        "unit_price": 424,
+        "cost_contribution": 410.52178529204093
+      },
+      {
+        "price_key": "exalt",
+        "expected_quantity": 120.70690647382129,
+        "price_status": "priced",
+        "unit_price": 1.77,
+        "cost_contribution": 213.65122445866368
+      },
+      {
+        "price_key": "scour",
+        "expected_quantity": 0.9682117577642475,
+        "price_status": "priced",
+        "unit_price": 0.3741,
+        "cost_contribution": 0.362208018579605
+      }
+    ],
+    "actions": [
+      {
+        "id": "annul",
+        "display_name": "annul",
+        "expected_visits": 221.8946998733404,
+        "expected_applied": 221.8946998733404,
+        "expected_spend_known": 2150.1596417726682,
+        "expected_spend_complete": true,
+        "known_cost_share": 0.1633894166734379,
+        "probability_of_any_use": {
+          "status": "not_computable_from_occupancy",
+          "value": null
+        },
+        "reachable_states": 13703,
+        "reachable_regions": 2,
+        "classifications": [
+          "ordinary_crafting"
+        ],
+        "materials": [
+          {
+            "price_key": "annul",
+            "expected_quantity": 221.8946998733404,
+            "price_status": "priced",
+            "unit_price": 9.69,
+            "cost_contribution": 2150.1596417726682
+          }
+        ],
+        "regions": [
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 13248,
+            "expected_visits": 221.3597620321633,
+            "expected_applied": 221.3597620321633
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 455,
+            "expected_visits": 0.534937841177025,
+            "expected_applied": 0.534937841177025
+          }
+        ],
+        "raw_nodes": [
+          {
+            "node_id": "s31",
+            "expected_visits": 221.8946998733404,
+            "expected_applied": 221.8946998733404
+          }
+        ]
+      },
+      {
+        "id": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "display_name": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "expected_visits": 0.9682117577642475,
+        "expected_applied": 0.9682117577642475,
+        "expected_spend_known": 410.52178529204093,
+        "expected_spend_complete": true,
+        "known_cost_share": 0.031195318583556862,
+        "probability_of_any_use": {
+          "status": "not_computable_from_occupancy",
+          "value": null
+        },
+        "reachable_states": 120,
+        "reachable_regions": 1,
+        "classifications": [
+          "protection_setup",
+          "ordinary_crafting"
+        ],
+        "materials": [
+          {
+            "price_key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+            "expected_quantity": 0.9682117577642475,
+            "price_status": "priced",
+            "unit_price": 424,
+            "cost_contribution": 410.52178529204093
+          }
+        ],
+        "regions": [
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 120,
+            "expected_visits": 0.9682117577642475,
+            "expected_applied": 0.9682117577642475
+          }
+        ],
+        "raw_nodes": [
+          {
+            "node_id": "s92",
+            "expected_visits": 0.9682117577642475,
+            "expected_applied": 0.9682117577642475
+          }
+        ]
+      },
+      {
+        "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+        "display_name": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+        "expected_visits": 26311.196415246326,
+        "expected_applied": 26311.196415246326,
+        "expected_spend_known": 10385.029225097725,
+        "expected_spend_complete": true,
+        "known_cost_share": 0.7891525048932723,
+        "probability_of_any_use": {
+          "status": "not_computable_from_occupancy",
+          "value": null
+        },
+        "reachable_states": 209902,
+        "reachable_regions": 3,
+        "classifications": [
+          "ordinary_crafting"
+        ],
+        "materials": [
+          {
+            "price_key": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+            "expected_quantity": 26311.196415246326,
+            "price_status": "priced",
+            "unit_price": 0.3947,
+            "cost_contribution": 10385.029225097725
+          }
+        ],
+        "regions": [
+          {
+            "goal_progress": 0,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 1,
+            "expected_applied": 1
+          },
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 186211,
+            "expected_visits": 25927.384109357732,
+            "expected_applied": 25927.384109357732
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 23690,
+            "expected_visits": 382.81230588816896,
+            "expected_applied": 382.81230588816896
+          }
+        ],
+        "raw_nodes": [
+          {
+            "node_id": "s0",
+            "expected_visits": 26311.196415246326,
+            "expected_applied": 26311.196415246326
+          }
+        ]
+      },
+      {
+        "id": "exalt",
+        "display_name": "exalt",
+        "expected_visits": 120.70690647382129,
+        "expected_applied": 120.70690647382129,
+        "expected_spend_known": 213.65122445866368,
+        "expected_spend_complete": true,
+        "known_cost_share": 0.01623523586699224,
+        "probability_of_any_use": {
+          "status": "not_computable_from_occupancy",
+          "value": null
+        },
+        "reachable_states": 1591,
+        "reachable_regions": 1,
+        "classifications": [
+          "ordinary_crafting"
+        ],
+        "materials": [
+          {
+            "price_key": "exalt",
+            "expected_quantity": 120.70690647382129,
+            "price_status": "priced",
+            "unit_price": 1.77,
+            "cost_contribution": 213.65122445866368
+          }
+        ],
+        "regions": [
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1591,
+            "expected_visits": 120.70690647382129,
+            "expected_applied": 120.70690647382129
+          }
+        ],
+        "raw_nodes": [
+          {
+            "node_id": "s16",
+            "expected_visits": 120.70690647382129,
+            "expected_applied": 120.70690647382129
+          }
+        ]
+      },
+      {
+        "id": "remove_crafted_modifiers",
+        "display_name": "remove_crafted_modifiers",
+        "expected_visits": 0,
+        "expected_applied": 0,
+        "expected_spend_known": 0,
+        "expected_spend_complete": true,
+        "known_cost_share": 0,
+        "probability_of_any_use": {
+          "status": "exact_zero",
+          "value": 0
+        },
+        "reachable_states": 0,
+        "reachable_regions": 0,
+        "classifications": [
+          "ordinary_crafting",
+          "cleanup_or_replacement"
+        ],
+        "materials": [
+          {
+            "price_key": "scour",
+            "expected_quantity": 0,
+            "price_status": "priced",
+            "unit_price": 0.3741,
+            "cost_contribution": 0
+          }
+        ],
+        "regions": [],
+        "raw_nodes": [
+          {
+            "node_id": "s62",
+            "expected_visits": 0,
+            "expected_applied": 0
+          }
+        ]
+      },
+      {
+        "id": "scour",
+        "display_name": "scour",
+        "expected_visits": 0.9682117577642475,
+        "expected_applied": 0.9682117577642475,
+        "expected_spend_known": 0.362208018579605,
+        "expected_spend_complete": true,
+        "known_cost_share": 2.7523982740822226e-05,
+        "probability_of_any_use": {
+          "status": "not_computable_from_occupancy",
+          "value": null
+        },
+        "reachable_states": 120,
+        "reachable_regions": 1,
+        "classifications": [
+          "ordinary_crafting"
+        ],
+        "materials": [
+          {
+            "price_key": "scour",
+            "expected_quantity": 0.9682117577642475,
+            "price_status": "priced",
+            "unit_price": 0.3741,
+            "cost_contribution": 0.362208018579605
+          }
+        ],
+        "regions": [
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 1,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 120,
+            "expected_visits": 0.9682117577642475,
+            "expected_applied": 0.9682117577642475
+          }
+        ],
+        "raw_nodes": [
+          {
+            "node_id": "s92_o1",
+            "expected_visits": 0.9682117577642475,
+            "expected_applied": 0.9682117577642475
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "family": "Ring FOUR",
+    "upper": 227989.251597418,
+    "materials": [
+      {
+        "price_key": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+        "expected_quantity": 575402.5848142772,
+        "price_status": "priced",
+        "unit_price": 0.3428,
+        "cost_contribution": 197248.00607433423
+      },
+      {
+        "price_key": "exalt",
+        "expected_quantity": 8625.824980865846,
+        "price_status": "priced",
+        "unit_price": 1.77,
+        "cost_contribution": 15267.710216132547
+      },
+      {
+        "price_key": "annul",
+        "expected_quantity": 1329.7476364923234,
+        "price_status": "priced",
+        "unit_price": 9.69,
+        "cost_contribution": 12885.254597610614
+      },
+      {
+        "price_key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "expected_quantity": 6.100847070946025,
+        "price_status": "priced",
+        "unit_price": 424,
+        "cost_contribution": 2586.7591580811145
+      },
+      {
+        "price_key": "scour",
+        "expected_quantity": 4.067231380630683,
+        "price_status": "priced",
+        "unit_price": 0.3741,
+        "cost_contribution": 1.5215512594939384
+      }
+    ],
+    "actions": [
+      {
+        "id": "annul",
+        "display_name": "annul",
+        "expected_visits": 1329.7476364923234,
+        "expected_applied": 1329.7476364923234,
+        "expected_spend_known": 12885.254597610614,
+        "expected_spend_complete": true,
+        "known_cost_share": 0.05651693887904556,
+        "probability_of_any_use": {
+          "status": "not_computable_from_occupancy",
+          "value": null
+        },
+        "reachable_states": 6157,
+        "reachable_regions": 4,
+        "classifications": [
+          "ordinary_crafting"
+        ],
+        "materials": [
+          {
+            "price_key": "annul",
+            "expected_quantity": 1329.7476364923234,
+            "price_status": "priced",
+            "unit_price": 9.69,
+            "cost_contribution": 12885.254597610614
+          }
+        ],
+        "regions": [
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 1.2158327344596056,
+            "expected_applied": 1.2158327344596056
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 5940,
+            "expected_visits": 1311.6658229149994,
+            "expected_applied": 1311.6658229149994
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 1,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 6.100847070946025,
+            "expected_applied": 6.100847070946025
+          },
+          {
+            "goal_progress": 4,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 215,
+            "expected_visits": 10.765133771918727,
+            "expected_applied": 10.765133771918727
+          }
+        ],
+        "raw_nodes": [
+          {
+            "node_id": "s548",
+            "expected_visits": 1323.6467894213774,
+            "expected_applied": 1323.6467894213774
+          },
+          {
+            "node_id": "s2951_o1",
+            "expected_visits": 6.100847070946025,
+            "expected_applied": 6.100847070946025
+          }
+        ]
+      },
+      {
+        "id": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "display_name": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "expected_visits": 6.100847070946025,
+        "expected_applied": 6.100847070946025,
+        "expected_spend_known": 2586.7591580811145,
+        "expected_spend_complete": true,
+        "known_cost_share": 0.01134596977689456,
+        "probability_of_any_use": {
+          "status": "not_computable_from_occupancy",
+          "value": null
+        },
+        "reachable_states": 1,
+        "reachable_regions": 1,
+        "classifications": [
+          "protection_setup",
+          "ordinary_crafting"
+        ],
+        "materials": [
+          {
+            "price_key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+            "expected_quantity": 6.100847070946025,
+            "price_status": "priced",
+            "unit_price": 424,
+            "cost_contribution": 2586.7591580811145
+          }
+        ],
+        "regions": [
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 6.100847070946025,
+            "expected_applied": 6.100847070946025
+          }
+        ],
+        "raw_nodes": [
+          {
+            "node_id": "s2951",
+            "expected_visits": 6.100847070946025,
+            "expected_applied": 6.100847070946025
+          }
+        ]
+      },
+      {
+        "id": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+        "display_name": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+        "expected_visits": 575402.5848142772,
+        "expected_applied": 575402.5848142772,
+        "expected_spend_known": 197248.00607433423,
+        "expected_spend_complete": true,
+        "known_cost_share": 0.8651636193035693,
+        "probability_of_any_use": {
+          "status": "not_computable_from_occupancy",
+          "value": null
+        },
+        "reachable_states": 174352,
+        "reachable_regions": 4,
+        "classifications": [
+          "ordinary_crafting"
+        ],
+        "materials": [
+          {
+            "price_key": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+            "expected_quantity": 575402.5848142772,
+            "price_status": "priced",
+            "unit_price": 0.3428,
+            "cost_contribution": 197248.00607433423
+          }
+        ],
+        "regions": [
+          {
+            "goal_progress": 0,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 1,
+            "expected_applied": 1
+          },
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 120202,
+            "expected_visits": 541241.536962953,
+            "expected_applied": 541241.536962953
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 53312,
+            "expected_visits": 34158.211914768806,
+            "expected_applied": 34158.211914768806
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 837,
+            "expected_visits": 1.8359365421732214,
+            "expected_applied": 1.8359365421732214
+          }
+        ],
+        "raw_nodes": [
+          {
+            "node_id": "s0",
+            "expected_visits": 575402.5848142772,
+            "expected_applied": 575402.5848142772
+          }
+        ]
+      },
+      {
+        "id": "exalt",
+        "display_name": "exalt",
+        "expected_visits": 8625.824980865846,
+        "expected_applied": 8625.824980865846,
+        "expected_spend_known": 15267.710216132547,
+        "expected_spend_complete": true,
+        "known_cost_share": 0.06696679825543782,
+        "probability_of_any_use": {
+          "status": "not_computable_from_occupancy",
+          "value": null
+        },
+        "reachable_states": 4844,
+        "reachable_regions": 2,
+        "classifications": [
+          "ordinary_crafting"
+        ],
+        "materials": [
+          {
+            "price_key": "exalt",
+            "expected_quantity": 8625.824980865846,
+            "price_status": "priced",
+            "unit_price": 1.77,
+            "cost_contribution": 15267.710216132547
+          }
+        ],
+        "regions": [
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 3996,
+            "expected_visits": 7900.869710641611,
+            "expected_applied": 7900.869710641611
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 848,
+            "expected_visits": 724.9552702242362,
+            "expected_applied": 724.9552702242362
+          }
+        ],
+        "raw_nodes": [
+          {
+            "node_id": "s66",
+            "expected_visits": 8625.824980865846,
+            "expected_applied": 8625.824980865846
+          }
+        ]
+      },
+      {
+        "id": "remove_crafted_modifiers",
+        "display_name": "remove_crafted_modifiers",
+        "expected_visits": 4.067231380630683,
+        "expected_applied": 4.067231380630683,
+        "expected_spend_known": 1.5215512594939384,
+        "expected_spend_complete": true,
+        "known_cost_share": 6.673785052729959e-06,
+        "probability_of_any_use": {
+          "status": "not_computable_from_occupancy",
+          "value": null
+        },
+        "reachable_states": 2,
+        "reachable_regions": 2,
+        "classifications": [
+          "ordinary_crafting",
+          "cleanup_or_replacement"
+        ],
+        "materials": [
+          {
+            "price_key": "scour",
+            "expected_quantity": 4.067231380630683,
+            "price_status": "priced",
+            "unit_price": 0.3741,
+            "cost_contribution": 1.5215512594939384
+          }
+        ],
+        "regions": [
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 1,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 2.0336156903153415,
+            "expected_applied": 2.0336156903153415
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 1,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 2.0336156903153415,
+            "expected_applied": 2.0336156903153415
+          }
+        ],
+        "raw_nodes": [
+          {
+            "node_id": "s576",
+            "expected_visits": 4.067231380630683,
+            "expected_applied": 4.067231380630683
+          }
+        ]
+      }
+    ]
+  }
+]

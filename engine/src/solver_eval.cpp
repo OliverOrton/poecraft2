@@ -643,6 +643,11 @@ struct StrategyEvalWork::Impl {
         for (const auto& failure : output.failures_by_node) {
             bytes += failure.node_id.capacity() + failure.reason.capacity() + 2;
         }
+        if (output.first_failure) {
+            bytes += output.first_failure->node_id.capacity() +
+                     output.first_failure->action_id.capacity() +
+                     output.first_failure->reason.capacity() + 3;
+        }
         bytes += output.nodes.capacity() * sizeof(StrategyEvalNode);
         for (const StrategyEvalNode& node : output.nodes) {
             bytes += node.id.capacity() + 1;
@@ -5249,8 +5254,23 @@ struct StrategyEvalWork::Impl {
         return true;
     }
 
+    void retain_failure_witness(const EvalAbsorption& absorption, double mass) {
+        if (!(mass > 0.0) || absorption.kind == EvalAbsorptionKind::Terminal ||
+            output.first_failure) return;
+        StrategyEvalFailureWitness witness;
+        witness.node_id = strategy->nodes.at(absorption.node).id;
+        const auto action=model.action_by_node.at(absorption.node);
+        if (action!=kNoId) witness.action_id=model.calc->registry().actions.at(action).id;
+        witness.reason = absorption.kind == EvalAbsorptionKind::ActionNotApplied
+            ? "action_not_applied" : "no_matching_edge";
+        witness.incoming_mass = mass;
+        witness.materialized = model.calc->materialize(absorption.state, witness.item);
+        output.first_failure = std::move(witness);
+    }
+
     void add_absorption(const EvalAbsorption& absorption, double mass) {
         if (!(mass > 0.0)) return;
+        retain_failure_witness(absorption, mass);
         if (absorption.edge != kNoId) {
             edge_traversals.at(absorption.edge) += mass;
         }
@@ -8438,6 +8458,7 @@ struct StrategyEvalWork::Impl {
                 incoming.clear();
             }
             deterministic_route_flows.clear();
+            output.first_failure.reset(); // The completed raw flow replaces preliminary quotient flow.
             terminal_incoming_owned_bytes = 0;
             compressed_policy_incoming_owned_bytes = 0;
             const bool exact_row_visits_available =
@@ -8518,6 +8539,7 @@ struct StrategyEvalWork::Impl {
                             solve_detail::WideFloat{
                                 absorption.probability};
                         const double mass = wide_mass.value();
+                        retain_failure_witness(absorption, mass);
                         if (absorption.edge != kNoId)
                             edge_traversals.at(absorption.edge) += mass;
                         add_compressed_policy_incoming(

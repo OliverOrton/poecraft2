@@ -9,6 +9,9 @@
 #include "solver_calc_types.hpp"
 #include "solver_options_helpers.hpp"
 #include "solver_executable_fragment_engine.hpp"
+#include "solver_solve_types.hpp"
+#include "solver_phase_lower.hpp"
+#include "solver_quotient_bellman.hpp"
 
 #include <algorithm>
 #include <array>
@@ -48,6 +51,7 @@ using Clock = std::chrono::steady_clock;
 using poecraft::json::Parser;
 using poecraft::json::Type;
 using poecraft::json::Value;
+namespace poecraft::solver { struct SolveWorkTestAccess { using Impl = SolveWork::Impl; }; }
 
 namespace {
 
@@ -67,6 +71,9 @@ struct Arguments {
     bool validate_only = false;
     bool action_layout_diagnostic = false;
     bool action_coverage_diagnostic = false;
+    double checked_potential_estimate = 0;
+    double checked_potential_target = 0;
+    bool checked_potential_refine_resistance = false;
     bool fragment_contract_rejection_probes = false;
     bool fragment_shadow_only = false;
     bool resumable_joint_policy_continuation_diagnostic = false;
@@ -3151,6 +3158,154 @@ std::string run_action_coverage_probe(pc_data_handle data, const Value& specific
     return out.str();
 }
 
+std::string run_checked_potential_probe(pc_data_handle data, const Value& specification,
+                                      double estimate, double target, bool refine_resistance) {
+    using namespace poecraft::solver;
+    using namespace poecraft::solver::quotient;
+    NativeHandles handles; pc_item_state start;
+    create_case_objects(data,specification,handles,start);
+    auto& calc=solver_lower_diagnostic_calculator(handles.solver);
+    const auto economy_text=load_case_economy_json(specification);
+    const auto economy=Parser(economy_text.data(),economy_text.size()).parse();
+    std::unordered_map<std::string,double> prices;
+    for (const auto& [key,value]:required(economy,"prices",Type::Object).object)
+        if (value.type==Type::Number) prices.emplace(key,value.number);
+    const auto& caps=required(specification,"caps",Type::Object);
+    SolveOptions options;
+    if (optional_string(caps,"solve_profile","default")=="calculator_product_v1")
+        apply_solve_profile_defaults(options,SolveProfile::CalculatorProductV1);
+    options.consider_imprint_programs=optional_bool(caps,"consider_imprint_programs",false);
+    options.allow_economic_restart=optional_bool(caps,"allow_economic_restart",options.allow_economic_restart);
+    options.max_solver_owned_bytes=optional_u64(caps,"max_solver_owned_bytes",8ull<<30);
+    options.native_retention_numerical_reuse=true;
+    SolveWorkTestAccess::Impl owner(calc,start,prices,options);
+    owner.prepare_goal_cover_cost();
+    const double prior=owner.completion_proof_lower_value(owner.result.start_state);
+    std::ostringstream out; out << std::setprecision(17);
+    out << "{\"kind\":\"checked_native_potential_pilot_v1\",\"case\":"
+        << escape_json(required(specification,"id",Type::String).string)
+        << ",\"estimate\":" << estimate << ",\"useful_root_threshold\":" << target
+        << ",\"prior_root_lower\":" << prior << ",\"query_workspace_limit\":" << options.native_retention_proof_bytes;
+    bool visited=false, native_rechecked=false, native_accepted=false;
+    PhaseLowerQueryDiagnostic diagnostic;
+    diagnostic.refine_resistance_support=refine_resistance;
+    out << ",\"resistance_support_refinement\":" << (refine_resistance?"true":"false");
+    diagnostic.propose=[&](const QuotientBellmanGraph& graph,const QuotientLowerQuery& query,
+        const std::vector<QuotientBellmanCellInput>& cells,const std::vector<double>& base,
+        const QuotientLowerBudget& budget)->std::optional<std::vector<double>> {
+        visited=true;
+        const auto began=Clock::now();
+        ScopedProofMemoryCharge charge(graph.proof_store()->ledger(),ProofMemoryCategory::Scratch,
+            256+base.size()*(6*sizeof(double)+sizeof(std::uint8_t)));
+        auto checking=budget; checking.retain_ranked_constraints=false;
+        if (!graph.check_lower(query,base,checking).checked)
+            throw std::runtime_error("native pilot base is not feasible for its current query");
+        const auto root=*graph.state_index_for_cell(query.roots.at(0));
+        std::vector<std::uint8_t> variable(base.size(),0);
+        for (const auto& source:query.sources) variable.at(*graph.state_index_for_cell(source.cell_id))=1;
+        std::vector<double> zero=base;
+        for (unsigned i=0;i<base.size();++i) if (variable[i]) zero[i]=0;
+        if (!graph.check_lower(query,zero,checking).checked)
+            throw std::runtime_error("native pilot zero base is not feasible with fixed boundaries");
+        double ceiling=std::numeric_limits<double>::infinity(); std::string ceiling_action;
+        std::size_t constraints=0;
+        for (const auto& source:query.sources) for (const auto& c:source.constraints) {
+            ++constraints;
+            if (source.cell_id==query.roots.at(0) && c.kind==LowerConstraintKind::Scalar && c.lower<ceiling) {
+                ceiling=c.lower;
+                ceiling_action=calc.registry().actions.at(c.evidence_identity.at(0)).id;
+            }
+        }
+        out << ",\"query\":{\"states\":" << cells.size() << ",\"sources\":" << query.sources.size()
+            << ",\"constraints\":" << constraints << ",\"root_cell\":" << query.roots.at(0)
+            << ",\"checked_base_root\":" << base[root] << ",\"coefficient_model\":\"exact_binary_model\""
+            << ",\"scalar_auxiliary_ceiling\":";
+        if (std::isfinite(ceiling)) out << ceiling; else out << "null";
+        out << ",\"ceiling_action\":" << escape_json(ceiling_action)
+            << ",\"ceiling_scope\":\"one-step independent-exit policy of this optimistic query, not a native executable action tail\"},\"rays\":[";
+        const auto& cache=graph.transition_cache();
+        const auto rhs=[&](const QuotientLowerConstraint& c,const std::vector<double>& v) {
+            if (c.kind==LowerConstraintKind::Scalar) return static_cast<long double>(c.lower);
+            const auto& row=cache.rows.at(c.row);
+            long double future=0,mass=0;
+            for (unsigned i=0;i<row.transition_count;++i) {
+                const auto at=row.transition_offset+i; const auto p=cache.probabilities.at(at);
+                mass+=p; future+=static_cast<long double>(p)*v.at(cache.successors.at(at));
+            }
+            for (unsigned i=0;i<row.choice_count;++i) {
+                const auto& choice=cache.choices.at(row.choice_offset+i);
+                double best=choice.has_self ? v.at(row.owner_state) : std::numeric_limits<double>::infinity();
+                for (unsigned j=0;j<choice.successor_count;++j)
+                    best=std::min(best,v.at(cache.choice_successors.at(choice.successor_offset+j)));
+                mass+=choice.probability; future+=static_cast<long double>(choice.probability)*best;
+            }
+            if (query.coefficients==LowerCoefficientModel::NormalizedStoredReference) future/=mass;
+            return static_cast<long double>(graph.priced_rows().at(c.row).cost)+future;
+        };
+        std::vector<double> best_trial=zero;
+        for (unsigned direction=0;direction<2;++direction) {
+            std::vector<double> proposed=base;
+            const double scale=estimate/std::max(1e-12,base[root]);
+            for (unsigned i=0;i<base.size();++i) if (variable[i])
+                proposed[i]=direction ? base[i]*scale : estimate*std::sqrt(base[i]/std::max(1e-12,base[root]));
+            long double limit=1, limiting_slack=0, limiting_slope=0;
+            std::uint32_t limiting_cell=UINT32_MAX; std::string limiting_action;
+            for (const auto& source:query.sources) {
+                const auto s=*graph.state_index_for_cell(source.cell_id);
+                for (const auto& c:source.constraints) {
+                    if (c.kind==LowerConstraintKind::Inapplicable) continue;
+                    const auto initial=rhs(c,zero);
+                    const auto slack=std::max(0.0L,initial-zero[s]);
+                    const auto slope=proposed[s]-zero[s]-(rhs(c,proposed)-initial);
+                    if (slope>0 && slack/slope<limit) {
+                        limit=slack/slope; limiting_slack=slack; limiting_slope=slope;
+                        limiting_cell=source.cell_id;
+                        limiting_action=calc.registry().actions.at(c.evidence_identity.at(0)).id;
+                    }
+                }
+            }
+            double low=0,high=std::clamp(static_cast<double>(limit),0.0,1.0);
+            std::vector<double> trial=zero,accepted=zero;
+            unsigned trials=0;
+            // Floating ratios propose only. Every actual vector goes through
+            // the unchanged checker; observed choices are re-minimized there.
+            for (;trials<25;++trials) {
+                const double alpha=trials==0 ? high : (low+high)*0.5;
+                for (unsigned i=0;i<base.size();++i) trial[i]=zero[i]+alpha*(proposed[i]-zero[i]);
+                const auto checked=graph.check_lower(query,trial,checking);
+                if (checked.status==QuotientLowerStatus::ResourceCap || checked.status==QuotientLowerStatus::Cancelled)
+                    throw std::runtime_error("checked potential trial interrupted: "+checked.reason);
+                if (checked.checked) { low=alpha; accepted=trial; if (trials==0) { ++trials; break; } }
+                else high=alpha;
+            }
+            if (direction) out << ',';
+            out << "{\"direction\":" << escape_json(direction ? "changed_checked_shape" : "aggressive_square_root_shape")
+                << ",\"raw_root\":" << proposed[root] << ",\"alpha_proposed\":" << static_cast<double>(limit)
+                << ",\"alpha_checked\":" << low << ",\"checked_root\":" << accepted[root]
+                << ",\"trials\":" << trials << ",\"limiting_cell\":" << limiting_cell
+                << ",\"limiting_action\":" << escape_json(limiting_action)
+                << ",\"slack_proposal\":" << static_cast<double>(limiting_slack)
+                << ",\"slope_proposal\":" << static_cast<double>(limiting_slope)
+                << ",\"exact_maximal_alpha_claimed\":false,\"native_minima_recheck_required\":true}";
+            if (accepted[root]>=best_trial[root]) best_trial=std::move(accepted);
+        }
+        out << "],\"pilot_ns\":" << std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now()-began).count();
+        return best_trial;
+    };
+    diagnostic.rechecked=[&](const std::vector<double>&,bool accepted) { native_rechecked=true; native_accepted=accepted; };
+    owner.options.native_retention_lower=true;
+    owner.prepare_native_retention_lower(&diagnostic);
+    const double after=owner.completion_proof_lower_value(owner.result.start_state);
+    out << ",\"query_visited\":" << (visited?"true":"false")
+        << ",\"fresh_native_minima_rechecked\":" << (native_rechecked?"true":"false")
+        << ",\"ray_native_accepted\":" << (native_accepted?"true":"false")
+        << ",\"native_retention_lower\":" << owner.native_retention_lower_value(owner.result.start_state)
+        << ",\"ordinary_root_composition\":" << after << ",\"root_consumer_delta\":" << after-prior
+        << ",\"native_refusal\":" << escape_json(owner.native_retention_refusal)
+        << ",\"peak_proof_bytes\":" << owner.native_retention_peak_bytes << "}\n";
+    return out.str();
+}
+
 std::string run_action_layout_probe(pc_data_handle data, const Value& specification) {
     using namespace poecraft::solver;
     using poecraft::ActionType;
@@ -5873,6 +6028,9 @@ Arguments parse_arguments(int argc, char** argv) {
         }
         else if (argument == "--action-layout-diagnostic") args.action_layout_diagnostic = true;
         else if (argument == "--action-coverage-diagnostic") args.action_coverage_diagnostic = true;
+        else if (argument == "--checked-potential-estimate") args.checked_potential_estimate = std::stod(value("--checked-potential-estimate"));
+        else if (argument == "--checked-potential-target") args.checked_potential_target = std::stod(value("--checked-potential-target"));
+        else if (argument == "--checked-potential-refine-resistance") args.checked_potential_refine_resistance = true;
         else if (argument == "--case") args.case_id = value("--case");
         else if (argument == "--native-retention-diagnostic") args.native_retention_diagnostic=value("--native-retention-diagnostic");
         else if (argument == "--native-dirty-guidance") args.native_dirty_guidance=value("--native-dirty-guidance");
@@ -5959,6 +6117,10 @@ Arguments parse_arguments(int argc, char** argv) {
          !args.development_checkpoint_load.empty())) {
         throw std::runtime_error("proof handoff requires one ordinary case without checkpoint or shadow diagnostics");
     }
+    if ((args.checked_potential_estimate!=0 || args.checked_potential_target!=0 || args.checked_potential_refine_resistance) &&
+        (!(args.checked_potential_estimate>0) || !std::isfinite(args.checked_potential_estimate) ||
+         !(args.checked_potential_target>0) || !std::isfinite(args.checked_potential_target)))
+        throw std::runtime_error("checked potential diagnostic requires finite positive estimate and target");
     if (!args.native_dirty_guidance.empty() && args.native_dirty_guidance!="legacy" &&
         args.native_dirty_guidance!="static" && args.native_dirty_guidance!="adaptive" &&
         args.native_dirty_guidance!="protected-first" && args.native_dirty_guidance!="selective" &&
@@ -6242,6 +6404,13 @@ int main(int argc, char** argv) {
                 return 0;
             }
 
+            if (args.checked_potential_estimate>0) {
+                if (specifications.size()!=1) throw std::runtime_error("checked potential diagnostic requires one case");
+                write_file(fs::absolute(args.output),run_checked_potential_probe(data,specifications.front(),
+                    args.checked_potential_estimate,args.checked_potential_target,args.checked_potential_refine_resistance));
+                pc_data_destroy(data);
+                return 0;
+            }
             if (args.action_coverage_diagnostic) {
                 if (specifications.size()!=1) throw std::runtime_error("action coverage diagnostic requires one case");
                 write_file(fs::absolute(args.output), run_action_coverage_probe(data, specifications.front()));

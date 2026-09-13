@@ -767,6 +767,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
         double old_entry_cost = kInfinity;
         std::uint32_t root_registry_action = kNoId;
         unsigned expansion = 0; // 0: preserved builder; 1: redraw; 2: protected cleanup too.
+        std::uint32_t observed_blocker_action = kNoId;
+        std::optional<pc_item_state> observed_blocker_entry;
     };
     std::vector<Proposal> proposals;
     // A current compiled policy may have useful progress behind a prefix that
@@ -913,6 +915,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
         }
     }
     bool retained = false;
+    bool blocker_refinement_queued = false;
     for (std::size_t next_proposal=0;next_proposal<proposals.size();++next_proposal) {
         if (requested_bounded_finish) break;
         const auto ordering_estimate = [&](const Proposal& value) {
@@ -938,9 +941,11 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     selected_next=i; break;
                 }
         }
+        if (proposals[next_proposal].observed_blocker_action!=kNoId) selected_next=next_proposal;
         const bool corrected_choice=adaptive && selected_next!=static_next;
         std::swap(proposals[next_proposal],proposals[selected_next]);
-        const auto& proposal=proposals[next_proposal];
+        const auto proposal=proposals[next_proposal];
+        std::optional<Proposal> blocker_refinement;
         const auto prediction_version=guide.version;
         const auto preconstruction_estimate=ordering_estimate(proposal);
         const bool native_gating=proposal.expansion==0 && options.goal_progress_gated_reforges;
@@ -962,6 +967,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
         std::uint64_t growth_batch=0, pending_opportunities=0, reused_rows=0, seed_rows=0;
         std::uint64_t selected_dependency_rows=0, protected_patch_rows=0;
         std::uint64_t automatic_sources=0, automatic_patch_rows=0, automatic_refusals=0;
+        std::uint32_t blocker_target=kNoId;
         std::string automatic_samples="[]";
         std::string patch_samples="[]";
         std::uint64_t child_work = 0, child_active = 0, child_peak = 0;
@@ -991,6 +997,10 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 std::string(root_name) + "\",\"disposition\":\"" + disposition +
                 "\",\"expansion\":" + std::to_string(proposal.expansion) +
                 ",\"selective_growth\":" + (selective ? "true" : "false") +
+                ",\"observed_blocker_action\":" + (proposal.observed_blocker_action==kNoId ? "null" :
+                    "\""+diagnostic_json_escape(calc.registry().actions.at(proposal.observed_blocker_action).id)+"\"") +
+                ",\"blocker_target_in_closed_seed\":" + (!proposal.observed_blocker_entry || growth_batch==0 ? "null" :
+                    blocker_target==kNoId ? "false" : "true") +
                 ",\"growth_batch\":" + std::to_string(growth_batch) +
                 ",\"seed_rows\":" + std::to_string(seed_rows) +
                 ",\"reused_rows\":" + std::to_string(reused_rows) +
@@ -1118,11 +1128,16 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     }
                 }
             }
+            auto private_observations=calc.layout().count_observations;
+            if (proposal.observed_blocker_action!=kNoId)
+                private_observations.push_back(temporary_bench_conflict_observation(calc.session(),
+                    calc.registry().actions.at(proposal.observed_blocker_action)));
             private_calc = std::make_unique<CalcContext>(calc.shared_session(), private_goal,
                 calc.registry(), private_candidates, false, false, false, std::nullopt,
-                calc.layout().count_observations, calc.product_solver_parent(), universe,
+                private_observations, calc.product_solver_parent(), universe,
                 calc.distinguishes_modifier_identity(), false, false, false, false,
                 preserve_layout ? &calc.layout() : nullptr, true);
+            std::vector<CountObservation>().swap(private_observations);
             SolveOptions local_options=options;
             const auto parent_bytes=parent_live_bytes();
             if (parent_bytes>=options.max_solver_owned_bytes)
@@ -1278,6 +1293,16 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 const auto patch_row_begin=protected_patch_rows;
                 const auto automatic_row_begin=automatic_patch_rows;
                 if (growth_batch>0) {
+                    if (growth_batch==1 && proposal.observed_blocker_entry) {
+                        // Carry the physical witness, never an old private ID or
+                        // entry upper. Offer its selected action after this view
+                        // has a closed seed, before unrelated alternatives.
+                        const auto target=private_calc->intern_item(*proposal.observed_blocker_entry);
+                        if (std::find(walk.begin(),walk.end(),target)!=walk.end()) {
+                            blocker_target=target;
+                            pending.push_back({target,kNoId,static_cast<std::uint64_t>(pending.size()),0});
+                        }
+                    }
                     for (;pending_walk_cursor<walk.size();++pending_walk_cursor) {
                         const auto state=walk[pending_walk_cursor];
                         const auto& item=private_calc->state(state);
@@ -1293,7 +1318,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                         for (const auto state:walk) {
                             const auto& item=private_calc->state(state);
                             const auto goals=std::popcount(child.satisfied_goal_mask_for_state(state));
-                            if (!child.result.goal_states[state] && item.rarity==PC_RARITY_RARE && item.flags==0 &&
+                            if (state!=blocker_target && !child.result.goal_states[state] && item.rarity==PC_RARITY_RARE && item.flags==0 &&
                                 goals>0 && goals+1>=private_calc->goal().required_satisfied_slots() &&
                                 private_calc->is_candidate_operator_admitted_for_state(state,exalt) &&
                                 action_legal(private_calc->session(),private_calc->registry().actions.at(
@@ -1327,6 +1352,9 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     }
                     const bool age_batch=growth_batch%3==0;
                     std::stable_sort(pending.begin()+pending_head,pending.end(),[&](const auto& a,const auto& b) {
+                        const bool selected_a=a.action==kNoId && a.state==blocker_target;
+                        const bool selected_b=b.action==kNoId && b.state==blocker_target;
+                        if (selected_a!=selected_b) return selected_a;
                         if (!age_batch && a.priority!=b.priority) return a.priority>b.priority;
                         return a.sequence<b.sequence;
                     });
@@ -1384,6 +1412,21 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                                 const auto& op=private_calc->operators().at(index);
                                 if (op.option_kind!=FixedOptionKind::TemporaryBenchRepeat &&
                                     op.option_kind!=FixedOptionKind::ProtectedRepeat) continue;
+                                if (op.option_kind==FixedOptionKind::TemporaryBenchRepeat &&
+                                    !temporary_bench_source_observation_complete(*private_calc,state,
+                                        private_calc->registry().actions.at(op.setup_action))) {
+                                    ++automatic_refusals;
+                                    if (!blocker_refinement_queued && !proposal.nonempty_handoff) {
+                                        blocker_refinement=proposal;
+                                        blocker_refinement->observed_blocker_action=op.setup_action;
+                                        pc_item_state entry{};
+                                        if (!private_calc->materialize(state,entry))
+                                            throw std::runtime_error("selected blocker entry is not materializable");
+                                        blocker_refinement->observed_blocker_entry=entry;
+                                        blocker_refinement_queued=true;
+                                    }
+                                    continue; // Representative admission is not class-wide entry authority.
+                                }
                                 const auto& kernel=private_calc->option_kernel(state,index);
                                 if (!kernel.supported || !kernel.legal || !kernel.terminates_almost_surely ||
                                     !kernel.observation_choice_groups.empty() || !kernel.observation_choice_options.empty()) {
@@ -1400,11 +1443,21 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                                 for (auto& exit:complete.entries) if (exit.state==kNoId) exit.state=state;
                                 (void)append(state,index,complete,cost); ++automatic_patch_rows; ++installed;
                                 if (automatic_patch_rows<=8) {
+                                    pc_item_state source_item;
+                                    if (!private_calc->materialize(state,source_item))
+                                        throw std::runtime_error("selected native option source is not materializable");
                                     if (automatic_samples=="[]") automatic_samples="["; else {automatic_samples.pop_back(); automatic_samples+=',';}
                                     automatic_samples+="{\"source\":"+std::to_string(state)+",\"operator\":\""+
                                         diagnostic_json_escape(op.id)+"\",\"goal_mask\":"+
                                         std::to_string(child.satisfied_goal_mask_for_state(state))+",\"native_expected_cost\":"+
-                                        diagnostic_finite_double(cost)+",\"exits\":"+std::to_string(complete.entries.size())+"}]";
+                                        diagnostic_finite_double(cost)+",\"exits\":"+std::to_string(complete.entries.size())+
+                                        ",\"native_item_identity\":[";
+                                    bool first=true;
+                                    for (const auto word:exact_item_state_key(source_item)) {
+                                        if (!first) automatic_samples+=','; first=false;
+                                        automatic_samples+='\"'+std::to_string(word)+'\"';
+                                    }
+                                    automatic_samples+="]}]";
                                 }
                                 if (installed==1) record("in_progress");
                                 co_await CooperativeCheckpoint{checkpoint_memory(batch_bytes())};
@@ -1814,14 +1867,29 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 co_await CooperativeCheckpoint{checkpoint_memory()+graph.capacity()+check.retained_bytes()};
             }
             auto evaluated=check.take_result(); check.reset();
-            if (!complete_return_evaluation(evaluated,false))
+            if (!complete_return_evaluation(evaluated,false)) {
+                std::string witness;
+                if (evaluated.first_failure) {
+                    const auto& failure=*evaluated.first_failure;
+                    witness=", first_failure={\"node\":\""+diagnostic_json_escape(failure.node_id)+
+                        "\",\"action\":\""+diagnostic_json_escape(failure.action_id)+
+                        "\",\"reason\":\""+failure.reason+"\",\"incoming_mass\":"+
+                        diagnostic_finite_double(failure.incoming_mass)+",\"materialized\":"+
+                        (failure.materialized ? "true" : "false")+",\"native_item_identity\":[";
+                    bool first=true;
+                    if (failure.materialized) for (const auto word:exact_item_state_key(failure.item)) {
+                        if (!first) witness+=','; first=false; witness+='\"'+std::to_string(word)+'\"';
+                    }
+                    witness+="]}";
+                }
                 throw std::runtime_error("complete emitted dirty controller failed native checks: converged="+
                     std::to_string(evaluated.converged)+", cost_complete="+std::to_string(evaluated.cost_complete)+
                     ", cost="+diagnostic_finite_double(evaluated.total_expected_cost)+
                     ", success="+diagnostic_finite_double(evaluated.success_probability)+
                     ", failure="+diagnostic_finite_double(evaluated.failure_probability)+
                     ", stop="+diagnostic_finite_double(evaluated.stop_probability)+
-                    ", failures="+std::to_string(evaluated.failures_by_node.size()));
+                    ", failures="+std::to_string(evaluated.failures_by_node.size())+witness);
+            }
             exact_cost=evaluated.total_expected_cost;
             if (incremental) { checked_selected_rows=selected_rows; checked_selected_cost=exact_cost; }
             if (adaptive && !proposal.nonempty_handoff)
@@ -1935,6 +2003,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             charge_child();
             record("refused",error.what());
         }
+        if (blocker_refinement)
+            proposals.insert(proposals.begin()+next_proposal+1,*blocker_refinement);
     }
     co_return retained;
 }
