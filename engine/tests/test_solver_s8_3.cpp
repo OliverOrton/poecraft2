@@ -3,6 +3,7 @@
 #include "../src/json.hpp"
 #include "../src/solver_internal.hpp"
 #include "../src/solver_solve_types.hpp"
+#include "../src/solver_dirty_guidance.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -2824,21 +2825,24 @@ void run_selective_dirty_growth() {
         {"remove_crafted_modifiers",0.1},{"bench:s83_mod_9",0.1},{"bench:s83_mod_10",0.1},
         {"bench:s83_mod_8",0.01}};
     double eager_upper=kInfinity, selective_upper=kInfinity;
-    for (unsigned pass=0;pass<5;++pass) {
+    for (unsigned pass=0;pass<8;++pass) {
         const auto mode=pass==0 ? NativeContinuationSearchMode::DirtyProtectedFirst :
+            pass==5 ? NativeContinuationSearchMode::DirtyExecutionCost :
+            pass>=6 ? NativeContinuationSearchMode::DirtyExecutionCount :
             pass>=3 ? NativeContinuationSearchMode::DirtySelectiveOptions : NativeContinuationSearchMode::DirtySelective;
         CalcContext calc(session,goal,registry,candidates);
         pc_item_state start; pc_item_clear(&start); start.rarity=PC_RARITY_RARE;
         SolveOptions options; options.high_impact_executable_uppers=true;
         options.allow_economic_restart=false; options.goal_progress_gated_reforges=true;
         options.native_continuation_search=mode;
+        if (pass>=6) options.native_execution_action_price=5.0;
         SolveWorkTestAccess::Impl work(calc,start,prices,options);
         const auto parent_states=calc.state_count();
         auto task=work.try_dirty_continuation_candidates(); bool complete=false, abandoned=false;
         double preserved_upper=kInfinity;
         for (unsigned unit=0;unit<1000000;++unit) {
             if (task.resume()) { complete=true; break; }
-            if (pass==2 || pass==4) {
+            if (pass==2 || pass==4 || pass==7) {
                 const auto& samples=work.result.diagnostics.policy_refinement.publication_candidate_samples;
                 if (samples.empty()) continue;
                 const auto& text=samples.back(); const auto sample=json::Parser(text.data(),text.size()).parse();
@@ -2846,7 +2850,7 @@ void run_selective_dirty_growth() {
                     sample.at("growth_batch").as_number()>0 &&
                     ((pass==2 && sample.at("protected_patch_rows").as_number()>0 &&
                       sample.at("stage").as_string()=="selected_protection_patch") ||
-                     (pass==4 && sample.at("automatic_patch_rows").as_number()>0 &&
+                     ((pass==4 || pass==7) && sample.at("automatic_patch_rows").as_number()>0 &&
                       sample.at("stage").as_string()=="selected_native_option_patch"))) {
                     PC_CHECK(!sample.at("eval_complete").as_bool());
                     preserved_upper=work.incumbent_portfolio.verified_executable_upper();
@@ -2863,7 +2867,7 @@ void run_selective_dirty_growth() {
                 std::printf("growth diagnostic: %s\n",sample.c_str());
         PC_CHECK(std::isfinite(upper)); PC_CHECK(calc.state_count()==parent_states);
         PC_CHECK(calc.candidates()==candidates); PC_CHECK(work.transition_cache->rows.empty());
-        if (pass==2 || pass==4) {
+        if (pass==2 || pass==4 || pass==7) {
             PC_CHECK(abandoned); PC_CHECK(upper==preserved_upper);
             PC_CHECK(!work.certified_fallback_portfolio.empty());
             for (const auto& retained:work.certified_fallback_portfolio)
@@ -2871,9 +2875,22 @@ void run_selective_dirty_growth() {
             continue;
         }
         bool reused=false, closed_seed=false, compiled_growth=false, native_options=false, reused_check=false;
+        bool count_rhs=false, weighted=false, restored_cost=false;
         for (const auto& text:work.result.diagnostics.policy_refinement.publication_candidate_samples) {
             const auto sample=json::Parser(text.data(),text.size()).parse();
             if (sample.at("kind").as_string()!="dirty_continuation_candidate") continue;
+            if (pass>=5) {
+                if (!sample.at("private_primitive_actions").is_null() && sample.at("eval_complete").as_bool()) {
+                    count_rhs=true;
+                    PC_CHECK(sample.at("private_primitive_actions").as_number()>0);
+                    if (!sample.at("exact_primitive_actions").is_null())
+                        PC_CHECK(std::abs(sample.at("exact_primitive_actions").as_number()-
+                            sample.at("private_primitive_actions").as_number()) <
+                            1e-8*std::max(1.0,sample.at("exact_primitive_actions").as_number()));
+                }
+                weighted|=sample.at("proposal_lambda").as_number()>0;
+                restored_cost|=sample.at("cost_only_follow_through").as_bool();
+            }
             PC_CHECK(sample.at("candidate_total_reforge_work").as_number()<=sample.at("initial_reforge_remainder").as_number());
             if (sample.at("expansion").as_number()==2) {
                 closed_seed|=sample.at("growth_batch").as_number()==0 && sample.at("eval_complete").as_bool();
@@ -2883,7 +2900,12 @@ void run_selective_dirty_growth() {
                 reused_check|=sample.at("disposition").as_string()=="reused_verified_selected_controller";
             }
         }
-        if (mode==NativeContinuationSearchMode::DirtySelective) {
+        if (pass>=5) {
+            PC_CHECK(count_rhs); PC_CHECK(upper<=selective_upper+1e-7);
+            if (pass==6) {
+                PC_CHECK(weighted); PC_CHECK(restored_cost);
+            }
+        } else if (mode==NativeContinuationSearchMode::DirtySelective) {
             selective_upper=upper; PC_CHECK(reused); PC_CHECK(closed_seed); PC_CHECK(compiled_growth);
         } else if (pass==3) {
             std::printf("native-options upper=%.12g\n",upper);
@@ -2894,10 +2916,51 @@ void run_selective_dirty_growth() {
     PC_CHECK(selective_upper<=eager_upper+1e-7);
 }
 
+void run_native_execution_tradeoff() {
+    auto session=make_automatic_session();
+    auto registry=build_action_registry(*session);
+    auto goal=automatic_goal(false,true);
+    pc_item_state start; pc_item_clear(&start); start.rarity=PC_RARITY_RARE;
+    for (const auto mod:{kGoalPrefix,kPrefixJunkA,kPrefixJunkB,kSuffixJunk}) {
+        GoalSlot slot; slot.family_id=session->family_id[mod]; goal.slots.push_back(slot);
+        add_mod(start,*session,mod);
+    }
+    const auto exalt=registry.index_by_id.at("exalt"), restart=registry.index_by_id.at("restart");
+    const auto bench=registry.index_by_id.at("bench:s83_mod_7");
+    CalcContext calc(session,goal,registry,{exalt,restart,bench},false,true,true);
+    const std::unordered_map<std::string,double> prices{{"exalt",10},{"base",100},{"scour",1},
+        {"bench:s83_mod_7",15},{"bench:s83_mod_8",2}};
+    (void)admit_automatic(calc,calc.intern_item(start),prices);
+    auto low=solve(calc,start,prices);
+    auto other_prices=prices; other_prices["bench:s83_mod_8"]=5;
+    auto direct=solve(calc,start,other_prices); // obtain the supported alternative structure
+    auto economy=std::make_shared<EconomyImpl>(); economy->id="native-two-reward"; economy->prices=prices;
+    StrategyEvalOptions evaluation; evaluation.economy=economy;
+    const auto evaluate=[&](const SolveResult& policy) {
+        const auto graph=compile_policy_strategy_json(calc,policy,"native two-reward tradeoff");
+        return evaluate_strategy(*compile_strategy_json(session,graph.data(),graph.size()),evaluation);
+    };
+    const auto cheap=evaluate(low), short_policy=evaluate(direct);
+    PC_CHECK(cheap.converged && cheap.cost_complete && cheap.success_probability==1);
+    PC_CHECK(short_policy.converged && short_policy.cost_complete && short_policy.success_probability==1);
+    PC_CHECK(cheap.total_expected_cost<short_policy.total_expected_cost);
+    PC_CHECK(cheap.expected_actions>short_policy.expected_actions);
+    const solve_detail::DirtyRowRewards a{cheap.total_expected_cost,cheap.expected_actions};
+    const solve_detail::DirtyRowRewards b{short_policy.total_expected_cost,short_policy.expected_actions};
+    PC_CHECK(a.proposal_reward(2)>b.proposal_reward(2));
+    SolveWorkTestAccess::Impl::IncumbentPortfolio portfolio;
+    SolveWorkTestAccess::Impl::BoundedPolicyIncumbent candidate;
+    candidate.independently_certified=candidate.independently_evaluated=candidate.proper=candidate.executable=true;
+    candidate.evaluated_policy_cost=cheap.total_expected_cost; portfolio.observe_verified(candidate);
+    candidate.evaluated_policy_cost=short_policy.total_expected_cost; portfolio.observe_verified(candidate);
+    PC_CHECK(portfolio.verified_executable_upper()==cheap.total_expected_cost);
+}
+
 void run_solver_protected_setup_tests() {
     run_protected_setup_capacity();
     run_protected_setup_after_cleanup();
     run_selective_dirty_growth();
+    run_native_execution_tradeoff();
 }
 
 void run_solver_s8_3_tests() {

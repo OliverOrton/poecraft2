@@ -1,0 +1,75 @@
+Implement the attached Execution-Aware Proposal Search and Bottleneck-Entry
+Recovery v1 programme in OliverOrton/poecraft2.
+
+Reviewed main: d2b706a02b7b3bfa8e1695d2c4d88a726ccdba3d.
+This request selects the new work. Reconcile local state and preserve newer or
+unrelated changes. This is self-contained; no old chat, ZIP or live Goal is needed.
+
+The blocker correspondence repair and checked-estimated-potential experiment
+are DONE. Keep the 12,541.579648544115 Amulet policy and all prior safeguards.
+The two root lowers did not improve. Do not rerun the unchanged ray/model-ceiling
+campaign, family-rescaling learner, Essence census or M0/M0A tooling work.
+
+Bow-four is now a primary improvement case, not only a hostile control.
+Its 1,404,492 expected actions concentrate in fractured-Magic Alteration/Augment.
+Current nonempty selection only requests Exalt/Annul/Scour and filters to Rare
+entries with more progress than the fracture. Investigate the missing opportunity
+at the actual native decision boundary; do not blindly delete those guards or
+intervene inside a mandatory option commitment. A million-action policy can be
+proper and structured, so a cheaper/shorter route must still be demonstrated.
+
+Ring-four is the second primary; preserve Amulet and the other existing controls.
+Current references: Bow C=223,349.0000393144, N=1,404,492.0069683318;
+Ring-four C=227,989.251597418, N=585,368.3255100878;
+Amulet C=12,541.579648544115, N=25,518.491313143768.
+Use actual compatible same-profile controls and historical high-water evidence.
+
+Read implementation_plan.md, review_and_mathematics.md and resource_policy.md.
+Start with a compact economic/count inspection of retained results, then proceed
+into native implementation. Use the existing native option count field
+expected_primitive_actions, row/continuation owners, sparse numerical machinery,
+compiler, evaluator and portfolio. Do not build another planner/checker.
+
+Add a bounded proposal-only two-reward view: native price c and primitive actions n.
+Try cost-only and at most two predeclared count-weighted proposal scores c+lambda*n,
+with consistent continuation estimates. Counts of macro invocations, graph steps
+and currency quantities are not interchangeable with primitive actions.
+Use complete native row expectations when available; incomplete estimates may
+rank work but may not become executable tails, probabilities or proof bounds.
+
+Expose and finish a few relevant acquisition/continuation alternatives in the
+actual recurring region. Preserve all positive-mass outcomes, paid setup/cleanup,
+observations, fractures, rarity and lost-goal recovery. Old root U is not an
+arbitrary-entry upper. Keep a closed seed and resumable selected dependencies.
+
+Independently evaluate every proposed complete graph at ORIGINAL prices.
+The public objective remains minimum expected Chaos. Keep the original cost
+winner; shorter but more expensive policies are explicitly labelled diagnostic
+trade-offs, not silent replacements. Give useful count-discovered evidence a
+bounded original-cost improvement pass. Lambda and count scores have no
+original-cost lower/pruning/exactness authority.
+
+Compare B=current main, E=expanded entry/opportunity coverage with cost-only
+ordering, T=same coverage with count-aware proposals. Distinguish coverage gains,
+count-guidance gains and capacity gains. Aim for the plan's two-family material
+cost target and record the separate no-cost-regression action-count objective.
+Continue through real compiled policies and matched results, not a new field,
+fixture, coverage table or documentation receipt.
+
+The math docs are substantively updated but need narrow reconciliation:
+apply docs_audit_and_updates.md, add latest blocker/ray dispositions to the
+existing series input and regenerate its view, clarify static versus adaptive
+credit, and incorporate the cost/count argument in existing canonical owners.
+Do not create another ledger or promote open claims just to clear warnings.
+
+Use existing deterministic batches/long waits and compact summaries. Start from
+600/840/870 seconds, 8-GiB aggregate/4-GiB checkers and selected 400M cumulative
+work; further relevant headroom remains authorized with safe host admission.
+No silent browser-cap changes or weakened numeric/semantic checks.
+
+One sequential session, no subagents, inherited deadline, automatic restart or
+push. Preserve protected root 0 without inspecting/staging it. Proportionate
+focused validation; no routine full suites or unchanged-policy Simulator.
+Follow the plan's bounded falsification rules, preserve the verified fallback,
+and leave exact status/remaining work if a genuine session/resource limit stops
+completion. Do not stop merely because the documentation portion is finished.

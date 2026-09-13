@@ -53,6 +53,37 @@ does not rescan unchanged rejected queries or maintain a permanent basin library
 Reconsideration needs a changed candidate, entry, completed support or effective
 budget, with corresponding identity checks.
 
+<a id="count-aware-proposals"></a>
+### Count-aware proposal objectives
+
+A native research proposer may rank or improve candidates using C_hat+lambda*N_hat,
+with lambda in Chaos per primitive execution and each component's evidence grade
+explicit. This is a proposal objective. Canonical prices, original-cost lowers,
+original action coverage and the returned cost winner retain their authorities.
+Restriction and reward changes do not supply an original-scope lower
+([CLM-0009](../claims.md#clm-0009)).
+
+A few weighted proposals may expose different acquisition/continuation regions.
+Every selected controller still needs complete native outcomes, observations,
+paid setup/cleanup, properness and independent original-price evaluation.
+Deprioritizing a proposal does not retire its original action. A shorter but more
+expensive verified controller is an explicit diagnostic trade-off; minimum
+expected Chaos remains the objective. A few weights need not find every
+nondominated deterministic policy, and bounded local search does not inherit
+the count monotonicity of exact scalarized minimizers over an unchanged domain.
+
+Compatible price-independent rows and controller structure may be reused after
+reweighting; stale numerical values or feasibility claims may not. Changed
+policy decisions invalidate both C and N. Give useful count-discovered
+continuations a bounded cost-only improvement pass before judging their value
+to the original objective. No sampled or approximate tail becomes executable.
+
+The [Bow entry investigation](../../active/2026-09-13-execution-aware-proposals/README.md)
+asks compiler-bound, independently evaluated global decision entries. The saved
+high-count Magic node is a diagnostic locator, not a hard-coded rule. An
+operation inside a mandatory program may only be replaced at its legal parent
+decision, preserving commitment and information timing.
+
 <a id="pruning"></a>
 ## 2. A sufficient local dominance argument
 

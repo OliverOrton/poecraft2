@@ -35,6 +35,26 @@ must therefore be identified before attributing a root gain to the heuristic.
 The [September 9 review](../../active/2026-09-09-empty-start-partial-continuation/research-inputs/useful-proof-time-review.md)
 clarifies these existing authorities; it supplies no new native closure result.
 
+<a id="count-guidance"></a>
+### Count guidance is not a monetary lower
+
+An estimate of remaining primitive actions may guide search without being a
+lower. A certified count potential requires complete same-scope inequalities
+h_N(s) <= n(s,a)+E[h_N(S')] for every required action/member with the original
+goal and control semantics. Its units are actions. Converting it to a monetary
+lower needs a separately valid reward relationship, such as c >= k*n for every
+required row with k >= 0; a current policy's average C/N supplies no such
+all-action guarantee.
+
+A positive count penalty changes the objective. A checked vector for
+c+lambda*n does not automatically lower-bound the optimum under c. A cost-0.01
+retry succeeding with probability 0.01 has C=1,N=100; a cost-2 immediate finish
+has C=2,N=1. At lambda=0.02 the latter's penalized score 2.02 is smaller, while
+the original optimum remains 1. Estimates and modified rewards cannot remove
+an optimistic model's escape or missing original action obligation. The
+[two-reward derivation](policies.md#primitive-execution-reward) grants proposal
+capability without changing the completed checked-ray pilot's negative result.
+
 <a id="checked-estimate-rays"></a>
 ### Checked estimate rays and optimistic ceilings
 

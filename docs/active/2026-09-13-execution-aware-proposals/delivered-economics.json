@@ -1,0 +1,1002 @@
+{
+  "ring-new": {
+    "source": "out\\execution-aware-proposals\\check-ring-new-full.json",
+    "sha256": "6d0be5c53b65cfccb7fde0e5b5feddb96a31b29da4c6050817ddb63f492df140",
+    "totals": {
+      "expected_actions": 583110.3499596338,
+      "known_expected_cost": 227377.06545019808,
+      "total_expected_cost": 227377.06545019808,
+      "cost_complete": true
+    },
+    "actions": [
+      {
+        "id": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+        "expected_applied": 573117.5201680647,
+        "expected_spend_known": 196464.6859136126,
+        "regions": [
+          {
+            "goal_progress": 0,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 1,
+            "expected_applied": 1
+          },
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 120204,
+            "expected_visits": 539092.1446639965,
+            "expected_applied": 539092.1446639965
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 53322,
+            "expected_visits": 34022.48140794732,
+            "expected_applied": 34022.48140794732
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 828,
+            "expected_visits": 1.894096136380943,
+            "expected_applied": 1.894096136380943
+          }
+        ],
+        "reachable_states": 174355,
+        "reachable_regions": 4
+      },
+      {
+        "id": "exalt",
+        "expected_applied": 8636.12239406435,
+        "expected_spend_known": 15285.9366374939,
+        "regions": [
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 3963,
+            "expected_visits": 7823.912804798129,
+            "expected_applied": 7823.912804798129
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 864,
+            "expected_visits": 812.2095892661883,
+            "expected_applied": 812.2095892661883
+          }
+        ],
+        "reachable_states": 4827,
+        "reachable_regions": 2
+      },
+      {
+        "id": "annul",
+        "expected_applied": 1346.5793575516275,
+        "expected_spend_known": 13048.35397467527,
+        "regions": [
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 2,
+            "expected_visits": 1.2266887576894698,
+            "expected_applied": 1.2266887576894698
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 5933,
+            "expected_visits": 1328.1488362143339,
+            "expected_applied": 1328.1488362143339
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 1,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 6.076823972918588,
+            "expected_applied": 6.076823972918588
+          },
+          {
+            "goal_progress": 4,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 215,
+            "expected_visits": 11.127008606686179,
+            "expected_applied": 11.127008606686179
+          }
+        ],
+        "reachable_states": 6151,
+        "reachable_regions": 4
+      },
+      {
+        "id": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "expected_applied": 6.076823972918588,
+        "expected_spend_known": 2576.573364517481,
+        "regions": [
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 6.076823972918588,
+            "expected_applied": 6.076823972918588
+          }
+        ],
+        "reachable_states": 1,
+        "reachable_regions": 1
+      },
+      {
+        "id": "remove_crafted_modifiers",
+        "expected_applied": 4.051215981945725,
+        "expected_spend_known": 1.5155598988458956,
+        "regions": [
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 1,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 2.0256079909728624,
+            "expected_applied": 2.0256079909728624
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 1,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 2.0256079909728624,
+            "expected_applied": 2.0256079909728624
+          }
+        ],
+        "reachable_states": 2,
+        "reachable_regions": 2
+      }
+    ],
+    "memory": {
+      "owned_bytes_estimate": 204967949,
+      "peak_owned_bytes_estimate": 267559003,
+      "retained_output_owned_bytes_estimate": 0,
+      "max_owned_bytes": 4294967296,
+      "max_output_json_bytes": 67108864
+    },
+    "scope": "Original root, complete native graph; additive immediate spend and primitive executions. Region entries retain native goal, rarity, fracture, blocker and craft identity. No continuation tail is added as spend."
+  },
+  "bow-tradeoff-1": {
+    "source": "out\\execution-aware-proposals\\check-bow-tradeoff-1-full.json",
+    "sha256": "1e5d431d16f115cfc8f640f1f8d3fb4ffa96a00c62a4a664b910301441373ae7",
+    "totals": {
+      "expected_actions": 331010.5800550823,
+      "known_expected_cost": 405589.69246311014,
+      "total_expected_cost": 405589.69246311014,
+      "cost_complete": true
+    },
+    "actions": [
+      {
+        "id": "chaos",
+        "expected_applied": 310908.69642761524,
+        "expected_spend_known": 310908.69642761524,
+        "regions": [
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 25759,
+            "expected_visits": 292450.09592510667,
+            "expected_applied": 292450.09592510667
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 8836,
+            "expected_visits": 18458.600502507685,
+            "expected_applied": 18458.600502507685
+          }
+        ],
+        "reachable_states": 34595,
+        "reachable_regions": 2
+      },
+      {
+        "id": "annul",
+        "expected_applied": 7751.358527539374,
+        "expected_spend_known": 75110.66413185654,
+        "regions": [
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 3113,
+            "expected_visits": 0.307865801286762,
+            "expected_applied": 0.307865801286762
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 5598,
+            "expected_visits": 6692.406589791051,
+            "expected_applied": 6692.406589791051
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 2904,
+            "expected_visits": 0.00667217242279355,
+            "expected_applied": 0.00667217242279355
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 2496,
+            "expected_visits": 1053.629045154642,
+            "expected_applied": 1053.629045154642
+          },
+          {
+            "goal_progress": 4,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 120,
+            "expected_visits": 3.165789319359261e-05,
+            "expected_applied": 3.165789319359261e-05
+          },
+          {
+            "goal_progress": 4,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 120,
+            "expected_visits": 5.008322962066298,
+            "expected_applied": 5.008322962066298
+          }
+        ],
+        "reachable_states": 14351,
+        "reachable_regions": 6
+      },
+      {
+        "id": "exalt",
+        "expected_applied": 9931.513099171412,
+        "expected_spend_known": 17578.7781855334,
+        "regions": [
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 300,
+            "expected_visits": 4.145811584605744,
+            "expected_applied": 4.145811584605744
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 235,
+            "expected_visits": 0.1541356269860947,
+            "expected_applied": 0.1541356269860947
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 1876,
+            "expected_visits": 9440.358645817072,
+            "expected_applied": 9440.358645817072
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 379,
+            "expected_visits": 0.008473958493730789,
+            "expected_applied": 0.008473958493730789
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 258,
+            "expected_visits": 486.84603218422944,
+            "expected_applied": 486.84603218422944
+          }
+        ],
+        "reachable_states": 3048,
+        "reachable_regions": 5
+      },
+      {
+        "id": "fracture",
+        "expected_applied": 3.999952508117553,
+        "expected_spend_known": 1620.3807610384208,
+        "regions": [
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1968,
+            "expected_visits": 3.999952508117553,
+            "expected_applied": 3.999952508117553
+          }
+        ],
+        "reachable_states": 1968,
+        "reachable_regions": 1
+      },
+      {
+        "id": "alteration",
+        "expected_applied": 2395.1797230309135,
+        "expected_spend_known": 366.46249762372975,
+        "regions": [
+          {
+            "goal_progress": 0,
+            "rarity": 1,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 170,
+            "expected_visits": 2341.6711231056106,
+            "expected_applied": 2341.6711231056106
+          },
+          {
+            "goal_progress": 1,
+            "rarity": 1,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 43,
+            "expected_visits": 53.5085999253031,
+            "expected_applied": 53.5085999253031
+          }
+        ],
+        "reachable_states": 213,
+        "reachable_regions": 2
+      },
+      {
+        "id": "restart",
+        "expected_applied": 2.9999643810881733,
+        "expected_spend_known": 2.9999643810881733,
+        "regions": [
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 1,
+            "reachable_states": 5419,
+            "expected_visits": 2.7652454931308568,
+            "expected_applied": 2.7652454931308568
+          },
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 2,
+            "fractured_count": 1,
+            "reachable_states": 232,
+            "expected_visits": 0.14177869199104962,
+            "expected_applied": 0.14177869199104962
+          },
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 8,
+            "fractured_count": 1,
+            "reachable_states": 253,
+            "expected_visits": 0.09294019596625344,
+            "expected_applied": 0.09294019596625344
+          }
+        ],
+        "reachable_states": 5904,
+        "reachable_regions": 3
+      },
+      {
+        "id": "regal",
+        "expected_applied": 4.429147716181597,
+        "expected_spend_known": 0.6922757880391835,
+        "regions": [
+          {
+            "goal_progress": 1,
+            "rarity": 1,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 16,
+            "expected_visits": 4.049211974322438,
+            "expected_applied": 4.049211974322438
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 1,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 3,
+            "expected_visits": 0.37993574185915846,
+            "expected_applied": 0.37993574185915846
+          }
+        ],
+        "reachable_states": 19,
+        "reachable_regions": 2
+      },
+      {
+        "id": "scour",
+        "expected_applied": 1.429183335093334,
+        "expected_spend_known": 0.5346574856584163,
+        "regions": [
+          {
+            "goal_progress": 0,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 1,
+            "expected_applied": 1
+          },
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 3113,
+            "expected_visits": 0.09503224523981367,
+            "expected_applied": 0.09503224523981367
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 3182,
+            "expected_visits": 0.334151089853512,
+            "expected_applied": 0.334151089853512
+          }
+        ],
+        "reachable_states": 6296,
+        "reachable_regions": 3
+      },
+      {
+        "id": "augment",
+        "expected_applied": 6.54488206960596,
+        "expected_spend_known": 0.4319622165939934,
+        "regions": [
+          {
+            "goal_progress": 1,
+            "rarity": 1,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 2,
+            "expected_visits": 6.54488206960596,
+            "expected_applied": 6.54488206960596
+          }
+        ],
+        "reachable_states": 2,
+        "reachable_regions": 1
+      },
+      {
+        "id": "transmute",
+        "expected_applied": 4.429147716181492,
+        "expected_spend_known": 0.051599570893514385,
+        "regions": [
+          {
+            "goal_progress": 0,
+            "rarity": 0,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 4.429147716181492,
+            "expected_applied": 4.429147716181492
+          }
+        ],
+        "reachable_states": 1,
+        "reachable_regions": 1
+      }
+    ],
+    "memory": {
+      "owned_bytes_estimate": 71054249,
+      "peak_owned_bytes_estimate": 105032855,
+      "retained_output_owned_bytes_estimate": 0,
+      "max_owned_bytes": 4294967296,
+      "max_output_json_bytes": 67108864
+    },
+    "scope": "Original root, complete native graph; additive immediate spend and primitive executions. Region entries retain native goal, rarity, fracture, blocker and craft identity. No continuation tail is added as spend."
+  },
+  "bow-tradeoff-2": {
+    "source": "out\\execution-aware-proposals\\check-bow-tradeoff-2-full.json",
+    "sha256": "11505a4a7e78dff3141ad85f39df217bf33d4d73899fe66fcbe11d3caf0f947f",
+    "totals": {
+      "expected_actions": 327477.87015743216,
+      "known_expected_cost": 405922.95178487874,
+      "total_expected_cost": 405922.95178487874,
+      "cost_complete": true
+    },
+    "actions": [
+      {
+        "id": "chaos",
+        "expected_applied": 306763.18294528686,
+        "expected_spend_known": 306763.18294528686,
+        "regions": [
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 25787,
+            "expected_visits": 288763.6382682212,
+            "expected_applied": 288763.6382682212
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 8808,
+            "expected_visits": 17999.544677061505,
+            "expected_applied": 17999.544677061505
+          }
+        ],
+        "reachable_states": 34595,
+        "reachable_regions": 2
+      },
+      {
+        "id": "annul",
+        "expected_applied": 8179.907827945723,
+        "expected_spend_known": 79263.30685279405,
+        "regions": [
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 3113,
+            "expected_visits": 0.307865801286762,
+            "expected_applied": 0.307865801286762
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 5626,
+            "expected_visits": 7123.348071599541,
+            "expected_applied": 7123.348071599541
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 2904,
+            "expected_visits": 0.00667217242279355,
+            "expected_applied": 0.00667217242279355
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 2496,
+            "expected_visits": 1051.2443648214437,
+            "expected_applied": 1051.2443648214437
+          },
+          {
+            "goal_progress": 4,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 120,
+            "expected_visits": 3.165789319359261e-05,
+            "expected_applied": 3.165789319359261e-05
+          },
+          {
+            "goal_progress": 4,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 120,
+            "expected_visits": 5.000821893070647,
+            "expected_applied": 5.000821893070647
+          }
+        ],
+        "reachable_states": 14379,
+        "reachable_regions": 6
+      },
+      {
+        "id": "exalt",
+        "expected_applied": 10115.76738344231,
+        "expected_spend_known": 17904.90826869289,
+        "regions": [
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 300,
+            "expected_visits": 4.145811584605744,
+            "expected_applied": 4.145811584605744
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 235,
+            "expected_visits": 0.1541356269860947,
+            "expected_applied": 0.1541356269860947
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 1876,
+            "expected_visits": 9622.030416699208,
+            "expected_applied": 9622.030416699208
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 379,
+            "expected_visits": 0.008473958493730789,
+            "expected_applied": 0.008473958493730789
+          },
+          {
+            "goal_progress": 3,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 4,
+            "fractured_count": 1,
+            "reachable_states": 258,
+            "expected_visits": 489.42854557302735,
+            "expected_applied": 489.42854557302735
+          }
+        ],
+        "reachable_states": 3048,
+        "reachable_regions": 5
+      },
+      {
+        "id": "fracture",
+        "expected_applied": 3.999952508117553,
+        "expected_spend_known": 1620.3807610384208,
+        "regions": [
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1968,
+            "expected_visits": 3.999952508117553,
+            "expected_applied": 3.999952508117553
+          }
+        ],
+        "reachable_states": 1968,
+        "reachable_regions": 1
+      },
+      {
+        "id": "alteration",
+        "expected_applied": 2395.1797230309135,
+        "expected_spend_known": 366.46249762372975,
+        "regions": [
+          {
+            "goal_progress": 0,
+            "rarity": 1,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 170,
+            "expected_visits": 2341.6711231056106,
+            "expected_applied": 2341.6711231056106
+          },
+          {
+            "goal_progress": 1,
+            "rarity": 1,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 43,
+            "expected_visits": 53.5085999253031,
+            "expected_applied": 53.5085999253031
+          }
+        ],
+        "reachable_states": 213,
+        "reachable_regions": 2
+      },
+      {
+        "id": "restart",
+        "expected_applied": 2.9999643810881733,
+        "expected_spend_known": 2.9999643810881733,
+        "regions": [
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 1,
+            "reachable_states": 5419,
+            "expected_visits": 2.7652454931308568,
+            "expected_applied": 2.7652454931308568
+          },
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 2,
+            "fractured_count": 1,
+            "reachable_states": 232,
+            "expected_visits": 0.14177869199104962,
+            "expected_applied": 0.14177869199104962
+          },
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 8,
+            "fractured_count": 1,
+            "reachable_states": 253,
+            "expected_visits": 0.09294019596625344,
+            "expected_applied": 0.09294019596625344
+          }
+        ],
+        "reachable_states": 5904,
+        "reachable_regions": 3
+      },
+      {
+        "id": "regal",
+        "expected_applied": 4.429147716181597,
+        "expected_spend_known": 0.6922757880391835,
+        "regions": [
+          {
+            "goal_progress": 1,
+            "rarity": 1,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 16,
+            "expected_visits": 4.049211974322438,
+            "expected_applied": 4.049211974322438
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 1,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 3,
+            "expected_visits": 0.37993574185915846,
+            "expected_applied": 0.37993574185915846
+          }
+        ],
+        "reachable_states": 19,
+        "reachable_regions": 2
+      },
+      {
+        "id": "scour",
+        "expected_applied": 1.429183335093334,
+        "expected_spend_known": 0.5346574856584163,
+        "regions": [
+          {
+            "goal_progress": 0,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 1,
+            "expected_applied": 1
+          },
+          {
+            "goal_progress": 1,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 3113,
+            "expected_visits": 0.09503224523981367,
+            "expected_applied": 0.09503224523981367
+          },
+          {
+            "goal_progress": 2,
+            "rarity": 2,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 3182,
+            "expected_visits": 0.334151089853512,
+            "expected_applied": 0.334151089853512
+          }
+        ],
+        "reachable_states": 6296,
+        "reachable_regions": 3
+      },
+      {
+        "id": "augment",
+        "expected_applied": 6.54488206960596,
+        "expected_spend_known": 0.4319622165939934,
+        "regions": [
+          {
+            "goal_progress": 1,
+            "rarity": 1,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 2,
+            "expected_visits": 6.54488206960596,
+            "expected_applied": 6.54488206960596
+          }
+        ],
+        "reachable_states": 2,
+        "reachable_regions": 1
+      },
+      {
+        "id": "transmute",
+        "expected_applied": 4.429147716181492,
+        "expected_spend_known": 0.051599570893514385,
+        "regions": [
+          {
+            "goal_progress": 0,
+            "rarity": 0,
+            "blocker_count": 0,
+            "crafted_count": 0,
+            "fractured_goal_mask": 0,
+            "fractured_count": 0,
+            "reachable_states": 1,
+            "expected_visits": 4.429147716181492,
+            "expected_applied": 4.429147716181492
+          }
+        ],
+        "reachable_states": 1,
+        "reachable_regions": 1
+      }
+    ],
+    "memory": {
+      "owned_bytes_estimate": 72140542,
+      "peak_owned_bytes_estimate": 114513028,
+      "retained_output_owned_bytes_estimate": 0,
+      "max_owned_bytes": 4294967296,
+      "max_output_json_bytes": 67108864
+    },
+    "scope": "Original root, complete native graph; additive immediate spend and primitive executions. Region entries retain native goal, rarity, fracture, blocker and craft identity. No continuation tail is added as spend."
+  }
+}

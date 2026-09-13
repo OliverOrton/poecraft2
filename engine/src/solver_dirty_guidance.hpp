@@ -5,8 +5,26 @@
 #include <cmath>
 #include <chrono>
 #include <cstdint>
+#include <stdexcept>
 
 namespace poecraft::solver::solve_detail {
+
+// A private row's two immediate rewards share its native first-exit law.
+// The caller supplies the primitive execution charge, or the option kernel's
+// expected_primitive_actions; resource quantities and macro calls are not n.
+struct DirtyRowRewards {
+    double cost = 0;
+    double primitive_actions = 0;
+
+    double proposal_reward(const double lambda) const {
+        if (!std::isfinite(cost) || cost < 0 || !std::isfinite(primitive_actions) ||
+            primitive_actions < 0 || !std::isfinite(lambda) || lambda < 0)
+            throw std::runtime_error("invalid private cost/count reward");
+        const double score = cost + lambda * primitive_actions;
+        if (!std::isfinite(score)) throw std::runtime_error("nonfinite private proposal reward");
+        return score;
+    }
+};
 
 // Run-local ordering evidence. These numbers never enter a Bellman lower,
 // executable boundary or action-retirement ledger. Root acquisition family is

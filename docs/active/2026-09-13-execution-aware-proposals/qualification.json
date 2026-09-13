@@ -1,0 +1,424 @@
+{
+  "reviewed_main": "d2b706a02b7b3bfa8e1695d2c4d88a726ccdba3d",
+  "status": "Implemented and cross-base qualified; partial Ring economic gain. Primary improvement and exactness targets unmet.",
+  "matrix_build": "build-ET-v7.json",
+  "final_build": "build-ET-v8.json",
+  "final_native_sources_match_receipt": true,
+  "final_executable_sha256": "d2d2c5070012251d27c53f1d4c79e3ce5d7790edbb55997aa81fc634f087971d",
+  "native_dll_sha256": "e036d825d3d63b91f9b4d2fc4635d5d12a7d7112f4f9f39e7f2c6a0086819e30",
+  "matched_matrix": {
+    "receipt": "comparison.json",
+    "pairs": 6,
+    "exclusions": 0,
+    "identities": "B=d2 frozen executable; E/T=v7. Isolated B Ring replaces the initial time-censored baseline for paired economic comparison. No time-speedup claim."
+  },
+  "delivered_original_price_checks": [
+    {
+      "kind": "fresh_native_evaluation_of_preserved_root_policy",
+      "case": "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb07-cross-base-product8-long240.json",
+      "case_sha256": "82e604292360284e1a48aa590a909b3a8260a3e4ab91b2d8a4aa68529781cae0",
+      "strategy": "docs\\active\\2026-09-13-execution-aware-proposals\\strategies\\ring-four-count.strategy.json",
+      "strategy_sha256": "d156cdea1f540470ef6d7cf307009d6adfbe6230956038ebd44e267b13a22c9e",
+      "native_dll_sha256": "e036d825d3d63b91f9b4d2fc4635d5d12a7d7112f4f9f39e7f2c6a0086819e30",
+      "limits": {
+        "epsilon": 1e-12,
+        "max_sweeps": 100000,
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296
+      },
+      "reference_upper": 227377.06545019808,
+      "wall_ms": 18709.70499998657,
+      "checks": {
+        "converged": true,
+        "complete_cost": true,
+        "goal_mass": true,
+        "zero_other_mass": true,
+        "same_upper": true,
+        "same_primitive_count": true
+      },
+      "original_cost": 227377.06545019808,
+      "primitive_actions": 583110.3499596338,
+      "full_evaluation": {
+        "path": "out\\execution-aware-proposals\\check-ring-new-full.json",
+        "sha256": "6d0be5c53b65cfccb7fde0e5b5feddb96a31b29da4c6050817ddb63f492df140"
+      }
+    },
+    {
+      "kind": "fresh_native_evaluation_of_preserved_root_policy",
+      "case": "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb04-cross-base-product8-long240.json",
+      "case_sha256": "cfd6715a32c43286a3b4d85587624bc68069533bbbd41a49eb73e58400fecc28",
+      "strategy": "docs\\active\\2026-09-13-execution-aware-proposals\\strategies\\T-bow-export-final-cb04-tradeoff-ad3322613db4.strategy.json",
+      "strategy_sha256": "ad3322613db483ded00a892cab51edd59101cdb0b2abb69b20928e2172d1fcef",
+      "native_dll_sha256": "e036d825d3d63b91f9b4d2fc4635d5d12a7d7112f4f9f39e7f2c6a0086819e30",
+      "limits": {
+        "epsilon": 1e-12,
+        "max_sweeps": 100000,
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296
+      },
+      "reference_upper": 405589.69246311055,
+      "wall_ms": 10156.195799994748,
+      "checks": {
+        "converged": true,
+        "complete_cost": true,
+        "goal_mass": true,
+        "zero_other_mass": true,
+        "same_upper": true,
+        "same_primitive_count": true
+      },
+      "original_cost": 405589.69246311014,
+      "primitive_actions": 331010.5800550823,
+      "full_evaluation": {
+        "path": "out\\execution-aware-proposals\\check-bow-tradeoff-1-full.json",
+        "sha256": "1e5d431d16f115cfc8f640f1f8d3fb4ffa96a00c62a4a664b910301441373ae7"
+      }
+    },
+    {
+      "kind": "fresh_native_evaluation_of_preserved_root_policy",
+      "case": "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb04-cross-base-product8-long240.json",
+      "case_sha256": "cfd6715a32c43286a3b4d85587624bc68069533bbbd41a49eb73e58400fecc28",
+      "strategy": "docs\\active\\2026-09-13-execution-aware-proposals\\strategies\\T-bow-export-final-cb04-tradeoff-4f729a5d8852.strategy.json",
+      "strategy_sha256": "4f729a5d8852ca5c3e8917ee0e03bef86fe41ac4cc791177fc14009cb5a410e4",
+      "native_dll_sha256": "e036d825d3d63b91f9b4d2fc4635d5d12a7d7112f4f9f39e7f2c6a0086819e30",
+      "limits": {
+        "epsilon": 1e-12,
+        "max_sweeps": 100000,
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 4294967296
+      },
+      "reference_upper": 405922.95178487856,
+      "wall_ms": 10323.94050003495,
+      "checks": {
+        "converged": true,
+        "complete_cost": true,
+        "goal_mass": true,
+        "zero_other_mass": true,
+        "same_upper": true,
+        "same_primitive_count": true
+      },
+      "original_cost": 405922.95178487874,
+      "primitive_actions": 327477.87015743216,
+      "full_evaluation": {
+        "path": "out\\execution-aware-proposals\\check-bow-tradeoff-2-full.json",
+        "sha256": "11505a4a7e78dff3141ad85f39df217bf33d4d73899fe66fcbe11d3caf0f947f"
+      }
+    }
+  ],
+  "native_sampling": [
+    {
+      "name": "ring-new",
+      "receipt": "sampling-ring-new.json",
+      "summary": {
+        "completed_runs": 1000,
+        "success_count": 141,
+        "failure_count": 859,
+        "stop_count": 0,
+        "total_actions": 93156799,
+        "action_limit_count": 859,
+        "cost_limit_count": 0,
+        "step_limit_count": 0,
+        "no_matching_edge_count": 0,
+        "action_not_applied_count": 0,
+        "missing_price_run_count": 0,
+        "costed_action_count": 93156799,
+        "missing_price_action_count": 0,
+        "known_total_cost": 36333692.90153424,
+        "cost_status": "complete",
+        "seed": 20260826,
+        "target_runs": 1000
+      },
+      "options": {
+        "target_runs": 1000,
+        "seed": 20260826,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 0.0,
+        "retained_trace_count": 0,
+        "max_trace_entries": 512,
+        "retained_success_count": 5,
+        "retained_failure_count": 5
+      },
+      "strategy_sha256": "d156cdea1f540470ef6d7cf307009d6adfbe6230956038ebd44e267b13a22c9e"
+    },
+    {
+      "name": "bow-tradeoff-1",
+      "receipt": "sampling-bow-tradeoff-1.json",
+      "summary": {
+        "completed_runs": 1000,
+        "success_count": 252,
+        "failure_count": 748,
+        "stop_count": 0,
+        "total_actions": 86603348,
+        "action_limit_count": 748,
+        "cost_limit_count": 0,
+        "step_limit_count": 0,
+        "no_matching_edge_count": 0,
+        "action_not_applied_count": 0,
+        "missing_price_run_count": 0,
+        "costed_action_count": 86603348,
+        "missing_price_action_count": 0,
+        "known_total_cost": 105324671.48510544,
+        "cost_status": "complete",
+        "seed": 20260826,
+        "target_runs": 1000
+      },
+      "options": {
+        "target_runs": 1000,
+        "seed": 20260826,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 0.0,
+        "retained_trace_count": 0,
+        "max_trace_entries": 512,
+        "retained_success_count": 5,
+        "retained_failure_count": 5
+      },
+      "strategy_sha256": "ad3322613db483ded00a892cab51edd59101cdb0b2abb69b20928e2172d1fcef"
+    },
+    {
+      "name": "bow-tradeoff-2",
+      "receipt": "sampling-bow-tradeoff-2.json",
+      "summary": {
+        "completed_runs": 1000,
+        "success_count": 253,
+        "failure_count": 747,
+        "stop_count": 0,
+        "total_actions": 86551539,
+        "action_limit_count": 747,
+        "cost_limit_count": 0,
+        "step_limit_count": 0,
+        "no_matching_edge_count": 0,
+        "action_not_applied_count": 0,
+        "missing_price_run_count": 0,
+        "costed_action_count": 86551539,
+        "missing_price_action_count": 0,
+        "known_total_cost": 106432232.55235581,
+        "cost_status": "complete",
+        "seed": 20260826,
+        "target_runs": 1000
+      },
+      "options": {
+        "target_runs": 1000,
+        "seed": 20260826,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 0.0,
+        "retained_trace_count": 0,
+        "max_trace_entries": 512,
+        "retained_success_count": 5,
+        "retained_failure_count": 5
+      },
+      "strategy_sha256": "4f729a5d8852ca5c3e8917ee0e03bef86fe41ac4cc791177fc14009cb5a410e4"
+    }
+  ],
+  "original_controls": "original-preservation.json",
+  "wasm_processes": [
+    {
+      "name": "retention-finish-abandon",
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 45608,
+        "process_identity_token": "45608:134338073610606224",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 28616.593899962027,
+        "command": [
+          "C:/Program Files/nodejs/node.exe",
+          "--import",
+          "tsx",
+          "test/retention-wasm.test.ts"
+        ],
+        "watchdog_seconds": 315
+      },
+      "log": "out\\execution-aware-proposals\\wasm\\retention-finish-abandon.log"
+    },
+    {
+      "name": "conquest-five",
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 8532,
+        "process_identity_token": "8532:134338073896744869",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 78606.18270002306,
+        "command": [
+          "C:/Program Files/nodejs/node.exe",
+          "--import",
+          "tsx",
+          "test/empty-start-retention-wasm.test.ts",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\wasm\\conquest-five.json"
+        ],
+        "watchdog_seconds": 105
+      },
+      "log": "out\\execution-aware-proposals\\wasm\\conquest-five.log"
+    },
+    {
+      "name": "exact-regalia",
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 32992,
+        "process_identity_token": "32992:134338074682825170",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 61334.11569998134,
+        "command": [
+          "C:/Program Files/nodejs/node.exe",
+          "--import",
+          "tsx",
+          "test/solver-benchmark.ts",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+          "--case",
+          "cb12-cross-base-product8-long240",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\wasm\\exact-regalia.json"
+        ],
+        "watchdog_seconds": 315
+      },
+      "log": "out\\execution-aware-proposals\\wasm\\exact-regalia.log"
+    }
+  ],
+  "tests": {
+    "protected_setup_selection_abandon_v8": {
+      "checks": 497,
+      "failures": 0,
+      "log": "out/execution-aware-proposals/protected-tests-v8.log"
+    },
+    "return_bridge_v7": {
+      "checks": 523,
+      "failures": 0,
+      "log": "out/execution-aware-proposals/solver-return-bridge-v7.log"
+    },
+    "native_continuation_api": {
+      "checks": 35,
+      "failures": 0
+    },
+    "native_blocker_entry": {
+      "checks": 36,
+      "failures": 0
+    },
+    "bounded_finish": {
+      "checks": 14,
+      "failures": 0
+    },
+    "python_corpus_and_identity": {
+      "passed": 27,
+      "failed": 0,
+      "log": "out/execution-aware-proposals/python-final-pytest.log"
+    },
+    "compile_selector_earlier_build": {
+      "checks": 1214,
+      "failures": 0,
+      "scope": "Existing fixture sampling is separate from delivered 1000-trial qualification."
+    }
+  },
+  "unrun": [
+    "Full native acceptance suite",
+    "Full original fourteen-case cohort",
+    "Web npm/TypeScript suites (no web source change)",
+    "Rendered UI review (owner)"
+  ],
+  "remaining_boundaries": [
+    "No 25% original-cost gain or 50% count reduction without cost increase on either primary. No lower/exactness gain.",
+    "Bow closed Magic family covers admitted mutable-goal Essence or paid Regal/Chaos with Exalt/Annul/redraw; no new protection/blocker option growth inside that family in v1. Nonmatching Essences and other entries are not exhausted.",
+    "Late T Ring and T Amulet Chaos checks hit remaining shared work caps; unfinished candidates are unknown, not infeasible.",
+    "Sampling stops at 100000 actions; no high-quantile or uncensored mean claim.",
+    "Main matrix is v7; v8 only changes bounded diagnostic retention. Final v8 Bow export reproduces C/N; fresh DLL rechecks all delivered graphs and six original controls qualify v8."
+  ],
+  "documentation": {
+    "metadata_errors": 0,
+    "generated_observations": 44,
+    "lint_errors": 0,
+    "existing_open_claim_warnings": 18,
+    "metadata": "out/execution-aware-proposals/metadata-final.json",
+    "lint": "out/execution-aware-proposals/knowledge-lint-final.json",
+    "generation": "out/execution-aware-proposals/research-generation-final.log",
+    "disposition": "Full packet imported once; four existing mathematical owners updated; blocker repair, checked-potential negative and execution result appended to existing series. Static/adaptive credit separated."
+  },
+  "development_failures": [
+    "v6 real Bow composition refused policy-scope mismatch; v7 native-gating correction and regression fixture pass.",
+    "Initial artifact export omitted 4.55-MB Bow graphs under the per-artifact cap; v8 bounded shared allowance exports both and reproduces economics.",
+    "Final unittest discovery found zero tests because the corpus uses pytest; corrected pytest invocation passes all 27. Initial CRLF diff-check failures were corrected to LF."
+  ],
+  "wasm_results": [
+    {
+      "name": "conquest-five",
+      "report": "out\\execution-aware-proposals\\wasm\\conquest-five.json",
+      "sha256": "1368a7f26072f4e862762cb3e3c607e96cc658429abe14101832071926b28be4",
+      "summary": {
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "policy_status": "bounded_feasible",
+        "stop_cause": "requested_bounded_finish",
+        "converged": false
+      },
+      "all_expectations_met": null,
+      "memory_after_cleanup": {
+        "ok": true,
+        "live_handles": 0,
+        "native_live_owned_bytes": 80,
+        "native_peak_owned_bytes": 80,
+        "native_serialized_output_bytes": 15,
+        "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+        "wasm_memory_bytes": 577437696
+      }
+    },
+    {
+      "name": "exact-regalia",
+      "report": "out\\execution-aware-proposals\\wasm\\exact-regalia.json",
+      "sha256": "529add32d5852afd5eac8c3b1d0734ed84c28d2b7c76ca6a5e15ff7c88b68e81",
+      "summary": {
+        "lower_bound": 65.60036144971359,
+        "upper_bound": 65.60036144971359,
+        "policy_status": "exact",
+        "stop_cause": "exact_closed",
+        "converged": true
+      },
+      "all_expectations_met": true,
+      "memory_after_cleanup": null
+    }
+  ],
+  "wasm_build": {
+    "log": "out/execution-aware-proposals/build-wasm-v8.log",
+    "exit_code": 0,
+    "warning": "Existing solver_solve_bellman.cpp:1542 size_t/uint64 comparison warning on WASM; build succeeds."
+  },
+  "wasm_artifacts": [
+    {
+      "path": "bindings\\wasm\\dist\\poecraft_engine.wasm",
+      "sha256": "f5b0b123373c886de88191120ed5ebe9ba6efe677458d0ca6ca7866b5fb013fc",
+      "bytes": 8139642
+    },
+    {
+      "path": "bindings\\wasm\\dist\\poecraft_engine.mjs",
+      "sha256": "92bc2b9d61c465b35c2b80c71f8b3ee125155755275e8d66cdc649792ab9f4ce",
+      "bytes": 20219
+    }
+  ],
+  "validation_notes": {
+    "source_diff_check": "pass",
+    "record_diff_check": "pass with cr-at-eol for generated receipts; immutable imported packet excluded",
+    "imported_packet": "All nine SHA256SUMS entries match. Two supplied Markdown hard-break lines intentionally retain trailing spaces.",
+    "generated_receipt_line_endings": "Preserved exactly, including CRLF, to retain completed input and receipt hashes.",
+    "staging": "Tracked WASM staged successfully despite git add reporting its already tracked parent dist/ ignore rule."
+  }
+}

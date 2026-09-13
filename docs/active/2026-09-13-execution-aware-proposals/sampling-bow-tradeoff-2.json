@@ -1,0 +1,230 @@
+{
+  "purpose": "Fresh native execution qualification of the changed controller; sampling is not cost or properness authority.",
+  "case": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb04-cross-base-product8-long240.json",
+  "strategy_sha256": "4f729a5d8852ca5c3e8917ee0e03bef86fe41ac4cc791177fc14009cb5a410e4",
+  "native_dll_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_engine.dll",
+  "native_dll_sha256": "e036d825d3d63b91f9b4d2fc4635d5d12a7d7112f4f9f39e7f2c6a0086819e30",
+  "options": {
+    "target_runs": 1000,
+    "seed": 20260826,
+    "max_actions_per_run": 100000,
+    "max_graph_steps_per_run": 4000000,
+    "max_cost_per_run": 0.0,
+    "retained_trace_count": 0,
+    "max_trace_entries": 512,
+    "retained_success_count": 5,
+    "retained_failure_count": 5
+  },
+  "summary": {
+    "completed_runs": 1000,
+    "success_count": 253,
+    "failure_count": 747,
+    "stop_count": 0,
+    "total_actions": 86551539,
+    "action_limit_count": 747,
+    "cost_limit_count": 0,
+    "step_limit_count": 0,
+    "no_matching_edge_count": 0,
+    "action_not_applied_count": 0,
+    "missing_price_run_count": 0,
+    "costed_action_count": 86551539,
+    "missing_price_action_count": 0,
+    "known_total_cost": 106432232.55235581,
+    "cost_status": "complete",
+    "seed": 20260826,
+    "target_runs": 1000
+  },
+  "action_distribution": [
+    {
+      "node_id": "dirty_s1",
+      "action_type": 5,
+      "count": 79162723
+    },
+    {
+      "node_id": "s1",
+      "action_type": 2,
+      "count": 2634080
+    },
+    {
+      "node_id": "dirty_s4",
+      "action_type": 6,
+      "count": 2610153
+    },
+    {
+      "node_id": "dirty_s17",
+      "action_type": 7,
+      "count": 2113592
+    },
+    {
+      "node_id": "s2",
+      "action_type": 1,
+      "count": 7225
+    },
+    {
+      "node_id": "s0",
+      "action_type": 0,
+      "count": 4801
+    },
+    {
+      "node_id": "s9",
+      "action_type": 3,
+      "count": 4801
+    },
+    {
+      "node_id": "s25",
+      "action_type": 6,
+      "count": 4678
+    },
+    {
+      "node_id": "s50",
+      "action_type": 24,
+      "count": 4317
+    },
+    {
+      "node_id": "product_fracture_restart",
+      "action_type": 1000,
+      "count": 3317
+    },
+    {
+      "node_id": "s22",
+      "action_type": 8,
+      "count": 1484
+    },
+    {
+      "node_id": "s39",
+      "action_type": 7,
+      "count": 368
+    }
+  ],
+  "failure_summaries": [
+    {
+      "failure_reason": 2,
+      "node_id": "dirty_s1",
+      "detail": "action limit reached",
+      "count": 707
+    },
+    {
+      "failure_reason": 2,
+      "node_id": "dirty_s4",
+      "detail": "action limit reached",
+      "count": 26
+    },
+    {
+      "failure_reason": 2,
+      "node_id": "dirty_s17",
+      "detail": "action limit reached",
+      "count": 14
+    }
+  ],
+  "missing_prices": {},
+  "sampled_accounting": {
+    "evidence_source": "simulator_sample",
+    "sample_count": 1000,
+    "seed": 20260826,
+    "actions": [
+      {
+        "action_id": "alteration",
+        "count": 2634080,
+        "average_per_invocation": 2634.08
+      },
+      {
+        "action_id": "annul",
+        "count": 2113960,
+        "average_per_invocation": 2113.96
+      },
+      {
+        "action_id": "augment",
+        "count": 7225,
+        "average_per_invocation": 7.225
+      },
+      {
+        "action_id": "chaos",
+        "count": 79162723,
+        "average_per_invocation": 79162.723
+      },
+      {
+        "action_id": "exalt",
+        "count": 2614831,
+        "average_per_invocation": 2614.831
+      },
+      {
+        "action_id": "fracture",
+        "count": 4317,
+        "average_per_invocation": 4.317
+      },
+      {
+        "action_id": "regal",
+        "count": 4801,
+        "average_per_invocation": 4.801
+      },
+      {
+        "action_id": "restart",
+        "count": 3317,
+        "average_per_invocation": 3.317
+      },
+      {
+        "action_id": "scour",
+        "count": 1484,
+        "average_per_invocation": 1.484
+      },
+      {
+        "action_id": "transmute",
+        "count": 4801,
+        "average_per_invocation": 4.801
+      }
+    ],
+    "materials": [
+      {
+        "price_key": "alteration",
+        "count": 2634080,
+        "average_per_invocation": 2634.08
+      },
+      {
+        "price_key": "annul",
+        "count": 2113960,
+        "average_per_invocation": 2113.96
+      },
+      {
+        "price_key": "augment",
+        "count": 7225,
+        "average_per_invocation": 7.225
+      },
+      {
+        "price_key": "base",
+        "count": 3317,
+        "average_per_invocation": 3.317
+      },
+      {
+        "price_key": "chaos",
+        "count": 79162723,
+        "average_per_invocation": 79162.723
+      },
+      {
+        "price_key": "exalt",
+        "count": 2614831,
+        "average_per_invocation": 2614.831
+      },
+      {
+        "price_key": "fracture",
+        "count": 4317,
+        "average_per_invocation": 4.317
+      },
+      {
+        "price_key": "regal",
+        "count": 4801,
+        "average_per_invocation": 4.801
+      },
+      {
+        "price_key": "scour",
+        "count": 1484,
+        "average_per_invocation": 1.484
+      },
+      {
+        "price_key": "transmute",
+        "count": 4801,
+        "average_per_invocation": 4.801
+      }
+    ]
+  },
+  "wall_ms": 122445.01379999565
+}

@@ -367,6 +367,7 @@ def _run_case(
     on_process_started: Callable[[int, str | None], None] | None = None,
     native_retention_diagnostic: str | None = None,
     native_dirty_guidance: str | None = None,
+    native_execution_action_price: float | None = None,
 ) -> dict[str, Any]:
     immutable_lab_attempt = bool(
         attempt_paths is not None
@@ -392,6 +393,7 @@ def _run_case(
         worker_headroom_bytes=worker_headroom_bytes,
         native_retention_diagnostic=native_retention_diagnostic,
         native_dirty_guidance=native_dirty_guidance,
+        native_execution_action_price=native_execution_action_price,
     )
     result = run_isolated_process(
         resolved.command.as_list(),
@@ -591,6 +593,7 @@ def run_corpus(
     selected_evaluation_roles: set[str] | None = None,
     native_retention_diagnostic: str | None = None,
     native_dirty_guidance: str | None = None,
+    native_execution_action_price: float | None = None,
     host_watchdog_seconds: float | None = None,
     worker_headroom_bytes: int = 0,
 ) -> dict[str, Any]:
@@ -601,8 +604,14 @@ def run_corpus(
     output_directory = output_directory.resolve()
     if max_workers <= 0:
         raise ValueError("max_workers must be positive")
-    if native_dirty_guidance not in (None, "legacy", "static", "adaptive", "protected-first", "selective", "selective-options"):
+    if native_dirty_guidance not in (None, "legacy", "static", "adaptive", "protected-first", "selective", "selective-options", "execution-cost", "execution-count"):
         raise ValueError("unsupported native dirty guidance treatment")
+    if native_execution_action_price is not None and (
+            native_dirty_guidance != "execution-count" or
+            not math.isfinite(native_execution_action_price) or native_execution_action_price <= 0):
+        raise ValueError("a positive finite action price requires execution-count treatment")
+    if native_dirty_guidance == "execution-count" and native_execution_action_price is None:
+        raise ValueError("execution-count treatment requires a frozen action price")
     if (isinstance(worker_headroom_bytes, bool) or not isinstance(worker_headroom_bytes, int)
             or not 0 <= worker_headroom_bytes <= 2**63 - 1):
         raise ValueError("worker headroom must be a non-negative 64-bit byte count")
@@ -654,11 +663,14 @@ def run_corpus(
         configuration["host_watchdog_seconds"] = host_watchdog_seconds
     if worker_headroom_bytes:
         configuration["worker_headroom_bytes"] = worker_headroom_bytes
+    treatment = {"native_dirty_guidance": native_dirty_guidance}
+    if native_execution_action_price is not None:
+        treatment["native_execution_action_price"] = float(native_execution_action_price)
     current_resume_identity = provenance.resume_identity(configuration)
     if native_dirty_guidance is not None:
         # Algorithm treatment is separate from request/capacity identity,
         # like executable identity, but still binds immutable resume.
-        current_resume_identity["treatment"] = {"native_dirty_guidance": native_dirty_guidance}
+        current_resume_identity["treatment"] = treatment
     elif previous.get("treatment"):
         current_resume_identity["treatment"] = None
     previous_resume_identity = {
@@ -682,7 +694,7 @@ def run_corpus(
         "cases": dict(previous_cases),
     }
     if native_dirty_guidance is not None:
-        ledger["treatment"] = {"native_dirty_guidance": native_dirty_guidance}
+        ledger["treatment"] = treatment
     pending: list[CaseTask] = []
     for task in tasks:
         prior = previous_cases.get(task.case_id)
@@ -738,6 +750,7 @@ def run_corpus(
                     goal_progress_gated_reforges=goal_progress_gated_reforges,
                     native_retention_diagnostic=native_retention_diagnostic,
                     native_dirty_guidance=native_dirty_guidance,
+                    native_execution_action_price=native_execution_action_price,
                     watchdog_seconds=host_watchdog_seconds,
                     worker_headroom_bytes=worker_headroom_bytes,
                 )
@@ -797,7 +810,8 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_WATCHDOG_SECONDS,
     )
     parser.add_argument("--no-exact-evaluation", action="store_true")
-    parser.add_argument("--native-dirty-guidance", choices=("legacy", "static", "adaptive", "protected-first", "selective", "selective-options"),
+    parser.add_argument("--native-execution-action-price", type=float, help="Frozen Chaos per primitive action; proposal-only execution-count treatment")
+    parser.add_argument("--native-dirty-guidance", choices=("legacy", "static", "adaptive", "protected-first", "selective", "selective-options", "execution-cost", "execution-count"),
         help="Native algorithm treatment, separately recorded from unchanged request and capacity identity.")
     parser.add_argument(
         "--native-retention-diagnostic",
@@ -847,6 +861,7 @@ def main(argv: list[str] | None = None) -> int:
         selected_evaluation_roles=set(args.role) or None,
         native_retention_diagnostic=args.native_retention_diagnostic,
         native_dirty_guidance=args.native_dirty_guidance,
+        native_execution_action_price=args.native_execution_action_price,
         host_watchdog_seconds=args.host_watchdog_seconds,
         worker_headroom_bytes=args.worker_headroom_bytes,
     )

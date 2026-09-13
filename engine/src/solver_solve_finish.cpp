@@ -2503,7 +2503,14 @@ SolveWork::Impl::run_publication_pipeline() {
                     best_current_certified_fallback();
                 if (retained == nullptr) return false;
                 ++telemetry.fallback_publication_attempts;
-                BoundedPolicyIncumbent fallback = std::move(*retained);
+                // Preserve the newly available compiler-bound entry through
+                // publication until its one optional bottleneck pass. This
+                // is a counted copy of existing verified evidence, not a new
+                // representative or a fabricated root-only binding.
+                const bool keep_execution_entry = execution_bottleneck_ready() &&
+                    certified_fallback_fits_memory(fast_estimated_owned_bytes(),
+                        incumbent_owned_bytes(*retained),options.max_solver_owned_bytes);
+                BoundedPolicyIncumbent fallback = keep_execution_entry ? *retained : std::move(*retained);
                 const bool direct_core_policy =
                     fallback.compilation_provenance ==
                         "direct_compiled_policy_assertion_v1" ||
@@ -2529,10 +2536,12 @@ SolveWork::Impl::run_publication_pipeline() {
                             : "final graph evaluation did not establish an "
                               "executable cost");
                 }
-                certified_fallback_portfolio.clear();
-                certified_fallback_portfolio.shrink_to_fit();
-                telemetry.fallback_portfolio_candidates = 0;
-                telemetry.fallback_portfolio_owned_bytes = 0;
+                if (!keep_execution_entry) {
+                    certified_fallback_portfolio.clear();
+                    certified_fallback_portfolio.shrink_to_fit();
+                    telemetry.fallback_portfolio_candidates = 0;
+                    telemetry.fallback_portfolio_owned_bytes = 0;
+                }
                 populate_incumbent_policy(fallback);
                 result.values = std::move(fallback.values);
                 result.policy = std::move(fallback.policy);
@@ -3491,16 +3500,18 @@ SolveWork::Impl::run_publication_pipeline() {
                 }
             }
         }
+        const bool bottleneck_only = publication_pipeline.dirty_continuation_attempted && execution_bottleneck_ready();
         if (dirty_continuation_search_enabled(options.native_continuation_search) &&
-            !publication_pipeline.dirty_continuation_attempted &&
+            (!publication_pipeline.dirty_continuation_attempted || bottleneck_only) &&
             !requested_bounded_finish && best_current_certified_fallback() != nullptr) {
             publication_pipeline.dirty_continuation_attempted = true;
+            if (bottleneck_only) publication_pipeline.execution_bottleneck_attempted=true;
             // Selected-policy certification can provide the first executable
             // graph without using the initial joint-controller seam. Its
             // checker/snapshot scope has ended here; preserve the artifact and
             // give the same private improvement owner this real opportunity.
             co_await solve_detail::CooperativeCheckpoint{0};
-            auto dirty = try_dirty_continuation_candidates();
+            auto dirty = try_dirty_continuation_candidates(bottleneck_only);
             while (!requested_bounded_finish && !dirty.resume())
                 co_await solve_detail::CooperativeCheckpoint{dirty.retained_bytes()};
             if (!requested_bounded_finish) (void)dirty.take_result();
@@ -5468,6 +5479,27 @@ SolveWork::Impl::run_publication_pipeline() {
                 (void)publish_certified_fallback(
                     coarse_solve_termination);
             }
+        }
+        if (publication_pipeline.dirty_continuation_attempted && execution_bottleneck_ready()) {
+            // The final core assertion can be the first compiler-bound
+            // fractured controller, after the earlier optional root lane.
+            // Service that genuinely new entry once while finish is unlatched.
+            publication_pipeline.execution_bottleneck_attempted=true;
+            co_await solve_detail::CooperativeCheckpoint{0};
+            auto dirty=try_dirty_continuation_candidates(true);
+            while (!requested_bounded_finish && !dirty.resume())
+                co_await solve_detail::CooperativeCheckpoint{dirty.retained_bytes()};
+            if (!requested_bounded_finish) (void)dirty.take_result();
+            dirty.reset();
+            // A completed candidate can precede the finish latch in this
+            // optional pass. Abandon unfinished proposal work, but retain the
+            // cheapest independently checked artifact even on that path.
+            const auto* improved=best_current_certified_fallback();
+            if (improved && certified_incumbent_invalid_reason(*improved)==nullptr &&
+                (!result.policy_available || improved->evaluated_policy_cost<result.upper_bound))
+                (void)publish_certified_fallback(requested_bounded_finish ?
+                    SolveTermination::RequestedBoundedFinish : result.termination);
+            co_await solve_detail::CooperativeCheckpoint{0};
         }
         const bool unclosed_strict_refinement =
             result.diagnostics.policy_refinement.strict_lift_status !=

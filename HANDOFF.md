@@ -1,42 +1,33 @@
 # Handoff
 
-[Policy Economics, Native Continuation Recovery, and Checked Estimated Potentials v1](docs/active/2026-09-13-policy-economics-checked-potentials/README.md)
-is partially achieved against reviewed main `bf3b980041821acee1f1f8149afc912a22021884`.
-That reviewed main was pushed before this programme. This programme is retained
-in a local commit; no push or automatic continuation is authorized.
+[Execution-aware proposals and bottleneck-entry recovery v1](docs/active/2026-09-13-execution-aware-proposals/README.md)
+is implemented against reviewed main `d2b706a02b7b3bfa8e1695d2c4d88a726ccdba3d`.
+The living record owns the complete packet, B/E/T matrix, strategy artifacts,
+resource identities, qualifications and remaining boundaries.
 
-The temporary Lightning bench failure was a native group-conflict distinction
-missing from its coarse entry. A fresh observed closed seed and selected
-physical-entry patch now produce a complete independently evaluated Amulet
-controller: U 12,541.579648544115, L 174.79327321907147 at matched 400M work,
-4.6972% cheaper than main. The initial 200M repair did not complete that seed.
-Native setup, all selected exits, paid cleanup and lost-goal recovery are
-qualified; no root-only artifact acquired a fabricated parent binding.
+Ring-four improves to C 227,377.06545019808 / N 583,110.3499596338, a 0.268515%
+original-cost gain. Bow retains C 223,349.0000393144 / N 1,404,492.0069683318.
+Its new complete entry controllers use about 76% fewer actions but cost about
+82% more; both are explicit diagnostics. Amulet remains C 12,541.579648544115 /
+N 25,518.491313143768. Neither primary improvement target nor exact closure is met.
 
-Ring FOUR stays at U 227,989.251597418 / L 201.85524142944053; Bow stays at
-U 223,349.0000393144 / L 341.0345603014526. Final DLL checks re-evaluate their
-preserved graphs rather than claim fresh final-build solver runs. No primary
-is exact; both 25% cost targets and the separate proof target remain unmet.
-The [qualification receipt](docs/active/2026-09-13-policy-economics-checked-potentials/qualification.json)
-binds source/build identities, matched controls, native checks and limitations.
+Native cost/count rewards remain separate. The new compiler-bound Magic entry
+family pays Regal/Chaos, Exalt/Annul and lost-goal recovery; it preserves scope,
+observations and original-price checking. Bow has 16 eligible Alteration entries
+and one Augment entry; largest single-entry spend selects the latter. This is
+bounded coverage, not exhaustion of protection/blocker or acquisition families.
 
-The bounded checked-potential pilot and one Harvest-support refinement pass
-complete native-minimum rechecks but improve neither root lower. Independent
-auxiliary ceilings block the declared proof targets in these unchanged models.
-The refinement remains benchmark-only; public static and browser defaults stay
-unchanged. Repeated Essence acquisition still dominates both primaries. A useful
-next continuation/acquisition change needs actual entry evidence; no further
-learner, cap experiment or lower-model campaign is selected here.
+The main matrix uses frozen v7; final v8 only fixes bounded diagnostic graph
+retention. Final-DLL checks and 1,000 trials qualify each delivered graph.
+Ring has 141 successes / 859 action-limit stops; Bow diagnostics 252/748 and
+253/747, with no other execution failures. Samples remain heavily censored.
+Six original controls preserve current costs and open CB05/CB09/CB03 evidence.
+The [qualification receipt](docs/active/2026-09-13-execution-aware-proposals/qualification.json)
+records focused checks, WASM and unrun full acceptance/cohort checks.
 
-The changed Amulet graph has 981 successes / 19 action-limit stops in 1,000
-original-limit native trials, with no routing/application failures. Unchanged
-Ring retains its earlier 153 / 847 tail evidence. Six selected original cases
-preserve costs/contracts; CB05's named-stop failure, CB09's absent policy and
-CB03's better historical high-water evidence remain open. The full original
-cohort and full native suite were not rerun. The living record owns detailed
-latency, memory, WASM controls, focused tests and remaining unsupported entries.
-
-The prior selective, adaptive/M0A and dirty-state work and verified artifacts
-remain intact. Preserve unrelated work and protected root `0` without inspection
-or staging. One sequential session, no subagents, inherited deadline, automatic
-restart or push. Reuse deterministic long waits and existing batched tooling.
+The native blocker repair, selective growth, checked-potential pilot, M0A and
+all earlier completion receipts are preserved. The requested documentation audit
+is integrated into existing mathematical owners and generated observations.
+No new programme is selected. Changes stay local; no push, subagents, inherited
+deadline or automatic restart. Preserve unrelated work and protected root `0`
+without inspection or staging. Reuse existing deterministic batched long waits.

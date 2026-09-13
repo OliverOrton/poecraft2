@@ -1,0 +1,68 @@
+[
+  {
+    "case": "cb03-cross-base-product8-long240",
+    "utc": "2026-09-13T20:49:44.510729+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 39826493440,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 4294967296,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One original-profile process at a time; external 4-GiB admission covers solver, final checker, parsed data and host overhead while legacy runner configuration remains identical to the preserved strict reference."
+  },
+  {
+    "case": "cb05-cross-base-product8-long240",
+    "utc": "2026-09-13T20:53:56.255370+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 39826632704,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 4294967296,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One original-profile process at a time; external 4-GiB admission covers solver, final checker, parsed data and host overhead while legacy runner configuration remains identical to the preserved strict reference."
+  },
+  {
+    "case": "cb09-cross-base-product8-long240",
+    "utc": "2026-09-13T20:54:45.180002+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 39700332544,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 4294967296,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One original-profile process at a time; external 4-GiB admission covers solver, final checker, parsed data and host overhead while legacy runner configuration remains identical to the preserved strict reference."
+  },
+  {
+    "case": "cb12-cross-base-product8-long240",
+    "utc": "2026-09-13T20:54:57.486666+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 39697948672,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 4294967296,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One original-profile process at a time; external 4-GiB admission covers solver, final checker, parsed data and host overhead while legacy runner configuration remains identical to the preserved strict reference."
+  },
+  {
+    "case": "ho01-cross-base-product8-long240",
+    "utc": "2026-09-13T20:55:18.045857+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 39681511424,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 4294967296,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One original-profile process at a time; external 4-GiB admission covers solver, final checker, parsed data and host overhead while legacy runner configuration remains identical to the preserved strict reference."
+  },
+  {
+    "case": "ho02-cross-base-product8-long240",
+    "utc": "2026-09-13T20:59:21.511233+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 39484514304,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 4294967296,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One original-profile process at a time; external 4-GiB admission covers solver, final checker, parsed data and host overhead while legacy runner configuration remains identical to the preserved strict reference."
+  }
+]

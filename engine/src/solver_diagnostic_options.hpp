@@ -50,7 +50,8 @@ pc_result configure_solver_native_retention_diagnostic(pc_solver_handle handle,
 /* Comparison arms only. The retained fresh-layout method is available through
  * the public PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH request flag. */
 pc_result configure_solver_native_continuation_search(pc_solver_handle handle,
-    NativeContinuationSearchMode mode, pc_error_info* out_error);
+    NativeContinuationSearchMode mode, pc_error_info* out_error,
+    double execution_action_price = 0.0);
 
 /* One benchmark-only handoff to the existing stable-candidate proof path.
  * It does not request delivery or change any target/resource setting. */

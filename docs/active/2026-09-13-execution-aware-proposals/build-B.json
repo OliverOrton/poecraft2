@@ -1,0 +1,64 @@
+{
+  "reviewed_main": "d2b706a02b7b3bfa8e1695d2c4d88a726ccdba3d",
+  "executable": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\B-d2.exe",
+  "sha256": "138bd85ece168e651a6e93e6cba6b97e784f3408e7c27fe76599ebfad31388f8",
+  "sources": [
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "sha256": "4b88d04acabc54fe83848e414ce69a95a70b4f1336cb5f8c353cfcb6959d1197"
+    },
+    {
+      "path": "engine/src/solver_calc_types.hpp",
+      "sha256": "3f0bd16afca1c519029c66bef0549bc4011f353e4a9dd193f2c3fd3d1074903d"
+    },
+    {
+      "path": "engine/src/solver_eval.cpp",
+      "sha256": "1993c6fd16a4323148ec7660a9315d1f96e3bf82366b08336a14872abfd39dc6"
+    },
+    {
+      "path": "engine/src/solver_eval_types.hpp",
+      "sha256": "38ea9317cfd0dd822862921ff62bf7b4cfdbce7612c09b8ec584a783d0139de6"
+    },
+    {
+      "path": "engine/src/solver_options_semantics.cpp",
+      "sha256": "239fe840d592cee979fed6628946766a5c912d2c9f8fa3c0e6f1cf6b24f0c265"
+    },
+    {
+      "path": "engine/src/solver_phase_lower.hpp",
+      "sha256": "dd157ebbebcafc9645e1c682eb67bdad2e830aa8908d085ca2029b04b568c183"
+    },
+    {
+      "path": "engine/src/solver_phase_probability.cpp",
+      "sha256": "396827c3c07cc542f896c625b9c6d178dbce23e749a6bfbad36888ece5ad6c61"
+    },
+    {
+      "path": "engine/src/solver_solve_bounds.cpp",
+      "sha256": "7d843ea5454ffdfd1059417377e35948d00edbd32ee7f4294b16de9e5c874e3a"
+    },
+    {
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "sha256": "962d380af526bf5685e1a56b0a20c825b5771dcc2b9284ebff870c431fb3e643"
+    },
+    {
+      "path": "engine/src/solver_solve_types.hpp",
+      "sha256": "4c5b02fe07040e00a5e6a3c5b54ef877df4811b01856940083dac47d258cb5a2"
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "sha256": "f2952df4911acfd387cb599b9921cf4534d4a6812b5f8edbe689eb33bfaf15da"
+    },
+    {
+      "path": "engine/tests/test_solver_calc.cpp",
+      "sha256": "a4f4d2de0a179bacf2891f6080e7fa66bca1eba74cc49dfdfaf7c0d98a186f2e"
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "f2125ef8e29db9e2fd53eae4cc04b39d92050f06bf89e63b318a4cb1afadb6b5"
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "sha256": "63240a81bab90ba3a1ab965477a45ee4ff5f108d03492fec979b9440bfa2a869"
+    }
+  ],
+  "source_reconciliation": "All frozen native source hashes match reviewed d2; preserved executable reused for fresh baseline trajectories."
+}

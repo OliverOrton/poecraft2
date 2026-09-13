@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import platform
@@ -334,9 +335,16 @@ def build_solver_case_command(
     goal_progress_gated_reforges: bool,
     native_retention_diagnostic: str | None = None,
     native_dirty_guidance: str | None = None,
+    native_execution_action_price: float | None = None,
 ) -> SolverCaseCommand:
-    if native_dirty_guidance not in (None, "legacy", "static", "adaptive", "protected-first", "selective", "selective-options"):
+    if native_dirty_guidance not in (None, "legacy", "static", "adaptive", "protected-first", "selective", "selective-options", "execution-cost", "execution-count"):
         raise ValueError("unsupported native dirty guidance treatment")
+    if native_execution_action_price is not None and (
+            native_dirty_guidance != "execution-count" or
+            not math.isfinite(native_execution_action_price) or native_execution_action_price <= 0):
+        raise ValueError("a positive finite action price requires execution-count treatment")
+    if native_dirty_guidance == "execution-count" and native_execution_action_price is None:
+        raise ValueError("execution-count treatment requires a frozen action price")
     if (native_retention_diagnostic is not None
             and native_retention_diagnostic not in NATIVE_RETENTION_DIAGNOSTIC_MODES):
         raise ValueError("unsupported native retention diagnostic mode")
@@ -365,6 +373,8 @@ def build_solver_case_command(
         argv.extend(("--native-retention-diagnostic", native_retention_diagnostic))
     if native_dirty_guidance is not None:
         argv.extend(("--native-dirty-guidance", native_dirty_guidance))
+    if native_execution_action_price is not None:
+        argv.extend(("--native-execution-action-price", repr(float(native_execution_action_price))))
     return SolverCaseCommand(tuple(argv), root)
 
 
@@ -383,6 +393,7 @@ def resolve_case_execution(
     worker_headroom_bytes: int = 0,
     native_retention_diagnostic: str | None = None,
     native_dirty_guidance: str | None = None,
+    native_execution_action_price: float | None = None,
 ) -> ResolvedCaseExecution:
     paths.prepare()
     command = build_solver_case_command(
@@ -397,6 +408,7 @@ def resolve_case_execution(
         goal_progress_gated_reforges=goal_progress_gated_reforges,
         native_retention_diagnostic=native_retention_diagnostic,
         native_dirty_guidance=native_dirty_guidance,
+        native_execution_action_price=native_execution_action_price,
     )
     return ResolvedCaseExecution(
         case_id=task.case_id,

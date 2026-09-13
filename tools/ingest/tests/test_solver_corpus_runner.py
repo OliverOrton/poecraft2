@@ -506,6 +506,26 @@ def test_immutable_attempt_paths_do_not_share_retry_outputs(tmp_path: Path) -> N
     assert second.strategy_output_path.is_dir()
 
 
+def test_execution_price_is_proposal_treatment_and_binds_resume(tmp_path: Path) -> None:
+    manifest = tmp_path / "manifest.json"
+    _write_json(manifest, {"cases": []})
+    args = dict(root=Path.cwd(), executable=Path(sys.executable), artifact=tmp_path,
+                corpus=manifest, tasks=[], host_watchdog_seconds=870)
+    cost = run_corpus(**args, output_directory=tmp_path / "cost", native_dirty_guidance="execution-cost")
+    weighted = run_corpus(**args, output_directory=tmp_path / "weighted",
+                          native_dirty_guidance="execution-count", native_execution_action_price=0.125)
+    assert cost["configuration"] == weighted["configuration"]
+    assert weighted["treatment"]["native_execution_action_price"] == 0.125
+    with pytest.raises(ValueError, match="provenance/configuration differs"):
+        run_corpus(**args, output_directory=tmp_path / "weighted",
+                   native_dirty_guidance="execution-count", native_execution_action_price=0.25)
+    for bad in (0, -1, float("nan"), float("inf")):
+        with pytest.raises(ValueError, match="positive finite"):
+            run_corpus(**args, output_directory=tmp_path / "bad",
+                       native_dirty_guidance="execution-count", native_execution_action_price=bad)
+    assert not (tmp_path / "bad").exists()
+
+
 def test_process_classification_preserves_native_expectation_miss() -> None:
     result = classify_process_result(
         {"exit_code": 2, "timed_out": False, "survivor": False},

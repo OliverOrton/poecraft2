@@ -1,0 +1,199 @@
+{
+  "identity": {
+    "corpus": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m-tradeoff-export\\manifest.json",
+      "sha256": "b797a860ba3d85e0bdfaf52d9c91a94a33fff927258e1c2f7f8ce6ccf3bb31a6",
+      "corpus_id": "execution-aware-bow-tradeoff-export-64m",
+      "schema_version": "solver_benchmark_corpus_v1",
+      "generator_config_sha256": null
+    },
+    "artifact": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+      "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+      "declared_files_verified": true,
+      "files": [
+        {
+          "path": "game-data.json",
+          "size_bytes": 16439442,
+          "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+        },
+        {
+          "path": "strings.json",
+          "size_bytes": 6534428,
+          "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      ],
+      "identity": {
+        "artifact_schema_version": 4,
+        "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+        "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+        "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+      }
+    },
+    "executable": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v7.exe",
+      "sha256": "abea7694ffbb6e7b3ae76d30f6ab0c80e4e6e8e51d117224dc7c1f22c7ee4004"
+    },
+    "machine": {
+      "system": "Windows",
+      "release": "11",
+      "machine": "AMD64",
+      "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "logical_cpu_count": 24,
+      "python": "3.14.2"
+    },
+    "source": {
+      "commit": "d2b706a02b7b3bfa8e1695d2c4d88a726ccdba3d",
+      "dirty": true,
+      "dirty_paths": [
+        {
+          "status": "M ",
+          "path": "ANDOFF.md"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-13-execution-aware-proposals/"
+        },
+        {
+          "status": " M",
+          "path": "docs/foundation/tooling.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/mathematics/lower-bounds.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/mathematics/numerical-closure.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/mathematics/policies.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/mathematics/search-and-resumption.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/research-state.md"
+        },
+        {
+          "status": " M",
+          "path": "engine/benchmarks/solver_benchmark.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_api.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_compile.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_compile_contracts.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_diagnostic_options.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_dirty_guidance.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_contracts.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_finish.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_incremental.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_return_bridge.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_types.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_solver_compile.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_solver_s8_3.cpp"
+        },
+        {
+          "status": " M",
+          "path": "experiments/solver-research/backbone-pilot-v1.json"
+        },
+        {
+          "status": " M",
+          "path": "tools/ingest/poecraft_ingest/solver_corpus_runner.py"
+        },
+        {
+          "status": " M",
+          "path": "tools/ingest/poecraft_ingest/solver_worker.py"
+        },
+        {
+          "status": " M",
+          "path": "tools/ingest/tests/test_solver_corpus_runner.py"
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "case_id": "cb04-cross-base-product8-long240",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v7.exe",
+          "--artifact",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m-tradeoff-export\\manifest.json",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\T-bow-export\\cases\\cb04-cross-base-product8-long240.json",
+          "--partial-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\T-bow-export\\partials\\cb04-cross-base-product8-long240.preflight.json",
+          "--strategy-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\T-bow-export\\strategies",
+          "--case",
+          "cb04-cross-base-product8-long240",
+          "--skip-verification",
+          "--exact-strategy-evaluation",
+          "--native-retention-diagnostic",
+          "reuse",
+          "--native-dirty-guidance",
+          "execution-count",
+          "--native-execution-action-price",
+          "0.159024756944986"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+      },
+      "paths": {
+        "attempt_id": "preflight",
+        "attempt_directory": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\T-bow-export",
+        "report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\T-bow-export\\cases\\cb04-cross-base-product8-long240.json",
+        "partial_report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\T-bow-export\\partials\\cb04-cross-base-product8-long240.preflight.json",
+        "strategy_output_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\T-bow-export\\strategies",
+        "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\T-bow-export\\logs\\cb04-cross-base-product8-long240.log"
+      },
+      "watchdog_seconds": 870.0,
+      "reservation": {
+        "solver_owned_cap_bytes": 8589934592,
+        "worker_headroom_bytes": 6442450944,
+        "policy_version": "solver_lab_host_reservation_v2"
+      }
+    }
+  ]
+}

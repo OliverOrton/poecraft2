@@ -1,0 +1,12 @@
+{
+  "source": "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb04-cross-base-product8-long240.json",
+  "source_sha256": "cfd6715a32c43286a3b4d85587624bc68069533bbbd41a49eb73e58400fecc28",
+  "changes": [
+    {
+      "path": "/caps/max_telemetry_json_bytes",
+      "before": 2097152,
+      "after": 67108864
+    }
+  ],
+  "reason": "The complete composed controller contains the preserved 399,990-byte parent graph and exceeds the 2-MiB profile's bounded artifact sample allowance. This profile retains at most three independently evaluated diagnostic strategies using the existing telemetry owner. The predeclared 64-MiB output allowance permits bounded samples up to 4 MiB each; the existing aggregate memory limit and three-artifact limit remain active."
+}

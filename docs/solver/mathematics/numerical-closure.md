@@ -20,13 +20,15 @@ For example, computing an exact dot product of stored binary floats proves an ex
 The current lower-only quotient separates coefficient declarations, native evidence, and exact binary inequality checking. Preserve that separation. [Lower and Pruning Authority](../lower-pruning.md); [CLM-0023](../claims.md#clm-0023).
 
 Run-local dirty cost correction stays in the candidate-calculation layer. Its
-bounded residual compares the completed private model and independent native
-evaluation of the same frozen controller at the same entry; neither number is
-a new optimal-value label. The [adaptive dirty application](../../active/2026-09-12-adaptive-dirty-guidance/README.md)
-retains the existing evaluator tolerances, complete-cost reconciliation,
-properness and entry checks. It improves feasible uppers without changing
-lower closure or numerical acceptance. Capped candidates do not train a cost
-correction or become executable boundary values.
+bounded residual compares the private estimate and independent native evaluation
+of the same frozen controller at the same entry; neither is an optimal-value
+label. The [adaptive dirty application](../../active/2026-09-12-adaptive-dirty-guidance/README.md)
+improved feasible uppers through additional candidate coverage, while its
+matched static/adaptive results established no correction benefit. The adaptive
+mode remains diagnostic. Existing tolerances, full cost reconciliation,
+properness and entry checks remain unchanged. Capped candidates are censored
+construction evidence, not training labels for expensive crafting or executable
+boundary values.
 
 The fixed-point certificate literature independently emphasizes producing checkable witnesses rather than trusting a numerical algorithm merely because it is sophisticated. The paper by Chatterjee and colleagues formalizes certificates for finite MDP reachability and reward properties; its checker does not automatically verify poecraft2's implicit action or member-domain bridge. [Chatterjee et al., TACAS 2025](https://arxiv.org/abs/2501.11467).
 
@@ -78,6 +80,17 @@ For a one-state retry with success probability \(p\), \(Q=1-p\), so a residual o
 That is not an argument against floating point. It is an argument against equating a small local residual with a small global error without the needed factor. The same issue becomes worse near nonabsorbing behavior. A zero-cost improper loop has no invertible \(I-Q\) at all.
 
 The example also explains why a selected-policy numerical residual cannot, by itself, certify every alternative Bellman inequality.
+
+### Execution-count-weighted residual sensitivity
+
+For the same proper finite controller, let r=c+Pv-v. Then
+C-v=(I-P)^(-1)r. If a justified componentwise bound gives |r_i| <= epsilon*n_i,
+nonnegativity of the transient inverse implies |C-v| <= epsilon*N. Recurrent
+execution can amplify small local errors. This requires the complete
+same-controller law and the stated bound; it grants no uniform guarantee to a
+learned estimate and does not loosen native acceptance tolerances. It applies
+[CLM-0023](../claims.md#clm-0023) with the
+[separate primitive reward](policies.md#primitive-execution-reward).
 
 <a id="flow-accounting"></a>
 ### Complete occupancy replaces preliminary accounting

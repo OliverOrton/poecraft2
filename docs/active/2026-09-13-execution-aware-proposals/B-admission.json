@@ -1,0 +1,32 @@
+[
+  {
+    "case": "cb04-cross-base-product8-long240",
+    "utc": "2026-09-13T17:56:27.774997+00:00",
+    "total_physical": 68409442304,
+    "available_physical": 35367813120,
+    "available_commit": 21059395584,
+    "reserved_bytes": 15032385536,
+    "outside_bytes": 13681888461,
+    "admitted": true
+  },
+  {
+    "case": "cb07-cross-base-product8-long240",
+    "utc": "2026-09-13T18:06:32.993570+00:00",
+    "total_physical": 68409442304,
+    "available_physical": 34459062272,
+    "available_commit": 18935013376,
+    "reserved_bytes": 15032385536,
+    "outside_bytes": 13681888461,
+    "admitted": true
+  },
+  {
+    "case": "cb08-cross-base-product8-long240",
+    "utc": "2026-09-13T18:18:38.202549+00:00",
+    "total_physical": 68409442304,
+    "available_physical": 34158161920,
+    "available_commit": 18718777344,
+    "reserved_bytes": 15032385536,
+    "outside_bytes": 13681888461,
+    "admitted": true
+  }
+]

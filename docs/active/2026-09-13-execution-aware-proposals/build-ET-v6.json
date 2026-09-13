@@ -1,0 +1,583 @@
+{
+  "reviewed_main": "d2b706a02b7b3bfa8e1695d2c4d88a726ccdba3d",
+  "executable": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v6.exe",
+  "sha256": "79deb7a38eb0d6cbd1dd900d72c14a93ab6eb0f7e184e0051799b5d5cfb70e7b",
+  "sources": [
+    {
+      "path": "engine/CMakeLists.txt",
+      "sha256": "cd48641f9c781b361f51dff21bb8171500b6fefb70c86e0530809a06619c3b2e"
+    },
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "sha256": "bab2e4e1f49695fb99cb52682d6c407c5e17e1cbe7c9b66a2e1e2d1efcb65638"
+    },
+    {
+      "path": "engine/benchmarks/solver_executable_fragment.cpp",
+      "sha256": "94ea19ff24489022531ec6c930dff6c63abd2c02a51cff5e106f1d186d7a218c"
+    },
+    {
+      "path": "engine/benchmarks/solver_executable_fragment.hpp",
+      "sha256": "1a77eb9f4d413e537fa92f5c22a00f4984a8f3a9715310e55bb02d95689dd9cb"
+    },
+    {
+      "path": "engine/benchmarks/solver_executable_fragment_engine.cpp",
+      "sha256": "9f0b09ebda0fe8560278f3a4d9b664124cd00150daeae68505fcb44f595786c7"
+    },
+    {
+      "path": "engine/benchmarks/solver_executable_fragment_engine.hpp",
+      "sha256": "835b61245e1c5efc1bba024adacaa08a517ab6855edbcdf44c5b2b0c52bd0f8b"
+    },
+    {
+      "path": "engine/benchmarks/solver_quotient_lower_probe.cpp",
+      "sha256": "584100478a64a14c01452b5f4390c3b5872dda615fd48a7e7bd7c6d4fac7c5cc"
+    },
+    {
+      "path": "engine/engine-sources.txt",
+      "sha256": "3e1efef58941591362183b5fe14e479d7d2970b5cd468295351e9884ff6bb577"
+    },
+    {
+      "path": "engine/include/poecraft/api.h",
+      "sha256": "e06293bf55647d9cb6eb62d5bc3876bc2f310a0382ad4f25d339e4badb41305a"
+    },
+    {
+      "path": "engine/include/poecraft/bestiary.h",
+      "sha256": "0b27c22ba180d68f78076e5cdab38466f13c9377f65f43e65026a2c0f10a99ac"
+    },
+    {
+      "path": "engine/include/poecraft/bitset.h",
+      "sha256": "dd552973dfe02ccca7070b00c5f60f36f94c70593cfdbf21f9822bf000606d17"
+    },
+    {
+      "path": "engine/include/poecraft/item_state.h",
+      "sha256": "81e867eaf3557bd6291f44285edf9ebaff857a6db19312996f7a4edca72d722c"
+    },
+    {
+      "path": "engine/include/poecraft/result.h",
+      "sha256": "592cba908d47fc359403bde5d5e184c4b500b99be379037557b1f409bf6a2f0e"
+    },
+    {
+      "path": "engine/include/poecraft/rng.h",
+      "sha256": "cb3a79cbfb6aa83da09fb27c585baa01bd599fe930b522daa40b4aa8f9d5f0f9"
+    },
+    {
+      "path": "engine/include/poecraft/session.h",
+      "sha256": "ea6ed77bd16dbca6946523b5b3895d5a93840acdaaf32cd983a0490a987d5732"
+    },
+    {
+      "path": "engine/include/poecraft/simulator.h",
+      "sha256": "dc85d9fe3a3842de0e0ae6c2d180e229148d2abeec286c085b8d041b58aacc4b"
+    },
+    {
+      "path": "engine/include/poecraft/solver.h",
+      "sha256": "6ed3ec4c86c67b7813e13c73f7ff922d8e6fc97676a7cb57c46d96a97946edfc"
+    },
+    {
+      "path": "engine/src/actions_basic.cpp",
+      "sha256": "db5b8746e4b6f9a6a2efbf5a29725ed87e36a0297b8eb6ef2bc38dbe0497f283"
+    },
+    {
+      "path": "engine/src/actions_bestiary.cpp",
+      "sha256": "12978a41e87dd2fc79dedc787db306d132ac3af608a54cba191684f68066cf1f"
+    },
+    {
+      "path": "engine/src/api.cpp",
+      "sha256": "2701afeccec1b964de242cbc7ed5e239f952977177b88ed13c5c10c8d150d5d2"
+    },
+    {
+      "path": "engine/src/bestiary_api.cpp",
+      "sha256": "eb38df9d9b6a58a8097b8a082a2ff187b805b3d992672bdbc9445a69e00cd229"
+    },
+    {
+      "path": "engine/src/bitset.cpp",
+      "sha256": "173b5b86e6ec23cdbd3e6d08db21b071247042334cbca21d3a9db9307d61e425"
+    },
+    {
+      "path": "engine/src/data_loader.cpp",
+      "sha256": "58c9f52ea39e188e1a8c47e26a5b7dd15637cfdc45b58db2adf235151183d433"
+    },
+    {
+      "path": "engine/src/engine_internal.hpp",
+      "sha256": "0f3b0eb8de6d18bc61c516387d4fa984d2569a64fe676b92ecfc48db3326064e"
+    },
+    {
+      "path": "engine/src/handles_internal.hpp",
+      "sha256": "1bb80e43746f2d7a61a53c089179be67d9669163bd0c68b8cb22bd4c79b5dc04"
+    },
+    {
+      "path": "engine/src/item_state.cpp",
+      "sha256": "8ae696389cb863762237ad284c0248023d33f7386a618fcf8e34e1ecedba45ce"
+    },
+    {
+      "path": "engine/src/json.hpp",
+      "sha256": "33713c356b1708d0ba5a9eff32f2812612e16b9d4c07e0f521f3f0ab6da868cd"
+    },
+    {
+      "path": "engine/src/rng.cpp",
+      "sha256": "00f82776a0b6c8d92dd30106c5e293c238d673d7af1c65ebb8a7bbac26c351cd"
+    },
+    {
+      "path": "engine/src/session_builder.cpp",
+      "sha256": "959d560cb5706b2e1c34e4044144f89305256931c4f3c6d59f695224075f1014"
+    },
+    {
+      "path": "engine/src/simulator.cpp",
+      "sha256": "48a23d513e537ce9fd916dd894a9b05f927d83bb5a326d61f3759fda0cde4cb8"
+    },
+    {
+      "path": "engine/src/solver_abstract.cpp",
+      "sha256": "9ae4dac62b589f3f8fc64e7e097082ff27ad2f1b92190a44675ba34f8641d20f"
+    },
+    {
+      "path": "engine/src/solver_action_coverage.hpp",
+      "sha256": "18a97587e9a0e53b2a499df0d7f3a5faf6a23237e753c22b399f653d8f9349a6"
+    },
+    {
+      "path": "engine/src/solver_action_envelope_ledger.hpp",
+      "sha256": "42ad32e9c163dce2a56044449dd6548998ab0f552e20087f2985cfcddf77ccb3"
+    },
+    {
+      "path": "engine/src/solver_action_family_contract.hpp",
+      "sha256": "3fe0e35319e7b83ad8c1567a52c48e609569ad6b62b2ebdac5f6febd2a6ba40a"
+    },
+    {
+      "path": "engine/src/solver_anytime_scheduler.hpp",
+      "sha256": "d32439cc72f132494cbdeba2fab112746c12e43db21aab14d41a74c87d11b9ec"
+    },
+    {
+      "path": "engine/src/solver_api.cpp",
+      "sha256": "c7a29ad4e4bfaa7efeb164f50a618965ed60bc83e8ce84bf0072104960683bea"
+    },
+    {
+      "path": "engine/src/solver_calc.cpp",
+      "sha256": "b764279a070de58b6cb57c56f33800a6b8b71ad395200bfb48c24c2a30cc42e9"
+    },
+    {
+      "path": "engine/src/solver_calc_types.hpp",
+      "sha256": "3f0bd16afca1c519029c66bef0549bc4011f353e4a9dd193f2c3fd3d1074903d"
+    },
+    {
+      "path": "engine/src/solver_compile.cpp",
+      "sha256": "6a5accbe03358d0d4f617004e5d24235e591ee264ce416770b913b1e4118646f"
+    },
+    {
+      "path": "engine/src/solver_compile_conditions.hpp",
+      "sha256": "86400ac6d82c23e21d84e538c1b473a858b3ff0116fbeac0b8ce9cd4fea82848"
+    },
+    {
+      "path": "engine/src/solver_compile_contracts.hpp",
+      "sha256": "d3ab162c3967cdc555d5df0cafee3b4a10f407cc09c769e92993cd3c89c949b1"
+    },
+    {
+      "path": "engine/src/solver_compile_serialization.hpp",
+      "sha256": "4234510a894d6ccf9e402cb5a26c6c664d2759efa91588f0d930b687122284ed"
+    },
+    {
+      "path": "engine/src/solver_condition_expr.hpp",
+      "sha256": "f82edb081eb01598a878bc2ead1a03fe8c1335dd7ff0c7d1928c202e85871569"
+    },
+    {
+      "path": "engine/src/solver_cooperative_task.hpp",
+      "sha256": "859bbd53b9697a06d3ebdb206aa10df773948d3025d746572c8416b8af17467d"
+    },
+    {
+      "path": "engine/src/solver_development_checkpoint.cpp",
+      "sha256": "f2b94299aad08c51e390ebe836919e1bac258b91779e8888ce12caa203a6e5ab"
+    },
+    {
+      "path": "engine/src/solver_diagnostic_options.hpp",
+      "sha256": "2274697020f7968aa0d4286ba0976cf043a8667c41400d71165ea9279c1e1618"
+    },
+    {
+      "path": "engine/src/solver_dirty_guidance.hpp",
+      "sha256": "b8c0104309b152aeafde2d9e356f7d8a9f699ad1c504fcf3e7882c72c347d34e"
+    },
+    {
+      "path": "engine/src/solver_eval.cpp",
+      "sha256": "1993c6fd16a4323148ec7660a9315d1f96e3bf82366b08336a14872abfd39dc6"
+    },
+    {
+      "path": "engine/src/solver_eval_helpers.hpp",
+      "sha256": "0c0e9c2a9952e985fd74974c7fe33545cc10b21a85c55b46b39b2c1ccb163ba8"
+    },
+    {
+      "path": "engine/src/solver_eval_report.cpp",
+      "sha256": "590087abe88b1c04a0842619b88c79a2e3ee4cea1844406f10411437edec883b"
+    },
+    {
+      "path": "engine/src/solver_eval_resolve.cpp",
+      "sha256": "5e9d160556d8fc9bd5639d36d340b4f0ec74001217bf973cb987f65069f47d92"
+    },
+    {
+      "path": "engine/src/solver_eval_types.hpp",
+      "sha256": "38ea9317cfd0dd822862921ff62bf7b4cfdbce7612c09b8ec584a783d0139de6"
+    },
+    {
+      "path": "engine/src/solver_internal.hpp",
+      "sha256": "5b8404f73311dc8aea67a3a646102bef5ec1be35f876996360415a356852446b"
+    },
+    {
+      "path": "engine/src/solver_joint_policy_continuation.hpp",
+      "sha256": "37228aa06dd2d56f6496c9400bb3149cae8711b9fe9430f9e0ba68f44dff9968"
+    },
+    {
+      "path": "engine/src/solver_model.hpp",
+      "sha256": "f804b7df8b2de613389d433f2cf2b07a87c3e5c64d66a66af8d52a30ceb4a15a"
+    },
+    {
+      "path": "engine/src/solver_options.cpp",
+      "sha256": "ef5dd0feb2ae44d4bec8a1e3aa7bfbfd28d536aa325a2c14c57b08760e908c13"
+    },
+    {
+      "path": "engine/src/solver_options_automatic.cpp",
+      "sha256": "de544bcb73839875ddd6975c4af2b55f902496ac171c9e3c03905e6f5ebdd953"
+    },
+    {
+      "path": "engine/src/solver_options_build.cpp",
+      "sha256": "f03fafed3ff0e5c744edc01d01ea8f6cb99e4447681a86ecfb23ec378ff8e19a"
+    },
+    {
+      "path": "engine/src/solver_options_helpers.hpp",
+      "sha256": "94b112cf1ecc8fef62637779adaeae452808059c9f723c56fd00c241146d0fed"
+    },
+    {
+      "path": "engine/src/solver_options_import.cpp",
+      "sha256": "95def5436017b9dec548ede166f6e3fb30536a84dde75787712bcd63e50cc435"
+    },
+    {
+      "path": "engine/src/solver_options_runtime_helpers.hpp",
+      "sha256": "4626e1527ca67c6ee92fc6a3167d5890ac15a2a803da0e1beb577050b1ed4438"
+    },
+    {
+      "path": "engine/src/solver_options_semantics.cpp",
+      "sha256": "239fe840d592cee979fed6628946766a5c912d2c9f8fa3c0e6f1cf6b24f0c265"
+    },
+    {
+      "path": "engine/src/solver_options_temporary.cpp",
+      "sha256": "79e80dc75d127291591710a3efaec53a916e338416470c7b00f43311ee545092"
+    },
+    {
+      "path": "engine/src/solver_phase_lower.cpp",
+      "sha256": "d16df9219822e6823785419cdcdcf8dab018af14e1e908136203d839ccb07828"
+    },
+    {
+      "path": "engine/src/solver_phase_lower.hpp",
+      "sha256": "dd157ebbebcafc9645e1c682eb67bdad2e830aa8908d085ca2029b04b568c183"
+    },
+    {
+      "path": "engine/src/solver_phase_probability.cpp",
+      "sha256": "396827c3c07cc542f896c625b9c6d178dbce23e749a6bfbad36888ece5ad6c61"
+    },
+    {
+      "path": "engine/src/solver_policy_assertion.cpp",
+      "sha256": "a1863b2c7e08e177e11de41e93ffb46281d7a938a668250cd7f73f3abf191e1a"
+    },
+    {
+      "path": "engine/src/solver_policy_assertion_work.cpp",
+      "sha256": "47818e71ef8e297f0bc49c307bd2e1a249c2e29927479f42e6cb4108a5440be4"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle.hpp",
+      "sha256": "f3728da87d38afbb39efb2ea7f3a4890d0fcf996534d432b86c9c66e9bc64bdb"
+    },
+    {
+      "path": "engine/src/solver_policy_refinement.cpp",
+      "sha256": "b3ad7091594919c42a6dec9b3677ebb06c2b61ca6e9bb05aa7a651e7b99abf8e"
+    },
+    {
+      "path": "engine/src/solver_policy_refinement.hpp",
+      "sha256": "42a45ece569d854ef4e04007deab24d47bf3cfded0215f95a1abcea4bb459bad"
+    },
+    {
+      "path": "engine/src/solver_policy_refinement_helpers.hpp",
+      "sha256": "bc9bf9f81ff251a041518d677b5b96bd00a86dea6ce152637cbef753994b935c"
+    },
+    {
+      "path": "engine/src/solver_policy_route.hpp",
+      "sha256": "42088dc16c5548348e202e3d26f46fb24257353b569fa26b4b5a962e9d73c6d1"
+    },
+    {
+      "path": "engine/src/solver_proof_pattern_manager.hpp",
+      "sha256": "2c832c18091279a54362e97c6599d2fc6480cf4b01b706aacbaa66e3797637ed"
+    },
+    {
+      "path": "engine/src/solver_quotient_bellman.cpp",
+      "sha256": "b10a52a7b90626624655753539954f74caef082d0de378085f2f0414a8b378ae"
+    },
+    {
+      "path": "engine/src/solver_quotient_bellman.hpp",
+      "sha256": "efcb35d5979e139dfd321967103570f08d7e5658aef2c54a8e0ff219fd386738"
+    },
+    {
+      "path": "engine/src/solver_quotient_lower.cpp",
+      "sha256": "f301d4fa1ae45212007a4585be4f547e2a9bd9b911d4f3f21aeea43941e1399d"
+    },
+    {
+      "path": "engine/src/solver_quotient_lower.hpp",
+      "sha256": "6c9fa7786675e7ef375ea4e9a5bc17136cd51d0e59341ed7cba2fb86b7cf1eea"
+    },
+    {
+      "path": "engine/src/solver_quotient_partition.cpp",
+      "sha256": "7462ad53a475d8e0abfa3383a8aa23c55eacffad9c4ebabd7980b21bc436d516"
+    },
+    {
+      "path": "engine/src/solver_quotient_partition.hpp",
+      "sha256": "79be01527740f5b943dd79db4afa717ebf01e8e430e6656257dc7f3e2c1c921b"
+    },
+    {
+      "path": "engine/src/solver_quotient_proof.cpp",
+      "sha256": "0d1cd89564ab1b7064355e1c0017c799098376651dc51683554e9967a7cd2157"
+    },
+    {
+      "path": "engine/src/solver_quotient_proof.hpp",
+      "sha256": "8623743faf4c7d69f7f2ed83e773b2583bf7af7b11def0231f25f38052ee4aac"
+    },
+    {
+      "path": "engine/src/solver_refinement.cpp",
+      "sha256": "ee7085db79fbe6043391494ec6e413f3fe37e0f9c9a7ca904f81f687b9373fe2"
+    },
+    {
+      "path": "engine/src/solver_refinement.hpp",
+      "sha256": "f9fa41b59f02a20399317a0327b4bb976c93eaa17da3242ff3b4e496d776694a"
+    },
+    {
+      "path": "engine/src/solver_refinement_eval.cpp",
+      "sha256": "41e882b54824487aaf7d7c0536470feca4533850fcc0b51437cbadc84ae3993c"
+    },
+    {
+      "path": "engine/src/solver_refinement_feature_helpers.hpp",
+      "sha256": "0a27997f807f19c60a1a0633ebd45cf5d95c2642c1e53c39573b7271dd000852"
+    },
+    {
+      "path": "engine/src/solver_refinement_features.cpp",
+      "sha256": "416ffd0ca85795ccff62a1338b7200b2d695d5c629d40c5c31617410e94e0089"
+    },
+    {
+      "path": "engine/src/solver_refinement_graph_core.hpp",
+      "sha256": "13f395a74d96ca9aadf427e203ee007eaf383bc09a855303ff38ef0e5050b84e"
+    },
+    {
+      "path": "engine/src/solver_refinement_graph_discovery.hpp",
+      "sha256": "c5d1701ff7d75075eaca6f8ea6f971894ec810bedf4571b10f7e3d1a4731be34"
+    },
+    {
+      "path": "engine/src/solver_refinement_graph_routing.hpp",
+      "sha256": "e6fbe1fb1415188b42f2c28382b1d971dd99186a3b355dafa22a2c07a0f8451e"
+    },
+    {
+      "path": "engine/src/solver_refinement_observation.cpp",
+      "sha256": "ac94f5239221601a0c3a310693514961b5994dced8af48f31cfc0ab5843b7abb"
+    },
+    {
+      "path": "engine/src/solver_refinement_observation_helpers.hpp",
+      "sha256": "3f8d72fc40e9487a0044f5c4c60850f19fd7a8b0061c0ba9fec784e9a60d220f"
+    },
+    {
+      "path": "engine/src/solver_refinement_partition.cpp",
+      "sha256": "0734e07d99a7ad154ecd6e54be695f7171feb059312a1478de29c81d0c1e3ce7"
+    },
+    {
+      "path": "engine/src/solver_refinement_partition_helpers.hpp",
+      "sha256": "ee1cc8794dd33bec89dddfe5eda2014957843829e069481f73f3263f46d51b1e"
+    },
+    {
+      "path": "engine/src/solver_reforge.cpp",
+      "sha256": "cd9f290f5518eec25a8d9c869d93b6cab0b9dd76f2790a51a42d83600729e2b4"
+    },
+    {
+      "path": "engine/src/solver_registry.cpp",
+      "sha256": "ea8ce4d2881b0521bf07395f936c5a02137f5557a5f183cd21c6220bde837e05"
+    },
+    {
+      "path": "engine/src/solver_segmented_vector.hpp",
+      "sha256": "d6e3a803321d74f2b7135a9535ca7d5d4be97c348489869d9f98056c8be278c0"
+    },
+    {
+      "path": "engine/src/solver_solve.cpp",
+      "sha256": "06c7048be7903e42278284c84e4e2e163d5ee94942133b0b4714fcd7eb1bc45d"
+    },
+    {
+      "path": "engine/src/solver_solve_audit.cpp",
+      "sha256": "24a2df379120d0080f6d8e0b14858d1f9fcac88baf7388afb2f0fc2fe8005ab3"
+    },
+    {
+      "path": "engine/src/solver_solve_bellman.cpp",
+      "sha256": "573762feddb9a4e4049e9998fa365db890f3e76bf27dba2e3409a688e182de65"
+    },
+    {
+      "path": "engine/src/solver_solve_bounds.cpp",
+      "sha256": "7d843ea5454ffdfd1059417377e35948d00edbd32ee7f4294b16de9e5c874e3a"
+    },
+    {
+      "path": "engine/src/solver_solve_carrier_pattern.cpp",
+      "sha256": "e406659dbf3f727913fc42caf21da364a31161e7ddc21afddfb7ba73b3f2c625"
+    },
+    {
+      "path": "engine/src/solver_solve_constructive.cpp",
+      "sha256": "9ccb6094f77a5f39b07d5617104b9188482f7f5c7506b6b97434a4dcfc104ff3"
+    },
+    {
+      "path": "engine/src/solver_solve_contracts.hpp",
+      "sha256": "724d8ba12fe29183bbd067f0369717dd8aceae86222a4029327b945b654f5ae2"
+    },
+    {
+      "path": "engine/src/solver_solve_envelope_proof.cpp",
+      "sha256": "8823836b21ee65a43f2377b8283f585b0cb04639c950d2c90916d2351bfa8f72"
+    },
+    {
+      "path": "engine/src/solver_solve_expand.cpp",
+      "sha256": "8cce8099029786286980c82610b544a15a7680b9ecaacaa8657c9c9719b303f1"
+    },
+    {
+      "path": "engine/src/solver_solve_finish.cpp",
+      "sha256": "9f3b74586967b79c84c351858d48b4a77843b2d4a5180af9714ccbe57490bfbd"
+    },
+    {
+      "path": "engine/src/solver_solve_focused.cpp",
+      "sha256": "e8884d15a55342245df87bb85c340105d6587fe2cfb4118d66e170fe0bce8a4b"
+    },
+    {
+      "path": "engine/src/solver_solve_incremental.cpp",
+      "sha256": "7cb7f9bec5c3eecfb0d3277dadc7fe8c647959fb2e054e809345d768b3139232"
+    },
+    {
+      "path": "engine/src/solver_solve_operator_proof.cpp",
+      "sha256": "ee5fd8d6daf039913e02b9925d83ce9181849481964b8e0d7771f0357df0fae4"
+    },
+    {
+      "path": "engine/src/solver_solve_priority.cpp",
+      "sha256": "530204f6e542de683d3e31950412b204b5688095ec02d5f98b30ab241c783608"
+    },
+    {
+      "path": "engine/src/solver_solve_quotient.cpp",
+      "sha256": "4fe9dbccc6e17814c7f8893a3b9dfee5f204e8248fd385461b25b9019e1d1321"
+    },
+    {
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "sha256": "335f0ba56bd77e2a371f78abed99421d662a346cf71cba0d05334605a8af6602"
+    },
+    {
+      "path": "engine/src/solver_solve_strict_pattern.cpp",
+      "sha256": "dc27704b565f3dc28cc98967d15237d42d18f4bf3a7c04c10f367dcbe2438a93"
+    },
+    {
+      "path": "engine/src/solver_solve_telemetry.cpp",
+      "sha256": "ff846ba205cda4523f3f613c05d0d7b5ce21bbe5aa8bf27de11f4d52ff0558dd"
+    },
+    {
+      "path": "engine/src/solver_solve_telemetry_json.cpp",
+      "sha256": "e40c73e49c347952b6775067a9ed88ba45726feb4f965e344f4997fd1ef54947"
+    },
+    {
+      "path": "engine/src/solver_solve_types.hpp",
+      "sha256": "bdcf83da7c37cc75f7b01b17d00566cc4499325d99f1b1917f78dd0e73a2e0b9"
+    },
+    {
+      "path": "engine/src/solver_sparse_policy.cpp",
+      "sha256": "e555b7a236b8c30f5e70e930595368c03afc77d6a338a36f50226d974862cf0b"
+    },
+    {
+      "path": "engine/src/solver_sparse_policy.hpp",
+      "sha256": "41fa963335b4bbd038d1bb0b1629a4373b82f9c39e3263a92e7aa20845501d5e"
+    },
+    {
+      "path": "engine/tests/header_smoke.cpp",
+      "sha256": "0545a7f66e573ba18ce5faa795bdb0470c9cf9254a9955fde063dd7ad8944cef"
+    },
+    {
+      "path": "engine/tests/test_actions.cpp",
+      "sha256": "34664325721a333dcb57616ea2d3f460462b48e8892d5f63d534f1d3be9796ed"
+    },
+    {
+      "path": "engine/tests/test_bestiary.cpp",
+      "sha256": "5da980e4ca543e25999c4083f2de6e3e84948c67537fb818e401d5d0c63eab85"
+    },
+    {
+      "path": "engine/tests/test_bitset.cpp",
+      "sha256": "669f971790f66b3f59bd3285a9897967684a2e9c7cb69041e1abdce9162fdfd6"
+    },
+    {
+      "path": "engine/tests/test_blocking.cpp",
+      "sha256": "96fbd6c4c60394201c1ca95c3a9c4ac19d3959f5da0687b332d4f889a90cdbd0"
+    },
+    {
+      "path": "engine/tests/test_data_loader.cpp",
+      "sha256": "a67d8436c0b7ec59913c4de8617395658c388b9e513830eba66e6353878bde87"
+    },
+    {
+      "path": "engine/tests/test_item_state.cpp",
+      "sha256": "b2b9da923d442fec88119725845dc6bdadbb43d7dd0ef5c912c87d12a72469ee"
+    },
+    {
+      "path": "engine/tests/test_main.cpp",
+      "sha256": "f2952df4911acfd387cb599b9921cf4534d4a6812b5f8edbe689eb33bfaf15da"
+    },
+    {
+      "path": "engine/tests/test_rng.cpp",
+      "sha256": "3325cb766afd2b7631775fa0014c661929a4fe6125dd8d3b1e92172691f46a55"
+    },
+    {
+      "path": "engine/tests/test_session_builder.cpp",
+      "sha256": "8ef8513da9518d780c1260a8680c3582c2334e47162940358daebacccb14eeae"
+    },
+    {
+      "path": "engine/tests/test_simulator.cpp",
+      "sha256": "2c6e02c16efa07fd0960f9d58db19208ff78e116f3e9bff7ebf36ad13dc70976"
+    },
+    {
+      "path": "engine/tests/test_solver_abstract.cpp",
+      "sha256": "11f42f20c5d1914b46288b40042c5d6830f3ca9c81139e48e8b7f84f87cc59d1"
+    },
+    {
+      "path": "engine/tests/test_solver_api.cpp",
+      "sha256": "3934973382980dd17fc3ef6968005b094968391315abdaa002b7b61125ec7479"
+    },
+    {
+      "path": "engine/tests/test_solver_calc.cpp",
+      "sha256": "a4f4d2de0a179bacf2891f6080e7fa66bca1eba74cc49dfdfaf7c0d98a186f2e"
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "3d7add7b0cfdae1c36ee42432e2fe519affb5e0821f6a9e793023ac11cea926c"
+    },
+    {
+      "path": "engine/tests/test_solver_eval.cpp",
+      "sha256": "9577d9864fd3e5b13d5a2f26e8d770e74cd514f3fabb74f99c9cdc5ce5c8a84c"
+    },
+    {
+      "path": "engine/tests/test_solver_fragment.cpp",
+      "sha256": "ea68734d5b2efbc76e4f2eceaaf0192d77ed743cc68b1ad1cce189029da522c3"
+    },
+    {
+      "path": "engine/tests/test_solver_quotient_bellman.cpp",
+      "sha256": "48dd5d8f7f40bc5b464407ae6c5d80e6a2bc4171c413f48c39cf551060fcc6be"
+    },
+    {
+      "path": "engine/tests/test_solver_quotient_lower.cpp",
+      "sha256": "3a0dc95058ae5cbd89461ac1ff824dfa30d3c6e15a2d81626ca4cf8229a82e22"
+    },
+    {
+      "path": "engine/tests/test_solver_quotient_partition.cpp",
+      "sha256": "1c154247d0879e16562f90322775e7a0969d0fa8357a4bf96405b2c9465b8490"
+    },
+    {
+      "path": "engine/tests/test_solver_quotient_proof.cpp",
+      "sha256": "2b90c18852950519d303588abebd6c1a62ecacb031195c81afffa1de681713a5"
+    },
+    {
+      "path": "engine/tests/test_solver_refinement.cpp",
+      "sha256": "1d5bfa1af1c68ab2361a10f6e89c5ea180bf636e99e87602ab4f630bad19192f"
+    },
+    {
+      "path": "engine/tests/test_solver_s8_3.cpp",
+      "sha256": "4cf7cd522fc44f6a4158eb7e5e27cf2df2b9b5c6b397ca3c007df5392a37d8f1"
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "sha256": "e9c6924648ce2739da46ccc9bdc3b8a977fe118efaef5bb6fd62c6edc674fa03"
+    },
+    {
+      "path": "engine/tests/tests.hpp",
+      "sha256": "63240a81bab90ba3a1ab965477a45ee4ff5f108d03492fec979b9440bfa2a869"
+    }
+  ]
+}

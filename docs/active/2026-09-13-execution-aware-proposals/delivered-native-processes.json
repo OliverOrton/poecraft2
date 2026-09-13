@@ -1,0 +1,224 @@
+[
+  {
+    "name": "check-ring-new",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\recheck_policy.py",
+      "--case",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb07-cross-base-product8-long240.json",
+      "--strategy",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\strategies\\ring-four-count.strategy.json",
+      "--upper",
+      "227377.06545019808",
+      "--output",
+      "out\\execution-aware-proposals\\check-ring-new-full.json"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "check-ring-new",
+      "utc": "2026-09-13T20:40:15.336101+00:00",
+      "available_physical": 39458451456,
+      "available_commit": 34379014144,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 15032385536,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 47552,
+      "process_identity_token": "47552:134338056153367419",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 18859.576099959668
+    }
+  },
+  {
+    "name": "sample-ring-new",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\qualify_sampling_amulet.py",
+      "--case",
+      "cb07-cross-base-product8-long240",
+      "--strategy",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\strategies\\ring-four-count.strategy.json",
+      "--output",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\sampling-ring-new.json",
+      "--seed",
+      "20260826"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "sample-ring-new",
+      "utc": "2026-09-13T20:40:34.206441+00:00",
+      "available_physical": 39398264832,
+      "available_commit": 34323488768,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 15032385536,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 42164,
+      "process_identity_token": "42164:134338056342070871",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 283541.9479000266
+    }
+  },
+  {
+    "name": "check-bow-tradeoff-1",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\recheck_policy.py",
+      "--case",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb04-cross-base-product8-long240.json",
+      "--strategy",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\strategies\\T-bow-export-final-cb04-tradeoff-ad3322613db4.strategy.json",
+      "--upper",
+      "405589.69246311055",
+      "--output",
+      "out\\execution-aware-proposals\\check-bow-tradeoff-1-full.json"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "check-bow-tradeoff-1",
+      "utc": "2026-09-13T20:45:17.749386+00:00",
+      "available_physical": 40079757312,
+      "available_commit": 34541522944,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 15032385536,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 59636,
+      "process_identity_token": "59636:134338059177499442",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 10307.079099991824
+    }
+  },
+  {
+    "name": "sample-bow-tradeoff-1",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\qualify_sampling_amulet.py",
+      "--case",
+      "cb04-cross-base-product8-long240",
+      "--strategy",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\strategies\\T-bow-export-final-cb04-tradeoff-ad3322613db4.strategy.json",
+      "--output",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\sampling-bow-tradeoff-1.json",
+      "--seed",
+      "20260826"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "sample-bow-tradeoff-1",
+      "utc": "2026-09-13T20:45:28.066771+00:00",
+      "available_physical": 40095715328,
+      "available_commit": 34551873536,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 15032385536,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 3356,
+      "process_identity_token": "3356:134338059280674198",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 123002.69619998289
+    }
+  },
+  {
+    "name": "check-bow-tradeoff-2",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\recheck_policy.py",
+      "--case",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb04-cross-base-product8-long240.json",
+      "--strategy",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\strategies\\T-bow-export-final-cb04-tradeoff-4f729a5d8852.strategy.json",
+      "--upper",
+      "405922.95178487856",
+      "--output",
+      "out\\execution-aware-proposals\\check-bow-tradeoff-2-full.json"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "check-bow-tradeoff-2",
+      "utc": "2026-09-13T20:47:31.070396+00:00",
+      "available_physical": 39906250752,
+      "available_commit": 34344419328,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 15032385536,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 32940,
+      "process_identity_token": "32940:134338060510709897",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 10470.358499966096
+    }
+  },
+  {
+    "name": "sample-bow-tradeoff-2",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\qualify_sampling_amulet.py",
+      "--case",
+      "cb04-cross-base-product8-long240",
+      "--strategy",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\strategies\\T-bow-export-final-cb04-tradeoff-4f729a5d8852.strategy.json",
+      "--output",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\sampling-bow-tradeoff-2.json",
+      "--seed",
+      "20260826"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "sample-bow-tradeoff-2",
+      "utc": "2026-09-13T20:47:41.551378+00:00",
+      "available_physical": 39889932288,
+      "available_commit": 34328231936,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 15032385536,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 18588,
+      "process_identity_token": "18588:134338060615520704",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 122593.6279000016
+    }
+  }
+]

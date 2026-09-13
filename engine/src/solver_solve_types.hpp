@@ -2147,6 +2147,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::uint64_t initial_candidate_proof_bytes = 0;
         std::uint64_t renewal_candidate_attempted_identity = 0;
         bool dirty_continuation_attempted = false;
+        bool execution_bottleneck_attempted = false;
         std::optional<solve_detail::CooperativeTask<SolveResult>> task;
         std::optional<SolveResult> result;
         bool consumed = false;
@@ -2740,7 +2741,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     solve_detail::CooperativeTask<bool> try_initial_return_bridges(
         const SolveResult& frozen_policy);
 
-    solve_detail::CooperativeTask<bool> try_dirty_continuation_candidates();
+    bool execution_bottleneck_ready();
+    solve_detail::CooperativeTask<bool> try_dirty_continuation_candidates(bool bottleneck_only = false);
 
     void retire_certified_unmaterialized_obligations();
 

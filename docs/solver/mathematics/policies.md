@@ -81,6 +81,51 @@ V^*(s)\le J_\pi(s).
 
 This subset argument is the entire reason a fixed-policy evaluation supplies an upper. No greediness premise is required. [CLM-0002](../claims.md#clm-0002).
 
+<a id="primitive-execution-reward"></a>
+### Primitive execution count is a separate reward
+
+Fix the same complete, proper finite controller and transient nonterminal
+matrix P. Let c be expected native monetary cost per represented decision and
+n the expected number of primitive executions before that decision's exit.
+Then C=c+PC and N=n+PN, so C=(I-P)^(-1)c and N=(I-P)^(-1)n. This is the
+fixed-policy and stopped-program argument applied to two rewards, under
+[CLM-0002](../claims.md#clm-0002) and [CLM-0004](../claims.md#clm-0004).
+
+An option can execute many primitives. Its n follows native
+`OptionKernel::expected_primitive_actions` and exactly the first-exit/retry
+normalization of its successor law and resource reward. One option invocation,
+one graph traversal and one currency unit are different quantities. Correlation
+between internal work and exit does not invalidate the stopped expectation;
+linearity suffices for this same committed controller and complete law.
+Independent physical evaluation owns the published controller's actual count
+and cost under the existing numerical contract.
+
+At entry s, d^T=e_s^T(I-P)^(-1) gives C(s)=d^T c and N(s)=d^T n. These immediate
+contributions may be aggregated by action or compatible native region.
+Continuation values and counts already include future work; adding them as
+separate contributions double-counts overlapping tails.
+
+A one-state retry with success probability p has expected count 1/p. Structure
+and properness therefore do not imply short execution, and a long mean does
+not prove that a shorter allowed controller exists. The mean alone also does
+not determine finite-limit completion. Preserve capped sampling trials in the
+denominator and keep them separate from native unlimited expected totals.
+
+The [execution-aware application](../../active/2026-09-13-execution-aware-proposals/README.md)
+uses accounted private cost/count rewards and the existing sparse policy
+owner. Complete rows survive changed proposal weights; numerical results do
+not. The supplied [derivation and counterexamples](../../active/2026-09-13-execution-aware-proposals/research-inputs/review_and_mathematics.md)
+are explanatory evidence, not whole-engine correspondence or a new claim.
+
+For the selected fractured-Magic acquisition family, the native redraw retains
+one satisfying fracture. In the [native reforge owner](../../../engine/src/solver_reforge.cpp),
+`base_satisfied_count >= 1`, so every roll has nonzero total goal progress and
+the zero-progress retry mass is zero. The composed domain still uses the
+caller's gated law, including terminal aggregation and scope metadata. Native
+physical/gated mass checks cover this retained-fracture case. This conditional
+argument neither removes the caller restriction nor permits entering a
+mandatory program midway through its execution.
+
 ### Why an equation solution is insufficient
 
 For a zero-cost non-goal self-loop, the equation is \(J=J\). Every finite number solves it, but the controller never finishes. Algebra does not establish properness. A numerical solver returning a finite vector cannot turn this into an executable upper.

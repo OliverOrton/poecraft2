@@ -1,0 +1,12 @@
+{
+  "source": "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m-tradeoff-export\\cb04-cross-base-product8-long240.json",
+  "source_sha256": "ae9c77df827892974c92c9ffead07fd86b14cf78ce8a3eba6e4aee0e450413e9",
+  "changes": [
+    {
+      "path": "/caps/max_telemetry_json_bytes",
+      "before": 67108864,
+      "after": 671088640
+    }
+  ],
+  "reason": "Final bounded delivery profile accounts for both maximum-sized strategy artifacts under the existing quarter-budget owner. The v7 64-MiB export omitted graphs; v8 removes the unrelated one-sixteenth guard and records actual graph bytes and reference count. No extra time, work, search memory or policy gain is credited."
+}

@@ -4062,12 +4062,13 @@ std::string compile_dirty_continuation_strategy_json(
         const std::vector<std::uint32_t>& local_states,
         const std::vector<std::uint32_t>& return_states,
         const SolveOptions& limits,
-        PolicyCompilationTelemetry* telemetry) {
+        PolicyCompilationTelemetry* telemetry,
+        const bool closed_local_domain) {
     const auto input_bytes = local_strategy_json.size() + old_strategy_json.size();
     if (input_bytes > limits.max_strategy_json_bytes ||
         input_bytes > limits.max_solver_owned_bytes / 128)
         throw SolverResourceLimit("max_solver_owned_bytes", limits.max_solver_owned_bytes);
-    if (local_states.empty() || return_states.empty())
+    if (local_states.empty() || (return_states.empty() != closed_local_domain))
         gap("dirty continuation needs both a local domain and a return domain");
     auto local = json::Parser(local_strategy_json.data(), local_strategy_json.size()).parse();
     auto old = json::Parser(old_strategy_json.data(), old_strategy_json.size()).parse();
@@ -4077,13 +4078,14 @@ std::string compile_dirty_continuation_strategy_json(
     for (const char* key : {"solver_policy_scope", "solver_imprint_programs_considered",
                            "solver_profile_id", "solver_profile_override_mask"})
         if (serialized(local.at(key)) != serialized(old.at(key)))
-            gap("dirty continuation controller scope mismatch");
+            gap("dirty continuation controller scope mismatch: " + std::string(key));
     // Only the explicit item differs at the private entry. Persistent context,
     // base and item level remain the original request's exact identities.
     auto local_base = local.at("base_state"), old_base = old.at("base_state");
     for (auto* base : {&local_base, &old_base})
-        std::erase_if(base->object, [](const auto& member) {
-            return member.first == "prefixes" || member.first == "suffixes";
+        std::erase_if(base->object, [&](const auto& member) {
+            return member.first == "prefixes" || member.first == "suffixes" ||
+                (closed_local_domain && member.first == "rarity");
         });
     if (serialized(local_base) != serialized(old_base))
         gap("dirty continuation base or persistent context mismatch");
@@ -4111,6 +4113,7 @@ std::string compile_dirty_continuation_strategy_json(
             // operations. Broader context/observation support needs its own
             // explicit entry contract; a matching physical item is not enough.
             if (type != "exalt" && type != "annul" && type != "chaos" &&
+                !(closed_local_domain && type == "essence") &&
                 type != "harvest_augment" && type != "harvest_reforge" &&
                 type != "harvest_resist" && type != "alteration" && type != "augment" &&
                 type != "regal" && type != "scour" && type != "transmute" &&
@@ -4135,7 +4138,8 @@ std::string compile_dirty_continuation_strategy_json(
         }
         return any_of(parts);
     };
-    const auto enter = predicate(local_states), leave = predicate(return_states);
+    const auto enter = predicate(local_states);
+    const auto leave = closed_local_domain ? std::string{} : predicate(return_states);
     return_namespace_graph(local, "dirty_");
     auto& nodes = return_member(old, "nodes").array;
     auto& edges = return_member(old, "edges").array;
@@ -4157,7 +4161,8 @@ std::string compile_dirty_continuation_strategy_json(
         edges.push_back(json::Parser(text.data(), text.size()).parse());
     };
     add_guard("dirty_enter", "policy_route_root", "dirty_policy_route_root", enter);
-    add_guard("dirty_return", "dirty_policy_route_root", "policy_route_root", leave);
+    if (!closed_local_domain)
+        add_guard("dirty_return", "dirty_policy_route_root", "policy_route_root", leave);
     return_member(old, "name").string = "Current-run nonempty dirty continuation";
     if (nodes.size() > limits.max_compiled_nodes || edges.size() > limits.max_compiled_edges)
         throw SolverResourceLimit("max_compiled_nodes", limits.max_compiled_nodes);

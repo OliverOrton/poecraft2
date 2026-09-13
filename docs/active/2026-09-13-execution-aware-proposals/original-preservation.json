@@ -1,0 +1,282 @@
+{
+  "cases": [
+    {
+      "case": "cb03-cross-base-product8-long240",
+      "report": "out\\execution-aware-proposals\\final-original-core\\cases\\cb03-cross-base-product8-long240.json",
+      "sha256": "70af4819b80d8065386595070f4d4dd6347275cb3e7d86fcfacd30be69c435f0",
+      "paired_cases": 1,
+      "exclusions": [],
+      "regressions": [],
+      "upper": 794067.4530398862,
+      "lower": 405.11164995948883,
+      "policy_status": "bounded_feasible",
+      "actual_status": "bounded_feasible",
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 65357,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 3292.0849,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 794067.4530398862,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "wall_ms": 250549.6019
+    },
+    {
+      "case": "cb05-cross-base-product8-long240",
+      "report": "out\\execution-aware-proposals\\final-original-core\\cases\\cb05-cross-base-product8-long240.json",
+      "sha256": "918316c2ca9daf768ebc64608bdebe63f1d0e13fc6c5b29bda2dd22a72f9b750",
+      "paired_cases": 1,
+      "exclusions": [],
+      "regressions": [],
+      "upper": 87200457.42804676,
+      "lower": 297.7999999702199,
+      "policy_status": "bounded_feasible",
+      "actual_status": "refused_resource_cap",
+      "bounded_contract": {
+        "checked": true,
+        "passed": false,
+        "path": "bounded",
+        "checks": {
+          "named_stop": false,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 8716,
+          "refinement_obligations": 0
+        },
+        "failure_reason": "one or more bounded-result proof obligations failed"
+      },
+      "errors": [
+        "bounded best-policy contract failed: one or more bounded-result proof obligations failed"
+      ],
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 10563.6745,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 87200457.42804676,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "wall_ms": 48404.0548
+    },
+    {
+      "case": "cb09-cross-base-product8-long240",
+      "report": "out\\execution-aware-proposals\\final-original-core\\cases\\cb09-cross-base-product8-long240.json",
+      "sha256": "77d6a2c83363107045550e9c82f11ef374ea1cefaa2044f88defd6788c283566",
+      "paired_cases": 1,
+      "exclusions": [],
+      "regressions": [],
+      "upper": null,
+      "lower": 172.4952745977795,
+      "policy_status": "none",
+      "actual_status": "refused_resource_cap",
+      "bounded_contract": {
+        "checked": true,
+        "passed": false,
+        "path": "bounded",
+        "checks": {
+          "named_stop": false,
+          "strict_gap": false,
+          "open_obligations": false,
+          "evaluated_upper": false,
+          "cheapest_independently_evaluated_incumbent": false
+        },
+        "open_work": {
+          "incremental_actions": 0,
+          "refinement_obligations": 0
+        },
+        "failure_reason": "the solve did not publish an executable policy"
+      },
+      "errors": [
+        "bounded best-policy contract failed: the solve did not publish an executable policy"
+      ],
+      "independent_evaluation": {
+        "completed": false,
+        "time_limited": false,
+        "status": "not_applicable_no_policy",
+        "wall_ms": null
+      },
+      "wall_ms": 11742.0453
+    },
+    {
+      "case": "cb12-cross-base-product8-long240",
+      "report": "out\\execution-aware-proposals\\final-original-core\\cases\\cb12-cross-base-product8-long240.json",
+      "sha256": "1fb58109205a5bf1a64721f3a36e722123f1db5bcbefb54b488742c4ddf8ec5c",
+      "paired_cases": 1,
+      "exclusions": [],
+      "regressions": [],
+      "upper": 65.60036144971359,
+      "lower": 65.60036144971359,
+      "policy_status": "exact",
+      "actual_status": "converged",
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "exact",
+        "checks": {
+          "named_stop": null,
+          "strict_gap": null,
+          "open_obligations": null,
+          "evaluated_upper": null,
+          "cheapest_independently_evaluated_incumbent": null
+        },
+        "open_work": {
+          "incremental_actions": 0,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 11.9341,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 65.60036144971359,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "wall_ms": 19960.2919
+    },
+    {
+      "case": "ho01-cross-base-product8-long240",
+      "report": "out\\execution-aware-proposals\\final-original-exposed\\cases\\ho01-cross-base-product8-long240.json",
+      "sha256": "dd42ff62d8df412415867af97b808038e9c5489e516dd1e6736ac52a34a7db54",
+      "paired_cases": 1,
+      "exclusions": [],
+      "regressions": [],
+      "upper": 2071.736538384866,
+      "lower": 93.66114293680295,
+      "policy_status": "bounded_feasible",
+      "actual_status": "bounded_feasible",
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 8402,
+          "refinement_obligations": 2941
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 2609.9908,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 2071.736538384866,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "wall_ms": 242991.673
+    },
+    {
+      "case": "ho02-cross-base-product8-long240",
+      "report": "out\\execution-aware-proposals\\final-original-exposed\\cases\\ho02-cross-base-product8-long240.json",
+      "sha256": "d5de80e4dafc05878dd7e9ec2fb1377259de5744c33f19919eb935b3f9802853",
+      "paired_cases": 1,
+      "exclusions": [],
+      "regressions": [],
+      "upper": 3963.671015833939,
+      "lower": 110.28721258971052,
+      "policy_status": "bounded_feasible",
+      "actual_status": "refused_state_cap",
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 10537,
+          "refinement_obligations": 17280
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 2956.5429,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 3963.671015833939,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "wall_ms": 222893.8794
+    }
+  ],
+  "all_six_strictly_paired": true,
+  "preserved_open_evidence": [
+    "CB05 retains its named-stop bounded-contract failure despite a matched feasible policy.",
+    "CB09 retains absent-policy/resource-cap evidence.",
+    "CB03 reproduces current U 794067.4530398862; stronger historical U 536407.1454 remains retained.",
+    "These six controls do not constitute the full original cohort."
+  ]
+}

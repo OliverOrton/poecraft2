@@ -62,6 +62,8 @@ enum class NativeContinuationSearchMode : std::uint8_t {
     DirtyProtectedFirst,
     DirtySelective,
     DirtySelectiveOptions,
+    DirtyExecutionCost,
+    DirtyExecutionCount,
 };
 
 inline const char* native_continuation_search_name(const NativeContinuationSearchMode mode) {
@@ -76,6 +78,8 @@ inline const char* native_continuation_search_name(const NativeContinuationSearc
     case NativeContinuationSearchMode::DirtyProtectedFirst: return "dirty_protected_first";
     case NativeContinuationSearchMode::DirtySelective: return "dirty_selective";
     case NativeContinuationSearchMode::DirtySelectiveOptions: return "dirty_selective_options";
+    case NativeContinuationSearchMode::DirtyExecutionCost: return "dirty_execution_cost";
+    case NativeContinuationSearchMode::DirtyExecutionCount: return "dirty_execution_count";
     }
     return "unknown";
 }
@@ -88,11 +92,16 @@ inline bool dirty_continuation_search_enabled(const NativeContinuationSearchMode
         mode == NativeContinuationSearchMode::DirtyGuidedAdaptive ||
         mode == NativeContinuationSearchMode::DirtyProtectedFirst ||
         mode == NativeContinuationSearchMode::DirtySelective ||
-        mode == NativeContinuationSearchMode::DirtySelectiveOptions;
+        mode == NativeContinuationSearchMode::DirtySelectiveOptions ||
+        mode == NativeContinuationSearchMode::DirtyExecutionCost ||
+        mode == NativeContinuationSearchMode::DirtyExecutionCount;
 }
 
 struct SolveOptions {
     NativeContinuationSearchMode native_continuation_search = NativeContinuationSearchMode::Ordinary;
+    // Native research proposal units: Chaos per primitive execution. Never
+    // canonical prices, a monetary lower, or an executable boundary value.
+    double native_execution_action_price = 0.0;
     double epsilon = 1e-9;          /* max Bellman residual, cost units */
     std::uint32_t max_states = 200000;
     std::uint32_t max_sweeps = 100000;

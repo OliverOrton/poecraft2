@@ -6,6 +6,7 @@
 #include "../src/solver_policy_route.hpp"
 #include "../src/solver_solve_types.hpp"
 #include "../src/solver_compile_contracts.hpp"
+#include "../src/solver_dirty_guidance.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -2087,6 +2088,8 @@ void run_artifact_gate(const char* artifact_dir) {
         PC_CHECK(kernel.terminates_almost_surely);
         PC_CHECK(kernel.expected_primitive_actions == 2.0);
         PC_CHECK(!kernel.exits.empty());
+        const solve_detail::DirtyRowRewards reward{3.0,kernel.expected_primitive_actions};
+        PC_CHECK(reward.proposal_reward(0.5)==4.0); // two primitives, one macro
     }
 
     {
@@ -2176,6 +2179,14 @@ void run_artifact_gate(const char* artifact_dir) {
         PC_CHECK(strategy.find("\"type\":\"alteration\"") !=
                  std::string::npos);
         PC_CHECK(strategy.find("_retry") != std::string::npos);
+        const auto evaluated=evaluate_compiled(session,strategy,{{"alteration",1.0}});
+        PC_CHECK(evaluated.converged && evaluated.cost_complete);
+        double self=0;
+        for (const auto& exit:kernel.exits) if (exit.state==state || exit.state==kNoId) self+=exit.probability;
+        const double count=kernel.expected_primitive_actions/(1.0-self);
+        PC_CHECK(count>1.0);
+        PC_CHECK(std::abs(evaluated.expected_actions-count)<1e-8*count);
+        PC_CHECK(std::abs(evaluated.total_expected_cost-count)<1e-8*count);
     }
 
     /* Validate the real-artifact ProtectedRepeat vocabulary without expanding
@@ -2911,6 +2922,7 @@ void run_nonempty_dirty_composition_tests() {
     old.exact_start_item = frozen;
     old.policy_status = SolvePolicyStatus::BoundedFeasible;
     old.options.allow_economic_restart = false;
+    old.options.goal_progress_gated_reforges = true;
     std::vector<std::uint32_t> walk{old.start_state};
     std::set<std::uint32_t> seen{old.start_state};
     for (std::size_t cursor = 0; cursor < walk.size(); ++cursor) {
@@ -2942,6 +2954,25 @@ void run_nonempty_dirty_composition_tests() {
     PC_CHECK(recovered.prefixes[0].mod_id == frozen.prefixes[0].mod_id &&
         recovered.prefixes[0].flags == PC_MOD_SLOT_FRACTURED);
     PC_CHECK(std::abs(recovery.entries.front().probability - 1) < 1e-12);
+    // A retained goal fracture prevents the native zero-progress retry
+    // basin. Keep the gated caller scope; only terminal aggregation differs
+    // from the complete ungated physical law, with no free reset or lost mass.
+    const auto chaos=registry.index_by_id.at("chaos");
+    const auto physical_redraw=calc.outcomes(old.start_state,chaos,false);
+    const auto gated_redraw=calc.outcomes(old.start_state,chaos,true);
+    PC_CHECK(physical_redraw.supported && gated_redraw.supported && gated_redraw.goal_progress_gated);
+    PC_CHECK(gated_redraw.gated_retry_probability==0);
+    std::map<std::uint32_t,double> physical_mass,gated_mass;
+    const auto aggregate=[&](const auto& law,auto& mass) {
+        for (const auto& exit:law.entries) {
+            const auto& state=calc.state(exit.state);
+            PC_CHECK(state.goal_progress_retry_basin==0 && state.fractured_goal_mask!=0);
+            mass[calc.is_goal_state(state)?kNoId:exit.state]+=exit.probability;
+        }
+    };
+    aggregate(physical_redraw,physical_mass); aggregate(gated_redraw,gated_mass);
+    PC_CHECK(physical_mass.size()==gated_mass.size());
+    for (const auto& [state,mass]:physical_mass) PC_CHECK(std::abs(mass-gated_mass[state])<1e-12);
     old.values.resize(calc.state_count(), 0); old.policy.resize(calc.state_count());
     old.policy_reachable.resize(calc.state_count(), 0); old.goal_states.resize(calc.state_count(), 0);
     old.expanded.resize(calc.state_count(), 0);
@@ -2966,6 +2997,36 @@ void run_nonempty_dirty_composition_tests() {
     PC_CHECK(std::abs(after.success_probability - 1) < 1e-12);
     PC_CHECK(std::abs(after.total_expected_cost - before.total_expected_cost) < 1e-9);
     PC_CHECK(after.total_expected_cost > 2); // all failed additions still pay native removal
+    // A new closed Magic acquisition domain enters only through the global
+    // parent router. Paid Regal's complete native outcomes feed the existing
+    // closed Rare controller; no old-root scalar or free rarity cast is used.
+    auto magic_local=old;
+    const auto magic_state=calc.intern_item(recovered);
+    const auto regal=registry.index_by_id.at("regal");
+    const auto promotion=calc.outcomes(magic_state,regal,false);
+    PC_CHECK(promotion.supported && promotion.applicable);
+    for (const auto& exit:promotion.entries) PC_CHECK(seen.contains(exit.state));
+    magic_local.start_state=magic_state; magic_local.exact_start_item=recovered;
+    magic_local.values.resize(calc.state_count(),0); magic_local.policy.resize(calc.state_count());
+    magic_local.policy_reachable.resize(calc.state_count(),0); magic_local.expanded.resize(calc.state_count(),0);
+    magic_local.goal_states.resize(calc.state_count(),0);
+    magic_local.policy[magic_state]=PolicyOperatorRef{regal};
+    magic_local.policy_reachable[magic_state]=magic_local.expanded[magic_state]=1;
+    const auto magic_graph=compile_policy_strategy_json(calc,magic_local,"paid Magic entry",
+        nullptr,old.options.max_strategy_json_bytes,nullptr,old.options.max_solver_owned_bytes,
+        PolicyRouteDefaultMode::CertificationFailClosed);
+    std::vector<std::uint32_t> closed{magic_state};
+    for (const auto state:walk) if (!old.goal_states[state]) closed.push_back(state);
+    const auto closed_graph=compile_dirty_continuation_strategy_json(calc,magic_graph,magic_graph,
+        closed,{},old.options,nullptr,true);
+    auto magic_prices=prices; magic_prices.emplace("regal",3.0);
+    const auto magic_before=evaluate_compiled(session,magic_graph,magic_prices);
+    const auto magic_after=evaluate_compiled(session,closed_graph,magic_prices);
+    PC_CHECK(magic_after.converged && magic_after.cost_complete);
+    PC_CHECK(magic_after.success_probability==1 && magic_after.action_not_applied_probability==0);
+    PC_CHECK(std::abs(magic_before.total_expected_cost-magic_after.total_expected_cost)<1e-9);
+    PC_CHECK(std::abs(magic_before.expected_actions-magic_after.expected_actions)<1e-9);
+    PC_CHECK(closed_graph.find("\"id\":\"dirty_return\"")==std::string::npos);
     bool refused = false;
     auto wrong_goal = old_graph;
     const auto goal_at = wrong_goal.find("\"min_tier\":1");

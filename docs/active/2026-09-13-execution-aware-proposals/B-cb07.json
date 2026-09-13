@@ -1,0 +1,288 @@
+{
+  "source_report": "out\\execution-aware-proposals\\B\\cases\\cb07-cross-base-product8-long240.json",
+  "source_sha256": "bbd443309e85543ee015ac096f53f2513223cd3d8dee5ddcf537e427b1943640",
+  "case": "cb07-cross-base-product8-long240",
+  "lower": 201.85524142944053,
+  "upper": 223450050.40882382,
+  "stop": "requested_bounded_finish",
+  "exact": false,
+  "bounded_contract": {
+    "checked": true,
+    "passed": true,
+    "path": "bounded",
+    "checks": {
+      "named_stop": true,
+      "strict_gap": true,
+      "open_obligations": true,
+      "evaluated_upper": true,
+      "cheapest_independently_evaluated_incumbent": true
+    },
+    "open_work": {
+      "incremental_actions": 800,
+      "refinement_obligations": 0
+    },
+    "failure_reason": null
+  },
+  "errors": [],
+  "exact_final": {
+    "completed": true,
+    "time_limited": false,
+    "status": "matched",
+    "wall_ms": 118070.1248,
+    "converged": true,
+    "cost_complete": true,
+    "zero_off_policy_mass": true,
+    "cost_reconciled": true,
+    "success_probability": 1,
+    "off_policy_mass": 0,
+    "total_expected_cost": 223450050.40882382,
+    "solver_cost_delta_absolute": 0,
+    "solver_cost_delta_relative": 0
+  },
+  "graph": {
+    "nodes": 186,
+    "edges": 637,
+    "strategy_json_bytes": 403178,
+    "strategy_output_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\B\\strategies\\cb07-cross-base-product8-long240.strategy.json"
+  },
+  "expected_actions": 80523544.22128385,
+  "actions": [
+    {
+      "id": "annul",
+      "expected_visits": 16123052.925389487,
+      "expected_applied": 16123052.925389487,
+      "expected_spend_known": 156232382.8470241,
+      "regions": [
+        {
+          "goal_progress": 1,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 346882,
+          "expected_visits": 15770848.296934912,
+          "expected_applied": 15770848.296934912
+        },
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 78261,
+          "expected_visits": 346838.8865696495,
+          "expected_applied": 346838.8865696495
+        },
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 6762,
+          "expected_visits": 5352.757926513272,
+          "expected_applied": 5352.757926513272
+        },
+        {
+          "goal_progress": 4,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 215,
+          "expected_visits": 12.983958725956978,
+          "expected_applied": 12.983958725956978
+        }
+      ]
+    },
+    {
+      "id": "chaos",
+      "expected_visits": 60741820.820701204,
+      "expected_applied": 60741820.820701204,
+      "expected_spend_known": 60741820.820701204,
+      "regions": [
+        {
+          "goal_progress": 0,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 183756,
+          "expected_visits": 60741820.820701204,
+          "expected_applied": 60741820.820701204
+        }
+      ]
+    },
+    {
+      "id": "exalt",
+      "expected_visits": 3658670.475196893,
+      "expected_applied": 3658670.475196893,
+      "expected_spend_known": 6475846.741098501,
+      "regions": [
+        {
+          "goal_progress": 1,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 662,
+          "expected_visits": 3416201.224345692,
+          "expected_applied": 3416201.224345692
+        },
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 4981,
+          "expected_visits": 238479.72139562404,
+          "expected_applied": 238479.72139562404
+        },
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 864,
+          "expected_visits": 3989.5294555752193,
+          "expected_applied": 3989.5294555752193
+        }
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "kind": "current_run_return_trial",
+      "disposition": "refused",
+      "reason": "exact anchor operation is not globally routable",
+      "stage": "anchor_entries",
+      "eval_complete": true,
+      "eval_states": 416,
+      "eval_pairs": 10,
+      "eval_transitions": 3314,
+      "eval_peak_bytes": 1760556,
+      "wall_seconds": 0.47941
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "retained",
+      "reason": "",
+      "stage": "complete_dirty_controller",
+      "root_action": "gated_chaos",
+      "nonempty_handoff": false,
+      "expansion": 0,
+      "growth_batch": 0,
+      "seed_cost_estimate": 417420782.9923674,
+      "coarse_cost_estimate": 243945017.48992026,
+      "evaluated_cost": 223450050.40882382,
+      "old_entry_cost": null,
+      "native_boundary_entries": 0,
+      "original_scope_preserved": true,
+      "private_lower_used": false,
+      "protected_patch_rows": 0,
+      "automatic_patch_rows": 0,
+      "automatic_refusals": 0,
+      "constructed_rows": 17240,
+      "child_work": 5741784,
+      "child_peak_bytes": 38020159,
+      "eval_complete": true,
+      "eval_states": 622404,
+      "eval_pairs": 438657,
+      "eval_transitions": 9121172,
+      "eval_peak_bytes": 1366079722,
+      "wall_seconds": 331.5406289
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "deferred_by_cost_estimate",
+      "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+      "stage": "continuation_cost_improvement",
+      "root_action": "exalt",
+      "nonempty_handoff": false,
+      "expansion": 0,
+      "growth_batch": 0,
+      "seed_cost_estimate": 2142651074.184875,
+      "coarse_cost_estimate": 1890970873.0658107,
+      "evaluated_cost": null,
+      "old_entry_cost": null,
+      "native_boundary_entries": 0,
+      "original_scope_preserved": true,
+      "private_lower_used": false,
+      "protected_patch_rows": 0,
+      "automatic_patch_rows": 0,
+      "automatic_refusals": 0,
+      "constructed_rows": 17239,
+      "child_work": 0,
+      "child_peak_bytes": 39485489,
+      "eval_complete": false,
+      "eval_states": 0,
+      "eval_pairs": 0,
+      "eval_transitions": 0,
+      "eval_peak_bytes": 0,
+      "wall_seconds": 117.9923469
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "in_progress",
+      "reason": "",
+      "stage": "complete_dirty_controller",
+      "root_action": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+      "nonempty_handoff": false,
+      "expansion": 0,
+      "growth_batch": 0,
+      "seed_cost_estimate": 22480971.447525006,
+      "coarse_cost_estimate": 10679949.76795998,
+      "evaluated_cost": null,
+      "old_entry_cost": null,
+      "native_boundary_entries": 0,
+      "original_scope_preserved": true,
+      "private_lower_used": false,
+      "protected_patch_rows": 0,
+      "automatic_patch_rows": 0,
+      "automatic_refusals": 0,
+      "constructed_rows": 17239,
+      "child_work": 887040,
+      "child_peak_bytes": 37623361,
+      "eval_complete": false,
+      "eval_states": 356629,
+      "eval_pairs": 356633,
+      "eval_transitions": 1275162,
+      "eval_peak_bytes": 217526049,
+      "wall_seconds": 131.4278969
+    },
+    {
+      "kind": "direct_compiled_core_policy",
+      "disposition": "eligible_verified_candidate",
+      "stage": "direct_certification",
+      "evaluated_cost": 3725358919.4984236
+    },
+    {
+      "kind": "private_dirty_continuation",
+      "disposition": "selected_for_publication",
+      "stage": "publication",
+      "evaluated_cost": 223450050.40882382
+    },
+    {
+      "kind": "direct_compiled_core_policy",
+      "disposition": "not_selected",
+      "stage": "publication",
+      "evaluated_cost": 3725358919.4984236
+    },
+    {
+      "kind": "gated_primitive_destructive_renewal",
+      "disposition": "not_selected",
+      "stage": "publication",
+      "evaluated_cost": 3725358919.4984236
+    }
+  ]
+}

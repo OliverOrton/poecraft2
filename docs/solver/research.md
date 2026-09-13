@@ -297,6 +297,18 @@ argument are incorporated under existing lower/coverage premises. Ordinary
 models, static opt-in guidance and historical failed qualification remain
 separate from these diagnostic findings. No new accepted claim is assigned.
 
+The [execution-aware application](../active/2026-09-13-execution-aware-proposals/README.md)
+uses separate native cost and primitive-action rewards for a bounded proposal
+comparison. New global fractured-Magic entry coverage completes a much shorter
+Bow controller at higher original cost; Bow's cheaper winner is preserved.
+Count guidance changes actual selections and finds a small independently
+evaluated Ring improvement (U 227,377.06545019808, N 583,110.3499596338).
+Cost-only follow-through is completed, Amulet's repaired result is preserved,
+and neither primary reaches the declared 25% cost or 50%-count-without-cost-rise
+objectives. Original lowers and exactness remain unchanged. Private proposal
+values, native evaluated counts and execution-limit samples retain separate
+authorities; no learner or new lower-model campaign is selected.
+
 The four [advisory audits](../active/2026-09-09-cross-base-capability-recovery/README.md#advisory-audits)
 are reconciled against that experiment. Their finite-region threshold and
 auxiliary-ceiling arguments now live in the [lower chapter](mathematics/lower-bounds.md#threshold-query);

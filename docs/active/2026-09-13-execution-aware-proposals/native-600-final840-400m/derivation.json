@@ -1,0 +1,26 @@
+[
+  {
+    "family": "bow",
+    "source": "docs\\active\\2026-09-12-adaptive-dirty-guidance\\native-600-final840\\bow\\cb04-cross-base-product8-long240.json",
+    "source_sha256": "3477f5c22b163292ffa85a24213ef3e181bbf63a21f45bfe35d0f376abf7a18f",
+    "changes": [
+      {
+        "path": "/caps/max_reforge_work",
+        "before": 200000000,
+        "after": 400000000
+      }
+    ]
+  },
+  {
+    "family": "ring-four",
+    "source": "docs\\active\\2026-09-13-selective-continuation-improvement\\native-600-final840-ring-four-400m\\cb07-cross-base-product8-long240.json",
+    "source_sha256": "3e3ea7b3bdf2fb1258a33e99c980c0b048fef34484d19951f34712bfb62178ed",
+    "changes": []
+  },
+  {
+    "family": "amulet",
+    "source": "docs\\active\\2026-09-13-policy-economics-checked-potentials\\native-600-final840-amulet-400m\\cb08-cross-base-product8-long240.json",
+    "source_sha256": "dc99451d7534334e1ff9d3360ca97b8103d856c7ce0d4cb1a9db195b569c4346",
+    "changes": []
+  }
+]

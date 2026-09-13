@@ -69,12 +69,14 @@ workaround is no longer needed for these controls. Other native modes, such as
 
 ### Waiting, batching and identity preflight
 
-The corpus runner's optional `--native-dirty-guidance legacy|static|adaptive|protected-first|selective|selective-options`
+The corpus runner's optional `--native-dirty-guidance legacy|static|adaptive|protected-first|selective|selective-options|execution-cost|execution-count`
 selects an explicit native algorithm treatment. Its ledger stores `treatment`
 separately from unchanged request/capacity configuration, while both treatment
 and the complete resolved argv bind resume. Strict input, artifact, corpus,
 machine and capacity comparisons are unchanged; executable/algorithm treatment
-is the intentional experiment difference.
+is the intentional experiment difference. The `execution-count` treatment also
+requires `--native-execution-action-price` (positive, finite Chaos per primitive
+action); that value binds resume and is not a canonical currency-price override.
 
 Declare independent cases, executables, activation and capacity arms before
 launch. Use the existing corpus runner or Lab wait/matrix owner, with timed

@@ -1456,6 +1456,15 @@ bool SolveWork::Impl::try_begin_candidate_proof_handoff() {
 }
 
 bool SolveWork::Impl::try_begin_renewal_candidate_publication() {
+    if (publication_pipeline.dirty_continuation_attempted &&
+        options.high_impact_executable_uppers && !requested_bounded_finish &&
+        !result.diagnostics.resource_cap_hit && !expansion_active &&
+        !publication_pipeline.initial_candidate_task && execution_bottleneck_ready()) {
+        publication_pipeline.execution_bottleneck_attempted=true;
+        publication_pipeline.initial_candidate_task.emplace(try_dirty_continuation_candidates(true));
+        phase=SolvePhase::Expanding;
+        return true;
+    }
     if (!dirty_continuation_search_enabled(options.native_continuation_search) ||
         !options.high_impact_executable_uppers || requested_bounded_finish ||
         result.diagnostics.resource_cap_hit || expansion_active ||

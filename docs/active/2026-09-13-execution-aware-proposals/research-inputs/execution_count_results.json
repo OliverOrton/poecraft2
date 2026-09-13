@@ -1,0 +1,60 @@
+{
+  "classification": "Exact synthetic arithmetic and finite-model enumeration; no native PoE execution",
+  "named_checks": {
+    "tiny_structured_controller_can_need_1_4M_actions": true,
+    "large_count_can_be_finite_and_proper": true,
+    "long_policy_can_be_cheaper": true,
+    "count_penalty_can_prefer_more_expensive_policy": true,
+    "penalized_optimum_not_original_cost_lower": true,
+    "zero_penalty_preserves_cost_ranking": true,
+    "finite_prefix_not_expected_completion": true,
+    "one_option_call_is_not_one_primitive": true,
+    "macro_count_changes_valid_proposal_order": true,
+    "unit_per_macro_would_reverse_order": true,
+    "two_rewards_scalarize_linearly": true,
+    "fixed_policy_count_is_price_independent": true,
+    "residual_duration_bound_is_sharp": true,
+    "residual_error_amplifies_with_count": true,
+    "equal_means_can_have_different_tails": true,
+    "equal_means_do_not_fix_success_by_100": true,
+    "continuation_costs_are_not_additive_spend": true,
+    "continuation_counts_are_not_additive_operations": true,
+    "count_only_subset_optimum_is_not_full_scope_lower": true,
+    "penalty_units_and_crossover": true,
+    "closed_two_option_cycle_refused": true,
+    "free_subgoal_tail_underprices_completion": true,
+    "middle_point_is_deterministically_nondominated": true,
+    "middle_point_requires_incompatible_lambda_conditions": true,
+    "larger_guess_cannot_defeat_scalar_escape": true,
+    "generated_exact_scalarization_identities": true,
+    "generated_global_count_monotonicity": true
+  },
+  "named_check_count": 27,
+  "generated_models": 96,
+  "enumerated_fixed_policies": 768,
+  "scalarized_evaluations": 3072,
+  "examples": {
+    "structured_retry_N": "1400000",
+    "structured_retry_C": "214200",
+    "penalty_crossover": "1/99",
+    "two_reward_C": [
+      "4",
+      "4"
+    ],
+    "two_reward_N": [
+      "24/7",
+      "34/7"
+    ]
+  },
+  "retained_measurement_arithmetic_not_new_runs": {
+    "bow_alteration_plus_augment_count_share": 0.9746553780437746,
+    "bow_fractured_magic_alteration_plus_augment_count_share": 0.9729453472332149,
+    "bow_alteration_plus_augment_cost_share": 0.7583259445444411,
+    "bow_cost_target_25_percent_reduction": 167511.7500294858,
+    "bow_count_target_50_percent_reduction": 702246.0034841659,
+    "ring_cost_target_25_percent_reduction": 170991.9386980635,
+    "ring_count_target_50_percent_reduction": 292684.1627550439,
+    "bow_reference_chaos_per_action": 0.15902475694498588,
+    "ring_reference_chaos_per_action": 0.3894799934703488
+  }
+}

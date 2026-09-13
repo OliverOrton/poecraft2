@@ -1,0 +1,2093 @@
+{
+  "rows": [
+    {
+      "run": "B",
+      "case": "cb04-cross-base-product8-long240",
+      "lower": 341.0345603014526,
+      "upper": 223349.0000393144,
+      "expected_actions": 1404492.0069683318,
+      "exact": false,
+      "stop": "requested_bounded_finish",
+      "independent_evaluation": {
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 25429,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "first_sample_of_returned_upper_ms": 305716.9465,
+      "wall_ms": {
+        "registry_layout": 41.4723,
+        "solve": 600898.374,
+        "compile": 5.9776,
+        "verification": null,
+        "total": 604180.1839
+      },
+      "strategy": "out\\execution-aware-proposals\\B\\strategies\\cb04-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "8640a80a6183f372b7744f14a1f88a66d1ed3a8237d336115b5b3964153981fb",
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 34492416,
+        "process_working_set_after_bytes": 511774720,
+        "process_working_set_delta_bytes": 477282304,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 355660000,
+        "native_peak_owned_bytes": 966081756,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 1024647
+      },
+      "treatment": {
+        "native_dirty_guidance": "selective-options"
+      },
+      "ledger": {
+        "path": "out\\execution-aware-proposals\\B\\ledger.json",
+        "sha256": "a91f01e225cb414787f613492ea18a3ac82622fc9c166d3e1050ac5ece8d1830"
+      }
+    },
+    {
+      "run": "B",
+      "case": "cb07-cross-base-product8-long240",
+      "lower": 201.85524142944053,
+      "upper": 223450050.40882382,
+      "expected_actions": 80523544.22128385,
+      "exact": false,
+      "stop": "requested_bounded_finish",
+      "independent_evaluation": {
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 800,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "first_sample_of_returned_upper_ms": 362193.0804,
+      "wall_ms": {
+        "registry_layout": 39.8081,
+        "solve": 606072.779,
+        "compile": 8.5921,
+        "verification": null,
+        "total": 724454.8272
+      },
+      "strategy": "out\\execution-aware-proposals\\B\\strategies\\cb07-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "7a2b1901e02e93b0f6199bc6906dc050b0bfd62e4a08457415b65b3912dd8a0f",
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 34672640,
+        "process_working_set_after_bytes": 805814272,
+        "process_working_set_delta_bytes": 771141632,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 16164695,
+        "native_peak_owned_bytes": 29897657,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 385652
+      },
+      "treatment": {
+        "native_dirty_guidance": "selective-options"
+      },
+      "ledger": {
+        "path": "out\\execution-aware-proposals\\B\\ledger.json",
+        "sha256": "a91f01e225cb414787f613492ea18a3ac82622fc9c166d3e1050ac5ece8d1830"
+      }
+    },
+    {
+      "run": "B",
+      "case": "cb08-cross-base-product8-long240",
+      "lower": 174.79327321907147,
+      "upper": 12541.579648544115,
+      "expected_actions": 25518.491313143768,
+      "exact": false,
+      "stop": "reforge_work_cap",
+      "independent_evaluation": {
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 25635,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "first_sample_of_returned_upper_ms": 365007.7135,
+      "wall_ms": {
+        "registry_layout": 43.4314,
+        "solve": 601065.8883,
+        "compile": 4.075,
+        "verification": null,
+        "total": 616777.3107
+      },
+      "strategy": "out\\execution-aware-proposals\\B\\strategies\\cb08-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "805f6161caff50680a35b171cc3f2541a79f38ee01e1c1bf20d86a94a9ffb6bb",
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 34660352,
+        "process_working_set_after_bytes": 297013248,
+        "process_working_set_delta_bytes": 262352896,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 20576060,
+        "native_peak_owned_bytes": 194459485,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 1125888
+      },
+      "treatment": {
+        "native_dirty_guidance": "selective-options"
+      },
+      "ledger": {
+        "path": "out\\execution-aware-proposals\\B\\ledger.json",
+        "sha256": "a91f01e225cb414787f613492ea18a3ac82622fc9c166d3e1050ac5ece8d1830"
+      }
+    },
+    {
+      "run": "B-ring-isolated",
+      "case": "cb07-cross-base-product8-long240",
+      "lower": 201.85524142944053,
+      "upper": 227989.251597418,
+      "expected_actions": 585368.3255100878,
+      "exact": false,
+      "stop": "requested_bounded_finish",
+      "independent_evaluation": {
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 800,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "first_sample_of_returned_upper_ms": 548013.922,
+      "wall_ms": {
+        "registry_layout": 33.7029,
+        "solve": 604073.3775,
+        "compile": 5.0148,
+        "verification": null,
+        "total": 614157.8693
+      },
+      "strategy": "out\\execution-aware-proposals\\B-ring-isolated\\strategies\\cb07-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "437931fe98e2162098795677c54d67b184d63ff0924ff8519c541f68fd3fdf3e",
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33869824,
+        "process_working_set_after_bytes": 202547200,
+        "process_working_set_delta_bytes": 168677376,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 16732304,
+        "native_peak_owned_bytes": 29897657,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 499028
+      },
+      "treatment": {
+        "native_dirty_guidance": "selective-options"
+      },
+      "ledger": {
+        "path": "out\\execution-aware-proposals\\B-ring-isolated\\ledger.json",
+        "sha256": "52a914745088ff2023f72def9cab3b3930f11c5b1c6de3ca2d7d8f7e6f7af02b"
+      }
+    },
+    {
+      "run": "E-bow-v7",
+      "case": "cb04-cross-base-product8-long240",
+      "lower": 341.0345603014526,
+      "upper": 223349.0000393144,
+      "expected_actions": 1404492.0069683318,
+      "exact": false,
+      "stop": "requested_bounded_finish",
+      "independent_evaluation": {
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 25429,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "first_sample_of_returned_upper_ms": 187874.1833,
+      "wall_ms": {
+        "registry_layout": 24.5435,
+        "solve": 600536.3146,
+        "compile": 3.4138,
+        "verification": null,
+        "total": 602566.1569
+      },
+      "strategy": "out\\execution-aware-proposals\\E-bow-v7\\strategies\\cb04-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "8640a80a6183f372b7744f14a1f88a66d1ed3a8237d336115b5b3964153981fb",
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33845248,
+        "process_working_set_after_bytes": 519729152,
+        "process_working_set_delta_bytes": 485883904,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 355689335,
+        "native_peak_owned_bytes": 966111275,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 1039651
+      },
+      "treatment": {
+        "native_dirty_guidance": "execution-cost"
+      },
+      "ledger": {
+        "path": "out\\execution-aware-proposals\\E-bow-v7\\ledger.json",
+        "sha256": "5a47673fbf1aeaa019aedb4398da316b6869412bb0370203cca88f4a892a098c"
+      }
+    },
+    {
+      "run": "T-bow-v7",
+      "case": "cb04-cross-base-product8-long240",
+      "lower": 341.0345603014526,
+      "upper": 223349.0000393144,
+      "expected_actions": 1404492.0069683318,
+      "exact": false,
+      "stop": "requested_bounded_finish",
+      "independent_evaluation": {
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 25429,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "first_sample_of_returned_upper_ms": 312909.5609,
+      "wall_ms": {
+        "registry_layout": 24.5109,
+        "solve": 600422.2275,
+        "compile": 3.3556,
+        "verification": null,
+        "total": 602427.4363
+      },
+      "strategy": "out\\execution-aware-proposals\\T-bow-v7\\strategies\\cb04-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "8640a80a6183f372b7744f14a1f88a66d1ed3a8237d336115b5b3964153981fb",
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33853440,
+        "process_working_set_after_bytes": 512311296,
+        "process_working_set_delta_bytes": 478457856,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 356229066,
+        "native_peak_owned_bytes": 967284312,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 1120868
+      },
+      "treatment": {
+        "native_dirty_guidance": "execution-count",
+        "native_execution_action_price": 0.15902475694498588
+      },
+      "ledger": {
+        "path": "out\\execution-aware-proposals\\T-bow-v7\\ledger.json",
+        "sha256": "fafae6cf78a7ce70b147b9ddf83475c2d146d18fba020c92dafc922ffcb95ded"
+      }
+    },
+    {
+      "run": "E-ring",
+      "case": "cb07-cross-base-product8-long240",
+      "lower": 201.85524142944053,
+      "upper": 227989.251597418,
+      "expected_actions": 585368.3255100878,
+      "exact": false,
+      "stop": "requested_bounded_finish",
+      "independent_evaluation": {
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 800,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "first_sample_of_returned_upper_ms": 367813.5595,
+      "wall_ms": {
+        "registry_layout": 29.8437,
+        "solve": 603936.1944,
+        "compile": 3.9876,
+        "verification": null,
+        "total": 613192.4429
+      },
+      "strategy": "out\\execution-aware-proposals\\E-ring\\strategies\\cb07-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "437931fe98e2162098795677c54d67b184d63ff0924ff8519c541f68fd3fdf3e",
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33828864,
+        "process_working_set_after_bytes": 208134144,
+        "process_working_set_delta_bytes": 174305280,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 16965708,
+        "native_peak_owned_bytes": 29897697,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 661083
+      },
+      "treatment": {
+        "native_dirty_guidance": "execution-cost"
+      },
+      "ledger": {
+        "path": "out\\execution-aware-proposals\\E-ring\\ledger.json",
+        "sha256": "414481f69e67a3821e640bcbc8edecc9525a40e073fe857bc3282581e58c62d3"
+      }
+    },
+    {
+      "run": "T-ring",
+      "case": "cb07-cross-base-product8-long240",
+      "lower": 201.85524142944053,
+      "upper": 227377.06545019808,
+      "expected_actions": 583110.3499596338,
+      "exact": false,
+      "stop": "requested_bounded_finish",
+      "independent_evaluation": {
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 800,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "first_sample_of_returned_upper_ms": 449981.1383,
+      "wall_ms": {
+        "registry_layout": 25.7373,
+        "solve": 603985.3425,
+        "compile": 4.0246,
+        "verification": null,
+        "total": 613461.6608
+      },
+      "strategy": "out\\execution-aware-proposals\\T-ring\\strategies\\cb07-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "d156cdea1f540470ef6d7cf307009d6adfbe6230956038ebd44e267b13a22c9e",
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33845248,
+        "process_working_set_after_bytes": 212525056,
+        "process_working_set_delta_bytes": 178679808,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 16444158,
+        "native_peak_owned_bytes": 29897697,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 569343
+      },
+      "treatment": {
+        "native_dirty_guidance": "execution-count",
+        "native_execution_action_price": 0.38947999347034884
+      },
+      "ledger": {
+        "path": "out\\execution-aware-proposals\\T-ring\\ledger.json",
+        "sha256": "801a61422da62a9f19bfb2b6d1af3f231b9aeb9a984ed79035e20d99b123e1c8"
+      }
+    },
+    {
+      "run": "E-amulet",
+      "case": "cb08-cross-base-product8-long240",
+      "lower": 174.79327321907147,
+      "upper": 12541.579648544115,
+      "expected_actions": 25518.491313143768,
+      "exact": false,
+      "stop": "sweep_cap",
+      "independent_evaluation": {
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 39395,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "first_sample_of_returned_upper_ms": 209755.6123,
+      "wall_ms": {
+        "registry_layout": 25.4755,
+        "solve": 601021.1585,
+        "compile": 2.5463,
+        "verification": null,
+        "total": 610430.8435
+      },
+      "strategy": "out\\execution-aware-proposals\\E-amulet\\strategies\\cb08-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "805f6161caff50680a35b171cc3f2541a79f38ee01e1c1bf20d86a94a9ffb6bb",
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33837056,
+        "process_working_set_after_bytes": 319582208,
+        "process_working_set_delta_bytes": 285745152,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 20679158,
+        "native_peak_owned_bytes": 194486967,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 1138895
+      },
+      "treatment": {
+        "native_dirty_guidance": "execution-cost"
+      },
+      "ledger": {
+        "path": "out\\execution-aware-proposals\\E-amulet\\ledger.json",
+        "sha256": "80ab1ee470f0d0ca0de94b6261580bab125b98f075e8d816030dd02e07c0e8f2"
+      }
+    },
+    {
+      "run": "T-amulet",
+      "case": "cb08-cross-base-product8-long240",
+      "lower": 174.79327321907147,
+      "upper": 12541.579648544115,
+      "expected_actions": 25518.491313143768,
+      "exact": false,
+      "stop": "sweep_cap",
+      "independent_evaluation": {
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1
+      },
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 63791,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "errors": [],
+      "first_sample_of_returned_upper_ms": 293757.9184,
+      "wall_ms": {
+        "registry_layout": 24.8805,
+        "solve": 600761.5505,
+        "compile": 2.3073,
+        "verification": null,
+        "total": 609867.8957
+      },
+      "strategy": "out\\execution-aware-proposals\\T-amulet\\strategies\\cb08-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "805f6161caff50680a35b171cc3f2541a79f38ee01e1c1bf20d86a94a9ffb6bb",
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33861632,
+        "process_working_set_after_bytes": 292392960,
+        "process_working_set_delta_bytes": 258531328,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 19121973,
+        "native_peak_owned_bytes": 194574209,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 1147402
+      },
+      "treatment": {
+        "native_dirty_guidance": "execution-count",
+        "native_execution_action_price": 0.49147026345105066
+      },
+      "ledger": {
+        "path": "out\\execution-aware-proposals\\T-amulet\\ledger.json",
+        "sha256": "5d795019cbf0f9b24faeb03bf3b37ec98c5016d4e2ad12277fea5448c7ecd793"
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "baseline": "B",
+      "candidate": "E-bow-v7",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [
+        "cb07-cross-base-product8-long240",
+        "cb08-cross-base-product8-long240"
+      ],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": -1614.0270000000019,
+          "median": -1614.0270000000019,
+          "p90": -1614.0270000000019,
+          "p99": -1614.0270000000019,
+          "max": -1614.0270000000019
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": -362.05939999991097,
+          "median": -362.05939999991097,
+          "p90": -362.05939999991097,
+          "p99": -362.05939999991097,
+          "max": -362.05939999991097
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": -0.14500000000000002,
+          "median": -0.14500000000000002,
+          "p90": -0.14500000000000002,
+          "p99": -0.14500000000000002,
+          "max": -0.14500000000000002
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": 9.5711,
+          "median": 9.5711,
+          "p90": 9.5711,
+          "p99": 9.5711,
+          "max": 9.5711
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": -5232.164999999999,
+          "median": -5232.164999999999,
+          "p90": -5232.164999999999,
+          "p99": -5232.164999999999,
+          "max": -5232.164999999999
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 29519.0,
+          "median": 29519.0,
+          "p90": 29519.0,
+          "p99": 29519.0,
+          "max": 29519.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": -8710.1371,
+          "median": -8710.1371,
+          "p90": -8710.1371,
+          "p99": -8710.1371,
+          "max": -8710.1371
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 358494.0,
+          "median": 358494.0,
+          "p90": 358494.0,
+          "p99": 358494.0,
+          "max": 358494.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb04-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Spine Bow",
+            "class": "Bow",
+            "base_class": "Bow / Spine Bow",
+            "natural_t1_count": "4",
+            "side_mix": "unknown",
+            "pool_density": "unknown",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "requested_bounded_finish",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\B-d2.exe",
+              "sha256": "138bd85ece168e651a6e93e6cba6b97e784f3408e7c27fe76599ebfad31388f8"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v7.exe",
+              "sha256": "abea7694ffbb6e7b3ae76d30f6ab0c80e4e6e8e51d117224dc7c1f22c7ee4004"
+            }
+          },
+          "baseline_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "wall_ms": -1614.0270000000019,
+            "solve_ms": -362.05939999991097,
+            "solve_step_median_ms": -0.14500000000000002,
+            "solve_step_p95_ms": 9.5711,
+            "solve_step_max_ms": -5232.164999999999,
+            "peak_memory_bytes": 29519.0,
+            "time_to_incumbent_ms": -8710.1371,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 0.0,
+            "transitions": 0.0,
+            "reforge_work": 358494.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "baseline": "E-bow-v7",
+      "candidate": "T-bow-v7",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": -138.72060000000056,
+          "median": -138.72060000000056,
+          "p90": -138.72060000000056,
+          "p99": -138.72060000000056,
+          "max": -138.72060000000056
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": -114.08710000000428,
+          "median": -114.08710000000428,
+          "p90": -114.08710000000428,
+          "p99": -114.08710000000428,
+          "max": -114.08710000000428
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": 0.020600000000000007,
+          "median": 0.020600000000000007,
+          "p90": 0.020600000000000007,
+          "p99": 0.020600000000000007,
+          "max": 0.020600000000000007
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": 1.3228000000000009,
+          "median": 1.3228000000000009,
+          "p90": 1.3228000000000009,
+          "p99": 1.3228000000000009,
+          "max": 1.3228000000000009
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": 711.4628000000002,
+          "median": 711.4628000000002,
+          "p90": 711.4628000000002,
+          "p99": 711.4628000000002,
+          "max": 711.4628000000002
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 1173037.0,
+          "median": 1173037.0,
+          "p90": 1173037.0,
+          "p99": 1173037.0,
+          "max": 1173037.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": 256.77410000000054,
+          "median": 256.77410000000054,
+          "p90": 256.77410000000054,
+          "p99": 256.77410000000054,
+          "max": 256.77410000000054
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 7034442.0,
+          "median": 7034442.0,
+          "p90": 7034442.0,
+          "p99": 7034442.0,
+          "max": 7034442.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb04-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Spine Bow",
+            "class": "Bow",
+            "base_class": "Bow / Spine Bow",
+            "natural_t1_count": "4",
+            "side_mix": "unknown",
+            "pool_density": "unknown",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "requested_bounded_finish",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v7.exe",
+              "sha256": "abea7694ffbb6e7b3ae76d30f6ab0c80e4e6e8e51d117224dc7c1f22c7ee4004"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v7.exe",
+              "sha256": "abea7694ffbb6e7b3ae76d30f6ab0c80e4e6e8e51d117224dc7c1f22c7ee4004"
+            }
+          },
+          "baseline_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "wall_ms": -138.72060000000056,
+            "solve_ms": -114.08710000000428,
+            "solve_step_median_ms": 0.020600000000000007,
+            "solve_step_p95_ms": 1.3228000000000009,
+            "solve_step_max_ms": 711.4628000000002,
+            "peak_memory_bytes": 1173037.0,
+            "time_to_incumbent_ms": 256.77410000000054,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 0.0,
+            "transitions": 0.0,
+            "reforge_work": 7034442.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "baseline": "B-ring-isolated",
+      "candidate": "E-ring",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": -965.4263999999966,
+          "median": -965.4263999999966,
+          "p90": -965.4263999999966,
+          "p99": -965.4263999999966,
+          "max": -965.4263999999966
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": -137.18309999990743,
+          "median": -137.18309999990743,
+          "p90": -137.18309999990743,
+          "p99": -137.18309999990743,
+          "max": -137.18309999990743
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": -0.3539000000000001,
+          "median": -0.3539000000000001,
+          "p90": -0.3539000000000001,
+          "p99": -0.3539000000000001,
+          "max": -0.3539000000000001
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": -2.4241,
+          "median": -2.4241,
+          "p90": -2.4241,
+          "p99": -2.4241,
+          "max": -2.4241
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": -1285.1267000000025,
+          "median": -1285.1267000000025,
+          "p90": -1285.1267000000025,
+          "p99": -1285.1267000000025,
+          "max": -1285.1267000000025
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 40.0,
+          "median": 40.0,
+          "p90": 40.0,
+          "p99": 40.0,
+          "max": 40.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": -13337.796699999999,
+          "median": -13337.796699999999,
+          "p90": -13337.796699999999,
+          "p99": -13337.796699999999,
+          "max": -13337.796699999999
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 59037899.0,
+          "median": 59037899.0,
+          "p90": 59037899.0,
+          "p99": 59037899.0,
+          "max": 59037899.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb07-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Amethyst Ring",
+            "class": "Ring",
+            "base_class": "Ring / Amethyst Ring",
+            "natural_t1_count": "4",
+            "side_mix": "unknown",
+            "pool_density": "unknown",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "requested_bounded_finish",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\B-d2.exe",
+              "sha256": "138bd85ece168e651a6e93e6cba6b97e784f3408e7c27fe76599ebfad31388f8"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v7.exe",
+              "sha256": "abea7694ffbb6e7b3ae76d30f6ab0c80e4e6e8e51d117224dc7c1f22c7ee4004"
+            }
+          },
+          "baseline_status": {
+            "actual": "refused_unsupported_action",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "refused_unsupported_action",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "wall_ms": -965.4263999999966,
+            "solve_ms": -137.18309999990743,
+            "solve_step_median_ms": -0.3539000000000001,
+            "solve_step_p95_ms": -2.4241,
+            "solve_step_max_ms": -1285.1267000000025,
+            "peak_memory_bytes": 40.0,
+            "time_to_incumbent_ms": -13337.796699999999,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 0.0,
+            "transitions": 0.0,
+            "reforge_work": 59037899.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "baseline": "E-ring",
+      "candidate": "T-ring",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": 269.2178999999305,
+          "median": 269.2178999999305,
+          "p90": 269.2178999999305,
+          "p99": 269.2178999999305,
+          "max": 269.2178999999305
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": 49.148099999991246,
+          "median": 49.148099999991246,
+          "p90": 49.148099999991246,
+          "p99": 49.148099999991246,
+          "max": 49.148099999991246
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": -0.1481999999999999,
+          "median": -0.1481999999999999,
+          "p90": -0.1481999999999999,
+          "p99": -0.1481999999999999,
+          "max": -0.1481999999999999
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": -0.01529999999999987,
+          "median": -0.01529999999999987,
+          "p90": -0.01529999999999987,
+          "p99": -0.01529999999999987,
+          "max": -0.01529999999999987
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": 135.52080000000024,
+          "median": 135.52080000000024,
+          "p90": 135.52080000000024,
+          "p99": 135.52080000000024,
+          "max": 135.52080000000024
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": 252.6203999999998,
+          "median": 252.6203999999998,
+          "p90": 252.6203999999998,
+          "p99": 252.6203999999998,
+          "max": 252.6203999999998
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": -612.186147219938,
+          "median": -612.186147219938,
+          "p90": -612.186147219938,
+          "p99": -612.186147219938,
+          "max": -612.186147219938
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": -612.186147219938,
+          "median": -612.186147219938,
+          "p90": -612.186147219938,
+          "p99": -612.186147219938,
+          "max": -612.186147219938
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": -3.0327978747775433,
+          "median": -3.0327978747775433,
+          "p90": -3.0327978747775433,
+          "p99": -3.0327978747775433,
+          "max": -3.0327978747775433
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": -46874205.0,
+          "median": -46874205.0,
+          "p90": -46874205.0,
+          "p99": -46874205.0,
+          "max": -46874205.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 1.0,
+          "median": 1.0,
+          "p90": 1.0,
+          "p99": 1.0,
+          "max": 1.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 3.0,
+          "median": 3.0,
+          "p90": 3.0,
+          "p99": 3.0,
+          "max": 3.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": -708.0,
+          "median": -708.0,
+          "p90": -708.0,
+          "p99": -708.0,
+          "max": -708.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb07-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Amethyst Ring",
+            "class": "Ring",
+            "base_class": "Ring / Amethyst Ring",
+            "natural_t1_count": "4",
+            "side_mix": "unknown",
+            "pool_density": "unknown",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "requested_bounded_finish",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v7.exe",
+              "sha256": "abea7694ffbb6e7b3ae76d30f6ab0c80e4e6e8e51d117224dc7c1f22c7ee4004"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v7.exe",
+              "sha256": "abea7694ffbb6e7b3ae76d30f6ab0c80e4e6e8e51d117224dc7c1f22c7ee4004"
+            }
+          },
+          "baseline_status": {
+            "actual": "refused_unsupported_action",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "refused_unsupported_action",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "wall_ms": 269.2178999999305,
+            "solve_ms": 49.148099999991246,
+            "solve_step_median_ms": -0.1481999999999999,
+            "solve_step_p95_ms": -0.01529999999999987,
+            "solve_step_max_ms": 135.52080000000024,
+            "peak_memory_bytes": 0.0,
+            "time_to_incumbent_ms": 252.6203999999998,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": -612.186147219938,
+            "final_absolute_gap": -612.186147219938,
+            "final_relative_gap": -3.0327978747775433,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 0.0,
+            "transitions": 0.0,
+            "reforge_work": -46874205.0,
+            "compiled_nodes": 1.0,
+            "compiled_edges": 3.0,
+            "strategy_json_bytes": -708.0
+          }
+        }
+      ]
+    },
+    {
+      "baseline": "B",
+      "candidate": "E-amulet",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [
+        "cb04-cross-base-product8-long240",
+        "cb07-cross-base-product8-long240"
+      ],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": -6346.467200000072,
+          "median": -6346.467200000072,
+          "p90": -6346.467200000072,
+          "p99": -6346.467200000072,
+          "max": -6346.467200000072
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": -44.729799999971874,
+          "median": -44.729799999971874,
+          "p90": -44.729799999971874,
+          "p99": -44.729799999971874,
+          "max": -44.729799999971874
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": -0.0077000000000000055,
+          "median": -0.0077000000000000055,
+          "p90": -0.0077000000000000055,
+          "p99": -0.0077000000000000055,
+          "max": -0.0077000000000000055
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": -0.079,
+          "median": -0.079,
+          "p90": -0.079,
+          "p99": -0.079,
+          "max": -0.079
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": -12616.949100000002,
+          "median": -12616.949100000002,
+          "p90": -12616.949100000002,
+          "p99": -12616.949100000002,
+          "max": -12616.949100000002
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 27482.0,
+          "median": 27482.0,
+          "p90": 27482.0,
+          "p99": 27482.0,
+          "max": 27482.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": -5358.4802,
+          "median": -5358.4802,
+          "p90": -5358.4802,
+          "p99": -5358.4802,
+          "max": -5358.4802
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 860.0,
+          "median": 860.0,
+          "p90": 860.0,
+          "p99": 860.0,
+          "max": 860.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 860.0,
+          "median": 860.0,
+          "p90": 860.0,
+          "p99": 860.0,
+          "max": 860.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb08-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Onyx Amulet",
+            "class": "Amulet",
+            "base_class": "Amulet / Onyx Amulet",
+            "natural_t1_count": "3",
+            "side_mix": "SSS",
+            "pool_density": "dense_ge_100",
+            "goal_probability": "low_le_0.005",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "refused_resource_cap",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\B-d2.exe",
+              "sha256": "138bd85ece168e651a6e93e6cba6b97e784f3408e7c27fe76599ebfad31388f8"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v7.exe",
+              "sha256": "abea7694ffbb6e7b3ae76d30f6ab0c80e4e6e8e51d117224dc7c1f22c7ee4004"
+            }
+          },
+          "baseline_status": {
+            "actual": "refused_resource_cap",
+            "policy": "bounded_feasible",
+            "termination": "refused_resource_cap"
+          },
+          "candidate_status": {
+            "actual": "refused_sweep_cap",
+            "policy": "bounded_feasible",
+            "termination": "refused_resource_cap"
+          },
+          "deltas": {
+            "wall_ms": -6346.467200000072,
+            "solve_ms": -44.729799999971874,
+            "solve_step_median_ms": -0.0077000000000000055,
+            "solve_step_p95_ms": -0.079,
+            "solve_step_max_ms": -12616.949100000002,
+            "peak_memory_bytes": 27482.0,
+            "time_to_incumbent_ms": -5358.4802,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 860.0,
+            "rows": 860.0,
+            "transitions": 0.0,
+            "reforge_work": 0.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "baseline": "E-amulet",
+      "candidate": "T-amulet",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": -562.9477999999654,
+          "median": -562.9477999999654,
+          "p90": -562.9477999999654,
+          "p99": -562.9477999999654,
+          "max": -562.9477999999654
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": -259.60800000000745,
+          "median": -259.60800000000745,
+          "p90": -259.60800000000745,
+          "p99": -259.60800000000745,
+          "max": -259.60800000000745
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": 0.012500000000000004,
+          "median": 0.012500000000000004,
+          "p90": 0.012500000000000004,
+          "p99": 0.012500000000000004,
+          "max": 0.012500000000000004
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": 0.31670000000000004,
+          "median": 0.31670000000000004,
+          "p90": 0.31670000000000004,
+          "p99": 0.31670000000000004,
+          "max": 0.31670000000000004
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": 141.3706999999995,
+          "median": 141.3706999999995,
+          "p90": 141.3706999999995,
+          "p99": 141.3706999999995,
+          "max": 141.3706999999995
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 87242.0,
+          "median": 87242.0,
+          "p90": 87242.0,
+          "p99": 87242.0,
+          "max": 87242.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": 95.88720000000012,
+          "median": 95.88720000000012,
+          "p90": 95.88720000000012,
+          "p99": 95.88720000000012,
+          "max": 95.88720000000012
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": -2720.0,
+          "median": -2720.0,
+          "p90": -2720.0,
+          "p99": -2720.0,
+          "max": -2720.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 1532.0,
+          "median": 1532.0,
+          "p90": 1532.0,
+          "p99": 1532.0,
+          "max": 1532.0
+        },
+        "rows": {
+          "count": 1,
+          "min": -16652.0,
+          "median": -16652.0,
+          "p90": -16652.0,
+          "p99": -16652.0,
+          "max": -16652.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": -51391.0,
+          "median": -51391.0,
+          "p90": -51391.0,
+          "p99": -51391.0,
+          "max": -51391.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb08-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Onyx Amulet",
+            "class": "Amulet",
+            "base_class": "Amulet / Onyx Amulet",
+            "natural_t1_count": "3",
+            "side_mix": "SSS",
+            "pool_density": "dense_ge_100",
+            "goal_probability": "low_le_0.005",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "refused_resource_cap",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v7.exe",
+              "sha256": "abea7694ffbb6e7b3ae76d30f6ab0c80e4e6e8e51d117224dc7c1f22c7ee4004"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v7.exe",
+              "sha256": "abea7694ffbb6e7b3ae76d30f6ab0c80e4e6e8e51d117224dc7c1f22c7ee4004"
+            }
+          },
+          "baseline_status": {
+            "actual": "refused_sweep_cap",
+            "policy": "bounded_feasible",
+            "termination": "refused_resource_cap"
+          },
+          "candidate_status": {
+            "actual": "refused_sweep_cap",
+            "policy": "bounded_feasible",
+            "termination": "refused_resource_cap"
+          },
+          "deltas": {
+            "wall_ms": -562.9477999999654,
+            "solve_ms": -259.60800000000745,
+            "solve_step_median_ms": 0.012500000000000004,
+            "solve_step_p95_ms": 0.31670000000000004,
+            "solve_step_max_ms": 141.3706999999995,
+            "peak_memory_bytes": 87242.0,
+            "time_to_incumbent_ms": 95.88720000000012,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": -2720.0,
+            "expanded_states": 1532.0,
+            "rows": -16652.0,
+            "transitions": -51391.0,
+            "reforge_work": 0.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    }
+  ],
+  "historical_references": "frozen-references.json",
+  "limits": "Bounded native trajectories, independently checked original-price policies. Historical cost winners constrain retention; fresh timed misses do not supersede them. No exactness or latency claim follows from a count reduction."
+}

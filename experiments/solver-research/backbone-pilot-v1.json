@@ -178,6 +178,37 @@
         "docs/active/2026-09-13-selective-continuation-improvement/build-options-v4.json"
       ],
       "source_binding": "Reviewed b1d main control and frozen v4 treatment; identical input/capacity, complete native final checks and returned graph hashes. The treatment root remains non-exact."
+    },
+    "cb08-blocker-recovery-400m-v1": {
+      "semantic_version": "Reviewed d2 native physical group-conflict observation and closed selected blocker continuation",
+      "property": "Original-price proper policy upper; no native exact closure or stronger root lower",
+      "coefficient_semantics": "Native complete selected outcomes, paid setup/cleanup and independent physical fixed-policy evaluation",
+      "scope": "CB08 Amulet, unchanged targets and economy; 600/840/870 seconds, 8/4 GiB, 400M shared work",
+      "input_references": [
+        "docs/active/2026-09-13-policy-economics-checked-potentials/native-600-final840-amulet-400m/cb08-cross-base-product8-long240.json"
+      ],
+      "source_binding": "docs/active/2026-09-13-policy-economics-checked-potentials/qualification.json"
+    },
+    "checked-potential-pilot-20260913": {
+      "semantic_version": "Complete optimistic native queries with one benchmark-only Harvest-support refinement",
+      "property": "Checked potential components and separate unchanged original root consumers",
+      "coefficient_semantics": "Exact stored-binary inequalities plus freshly rebuilt native minima; independent optimistic-model ceilings",
+      "scope": "CB08 Amulet and CB07 Ring FOUR; not executable acquisition tails",
+      "input_references": [
+        "docs/active/2026-09-13-policy-economics-checked-potentials/potential-refined-amulet.json",
+        "docs/active/2026-09-13-policy-economics-checked-potentials/potential-refined-ring-four.json"
+      ],
+      "source_binding": "docs/active/2026-09-13-policy-economics-checked-potentials/README.md"
+    },
+    "execution-aware-proposals-20260913": {
+      "semantic_version": "Native execution-aware proposal and globally routed fractured-Magic acquisition application v1",
+      "property": "Original-price bounded policy uppers with separately evaluated primitive counts; no exact-closure or lower gain",
+      "coefficient_semantics": "Immutable complete native rows, original cost and OptionKernel primitive rewards, serialized proposal-only weights and independent original-price physical evaluation",
+      "scope": "Matched B/E/T Bow-four, Ring-four and Amulet; 600/840/870 seconds, 8/4 GiB, 400M work",
+      "input_references": [
+        "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/manifest.json"
+      ],
+      "source_binding": "docs/active/2026-09-13-execution-aware-proposals/build-ET-v7.json"
     }
   },
   "comparison_profiles": {
@@ -200,7 +231,7 @@
         "The focused fixture passes 177/0; old code fails two intended checks.",
         "D3 control returns 5218.04095 in 86.477 seconds; D4/D5 fail the native 90-second watchdog without final publication.",
         "Internally retained candidate values are not returned uppers for failed attempts.",
-        "Restored D7 primary independently reproduces 405.36940\u00e2\u20ac\u201c85558.70619 in 66.886 seconds; no new root gain or exact closure."
+        "Restored D7 primary independently reproduces 405.36940–85558.70619 in 66.886 seconds; no new root gain or exact closure."
       ]
     },
     {
@@ -556,7 +587,7 @@
       "role": "Primary regression qualification, matched to D7",
       "treatment": "consume the latched finish request during optional strict work and preserve the cheapest compatible verified publication",
       "limitations": [
-        "Same 405.3694021063399\u201385558.70618560436 interval and graph. No additional primary causal gain or exact closure.",
+        "Same 405.3694021063399–85558.70618560436 interval and graph. No additional primary causal gain or exact closure.",
         "Single observations under unchanged fixture inputs; generated fresh implementation-plan package remains inaccessible."
       ]
     },
@@ -798,6 +829,51 @@
       "limitations": [
         "Main U 228023.27997140243; selective U 227989.251597418 (0.014923% lower), not the 25% objective. Lower remains 201.85524142944053.",
         "Amulet remains 13159.724084639676. Its apparent cheaper blocker patch fails native success/continuation checks and has no upper authority. Neither primary is exact; execution tails and unchanged default/browser scope are separate evidence."
+      ]
+    },
+    {
+      "id": "cb08-blocker-recovered-400m-upper-20260913",
+      "model": "cb08-blocker-recovery-400m-v1",
+      "kind": "verified_policy_upper",
+      "producer": "Fresh observed private seed, selected physical entry, native compiler and independent final evaluator",
+      "validation": "docs/active/2026-09-13-policy-economics-checked-potentials/qualification.json",
+      "evidence": "docs/active/2026-09-13-policy-economics-checked-potentials/final-v3-amulet.json",
+      "pointer": "/upper",
+      "role": "Repaired native group-conflict coverage; matched 400M Amulet upper",
+      "treatment": "Separate actual natural group-conflict members and prioritize the selected physical blocker entry after a closed seed.",
+      "limitations": [
+        "U 12541.579648544115, N 25518.491313143768: 4.6972% cheaper than the matched 400M control. Root L remains 174.79327321907147; no exact closure.",
+        "Initial 200M observed-seed failure remains construction-capped. Ring/Bow final DLL receipts re-evaluate retained policies, not fresh final-build solve trajectories. Original profiles and historical failures remain separate."
+      ]
+    },
+    {
+      "id": "checked-potential-root-negative-20260913",
+      "model": "checked-potential-pilot-20260913",
+      "kind": "conditional_observation",
+      "producer": "Existing checked-ray and native minimum owners with one bounded support refinement",
+      "validation": "docs/active/2026-09-13-policy-economics-checked-potentials/README.md",
+      "evidence": "docs/active/2026-09-13-policy-economics-checked-potentials/potential-refined-amulet.json",
+      "pointer": "/root_consumer_delta",
+      "role": "Both original-cost root consumers remain unchanged",
+      "treatment": "Two ray directions and one support refinement rechecked against complete native minima; separate auxiliary ceilings limit model headroom.",
+      "limitations": [
+        "Amulet/Ring root deltas both zero. Refined components 28.9717 and 27.06 remain below roots 174.7933 and 201.8552; independent auxiliary ceilings 424 and 27.06 prevent the declared thresholds.",
+        "Refinement is benchmark-only; no new native lower claim, policy, or automatic next-model programme. Directional endpoints and whole-model ceilings remain distinct."
+      ]
+    },
+    {
+      "id": "execution-aware-ring-gain-bow-tradeoff-20260913",
+      "model": "execution-aware-proposals-20260913",
+      "kind": "conditional_observation",
+      "producer": "Existing native dirty continuation, sparse policy, compiler, evaluator and original-cost portfolio owners",
+      "validation": "docs/active/2026-09-13-execution-aware-proposals/README.md",
+      "evidence": "docs/active/2026-09-13-execution-aware-proposals/ring-improvement.json",
+      "pointer": "/original_cost",
+      "role": "Small Ring economic/count gain; explicit shorter but costlier Bow controller; Amulet preserved",
+      "treatment": "E expands legal Magic-entry coverage with cost-only guidance; T uses the same machinery with two frozen count-aware proposal weights and cost-only follow-through. Six strict input comparisons pass.",
+      "limitations": [
+        "Ring U 227377.06545019808 and N 583110.3499596338 improve by 0.2685% and 0.3857%. Bow retains U 223349.0000393144; its T Magic controller costs 405922.95178487856 for 327477.8701574201 actions and is diagnostic. Amulet retains U 12541.579648544115 and N 25518.491313143768.",
+        "Neither primary meets the predeclared cost/count objectives; no exact-closure or original-cost lower gain. Late capped alternatives remain unknown. The separate telemetry-cap export profile grants no search gain."
       ]
     }
   ],
