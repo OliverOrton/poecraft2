@@ -152,6 +152,15 @@ Pausing a queue stops new dispatch; it is not pausing and checkpointing a live s
 
 Use the first named cap/stop owner, current phase, retained incumbent status, open action/frontier obligations, and partial-report identity. Read [benchmarking](benchmarking.md#durable-partial-reports) before treating watchdog output as a censored trajectory. Missing observations are not zero work, and resource failure is not exact inapplicability.
 
+Selective dirty growth retains rows, kernels, selected decisions and numerical
+seeds only within one compatible private layout/session/price context. Selected
+row IDs are append-only there. After a complete native check, equality of the
+root-reachable selected row vector permits reuse of that root check when only
+unselected alternatives changed. This is not a new entry certificate: no parent
+binding or off-path upper is synthesized. A changed selected row requires the
+usual compile/properness/evaluation route. Context changes discard the vector;
+there is no persistent library or disk-resume claim.
+
 ## Source basis
 
 This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/resources-resume-replay.md) and [2026-08-30-carrier-ladder-released-candidate-reclamation-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md), [2026-09-05-native-applied-reforge-preparation-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md), [solver-lab.md](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/foundation/solver-lab.md). Claim IDs are registered in [the ledger](claims.md); each history states its acceptance basis. The [backbone integration](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) is complete. Remaining native correspondence is scoped in [research](research.md#open-obligations); an argument link does not confer runtime authority.

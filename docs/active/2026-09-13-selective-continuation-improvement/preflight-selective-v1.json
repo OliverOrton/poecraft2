@@ -1,0 +1,20 @@
+[
+  {
+    "family": "ring-four",
+    "matching_identity": {
+      "configuration": true,
+      "corpus": true,
+      "artifact": true,
+      "machine": true
+    }
+  },
+  {
+    "family": "amulet",
+    "matching_identity": {
+      "configuration": true,
+      "corpus": true,
+      "artifact": true,
+      "machine": true
+    }
+  }
+]

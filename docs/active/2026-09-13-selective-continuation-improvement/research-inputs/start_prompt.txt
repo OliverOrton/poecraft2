@@ -1,0 +1,87 @@
+Implement the attached Selective Action Coverage and Incremental Continuation
+Improvement v1 programme in OliverOrton/poecraft2.
+
+Reviewed remote main:
+b1d7436c37e2cf2dec5149713b685fe6ecffaad6
+
+You may be a fresh session. Reconcile actual local/newer work and preserve it.
+This request selects the next implementation; no prior thread/Goal/ZIP is needed.
+One sequential session, no subagents, inherited deadline, automatic restart or
+push. Preserve unrelated work and protected root 0 without inspecting/staging it.
+
+The previous adaptive programme is DONE. Do not repeat M0/M0A, the no-polling fix,
+case/identity tooling, first-policy recovery, dirty-state construction, checker
+headroom, coarsening proof, protected cleanup/compiler fixes or rank-one occupancy
+preparation. Keep them. Keep static native guidance as default. Three-family
+adaptive scaling changed no tested next obligation and supplied no extra gain;
+this is not a mandate for a bigger learner.
+
+Current independently evaluated native opt-in references:
+  Amulet CB08 three goals: 13,159.724084639676
+  Ring CB07 FOUR goals: 228,023.27997140243
+  Bow CB04 contrast: 223,349.0000393144
+Ring-two is separate. Original scope/defaults remain unchanged; none of these
+new primary results is exact closure.
+
+Read implementation_plan.md, then the targeted argument in
+review_and_mathematics.md. resource_policy.md defines the authorized follow-through.
+Use one living record and continue into native implementation; do not stop at
+another plan, a coverage table, a toy test, a large allocation or a single row.
+
+The next problem is work granularity. Current root search chooses one Essence
+by price/forced-goal COUNT, but forced GOAL IDENTITY and the remaining subproblem
+can matter far more. Inspect actual admitted/priced/satisfying-tier options first;
+do not assume a better one exists, conflate equal masks with equal laws, or invent
+PoE mechanics. If only one useful forcing class exists, record that and continue.
+
+Meanwhile, Ring's protected Essence was left only 9,140,737 shared-work units and
+failed before installing a row. The Exalt protection closure built 8,519 protected
+alternatives and 7,969 refusals without a completed improvement round. Ring now
+spends87.5% on repeated Essences, not96% on Annul. Capped protection is UNKNOWN,
+not an evaluated loser. Give a concrete opportunity a fair, bounded test.
+
+Reuse the existing private continuation, native option, sparse policy and
+portfolio owners. Preserve a closed seed, then complete selected source/operator
+or small coherent dependency patches and evaluate before expanding every
+alternative's descendants. Preserve compatible rows and a correct namespace;
+no second planner, permanent recipe library, speculative global graph copy or
+another numerical backend. The ordinary solver already has policy iteration
+and candidate continuation: do not implement them as if missing.
+
+Keep all positive-mass selected outcomes, setup/cleanup, rarity recovery,
+observations, prices and properness. Unknown tails are not goals or root uppers.
+A private subset optimum is not the full-scope lower. Existing root-only dirty
+artifacts have no parent policy bindings to fabricate. Selected-candidate
+identities stay fixed while new estimates rank future work.
+
+Use state/action continuation estimates for prioritization where they can change
+real work. Old occupancy times advantage is only a proxy; changing a recurrent
+controller changes its visits. Use the handoff's complete response reasoning and
+existing native checks. Do not permanently retire actions using a guess or a
+costly known policy. Do not require each individual edit in a coherent patch to
+improve the root before completing its needed tail.
+
+Start from the qualified 600/840/870-second, 8-GiB aggregate / 4-GiB checker profile.
+A separate400M shared-reforge-work test at the same clock is authorized for the
+named cumulative-work barrier. A targeted900/1140/1170-second follow-through is
+allowed for a materially advancing candidate. Increase other binding caps only
+with actual host admission. Do not reset each child's shared debit, loosen
+validation or silently enlarge browser limits. Compare code at identical caps;
+label capacity-only improvements honestly.
+
+Aim for new exact closure or the plan's material two-family verified-cost goal.
+Continue through compiled/native-evaluated returned policies, original-profile
+and affected product qualification. Keep execution-tail results, CB05/CB09,
+CB02's initial failure and CB03's unreproduced high-water mark visible. Explicitly
+check bounded U/stop contracts; generic reporter flags alone do not cover them.
+
+Batch independent runs serially under the working deterministic long-wait route.
+No routine LLM polling or duplicate worker launch. Use compact projections and
+proportional focused tests, not repeated full suites, whole censuses or routine
+Simulator. Sample only final genuinely changed policies per current instructions.
+
+If a branch is genuinely disproved, retain its precise evidence and move to the
+next supported opportunity. If no useful mechanism remains, preserve the valid
+partial result and exact blocker rather than forcing a new architecture or
+marking an unmet capability goal complete. Import the actual mathematical
+findings once into existing owners using documentation_delta.md.

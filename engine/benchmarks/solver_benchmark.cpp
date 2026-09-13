@@ -7,6 +7,7 @@
 #include "json.hpp"
 #include "solver_diagnostic_options.hpp"
 #include "solver_calc_types.hpp"
+#include "solver_options_helpers.hpp"
 #include "solver_executable_fragment_engine.hpp"
 
 #include <algorithm>
@@ -65,6 +66,7 @@ struct Arguments {
     double proof_handoff_seconds = 0;
     bool validate_only = false;
     bool action_layout_diagnostic = false;
+    bool action_coverage_diagnostic = false;
     bool fragment_contract_rejection_probes = false;
     bool fragment_shadow_only = false;
     bool resumable_joint_policy_continuation_diagnostic = false;
@@ -3074,6 +3076,81 @@ void create_case_objects(
 
 // Native-only attribution through the real request constructor. This never
 // changes the caller handle's candidate set or transplants a layout namespace.
+std::string run_action_coverage_probe(pc_data_handle data, const Value& specification) {
+    using namespace poecraft::solver;
+    using poecraft::ActionType;
+    NativeHandles handles;
+    pc_item_state start;
+    create_case_objects(data, specification, handles, start);
+    auto& calc = solver_lower_diagnostic_calculator(handles.solver);
+    const auto state = calc.intern_item(start);
+    const auto economy_json = load_case_economy_json(specification);
+    const auto economy = Parser(economy_json.data(), economy_json.size()).parse();
+    const auto& prices = required(economy, "prices", Type::Object);
+    std::ostringstream out;
+    out << std::setprecision(17) << "{\"kind\":\"native_action_coverage_v1\",\"case\":"
+        << escape_json(required(specification,"id",Type::String).string)
+        << ",\"kernel_evaluations\":0,\"forcing_masks_are_not_kernel_equivalence\":true,\"actions\":[";
+    bool first = true;
+    for (std::uint32_t i=0;i<calc.registry().actions.size();++i) {
+        const auto& action=calc.registry().actions[i];
+        const bool forcing=action.params.type==ActionType::Essence;
+        const bool setup=action.params.type==ActionType::Bench &&
+            action.params.mod_id<calc.session().metamod_type.size() &&
+            calc.session().metamod_type[action.params.mod_id]>=0;
+        if (!forcing && !setup && action.params.type!=ActionType::HarvestReforge &&
+            action.params.type!=ActionType::Scour && action.params.type!=ActionType::Annul &&
+            action.params.type!=ActionType::Regal && action.params.type!=ActionType::RemoveCraftedModifiers) continue;
+        bool priced=true; double cost=0;
+        for (const auto& key:action.cost_keys) {
+            const auto* value=prices.find(key);
+            if (!value || value->type!=Type::Number || !std::isfinite(value->number) || value->number<0) priced=false;
+            else cost+=value->number;
+        }
+        const bool admitted=std::find(calc.candidates().begin(),calc.candidates().end(),i)!=calc.candidates().end();
+        const bool legal=action_legal(calc.session(),action,calc.state(state));
+        if (!first) out << ','; first=false;
+        out << "{\"action\":" << escape_json(action.id) << ",\"admitted_primitive\":" << (admitted?"true":"false")
+            << ",\"legal_at_start\":" << (legal?"true":"false") << ",\"priced\":" << (priced?"true":"false")
+            << ",\"price\":";
+        if (priced) out << cost; else out << "null";
+        if (forcing && action.params.essence_index<calc.session().essence_guaranteed_mod_ids.size()) {
+            const auto mod=calc.session().essence_guaranteed_mod_ids[action.params.essence_index];
+            unsigned mask=0, member_mask=0;
+            for (std::size_t slot=0;slot<calc.layout().slots.size();++slot) {
+                const auto& target=calc.layout().slots[slot];
+                if (mod/64<target.satisfying_mask.size() && ((target.satisfying_mask[mod/64]>>(mod%64))&1ull)) mask|=1u<<slot;
+                if (mod/64<target.member_mask.size() && ((target.member_mask[mod/64]>>(mod%64))&1ull)) member_mask|=1u<<slot;
+            }
+            const auto global=calc.session().global_index.at(mod);
+            out << ",\"forced_mod\":" << escape_json(calc.session().data->strings.at(calc.session().data->mod_key_sid.at(global)))
+                << ",\"forced_side\":" << int(calc.session().gen_type.at(mod))
+                << ",\"satisfying_goal_mask\":" << mask << ",\"goal_family_member_mask\":" << member_mask
+                << ",\"remaining_goal_mask\":" << (((1u<<calc.goal().slots.size())-1)&~mask)
+                << ",\"eligible_forcing\":" << (admitted&&legal&&priced&&mask?"true":"false");
+        }
+        out << '}';
+    }
+    std::unordered_map<std::string,double> native_prices;
+    for (const auto& [key,value]:prices.object)
+        if (value.type==Type::Number && std::isfinite(value.number) && value.number>=0)
+            native_prices.emplace(key,value.number);
+    const auto automatic=synthesize_automatic_options(calc,state,start,&native_prices);
+    out << "],\"automatic_specs_at_entry\":[";
+    first=true;
+    for (const auto& spec:automatic.specs) {
+        if (!first) out << ','; first=false;
+        out << "{\"kind\":" << unsigned(spec.kind) << ",\"automatic_kind\":" << unsigned(spec.automatic_kind)
+            << ",\"action\":" << escape_json(spec.action_id) << ",\"side\":" << int(spec.side)
+            << ",\"relevant_goal_mask\":" << spec.relevant_goal_mask << ",\"setup\":[";
+        bool first_setup=true;
+        for (const auto& id:spec.setup_action_ids) { if (!first_setup) out << ','; first_setup=false; out << escape_json(id); }
+        out << "],\"row_support\":\"not_evaluated\"}";
+    }
+    out << "]}\n";
+    return out.str();
+}
+
 std::string run_action_layout_probe(pc_data_handle data, const Value& specification) {
     using namespace poecraft::solver;
     using poecraft::ActionType;
@@ -3572,6 +3649,9 @@ CaseResult run_case(
             if ((solve_options.solver_flags & PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH)==0)
                 throw std::runtime_error("dirty guidance treatment requires the native dirty opt-in request");
             const auto selected=native_dirty_guidance=="adaptive" ? Mode::DirtyGuidedAdaptive :
+                native_dirty_guidance=="protected-first" ? Mode::DirtyProtectedFirst :
+                native_dirty_guidance=="selective-options" ? Mode::DirtySelectiveOptions :
+                native_dirty_guidance=="selective" ? Mode::DirtySelective :
                 native_dirty_guidance=="static" ? Mode::DirtyGuidedStatic : Mode::DirtyRestrictedFreshLayout;
             const auto configured=poecraft::solver::configure_solver_native_continuation_search(handles.solver,selected,&error);
             if (configured!=PC_RESULT_OK)
@@ -5792,6 +5872,7 @@ Arguments parse_arguments(int argc, char** argv) {
                 value("--load-development-checkpoint");
         }
         else if (argument == "--action-layout-diagnostic") args.action_layout_diagnostic = true;
+        else if (argument == "--action-coverage-diagnostic") args.action_coverage_diagnostic = true;
         else if (argument == "--case") args.case_id = value("--case");
         else if (argument == "--native-retention-diagnostic") args.native_retention_diagnostic=value("--native-retention-diagnostic");
         else if (argument == "--native-dirty-guidance") args.native_dirty_guidance=value("--native-dirty-guidance");
@@ -5879,8 +5960,10 @@ Arguments parse_arguments(int argc, char** argv) {
         throw std::runtime_error("proof handoff requires one ordinary case without checkpoint or shadow diagnostics");
     }
     if (!args.native_dirty_guidance.empty() && args.native_dirty_guidance!="legacy" &&
-        args.native_dirty_guidance!="static" && args.native_dirty_guidance!="adaptive")
-        throw std::runtime_error("native dirty guidance must be legacy, static or adaptive");
+        args.native_dirty_guidance!="static" && args.native_dirty_guidance!="adaptive" &&
+        args.native_dirty_guidance!="protected-first" && args.native_dirty_guidance!="selective" &&
+        args.native_dirty_guidance!="selective-options")
+        throw std::runtime_error("native dirty guidance must be legacy, static, adaptive, protected-first, selective or selective-options");
     if (!args.native_retention_diagnostic.empty() &&
         ((args.native_retention_diagnostic!="cold" && args.native_retention_diagnostic!="reuse" && args.native_retention_diagnostic!="checked" && args.native_retention_diagnostic!="reuse-unconsumed") ||
          args.case_id.empty() || args.validate_only || args.fragment_shadow_only ||
@@ -6159,6 +6242,12 @@ int main(int argc, char** argv) {
                 return 0;
             }
 
+            if (args.action_coverage_diagnostic) {
+                if (specifications.size()!=1) throw std::runtime_error("action coverage diagnostic requires one case");
+                write_file(fs::absolute(args.output), run_action_coverage_probe(data, specifications.front()));
+                pc_data_destroy(data);
+                return 0;
+            }
             if (args.action_layout_diagnostic) {
                 if (specifications.size() != 1) throw std::runtime_error("action layout diagnostic requires one case");
                 write_file(fs::absolute(args.output), run_action_layout_probe(data, specifications.front()));

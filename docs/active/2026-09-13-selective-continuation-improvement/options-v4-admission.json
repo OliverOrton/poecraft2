@@ -1,0 +1,24 @@
+[
+  {
+    "case": "options-v4-amulet-200m",
+    "utc": "2026-09-13T00:48:19.845757+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 38803038208,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 15032385536,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One qualified native request: 8-GiB aggregate plus 6-GiB runner headroom."
+  },
+  {
+    "case": "options-v4-ring-four-400m",
+    "utc": "2026-09-13T00:58:30.424125+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 38592409600,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 15032385536,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One qualified native request: 8-GiB aggregate plus 6-GiB runner headroom."
+  }
+]

@@ -2,6 +2,7 @@
 
 #include "../src/json.hpp"
 #include "../src/solver_internal.hpp"
+#include "../src/solver_solve_types.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -17,6 +18,10 @@
 
 using namespace poecraft;
 using namespace poecraft::solver;
+
+namespace poecraft::solver {
+struct SolveWorkTestAccess { using Impl = SolveWork::Impl; };
+}
 
 namespace {
 
@@ -2802,9 +2807,97 @@ void run_solver_automatic_veiled_tests() {
     run_automatic_veiled_program();
 }
 
+void run_selective_dirty_growth() {
+    auto session=make_automatic_session();
+    auto& data=const_cast<DataImpl&>(*session->data);
+    for (const auto mod:{kGoalPrefix,kGoalSuffix,kSuffixCompetitor,kPrefixJunkA,kPrefixJunkB,kSuffixJunk}) {
+        session->base_spawn_weight[mod]=100; session->base_roll_weight[mod]=100;
+        data.spawn_weights[mod]=100;
+        pc_bitset_set(session->positive_base_weight_mask.data(),mod);
+    }
+    GoalSpec goal; goal.rarity=PC_RARITY_RARE; goal.automatic_candidates=true;
+    for (const auto family:{100u,103u,104u}) { GoalSlot slot; slot.family_id=family; slot.min_tier=1; goal.slots.push_back(slot); }
+    auto registry=build_action_registry(*session);
+    std::vector<std::uint32_t> candidates;
+    for (const char* id:{"exalt","annul","chaos","scour","regal"}) candidates.push_back(registry.index_by_id.at(id));
+    const std::unordered_map<std::string,double> prices{{"exalt",1},{"annul",5},{"chaos",20},{"scour",1},{"regal",1},
+        {"remove_crafted_modifiers",0.1},{"bench:s83_mod_9",0.1},{"bench:s83_mod_10",0.1},
+        {"bench:s83_mod_8",0.01}};
+    double eager_upper=kInfinity, selective_upper=kInfinity;
+    for (unsigned pass=0;pass<5;++pass) {
+        const auto mode=pass==0 ? NativeContinuationSearchMode::DirtyProtectedFirst :
+            pass>=3 ? NativeContinuationSearchMode::DirtySelectiveOptions : NativeContinuationSearchMode::DirtySelective;
+        CalcContext calc(session,goal,registry,candidates);
+        pc_item_state start; pc_item_clear(&start); start.rarity=PC_RARITY_RARE;
+        SolveOptions options; options.high_impact_executable_uppers=true;
+        options.allow_economic_restart=false; options.goal_progress_gated_reforges=true;
+        options.native_continuation_search=mode;
+        SolveWorkTestAccess::Impl work(calc,start,prices,options);
+        const auto parent_states=calc.state_count();
+        auto task=work.try_dirty_continuation_candidates(); bool complete=false, abandoned=false;
+        double preserved_upper=kInfinity;
+        for (unsigned unit=0;unit<1000000;++unit) {
+            if (task.resume()) { complete=true; break; }
+            if (pass==2 || pass==4) {
+                const auto& samples=work.result.diagnostics.policy_refinement.publication_candidate_samples;
+                if (samples.empty()) continue;
+                const auto& text=samples.back(); const auto sample=json::Parser(text.data(),text.size()).parse();
+                if (sample.at("kind").as_string()=="dirty_continuation_candidate" &&
+                    sample.at("growth_batch").as_number()>0 &&
+                    ((pass==2 && sample.at("protected_patch_rows").as_number()>0 &&
+                      sample.at("stage").as_string()=="selected_protection_patch") ||
+                     (pass==4 && sample.at("automatic_patch_rows").as_number()>0 &&
+                      sample.at("stage").as_string()=="selected_native_option_patch"))) {
+                    PC_CHECK(!sample.at("eval_complete").as_bool());
+                    preserved_upper=work.incumbent_portfolio.verified_executable_upper();
+                    work.requested_bounded_finish=true; task.reset(); abandoned=true; complete=true; break;
+                }
+            }
+        }
+        PC_CHECK(complete);
+        if (!complete) { task.reset(); continue; }
+        if (!abandoned) { PC_CHECK(task.take_result()); task.reset(); }
+        const auto upper=work.incumbent_portfolio.verified_executable_upper();
+        if (!std::isfinite(upper))
+            for (const auto& sample:work.result.diagnostics.policy_refinement.publication_candidate_samples)
+                std::printf("growth diagnostic: %s\n",sample.c_str());
+        PC_CHECK(std::isfinite(upper)); PC_CHECK(calc.state_count()==parent_states);
+        PC_CHECK(calc.candidates()==candidates); PC_CHECK(work.transition_cache->rows.empty());
+        if (pass==2 || pass==4) {
+            PC_CHECK(abandoned); PC_CHECK(upper==preserved_upper);
+            PC_CHECK(!work.certified_fallback_portfolio.empty());
+            for (const auto& retained:work.certified_fallback_portfolio)
+                PC_CHECK(work.retained_incumbent_invalid_reason(retained)==nullptr);
+            continue;
+        }
+        bool reused=false, closed_seed=false, compiled_growth=false, native_options=false, reused_check=false;
+        for (const auto& text:work.result.diagnostics.policy_refinement.publication_candidate_samples) {
+            const auto sample=json::Parser(text.data(),text.size()).parse();
+            if (sample.at("kind").as_string()!="dirty_continuation_candidate") continue;
+            PC_CHECK(sample.at("candidate_total_reforge_work").as_number()<=sample.at("initial_reforge_remainder").as_number());
+            if (sample.at("expansion").as_number()==2) {
+                closed_seed|=sample.at("growth_batch").as_number()==0 && sample.at("eval_complete").as_bool();
+                reused|=sample.at("growth_batch").as_number()>0 && sample.at("reused_rows").as_number()>0;
+                compiled_growth|=sample.at("growth_batch").as_number()>0 && sample.at("eval_complete").as_bool();
+                native_options|=sample.at("automatic_patch_rows").as_number()>0;
+                reused_check|=sample.at("disposition").as_string()=="reused_verified_selected_controller";
+            }
+        }
+        if (mode==NativeContinuationSearchMode::DirtySelective) {
+            selective_upper=upper; PC_CHECK(reused); PC_CHECK(closed_seed); PC_CHECK(compiled_growth);
+        } else if (pass==3) {
+            std::printf("native-options upper=%.12g\n",upper);
+            PC_CHECK(native_options); PC_CHECK(reused); PC_CHECK(reused_check); PC_CHECK(upper<=selective_upper+1e-7);
+        } else eager_upper=upper;
+    }
+    std::printf("selective native growth: eager=%.12g selective=%.12g\n",eager_upper,selective_upper);
+    PC_CHECK(selective_upper<=eager_upper+1e-7);
+}
+
 void run_solver_protected_setup_tests() {
     run_protected_setup_capacity();
     run_protected_setup_after_cleanup();
+    run_selective_dirty_growth();
 }
 
 void run_solver_s8_3_tests() {

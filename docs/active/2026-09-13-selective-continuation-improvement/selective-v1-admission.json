@@ -1,0 +1,24 @@
+[
+  {
+    "case": "ring-four",
+    "utc": "2026-09-12T23:21:18.727612+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 38773080064,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 15032385536,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One qualified native request, 8-GiB aggregate plus 6-GiB runner headroom."
+  },
+  {
+    "case": "amulet",
+    "utc": "2026-09-12T23:31:39.877236+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 38626627584,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 15032385536,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One qualified native request, 8-GiB aggregate plus 6-GiB runner headroom."
+  }
+]

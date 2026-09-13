@@ -1,0 +1,479 @@
+{
+  "reviewed_main": "b1d7436c37e2cf2dec5149713b685fe6ecffaad6",
+  "status": "partial; requested two-family material reduction and exact closure not achieved",
+  "commit_state": "retained in the local commit containing this receipt; no push",
+  "activation": {
+    "public_native_dirty_opt_in": "DirtyGuidedStatic",
+    "browser_defaults": "unchanged",
+    "selective_modes": "explicit native diagnostics only"
+  },
+  "effective_controls": {
+    "native_seconds": 600,
+    "final_checker_seconds": 840,
+    "host_watchdog_seconds": 870,
+    "aggregate_owned_bytes": 8589934592,
+    "candidate_owned_bytes": 4294967296,
+    "shared_work_primary": 200000000,
+    "ring_diagnostic_shared_work": 400000000,
+    "additional_time_or_memory_extension": false,
+    "host_admission": "fresh per timed case; 14-GiB reservation plus max(8 GiB,20% physical total) available headroom; separate admission/preflight receipts",
+    "original_profile": "separate and preserved; original full gate not rerun"
+  },
+  "build_identity": "build-options-v4.json",
+  "artifacts": {
+    "build/engine/poecraft_engine.dll": {
+      "sha256": "b7f8e8695bbc89c08fc3006353cb30ccc6dcd809d5a825903397200812ea3b0a",
+      "bytes": 12889902
+    },
+    "bindings/wasm/dist/poecraft_engine.wasm": {
+      "sha256": "6c8021162ae9c7fe8d7beaf044634679db14ee31a44bb9933b862a48e80ac48d",
+      "bytes": 8087724
+    }
+  },
+  "strict_native_comparison": {
+    "receipt": "native-comparison.json",
+    "pairs": 7,
+    "exclusions": 0,
+    "explicit_bounded_and_stop_checks_passed": true
+  },
+  "final_native_results": [
+    {
+      "receipt": "options-v4-amulet-200m.json",
+      "upper": 13159.724084639676,
+      "lower": 174.79327321907147,
+      "exact": false,
+      "first_policy_ms": 6951.4276,
+      "best_policy_observed_ms": 191235.2079,
+      "expected_actions": 26655.734445108934,
+      "expected_consumption": [
+        {
+          "key": "annul",
+          "quantity": 221.8946998733404
+        },
+        {
+          "key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+          "quantity": 0.9682117577642475
+        },
+        {
+          "key": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "quantity": 26311.196415246326
+        },
+        {
+          "key": "exalt",
+          "quantity": 120.70690647382129
+        },
+        {
+          "key": "scour",
+          "quantity": 0.9682117577642475
+        }
+      ],
+      "stop": "reforge_work_cap",
+      "termination": "refused_resource_cap",
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 72500,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "explicit_checks": {
+        "finite_upper": true,
+        "native_upper_matches": true,
+        "stop_named": true,
+        "bounded_contract_passed": true,
+        "completed_no_survivor": true
+      },
+      "strategy_sha256": "3baa8c88c7d277befadd91ef8dcc5dca13c634d48de2f020d7c7a9cac8f3c7c6",
+      "comparison": {
+        "paired_cases": 1,
+        "excluded": [],
+        "cost_delta": 0.0,
+        "cost_reduction_percent": 0.0,
+        "graph_identical": false
+      },
+      "revision": "v4"
+    },
+    {
+      "receipt": "options-v4-ring-four-400m.json",
+      "upper": 227989.251597418,
+      "lower": 201.85524142944053,
+      "exact": false,
+      "first_policy_ms": 18315.4366,
+      "best_policy_observed_ms": 369435.353,
+      "expected_actions": 585368.3255100878,
+      "expected_consumption": [
+        {
+          "key": "annul",
+          "quantity": 1329.7476364923234
+        },
+        {
+          "key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+          "quantity": 6.100847070946025
+        },
+        {
+          "key": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "quantity": 575402.5848142772
+        },
+        {
+          "key": "exalt",
+          "quantity": 8625.824980865846
+        },
+        {
+          "key": "scour",
+          "quantity": 4.067231380630683
+        }
+      ],
+      "stop": "requested_bounded_finish",
+      "termination": "requested_bounded_finish",
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 4247,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "explicit_checks": {
+        "finite_upper": true,
+        "native_upper_matches": true,
+        "stop_named": true,
+        "bounded_contract_passed": true,
+        "completed_no_survivor": true
+      },
+      "strategy_sha256": "437931fe98e2162098795677c54d67b184d63ff0924ff8519c541f68fd3fdf3e",
+      "comparison": {
+        "paired_cases": 1,
+        "excluded": [],
+        "cost_delta": -34.02837398441625,
+        "cost_reduction_percent": 0.01492320169619695,
+        "graph_identical": false
+      },
+      "revision": "v4"
+    },
+    {
+      "receipt": "options-v3-bow-200m.json",
+      "upper": 223349.0000393144,
+      "lower": 341.0345603014526,
+      "exact": false,
+      "first_policy_ms": 13081.1217,
+      "best_policy_observed_ms": 190966.5932,
+      "expected_actions": 1404492.0069683318,
+      "expected_consumption": [
+        {
+          "key": "alteration",
+          "quantity": 908324.4368865712
+        },
+        {
+          "key": "annul",
+          "quantity": 1546.8822256556145
+        },
+        {
+          "key": "augment",
+          "quantity": 460571.25112460786
+        },
+        {
+          "key": "base",
+          "quantity": 2.9999643810881738
+        },
+        {
+          "key": "exalt",
+          "quantity": 18831.99401429744
+        },
+        {
+          "key": "fracture",
+          "quantity": 3.9999525081175533
+        },
+        {
+          "key": "regal",
+          "quantity": 7604.506808484139
+        },
+        {
+          "key": "scour",
+          "quantity": 7601.506844103155
+        },
+        {
+          "key": "transmute",
+          "quantity": 4.429147716181492
+        }
+      ],
+      "stop": "requested_bounded_finish",
+      "termination": "requested_bounded_finish",
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 25429,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "explicit_checks": {
+        "finite_upper": true,
+        "native_upper_matches": true,
+        "stop_named": true,
+        "bounded_contract_passed": true,
+        "completed_no_survivor": true
+      },
+      "strategy_sha256": "8640a80a6183f372b7744f14a1f88a66d1ed3a8237d336115b5b3964153981fb",
+      "comparison": {
+        "paired_cases": 1,
+        "excluded": [],
+        "cost_delta": 0.0,
+        "cost_reduction_percent": 0.0,
+        "graph_identical": true
+      },
+      "revision": "v3"
+    }
+  ],
+  "sampling": {
+    "amulet": {
+      "receipt": "sampling-amulet.json",
+      "options": {
+        "target_runs": 1000,
+        "seed": 2026091301,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 0.0,
+        "retained_trace_count": 0,
+        "max_trace_entries": 512,
+        "retained_success_count": 5,
+        "retained_failure_count": 5
+      },
+      "summary": {
+        "completed_runs": 1000,
+        "success_count": 974,
+        "failure_count": 26,
+        "stop_count": 0,
+        "total_actions": 26739174,
+        "action_limit_count": 26,
+        "cost_limit_count": 0,
+        "step_limit_count": 0,
+        "no_matching_edge_count": 0,
+        "action_not_applied_count": 0,
+        "missing_price_run_count": 0,
+        "costed_action_count": 26739174,
+        "missing_price_action_count": 0,
+        "known_total_cost": 13196415.93840381,
+        "cost_status": "complete",
+        "seed": 2026091301,
+        "target_runs": 1000
+      }
+    },
+    "ring-four": {
+      "receipt": "sampling-ring-four.json",
+      "options": {
+        "target_runs": 1000,
+        "seed": 2026091302,
+        "max_actions_per_run": 100000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 0.0,
+        "retained_trace_count": 0,
+        "max_trace_entries": 512,
+        "retained_success_count": 5,
+        "retained_failure_count": 5
+      },
+      "summary": {
+        "completed_runs": 1000,
+        "success_count": 153,
+        "failure_count": 847,
+        "stop_count": 0,
+        "total_actions": 92316610,
+        "action_limit_count": 847,
+        "cost_limit_count": 0,
+        "step_limit_count": 0,
+        "no_matching_edge_count": 0,
+        "action_not_applied_count": 0,
+        "missing_price_run_count": 0,
+        "costed_action_count": 92316610,
+        "missing_price_action_count": 0,
+        "known_total_cost": 35948490.71523517,
+        "cost_status": "complete",
+        "seed": 2026091302,
+        "target_runs": 1000
+      }
+    }
+  },
+  "sampling_authority": "finite 100,000-action windows; action limits remain failures in these windows, not a cost or properness proof; no matched-seed improvement claim",
+  "bow_sampling": "not rerun because the v3 graph is byte-identical to main; v4 option admission was qualified on the primaries only",
+  "invalid_amulet_candidate": {
+    "source": 37,
+    "goal_mask": 3,
+    "operator": "option:temporary_bench_repeat:bench:EinharMasterAddedLightningDamage1:exalt:until:1:2",
+    "private_estimate": 12482.58479255575,
+    "native_partial_cost": 3481.1716716110686,
+    "native_success_probability": 0.2717750734335109,
+    "published_upper": false,
+    "disposition": "same native execution coverage barrier repeated; verified fallback retained"
+  },
+  "validation": {
+    "protected_setup_current": {
+      "passed": true,
+      "log": "out/selective-continuation-improvement/options-v4-protected-tests.log",
+      "evidence": "372 checks, 0 failures"
+    },
+    "joint_policy_continuation_v3": {
+      "passed": true,
+      "log": "out/selective-continuation-improvement/options-v3-continuation-tests.log",
+      "evidence": "312 checks, 0 failures"
+    },
+    "native_continuation_api_v3": {
+      "passed": true,
+      "log": "out/selective-continuation-improvement/options-v3-api-tests.log",
+      "evidence": "35 checks, 0 failures"
+    },
+    "python_treatment_and_watchdog_v3": {
+      "passed": true,
+      "log": "out/selective-continuation-improvement/options-v3-python-tests.log",
+      "evidence": "2 passed, 24 deselected"
+    },
+    "native_build": {
+      "passed": true,
+      "log": "out/selective-continuation-improvement/final-native-build.log",
+      "evidence": "Build completed."
+    },
+    "wasm_build": {
+      "passed": true,
+      "log": "out/selective-continuation-improvement/final-wasm-build.log",
+      "evidence": "WASM engine written to"
+    },
+    "web_corpus": {
+      "passed": true,
+      "log": "out/selective-continuation-improvement/final-web-corpus.log",
+      "evidence": "# pass 9"
+    },
+    "web_export": {
+      "passed": true,
+      "log": "out/selective-continuation-improvement/final-web-export.log",
+      "evidence": "solver lab Calculator export tests passed"
+    },
+    "typescript": {
+      "passed": true,
+      "log": "out/selective-continuation-improvement/final-tsc.log",
+      "evidence": "completed process exit code 0 recorded in session"
+    },
+    "research_metadata": {
+      "passed": true,
+      "log": "out/selective-continuation-improvement/metadata.log",
+      "evidence": "completed process exit code 0 recorded in session"
+    },
+    "claim_link_lint": {
+      "passed": true,
+      "log": "out/selective-continuation-improvement/knowledge-lint.log",
+      "evidence": "completed process exit code 0 recorded in session"
+    },
+    "research_state_regeneration": {
+      "passed": true,
+      "log": "out/selective-continuation-improvement/research-state.log",
+      "evidence": "completed process exit code 0 recorded in session"
+    }
+  },
+  "wasm_processes": {
+    "retention-finish-abandon": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 15004,
+      "process_identity_token": "15004:134337356610115264",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 27615.87869998766,
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "--import",
+        "tsx",
+        "test/retention-wasm.test.ts"
+      ],
+      "watchdog_seconds": 315
+    },
+    "conquest-five": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 41332,
+      "process_identity_token": "41332:134337356886282720",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 77673.86340000667,
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "--import",
+        "tsx",
+        "test/empty-start-retention-wasm.test.ts",
+        "--output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\selective-continuation-improvement\\wasm\\conquest-five.json"
+      ],
+      "watchdog_seconds": 105
+    },
+    "exact-regalia": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 61492,
+      "process_identity_token": "61492:134337357663031020",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 52412.94129996095,
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "--import",
+        "tsx",
+        "test/solver-benchmark.ts",
+        "--corpus",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+        "--case",
+        "cb12-cross-base-product8-long240",
+        "--output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\selective-continuation-improvement\\wasm\\exact-regalia.json"
+      ],
+      "watchdog_seconds": 315
+    }
+  },
+  "not_rerun": [
+    "full native acceptance suite",
+    "original 14-case core/exposed preservation gate",
+    "Bow Simulator for unchanged graph"
+  ],
+  "preserved_open_evidence": {
+    "prior_qualification": "../2026-09-12-adaptive-dirty-guidance/qualification.json",
+    "CB05": "bounded/stop-contract failure unresolved",
+    "CB09": "policy absent",
+    "CB03": "historical 536407.1454418747 graph retained; recent main/static repeats both 794067.4530398862",
+    "CB02": "earlier contract failure retained alongside successful matched repeat",
+    "ring_two": "separate request, no new qualification"
+  },
+  "mathematics": "supplied 27 named and 256 generated transient three-state checks passed; existing native sparse policy and independent evaluator own published uppers; no general inverse backend",
+  "disposition": "compatible row reuse and selected support incorporated into existing canonical owners; full-scope lower/exactness claims unchanged; no automatic continuation"
+}

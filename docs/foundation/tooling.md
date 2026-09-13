@@ -69,7 +69,7 @@ workaround is no longer needed for these controls. Other native modes, such as
 
 ### Waiting, batching and identity preflight
 
-The corpus runner's optional `--native-dirty-guidance legacy|static|adaptive`
+The corpus runner's optional `--native-dirty-guidance legacy|static|adaptive|protected-first|selective|selective-options`
 selects an explicit native algorithm treatment. Its ledger stores `treatment`
 separately from unchanged request/capacity configuration, while both treatment
 and the complete resolved argv bind resume. Strict input, artifact, corpus,

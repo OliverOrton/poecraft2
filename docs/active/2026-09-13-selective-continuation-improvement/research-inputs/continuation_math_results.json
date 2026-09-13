@@ -1,0 +1,65 @@
+{
+  "checks": {
+    "candidate_specific_work_can_be_smaller": true,
+    "candidate_values_match_fresh_solves": true,
+    "cheap_guarantee_can_cost_more": true,
+    "closed_retry_update_refused": true,
+    "complete_renewal_cost": true,
+    "conditional_continuation_threshold": true,
+    "different_family_rescale_can_change_order": true,
+    "equal_forced_count_not_a_dominance_proof": true,
+    "family_rescale_order_0": true,
+    "family_rescale_order_1": true,
+    "family_rescale_order_2": true,
+    "joint_dependency_patch_can_win": true,
+    "observation_timing_preserved": true,
+    "old_occupancy_ranking_reverses": true,
+    "old_policy_value": true,
+    "one_row_direct_value": true,
+    "one_row_repeat_value": true,
+    "random_exact_one_row_and_performance_difference": true,
+    "rare_opportunity_can_have_material_gain": true,
+    "rare_tail_not_droppable": true,
+    "renewal_threshold_tie": true,
+    "restricted_optimum_not_full_lower": true,
+    "root_cost_not_arbitrary_entry": true,
+    "root_only_change_can_look_bad": true,
+    "soft_deferral_not_retirement": true,
+    "unknown_exit_not_free_goal": true,
+    "unreachable_tail_improvement_not_root_gain": true
+  },
+  "classification": "exact synthetic arithmetic and finite SSP checks; NOT native PoE evidence",
+  "named_checks": 27,
+  "random_finite_models": 256,
+  "random_model_contract": "3 transient states; every row has positive goal mass; fixed seed",
+  "worked_examples": {
+    "conditional_renewal": {
+      "break_even_local_cost": "50",
+      "new": "20",
+      "old": "100"
+    },
+    "family_multiplier": "positive common multiplier preserves within-family order",
+    "guaranteed_goal_counterexample": {
+      "cheap_attempt_value": "1000",
+      "expensive_attempt_value": "10"
+    },
+    "joint_dependency": {
+      "joint_change": "2",
+      "old_root": "10",
+      "root_change_only": "101"
+    },
+    "old_occupancy_counterexample": {
+      "base": "100",
+      "direct_finish": "80",
+      "old_occupancy_predicted_gains": [
+        "2000",
+        "90"
+      ],
+      "retry_improvement": "10",
+      "true_gains": [
+        "20",
+        "90"
+      ]
+    }
+  }
+}

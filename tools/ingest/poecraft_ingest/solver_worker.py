@@ -333,7 +333,7 @@ def build_solver_case_command(
     native_retention_diagnostic: str | None = None,
     native_dirty_guidance: str | None = None,
 ) -> SolverCaseCommand:
-    if native_dirty_guidance not in (None, "legacy", "static", "adaptive"):
+    if native_dirty_guidance not in (None, "legacy", "static", "adaptive", "protected-first", "selective", "selective-options"):
         raise ValueError("unsupported native dirty guidance treatment")
     if (native_retention_diagnostic is not None
             and native_retention_diagnostic not in NATIVE_RETENTION_DIAGNOSTIC_MODES):

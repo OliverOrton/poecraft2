@@ -143,6 +143,14 @@ owns measured eligibility, costs and qualification.
 
 ### Optional native dirty continuation
 
+The selective diagnostics add bounded source/operator patches after a closed
+private seed. Each selected row retains complete native probability; all new
+exits receive paid executable recovery before policy iteration and independent
+root evaluation. Unbuilt alternatives remain open in the original action scope.
+A private subset optimum is neither a full-scope lower nor exact closure.
+The [selective programme](../active/2026-09-13-selective-continuation-improvement/README.md)
+owns its measured disposition. Public opt-in activation remains static.
+
 The v2 candidate expansion additionally offers the admitted broad acquisition
 at actual dirty positive-progress entries. All lost goals and physical redraw
 outcomes return through the paid controller. Protected-side programs use fresh

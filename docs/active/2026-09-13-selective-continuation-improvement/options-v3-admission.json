@@ -1,0 +1,46 @@
+[
+  {
+    "case": "options-v3-amulet-200m",
+    "utc": "2026-09-13T00:01:23.040045+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 38598451200,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 15032385536,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One qualified native request: 8-GiB aggregate plus 6-GiB runner headroom."
+  },
+  {
+    "case": "main-ring-four-400m",
+    "utc": "2026-09-13T00:11:33.726581+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 38856503296,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 15032385536,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One qualified native request: 8-GiB aggregate plus 6-GiB runner headroom."
+  },
+  {
+    "case": "options-v3-ring-four-400m",
+    "utc": "2026-09-13T00:21:47.607895+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 38879371264,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 15032385536,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One qualified native request: 8-GiB aggregate plus 6-GiB runner headroom."
+  },
+  {
+    "case": "options-v3-bow-200m",
+    "utc": "2026-09-13T00:32:05.274951+00:00",
+    "total_bytes": 68409442304,
+    "available_bytes": 39011663872,
+    "minimum_outside_bytes": 13681888461,
+    "external_reservation_bytes": 15032385536,
+    "legacy_runner_headroom_bytes": 0,
+    "admitted": true,
+    "purpose": "One qualified native request: 8-GiB aggregate plus 6-GiB runner headroom."
+  }
+]

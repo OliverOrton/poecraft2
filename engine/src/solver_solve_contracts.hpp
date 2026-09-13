@@ -59,6 +59,9 @@ enum class NativeContinuationSearchMode : std::uint8_t {
     DirtyRestrictedFreshLayout,
     DirtyGuidedStatic,
     DirtyGuidedAdaptive,
+    DirtyProtectedFirst,
+    DirtySelective,
+    DirtySelectiveOptions,
 };
 
 inline const char* native_continuation_search_name(const NativeContinuationSearchMode mode) {
@@ -70,6 +73,9 @@ inline const char* native_continuation_search_name(const NativeContinuationSearc
     case NativeContinuationSearchMode::DirtyRestrictedFreshLayout: return "dirty_restricted_fresh";
     case NativeContinuationSearchMode::DirtyGuidedStatic: return "dirty_guided_static";
     case NativeContinuationSearchMode::DirtyGuidedAdaptive: return "dirty_guided_adaptive";
+    case NativeContinuationSearchMode::DirtyProtectedFirst: return "dirty_protected_first";
+    case NativeContinuationSearchMode::DirtySelective: return "dirty_selective";
+    case NativeContinuationSearchMode::DirtySelectiveOptions: return "dirty_selective_options";
     }
     return "unknown";
 }
@@ -79,7 +85,10 @@ inline bool dirty_continuation_search_enabled(const NativeContinuationSearchMode
         mode == NativeContinuationSearchMode::DirtyRestrictedFullLayout ||
         mode == NativeContinuationSearchMode::DirtyRestrictedFreshLayout ||
         mode == NativeContinuationSearchMode::DirtyGuidedStatic ||
-        mode == NativeContinuationSearchMode::DirtyGuidedAdaptive;
+        mode == NativeContinuationSearchMode::DirtyGuidedAdaptive ||
+        mode == NativeContinuationSearchMode::DirtyProtectedFirst ||
+        mode == NativeContinuationSearchMode::DirtySelective ||
+        mode == NativeContinuationSearchMode::DirtySelectiveOptions;
 }
 
 struct SolveOptions {

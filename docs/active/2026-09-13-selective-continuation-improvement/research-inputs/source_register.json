@@ -1,0 +1,99 @@
+{
+  "reviewed_main": "b1d7436c37e2cf2dec5149713b685fe6ecffaad6",
+  "mode": "read-only repository review and primary-literature research",
+  "no_native_execution": true,
+  "no_repository_modification": true,
+  "sources": [
+    {
+      "id": "R1",
+      "title": "Reviewed commit",
+      "url": "https://github.com/OliverOrton/poecraft2/commit/b1d7436c37e2cf2dec5149713b685fe6ecffaad6",
+      "examined": "Branch, commit metadata and changed-source inventory; no local build"
+    },
+    {
+      "id": "R2",
+      "title": "Current handoff",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/b1d7436c37e2cf2dec5149713b685fe6ecffaad6/HANDOFF.md",
+      "examined": "Full current handoff"
+    },
+    {
+      "id": "R3",
+      "title": "Current working rules",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/b1d7436c37e2cf2dec5149713b685fe6ecffaad6/AGENTS.md",
+      "examined": "Full current rules; no-polling and batching are implemented"
+    },
+    {
+      "id": "R4",
+      "title": "Adaptive dirty guidance living record",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/b1d7436c37e2cf2dec5149713b685fe6ecffaad6/docs/active/2026-09-12-adaptive-dirty-guidance/README.md",
+      "examined": "Full record; retained measurements and qualification, not rerun here"
+    },
+    {
+      "id": "R5",
+      "title": "Three-bucket adaptive guide",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/b1d7436c37e2cf2dec5149713b685fe6ecffaad6/engine/src/solver_dirty_guidance.hpp",
+      "examined": "Full 47-line header"
+    },
+    {
+      "id": "R6",
+      "title": "Current native continuation builder",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/b1d7436c37e2cf2dec5149713b685fe6ecffaad6/engine/src/solver_solve_return_bridge.cpp",
+      "examined": "Selected source ranges600\u2013830,880\u20131080,1290\u20131520, plus commit diff"
+    },
+    {
+      "id": "R7",
+      "title": "Final static Ring-four evidence",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/b1d7436c37e2cf2dec5149713b685fe6ecffaad6/docs/active/2026-09-12-adaptive-dirty-guidance/final-ring-four.json",
+      "examined": "Selected ranges1\u2013220,380\u2013690,1900\u20132100,2280\u20132560; not independent reprocessing of raw native report"
+    },
+    {
+      "id": "R8",
+      "title": "Existing policy mathematics",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/b1d7436c37e2cf2dec5149713b685fe6ecffaad6/docs/solver/mathematics/policies.md",
+      "examined": "Fixed-policy, properness, performance-difference and program sections; no new claim promotion"
+    },
+    {
+      "id": "R9",
+      "title": "Existing native local Bellman comparator",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/b1d7436c37e2cf2dec5149713b685fe6ecffaad6/engine/src/solver_policy_oracle_improve.inc#L1-L185",
+      "examined": "Selected full source function prefix through current Q/value checks"
+    },
+    {
+      "id": "R10",
+      "title": "Current candidate limits and resource ownership",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/b1d7436c37e2cf2dec5149713b685fe6ecffaad6/docs/solver/resources-resume-replay.md#candidate-checker-and-native-headroom",
+      "examined": "Candidate and shared owner sections"
+    },
+    {
+      "id": "R11",
+      "title": "Frozen Ring-four resource/target request",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/b1d7436c37e2cf2dec5149713b685fe6ecffaad6/docs/active/2026-09-11-dirty-state-continuation/native-600-final840/ring-four/cb07-cross-base-product8-long240.json",
+      "examined": "Full native case request; filename long240 is not the effective600-second finish"
+    },
+    {
+      "id": "P1",
+      "title": "Schmalz & Trevizan (2026), Efficient Constraint Generation for Stochastic Shortest Path Problems",
+      "url": "https://schmlz.github.io/downloads/cgilao/cgilao_aij26_paper.pdf",
+      "examined": "Author-hosted accepted manuscript; parsed sections2\u20135 and introductory definitions. Screenshot calls failed; no unseen-figure inference. DOI10.1016/j.artint.2026.104505"
+    },
+    {
+      "id": "P2",
+      "title": "Hansson & Wahlberg (2026), Performance Bounds for Rollout Policies in Stochastic Shortest Path Problems",
+      "url": "https://arxiv.org/html/2605.22965v1",
+      "examined": "Primary preprint HTML; assumptions, performance-difference identity and hitting-time bound"
+    },
+    {
+      "id": "P3",
+      "title": "Thayer, Dionne & Ruml (2011), Learning Inadmissible Heuristics During Search",
+      "url": "https://ojs.aaai.org/index.php/ICAPS/article/view/13474",
+      "examined": "Primary publication page/abstract; no claim to re-run reported experiments"
+    },
+    {
+      "id": "P4",
+      "title": "Smith & Simmons (2006), Focused Real-Time Dynamic Programming for MDPs",
+      "url": "https://aiinternational.org/Library/AAAI/2006/aaai06-192.php",
+      "examined": "Published AAAI library abstract only; no transferred speedup claim"
+    }
+  ],
+  "source_priority": "current pinned repository > current committed measurements > older attached audits; mathematical proposals remain proposals"
+}

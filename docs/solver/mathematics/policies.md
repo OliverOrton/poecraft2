@@ -109,6 +109,15 @@ mark the unselected domain unknown and retain the first verified artifact while
 testing that alternative. The [goal-reaching delivery application](../../active/2026-09-10-goal-reaching-row-delivery/README.md)
 exercises this boundary with native rows and independent emitted-graph evaluation.
 
+Within an immutable native row/price/control domain, an unchanged complete
+root-reachable selected row vector defines the same transient fixed-policy
+equations and the same entry cost. Adding unselected alternatives or unreachable
+router nodes does not invalidate that root check. The reachable support must be
+recomputed from every positive selected transition; equal estimates or goal
+masks alone do not establish equality. No entry beyond the checked domain gains
+upper authority. The [selective application](../../active/2026-09-13-selective-continuation-improvement/README.md)
+uses this narrow identity to avoid repeated checks of unchanged controllers.
+
 <a id="proper-seed"></a>
 ### Constructing a proper seed from complete rows
 

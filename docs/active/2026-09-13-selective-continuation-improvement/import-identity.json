@@ -1,0 +1,57 @@
+{
+  "archive": "C:\\Users\\Oliver\\Downloads\\poecraft_selective_policy_improvement_next_codex.zip",
+  "sha256": "302d6f22ded3c0639270abcbb7c9c6ba6f529de2059861cc52d6a01f6b8a3f4e",
+  "imported_at_utc": "2026-09-12T22:40:01.658741+00:00",
+  "members": [
+    {
+      "path": "README.md",
+      "bytes": 1419,
+      "sha256": "6ff996b9102968a9d3d900e0dbe9842f5c0ef2d5e5c2673252456dc48bfb31e8"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 792,
+      "sha256": "d4e9a59e6fce197a4527cb217e3ad1a854ced014cf3c3564b2871d8cc986648c"
+    },
+    {
+      "path": "continuation_math_checks.py",
+      "bytes": 8880,
+      "sha256": "71c0587478fea612c1dd3c3220c977dd6a0aa5f10472d82bc0bdee977f942c74"
+    },
+    {
+      "path": "continuation_math_results.json",
+      "bytes": 2161,
+      "sha256": "253f3a248f4d9a108d528158a95f654dfa3901ea30f1d40970fdc031ca7cf0f9"
+    },
+    {
+      "path": "documentation_delta.md",
+      "bytes": 4989,
+      "sha256": "1f5ac2bfb64bcd97ba29fea3366e009afcde94a1db47da62a15140f94d44ffc6"
+    },
+    {
+      "path": "implementation_plan.md",
+      "bytes": 22070,
+      "sha256": "31949b6a2e5ef7cb0686a0450544155f836910fc6e101681a7f47b76883920c9"
+    },
+    {
+      "path": "resource_policy.md",
+      "bytes": 4318,
+      "sha256": "711cfc9fe8cb91ff3d5ac709fba580a31980cdbb753aa9db03363956382434b0"
+    },
+    {
+      "path": "review_and_mathematics.md",
+      "bytes": 21174,
+      "sha256": "d527e6ff1a02f918bd6f09d3ce4a92ed126b75748e1a10dd78735bcc0882669e"
+    },
+    {
+      "path": "source_register.json",
+      "bytes": 5157,
+      "sha256": "b96e703d970dde786ceb60b84a399b40e3003066b49c8bed0d5b40aed93beb94"
+    },
+    {
+      "path": "start_prompt.txt",
+      "bytes": 5346,
+      "sha256": "139e0b236838dfb7ab0ae1f2943916a185f61ce6543d3e13059687459ccc78e1"
+    }
+  ]
+}

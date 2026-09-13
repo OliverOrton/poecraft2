@@ -166,6 +166,18 @@
         "docs/active/2026-09-12-adaptive-dirty-guidance/build-v3.json"
       ],
       "source_binding": "Frozen v3 production build, unchanged 600/840/870 profile, typed strict comparison, complete native final evaluation and returned graph digest in the linked final receipt."
+    },
+    "cb07-selective-dirty-400m-v1": {
+      "semantic_version": "Current-main versus bounded selective source/action growth; native option diagnostic adds no certified Amulet tail.",
+      "property": "Independently evaluated original-scope executable upper; original lower and exactness remain separate.",
+      "coefficient_semantics": "Complete native fixed-policy evaluation, original terminal and observation semantics, recorded residual/cost reconciliation; no probability truncation.",
+      "scope": "Ring four-goal, empty Rare ilvl86; 600-second requested finish, 840-second native watchdog, 870-second outer watchdog, 8 GiB solver / 4 GiB checker, 2M states / 10M pairs / 40M transitions, 400M cumulative shared logical work.",
+      "input_references": [
+        "docs/active/2026-09-13-selective-continuation-improvement/native-600-final840-ring-four-400m/cb07-cross-base-product8-long240.json",
+        "docs/active/2026-09-13-selective-continuation-improvement/native-comparison.json",
+        "docs/active/2026-09-13-selective-continuation-improvement/build-options-v4.json"
+      ],
+      "source_binding": "Reviewed b1d main control and frozen v4 treatment; identical input/capacity, complete native final checks and returned graph hashes. The treatment root remains non-exact."
     }
   },
   "comparison_profiles": {
@@ -188,7 +200,7 @@
         "The focused fixture passes 177/0; old code fails two intended checks.",
         "D3 control returns 5218.04095 in 86.477 seconds; D4/D5 fail the native 90-second watchdog without final publication.",
         "Internally retained candidate values are not returned uppers for failed attempts.",
-        "Restored D7 primary independently reproduces 405.36940â€“85558.70619 in 66.886 seconds; no new root gain or exact closure."
+        "Restored D7 primary independently reproduces 405.36940\u00e2\u20ac\u201c85558.70619 in 66.886 seconds; no new root gain or exact closure."
       ]
     },
     {
@@ -544,7 +556,7 @@
       "role": "Primary regression qualification, matched to D7",
       "treatment": "consume the latched finish request during optional strict work and preserve the cheapest compatible verified publication",
       "limitations": [
-        "Same 405.3694021063399–85558.70618560436 interval and graph. No additional primary causal gain or exact closure.",
+        "Same 405.3694021063399\u201385558.70618560436 interval and graph. No additional primary causal gain or exact closure.",
         "Single observations under unchanged fixture inputs; generated fresh implementation-plan package remains inaccessible."
       ]
     },
@@ -756,6 +768,36 @@
       "limitations": [
         "Final U 228023.27997140243; expected execution 592244.4725920247 actions. Lower and exactness remain unchanged. Original-limit sampling and product preservation have separate receipts.",
         "Static and adaptive tie; no next-obligation selection changed. Adaptation does not satisfy the predeclared benefit gate. Bow final cost is preserved but arrives later."
+      ]
+    },
+    {
+      "id": "cb07-main-400m-upper-20260913",
+      "model": "cb07-selective-dirty-400m-v1",
+      "kind": "verified_policy_upper",
+      "producer": "Existing native continuation, sparse-policy, compiler and separate native final evaluator",
+      "validation": "docs/active/2026-09-13-selective-continuation-improvement/README.md",
+      "evidence": "docs/active/2026-09-13-selective-continuation-improvement/main-ring-four-400m.json",
+      "pointer": "/upper",
+      "role": "matched current-main capacity control",
+      "treatment": "Same 600/840/870 clocks, 8-GiB/4-GiB ownership, 400M shared logical work; only native code/method differs.",
+      "limitations": [
+        "Main U 228023.27997140243; selective U 227989.251597418 (0.014923% lower), not the 25% objective. Lower remains 201.85524142944053.",
+        "Amulet remains 13159.724084639676. Its apparent cheaper blocker patch fails native success/continuation checks and has no upper authority. Neither primary is exact; execution tails and unchanged default/browser scope are separate evidence."
+      ]
+    },
+    {
+      "id": "cb07-selective-400m-upper-20260913",
+      "model": "cb07-selective-dirty-400m-v1",
+      "kind": "verified_policy_upper",
+      "producer": "Existing native continuation, sparse-policy, compiler and separate native final evaluator",
+      "validation": "docs/active/2026-09-13-selective-continuation-improvement/README.md",
+      "evidence": "docs/active/2026-09-13-selective-continuation-improvement/options-v4-ring-four-400m.json",
+      "pointer": "/upper",
+      "role": "bounded selected protection upper",
+      "treatment": "Same 600/840/870 clocks, 8-GiB/4-GiB ownership, 400M shared logical work; only native code/method differs.",
+      "limitations": [
+        "Main U 228023.27997140243; selective U 227989.251597418 (0.014923% lower), not the 25% objective. Lower remains 201.85524142944053.",
+        "Amulet remains 13159.724084639676. Its apparent cheaper blocker patch fails native success/continuation checks and has no upper authority. Neither primary is exact; execution tails and unchanged default/browser scope are separate evidence."
       ]
     }
   ],

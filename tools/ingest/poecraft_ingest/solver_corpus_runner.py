@@ -601,7 +601,7 @@ def run_corpus(
     output_directory = output_directory.resolve()
     if max_workers <= 0:
         raise ValueError("max_workers must be positive")
-    if native_dirty_guidance not in (None, "legacy", "static", "adaptive"):
+    if native_dirty_guidance not in (None, "legacy", "static", "adaptive", "protected-first", "selective", "selective-options"):
         raise ValueError("unsupported native dirty guidance treatment")
     if (isinstance(worker_headroom_bytes, bool) or not isinstance(worker_headroom_bytes, int)
             or not 0 <= worker_headroom_bytes <= 2**63 - 1):
@@ -797,7 +797,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_WATCHDOG_SECONDS,
     )
     parser.add_argument("--no-exact-evaluation", action="store_true")
-    parser.add_argument("--native-dirty-guidance", choices=("legacy", "static", "adaptive"),
+    parser.add_argument("--native-dirty-guidance", choices=("legacy", "static", "adaptive", "protected-first", "selective", "selective-options"),
         help="Native algorithm treatment, separately recorded from unchanged request and capacity identity.")
     parser.add_argument(
         "--native-retention-diagnostic",

@@ -272,6 +272,19 @@ counterexamples remain byte-preserved and their argument is integrated into
 the policy, scheduling, numerical and resource chapters. No new experimental
 runner, action-family proof or learned executable tail is introduced.
 
+The [selective continuation application](../active/2026-09-13-selective-continuation-improvement/README.md)
+finds one admitted satisfying-tier Essence identity per primary. A fair Ring
+protection opportunity still stalls before cost iteration, while bounded patches
+retain complete rows and reach checked policies without that eager closure.
+At matched 400M work, Ring improves only 0.014923%; Amulet's cost is unchanged.
+A temporary blocker lowers its private estimate but fails native terminal
+coverage, so it is not an economic win or a published upper. The two-family 25%
+objective and exact closure remain unmet; static stays the public opt-in method.
+The imported one-row response checks are explanatory evidence; no new inverse
+backend or adaptive-learning campaign is selected. Original CB05/CB09 failures,
+CB03 historical high-water evidence and finite execution tails remain separate
+fields in the living record.
+
 The four [advisory audits](../active/2026-09-09-cross-base-capability-recovery/README.md#advisory-audits)
 are reconciled against that experiment. Their finite-region threshold and
 auxiliary-ceiling arguments now live in the [lower chapter](mathematics/lower-bounds.md#threshold-query);

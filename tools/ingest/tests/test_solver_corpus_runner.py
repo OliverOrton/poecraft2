@@ -483,10 +483,11 @@ def test_guidance_treatment_binds_resume_without_changing_capacity(tmp_path: Pat
     args=dict(root=Path.cwd(), executable=Path(sys.executable), artifact=tmp_path,
               corpus=manifest,tasks=[],host_watchdog_seconds=870)
     static=run_corpus(**args,output_directory=tmp_path / "static",native_dirty_guidance="static")
-    adaptive=run_corpus(**args,output_directory=tmp_path / "adaptive",native_dirty_guidance="adaptive")
-    assert static["configuration"]==adaptive["configuration"]
-    assert static["treatment"] != adaptive["treatment"]
-    for changed in ("adaptive",None):
+    for changed in ("adaptive", "protected-first", "selective", "selective-options"):
+        other=run_corpus(**args,output_directory=tmp_path / changed,native_dirty_guidance=changed)
+        assert static["configuration"]==other["configuration"]
+        assert static["treatment"] != other["treatment"]
+    for changed in ("adaptive", "protected-first", "selective", "selective-options", None):
         with pytest.raises(ValueError,match="provenance/configuration differs"):
             run_corpus(**args,output_directory=tmp_path / "static",native_dirty_guidance=changed)
 

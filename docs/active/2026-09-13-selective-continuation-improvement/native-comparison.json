@@ -1,0 +1,156 @@
+[
+  {
+    "run": "out/selective-continuation-improvement/selective-v1-amulet-200m",
+    "upper": 13159.724084639676,
+    "lower": 174.79327321907147,
+    "stop": "sweep_cap",
+    "expected_actions": 26655.734445108934,
+    "comparison": {
+      "paired_cases": 1,
+      "excluded": [],
+      "cost_delta": 0.0,
+      "cost_reduction_percent": 0.0,
+      "graph_identical": false
+    },
+    "explicit_checks": {
+      "finite_upper": true,
+      "native_upper_matches": true,
+      "stop_named": true,
+      "bounded_contract_passed": true,
+      "completed_no_survivor": true
+    },
+    "best_policy_observed_ms": 190842.5157
+  },
+  {
+    "run": "out/selective-continuation-improvement/selective-v1-ring-four-200m",
+    "upper": 228023.27997140243,
+    "lower": 201.85524142944053,
+    "stop": "requested_bounded_finish",
+    "expected_actions": 592244.4725920247,
+    "comparison": {
+      "paired_cases": 1,
+      "excluded": [],
+      "cost_delta": 0.0,
+      "cost_reduction_percent": 0.0,
+      "graph_identical": true
+    },
+    "explicit_checks": {
+      "finite_upper": true,
+      "native_upper_matches": true,
+      "stop_named": true,
+      "bounded_contract_passed": true,
+      "completed_no_survivor": true
+    },
+    "best_policy_observed_ms": 349277.1407
+  },
+  {
+    "run": "out/selective-continuation-improvement/options-v3-amulet-200m",
+    "upper": 13159.724084639676,
+    "lower": 174.79327321907147,
+    "stop": "reforge_work_cap",
+    "expected_actions": 26655.734445108934,
+    "comparison": {
+      "paired_cases": 1,
+      "excluded": [],
+      "cost_delta": 0.0,
+      "cost_reduction_percent": 0.0,
+      "graph_identical": false
+    },
+    "explicit_checks": {
+      "finite_upper": true,
+      "native_upper_matches": true,
+      "stop_named": true,
+      "bounded_contract_passed": true,
+      "completed_no_survivor": true
+    },
+    "best_policy_observed_ms": 191763.2104
+  },
+  {
+    "run": "out/selective-continuation-improvement/options-v3-ring-four-400m",
+    "upper": 227989.251597418,
+    "lower": 201.85524142944053,
+    "stop": "requested_bounded_finish",
+    "expected_actions": 585368.3255100878,
+    "comparison": {
+      "paired_cases": 1,
+      "excluded": [],
+      "cost_delta": -34.02837398441625,
+      "cost_reduction_percent": 0.01492320169619695,
+      "graph_identical": false
+    },
+    "explicit_checks": {
+      "finite_upper": true,
+      "native_upper_matches": true,
+      "stop_named": true,
+      "bounded_contract_passed": true,
+      "completed_no_survivor": true
+    },
+    "best_policy_observed_ms": 368201.7478
+  },
+  {
+    "run": "out/selective-continuation-improvement/options-v3-bow-200m",
+    "upper": 223349.0000393144,
+    "lower": 341.0345603014526,
+    "stop": "requested_bounded_finish",
+    "expected_actions": 1404492.0069683318,
+    "comparison": {
+      "paired_cases": 1,
+      "excluded": [],
+      "cost_delta": 0.0,
+      "cost_reduction_percent": 0.0,
+      "graph_identical": true
+    },
+    "explicit_checks": {
+      "finite_upper": true,
+      "native_upper_matches": true,
+      "stop_named": true,
+      "bounded_contract_passed": true,
+      "completed_no_survivor": true
+    },
+    "best_policy_observed_ms": 190966.5932
+  },
+  {
+    "run": "out/selective-continuation-improvement/options-v4-amulet-200m",
+    "upper": 13159.724084639676,
+    "lower": 174.79327321907147,
+    "stop": "reforge_work_cap",
+    "expected_actions": 26655.734445108934,
+    "comparison": {
+      "paired_cases": 1,
+      "excluded": [],
+      "cost_delta": 0.0,
+      "cost_reduction_percent": 0.0,
+      "graph_identical": false
+    },
+    "explicit_checks": {
+      "finite_upper": true,
+      "native_upper_matches": true,
+      "stop_named": true,
+      "bounded_contract_passed": true,
+      "completed_no_survivor": true
+    },
+    "best_policy_observed_ms": 191235.2079
+  },
+  {
+    "run": "out/selective-continuation-improvement/options-v4-ring-four-400m",
+    "upper": 227989.251597418,
+    "lower": 201.85524142944053,
+    "stop": "requested_bounded_finish",
+    "expected_actions": 585368.3255100878,
+    "comparison": {
+      "paired_cases": 1,
+      "excluded": [],
+      "cost_delta": -34.02837398441625,
+      "cost_reduction_percent": 0.01492320169619695,
+      "graph_identical": false
+    },
+    "explicit_checks": {
+      "finite_upper": true,
+      "native_upper_matches": true,
+      "stop_named": true,
+      "bounded_contract_passed": true,
+      "completed_no_survivor": true
+    },
+    "best_policy_observed_ms": 369435.353
+  }
+]

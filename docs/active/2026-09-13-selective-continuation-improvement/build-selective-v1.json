@@ -1,0 +1,39 @@
+{
+  "reviewed_main": "b1d7436c37e2cf2dec5149713b685fe6ecffaad6",
+  "executable": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\selective-continuation-improvement\\selective-v1.exe",
+  "sha256": "223c67bdac52924e4cfec213ddb392c29630c061619c9497b097fdc839ff7c33",
+  "sources": [
+    {
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "sha256": "da19606d10da010e6bc43c19bef86a625b18ba5518bc26a418b4741109ecc1d8"
+    },
+    {
+      "path": "engine/src/solver_dirty_guidance.hpp",
+      "sha256": "9247414b87e412cf1b6c93117c35222bb759fd9633af7de1bd6685bf0b79cad3"
+    },
+    {
+      "path": "engine/src/solver_options.cpp",
+      "sha256": "ef5dd0feb2ae44d4bec8a1e3aa7bfbfd28d536aa325a2c14c57b08760e908c13"
+    },
+    {
+      "path": "engine/src/solver_options_build.cpp",
+      "sha256": "f03fafed3ff0e5c744edc01d01ea8f6cb99e4447681a86ecfb23ec378ff8e19a"
+    },
+    {
+      "path": "engine/src/solver_registry.cpp",
+      "sha256": "ea8ce4d2881b0521bf07395f936c5a02137f5557a5f183cd21c6220bde837e05"
+    },
+    {
+      "path": "engine/src/solver_solve_contracts.hpp",
+      "sha256": "4ee7d8340a03cd31f1ab5e25725f29bd30601a3a31b23d2fa9d2fd3531ccc40f"
+    },
+    {
+      "path": "engine/src/solver_api.cpp",
+      "sha256": "a37932cd6bdd71eaf707c599a9bc3f8ff423825cd3706bbaafdb5895d041c27e"
+    },
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "sha256": "d33b1a115a6fe9b4afc5bbe65000b48c21cd7897e5808ad6635738fd9787babb"
+    }
+  ]
+}

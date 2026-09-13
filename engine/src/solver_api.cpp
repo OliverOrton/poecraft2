@@ -1198,7 +1198,7 @@ pc_result solver::configure_solver_native_continuation_search(
         pc_solver_handle handle, NativeContinuationSearchMode mode,
         pc_error_info* out_error) {
     if (!handle || handle->solve_work || handle->solved.has_value() ||
-        mode > NativeContinuationSearchMode::DirtyGuidedAdaptive) {
+        mode > NativeContinuationSearchMode::DirtySelectiveOptions) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
             "native continuation mode requires an idle unsolved handle and a known mode");
         return PC_RESULT_INVALID_ARGUMENT;

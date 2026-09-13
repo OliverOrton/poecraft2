@@ -1,0 +1,386 @@
+[
+  {
+    "run": "options-v3-amulet-200m",
+    "mode": "selective-options",
+    "identity": {
+      "corpus": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-11-dirty-state-continuation\\native-600-final840\\amulet\\manifest.json",
+        "sha256": "a68b2e6a11d1b2ad7b06d5b12a65106584493dc8eddd9e77fa40c02294e4c94b",
+        "corpus_id": "dirty-state-native600-final840-amulet",
+        "schema_version": "solver_benchmark_corpus_v1",
+        "generator_config_sha256": null
+      },
+      "artifact": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+        "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+        "declared_files_verified": true,
+        "files": [
+          {
+            "path": "game-data.json",
+            "size_bytes": 16439442,
+            "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+          },
+          {
+            "path": "strings.json",
+            "size_bytes": 6534428,
+            "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+          }
+        ],
+        "identity": {
+          "artifact_schema_version": 4,
+          "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+          "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+          "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      },
+      "executable": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\selective-continuation-improvement\\options-v3.exe",
+        "sha256": "cf3e2c442283f9a3e3406947e582772d55a6251f8b4dae142164e1a445639a93"
+      },
+      "machine": {
+        "system": "Windows",
+        "release": "11",
+        "machine": "AMD64",
+        "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "logical_cpu_count": 24,
+        "python": "3.14.2"
+      },
+      "source": {
+        "commit": "b1d7436c37e2cf2dec5149713b685fe6ecffaad6",
+        "dirty": true,
+        "dirty_paths": [
+          {
+            "status": "M ",
+            "path": "ANDOFF.md"
+          },
+          {
+            "status": "??",
+            "path": "docs/active/2026-09-13-selective-continuation-improvement/"
+          },
+          {
+            "status": " M",
+            "path": "engine/benchmarks/solver_benchmark.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_api.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_contracts.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_return_bridge.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/tests/test_solver_s8_3.cpp"
+          },
+          {
+            "status": " M",
+            "path": "tools/ingest/poecraft_ingest/solver_corpus_runner.py"
+          },
+          {
+            "status": " M",
+            "path": "tools/ingest/poecraft_ingest/solver_worker.py"
+          },
+          {
+            "status": " M",
+            "path": "tools/ingest/tests/test_solver_corpus_runner.py"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "run": "main-ring-four-400m",
+    "mode": "static",
+    "identity": {
+      "corpus": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-selective-continuation-improvement\\native-600-final840-ring-four-400m\\manifest.json",
+        "sha256": "1f0513dedaaff93d5490927876fd56bdd918990aa177fd70220c5dd187f45c13",
+        "corpus_id": "selective-continuation-ring-four-400m",
+        "schema_version": "solver_benchmark_corpus_v1",
+        "generator_config_sha256": null
+      },
+      "artifact": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+        "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+        "declared_files_verified": true,
+        "files": [
+          {
+            "path": "game-data.json",
+            "size_bytes": 16439442,
+            "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+          },
+          {
+            "path": "strings.json",
+            "size_bytes": 6534428,
+            "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+          }
+        ],
+        "identity": {
+          "artifact_schema_version": 4,
+          "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+          "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+          "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      },
+      "executable": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\selective-continuation-improvement\\main-b1d.exe",
+        "sha256": "017baadbdb6ec3df6555363d124d34311042da6250c2747a9a8ac26328e78e23"
+      },
+      "machine": {
+        "system": "Windows",
+        "release": "11",
+        "machine": "AMD64",
+        "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "logical_cpu_count": 24,
+        "python": "3.14.2"
+      },
+      "source": {
+        "commit": "b1d7436c37e2cf2dec5149713b685fe6ecffaad6",
+        "dirty": true,
+        "dirty_paths": [
+          {
+            "status": "M ",
+            "path": "ANDOFF.md"
+          },
+          {
+            "status": "??",
+            "path": "docs/active/2026-09-13-selective-continuation-improvement/"
+          },
+          {
+            "status": " M",
+            "path": "engine/benchmarks/solver_benchmark.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_api.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_contracts.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_return_bridge.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/tests/test_solver_s8_3.cpp"
+          },
+          {
+            "status": " M",
+            "path": "tools/ingest/poecraft_ingest/solver_corpus_runner.py"
+          },
+          {
+            "status": " M",
+            "path": "tools/ingest/poecraft_ingest/solver_worker.py"
+          },
+          {
+            "status": " M",
+            "path": "tools/ingest/tests/test_solver_corpus_runner.py"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "run": "options-v3-ring-four-400m",
+    "mode": "selective-options",
+    "identity": {
+      "corpus": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-selective-continuation-improvement\\native-600-final840-ring-four-400m\\manifest.json",
+        "sha256": "1f0513dedaaff93d5490927876fd56bdd918990aa177fd70220c5dd187f45c13",
+        "corpus_id": "selective-continuation-ring-four-400m",
+        "schema_version": "solver_benchmark_corpus_v1",
+        "generator_config_sha256": null
+      },
+      "artifact": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+        "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+        "declared_files_verified": true,
+        "files": [
+          {
+            "path": "game-data.json",
+            "size_bytes": 16439442,
+            "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+          },
+          {
+            "path": "strings.json",
+            "size_bytes": 6534428,
+            "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+          }
+        ],
+        "identity": {
+          "artifact_schema_version": 4,
+          "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+          "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+          "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      },
+      "executable": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\selective-continuation-improvement\\options-v3.exe",
+        "sha256": "cf3e2c442283f9a3e3406947e582772d55a6251f8b4dae142164e1a445639a93"
+      },
+      "machine": {
+        "system": "Windows",
+        "release": "11",
+        "machine": "AMD64",
+        "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "logical_cpu_count": 24,
+        "python": "3.14.2"
+      },
+      "source": {
+        "commit": "b1d7436c37e2cf2dec5149713b685fe6ecffaad6",
+        "dirty": true,
+        "dirty_paths": [
+          {
+            "status": "M ",
+            "path": "ANDOFF.md"
+          },
+          {
+            "status": "??",
+            "path": "docs/active/2026-09-13-selective-continuation-improvement/"
+          },
+          {
+            "status": " M",
+            "path": "engine/benchmarks/solver_benchmark.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_api.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_contracts.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_return_bridge.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/tests/test_solver_s8_3.cpp"
+          },
+          {
+            "status": " M",
+            "path": "tools/ingest/poecraft_ingest/solver_corpus_runner.py"
+          },
+          {
+            "status": " M",
+            "path": "tools/ingest/poecraft_ingest/solver_worker.py"
+          },
+          {
+            "status": " M",
+            "path": "tools/ingest/tests/test_solver_corpus_runner.py"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "run": "options-v3-bow-200m",
+    "mode": "selective-options",
+    "identity": {
+      "corpus": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-12-adaptive-dirty-guidance\\native-600-final840\\bow\\manifest.json",
+        "sha256": "a4d107f4afbb246a57fe221f6db35eae0840d72ed9eedb9fd5f92e549f8e31e6",
+        "corpus_id": "adaptive-guidance-native600-final840-bow",
+        "schema_version": "solver_benchmark_corpus_v1",
+        "generator_config_sha256": null
+      },
+      "artifact": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+        "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+        "declared_files_verified": true,
+        "files": [
+          {
+            "path": "game-data.json",
+            "size_bytes": 16439442,
+            "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+          },
+          {
+            "path": "strings.json",
+            "size_bytes": 6534428,
+            "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+          }
+        ],
+        "identity": {
+          "artifact_schema_version": 4,
+          "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+          "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+          "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      },
+      "executable": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\selective-continuation-improvement\\options-v3.exe",
+        "sha256": "cf3e2c442283f9a3e3406947e582772d55a6251f8b4dae142164e1a445639a93"
+      },
+      "machine": {
+        "system": "Windows",
+        "release": "11",
+        "machine": "AMD64",
+        "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "logical_cpu_count": 24,
+        "python": "3.14.2"
+      },
+      "source": {
+        "commit": "b1d7436c37e2cf2dec5149713b685fe6ecffaad6",
+        "dirty": true,
+        "dirty_paths": [
+          {
+            "status": "M ",
+            "path": "ANDOFF.md"
+          },
+          {
+            "status": "??",
+            "path": "docs/active/2026-09-13-selective-continuation-improvement/"
+          },
+          {
+            "status": " M",
+            "path": "engine/benchmarks/solver_benchmark.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_api.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_contracts.hpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/src/solver_solve_return_bridge.cpp"
+          },
+          {
+            "status": " M",
+            "path": "engine/tests/test_solver_s8_3.cpp"
+          },
+          {
+            "status": " M",
+            "path": "tools/ingest/poecraft_ingest/solver_corpus_runner.py"
+          },
+          {
+            "status": " M",
+            "path": "tools/ingest/poecraft_ingest/solver_worker.py"
+          },
+          {
+            "status": " M",
+            "path": "tools/ingest/tests/test_solver_corpus_runner.py"
+          }
+        ]
+      }
+    }
+  }
+]

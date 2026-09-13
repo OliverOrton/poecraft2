@@ -5,6 +5,7 @@
 #include "solver_sparse_policy.hpp"
 #include "solver_dirty_guidance.hpp"
 #include "solver_action_family_contract.hpp"
+#include "solver_options_helpers.hpp"
 
 namespace poecraft::solver {
 
@@ -677,7 +678,12 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
     const bool restricted = mode != NativeContinuationSearchMode::DirtyFull;
     const bool preserve_layout = mode == NativeContinuationSearchMode::DirtyRestrictedFullLayout;
     const bool guided = mode == NativeContinuationSearchMode::DirtyGuidedStatic ||
-        mode == NativeContinuationSearchMode::DirtyGuidedAdaptive;
+        mode == NativeContinuationSearchMode::DirtyGuidedAdaptive ||
+        mode == NativeContinuationSearchMode::DirtyProtectedFirst ||
+        mode == NativeContinuationSearchMode::DirtySelective ||
+        mode == NativeContinuationSearchMode::DirtySelectiveOptions;
+    const bool selective_options = mode == NativeContinuationSearchMode::DirtySelectiveOptions;
+    const bool selective = mode == NativeContinuationSearchMode::DirtySelective || selective_options;
     const bool adaptive = mode == NativeContinuationSearchMode::DirtyGuidedAdaptive;
     const auto guide_setup_begin=std::chrono::steady_clock::now();
     DirtyGuidance guide;
@@ -897,6 +903,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
     const auto preserved_proposals = proposals.size();
     if (guided) {
         for (unsigned expansion : {1u,2u}) {
+            if (selective && expansion==1) continue; // The protected context first completes this same redraw seed.
             for (std::size_t i=0;i<preserved_proposals;++i) {
                 if (proposals[i].nonempty_handoff ||
                     (expansion == 1 && proposals[i].root_type == ActionType::Exalt)) continue;
@@ -925,7 +932,13 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     selected_next=i;
             }
         }
-        const bool corrected_choice=selected_next!=static_next;
+        if ((mode==NativeContinuationSearchMode::DirtyProtectedFirst || selective) && next_proposal==preserved_proposals) {
+            for (std::size_t i=next_proposal;i<proposals.size();++i)
+                if (proposals[i].root_type==ActionType::Essence && proposals[i].expansion==2) {
+                    selected_next=i; break;
+                }
+        }
+        const bool corrected_choice=adaptive && selected_next!=static_next;
         std::swap(proposals[next_proposal],proposals[selected_next]);
         const auto& proposal=proposals[next_proposal];
         const auto prediction_version=guide.version;
@@ -939,12 +952,18 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 : root_type == ActionType::Exalt ? "exalt" : "gated_chaos";
         const auto begin = std::chrono::steady_clock::now();
         ReturnEvaluationReceipt evaluation;
+        const auto used_before_candidate=calc.telemetry().reforge_logical_work_v1;
         std::uint64_t constructed_rows = 0, continued_dirty = 0, paid_cleanup = 0;
         std::uint64_t paid_scour = 0, paid_redraw = 0, shared_redraw_rows = 0;
         std::uint64_t cleanup_alternatives = 0, improvement_rounds = 0;
         std::uint64_t redraw_alternatives = 0, protected_alternatives = 0, protected_refusals = 0;
         std::uint64_t rarity_recoveries = 0;
         std::uint64_t paid_lock_cleanups = 0;
+        std::uint64_t growth_batch=0, pending_opportunities=0, reused_rows=0, seed_rows=0;
+        std::uint64_t selected_dependency_rows=0, protected_patch_rows=0;
+        std::uint64_t automatic_sources=0, automatic_patch_rows=0, automatic_refusals=0;
+        std::string automatic_samples="[]";
+        std::string patch_samples="[]";
         std::uint64_t child_work = 0, child_active = 0, child_peak = 0;
         double seed_cost = kInfinity, coarse_cost = kInfinity, exact_cost = kInfinity;
         std::uint64_t native_boundary_entries = 0;
@@ -971,7 +990,25 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             std::string sample = "{\"kind\":\"dirty_continuation_candidate\",\"root_action\":\"" +
                 std::string(root_name) + "\",\"disposition\":\"" + disposition +
                 "\",\"expansion\":" + std::to_string(proposal.expansion) +
-                ",\"guidance_mode\":\"" + (adaptive ? "adaptive" : guided ? "static" : "off") +
+                ",\"selective_growth\":" + (selective ? "true" : "false") +
+                ",\"growth_batch\":" + std::to_string(growth_batch) +
+                ",\"seed_rows\":" + std::to_string(seed_rows) +
+                ",\"reused_rows\":" + std::to_string(reused_rows) +
+                ",\"pending_opportunities\":" + std::to_string(pending_opportunities) +
+                ",\"selected_dependency_rows\":" + std::to_string(selected_dependency_rows) +
+                ",\"protected_patch_rows\":" + std::to_string(protected_patch_rows) +
+                ",\"automatic_sources\":" + std::to_string(automatic_sources) +
+                ",\"automatic_patch_rows\":" + std::to_string(automatic_patch_rows) +
+                ",\"automatic_refusals\":" + std::to_string(automatic_refusals) +
+                ",\"automatic_samples\":" + automatic_samples +
+                ",\"patch_samples\":" + patch_samples +
+                ",\"global_reforge_allowance\":" + std::to_string(options.max_reforge_work) +
+                ",\"used_before_candidate\":" + std::to_string(used_before_candidate) +
+                ",\"initial_reforge_remainder\":" + std::to_string(options.max_reforge_work-
+                    std::min(options.max_reforge_work,used_before_candidate)) +
+                ",\"candidate_total_reforge_work\":" + std::to_string(
+                    calc.telemetry().reforge_logical_work_v1-used_before_candidate) +
+                ",\"guidance_mode\":\"" + (selective ? "selective" : adaptive ? "adaptive" : guided ? "static" : "off") +
                 "\",\"prediction_version\":" + std::to_string(prediction_version) +
                 ",\"guide_version\":" + std::to_string(guide.version) +
                 ",\"guide_updates\":" + std::to_string(guide.updates) +
@@ -1102,6 +1139,20 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             Impl child(*private_calc, proposal.start, prices, local_options);
             child.incremental_action_generation=true;
             const auto root=child.result.start_state;
+            std::array<std::uint32_t,2> side_goal_masks{};
+            for (std::size_t slot=0;slot<private_calc->goal().slots.size();++slot) {
+                const auto side=goal_slot_side(private_calc->session(),private_calc->goal().slots[slot]);
+                if (side>=0 && side<2) side_goal_masks[side]|=1u<<slot;
+            }
+            std::uint32_t forced_goal_mask=0;
+            if (proposal.root_registry_action!=kNoId && root_type==ActionType::Essence) {
+                const auto& action=calc.registry().actions.at(proposal.root_registry_action);
+                const auto mod=calc.session().essence_guaranteed_mod_ids.at(action.params.essence_index);
+                for (std::size_t slot=0;slot<private_calc->layout().slots.size();++slot) {
+                    const auto& mask=private_calc->layout().slots[slot].satisfying_mask;
+                    if (mod/64<mask.size() && ((mask[mod/64]>>(mod%64))&1ull)) forced_goal_mask|=1u<<slot;
+                }
+            }
             std::uint32_t exalt=kNoId, annul=kNoId, scour=kNoId, regal=kNoId, remove_lock=kNoId, root_action=kNoId;
             std::vector<std::uint32_t> protection;
             for (const auto& priced : child.operators) {
@@ -1135,12 +1186,23 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             }
             std::vector<std::uint32_t> boundary;
             std::vector<std::uint32_t> local_states;
+            struct Opportunity { std::uint32_t state, action; std::uint64_t sequence; double priority=0; };
+            std::vector<Opportunity> pending;
+            // Row IDs are immutable in this context. A root-reachable selected
+            // row vector can reuse a completed native root check even when new
+            // off-policy rows would change the compiler's unused router nodes.
+            std::vector<std::uint64_t> checked_selected_rows, selected_rows;
+            double checked_selected_cost=kInfinity;
+            std::size_t pending_head=0, pending_walk_cursor=0, completed_walk=0;
+            const bool incremental=selective && proposal.expansion>=2 && !proposal.nonempty_handoff;
             std::uint32_t retry=kNoId;
             std::optional<SharedSparseTransitionSpan> root_redraw_span;
             child.transition_cache=std::make_shared<SolveTransitionCache>();
             child.priced_rows.clear(); child.policy_rows.clear();
             const auto extra_bytes=[&] {
-                return walk.capacity()*sizeof(std::uint32_t)+reached.capacity()+
+                return (checked_selected_rows.capacity()+selected_rows.capacity())*sizeof(std::uint64_t)+
+                    pending.capacity()*sizeof(Opportunity)+patch_samples.capacity()+automatic_samples.capacity()+
+                    walk.capacity()*sizeof(std::uint32_t)+reached.capacity()+
                     entries.capacity()*sizeof(StrategyContinuationEntryRequest)+
                     candidates.capacity()*sizeof(std::uint32_t)+universe.capacity()*sizeof(std::uint64_t)+
                     entry_states.capacity()*sizeof(std::uint32_t)+entry_response.capacity()+
@@ -1159,7 +1221,233 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             const auto checkpoint_memory = [&](const std::uint64_t transient=0) {
                 return observe_memory(transient) + handoff_base_bytes;
             };
-            for (std::size_t cursor=0;cursor<walk.size();++cursor) {
+                const auto append = [&](const std::uint32_t state, const std::uint32_t action, const OutcomeDistribution& native,
+                                        const double native_cost=kInfinity) {
+                    const auto n=private_calc->state_count();
+                    reached.resize(n,0); child.policy_rows.resize(n,std::numeric_limits<std::uint64_t>::max());
+                    child.result.policy.resize(n);
+                    SparsePolicyRowInput row; row.owner_state=state; row.operator_index=action;
+                    for (const auto& priced:child.operators) if (priced.index==action) row.cost=priced.cost;
+                    if (std::isfinite(native_cost)) row.cost=native_cost;
+                    observe_memory(native.entries.size()*sizeof(SparsePolicyTransitionInput));
+                    row.transitions.reserve(native.entries.size());
+                    double mass=0;
+                    for (const auto& e:native.entries) {
+                        if (!std::isfinite(e.probability) || e.probability<0) throw std::runtime_error("invalid native dirty probability");
+                        mass+=e.probability;
+                        if (e.probability==0) continue;
+                        row.transitions.push_back({e.state,e.probability});
+                        if (!reached[e.state]) { reached[e.state]=1; walk.push_back(e.state); }
+                    }
+                    if (std::abs(mass-1)>1e-12) throw std::runtime_error("incomplete native dirty probability mass");
+                    std::optional<SharedSparseTransitionSpan> shared;
+                    if (broad_root && action==root_action && root_redraw_span &&
+                        root_redraw_span->count==row.transitions.size()) {
+                        bool equal=true;
+                        for (std::size_t i=0;i<row.transitions.size();++i) {
+                            const auto at=root_redraw_span->offset+i;
+                            equal &= child.transition_cache->successors.at(at)==row.transitions[i].successor &&
+                                child.transition_cache->probabilities.at(at)==row.transitions[i].probability;
+                        }
+                        if (equal) shared=root_redraw_span;
+                    }
+                    const auto appended_transitions=shared ? 0 : row.transitions.size();
+                    if (constructed_rows>=options.max_state_action_rows ||
+                        appended_transitions>options.max_transitions-std::min<std::uint64_t>(
+                            options.max_transitions,child.transition_cache->successors.size()))
+                        throw std::runtime_error("dirty selected graph reached the declared row/transition cap");
+                    observe_memory(row.transitions.capacity()*sizeof(SparsePolicyTransitionInput) +
+                        appended_transitions*2*(sizeof(std::uint32_t)+sizeof(double)));
+                    ++constructed_rows;
+                    const auto id=append_sparse_policy_row(*child.transition_cache,child.priced_rows,row,shared);
+                    if (broad_root && action==root_action && !root_redraw_span) {
+                        const auto& stored=child.transition_cache->rows.at(id);
+                        root_redraw_span=SharedSparseTransitionSpan{stored.transition_offset,stored.transition_count};
+                    }
+                    if (shared) ++shared_redraw_rows;
+                    return id;
+                };
+            // All growth batches stay in this exact CalcContext and sparse row namespace.
+            // A completed published graph is owned separately by the parent portfolio.
+            for (growth_batch=0; growth_batch<(incremental ? selective_options ? 17u : 9u : 1u) && !requested_bounded_finish; ++growth_batch) {
+                if (growth_batch>0) {
+                    sample_index.reset(); evaluation=ReturnEvaluationReceipt{};
+                    coarse_cost=exact_cost=kInfinity; entry_response="[]";
+                }
+                const auto batch_row_begin=constructed_rows;
+                const auto patch_row_begin=protected_patch_rows;
+                const auto automatic_row_begin=automatic_patch_rows;
+                if (growth_batch>0) {
+                    for (;pending_walk_cursor<walk.size();++pending_walk_cursor) {
+                        const auto state=walk[pending_walk_cursor];
+                        const auto& item=private_calc->state(state);
+                        const auto goals=std::popcount(child.satisfied_goal_mask_for_state(state));
+                        if (child.result.goal_states[state] || item.rarity!=PC_RARITY_RARE ||
+                            item.flags!=0 || goals==0 || item.prefix_count+item.suffix_count<=goals) continue;
+                        for (const auto action:protection)
+                            pending.push_back({state,action,static_cast<std::uint64_t>(pending.size()),0});
+                    }
+                    if (selective_options && growth_batch==9) {
+                        // Preserve the complete bounded protection opportunity
+                        // before the separate native-option addition phase.
+                        for (const auto state:walk) {
+                            const auto& item=private_calc->state(state);
+                            const auto goals=std::popcount(child.satisfied_goal_mask_for_state(state));
+                            if (!child.result.goal_states[state] && item.rarity==PC_RARITY_RARE && item.flags==0 &&
+                                goals>0 && goals+1>=private_calc->goal().required_satisfied_slots() &&
+                                private_calc->is_candidate_operator_admitted_for_state(state,exalt) &&
+                                action_legal(private_calc->session(),private_calc->registry().actions.at(
+                                    private_calc->operators().at(exalt).primitive_action),item))
+                                pending.push_back({state,kNoId,static_cast<std::uint64_t>(pending.size()),0});
+                        }
+                    }
+                    pending_opportunities=pending.size()-pending_head;
+                    if (!pending_opportunities && selective_options && growth_batch<9) {
+                        growth_batch=8; continue;
+                    }
+                    if (!pending_opportunities) break;
+                    observe_memory();
+                    for (std::size_t i=pending_head;i<pending.size();++i) {
+                        auto& opportunity=pending[i];
+                        if (opportunity.action==kNoId) {
+                            opportunity.priority=child.result.values.at(opportunity.state)*
+                                std::popcount(child.satisfied_goal_mask_for_state(opportunity.state));
+                            continue;
+                        }
+                        const auto& op=private_calc->operators().at(opportunity.action);
+                        const auto mask=child.satisfied_goal_mask_for_state(opportunity.state);
+                        const auto saved_mask=op.intended_side>=0 && op.intended_side<2 ?
+                            mask&side_goal_masks[op.intended_side] : 0u;
+                        const auto retained_goals=std::popcount(saved_mask&~forced_goal_mask);
+                        double cost=0;
+                        for (const auto& priced:child.operators) if (priced.index==opportunity.action) cost=priced.cost;
+                        // Private continuation value and preserved goal identity can change
+                        // actual source/action service. This is not a root-saving certificate.
+                        opportunity.priority=retained_goals ? child.result.values.at(opportunity.state)*retained_goals*retained_goals/std::max(1.0,cost) : -1;
+                    }
+                    const bool age_batch=growth_batch%3==0;
+                    std::stable_sort(pending.begin()+pending_head,pending.end(),[&](const auto& a,const auto& b) {
+                        if (!age_batch && a.priority!=b.priority) return a.priority>b.priority;
+                        return a.sequence<b.sequence;
+                    });
+                    reused_rows=constructed_rows;
+                    unsigned installed=0, serviced=0;
+                    std::vector<std::tuple<std::uint32_t,std::uint8_t,std::uint8_t,std::uint32_t>> serviced_views;
+                    evaluation.stage="selected_protection_patch";
+                    while (pending_head<pending.size() && installed<32 && serviced<128) {
+                        // Cover different source/action views before spending a
+                        // whole batch on disposable variants of one view. This
+                        // is a shortlist, never a kernel-equivalence assertion.
+                        std::size_t chosen=pending_head;
+                        if (!age_batch) {
+                            for (std::size_t i=pending_head;i<pending.size();++i) {
+                                const auto& candidate=pending[i];
+                                const auto& item=private_calc->state(candidate.state);
+                                const auto view=std::make_tuple(child.satisfied_goal_mask_for_state(candidate.state),
+                                    item.prefix_count,item.suffix_count,candidate.action);
+                                if (std::find(serviced_views.begin(),serviced_views.end(),view)==serviced_views.end()) {
+                                    serviced_views.push_back(view); chosen=i; break;
+                                }
+                            }
+                        }
+                        std::swap(pending[pending_head],pending[chosen]);
+                        const auto opportunity=pending[pending_head++]; ++serviced;
+                        const auto state=opportunity.state, action=opportunity.action;
+                        if (action==kNoId) {
+                            evaluation.stage="selected_native_option_patch";
+                            AutomaticAdmissionLimits admission;
+                            admission.max_state_action_rows=options.max_state_action_rows-constructed_rows;
+                            admission.max_transitions=options.max_transitions-child.transition_cache->successors.size();
+                            const auto available=options.max_solver_owned_bytes-
+                                std::min(options.max_solver_owned_bytes,parent_live_bytes()+observe_memory());
+                            admission.max_solver_owned_bytes=private_calc->fast_estimated_owned_bytes()+available;
+                            admission.consider_imprint_programs=false; admission.prices=&prices;
+                            // No root upper is supplied as an entry bound.
+                            StateLocalAutomaticBatch batch;
+                            while (!private_calc->advance_state_local_automatic_candidates(state,admission,batch,1)) {
+                                charge_child();
+                                co_await CooperativeCheckpoint{checkpoint_memory()};
+                            }
+                            charge_child(); ++automatic_sources;
+                            const auto batch_bytes=[&] {
+                                std::uint64_t bytes=batch.admitted_operators.capacity()*sizeof(std::uint32_t)+
+                                    batch.decisions.capacity()*sizeof(StateLocalAutomaticCandidate)+
+                                    batch.resource_cap.capacity()+batch.resource_reason.capacity();
+                                for (const auto& decision:batch.decisions)
+                                    bytes+=decision.id.capacity()+decision.evidence.reason.capacity()+decision.evidence.legality_result.capacity();
+                                return bytes+serviced_views.capacity()*sizeof(decltype(serviced_views)::value_type);
+                            };
+                            if (batch.status!=StateLocalAutomaticBatchStatus::Complete)
+                                throw std::runtime_error("selected native option admission deferred: "+batch.resource_reason);
+                            for (const auto index:batch.admitted_operators) {
+                                if (!child.ensure_priced_operator(index)) { ++automatic_refusals; continue; }
+                                const auto& op=private_calc->operators().at(index);
+                                if (op.option_kind!=FixedOptionKind::TemporaryBenchRepeat &&
+                                    op.option_kind!=FixedOptionKind::ProtectedRepeat) continue;
+                                const auto& kernel=private_calc->option_kernel(state,index);
+                                if (!kernel.supported || !kernel.legal || !kernel.terminates_almost_surely ||
+                                    !kernel.observation_choice_groups.empty() || !kernel.observation_choice_options.empty()) {
+                                    ++automatic_refusals; continue;
+                                }
+                                double cost=0;
+                                for (const auto& [key,quantity]:kernel.expected_resources) {
+                                    const auto found=prices.find(key);
+                                    if (found==prices.end() || !std::isfinite(quantity) || quantity<0)
+                                        throw std::runtime_error("selected native option has incomplete pricing");
+                                    cost+=quantity*found->second;
+                                }
+                                OutcomeDistribution complete; complete.entries=kernel.exits;
+                                for (auto& exit:complete.entries) if (exit.state==kNoId) exit.state=state;
+                                (void)append(state,index,complete,cost); ++automatic_patch_rows; ++installed;
+                                if (automatic_patch_rows<=8) {
+                                    if (automatic_samples=="[]") automatic_samples="["; else {automatic_samples.pop_back(); automatic_samples+=',';}
+                                    automatic_samples+="{\"source\":"+std::to_string(state)+",\"operator\":\""+
+                                        diagnostic_json_escape(op.id)+"\",\"goal_mask\":"+
+                                        std::to_string(child.satisfied_goal_mask_for_state(state))+",\"native_expected_cost\":"+
+                                        diagnostic_finite_double(cost)+",\"exits\":"+std::to_string(complete.entries.size())+"}]";
+                                }
+                                if (installed==1) record("in_progress");
+                                co_await CooperativeCheckpoint{checkpoint_memory(batch_bytes())};
+                            }
+                            for (const auto& decision:batch.decisions) if (!decision.admitted) ++automatic_refusals;
+                            pending_opportunities=pending.size()-pending_head;
+                            // One coherent native-admission carrier per batch;
+                            // all its installed rows and tails close together.
+                            break;
+                        }
+                        const auto& kernel=private_calc->option_kernel(state,action);
+                        charge_child();
+                        if (!kernel.supported || !kernel.legal || !kernel.terminates_almost_surely ||
+                            !kernel.observation_choice_groups.empty() || !kernel.observation_choice_options.empty()) {
+                            ++protected_refusals;
+                        } else {
+                            OutcomeDistribution complete; complete.entries=kernel.exits;
+                            (void)append(state,action,complete);
+                            ++protected_alternatives; ++protected_patch_rows; ++installed;
+                            if (protected_patch_rows<=8) {
+                                if (patch_samples=="[]") patch_samples="["; else { patch_samples.pop_back(); patch_samples+=','; }
+                                pc_item_state item; if (!private_calc->materialize(state,item)) throw std::runtime_error("selected protection entry is not materializable");
+                                patch_samples+="{\"source\":"+std::to_string(state)+",\"operator\":\""+
+                                    diagnostic_json_escape(private_calc->operators().at(action).id)+"\",\"goal_mask\":"+
+                                    std::to_string(child.satisfied_goal_mask_for_state(state))+",\"positive_exits\":"+
+                                    std::to_string(complete.entries.size())+",\"priority_estimate\":"+
+                                    diagnostic_finite_double(opportunity.priority)+",\"native_item_identity\":[";
+                                bool first=true; for (const auto word:exact_item_state_key(item)) {
+                                    if (!first) patch_samples+=','; first=false; patch_samples+='\"'+std::to_string(word)+'\"';
+                                }
+                                patch_samples+="]}]";
+                            }
+                            if (installed==1) record("in_progress");
+                        }
+                        pending_opportunities=pending.size()-pending_head;
+                        co_await CooperativeCheckpoint{checkpoint_memory(serviced_views.capacity()*sizeof(decltype(serviced_views)::value_type))};
+                    }
+                    if (!installed && pending_head==pending.size()) {
+                        if (selective_options && growth_batch<9) { growth_batch=8; continue; }
+                        break;
+                    }
+                }
+                for (std::size_t cursor=completed_walk;cursor<walk.size();++cursor) {
                 const auto state=walk[cursor];
                 if (private_calc->is_goal_state(private_calc->state(state))) continue;
                 pc_item_state item;
@@ -1253,51 +1541,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 if (!law || !law->supported || !law->applicable || !law->choice_groups.empty() || !law->choice_options.empty())
                     throw std::runtime_error("dirty selected native row is incomplete, illegal or observed");
                 if (state==root && law->goal_progress_gated) retry=law->gated_retry_state;
-                const auto append = [&](const std::uint32_t action, const OutcomeDistribution& native) {
-                    const auto n=private_calc->state_count();
-                    reached.resize(n,0); child.policy_rows.resize(n,std::numeric_limits<std::uint64_t>::max());
-                    child.result.policy.resize(n);
-                    SparsePolicyRowInput row; row.owner_state=state; row.operator_index=action;
-                    for (const auto& priced:child.operators) if (priced.index==action) row.cost=priced.cost;
-                    observe_memory(native.entries.size()*sizeof(SparsePolicyTransitionInput));
-                    row.transitions.reserve(native.entries.size());
-                    double mass=0;
-                    for (const auto& e:native.entries) {
-                        if (!std::isfinite(e.probability) || e.probability<0) throw std::runtime_error("invalid native dirty probability");
-                        mass+=e.probability;
-                        if (e.probability==0) continue;
-                        row.transitions.push_back({e.state,e.probability});
-                        if (!reached[e.state]) { reached[e.state]=1; walk.push_back(e.state); }
-                    }
-                    if (std::abs(mass-1)>1e-12) throw std::runtime_error("incomplete native dirty probability mass");
-                    std::optional<SharedSparseTransitionSpan> shared;
-                    if (broad_root && action==root_action && root_redraw_span &&
-                        root_redraw_span->count==row.transitions.size()) {
-                        bool equal=true;
-                        for (std::size_t i=0;i<row.transitions.size();++i) {
-                            const auto at=root_redraw_span->offset+i;
-                            equal &= child.transition_cache->successors.at(at)==row.transitions[i].successor &&
-                                child.transition_cache->probabilities.at(at)==row.transitions[i].probability;
-                        }
-                        if (equal) shared=root_redraw_span;
-                    }
-                    const auto appended_transitions=shared ? 0 : row.transitions.size();
-                    if (constructed_rows>=options.max_state_action_rows ||
-                        appended_transitions>options.max_transitions-std::min<std::uint64_t>(
-                            options.max_transitions,child.transition_cache->successors.size()))
-                        throw std::runtime_error("dirty selected graph reached the declared row/transition cap");
-                    observe_memory(row.transitions.capacity()*sizeof(SparsePolicyTransitionInput) +
-                        appended_transitions*2*(sizeof(std::uint32_t)+sizeof(double)));
-                    ++constructed_rows;
-                    const auto id=append_sparse_policy_row(*child.transition_cache,child.priced_rows,row,shared);
-                    if (broad_root && action==root_action && !root_redraw_span) {
-                        const auto& stored=child.transition_cache->rows.at(id);
-                        root_redraw_span=SharedSparseTransitionSpan{stored.transition_offset,stored.transition_count};
-                    }
-                    if (shared) ++shared_redraw_rows;
-                    return id;
-                };
-                child.policy_rows[state]=append(selected,*law);
+                child.policy_rows[state]=append(state,selected,*law);
                 child.result.policy[state]=PolicyOperatorRef{selected};
                 // Complete the competing paid-removal row and every new
                 // successor under the same native controller. Selection below
@@ -1316,7 +1560,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     if (!cleanup || !cleanup->supported || !cleanup->applicable ||
                         !cleanup->choice_groups.empty() || !cleanup->choice_options.empty())
                         throw std::runtime_error("dirty cleanup alternative is not a complete native row");
-                    (void)append(annul,*cleanup);
+                    (void)append(state,annul,*cleanup);
                     ++cleanup_alternatives;
                 }
                 if (proposal.nonempty_handoff && selected!=scour &&
@@ -1333,7 +1577,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     if (!cleanup || !cleanup->supported || !cleanup->applicable ||
                         !cleanup->choice_groups.empty() || !cleanup->choice_options.empty())
                         throw std::runtime_error("dirty Scour alternative is not a complete native row");
-                    (void)append(scour,*cleanup);
+                    (void)append(state,scour,*cleanup);
                     ++cleanup_alternatives;
                 }
                 if (!lock_cleanup && proposal.expansion>0 && broad_root && selected!=root_action &&
@@ -1352,14 +1596,14 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     if (!redraw || !redraw->supported || !redraw->applicable ||
                         !redraw->choice_groups.empty() || !redraw->choice_options.empty())
                         throw std::runtime_error("positive-progress redraw lacks a complete native row");
-                    (void)append(root_action,*redraw);
+                    (void)append(state,root_action,*redraw);
                     ++redraw_alternatives;
                 }
-                if (!lock_cleanup && proposal.expansion>=2 && goals>0 && count>goals && item.rarity==PC_RARITY_RARE) {
+                if (!incremental && !lock_cleanup && proposal.expansion>=2 && goals>0 && count>goals && item.rarity==PC_RARITY_RARE) {
                     for (const auto action : protection) {
                         // These bounded deterministic/removal programs use
-                        // the existing option kernel and compiler. No observed
-                        // offer or protected intermediate becomes an outer row.
+                        // the existing option kernel and compiler. Every physical
+                        // exit continues through the paid controller; offers refuse.
                         const auto& kernel=private_calc->option_kernel(state,action);
                         charge_child();
                         if (!kernel.supported || !kernel.legal || !kernel.terminates_almost_surely ||
@@ -1368,7 +1612,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                         } else {
                             OutcomeDistribution completed;
                             completed.entries=kernel.exits;
-                            (void)append(action,completed);
+                            (void)append(state,action,completed);
                             ++protected_alternatives;
                         }
                         co_await CooperativeCheckpoint{checkpoint_memory()};
@@ -1392,10 +1636,16 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 }
                 co_await CooperativeCheckpoint{checkpoint_memory()};
             }
+            completed_walk=walk.size();
+            if (growth_batch==0) seed_rows=constructed_rows;
+            else selected_dependency_rows+=constructed_rows-batch_row_begin-(protected_patch_rows-patch_row_begin)-
+                (automatic_patch_rows-automatic_row_begin);
             const auto n=private_calc->state_count();
             // The exact fixed-policy solver requires finite numerical seeds
             // within each closed SCC. These zeros carry no bound authority.
-            child.result.values.assign(n,0); child.result.goal_states.assign(n,0);
+            if (growth_batch==0) child.result.values.assign(n,0);
+            else child.result.values.resize(n,0);
+            child.result.goal_states.assign(n,0);
             child.expanded.assign(n,0); child.result.expanded.assign(n,0);
             child.result.policy_reachable=reached;
             for (const auto state:walk) {
@@ -1487,9 +1737,38 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             coarse_cost=child.result.values.at(root);
             if (!std::isfinite(coarse_cost) || coarse_cost<0)
                 throw std::runtime_error("coarse dirty fixed controller has no finite root estimate");
+            if (incremental) {
+                selected_rows.clear();
+                std::vector<std::uint32_t> frontier{root};
+                std::vector<std::uint8_t> seen(n,0); seen[root]=1;
+                for (std::size_t cursor=0;cursor<frontier.size();++cursor) {
+                    const auto state=frontier[cursor];
+                    if (child.result.goal_states[state]) continue;
+                    const auto id=child.policy_rows.at(state);
+                    selected_rows.push_back(id);
+                    const auto& row=child.transition_cache->rows.at(id);
+                    for (std::uint32_t i=0;i<row.transition_count;++i) {
+                        const auto at=row.transition_offset+i;
+                        if (!(child.transition_cache->probabilities.at(at)>0)) continue;
+                        const auto next=child.transition_cache->successors.at(at);
+                        if (!seen.at(next)) { seen[next]=1; frontier.push_back(next); }
+                    }
+                    if ((cursor&255u)==0) {
+                        observe_memory(frontier.capacity()*sizeof(std::uint32_t)+seen.capacity());
+                        co_await CooperativeCheckpoint{checkpoint_memory()+frontier.capacity()*sizeof(std::uint32_t)+seen.capacity()};
+                    }
+                }
+                std::sort(selected_rows.begin(),selected_rows.end());
+                if (std::isfinite(checked_selected_cost) && selected_rows==checked_selected_rows) {
+                    exact_cost=checked_selected_cost;
+                    record("reused_verified_selected_controller",
+                        "same complete root-reachable selected rows, immutable context and prices; no new entry certificate");
+                    continue;
+                }
+            }
             if (!proposal.nonempty_handoff) completed_private_cost[family_of(root_type)]=coarse_cost;
-            if (!proposal.nonempty_handoff && proposal.expansion==0 &&
-                coarse_cost>=incumbent_portfolio.verified_executable_upper()) {
+            if (!proposal.nonempty_handoff && (proposal.expansion==0 || incremental) &&
+                coarse_cost>=incumbent_portfolio.verified_executable_upper()*(incremental ? 1.05 : 1.0)) {
                 record("deferred_by_cost_estimate",
                     "private estimate is not competitive; no numerical or action-retirement authority");
                 continue;
@@ -1516,6 +1795,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 if (existing && certified_incumbent_invalid_reason(*existing)==nullptr &&
                     existing->compiled_artifact.strategy_json==graph) {
                     exact_cost=existing->evaluated_policy_cost;
+                    if (incremental) { checked_selected_rows=selected_rows; checked_selected_cost=exact_cost; }
                     record("reused_verified_identical_graph","same frozen graph, original root, scope and economy; no new training label");
                     continue;
                 }
@@ -1526,7 +1806,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             check_limits.max_solver_owned_bytes=options.max_solver_owned_bytes-held;
             check_limits.max_reforge_work=options.max_reforge_work-
                 std::min(options.max_reforge_work,calc.telemetry().reforge_logical_work_v1);
-            auto check=evaluate_return_graph(calc,prices,graph,check_limits,evaluation,"complete_dirty_controller",std::move(entries));
+            auto check=evaluate_return_graph(calc,prices,graph,check_limits,evaluation,"complete_dirty_controller",entries);
             while (!check.resume()) {
                 if (std::chrono::steady_clock::now()-last_sample>=std::chrono::seconds(1)) {
                     record("in_progress"); last_sample=std::chrono::steady_clock::now();
@@ -1535,8 +1815,15 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             }
             auto evaluated=check.take_result(); check.reset();
             if (!complete_return_evaluation(evaluated,false))
-                throw std::runtime_error("complete emitted dirty controller failed native properness or cost checks");
+                throw std::runtime_error("complete emitted dirty controller failed native checks: converged="+
+                    std::to_string(evaluated.converged)+", cost_complete="+std::to_string(evaluated.cost_complete)+
+                    ", cost="+diagnostic_finite_double(evaluated.total_expected_cost)+
+                    ", success="+diagnostic_finite_double(evaluated.success_probability)+
+                    ", failure="+diagnostic_finite_double(evaluated.failure_probability)+
+                    ", stop="+diagnostic_finite_double(evaluated.stop_probability)+
+                    ", failures="+std::to_string(evaluated.failures_by_node.size()));
             exact_cost=evaluated.total_expected_cost;
+            if (incremental) { checked_selected_rows=selected_rows; checked_selected_cost=exact_cost; }
             if (adaptive && !proposal.nonempty_handoff)
                 guide.observe(coarse_cost,exact_cost,family_of(root_type));
             entry_response="[";
@@ -1642,6 +1929,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 throw std::runtime_error("independently evaluated dirty root artifact failed portfolio admission");
             retained=true;
             record("retained");
+            } // One closed seed and its bounded compatible growth batches.
         } catch (const std::exception& error) {
             if (private_calc) private_calc->cancel_outcomes();
             charge_child();
