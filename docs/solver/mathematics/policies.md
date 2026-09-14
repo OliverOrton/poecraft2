@@ -322,6 +322,17 @@ J_{o;\pi}(s)=C_o(s)+\sum_tP_o(t\mid s)J_\pi(t).
 
 This is the law of total expectation, not a new crafting action. Internal resource use must include repeated setup when retries actually reapply it. Every positive-probability exit needs the corresponding continuation. Exit-specific cost/resource correlations must remain consistent with whatever accounting the compiler and evaluator check.
 
+The native temporary-bench option can include paid Multimod before a Cannot
+Roll blocker, followed by Exalt and removal of both crafts. Capacity and pool
+filtering interact: filling the opposite side can change the draw even when
+Multimod supplies no desired modifier. Four paid primitive operations remain
+four executions, regardless of the number or quantities of price keys. This
+program has a distinct option/template identity from a single blocker. Native
+attempt legality, complete exits and cleanup still decide admission; a promising
+pool census alone supplies no executable upper. The
+[cross-base application](../../active/2026-09-14-cross-base-strategy-recovery/README.md)
+records the full-root comparisons and their differing economic results.
+
 The stop boundary cannot skip a decision the native caller is entitled to take. It may summarize mandatory internal operations of one allowed operator. It must not turn an optional cleanup into a forced one merely to obtain a convenient continuation law.
 
 ### Proper options do not imply a proper composition
@@ -353,6 +364,16 @@ J=c+(1-p)(d+J)
 \]
 
 The assumptions are substantial: every failure must really reach the same priced retry state after recovery, the trial law must remain the same, and every required branch must be proper. A destructive action whose failure changes blockers, rarity, or retained progress is not an identical retry until that state change is represented or reset at its actual cost.
+
+To distinguish acquisition rarity from later loss, stop the fixed controller at
+exact compatible decision entries. If acquisition A to B costs a, B's complete
+tail costs b and returns only to identical A with probability 1-p (otherwise
+the true goal), then C(A)=(a+b)/p. The same equation holds for the separate
+primitive reward. With multiple physical or controller contexts, retain the
+return matrix and solve the vector equations instead. A changed recurring
+continuation changes that matrix and the original-root occupancy; old visits
+times a local saving is not an acceptance calculation. Diagnostic STOP nodes
+are never true goals or executable tails.
 
 With \(c=1\), \(p=1/128\), and \(d=2\), free rollback gives 128 while paid recovery gives 382. This is an exact synthetic example, not a native price prediction. The applied-reforge archive uses this kind of distinction to test its lower relation. [Applied-reforge evidence](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md).
 

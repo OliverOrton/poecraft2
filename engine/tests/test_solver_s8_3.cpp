@@ -2956,11 +2956,70 @@ void run_native_execution_tradeoff() {
     PC_CHECK(portfolio.verified_executable_upper()==cheap.total_expected_cost);
 }
 
+void run_temporary_capacity_finish() {
+    auto session = make_automatic_session(true);
+    auto& data = const_cast<DataImpl&>(*session->data);
+    data.spawn_weights[kGoalPrefix] = 100;
+    session->base_spawn_weight[kGoalPrefix] = 100;
+    session->base_roll_weight[kGoalPrefix] = 100;
+    pc_bitset_set(session->positive_base_weight_mask.data(), kGoalPrefix);
+    auto goal = automatic_goal(true, true);
+    pc_item_state start; pc_item_clear(&start); start.rarity = PC_RARITY_RARE;
+    for (const auto mod : {kPrefixJunkA, kPrefixJunkB}) {
+        GoalSlot slot; slot.family_id = session->family_id[mod]; goal.slots.push_back(slot);
+        add_mod(start, *session, mod);
+    }
+    add_mod(start, *session, kGoalSuffix, PC_MOD_SLOT_FRACTURED);
+    const auto registry = build_action_registry(*session);
+    const auto exalt = registry.index_by_id.at("exalt");
+    const auto restart = registry.index_by_id.at("restart");
+    const std::unordered_map<std::string, double> prices{
+        {"exalt", 10}, {"base", 100}, {"scour", 1},
+        {"bench:s83_mod_11", 2}, {"bench:s83_mod_16", 2}};
+    CalcContext calc(session, goal, registry, {exalt, restart}, false, true, true);
+    const auto entry = calc.intern_item(start);
+    const auto batch = admit_automatic(calc, entry, prices);
+    const auto capacity = operator_by_fragment(calc, ":capacity:bench:s83_mod_11");
+    PC_CHECK(capacity != kNoId);
+    if (capacity == kNoId) return;
+    PC_CHECK(std::find(batch.admitted_operators.begin(), batch.admitted_operators.end(), capacity) != batch.admitted_operators.end());
+    const auto& kernel = calc.option_kernel(entry, capacity);
+    PC_CHECK(kernel.legal && kernel.supported && kernel.terminates_almost_surely);
+    PC_CHECK(kernel.expected_primitive_actions == 4);
+    PC_CHECK(kernel.automatic.setup_complete && kernel.automatic.cleanup_complete);
+    PC_CHECK(kernel.exits.size() == 1 && kernel.exits.front().probability == 1);
+    PC_CHECK(calc.is_goal_state(calc.state(kernel.exits.front().state)));
+    const auto single = operator_by_fragment(calc, "option:temporary_bench_repeat:bench:s83_mod_16:exalt");
+    PC_CHECK(single != capacity && single != kNoId);
+    if (single != kNoId) PC_CHECK(std::abs(calc.option_kernel(entry, single).expected_primitive_actions - 3) < 1e-12);
+    const auto winner = solve(calc, start, prices);
+    PC_CHECK(winner.converged);
+    PC_CHECK(std::abs(winner.values[winner.start_state] - 15) < 1e-9);
+    const auto graph = compile_policy_strategy_json(calc, winner, "native capacity finish");
+    auto economy = std::make_shared<EconomyImpl>(); economy->id = "capacity"; economy->prices = prices;
+    StrategyEvalOptions limits; limits.economy = economy;
+    const auto evaluated = evaluate_strategy(*compile_strategy_json(session, graph.data(), graph.size()), limits);
+    PC_CHECK(evaluated.converged && evaluated.cost_complete && evaluated.success_probability == 1);
+    PC_CHECK(std::abs(evaluated.total_expected_cost - 15) < 1e-9 && evaluated.expected_actions == 4);
+    // Native setup/cleanup stays inside the mandatory option when composing
+    // a closed local finish at the old global router.
+    const auto composed = compile_dirty_continuation_strategy_json(
+        calc, graph, graph, {entry}, {}, winner.options, nullptr, true);
+    const auto checked = evaluate_strategy(
+        *compile_strategy_json(session, composed.data(), composed.size()), limits);
+    PC_CHECK(checked.converged && checked.success_probability == 1 && checked.cost_complete);
+    PC_CHECK(std::abs(checked.total_expected_cost - 15) < 1e-9 && checked.expected_actions == 4);
+    auto full = start; add_mod(full, *session, kSuffixJunk); add_mod(full, *session, kSuffixCompetitor);
+    PC_CHECK(!calc.option_kernel(calc.intern_item(full), capacity).legal);
+    check_owned_byte_ledger(calc);
+}
+
 void run_solver_protected_setup_tests() {
     run_protected_setup_capacity();
     run_protected_setup_after_cleanup();
     run_selective_dirty_growth();
     run_native_execution_tradeoff();
+    run_temporary_capacity_finish();
 }
 
 void run_solver_s8_3_tests() {

@@ -1,0 +1,89 @@
+{
+  "build": "build-CBR-v4.json",
+  "checks": [
+    {
+      "log": "out/cross-base-strategy-recovery/native-focused-final.log",
+      "sha256": "00c54f4515e0ba85945bd4be862452197a1b47f477c28f64bab5fe3ea77b4213",
+      "passed_checks": 519,
+      "tail": [
+        "native-options upper=15.0714285714",
+        "selective native growth: eager=15.0714285714 selective=15.0714285714",
+        "solver protected-setup tests: 519 checks, 0 failures"
+      ]
+    },
+    {
+      "log": "out/cross-base-strategy-recovery/native-compile-final.log",
+      "sha256": "f2b925efd408f607a90062478318f271a701ae05969f5a3258aa6fdf3761a44e",
+      "passed_checks": 1244,
+      "tail": [
+        "solver compile artifact: V=25.0365 empirical=25.0234 over 10000 runs",
+        "solver Imprint R3 fixture: V=7683.072000 creates=4918 restores=4854 runs=64",
+        "solver compile tests: 1244 checks, 0 failures"
+      ]
+    },
+    {
+      "log": "out/cross-base-strategy-recovery/native-api-final.log",
+      "sha256": "67ed49650ac696f45ae12ec355d785e4caa436f9cd390ccc98d328817f33bafb",
+      "passed_checks": 2838,
+      "tail": [
+        "solver API current Imprint: V=705.394260 creates=100544 runs=10000",
+        "solver API product Eldritch: V=4.200000 states=17 runs=10000",
+        "solver API tests: 2838 checks, 0 failures"
+      ]
+    },
+    {
+      "log": "out/cross-base-strategy-recovery/native-eval-final.log",
+      "sha256": "06506adf2a0131d988028ad4e8d1f425a0d7e35c82c08b5cb2864736c5b4e90b",
+      "passed_checks": 16927,
+      "tail": [
+        "solver eval mc scour: exact=4.149306 observed=4.094700 tol=0.267821",
+        "solver eval mc base: exact=4.149306 observed=4.094700 tol=0.267821",
+        "solver evaluator tests: 16927 checks, 0 failures"
+      ]
+    },
+    {
+      "log": "out/cross-base-strategy-recovery/native-conflict-v1.log",
+      "sha256": "9262b3706aee6720f6def8d6cd09eb396cec941b95c48169d95a7d4c850b55f0",
+      "passed_checks": 36,
+      "tail": [
+        "native blocker decision Metadata/Items/Rings/Ring10: option:temporary_bench_repeat:bench:EinharMasterAddedLightningDamage1:exalt:until:1:1 / exact_kernel_unsupported",
+        "native blocker entry Metadata/Items/Rings/Ring10: coarse=0 observed=0 conflicting=1",
+        "solver native blocker-entry tests: 36 checks, 0 failures"
+      ]
+    },
+    {
+      "log": "out/cross-base-strategy-recovery/binding-buffer-test.log",
+      "sha256": "4a0cd8b0accbd095bd6a9118e6d501bae444c7a4cf5ed292b84514851cbeee91",
+      "passed_checks": 1,
+      "tail": [
+        ".                                                                        [100%]",
+        "1 passed, 15 deselected in 0.05s"
+      ]
+    },
+    {
+      "log": "out/cross-base-strategy-recovery/build-v7.log",
+      "sha256": "f824996a9c36237f5a7609cd648e0a29b7cfc12e5c70427d54ceb99c89f4fce6",
+      "passed_checks": null,
+      "tail": [
+        "[10/12] Linking CXX executable poecraft_solver_benchmark.exe",
+        "[11/12] Linking CXX executable poecraft_engine_tests.exe",
+        "Build completed."
+      ]
+    },
+    {
+      "log": "out/cross-base-strategy-recovery/build-wasm.log",
+      "sha256": "44e5391698c39926fce42def13d0b116e7ceeceb6bed732cb2613babeacfdb99",
+      "passed_checks": null,
+      "tail": [
+        "      |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+        "1 warning generated.",
+        "WASM engine written to C:\\Users\\Oliver\\Documents\\poecraft2\\bindings\\wasm\\dist\\poecraft_engine.mjs"
+      ]
+    }
+  ],
+  "wasm": {
+    "path": "bindings/wasm/dist/poecraft_engine.wasm",
+    "sha256": "2e8c630984737430a2405fd61abbd7d0bb43700b98797458fa5fbfe1834c1421"
+  },
+  "scope": "Focused changed-owner native checks, binding buffer regression and rebuilt WASM. Full acceptance suite and unchanged-policy Simulator were not requested by these changes."
+}

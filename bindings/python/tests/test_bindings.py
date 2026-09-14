@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import json
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from poecraft_engine import (
@@ -21,6 +22,28 @@ ARTIFACT = Path(
 )
 BASE = "Metadata/Items/Armours/BodyArmours/BodyInt17"
 FIXTURES = Path(__file__).resolve().parents[3] / "fixtures" / "spec"
+
+
+class EvaluationBufferTests(unittest.TestCase):
+    def test_result_growth_retries_without_parsing_truncated_json(self):
+        from poecraft_engine import _binding as binding
+        calls = []
+        payload = json.dumps({"native_result": "x" * 2048}).encode()
+
+        def evaluate(handle, options, buffer, capacity, length, error):
+            calls.append(capacity)
+            binding.ct.cast(length, binding.ct.POINTER(binding.ct.c_size_t))[0] = (
+                2 if buffer is None else len(payload)
+            )
+            if buffer is not None:
+                binding.ct.memmove(buffer, payload, min(len(payload), capacity - 1))
+            return 0
+
+        with patch.object(binding._lib, "pc_strategy_evaluate", side_effect=evaluate):
+            strategy = binding.Strategy(None, None)
+            self.assertEqual(strategy.evaluate(), json.loads(payload))
+        self.assertEqual(len(calls), 3)
+        self.assertGreater(calls[-1], len(payload))
 
 
 @unittest.skipUnless(ARTIFACT.exists(), "compiled engine artifact is absent")

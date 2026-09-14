@@ -347,6 +347,13 @@ ProductAdmissionDecision classify_goal_relevant_action(
                     return {ProductActionRole::AutomaticDependency,
                             "automatic_multimod_dependency"};
                 }
+                if (cannot_roll_metamod_has_automatic_effect(
+                        session, options, data.metamod_no_attack_code) ||
+                    cannot_roll_metamod_has_automatic_effect(
+                        session, options, data.metamod_no_caster_code)) {
+                    return {ProductActionRole::AutomaticDependency,
+                            "automatic_multimod_dependency"};
+                }
             }
             if (cannot_roll_metamod_has_automatic_effect(
                     session, options, metamod)) {

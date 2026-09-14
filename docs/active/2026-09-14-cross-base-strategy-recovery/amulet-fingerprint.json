@@ -1,0 +1,419 @@
+{
+  "identity": "amulet",
+  "totals": {
+    "expected_actions": 25518.491313143768,
+    "known_expected_cost": 12541.579648544115,
+    "total_expected_cost": 12541.579648544115,
+    "cost_complete": true
+  },
+  "terminals": {
+    "success": 1,
+    "failure": 0,
+    "stop": 0,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "unresolved": 0,
+    "by_node": [
+      {
+        "node_id": "goal",
+        "kind": "success",
+        "p": 1
+      },
+      {
+        "node_id": "offpolicy",
+        "kind": "failure",
+        "p": 0
+      }
+    ]
+  },
+  "converged": true,
+  "metadata": {
+    "native_goal_feasibility": {
+      "status": "feasible",
+      "reason": "natural_reforge_witness",
+      "goal_slot_count": 3,
+      "required_slot_count": 3,
+      "eligible_slot_count": 3,
+      "natural_pool_mod_count": 264,
+      "natural_prefix_mod_count": 112,
+      "natural_suffix_mod_count": 152,
+      "natural_pool_weight": 214650,
+      "natural_prefix_weight": 88600,
+      "natural_suffix_weight": 126050,
+      "witness_action_index": 5,
+      "witness_action_id": "chaos",
+      "witness_mod_ids": [
+        290,
+        70,
+        52
+      ],
+      "slot_natural_mod_counts": [
+        1,
+        1,
+        1
+      ],
+      "slot_natural_weights": [
+        500,
+        250,
+        1000
+      ],
+      "slot_single_draw_probabilities": [
+        0.0023293733985557887,
+        0.0011646866992778943,
+        0.004658746797111577
+      ]
+    },
+    "native_goals": [
+      {
+        "request": {
+          "family_mod_key": "LightningDamagePercent5",
+          "min_tier": 1
+        },
+        "native_anchor_mod": {
+          "session_mod_id": 290,
+          "global_mod_id": 19556,
+          "key": "LightningDamagePercent5",
+          "generation_type": 1,
+          "reach_kind": 0,
+          "reach_influence": -1,
+          "reach_via": "base",
+          "primary_group_id": 3157,
+          "family_id": 87,
+          "required_level": 64,
+          "group_display_name": "of Static",
+          "family_tier_index": 1,
+          "text_lines": [
+            "(23-26)% increased Lightning Damage"
+          ],
+          "classification_tags": [
+            "damage",
+            "elemental",
+            "elemental_damage",
+            "lightning"
+          ]
+        },
+        "native_groups": [
+          3157
+        ]
+      },
+      {
+        "request": {
+          "family_mod_key": "ChaosResist6",
+          "min_tier": 1
+        },
+        "native_anchor_mod": {
+          "session_mod_id": 70,
+          "global_mod_id": 4742,
+          "key": "ChaosResist6",
+          "generation_type": 1,
+          "reach_kind": 0,
+          "reach_influence": -1,
+          "reach_via": "base",
+          "primary_group_id": 1143,
+          "family_id": 14,
+          "required_level": 81,
+          "group_display_name": "of Tacati",
+          "family_tier_index": 1,
+          "text_lines": [
+            "+(31-35)% to Chaos Resistance"
+          ],
+          "classification_tags": [
+            "chaos",
+            "resistance"
+          ]
+        },
+        "native_groups": [
+          1143
+        ]
+      },
+      {
+        "request": {
+          "family_mod_key": "AllResistances6",
+          "min_tier": 1
+        },
+        "native_anchor_mod": {
+          "session_mod_id": 52,
+          "global_mod_id": 1928,
+          "key": "AllResistances6",
+          "generation_type": 1,
+          "reach_kind": 0,
+          "reach_influence": -1,
+          "reach_via": "base",
+          "primary_group_id": 475,
+          "family_id": 7,
+          "required_level": 85,
+          "group_display_name": "of Craft",
+          "family_tier_index": 1,
+          "text_lines": [
+            "+(17-18)% to all Elemental Resistances"
+          ],
+          "classification_tags": [
+            "elemental",
+            "resistance"
+          ]
+        },
+        "native_groups": [
+          475
+        ]
+      }
+    ],
+    "session_mod_count": 661,
+    "scope": "Native loaded artifact, exact request root; natural-pool single-draw data are not complete acquisition probabilities."
+  },
+  "compiled_nodes": 74,
+  "compiled_edges": 210,
+  "coarse_summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 12541.579648544115,
+    "expanded_states": 3793,
+    "sweeps": 100000,
+    "residual": 200.18452532589436,
+    "skipped_action_count": 0,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "refused_resource_cap",
+    "stop_cause": "sweep_cap",
+    "cap_hit_mask": 24,
+    "action_counts": {
+      "registry": 165,
+      "candidate": 31,
+      "evaluator_supported": 31,
+      "supported_priced": 532,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 0
+    },
+    "lower_bound": 174.79327321907147,
+    "upper_bound": 12541.579648544115,
+    "evaluated_policy_cost": 12541.579648544115,
+    "absolute_optimality_gap": 12366.786375325044,
+    "relative_optimality_gap": 70.75092849726279,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  },
+  "evaluator_memory": {
+    "owned_bytes_estimate": 213718750,
+    "peak_owned_bytes_estimate": 283811064,
+    "retained_output_owned_bytes_estimate": 0,
+    "max_owned_bytes": 4294967296,
+    "max_output_json_bytes": 67108864
+  },
+  "action_totals": [
+    {
+      "id": "annul",
+      "expected_applied": 207.6069983976705,
+      "expected_spend_known": 2011.7118144734272,
+      "regions": [
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 13612,
+          "expected_visits": 207.2575853389353,
+          "expected_applied": 207.2575853389353
+        },
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 455,
+          "expected_visits": 0.34941305873549416,
+          "expected_applied": 0.34941305873549416
+        }
+      ],
+      "reachable_states": 14067,
+      "reachable_regions": 2
+    },
+    {
+      "id": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+      "expected_applied": 0.9684746350946769,
+      "expected_spend_known": 410.633245280143,
+      "regions": [
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 120,
+          "expected_visits": 0.9684746350946769,
+          "expected_applied": 0.9684746350946769
+        }
+      ],
+      "reachable_states": 120,
+      "reachable_regions": 1
+    },
+    {
+      "id": "bench:EinharMasterAddedLightningDamage1",
+      "expected_applied": 30.069562803439823,
+      "expected_spend_known": 1.4012416266402958,
+      "regions": [
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 91,
+          "expected_visits": 30.069562803439823,
+          "expected_applied": 30.069562803439823
+        }
+      ],
+      "reachable_states": 91,
+      "reachable_regions": 1
+    },
+    {
+      "id": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+      "expected_applied": 25146.636055558352,
+      "expected_spend_known": 9925.37725112888,
+      "regions": [
+        {
+          "goal_progress": 0,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 1,
+          "expected_visits": 1,
+          "expected_applied": 1
+        },
+        {
+          "goal_progress": 1,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 186575,
+          "expected_visits": 24779.82119050451,
+          "expected_applied": 24779.82119050451
+        },
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 23690,
+          "expected_visits": 365.8148650543961,
+          "expected_applied": 365.8148650543961
+        }
+      ],
+      "reachable_states": 210266,
+      "reachable_regions": 3
+    },
+    {
+      "id": "exalt",
+      "expected_applied": 102.17218431032073,
+      "expected_spend_known": 180.8447662292677,
+      "regions": [
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 1136,
+          "expected_visits": 72.10262150688091,
+          "expected_applied": 72.10262150688091
+        },
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 1,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 91,
+          "expected_visits": 30.069562803439823,
+          "expected_applied": 30.069562803439823
+        }
+      ],
+      "reachable_states": 1227,
+      "reachable_regions": 2
+    },
+    {
+      "id": "remove_crafted_modifiers",
+      "expected_applied": 30.06956280343983,
+      "expected_spend_known": 11.24902344476684,
+      "regions": [
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 1,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 2093,
+          "expected_visits": 29.823191948843853,
+          "expected_applied": 29.823191948843853
+        },
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 1,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 91,
+          "expected_visits": 0.2463708545959837,
+          "expected_applied": 0.2463708545959837
+        }
+      ],
+      "reachable_states": 2184,
+      "reachable_regions": 2
+    },
+    {
+      "id": "scour",
+      "expected_applied": 0.968474635094677,
+      "expected_spend_known": 0.36230636098891866,
+      "regions": [
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 1,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 120,
+          "expected_visits": 0.968474635094677,
+          "expected_applied": 0.968474635094677
+        }
+      ],
+      "reachable_states": 120,
+      "reachable_regions": 1
+    }
+  ],
+  "counting_conventions": "Compiled graph nodes, coarse states and evaluator item-node pairs are distinct. Action regions are descriptive, not executable equivalence classes.",
+  "rollups_reconcile": true,
+  "search_delivery": {
+    "checked": true,
+    "passed": true,
+    "path": "bounded",
+    "checks": {
+      "named_stop": true,
+      "strict_gap": true,
+      "open_obligations": true,
+      "evaluated_upper": true,
+      "cheapest_independently_evaluated_incumbent": true
+    },
+    "open_work": {
+      "incremental_actions": 63791,
+      "refinement_obligations": 0
+    },
+    "failure_reason": null
+  }
+}

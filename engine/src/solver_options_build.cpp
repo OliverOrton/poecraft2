@@ -466,20 +466,22 @@ std::vector<PlannerOperator> build_planner_operators(
             break;
         }
         case FixedOptionKind::TemporaryBenchRepeat: {
-            if (spec.setup_action_ids.size() != 1 ||
+            const bool capacity_setup = spec.setup_action_ids.size() == 2;
+            if ((spec.setup_action_ids.size() != 1 && !capacity_setup) ||
                 spec.exit_goal_slots.size() != 1 ||
                 spec.exit_min_satisfied != 1 ||
+                (capacity_setup && !spec.program_action_ids.empty()) ||
                 (!spec.program_action_ids.empty() &&
                  spec.program_action_ids !=
                      std::vector<std::string>{
                          "remove_crafted_modifiers"})) {
                 throw std::runtime_error(
-                    "fixed option: temporary bench repeat needs one blocker "
+                    "fixed option: temporary bench repeat needs one blocker, optional Multimod, "
                     "and one exact goal-slot exit");
             }
             std::uint32_t blocker_index = kNoId;
             const ActionDescriptor& blocker = require_action(
-                registry, spec.setup_action_ids.front(), blocker_index);
+                registry, spec.setup_action_ids.back(), blocker_index);
             const int blocker_metamod =
                 blocker.params.mod_id < session.metamod_type.size()
                     ? session.metamod_type[blocker.params.mod_id]
@@ -511,13 +513,31 @@ std::vector<PlannerOperator> build_planner_operators(
                 : std::vector<std::uint32_t>{
                       cleanup_index, blocker_index, followup_index,
                       cleanup_index};
+            if (capacity_setup) {
+                std::uint32_t capacity_index = kNoId;
+                const auto& capacity = require_action(
+                    registry, spec.setup_action_ids.front(), capacity_index);
+                if (!supported_pool_blocker ||
+                    capacity.params.type != ActionType::Bench ||
+                    capacity.params.mod_id >= session.metamod_type.size() ||
+                    session.metamod_type[capacity.params.mod_id] !=
+                        session.data->metamod_multimod_code ||
+                    followup.params.type != ActionType::Exalt) {
+                    throw std::runtime_error(
+                        "fixed option: capacity setup requires Multimod, Cannot Roll and Exalt");
+                }
+                option.primitive_program.insert(
+                    option.primitive_program.begin(), capacity_index);
+            }
             option.setup_action = blocker_index;
             option.followup_action = followup_index;
             option.cleanup_action = cleanup_index;
             option.id = "option:temporary_bench_repeat:" + blocker.id +
                         ':' + followup.id + exit_suffix(spec);
+            if (capacity_setup) option.id += ":capacity:" + spec.setup_action_ids.front();
             option.display_name = "Temporary " + blocker.display_name +
                                   " then repeat " + followup.display_name;
+            if (capacity_setup) option.display_name = "Multimod and " + option.display_name;
             break;
         }
         }

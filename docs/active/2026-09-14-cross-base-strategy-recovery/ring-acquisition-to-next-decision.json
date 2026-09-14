@@ -1,0 +1,1273 @@
+{
+  "name": "ring-acquisition-to-next-decision",
+  "reference": "ring",
+  "reference_strategy_sha256": "d156cdea1f540470ef6d7cf307009d6adfbe6230956038ebd44e267b13a22c9e",
+  "diagnostic_graph": "out\\cross-base-strategy-recovery\\ring-acquisition-to-next-decision.strategy.json",
+  "diagnostic_graph_sha256": "7a3ff61da5cae330fd80f5b27ab8df669073aa520d3ce93c149ff42bcd6cc18e",
+  "entry": {
+    "base_key": "Metadata/Items/Rings/Ring10",
+    "item_level": 86,
+    "rarity": "rare",
+    "item_flags": 0,
+    "generic_influence_bits": 0,
+    "searing_exarch_tier": 0,
+    "eater_of_worlds_tier": 0,
+    "prefixes": [],
+    "suffixes": []
+  },
+  "boundaries": {
+    "scope": "First different native operation or true goal. Mandatory interiors are not planner opportunities."
+  },
+  "limits": {
+    "epsilon": 1e-12,
+    "max_sweeps": 100000,
+    "max_states": 2000000,
+    "max_pairs": 10000000,
+    "max_transitions": 40000000,
+    "max_owned_bytes": 4294967296,
+    "max_output_json_bytes": 67108864,
+    "top_classes_per_node": 32
+  },
+  "cost": 28.174493870697596,
+  "count": 82.18930534042472,
+  "cost_complete": true,
+  "converged": true,
+  "terminals": {
+    "success": 1.76715168400376e-05,
+    "failure": 0,
+    "stop": 0.9999823284831599,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "unresolved": 0,
+    "by_node": [
+      {
+        "node_id": "goal",
+        "kind": "success",
+        "p": 1.76715168400376e-05
+      },
+      {
+        "node_id": "offpolicy",
+        "kind": "failure",
+        "p": 0
+      },
+      {
+        "node_id": "depart_s66",
+        "kind": "stop",
+        "p": 0.9415110416256803
+      },
+      {
+        "node_id": "depart_s548",
+        "kind": "stop",
+        "p": 0.05836525775643941
+      },
+      {
+        "node_id": "depart_s576",
+        "kind": "stop",
+        "p": 0
+      },
+      {
+        "node_id": "depart_s2951",
+        "kind": "stop",
+        "p": 0.00010602910104022558
+      },
+      {
+        "node_id": "depart_s2951_o1",
+        "kind": "stop",
+        "p": 0
+      }
+    ]
+  },
+  "boundary_nodes": [
+    {
+      "id": "goal",
+      "expected_visits": 1.76715168400376e-05,
+      "classes": [
+        {
+          "share": 1,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            2
+          ]
+        }
+      ],
+      "classes_truncated_share": 0
+    },
+    {
+      "id": "depart_s66",
+      "expected_visits": 0.9415110416256803,
+      "classes": [
+        {
+          "share": 0.006685091973406966,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.006685091973406966,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.006685091973406966,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.006010207935836079,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.006010207935836079,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.006010207935836079,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.005906122248773724,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.005906122248773724,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.005604762651955871,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.005604762651955871,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.005604762651955871,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.005305984543926824,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.005305984543926824,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.005136768776897586,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.00501372693622967,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.00501372693622967,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.00501372693622967,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.004951848366830989,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.004951848366830989,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0046114423496067284,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.004426279547094833,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.004426279547094833,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.004376774617856249,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.004306948682908581,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.004021962319855471,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.004021962319855471,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.004021962319855471,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.003926322255049795,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0038469017124819036,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.003669850338971062,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.003625891360919894,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0035715081099078508,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        }
+      ],
+      "classes_truncated_share": 0.8397398669303014
+    },
+    {
+      "id": "depart_s548",
+      "expected_visits": 0.05836525775643941,
+      "classes": [
+        {
+          "share": 0.0026203401271709015,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0026203401271709015,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0026203401271709015,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0025655081630926724,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0025655081630926724,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0025655081630926724,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0023032401559143502,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0023032401559143502,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0023032401559143502,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0023032401559143502,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0023032401559143502,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0023032401559143502,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.002261660694763385,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.002261660694763385,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.002261660694763385,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.002261660694763385,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.002261660694763385,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.002261660694763385,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0021659340295465163,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0021659340295465163,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0021659340295465163,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0021194221123201564,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            1,
+            2,
+            2
+          ]
+        },
+        {
+          "share": 0.002024523336526019,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.001993799928301278,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.001993288054658957,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.001993288054658957,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.001993288054658957,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.001962858470787879,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0019628584707878784,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0019628584707878784,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0019038239273536678,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        },
+        {
+          "share": 0.0019038239273536678,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 3,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            0
+          ]
+        }
+      ],
+      "classes_truncated_share": 0.9287414151283124
+    },
+    {
+      "id": "depart_s576",
+      "expected_visits": 0,
+      "classes": [],
+      "classes_truncated_share": 0
+    },
+    {
+      "id": "depart_s2951",
+      "expected_visits": 0.00010602910104022558,
+      "classes": [
+        {
+          "share": 1,
+          "rarity": 2,
+          "prefixes": 2,
+          "suffixes": 2,
+          "flags": 0,
+          "blocked": 0,
+          "slots": [
+            1,
+            2,
+            2,
+            2
+          ]
+        }
+      ],
+      "classes_truncated_share": 0
+    },
+    {
+      "id": "depart_s2951_o1",
+      "expected_visits": 0,
+      "classes": [],
+      "classes_truncated_share": 0
+    }
+  ],
+  "actions": [
+    {
+      "id": "annul",
+      "display_name": "annul",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "annul",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s548",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s2951_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+      "display_name": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "protection_setup",
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s2951",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+      "display_name": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+      "expected_visits": 82.18930534042472,
+      "expected_applied": 82.18930534042472,
+      "expected_spend_known": 28.174493870697596,
+      "expected_spend_complete": true,
+      "known_cost_share": 1,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 167494,
+      "reachable_regions": 3,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+          "expected_quantity": 82.18930534042472,
+          "price_status": "priced",
+          "unit_price": 0.3428,
+          "cost_contribution": 28.174493870697596
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 0,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 1,
+          "expected_visits": 1,
+          "expected_applied": 1
+        },
+        {
+          "goal_progress": 1,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 120200,
+          "expected_visits": 77.30969672262543,
+          "expected_applied": 77.30969672262543
+        },
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 0,
+          "fractured_count": 0,
+          "reachable_states": 47293,
+          "expected_visits": 3.8796086178024054,
+          "expected_applied": 3.8796086178024054
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s0",
+          "expected_visits": 82.18930534042472,
+          "expected_applied": 82.18930534042472
+        }
+      ]
+    },
+    {
+      "id": "exalt",
+      "display_name": "exalt",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "exalt",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s66",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "remove_crafted_modifiers",
+      "display_name": "remove_crafted_modifiers",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting",
+        "cleanup_or_replacement"
+      ],
+      "materials": [
+        {
+          "price_key": "scour",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s576",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    }
+  ],
+  "memory": {
+    "owned_bytes_estimate": 165068550,
+    "peak_owned_bytes_estimate": 220610149,
+    "retained_output_owned_bytes_estimate": 0,
+    "max_owned_bytes": 4294967296,
+    "max_output_json_bytes": 67108864
+  },
+  "wall_ms": 10765.292299969587,
+  "authority": "STOP diagnostic only, never a native success policy, upper, lower or boundary certificate. Original graph decisions, native probabilities and prices are unchanged before stopping."
+}

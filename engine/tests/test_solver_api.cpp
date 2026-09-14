@@ -2576,11 +2576,10 @@ void run_public_solver_gate(const char* artifact_dir) {
                      "\"proper\":true}") !=
                  std::string::npos);
     } else {
-        PC_CHECK(solved_telemetry.find(
-                     "\"policy_refinement\":{\"triggers\":0,"
-                     "\"status\":\"direct_core_policy_exact\","
-                     "\"resource_cap\":null") !=
-                 std::string::npos);
+        const auto& refinement = solved_telemetry_document.at("policy_refinement");
+        PC_CHECK(refinement.at("triggers").as_int() == 0);
+        PC_CHECK(refinement.at("status").as_string() == "direct_core_policy_exact");
+        PC_CHECK(refinement.at("resource_cap").type == json::Type::Null);
         PC_CHECK(solved_telemetry.find(
                      "\"publication\":{"
                      "\"status\":\"exact_core_policy\","

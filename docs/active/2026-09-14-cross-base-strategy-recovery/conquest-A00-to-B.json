@@ -1,0 +1,1440 @@
+{
+  "name": "conquest-A00-to-B",
+  "reference": "conquest-native",
+  "reference_strategy_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+  "diagnostic_graph": "out\\cross-base-strategy-recovery\\conquest-A00-to-B.strategy.json",
+  "diagnostic_graph_sha256": "6249fa6f295b49cd48fd5780b1a0c697117f6a07c58d3eb089849d2fc2368b8c",
+  "entry": {
+    "base_key": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+    "item_level": 86,
+    "rarity": "magic",
+    "item_flags": 0,
+    "generic_influence_bits": 0,
+    "searing_exarch_tier": 0,
+    "eater_of_worlds_tier": 0,
+    "prefixes": [],
+    "suffixes": [
+      {
+        "mod_key": "ChanceToSuppressSpellsHigh5___",
+        "fractured": true
+      }
+    ]
+  },
+  "boundaries": {
+    "depart_B_0": {
+      "base_key": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+      "item_level": 86,
+      "rarity": "magic",
+      "item_flags": 0,
+      "generic_influence_bits": 0,
+      "searing_exarch_tier": 0,
+      "eater_of_worlds_tier": 0,
+      "prefixes": [
+        {
+          "mod_key": "LocalIncreasedArmourAndEvasion8"
+        }
+      ],
+      "suffixes": [
+        {
+          "mod_key": "ChanceToSuppressSpellsHigh5___",
+          "fractured": true
+        }
+      ]
+    },
+    "depart_B_1": {
+      "base_key": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+      "item_level": 86,
+      "rarity": "magic",
+      "item_flags": 0,
+      "generic_influence_bits": 0,
+      "searing_exarch_tier": 0,
+      "eater_of_worlds_tier": 0,
+      "prefixes": [
+        {
+          "mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6"
+        }
+      ],
+      "suffixes": [
+        {
+          "mod_key": "ChanceToSuppressSpellsHigh5___",
+          "fractured": true
+        }
+      ]
+    },
+    "depart_B_2": {
+      "base_key": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+      "item_level": 86,
+      "rarity": "magic",
+      "item_flags": 0,
+      "generic_influence_bits": 0,
+      "searing_exarch_tier": 0,
+      "eater_of_worlds_tier": 0,
+      "prefixes": [
+        {
+          "mod_key": "LocalBaseArmourAndEvasionRating8"
+        }
+      ],
+      "suffixes": [
+        {
+          "mod_key": "ChanceToSuppressSpellsHigh5___",
+          "fractured": true
+        }
+      ]
+    }
+  },
+  "limits": {
+    "epsilon": 1e-12,
+    "max_sweeps": 100000,
+    "max_states": 2000000,
+    "max_pairs": 10000000,
+    "max_transitions": 40000000,
+    "max_owned_bytes": 4294967296,
+    "max_output_json_bytes": 67108864,
+    "top_classes_per_node": 32
+  },
+  "cost": 2.515,
+  "count": 20.750000000000004,
+  "cost_complete": true,
+  "converged": true,
+  "terminals": {
+    "success": 0,
+    "failure": 0,
+    "stop": 1,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "unresolved": 0,
+    "by_node": [
+      {
+        "node_id": "goal",
+        "kind": "success",
+        "p": 0
+      },
+      {
+        "node_id": "offpolicy",
+        "kind": "failure",
+        "p": 0
+      },
+      {
+        "node_id": "depart_B_0",
+        "kind": "stop",
+        "p": 0.33333333333333326
+      },
+      {
+        "node_id": "depart_B_1",
+        "kind": "stop",
+        "p": 0.33333333333333337
+      },
+      {
+        "node_id": "depart_B_2",
+        "kind": "stop",
+        "p": 0.33333333333333337
+      }
+    ]
+  },
+  "boundary_nodes": [
+    {
+      "id": "goal",
+      "expected_visits": 0,
+      "classes": [],
+      "classes_truncated_share": 0
+    },
+    {
+      "id": "depart_B_0",
+      "expected_visits": 0.33333333333333326,
+      "classes": [
+        {
+          "share": 1.0000000000000004,
+          "rarity": 1,
+          "prefixes": 1,
+          "suffixes": 1,
+          "flags": 16,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            0,
+            2
+          ]
+        }
+      ],
+      "classes_truncated_share": 0
+    },
+    {
+      "id": "depart_B_1",
+      "expected_visits": 0.33333333333333337,
+      "classes": [
+        {
+          "share": 1,
+          "rarity": 1,
+          "prefixes": 1,
+          "suffixes": 1,
+          "flags": 16,
+          "blocked": 0,
+          "slots": [
+            0,
+            2,
+            2,
+            0
+          ]
+        }
+      ],
+      "classes_truncated_share": 0
+    },
+    {
+      "id": "depart_B_2",
+      "expected_visits": 0.33333333333333337,
+      "classes": [
+        {
+          "share": 1,
+          "rarity": 1,
+          "prefixes": 1,
+          "suffixes": 1,
+          "flags": 16,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            0,
+            0
+          ]
+        }
+      ],
+      "classes_truncated_share": 0
+    }
+  ],
+  "actions": [
+    {
+      "id": "alteration",
+      "display_name": "alteration",
+      "expected_visits": 13.166666666666668,
+      "expected_applied": 13.166666666666668,
+      "expected_spend_known": 2.0145,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.8009940357852882,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 6,
+      "reachable_regions": 1,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "alteration",
+          "expected_quantity": 13.166666666666668,
+          "price_status": "priced",
+          "unit_price": 0.153,
+          "cost_contribution": 2.0145
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 1,
+          "rarity": 1,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 2,
+          "fractured_count": 1,
+          "reachable_states": 6,
+          "expected_visits": 13.166666666666668,
+          "expected_applied": 13.166666666666668
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s7",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s120",
+          "expected_visits": 13.166666666666668,
+          "expected_applied": 13.166666666666668
+        }
+      ]
+    },
+    {
+      "id": "annul",
+      "display_name": "annul",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "annul",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s774",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "augment",
+      "display_name": "augment",
+      "expected_visits": 7.583333333333334,
+      "expected_applied": 7.583333333333334,
+      "expected_spend_known": 0.5005000000000001,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.19900596421471176,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 1,
+      "reachable_regions": 1,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "augment",
+          "expected_quantity": 7.583333333333334,
+          "price_status": "priced",
+          "unit_price": 0.066,
+          "cost_contribution": 0.5005000000000001
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 1,
+          "rarity": 1,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 2,
+          "fractured_count": 1,
+          "reachable_states": 1,
+          "expected_visits": 7.583333333333334,
+          "expected_applied": 7.583333333333334
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s6",
+          "expected_visits": 7.583333333333334,
+          "expected_applied": 7.583333333333334
+        }
+      ]
+    },
+    {
+      "id": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+      "display_name": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "protection_setup",
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s552",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s684",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "bench:JunMaster2StrengthAndDexterity2",
+      "display_name": "bench:JunMaster2StrengthAndDexterity2",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "temporary_blocker",
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "bench:JunMaster2StrengthAndDexterity2",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s3756",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3757",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3758",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3759",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3760",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3761",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3762",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3763",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3764",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3765",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3766",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3767",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3780",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3781",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3782",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3783",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3784",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3785",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3834",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3835",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3836",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3837",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3838",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3839",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "chaos",
+      "display_name": "chaos",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "chaos",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s324",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "eldritch_annul",
+      "display_name": "eldritch_annul",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "eldritch_annul",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s4104_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4105_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4106",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4108_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4722_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4723",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4724_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4727_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "eldritch_chaos",
+      "display_name": "eldritch_chaos",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "eldritch_chaos",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s5850_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s5851",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s5852_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s5855_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "eldritch_ember:1",
+      "display_name": "eldritch_ember:1",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "eldritch_ember:1",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s528",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4104",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4727",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s5855",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "eldritch_ember:2",
+      "display_name": "eldritch_ember:2",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "eldritch_ember:2",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s529",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s532_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4105",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4108_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "eldritch_exalt",
+      "display_name": "eldritch_exalt",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "eldritch_exalt",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s528_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s529_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s530",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s532_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "eldritch_ichor:1",
+      "display_name": "eldritch_ichor:1",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "eldritch_ichor:1",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s532",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4108",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4722",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s5850",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "eldritch_ichor:2",
+      "display_name": "eldritch_ichor:2",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "eldritch_ichor:2",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s4724",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s4727_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s5852",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s5855_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "exalt",
+      "display_name": "exalt",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting",
+        "retry_action"
+      ],
+      "materials": [
+        {
+          "price_key": "exalt",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s348",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3756_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3757_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3758_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3759_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3760_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3761_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3762_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3763_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3764_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3765_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3766_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3767_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3780_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3781_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3782_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3783_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3784_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3785_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3834_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3835_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3836_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3837_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3838_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3839_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "fracture",
+      "display_name": "fracture",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting",
+        "fracture"
+      ],
+      "materials": [
+        {
+          "price_key": "fracture",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s924",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "regal",
+      "display_name": "regal",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "regal",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s114",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "remove_crafted_modifiers",
+      "display_name": "remove_crafted_modifiers",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "cleanup_or_replacement",
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "scour",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s3756_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3757_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3758_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3759_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3760_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3761_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3762_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3763_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3764_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3765_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3766_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3767_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3780_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3781_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3782_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3783_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3784_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3785_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3834_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3835_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3836_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3837_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3838_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s3839_o2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "restart",
+      "display_name": "restart (fresh base)",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "restart"
+      ],
+      "materials": [
+        {
+          "price_key": "base",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "product_fracture_restart",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "scour",
+      "display_name": "scour",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "scour",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s325",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s552_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s684_o1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "transmute",
+      "display_name": "transmute",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "transmute",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s0",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    }
+  ],
+  "memory": {
+    "owned_bytes_estimate": 4652732,
+    "peak_owned_bytes_estimate": 7027149,
+    "retained_output_owned_bytes_estimate": 0,
+    "max_owned_bytes": 4294967296,
+    "max_output_json_bytes": 67108864
+  },
+  "wall_ms": 1153.405599994585,
+  "authority": "STOP diagnostic only, never a native success policy, upper, lower or boundary certificate. Original graph decisions, native probabilities and prices are unchanged before stopping."
+}

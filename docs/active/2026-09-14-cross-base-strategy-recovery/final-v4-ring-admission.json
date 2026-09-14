@@ -1,0 +1,12 @@
+[
+  {
+    "case": "cb07-cross-base-product8-long240",
+    "utc": "2026-09-14T16:02:50.847174+00:00",
+    "total_physical": 68409442304,
+    "available_physical": 39336124416,
+    "available_commit": 28085587968,
+    "reserved_bytes": 15032385536,
+    "outside_bytes": 13681888461,
+    "admitted": true
+  }
+]

@@ -1,0 +1,30 @@
+{
+  "old_success_probability": 0.00013157604061549266,
+  "new_success_probability": 0.0028604082435662983,
+  "old_expected_acquisition_cycles": 7600.167897758228,
+  "new_expected_acquisition_cycles": 349.6004468065791,
+  "old_tail_cost": 6.887028464539715,
+  "new_tail_cost": 8.564685735802474,
+  "unchanged_acquisition_cost": 22.23719999999984,
+  "unchanged_acquisition_count": 179.79999999999865,
+  "recomposed_A_cost": 10768.353015721685,
+  "evaluated_A_cost": 10768.353015694365,
+  "recomposed_A_count": 64490.85926039861,
+  "evaluated_A_count": 64490.85926023492,
+  "recomposed_root_cost": 12770.827062245702,
+  "evaluated_root_cost": 12770.827062219498,
+  "recomposed_root_count": 66914.72854200103,
+  "evaluated_root_count": 66914.72854184538,
+  "root_relative_cost_error": 2.0518922713316767e-12,
+  "root_relative_count_error": 2.3260541987445593e-12,
+  "premise": "Only these exact A/B entries share identical physical and controller context; all true goal and return mass retained. Unchanged A-to-B subgraph acquisition law, paid root entry and new full B return law. No aggregation of intermediate Alteration items or Conquest eldritch contexts.",
+  "sources": [
+    "bow-A-to-B.json",
+    "bow-B-to-A-or-goal.json",
+    "bow-new-B-to-A-or-goal.json",
+    "bow-new-root-to-A.json",
+    "bow-new-A-full.json",
+    "final-v4-bow.json"
+  ],
+  "authority": "Native fixed-policy diagnostic decomposition, not a new lower or planner tail."
+}

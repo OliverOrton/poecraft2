@@ -1,0 +1,2079 @@
+{
+  "reviewed_main": "3268d1a9f73e8baa156d6daa366bd4f4cc86c29f",
+  "native_dll_sha256": "e036d825d3d63b91f9b4d2fc4635d5d12a7d7112f4f9f39e7f2c6a0086819e30",
+  "compiled_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+  "references": [
+    {
+      "name": "conquest-native",
+      "report": "out/adaptive-dirty-guidance/final-original-core/cases/cb02-cross-base-product8-long240.json",
+      "report_sha256": "e31f9afe4bc39c55b6991b63eb087d9b5128750df35cada459898ce8eb8bf360",
+      "strategy": "out/adaptive-dirty-guidance/final-original-core/strategies/cb02-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+      "strategy_bytes": 1507796,
+      "request": {
+        "native_retention_diagnostic": "reuse",
+        "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+        "watchdog_seconds": 300,
+        "requested_bounded_finish_seconds": 240,
+        "session": {
+          "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+          "base_name": "Conquest Lamellar",
+          "item_class_key": "Body Armour",
+          "item_level": 86,
+          "minimum_item_level": 86
+        },
+        "start": {
+          "rarity": "rare",
+          "with_implicits": false,
+          "mods": []
+        },
+        "goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 4,
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+              "min_tier": 1
+            }
+          ]
+        },
+        "corpus": {
+          "tier": "clean-four",
+          "stratum": "conquest-lamellar_clean_zero_to_4",
+          "goal_modifier_count": 4,
+          "start_goal_modifier_count": 0,
+          "product_worker_profile": "calculator_default_adaptive_max_8"
+        },
+        "product_action_envelope": {
+          "mode": "calculator_goal_relevant_priced_v1",
+          "envelope_goal": {
+            "version": "v1",
+            "rarity": "rare",
+            "action_mode": "goal_relevant",
+            "min_satisfied_slots": 4,
+            "slots": [
+              {
+                "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+                "min_tier": 1
+              }
+            ],
+            "fossil_mode": "goal_relevant",
+            "requested_fossil_actions": []
+          },
+          "pricing_filter": "all_declared_cost_keys_present",
+          "bench_goal_slots_forbidden": true
+        },
+        "allowed_mechanic_families": [
+          "calculator_goal_relevant_product_envelope"
+        ],
+        "bounded_best_policy_contract": {
+          "allow_exact": true,
+          "bounded_requires_named_stop": true,
+          "bounded_requires_strict_gap": true,
+          "bounded_requires_open_obligations": true,
+          "require_evaluated_upper": true,
+          "require_cheapest_independently_evaluated_incumbent": true
+        },
+        "economy": {
+          "version": "v1",
+          "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+          "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+          "league_key": "allflame",
+          "league_name": "Allflame",
+          "manual_overrides": {
+            "base": 1
+          },
+          "fallback_price": null,
+          "missing_price_decisions": {
+            "base": "quality_ladder_fixture_input_1_chaos"
+          }
+        },
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "verification": {
+          "runs": 0,
+          "seed": 20260826,
+          "max_actions_per_run": 100000,
+          "max_graph_steps_per_run": 4000000,
+          "exact_evaluation": true,
+          "exact_max_states": 1000000,
+          "exact_max_pairs": 5000000,
+          "exact_max_transitions": 20000000,
+          "exact_max_owned_bytes": 1073741824,
+          "exact_cost_absolute_tolerance": 1e-07,
+          "exact_cost_relative_tolerance": 1e-09
+        }
+      },
+      "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "effective_prices_sha256": "5eca9aac1a257e05f0d79cf72d87faac306b669ffaa671a5e52d7a7a801d0755",
+      "controller_metadata": {
+        "version": "v1",
+        "name": "selected core policy",
+        "description": "Compiled policy; compilation does not establish policy optimality; zero-progress-reroll policy restriction; excluded zero-progress salvage routes are not globally optimized; ordinary fresh-base abandonment is also excluded; automatic Imprint programs are excluded",
+        "solver_policy_scope": "zero_progress_reroll_and_no_economic_restart_restrictions",
+        "solver_imprint_programs_considered": false,
+        "solver_profile_id": "calculator_product_v1",
+        "solver_profile_override_mask": 0,
+        "base_state": {
+          "base_key": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+          "item_level": 86,
+          "rarity": "rare",
+          "item_flags": 0,
+          "generic_influence_bits": 0,
+          "searing_exarch_tier": 0,
+          "eater_of_worlds_tier": 0,
+          "prefixes": [],
+          "suffixes": []
+        },
+        "start_node_id": "start"
+      },
+      "historical_evaluator_memory": {
+        "owned_bytes_estimate": 23731855,
+        "peak_owned_bytes_estimate": 38188305,
+        "retained_output_owned_bytes_estimate": 0,
+        "max_owned_bytes": 1073741824,
+        "max_output_json_bytes": 67108864
+      },
+      "cost": 3746.1319409485764,
+      "count": 8608.881793656798,
+      "artifact": {
+        "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+        "manifest": {
+          "artifact_kind": "runtime_dataset",
+          "artifact_schema_version": 4,
+          "complete_dataset": true,
+          "engine_loadable": true,
+          "enums": {
+            "base_flags": {
+              "cluster": 1,
+              "ordinary_session": 2
+            },
+            "bestiary_checkpoint_effect": {
+              "consume": 1,
+              "create": 0
+            },
+            "bestiary_checkpoint_requirement": {
+              "absent": 0,
+              "present": 1
+            },
+            "bestiary_classification": {
+              "checkpoint/restore": 2,
+              "explicitly unsupported in B1": 4,
+              "multi-output or multi-item": 3,
+              "ordinary one-item deterministic": 0,
+              "ordinary one-item stochastic": 1
+            },
+            "bestiary_identity_requirement": {
+              "current_item": 0,
+              "same_item": 1
+            },
+            "bestiary_operation": {
+              "create": 0,
+              "restore": 1
+            },
+            "bestiary_support": {
+              "selected": 0,
+              "unsupported": 1
+            },
+            "bestiary_transition": {
+              "deterministic": 0
+            },
+            "domain": {
+              "abyss_jewel": 0,
+              "affliction_charm": 1,
+              "affliction_jewel": 2,
+              "area": 3,
+              "atlas": 4,
+              "brequel_graft": 5,
+              "chest": 6,
+              "crafted": 7,
+              "crucible_remnant": 8,
+              "delve": 9,
+              "delve_area": 10,
+              "dummy": 11,
+              "expedition_relic": 12,
+              "flask": 13,
+              "heist_area": 14,
+              "heist_npc": 15,
+              "heist_trinket": 16,
+              "item": 17,
+              "leaguestone": 18,
+              "map_device": 19,
+              "map_relic": 20,
+              "memory_lines": 21,
+              "misc": 22,
+              "monster": 23,
+              "necropolis_monster": 24,
+              "primordial_altar": 25,
+              "sanctum_relic": 26,
+              "sentinel": 27,
+              "synthesis_a": 28,
+              "synthesis_bonus": 29,
+              "synthesis_globals": 30,
+              "templar_relic": 31,
+              "tincture": 32,
+              "undefined": 33,
+              "unveiled": 34,
+              "veiled": 35,
+              "watchstone": 36
+            },
+            "flags": {
+              "corrupted_implicit": 64,
+              "crafted": 2,
+              "delve": 16,
+              "eldritch_implicit": 128,
+              "essence_only": 1,
+              "implicit": 32,
+              "influence": 8,
+              "metamod": 4,
+              "unveiled": 512,
+              "veiled_template": 256
+            },
+            "fossil_mod_kind": {
+              "added": 0,
+              "forced": 1,
+              "sell_price": 2
+            },
+            "fossil_tag_kind": {
+              "allowed": 0,
+              "forbidden": 1
+            },
+            "fossil_weight_kind": {
+              "negative": 0,
+              "positive": 1
+            },
+            "generation_type": {
+              "azmeri_empowered_monster": 0,
+              "bestiary": 1,
+              "blight": 2,
+              "blight_tower": 3,
+              "bloodlines": 4,
+              "corrupted": 5,
+              "crucible_tree": 6,
+              "crucible_unique_tree": 7,
+              "delve_area": 8,
+              "eater_of_worlds_implicit": 9,
+              "enchantment": 10,
+              "essence": 11,
+              "expedition_logbook": 12,
+              "flask_enchantment_enkindling": 13,
+              "flask_enchantment_instilling": 14,
+              "memory_altar": 15,
+              "monster_affliction": 16,
+              "necropolis_devoted_monster": 17,
+              "necropolis_monster": 18,
+              "nemesis": 19,
+              "prefix": 20,
+              "scourge_benefit": 21,
+              "scourge_detriment": 22,
+              "scourge_gimmick": 23,
+              "searing_exarch_implicit": 24,
+              "suffix": 25,
+              "synthesis_a": 26,
+              "synthesis_bonus": 27,
+              "synthesis_globals": 28,
+              "talisman": 29,
+              "tempest": 30,
+              "torment": 31,
+              "unique": 32
+            },
+            "influence": {
+              "adjudicator": 1,
+              "basilisk": 2,
+              "crusader": 3,
+              "elder": 4,
+              "eyrie": 5,
+              "none": 0,
+              "shaper": 6
+            },
+            "metamod_type": {
+              "multimod": 0,
+              "no_attack": 1,
+              "no_caster": 2,
+              "prefixes_locked": 3,
+              "suffixes_locked": 4
+            },
+            "session_support": {
+              "cluster_unsupported": 1,
+              "ordinary": 0,
+              "unsupported_domain": 2
+            },
+            "special_kind": {
+              "base_implicit": 0,
+              "corrupted_implicit": 1,
+              "delve": 2,
+              "eldritch_implicit": 3,
+              "unveiled": 4,
+              "veiled_template": 5
+            }
+          },
+          "files": {
+            "game-data.json": {
+              "byte_size": 16439442,
+              "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+            },
+            "strings.json": {
+              "byte_size": 6534428,
+              "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+            }
+          },
+          "generated_at_utc": "2026-08-30T02:54:53Z",
+          "row_counts": {
+            "adds_tag_links": 5052,
+            "base_item_implicit_links": 760,
+            "base_item_tag_links": 17150,
+            "base_items": 4974,
+            "bench_cost_rows": 789,
+            "bench_item_class_links": 4975,
+            "bench_options": 774,
+            "bestiary_action_cost_rows": 4,
+            "bestiary_actions": 2,
+            "bestiary_beast_inputs": 2,
+            "bestiary_recipes": 3,
+            "bestiary_selected_recipes": 1,
+            "bestiary_unsupported_recipes": 2,
+            "classification_tag_links": 68322,
+            "cluster_jewels": 3,
+            "cluster_notables": 309,
+            "cluster_passives": 55,
+            "cluster_unsupported_bases": 3,
+            "essence_mod_links": 2310,
+            "essences": 106,
+            "fossil_mod_links": 24,
+            "fossil_tag_links": 18,
+            "fossil_weight_rows": 877,
+            "fossils": 445,
+            "generation_weight_rows": 4074,
+            "groups": 7169,
+            "item_classes": 99,
+            "mod_group_links": 39527,
+            "mods": 39292,
+            "ordinary_session_bases": 979,
+            "spawn_weight_rows": 70196,
+            "stat_rows": 59112,
+            "tags": 1355,
+            "unsupported_domain_bases": 3992
+          },
+          "scope": {
+            "base_items": "all released canonical bases",
+            "cluster_runtime_support": "unsupported",
+            "mods": "complete normalized global mod catalog",
+            "session_source": "ordinary sessions are derived from this artifact; SQLite is not required at runtime"
+          },
+          "source": {
+            "data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+            "database_schema_version": "2",
+            "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+            "source_version": "repoe-e4eaf06c20e1ddb4"
+          }
+        }
+      },
+      "action_vocabulary": [
+        "transmute",
+        "augment",
+        "alteration",
+        "regal",
+        "alchemy",
+        "chaos",
+        "exalt",
+        "annul",
+        "scour",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "harvest_reforge:defences",
+        "harvest_augment:defences",
+        "fracture",
+        "restart"
+      ],
+      "native_result_reused": true,
+      "fresh_solve": false
+    },
+    {
+      "name": "conquest-browser",
+      "report": "out/2026-09-09-empty-start-partial-continuation/E10-wasm-four.json",
+      "report_sha256": "138b9b5f116df3a97ae45674452dc34336552a95e9218abcdf00a7f29aa8ffc8",
+      "strategy": "out/2026-09-09-empty-start-partial-continuation/F9-four-short-strategy.json/conquest-lamellar-allflame-clean-4-goal-product8.strategy.json",
+      "strategy_sha256": "95e6215ecf67f8cdde3648fdcfd2a3c45af52c8dbc8d202da5dd2d8e43e3b22d",
+      "strategy_bytes": 189363,
+      "request": {
+        "schema_version": "solver_benchmark_case_v1",
+        "id": "conquest-lamellar-allflame-clean-4-goal-product8",
+        "category": "solver_quality_ladder",
+        "approval_status": "active_gate0_2026_08_26",
+        "benchmark_enabled": true,
+        "description": "conquest-lamellar_clean_zero_to_4",
+        "comparison_profile": "calculator-product-quality-ladder-v1",
+        "watchdog_seconds": 90,
+        "requested_bounded_finish_seconds": 60,
+        "session": {
+          "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+          "base_name": "Conquest Lamellar",
+          "item_class_key": "Body Armour",
+          "item_level": 86,
+          "minimum_item_level": 86
+        },
+        "start": {
+          "rarity": "rare",
+          "with_implicits": false,
+          "mods": []
+        },
+        "goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 4,
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+              "min_tier": 1
+            }
+          ]
+        },
+        "product_action_envelope": {
+          "mode": "calculator_goal_relevant_priced_v1",
+          "envelope_goal": {
+            "version": "v1",
+            "rarity": "rare",
+            "action_mode": "goal_relevant",
+            "min_satisfied_slots": 4,
+            "slots": [
+              {
+                "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+                "min_tier": 1
+              }
+            ],
+            "fossil_mode": "goal_relevant",
+            "requested_fossil_actions": []
+          },
+          "pricing_filter": "all_declared_cost_keys_present",
+          "bench_goal_slots_forbidden": true
+        },
+        "allowed_mechanic_families": [
+          "calculator_goal_relevant_product_envelope"
+        ],
+        "economy": {
+          "version": "v1",
+          "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+          "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+          "league_key": "allflame",
+          "league_name": "Allflame",
+          "manual_overrides": {
+            "base": 1
+          },
+          "fallback_price": null,
+          "missing_price_decisions": {
+            "base": "quality_ladder_fixture_input_1_chaos"
+          }
+        },
+        "expected": {
+          "solve_status": "reliability_classified",
+          "optimality_status": "classified",
+          "compile_status": "compiled",
+          "verification_status": "not_required"
+        },
+        "bounded_best_policy_contract": {
+          "allow_exact": true,
+          "bounded_requires_named_stop": true,
+          "bounded_requires_strict_gap": true,
+          "bounded_requires_open_obligations": true,
+          "require_evaluated_upper": true,
+          "require_cheapest_independently_evaluated_incumbent": true
+        },
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "verification": {
+          "runs": 0,
+          "seed": 20260826,
+          "max_actions_per_run": 100000,
+          "max_graph_steps_per_run": 4000000,
+          "exact_evaluation": true,
+          "exact_max_states": 1000000,
+          "exact_max_pairs": 5000000,
+          "exact_max_transitions": 20000000,
+          "exact_max_owned_bytes": 1073741824,
+          "exact_cost_absolute_tolerance": 1e-07,
+          "exact_cost_relative_tolerance": 1e-09
+        },
+        "corpus": {
+          "tier": "clean-four",
+          "stratum": "conquest-lamellar_clean_zero_to_4",
+          "goal_modifier_count": 4,
+          "start_goal_modifier_count": 0,
+          "product_worker_profile": "calculator_default_adaptive_max_8"
+        }
+      },
+      "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "effective_prices_sha256": "5eca9aac1a257e05f0d79cf72d87faac306b669ffaa671a5e52d7a7a801d0755",
+      "controller_metadata": {
+        "version": "v1",
+        "name": "selected coarse policy",
+        "description": "Exact within the zero-progress-reroll policy restriction; excluded zero-progress salvage routes are not globally optimized; ordinary fresh-base abandonment is also excluded; automatic Imprint programs are excluded",
+        "solver_policy_scope": "zero_progress_reroll_and_no_economic_restart_restrictions",
+        "solver_imprint_programs_considered": false,
+        "solver_profile_id": "calculator_product_v1",
+        "solver_profile_override_mask": 0,
+        "base_state": {
+          "base_key": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+          "item_level": 86,
+          "rarity": "rare",
+          "item_flags": 0,
+          "generic_influence_bits": 0,
+          "searing_exarch_tier": 0,
+          "eater_of_worlds_tier": 0,
+          "prefixes": [],
+          "suffixes": []
+        },
+        "start_node_id": "start"
+      },
+      "historical_evaluator_memory": {
+        "owned_bytes_estimate": 4662357,
+        "peak_owned_bytes_estimate": 7628164,
+        "retained_output_owned_bytes_estimate": 0,
+        "max_owned_bytes": 1073741824,
+        "max_output_json_bytes": 67108864
+      },
+      "cost": 5218.040949685988,
+      "count": 14152.339714597114,
+      "artifact": null,
+      "action_vocabulary": [
+        "transmute",
+        "augment",
+        "alteration",
+        "regal",
+        "alchemy",
+        "chaos",
+        "exalt",
+        "annul",
+        "scour",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "harvest_reforge:defences",
+        "harvest_augment:defences",
+        "fracture",
+        "restart"
+      ],
+      "native_result_reused": true,
+      "fresh_solve": false
+    },
+    {
+      "name": "bow",
+      "report": "out/execution-aware-proposals/T-bow-v7/cases/cb04-cross-base-product8-long240.json",
+      "report_sha256": "6be18f7dcd5af23ef1434a357b1b898a76dc4b6930dbfaa34e67c3d4542bbea8",
+      "strategy": "out/execution-aware-proposals/T-bow-v7/strategies/cb04-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "8640a80a6183f372b7744f14a1f88a66d1ed3a8237d336115b5b3964153981fb",
+      "strategy_bytes": 399990,
+      "request": {
+        "native_retention_diagnostic": "reuse",
+        "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+        "watchdog_seconds": 840,
+        "requested_bounded_finish_seconds": 600,
+        "session": {
+          "base_metadata_path": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+          "base_name": "Spine Bow",
+          "item_class_key": "Bow",
+          "item_level": 86,
+          "minimum_item_level": 86
+        },
+        "start": {
+          "rarity": "rare",
+          "with_implicits": false,
+          "mods": []
+        },
+        "goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 4,
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreaseSocketedGemLevel1",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalAddedPhysicalDamageTwoHand9",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalAddedColdDamageTwoHand10",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ManaGainedFromEnemyDeath6",
+              "min_tier": 1
+            }
+          ]
+        },
+        "corpus": {
+          "tier": "clean-four",
+          "stratum": "spine-bow_clean_zero_to_4",
+          "goal_modifier_count": 4,
+          "start_goal_modifier_count": 0,
+          "product_worker_profile": "calculator_default_adaptive_max_8"
+        },
+        "product_action_envelope": {
+          "mode": "calculator_goal_relevant_priced_v1",
+          "envelope_goal": {
+            "version": "v1",
+            "rarity": "rare",
+            "action_mode": "goal_relevant",
+            "min_satisfied_slots": 4,
+            "slots": [
+              {
+                "family_mod_key": "LocalIncreaseSocketedGemLevel1",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LocalAddedPhysicalDamageTwoHand9",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "LocalAddedColdDamageTwoHand10",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "ManaGainedFromEnemyDeath6",
+                "min_tier": 1
+              }
+            ],
+            "fossil_mode": "goal_relevant",
+            "requested_fossil_actions": []
+          },
+          "pricing_filter": "all_declared_cost_keys_present",
+          "bench_goal_slots_forbidden": true
+        },
+        "allowed_mechanic_families": [
+          "calculator_goal_relevant_product_envelope"
+        ],
+        "bounded_best_policy_contract": {
+          "allow_exact": true,
+          "bounded_requires_named_stop": true,
+          "bounded_requires_strict_gap": true,
+          "bounded_requires_open_obligations": true,
+          "require_evaluated_upper": true,
+          "require_cheapest_independently_evaluated_incumbent": true
+        },
+        "economy": {
+          "version": "v1",
+          "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+          "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+          "league_key": "allflame",
+          "league_name": "Allflame",
+          "manual_overrides": {
+            "base": 1
+          },
+          "fallback_price": null,
+          "missing_price_decisions": {
+            "base": "quality_ladder_fixture_input_1_chaos"
+          }
+        },
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 400000000,
+          "max_solver_owned_bytes": 8589934592,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true,
+          "candidate_evaluation": {
+            "max_owned_bytes": 4294967296,
+            "max_pairs": 10000000,
+            "max_states": 2000000,
+            "max_transitions": 40000000
+          },
+          "native_continuation_search": "dirty_restricted_fresh"
+        },
+        "verification": {
+          "runs": 0,
+          "seed": 20260826,
+          "max_actions_per_run": 100000,
+          "max_graph_steps_per_run": 4000000,
+          "exact_evaluation": true,
+          "exact_max_states": 2000000,
+          "exact_max_pairs": 10000000,
+          "exact_max_transitions": 40000000,
+          "exact_max_owned_bytes": 4294967296,
+          "exact_cost_absolute_tolerance": 1e-07,
+          "exact_cost_relative_tolerance": 1e-09
+        }
+      },
+      "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "effective_prices_sha256": "5eca9aac1a257e05f0d79cf72d87faac306b669ffaa671a5e52d7a7a801d0755",
+      "controller_metadata": {
+        "version": "v1",
+        "name": "selected coarse policy",
+        "description": "Compiled policy; compilation does not establish policy optimality; zero-progress-reroll policy restriction; excluded zero-progress salvage routes are not globally optimized; ordinary fresh-base abandonment is also excluded; automatic Imprint programs are excluded",
+        "solver_policy_scope": "zero_progress_reroll_and_no_economic_restart_restrictions",
+        "solver_imprint_programs_considered": false,
+        "solver_profile_id": "calculator_product_v1",
+        "solver_profile_override_mask": 0,
+        "base_state": {
+          "base_key": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+          "item_level": 86,
+          "rarity": "rare",
+          "item_flags": 0,
+          "generic_influence_bits": 0,
+          "searing_exarch_tier": 0,
+          "eater_of_worlds_tier": 0,
+          "prefixes": [],
+          "suffixes": []
+        },
+        "start_node_id": "start"
+      },
+      "historical_evaluator_memory": {
+        "owned_bytes_estimate": 33701317,
+        "peak_owned_bytes_estimate": 64245691,
+        "retained_output_owned_bytes_estimate": 0,
+        "max_owned_bytes": 4294967296,
+        "max_output_json_bytes": 67108864
+      },
+      "cost": 223349.0000393144,
+      "count": 1404492.0069683318,
+      "artifact": {
+        "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+        "manifest": {
+          "artifact_kind": "runtime_dataset",
+          "artifact_schema_version": 4,
+          "complete_dataset": true,
+          "engine_loadable": true,
+          "enums": {
+            "base_flags": {
+              "cluster": 1,
+              "ordinary_session": 2
+            },
+            "bestiary_checkpoint_effect": {
+              "consume": 1,
+              "create": 0
+            },
+            "bestiary_checkpoint_requirement": {
+              "absent": 0,
+              "present": 1
+            },
+            "bestiary_classification": {
+              "checkpoint/restore": 2,
+              "explicitly unsupported in B1": 4,
+              "multi-output or multi-item": 3,
+              "ordinary one-item deterministic": 0,
+              "ordinary one-item stochastic": 1
+            },
+            "bestiary_identity_requirement": {
+              "current_item": 0,
+              "same_item": 1
+            },
+            "bestiary_operation": {
+              "create": 0,
+              "restore": 1
+            },
+            "bestiary_support": {
+              "selected": 0,
+              "unsupported": 1
+            },
+            "bestiary_transition": {
+              "deterministic": 0
+            },
+            "domain": {
+              "abyss_jewel": 0,
+              "affliction_charm": 1,
+              "affliction_jewel": 2,
+              "area": 3,
+              "atlas": 4,
+              "brequel_graft": 5,
+              "chest": 6,
+              "crafted": 7,
+              "crucible_remnant": 8,
+              "delve": 9,
+              "delve_area": 10,
+              "dummy": 11,
+              "expedition_relic": 12,
+              "flask": 13,
+              "heist_area": 14,
+              "heist_npc": 15,
+              "heist_trinket": 16,
+              "item": 17,
+              "leaguestone": 18,
+              "map_device": 19,
+              "map_relic": 20,
+              "memory_lines": 21,
+              "misc": 22,
+              "monster": 23,
+              "necropolis_monster": 24,
+              "primordial_altar": 25,
+              "sanctum_relic": 26,
+              "sentinel": 27,
+              "synthesis_a": 28,
+              "synthesis_bonus": 29,
+              "synthesis_globals": 30,
+              "templar_relic": 31,
+              "tincture": 32,
+              "undefined": 33,
+              "unveiled": 34,
+              "veiled": 35,
+              "watchstone": 36
+            },
+            "flags": {
+              "corrupted_implicit": 64,
+              "crafted": 2,
+              "delve": 16,
+              "eldritch_implicit": 128,
+              "essence_only": 1,
+              "implicit": 32,
+              "influence": 8,
+              "metamod": 4,
+              "unveiled": 512,
+              "veiled_template": 256
+            },
+            "fossil_mod_kind": {
+              "added": 0,
+              "forced": 1,
+              "sell_price": 2
+            },
+            "fossil_tag_kind": {
+              "allowed": 0,
+              "forbidden": 1
+            },
+            "fossil_weight_kind": {
+              "negative": 0,
+              "positive": 1
+            },
+            "generation_type": {
+              "azmeri_empowered_monster": 0,
+              "bestiary": 1,
+              "blight": 2,
+              "blight_tower": 3,
+              "bloodlines": 4,
+              "corrupted": 5,
+              "crucible_tree": 6,
+              "crucible_unique_tree": 7,
+              "delve_area": 8,
+              "eater_of_worlds_implicit": 9,
+              "enchantment": 10,
+              "essence": 11,
+              "expedition_logbook": 12,
+              "flask_enchantment_enkindling": 13,
+              "flask_enchantment_instilling": 14,
+              "memory_altar": 15,
+              "monster_affliction": 16,
+              "necropolis_devoted_monster": 17,
+              "necropolis_monster": 18,
+              "nemesis": 19,
+              "prefix": 20,
+              "scourge_benefit": 21,
+              "scourge_detriment": 22,
+              "scourge_gimmick": 23,
+              "searing_exarch_implicit": 24,
+              "suffix": 25,
+              "synthesis_a": 26,
+              "synthesis_bonus": 27,
+              "synthesis_globals": 28,
+              "talisman": 29,
+              "tempest": 30,
+              "torment": 31,
+              "unique": 32
+            },
+            "influence": {
+              "adjudicator": 1,
+              "basilisk": 2,
+              "crusader": 3,
+              "elder": 4,
+              "eyrie": 5,
+              "none": 0,
+              "shaper": 6
+            },
+            "metamod_type": {
+              "multimod": 0,
+              "no_attack": 1,
+              "no_caster": 2,
+              "prefixes_locked": 3,
+              "suffixes_locked": 4
+            },
+            "session_support": {
+              "cluster_unsupported": 1,
+              "ordinary": 0,
+              "unsupported_domain": 2
+            },
+            "special_kind": {
+              "base_implicit": 0,
+              "corrupted_implicit": 1,
+              "delve": 2,
+              "eldritch_implicit": 3,
+              "unveiled": 4,
+              "veiled_template": 5
+            }
+          },
+          "files": {
+            "game-data.json": {
+              "byte_size": 16439442,
+              "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+            },
+            "strings.json": {
+              "byte_size": 6534428,
+              "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+            }
+          },
+          "generated_at_utc": "2026-08-30T02:54:53Z",
+          "row_counts": {
+            "adds_tag_links": 5052,
+            "base_item_implicit_links": 760,
+            "base_item_tag_links": 17150,
+            "base_items": 4974,
+            "bench_cost_rows": 789,
+            "bench_item_class_links": 4975,
+            "bench_options": 774,
+            "bestiary_action_cost_rows": 4,
+            "bestiary_actions": 2,
+            "bestiary_beast_inputs": 2,
+            "bestiary_recipes": 3,
+            "bestiary_selected_recipes": 1,
+            "bestiary_unsupported_recipes": 2,
+            "classification_tag_links": 68322,
+            "cluster_jewels": 3,
+            "cluster_notables": 309,
+            "cluster_passives": 55,
+            "cluster_unsupported_bases": 3,
+            "essence_mod_links": 2310,
+            "essences": 106,
+            "fossil_mod_links": 24,
+            "fossil_tag_links": 18,
+            "fossil_weight_rows": 877,
+            "fossils": 445,
+            "generation_weight_rows": 4074,
+            "groups": 7169,
+            "item_classes": 99,
+            "mod_group_links": 39527,
+            "mods": 39292,
+            "ordinary_session_bases": 979,
+            "spawn_weight_rows": 70196,
+            "stat_rows": 59112,
+            "tags": 1355,
+            "unsupported_domain_bases": 3992
+          },
+          "scope": {
+            "base_items": "all released canonical bases",
+            "cluster_runtime_support": "unsupported",
+            "mods": "complete normalized global mod catalog",
+            "session_source": "ordinary sessions are derived from this artifact; SQLite is not required at runtime"
+          },
+          "source": {
+            "data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+            "database_schema_version": "2",
+            "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+            "source_version": "repoe-e4eaf06c20e1ddb4"
+          }
+        }
+      },
+      "action_vocabulary": [
+        "transmute",
+        "augment",
+        "alteration",
+        "regal",
+        "alchemy",
+        "chaos",
+        "exalt",
+        "annul",
+        "scour",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMana",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical+Metadata/Items/Currency/CurrencyDelveCraftingQuality",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical+Metadata/Items/Currency/CurrencyDelveCraftingQuality+Metadata/Items/Currency/CurrencyDelveCraftingRandom",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingMinionsAuras",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "harvest_reforge:attack",
+        "harvest_reforge:cold",
+        "harvest_reforge:elemental",
+        "harvest_reforge:mana",
+        "harvest_reforge:physical",
+        "harvest_augment:attack",
+        "harvest_augment:cold",
+        "harvest_augment:physical",
+        "fracture",
+        "restart"
+      ],
+      "native_result_reused": true,
+      "fresh_solve": false
+    },
+    {
+      "name": "ring",
+      "report": "out/execution-aware-proposals/T-ring/cases/cb07-cross-base-product8-long240.json",
+      "report_sha256": "e4075a893c3c206e408042559ca6fb2562bb4722e5cf1d09d39d529c57e5fe97",
+      "strategy": "docs/active/2026-09-13-execution-aware-proposals/strategies/ring-four-count.strategy.json",
+      "strategy_sha256": "d156cdea1f540470ef6d7cf307009d6adfbe6230956038ebd44e267b13a22c9e",
+      "strategy_bytes": 394680,
+      "request": {
+        "native_retention_diagnostic": "reuse",
+        "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+        "watchdog_seconds": 840,
+        "requested_bounded_finish_seconds": 600,
+        "session": {
+          "base_metadata_path": "Metadata/Items/Rings/Ring10",
+          "base_name": "Amethyst Ring",
+          "item_class_key": "Ring",
+          "item_level": 86,
+          "minimum_item_level": 86
+        },
+        "start": {
+          "rarity": "rare",
+          "with_implicits": false,
+          "mods": []
+        },
+        "goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 4,
+          "slots": [
+            {
+              "family_mod_key": "IncreasedEvasionRating7",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "FireResist8",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "AddedColdDamage9",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "AllAttributes4",
+              "min_tier": 1
+            }
+          ]
+        },
+        "corpus": {
+          "tier": "diversity-clean-four",
+          "stratum": "amethyst_ring_clean_zero_to_4",
+          "goal_modifier_count": 4,
+          "start_goal_modifier_count": 0,
+          "product_worker_profile": "calculator_default_adaptive_max_8"
+        },
+        "product_action_envelope": {
+          "mode": "calculator_goal_relevant_priced_v1",
+          "envelope_goal": {
+            "version": "v1",
+            "rarity": "rare",
+            "action_mode": "goal_relevant",
+            "min_satisfied_slots": 4,
+            "slots": [
+              {
+                "family_mod_key": "IncreasedEvasionRating7",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "FireResist8",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "AddedColdDamage9",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "AllAttributes4",
+                "min_tier": 1
+              }
+            ],
+            "fossil_mode": "goal_relevant",
+            "requested_fossil_actions": []
+          },
+          "pricing_filter": "all_declared_cost_keys_present",
+          "bench_goal_slots_forbidden": true
+        },
+        "allowed_mechanic_families": [
+          "calculator_goal_relevant_product_envelope"
+        ],
+        "bounded_best_policy_contract": {
+          "allow_exact": true,
+          "bounded_requires_named_stop": true,
+          "bounded_requires_strict_gap": true,
+          "bounded_requires_open_obligations": true,
+          "require_evaluated_upper": true,
+          "require_cheapest_independently_evaluated_incumbent": true
+        },
+        "economy": {
+          "version": "v1",
+          "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+          "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+          "league_key": "allflame",
+          "league_name": "Allflame",
+          "manual_overrides": {
+            "base": 1
+          },
+          "fallback_price": null,
+          "missing_price_decisions": {
+            "base": "quality_ladder_fixture_input_1_chaos"
+          }
+        },
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 400000000,
+          "max_solver_owned_bytes": 8589934592,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true,
+          "candidate_evaluation": {
+            "max_owned_bytes": 4294967296,
+            "max_pairs": 10000000,
+            "max_states": 2000000,
+            "max_transitions": 40000000
+          },
+          "native_continuation_search": "dirty_restricted_fresh"
+        },
+        "verification": {
+          "runs": 0,
+          "seed": 20260826,
+          "max_actions_per_run": 100000,
+          "max_graph_steps_per_run": 4000000,
+          "exact_evaluation": true,
+          "exact_max_states": 2000000,
+          "exact_max_pairs": 10000000,
+          "exact_max_transitions": 40000000,
+          "exact_max_owned_bytes": 4294967296,
+          "exact_cost_absolute_tolerance": 1e-07,
+          "exact_cost_relative_tolerance": 1e-09
+        }
+      },
+      "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "effective_prices_sha256": "5eca9aac1a257e05f0d79cf72d87faac306b669ffaa671a5e52d7a7a801d0755",
+      "controller_metadata": {
+        "version": "v1",
+        "name": "Current-run dirty continuation policy",
+        "description": "Compiled policy; compilation does not establish policy optimality; current-carrier policy restriction; ordinary fresh-base abandonment is excluded; automatic Imprint programs are excluded",
+        "solver_policy_scope": "no_economic_restart_policy_restriction",
+        "solver_imprint_programs_considered": false,
+        "solver_profile_id": "calculator_product_v1",
+        "solver_profile_override_mask": 0,
+        "base_state": {
+          "base_key": "Metadata/Items/Rings/Ring10",
+          "item_level": 86,
+          "rarity": "rare",
+          "item_flags": 0,
+          "generic_influence_bits": 0,
+          "searing_exarch_tier": 0,
+          "eater_of_worlds_tier": 0,
+          "prefixes": [],
+          "suffixes": []
+        },
+        "start_node_id": "start"
+      },
+      "historical_evaluator_memory": {
+        "owned_bytes_estimate": 204967949,
+        "peak_owned_bytes_estimate": 267559003,
+        "retained_output_owned_bytes_estimate": 0,
+        "max_owned_bytes": 4294967296,
+        "max_output_json_bytes": 67108864
+      },
+      "cost": 227377.06545019808,
+      "count": 583110.3499596338,
+      "artifact": {
+        "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+        "manifest": {
+          "artifact_kind": "runtime_dataset",
+          "artifact_schema_version": 4,
+          "complete_dataset": true,
+          "engine_loadable": true,
+          "enums": {
+            "base_flags": {
+              "cluster": 1,
+              "ordinary_session": 2
+            },
+            "bestiary_checkpoint_effect": {
+              "consume": 1,
+              "create": 0
+            },
+            "bestiary_checkpoint_requirement": {
+              "absent": 0,
+              "present": 1
+            },
+            "bestiary_classification": {
+              "checkpoint/restore": 2,
+              "explicitly unsupported in B1": 4,
+              "multi-output or multi-item": 3,
+              "ordinary one-item deterministic": 0,
+              "ordinary one-item stochastic": 1
+            },
+            "bestiary_identity_requirement": {
+              "current_item": 0,
+              "same_item": 1
+            },
+            "bestiary_operation": {
+              "create": 0,
+              "restore": 1
+            },
+            "bestiary_support": {
+              "selected": 0,
+              "unsupported": 1
+            },
+            "bestiary_transition": {
+              "deterministic": 0
+            },
+            "domain": {
+              "abyss_jewel": 0,
+              "affliction_charm": 1,
+              "affliction_jewel": 2,
+              "area": 3,
+              "atlas": 4,
+              "brequel_graft": 5,
+              "chest": 6,
+              "crafted": 7,
+              "crucible_remnant": 8,
+              "delve": 9,
+              "delve_area": 10,
+              "dummy": 11,
+              "expedition_relic": 12,
+              "flask": 13,
+              "heist_area": 14,
+              "heist_npc": 15,
+              "heist_trinket": 16,
+              "item": 17,
+              "leaguestone": 18,
+              "map_device": 19,
+              "map_relic": 20,
+              "memory_lines": 21,
+              "misc": 22,
+              "monster": 23,
+              "necropolis_monster": 24,
+              "primordial_altar": 25,
+              "sanctum_relic": 26,
+              "sentinel": 27,
+              "synthesis_a": 28,
+              "synthesis_bonus": 29,
+              "synthesis_globals": 30,
+              "templar_relic": 31,
+              "tincture": 32,
+              "undefined": 33,
+              "unveiled": 34,
+              "veiled": 35,
+              "watchstone": 36
+            },
+            "flags": {
+              "corrupted_implicit": 64,
+              "crafted": 2,
+              "delve": 16,
+              "eldritch_implicit": 128,
+              "essence_only": 1,
+              "implicit": 32,
+              "influence": 8,
+              "metamod": 4,
+              "unveiled": 512,
+              "veiled_template": 256
+            },
+            "fossil_mod_kind": {
+              "added": 0,
+              "forced": 1,
+              "sell_price": 2
+            },
+            "fossil_tag_kind": {
+              "allowed": 0,
+              "forbidden": 1
+            },
+            "fossil_weight_kind": {
+              "negative": 0,
+              "positive": 1
+            },
+            "generation_type": {
+              "azmeri_empowered_monster": 0,
+              "bestiary": 1,
+              "blight": 2,
+              "blight_tower": 3,
+              "bloodlines": 4,
+              "corrupted": 5,
+              "crucible_tree": 6,
+              "crucible_unique_tree": 7,
+              "delve_area": 8,
+              "eater_of_worlds_implicit": 9,
+              "enchantment": 10,
+              "essence": 11,
+              "expedition_logbook": 12,
+              "flask_enchantment_enkindling": 13,
+              "flask_enchantment_instilling": 14,
+              "memory_altar": 15,
+              "monster_affliction": 16,
+              "necropolis_devoted_monster": 17,
+              "necropolis_monster": 18,
+              "nemesis": 19,
+              "prefix": 20,
+              "scourge_benefit": 21,
+              "scourge_detriment": 22,
+              "scourge_gimmick": 23,
+              "searing_exarch_implicit": 24,
+              "suffix": 25,
+              "synthesis_a": 26,
+              "synthesis_bonus": 27,
+              "synthesis_globals": 28,
+              "talisman": 29,
+              "tempest": 30,
+              "torment": 31,
+              "unique": 32
+            },
+            "influence": {
+              "adjudicator": 1,
+              "basilisk": 2,
+              "crusader": 3,
+              "elder": 4,
+              "eyrie": 5,
+              "none": 0,
+              "shaper": 6
+            },
+            "metamod_type": {
+              "multimod": 0,
+              "no_attack": 1,
+              "no_caster": 2,
+              "prefixes_locked": 3,
+              "suffixes_locked": 4
+            },
+            "session_support": {
+              "cluster_unsupported": 1,
+              "ordinary": 0,
+              "unsupported_domain": 2
+            },
+            "special_kind": {
+              "base_implicit": 0,
+              "corrupted_implicit": 1,
+              "delve": 2,
+              "eldritch_implicit": 3,
+              "unveiled": 4,
+              "veiled_template": 5
+            }
+          },
+          "files": {
+            "game-data.json": {
+              "byte_size": 16439442,
+              "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+            },
+            "strings.json": {
+              "byte_size": 6534428,
+              "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+            }
+          },
+          "generated_at_utc": "2026-08-30T02:54:53Z",
+          "row_counts": {
+            "adds_tag_links": 5052,
+            "base_item_implicit_links": 760,
+            "base_item_tag_links": 17150,
+            "base_items": 4974,
+            "bench_cost_rows": 789,
+            "bench_item_class_links": 4975,
+            "bench_options": 774,
+            "bestiary_action_cost_rows": 4,
+            "bestiary_actions": 2,
+            "bestiary_beast_inputs": 2,
+            "bestiary_recipes": 3,
+            "bestiary_selected_recipes": 1,
+            "bestiary_unsupported_recipes": 2,
+            "classification_tag_links": 68322,
+            "cluster_jewels": 3,
+            "cluster_notables": 309,
+            "cluster_passives": 55,
+            "cluster_unsupported_bases": 3,
+            "essence_mod_links": 2310,
+            "essences": 106,
+            "fossil_mod_links": 24,
+            "fossil_tag_links": 18,
+            "fossil_weight_rows": 877,
+            "fossils": 445,
+            "generation_weight_rows": 4074,
+            "groups": 7169,
+            "item_classes": 99,
+            "mod_group_links": 39527,
+            "mods": 39292,
+            "ordinary_session_bases": 979,
+            "spawn_weight_rows": 70196,
+            "stat_rows": 59112,
+            "tags": 1355,
+            "unsupported_domain_bases": 3992
+          },
+          "scope": {
+            "base_items": "all released canonical bases",
+            "cluster_runtime_support": "unsupported",
+            "mods": "complete normalized global mod catalog",
+            "session_source": "ordinary sessions are derived from this artifact; SQLite is not required at runtime"
+          },
+          "source": {
+            "data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+            "database_schema_version": "2",
+            "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+            "source_version": "repoe-e4eaf06c20e1ddb4"
+          }
+        }
+      },
+      "action_vocabulary": [
+        "transmute",
+        "augment",
+        "alteration",
+        "regal",
+        "alchemy",
+        "chaos",
+        "exalt",
+        "annul",
+        "scour",
+        "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingFire",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingSockets",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingAttackMods+Metadata/Items/Currency/CurrencyDelveCraftingCold",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingSockets",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingAttackMods+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingSockets+Metadata/Items/Currency/CurrencyDelveCraftingVaal",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingAttackMods+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingSockets+Metadata/Items/Currency/CurrencyDelveCraftingSpeed+Metadata/Items/Currency/CurrencyDelveCraftingVaal",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingFire+Metadata/Items/Currency/CurrencyDelveCraftingSockets",
+        "harvest_reforge:attack",
+        "harvest_reforge:attribute",
+        "harvest_reforge:cold",
+        "harvest_reforge:defences",
+        "harvest_reforge:elemental",
+        "harvest_reforge:fire",
+        "harvest_augment:attack",
+        "harvest_augment:cold",
+        "harvest_augment:defences",
+        "harvest_augment:fire",
+        "harvest_resist:fire:cold",
+        "harvest_resist:cold:fire",
+        "harvest_resist:lightning:fire",
+        "harvest_resist:lightning:cold",
+        "fracture",
+        "restart"
+      ],
+      "native_result_reused": true,
+      "fresh_solve": false
+    },
+    {
+      "name": "amulet",
+      "report": "out/execution-aware-proposals/T-amulet/cases/cb08-cross-base-product8-long240.json",
+      "report_sha256": "44bb8d2520cbff5a46444f143191b15c7a2371de58525b69c5e0f05b28d8aa54",
+      "strategy": "out/execution-aware-proposals/T-amulet/strategies/cb08-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "805f6161caff50680a35b171cc3f2541a79f38ee01e1c1bf20d86a94a9ffb6bb",
+      "strategy_bytes": 214678,
+      "request": {
+        "native_retention_diagnostic": "reuse",
+        "comparison_profile": "cross-base-capability-recovery-product8-long240-v1",
+        "watchdog_seconds": 840,
+        "requested_bounded_finish_seconds": 600,
+        "session": {
+          "base_metadata_path": "Metadata/Items/Amulets/Amulet7",
+          "base_name": "Onyx Amulet",
+          "item_class_key": "Amulet",
+          "item_level": 86
+        },
+        "start": {
+          "mods": [],
+          "rarity": "rare",
+          "with_implicits": false
+        },
+        "goal": {
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 3,
+          "rarity": "rare",
+          "slots": [
+            {
+              "family_mod_key": "LightningDamagePercent5",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChaosResist6",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "AllResistances6",
+              "min_tier": 1
+            }
+          ],
+          "version": "v1"
+        },
+        "corpus": {
+          "geometric_mean_single_draw_probability": 0.0023293733985557895,
+          "goal_modifier_count": 3,
+          "maximum_single_draw_probability": 0.004658746797111577,
+          "minimum_single_draw_probability": 0.0011646866992778943,
+          "natural_pool_mod_count": 264,
+          "natural_pool_weight": 214650,
+          "prefix_goal_count": 0,
+          "side_mix": "SSS",
+          "stratum": "full-three",
+          "suffix_goal_count": 3,
+          "tier": "full_short"
+        },
+        "feasibility": {
+          "eligible_slot_count": 3,
+          "goal_slot_count": 3,
+          "natural_pool_mod_count": 264,
+          "natural_pool_weight": 214650,
+          "natural_prefix_mod_count": 112,
+          "natural_prefix_weight": 88600,
+          "natural_suffix_mod_count": 152,
+          "natural_suffix_weight": 126050,
+          "reason": "natural_reforge_witness",
+          "required_slot_count": 3,
+          "slot_natural_mod_counts": [
+            1,
+            1,
+            1
+          ],
+          "slot_natural_weights": [
+            500,
+            250,
+            1000
+          ],
+          "slot_single_draw_probabilities": [
+            0.0023293733985557887,
+            0.0011646866992778943,
+            0.004658746797111577
+          ],
+          "status": "feasible",
+          "witness_action_id": "chaos",
+          "witness_action_index": 5,
+          "witness_mod_ids": [
+            290,
+            70,
+            52
+          ]
+        },
+        "generation": {
+          "artifact_manifest_sha256": "6b8bbfe77abf87373ec1782fb364500e064eb7539f1d3f0fdb210a807c927875",
+          "engine_binary_sha256": "ee8d3d97955e864b1018dd41b1f87891b1b4952aa8fa076c331dbf589539c89d",
+          "engine_commit": "4c99cd093ed85b9aa2ecb86c3c9117b0f356068b",
+          "generator_seed": 20260722,
+          "generator_version": "natural-t1-corpus-v1"
+        },
+        "product_action_envelope": {
+          "bench_goal_slots_forbidden": true,
+          "envelope_goal": {
+            "action_mode": "goal_relevant",
+            "fossil_mode": "goal_relevant",
+            "min_satisfied_slots": 3,
+            "rarity": "rare",
+            "requested_fossil_actions": [],
+            "slots": [
+              {
+                "family_mod_key": "LightningDamagePercent5",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "ChaosResist6",
+                "min_tier": 1
+              },
+              {
+                "family_mod_key": "AllResistances6",
+                "min_tier": 1
+              }
+            ],
+            "version": "v1"
+          },
+          "mode": "calculator_goal_relevant_priced_v1",
+          "pricing_filter": "all_declared_cost_keys_present"
+        },
+        "allowed_mechanic_families": [
+          "calculator_goal_relevant_product_envelope"
+        ],
+        "bounded_best_policy_contract": {
+          "allow_exact": true,
+          "bounded_requires_named_stop": true,
+          "bounded_requires_strict_gap": true,
+          "bounded_requires_open_obligations": true,
+          "require_evaluated_upper": true,
+          "require_cheapest_independently_evaluated_incumbent": true
+        },
+        "economy": {
+          "version": "v1",
+          "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+          "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+          "league_key": "allflame",
+          "league_name": "Allflame",
+          "manual_overrides": {
+            "base": 1
+          },
+          "fallback_price": null,
+          "missing_price_decisions": {
+            "base": "quality_ladder_fixture_input_1_chaos"
+          }
+        },
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 400000000,
+          "max_solver_owned_bytes": 8589934592,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true,
+          "candidate_evaluation": {
+            "max_owned_bytes": 4294967296,
+            "max_pairs": 10000000,
+            "max_states": 2000000,
+            "max_transitions": 40000000
+          },
+          "native_continuation_search": "dirty_restricted_fresh"
+        },
+        "verification": {
+          "runs": 0,
+          "seed": 20260826,
+          "max_actions_per_run": 100000,
+          "max_graph_steps_per_run": 4000000,
+          "exact_evaluation": true,
+          "exact_max_states": 2000000,
+          "exact_max_pairs": 10000000,
+          "exact_max_transitions": 40000000,
+          "exact_max_owned_bytes": 4294967296,
+          "exact_cost_absolute_tolerance": 1e-07,
+          "exact_cost_relative_tolerance": 1e-09
+        }
+      },
+      "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "effective_prices_sha256": "5eca9aac1a257e05f0d79cf72d87faac306b669ffaa671a5e52d7a7a801d0755",
+      "controller_metadata": {
+        "version": "v1",
+        "name": "Current-run dirty continuation policy",
+        "description": "Compiled policy; compilation does not establish policy optimality; current-carrier policy restriction; ordinary fresh-base abandonment is excluded; automatic Imprint programs are excluded",
+        "solver_policy_scope": "no_economic_restart_policy_restriction",
+        "solver_imprint_programs_considered": false,
+        "solver_profile_id": "calculator_product_v1",
+        "solver_profile_override_mask": 0,
+        "base_state": {
+          "base_key": "Metadata/Items/Amulets/Amulet7",
+          "item_level": 86,
+          "rarity": "rare",
+          "item_flags": 0,
+          "generic_influence_bits": 0,
+          "searing_exarch_tier": 0,
+          "eater_of_worlds_tier": 0,
+          "prefixes": [],
+          "suffixes": []
+        },
+        "start_node_id": "start"
+      },
+      "historical_evaluator_memory": {
+        "owned_bytes_estimate": 213718750,
+        "peak_owned_bytes_estimate": 283811064,
+        "retained_output_owned_bytes_estimate": 0,
+        "max_owned_bytes": 4294967296,
+        "max_output_json_bytes": 67108864
+      },
+      "cost": 12541.579648544115,
+      "count": 25518.491313143768,
+      "artifact": {
+        "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+        "manifest": {
+          "artifact_kind": "runtime_dataset",
+          "artifact_schema_version": 4,
+          "complete_dataset": true,
+          "engine_loadable": true,
+          "enums": {
+            "base_flags": {
+              "cluster": 1,
+              "ordinary_session": 2
+            },
+            "bestiary_checkpoint_effect": {
+              "consume": 1,
+              "create": 0
+            },
+            "bestiary_checkpoint_requirement": {
+              "absent": 0,
+              "present": 1
+            },
+            "bestiary_classification": {
+              "checkpoint/restore": 2,
+              "explicitly unsupported in B1": 4,
+              "multi-output or multi-item": 3,
+              "ordinary one-item deterministic": 0,
+              "ordinary one-item stochastic": 1
+            },
+            "bestiary_identity_requirement": {
+              "current_item": 0,
+              "same_item": 1
+            },
+            "bestiary_operation": {
+              "create": 0,
+              "restore": 1
+            },
+            "bestiary_support": {
+              "selected": 0,
+              "unsupported": 1
+            },
+            "bestiary_transition": {
+              "deterministic": 0
+            },
+            "domain": {
+              "abyss_jewel": 0,
+              "affliction_charm": 1,
+              "affliction_jewel": 2,
+              "area": 3,
+              "atlas": 4,
+              "brequel_graft": 5,
+              "chest": 6,
+              "crafted": 7,
+              "crucible_remnant": 8,
+              "delve": 9,
+              "delve_area": 10,
+              "dummy": 11,
+              "expedition_relic": 12,
+              "flask": 13,
+              "heist_area": 14,
+              "heist_npc": 15,
+              "heist_trinket": 16,
+              "item": 17,
+              "leaguestone": 18,
+              "map_device": 19,
+              "map_relic": 20,
+              "memory_lines": 21,
+              "misc": 22,
+              "monster": 23,
+              "necropolis_monster": 24,
+              "primordial_altar": 25,
+              "sanctum_relic": 26,
+              "sentinel": 27,
+              "synthesis_a": 28,
+              "synthesis_bonus": 29,
+              "synthesis_globals": 30,
+              "templar_relic": 31,
+              "tincture": 32,
+              "undefined": 33,
+              "unveiled": 34,
+              "veiled": 35,
+              "watchstone": 36
+            },
+            "flags": {
+              "corrupted_implicit": 64,
+              "crafted": 2,
+              "delve": 16,
+              "eldritch_implicit": 128,
+              "essence_only": 1,
+              "implicit": 32,
+              "influence": 8,
+              "metamod": 4,
+              "unveiled": 512,
+              "veiled_template": 256
+            },
+            "fossil_mod_kind": {
+              "added": 0,
+              "forced": 1,
+              "sell_price": 2
+            },
+            "fossil_tag_kind": {
+              "allowed": 0,
+              "forbidden": 1
+            },
+            "fossil_weight_kind": {
+              "negative": 0,
+              "positive": 1
+            },
+            "generation_type": {
+              "azmeri_empowered_monster": 0,
+              "bestiary": 1,
+              "blight": 2,
+              "blight_tower": 3,
+              "bloodlines": 4,
+              "corrupted": 5,
+              "crucible_tree": 6,
+              "crucible_unique_tree": 7,
+              "delve_area": 8,
+              "eater_of_worlds_implicit": 9,
+              "enchantment": 10,
+              "essence": 11,
+              "expedition_logbook": 12,
+              "flask_enchantment_enkindling": 13,
+              "flask_enchantment_instilling": 14,
+              "memory_altar": 15,
+              "monster_affliction": 16,
+              "necropolis_devoted_monster": 17,
+              "necropolis_monster": 18,
+              "nemesis": 19,
+              "prefix": 20,
+              "scourge_benefit": 21,
+              "scourge_detriment": 22,
+              "scourge_gimmick": 23,
+              "searing_exarch_implicit": 24,
+              "suffix": 25,
+              "synthesis_a": 26,
+              "synthesis_bonus": 27,
+              "synthesis_globals": 28,
+              "talisman": 29,
+              "tempest": 30,
+              "torment": 31,
+              "unique": 32
+            },
+            "influence": {
+              "adjudicator": 1,
+              "basilisk": 2,
+              "crusader": 3,
+              "elder": 4,
+              "eyrie": 5,
+              "none": 0,
+              "shaper": 6
+            },
+            "metamod_type": {
+              "multimod": 0,
+              "no_attack": 1,
+              "no_caster": 2,
+              "prefixes_locked": 3,
+              "suffixes_locked": 4
+            },
+            "session_support": {
+              "cluster_unsupported": 1,
+              "ordinary": 0,
+              "unsupported_domain": 2
+            },
+            "special_kind": {
+              "base_implicit": 0,
+              "corrupted_implicit": 1,
+              "delve": 2,
+              "eldritch_implicit": 3,
+              "unveiled": 4,
+              "veiled_template": 5
+            }
+          },
+          "files": {
+            "game-data.json": {
+              "byte_size": 16439442,
+              "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+            },
+            "strings.json": {
+              "byte_size": 6534428,
+              "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+            }
+          },
+          "generated_at_utc": "2026-08-30T02:54:53Z",
+          "row_counts": {
+            "adds_tag_links": 5052,
+            "base_item_implicit_links": 760,
+            "base_item_tag_links": 17150,
+            "base_items": 4974,
+            "bench_cost_rows": 789,
+            "bench_item_class_links": 4975,
+            "bench_options": 774,
+            "bestiary_action_cost_rows": 4,
+            "bestiary_actions": 2,
+            "bestiary_beast_inputs": 2,
+            "bestiary_recipes": 3,
+            "bestiary_selected_recipes": 1,
+            "bestiary_unsupported_recipes": 2,
+            "classification_tag_links": 68322,
+            "cluster_jewels": 3,
+            "cluster_notables": 309,
+            "cluster_passives": 55,
+            "cluster_unsupported_bases": 3,
+            "essence_mod_links": 2310,
+            "essences": 106,
+            "fossil_mod_links": 24,
+            "fossil_tag_links": 18,
+            "fossil_weight_rows": 877,
+            "fossils": 445,
+            "generation_weight_rows": 4074,
+            "groups": 7169,
+            "item_classes": 99,
+            "mod_group_links": 39527,
+            "mods": 39292,
+            "ordinary_session_bases": 979,
+            "spawn_weight_rows": 70196,
+            "stat_rows": 59112,
+            "tags": 1355,
+            "unsupported_domain_bases": 3992
+          },
+          "scope": {
+            "base_items": "all released canonical bases",
+            "cluster_runtime_support": "unsupported",
+            "mods": "complete normalized global mod catalog",
+            "session_source": "ordinary sessions are derived from this artifact; SQLite is not required at runtime"
+          },
+          "source": {
+            "data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+            "database_schema_version": "2",
+            "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+            "source_version": "repoe-e4eaf06c20e1ddb4"
+          }
+        }
+      },
+      "action_vocabulary": [
+        "transmute",
+        "augment",
+        "alteration",
+        "regal",
+        "alchemy",
+        "chaos",
+        "exalt",
+        "annul",
+        "scour",
+        "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "harvest_reforge:chaos",
+        "harvest_reforge:elemental",
+        "harvest_reforge:lightning",
+        "harvest_augment:chaos",
+        "harvest_augment:lightning",
+        "harvest_resist:fire:lightning",
+        "harvest_resist:cold:lightning",
+        "fracture",
+        "restart"
+      ],
+      "native_result_reused": true,
+      "fresh_solve": false
+    }
+  ]
+}

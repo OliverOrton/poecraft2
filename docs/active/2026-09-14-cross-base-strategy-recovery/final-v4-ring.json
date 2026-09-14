@@ -1,0 +1,361 @@
+{
+  "build": "build-CBR-v4.json",
+  "report": {
+    "path": "out/cross-base-strategy-recovery/final-v4-ring/cases/cb07-cross-base-product8-long240.json",
+    "sha256": "f2c060d380c81d5e82d57f7227eb5aee63d9730c79aee93bdbb9921adcb939f4"
+  },
+  "strategy": {
+    "path": "out/cross-base-strategy-recovery/final-v4-ring/strategies/cb07-cross-base-product8-long240.strategy.json",
+    "sha256": "d156cdea1f540470ef6d7cf307009d6adfbe6230956038ebd44e267b13a22c9e"
+  },
+  "actual_status": "refused_unsupported_action",
+  "summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 227377.06545019808,
+    "expanded_states": 32,
+    "sweeps": 2,
+    "residual": 0.0002541542053222656,
+    "skipped_action_count": 1,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "action_counts": {
+      "registry": 185,
+      "candidate": 43,
+      "evaluator_supported": 43,
+      "supported_priced": 43,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 1
+    },
+    "lower_bound": 201.85524142944053,
+    "upper_bound": 227377.06545019808,
+    "evaluated_policy_cost": 227377.06545019808,
+    "absolute_optimality_gap": 227175.21020876864,
+    "relative_optimality_gap": 1125.4362710624923,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  },
+  "evaluation_status": "matched",
+  "totals": {
+    "expected_actions": 583110.3499596338,
+    "known_expected_cost": 227377.06545019808,
+    "total_expected_cost": 227377.06545019808,
+    "cost_complete": true
+  },
+  "terminals": {
+    "success": 1,
+    "failure": 0,
+    "stop": 0,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "unresolved": 0,
+    "by_node": [
+      {
+        "node_id": "goal",
+        "kind": "success",
+        "p": 1
+      },
+      {
+        "node_id": "offpolicy",
+        "kind": "failure",
+        "p": 0
+      }
+    ]
+  },
+  "phase_wall_ms": {
+    "registry_layout": 25.511,
+    "solve": 603936.3016,
+    "compile": 4.1247,
+    "verification": null,
+    "total": 613169.5427
+  },
+  "errors": [],
+  "late_entry_samples": [],
+  "other_candidate_dispositions": [
+    {
+      "kind": "current_run_return_trial",
+      "disposition": "refused",
+      "reason": "exact anchor operation is not globally routable",
+      "stage": "anchor_entries",
+      "magic_acquisition": null
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "retained",
+      "reason": "",
+      "stage": "complete_dirty_controller",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "deferred_by_cost_estimate",
+      "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "retained",
+      "reason": "",
+      "stage": "complete_dirty_controller",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "retained",
+      "reason": "",
+      "stage": "complete_dirty_controller",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "retained",
+      "reason": "",
+      "stage": "complete_dirty_controller",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "diagnostic_tradeoff",
+      "reason": "complete count-guided controller evaluated at original prices; cheaper verified cost winner preserved",
+      "stage": "complete_dirty_controller",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "independently_evaluated",
+      "reason": "",
+      "stage": "complete_dirty_controller",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "independently_evaluated",
+      "reason": "",
+      "stage": "complete_dirty_controller",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "retained",
+      "reason": "",
+      "stage": "complete_dirty_controller",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "diagnostic_tradeoff",
+      "reason": "complete count-guided controller evaluated at original prices; cheaper verified cost winner preserved",
+      "stage": "complete_dirty_controller",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "independently_evaluated",
+      "reason": "",
+      "stage": "complete_dirty_controller",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "reused_verified_selected_controller",
+      "reason": "same complete root-reachable selected rows, immutable context and prices; no new entry certificate",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "deferred_by_cost_estimate",
+      "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "refused",
+      "reason": "solver exceeded max_reforge_work (18257819)",
+      "stage": "complete_dirty_controller",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "deferred_by_cost_estimate",
+      "reason": "private estimate is not competitive; no numerical or action-retirement authority",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "dirty_continuation_candidate",
+      "disposition": "in_progress",
+      "reason": "",
+      "stage": "continuation_cost_improvement",
+      "magic_acquisition": false
+    },
+    {
+      "kind": "direct_compiled_core_policy",
+      "disposition": "eligible_verified_candidate",
+      "reason": null,
+      "stage": "direct_certification",
+      "magic_acquisition": null
+    },
+    {
+      "kind": "private_dirty_continuation",
+      "disposition": "selected_for_publication",
+      "reason": null,
+      "stage": "publication",
+      "magic_acquisition": null
+    },
+    {
+      "kind": "private_dirty_continuation",
+      "disposition": "not_selected",
+      "reason": null,
+      "stage": "publication",
+      "magic_acquisition": null
+    },
+    {
+      "kind": "private_dirty_continuation",
+      "disposition": "not_selected",
+      "reason": null,
+      "stage": "publication",
+      "magic_acquisition": null
+    },
+    {
+      "kind": "private_dirty_continuation",
+      "disposition": "not_selected",
+      "reason": null,
+      "stage": "publication",
+      "magic_acquisition": null
+    }
+  ],
+  "memory": {
+    "measurement_kind": "working_set_snapshots_not_peak",
+    "process_working_set_before_bytes": 34582528,
+    "process_working_set_after_bytes": 210370560,
+    "process_working_set_delta_bytes": 175788032,
+    "process_working_set_peak_bytes": null,
+    "wasm_heap_before_bytes": null,
+    "wasm_heap_after_bytes": null,
+    "wasm_heap_growth_bytes": null,
+    "native_live_owned_bytes": 16453062,
+    "native_peak_owned_bytes": 29902959,
+    "native_serialized_output_bytes": 45,
+    "solver_telemetry_json_bytes": 577810
+  },
+  "cap_checks": {
+    "all_passed": true,
+    "checks": {
+      "max_discovered_states": true,
+      "max_expanded_states": true,
+      "max_state_action_rows": true,
+      "max_transitions": true,
+      "max_reforge_work": true,
+      "max_solver_owned_bytes": true,
+      "max_compiled_nodes": true,
+      "max_compiled_edges": true,
+      "max_strategy_json_bytes": true
+    }
+  }
+}

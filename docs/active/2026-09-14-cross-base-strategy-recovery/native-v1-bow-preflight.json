@@ -1,0 +1,135 @@
+{
+  "identity": {
+    "corpus": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\manifest.json",
+      "sha256": "42e928d09c3ae0c39fe39a13e96d7ec7cf47924dd8a4262665d22344e63805da",
+      "corpus_id": "execution-aware-native600-final840-400m",
+      "schema_version": "solver_benchmark_corpus_v1",
+      "generator_config_sha256": null
+    },
+    "artifact": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+      "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+      "declared_files_verified": true,
+      "files": [
+        {
+          "path": "game-data.json",
+          "size_bytes": 16439442,
+          "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+        },
+        {
+          "path": "strings.json",
+          "size_bytes": 6534428,
+          "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      ],
+      "identity": {
+        "artifact_schema_version": 4,
+        "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+        "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+        "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+      }
+    },
+    "executable": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\CBR-v1.exe",
+      "sha256": "32da5b2b7ba010bcf7b43ff4da6d04ade98f02994cfffe14eabc8a99b57be382"
+    },
+    "machine": {
+      "system": "Windows",
+      "release": "11",
+      "machine": "AMD64",
+      "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "logical_cpu_count": 24,
+      "python": "3.14.2"
+    },
+    "source": {
+      "commit": "3268d1a9f73e8baa156d6daa366bd4f4cc86c29f",
+      "dirty": true,
+      "dirty_paths": [
+        {
+          "status": "M ",
+          "path": "ANDOFF.md"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-14-cross-base-strategy-recovery/"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_options.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_options_automatic.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_options_build.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_options_helpers.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_options_runtime_helpers.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_registry.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_solver_s8_3.cpp"
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "case_id": "cb04-cross-base-product8-long240",
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\CBR-v1.exe",
+          "--artifact",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\manifest.json",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\native-v1-bow\\cases\\cb04-cross-base-product8-long240.json",
+          "--partial-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\native-v1-bow\\partials\\cb04-cross-base-product8-long240.preflight.json",
+          "--strategy-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\native-v1-bow\\strategies",
+          "--case",
+          "cb04-cross-base-product8-long240",
+          "--skip-verification",
+          "--exact-strategy-evaluation",
+          "--native-retention-diagnostic",
+          "reuse",
+          "--native-dirty-guidance",
+          "execution-count",
+          "--native-execution-action-price",
+          "0.159024756944986"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+      },
+      "paths": {
+        "attempt_id": "preflight",
+        "attempt_directory": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\native-v1-bow",
+        "report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\native-v1-bow\\cases\\cb04-cross-base-product8-long240.json",
+        "partial_report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\native-v1-bow\\partials\\cb04-cross-base-product8-long240.preflight.json",
+        "strategy_output_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\native-v1-bow\\strategies",
+        "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\native-v1-bow\\logs\\cb04-cross-base-product8-long240.log"
+      },
+      "watchdog_seconds": 870.0,
+      "reservation": {
+        "solver_owned_cap_bytes": 8589934592,
+        "worker_headroom_bytes": 6442450944,
+        "policy_version": "solver_lab_host_reservation_v2"
+      }
+    }
+  ]
+}

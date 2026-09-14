@@ -1,0 +1,54 @@
+{
+  "name": "bow",
+  "strategy": "docs/active/2026-09-14-cross-base-strategy-recovery/strategies/bow-four.strategy.json",
+  "strategy_sha256": "9b31512ecf4f68ba7693a50f13d77b95de487b1b42c6aae9f9228d2dea583d4d",
+  "case_path": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/cb04-cross-base-product8-long240.json",
+  "case_sha256": "cfd6715a32c43286a3b4d85587624bc68069533bbbd41a49eb73e58400fecc28",
+  "wasm_sha256": "2e8c630984737430a2405fd61abbd7d0bb43700b98797458fa5fbfe1834c1421",
+  "defaults": "Unchanged web worker evaluator defaults",
+  "checks": {
+    "converged": true,
+    "complete_cost": true,
+    "goal_mass": true,
+    "zero_other_mass": true,
+    "same_cost": true,
+    "same_count": true
+  },
+  "totals": {
+    "expected_actions": 66914.72854184538,
+    "known_expected_cost": 12770.827062219498,
+    "total_expected_cost": 12770.827062219498,
+    "cost_complete": true
+  },
+  "terminals": {
+    "success": 1,
+    "failure": 0,
+    "stop": 0,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "unresolved": 0,
+    "by_node": [
+      {
+        "node_id": "goal",
+        "kind": "success",
+        "p": 0.0291322356801133
+      },
+      {
+        "node_id": "offpolicy",
+        "kind": "failure",
+        "p": 0
+      },
+      {
+        "node_id": "dirty_goal",
+        "kind": "success",
+        "p": 0.9708677643198868
+      },
+      {
+        "node_id": "dirty_offpolicy",
+        "kind": "failure",
+        "p": 0
+      }
+    ]
+  },
+  "wall_ms": 2233.84
+}

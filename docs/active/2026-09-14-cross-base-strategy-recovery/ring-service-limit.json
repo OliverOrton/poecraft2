@@ -1,0 +1,11 @@
+{
+  "native_actual_status": "refused_unsupported_action",
+  "policy_status": "bounded_feasible",
+  "independent_evaluation": "matched",
+  "late_entry_samples": 0,
+  "graph_has_fracture_operation": false,
+  "service_owner": "engine/src/solver_solve_return_bridge.cpp: execution_bottleneck_ready",
+  "remaining_precondition": "The preserved post-incumbent bottleneck trigger requires a fracture-bearing graph. Ring returns an Essence controller without Fracture; the generalized ordinary-entry query is therefore not triggered after that controller is available. No late-entry comparison is recorded.",
+  "economic_disposition": "The full recurring single-blocker diagnostic is cheaper and retained. Native search did not discover it in this profile; broader post-incumbent service is a remaining delivery capability, not an economic rejection.",
+  "unsupported_case_reason": "primitive_renewal_expected_actions_exceed_simulator_cap at the root Chaos compatibility check; separate from the returned, independently evaluated bounded-feasible controller."
+}

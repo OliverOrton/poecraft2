@@ -1,0 +1,56 @@
+{
+  "entries": [
+    {
+      "base": "Bow",
+      "entry": "fractured-Cold-only Magic A",
+      "alternative": "Alteration in place of Augment",
+      "first_owner": "complete original-root evaluator",
+      "disposition": "complete_verified_more_expensive",
+      "receipt": "bow-alteration-acquisition-full.json"
+    },
+    {
+      "base": "Bow",
+      "entry": "clean physical/Cold/Mana Rare at global router",
+      "alternative": "Cannot Roll Attack, Exalt, cleanup",
+      "first_owner": "entry service: existing temporary-bench family",
+      "disposition": "verified_cheaper_diagnostic",
+      "receipt": "bow-single-blocker-full.json"
+    },
+    {
+      "base": "Bow",
+      "entry": "same clean three-goal entry",
+      "alternative": "Multimod, Cannot Roll Attack, Exalt, cleanup",
+      "first_owner": "temporary-bench synthesis/program builder accepted only one setup craft",
+      "disposition": "qualified_native_product_discovery",
+      "receipt": "bow-capacity-blocker-full.json",
+      "product_receipt": "final-v4-bow.json",
+      "qualification": "qualification.json"
+    },
+    {
+      "base": "Ring",
+      "entry": "clean cold prefix, fire/attributes suffixes",
+      "alternative": "same two-craft capacity family",
+      "first_owner": "native suffix capacity",
+      "disposition": "native_illegal_two_extra_suffix_crafts_do_not_fit"
+    },
+    {
+      "base": "Ring",
+      "entry": "same clean three-goal entry",
+      "alternative": "Cannot Roll Attack, Exalt, cleanup",
+      "first_owner": "entry service: existing temporary-bench family",
+      "disposition": "qualified_cheaper_diagnostic_not_serviced_by_native_product",
+      "receipt": "ring-single-blocker-full.json",
+      "service_limit": "ring-service-limit.json",
+      "qualification": "qualification.json"
+    },
+    {
+      "base": "Conquest",
+      "entry": "clean first two goal prefixes and fractured suppression suffix; no eldritch context",
+      "alternative": "Multimod, Cannot Roll Attack, Exalt, cleanup",
+      "first_owner": "complete original-root evaluator",
+      "disposition": "complete_verified_more_expensive",
+      "receipt": "conquest-capacity-blocker-full.json"
+    }
+  ],
+  "scope": "Bounded native witnesses, not global family exhaustion. STOP diagnostics and complete policy evaluations are distinct. No representation-removal experiment was justified."
+}

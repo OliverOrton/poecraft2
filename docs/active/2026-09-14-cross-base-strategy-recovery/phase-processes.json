@@ -1,0 +1,443 @@
+[
+  {
+    "name": "bow-root-to-A",
+    "admission": {
+      "available_physical": 36855615488,
+      "available_commit": 28927160320,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 54968,
+      "process_identity_token": "54968:134338714544356763",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 2372.4600999848917
+    }
+  },
+  {
+    "name": "bow-A-to-B",
+    "admission": {
+      "available_physical": 36834807808,
+      "available_commit": 28905324544,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 41616,
+      "process_identity_token": "41616:134338714568090353",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 521.6453999746591
+    }
+  },
+  {
+    "name": "bow-A-full",
+    "admission": {
+      "available_physical": 36837273600,
+      "available_commit": 28910960640,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 57740,
+      "process_identity_token": "57740:134338714573350405",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 2177.5287999771535
+    }
+  },
+  {
+    "name": "bow-B-to-A-or-goal",
+    "admission": {
+      "available_physical": 36863705088,
+      "available_commit": 28928753664,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 3864,
+      "process_identity_token": "3864:134338714595103792",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 2127.2484000073746
+    }
+  },
+  {
+    "name": "conquest-root-to-A",
+    "admission": {
+      "available_physical": 36852113408,
+      "available_commit": 28926558208,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 48112,
+      "process_identity_token": "48112:134338714616388165",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 5062.013499962632
+    }
+  },
+  {
+    "name": "conquest-A00-to-B",
+    "admission": {
+      "available_physical": 36828409856,
+      "available_commit": 28876644352,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 61356,
+      "process_identity_token": "61356:134338714667018168",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1420.280200021807
+    }
+  },
+  {
+    "name": "conquest-depart_B_0-to-A-or-goal",
+    "admission": {
+      "available_physical": 36833026048,
+      "available_commit": 28899389440,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 41700,
+      "process_identity_token": "41700:134338714681230477",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1592.8471999941394
+    }
+  },
+  {
+    "name": "conquest-depart_B_1-to-A-or-goal",
+    "admission": {
+      "available_physical": 36822818816,
+      "available_commit": 28900442112,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 61284,
+      "process_identity_token": "61284:134338714697171739",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1592.4473999766633
+    }
+  },
+  {
+    "name": "conquest-depart_B_2-to-A-or-goal",
+    "admission": {
+      "available_physical": 36807950336,
+      "available_commit": 28868333568,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 61500,
+      "process_identity_token": "61500:134338714713104971",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1589.6503999829292
+    }
+  },
+  {
+    "name": "conquest-B2-serialization-witness",
+    "admission": {
+      "available_physical": 36847689728,
+      "available_commit": 28905918464,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 55328,
+      "process_identity_token": "55328:134338715293748896",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1584.586600016337
+    }
+  },
+  {
+    "name": "ring-one-essence-return",
+    "admission": {
+      "available_physical": 36884131840,
+      "available_commit": 28937093120,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 47052,
+      "process_identity_token": "47052:134338715473902262",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 6492.684600001667
+    }
+  },
+  {
+    "name": "ring-acquisition-to-next-decision",
+    "admission": {
+      "available_physical": 37015846912,
+      "available_commit": 29102862336,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 43788,
+      "process_identity_token": "43788:134338715538839120",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 11006.204100034665
+    }
+  },
+  {
+    "name": "bow-root-to-late",
+    "admission": {
+      "available_physical": 31179784192,
+      "available_commit": 17799565312,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 33292,
+      "process_identity_token": "33292:134338720244056278",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 4721.9249999616295
+    }
+  },
+  {
+    "name": "bow-single-blocker-full",
+    "admission": {
+      "available_physical": 31190683648,
+      "available_commit": 17828999168,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 35212,
+      "process_identity_token": "35212:134338720291296149",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 5000.73590001557
+    }
+  },
+  {
+    "name": "bow-capacity-blocker-full",
+    "admission": {
+      "available_physical": 31205781504,
+      "available_commit": 17853493248,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 47564,
+      "process_identity_token": "47564:134338720341317941",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 6179.519600002095
+    }
+  },
+  {
+    "name": "bow-alteration-acquisition-full",
+    "admission": {
+      "available_physical": 30101667840,
+      "available_commit": 17304764416,
+      "reserved_bytes": 15032385536,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 2808,
+      "process_identity_token": "2808:134338720403132485",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 5645.341600000393
+    }
+  },
+  {
+    "name": "conquest-capacity-blocker-full",
+    "admission": {
+      "available_physical": 31585968128,
+      "available_commit": 14374391808,
+      "reserved_bytes": 8589934592,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 57076,
+      "process_identity_token": "57076:134338726123270484",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 6895.432399993297
+    }
+  },
+  {
+    "name": "ring-single-blocker-full",
+    "admission": {
+      "available_physical": 31649456128,
+      "available_commit": 14476644352,
+      "reserved_bytes": 8589934592,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 43836,
+      "process_identity_token": "43836:134338726192242494",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 28486.338600050658
+    }
+  },
+  {
+    "name": "bow-new-B-to-A-or-goal",
+    "admission": {
+      "available_physical": 39520051200,
+      "available_commit": 28536004608,
+      "reserved_bytes": 8589934592,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 25964,
+      "process_identity_token": "25964:134338767645794409",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 2235.2873999625444
+    }
+  },
+  {
+    "name": "bow-new-root-to-A",
+    "admission": {
+      "available_physical": 39497949184,
+      "available_commit": 28519243776,
+      "reserved_bytes": 8589934592,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 50516,
+      "process_identity_token": "50516:134338767668157596",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 2510.196899995208
+    }
+  },
+  {
+    "name": "bow-new-A-full",
+    "admission": {
+      "available_physical": 39510708224,
+      "available_commit": 28525998080,
+      "reserved_bytes": 8589934592,
+      "outside_bytes": 13681888461
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 15376,
+      "process_identity_token": "15376:134338767693305383",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 2252.513399987947
+    }
+  }
+]

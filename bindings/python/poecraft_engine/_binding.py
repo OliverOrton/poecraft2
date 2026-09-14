@@ -1993,20 +1993,26 @@ class Strategy(_OwnedHandle):
             ),
             error,
         )
-        buffer = ct.create_string_buffer(length.value + 1)
-        error = _error()
-        _check(
-            _lib.pc_strategy_evaluate(
-                self._handle,
-                ct.byref(options),
-                buffer,
-                len(buffer),
-                ct.byref(length),
-                ct.byref(error),
-            ),
-            error,
-        )
-        return json.loads(buffer.raw[: length.value].decode("utf-8"))
+        # This synchronous API evaluates again when filling the buffer. Timing
+        # telemetry can change the JSON length; copy_text reports the required
+        # length even when it truncates. Never deserialize a truncated result.
+        for _ in range(3):
+            buffer = ct.create_string_buffer(length.value + 1024)
+            error = _error()
+            _check(
+                _lib.pc_strategy_evaluate(
+                    self._handle,
+                    ct.byref(options),
+                    buffer,
+                    len(buffer),
+                    ct.byref(length),
+                    ct.byref(error),
+                ),
+                error,
+            )
+            if length.value < len(buffer):
+                return json.loads(buffer.raw[: length.value].decode("utf-8"))
+        raise RuntimeError("Native strategy evaluation output repeatedly outgrew its buffer")
 
 
 class Economy(_OwnedHandle):

@@ -1,0 +1,134 @@
+[
+  {
+    "kind": "fresh_native_evaluation_of_preserved_root_policy",
+    "case": "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb04-cross-base-product8-long240.json",
+    "case_sha256": "cfd6715a32c43286a3b4d85587624bc68069533bbbd41a49eb73e58400fecc28",
+    "strategy": "docs\\active\\2026-09-14-cross-base-strategy-recovery\\strategies\\bow-four.strategy.json",
+    "strategy_sha256": "9b31512ecf4f68ba7693a50f13d77b95de487b1b42c6aae9f9228d2dea583d4d",
+    "native_dll_sha256": "906708e83a926413aa748c24ead7cd40ed131e6caa00fef4a1c5f9f0c81ce086",
+    "limits": {
+      "epsilon": 1e-12,
+      "max_sweeps": 100000,
+      "max_states": 2000000,
+      "max_pairs": 10000000,
+      "max_transitions": 40000000,
+      "max_owned_bytes": 4294967296
+    },
+    "reference_upper": 12770.827062219498,
+    "wall_ms": 3968.583600013517,
+    "checks": {
+      "converged": true,
+      "complete_cost": true,
+      "goal_mass": true,
+      "zero_other_mass": true,
+      "same_upper": true,
+      "same_primitive_count": true
+    },
+    "name": "bow",
+    "original_cost": 12770.827062219496,
+    "primitive_actions": 66914.72854184537,
+    "full_evaluation": {
+      "path": "out\\cross-base-strategy-recovery\\check-bow-full.json",
+      "sha256": "be7431c6bbc9bb4d92276534f1fa1cdc1b71428b3412334f95b04a755b900c45"
+    }
+  },
+  {
+    "kind": "fresh_native_evaluation_of_preserved_root_policy",
+    "case": "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb07-cross-base-product8-long240.json",
+    "case_sha256": "82e604292360284e1a48aa590a909b3a8260a3e4ab91b2d8a4aa68529781cae0",
+    "strategy": "docs\\active\\2026-09-14-cross-base-strategy-recovery\\strategies\\ring-four.strategy.json",
+    "strategy_sha256": "71c9752dbd803f7874e1d1084ab18361b158e8c175dc45497e013f442b56883b",
+    "native_dll_sha256": "906708e83a926413aa748c24ead7cd40ed131e6caa00fef4a1c5f9f0c81ce086",
+    "limits": {
+      "epsilon": 1e-12,
+      "max_sweeps": 100000,
+      "max_states": 2000000,
+      "max_pairs": 10000000,
+      "max_transitions": 40000000,
+      "max_owned_bytes": 4294967296
+    },
+    "reference_upper": 220743.46354691783,
+    "wall_ms": 18929.483000014443,
+    "checks": {
+      "converged": true,
+      "complete_cost": true,
+      "goal_mass": true,
+      "zero_other_mass": true,
+      "same_upper": true,
+      "same_primitive_count": true
+    },
+    "name": "ring",
+    "original_cost": 220743.46354691783,
+    "primitive_actions": 564673.7576801177,
+    "full_evaluation": {
+      "path": "out\\cross-base-strategy-recovery\\check-ring-full.json",
+      "sha256": "6afff2424f9dc63da5582e00b69a03c5b82aa89ee31115ae8fba3d24a10472e8"
+    }
+  },
+  {
+    "kind": "fresh_native_evaluation_of_preserved_root_policy",
+    "case": "docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\cases\\cb02-cross-base-product8-long240.json",
+    "case_sha256": "a3b2a59eb945fe458cb40dfc10b102b0c94d35fe116a748b494da1c918dd004b",
+    "strategy": "out\\adaptive-dirty-guidance\\final-original-core\\strategies\\cb02-cross-base-product8-long240.strategy.json",
+    "strategy_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+    "native_dll_sha256": "906708e83a926413aa748c24ead7cd40ed131e6caa00fef4a1c5f9f0c81ce086",
+    "limits": {
+      "epsilon": 1e-12,
+      "max_sweeps": 100000,
+      "max_states": 1000000,
+      "max_pairs": 5000000,
+      "max_transitions": 20000000,
+      "max_owned_bytes": 1073741824
+    },
+    "reference_upper": 3746.1319409485764,
+    "wall_ms": 5047.808399947826,
+    "checks": {
+      "converged": true,
+      "complete_cost": true,
+      "goal_mass": true,
+      "zero_other_mass": true,
+      "same_upper": true,
+      "same_primitive_count": true
+    },
+    "name": "conquest-native",
+    "original_cost": 3746.131940948572,
+    "primitive_actions": 8608.88179365679,
+    "full_evaluation": {
+      "path": "out\\cross-base-strategy-recovery\\check-conquest-native-full.json",
+      "sha256": "b147d247e1c71431999ccca87228c66968a049a3f263eb828f592d30b68e1442"
+    }
+  },
+  {
+    "kind": "fresh_native_evaluation_of_preserved_root_policy",
+    "case": "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb08-cross-base-product8-long240.json",
+    "case_sha256": "a5c9aca4f3f8bb0884a590e35855d84917d07994cca74938ff6c6b7f36846486",
+    "strategy": "out\\execution-aware-proposals\\T-amulet\\strategies\\cb08-cross-base-product8-long240.strategy.json",
+    "strategy_sha256": "805f6161caff50680a35b171cc3f2541a79f38ee01e1c1bf20d86a94a9ffb6bb",
+    "native_dll_sha256": "906708e83a926413aa748c24ead7cd40ed131e6caa00fef4a1c5f9f0c81ce086",
+    "limits": {
+      "epsilon": 1e-12,
+      "max_sweeps": 100000,
+      "max_states": 2000000,
+      "max_pairs": 10000000,
+      "max_transitions": 40000000,
+      "max_owned_bytes": 4294967296
+    },
+    "reference_upper": 12541.579648544115,
+    "wall_ms": 18739.92120003095,
+    "checks": {
+      "converged": true,
+      "complete_cost": true,
+      "goal_mass": true,
+      "zero_other_mass": true,
+      "same_upper": true,
+      "same_primitive_count": true
+    },
+    "name": "amulet",
+    "original_cost": 12541.579648544115,
+    "primitive_actions": 25518.491313143768,
+    "full_evaluation": {
+      "path": "out\\cross-base-strategy-recovery\\check-amulet-full.json",
+      "sha256": "6c39ad0c26013db3e63fea5da814a1b0b624c30df89084424435be94bab2e1d6"
+    }
+  }
+]

@@ -1,0 +1,31 @@
+{
+  "path": "out\\cross-base-strategy-recovery\\CBR-v1.exe",
+  "sha256": "32da5b2b7ba010bcf7b43ff4da6d04ade98f02994cfffe14eabc8a99b57be382",
+  "native_dll_sha256": "df8549a32fe732dc935c0ab88700d13e4248c39bf34c302f74b0722a83e6047f",
+  "sources": [
+    {
+      "path": "engine/src/solver_options.cpp",
+      "sha256": "2882da17f180cd57e88cac504c04948348178d1a1d6f058573476d613680bd3b"
+    },
+    {
+      "path": "engine/src/solver_options_automatic.cpp",
+      "sha256": "b2708186bb50665dd42e8b1cdae88a3deea160319cd99b5d344031325ec8fd41"
+    },
+    {
+      "path": "engine/src/solver_options_build.cpp",
+      "sha256": "a9c25dab6070596239a5173fca6ecf22d36e255688d5d586214d0720714eac0a"
+    },
+    {
+      "path": "engine/src/solver_options_helpers.hpp",
+      "sha256": "9dd9ac4216cdcc5c843a243acc7276aaa3222adabbf15f2cd1783c612ee50911"
+    },
+    {
+      "path": "engine/src/solver_options_runtime_helpers.hpp",
+      "sha256": "085fa066319695ea82ba78b380140e4b56762a830d60d5bdd6f6db9438f7a8ac"
+    },
+    {
+      "path": "engine/src/solver_registry.cpp",
+      "sha256": "eace47b528f75951420584497009cd9b5bce8edaea7cf5243a4d77bbd6a3daee"
+    }
+  ]
+}

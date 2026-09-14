@@ -310,10 +310,13 @@ const OptionKernel& CalcContext::option_kernel(
                     baseline.supported && baseline.fully_legal &&
                     !same_attempt_outcomes(baseline, attempt);
             }
-            if (cleanup_before_setup) {
+            const bool capacity_setup =
+                option.option_kind == FixedOptionKind::TemporaryBenchRepeat &&
+                option.primitive_program.size() == 4 && !cleanup_before_setup;
+            if (cleanup_before_setup || capacity_setup) {
                 const AttemptKernel prepared = execute_attempt(
                     *this,
-                    {option.cleanup_action, option.setup_action},
+                    {option.primitive_program.front(), option.setup_action},
                     state_id);
                 result->automatic.setup_complete =
                     prepared.supported && prepared.fully_legal &&

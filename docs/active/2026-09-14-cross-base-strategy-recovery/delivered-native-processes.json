@@ -1,0 +1,288 @@
+[
+  {
+    "name": "check-bow",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\recheck_policy.py",
+      "--case",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb04-cross-base-product8-long240.json",
+      "--strategy",
+      "docs\\active\\2026-09-14-cross-base-strategy-recovery\\strategies\\bow-four.strategy.json",
+      "--upper",
+      "12770.827062219498",
+      "--output",
+      "out\\cross-base-strategy-recovery\\check-bow-full.json"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "check-bow",
+      "utc": "2026-09-14T16:26:11.804251+00:00",
+      "available_physical": 39520755712,
+      "available_commit": 28540919808,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 34568,
+      "process_identity_token": "34568:134338767718049132",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 4106.185499986168
+    }
+  },
+  {
+    "name": "sample-bow",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\qualify_sampling_amulet.py",
+      "--case",
+      "cb04-cross-base-product8-long240",
+      "--strategy",
+      "docs\\active\\2026-09-14-cross-base-strategy-recovery\\strategies\\bow-four.strategy.json",
+      "--output",
+      "docs\\active\\2026-09-14-cross-base-strategy-recovery\\sampling-bow.json",
+      "--seed",
+      "20260826"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "sample-bow",
+      "utc": "2026-09-14T16:26:15.919561+00:00",
+      "available_physical": 39549337600,
+      "available_commit": 28573904896,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 43836,
+      "process_identity_token": "43836:134338767759201973",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 37664.41129997838
+    }
+  },
+  {
+    "name": "check-ring",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\recheck_policy.py",
+      "--case",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb07-cross-base-product8-long240.json",
+      "--strategy",
+      "docs\\active\\2026-09-14-cross-base-strategy-recovery\\strategies\\ring-four.strategy.json",
+      "--upper",
+      "220743.46354691783",
+      "--output",
+      "out\\cross-base-strategy-recovery\\check-ring-full.json"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "check-ring",
+      "utc": "2026-09-14T16:26:53.584901+00:00",
+      "available_physical": 39357632512,
+      "available_commit": 28365205504,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 58136,
+      "process_identity_token": "58136:134338768135856095",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 19066.19139999384
+    }
+  },
+  {
+    "name": "sample-ring",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\dirty-state-continuation\\qualify_sampling_amulet.py",
+      "--case",
+      "cb07-cross-base-product8-long240",
+      "--strategy",
+      "docs\\active\\2026-09-14-cross-base-strategy-recovery\\strategies\\ring-four.strategy.json",
+      "--output",
+      "docs\\active\\2026-09-14-cross-base-strategy-recovery\\sampling-ring.json",
+      "--seed",
+      "20260826"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "sample-ring",
+      "utc": "2026-09-14T16:27:12.662426+00:00",
+      "available_physical": 39560478720,
+      "available_commit": 28595273728,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 49100,
+      "process_identity_token": "49100:134338768326631616",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 284133.1832999713
+    }
+  },
+  {
+    "name": "check-conquest-native",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\recheck_policy.py",
+      "--case",
+      "docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\cases\\cb02-cross-base-product8-long240.json",
+      "--strategy",
+      "out\\adaptive-dirty-guidance\\final-original-core\\strategies\\cb02-cross-base-product8-long240.strategy.json",
+      "--upper",
+      "3746.1319409485764",
+      "--output",
+      "out\\cross-base-strategy-recovery\\check-conquest-native-full.json"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "check-conquest-native",
+      "utc": "2026-09-14T16:31:56.796522+00:00",
+      "available_physical": 39268904960,
+      "available_commit": 28268298240,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 23076,
+      "process_identity_token": "23076:134338771167973297",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 5200.69520000834
+    }
+  },
+  {
+    "name": "check-amulet",
+    "command": [
+      "C:\\Users\\Oliver\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\policy-economics-checked-potentials\\recheck_policy.py",
+      "--case",
+      "docs\\active\\2026-09-13-execution-aware-proposals\\native-600-final840-400m\\cb08-cross-base-product8-long240.json",
+      "--strategy",
+      "out\\execution-aware-proposals\\T-amulet\\strategies\\cb08-cross-base-product8-long240.strategy.json",
+      "--upper",
+      "12541.579648544115",
+      "--output",
+      "out\\cross-base-strategy-recovery\\check-amulet-full.json"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "check-amulet",
+      "utc": "2026-09-14T16:32:02.016608+00:00",
+      "available_physical": 39378382848,
+      "available_commit": 28401258496,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 49060,
+      "process_identity_token": "49060:134338771220173094",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 18875.90959999943
+    }
+  },
+  {
+    "name": "wasm-bow",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\check_wasm_graph.mts",
+      "bow"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "wasm-bow",
+      "utc": "2026-09-14T16:32:20.901509+00:00",
+      "available_physical": 39392858112,
+      "available_commit": 28405223424,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 47564,
+      "process_identity_token": "47564:134338771409025424",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 2665.6841000076383
+    }
+  },
+  {
+    "name": "wasm-ring",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\check_wasm_graph.mts",
+      "ring"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "name": "wasm-ring",
+      "utc": "2026-09-14T16:32:23.568038+00:00",
+      "available_physical": 39376576512,
+      "available_commit": 28391899136,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 53228,
+      "process_identity_token": "53228:134338771435689608",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1015.7548999995925
+    }
+  }
+]

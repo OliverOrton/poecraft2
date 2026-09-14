@@ -4112,8 +4112,11 @@ std::string compile_dirty_continuation_strategy_json(
             // No saved checkpoint or revealed offer can outlive these native
             // operations. Broader context/observation support needs its own
             // explicit entry contract; a matching physical item is not enough.
+            // Bench flags live on the item; paid temporary setup and cleanup
+            // can therefore stay inside a compiled native option. This does
+            // not permit an external handoff into that mandatory interior.
             if (type != "exalt" && type != "annul" && type != "chaos" &&
-                !(closed_local_domain && type == "essence") &&
+                type != "essence" && type != "bench" && type != "remove_crafted_modifiers" &&
                 type != "harvest_augment" && type != "harvest_reforge" &&
                 type != "harvest_resist" && type != "alteration" && type != "augment" &&
                 type != "regal" && type != "scour" && type != "transmute" &&

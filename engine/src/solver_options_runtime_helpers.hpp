@@ -199,6 +199,13 @@ std::string temporary_evaluation_key(
         key += std::to_string(slot) + ',';
     }
     key.push_back(':');
+    // A paid capacity setup changes both the pool and the resource vector.
+    // It must never reuse a single-blocker template.
+    for (const auto action : planner.primitive_program) {
+        if (action != planner.setup_action && action != planner.followup_action &&
+            action != planner.cleanup_action) key += std::to_string(action) + ',';
+    }
+    key.push_back(':');
     std::vector<std::uint32_t> groups;
     for (std::uint32_t row = session.group_offsets[blocker.params.mod_id];
          row < session.group_offsets[blocker.params.mod_id + 1]; ++row) {

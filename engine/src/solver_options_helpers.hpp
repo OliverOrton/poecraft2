@@ -972,6 +972,51 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             option.relevant_goal_mask = 1u << group.goal_slot;
             result.push_back(std::move(option));
         }
+        // A second paid craft can close the opposite side while Cannot Roll
+        // filters the last target draw. This is a bounded proposal family;
+        // the native attempt kernel still owns legality, all exits and cleanup.
+        if (state.rarity == PC_RARITY_RARE &&
+            goal.required_satisfied_slots() == goal.slots.size() &&
+            std::popcount(satisfied) + 1 == goal.slots.size() &&
+            state.prefix_count + state.suffix_count == std::popcount(satisfied) &&
+            !state_has_unfractured_crafted(state) &&
+            state.crafted_goal_mask == 0 &&
+            multimod_entry != registry.index_by_id.end() &&
+            !solver_automatic_candidate_disabled(goal, AutomaticCandidateKind::CannotRoll) &&
+            !solver_action_family_disabled(goal, SolverActionFamily::Metamod) &&
+            action_has_prices(multimod_entry->second) &&
+            !solver_action_disabled(goal, registry.actions.at(multimod_entry->second)) &&
+            action_legal(session, registry.actions.at(multimod_entry->second), state)) {
+            const auto& capacity = registry.actions.at(multimod_entry->second);
+            const auto cap = rarity_affix_cap(session, state.rarity);
+            for (const auto& effect : precompiled) {
+                if (!effect.pool_tag_blocker || !target_slot_missing(state, effect.goal_slot) ||
+                    registry.actions.at(effect.followup_action).params.type != ActionType::Exalt ||
+                    solver_action_disabled(goal, registry.actions.at(effect.followup_action)) ||
+                    !action_has_prices(effect.followup_action) ||
+                    !temporary_blocker_applies(session, carrier, effect)) continue;
+                const auto target_side = goal_slot_side(session, goal.slots[effect.goal_slot]);
+                if (target_side < 0 || target_side == effect.blocker_side ||
+                    session.gen_type[capacity.params.mod_id] != effect.blocker_side) continue;
+                const auto target_count = target_side == PC_SIDE_PREFIX ? state.prefix_count : state.suffix_count;
+                const auto other_count = target_side == PC_SIDE_PREFIX ? state.suffix_count : state.prefix_count;
+                if (target_count + 1 != cap || other_count + 2 != cap) continue;
+                for (const auto blocker_index : effect.blocker_actions) {
+                    const auto& blocker = registry.actions.at(blocker_index);
+                    if (solver_action_disabled(goal, blocker) || !action_has_prices(blocker_index) ||
+                        !action_legal(session, blocker, state)) continue;
+                    FixedOptionSpec option;
+                    option.kind = FixedOptionKind::TemporaryBenchRepeat;
+                    option.setup_action_ids = {capacity.id, blocker.id};
+                    option.action_id = registry.actions.at(effect.followup_action).id;
+                    option.exit_goal_slots = {effect.goal_slot};
+                    option.exit_min_satisfied = 1;
+                    option.automatic_kind = AutomaticCandidateKind::CannotRoll;
+                    option.relevant_goal_mask = 1u << effect.goal_slot;
+                    result.push_back(std::move(option));
+                }
+            }
+        }
         synthesis.temporary_enumeration_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - enumeration_started)

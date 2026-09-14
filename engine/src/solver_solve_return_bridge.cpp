@@ -785,6 +785,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
         std::uint32_t observed_blocker_action = kNoId;
         std::optional<pc_item_state> observed_blocker_entry;
         bool magic_acquisition = false;
+        bool temporary_entry = false;
     };
     std::vector<Proposal> proposals;
     // A current compiled policy may have useful progress behind a prefix that
@@ -793,7 +794,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
     // or representative parent ids transplanted into a private layout.
     const auto* current = best_current_certified_fallback();
     if (current && certified_incumbent_invalid_reason(*current) == nullptr &&
-        current->compiled_artifact.strategy_json.find("\"fracture\"") != std::string::npos &&
+        (execution || current->compiled_artifact.strategy_json.find("\"fracture\"") != std::string::npos) &&
         !current->compiled_artifact.policy_decision_bindings.empty() &&
         incumbent_owned_bytes(*current) < options.max_solver_owned_bytes -
             std::min(options.max_solver_owned_bytes, parent_live_bytes())) {
@@ -849,6 +850,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             double magic_score = -1;
             std::array<std::uint64_t,2> magic_entry_counts{};
             std::array<double,2> magic_entry_spend{};
+            std::vector<std::pair<double, Proposal>> temporary_entries;
             for (const auto& entry : evaluated.policy_entries.entries) {
                 if (!entry.globally_routable() || entry.checkpoint_active || entry.observed_offer_active ||
                     !(entry.root_expected_visits > 0) || !dirty_fractured_bridge_item(calc.session(), entry.item)) continue;
@@ -860,6 +862,22 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 bool fractured_junk = false;
                 for (std::size_t i = 0; i < state.fractured_junk_counts.size(); ++i)
                     fractured_junk |= state.fractured_junk_counts[i] != 0;
+                // Service clean late decisions, separately from high-spend
+                // acquisition. Physical reachability and compiler bindings
+                // exclude mandatory interiors and hidden control contexts.
+                if (execution && (state.flags & ~kFlagFractured) == 0 &&
+                    !fractured_junk && entry.item.rarity == PC_RARITY_RARE &&
+                    goals + 1 == calc.goal().required_satisfied_slots() &&
+                    entry.item.prefix_count + entry.item.suffix_count == goals &&
+                    entry.selected_operator < calc.operators().size() &&
+                    calc.operators().at(entry.selected_operator).kind == PlannerOperatorKind::Primitive) {
+                    Proposal added{ActionType::Exalt, entry.item, true, goals, entry.exact_continuation_upper};
+                    added.temporary_entry = true;
+                    temporary_entries.push_back({entry.root_expected_visits * entry.exact_continuation_upper, added});
+                    std::stable_sort(temporary_entries.begin(), temporary_entries.end(),
+                        [](const auto& a, const auto& b) { return a.first > b.first; });
+                    if (temporary_entries.size() > 3) temporary_entries.pop_back();
+                }
                 // This family owns a closed acquisition/recovery controller.
                 // It requires an actual globally routed primitive decision,
                 // one goal fracture, no other persistent control, and no
@@ -895,6 +913,10 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     selected_node = entry.compiled_node_id;
                 }
             }
+            std::stable_sort(temporary_entries.begin(), temporary_entries.end(),
+                [](const auto& a, const auto& b) { return a.first > b.first; });
+            for (std::size_t i = 0; i < std::min<std::size_t>(3, temporary_entries.size()); ++i)
+                proposals.push_back(temporary_entries[i].second);
             if (magic_entry) {
                 publication_pipeline.execution_bottleneck_attempted = true;
                 const auto source = project_item(calc.session(),calc.layout(),magic_entry->item);
@@ -1100,6 +1122,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 "\",\"expansion\":" + std::to_string(proposal.expansion) +
                 ",\"selective_growth\":" + (selective ? "true" : "false") +
                 ",\"magic_acquisition\":" + (proposal.magic_acquisition ? "true" : "false") +
+                ",\"temporary_entry\":" + (proposal.temporary_entry ? "true" : "false") +
                 ",\"proposal_lambda\":" + diagnostic_finite_double(proposal_lambda) +
                 ",\"reward_view\":" + std::to_string(reward_view) +
                 ",\"cost_only_follow_through\":" + (reward_view==3 ? "true" : "false") +
@@ -1325,13 +1348,15 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             double checked_selected_count=kInfinity;
             std::size_t pending_head=0, pending_walk_cursor=0, completed_walk=0;
             bool compared_count_option_patch=false;
+            std::uint64_t automatic_entry_batch_bytes = 0;
             const bool incremental=selective && proposal.expansion>=2 && !proposal.nonempty_handoff;
             std::uint32_t retry=kNoId;
             std::optional<SharedSparseTransitionSpan> root_redraw_span;
             child.transition_cache=std::make_shared<SolveTransitionCache>();
             child.priced_rows.clear(); child.policy_rows.clear();
             const auto extra_bytes=[&] {
-                return (checked_selected_rows.capacity()+selected_rows.capacity())*sizeof(std::uint64_t)+
+                return automatic_entry_batch_bytes +
+                    (checked_selected_rows.capacity()+selected_rows.capacity())*sizeof(std::uint64_t)+
                     native_rewards.capacity()*sizeof(DirtyRowRewards)+cost_values.capacity()*sizeof(double)+
                     cost_selected_rows.capacity()*sizeof(std::uint64_t)+
                     pending.capacity()*sizeof(Opportunity)+patch_samples.capacity()+automatic_samples.capacity()+
@@ -1630,6 +1655,10 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 for (std::size_t cursor=completed_walk;cursor<walk.size();++cursor) {
                 const auto state=walk[cursor];
                 if (private_calc->is_goal_state(private_calc->state(state))) continue;
+                if (proposal.temporary_entry && state != root) {
+                    boundary.push_back(state);
+                    continue; // Every non-goal exit needs the frozen native tail.
+                }
                 pc_item_state item;
                 const auto ordinary_exit = [&](const pc_item_state& exit) {
                     auto check=exit;
@@ -1654,6 +1683,64 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                         std::to_string(private_calc->state(state).rarity));
                 const auto goals=std::popcount(child.satisfied_goal_mask_for_state(state));
                 const auto count=item.prefix_count+item.suffix_count;
+                if (proposal.temporary_entry) {
+                    evaluation.stage = "native_late_entry_options";
+                    AutomaticAdmissionLimits admission;
+                    admission.max_state_action_rows = options.max_state_action_rows - constructed_rows;
+                    admission.max_transitions = options.max_transitions - child.transition_cache->successors.size();
+                    const auto available = options.max_solver_owned_bytes -
+                        std::min(options.max_solver_owned_bytes, parent_live_bytes() + observe_memory());
+                    admission.max_solver_owned_bytes = private_calc->fast_estimated_owned_bytes() + available;
+                    admission.prices = &prices;
+                    admission.consider_imprint_programs = false;
+                    StateLocalAutomaticBatch batch;
+                    while (!private_calc->advance_state_local_automatic_candidates(state, admission, batch, 1)) {
+                        charge_child(); co_await CooperativeCheckpoint{checkpoint_memory()};
+                    }
+                    charge_child(); ++automatic_sources;
+                    automatic_entry_batch_bytes = batch.admitted_operators.capacity() * sizeof(std::uint32_t) +
+                        batch.decisions.capacity() * sizeof(StateLocalAutomaticCandidate) +
+                        batch.resource_cap.capacity() + batch.resource_reason.capacity() + 2;
+                    for (const auto& decision : batch.decisions)
+                        automatic_entry_batch_bytes += decision.id.capacity() +
+                            decision.evidence.legality_result.capacity() + decision.evidence.reason.capacity() + 3;
+                    observe_memory();
+                    if (batch.status != StateLocalAutomaticBatchStatus::Complete)
+                        throw std::runtime_error("late entry option admission incomplete: " + batch.resource_reason);
+                    bool seeded = false;
+                    for (const auto index : batch.admitted_operators) {
+                        const auto& op = private_calc->operators().at(index);
+                        if (op.kind != PlannerOperatorKind::FixedOption ||
+                            op.option_kind != FixedOptionKind::TemporaryBenchRepeat ||
+                            op.automatic_kind != AutomaticCandidateKind::CannotRoll ||
+                            !temporary_bench_source_observation_complete(*private_calc, state,
+                                private_calc->registry().actions.at(op.setup_action)) ||
+                            !child.ensure_priced_operator(index)) continue;
+                        const auto& kernel = private_calc->option_kernel(state, index);
+                        if (!kernel.supported || !kernel.legal || !kernel.terminates_almost_surely ||
+                            !kernel.observation_choice_groups.empty() || !kernel.observation_choice_options.empty()) continue;
+                        double cost = 0;
+                        for (const auto& [key, quantity] : kernel.expected_resources) {
+                            const auto price = prices.find(key);
+                            if (price == prices.end() || !std::isfinite(quantity) || quantity < 0)
+                                throw std::runtime_error("late entry option price incomplete");
+                            cost += quantity * price->second;
+                        }
+                        OutcomeDistribution law; law.entries = kernel.exits;
+                        for (auto& exit : law.entries) if (exit.state == kNoId) exit.state = state;
+                        const auto row = append(state, index, law, cost);
+                        if (!seeded) {
+                            child.policy_rows[state] = row;
+                            child.result.policy[state] = PolicyOperatorRef{op.kind, index};
+                            seeded = true;
+                        }
+                        ++automatic_patch_rows;
+                    }
+                    if (!seeded) throw std::runtime_error("no complete class-legal late entry Cannot Roll option");
+                    local_states.push_back(state);
+                    automatic_entry_batch_bytes = 0;
+                    continue;
+                }
                 std::uint32_t selected=kNoId;
                 std::shared_ptr<const OutcomeDistribution> law;
                 if (lock_cleanup) {
@@ -1851,7 +1938,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 }
             }
             child.expanded_count=static_cast<std::uint32_t>(walk.size());
-            if (proposal.nonempty_handoff && !proposal.magic_acquisition) {
+            if (proposal.nonempty_handoff && !proposal.magic_acquisition &&
+                !(proposal.temporary_entry && boundary.empty())) {
                 if (boundary.empty()) throw std::runtime_error("nonempty proposal has no native return entries");
                 std::vector<StrategyContinuationEntryRequest> requests;
                 for (const auto state : boundary) {
@@ -2041,7 +2129,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 compose_limits.max_solver_owned_bytes-=std::min(compose_limits.max_solver_owned_bytes,held);
                 graph=compile_dirty_continuation_strategy_json(*private_calc,graph,
                     handoff_base->compiled_artifact.strategy_json,local_states,boundary,compose_limits,&compilation,
-                    proposal.magic_acquisition);
+                    proposal.magic_acquisition || (proposal.temporary_entry && boundary.empty()));
             }
             compiled_graph_bytes=graph.size();
             if (!proposal.nonempty_handoff) {

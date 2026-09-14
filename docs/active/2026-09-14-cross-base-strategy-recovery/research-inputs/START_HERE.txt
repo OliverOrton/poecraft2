@@ -1,0 +1,48 @@
+Research-to-plan handoff: Cross-Base Strategy Comparison and Capability Recovery
+
+Repository: OliverOrton/poecraft2
+Research pin: 3268d1a9f73e8baa156d6daa366bd4f4cc86c29f
+Main was rechecked and still matched this pin at the end of the remote review.
+
+Oliver's request:
+Compare good strategies such as four-mod Conquest with Bow and Ring. Use the differences in strategy complexity to identify where the solver is performing poorly on harder bases. Research first, then write the implementation plan. The earlier native solver research chat reached its limit.
+
+Read this package in order:
+1. 01_research_report.md
+2. 02_implementation_plan.md
+3. SOURCES.md and evidence_snapshot.json as needed
+
+This is a research handoff, not evidence that any proposed experiment has run. It is not authorization to implement every branch, commit, push, use subagents, or restart automatically. First reconcile the actual checkout and current repository instructions, then turn the decision-gated plan into the smallest appropriate working plan.
+
+The central question is NOT simply why Essence or Alteration has high spend. Determine whether acquisition is intrinsically rare, or whether later failures repeatedly destroy useful progress and amplify the acquisition bill. Compare complete native acquisition/recovery/return laws with the successful Conquest strategies. A low-cost late decision can be the cause of most earlier spending.
+
+Current retained references:
+- Native Conquest four CB02: C = 3746.1319409485764, L = 198.8334996747695. The inspected historical native receipt has 811 compiled nodes, 2200 edges, 7213 expanded coarse states, no coarse frontier and 147503 refinement obligations. It is bounded, not globally exact. Its primitive count was not recovered in the remote review.
+- Distinct Conquest-four browser E10 graph: C = 5218.040949685988, N = 14152.339714597114. This is NOT the native CB02 graph and must not be used to fill its missing count.
+- Bow four CB04: C = 223349.0000393144, N = 1404492.0069683318.
+- Ring four CB07: C = 227377.06545019808, N = 583110.3499596338.
+- Amulet three CB08 control: C = 12541.579648544115, N = 25518.491313143768.
+
+Important current evidence:
+- Bow's fractured-Magic Alteration/Augment acquisition categories account for about 75.67% of cost and 97.29% of primitives. Sixteen Alteration entries collectively have about 138607 immediate spend; the max-single-entry selector instead picks the one Augment entry around 30397. This is a hypothesis for a matched coverage/entry-service comparison, not a proven selector defect. Determine how those entries route through one another before proposing a group.
+- Current fractured-Magic proposals are narrowly gated to actual globally routable primitive entries with one satisfying fracture and no mutable progress/other control. The nonempty family does not receive the general protected-expansion branch. No admitted Essence guaranteed a satisfying mutable goal at the selected Bow entry. Do not generalize that result to all Essences, all entries or all protected strategies.
+- Current Bow tradeoffs reduce actions roughly 76% but cost roughly 82% more. They must not replace the cheaper original policy under the monetary objective.
+- Current Ring spends about 86.40% of cost and 98.29% of actions on Suffering4 Essence. It also uses some paid suffix locking. Do not repeat the stale dominant-Annul diagnosis or say protection is completely absent.
+- The Amulet blocker failure was a real native conflict-observation/source-class mismatch. Fresh native observations and physical-entry handoff eventually produced a matched 400M improvement. A capped construction is not an economic rejection, and matching goal counts does not establish source equivalence.
+- Recent adaptive ordering did not establish a selection advantage over its matched static counterpart. The earlier generic proper-policy-selector explanation was already falsified on the then-supplied goal-free views. Do not restart those programmes without a new native witness.
+
+First work chunk:
+Recover the actual saved graphs and immutable receipts using the existing tooling. Prefer evaluating saved compatible graphs to re-solving. Build a small Conquest/Bow/Ring fingerprint from the existing native evaluator: true goal/pool metadata, primitive count, immediate spend, physical entry identities, paid strategy phases, progress losses and repeated returns. Keep coarse states, evaluator states/pairs and compiled graph nodes distinct.
+
+Then choose one high-impact actual native region and run a complete acquisition-versus-recovery contrast. Hold the original final goal, full-root pricing, supported mechanics and request scope fixed. A supposedly one-factor change that needs new tail coverage must say so. Only after identifying the first missing owner should an implementation branch be selected: entry service, a complete native continuation family, a necessary observation/layout repair, or a different fully paid root anchor/progress ordering.
+
+Reuse solver_solve_return_bridge.cpp, existing sparse policy/continuation/compile/evaluation owners, and existing runner/Lab/report tooling. No second solver, generic option framework, new supervisor, case-specific recipe, blanket lambda sweep or full proof-model campaign is selected.
+
+Correctness boundaries:
+Retain every positive-mass exit and actual paid recovery. Do not grant a fractured item for free, confuse full goal mask with clean success, patch mandatory option interiors, reuse foreign layout IDs/values, normalize failure mass away, or infer an upper from an incomplete tail. A private subset is for upper discovery only; full-scope lowers/pruning/exactness keep their own authority. Evaluate every changed whole original-root graph independently. Old-policy occupancy attributes old spend, not the exact effect of a recurring replacement.
+
+Execution discipline:
+Use the existing runner and current tooling contracts. Development and original-product profiles stay separate. Latest development identity uses 600-second requested finish / 840-second native watchdog / 870-second host watchdog, 8-GiB aggregate, 4-GiB candidate allowance and 400M shared work with explicit host admission. Confirm effective values from the actual manifest/command. No overlapping timed hard jobs or builds, silent capacity increases, automatic repeated runs, unnecessary full suites or simulations on unchanged graphs. New graphs receive only the focused qualification actually required. Preserve CB03 historical non-reproduction, CB05 bounded/named-stop failure and CB09 no-policy failure in control reporting.
+
+Desired outcome:
+A native causal comparison first; then a material verified original-cost improvement with a semantic explanation. The plan suggests a 25% cost milestone on one hard primary, with no lost cheaper incumbent elsewhere, and reports one-family versus two-family success separately. Neither such improvement nor global exactness is assumed to be achievable by the selected bounded family. Complete negative results are useful; caps, unsupported kernels and invalid routing remain explicitly unknown economically.

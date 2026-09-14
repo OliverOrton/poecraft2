@@ -1,0 +1,50 @@
+{
+  "name": "ring",
+  "strategy": "docs/active/2026-09-14-cross-base-strategy-recovery/strategies/ring-four.strategy.json",
+  "strategy_sha256": "71c9752dbd803f7874e1d1084ab18361b158e8c175dc45497e013f442b56883b",
+  "case_path": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/cb07-cross-base-product8-long240.json",
+  "case_sha256": "82e604292360284e1a48aa590a909b3a8260a3e4ab91b2d8a4aa68529781cae0",
+  "wasm_sha256": "2e8c630984737430a2405fd61abbd7d0bb43700b98797458fa5fbfe1834c1421",
+  "defaults": "Explicit fixed-graph diagnostic limits; shipped browser defaults unchanged",
+  "limits": {
+    "max_states": 2000000,
+    "max_pairs": 10000000,
+    "max_transitions": 40000000,
+    "max_owned_bytes": 2147483648
+  },
+  "checks": {
+    "converged": true,
+    "complete_cost": true,
+    "goal_mass": true,
+    "zero_other_mass": true,
+    "same_cost": true,
+    "same_count": true
+  },
+  "totals": {
+    "expected_actions": 564673.7576801177,
+    "known_expected_cost": 220743.46354691783,
+    "total_expected_cost": 220743.46354691783,
+    "cost_complete": true
+  },
+  "terminals": {
+    "success": 1,
+    "failure": 0,
+    "stop": 0,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "unresolved": 0,
+    "by_node": [
+      {
+        "node_id": "goal",
+        "kind": "success",
+        "p": 1
+      },
+      {
+        "node_id": "offpolicy",
+        "kind": "failure",
+        "p": 0
+      }
+    ]
+  },
+  "wall_ms": 8711.3043
+}

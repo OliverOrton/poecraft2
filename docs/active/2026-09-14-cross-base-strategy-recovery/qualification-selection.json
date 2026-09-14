@@ -1,0 +1,17 @@
+{
+  "native_original_profile_cases": [
+    "cb02-cross-base-product8-long240",
+    "cb08-cross-base-product8-long240",
+    "cb12-cross-base-product8-long240",
+    "ho01-cross-base-product8-long240"
+  ],
+  "holdout_description": "HO01 Pinnacle Tower Shield is the native structural holdout from the existing already-exposed heldout corpus, not a newly unseen test.",
+  "preserved_original_failures": [
+    "CB03 historical cheaper non-reproduction",
+    "CB05 named-stop bounded-result failure",
+    "CB09 no-policy result"
+  ],
+  "new_graph_trials": 1000,
+  "browser_defaults": "unchanged",
+  "current_matrix": "8-GiB original development profile, final v4 versus compatible preserved original-price baseline receipts; 6-GiB v3 is diagnostic only, no matched timing claim."
+}

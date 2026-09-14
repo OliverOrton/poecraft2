@@ -1,0 +1,261 @@
+{
+  "purpose": "Fresh native execution qualification of the changed controller; sampling is not cost or properness authority.",
+  "case": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb04-cross-base-product8-long240.json",
+  "strategy_sha256": "9b31512ecf4f68ba7693a50f13d77b95de487b1b42c6aae9f9228d2dea583d4d",
+  "native_dll_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_engine.dll",
+  "native_dll_sha256": "906708e83a926413aa748c24ead7cd40ed131e6caa00fef4a1c5f9f0c81ce086",
+  "options": {
+    "target_runs": 1000,
+    "seed": 20260826,
+    "max_actions_per_run": 100000,
+    "max_graph_steps_per_run": 4000000,
+    "max_cost_per_run": 0.0,
+    "retained_trace_count": 0,
+    "max_trace_entries": 512,
+    "retained_success_count": 5,
+    "retained_failure_count": 5
+  },
+  "summary": {
+    "completed_runs": 1000,
+    "success_count": 797,
+    "failure_count": 203,
+    "stop_count": 0,
+    "total_actions": 51689578,
+    "action_limit_count": 203,
+    "cost_limit_count": 0,
+    "step_limit_count": 0,
+    "no_matching_edge_count": 0,
+    "action_not_applied_count": 0,
+    "missing_price_run_count": 0,
+    "costed_action_count": 51689578,
+    "missing_price_action_count": 0,
+    "known_total_cost": 10257525.970955295,
+    "cost_status": "complete",
+    "seed": 20260826,
+    "target_runs": 1000
+  },
+  "action_distribution": [
+    {
+      "node_id": "s12",
+      "action_type": 2,
+      "count": 31786407
+    },
+    {
+      "node_id": "s2",
+      "action_type": 1,
+      "count": 16165286
+    },
+    {
+      "node_id": "s1",
+      "action_type": 2,
+      "count": 2470190
+    },
+    {
+      "node_id": "s25",
+      "action_type": 6,
+      "count": 661960
+    },
+    {
+      "node_id": "s9",
+      "action_type": 3,
+      "count": 270895
+    },
+    {
+      "node_id": "s22",
+      "action_type": 8,
+      "count": 268061
+    },
+    {
+      "node_id": "s39",
+      "action_type": 7,
+      "count": 52132
+    },
+    {
+      "node_id": "s0",
+      "action_type": 0,
+      "count": 4491
+    },
+    {
+      "node_id": "s50",
+      "action_type": 24,
+      "count": 4034
+    },
+    {
+      "node_id": "product_fracture_restart",
+      "action_type": 1000,
+      "count": 3034
+    },
+    {
+      "node_id": "dirty_s0",
+      "action_type": 11,
+      "count": 772
+    },
+    {
+      "node_id": "dirty_s0_o1",
+      "action_type": 11,
+      "count": 772
+    },
+    {
+      "node_id": "dirty_s0_o2",
+      "action_type": 6,
+      "count": 772
+    },
+    {
+      "node_id": "dirty_s0_o3",
+      "action_type": 25,
+      "count": 772
+    }
+  ],
+  "failure_summaries": [
+    {
+      "failure_reason": 2,
+      "node_id": "s12",
+      "detail": "action limit reached",
+      "count": 132
+    },
+    {
+      "failure_reason": 2,
+      "node_id": "s2",
+      "detail": "action limit reached",
+      "count": 68
+    },
+    {
+      "failure_reason": 2,
+      "node_id": "s22",
+      "detail": "action limit reached",
+      "count": 2
+    },
+    {
+      "failure_reason": 2,
+      "node_id": "s25",
+      "detail": "action limit reached",
+      "count": 1
+    }
+  ],
+  "missing_prices": {},
+  "sampled_accounting": {
+    "evidence_source": "simulator_sample",
+    "sample_count": 1000,
+    "seed": 20260826,
+    "actions": [
+      {
+        "action_id": "alteration",
+        "count": 34256597,
+        "average_per_invocation": 34256.597
+      },
+      {
+        "action_id": "annul",
+        "count": 52132,
+        "average_per_invocation": 52.132
+      },
+      {
+        "action_id": "augment",
+        "count": 16165286,
+        "average_per_invocation": 16165.286
+      },
+      {
+        "action_id": "bench:IntMasterItemGenerationCannotRollAttackAffixes",
+        "count": 772,
+        "average_per_invocation": 0.772
+      },
+      {
+        "action_id": "bench:StrIntMasterItemGenerationCanHaveMultipleCraftedMods",
+        "count": 772,
+        "average_per_invocation": 0.772
+      },
+      {
+        "action_id": "exalt",
+        "count": 662732,
+        "average_per_invocation": 662.732
+      },
+      {
+        "action_id": "fracture",
+        "count": 4034,
+        "average_per_invocation": 4.034
+      },
+      {
+        "action_id": "regal",
+        "count": 270895,
+        "average_per_invocation": 270.895
+      },
+      {
+        "action_id": "remove_crafted_modifiers",
+        "count": 772,
+        "average_per_invocation": 0.772
+      },
+      {
+        "action_id": "restart",
+        "count": 3034,
+        "average_per_invocation": 3.034
+      },
+      {
+        "action_id": "scour",
+        "count": 268061,
+        "average_per_invocation": 268.061
+      },
+      {
+        "action_id": "transmute",
+        "count": 4491,
+        "average_per_invocation": 4.491
+      }
+    ],
+    "materials": [
+      {
+        "price_key": "alteration",
+        "count": 34256597,
+        "average_per_invocation": 34256.597
+      },
+      {
+        "price_key": "annul",
+        "count": 52132,
+        "average_per_invocation": 52.132
+      },
+      {
+        "price_key": "augment",
+        "count": 16165286,
+        "average_per_invocation": 16165.286
+      },
+      {
+        "price_key": "base",
+        "count": 3034,
+        "average_per_invocation": 3.034
+      },
+      {
+        "price_key": "bench:IntMasterItemGenerationCannotRollAttackAffixes",
+        "count": 772,
+        "average_per_invocation": 0.772
+      },
+      {
+        "price_key": "bench:StrIntMasterItemGenerationCanHaveMultipleCraftedMods",
+        "count": 772,
+        "average_per_invocation": 0.772
+      },
+      {
+        "price_key": "exalt",
+        "count": 662732,
+        "average_per_invocation": 662.732
+      },
+      {
+        "price_key": "fracture",
+        "count": 4034,
+        "average_per_invocation": 4.034
+      },
+      {
+        "price_key": "regal",
+        "count": 270895,
+        "average_per_invocation": 270.895
+      },
+      {
+        "price_key": "scour",
+        "count": 268833,
+        "average_per_invocation": 268.833
+      },
+      {
+        "price_key": "transmute",
+        "count": 4491,
+        "average_per_invocation": 4.491
+      }
+    ]
+  },
+  "wall_ms": 37530.424700002186
+}

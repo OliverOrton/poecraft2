@@ -1,0 +1,529 @@
+{
+  "name": "bow-A-full",
+  "reference": "bow",
+  "reference_strategy_sha256": "8640a80a6183f372b7744f14a1f88a66d1ed3a8237d336115b5b3964153981fb",
+  "diagnostic_graph": "out\\cross-base-strategy-recovery\\bow-A-full.strategy.json",
+  "diagnostic_graph_sha256": "7c006d8312983b0f446c24e5ecd9f3a4bc5fe0b882a00c1f5fa9d084282acc09",
+  "entry": {
+    "base_key": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+    "item_level": 86,
+    "rarity": "magic",
+    "item_flags": 0,
+    "generic_influence_bits": 0,
+    "searing_exarch_tier": 0,
+    "eater_of_worlds_tier": 0,
+    "prefixes": [
+      {
+        "mod_key": "LocalAddedColdDamageTwoHand10",
+        "fractured": true
+      }
+    ],
+    "suffixes": []
+  },
+  "boundaries": {},
+  "limits": {
+    "epsilon": 1e-12,
+    "max_sweeps": 100000,
+    "max_states": 2000000,
+    "max_pairs": 10000000,
+    "max_transitions": 40000000,
+    "max_owned_bytes": 4294967296,
+    "max_output_json_bytes": 67108864,
+    "top_classes_per_node": 32
+  },
+  "cost": 221349.02621093366,
+  "count": 1402084.0188909764,
+  "cost_complete": true,
+  "converged": true,
+  "terminals": {
+    "success": 1,
+    "failure": 0,
+    "stop": 0,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "unresolved": 0,
+    "by_node": [
+      {
+        "node_id": "goal",
+        "kind": "success",
+        "p": 1
+      },
+      {
+        "node_id": "offpolicy",
+        "kind": "failure",
+        "p": 0
+      }
+    ]
+  },
+  "boundary_nodes": [
+    {
+      "id": "goal",
+      "expected_visits": 1,
+      "classes": [
+        {
+          "share": 0.9999999999447141,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 16,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            2
+          ]
+        }
+      ],
+      "classes_truncated_share": 0
+    }
+  ],
+  "actions": [
+    {
+      "id": "alteration",
+      "display_name": "alteration",
+      "expected_visits": 905940.0133626952,
+      "expected_applied": 905940.0133626952,
+      "expected_spend_known": 138608.82204449238,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.6262002793380517,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 16,
+      "reachable_regions": 1,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "alteration",
+          "expected_quantity": 905940.0133626952,
+          "price_status": "priced",
+          "unit_price": 0.153,
+          "cost_contribution": 138608.82204449238
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 1,
+          "rarity": 1,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 4,
+          "fractured_count": 1,
+          "reachable_states": 16,
+          "expected_visits": 905940.0133626952,
+          "expected_applied": 905940.0133626952
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s12",
+          "expected_visits": 905940.0133626952,
+          "expected_applied": 905940.0133626952
+        }
+      ]
+    },
+    {
+      "id": "annul",
+      "display_name": "annul",
+      "expected_visits": 1546.58601859438,
+      "expected_applied": 1546.58601859438,
+      "expected_spend_known": 14986.41852017954,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.06770492184545819,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 2760,
+      "reachable_regions": 3,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "annul",
+          "expected_quantity": 1546.58601859438,
+          "price_status": "priced",
+          "unit_price": 9.69,
+          "cost_contribution": 14986.41852017954
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 4,
+          "fractured_count": 1,
+          "reachable_states": 144,
+          "expected_visits": 589.1388227914942,
+          "expected_applied": 589.1388227914942
+        },
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 4,
+          "fractured_count": 1,
+          "reachable_states": 2496,
+          "expected_visits": 953.1121034653492,
+          "expected_applied": 953.1121034653492
+        },
+        {
+          "goal_progress": 4,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 4,
+          "fractured_count": 1,
+          "reachable_states": 120,
+          "expected_visits": 4.3350923375244435,
+          "expected_applied": 4.3350923375244435
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s39",
+          "expected_visits": 1546.58601859438,
+          "expected_applied": 1546.58601859438
+        }
+      ]
+    },
+    {
+      "id": "augment",
+      "display_name": "augment",
+      "expected_visits": 460570.1745786856,
+      "expected_applied": 460570.1745786856,
+      "expected_spend_known": 30397.631522193253,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.13732895979956086,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 1,
+      "reachable_regions": 1,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "augment",
+          "expected_quantity": 460570.1745786856,
+          "price_status": "priced",
+          "unit_price": 0.066,
+          "cost_contribution": 30397.631522193253
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 1,
+          "rarity": 1,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 4,
+          "fractured_count": 1,
+          "reachable_states": 1,
+          "expected_visits": 460570.1745786856,
+          "expected_applied": 460570.1745786856
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s2",
+          "expected_visits": 460570.1745786856,
+          "expected_applied": 460570.1745786856
+        }
+      ]
+    },
+    {
+      "id": "exalt",
+      "display_name": "exalt",
+      "expected_visits": 18827.90913633921,
+      "expected_applied": 18827.90913633921,
+      "expected_spend_known": 33325.3991713204,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.1505558878743975,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 2846,
+      "reachable_regions": 2,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "exalt",
+          "expected_quantity": 18827.90913633921,
+          "price_status": "priced",
+          "unit_price": 1.77,
+          "cost_contribution": 33325.3991713204
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 4,
+          "fractured_count": 1,
+          "reachable_states": 2588,
+          "expected_visits": 18155.62138501234,
+          "expected_applied": 18155.62138501234
+        },
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 4,
+          "fractured_count": 1,
+          "reachable_states": 258,
+          "expected_visits": 672.2877513269384,
+          "expected_applied": 672.2877513269384
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s25",
+          "expected_visits": 18827.90913633921,
+          "expected_applied": 18827.90913633921
+        }
+      ]
+    },
+    {
+      "id": "fracture",
+      "display_name": "fracture",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting",
+        "fracture"
+      ],
+      "materials": [
+        {
+          "price_key": "fracture",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s50",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "regal",
+      "display_name": "regal",
+      "expected_visits": 7600.167897338046,
+      "expected_applied": 7600.167897338046,
+      "expected_spend_known": 1187.9062423539365,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.005366665770744914,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 1,
+      "reachable_regions": 1,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "regal",
+          "expected_quantity": 7600.167897338046,
+          "price_status": "priced",
+          "unit_price": 0.1563,
+          "cost_contribution": 1187.9062423539365
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 2,
+          "rarity": 1,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 4,
+          "fractured_count": 1,
+          "reachable_states": 1,
+          "expected_visits": 7600.167897338046,
+          "expected_applied": 7600.167897338046
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s9",
+          "expected_visits": 7600.167897338046,
+          "expected_applied": 7600.167897338046
+        }
+      ]
+    },
+    {
+      "id": "restart",
+      "display_name": "restart (fresh base)",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "restart"
+      ],
+      "materials": [
+        {
+          "price_key": "base",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "product_fracture_restart",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "scour",
+      "display_name": "scour",
+      "expected_visits": 7599.167897338031,
+      "expected_applied": 7599.167897338031,
+      "expected_spend_known": 2842.8487103941575,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.01284328537178689,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 9010,
+      "reachable_regions": 2,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "scour",
+          "expected_quantity": 7599.167897338031,
+          "price_status": "priced",
+          "unit_price": 0.3741,
+          "cost_contribution": 2842.8487103941575
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 1,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 4,
+          "fractured_count": 1,
+          "reachable_states": 144,
+          "expected_visits": 292.3772990591296,
+          "expected_applied": 292.3772990591296
+        },
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 4,
+          "fractured_count": 1,
+          "reachable_states": 8866,
+          "expected_visits": 7306.7905982789125,
+          "expected_applied": 7306.7905982789125
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s22",
+          "expected_visits": 7599.167897338031,
+          "expected_applied": 7599.167897338031
+        }
+      ]
+    },
+    {
+      "id": "transmute",
+      "display_name": "transmute",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "transmute",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s0",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    }
+  ],
+  "memory": {
+    "owned_bytes_estimate": 12677066,
+    "peak_owned_bytes_estimate": 26838216,
+    "retained_output_owned_bytes_estimate": 0,
+    "max_owned_bytes": 4294967296,
+    "max_output_json_bytes": 67108864
+  },
+  "wall_ms": 1919.1902999882586,
+  "authority": "STOP diagnostic only, never a native success policy, upper, lower or boundary certificate. Original graph decisions, native probabilities and prices are unchanged before stopping."
+}

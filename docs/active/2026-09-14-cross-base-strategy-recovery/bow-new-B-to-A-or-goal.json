@@ -1,0 +1,729 @@
+{
+  "name": "bow-new-B-to-A-or-goal",
+  "reference": "bow",
+  "native_dll_sha256": "906708e83a926413aa748c24ead7cd40ed131e6caa00fef4a1c5f9f0c81ce086",
+  "reference_strategy_sha256": "8640a80a6183f372b7744f14a1f88a66d1ed3a8237d336115b5b3964153981fb",
+  "diagnostic_graph": "out\\cross-base-strategy-recovery\\bow-new-B-to-A-or-goal.strategy.json",
+  "diagnostic_graph_sha256": "e984036b13f8146e64c01ff0e07d528707fa5eabea8064b1d06d600c893c987d",
+  "entry": {
+    "base_key": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+    "item_level": 86,
+    "rarity": "magic",
+    "item_flags": 0,
+    "generic_influence_bits": 0,
+    "searing_exarch_tier": 0,
+    "eater_of_worlds_tier": 0,
+    "prefixes": [
+      {
+        "mod_key": "LocalAddedColdDamageTwoHand10",
+        "fractured": true
+      }
+    ],
+    "suffixes": [
+      {
+        "mod_key": "ManaGainedFromEnemyDeath6"
+      }
+    ]
+  },
+  "boundaries": {
+    "return_A": {
+      "base_key": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+      "item_level": 86,
+      "rarity": "magic",
+      "item_flags": 0,
+      "generic_influence_bits": 0,
+      "searing_exarch_tier": 0,
+      "eater_of_worlds_tier": 0,
+      "prefixes": [
+        {
+          "mod_key": "LocalAddedColdDamageTwoHand10",
+          "fractured": true
+        }
+      ],
+      "suffixes": []
+    }
+  },
+  "limits": {
+    "epsilon": 1e-12,
+    "max_sweeps": 100000,
+    "max_states": 2000000,
+    "max_pairs": 10000000,
+    "max_transitions": 40000000,
+    "max_owned_bytes": 4294967296,
+    "max_output_json_bytes": 67108864,
+    "top_classes_per_node": 32
+  },
+  "cost": 8.564685735802474,
+  "count": 4.670185463119476,
+  "cost_complete": true,
+  "converged": true,
+  "terminals": {
+    "success": 0.0028604082435662983,
+    "failure": 0,
+    "stop": 0.9971395917564337,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "unresolved": 0,
+    "by_node": [
+      {
+        "node_id": "goal",
+        "kind": "success",
+        "p": 8.329711453400648e-05
+      },
+      {
+        "node_id": "offpolicy",
+        "kind": "failure",
+        "p": 0
+      },
+      {
+        "node_id": "dirty_goal",
+        "kind": "success",
+        "p": 0.002777111129032292
+      },
+      {
+        "node_id": "dirty_offpolicy",
+        "kind": "failure",
+        "p": 0
+      },
+      {
+        "node_id": "return_A",
+        "kind": "stop",
+        "p": 0.9971395917564337
+      }
+    ]
+  },
+  "boundary_nodes": [
+    {
+      "id": "goal",
+      "expected_visits": 8.329711453400648e-05,
+      "classes": [
+        {
+          "share": 0.9999999999999997,
+          "rarity": 2,
+          "prefixes": 3,
+          "suffixes": 1,
+          "flags": 16,
+          "blocked": 0,
+          "slots": [
+            2,
+            2,
+            2,
+            2
+          ]
+        }
+      ],
+      "classes_truncated_share": 0
+    },
+    {
+      "id": "return_A",
+      "expected_visits": 0.9971395917564337,
+      "classes": [
+        {
+          "share": 1.0000000000000018,
+          "rarity": 1,
+          "prefixes": 1,
+          "suffixes": 0,
+          "flags": 16,
+          "blocked": 0,
+          "slots": [
+            2,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "classes_truncated_share": 0
+    }
+  ],
+  "actions": [
+    {
+      "id": "alteration",
+      "display_name": "alteration",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "alteration",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s1",
+          "expected_visits": 0,
+          "expected_applied": 0
+        },
+        {
+          "node_id": "s12",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "annul",
+      "display_name": "annul",
+      "expected_visits": 0.19590018774886045,
+      "expected_applied": 0.19590018774886045,
+      "expected_spend_known": 1.8982728192864577,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.2216395181146244,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 2760,
+      "reachable_regions": 3,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "annul",
+          "expected_quantity": 0.19590018774886045,
+          "price_status": "priced",
+          "unit_price": 9.69,
+          "cost_contribution": 1.8982728192864577
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 1,
+          "fractured_count": 1,
+          "reachable_states": 144,
+          "expected_visits": 0.0754137486900672,
+          "expected_applied": 0.0754137486900672
+        },
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 1,
+          "fractured_count": 1,
+          "reachable_states": 2496,
+          "expected_visits": 0.12001627965576926,
+          "expected_applied": 0.12001627965576926
+        },
+        {
+          "goal_progress": 4,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 1,
+          "fractured_count": 1,
+          "reachable_states": 120,
+          "expected_visits": 0.00047015940302385913,
+          "expected_applied": 0.00047015940302385913
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s39",
+          "expected_visits": 0.19590018774886045,
+          "expected_applied": 0.19590018774886045
+        }
+      ]
+    },
+    {
+      "id": "augment",
+      "display_name": "augment",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "augment",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s2",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "bench:IntMasterItemGenerationCannotRollAttackAffixes",
+      "display_name": "bench:IntMasterItemGenerationCannotRollAttackAffixes",
+      "expected_visits": 0.002777111129032292,
+      "expected_applied": 0.002777111129032292,
+      "expected_spend_known": 0.5887475593548459,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.0687412915682052,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 1,
+      "reachable_regions": 1,
+      "classifications": [
+        "temporary_blocker",
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "bench:IntMasterItemGenerationCannotRollAttackAffixes",
+          "expected_quantity": 0.002777111129032292,
+          "price_status": "priced",
+          "unit_price": 212,
+          "cost_contribution": 0.5887475593548459
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 1,
+          "fractured_goal_mask": 1,
+          "fractured_count": 1,
+          "reachable_states": 1,
+          "expected_visits": 0.002777111129032292,
+          "expected_applied": 0.002777111129032292
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "dirty_s0_o1",
+          "expected_visits": 0.002777111129032292,
+          "expected_applied": 0.002777111129032292
+        }
+      ]
+    },
+    {
+      "id": "bench:StrIntMasterItemGenerationCanHaveMultipleCraftedMods",
+      "display_name": "bench:StrIntMasterItemGenerationCanHaveMultipleCraftedMods",
+      "expected_visits": 0.002777111129032292,
+      "expected_applied": 0.002777111129032292,
+      "expected_spend_known": 1.1774951187096918,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.1374825831364104,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 1,
+      "reachable_regions": 1,
+      "classifications": [
+        "ordinary_crafting",
+        "multimod_setup"
+      ],
+      "materials": [
+        {
+          "price_key": "bench:StrIntMasterItemGenerationCanHaveMultipleCraftedMods",
+          "expected_quantity": 0.002777111129032292,
+          "price_status": "priced",
+          "unit_price": 424,
+          "cost_contribution": 1.1774951187096918
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 1,
+          "fractured_count": 1,
+          "reachable_states": 1,
+          "expected_visits": 0.002777111129032292,
+          "expected_applied": 0.002777111129032292
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "dirty_s0",
+          "expected_visits": 0.002777111129032292,
+          "expected_applied": 0.002777111129032292
+        }
+      ]
+    },
+    {
+      "id": "exalt",
+      "display_name": "exalt",
+      "expected_visits": 2.4688143502271327,
+      "expected_applied": 2.4688143502271327,
+      "expected_spend_known": 4.369801399902025,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.5102115284435003,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 2846,
+      "reachable_regions": 3,
+      "classifications": [
+        "ordinary_crafting",
+        "retry_action"
+      ],
+      "materials": [
+        {
+          "price_key": "exalt",
+          "expected_quantity": 2.4688143502271327,
+          "price_status": "priced",
+          "unit_price": 1.77,
+          "cost_contribution": 4.369801399902025
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 1,
+          "fractured_count": 1,
+          "reachable_states": 2588,
+          "expected_visits": 2.385383191491632,
+          "expected_applied": 2.385383191491632
+        },
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 1,
+          "fractured_count": 1,
+          "reachable_states": 257,
+          "expected_visits": 0.08065404760646948,
+          "expected_applied": 0.08065404760646948
+        },
+        {
+          "goal_progress": 3,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 2,
+          "fractured_goal_mask": 1,
+          "fractured_count": 1,
+          "reachable_states": 1,
+          "expected_visits": 0.002777111129032292,
+          "expected_applied": 0.002777111129032292
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s25",
+          "expected_visits": 2.4660372390981005,
+          "expected_applied": 2.4660372390981005
+        },
+        {
+          "node_id": "dirty_s0_o2",
+          "expected_visits": 0.002777111129032292,
+          "expected_applied": 0.002777111129032292
+        }
+      ]
+    },
+    {
+      "id": "fracture",
+      "display_name": "fracture",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting",
+        "fracture"
+      ],
+      "materials": [
+        {
+          "price_key": "fracture",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s50",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "regal",
+      "display_name": "regal",
+      "expected_visits": 1,
+      "expected_applied": 1,
+      "expected_spend_known": 0.1563,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.01824935611433212,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 1,
+      "reachable_regions": 1,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "regal",
+          "expected_quantity": 1,
+          "price_status": "priced",
+          "unit_price": 0.1563,
+          "cost_contribution": 0.1563
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 2,
+          "rarity": 1,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 1,
+          "fractured_count": 1,
+          "reachable_states": 1,
+          "expected_visits": 1,
+          "expected_applied": 1
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s9",
+          "expected_visits": 1,
+          "expected_applied": 1
+        }
+      ]
+    },
+    {
+      "id": "remove_crafted_modifiers",
+      "display_name": "remove_crafted_modifiers",
+      "expected_visits": 0.002777111129032292,
+      "expected_applied": 0.002777111129032292,
+      "expected_spend_known": 0.0010389172733709805,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.00012130243950785643,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 1,
+      "reachable_regions": 1,
+      "classifications": [
+        "cleanup_or_replacement",
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "scour",
+          "expected_quantity": 0.002777111129032292,
+          "price_status": "priced",
+          "unit_price": 0.3741,
+          "cost_contribution": 0.0010389172733709805
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 4,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 2,
+          "fractured_goal_mask": 1,
+          "fractured_count": 1,
+          "reachable_states": 1,
+          "expected_visits": 0.002777111129032292,
+          "expected_applied": 0.002777111129032292
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "dirty_s0_o3",
+          "expected_visits": 0.002777111129032292,
+          "expected_applied": 0.002777111129032292
+        }
+      ]
+    },
+    {
+      "id": "restart",
+      "display_name": "restart (fresh base)",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "restart"
+      ],
+      "materials": [
+        {
+          "price_key": "base",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "product_fracture_restart",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    },
+    {
+      "id": "scour",
+      "display_name": "scour",
+      "expected_visits": 0.9971395917564355,
+      "expected_applied": 0.9971395917564355,
+      "expected_spend_known": 0.37302992127608253,
+      "expected_spend_complete": true,
+      "known_cost_share": 0.043554420183419755,
+      "probability_of_any_use": {
+        "status": "not_computable_from_occupancy",
+        "value": null
+      },
+      "reachable_states": 9010,
+      "reachable_regions": 2,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "scour",
+          "expected_quantity": 0.9971395917564355,
+          "price_status": "priced",
+          "unit_price": 0.3741,
+          "cost_contribution": 0.37302992127608253
+        }
+      ],
+      "regions": [
+        {
+          "goal_progress": 1,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 1,
+          "fractured_count": 1,
+          "reachable_states": 144,
+          "expected_visits": 0.037489952895143536,
+          "expected_applied": 0.037489952895143536
+        },
+        {
+          "goal_progress": 2,
+          "rarity": 2,
+          "blocker_count": 0,
+          "crafted_count": 0,
+          "fractured_goal_mask": 1,
+          "fractured_count": 1,
+          "reachable_states": 8866,
+          "expected_visits": 0.9596496388612908,
+          "expected_applied": 0.9596496388612908
+        }
+      ],
+      "raw_nodes": [
+        {
+          "node_id": "s22",
+          "expected_visits": 0.9971395917564355,
+          "expected_applied": 0.9971395917564355
+        }
+      ]
+    },
+    {
+      "id": "transmute",
+      "display_name": "transmute",
+      "expected_visits": 0,
+      "expected_applied": 0,
+      "expected_spend_known": 0,
+      "expected_spend_complete": false,
+      "known_cost_share": 0,
+      "probability_of_any_use": {
+        "status": "exact_zero",
+        "value": 0
+      },
+      "reachable_states": 0,
+      "reachable_regions": 0,
+      "classifications": [
+        "ordinary_crafting"
+      ],
+      "materials": [
+        {
+          "price_key": "transmute",
+          "expected_quantity": 0,
+          "price_status": "missing",
+          "unit_price": null,
+          "cost_contribution": null
+        }
+      ],
+      "regions": [],
+      "raw_nodes": [
+        {
+          "node_id": "s0",
+          "expected_visits": 0,
+          "expected_applied": 0
+        }
+      ]
+    }
+  ],
+  "memory": {
+    "owned_bytes_estimate": 12605154,
+    "peak_owned_bytes_estimate": 19478339,
+    "retained_output_owned_bytes_estimate": 0,
+    "max_owned_bytes": 4294967296,
+    "max_output_json_bytes": 67108864
+  },
+  "wall_ms": 1940.1195999816991,
+  "authority": "STOP diagnostic only, never a native success policy, upper, lower or boundary certificate. Original graph decisions, native probabilities and prices are unchanged before stopping.",
+  "source_policy": {
+    "path": "out/cross-base-strategy-recovery/final-v4-bow/strategies/cb04-cross-base-product8-long240.strategy.json",
+    "sha256": "9b31512ecf4f68ba7693a50f13d77b95de487b1b42c6aae9f9228d2dea583d4d",
+    "kind": "final v4 generated policy; reference_strategy_sha256 above identifies the old comparison baseline only"
+  }
+}

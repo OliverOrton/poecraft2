@@ -1,0 +1,100 @@
+{
+  "retained_policies": "retained-policies.json",
+  "four_native_graph_cost_count_checks": "delivered-native-checks.json",
+  "all_four_native_graph_checks_passed": true,
+  "new_graph_execution_trials": [
+    {
+      "name": "bow",
+      "completed": 1000,
+      "success": 797,
+      "action_cap_censored": 203,
+      "illegal_or_unrouted_or_unpriced": 0,
+      "receipt": "sampling-bow.json"
+    },
+    {
+      "name": "ring",
+      "completed": 1000,
+      "success": 143,
+      "action_cap_censored": 857,
+      "illegal_or_unrouted_or_unpriced": 0,
+      "receipt": "sampling-ring.json"
+    }
+  ],
+  "wasm_graphs": [
+    {
+      "receipt": "wasm-bow.json",
+      "checks": {
+        "converged": true,
+        "complete_cost": true,
+        "goal_mass": true,
+        "zero_other_mass": true,
+        "same_cost": true,
+        "same_count": true
+      },
+      "totals": {
+        "expected_actions": 66914.72854184538,
+        "known_expected_cost": 12770.827062219498,
+        "total_expected_cost": 12770.827062219498,
+        "cost_complete": true
+      },
+      "limits": null,
+      "defaults": "Unchanged web worker evaluator defaults"
+    },
+    {
+      "receipt": "wasm-ring-diagnostic-limits.json",
+      "checks": {
+        "converged": true,
+        "complete_cost": true,
+        "goal_mass": true,
+        "zero_other_mass": true,
+        "same_cost": true,
+        "same_count": true
+      },
+      "totals": {
+        "expected_actions": 564673.7576801177,
+        "known_expected_cost": 220743.46354691783,
+        "total_expected_cost": 220743.46354691783,
+        "cost_complete": true
+      },
+      "limits": {
+        "max_states": 2000000,
+        "max_pairs": 10000000,
+        "max_transitions": 40000000,
+        "max_owned_bytes": 2147483648
+      },
+      "defaults": "Explicit fixed-graph diagnostic limits; shipped browser defaults unchanged"
+    }
+  ],
+  "wasm_default_ring_refusal": {
+    "log": "out/cross-base-strategy-recovery/wasm-ring.log",
+    "reason": "max_discovered_states (100000)",
+    "diagnostic": "Same graph checked with 2M states, 10M pairs, 40M transitions, 2-GiB evaluator; browser defaults unchanged."
+  },
+  "wasm_controls": {
+    "retention_finish_abandon": "passed",
+    "exact_regalia_cost": 65.60036144971359,
+    "exact_regalia_status": "exact",
+    "process_receipts": "wasm-remaining-processes.json"
+  },
+  "strict_identity_pairs": {
+    "development": 2,
+    "selected_original_controls": 4,
+    "excluded": 0
+  },
+  "focused_native_checks_final_build": 21528,
+  "python_buffer_regression": "1 passed, 15 deselected",
+  "mathematical_traceability": {
+    "errors": 0,
+    "existing_open_claim_warnings": 18
+  },
+  "research_metadata_errors": 0,
+  "qualification_scope": "One primary product-discovered milestone plus a smaller Ring diagnostic; no global exactness or all-corpus pass. Four original controls preserve prior costs/statuses including Amulet cap; CB03/CB05/CB09 historical limitations remain open.",
+  "unrun": "Full acceptance suite, full web suite, UI visual review and Simulator on unchanged policies were not needed for this change.",
+  "git": "Qualified before publication; Oliver subsequently authorized committing and pushing main for Pro review. Protected root 0 remains excluded.",
+  "final_consistency": {
+    "tracked_diff_check": "passed",
+    "active_record_links": "passed",
+    "retained_graph_hashes": "matched",
+    "historical_series_models_and_observations": "unchanged; appended one model and two observations"
+  }
+}

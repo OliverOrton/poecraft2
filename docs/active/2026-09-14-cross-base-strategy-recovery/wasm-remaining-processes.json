@@ -1,0 +1,100 @@
+[
+  {
+    "name": "wasm-ring-diagnostic-limits",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\check_wasm_graph.mts",
+      "ring",
+      "--diagnostic-limits"
+    ],
+    "watchdog_seconds": 870,
+    "admission": {
+      "utc": "2026-09-14T16:33:43.413069+00:00",
+      "available_physical": 39176060928,
+      "available_commit": 28177256448,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 46312,
+      "process_identity_token": "46312:134338772234141535",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 8970.49610002432
+    }
+  },
+  {
+    "name": "wasm-retention",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/retention-wasm.test.ts"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-14T16:33:52.384783+00:00",
+      "available_physical": 39143505920,
+      "available_commit": 28139900928,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 59744,
+      "process_identity_token": "59744:134338772323857772",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 27624.52840001788
+    }
+  },
+  {
+    "name": "wasm-exact-regalia",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/solver-benchmark.ts",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "--case",
+      "cb12-cross-base-product8-long240",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\wasm-exact-regalia.json"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-14T16:34:20.010303+00:00",
+      "available_physical": 39290204160,
+      "available_commit": 28306534400,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 34724,
+      "process_identity_token": "34724:134338772600114648",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 52221.212700009346
+    }
+  }
+]

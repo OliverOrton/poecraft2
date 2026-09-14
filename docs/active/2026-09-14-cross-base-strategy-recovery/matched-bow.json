@@ -1,0 +1,236 @@
+{
+  "baseline": "reviewed-main",
+  "candidate": "capacity-and-entry",
+  "shared_case_ids": 1,
+  "paired_cases": 1,
+  "missing_from_baseline": [],
+  "missing_from_candidate": [],
+  "excluded": [],
+  "delta_distributions": {
+    "wall_ms": {
+      "count": 1,
+      "min": 11264.411100000027,
+      "median": 11264.411100000027,
+      "p90": 11264.411100000027,
+      "p99": 11264.411100000027,
+      "max": 11264.411100000027
+    },
+    "solve_ms": {
+      "count": 1,
+      "min": 11186.715800000005,
+      "median": 11186.715800000005,
+      "p90": 11186.715800000005,
+      "p99": 11186.715800000005,
+      "max": 11186.715800000005
+    },
+    "solve_step_median_ms": {
+      "count": 1,
+      "min": 0.022400000000000003,
+      "median": 0.022400000000000003,
+      "p90": 0.022400000000000003,
+      "p99": 0.022400000000000003,
+      "max": 0.022400000000000003
+    },
+    "solve_step_p95_ms": {
+      "count": 1,
+      "min": 1.9557000000000002,
+      "median": 1.9557000000000002,
+      "p90": 1.9557000000000002,
+      "p99": 1.9557000000000002,
+      "max": 1.9557000000000002
+    },
+    "solve_step_max_ms": {
+      "count": 1,
+      "min": -9.496500000000196,
+      "median": -9.496500000000196,
+      "p90": -9.496500000000196,
+      "p99": -9.496500000000196,
+      "max": -9.496500000000196
+    },
+    "peak_memory_bytes": {
+      "count": 1,
+      "min": -351445314.0,
+      "median": -351445314.0,
+      "p90": -351445314.0,
+      "p99": -351445314.0,
+      "max": -351445314.0
+    },
+    "time_to_incumbent_ms": {
+      "count": 1,
+      "min": 66.19650000000001,
+      "median": 66.19650000000001,
+      "p90": 66.19650000000001,
+      "p99": 66.19650000000001,
+      "max": 66.19650000000001
+    },
+    "time_to_target_ms": {
+      "count": 0,
+      "min": null,
+      "median": null,
+      "p90": null,
+      "p99": null,
+      "max": null
+    },
+    "final_lower_bound": {
+      "count": 1,
+      "min": 0.0,
+      "median": 0.0,
+      "p90": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    },
+    "final_upper_bound": {
+      "count": 1,
+      "min": -210578.1729770949,
+      "median": -210578.1729770949,
+      "p90": -210578.1729770949,
+      "p99": -210578.1729770949,
+      "max": -210578.1729770949
+    },
+    "final_absolute_gap": {
+      "count": 1,
+      "min": -210578.1729770949,
+      "median": -210578.1729770949,
+      "p90": -210578.1729770949,
+      "p99": -210578.1729770949,
+      "max": -210578.1729770949
+    },
+    "final_relative_gap": {
+      "count": 1,
+      "min": -617.468718686333,
+      "median": -617.468718686333,
+      "p90": -617.468718686333,
+      "p99": -617.468718686333,
+      "max": -617.468718686333
+    },
+    "states": {
+      "count": 1,
+      "min": 0.0,
+      "median": 0.0,
+      "p90": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    },
+    "expanded_states": {
+      "count": 1,
+      "min": 0.0,
+      "median": 0.0,
+      "p90": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    },
+    "rows": {
+      "count": 1,
+      "min": 16.0,
+      "median": 16.0,
+      "p90": 16.0,
+      "p99": 16.0,
+      "max": 16.0
+    },
+    "transitions": {
+      "count": 1,
+      "min": 36.0,
+      "median": 36.0,
+      "p90": 36.0,
+      "p99": 36.0,
+      "max": 36.0
+    },
+    "reforge_work": {
+      "count": 1,
+      "min": -258118.0,
+      "median": -258118.0,
+      "p90": -258118.0,
+      "p99": -258118.0,
+      "max": -258118.0
+    },
+    "compiled_nodes": {
+      "count": 1,
+      "min": 9.0,
+      "median": 9.0,
+      "p90": 9.0,
+      "p99": 9.0,
+      "max": 9.0
+    },
+    "compiled_edges": {
+      "count": 1,
+      "min": 11.0,
+      "median": 11.0,
+      "p90": 11.0,
+      "p99": 11.0,
+      "max": 11.0
+    },
+    "strategy_json_bytes": {
+      "count": 1,
+      "min": 113462.0,
+      "median": 113462.0,
+      "p90": 113462.0,
+      "p99": 113462.0,
+      "max": 113462.0
+    }
+  },
+  "status_transitions": {
+    "bounded_feasible->bounded_feasible": 1
+  },
+  "regressions": [],
+  "pairs": [
+    {
+      "id": "cb04-cross-base-product8-long240",
+      "dimensions": {
+        "base": "Spine Bow",
+        "class": "Bow",
+        "base_class": "Bow / Spine Bow",
+        "natural_t1_count": "4",
+        "side_mix": "unknown",
+        "pool_density": "unknown",
+        "goal_probability": "unknown",
+        "incumbent": "other",
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "evaluation_role": "unassigned",
+        "observation_status": "completed"
+      },
+      "treatments": {
+        "baseline_executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\execution-aware-proposals\\ET-v7.exe",
+          "sha256": "abea7694ffbb6e7b3ae76d30f6ab0c80e4e6e8e51d117224dc7c1f22c7ee4004"
+        },
+        "candidate_executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\CBR-v4.exe",
+          "sha256": "e4afb35a588f1ccd37bebbf1fcfee6f9831b010c9babde35479788ec9089d1f3"
+        }
+      },
+      "baseline_status": {
+        "actual": "bounded_feasible",
+        "policy": "bounded_feasible",
+        "termination": "requested_bounded_finish"
+      },
+      "candidate_status": {
+        "actual": "bounded_feasible",
+        "policy": "bounded_feasible",
+        "termination": "requested_bounded_finish"
+      },
+      "deltas": {
+        "wall_ms": 11264.411100000027,
+        "solve_ms": 11186.715800000005,
+        "solve_step_median_ms": 0.022400000000000003,
+        "solve_step_p95_ms": 1.9557000000000002,
+        "solve_step_max_ms": -9.496500000000196,
+        "peak_memory_bytes": -351445314.0,
+        "time_to_incumbent_ms": 66.19650000000001,
+        "time_to_target_ms": null,
+        "final_lower_bound": 0.0,
+        "final_upper_bound": -210578.1729770949,
+        "final_absolute_gap": -210578.1729770949,
+        "final_relative_gap": -617.468718686333,
+        "states": 0.0,
+        "expanded_states": 0.0,
+        "rows": 16.0,
+        "transitions": 36.0,
+        "reforge_work": -258118.0,
+        "compiled_nodes": 9.0,
+        "compiled_edges": 11.0,
+        "strategy_json_bytes": 113462.0
+      }
+    }
+  ]
+}

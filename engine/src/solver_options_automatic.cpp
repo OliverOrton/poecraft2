@@ -1814,7 +1814,9 @@ CalcContext::build_state_local_automatic_candidates(
         const auto temporary_group_for = [&](const PlannerOperator& planner)
             -> const TemporaryBenchCandidateGroup* {
             if (planner.option_kind !=
-                FixedOptionKind::TemporaryBenchRepeat) {
+                    FixedOptionKind::TemporaryBenchRepeat ||
+                (planner.primitive_program.front() != planner.setup_action &&
+                 planner.primitive_program.front() != planner.cleanup_action)) {
                 return nullptr;
             }
             const auto found = std::find_if(

@@ -209,6 +209,18 @@
         "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/manifest.json"
       ],
       "source_binding": "docs/active/2026-09-13-execution-aware-proposals/build-ET-v7.json"
+    },
+    "cross-base-capacity-recovery-20260914": {
+      "semantic_version": "Native paid capacity/blocker option and bounded physical late-entry service",
+      "property": "Complete original-root executable policy upper and separate cross-base capability diagnostics; no stronger lower or exact-closure claim",
+      "coefficient_semantics": "Native setup, all outcomes, observations, cleanup and lost-progress recovery; original resource prices and primitive execution reward remain separate",
+      "scope": "Bow/Ring four-goal original requests and prices, distinct Conquest CB02/E10 references, retained Amulet; final native development comparison 600/840/870 seconds, 8/4 GiB, 400M work",
+      "input_references": [
+        "docs/active/2026-09-14-cross-base-strategy-recovery/comparison-manifest.json",
+        "docs/active/2026-09-14-cross-base-strategy-recovery/final-v4-bow-preflight.json",
+        "docs/active/2026-09-14-cross-base-strategy-recovery/final-v4-ring-preflight.json"
+      ],
+      "source_binding": "docs/active/2026-09-14-cross-base-strategy-recovery/retained-policies.json"
     }
   },
   "comparison_profiles": {
@@ -874,6 +886,36 @@
       "limitations": [
         "Ring U 227377.06545019808 and N 583110.3499596338 improve by 0.2685% and 0.3857%. Bow retains U 223349.0000393144; its T Magic controller costs 405922.95178487856 for 327477.8701574201 actions and is diagnostic. Amulet retains U 12541.579648544115 and N 25518.491313143768.",
         "Neither primary meets the predeclared cost/count objectives; no exact-closure or original-cost lower gain. Late capped alternatives remain unknown. The separate telemetry-cap export profile grants no search gain."
+      ]
+    },
+    {
+      "id": "bow-capacity-recovery-product-upper-20260914",
+      "model": "cross-base-capacity-recovery-20260914",
+      "kind": "verified_policy_upper",
+      "producer": "Existing native automatic option, real entry, sparse cost-only improvement, compiler and original-price evaluator owners",
+      "validation": "docs/active/2026-09-14-cross-base-strategy-recovery/delivered-native-checks.json",
+      "evidence": "docs/active/2026-09-14-cross-base-strategy-recovery/final-v4-bow.json",
+      "pointer": "/totals/total_expected_cost",
+      "role": "Bow original cost falls 94.28%; native search generates the full-root paid capacity/blocker policy",
+      "treatment": "Exact acquisition/return laws and complete acquisition-versus-recovery contrasts select a Multimod/Cannot Roll/Exalt/cleanup option, then bounded service at real late decisions. Strict final 8-GiB comparison has one pair and zero exclusions.",
+      "limitations": [
+        "C 12770.827062219498 and N 66914.72854184538, versus C 223349.0000393144 and N 1404492.0069683318. Late-entry selection is cost-only; count weighting receives no causal credit.",
+        "Bounded feasible with L 341.0345603014526, not global exactness. The temporary 6-GiB run is diagnostic and supplies no matched timing claim. All positive exits and old-root acquisition remain paid."
+      ]
+    },
+    {
+      "id": "ring-single-blocker-upper-service-limit-20260914",
+      "model": "cross-base-capacity-recovery-20260914",
+      "kind": "conditional_observation",
+      "producer": "Existing native fixed-policy evaluator and complete recurring original-root diagnostic graph",
+      "validation": "docs/active/2026-09-14-cross-base-strategy-recovery/delivered-native-checks.json",
+      "evidence": "docs/active/2026-09-14-cross-base-strategy-recovery/ring-single-blocker-full.json",
+      "pointer": "/cost",
+      "role": "Ring retains a smaller verified saving; two-primary product-discovery success is not established",
+      "treatment": "Single Cannot Roll Attack, Exalt and cleanup at the legal three-goal Ring entry, with original acquisition and recovery. Two-craft capacity setup is illegal there.",
+      "limitations": [
+        "C 220743.46354691783 and N 564673.7576801177 improve Ring cost by 2.92%; the native final run retains C 227377.06545019808 and has no late-entry samples. The preserved post-incumbent trigger requires a fracture-bearing graph, absent from this Essence controller.",
+        "This is a complete verified diagnostic controller, not a native product discovery or a 25% Ring milestone. The actual native case classification remains refused_unsupported_action while its returned bounded-feasible policy independently matches. Conquest CB02 and Amulet cheaper incumbents remain retained; historical CB03/CB05/CB09 limitations stay open."
       ]
     }
   ],

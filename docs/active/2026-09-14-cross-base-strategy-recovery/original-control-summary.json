@@ -1,0 +1,1577 @@
+{
+  "cases": [
+    {
+      "case_id": "cb02-cross-base-product8-long240",
+      "group": "core",
+      "baseline": {
+        "actual_status": "bounded_feasible",
+        "summary": {
+          "converged": false,
+          "start_state": 0,
+          "start_value": 3746.1319409485764,
+          "expanded_states": 7213,
+          "sweeps": 16,
+          "residual": 1.8189894035458565e-12,
+          "skipped_action_count": 0,
+          "policy_available": true,
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "stop_cause": "requested_bounded_finish",
+          "cap_hit_mask": 0,
+          "action_counts": {
+            "registry": 179,
+            "candidate": 21,
+            "evaluator_supported": 21,
+            "supported_priced": 296,
+            "skipped_missing_price": 0,
+            "skipped_unsupported": 0
+          },
+          "lower_bound": 198.8334996747695,
+          "upper_bound": 3746.1319409485764,
+          "evaluated_policy_cost": 3746.1319409485764,
+          "absolute_optimality_gap": 3547.298441273807,
+          "relative_optimality_gap": 17.840547227082443,
+          "requested_absolute_optimality_gap": 0,
+          "requested_relative_optimality_gap": 0,
+          "target_met": false,
+          "target_fired": "none"
+        },
+        "evaluation": {
+          "completed": true,
+          "time_limited": false,
+          "status": "matched",
+          "wall_ms": 2296.4537,
+          "converged": true,
+          "cost_complete": true,
+          "zero_off_policy_mass": true,
+          "cost_reconciled": true,
+          "success_probability": 1,
+          "off_policy_mass": 0,
+          "total_expected_cost": 3746.1319409485764,
+          "solver_cost_delta_absolute": 0,
+          "solver_cost_delta_relative": 0
+        },
+        "errors": [
+          "bounded best-policy contract failed: one or more bounded-result proof obligations failed"
+        ],
+        "phase_wall_ms": {
+          "registry_layout": 36.6067,
+          "solve": 240764.0138,
+          "compile": 16.8524,
+          "verification": null,
+          "total": 243657.217
+        },
+        "cap_checks": {
+          "all_passed": true,
+          "checks": {
+            "max_discovered_states": true,
+            "max_expanded_states": true,
+            "max_state_action_rows": true,
+            "max_transitions": true,
+            "max_reforge_work": true,
+            "max_solver_owned_bytes": true,
+            "max_compiled_nodes": true,
+            "max_compiled_edges": true,
+            "max_strategy_json_bytes": true
+          }
+        }
+      },
+      "treatment": {
+        "actual_status": "bounded_feasible",
+        "summary": {
+          "converged": false,
+          "start_state": 0,
+          "start_value": 3746.1319409485764,
+          "expanded_states": 7213,
+          "sweeps": 16,
+          "residual": 1.8189894035458565e-12,
+          "skipped_action_count": 0,
+          "policy_available": true,
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "stop_cause": "requested_bounded_finish",
+          "cap_hit_mask": 0,
+          "action_counts": {
+            "registry": 180,
+            "candidate": 21,
+            "evaluator_supported": 21,
+            "supported_priced": 302,
+            "skipped_missing_price": 0,
+            "skipped_unsupported": 0
+          },
+          "lower_bound": 198.8334996747695,
+          "upper_bound": 3746.1319409485764,
+          "evaluated_policy_cost": 3746.1319409485764,
+          "absolute_optimality_gap": 3547.298441273807,
+          "relative_optimality_gap": 17.840547227082443,
+          "requested_absolute_optimality_gap": 0,
+          "requested_relative_optimality_gap": 0,
+          "target_met": false,
+          "target_fired": "none"
+        },
+        "evaluation": {
+          "completed": true,
+          "time_limited": false,
+          "status": "matched",
+          "wall_ms": 2292.3699,
+          "converged": true,
+          "cost_complete": true,
+          "zero_off_policy_mass": true,
+          "cost_reconciled": true,
+          "success_probability": 1,
+          "off_policy_mass": 0,
+          "total_expected_cost": 3746.1319409485764,
+          "solver_cost_delta_absolute": 0,
+          "solver_cost_delta_relative": 0
+        },
+        "errors": [],
+        "phase_wall_ms": {
+          "registry_layout": 51.8712,
+          "solve": 240783.3382,
+          "compile": 13.4447,
+          "verification": null,
+          "total": 243657.5571
+        },
+        "cap_checks": {
+          "all_passed": true,
+          "checks": {
+            "max_discovered_states": true,
+            "max_expanded_states": true,
+            "max_state_action_rows": true,
+            "max_transitions": true,
+            "max_reforge_work": true,
+            "max_solver_owned_bytes": true,
+            "max_compiled_nodes": true,
+            "max_compiled_edges": true,
+            "max_strategy_json_bytes": true
+          }
+        }
+      },
+      "report": "out/cross-base-strategy-recovery/original-v4-core/cases/cb02-cross-base-product8-long240.json",
+      "report_sha256": "491b012b8871cb5b6c8d0e159cf1b0ff1f708f1c461b3de61aaf5af3d71dcf0e",
+      "strict_pair": {
+        "baseline": "original-profile-main",
+        "candidate": "final-v4",
+        "shared_case_ids": 1,
+        "paired_cases": 1,
+        "missing_from_baseline": [],
+        "missing_from_candidate": [],
+        "excluded": [],
+        "delta_distributions": {
+          "wall_ms": {
+            "count": 1,
+            "min": 0.3401000000012573,
+            "median": 0.3401000000012573,
+            "p90": 0.3401000000012573,
+            "p99": 0.3401000000012573,
+            "max": 0.3401000000012573
+          },
+          "solve_ms": {
+            "count": 1,
+            "min": 19.324400000012247,
+            "median": 19.324400000012247,
+            "p90": 19.324400000012247,
+            "p99": 19.324400000012247,
+            "max": 19.324400000012247
+          },
+          "solve_step_median_ms": {
+            "count": 1,
+            "min": -0.00010000000000000005,
+            "median": -0.00010000000000000005,
+            "p90": -0.00010000000000000005,
+            "p99": -0.00010000000000000005,
+            "max": -0.00010000000000000005
+          },
+          "solve_step_p95_ms": {
+            "count": 1,
+            "min": -0.00010000000000000026,
+            "median": -0.00010000000000000026,
+            "p90": -0.00010000000000000026,
+            "p99": -0.00010000000000000026,
+            "max": -0.00010000000000000026
+          },
+          "solve_step_max_ms": {
+            "count": 1,
+            "min": -51.492899999999736,
+            "median": -51.492899999999736,
+            "p90": -51.492899999999736,
+            "p99": -51.492899999999736,
+            "max": -51.492899999999736
+          },
+          "peak_memory_bytes": {
+            "count": 1,
+            "min": 83554586.0,
+            "median": 83554586.0,
+            "p90": 83554586.0,
+            "p99": 83554586.0,
+            "max": 83554586.0
+          },
+          "time_to_incumbent_ms": {
+            "count": 1,
+            "min": -17048.038,
+            "median": -17048.038,
+            "p90": -17048.038,
+            "p99": -17048.038,
+            "max": -17048.038
+          },
+          "time_to_target_ms": {
+            "count": 0,
+            "min": null,
+            "median": null,
+            "p90": null,
+            "p99": null,
+            "max": null
+          },
+          "final_lower_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_upper_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_absolute_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_relative_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "expanded_states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "rows": {
+            "count": 1,
+            "min": 144.0,
+            "median": 144.0,
+            "p90": 144.0,
+            "p99": 144.0,
+            "max": 144.0
+          },
+          "transitions": {
+            "count": 1,
+            "min": 192.0,
+            "median": 192.0,
+            "p90": 192.0,
+            "p99": 192.0,
+            "max": 192.0
+          },
+          "reforge_work": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_nodes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_edges": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "strategy_json_bytes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          }
+        },
+        "status_transitions": {
+          "bounded_feasible->bounded_feasible": 1
+        },
+        "regressions": [
+          {
+            "id": "cb02-cross-base-product8-long240",
+            "reasons": [
+              "peak_memory_gt_10_percent"
+            ],
+            "deltas": {
+              "wall_ms": 0.3401000000012573,
+              "solve_ms": 19.324400000012247,
+              "solve_step_median_ms": -0.00010000000000000005,
+              "solve_step_p95_ms": -0.00010000000000000026,
+              "solve_step_max_ms": -51.492899999999736,
+              "peak_memory_bytes": 83554586.0,
+              "time_to_incumbent_ms": -17048.038,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": 0.0,
+              "final_absolute_gap": 0.0,
+              "final_relative_gap": 0.0,
+              "states": 0.0,
+              "expanded_states": 0.0,
+              "rows": 144.0,
+              "transitions": 192.0,
+              "reforge_work": 0.0,
+              "compiled_nodes": 0.0,
+              "compiled_edges": 0.0,
+              "strategy_json_bytes": 0.0
+            }
+          }
+        ],
+        "pairs": [
+          {
+            "id": "cb02-cross-base-product8-long240",
+            "dimensions": {
+              "base": "Conquest Lamellar",
+              "class": "Body Armour",
+              "base_class": "Body Armour / Conquest Lamellar",
+              "natural_t1_count": "4",
+              "side_mix": "unknown",
+              "pool_density": "unknown",
+              "goal_probability": "unknown",
+              "incumbent": "other",
+              "policy_status": "bounded_feasible",
+              "termination": "requested_bounded_finish",
+              "evaluation_role": "unassigned",
+              "observation_status": "completed"
+            },
+            "treatments": {
+              "baseline_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              },
+              "candidate_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\CBR-v4.exe",
+                "sha256": "e4afb35a588f1ccd37bebbf1fcfee6f9831b010c9babde35479788ec9089d1f3"
+              }
+            },
+            "baseline_status": {
+              "actual": "bounded_feasible",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "candidate_status": {
+              "actual": "bounded_feasible",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "deltas": {
+              "wall_ms": 0.3401000000012573,
+              "solve_ms": 19.324400000012247,
+              "solve_step_median_ms": -0.00010000000000000005,
+              "solve_step_p95_ms": -0.00010000000000000026,
+              "solve_step_max_ms": -51.492899999999736,
+              "peak_memory_bytes": 83554586.0,
+              "time_to_incumbent_ms": -17048.038,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": 0.0,
+              "final_absolute_gap": 0.0,
+              "final_relative_gap": 0.0,
+              "states": 0.0,
+              "expanded_states": 0.0,
+              "rows": 144.0,
+              "transitions": 192.0,
+              "reforge_work": 0.0,
+              "compiled_nodes": 0.0,
+              "compiled_edges": 0.0,
+              "strategy_json_bytes": 0.0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "cb08-cross-base-product8-long240",
+      "group": "core",
+      "baseline": {
+        "actual_status": "refused_resource_cap",
+        "summary": {
+          "converged": false,
+          "start_state": 0,
+          "start_value": 40215428.995558396,
+          "expanded_states": 1401,
+          "sweeps": 77997,
+          "residual": 5839472.954345703,
+          "skipped_action_count": 0,
+          "policy_available": true,
+          "policy_status": "bounded_feasible",
+          "termination": "refused_resource_cap",
+          "stop_cause": "reforge_work_cap",
+          "cap_hit_mask": 16,
+          "action_counts": {
+            "registry": 165,
+            "candidate": 31,
+            "evaluator_supported": 31,
+            "supported_priced": 532,
+            "skipped_missing_price": 0,
+            "skipped_unsupported": 0
+          },
+          "lower_bound": 174.79327321907147,
+          "upper_bound": 40215428.995558396,
+          "evaluated_policy_cost": 40215428.995558396,
+          "absolute_optimality_gap": 40215254.20228518,
+          "relative_optimality_gap": 230073.23715417067,
+          "requested_absolute_optimality_gap": 0,
+          "requested_relative_optimality_gap": 0,
+          "target_met": false,
+          "target_fired": "none"
+        },
+        "evaluation": {
+          "completed": true,
+          "time_limited": false,
+          "status": "matched",
+          "wall_ms": 22.4351,
+          "converged": true,
+          "cost_complete": true,
+          "zero_off_policy_mass": true,
+          "cost_reconciled": true,
+          "success_probability": 1.0000000006277008,
+          "off_policy_mass": 0,
+          "total_expected_cost": 40215428.995558396,
+          "solver_cost_delta_absolute": 0,
+          "solver_cost_delta_relative": 0
+        },
+        "errors": [],
+        "phase_wall_ms": {
+          "registry_layout": 27.1326,
+          "solve": 240536.4611,
+          "compile": 1.5668,
+          "verification": null,
+          "total": 240735.1961
+        },
+        "cap_checks": {
+          "all_passed": true,
+          "checks": {
+            "max_discovered_states": true,
+            "max_expanded_states": true,
+            "max_state_action_rows": true,
+            "max_transitions": true,
+            "max_reforge_work": true,
+            "max_solver_owned_bytes": true,
+            "max_compiled_nodes": true,
+            "max_compiled_edges": true,
+            "max_strategy_json_bytes": true
+          }
+        }
+      },
+      "treatment": {
+        "actual_status": "refused_resource_cap",
+        "summary": {
+          "converged": false,
+          "start_state": 0,
+          "start_value": 40215428.995558396,
+          "expanded_states": 1401,
+          "sweeps": 80426,
+          "residual": 5484364.71875,
+          "skipped_action_count": 0,
+          "policy_available": true,
+          "policy_status": "bounded_feasible",
+          "termination": "refused_resource_cap",
+          "stop_cause": "reforge_work_cap",
+          "cap_hit_mask": 16,
+          "action_counts": {
+            "registry": 166,
+            "candidate": 31,
+            "evaluator_supported": 31,
+            "supported_priced": 532,
+            "skipped_missing_price": 0,
+            "skipped_unsupported": 0
+          },
+          "lower_bound": 174.79327321907147,
+          "upper_bound": 40215428.995558396,
+          "evaluated_policy_cost": 40215428.995558396,
+          "absolute_optimality_gap": 40215254.20228518,
+          "relative_optimality_gap": 230073.23715417067,
+          "requested_absolute_optimality_gap": 0,
+          "requested_relative_optimality_gap": 0,
+          "target_met": false,
+          "target_fired": "none"
+        },
+        "evaluation": {
+          "completed": true,
+          "time_limited": false,
+          "status": "matched",
+          "wall_ms": 22.3709,
+          "converged": true,
+          "cost_complete": true,
+          "zero_off_policy_mass": true,
+          "cost_reconciled": true,
+          "success_probability": 1.0000000006277008,
+          "off_policy_mass": 0,
+          "total_expected_cost": 40215428.995558396,
+          "solver_cost_delta_absolute": 0,
+          "solver_cost_delta_relative": 0
+        },
+        "errors": [],
+        "phase_wall_ms": {
+          "registry_layout": 32.2355,
+          "solve": 240530.5753,
+          "compile": 1.4391,
+          "verification": null,
+          "total": 240729.6985
+        },
+        "cap_checks": {
+          "all_passed": true,
+          "checks": {
+            "max_discovered_states": true,
+            "max_expanded_states": true,
+            "max_state_action_rows": true,
+            "max_transitions": true,
+            "max_reforge_work": true,
+            "max_solver_owned_bytes": true,
+            "max_compiled_nodes": true,
+            "max_compiled_edges": true,
+            "max_strategy_json_bytes": true
+          }
+        }
+      },
+      "report": "out/cross-base-strategy-recovery/original-v4-core/cases/cb08-cross-base-product8-long240.json",
+      "report_sha256": "348009eafd7920b24e7942c74fe8bfbe3f88607b263a2e3283d69648cc73e000",
+      "strict_pair": {
+        "baseline": "original-profile-main",
+        "candidate": "final-v4",
+        "shared_case_ids": 1,
+        "paired_cases": 1,
+        "missing_from_baseline": [],
+        "missing_from_candidate": [],
+        "excluded": [],
+        "delta_distributions": {
+          "wall_ms": {
+            "count": 1,
+            "min": -5.497600000002421,
+            "median": -5.497600000002421,
+            "p90": -5.497600000002421,
+            "p99": -5.497600000002421,
+            "max": -5.497600000002421
+          },
+          "solve_ms": {
+            "count": 1,
+            "min": -5.8857999999891035,
+            "median": -5.8857999999891035,
+            "p90": -5.8857999999891035,
+            "p99": -5.8857999999891035,
+            "max": -5.8857999999891035
+          },
+          "solve_step_median_ms": {
+            "count": 1,
+            "min": -0.00030000000000000165,
+            "median": -0.00030000000000000165,
+            "p90": -0.00030000000000000165,
+            "p99": -0.00030000000000000165,
+            "max": -0.00030000000000000165
+          },
+          "solve_step_p95_ms": {
+            "count": 1,
+            "min": -0.0063,
+            "median": -0.0063,
+            "p90": -0.0063,
+            "p99": -0.0063,
+            "max": -0.0063
+          },
+          "solve_step_max_ms": {
+            "count": 1,
+            "min": -38.18919999999997,
+            "median": -38.18919999999997,
+            "p90": -38.18919999999997,
+            "p99": -38.18919999999997,
+            "max": -38.18919999999997
+          },
+          "peak_memory_bytes": {
+            "count": 1,
+            "min": 4222.0,
+            "median": 4222.0,
+            "p90": 4222.0,
+            "p99": 4222.0,
+            "max": 4222.0
+          },
+          "time_to_incumbent_ms": {
+            "count": 1,
+            "min": -114.61799999999994,
+            "median": -114.61799999999994,
+            "p90": -114.61799999999994,
+            "p99": -114.61799999999994,
+            "max": -114.61799999999994
+          },
+          "time_to_target_ms": {
+            "count": 0,
+            "min": null,
+            "median": null,
+            "p90": null,
+            "p99": null,
+            "max": null
+          },
+          "final_lower_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_upper_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_absolute_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_relative_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "expanded_states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "rows": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "transitions": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "reforge_work": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_nodes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_edges": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "strategy_json_bytes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          }
+        },
+        "status_transitions": {
+          "bounded_feasible->bounded_feasible": 1
+        },
+        "regressions": [],
+        "pairs": [
+          {
+            "id": "cb08-cross-base-product8-long240",
+            "dimensions": {
+              "base": "Onyx Amulet",
+              "class": "Amulet",
+              "base_class": "Amulet / Onyx Amulet",
+              "natural_t1_count": "3",
+              "side_mix": "SSS",
+              "pool_density": "dense_ge_100",
+              "goal_probability": "low_le_0.005",
+              "incumbent": "other",
+              "policy_status": "bounded_feasible",
+              "termination": "refused_resource_cap",
+              "evaluation_role": "unassigned",
+              "observation_status": "completed"
+            },
+            "treatments": {
+              "baseline_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              },
+              "candidate_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\CBR-v4.exe",
+                "sha256": "e4afb35a588f1ccd37bebbf1fcfee6f9831b010c9babde35479788ec9089d1f3"
+              }
+            },
+            "baseline_status": {
+              "actual": "refused_resource_cap",
+              "policy": "bounded_feasible",
+              "termination": "refused_resource_cap"
+            },
+            "candidate_status": {
+              "actual": "refused_resource_cap",
+              "policy": "bounded_feasible",
+              "termination": "refused_resource_cap"
+            },
+            "deltas": {
+              "wall_ms": -5.497600000002421,
+              "solve_ms": -5.8857999999891035,
+              "solve_step_median_ms": -0.00030000000000000165,
+              "solve_step_p95_ms": -0.0063,
+              "solve_step_max_ms": -38.18919999999997,
+              "peak_memory_bytes": 4222.0,
+              "time_to_incumbent_ms": -114.61799999999994,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": 0.0,
+              "final_absolute_gap": 0.0,
+              "final_relative_gap": 0.0,
+              "states": 0.0,
+              "expanded_states": 0.0,
+              "rows": 0.0,
+              "transitions": 0.0,
+              "reforge_work": 0.0,
+              "compiled_nodes": 0.0,
+              "compiled_edges": 0.0,
+              "strategy_json_bytes": 0.0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "cb12-cross-base-product8-long240",
+      "group": "core",
+      "baseline": {
+        "actual_status": "converged",
+        "summary": {
+          "converged": true,
+          "start_state": 0,
+          "start_value": 65.60036144971359,
+          "expanded_states": 1826,
+          "sweeps": 12,
+          "residual": 1.4210854715202004e-14,
+          "skipped_action_count": 0,
+          "policy_available": true,
+          "policy_status": "exact",
+          "termination": "exact_closed",
+          "stop_cause": "exact_closed",
+          "cap_hit_mask": 0,
+          "action_counts": {
+            "registry": 158,
+            "candidate": 21,
+            "evaluator_supported": 21,
+            "supported_priced": 74,
+            "skipped_missing_price": 0,
+            "skipped_unsupported": 0
+          },
+          "lower_bound": 65.60036144971359,
+          "upper_bound": 65.60036144971359,
+          "evaluated_policy_cost": 65.60036144971359,
+          "absolute_optimality_gap": 0,
+          "relative_optimality_gap": 0,
+          "requested_absolute_optimality_gap": 0,
+          "requested_relative_optimality_gap": 0,
+          "target_met": false,
+          "target_fired": "none"
+        },
+        "evaluation": {
+          "completed": true,
+          "time_limited": false,
+          "status": "matched",
+          "wall_ms": 11.843,
+          "converged": true,
+          "cost_complete": true,
+          "zero_off_policy_mass": true,
+          "cost_reconciled": true,
+          "success_probability": 1,
+          "off_policy_mass": 0,
+          "total_expected_cost": 65.60036144971359,
+          "solver_cost_delta_absolute": 0,
+          "solver_cost_delta_relative": 0
+        },
+        "errors": [],
+        "phase_wall_ms": {
+          "registry_layout": 28.0304,
+          "solve": 20516.3814,
+          "compile": 1.2694,
+          "verification": null,
+          "total": 20620.786
+        },
+        "cap_checks": {
+          "all_passed": true,
+          "checks": {
+            "max_discovered_states": true,
+            "max_expanded_states": true,
+            "max_state_action_rows": true,
+            "max_transitions": true,
+            "max_reforge_work": true,
+            "max_solver_owned_bytes": true,
+            "max_compiled_nodes": true,
+            "max_compiled_edges": true,
+            "max_strategy_json_bytes": true
+          }
+        }
+      },
+      "treatment": {
+        "actual_status": "converged",
+        "summary": {
+          "converged": true,
+          "start_state": 0,
+          "start_value": 65.60036144971359,
+          "expanded_states": 1826,
+          "sweeps": 12,
+          "residual": 1.4210854715202004e-14,
+          "skipped_action_count": 0,
+          "policy_available": true,
+          "policy_status": "exact",
+          "termination": "exact_closed",
+          "stop_cause": "exact_closed",
+          "cap_hit_mask": 0,
+          "action_counts": {
+            "registry": 158,
+            "candidate": 21,
+            "evaluator_supported": 21,
+            "supported_priced": 74,
+            "skipped_missing_price": 0,
+            "skipped_unsupported": 0
+          },
+          "lower_bound": 65.60036144971359,
+          "upper_bound": 65.60036144971359,
+          "evaluated_policy_cost": 65.60036144971359,
+          "absolute_optimality_gap": 0,
+          "relative_optimality_gap": 0,
+          "requested_absolute_optimality_gap": 0,
+          "requested_relative_optimality_gap": 0,
+          "target_met": false,
+          "target_fired": "none"
+        },
+        "evaluation": {
+          "completed": true,
+          "time_limited": false,
+          "status": "matched",
+          "wall_ms": 11.2968,
+          "converged": true,
+          "cost_complete": true,
+          "zero_off_policy_mass": true,
+          "cost_reconciled": true,
+          "success_probability": 1,
+          "off_policy_mass": 0,
+          "total_expected_cost": 65.60036144971359,
+          "solver_cost_delta_absolute": 0,
+          "solver_cost_delta_relative": 0
+        },
+        "errors": [],
+        "phase_wall_ms": {
+          "registry_layout": 25.9405,
+          "solve": 20579.1188,
+          "compile": 1.6144,
+          "verification": null,
+          "total": 20678.5294
+        },
+        "cap_checks": {
+          "all_passed": true,
+          "checks": {
+            "max_discovered_states": true,
+            "max_expanded_states": true,
+            "max_state_action_rows": true,
+            "max_transitions": true,
+            "max_reforge_work": true,
+            "max_solver_owned_bytes": true,
+            "max_compiled_nodes": true,
+            "max_compiled_edges": true,
+            "max_strategy_json_bytes": true
+          }
+        }
+      },
+      "report": "out/cross-base-strategy-recovery/original-v4-core/cases/cb12-cross-base-product8-long240.json",
+      "report_sha256": "8412d36c3076aa55c12e6bb4e3e7babf048750dc909f5a13bcae22cfaf886dc1",
+      "strict_pair": {
+        "baseline": "original-profile-main",
+        "candidate": "final-v4",
+        "shared_case_ids": 1,
+        "paired_cases": 1,
+        "missing_from_baseline": [],
+        "missing_from_candidate": [],
+        "excluded": [],
+        "delta_distributions": {
+          "wall_ms": {
+            "count": 1,
+            "min": 57.74339999999938,
+            "median": 57.74339999999938,
+            "p90": 57.74339999999938,
+            "p99": 57.74339999999938,
+            "max": 57.74339999999938
+          },
+          "solve_ms": {
+            "count": 1,
+            "min": 62.7374000000018,
+            "median": 62.7374000000018,
+            "p90": 62.7374000000018,
+            "p99": 62.7374000000018,
+            "max": 62.7374000000018
+          },
+          "solve_step_median_ms": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "solve_step_p95_ms": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "solve_step_max_ms": {
+            "count": 1,
+            "min": 0.9956999999999994,
+            "median": 0.9956999999999994,
+            "p90": 0.9956999999999994,
+            "p99": 0.9956999999999994,
+            "max": 0.9956999999999994
+          },
+          "peak_memory_bytes": {
+            "count": 1,
+            "min": 7512.0,
+            "median": 7512.0,
+            "p90": 7512.0,
+            "p99": 7512.0,
+            "max": 7512.0
+          },
+          "time_to_incumbent_ms": {
+            "count": 1,
+            "min": 65.05879999999888,
+            "median": 65.05879999999888,
+            "p90": 65.05879999999888,
+            "p99": 65.05879999999888,
+            "max": 65.05879999999888
+          },
+          "time_to_target_ms": {
+            "count": 0,
+            "min": null,
+            "median": null,
+            "p90": null,
+            "p99": null,
+            "max": null
+          },
+          "final_lower_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_upper_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_absolute_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_relative_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "expanded_states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "rows": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "transitions": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "reforge_work": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_nodes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_edges": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "strategy_json_bytes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          }
+        },
+        "status_transitions": {
+          "exact->exact": 1
+        },
+        "regressions": [],
+        "pairs": [
+          {
+            "id": "cb12-cross-base-product8-long240",
+            "dimensions": {
+              "base": "Vaal Regalia",
+              "class": "Body Armour",
+              "base_class": "Body Armour / Vaal Regalia",
+              "natural_t1_count": "1",
+              "side_mix": "S",
+              "pool_density": "dense_ge_100",
+              "goal_probability": "moderate_le_0.02",
+              "incumbent": "other",
+              "policy_status": "exact",
+              "termination": "exact_closed",
+              "evaluation_role": "unassigned",
+              "observation_status": "completed"
+            },
+            "treatments": {
+              "baseline_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              },
+              "candidate_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\CBR-v4.exe",
+                "sha256": "e4afb35a588f1ccd37bebbf1fcfee6f9831b010c9babde35479788ec9089d1f3"
+              }
+            },
+            "baseline_status": {
+              "actual": "converged",
+              "policy": "exact",
+              "termination": "exact_closed"
+            },
+            "candidate_status": {
+              "actual": "converged",
+              "policy": "exact",
+              "termination": "exact_closed"
+            },
+            "deltas": {
+              "wall_ms": 57.74339999999938,
+              "solve_ms": 62.7374000000018,
+              "solve_step_median_ms": 0.0,
+              "solve_step_p95_ms": 0.0,
+              "solve_step_max_ms": 0.9956999999999994,
+              "peak_memory_bytes": 7512.0,
+              "time_to_incumbent_ms": 65.05879999999888,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": 0.0,
+              "final_absolute_gap": 0.0,
+              "final_relative_gap": 0.0,
+              "states": 0.0,
+              "expanded_states": 0.0,
+              "rows": 0.0,
+              "transitions": 0.0,
+              "reforge_work": 0.0,
+              "compiled_nodes": 0.0,
+              "compiled_edges": 0.0,
+              "strategy_json_bytes": 0.0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "ho01-cross-base-product8-long240",
+      "group": "exposed",
+      "baseline": {
+        "actual_status": "bounded_feasible",
+        "summary": {
+          "converged": false,
+          "start_state": 0,
+          "start_value": 2112.534554200355,
+          "expanded_states": 493,
+          "sweeps": 0,
+          "residual": 1.8189894035458565e-12,
+          "skipped_action_count": 0,
+          "policy_available": true,
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "stop_cause": "requested_bounded_finish",
+          "cap_hit_mask": 0,
+          "action_counts": {
+            "registry": 201,
+            "candidate": 29,
+            "evaluator_supported": 29,
+            "supported_priced": 189,
+            "skipped_missing_price": 0,
+            "skipped_unsupported": 0
+          },
+          "lower_bound": 93.66114293680295,
+          "upper_bound": 2071.736538384866,
+          "evaluated_policy_cost": 2071.736538384866,
+          "absolute_optimality_gap": 1978.075395448063,
+          "relative_optimality_gap": 21.11948811881094,
+          "requested_absolute_optimality_gap": 0,
+          "requested_relative_optimality_gap": 0,
+          "target_met": false,
+          "target_fired": "none"
+        },
+        "evaluation": {
+          "completed": true,
+          "time_limited": false,
+          "status": "matched",
+          "wall_ms": 2631.5501,
+          "converged": true,
+          "cost_complete": true,
+          "zero_off_policy_mass": true,
+          "cost_reconciled": true,
+          "success_probability": 1,
+          "off_policy_mass": 0,
+          "total_expected_cost": 2071.736538384866,
+          "solver_cost_delta_absolute": 0,
+          "solver_cost_delta_relative": 0
+        },
+        "errors": [],
+        "phase_wall_ms": {
+          "registry_layout": 22.2342,
+          "solve": 240284.5736,
+          "compile": 2.6005,
+          "verification": null,
+          "total": 243065.2142
+        },
+        "cap_checks": {
+          "all_passed": true,
+          "checks": {
+            "max_discovered_states": true,
+            "max_expanded_states": true,
+            "max_state_action_rows": true,
+            "max_transitions": true,
+            "max_reforge_work": true,
+            "max_solver_owned_bytes": true,
+            "max_compiled_nodes": true,
+            "max_compiled_edges": true,
+            "max_strategy_json_bytes": true
+          }
+        }
+      },
+      "treatment": {
+        "actual_status": "bounded_feasible",
+        "summary": {
+          "converged": false,
+          "start_state": 0,
+          "start_value": 2112.534554200355,
+          "expanded_states": 493,
+          "sweeps": 0,
+          "residual": 1.8189894035458565e-12,
+          "skipped_action_count": 0,
+          "policy_available": true,
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "stop_cause": "requested_bounded_finish",
+          "cap_hit_mask": 0,
+          "action_counts": {
+            "registry": 202,
+            "candidate": 29,
+            "evaluator_supported": 29,
+            "supported_priced": 189,
+            "skipped_missing_price": 0,
+            "skipped_unsupported": 0
+          },
+          "lower_bound": 93.66114293680295,
+          "upper_bound": 2071.736538384866,
+          "evaluated_policy_cost": 2071.736538384866,
+          "absolute_optimality_gap": 1978.075395448063,
+          "relative_optimality_gap": 21.11948811881094,
+          "requested_absolute_optimality_gap": 0,
+          "requested_relative_optimality_gap": 0,
+          "target_met": false,
+          "target_fired": "none"
+        },
+        "evaluation": {
+          "completed": true,
+          "time_limited": false,
+          "status": "matched",
+          "wall_ms": 2623.0436,
+          "converged": true,
+          "cost_complete": true,
+          "zero_off_policy_mass": true,
+          "cost_reconciled": true,
+          "success_probability": 1,
+          "off_policy_mass": 0,
+          "total_expected_cost": 2071.736538384866,
+          "solver_cost_delta_absolute": 0,
+          "solver_cost_delta_relative": 0
+        },
+        "errors": [],
+        "phase_wall_ms": {
+          "registry_layout": 22.1249,
+          "solve": 240331.6515,
+          "compile": 2.4565,
+          "verification": null,
+          "total": 243074.5679
+        },
+        "cap_checks": {
+          "all_passed": true,
+          "checks": {
+            "max_discovered_states": true,
+            "max_expanded_states": true,
+            "max_state_action_rows": true,
+            "max_transitions": true,
+            "max_reforge_work": true,
+            "max_solver_owned_bytes": true,
+            "max_compiled_nodes": true,
+            "max_compiled_edges": true,
+            "max_strategy_json_bytes": true
+          }
+        }
+      },
+      "report": "out/cross-base-strategy-recovery/original-v4-exposed/cases/ho01-cross-base-product8-long240.json",
+      "report_sha256": "3ec9323c82b444d965a874fa95935a2e99010c85bb1f898e07830191647e2bcc",
+      "strict_pair": {
+        "baseline": "original-profile-main",
+        "candidate": "final-v4",
+        "shared_case_ids": 1,
+        "paired_cases": 1,
+        "missing_from_baseline": [],
+        "missing_from_candidate": [],
+        "excluded": [],
+        "delta_distributions": {
+          "wall_ms": {
+            "count": 1,
+            "min": 9.353700000006938,
+            "median": 9.353700000006938,
+            "p90": 9.353700000006938,
+            "p99": 9.353700000006938,
+            "max": 9.353700000006938
+          },
+          "solve_ms": {
+            "count": 1,
+            "min": 47.077900000003865,
+            "median": 47.077900000003865,
+            "p90": 47.077900000003865,
+            "p99": 47.077900000003865,
+            "max": 47.077900000003865
+          },
+          "solve_step_median_ms": {
+            "count": 1,
+            "min": -0.001700000000000007,
+            "median": -0.001700000000000007,
+            "p90": -0.001700000000000007,
+            "p99": -0.001700000000000007,
+            "max": -0.001700000000000007
+          },
+          "solve_step_p95_ms": {
+            "count": 1,
+            "min": -1.87439999999998,
+            "median": -1.87439999999998,
+            "p90": -1.87439999999998,
+            "p99": -1.87439999999998,
+            "max": -1.87439999999998
+          },
+          "solve_step_max_ms": {
+            "count": 1,
+            "min": -109.46039999999994,
+            "median": -109.46039999999994,
+            "p90": -109.46039999999994,
+            "p99": -109.46039999999994,
+            "max": -109.46039999999994
+          },
+          "peak_memory_bytes": {
+            "count": 1,
+            "min": 12032288.0,
+            "median": 12032288.0,
+            "p90": 12032288.0,
+            "p99": 12032288.0,
+            "max": 12032288.0
+          },
+          "time_to_incumbent_ms": {
+            "count": 1,
+            "min": -881.4422000000013,
+            "median": -881.4422000000013,
+            "p90": -881.4422000000013,
+            "p99": -881.4422000000013,
+            "max": -881.4422000000013
+          },
+          "time_to_target_ms": {
+            "count": 0,
+            "min": null,
+            "median": null,
+            "p90": null,
+            "p99": null,
+            "max": null
+          },
+          "final_lower_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_upper_bound": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_absolute_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "final_relative_gap": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "expanded_states": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "rows": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "transitions": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "reforge_work": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_nodes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "compiled_edges": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          },
+          "strategy_json_bytes": {
+            "count": 1,
+            "min": 0.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "p99": 0.0,
+            "max": 0.0
+          }
+        },
+        "status_transitions": {
+          "bounded_feasible->bounded_feasible": 1
+        },
+        "regressions": [],
+        "pairs": [
+          {
+            "id": "ho01-cross-base-product8-long240",
+            "dimensions": {
+              "base": "Pinnacle Tower Shield",
+              "class": "Shield",
+              "base_class": "Shield / Pinnacle Tower Shield",
+              "natural_t1_count": "3",
+              "side_mix": "PPS",
+              "pool_density": "dense_ge_100",
+              "goal_probability": "moderate_le_0.02",
+              "incumbent": "other",
+              "policy_status": "bounded_feasible",
+              "termination": "requested_bounded_finish",
+              "evaluation_role": "unassigned",
+              "observation_status": "completed"
+            },
+            "treatments": {
+              "baseline_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\adaptive-dirty-guidance\\guidance-v3.exe",
+                "sha256": "420cd80bf4caaca1baea6c2c9f9624bb4b8e3f6faf735fe9e24a7cce06f09834"
+              },
+              "candidate_executable": {
+                "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cross-base-strategy-recovery\\CBR-v4.exe",
+                "sha256": "e4afb35a588f1ccd37bebbf1fcfee6f9831b010c9babde35479788ec9089d1f3"
+              }
+            },
+            "baseline_status": {
+              "actual": "bounded_feasible",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "candidate_status": {
+              "actual": "bounded_feasible",
+              "policy": "bounded_feasible",
+              "termination": "requested_bounded_finish"
+            },
+            "deltas": {
+              "wall_ms": 9.353700000006938,
+              "solve_ms": 47.077900000003865,
+              "solve_step_median_ms": -0.001700000000000007,
+              "solve_step_p95_ms": -1.87439999999998,
+              "solve_step_max_ms": -109.46039999999994,
+              "peak_memory_bytes": 12032288.0,
+              "time_to_incumbent_ms": -881.4422000000013,
+              "time_to_target_ms": null,
+              "final_lower_bound": 0.0,
+              "final_upper_bound": 0.0,
+              "final_absolute_gap": 0.0,
+              "final_relative_gap": 0.0,
+              "states": 0.0,
+              "expanded_states": 0.0,
+              "rows": 0.0,
+              "transitions": 0.0,
+              "reforge_work": 0.0,
+              "compiled_nodes": 0.0,
+              "compiled_edges": 0.0,
+              "strategy_json_bytes": 0.0
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "historical_limitations_preserved": [
+    "CB03 historical cheaper policy was not reproduced",
+    "CB05 named-stop bounded-result failure",
+    "CB09 no-policy result"
+  ],
+  "qualification_scope": "Selected original-profile controls, plus HO01 already-exposed structural holdout. This is not a full corpus pass or unseen validation."
+}

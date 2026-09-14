@@ -1,0 +1,26 @@
+{
+  "files": [
+    {
+      "name": "START_HERE.txt",
+      "source": "C:\\Users\\Oliver\\Downloads\\START_HERE.txt",
+      "sha256": "fa02ede274d2f04c46d3a4fffa1ceb4c82e77ab198e4f9fb5950e411cc6fb849"
+    },
+    {
+      "name": "01_research_report.md",
+      "source": "C:\\Users\\Oliver\\Downloads\\01_research_report.md",
+      "sha256": "198ad716ccd96e79f1a96f3eaff4f003a612cc4a4bad7740d2c823f9158056f6"
+    },
+    {
+      "name": "02_implementation_plan.md",
+      "source": "C:\\Users\\Oliver\\Downloads\\02_implementation_plan.md",
+      "sha256": "7e0d632e99eed3607b10536d2c1ff1a74257ebf6db9b72714b790addc5d66ead"
+    }
+  ],
+  "not_supplied": [
+    "SOURCES.md",
+    "evidence_snapshot.json",
+    "checked_examples.py"
+  ],
+  "disposition": "Research first, then select only a native-witness-supported implementation branch. Source citations will be reconciled against local owners and receipts; no new commit, push, subagents or automatic restart is selected.",
+  "completed_disposition": "Argument preserved once in the supplied research files; native graph recovery, exact-entry return laws and complete contrasts select the paid capacity/blocker option and bounded late-entry service. Bow crosses the 25% milestone in real native search. Ring retains a smaller verified diagnostic and a named service limit. Existing mathematical owners and generated research observations are updated; no new theorem or lower campaign. Oliver subsequently authorized committing and pushing main for Pro review."
+}
