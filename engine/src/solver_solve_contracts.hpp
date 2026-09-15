@@ -1304,6 +1304,7 @@ struct RetainedCompiledPolicyArtifact {
      * retain their historical coarse/search meaning. */
     ExecutableContinuationUpperCertificate continuation_upper;
     std::vector<CompiledPolicyDecisionBinding> policy_decision_bindings;
+    GraphLocalPolicyProvenance graph_local_provenance;
     std::uint32_t working_states = 0;
     std::uint32_t closed_coarse_domain_added_states = 0;
     std::uint32_t closed_coarse_domain_route_states = 0;
@@ -1473,6 +1474,7 @@ enum class SolvePhaseOwner : std::uint8_t {
 };
 
 struct SolveProgress {
+    std::uint64_t lifecycle_sequence = 0;
     SolvePhase phase = SolvePhase::Expanding;
     SolvePhaseOwner phase_owner = SolvePhaseOwner::Setup;
     bool done = false;
@@ -1543,6 +1545,8 @@ class SolveWork {
      * This never clears or substitutes for a real bounded-finish request. */
     void request_proof_handoff();
     SolveProgress progress() const;
+    std::uint64_t progress_sequence() const;
+    std::string progress_trace_json(std::uint64_t after_sequence = 0) const;
     SolveTelemetrySnapshot telemetry_snapshot(bool abandoned = false) const;
     SolveResult finish();
     std::uint64_t live_owned_bytes() const;
@@ -1607,6 +1611,7 @@ struct PolicyCompilationTelemetry {
      * nodes. Fixed-program continuation operations, route nodes, checkpoints,
      * and terminals are deliberately absent. */
     std::vector<CompiledPolicyDecisionBinding> policy_decision_bindings;
+    GraphLocalPolicyProvenance graph_local_provenance;
     std::uint32_t nodes = 0;
     std::uint32_t edges = 0;
     std::uint64_t strategy_json_bytes = 0;

@@ -1,0 +1,262 @@
+{
+  "build": "build-M12.json",
+  "report": "out/progress-delivery/M12-worker-conquest.json",
+  "report_sha256": "5c7b0e9ed1a2bf04d86975c6cf6af5b771eb7577c349c8dc958b48e9ca28596f",
+  "prepared_strategy_sha256": "7669412762ab97801d277dc4d561685baada15824923adcdd03180561aef5b56",
+  "executable_matches_native": {
+    "strategy": "docs/active/2026-09-14-progress-and-delivery/strategies/conquest-five.strategy.json",
+    "strategy_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+    "difference": "node layout positions only; all executable JSON fields equal"
+  },
+  "solve_summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 358209179.6640102,
+    "expanded_states": 3274,
+    "sweeps": 0,
+    "residual": null,
+    "skipped_actions": 1,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "lower_bound": 405.3694021063399,
+    "upper_bound": 85558.70618560436,
+    "evaluated_policy_cost": 85558.70618560436,
+    "absolute_optimality_gap": 85153.33678349802,
+    "relative_optimality_gap": 210.06355275221262,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "registry_actions": 187,
+    "candidate_actions": 28,
+    "evaluator_supported_actions": 28,
+    "supported_priced_actions": 252,
+    "skipped_missing_price_actions": 0,
+    "skipped_unsupported_actions": 1,
+    "cancelled": false
+  },
+  "exact_evaluation": {
+    "converged": true,
+    "cost_complete": true,
+    "success_probability": 1,
+    "off_policy_mass": 0,
+    "total_expected_cost": 85558.70618560436,
+    "solver_policy_cost": 85558.70618560436,
+    "cost_delta_absolute": 0,
+    "cost_delta_relative": 0,
+    "cost_reconciled": true
+  },
+  "execution": {
+    "solve_steps": 6855642,
+    "max_solve_step_ms": 387.339,
+    "worker_max_slice_ms": 387.339,
+    "finalization_ms": 38.791,
+    "cancellation_ack_ms": null,
+    "cancellation_mode": null,
+    "cooperative_abandon_ms": null,
+    "watchdog_seconds": 300,
+    "watchdog_mode": "cooperative_abort_signal",
+    "watchdog_expired": false
+  },
+  "milestones": [
+    {
+      "stage": "native_begin_requested",
+      "worker_elapsed_ms": 0.04939999999999145
+    },
+    {
+      "stage": "native_begin_completed",
+      "worker_elapsed_ms": 13092.8139
+    },
+    {
+      "stage": "finish_requested",
+      "worker_elapsed_ms": 240000.0872
+    },
+    {
+      "stage": "native_done_observed",
+      "worker_elapsed_ms": 243695.94470000002
+    },
+    {
+      "stage": "result_export_start",
+      "worker_elapsed_ms": 243695.94720000002
+    },
+    {
+      "stage": "result_export_completed",
+      "worker_elapsed_ms": 243734.73450000002
+    }
+  ],
+  "source_events": [
+    {
+      "sequence": 289,
+      "native_elapsed_ms": 41902.5264,
+      "kind": "service_queued",
+      "reason": "complete_selected_candidate",
+      "candidate_identity": "5598023219215714573",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 69,
+      "completed_rows": 29155,
+      "verified_upper": null
+    },
+    {
+      "sequence": 293,
+      "native_elapsed_ms": 42301.0956,
+      "kind": "check_start",
+      "reason": "initial_candidate",
+      "candidate_identity": "5598023219215714573",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 69,
+      "completed_rows": 29155,
+      "verified_upper": null
+    },
+    {
+      "sequence": 294,
+      "native_elapsed_ms": 45024.2043,
+      "kind": "check_completed",
+      "reason": "compiled policy exact cost does not reconcile with the solver value",
+      "candidate_identity": "5598023219215714573",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 69,
+      "completed_rows": 29155,
+      "verified_upper": null
+    },
+    {
+      "sequence": 295,
+      "native_elapsed_ms": 45032.4439,
+      "kind": "incumbent_retained",
+      "reason": "anytime_reachable_proper_policy",
+      "candidate_identity": "18381843832106689921",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 69,
+      "completed_rows": 29155,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 297,
+      "native_elapsed_ms": 45032.7434,
+      "kind": "incumbent_retained",
+      "reason": "anytime_reachable_proper_policy",
+      "candidate_identity": "18381843832106689921",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 69,
+      "completed_rows": 29155,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 303,
+      "native_elapsed_ms": 239997.3644,
+      "kind": "finish_requested",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 268,
+      "completed_rows": 38931,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 304,
+      "native_elapsed_ms": 239997.4501,
+      "kind": "finish_acknowledged",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 268,
+      "completed_rows": 38931,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 313,
+      "native_elapsed_ms": 240662.0731,
+      "kind": "check_start",
+      "reason": "selected_core_policy",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 268,
+      "completed_rows": 38931,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 314,
+      "native_elapsed_ms": 243353.3836,
+      "kind": "check_completed",
+      "reason": "selected_core_policy:",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 268,
+      "completed_rows": 38931,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 315,
+      "native_elapsed_ms": 243403.7042,
+      "kind": "incumbent_retained",
+      "reason": "direct_compiled_core_policy",
+      "candidate_identity": "15051897726710974431",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 268,
+      "completed_rows": 38931,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 317,
+      "native_elapsed_ms": 243692.4111,
+      "kind": "native_done",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 268,
+      "completed_rows": 38931,
+      "verified_upper": 85558.70618560436
+    }
+  ],
+  "errors": [],
+  "cap_checks": {
+    "all_passed": false,
+    "checks": {
+      "max_discovered_states": true,
+      "max_expanded_states": true,
+      "max_state_action_rows": true,
+      "max_transitions": true,
+      "max_reforge_work": true,
+      "max_solver_owned_bytes": true,
+      "max_compiled_nodes": true,
+      "max_compiled_edges": true,
+      "max_strategy_json_bytes": true,
+      "worker_step_ms": false,
+      "watchdog_seconds": true,
+      "watchdog_not_expired": true
+    }
+  },
+  "expectation_met": false,
+  "bounded_best_policy_contract": {
+    "checked": true,
+    "passed": true,
+    "path": "bounded",
+    "checks": {
+      "named_stop": true,
+      "strict_gap": true,
+      "open_obligations": true,
+      "evaluated_upper": true,
+      "cheapest_independently_evaluated_incumbent": true
+    },
+    "open_work": {
+      "incremental_actions": 67936,
+      "refinement_obligations": 0
+    },
+    "failure_reason": null
+  },
+  "prior_qualification": "worker-conquest-qualification.json",
+  "disposition": "Final M12 worker executable delivery and complete original-price evaluation passed. Overall benchmark expectation failed the unchanged 250 ms worker-step limit (387.339 ms). Earlier M11 717.115 ms failure remains retained; this is not a matched performance or responsiveness qualification."
+}

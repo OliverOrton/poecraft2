@@ -580,6 +580,34 @@ as an original-scope root artifact. This grants no parent statewise values or
 private state-ID correspondence. Reuse must bind the complete graph, actual
 entry, terminal semantics, scope, vocabulary, mechanics and prices.
 
+Graph-local decision provenance supplies an observable intervention boundary,
+not a state-space correspondence. A compiler declaration remapped with its graph
+can let the evaluator discover actual physical entries without importing private
+numeric state IDs. Their occupancy ranks proposals; it does not certify a saving.
+
+There are two distinct ways to assess a proposed replacement. The local response
+equations above require compatible finite values for every positive-mass boundary.
+Alternatively, compile the complete recurring controller and evaluate its full
+native item/control graph from the original root. That second route need not
+assign a scalar value to a heterogeneous local return class: actual native
+outcomes follow the executable old router or complete new recovery. It still
+requires the unchanged terminal predicate, all paid setup/cleanup, complete
+probability and price, almost-sure goal completion and finite expected cost.
+Local option-prefix costs used for compilation bookkeeping are stripped from
+composition annotations and have no bound or acceptance authority. Only the
+independent whole-controller result enters the verified portfolio.
+
+For a clean intervention whose distinct satisfied goal slots exhaust both exact
+side counts, zero junk counts follow from those observations. Exporting separate
+private junk-class predicates adds no routing distinction there and can enlarge
+the evaluator's global observation partition. The single-pass option compiler
+omits only those implied predicates: overlapping goal masks, mixed-side slots,
+below-tier or extra affixes refuse the simplification. It emits the unchanged
+complete native program, with no hidden offer or mandatory retry, then returns
+all actual outcomes through the old global router. Full original-root evaluation
+still establishes the recurring controller's properness and cost; this argument
+does not justify deleting guards at arbitrary dirty or interior states.
+
 One-shot advantage also need not rank repeated controllers. At old cost 10,
 an excursion with success probability .9 and repeated cost 8 gains 1.8 in a
 one-shot comparison; one with probability .01 and repeated cost 1 gains only .09.

@@ -2333,6 +2333,7 @@ void SolveWork::Impl::prepare_requested_bounded_finish() {
             throw std::logic_error(
                 "requested bounded finish crossed live solver scratch");
         }
+        record_progress_event("finish_acknowledged");
         /* A public step boundary never suspends halfway through appending a
          * sparse row. It can, however, retain a state-local automatic
          * admission coroutine or focused-policy scratch. Roll back only that

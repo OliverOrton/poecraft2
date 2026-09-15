@@ -1,0 +1,171 @@
+{
+  "baseline": "fe5bdcb4111fa6785c5615896b993a6fc713d1a1",
+  "binary": "out/progress-delivery/M12.exe",
+  "sha256": "ed50f3be971b14d271ac2acf20334109c1d55e0e0ad1e4e39d1ba7c1d5ff03d1",
+  "native_dll_sha256": "6c84d25469dece010596d45a0f46f63c5b9c14200d624367e4d1d29e53078a1a",
+  "wasm": {
+    "bindings/wasm/dist/poecraft_engine.mjs": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502",
+    "bindings/wasm/dist/poecraft_engine.wasm": "ef87cbd44e50e5a679825acb83a8506f79ac86142344ab219643af13347b8b00"
+  },
+  "sources": [
+    {
+      "path": "apps/web/src/app/components/pc-calculator.ts",
+      "sha256": "e8c2685b5c38dc149c69d7ba8de14195fc78b4d4403da0bc50a57a3bf1747ca1"
+    },
+    {
+      "path": "apps/web/src/app/engine-protocol.ts",
+      "sha256": "29372653beb72eb0e05d227dd43ff81da5d6205576c07cdc49caf42dbe820267"
+    },
+    {
+      "path": "apps/web/src/app/engine-wasm.ts",
+      "sha256": "3e6f493c2467681b8a009f43c275faa7112b08397df9604e526458f9ccc28173"
+    },
+    {
+      "path": "apps/web/src/app/engine-worker.ts",
+      "sha256": "23ffabcc3393b3957c26bb4e38adc00d4d96823d32fa256fe30bd86f841a076e"
+    },
+    {
+      "path": "apps/web/test/solver-benchmark.ts",
+      "sha256": "c0161932042adc2e162a8f46bf2354839b57a200c3e3e4c973f5b2cdb04d7be5"
+    },
+    {
+      "path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "sha256": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502"
+    },
+    {
+      "path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "sha256": "ef87cbd44e50e5a679825acb83a8506f79ac86142344ab219643af13347b8b00"
+    },
+    {
+      "path": "bindings/wasm/wasm-exports.txt",
+      "sha256": "efacf396d6a7e8e63354021db6a30620ff554a0cf7900f6ccf91d5ea9a4eaabb"
+    },
+    {
+      "path": "bindings/wasm/wasm_api.cpp",
+      "sha256": "907cf272e232ac514285e39f8382c2df9f06dc87e65732a9cf48b6552f777ee8"
+    },
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "sha256": "e2128a1ba7ce6381896ce77b4eafc0b52064d34814fe902fa50674bde7dd1e88"
+    },
+    {
+      "path": "engine/include/poecraft/solver.h",
+      "sha256": "46409e51c36ee4583e37f0530b468c256a184098d0d0b50b10fb58eef4bf64d5"
+    },
+    {
+      "path": "engine/src/engine_internal.hpp",
+      "sha256": "d4010ad260be6bb8e1389e11ae88db0a624a5f64603edd7d932adfc726373d7d"
+    },
+    {
+      "path": "engine/src/simulator.cpp",
+      "sha256": "cc672abec582b1b825a787f95c8e5557c8a0714d067805f11020e4bb35a63d35"
+    },
+    {
+      "path": "engine/src/solver_api.cpp",
+      "sha256": "12a1cc95da62e54eeb4cd47ee1013ccd2164c00de9bda77e03474809f854b61e"
+    },
+    {
+      "path": "engine/src/solver_compile.cpp",
+      "sha256": "005be8bad8e878ca99d71579c2281264a93c6127ed2eaf98adb3c77d175e77b2"
+    },
+    {
+      "path": "engine/src/solver_compile_contracts.hpp",
+      "sha256": "59e13ebe5f11bf8a36e2bc255ab56ede84be601843ee754266ede3ffc5064bed"
+    },
+    {
+      "path": "engine/src/solver_eval.cpp",
+      "sha256": "1a80655f07a68a581866fe56448cc4edf30b9eccb80981f814fad7c9a656869b"
+    },
+    {
+      "path": "engine/src/solver_eval_types.hpp",
+      "sha256": "5cd8e4424486a992c7ecc29a784a56881aed0f93fdf08de2f74332073e14dbd8"
+    },
+    {
+      "path": "engine/src/solver_policy_assertion_work.cpp",
+      "sha256": "fcec23f8f43da815c7613b74681ff1be4556bf4cdfd86a68533eb3d935013ed6"
+    },
+    {
+      "path": "engine/src/solver_policy_refinement_helpers.hpp",
+      "sha256": "876423118b3af5bc1b2695c1e6fc04805078bf225bf32b7354c7d6f2e59385a9"
+    },
+    {
+      "path": "engine/src/solver_solve.cpp",
+      "sha256": "bcb66795f9245fac82a34c68a0faad6a8c94df75b3eeed29fa48b634e525ede0"
+    },
+    {
+      "path": "engine/src/solver_solve_bellman.cpp",
+      "sha256": "56584b34676123c45d88d907b1a296035e903d5f3e4b7b282344f53ab00c8b74"
+    },
+    {
+      "path": "engine/src/solver_solve_constructive.cpp",
+      "sha256": "2edaf687d1b79259448516bc84eb664b12980a4ba3f1c594957bc20a33b11ae3"
+    },
+    {
+      "path": "engine/src/solver_solve_contracts.hpp",
+      "sha256": "6cae55e6eaddbc1636ef89c7b389d18dafe2b23984012767b2b9ec5d388daf5c"
+    },
+    {
+      "path": "engine/src/solver_solve_finish.cpp",
+      "sha256": "34563cde7e6890b72ae7a7f3808f65b2e02d46fced8b3f6de554b9029257ba98"
+    },
+    {
+      "path": "engine/src/solver_solve_focused.cpp",
+      "sha256": "2df8fd9536e4a928f77b36cb77dec3f5bba8e06f9cb0c7d1364dc8c633859dcb"
+    },
+    {
+      "path": "engine/src/solver_solve_incremental.cpp",
+      "sha256": "2e6ac7dbcca93631abdecacfe4a967336eb8be5399c4a825a99b8181aab5ba9e"
+    },
+    {
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "sha256": "276750c278330fe6ea6f2571618880bc5717c09f6bcae1a378b35d1a338968a2"
+    },
+    {
+      "path": "engine/src/solver_solve_telemetry.cpp",
+      "sha256": "a576a8f661f8ed5e569c58424d6315eeb83ffde593cbac48a1d10ab45ae33c13"
+    },
+    {
+      "path": "engine/src/solver_solve_types.hpp",
+      "sha256": "79302a7fc1a60bc00673899687c68e22adb8958d588ed329820954b0a1e4a23f"
+    },
+    {
+      "path": "engine/tests/test_solver_api.cpp",
+      "sha256": "9d8a5d6cda8fb2ce7f128f4bbd018956b0751bc50f6c55357b76f15d8ade6d28"
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "520e9a4def0f46d7c6d5f029f3768ae0c04b8d4b9b1196a73b2ad4412b8bd4f2"
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "sha256": "78c6f1b1bef2b13829cc908d6b8c29d989a3553accb1ca7d340ad41424e51669"
+    },
+    {
+      "path": "tools/ingest/poecraft_ingest/solver_lab_service.py",
+      "sha256": "2296ec291cc8854e22ae8ee317f27eabfe6728e2685b41da8498b06178855110"
+    },
+    {
+      "path": "engine/src/solver_compile_conditions.hpp",
+      "sha256": "d37b5b1215545bf9a0b6e30918f56f5171c2c1ac3c560ca88b1765c15a21bc34"
+    }
+  ],
+  "prior_qualified_build": "build-M11.json",
+  "changes_from_M11": [
+    "HANDOFF.md",
+    "bindings/wasm/dist/poecraft_engine.wasm",
+    "bindings/wasm/wasm_api.cpp",
+    "engine/benchmarks/solver_benchmark.cpp",
+    "engine/include/poecraft/solver.h",
+    "engine/src/solver_api.cpp",
+    "engine/src/solver_solve.cpp",
+    "engine/src/solver_solve_contracts.hpp",
+    "engine/tests/test_solver_api.cpp"
+  ],
+  "equivalence": "M12 restores the original public pc_solve_progress layout and transports the same lifecycle sequence through an additive read-only accessor. Search, candidate scheduling, compilation and evaluation algorithms are unchanged; native M11 policy qualification and Ring execution sampling are reused under their original build identity.",
+  "build_logs": [
+    "out/progress-delivery/build-M12-native.log",
+    "out/progress-delivery/build-M12-shared.log",
+    "out/progress-delivery/build-M12-wasm.log",
+    "out/progress-delivery/build-M12-tests.log"
+  ]
+}

@@ -2285,6 +2285,26 @@ pc_result pc_solver_solve_log(
                      out_error);
 }
 
+uint64_t pc_solver_progress_sequence(pc_solver_handle solver) {
+    return solver != nullptr && solver->solve_work ? solver->solve_work->progress_sequence() : 0;
+}
+
+pc_result pc_solver_progress_trace(
+    pc_solver_handle solver, uint64_t after_sequence, char* buffer,
+    size_t capacity, size_t* out_length, pc_error_info* out_error) {
+    if (solver == nullptr || out_length == nullptr || !solver->solve_work) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "trace requires live stepped work");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        return copy_text(solver->solve_work->progress_trace_json(after_sequence),
+            buffer, capacity, out_length, out_error);
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
 pc_result pc_solver_telemetry(
     pc_solver_handle solver,
     char* buffer,

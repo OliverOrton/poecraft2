@@ -2452,6 +2452,7 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
     }
 
     auto strategy = std::make_shared<StrategyImpl>();
+    strategy->source_json.assign(strategy_json, strategy_json_size);
     strategy->session = std::move(session);
     strategy->name = string_member(root, "name");
     strategy->start_item = parse_start_item(

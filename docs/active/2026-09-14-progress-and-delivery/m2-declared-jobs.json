@@ -1,0 +1,35 @@
+[
+  {
+    "name": "B0-conquest",
+    "binary": "out\\cross-base-strategy-recovery\\CBR-v4.exe",
+    "binary_sha256": "e4afb35a588f1ccd37bebbf1fcfee6f9831b010c9babde35479788ec9089d1f3",
+    "source_commit": "fe5bdcb4111fa6785c5615896b993a6fc713d1a1",
+    "manifest": "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+    "cases": [
+      "cb01-cross-base-product8-long240"
+    ],
+    "host_watchdog": 315.0
+  },
+  {
+    "name": "M1-conquest",
+    "binary": "out/progress-delivery/M1.exe",
+    "binary_sha256": "284b56394a5ada68e640ae212bfd10795f79de6f6e663e2196112222ff3c6637",
+    "manifest": "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+    "cases": [
+      "cb01-cross-base-product8-long240"
+    ],
+    "host_watchdog": 315.0
+  },
+  {
+    "name": "M1-ring",
+    "binary": "out/progress-delivery/M1.exe",
+    "binary_sha256": "284b56394a5ada68e640ae212bfd10795f79de6f6e663e2196112222ff3c6637",
+    "manifest": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/manifest.json",
+    "cases": [
+      "cb07-cross-base-product8-long240"
+    ],
+    "host_watchdog": 870.0,
+    "mode": "execution-count",
+    "action_price": 0.389479993470349
+  }
+]

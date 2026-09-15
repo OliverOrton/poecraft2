@@ -1,5 +1,25 @@
 # Handoff
 
+Completed locally: [Explainable progress and timely executable policies](docs/active/2026-09-14-progress-and-delivery/README.md),
+against `fe5bdcb4`. Native/worker/Calculator/Lab progress is bounded and exported.
+Counterbalanced native Conquest verification is 46.64/47.01 seconds versus
+244.68/244.90 at the same C85558.70619; default finish remains 240 seconds.
+Final M11 native Ring discovers, retains and independently evaluates C220743.46355
+with legitimate graph-local provenance and root-only parent authority. Bow,
+Amulet and Conquest-four preserve their exact reference graph hashes; Regalia
+remains exact. Ring's 1000 trials have 143 successes and 857 action-cap censorings,
+with zero illegal/missing-price/graph-step failures. Full-scope proof remains open.
+Final M12 preserves the public progress ABI with an additive cursor API; the
+old-header compatibility probe passes. Native M11 search qualification remains
+applicable to this transport-only correction under its original build identity.
+Actual M12 Conquest WASM delivery and policy checks pass, but its maximum 387 ms
+worker step fails the unchanged 250 ms responsiveness limit; the earlier 717 ms
+failure remains recorded. WASM retention, cleanup and Regalia checks pass.
+The living record owns the compact qualification,
+retained graphs, failed variants and source/build/request identities.
+No automatic successor, restart, push or subagents are authorized. Protected
+root `0` was not inspected or staged. No next implementation is selected.
+
 [Cross-base strategy comparison and capability recovery](docs/active/2026-09-14-cross-base-strategy-recovery/README.md)
 is complete against reviewed main `3268d1a9f73e8baa156d6daa366bd4f4cc86c29f`,
 with publication to main authorized by Oliver for Pro review. The commit

@@ -1,0 +1,244 @@
+{
+  "build": "build-M11.json",
+  "report": "out/progress-delivery/M11-worker-conquest.json",
+  "report_sha256": "57fbe86ce78c9970c89f17bebca355ec847cacbb82a9866141f00f537467744a",
+  "prepared_strategy_sha256": "7669412762ab97801d277dc4d561685baada15824923adcdd03180561aef5b56",
+  "executable_matches_native": {
+    "strategy": "out/progress-delivery/M3v2-conquest/strategies/cb01-cross-base-product8-long240.strategy.json",
+    "strategy_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+    "difference": "node layout positions only; all executable JSON fields equal"
+  },
+  "solve_summary": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 358209179.6640102,
+    "expanded_states": 3274,
+    "sweeps": 0,
+    "residual": 1.6689300537109375e-06,
+    "skipped_actions": 1,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "lower_bound": 405.3694021063399,
+    "upper_bound": 85558.70618560436,
+    "evaluated_policy_cost": 85558.70618560436,
+    "absolute_optimality_gap": 85153.33678349802,
+    "relative_optimality_gap": 210.06355275221262,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "registry_actions": 187,
+    "candidate_actions": 28,
+    "evaluator_supported_actions": 28,
+    "supported_priced_actions": 252,
+    "skipped_missing_price_actions": 0,
+    "skipped_unsupported_actions": 1,
+    "cancelled": false
+  },
+  "exact_evaluation": {
+    "converged": true,
+    "cost_complete": true,
+    "success_probability": 1,
+    "off_policy_mass": 0,
+    "total_expected_cost": 85558.70618560436,
+    "solver_policy_cost": 85558.70618560436,
+    "cost_delta_absolute": 0,
+    "cost_delta_relative": 0,
+    "cost_reconciled": true
+  },
+  "execution": {
+    "solve_steps": 4432257,
+    "max_solve_step_ms": 717.115,
+    "worker_max_slice_ms": 717.115,
+    "finalization_ms": 43.89,
+    "cancellation_ack_ms": null,
+    "cancellation_mode": null,
+    "cooperative_abandon_ms": null,
+    "watchdog_seconds": 300,
+    "watchdog_mode": "cooperative_abort_signal",
+    "watchdog_expired": false
+  },
+  "milestones": [
+    {
+      "stage": "native_begin_requested",
+      "worker_elapsed_ms": 0.04200000000003001
+    },
+    {
+      "stage": "native_begin_completed",
+      "worker_elapsed_ms": 18567.8084
+    },
+    {
+      "stage": "finish_requested",
+      "worker_elapsed_ms": 240000.12219999998
+    },
+    {
+      "stage": "native_done_observed",
+      "worker_elapsed_ms": 245385.5673
+    },
+    {
+      "stage": "result_export_start",
+      "worker_elapsed_ms": 245385.58179999999
+    },
+    {
+      "stage": "result_export_completed",
+      "worker_elapsed_ms": 245429.4601
+    }
+  ],
+  "source_events": [
+    {
+      "sequence": 289,
+      "native_elapsed_ms": 63631.9764,
+      "kind": "service_queued",
+      "reason": "complete_selected_candidate",
+      "candidate_identity": "5598023219215714573",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 69,
+      "completed_rows": 29155,
+      "verified_upper": null
+    },
+    {
+      "sequence": 293,
+      "native_elapsed_ms": 64192.6569,
+      "kind": "check_start",
+      "reason": "initial_candidate",
+      "candidate_identity": "5598023219215714573",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 69,
+      "completed_rows": 29155,
+      "verified_upper": null
+    },
+    {
+      "sequence": 294,
+      "native_elapsed_ms": 66997.444,
+      "kind": "check_completed",
+      "reason": "compiled policy exact cost does not reconcile with the solver value",
+      "candidate_identity": "5598023219215714573",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 69,
+      "completed_rows": 29155,
+      "verified_upper": null
+    },
+    {
+      "sequence": 295,
+      "native_elapsed_ms": 67004.6295,
+      "kind": "incumbent_retained",
+      "reason": "anytime_reachable_proper_policy",
+      "candidate_identity": "18381843832106689921",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 69,
+      "completed_rows": 29155,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 297,
+      "native_elapsed_ms": 67004.9236,
+      "kind": "incumbent_retained",
+      "reason": "anytime_reachable_proper_policy",
+      "candidate_identity": "18381843832106689921",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 69,
+      "completed_rows": 29155,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 303,
+      "native_elapsed_ms": 239996.4657,
+      "kind": "finish_requested",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 186,
+      "completed_rows": 38715,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 304,
+      "native_elapsed_ms": 239996.5561,
+      "kind": "finish_acknowledged",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 186,
+      "completed_rows": 38715,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 309,
+      "native_elapsed_ms": 240926.7537,
+      "kind": "check_start",
+      "reason": "selected_core_policy",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 186,
+      "completed_rows": 38715,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 310,
+      "native_elapsed_ms": 244889.0673,
+      "kind": "check_completed",
+      "reason": "selected_core_policy:compiled policy exact cost does not reconcile with the solver value",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 186,
+      "completed_rows": 38715,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 311,
+      "native_elapsed_ms": 244955.2729,
+      "kind": "incumbent_retained",
+      "reason": "direct_compiled_core_policy",
+      "candidate_identity": "4333426367942422734",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 186,
+      "completed_rows": 38715,
+      "verified_upper": 85558.70618560436
+    },
+    {
+      "sequence": 313,
+      "native_elapsed_ms": 245381.584,
+      "kind": "native_done",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 186,
+      "completed_rows": 38715,
+      "verified_upper": 85558.70618560436
+    }
+  ],
+  "errors": [],
+  "cap_checks": {
+    "all_passed": false,
+    "checks": {
+      "max_discovered_states": true,
+      "max_expanded_states": true,
+      "max_state_action_rows": true,
+      "max_transitions": true,
+      "max_reforge_work": true,
+      "max_solver_owned_bytes": true,
+      "max_compiled_nodes": true,
+      "max_compiled_edges": true,
+      "max_strategy_json_bytes": true,
+      "worker_step_ms": false,
+      "watchdog_seconds": true,
+      "watchdog_not_expired": true
+    }
+  },
+  "expectation_met": false,
+  "disposition": "Executable delivery and original-price evaluation passed; overall benchmark expectation failed the unchanged 250 ms worker-step limit (717.115 ms). No WASM speedup claim without a matched WASM baseline."
+}

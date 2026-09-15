@@ -844,7 +844,7 @@ const char* solve_phase_owner_name(const int32_t owner) {
 
 void append_solve_progress(
     std::string& out,
-    const pc_solve_progress& progress) {
+    const pc_solve_progress& progress, uint64_t lifecycle_sequence) {
     out += "{\"phase\":\"";
     out += solve_phase_name(progress.phase);
     out += "\",\"phase_owner\":\"";
@@ -904,6 +904,7 @@ void append_solve_progress(
            std::to_string(progress.certification_solved_sccs);
     out += ",\"certification_total_sccs\":" +
            std::to_string(progress.certification_total_sccs);
+    out += ",\"lifecycle_sequence\":" + std::to_string(lifecycle_sequence);
     out.push_back('}');
 }
 
@@ -2747,9 +2748,25 @@ const char* pcw_solver_solve_step(uint32_t solver_id,
         *solver, max_work_items, &progress, &error);
     if (rc != PC_RESULT_OK) return fail(error);
     std::string out = "{\"ok\":true,\"progress\":";
-    append_solve_progress(out, progress);
+    append_solve_progress(out, progress, pc_solver_progress_sequence(*solver));
     out.push_back('}');
     return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_progress_trace(uint32_t solver_id, double after_sequence) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_error_info error = make_error();
+    size_t length = 0;
+    auto rc = pc_solver_progress_trace(*solver, static_cast<uint64_t>(after_sequence), nullptr, 0, &length, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string trace(length + 256, '\0');
+    rc = pc_solver_progress_trace(*solver, static_cast<uint64_t>(after_sequence), trace.data(), trace.size(), &length, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    trace.resize(length);
+    if (!trace.empty() && trace.back() == '\0') trace.pop_back();
+    return respond("{\"ok\":true,\"trace\":" + trace + "}");
 }
 
 EMSCRIPTEN_KEEPALIVE

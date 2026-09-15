@@ -1,0 +1,36 @@
+{
+  "kind": "native_compiler_diagnostic_not_product_discovery",
+  "case": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/cb07-cross-base-product8-long240.json",
+  "case_sha256": "82e604292360284e1a48aa590a909b3a8260a3e4ab91b2d8a4aa68529781cae0",
+  "strategy": "out/progress-delivery/ring-compact-option-0.strategy.json",
+  "strategy_sha256": "5a2ef4867ecb6bd6297b690dd5b67f50461f1cc35f28917467fd018addab883b",
+  "native_dll_sha256": "906708e83a926413aa748c24ead7cd40ed131e6caa00fef4a1c5f9f0c81ce086",
+  "limits": {
+    "epsilon": 1e-12,
+    "max_sweeps": 100000,
+    "max_states": 2000000,
+    "max_pairs": 10000000,
+    "max_transitions": 40000000,
+    "max_owned_bytes": 4294967296
+  },
+  "reference_upper": 220743.463546918,
+  "wall_ms": 18860.657999990508,
+  "checks": {
+    "converged": true,
+    "complete_cost": true,
+    "goal_mass": true,
+    "zero_other_mass": true,
+    "same_upper": true
+  },
+  "totals": {
+    "expected_actions": 564673.7576801107,
+    "known_expected_cost": 220743.46354691702,
+    "total_expected_cost": 220743.46354691702,
+    "cost_complete": true
+  },
+  "full_receipt": {
+    "path": "out/progress-delivery/ring-compact-option-0-check.json",
+    "sha256": "055561ce49c8b03d90e8887e05923b0039a28987aebdfaa09548a65bd68798d8"
+  },
+  "probe_source_sha256": "ca41f76c01404f5444f33c8ff2e64852dc79d92a62008c431938b16f96894a37"
+}

@@ -1,0 +1,99 @@
+{
+  "baseline": "fe5bdcb4111fa6785c5615896b993a6fc713d1a1",
+  "binary": "out\\progress-delivery\\M3.exe",
+  "sha256": "8c53e66536df445645780733ea0d4fae30d4596235ac5af7d28674ea24f4ec94",
+  "sources": [
+    {
+      "path": "HANDOFF.md",
+      "sha256": "fcb22d0f2d2fab5e83710d4abe89c007ffeec80d0a2e68212191cd0d80fdf32f"
+    },
+    {
+      "path": "apps/web/src/app/components/pc-calculator.ts",
+      "sha256": "e8c2685b5c38dc149c69d7ba8de14195fc78b4d4403da0bc50a57a3bf1747ca1"
+    },
+    {
+      "path": "apps/web/src/app/engine-protocol.ts",
+      "sha256": "29372653beb72eb0e05d227dd43ff81da5d6205576c07cdc49caf42dbe820267"
+    },
+    {
+      "path": "apps/web/src/app/engine-wasm.ts",
+      "sha256": "3e6f493c2467681b8a009f43c275faa7112b08397df9604e526458f9ccc28173"
+    },
+    {
+      "path": "apps/web/src/app/engine-worker.ts",
+      "sha256": "23ffabcc3393b3957c26bb4e38adc00d4d96823d32fa256fe30bd86f841a076e"
+    },
+    {
+      "path": "bindings/wasm/wasm-exports.txt",
+      "sha256": "efacf396d6a7e8e63354021db6a30620ff554a0cf7900f6ccf91d5ea9a4eaabb"
+    },
+    {
+      "path": "bindings/wasm/wasm_api.cpp",
+      "sha256": "370903138e187a813d3611e6df9b57f8f0614e97bac7f13884a0797dcefbf8b6"
+    },
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "sha256": "9d7aaa58124f6d367c8c30dff364ea14deb3ccaa02f0f1cd1367ec5e12896017"
+    },
+    {
+      "path": "engine/include/poecraft/solver.h",
+      "sha256": "f612e785fdad48e38944517bcc6315950924d366ff73e388b60861752921432f"
+    },
+    {
+      "path": "engine/src/solver_api.cpp",
+      "sha256": "b9b248e1de70936f46a59282f36468c63fd53030d8804fe6f42a87c70f680701"
+    },
+    {
+      "path": "engine/src/solver_solve.cpp",
+      "sha256": "d6122cd592808e75df6cef3305a7b145d8a90f14628ca65fb5dd1e839e646a51"
+    },
+    {
+      "path": "engine/src/solver_solve_bellman.cpp",
+      "sha256": "56584b34676123c45d88d907b1a296035e903d5f3e4b7b282344f53ab00c8b74"
+    },
+    {
+      "path": "engine/src/solver_solve_constructive.cpp",
+      "sha256": "4acc12f72f64f1204490bc3700adbd8c89eed62cca0eb2be99841ebcd97a6a03"
+    },
+    {
+      "path": "engine/src/solver_solve_contracts.hpp",
+      "sha256": "3f5001cbf01ca45745102bca15d4000041aeab59eb6f33a5e3ba496447c54e7a"
+    },
+    {
+      "path": "engine/src/solver_solve_finish.cpp",
+      "sha256": "a9972c50436ee4835d8b1f65da86c12785688b9446dbb83a301a8a3afd105cb1"
+    },
+    {
+      "path": "engine/src/solver_solve_focused.cpp",
+      "sha256": "2df8fd9536e4a928f77b36cb77dec3f5bba8e06f9cb0c7d1364dc8c633859dcb"
+    },
+    {
+      "path": "engine/src/solver_solve_incremental.cpp",
+      "sha256": "4b62c3558e9c99acbfebf28639a165cfa1d25c4c29b8902426e23bfa58b371a9"
+    },
+    {
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "sha256": "7ce6bdab6afc42ea7b6cf1f39a6814c7d37eb8eb16152812ec20984ed29fe772"
+    },
+    {
+      "path": "engine/src/solver_solve_telemetry.cpp",
+      "sha256": "21f8932d9554884a264990ea6a36a894b0a695c49a39df6ad581ce3832f7de07"
+    },
+    {
+      "path": "engine/src/solver_solve_types.hpp",
+      "sha256": "9ef1d6042f1977c77cab977eb181b9e6243103c2750cd08e0dc999b98954374b"
+    },
+    {
+      "path": "engine/tests/test_solver_api.cpp",
+      "sha256": "5d92452dbce06a4112d9ac008feb0487787d85c80deac5fea6cb9fdab9c31f70"
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "sha256": "05fae8a91f5a97583eb0afcaae1ae1d2261ecf77775a94d1ac22c93a0984f7c3"
+    },
+    {
+      "path": "tools/ingest/poecraft_ingest/solver_lab_service.py",
+      "sha256": "2296ec291cc8854e22ae8ee317f27eabfe6728e2685b41da8498b06178855110"
+    }
+  ]
+}

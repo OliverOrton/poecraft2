@@ -551,6 +551,11 @@ export class EngineBindings {
         ).progress as unknown as SolveProgress;
     }
 
+    solverProgressTrace(solver: number, afterSequence: number): import("./engine-protocol").SolverProgressTrace {
+        return this.callJson("pcw_solver_progress_trace", ["number", "number"],
+            [solver, afterSequence]).trace as unknown as import("./engine-protocol").SolverProgressTrace;
+    }
+
     requestSolverSolveBoundedFinish(solver: number): void {
         this.callJson(
             "pcw_solver_solve_request_bounded_finish",

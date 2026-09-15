@@ -1157,6 +1157,7 @@ std::uint64_t SolveWork::Impl::incumbent_owned_bytes(
             bytes += continuation.policy_entries.retained_owned_bytes -
                 sizeof(StrategyPolicyEntryCertificate);
         }
+        bytes += incumbent.compiled_artifact.graph_local_provenance.owned_bytes();
         bytes += incumbent.compiled_artifact.policy_decision_bindings.capacity() *
             sizeof(CompiledPolicyDecisionBinding);
         for (const CompiledPolicyDecisionBinding& binding :
@@ -3308,6 +3309,7 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
             compilation.additional_recipe_nodes;
         incumbent.compiled_artifact.policy_decision_bindings =
             compilation.policy_decision_bindings;
+        incumbent.compiled_artifact.graph_local_provenance = compilation.graph_local_provenance;
         incumbent.compiled_artifact.nodes = compilation.nodes;
         incumbent.compiled_artifact.edges = compilation.edges;
         incumbent.compiled_artifact.total_condition_bytes =
@@ -3436,6 +3438,12 @@ bool SolveWork::Impl::retain_certified_incumbent(
                 return incumbent_precedes(left, right);
             });
         incumbent_portfolio.observe_verified(incumbent);
+        record_progress_event(incumbent.independently_evaluated && incumbent.executable
+            ? "incumbent_retained" : "candidate_retained", incumbent.kind, incumbent.portfolio_identity);
+        record_progress_event("entry_provenance", "root_only=" + std::to_string(incumbent.compiled_root_entry_only) +
+            ";parent_bindings=" + std::to_string(incumbent.compiled_artifact.policy_decision_bindings.size()) +
+            ";fracture=" + std::to_string(incumbent.compiled_artifact.strategy_json.find("\"fracture\"") != std::string::npos),
+            incumbent.portfolio_identity);
         if (options.carrier_ladder_exact_boundary_mode ==
                 CarrierLadderExactBoundaryMode::ResumableContinuation) {
             audit_verified_incumbent_operator_proof_shadow(incumbent);
@@ -3530,6 +3538,7 @@ bool SolveWork::Impl::commit_output_incumbent(
             return false;
         }
         output_incumbent = std::move(candidate);
+        record_progress_event("candidate_captured", output_incumbent->kind, output_incumbent->portfolio_identity);
         if (displaced_identity != 0 &&
             options.carrier_ladder_exact_boundary_mode !=
                 CarrierLadderExactBoundaryMode::Off) {
@@ -4555,6 +4564,7 @@ SolveWork::Impl::resume_joint_policy_candidate_if_ready() {
         std::numeric_limits<std::uint64_t>::max()) {
         return ResumableJointPolicyAdvance::NoProgress;
     }
+    record_progress_event("support_ready", "named_continuation_has_priced_seed_row", 0, missing);
     retained.ordinary_interleave_events +=
         incremental_carrier_ladder_epochs -
             retained.carrier_epochs_before_last_resume +
@@ -4593,6 +4603,7 @@ SolveWork::Impl::resume_joint_policy_candidate_if_ready() {
                 incremental_anytime_missing_frontier_states.end(), next) ==
             incremental_anytime_missing_frontier_states.end()) {
             incremental_anytime_missing_frontier_states.push_back(next);
+            record_progress_event("missing_support", "selected_positive_successor", 0, next);
             ++incremental_missing_frontier_discovered;
             incremental_missing_frontier_max_open = std::max<std::uint64_t>(
                 incremental_missing_frontier_max_open,
@@ -4601,6 +4612,7 @@ SolveWork::Impl::resume_joint_policy_candidate_if_ready() {
         return ResumableJointPolicyAdvance::Yielded;
     }
     if (advanced.lifecycle == Lifecycle::CompleteCandidate) {
+        record_progress_event("candidate_completed", "complete_selected_support");
         return ResumableJointPolicyAdvance::Complete;
     }
     return ResumableJointPolicyAdvance::Released;
@@ -4611,6 +4623,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
         const JointAnytimeAttemptLineage::Trigger trigger) {
         std::optional<std::size_t> lineage_index;
         const auto record_attempt_failure = [&](std::string failure) {
+            record_progress_event("candidate_blocked", failure);
             if (lineage_index.has_value()) {
                 JointAnytimeAttemptLineage& lineage =
                     joint_anytime_attempt_lineage.at(*lineage_index);
@@ -5279,6 +5292,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                             .end()) {
                                     incremental_anytime_missing_frontier_states
                                         .push_back(state);
+                                    record_progress_event("missing_support", "selected_positive_successor", 0, state);
                                     ++incremental_missing_frontier_discovered;
                                     incremental_missing_frontier_max_open =
                                         std::max<std::uint64_t>(

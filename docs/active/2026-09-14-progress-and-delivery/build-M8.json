@@ -1,0 +1,173 @@
+{
+  "baseline": "fe5bdcb4111fa6785c5615896b993a6fc713d1a1",
+  "binary": "out/progress-delivery/M8.exe",
+  "sha256": "d49f34a6f727fad2c8838b995d8427046afb9d8caa8837c22195a64475df18ab",
+  "sources": [
+    {
+      "path": "HANDOFF.md",
+      "sha256": "6699066ff1670ae5db666eef2f7dd3f924d76a832e0f1b8f2c3fd20b2af25831"
+    },
+    {
+      "path": "apps/web/src/app/components/pc-calculator.ts",
+      "sha256": "e8c2685b5c38dc149c69d7ba8de14195fc78b4d4403da0bc50a57a3bf1747ca1"
+    },
+    {
+      "path": "apps/web/src/app/engine-protocol.ts",
+      "sha256": "29372653beb72eb0e05d227dd43ff81da5d6205576c07cdc49caf42dbe820267"
+    },
+    {
+      "path": "apps/web/src/app/engine-wasm.ts",
+      "sha256": "3e6f493c2467681b8a009f43c275faa7112b08397df9604e526458f9ccc28173"
+    },
+    {
+      "path": "apps/web/src/app/engine-worker.ts",
+      "sha256": "23ffabcc3393b3957c26bb4e38adc00d4d96823d32fa256fe30bd86f841a076e"
+    },
+    {
+      "path": "apps/web/test/solver-benchmark.ts",
+      "sha256": "c0161932042adc2e162a8f46bf2354839b57a200c3e3e4c973f5b2cdb04d7be5"
+    },
+    {
+      "path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "sha256": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502"
+    },
+    {
+      "path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "sha256": "c46c7c3b43429125b5436cfaf2b99fb03abd7bfa6534a6550574e0b609ff3492"
+    },
+    {
+      "path": "bindings/wasm/wasm-exports.txt",
+      "sha256": "efacf396d6a7e8e63354021db6a30620ff554a0cf7900f6ccf91d5ea9a4eaabb"
+    },
+    {
+      "path": "bindings/wasm/wasm_api.cpp",
+      "sha256": "370903138e187a813d3611e6df9b57f8f0614e97bac7f13884a0797dcefbf8b6"
+    },
+    {
+      "path": "engine/benchmarks/solver_benchmark.cpp",
+      "sha256": "9d7aaa58124f6d367c8c30dff364ea14deb3ccaa02f0f1cd1367ec5e12896017"
+    },
+    {
+      "path": "engine/include/poecraft/solver.h",
+      "sha256": "f612e785fdad48e38944517bcc6315950924d366ff73e388b60861752921432f"
+    },
+    {
+      "path": "engine/src/engine_internal.hpp",
+      "sha256": "d4010ad260be6bb8e1389e11ae88db0a624a5f64603edd7d932adfc726373d7d"
+    },
+    {
+      "path": "engine/src/simulator.cpp",
+      "sha256": "cc672abec582b1b825a787f95c8e5557c8a0714d067805f11020e4bb35a63d35"
+    },
+    {
+      "path": "engine/src/solver_api.cpp",
+      "sha256": "b9b248e1de70936f46a59282f36468c63fd53030d8804fe6f42a87c70f680701"
+    },
+    {
+      "path": "engine/src/solver_compile.cpp",
+      "sha256": "005be8bad8e878ca99d71579c2281264a93c6127ed2eaf98adb3c77d175e77b2"
+    },
+    {
+      "path": "engine/src/solver_compile_contracts.hpp",
+      "sha256": "59e13ebe5f11bf8a36e2bc255ab56ede84be601843ee754266ede3ffc5064bed"
+    },
+    {
+      "path": "engine/src/solver_eval.cpp",
+      "sha256": "1a80655f07a68a581866fe56448cc4edf30b9eccb80981f814fad7c9a656869b"
+    },
+    {
+      "path": "engine/src/solver_eval_types.hpp",
+      "sha256": "5cd8e4424486a992c7ecc29a784a56881aed0f93fdf08de2f74332073e14dbd8"
+    },
+    {
+      "path": "engine/src/solver_policy_assertion_work.cpp",
+      "sha256": "fcec23f8f43da815c7613b74681ff1be4556bf4cdfd86a68533eb3d935013ed6"
+    },
+    {
+      "path": "engine/src/solver_policy_refinement_helpers.hpp",
+      "sha256": "876423118b3af5bc1b2695c1e6fc04805078bf225bf32b7354c7d6f2e59385a9"
+    },
+    {
+      "path": "engine/src/solver_solve.cpp",
+      "sha256": "d6122cd592808e75df6cef3305a7b145d8a90f14628ca65fb5dd1e839e646a51"
+    },
+    {
+      "path": "engine/src/solver_solve_bellman.cpp",
+      "sha256": "56584b34676123c45d88d907b1a296035e903d5f3e4b7b282344f53ab00c8b74"
+    },
+    {
+      "path": "engine/src/solver_solve_constructive.cpp",
+      "sha256": "2edaf687d1b79259448516bc84eb664b12980a4ba3f1c594957bc20a33b11ae3"
+    },
+    {
+      "path": "engine/src/solver_solve_contracts.hpp",
+      "sha256": "a0ea0140d41b2cea94719c4ac63d9c27e0e3753ae606382ee15c444a79b23c5b"
+    },
+    {
+      "path": "engine/src/solver_solve_finish.cpp",
+      "sha256": "34563cde7e6890b72ae7a7f3808f65b2e02d46fced8b3f6de554b9029257ba98"
+    },
+    {
+      "path": "engine/src/solver_solve_focused.cpp",
+      "sha256": "2df8fd9536e4a928f77b36cb77dec3f5bba8e06f9cb0c7d1364dc8c633859dcb"
+    },
+    {
+      "path": "engine/src/solver_solve_incremental.cpp",
+      "sha256": "fe704a6671bab4b81a8418873fd7715fe6d6821141515f6f1b32f3482199c057"
+    },
+    {
+      "path": "engine/src/solver_solve_return_bridge.cpp",
+      "sha256": "f3442f3aaeab1aa362d2eb34ab483a3cd9c43a16aaf55a38925d63e93f8e62fd"
+    },
+    {
+      "path": "engine/src/solver_solve_telemetry.cpp",
+      "sha256": "a576a8f661f8ed5e569c58424d6315eeb83ffde593cbac48a1d10ab45ae33c13"
+    },
+    {
+      "path": "engine/src/solver_solve_types.hpp",
+      "sha256": "79302a7fc1a60bc00673899687c68e22adb8958d588ed329820954b0a1e4a23f"
+    },
+    {
+      "path": "engine/tests/test_solver_api.cpp",
+      "sha256": "5d92452dbce06a4112d9ac008feb0487787d85c80deac5fea6cb9fdab9c31f70"
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "520e9a4def0f46d7c6d5f029f3768ae0c04b8d4b9b1196a73b2ad4412b8bd4f2"
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "sha256": "05fae8a91f5a97583eb0afcaae1ae1d2261ecf77775a94d1ac22c93a0984f7c3"
+    },
+    {
+      "path": "tools/ingest/poecraft_ingest/solver_lab_service.py",
+      "sha256": "2296ec291cc8854e22ae8ee317f27eabfe6728e2685b41da8498b06178855110"
+    },
+    {
+      "path": "engine/src/solver_compile_conditions.hpp",
+      "sha256": "d37b5b1215545bf9a0b6e30918f56f5171c2c1ac3c560ca88b1765c15a21bc34"
+    }
+  ],
+  "wasm": {
+    "bindings/wasm/dist/poecraft_engine.mjs": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502",
+    "bindings/wasm/dist/poecraft_engine.wasm": "c46c7c3b43429125b5436cfaf2b99fb03abd7bfa6534a6550574e0b609ff3492"
+  },
+  "checks": {
+    "return_bridge": {
+      "checks": 648,
+      "failures": 0
+    },
+    "bounded_finish": {
+      "checks": 179,
+      "failures": 0
+    },
+    "typescript": "passed",
+    "web_focused": "transfer, Lab export, solver result presentation passed",
+    "native_blocker_entry": {
+      "checks": 65,
+      "failures": 0
+    }
+  },
+  "wasm_disposition": "M8 matching source rebuilt",
+  "native_dll_sha256": "906708e83a926413aa748c24ead7cd40ed131e6caa00fef4a1c5f9f0c81ce086"
+}

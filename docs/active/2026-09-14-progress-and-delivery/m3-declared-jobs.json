@@ -1,0 +1,12 @@
+[
+  {
+    "name": "M3-conquest",
+    "binary": "out\\progress-delivery\\M3.exe",
+    "binary_sha256": "8c53e66536df445645780733ea0d4fae30d4596235ac5af7d28674ea24f4ec94",
+    "manifest": "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+    "cases": [
+      "cb01-cross-base-product8-long240"
+    ],
+    "host_watchdog": 315.0
+  }
+]

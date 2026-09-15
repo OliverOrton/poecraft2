@@ -1,0 +1,36 @@
+{
+  "command": [
+    "py",
+    "-3",
+    "out/dirty-state-continuation/qualify_sampling_amulet.py",
+    "--case",
+    "cb07-cross-base-product8-long240",
+    "--strategy",
+    "docs/active/2026-09-14-progress-and-delivery/strategies/ring-native.strategy.json",
+    "--output",
+    "docs/active/2026-09-14-progress-and-delivery/sampling-ring.json",
+    "--seed",
+    "20260826"
+  ],
+  "watchdog_seconds": 870,
+  "admission": {
+    "available_physical": 36322033664,
+    "available_commit": 21694357504,
+    "outside_bytes": 13681888461,
+    "reserved_bytes": 8589934592,
+    "admitted": true
+  },
+  "build": "build-M11.json",
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 42420,
+    "process_identity_token": "42420:134339186608755346",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 296199.6478999499
+  }
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "name": "M3v2-conquest-confirmation",
+    "binary": "out\\progress-delivery\\M4.exe",
+    "binary_sha256": "71069f91c7a92c4d0b3f86ffc56a16de4716001c1766699a2c19d6072609fc3d",
+    "manifest": "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+    "cases": [
+      "cb01-cross-base-product8-long240"
+    ],
+    "host_watchdog": 315.0
+  },
+  {
+    "name": "M1-conquest-counterbalance",
+    "binary": "out\\progress-delivery\\M1.exe",
+    "binary_sha256": "284b56394a5ada68e640ae212bfd10795f79de6f6e663e2196112222ff3c6637",
+    "manifest": "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+    "cases": [
+      "cb01-cross-base-product8-long240"
+    ],
+    "host_watchdog": 315.0
+  },
+  {
+    "name": "M5-ring",
+    "binary": "out/progress-delivery/M5.exe",
+    "binary_sha256": "477b810adbe3c06602f2f6b350133b6a17e5a411c9abd92a55b60b57a4fa63e9",
+    "manifest": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/manifest.json",
+    "cases": [
+      "cb07-cross-base-product8-long240"
+    ],
+    "host_watchdog": 870.0,
+    "mode": "execution-count",
+    "action_price": 0.389479993470349
+  }
+]

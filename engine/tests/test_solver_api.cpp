@@ -2376,6 +2376,21 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(solve_progress.peak_owned_bytes >=
              solve_progress.live_owned_bytes);
     PC_CHECK(saw_refining || saw_compiling || saw_certifying);
+    // Cheap projection reads are passive, keep native/source time distinct,
+    // and expose sequence cursors without creating events or solver work.
+    size_t trace_length = 0;
+    PC_CHECK(pc_solver_progress_trace(solver, 0, nullptr, 0, &trace_length, &error) == PC_RESULT_OK);
+    std::string trace(trace_length + 256, '\0');
+    PC_CHECK(pc_solver_progress_trace(solver, 0, trace.data(), trace.size(), &trace_length, &error) == PC_RESULT_OK);
+    trace.resize(trace_length);
+    PC_CHECK(trace.find("solver_progress_trace_v1") != std::string::npos);
+    PC_CHECK(trace.find("native_solve_constructor_ms") != std::string::npos);
+    PC_CHECK(trace.find("native_done") != std::string::npos);
+    PC_CHECK(trace.find("numerical_generation") != std::string::npos);
+    PC_CHECK(pc_solver_progress_trace(solver, pc_solver_progress_sequence(solver),
+        trace.data(), trace.size(), &trace_length, &error) == PC_RESULT_OK);
+    trace.resize(trace_length);
+    PC_CHECK(trace.find("\"events\":[]") != std::string::npos);
     PC_CHECK(solve_progress.finalization_work_items > 0);
     PC_CHECK(solve_progress.certification_discovered_pairs > 0);
     /* Done includes exact refinement and independent policy evaluation;

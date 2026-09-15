@@ -72,7 +72,9 @@ std::string compile_dirty_continuation_strategy_json(
     const std::vector<std::uint32_t>& return_states,
     const SolveOptions& limits,
     PolicyCompilationTelemetry* telemetry = nullptr,
-    bool closed_local_domain = false);
+    bool closed_local_domain = false,
+    const GraphLocalPolicyProvenance* old_provenance = nullptr,
+    std::uint32_t single_pass_option = kNoId);
 
 
 } // namespace solver

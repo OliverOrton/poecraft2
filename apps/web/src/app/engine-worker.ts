@@ -301,6 +301,9 @@ async function solveSolver(
     let workItems = qualificationWorkItems ?? Math.min(4, maxWorkItems);
     let observedPhase: SolveProgress["phase"] = "expanding";
     let emittedProgress = false;
+    let observedOwner = "setup";
+    let traceSequence = 0;
+    let traceError: string | undefined;
     let lastProgressAt = -Infinity;
     let yieldCount = 0;
     let lastTimerYieldAt = -Infinity;
@@ -323,8 +326,36 @@ async function solveSolver(
         max_step_ms: 0,
         total_step_ms: 0,
         finalization_ms: 0,
+        progress_observations: [],
+        progress_observations_omitted: 0,
+        milestones: [],
+    };
+    const milestone = (stage: string): void => {
+        worker.milestones!.push({stage, worker_elapsed_ms: performance.now()-solveStartedAt});
+    };
+    const captureProgress = (stage = "native_work"): void => {
+        // Diagnostic failure cannot refuse a valid solve, including an older
+        // loaded module. Preserve the error and avoid repeated failed reads.
+        let trace: SolveProgress["trace"];
+        if (!traceError) {
+            try {
+                trace = bindings.solverProgressTrace(solver, traceSequence);
+                traceSequence = trace.sequence;
+            } catch (error) {
+                traceError = error instanceof Error ? error.message : String(error);
+            }
+        }
+        progress = {...progress, trace, trace_error: traceError,
+            worker_observed_ms: performance.now()-solveStartedAt, delivery_stage: stage};
+        const observations = worker.progress_observations!;
+        if (observations.length === 4096) {
+            observations.shift(); worker.progress_observations_omitted! += 1;
+        }
+        observations.push(progress);
     };
     const acknowledgeCancellation = (): SolverSolveResult => {
+        milestone("cancel_acknowledged");
+        if (begun) captureProgress("abandon_cleanup");
         const result: SolverSolveResult = {
             cancelled: true,
             progress,
@@ -384,6 +415,7 @@ async function solveSolver(
         if (cancelled.has(id)) {
             return acknowledgeCancellation();
         }
+        milestone("native_begin_requested");
         bindings.beginSolverSolve(
             solver,
             params.item as number,
@@ -391,6 +423,7 @@ async function solveSolver(
             params.options as SolveOptions | undefined,
         );
         begun = true;
+        milestone("native_begin_completed");
 
         do {
             if (cancelled.has(id)) {
@@ -430,6 +463,7 @@ async function solveSolver(
                 boundedFinishAfterMs !== null &&
                 performance.now() - solveStartedAt >= boundedFinishAfterMs
             ) {
+                milestone("finish_requested");
                 bindings.requestSolverSolveBoundedFinish(solver);
                 boundedFinishRequested = true;
             }
@@ -439,8 +473,11 @@ async function solveSolver(
                 reportEveryChunk ||
                 !emittedProgress ||
                 phaseChanged ||
+                progress.phase_owner !== observedOwner ||
                 now - lastProgressAt >= 100
             )) {
+                captureProgress();
+                observedOwner = progress.phase_owner;
                 const counts = solveProgressCounts(progress);
                 post({
                     kind: "progress",
@@ -474,8 +511,12 @@ async function solveSolver(
         if (cancelled.has(id)) {
             return acknowledgeCancellation();
         }
+        captureProgress("native_done");
+        milestone("native_done_observed");
         const finalizationStarted = performance.now();
+        milestone("result_export_start");
         const summary = bindings.finishSolverSolve(solver);
+        milestone("result_export_completed");
         worker.finalization_ms = Math.max(
             0,
             performance.now() - finalizationStarted,
@@ -503,7 +544,11 @@ async function solveSolver(
         });
         return { ...summary, cancelled: false, progress, worker };
     } finally {
-        if (begun) bindings.abandonSolverSolve(solver);
+        if (begun) {
+            milestone("abandon_cleanup_start");
+            bindings.abandonSolverSolve(solver);
+            milestone("abandon_cleanup_completed");
+        }
     }
 }
 

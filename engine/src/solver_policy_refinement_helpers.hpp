@@ -224,7 +224,7 @@ std::uint64_t strategy_impl_owned_bytes(
     std::set<const CompiledObservationProgram*>
         counted_observation_programs;
     std::uint64_t bytes =
-        sizeof(StrategyImpl) + strategy.name.capacity() + 1;
+        sizeof(StrategyImpl) + strategy.name.capacity() + 1 + strategy.source_json.capacity() + 1;
     bytes += strategy.nodes.capacity() * sizeof(StrategyNode);
     bytes += strategy.node_by_id.bucket_count() * sizeof(void*);
     bytes += strategy.node_by_id.size() *

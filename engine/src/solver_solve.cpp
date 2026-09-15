@@ -629,6 +629,7 @@ void SolveWork::request_bounded_finish() {
         impl_->requested_bounded_finish) {
         return;
     }
+    impl_->record_progress_event("finish_requested");
     impl_->requested_bounded_finish = true;
     impl_->result.diagnostics.requested_bounded_finish = true;
     impl_->result.diagnostics.requested_bounded_finish_expanded_states =
@@ -651,6 +652,14 @@ void SolveWork::request_proof_handoff() {
 
 SolveProgress SolveWork::progress() const {
     return impl_->progress();
+}
+
+std::uint64_t SolveWork::progress_sequence() const {
+    return impl_->progress_event_sequence;
+}
+
+std::string SolveWork::progress_trace_json(std::uint64_t after_sequence) const {
+    return impl_->progress_trace_json(after_sequence);
 }
 
 SolveTelemetrySnapshot SolveWork::telemetry_snapshot(bool abandoned) const {

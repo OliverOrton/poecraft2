@@ -106,6 +106,7 @@ std::uint64_t compiled_policy_assertion_retained_bytes(
         bytes,
         assertion.evaluation.retained_output_owned_bytes_estimate);
     const auto add_bindings = [&](const PolicyCompilationTelemetry& value) {
+        saturating_add(bytes, value.graph_local_provenance.owned_bytes());
         saturating_add(
             bytes,
             value.policy_decision_bindings.capacity() *

@@ -2377,6 +2377,7 @@ SolveWork::Impl::run_publication_pipeline() {
                             std::move(assertion.evaluation.policy_entries);
                         artifact.policy_decision_bindings =
                             assertion.compilation.policy_decision_bindings;
+                        artifact.graph_local_provenance = assertion.compilation.graph_local_provenance;
                         if (!artifact.certification_strategy_json.empty() &&
                             artifact.continuation_upper.evaluation
                                 .requested) {
@@ -3241,11 +3242,13 @@ SolveWork::Impl::run_publication_pipeline() {
                                         case refinement::
                                                 PolicyExactLiftPhase::
                                                     Compiling:
+                                            if (phase != SolvePhase::Compiling) record_progress_event("compile_start", "publication_pipeline");
                                             phase = SolvePhase::Compiling;
                                             break;
                                         case refinement::
                                                 PolicyExactLiftPhase::
                                                     Certifying:
+                                            if (phase != SolvePhase::Certifying) record_progress_event("check_start", "publication_pipeline");
                                             phase = SolvePhase::Certifying;
                                             break;
                                         default:
@@ -3666,6 +3669,7 @@ SolveWork::Impl::run_publication_pipeline() {
                  * assertion allocates, parses, and prepares its evaluator so
                  * a release-WASM solve step cannot fold both stages into one
                  * cancellation slice. */
+                if (phase != SolvePhase::Compiling) record_progress_event("compile_start", "publication_pipeline");
                 phase = SolvePhase::Compiling;
                 co_await solve_detail::CooperativeCheckpoint{};
                 refinement::CompiledPolicyAssertionWork assertion_work(
@@ -3677,6 +3681,11 @@ SolveWork::Impl::run_publication_pipeline() {
                 while (!assertion_work.progress().done) {
                     const auto assertion_progress =
                         assertion_work.progress();
+                    if (phase == SolvePhase::Compiling && assertion_progress.phase !=
+                            refinement::CompiledPolicyAssertionPhase::Compiling) {
+                        record_progress_event("compile_completed", "selected_core_policy");
+                        record_progress_event("check_start", "selected_core_policy");
+                    }
                     phase = assertion_progress.phase ==
                             refinement::CompiledPolicyAssertionPhase::
                                 Compiling
@@ -3689,6 +3698,8 @@ SolveWork::Impl::run_publication_pipeline() {
                         assertion_work.retained_bytes()};
                 }
                 assertion = assertion_work.take_result();
+                record_progress_event(assertion.executable && assertion.proper ? "check_completed" : "check_refused",
+                    "selected_core_policy:" + assertion.failure_reason);
                 co_await solve_detail::CooperativeCheckpoint{};
             } else {
                 assertion.status =
@@ -4502,9 +4513,11 @@ SolveWork::Impl::run_publication_pipeline() {
                     }
                     switch (lift_progress.phase) {
                     case refinement::PolicyExactLiftPhase::Compiling:
+                        if (phase != SolvePhase::Compiling) record_progress_event("compile_start", "publication_pipeline");
                         phase = SolvePhase::Compiling;
                         break;
                     case refinement::PolicyExactLiftPhase::Certifying:
+                        if (phase != SolvePhase::Certifying) record_progress_event("check_start", "publication_pipeline");
                         phase = SolvePhase::Certifying;
                         break;
                     default:
@@ -5138,6 +5151,7 @@ SolveWork::Impl::run_publication_pipeline() {
                 artifact.policy_decision_bindings =
                     certificate.compiled.compilation
                         .policy_decision_bindings;
+                artifact.graph_local_provenance = certificate.compiled.compilation.graph_local_provenance;
                 artifact.nodes =
                     certificate.compiled.compilation.nodes;
                 artifact.edges =
@@ -5954,6 +5968,7 @@ RetainedCompiledPolicyArtifact SolveWork::Impl::retained_artifact_from_assertion
         assertion.compilation.additional_recipe_nodes;
     artifact.policy_decision_bindings =
         assertion.compilation.policy_decision_bindings;
+    artifact.graph_local_provenance = assertion.compilation.graph_local_provenance;
     artifact.nodes = assertion.compilation.nodes;
     artifact.edges = assertion.compilation.edges;
     artifact.total_condition_bytes =
@@ -6029,6 +6044,7 @@ RetainedCompiledPolicyArtifact SolveWork::Impl::retained_artifact_from_assertion
 }
 
 solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate() {
+    record_progress_event("service_start", "initial_candidate");
     if (!output_incumbent.has_value()) co_return false;
     BoundedPolicyIncumbent& candidate = *output_incumbent;
     if (candidate.independently_evaluated) co_return true;
@@ -6083,8 +6099,15 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
             lineage.compilation_result = "initial_candidate_compilation";
             lineage.independent_evaluation_attempted = true;
         });
+        record_progress_event("compile_start", "initial_candidate", candidate.portfolio_identity);
+        bool checking_started = false;
         while (!work.progress().done) {
             const auto progress = work.progress();
+            if (!checking_started && progress.phase != refinement::CompiledPolicyAssertionPhase::Compiling) {
+                record_progress_event("compile_completed", "initial_candidate", candidate.portfolio_identity);
+                record_progress_event("check_start", "initial_candidate", candidate.portfolio_identity);
+                checking_started = true;
+            }
             phase = progress.phase == refinement::CompiledPolicyAssertionPhase::Compiling
                 ? SolvePhase::Compiling : SolvePhase::Certifying;
             finalization_evaluation_progress = progress.evaluation;
@@ -6108,6 +6131,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
             lineage.independent_evaluation_result = verified
                 ? "verified_before_improvement" : assertion.failure_reason;
         });
+        record_progress_event(verified ? "check_completed" : "check_refused", assertion.failure_reason, candidate.portfolio_identity);
         if (!verified) co_return false;
         candidate.certified_upper_bound = assertion.exact_cost;
         candidate.evaluated_policy_cost = assertion.exact_cost;
@@ -6127,6 +6151,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
         // admits the additional retained copy through its existing shared cap.
         const bool retained = retain_current_certified_incumbent();
         incumbent_portfolio.observe_verified(candidate);
+        record_progress_event("incumbent_retained", candidate.kind, candidate.portfolio_identity);
         record_upper_attribution_milestone(candidate.certified_upper_bound, true);
         update_lineage([&](auto& lineage) {
             lineage.candidate_portfolio_identity = candidate.portfolio_identity;
@@ -6241,6 +6266,7 @@ void SolveWork::Impl::advance_publication_pipeline() {
             finalized_result->diagnostics, &*finalized_result);
         finalization_task.reset();
         phase = SolvePhase::Done;
+        record_progress_event("native_done");
     }
 
 SolveResult SolveWork::Impl::finish() {

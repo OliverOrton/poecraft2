@@ -2912,7 +2912,8 @@ void run_nonempty_dirty_composition_tests() {
         GoalSlot slot; slot.family_id = family; slot.min_tier = 1;
         goal.slots.push_back(slot);
     }
-    CalcContext calc(session, goal, registry, {exalt, annul});
+    CalcContext calc(session, goal, registry, {exalt, annul}, false, true, true,
+        std::nullopt, {}, false, {}, true);
     pc_item_state frozen; pc_item_clear(&frozen); frozen.rarity = PC_RARITY_RARE;
     PC_CHECK(pc_item_add_mod(&frozen, PC_SIDE_PREFIX, 0, session->primary_group[0],
         PC_MOD_SLOT_FRACTURED, nullptr) == PC_RESULT_OK);
@@ -2976,8 +2977,9 @@ void run_nonempty_dirty_composition_tests() {
     old.values.resize(calc.state_count(), 0); old.policy.resize(calc.state_count());
     old.policy_reachable.resize(calc.state_count(), 0); old.goal_states.resize(calc.state_count(), 0);
     old.expanded.resize(calc.state_count(), 0);
+    PolicyCompilationTelemetry old_compilation;
     const auto old_graph = compile_policy_strategy_json(calc, old, "native frozen-goal reference",
-        nullptr, old.options.max_strategy_json_bytes, nullptr, old.options.max_solver_owned_bytes,
+        &old_compilation, old.options.max_strategy_json_bytes, nullptr, old.options.max_solver_owned_bytes,
         PolicyRouteDefaultMode::CertificationFailClosed);
     auto local = old;
     local.start_state = dirty_state; local.exact_start_item = dirty;
@@ -2997,6 +2999,90 @@ void run_nonempty_dirty_composition_tests() {
     PC_CHECK(std::abs(after.success_probability - 1) < 1e-12);
     PC_CHECK(std::abs(after.total_expected_cost - before.total_expected_cost) < 1e-9);
     PC_CHECK(after.total_expected_cost > 2); // all failed additions still pay native removal
+    // Genuine second-generation improvement: paid Scour/Regal/Annul renewal,
+    // then the complete Exalt/Annul controller above, then paid Scour -> Magic
+    // acquisition -> Regal. Both compositions enter at the original root.
+    const auto compile_closed = [&](const auto& choose, const char* label,
+            PolicyCompilationTelemetry& metadata, std::vector<std::uint32_t>& domain) {
+        auto selected = old;
+        selected.policy_reachable.assign(calc.state_count(), 0);
+        selected.expanded.assign(calc.state_count(), 0);
+        std::vector<std::uint32_t> pending{old.start_state};
+        std::set<std::uint32_t> visited{old.start_state};
+        for (std::size_t cursor = 0; cursor < pending.size(); ++cursor) {
+            const auto state = pending[cursor], n = calc.state_count();
+            selected.values.resize(n, 0); selected.policy.resize(n);
+            selected.policy_reachable.resize(n, 0); selected.goal_states.resize(n, 0);
+            selected.expanded.resize(n, 0); selected.policy_reachable[state] = 1;
+            if (calc.is_goal_state(calc.state(state))) { selected.goal_states[state] = 1; continue; }
+            pc_item_state item; PC_CHECK(calc.materialize(state, item));
+            const auto action = choose(item);
+            selected.policy[state] = PolicyOperatorRef{action}; selected.expanded[state] = 1;
+            domain.push_back(state);
+            const auto law = calc.outcomes(state, action, false);
+            PC_CHECK(law.supported && law.applicable);
+            for (const auto& exit : law.entries)
+                if (exit.probability > 0 && visited.insert(exit.state).second) pending.push_back(exit.state);
+        }
+        return compile_policy_strategy_json(calc, selected, label, &metadata,
+            old.options.max_strategy_json_bytes, nullptr, old.options.max_solver_owned_bytes,
+            PolicyRouteDefaultMode::CertificationFailClosed);
+    };
+    PolicyCompilationTelemetry expensive_metadata;
+    std::vector<std::uint32_t> expensive_domain;
+    auto previous_graph = compile_closed([&](const pc_item_state& item) {
+        return item.rarity == PC_RARITY_MAGIC ? registry.index_by_id.at("regal") :
+            item.prefix_count + item.suffix_count == 1 ? scour : annul;
+    }, "paid native renewal", expensive_metadata, expensive_domain);
+    auto previous_provenance = expensive_metadata.graph_local_provenance;
+    auto all_prices = prices; all_prices["exalt"] = 1;
+    all_prices.insert({{"chaos",100}, {"scour",1}, {"alteration",1}, {"augment",1}, {"regal",1}});
+    double previous_cost = evaluate_compiled(session, previous_graph, all_prices).total_expected_cost;
+    for (unsigned generation : {1u, 2u}) {
+        PolicyCompilationTelemetry metadata;
+        std::vector<std::uint32_t> domain;
+        const auto replacement = compile_closed([&](const pc_item_state& item) {
+            if (generation == 1) return item.prefix_count + item.suffix_count == 1 ? exalt : annul;
+            if (item.rarity == PC_RARITY_RARE)
+                return item.prefix_count + item.suffix_count == 1 ? scour : annul;
+            bool suffix_goal = false;
+            for (unsigned i = 0; i < item.suffix_count; ++i) suffix_goal |= item.suffixes[i].mod_id == 5;
+            return registry.index_by_id.at(suffix_goal ? "regal" :
+                item.prefix_count + item.suffix_count == 1 ? "augment" : "alteration");
+        }, "closed native improvement", metadata, domain);
+        const auto composed = compile_dirty_continuation_strategy_json(calc, replacement, previous_graph,
+            domain, {}, old.options, &metadata, true, &previous_provenance);
+        PC_CHECK(metadata.policy_decision_bindings.empty());
+        PC_CHECK(metadata.graph_local_provenance.matches(composed));
+        auto parsed = compile_strategy_json(session, composed.data(), composed.size());
+        auto economy = std::make_shared<EconomyImpl>(); economy->prices = all_prices;
+        StrategyEvalOptions query; query.economy = economy;
+        query.graph_local_provenance = metadata.graph_local_provenance;
+        for (const auto& declaration : query.graph_local_provenance.decisions)
+            query.policy_decision_entries.push_back({declaration.compiled_node_id, kNoId, kNoId, {},
+                declaration.selected_operator_identity, declaration.fixed_observed_choice_policy, true});
+        const auto checked = evaluate_strategy(*parsed, query);
+        PC_CHECK(checked.converged && checked.cost_complete && std::abs(checked.success_probability - 1) < 1e-12);
+        PC_CHECK(checked.total_expected_cost < previous_cost - 1e-9);
+        bool reached_local = false;
+        for (const auto& entry : checked.policy_entries.entries) {
+            PC_CHECK(entry.coarse_state == kNoId && entry.selected_operator == kNoId);
+            PC_CHECK(entry.coarse_state_identity.empty());
+            reached_local |= entry.globally_routable() && entry.compiled_node_id.starts_with(generation == 1 ? "dirty_" : "dirty2_");
+        }
+        PC_CHECK(reached_local);
+        auto foreign = query; foreign.policy_decision_entries.front().coarse_state = 0;
+        PC_CHECK(evaluate_strategy(*parsed, foreign).policy_entries.decisions.front().status == StrategyPolicyEntryStatus::InvalidRequest);
+        auto stale = query; stale.graph_local_provenance.strategy_json += " ";
+        PC_CHECK(evaluate_strategy(*parsed, stale).policy_entries.certified_entries == 0);
+        auto interior = query;
+        interior.policy_decision_entries = {{"policy_route_root", kNoId, kNoId, {}, {1}, false, true}};
+        PC_CHECK(evaluate_strategy(*parsed, interior).policy_entries.certified_entries == 0);
+        std::printf("graph-local private generation %u: %.12g -> %.12g; entries=%u\n",
+            generation, previous_cost, checked.total_expected_cost, checked.policy_entries.certified_entries);
+        previous_graph = composed; previous_provenance = metadata.graph_local_provenance;
+        previous_cost = checked.total_expected_cost;
+    }
     // A new closed Magic acquisition domain enters only through the global
     // parent router. Paid Regal's complete native outcomes feed the existing
     // closed Rare controller; no old-root scalar or free rarity cast is used.
@@ -3439,6 +3525,69 @@ void run_solver_native_blocker_entry_tests(const char* artifact_dir) {
                 registry.actions.at(op.setup_action).id==bench.id;
         }));
         std::printf("native blocker entry %s: coarse=%u observed=%u conflicting=%u\n",base,old_source,entry,blocked);
+        if (!amulet) {
+            // Real clean Ring entry: a complete native program must compose
+            // without exporting its private junk partition into the old graph.
+            GoalSpec clean_goal; clean_goal.rarity=PC_RARITY_RARE; clean_goal.automatic_candidates=true;
+            for (const char* key : {"IncreasedEvasionRating7","FireResist8","AddedColdDamage9","AllAttributes4"}) {
+                GoalSlot slot; slot.family_id=session->family_id.at(mod(key)); slot.min_tier=1;
+                clean_goal.slots.push_back(slot);
+            }
+            pc_item_state clean; pc_item_clear(&clean); clean.rarity=PC_RARITY_RARE;
+            for (const char* key : {"AddedColdDamage9","FireResist8","AllAttributes4"}) add(clean,key);
+            CalcContext local(session,clean_goal,registry,candidates,false,false,false,std::nullopt,{},true,universe);
+            const auto source=local.intern_item(clean);
+            AutomaticAdmissionLimits admission; admission.prices=&prices; admission.consider_imprint_programs=false;
+            StateLocalAutomaticBatch options;
+            while (!local.advance_state_local_automatic_candidates(source,admission,options,1)) {}
+            std::string old_graph;
+            PC_CHECK(read_text_file("docs/active/2026-09-13-execution-aware-proposals/strategies/ring-four-count.strategy.json",old_graph));
+            unsigned composed_options=0;
+            for (const auto index : options.admitted_operators) {
+                const auto op=local.operators().at(index);
+                if (op.option_kind!=FixedOptionKind::TemporaryBenchRepeat || op.automatic_kind!=AutomaticCandidateKind::CannotRoll) continue;
+                const auto kernel=local.option_kernel(source,index);
+                PC_CHECK(kernel.legal && kernel.terminates_almost_surely && kernel.retry_states.empty());
+                SolveResult selected; selected.start_state=source; selected.exact_start_item=clean; selected.has_exact_start_item=true;
+                selected.policy_available=true; selected.policy_status=SolvePolicyStatus::BoundedFeasible;
+                selected.options.allow_economic_restart=false; selected.options.consider_imprint_programs=false;
+                selected.options.solve_profile=SolveProfile::CalculatorProductV1;
+                selected.values.assign(local.state_count(),kInfinity); selected.values[source]=1;
+                selected.upper_bound=selected.evaluated_policy_cost=1; // unverified compiler bookkeeping only
+                selected.policy.resize(local.state_count()); selected.policy[source]=PolicyOperatorRef{op.kind,index};
+                selected.policy_reachable.assign(local.state_count(),0); selected.expanded.assign(local.state_count(),0);
+                selected.goal_states.assign(local.state_count(),0); selected.policy_reachable[source]=selected.expanded[source]=1;
+                std::vector<std::uint32_t> returns;
+                for (const auto& exit:kernel.exits) {
+                    PC_CHECK(exit.state!=kNoId);
+                    if (local.is_goal_state(local.state(exit.state))) { selected.goal_states[exit.state]=1; selected.values[exit.state]=0; }
+                    else returns.push_back(exit.state);
+                }
+                PolicyCompilationTelemetry metadata;
+                const auto graph=compile_policy_strategy_json(local,selected,"clean native option",&metadata,
+                    selected.options.max_strategy_json_bytes,nullptr,selected.options.max_solver_owned_bytes,
+                    PolicyRouteDefaultMode::CertificationFailClosed);
+                const auto original_metadata=metadata;
+                const auto composed=compile_dirty_continuation_strategy_json(local,graph,old_graph,{source},returns,
+                    selected.options,&metadata,returns.empty(),nullptr,index);
+                PC_CHECK(metadata.graph_local_provenance.matches(composed));
+                PC_CHECK(metadata.policy_decision_bindings.empty());
+                PC_CHECK(metadata.graph_local_provenance.decisions.size()==1);
+                PC_CHECK(metadata.graph_local_provenance.decisions.front().compiled_node_id=="dirty_entry_option_0");
+                PC_CHECK(metadata.graph_local_provenance.decision_routers==std::vector<std::string>{"policy_route_root"});
+                PC_CHECK(composed.find("dirty_entry_option_1")!=std::string::npos);
+                PC_CHECK(composed.find("dirty_return")!=std::string::npos);
+                bool missing_refused=false;
+                auto missing=returns; missing.pop_back(); metadata=original_metadata;
+                try { (void)compile_dirty_continuation_strategy_json(local,graph,old_graph,{source},missing,
+                    selected.options,&metadata,missing.empty(),nullptr,index); }
+                catch (const std::exception&) { missing_refused=true; }
+                PC_CHECK(missing_refused);
+                ++composed_options;
+            }
+            PC_CHECK(composed_options>0);
+            std::printf("native clean Ring compact options: %u; complete exits and private-ID-free provenance\n",composed_options);
+        }
     }
 }
 

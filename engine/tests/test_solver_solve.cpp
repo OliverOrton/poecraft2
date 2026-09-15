@@ -13709,11 +13709,17 @@ void run_solver_dirty_continuation_tests() {
     SolveWorkTestAccess::Impl work(calc, start,
         {{"chaos", 100}, {"annul", 5}, {"exalt", 2}}, options);
     const auto original_states = calc.state_count();
+    // The caller may be the suspended final-publication owner. Diagnostics
+    // inside private service must never switch it back to ordinary discovery.
+    work.phase = SolvePhase::Certifying;
     auto task = work.try_dirty_continuation_candidates();
-    bool complete = false;
+    bool complete = false, owner_preserved = true;
     for (unsigned units = 0; units < 500000; ++units) {
-        if (task.resume()) { complete = true; break; }
+        const bool done = task.resume();
+        owner_preserved &= work.phase == SolvePhase::Certifying;
+        if (done) { complete = true; break; }
     }
+    PC_CHECK(owner_preserved);
     PC_CHECK(complete);
     if (!complete) return;
     const bool retained = task.take_result();
@@ -13955,6 +13961,64 @@ void run_solver_selected_fallback_tests() {
 }
 
 void run_solver_bounded_finish_tests() {
+    // Fixed native work is identical with and without repeated observation.
+    auto session = make_solve_session();
+    auto registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot; slot.family_id = 100; slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    const std::vector<std::uint32_t> actions{registry.index_by_id.at("chaos"),
+        registry.index_by_id.at("annul"), registry.index_by_id.at("exalt")};
+    CalcContext control_calc(session, goal, registry, actions);
+    CalcContext observed_calc(session, goal, registry, actions);
+    pc_item_state start; pc_item_clear(&start); start.rarity = PC_RARITY_RARE;
+    SolveOptions options; options.allow_economic_restart = false;
+    const std::unordered_map<std::string, double> prices{
+        {"chaos", 100}, {"annul", 5}, {"exalt", 2}};
+    SolveWorkTestAccess::Impl control(control_calc, start, prices, options);
+    SolveWorkTestAccess::Impl observed(observed_calc, start, prices, options);
+    for (unsigned i = 0; i < 32 && !control.progress().done; ++i) {
+        control.step(8); observed.step(8);
+        const auto sequence = observed.progress_event_sequence;
+        (void)observed.progress_trace_json(0);
+        (void)observed.progress_trace_json(sequence);
+        PC_CHECK(observed.progress_event_sequence == sequence);
+        PC_CHECK(control.progress().state_action_rows == observed.progress().state_action_rows);
+        PC_CHECK(control.progress().transition_entries == observed.progress().transition_entries);
+        PC_CHECK(control.result.values == observed.result.values);
+        PC_CHECK(control.policy_rows == observed.policy_rows);
+    }
+    const auto before = observed.progress_generation;
+    observed.reset_focused_optimization_state();
+    PC_CHECK(observed.progress_generation == before + 1);
+    PC_CHECK(observed.sweeps == 0);
+    const auto first = observed.progress_event_sequence;
+    for (unsigned i = 0; i < 140; ++i)
+        observed.record_progress_event("fixture_lifecycle", "bounded_source_record", i);
+    const auto trace = observed.progress_trace_json(first);
+    PC_CHECK(trace.find("\"dropped_before_cursor\":12") != std::string::npos);
+    PC_CHECK(count_occurrences(trace, "\"kind\":") == 128);
+    PC_CHECK(observed.progress_trace_json(observed.progress_event_sequence)
+        .find("\"events\":[]") != std::string::npos);
+    // A displaced unverified capture must not reopen the pre-first-policy
+    // checker while the portfolio already owns a verified artifact. The
+    // finalization-only scalar may still be infinite at this live boundary.
+    observed.options.high_impact_executable_uppers = true;
+    observed.expansion_active = false;
+    observed.requested_bounded_finish = false;
+    observed.publication_pipeline.initial_candidate_task.reset();
+    observed.publication_pipeline.complete_candidate_attempted_identity = 0;
+    observed.finalization_verified_upper_bound = kInfinity;
+    observed.incumbent_portfolio.best_verified_upper = 5;
+    observed.output_incumbent.emplace();
+    observed.output_incumbent->kind = "anytime_reachable_proper_policy";
+    observed.output_incumbent->policy_materialized = true;
+    observed.output_incumbent->portfolio_identity = 17;
+    PC_CHECK(!observed.try_begin_renewal_candidate_publication());
+    PC_CHECK(!observed.try_begin_renewal_candidate_publication());
+    PC_CHECK(observed.publication_pipeline.complete_candidate_attempted_identity == 0);
+    PC_CHECK(!observed.publication_pipeline.initial_candidate_task);
     run_bounded_finish_publication_tests();
 }
 

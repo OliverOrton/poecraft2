@@ -1,0 +1,24 @@
+[
+  {
+    "name": "M3v2-conquest",
+    "binary": "out\\progress-delivery\\M4.exe",
+    "binary_sha256": "71069f91c7a92c4d0b3f86ffc56a16de4716001c1766699a2c19d6072609fc3d",
+    "manifest": "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+    "cases": [
+      "cb01-cross-base-product8-long240"
+    ],
+    "host_watchdog": 315.0
+  },
+  {
+    "name": "M4-ring",
+    "binary": "out\\progress-delivery\\M4.exe",
+    "binary_sha256": "71069f91c7a92c4d0b3f86ffc56a16de4716001c1766699a2c19d6072609fc3d",
+    "manifest": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/manifest.json",
+    "cases": [
+      "cb07-cross-base-product8-long240"
+    ],
+    "host_watchdog": 870.0,
+    "mode": "execution-count",
+    "action_price": 0.389479993470349
+  }
+]

@@ -1,0 +1,48 @@
+[
+  {
+    "name": "M11-ring",
+    "binary": "out/progress-delivery/M11.exe",
+    "binary_sha256": "107a7d7caeeb1806afbbe41eaa4be6e918e70883a5d383c712c069973cb5bad6",
+    "manifest": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/manifest.json",
+    "cases": [
+      "cb07-cross-base-product8-long240"
+    ],
+    "host_watchdog": 870.0,
+    "mode": "execution-count",
+    "action_price": 0.389479993470349
+  },
+  {
+    "name": "M11-bow",
+    "binary": "out/progress-delivery/M11.exe",
+    "binary_sha256": "107a7d7caeeb1806afbbe41eaa4be6e918e70883a5d383c712c069973cb5bad6",
+    "manifest": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/manifest.json",
+    "cases": [
+      "cb04-cross-base-product8-long240"
+    ],
+    "host_watchdog": 870.0,
+    "mode": "execution-count",
+    "action_price": 0.159024756944986
+  },
+  {
+    "name": "M11-amulet",
+    "binary": "out/progress-delivery/M11.exe",
+    "binary_sha256": "107a7d7caeeb1806afbbe41eaa4be6e918e70883a5d383c712c069973cb5bad6",
+    "manifest": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/manifest.json",
+    "cases": [
+      "cb08-cross-base-product8-long240"
+    ],
+    "host_watchdog": 870.0,
+    "mode": "execution-count",
+    "action_price": 0.49147026345105066
+  },
+  {
+    "name": "M11-conquest-four",
+    "binary": "out/progress-delivery/M11.exe",
+    "binary_sha256": "107a7d7caeeb1806afbbe41eaa4be6e918e70883a5d383c712c069973cb5bad6",
+    "manifest": "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+    "cases": [
+      "cb02-cross-base-product8-long240"
+    ],
+    "host_watchdog": 315.0
+  }
+]

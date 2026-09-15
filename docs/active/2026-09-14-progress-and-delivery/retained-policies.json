@@ -1,0 +1,60 @@
+{
+  "objective": "Minimum independently verified original-price expected cost; count is measured separately.",
+  "policies": [
+    {
+      "name": "ring",
+      "strategy": "docs/active/2026-09-14-progress-and-delivery/strategies/ring-native.strategy.json",
+      "strategy_sha256": "5a2ef4867ecb6bd6297b690dd5b67f50461f1cc35f28917467fd018addab883b",
+      "cost": 220743.46354691702,
+      "expected_primitive_actions": 564673.7576801107,
+      "independent_native_run": "M11-final-ring",
+      "report": "out/progress-delivery/M11-final-ring/cases/cb07-cross-base-product8-long240.json",
+      "report_sha256": "89a86f58eee7c9205324ac05e3f6a3fa5509fbf46e4abdfee4dea3ce0bf0ba0d",
+      "disposition": "new native-discovered cost improvement"
+    },
+    {
+      "name": "bow",
+      "strategy": "docs/active/2026-09-14-cross-base-strategy-recovery/strategies/bow-four.strategy.json",
+      "strategy_sha256": "9b31512ecf4f68ba7693a50f13d77b95de487b1b42c6aae9f9228d2dea583d4d",
+      "cost": 12770.827062219498,
+      "expected_primitive_actions": 66914.72854184538,
+      "independent_native_run": "M11-final-bow",
+      "report": "out/progress-delivery/M11-final-bow/cases/cb04-cross-base-product8-long240.json",
+      "report_sha256": "e53ae3d89843963e4730d14bad0232c48314afd21af6d7a0b6b89b292e55bd8b",
+      "disposition": "exact preserved reference graph"
+    },
+    {
+      "name": "amulet",
+      "strategy": "docs/active/2026-09-14-progress-and-delivery/strategies/amulet.strategy.json",
+      "strategy_sha256": "805f6161caff50680a35b171cc3f2541a79f38ee01e1c1bf20d86a94a9ffb6bb",
+      "cost": 12541.579648544115,
+      "expected_primitive_actions": 25518.491313143768,
+      "independent_native_run": "M11-final-amulet",
+      "report": "out/progress-delivery/M11-final-amulet/cases/cb08-cross-base-product8-long240.json",
+      "report_sha256": "e3acf2fe621f8557cee9f4fd1a180789f11bcffc3d4c15abe95189b60202fe86",
+      "disposition": "exact preserved reference graph"
+    },
+    {
+      "name": "conquest-four",
+      "strategy": "docs/active/2026-09-14-progress-and-delivery/strategies/conquest-four.strategy.json",
+      "strategy_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+      "cost": 3746.1319409485764,
+      "expected_primitive_actions": 8608.881793656798,
+      "independent_native_run": "M11-final-conquest-four",
+      "report": "out/progress-delivery/M11-final-conquest-four/cases/cb02-cross-base-product8-long240.json",
+      "report_sha256": "7a5bf96fe069d9af547d419a0f2329bc690900abecd66cfa0d7232a9cede005b",
+      "disposition": "exact preserved reference graph"
+    },
+    {
+      "name": "conquest-five",
+      "strategy": "docs/active/2026-09-14-progress-and-delivery/strategies/conquest-five.strategy.json",
+      "strategy_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+      "cost": 85558.70618560436,
+      "expected_primitive_actions": 8407.202314771383,
+      "independent_native_run": "M3v2-conquest",
+      "report": "out\\progress-delivery\\M3v2-conquest\\cases\\cb01-cross-base-product8-long240.json",
+      "report_sha256": "a85f8d7b1d909eeb62d7350ccc5d29121ba01d31f8deb2b2983a640c8d74dcf0",
+      "disposition": "earlier verification of same-cost controller"
+    }
+  ]
+}

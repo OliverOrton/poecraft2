@@ -1,0 +1,98 @@
+{
+  "report": "out/progress-delivery/M11-worker-regalia.json",
+  "report_sha256": "5ce634898dc0810b8c041c34253d02a4ff457287f9c5163c6d4720f9af68f08e",
+  "expectation_met": true,
+  "summary": {
+    "converged": true,
+    "start_state": 0,
+    "start_value": 65.60036144971359,
+    "expanded_states": 1826,
+    "sweeps": 12,
+    "residual": 1.4210854715202004e-14,
+    "skipped_actions": 0,
+    "policy_available": true,
+    "policy_status": "exact",
+    "termination": "exact_closed",
+    "lower_bound": 65.60036144971359,
+    "upper_bound": 65.60036144971359,
+    "evaluated_policy_cost": 65.60036144971359,
+    "absolute_optimality_gap": 0,
+    "relative_optimality_gap": 0,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none",
+    "stop_cause": "exact_closed",
+    "cap_hit_mask": 0,
+    "registry_actions": 158,
+    "candidate_actions": 21,
+    "evaluator_supported_actions": 21,
+    "supported_priced_actions": 74,
+    "skipped_missing_price_actions": 0,
+    "skipped_unsupported_actions": 0,
+    "cancelled": false
+  },
+  "exact_evaluation": {
+    "converged": true,
+    "cost_complete": true,
+    "success_probability": 1,
+    "off_policy_mass": 0,
+    "total_expected_cost": 65.60036144971359,
+    "solver_policy_cost": 65.60036144971359,
+    "cost_delta_absolute": 0,
+    "cost_delta_relative": 0,
+    "cost_reconciled": true
+  },
+  "execution": {
+    "solve_steps": 2300773,
+    "max_solve_step_ms": 51.483,
+    "worker_max_slice_ms": 51.483,
+    "finalization_ms": 4.525,
+    "cancellation_ack_ms": null,
+    "cancellation_mode": null,
+    "cooperative_abandon_ms": null,
+    "watchdog_seconds": 300,
+    "watchdog_mode": "cooperative_abort_signal",
+    "watchdog_expired": false
+  },
+  "cap_checks": {
+    "all_passed": true,
+    "checks": {
+      "max_discovered_states": true,
+      "max_expanded_states": true,
+      "max_state_action_rows": true,
+      "max_transitions": true,
+      "max_reforge_work": true,
+      "max_solver_owned_bytes": true,
+      "max_compiled_nodes": true,
+      "max_compiled_edges": true,
+      "max_strategy_json_bytes": true,
+      "worker_step_ms": true,
+      "watchdog_seconds": true,
+      "watchdog_not_expired": true
+    }
+  },
+  "milestones": [
+    {
+      "stage": "native_begin_requested",
+      "worker_elapsed_ms": 0.04169999999999163
+    },
+    {
+      "stage": "native_begin_completed",
+      "worker_elapsed_ms": 166.23570000000007
+    },
+    {
+      "stage": "native_done_observed",
+      "worker_elapsed_ms": 38983.2548
+    },
+    {
+      "stage": "result_export_start",
+      "worker_elapsed_ms": 38983.2591
+    },
+    {
+      "stage": "result_export_completed",
+      "worker_elapsed_ms": 38987.779800000004
+    }
+  ],
+  "errors": []
+}

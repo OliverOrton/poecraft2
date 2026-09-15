@@ -1,0 +1,175 @@
+{
+  "purpose": "Fresh native execution qualification of the changed controller; sampling is not cost or properness authority.",
+  "case": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb07-cross-base-product8-long240.json",
+  "strategy_sha256": "5a2ef4867ecb6bd6297b690dd5b67f50461f1cc35f28917467fd018addab883b",
+  "native_dll_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_engine.dll",
+  "native_dll_sha256": "906708e83a926413aa748c24ead7cd40ed131e6caa00fef4a1c5f9f0c81ce086",
+  "options": {
+    "target_runs": 1000,
+    "seed": 20260826,
+    "max_actions_per_run": 100000,
+    "max_graph_steps_per_run": 4000000,
+    "max_cost_per_run": 0.0,
+    "retained_trace_count": 0,
+    "max_trace_entries": 512,
+    "retained_success_count": 5,
+    "retained_failure_count": 5
+  },
+  "summary": {
+    "completed_runs": 1000,
+    "success_count": 143,
+    "failure_count": 857,
+    "stop_count": 0,
+    "total_actions": 93035270,
+    "action_limit_count": 857,
+    "cost_limit_count": 0,
+    "step_limit_count": 0,
+    "no_matching_edge_count": 0,
+    "action_not_applied_count": 0,
+    "missing_price_run_count": 0,
+    "costed_action_count": 93035270,
+    "missing_price_action_count": 0,
+    "known_total_cost": 36387969.99983412,
+    "cost_status": "complete",
+    "seed": 20260826,
+    "target_runs": 1000
+  },
+  "action_distribution": [
+    {
+      "node_id": "s0",
+      "action_type": 9,
+      "count": 91440359
+    },
+    {
+      "node_id": "s66",
+      "action_type": 6,
+      "count": 1377239
+    },
+    {
+      "node_id": "s548",
+      "action_type": 7,
+      "count": 213783
+    },
+    {
+      "node_id": "s2951",
+      "action_type": 11,
+      "count": 1050
+    },
+    {
+      "node_id": "s2951_o1",
+      "action_type": 7,
+      "count": 1050
+    },
+    {
+      "node_id": "s576",
+      "action_type": 25,
+      "count": 706
+    },
+    {
+      "node_id": "dirty_entry_option_0",
+      "action_type": 11,
+      "count": 361
+    },
+    {
+      "node_id": "dirty_entry_option_1",
+      "action_type": 6,
+      "count": 361
+    },
+    {
+      "node_id": "dirty_entry_option_2",
+      "action_type": 25,
+      "count": 361
+    }
+  ],
+  "failure_summaries": [
+    {
+      "failure_reason": 2,
+      "node_id": "s0",
+      "detail": "action limit reached",
+      "count": 846
+    },
+    {
+      "failure_reason": 2,
+      "node_id": "s66",
+      "detail": "action limit reached",
+      "count": 8
+    },
+    {
+      "failure_reason": 2,
+      "node_id": "s548",
+      "detail": "action limit reached",
+      "count": 3
+    }
+  ],
+  "missing_prices": {},
+  "sampled_accounting": {
+    "evidence_source": "simulator_sample",
+    "sample_count": 1000,
+    "seed": 20260826,
+    "actions": [
+      {
+        "action_id": "annul",
+        "count": 214833,
+        "average_per_invocation": 214.833
+      },
+      {
+        "action_id": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "count": 1050,
+        "average_per_invocation": 1.05
+      },
+      {
+        "action_id": "bench:IntMasterItemGenerationCannotRollAttackAffixes",
+        "count": 361,
+        "average_per_invocation": 0.361
+      },
+      {
+        "action_id": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+        "count": 91440359,
+        "average_per_invocation": 91440.359
+      },
+      {
+        "action_id": "exalt",
+        "count": 1377600,
+        "average_per_invocation": 1377.6
+      },
+      {
+        "action_id": "remove_crafted_modifiers",
+        "count": 1067,
+        "average_per_invocation": 1.067
+      }
+    ],
+    "materials": [
+      {
+        "price_key": "annul",
+        "count": 214833,
+        "average_per_invocation": 214.833
+      },
+      {
+        "price_key": "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "count": 1050,
+        "average_per_invocation": 1.05
+      },
+      {
+        "price_key": "bench:IntMasterItemGenerationCannotRollAttackAffixes",
+        "count": 361,
+        "average_per_invocation": 0.361
+      },
+      {
+        "price_key": "essence:Metadata/Items/Currency/CurrencyEssenceSuffering4",
+        "count": 91440359,
+        "average_per_invocation": 91440.359
+      },
+      {
+        "price_key": "exalt",
+        "count": 1377600,
+        "average_per_invocation": 1377.6
+      },
+      {
+        "price_key": "scour",
+        "count": 1067,
+        "average_per_invocation": 1.067
+      }
+    ]
+  },
+  "wall_ms": 295910.6738999835
+}

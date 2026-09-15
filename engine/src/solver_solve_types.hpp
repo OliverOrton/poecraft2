@@ -2122,6 +2122,23 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     };
     std::unique_ptr<CarrierBoundAttributionWork> carrier_bound_attribution;
     std::uint64_t peak_owned_bytes = 0;
+    // Fixed storage is charged by sizeof(Impl) in both memory ledgers.
+    // Events describe source operations; reading them never advances work.
+    struct ProgressEvent {
+        std::uint64_t sequence = 0, candidate = 0, rows = 0;
+        double elapsed_ms = 0, verified_upper = kInfinity;
+        std::uint32_t state = kNoId, generation = 0;
+        std::array<char, 48> kind{};
+        std::array<char, 128> reason{};
+    };
+    std::array<ProgressEvent, 128> progress_events{};
+    std::uint64_t progress_event_sequence = 0;
+    std::uint32_t progress_generation = 0;
+    std::chrono::steady_clock::time_point progress_started_at =
+        std::chrono::steady_clock::now();
+    void record_progress_event(const char* kind, const std::string& reason = {},
+        std::uint64_t candidate = 0, std::uint32_t state = kNoId);
+    std::string progress_trace_json(std::uint64_t after_sequence) const;
     SolvePhase phase = SolvePhase::Expanding;
     /* Proof-model setup is measured before the first public work boundary.
      * A configured CalcContext cap reached there must still cross the same
@@ -2146,8 +2163,13 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::optional<solve_detail::CooperativeTask<bool>> initial_candidate_task;
         std::uint64_t initial_candidate_proof_bytes = 0;
         std::uint64_t renewal_candidate_attempted_identity = 0;
+        // One complete non-renewal candidate before the first verified policy.
+        // Row growth cannot re-arm this bounded service slot.
+        std::uint64_t complete_candidate_attempted_identity = 0;
         bool dirty_continuation_attempted = false;
         bool execution_bottleneck_attempted = false;
+        bool ordinary_entry_attempted = false;
+        std::uint64_t ordinary_entry_identity = 0;
         std::optional<solve_detail::CooperativeTask<SolveResult>> task;
         std::optional<SolveResult> result;
         bool consumed = false;

@@ -84,9 +84,47 @@ guards remain active.
 
 ## Progress and interruption
 
+The September 14 Conquest-five trace found a complete selected candidate near
+44 seconds but no native checker before the unchanged 240-second finish request.
+One pre-first-policy slot now invokes the existing cooperative compiler/checker
+at the candidate owner boundary. It binds the captured semantic identity, keeps
+the ordinary continuation cursor, and cannot re-arm from unrelated rows or
+focused-round counters. Incomplete support still follows the existing bounded
+dependency service; this does not recreate the removed C9 retry storm.
+
+The matched native pairs retained the same C85558.70618560436 upper at
+46.644/47.006 seconds versus 244.678/244.900 seconds, including reversed run
+order. This qualifies earlier verification, not earlier default final delivery:
+the Calculator finish remains four minutes. Original-price evaluation, lower
+405.3694021063399 and 3274 expanded states are preserved; the source estimate
+still fails cost reconciliation and supplies no full-scope exactness. The
+[progress/delivery record](../active/2026-09-14-progress-and-delivery/README.md)
+owns requests, builds, source events and later host observations.
+
 The retained scheduler exposes service and starvation observations. This page does not assert a general eventual-closure theorem for arbitrary generated grammars. Such a theorem needs its actual finiteness, row-completion, refinement, numerical termination, and fairness assumptions; [CLM-0022](claims.md#clm-0022) records that distinction.
 
 A cap-stopped solve can still preserve checked independent lowers and a verified incumbent. It cannot declare the remaining action family closed, reinterpret the frontier as success, or promote an unverified candidate.
+
+The cheap progress trace is observational: reading it cannot advance a candidate
+or run a checker. Diagnostic stages must not assign the native scheduling phase: a
+private coroutine may be owned by final publication, whose suspended cursor must
+remain in control. Frozen private rows and option payloads are audited once across
+a whole-controller check; its independent evaluator retains and charges its own
+growing workspace within the remaining aggregate allowance. Source events
+distinguish capture, named support, service,
+compilation/checking, verified retention and finish request/acknowledgement.
+The native numerical generation advances at the existing sweep resets. Working
+values name their lower/upper/search workspace role; they are not a retained
+policy price. Outer cache counts, private work and evaluator pairs have distinct
+namespaces. Live and finalized reforge counters identify their source rather
+than manufacturing a cumulative count from sampled deltas.
+
+Native events are bounded and drained through the existing benchmark/worker.
+Source timestamps and later host observations remain separate; same-kind policy
+replacement is observed by verified identity and value. The Calculator exposes
+the current owner, candidate stage and last native update age, and exports the
+trace with worker/export/cleanup milestones. The implementation and measured
+qualification are in the [progress/delivery record](../active/2026-09-14-progress-and-delivery/README.md).
 
 ## Failure And Telemetry
 

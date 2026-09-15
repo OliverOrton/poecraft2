@@ -255,6 +255,22 @@ C++ comment-only changes are not inferred from filenames. The knowledge job stil
 runs, and the Windows check says when native work is not applicable. Local
 classifier tests do not claim a hosted workflow run or branch-protection change.
 
+The native bound trace retains periodic snapshots plus meaningful owner,
+lifecycle and verified-policy changes. A bounded source-event stream records
+native operation times; the enclosing sample records later host observation.
+Refinement batches are aggregated rather than logged per row. Omission counts
+remain explicit. Capturing an owner change does not rewrite the growing report:
+persistence follows the declared interval, plus a new verified upper or completion.
+The Conquest-four control exposed a deadline-sensitive quality regression from
+event-by-event report serialization; restoring this cadence preserved its original
+policy. `pc_solver_progress_trace` is a cheap read-only live-solve transport,
+distinct from the full telemetry snapshot. Its constant-time cursor is available
+through `pc_solver_progress_sequence`; the public `pc_solve_progress` ABI layout
+is unchanged. Worker receipts also retain
+bounded progress and export/cleanup milestones. Numerical generation, current
+workspace role and live/finalized work source prevent sampled counters from
+being mistaken for lifetime work or verified policy cost.
+
 ## Current sources
 
 Current code: `solver_benchmark.cpp`, `solver_corpus_runner.py`,

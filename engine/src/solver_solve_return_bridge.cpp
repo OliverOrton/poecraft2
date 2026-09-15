@@ -131,7 +131,8 @@ solve_detail::CooperativeTask<StrategyEvalResult> evaluate_return_graph(
         SolveOptions limits, // Own the allowance across suspension.
         ReturnEvaluationReceipt& receipt, const char* stage,
         std::vector<StrategyContinuationEntryRequest> entries = {},
-        std::vector<StrategyPolicyDecisionRequest> decisions = {}) {
+        std::vector<StrategyPolicyDecisionRequest> decisions = {},
+        GraphLocalPolicyProvenance local_provenance = {}) {
     receipt = {};
     receipt.stage = stage;
     auto parsed = compile_strategy_json(budget_owner.shared_session(), graph.data(), graph.size());
@@ -157,6 +158,7 @@ solve_detail::CooperativeTask<StrategyEvalResult> evaluate_return_graph(
     options.economy = economy;
     options.continuation_entries = std::move(entries);
     options.policy_decision_entries = std::move(decisions);
+    options.graph_local_provenance = std::move(local_provenance);
     StrategyEvalWork work(parsed, options);
     std::uint64_t charged_active = 0, charged_logical = 0;
     const auto charge = [&] {
@@ -681,6 +683,7 @@ bool SolveWork::Impl::execution_bottleneck_ready() {
 
 solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_candidates(const bool bottleneck_only) {
     using namespace solve_detail;
+    record_progress_event("service_start", bottleneck_only ? "bottleneck_continuation" : "dirty_continuation");
     if (!options.high_impact_executable_uppers || requested_bounded_finish ||
         !result.has_exact_start_item || options.allow_economic_restart ||
         !ordinary_return_bridge_item(calc.session(), exact_start_item)) co_return false;
@@ -786,16 +789,22 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
         std::optional<pc_item_state> observed_blocker_entry;
         bool magic_acquisition = false;
         bool temporary_entry = false;
+        bool graph_local_entry = false;
+        std::string source_node;
+        double source_visits = 0;
     };
     std::vector<Proposal> proposals;
     // A current compiled policy may have useful progress behind a prefix that
     // the empty-Rare proposals cannot reproduce economically. Ask its existing
     // native decision-entry owner for actual reached items, never saved recipes
     // or representative parent ids transplanted into a private layout.
+    const auto collect_current_entries = [&](const bool ordinary_wave) -> CooperativeTask<bool> {
     const auto* current = best_current_certified_fallback();
     if (current && certified_incumbent_invalid_reason(*current) == nullptr &&
-        (execution || current->compiled_artifact.strategy_json.find("\"fracture\"") != std::string::npos) &&
-        !current->compiled_artifact.policy_decision_bindings.empty() &&
+        (((execution || current->compiled_artifact.strategy_json.find("\"fracture\"") != std::string::npos) &&
+          !current->compiled_artifact.policy_decision_bindings.empty()) ||
+         (ordinary_wave && current->compiled_artifact.graph_local_provenance.matches(
+             current->compiled_artifact.strategy_json))) &&
         incumbent_owned_bytes(*current) < options.max_solver_owned_bytes -
             std::min(options.max_solver_owned_bytes, parent_live_bytes())) {
         handoff_base = *current;
@@ -827,13 +836,30 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                         binding.selected_operator, binding.coarse_state_identity,
                         binding.selected_operator_identity, binding.fixed_observed_choice_policy});
                 }
+                if (ordinary_wave && requests.empty() &&
+                    handoff_base->compiled_artifact.graph_local_provenance.matches(graph)) {
+                    const auto& authority = handoff_base->compiled_artifact.continuation_upper.authority;
+                    if (authority != executable_continuation_authority_context(handoff_base->action_vocabulary_size))
+                        throw std::runtime_error("graph-local entry authority changed");
+                    for (const auto& declaration : handoff_base->compiled_artifact.graph_local_provenance.decisions) {
+                        const auto found = parsed->node_by_id.find(declaration.compiled_node_id);
+                        if (found == parsed->node_by_id.end() || !declaration.primitive) continue;
+                        const auto& node = parsed->nodes.at(found->second);
+                        if (node.kind != StrategyNodeKind::Operation ||
+                            (node.action.type != ActionType::Exalt && node.action.type != ActionType::Annul &&
+                             node.action.type != ActionType::Scour)) continue;
+                        requests.push_back({declaration.compiled_node_id, kNoId, kNoId, {},
+                            declaration.selected_operator_identity, declaration.fixed_observed_choice_policy, true});
+                    }
+                }
             }
             const auto requested_nodes = requests.size();
             SolveOptions entry_limits = options;
             entry_limits.max_solver_owned_bytes -= std::min(entry_limits.max_solver_owned_bytes, parent_live_bytes());
             entry_limits.max_reforge_work -= std::min(entry_limits.max_reforge_work, calc.telemetry().reforge_logical_work_v1);
             auto task = evaluate_return_graph(calc, prices, handoff_base->compiled_artifact.strategy_json,
-                entry_limits, entry_receipt, "nonempty_current_policy_entries", {}, std::move(requests));
+                entry_limits, entry_receipt, "nonempty_current_policy_entries", {}, std::move(requests),
+                ordinary_wave ? handoff_base->compiled_artifact.graph_local_provenance : GraphLocalPolicyProvenance{});
             while (!task.resume()) co_await CooperativeCheckpoint{handoff_base_bytes + task.retained_bytes()};
             auto evaluated = task.take_result(); task.reset();
             if (!complete_return_evaluation(evaluated, false))
@@ -869,10 +895,14 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     !fractured_junk && entry.item.rarity == PC_RARITY_RARE &&
                     goals + 1 == calc.goal().required_satisfied_slots() &&
                     entry.item.prefix_count + entry.item.suffix_count == goals &&
-                    entry.selected_operator < calc.operators().size() &&
-                    calc.operators().at(entry.selected_operator).kind == PlannerOperatorKind::Primitive) {
+                    (entry.graph_local ? entry.primitive_decision :
+                     (entry.selected_operator < calc.operators().size() &&
+                      calc.operators().at(entry.selected_operator).kind == PlannerOperatorKind::Primitive))) {
                     Proposal added{ActionType::Exalt, entry.item, true, goals, entry.exact_continuation_upper};
                     added.temporary_entry = true;
+                    added.graph_local_entry = ordinary_wave && entry.graph_local;
+                    added.source_node = entry.compiled_node_id;
+                    added.source_visits = entry.root_expected_visits;
                     temporary_entries.push_back({entry.root_expected_visits * entry.exact_continuation_upper, added});
                     std::stable_sort(temporary_entries.begin(), temporary_entries.end(),
                         [](const auto& a, const auto& b) { return a.first > b.first; });
@@ -882,7 +912,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 // It requires an actual globally routed primitive decision,
                 // one goal fracture, no other persistent control, and no
                 // mutable progress. Mandatory option interiors never qualify.
-                if (execution && state.flags == kFlagFractured && frozen == 1 &&
+                if (!ordinary_wave && execution && state.flags == kFlagFractured && frozen == 1 &&
                     !fractured_junk && goals == frozen && entry.item.rarity == PC_RARITY_MAGIC &&
                     entry.selected_operator < calc.operators().size()) {
                     const auto& op = calc.operators().at(entry.selected_operator);
@@ -915,8 +945,30 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             }
             std::stable_sort(temporary_entries.begin(), temporary_entries.end(),
                 [](const auto& a, const auto& b) { return a.first > b.first; });
-            for (std::size_t i = 0; i < std::min<std::size_t>(3, temporary_entries.size()); ++i)
+            for (std::size_t i = 0; i < std::min<std::size_t>(3, temporary_entries.size()); ++i) {
                 proposals.push_back(temporary_entries[i].second);
+                const auto& entry = temporary_entries[i].second;
+                std::string identity = "[";
+                for (const auto word : exact_item_state_key(entry.start)) {
+                    if (identity.size() > 1) identity += ',';
+                    identity += '\"' + std::to_string(word) + '\"';
+                }
+                identity += ']';
+                retain_bounded_json_sample(result.diagnostics.policy_refinement.publication_candidate_samples,
+                    result.diagnostics.policy_refinement.publication_candidate_samples_omitted,
+                    result.diagnostics.policy_refinement.publication_candidate_sample_bytes,
+                    "{\"kind\":\"" + std::string(ordinary_wave ? "ordinary_entry_selection" : "legacy_entry_selection") + "\",\"rank\":" + std::to_string(i+1) +
+                    ",\"node\":\"" + diagnostic_json_escape(entry.source_node) + "\",\"root_expected_visits\":" +
+                    diagnostic_finite_double(entry.source_visits) + ",\"old_entry_cost\":" +
+                    diagnostic_finite_double(entry.old_entry_cost) + ",\"native_item_identity\":" + identity + "}");
+                record_progress_event("entry_selected", std::string(ordinary_wave ? "ordinary_clean_rare_rank=" : "legacy_clean_rare_rank=") + std::to_string(i + 1),
+                    handoff_base->portfolio_identity);
+            }
+            if (ordinary_wave && !temporary_entries.empty()) publication_pipeline.ordinary_entry_attempted = true;
+            if (ordinary_wave) record_progress_event("entry_query_completed",
+                "decisions=" + std::to_string(requested_nodes) + ";entries=" +
+                std::to_string(evaluated.policy_entries.entries.size()) + ";selected=" +
+                std::to_string(temporary_entries.size()), handoff_base->portfolio_identity);
             if (magic_entry) {
                 publication_pipeline.execution_bottleneck_attempted = true;
                 const auto source = project_item(calc.session(),calc.layout(),magic_entry->item);
@@ -981,6 +1033,12 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 diagnostic_json_escape(error.what()) + "\"}");
         }
         if (proposals.empty()) { handoff_base.reset(); handoff_base_bytes = 0; }
+    }
+    co_return true;
+    };
+    {
+        auto query = collect_current_entries(false);
+        while (!query.resume()) co_await CooperativeCheckpoint{query.retained_bytes()};
     }
     // The native registry already admits exact-goal forced modifiers. A
     // priced guaranteed acquisition is materially different from an ordinary
@@ -1054,7 +1112,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     selected_next=i; break;
                 }
         }
-        if (proposals[next_proposal].observed_blocker_action!=kNoId) selected_next=next_proposal;
+        if (proposals[next_proposal].observed_blocker_action!=kNoId ||
+            proposals[next_proposal].graph_local_entry) selected_next=next_proposal;
         const bool corrected_choice=adaptive && selected_next!=static_next;
         std::swap(proposals[next_proposal],proposals[selected_next]);
         const auto proposal=proposals[next_proposal];
@@ -1064,7 +1123,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
         // Keep the caller's retry commitment in a composed Magic domain.
         // Its preserved goal fracture makes zero-progress retry mass zero;
         // the native gated law still owns terminal aggregation and scope.
-        const bool native_gating=(proposal.expansion==0 || proposal.magic_acquisition) &&
+        const bool native_gating=!proposal.graph_local_entry &&
+            (proposal.expansion==0 || proposal.magic_acquisition) &&
             options.goal_progress_gated_reforges;
         const auto root_type = proposal.root_type;
         const bool execution_view = execution && (proposal.magic_acquisition || proposal.expansion>=2);
@@ -1123,6 +1183,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 ",\"selective_growth\":" + (selective ? "true" : "false") +
                 ",\"magic_acquisition\":" + (proposal.magic_acquisition ? "true" : "false") +
                 ",\"temporary_entry\":" + (proposal.temporary_entry ? "true" : "false") +
+                ",\"graph_local_entry\":" + (proposal.graph_local_entry ? "true" : "false") +
                 ",\"proposal_lambda\":" + diagnostic_finite_double(proposal_lambda) +
                 ",\"reward_view\":" + std::to_string(reward_view) +
                 ",\"cost_only_follow_through\":" + (reward_view==3 ? "true" : "false") +
@@ -1187,7 +1248,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 ",\"child_work\":" + std::to_string(child_work) + ",\"child_peak_bytes\":" + std::to_string(child_peak) +
                 ",\"seed_cost_estimate\":" + diagnostic_finite_double(seed_cost) +
                 ",\"coarse_cost_estimate\":" + diagnostic_finite_double(coarse_cost) +
-                ",\"coarse_cost_entry\":\"" + (proposal.nonempty_handoff ? "native_nonempty_entry" : "original_root") + "\"" +
+                ",\"coarse_cost_entry\":\"" + (proposal.graph_local_entry ? "paid_option_prefix_only" :
+                    proposal.nonempty_handoff ? "native_nonempty_entry" : "original_root") + "\"" +
                 ",\"evaluated_cost\":" + diagnostic_finite_double(exact_cost) +
                 ",\"nonempty_handoff\":" + (proposal.nonempty_handoff ? "true" : "false") +
                 ",\"old_entry_cost\":" + diagnostic_finite_double(proposal.old_entry_cost) +
@@ -1227,6 +1289,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             }
         };
         try {
+            finalization_evaluation_progress = {};
             auto private_goal=calc.goal();
             auto private_candidates=candidates;
             if (proposal.expansion>=2 && private_goal.automatic_candidates &&
@@ -1335,6 +1398,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             }
             std::vector<std::uint32_t> boundary;
             std::vector<std::uint32_t> local_states;
+            std::vector<std::uint64_t> temporary_rows;
             struct Opportunity { std::uint32_t state, action; std::uint64_t sequence; double priority=0; };
             std::vector<Opportunity> pending;
             // Row IDs are immutable in this context. A root-reachable selected
@@ -1356,7 +1420,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             child.priced_rows.clear(); child.policy_rows.clear();
             const auto extra_bytes=[&] {
                 return automatic_entry_batch_bytes +
-                    (checked_selected_rows.capacity()+selected_rows.capacity())*sizeof(std::uint64_t)+
+                    (checked_selected_rows.capacity()+selected_rows.capacity()+temporary_rows.capacity())*sizeof(std::uint64_t)+
                     native_rewards.capacity()*sizeof(DirtyRowRewards)+cost_values.capacity()*sizeof(double)+
                     cost_selected_rows.capacity()*sizeof(std::uint64_t)+
                     pending.capacity()*sizeof(Opportunity)+patch_samples.capacity()+automatic_samples.capacity()+
@@ -1685,6 +1749,9 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 const auto count=item.prefix_count+item.suffix_count;
                 if (proposal.temporary_entry) {
                     evaluation.stage = "native_late_entry_options";
+                    finalization_evaluation_progress = {};
+                    record_progress_event("entry_options_start", proposal.source_node, handoff_base->portfolio_identity);
+                    record("in_progress");
                     AutomaticAdmissionLimits admission;
                     admission.max_state_action_rows = options.max_state_action_rows - constructed_rows;
                     admission.max_transitions = options.max_transitions - child.transition_cache->successors.size();
@@ -1729,6 +1796,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                         OutcomeDistribution law; law.entries = kernel.exits;
                         for (auto& exit : law.entries) if (exit.state == kNoId) exit.state = state;
                         const auto row = append(state, index, law, cost);
+                        temporary_rows.push_back(row);
                         if (!seeded) {
                             child.policy_rows[state] = row;
                             child.result.policy[state] = PolicyOperatorRef{op.kind, index};
@@ -1736,6 +1804,9 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                         }
                         ++automatic_patch_rows;
                     }
+                    record_progress_event("entry_options_completed", "complete_rows=" + std::to_string(automatic_patch_rows),
+                        handoff_base->portfolio_identity);
+                    record("in_progress");
                     if (!seeded) throw std::runtime_error("no complete class-legal late entry Cannot Roll option");
                     local_states.push_back(state);
                     automatic_entry_batch_bytes = 0;
@@ -1938,7 +2009,16 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 }
             }
             child.expanded_count=static_cast<std::uint32_t>(walk.size());
-            if (proposal.nonempty_handoff && !proposal.magic_acquisition &&
+            if (proposal.graph_local_entry) {
+                // These complete native options are compared by evaluating
+                // their recurring original-root compositions. Unknown local
+                // tail values stay unknown; they are not executable terminals.
+                for (const auto state : boundary) {
+                    child.result.values[state] = kInfinity;
+                    child.expanded[state] = child.result.expanded[state] = 0;
+                }
+                child.expanded_count -= static_cast<std::uint32_t>(boundary.size());
+            } else if (proposal.nonempty_handoff && !proposal.magic_acquisition &&
                 !(proposal.temporary_entry && boundary.empty())) {
                 if (boundary.empty()) throw std::runtime_error("nonempty proposal has no native return entries");
                 std::vector<StrategyContinuationEntryRequest> requests;
@@ -1947,14 +2027,23 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     if (!private_calc->materialize(state,item)) throw std::runtime_error("nonempty boundary cannot materialize");
                     requests.push_back({(1ull<<62)+state,state,1,item,false});
                 }
+                record_progress_event("boundary_check_start", "requested=" + std::to_string(requests.size()),
+                    handoff_base->portfolio_identity);
+                evaluation.stage = "nonempty_boundary_continuations";
+                record("in_progress");
                 auto boundary_limits = options;
                 const auto held = parent_live_bytes()+observe_memory();
                 boundary_limits.max_solver_owned_bytes -= std::min(boundary_limits.max_solver_owned_bytes,held);
                 boundary_limits.max_reforge_work -= std::min(boundary_limits.max_reforge_work,calc.telemetry().reforge_logical_work_v1);
                 auto boundary_work = evaluate_return_graph(calc,prices,handoff_base->compiled_artifact.strategy_json,
                     boundary_limits,evaluation,"nonempty_boundary_continuations",std::move(requests));
-                while (!boundary_work.resume())
+                while (!boundary_work.resume()) {
+                    finalization_evaluation_progress = evaluation.progress;
+                    if (std::chrono::steady_clock::now()-last_sample >= std::chrono::seconds(10)) {
+                        record("in_progress"); last_sample=std::chrono::steady_clock::now();
+                    }
                     co_await CooperativeCheckpoint{checkpoint_memory()+boundary_work.retained_bytes()};
+                }
                 auto responses = boundary_work.take_result(); boundary_work.reset();
                 if (!complete_return_evaluation(responses,false))
                     throw std::runtime_error("nonempty return controller failed native boundary evaluation");
@@ -1971,6 +2060,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     child.expanded[state]=0; child.result.expanded[state]=0;
                     ++native_boundary_entries;
                 }
+                record_progress_event("boundary_check_completed", "entries=" + std::to_string(native_boundary_entries),
+                    handoff_base->portfolio_identity);
                 if (native_boundary_entries!=boundary.size())
                     throw std::runtime_error("nonempty return entry coverage is incomplete");
                 child.expanded_count-=static_cast<std::uint32_t>(boundary.size());
@@ -1989,8 +2080,10 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             const unsigned reward_views = count_guided && execution_view && broad_root && boundary.empty() &&
                 (growth_batch==0 || first_count_patch) ? 4u : 1u;
             if (reward_views>1 && first_count_patch) compared_count_option_patch=true;
-            for (reward_view=0; reward_view<reward_views && !requested_bounded_finish; ++reward_view) {
-            if (reward_view) {
+            const auto controller_views = proposal.graph_local_entry ? temporary_rows.size() : reward_views;
+            for (std::size_t controller_view=0; controller_view<controller_views && !requested_bounded_finish; ++controller_view) {
+            reward_view = proposal.graph_local_entry ? 0u : static_cast<unsigned>(controller_view);
+            if (controller_view) {
                 sample_index.reset(); evaluation=ReturnEvaluationReceipt{};
                 exact_cost=exact_count=kInfinity;
             }
@@ -2001,6 +2094,14 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 for (std::size_t row=0; row<native_rewards.size(); ++row)
                     child.priced_rows[row].cost=native_rewards[row].proposal_reward(proposal_lambda);
             }
+            if (proposal.graph_local_entry) {
+                child.policy_rows[root] = temporary_rows.at(controller_view);
+                // Compiler bookkeeping describes only the paid option prefix.
+                // Composition strips these annotations. No local finite tail,
+                // bound or cost comparison is inferred from this number.
+                child.result.values[root] = child.priced_rows.at(child.policy_rows[root]).cost;
+                evaluation.stage = "complete_native_option_comparison";
+            } else {
             // Every objective change invalidates numerical preparation. Only
             // immutable native transitions and complete row identities survive.
             child.reset_policy_iteration_units();
@@ -2068,6 +2169,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                     child.priced_rows[row].cost=native_rewards[row].cost;
                 child.reset_policy_iteration_units();
             }
+            }
             for (const auto state:walk) {
                 if (child.result.goal_states[state] || !child.result.expanded[state]) continue;
                 const auto index=child.priced_rows.at(child.policy_rows[state]).operator_index;
@@ -2125,11 +2227,13 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 PolicyRouteDefaultMode::CertificationFailClosed);
             if (proposal.nonempty_handoff) {
                 auto compose_limits=options;
-                const auto held=parent_live_bytes()+observe_memory()+graph.capacity();
+                const auto held=parent_live_bytes()+observe_memory()+graph.capacity()+compilation.graph_local_provenance.owned_bytes();
                 compose_limits.max_solver_owned_bytes-=std::min(compose_limits.max_solver_owned_bytes,held);
                 graph=compile_dirty_continuation_strategy_json(*private_calc,graph,
                     handoff_base->compiled_artifact.strategy_json,local_states,boundary,compose_limits,&compilation,
-                    proposal.magic_acquisition || (proposal.temporary_entry && boundary.empty()));
+                    proposal.magic_acquisition || (proposal.temporary_entry && boundary.empty()),
+                    &handoff_base->compiled_artifact.graph_local_provenance,
+                    proposal.graph_local_entry ? child.result.policy[root].index : kNoId);
             }
             compiled_graph_bytes=graph.size();
             if (!proposal.nonempty_handoff) {
@@ -2150,19 +2254,30 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
                 }
             }
             SolveOptions check_limits=options;
-            const auto held=parent_live_bytes()+observe_memory()+graph.capacity();
+            const auto held=parent_live_bytes()+observe_memory()+graph.capacity()+compilation.graph_local_provenance.owned_bytes();
             if (held>=options.max_solver_owned_bytes) throw SolverResourceLimit("max_solver_owned_bytes",options.max_solver_owned_bytes);
             check_limits.max_solver_owned_bytes=options.max_solver_owned_bytes-held;
             check_limits.max_reforge_work=options.max_reforge_work-
                 std::min(options.max_reforge_work,calc.telemetry().reforge_logical_work_v1);
-            auto check=evaluate_return_graph(calc,prices,graph,check_limits,evaluation,"complete_dirty_controller",entries);
+            // The private rows, native kernels, graph and declarations are
+            // immutable throughout this whole-controller check. Audit their
+            // retained bytes once; only the independent evaluator grows on
+            // resume, within the remaining allowance above. Rewalking all
+            // frozen automatic-option payloads at every routing checkpoint
+            // can otherwise cost more than the evaluation itself.
+            const auto frozen_check_checkpoint = checkpoint_memory() + graph.capacity() +
+                compilation.graph_local_provenance.owned_bytes();
+            record_progress_event("check_start", "complete_dirty_controller");
+            auto check=evaluate_return_graph(calc,prices,graph,check_limits,evaluation,"complete_dirty_controller",
+                proposal.graph_local_entry ? std::vector<StrategyContinuationEntryRequest>{entries.front()} : entries);
             while (!check.resume()) {
                 if (std::chrono::steady_clock::now()-last_sample>=std::chrono::seconds(1)) {
                     record("in_progress"); last_sample=std::chrono::steady_clock::now();
                 }
-                co_await CooperativeCheckpoint{checkpoint_memory()+graph.capacity()+check.retained_bytes()};
+                co_await CooperativeCheckpoint{frozen_check_checkpoint+check.retained_bytes()};
             }
             auto evaluated=check.take_result(); check.reset();
+            record_progress_event(complete_return_evaluation(evaluated,false) ? "check_completed" : "check_refused", "complete_dirty_controller");
             if (!complete_return_evaluation(evaluated,false)) {
                 std::string witness;
                 if (evaluated.first_failure) {
@@ -2323,8 +2438,10 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             identity_mix_string(candidate.portfolio_identity,graph);
             identity_mix(candidate.portfolio_identity,candidate.caller_scope_identity);
             candidate.retained_owned_bytes=incumbent_owned_bytes(candidate);
+            if (const auto* reason = retained_incumbent_invalid_reason(candidate))
+                throw std::runtime_error(std::string("independently evaluated dirty root artifact refused: ") + reason);
             if (!retain_certified_incumbent(candidate,observe_memory()+graph.capacity()+candidate.retained_owned_bytes))
-                throw std::runtime_error("independently evaluated dirty root artifact failed portfolio admission");
+                throw std::runtime_error("independently evaluated dirty root artifact failed portfolio memory admission");
             retained=true;
             record("retained");
             } // Serialized cost, two count-weighted proposals, cost follow-through.
@@ -2336,6 +2453,28 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
         }
         if (blocker_refinement)
             proposals.insert(proposals.begin()+next_proposal+1,*blocker_refinement);
+        // One ordinary wave after a full protected private proposal, including
+        // its count views and cost-only follow-through. The next root proposal
+        // keeps its cursor. Never recursively enter another builder/checker.
+        if (execution && !bottleneck_only && !proposal.nonempty_handoff &&
+            proposal.expansion >= 2 && proposal.root_type == ActionType::Essence &&
+            !blocker_refinement && !publication_pipeline.ordinary_entry_attempted &&
+            !requested_bounded_finish && !result.diagnostics.resource_cap_hit) {
+            const auto* winner = best_current_certified_fallback();
+            if (winner && winner->compiled_root_entry_only &&
+                winner->compiled_artifact.graph_local_provenance.matches(winner->compiled_artifact.strategy_json)) {
+                publication_pipeline.ordinary_entry_attempted = true;
+                publication_pipeline.ordinary_entry_identity = winner->portfolio_identity;
+                record_progress_event("service_queued", "ordinary_graph_local_wave", winner->portfolio_identity);
+                charge_child(); private_calc.reset();
+                const auto before = proposals.size();
+                auto query = collect_current_entries(true);
+                while (!query.resume()) co_await CooperativeCheckpoint{query.retained_bytes()};
+                if (proposals.size() > before)
+                    std::rotate(proposals.begin() + next_proposal + 1,
+                        proposals.begin() + before, proposals.end());
+            }
+        }
     }
     co_return retained;
 }

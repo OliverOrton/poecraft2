@@ -198,6 +198,7 @@ bool SolveWork::Impl::advance_focused_lower_preparation() {
          * pure duplicate transition work once that exact initializer exists. */
         policy_unit_stage = PolicyUnitStage::InitialSelect;
         backup_active = false;
+        ++progress_generation;
         sweeps = 0;
         residual = kValueCeiling;
         if (!result.diagnostics.policy_evaluation_failure.starts_with(
@@ -507,6 +508,7 @@ void SolveWork::Impl::reset_focused_optimization_state() {
         policy_iteration_failed = false;
         reset_policy_iteration_units();
         backup_active = false;
+        ++progress_generation;
         sweeps = 0;
         residual = kValueCeiling;
         result.diagnostics.sweeps = 0;

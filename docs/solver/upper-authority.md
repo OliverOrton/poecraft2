@@ -30,6 +30,38 @@ The early-closure archive demonstrates this distinction. Its numerical values ar
 
 ## Entry-scoped and class-scoped evidence
 
+Compiler-authored graph-local declarations identify genuine native decisions in
+an immutable emitted graph. They bind full graph bytes, native operator semantics
+and observable control boundaries. Composition carries declarations through its
+actual collision-free node/router remapping. Missing old metadata leaves a valid
+root policy unavailable to this entry feature; it does not authorize invented
+parent IDs. Private publication remains root-only, with parent bindings cleared.
+
+The native evaluator can request actual reached item/control entries through
+these declarations and the real global router. Stale graphs, foreign numeric
+state handles, mandatory interiors and hidden offer/checkpoint contexts refuse.
+Full goal, scope, vocabulary, mechanics and price identity still govern reuse.
+An entry answer certifies that physical entry only; it does not create a parent
+statewise upper, class equivalence, lower or pruning permission.
+
+The ordinary service wave considers at most three clean Rare one-goal-missing
+entries, ranked by old visits times entry cost. At each, complete native temporary
+options can be composed with the frozen old graph and compared directly by
+original-root evaluation. This avoids requiring a scalar proposal value for
+every return class. Unknown local tails remain unknown; the emitted graph must
+route every actual exit through a paid complete continuation, and the evaluator
+must establish properness, complete price and zero off-policy mass for the whole
+recurring controller before portfolio admission. The smallest verified original
+cost wins. The separate Magic opportunity retains its own eligibility guards.
+
+The graph-local Ring recovery is exercised by native search at
+C220743.46354691702. Its complete original-root entry certificate remains a
+portfolio requirement even when optional extra continuation queries are omitted.
+The new wave is distinct from legacy compiler-bound clean-entry service; changing
+one must not silently replace the other's coverage, ranking or continuation law.
+The [qualification record](../active/2026-09-14-progress-and-delivery/qualification.json)
+records retained original-price policies and the still-open exactness obligations.
+
 Root evaluation proves the cost of the strategy from that root. It does not establish properness or finite values at root-unreachable entries.
 
 For post-incumbent improvement, old-policy occupancy locates expensive actions

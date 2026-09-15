@@ -78,6 +78,7 @@ std::string compile_policy_strategy_json(
         telemetry->policy_route_default_mode =
             route_default_mode_name;
         telemetry->policy_decision_bindings.clear();
+        telemetry->graph_local_provenance = {};
     }
     const PolicyRefinementTelemetry& requested_refinement =
         result.diagnostics.policy_refinement;
@@ -130,6 +131,7 @@ std::string compile_policy_strategy_json(
                 result.refined_policy_artifact.additional_recipe_nodes;
             telemetry->policy_decision_bindings =
                 result.refined_policy_artifact.policy_decision_bindings;
+            telemetry->graph_local_provenance = result.refined_policy_artifact.graph_local_provenance;
             telemetry->nodes = result.refined_policy_artifact.nodes;
             telemetry->edges = result.refined_policy_artifact.edges;
             telemetry->strategy_json_bytes =
@@ -2962,6 +2964,10 @@ std::string compile_policy_strategy_json(
             }
             const PlannerOperator& planner =
                 calc.operators().at(result.policy[state_id]);
+            telemetry->graph_local_provenance.decisions.push_back({
+                state_node(state_id), planner_operator_semantic_key(planner),
+                planner.kind == PlannerOperatorKind::Primitive,
+                primitive_observes_modifier_offer(planner) || option_observes_modifier_offer(planner)});
             telemetry->policy_decision_bindings.push_back({
                 state_node(state_id),
                 state_id,
@@ -3864,6 +3870,12 @@ std::string compile_policy_strategy_json(
             census_route_edges(edges);
         }
     }
+    if (telemetry) {
+        telemetry->graph_local_provenance.strategy_json = json;
+        telemetry->graph_local_provenance.decision_routers = {"policy_route_root"};
+        observe_complete_compiler_owned(compiler_previously_accounted_peak_owned_bytes,
+            compiler_complete_peak_owned_bytes + telemetry->graph_local_provenance.owned_bytes());
+    }
     return json;
 }
 
@@ -4063,13 +4075,30 @@ std::string compile_dirty_continuation_strategy_json(
         const std::vector<std::uint32_t>& return_states,
         const SolveOptions& limits,
         PolicyCompilationTelemetry* telemetry,
-        const bool closed_local_domain) {
+        const bool closed_local_domain,
+        const GraphLocalPolicyProvenance* old_provenance,
+        const std::uint32_t single_pass_option) {
     const auto input_bytes = local_strategy_json.size() + old_strategy_json.size();
     if (input_bytes > limits.max_strategy_json_bytes ||
         input_bytes > limits.max_solver_owned_bytes / 128)
         throw SolverResourceLimit("max_solver_owned_bytes", limits.max_solver_owned_bytes);
     if (local_states.empty() || (return_states.empty() != closed_local_domain))
         gap("dirty continuation needs both a local domain and a return domain");
+    GraphLocalPolicyProvenance carried;
+    if (old_provenance && !old_provenance->decisions.empty()) {
+        if (!old_provenance->matches(old_strategy_json)) gap("stale old graph-local provenance");
+        carried.decisions = old_provenance->decisions;
+        carried.decision_routers = old_provenance->decision_routers;
+    }
+    const auto old_routers = carried.decision_routers.empty()
+        ? std::vector<std::string>{"policy_route_root"} : carried.decision_routers;
+    carried.decision_routers = old_routers;
+    GraphLocalPolicyProvenance local_provenance;
+    if (telemetry && !telemetry->graph_local_provenance.decisions.empty()) {
+        if (!telemetry->graph_local_provenance.matches(local_strategy_json))
+            gap("stale local graph-local provenance");
+        local_provenance = telemetry->graph_local_provenance;
+    }
     auto local = json::Parser(local_strategy_json.data(), local_strategy_json.size()).parse();
     auto old = json::Parser(old_strategy_json.data(), old_strategy_json.size()).parse();
     const auto serialized = [&](const json::Value& value) {
@@ -4105,8 +4134,7 @@ std::string compile_dirty_continuation_strategy_json(
         for (const auto& node : graph->at("nodes").array) {
             const auto& id = node.at("id").string;
             if (id == "policy_route_root" && node.at("kind").string == "router") router = true;
-            if (graph == &old && id.starts_with("dirty_"))
-                gap("dirty continuation namespace already occupied");
+
             if (node.at("kind").string != "operation") continue;
             const auto& type = node.at("operation").at("type").string;
             // No saved checkpoint or revealed offer can outlive these native
@@ -4128,6 +4156,51 @@ std::string compile_dirty_continuation_strategy_json(
     std::vector<SlotVocabulary> vocabulary;
     for (std::size_t i = 0; i < private_calc.layout().slots.size(); ++i)
         vocabulary.push_back(slot_vocabulary(private_calc.session(), private_calc.layout().slots[i], i));
+    const bool compact_option = single_pass_option != kNoId;
+    if (compact_option) {
+        if (local_states.size() != 1 || local_provenance.decisions.size() != 1 ||
+            single_pass_option >= private_calc.operators().size())
+            gap("compact option needs one compiler-declared decision");
+        const auto& op = private_calc.operators().at(single_pass_option);
+        const auto& kernel = private_calc.option_kernel(local_states.front(), single_pass_option);
+        const auto& declaration = local_provenance.decisions.front();
+        if (declaration.primitive || declaration.fixed_observed_choice_policy ||
+            declaration.selected_operator_identity != planner_operator_semantic_key(op))
+            gap("compact option declaration does not match the native decision");
+        if (op.kind != PlannerOperatorKind::FixedOption || op.option_kind != FixedOptionKind::TemporaryBenchRepeat ||
+            op.primitive_program.empty() || !kernel.supported || !kernel.legal || !kernel.terminates_almost_surely ||
+            !kernel.retry_states.empty() || !kernel.observation_choice_groups.empty() || !kernel.observation_choice_options.empty() ||
+            std::any_of(kernel.exits.begin(), kernel.exits.end(), [](const auto& exit) { return exit.state == kNoId; }))
+            gap("compact option requires a complete single-pass native program");
+        std::set<std::uint32_t> returns;
+        for (const auto state : return_states)
+            if (state >= private_calc.state_count() || state == local_states.front() ||
+                private_calc.is_goal_state(private_calc.state(state)) ||
+                private_calc.state(state).goal_progress_retry_basin != 0 || !returns.insert(state).second)
+                gap("compact option has an invalid return domain");
+        for (const auto& exit : kernel.exits)
+            if (exit.probability > 0 && !private_calc.is_goal_state(private_calc.state(exit.state)) &&
+                !returns.contains(exit.state)) gap("compact option has uncovered native exits");
+        // Keep the native program and its mandatory interior. Every completed
+        // exit returns through the old real router; no private junk partition
+        // is exported as a new global observation or finite boundary value.
+        std::string nodes = "[", edges = "[";
+        for (std::size_t i = 0; i < op.primitive_program.size(); ++i) {
+            if (i) { nodes += ','; edges += ','; }
+            const auto id = "entry_option_" + std::to_string(i);
+            nodes += "{\"id\":\"" + id + "\",\"kind\":\"operation\",\"operation\":" +
+                operation_json(private_calc.session(), private_calc.registry().actions.at(op.primitive_program[i])) + "}";
+            const auto next = i + 1 == op.primitive_program.size() ? "policy_route_root" : "entry_option_" + std::to_string(i + 1);
+            edges += "{\"id\":\"" + id + "_next\",\"from\":\"" + id + "\",\"to\":\"" + next +
+                "\",\"priority\":0,\"is_default\":true}";
+        }
+        nodes += ",{\"id\":\"policy_route_root\",\"kind\":\"router\"}]"; edges += ']';
+        return_member(local, "nodes") = json::Parser(nodes.data(), nodes.size()).parse();
+        return_member(local, "edges") = json::Parser(edges.data(), edges.size()).parse();
+        return_member(local, "start_node_id").string = "entry_option_0";
+        local_provenance.decisions.front().compiled_node_id = "entry_option_0";
+        local_provenance.decision_routers.clear(); // the remaining router is a mandatory return, not a decision
+    }
     std::set<std::uint32_t> seen;
     const auto predicate = [&](const auto& states) {
         std::vector<std::string> parts;
@@ -4137,13 +4210,30 @@ std::string compile_dirty_continuation_strategy_json(
                 private_calc.state(state).goal_progress_retry_basin != 0)
                 gap("dirty continuation domain has an invalid, overlapping or virtual entry");
             parts.push_back(abstract_state_condition(private_calc.session(), private_calc.layout(),
-                vocabulary, private_calc.state(state)));
+                vocabulary, private_calc.state(state), !compact_option));
         }
         return any_of(parts);
     };
     const auto enter = predicate(local_states);
-    const auto leave = closed_local_domain ? std::string{} : predicate(return_states);
-    return_namespace_graph(local, "dirty_");
+    const auto leave = closed_local_domain || compact_option ? std::string{} : predicate(return_states);
+    // The same chosen namespace remaps executable nodes, edges and authored
+    // decisions. A composed policy may legitimately become the next input.
+    std::string prefix = "dirty_";
+    for (std::size_t generation = 2;; ++generation) {
+        bool occupied = false;
+        for (const auto* field : {"nodes", "edges"})
+            for (const auto& value : old.at(field).array)
+                occupied |= value.at("id").string.starts_with(prefix);
+        if (!occupied) break;
+        prefix = "dirty" + std::to_string(generation) + "_";
+    }
+    for (auto declaration : local_provenance.decisions) {
+        declaration.compiled_node_id = prefix + declaration.compiled_node_id;
+        carried.decisions.push_back(std::move(declaration));
+    }
+    for (const auto& router : local_provenance.decision_routers)
+        carried.decision_routers.push_back(prefix + router);
+    return_namespace_graph(local, prefix);
     auto& nodes = return_member(old, "nodes").array;
     auto& edges = return_member(old, "edges").array;
     // Remove old annotations too: their costs predate the new global cycles.
@@ -4151,7 +4241,7 @@ std::string compile_dirty_continuation_strategy_json(
         std::erase_if(node.object, [](const auto& member) { return member.first == "expected_cost"; });
     for (auto& node : return_member(local, "nodes").array) nodes.push_back(std::move(node));
     for (auto& edge : return_member(local, "edges").array) edges.push_back(std::move(edge));
-    const auto add_guard = [&](const char* id, const char* from, const char* to, const std::string& condition) {
+    const auto add_guard = [&](const std::string& id, const std::string& from, const std::string& to, const std::string& condition) {
         double priority = 0;
         for (const auto& edge : edges)
             if (edge.at("from").string == from)
@@ -4163,9 +4253,21 @@ std::string compile_dirty_continuation_strategy_json(
             ",\"condition\":" + condition + "}";
         edges.push_back(json::Parser(text.data(), text.size()).parse());
     };
-    add_guard("dirty_enter", "policy_route_root", "dirty_policy_route_root", enter);
-    if (!closed_local_domain)
-        add_guard("dirty_return", "dirty_policy_route_root", "policy_route_root", leave);
+    for (std::size_t index = 0; index < old_routers.size(); ++index) {
+        const auto& router = old_routers[index];
+        const auto found = std::find_if(nodes.begin(), nodes.end(), [&](const auto& node) {
+            return node.at("id").string == router && node.at("kind").string == "router";
+        });
+        if (found == nodes.end()) gap("graph-local decision router was not preserved");
+        add_guard(prefix + "enter" + (index == 0 ? "" : "_" + std::to_string(index)),
+            router, prefix + (compact_option ? "entry_option_0" : "policy_route_root"), enter);
+    }
+    if (compact_option) {
+        const auto edge = "{\"id\":\"" + prefix + "return\",\"from\":\"" + prefix +
+            "policy_route_root\",\"to\":\"policy_route_root\",\"priority\":0,\"is_default\":true}";
+        edges.push_back(json::Parser(edge.data(), edge.size()).parse());
+    } else if (!closed_local_domain)
+        add_guard(prefix + "return", prefix + "policy_route_root", "policy_route_root", leave);
     return_member(old, "name").string = "Current-run nonempty dirty continuation";
     if (nodes.size() > limits.max_compiled_nodes || edges.size() > limits.max_compiled_edges)
         throw SolverResourceLimit("max_compiled_nodes", limits.max_compiled_nodes);
@@ -4177,6 +4279,10 @@ std::string compile_dirty_continuation_strategy_json(
         telemetry->nodes = static_cast<std::uint32_t>(nodes.size());
         telemetry->edges = static_cast<std::uint32_t>(edges.size());
         telemetry->strategy_json_bytes = output.size();
+        if (!carried.decisions.empty()) {
+            carried.strategy_json = output;
+            telemetry->graph_local_provenance = std::move(carried);
+        }
     }
     return output;
 }

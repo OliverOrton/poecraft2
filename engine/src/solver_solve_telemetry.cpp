@@ -2,6 +2,8 @@
 
 #include "solver_action_family_contract.hpp"
 #include "solver_quotient_proof.hpp"
+#include <sstream>
+#include <iomanip>
 
 namespace poecraft {
 namespace solver {
@@ -1935,6 +1937,7 @@ std::uint64_t solve_result_owned_bytes(const SolveResult& result) {
                  .certification_strategy_json.capacity() + 1;
     bytes += continuation_upper_dynamic_owned_bytes(
         result.refined_policy_artifact.continuation_upper);
+    bytes += result.refined_policy_artifact.graph_local_provenance.owned_bytes();
     bytes += compiled_policy_decision_bindings_owned_bytes(
         result.refined_policy_artifact.policy_decision_bindings);
     bytes += result.refined_policy_artifact
@@ -2001,6 +2004,99 @@ std::uint64_t SolveTransitionCache::estimated_owned_bytes() const {
         return audited_estimated_owned_bytes();
     }
 
+void SolveWork::Impl::record_progress_event(const char* kind,
+        const std::string& reason, std::uint64_t candidate, std::uint32_t state) {
+    ProgressEvent& event = progress_events[progress_event_sequence % progress_events.size()];
+    event = {};
+    event.sequence = ++progress_event_sequence;
+    event.elapsed_ms = std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - progress_started_at).count();
+    event.candidate = candidate;
+    event.state = state;
+    event.generation = progress_generation;
+    event.rows = transition_cache ? transition_cache->rows.size() : 0;
+    event.verified_upper = incumbent_portfolio.verified_executable_upper();
+    const std::string_view name(kind);
+    std::copy_n(name.data(), std::min(name.size(), event.kind.size()-1), event.kind.data());
+    std::copy_n(reason.data(), std::min(reason.size(), event.reason.size()-1), event.reason.data());
+}
+
+std::string SolveWork::Impl::progress_trace_json(std::uint64_t after_sequence) const {
+    const auto number = [](double x) {
+        if (!std::isfinite(x)) return std::string("null");
+        std::ostringstream out; out << std::setprecision(17) << x; return out.str();
+    };
+    const auto boolean = [](bool x) { return x ? "true" : "false"; };
+    const auto quote = [](const std::string& x) {
+        std::string result; append_json_string(result, x); return result;
+    };
+    const char* owner = finalization_task ? "publication" :
+        publication_pipeline.initial_candidate_task ? "candidate_service" :
+        incremental_refinement_active ? "named_continuation" :
+        incremental_dynamic_prepare_active ? "automatic_synthesis" :
+        expansion_active ? "row_construction" : focus_optimizing ?
+        (focused_lower_mode ? "focused_lower" : "focused_upper") : "ordinary_search";
+    const char* role = finalized_result ? "finalized_result" :
+        focused_lower_mode ? "restricted_lower_workspace" :
+        (incremental_upper_policy_pass || focused_upper_mode) ? "upper_policy_workspace" :
+        "search_workspace";
+    const BoundedPolicyIncumbent* selected = unverified_selected_policy_candidate ?
+        &unverified_selected_policy_candidate->snapshot :
+        output_incumbent ? &*output_incumbent : nullptr;
+    // Observe existing retained storage without the service accessor's pruning.
+    const BoundedPolicyIncumbent* fallback = certified_fallback_portfolio.empty() ?
+        nullptr : &certified_fallback_portfolio.front();
+    if (output_incumbent && output_incumbent->independently_evaluated &&
+        (!fallback || output_incumbent->evaluated_policy_cost < fallback->evaluated_policy_cost))
+        fallback = &*output_incumbent;
+    const std::uint64_t first = progress_event_sequence >= progress_events.size() ?
+        progress_event_sequence - progress_events.size() + 1 : 1;
+    std::string json = "{\"schema_version\":\"solver_progress_trace_v1\",\"clock\":\"native_solve_constructor_ms\",\"native_elapsed_ms\":" +
+        number(std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-progress_started_at).count()) +
+        ",\"sequence\":" + std::to_string(progress_event_sequence) +
+        ",\"dropped_before_cursor\":" + std::to_string(first > after_sequence + 1 ? first-after_sequence-1 : 0) +
+        ",\"current\":{\"active_work_owner\":" + quote(owner) +
+        ",\"working_value_role\":" + quote(role) +
+        ",\"numerical_generation\":" + std::to_string(progress_generation) +
+        ",\"reforge_source\":" + quote(finalized_result ? "finalized_diagnostics" : "outer_calculator") +
+        ",\"candidate_identity\":" + quote(selected ? std::to_string(selected->portfolio_identity) : "") +
+        ",\"candidate_source\":" + quote(selected ? selected->kind : "none") +
+        ",\"candidate_stage\":" + quote(!selected ? "none" : selected->independently_evaluated ? "verified" :
+            !selected->compiled_artifact.strategy_json.empty() ? "compiled" : selected->policy_materialized ? "materialized" : "estimate") +
+        ",\"missing_continuations\":" + std::to_string(incremental_anytime_missing_frontier_states.size()) +
+        ",\"candidate_attempts\":" + std::to_string(incremental_anytime_policy_attempts) +
+        ",\"verified_identity\":" + quote(std::to_string(incumbent_portfolio.best_verified_identity)) +
+        ",\"verified_replacements\":" + std::to_string(incumbent_portfolio.verified_replacements) +
+        ",\"finish_requested\":" + boolean(requested_bounded_finish) +
+        ",\"ordinary_entry_attempted\":" + boolean(publication_pipeline.ordinary_entry_attempted) +
+        ",\"complete_candidate_attempted\":" + boolean(publication_pipeline.complete_candidate_attempted_identity != 0) +
+        ",\"dirty_attempted\":" + boolean(publication_pipeline.dirty_continuation_attempted) +
+        ",\"magic_attempted\":" + boolean(publication_pipeline.execution_bottleneck_attempted) +
+        ",\"solver_memory_cap\":" + std::to_string(options.max_solver_owned_bytes) +
+        ",\"reforge_work_cap\":" + std::to_string(options.max_reforge_work);
+    if (fallback) {
+        json += ",\"fallback\":{\"identity\":" + quote(std::to_string(fallback->portfolio_identity)) +
+            ",\"provenance\":" + quote(fallback->compilation_provenance) +
+            ",\"root_only\":" + boolean(fallback->compiled_root_entry_only) +
+            ",\"parent_bindings\":" + std::to_string(fallback->compiled_artifact.policy_decision_bindings.size()) +
+            ",\"graph_local_decisions\":" + std::to_string(fallback->compiled_artifact.graph_local_provenance.decisions.size()) +
+            ",\"has_fracture\":" + boolean(fallback->compiled_artifact.strategy_json.find("\"fracture\"") != std::string::npos) + "}";
+    }
+    json += "},\"events\":[";
+    bool comma = false;
+    for (auto seq = std::max(first, after_sequence + 1); seq <= progress_event_sequence; ++seq) {
+        const auto& e = progress_events[(seq-1)%progress_events.size()];
+        if (comma) json += ','; comma = true;
+        json += "{\"sequence\":" + std::to_string(seq) + ",\"native_elapsed_ms\":" + number(e.elapsed_ms) +
+            ",\"kind\":" + quote(e.kind.data()) + ",\"reason\":" + quote(e.reason.data()) +
+            ",\"candidate_identity\":" + quote(std::to_string(e.candidate)) +
+            ",\"state_namespace\":\"outer_calculator\",\"state\":" + (e.state == kNoId ? "null" : std::to_string(e.state)) +
+            ",\"numerical_generation\":" + std::to_string(e.generation) +
+            ",\"completed_rows\":" + std::to_string(e.rows) + ",\"verified_upper\":" + number(e.verified_upper) + "}";
+    }
+    return json + "]}";
+}
+
 SolvePhaseOwner SolveWork::Impl::current_phase_owner() const {
         switch (phase) {
         case SolvePhase::Iterating:
@@ -2050,6 +2146,7 @@ SolvePhaseOwner SolveWork::Impl::current_phase_owner() const {
 
 SolveProgress SolveWork::Impl::progress() const {
         SolveProgress value;
+        value.lifecycle_sequence = progress_event_sequence;
         value.phase = phase;
         value.phase_owner = current_phase_owner();
         value.done = phase == SolvePhase::Done;
@@ -2822,6 +2919,7 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                      .certification_strategy_json.capacity() + 1;
         bytes += continuation_upper_dynamic_owned_bytes(
             result.refined_policy_artifact.continuation_upper);
+        bytes += result.refined_policy_artifact.graph_local_provenance.owned_bytes();
         bytes += compiled_policy_decision_bindings_owned_bytes(
             result.refined_policy_artifact.policy_decision_bindings);
         bytes += result.refined_policy_artifact
@@ -3113,6 +3211,7 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
                      .certification_strategy_json.capacity() + 1;
         bytes += continuation_upper_dynamic_owned_bytes(
             result.refined_policy_artifact.continuation_upper);
+        bytes += result.refined_policy_artifact.graph_local_provenance.owned_bytes();
         bytes += compiled_policy_decision_bindings_owned_bytes(
             result.refined_policy_artifact.policy_decision_bindings);
         bytes += result.refined_policy_artifact

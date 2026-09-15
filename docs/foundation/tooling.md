@@ -93,7 +93,10 @@ explicit yield override. A deterministic code-mode loop can await successive
 terminal windows without a model turn between them. Give the outer request a
 finite allowance appropriate to the whole batch, subject to the installed client.
 Do not claim automatic completion notifications or zero idle wakes without
-observing them. If the client clamps the outer wait, preserve the handle and
+observing them. The September 14 progress/delivery batches completed observed
+834.8- and 2063.6-second outer waits without model solver polling; these confirm
+the existing long-wait path on that host, not a universal client guarantee.
+If the client clamps the outer wait, preserve the handle and
 minimize re-entry while continuing useful independent work.
 
 The [official configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference)

@@ -1,0 +1,103 @@
+{
+  "baseline": "fe5bdcb4111fa6785c5615896b993a6fc713d1a1",
+  "final_build": "build-M12.json",
+  "native_final_cases": [
+    "M11-final-conquest-four",
+    "M11-final-ring",
+    "M11-final-bow",
+    "M11-final-amulet"
+  ],
+  "native_cost_preservation_passed": true,
+  "ring_native_target_recovered": true,
+  "ring_root_only_parent_authority_preserved": true,
+  "conquest_native_same_target_verification": {
+    "baseline_seconds": [
+      244.6783095,
+      244.8998977
+    ],
+    "treatment_seconds": [
+      46.6442546,
+      47.0061799
+    ],
+    "default_finish_seconds": 240,
+    "claim": "About 81% earlier native verification; default final delivery unchanged.",
+    "source_runs": [
+      "M1-conquest",
+      "M3v2-conquest",
+      "M3v2-conquest-confirmation",
+      "M1-conquest-counterbalance"
+    ]
+  },
+  "checks": {
+    "native_return_bridge": {
+      "checks": 648,
+      "failures": 0,
+      "log": "out/progress-delivery/test-M11-return.log"
+    },
+    "native_joint_continuation": {
+      "checks": 313,
+      "failures": 0,
+      "log": "out/progress-delivery/test-M11-joint.log"
+    },
+    "native_bounded_finish": {
+      "checks": 183,
+      "failures": 0,
+      "source": "M9; unchanged bounded-finish/early guard source"
+    },
+    "native_blocker_entry": {
+      "checks": 65,
+      "failures": 0,
+      "source": "M8; unchanged compact compiler fixture/source"
+    },
+    "native_api": {
+      "checks": 2846,
+      "failures": 0,
+      "source": "M1 initial progress trace API suite; M12 accessor/layout correction qualified separately by the retained old-header probe."
+    },
+    "typescript": "passed",
+    "web_focused": "transfer, Lab export and result presentation passed",
+    "knowledge_lint": "no errors; existing open-claim warnings remain",
+    "abi_compatibility": "passed; abi-compatibility.json (old-header buffer canary, passive cursor/trace, null/abandon, shared DLL export)",
+    "final_native_shared_tests_wasm_builds": "passed; build-M12.json"
+  },
+  "ring_execution": {
+    "receipt": "sampling-ring.json",
+    "completed_runs": 1000,
+    "successes": 143,
+    "action_limit_censored": 857,
+    "illegal_or_missing_price_or_step_limit_failures": 0,
+    "cost_authority": "independent original-root evaluation, not the censored sample mean"
+  },
+  "wasm": {
+    "build_matches_final_native_source": true,
+    "conquest": "worker-conquest-M12-qualification.json",
+    "retention_and_handle_cleanup": "M11 passed; unchanged behavior reused; worker-processes.json",
+    "regalia": "worker-regalia-qualification.json (M11, unchanged behavior reused)",
+    "known_failure": "Final M12 Conquest maximum worker step 387.339 ms exceeds unchanged 250 ms contract. Delivery and complete policy evaluation passed; overall benchmark expectation did not. Earlier M11 maximum 717.115 ms failure retained.",
+    "previous_conquest": "worker-conquest-qualification.json"
+  },
+  "full_scope_exactness": "Open for Conquest/Bow/Ring/Amulet; exact Regalia preserved. No new lower or pruning authority.",
+  "historical_limits": "CB03 cheaper historical result not reproduced; CB05 named failure and CB09 no-policy case remain unchanged. Browser Ring default-state refusal remains separate from wider diagnostics.",
+  "operations": {
+    "sequential": true,
+    "subagents": false,
+    "automatic_restarts": false,
+    "push": false,
+    "final_batch_outer_wait_seconds": 2063.6,
+    "all_run_processes_drained": true
+  },
+  "research_disposition": "Applied passive lifecycle transport, one bounded complete-candidate check and native graph-local entry provenance/composition. Imported argument retained once; existing mathematical owners updated. Hard action budgets, broad sweeps and new lower models remain outside scope.",
+  "not_run": [
+    "Full acceptance suite; focused changed-layer checks used",
+    "Rendered UI review; remains with Oliver",
+    "Unchanged-policy execution resimulation"
+  ],
+  "native_policy_qualification_build": "build-M11.json",
+  "final_build_equivalence": "M12 changes only progress cursor transport, restoring the baseline public struct layout. Native M11 search/policy results and Ring sampling are reused under their original identities.",
+  "outcomes": {
+    "observability": "Native API, benchmark, actual worker and exported traces qualified; rendered UI review not run. Worker responsiveness remains unqualified.",
+    "earlier_conquest_verification": "Qualified by counterbalanced native surrogate pairs at identical verified cost; default final finish unchanged.",
+    "ring_native_recovery": "Qualified by actual native discovery, original-root evaluation and changed-graph execution trials.",
+    "full_scope_proof": "Still open; no new lower, permanent prune or native probability authority."
+  }
+}

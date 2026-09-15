@@ -733,6 +733,7 @@ struct StrategyEvalWork::Impl {
         }
         bytes += options.continuation_entries.capacity() *
                  sizeof(StrategyContinuationEntryRequest);
+        bytes += options.graph_local_provenance.owned_bytes();
         bytes += options.policy_decision_entries.capacity() *
                  sizeof(StrategyPolicyDecisionRequest);
         for (const StrategyPolicyDecisionRequest& request :
@@ -942,6 +943,7 @@ struct StrategyEvalWork::Impl {
         bytes += review_payload_owned_bytes;
         bytes += options.continuation_entries.capacity() *
                  sizeof(StrategyContinuationEntryRequest);
+        bytes += options.graph_local_provenance.owned_bytes();
         bytes += options.policy_decision_entries.capacity() *
                  sizeof(StrategyPolicyDecisionRequest);
         for (const StrategyPolicyDecisionRequest& request :
@@ -7528,6 +7530,7 @@ struct StrategyEvalWork::Impl {
             const StrategyPolicyDecisionRequest& request =
                 options.policy_decision_entries[index];
             StrategyPolicyDecisionCoverage decision;
+            decision.graph_local = request.graph_local;
             decision.compiled_node_id = request.compiled_node_id;
             decision.coarse_state = request.coarse_state;
             decision.selected_operator = request.selected_operator;
@@ -7539,12 +7542,19 @@ struct StrategyEvalWork::Impl {
             if (decision.fixed_observed_choice_policy) {
                 ++policy_certificate.fixed_observed_choice_decisions;
             }
-            const bool structurally_valid =
-                !request.compiled_node_id.empty() &&
-                request.coarse_state != kNoId &&
-                request.selected_operator != kNoId &&
-                !request.coarse_state_identity.empty() &&
-                !request.selected_operator_identity.empty();
+            const auto& provenance = options.graph_local_provenance;
+            const auto declaration = std::find_if(provenance.decisions.begin(), provenance.decisions.end(),
+                [&](const auto& d) { return d.compiled_node_id == request.compiled_node_id; });
+            const bool local_valid = provenance.matches(strategy->source_json) &&
+                declaration != provenance.decisions.end() &&
+                declaration->selected_operator_identity == request.selected_operator_identity &&
+                declaration->fixed_observed_choice_policy == request.fixed_observed_choice_policy &&
+                request.coarse_state == kNoId && request.selected_operator == kNoId &&
+                request.coarse_state_identity.empty();
+            const bool structurally_valid = !request.compiled_node_id.empty() &&
+                !request.selected_operator_identity.empty() && (request.graph_local ? local_valid :
+                (request.coarse_state != kNoId && request.selected_operator != kNoId &&
+                 !request.coarse_state_identity.empty()));
             if (!structurally_valid) {
                 decision_valid[index] = 0;
                 decision.status = StrategyPolicyEntryStatus::InvalidRequest;
@@ -7592,6 +7602,13 @@ struct StrategyEvalWork::Impl {
             const StrategyPolicyDecisionRequest& request =
                 options.policy_decision_entries[request_index];
             StrategyPolicyEntryResult entry;
+            entry.graph_local = request.graph_local;
+            if (entry.graph_local) {
+                const auto& declarations = options.graph_local_provenance.decisions;
+                const auto found = std::find_if(declarations.begin(), declarations.end(),
+                    [&](const auto& d) { return d.compiled_node_id == request.compiled_node_id; });
+                entry.primitive_decision = found != declarations.end() && found->primitive;
+            }
             entry.compiled_node_id = request.compiled_node_id;
             entry.coarse_state = request.coarse_state;
             entry.selected_operator = request.selected_operator;
@@ -9830,6 +9847,7 @@ std::uint64_t strategy_policy_entry_certificate_semantic_identity(
     }
     for (const StrategyPolicyDecisionCoverage& decision :
          certificate.decisions) {
+        if (decision.graph_local) mix_word(0x67726170686c6f63ull);
         mix_string(decision.compiled_node_id);
         mix_word(decision.coarse_state);
         mix_word(decision.selected_operator);
@@ -9841,6 +9859,7 @@ std::uint64_t strategy_policy_entry_certificate_semantic_identity(
         mix_word(decision.certified_entries);
     }
     for (const StrategyPolicyEntryResult& entry : certificate.entries) {
+        if (entry.graph_local) { mix_word(0x67726170686c6f63ull); mix_word(entry.primitive_decision); }
         mix_string(entry.compiled_node_id);
         mix_word(entry.coarse_state);
         mix_word(entry.selected_operator);

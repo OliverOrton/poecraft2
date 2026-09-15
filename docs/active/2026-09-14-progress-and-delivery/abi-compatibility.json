@@ -1,0 +1,33 @@
+{
+  "build": "build-M12.json",
+  "baseline_header_revision": "fe5bdcb4111fa6785c5615896b993a6fc713d1a1",
+  "probe_source": "docs/active/2026-09-14-progress-and-delivery/probes/legacy-progress-probe.cpp",
+  "probe_source_sha256": "7d0af379cd480698deead7a2b30f564e85130fb2871b195e28b1d1e2badf122a",
+  "admission": {
+    "available_physical": 35280781312,
+    "available_commit": 20737130496,
+    "outside_bytes": 13681888461,
+    "reserved_bytes": 8589934592,
+    "admitted": true
+  },
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 64680,
+    "process_identity_token": "64680:134339199744086547",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 445.80849999329075
+  },
+  "checks": {
+    "old_header_progress_bytes": 200,
+    "adjacent_canary_unchanged": true,
+    "sequence_reads_passive": true,
+    "trace_read_passive": true,
+    "null_and_abandon_zero": true
+  },
+  "shared_dll_accessor_export_and_null_zero": true
+}

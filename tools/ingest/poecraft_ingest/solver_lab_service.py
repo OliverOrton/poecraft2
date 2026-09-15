@@ -1689,6 +1689,7 @@ class SolverLabService:
                 "warning": warning,
                 "original_sample_count": original_count,
                 "returned_sample_count": len(samples),
+                "source_observations_omitted": trace.get("observations_omitted"),
                 "samples": samples,
             },
         )

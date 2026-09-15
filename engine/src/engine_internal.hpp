@@ -1017,6 +1017,7 @@ struct StrategyNode {
 };
 
 struct StrategyImpl {
+    std::string source_json; // Exact parser input for graph-local provenance checks.
     std::shared_ptr<const SessionImpl> session;
     std::string name;
     pc_item_state start_item{};

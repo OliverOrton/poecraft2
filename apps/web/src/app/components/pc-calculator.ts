@@ -261,6 +261,10 @@ export class PcCalculator extends HTMLElement {
     private solveRunning = false;
     private solveProgress: SolveProgress | null = null;
     private solveElapsedMs = 0;
+    private solveLastNativeUpdateAt: number | null = null;
+    private solveDeliveryStage = "idle";
+    private solveProgressExport: unknown = null;
+    private solveUiMilestones: Array<{stage: string; ui_elapsed_ms: number}> = [];
     private solveAbort: AbortController | null = null;
     private solveCancelled = false;
     private verificationRunning = false;
@@ -771,12 +775,24 @@ export class PcCalculator extends HTMLElement {
         this.solveEconomy = pinned;
         this.solveRunning = true;
         const solveStartedAt = performance.now();
+        this.solveLastNativeUpdateAt = null;
+        this.solveProgressExport = null;
+        this.solveDeliveryStage = "preparing";
+        this.solveUiMilestones = [];
+        const delivery = (stage: string): void => {
+            this.solveDeliveryStage = stage;
+            this.solveUiMilestones.push({stage, ui_elapsed_ms: performance.now()-solveStartedAt});
+            this.renderSolvePanel();
+        };
         this.solveElapsedMs = 0;
         const refreshSolveElapsed = (): void => {
             this.solveElapsedMs = performance.now() - solveStartedAt;
             const elapsed = this.querySelector<HTMLElement>(
                 ".pc-calc-solve-elapsed b",
             );
+            const age = this.querySelector<HTMLElement>("[data-native-update-age]");
+            if (age && this.solveLastNativeUpdateAt !== null) age.textContent =
+                `${((performance.now()-this.solveLastNativeUpdateAt)/1000).toFixed(1)} s`;
             if (elapsed) {
                 elapsed.textContent = solveElapsedLabel(this.solveElapsedMs);
             }
@@ -848,6 +864,8 @@ export class PcCalculator extends HTMLElement {
                     boundedFinishAfterMs: 4 * 60 * 1000,
                     onProgress: (progress) => {
                         this.solveProgress = progress;
+                        this.solveLastNativeUpdateAt = performance.now();
+                        this.solveDeliveryStage = progress.delivery_stage ?? "native_work";
                         refreshSolveElapsed();
                         const phase =
                             progress.phase === "expanding"
@@ -868,6 +886,8 @@ export class PcCalculator extends HTMLElement {
                     },
                 },
             );
+            this.solveProgressExport = result.worker;
+            delivery("worker_result_received");
             if (result.cancelled) {
                 this.solveCancelled = true;
                 return;
@@ -893,6 +913,7 @@ export class PcCalculator extends HTMLElement {
                 return;
             }
             try {
+                delivery("strategy_export");
                 const compiled = await this.client.solverCompileStrategy(
                     solveSolver,
                 );
@@ -921,6 +942,7 @@ export class PcCalculator extends HTMLElement {
             window.clearInterval(solveClock);
             refreshSolveElapsed();
             this.solveAbort = null;
+            delivery("handle_cleanup");
             const releases: Promise<unknown>[] = [];
             if (solveSolver) {
                 releases.push(this.client.closeSolver(solveSolver));
@@ -932,6 +954,7 @@ export class PcCalculator extends HTMLElement {
                 releases.push(this.client.closeEconomy(economy));
             }
             await Promise.all(releases);
+            delivery("ui_delivery_completed");
             this.solveRunning = false;
             this.renderSolvePanel();
         }
@@ -1865,6 +1888,14 @@ export class PcCalculator extends HTMLElement {
     }
 
     private bindPriceInputs(host: HTMLElement): void {
+        host.querySelector("[data-progress-export]")?.addEventListener("click", () => {
+            const blob = new Blob([JSON.stringify({schema_version: "solver_delivery_trace_v1",
+                economy: this.solveEconomy?.identity, worker: this.solveProgressExport,
+                ui_milestones: this.solveUiMilestones}, null, 2)], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement("a"); anchor.href = url;
+            anchor.download = "solver-progress.json"; anchor.click(); URL.revokeObjectURL(url);
+        });
         host.querySelectorAll<HTMLInputElement>("[data-price-key]").forEach(
             (input) => {
                 input.addEventListener("change", () => {
@@ -1953,7 +1984,7 @@ export class PcCalculator extends HTMLElement {
                     <span>Refinement classes <b>${progress.refinement_classes.toLocaleString()}</b></span>
                     <span>Certification pairs <b>${progress.certification_discovered_pairs.toLocaleString()}</b></span>
                     <span>Solver-owned memory <b>${solveMemoryLabel(progress.live_owned_bytes)}</b></span>
-                    <span>Candidate estimate <b>${progressCandidate}</b></span>
+                    <span>Working value <b>${progressCandidate}</b> (${escapeHtml(progress.trace?.current.working_value_role ?? "unclassified")})</span>
                     <span>Lower <b>${progressLower}</b></span>
                     <span>Verified executable upper <b>${progressUpper}</b></span>
                     <span>Gap <b>${progressGap}</b></span>
@@ -2073,6 +2104,18 @@ export class PcCalculator extends HTMLElement {
                     </details>`
                     : ""
             }
+            ${progress?.trace_error ? `<p class="pc-calc-solve-warning">Progress details unavailable: ${escapeHtml(progress.trace_error)}</p>` : ""}
+            ${progress?.trace ? `<details class="pc-calc-solve-diagnostics" open>
+                <summary>Solver progress diagnostics</summary>
+                <p>Owner: ${escapeHtml(progress.phase_owner)} / ${escapeHtml(progress.trace.current.active_work_owner)}.
+                Delivery: ${escapeHtml(this.solveDeliveryStage)}.
+                Last native update: <span data-native-update-age>${this.solveLastNativeUpdateAt === null ? "Unavailable" : `${((performance.now()-this.solveLastNativeUpdateAt)/1000).toFixed(1)} s`}</span>.</p>
+                <p>Candidate: ${escapeHtml(progress.trace.current.candidate_source)} · ${escapeHtml(progress.trace.current.candidate_stage)}.
+                Waiting on ${progress.trace.current.missing_continuations} named continuations.
+                Numerical generation ${progress.trace.current.numerical_generation}; reforge source ${escapeHtml(progress.trace.current.reforge_source)}.</p>
+                <p>Recent source events: ${progress.trace.events.slice(-4).map(e => escapeHtml(`${(e.native_elapsed_ms/1000).toFixed(2)} s ${e.kind}: ${e.reason}`)).join("; ") || "No new lifecycle event in this observation"}.</p>
+                <button data-progress-export ${this.solveProgressExport ? "" : "disabled"}>Export progress trace</button>
+            </details>` : ""}
             ${resultMarkup}
             ${labExportMarkup}
             ${errorMarkup}`;

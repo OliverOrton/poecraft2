@@ -151,6 +151,12 @@ struct CaseResult {
         std::uint64_t reforge_work = 0;
         std::uint64_t live_owned_bytes = 0;
         std::uint64_t peak_owned_bytes = 0;
+        std::uint32_t sweeps = 0;
+        double residual = 0, working_value = 0;
+        std::uint64_t finalization_cursor = 0, refinement_states = 0,
+            refinement_kernels = 0, refinement_transitions = 0,
+            certification_pairs = 0, certification_pending = 0;
+        std::string lifecycle = "null";
         bool raised_lower = false;
         bool decreased_lower = false;
         bool lowered_upper = false;
@@ -292,6 +298,7 @@ struct CaseResult {
     std::vector<ActionDescriptorCount> action_descriptor_distribution;
     std::vector<MaterialCount> material_distribution;
     std::vector<BoundTraceEntry> bound_trace;
+    std::uint64_t bound_trace_omitted = 0;
     bool has_time_to_first_incumbent = false;
     double time_to_first_incumbent_ms = 0.0;
     std::vector<std::pair<double, double>> absolute_gap_milestones;
@@ -3593,6 +3600,10 @@ CaseResult run_case(
             CaseResult::BoundTraceEntry entry;
             entry.elapsed_ms = milliseconds(total_begin, Clock::now());
             entry.phase_owner = owner;
+            if (report.bound_trace.size() == 8192) {
+                report.bound_trace.erase(report.bound_trace.begin());
+                ++report.bound_trace_omitted;
+            }
             report.bound_trace.push_back(entry);
             if (checkpoint) checkpoint(report);
         };
@@ -3902,9 +3913,12 @@ CaseResult run_case(
                 ? 1.0
                 : std::max(0.05, trace_interval_value->number);
         auto next_bound_trace = solve_begin;
+        auto next_trace_checkpoint = solve_begin;
         std::uint32_t last_trace_round =
             std::numeric_limits<std::uint32_t>::max();
         std::int32_t last_trace_incumbent = -1;
+        std::int32_t last_trace_owner = -1;
+        std::uint64_t last_trace_sequence = 0;
         const std::vector<double> absolute_thresholds{
             1000.0, 100.0, 50.0, 25.0, 10.0, 5.0, 1.0, 0.1};
         const std::vector<double> relative_thresholds{
@@ -3912,6 +3926,27 @@ CaseResult run_case(
         const auto record_bound_trace = [&](const auto now) {
             CaseResult::BoundTraceEntry entry;
             entry.elapsed_ms = milliseconds(solve_begin, now);
+            entry.sweeps = progress.sweeps;
+            entry.residual = progress.residual;
+            entry.working_value = progress.start_value_bound;
+            entry.finalization_cursor = progress.finalization_work_items;
+            entry.refinement_states = progress.refinement_states;
+            entry.refinement_kernels = progress.refinement_kernels;
+            entry.refinement_transitions = progress.refinement_transitions;
+            entry.certification_pairs = progress.certification_discovered_pairs;
+            entry.certification_pending = progress.certification_pending_pairs;
+            size_t trace_length = 0;
+            auto trace_rc = pc_solver_progress_trace(handles.solver, last_trace_sequence,
+                nullptr, 0, &trace_length, &error);
+            if (trace_rc != PC_RESULT_OK) throw std::runtime_error("progress trace size failed");
+            entry.lifecycle.resize(trace_length + 256);
+            trace_rc = pc_solver_progress_trace(handles.solver, last_trace_sequence,
+                entry.lifecycle.data(), entry.lifecycle.size(), &trace_length, &error);
+            if (trace_rc != PC_RESULT_OK) throw std::runtime_error("progress trace read failed");
+            entry.lifecycle.resize(trace_length);
+            if (!entry.lifecycle.empty() && entry.lifecycle.back() == '\0') entry.lifecycle.pop_back();
+            last_trace_sequence = pc_solver_progress_sequence(handles.solver);
+            last_trace_owner = progress.phase_owner;
             entry.phase = progress.phase;
             entry.phase_owner = progress.phase_owner;
             entry.round = progress.focused_round;
@@ -3949,6 +3984,10 @@ CaseResult run_case(
                     std::isfinite(previous.upper_bound) &&
                     entry.upper_bound > previous.upper_bound;
             }
+            if (report.bound_trace.size() == 8192) {
+                report.bound_trace.erase(report.bound_trace.begin());
+                ++report.bound_trace_omitted;
+            }
             report.bound_trace.push_back(entry);
             if (!report.has_time_to_first_incumbent &&
                 entry.incumbent_kind != PC_SOLVE_INCUMBENT_NONE &&
@@ -3981,7 +4020,14 @@ CaseResult run_case(
             report.solve_ms = entry.elapsed_ms;
             report.total_ms = milliseconds(total_begin, now);
             report.working_set_after = process_working_set();
-            if (checkpoint) checkpoint(report);
+            // Source/owner changes are retained immediately, but rewriting the
+            // entire accumulated report at every such event makes observation
+            // consume the solve window. Persist at the declared trace cadence.
+            if (checkpoint && (progress.done || now >= next_trace_checkpoint || entry.lowered_upper)) {
+                checkpoint(report);
+                next_trace_checkpoint = now + std::chrono::duration_cast<Clock::duration>(
+                    std::chrono::duration<double>(trace_interval_seconds));
+            }
         };
         bool watchdog_abandoned = false;
         const Value* requested_bounded_finish_value = optional(
@@ -4027,6 +4073,9 @@ CaseResult run_case(
             if (report.bound_trace.empty() || progress.done ||
                 progress.focused_round != last_trace_round ||
                 progress.incumbent_kind != last_trace_incumbent ||
+                progress.phase_owner != last_trace_owner ||
+                pc_solver_progress_sequence(handles.solver) != last_trace_sequence ||
+                (!report.bound_trace.empty() && progress.upper_bound != report.bound_trace.back().upper_bound) ||
                 after_step >= next_bound_trace) {
                 record_bound_trace(after_step);
                 last_trace_round = progress.focused_round;
@@ -5368,7 +5417,7 @@ void append_case_report(
         append_nullable_number(
             out, true, static_cast<double>(current) / cap->number);
     };
-    out << "  \"bound_trace\":{\"sampling\":{"
+    out << "  \"bound_trace\":{\"observations_omitted\":" << result.bound_trace_omitted << ",\"sampling\":{"
            "\"round_changes\":true,\"bounded_wall_intervals\":true},"
            "\"time_to_first_incumbent_ms\":";
     append_nullable_number(
@@ -5402,6 +5451,17 @@ void append_case_report(
         const CaseResult::BoundTraceEntry& entry = result.bound_trace[i];
         out << "{\"elapsed_ms\":";
         append_nullable_number(out, true, entry.elapsed_ms);
+        out << ",\"sweeps\":" << entry.sweeps << ",\"residual\":";
+        append_nullable_number(out, true, entry.residual);
+        out << ",\"working_value\":";
+        append_nullable_number(out, true, entry.working_value);
+        out << ",\"finalization_cursor\":" << entry.finalization_cursor
+            << ",\"refinement_states\":" << entry.refinement_states
+            << ",\"refinement_kernels\":" << entry.refinement_kernels
+            << ",\"refinement_transitions\":" << entry.refinement_transitions
+            << ",\"certification_pairs\":" << entry.certification_pairs
+            << ",\"certification_pending\":" << entry.certification_pending
+            << ",\"lifecycle\":" << entry.lifecycle;
         out << ",\"phase\":" << entry.phase
             << ",\"phase_owner\":"
             << escape_json(phase_owner_name(entry.phase_owner))

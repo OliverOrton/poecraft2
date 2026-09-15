@@ -1,0 +1,14 @@
+[
+  {
+    "name": "M7-ring",
+    "binary": "out/progress-delivery/M7.exe",
+    "binary_sha256": "9baf666ff6d21741d611be35099d630cd8fc7be31d9ddabd9f29e20bf33c5fd5",
+    "manifest": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/manifest.json",
+    "cases": [
+      "cb07-cross-base-product8-long240"
+    ],
+    "host_watchdog": 870.0,
+    "mode": "execution-count",
+    "action_price": 0.389479993470349
+  }
+]

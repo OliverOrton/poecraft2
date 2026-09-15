@@ -742,7 +742,39 @@ export interface EngineMemoryStats {
     scope: "facade_registries_plus_solver_and_evaluator_owned_allocations";
 }
 
+export interface SolverProgressTrace {
+    schema_version: "solver_progress_trace_v1";
+    clock: "native_solve_constructor_ms";
+    native_elapsed_ms: number;
+    sequence: number;
+    dropped_before_cursor: number;
+    current: {
+        active_work_owner: string;
+        working_value_role: string;
+        numerical_generation: number;
+        reforge_source: string;
+        candidate_identity: string;
+        candidate_source: string;
+        candidate_stage: string;
+        missing_continuations: number;
+        candidate_attempts: number;
+        verified_identity: string;
+        verified_replacements: number;
+        finish_requested: boolean;
+        [key: string]: unknown;
+    };
+    events: Array<{sequence: number; native_elapsed_ms: number;
+        kind: string; reason: string; candidate_identity: string;
+        [key: string]: unknown}>;
+}
+
 export interface SolveProgress {
+    lifecycle_sequence?: number;
+    trace?: SolverProgressTrace;
+    /** Worker observation clock, distinct from source event time. */
+    worker_observed_ms?: number;
+    delivery_stage?: string;
+    trace_error?: string;
     /** Native retained-work phase. `done` means finish is packaging-only. */
     phase:
         | "expanding"
@@ -769,8 +801,7 @@ export interface SolveProgress {
     expanded_states: number;
     sweeps: number;
     residual: number | null;
-    /** Monotonically descending upper bound; 1e12 means iteration is pending. */
-    /** Current selected/coarse candidate estimate; not publication authority. */
+    /** Active numerical workspace value; role/generation are in trace.current. */
     start_value_bound: number | null;
     lower_bound: number | null;
     /** Monotone independently verified executable upper, when available. */
@@ -824,6 +855,9 @@ export interface SolverWorkerMetrics {
     total_step_ms: number;
     /** Packaging-only public-result transfer after native bounded stepping. */
     finalization_ms: number;
+    progress_observations?: SolveProgress[];
+    progress_observations_omitted?: number;
+    milestones?: Array<{stage: string; worker_elapsed_ms: number}>;
 }
 
 export type SolverSolveResult =

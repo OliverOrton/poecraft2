@@ -1,0 +1,147 @@
+[
+  {
+    "name": "M11-worker-conquest",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/solver-benchmark.ts",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "--case",
+      "cb01-cross-base-product8-long240",
+      "--skip-verification",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\progress-delivery\\M11-worker-conquest.json"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-15T03:08:22.840368+00:00",
+      "available_physical": 28601163776,
+      "available_commit": 9549344768,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-M11.json",
+    "process": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 21836,
+      "process_identity_token": "21836:134339153028427243",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 267215.7032999676
+    }
+  },
+  {
+    "name": "M11-worker-retention",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/retention-wasm.test.ts"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-15T04:02:58.846762+00:00",
+      "available_physical": 36423012352,
+      "available_commit": 22319083520,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-M11.json",
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 61376,
+      "process_identity_token": "61376:134339185788481651",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 27456.468599964865
+    }
+  },
+  {
+    "name": "M11-worker-regalia",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/solver-benchmark.ts",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "--case",
+      "cb12-cross-base-product8-long240",
+      "--skip-verification",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\progress-delivery\\M11-worker-regalia.json"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-15T04:03:26.304532+00:00",
+      "available_physical": 36820721664,
+      "available_commit": 22470356992,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-M11.json",
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 67100,
+      "process_identity_token": "67100:134339186063060067",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 54318.86500003748
+    }
+  },
+  {
+    "name": "M12-worker-conquest",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/solver-benchmark.ts",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "--case",
+      "cb01-cross-base-product8-long240",
+      "--skip-verification",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\progress-delivery\\M12-worker-conquest.json"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-15T04:26:14.907295+00:00",
+      "available_physical": 35240202240,
+      "available_commit": 20713086976,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-M12.json",
+    "process": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 61684,
+      "process_identity_token": "61684:134339199749088145",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 258619.14229998365
+    }
+  }
+]

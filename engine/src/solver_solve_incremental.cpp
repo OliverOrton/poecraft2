@@ -1428,6 +1428,7 @@ void SolveWork::Impl::capture_initial_incremental_selected_policy() {
     telemetry.selected_candidate_status =
         "initial_restricted_policy_captured";
     unverified_selected_policy_candidate = std::move(selected);
+    record_progress_event("candidate_captured", "selected_policy", unverified_selected_policy_candidate->snapshot.portfolio_identity);
 }
 
 bool SolveWork::Impl::try_begin_candidate_proof_handoff() {
@@ -1456,6 +1457,31 @@ bool SolveWork::Impl::try_begin_candidate_proof_handoff() {
 }
 
 bool SolveWork::Impl::try_begin_renewal_candidate_publication() {
+    if (options.high_impact_executable_uppers && !requested_bounded_finish &&
+        !result.diagnostics.resource_cap_hit && !expansion_active &&
+        !publication_pipeline.initial_candidate_task &&
+        publication_pipeline.complete_candidate_attempted_identity == 0 &&
+        !std::isfinite(finalization_verified_upper_bound) &&
+        !std::isfinite(incumbent_portfolio.verified_executable_upper()) && output_incumbent &&
+        !output_incumbent->independently_evaluated &&
+        output_incumbent->policy_materialized &&
+        output_incumbent->kind == "anytime_reachable_proper_policy") {
+        // This capture has already walked every selected positive-mass exit,
+        // including fixed option closure. It can arrive from an upper pass,
+        // outside continue_initial_candidate's successful-install branch.
+        // Freeze it through the existing cooperative checker at this safe
+        // boundary. Ordinary discovery resumes with its existing cursor;
+        // neither failure nor unrelated row growth retries the slot.
+        publication_pipeline.complete_candidate_attempted_identity =
+            output_incumbent->portfolio_identity;
+        record_progress_event("service_queued", "complete_selected_candidate",
+            output_incumbent->portfolio_identity);
+        focus_optimizing = false;
+        focused_lower_mode = false;
+        publication_pipeline.initial_candidate_task.emplace(certify_initial_candidate());
+        phase = SolvePhase::Expanding;
+        return true;
+    }
     if (publication_pipeline.dirty_continuation_attempted &&
         options.high_impact_executable_uppers && !requested_bounded_finish &&
         !result.diagnostics.resource_cap_hit && !expansion_active &&
@@ -1862,10 +1888,12 @@ bool SolveWork::Impl::schedule_incremental_refinement(
     if (batch == 0) return false;
     ranked.resize(batch);
 
+    record_progress_event("support_service_start", "refinement_batch_size=" + std::to_string(ranked.size()));
     std::vector<std::uint8_t> selected(state_count, 0);
     double selected_uncertainty = 0.0;
     for (const std::uint32_t state : ranked) {
         selected[state] = 1;
+
         selected_uncertainty = std::min(
             unbounded_priority,
             selected_uncertainty + priority[state]);

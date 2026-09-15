@@ -80,6 +80,8 @@ interface CaseReport {
         watchdog_expired: boolean;
     };
     progress_trace: Array<Record<string, unknown>>;
+    progress_trace_omitted: number;
+    worker_milestones: Array<{stage: string; worker_elapsed_ms: number}>;
     memory: {
         measurement_kind: string;
         process_working_set_before_bytes: number | null;
@@ -318,6 +320,8 @@ function disabledReport(spec: SolverBenchmarkCase, status?: string): CaseReport 
             watchdog_expired: false,
         },
         progress_trace: [],
+        progress_trace_omitted: 0,
+        worker_milestones: [],
         memory: {
             measurement_kind: "not_measured",
             process_working_set_before_bytes: null,
@@ -1091,6 +1095,7 @@ async function runCase(
     let cancellationAckMs: number | null = null;
     let solveError: string | null = null;
     const progressTrace: Array<Record<string, unknown>> = [];
+    let progressTraceOmitted = 0;
     const persistProgressTrace = (reason: string): void => {
         if (!progressOutputPath) return;
         mkdirSync(dirname(progressOutputPath), { recursive: true });
@@ -1102,6 +1107,7 @@ async function runCase(
                 reason,
                 captured_at_utc: new Date().toISOString(),
                 trace: progressTrace,
+                observations_omitted: progressTraceOmitted,
             }, null, 2)}\n`,
         );
     };
@@ -1215,6 +1221,7 @@ async function runCase(
 
         const solveStarted = performance.now();
         const recordSolveProgress = (progress: SolveProgress): void => {
+            if (progressTrace.length === 8192) { progressTrace.shift(); progressTraceOmitted += 1; }
             progressTrace.push({
                 elapsed_ms: roundMs(performance.now() - solveStarted),
                 ...progress,
@@ -1723,6 +1730,8 @@ async function runCase(
             watchdog_expired: watchdogExpired,
         },
         progress_trace: progressTrace,
+        progress_trace_omitted: progressTraceOmitted,
+        worker_milestones: worker?.milestones ?? [],
         memory: {
             measurement_kind: "node_process_rss_sampled_5ms_and_wasm_heap_snapshots",
             process_working_set_before_bytes: memoryBefore || null,

@@ -731,6 +731,16 @@ pc_result pc_solver_solve_log(
     size_t* out_length,
     pc_error_info* out_error);
 
+/* Constant-time observational cursor; zero for no live solve or no events.
+ * Separate from pc_solve_progress to preserve its public ABI layout. */
+uint64_t pc_solver_progress_sequence(pc_solver_handle solver);
+
+/* Cheap, read-only bounded lifecycle projection; requires live stepped work.
+ * Sequence cursors expose overwritten events explicitly. No policy checking. */
+pc_result pc_solver_progress_trace(
+    pc_solver_handle solver, uint64_t after_sequence, char* buffer,
+    size_t capacity, size_t* out_length, pc_error_info* out_error);
+
 /* Versioned solver telemetry JSON for the current handle and latest solve.
  * Available before solving (registry/layout fields are populated), during a
  * stepped solve (partial counters advance), after abandon (the last partial

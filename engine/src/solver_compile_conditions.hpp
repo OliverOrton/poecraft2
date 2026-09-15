@@ -392,7 +392,8 @@ std::string abstract_state_condition(
     const SessionImpl& session,
     const AbstractLayout& layout,
     const std::vector<SlotVocabulary>& vocabulary,
-    const AbstractState& state) {
+    const AbstractState& state,
+    const bool include_junk_counts = true) {
     std::vector<std::string> parts{rarity_condition(state.rarity)};
     parts.push_back(
         count_condition("prefix_count_range", state.prefix_count));
@@ -529,6 +530,33 @@ std::string abstract_state_condition(
         "searing", state.searing_exarch_tier));
     parts.push_back(eldritch_tier_condition(
         "eater", state.eater_of_worlds_tier));
+    if (!include_junk_counts) {
+        std::array<unsigned, 2> occupied{};
+        std::vector<std::uint64_t> occupied_members(session.words, 0);
+        for (std::size_t i = 0; i < layout.slots.size(); ++i) {
+            if (state.slot_status[i] == static_cast<std::uint8_t>(GoalSlotStatus::Absent)) continue;
+            if (state.slot_status[i] != static_cast<std::uint8_t>(GoalSlotStatus::Satisfied))
+                gap("compact entry needs satisfied goal affixes only");
+            int side = -1;
+            for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+                if (!pc_bitset_test(layout.slots[i].satisfying_mask.data(), mod)) continue;
+                if (pc_bitset_test(occupied_members.data(), mod)) gap("compact entry has overlapping goal slots");
+                pc_bitset_set(occupied_members.data(), mod);
+                if (side != -1 && side != session.gen_type[mod]) gap("compact entry has a mixed-side goal");
+                side = session.gen_type[mod];
+            }
+            if (side < 0 || side > 1) gap("compact entry has an unknown goal side");
+            ++occupied[side];
+        }
+        if (occupied[PC_SIDE_PREFIX] != state.prefix_count || occupied[PC_SIDE_SUFFIX] != state.suffix_count)
+            gap("compact entry has unobserved affixes");
+        for (std::size_t i = 0; i < layout.junk_classes.size(); ++i)
+            if (state.junk_counts[i] || state.fractured_junk_counts[i] || state.crafted_junk_counts[i] ||
+                state.fractured_crafted_junk_counts[i]) gap("compact entry has junk");
+        // Exact side counts and the distinct occupied goal slots exhaust all
+        // affixes. Zero junk counts are implied, not an extra observation.
+        return all_of(parts);
+    }
     for (std::size_t i = 0; i < layout.junk_classes.size(); ++i) {
         parts.push_back(mod_count_condition(
             session, layout.junk_classes[i], state.junk_counts[i]));

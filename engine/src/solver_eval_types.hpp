@@ -140,6 +140,33 @@ struct StrategyContinuationUpperCertificate {
  * graph identity; numeric solver/operator ids remain call-local handles and
  * are always paired with their collision-free semantic identities.
  */
+// Compiler-authored declarations, bound to the complete immutable graph bytes.
+// No numeric state/operator handle crosses a private calculator boundary.
+struct GraphLocalPolicyDecision {
+    std::string compiled_node_id;
+    std::vector<std::uint64_t> selected_operator_identity;
+    bool primitive = false;
+    bool fixed_observed_choice_policy = false;
+    bool operator==(const GraphLocalPolicyDecision&) const = default;
+};
+struct GraphLocalPolicyProvenance {
+    std::string strategy_json;
+    std::vector<GraphLocalPolicyDecision> decisions;
+    std::vector<std::string> decision_routers;
+    bool matches(const std::string& graph) const {
+        return !decisions.empty() && !strategy_json.empty() && strategy_json == graph;
+    }
+    std::uint64_t owned_bytes() const {
+        std::uint64_t bytes = strategy_json.capacity() + 1 +
+            decisions.capacity() * sizeof(GraphLocalPolicyDecision);
+        for (const auto& d : decisions) bytes += d.compiled_node_id.capacity() + 1 +
+            d.selected_operator_identity.capacity() * sizeof(std::uint64_t);
+        bytes += decision_routers.capacity() * sizeof(std::string);
+        for (const auto& id : decision_routers) bytes += id.capacity() + 1;
+        return bytes;
+    }
+};
+
 struct StrategyPolicyDecisionRequest {
     std::string compiled_node_id;
     std::uint32_t coarse_state = kNoId;
@@ -147,6 +174,7 @@ struct StrategyPolicyDecisionRequest {
     std::vector<std::uint64_t> coarse_state_identity;
     std::vector<std::uint64_t> selected_operator_identity;
     bool fixed_observed_choice_policy = false;
+    bool graph_local = false;
 };
 
 enum class StrategyPolicyEntryStatus : std::uint8_t {
@@ -231,10 +259,14 @@ struct StrategyPolicyEntryResult {
      * solved later in finalization. It is never an identity or reuse key. */
     std::uint32_t evaluator_pair_index = kNoId;
 
+    bool graph_local = false;
+    bool primitive_decision = false;
+
     bool available() const {
         return status == StrategyPolicyEntryStatus::Complete &&
                !compiled_node_id.empty() &&
-               !coarse_state_identity.empty() &&
+               (graph_local ? (coarse_state == kNoId && selected_operator == kNoId &&
+                   coarse_state_identity.empty()) : !coarse_state_identity.empty()) &&
                !selected_operator_identity.empty() &&
                !exact_entry_identity.empty() &&
                !exact_item_identity.empty() &&
@@ -259,6 +291,7 @@ struct StrategyPolicyDecisionCoverage {
         StrategyPolicyEntryStatus::InvalidRequest;
     std::uint32_t reached_entries = 0;
     std::uint32_t certified_entries = 0;
+    bool graph_local = false;
 };
 
 enum class StrategyPolicySelectedKernelStatus : std::uint8_t {
@@ -390,6 +423,7 @@ struct StrategyEvalOptions {
      * genuine decision nodes. Route nodes and fixed-program continuation
      * operations are absent by construction. */
     std::vector<StrategyPolicyDecisionRequest> policy_decision_entries;
+    GraphLocalPolicyProvenance graph_local_provenance;
 };
 
 enum class StrategyEvalPhase {
