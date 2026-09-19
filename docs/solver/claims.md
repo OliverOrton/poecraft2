@@ -61,6 +61,8 @@ For a small fix, this ledger need not change. For a mathematical change, follow 
 - 2026-09-10 — `accepted` — Codex, scoped native delivery application: the [entry-domain argument](mathematics/policies.md#properness) excludes unrelated lower estimates from upper-policy frontier authority. The [goal-reaching continuation](../active/2026-09-10-goal-reaching-row-delivery/README.md) compiles and independently evaluates Ring/Amulet policies at the original memory limit, retaining the first verified candidate before improvement. Full goal masks are not terminals; complete native failures and observations remain required. Statement, preconditions and exactness status are unchanged; control and WASM qualification are recorded separately.
 - 2026-09-12 — `accepted` — Codex, scoped native application and responsible self-review: the [adaptive dirty programme](../active/2026-09-12-adaptive-dirty-guidance/README.md) admits complete paid redraw/protection continuations and independently evaluates root-only Amulet/Ring-four uppers. Private IDs and estimates supply no parent binding or lower authority. Static/adaptive matched costs tie; no learning advantage or exact closure is claimed. Statement, preconditions and numerical checks are unchanged.
 - 2026-09-13 — `accepted` — Codex, responsible self-review and scoped native application: [selective growth](../active/2026-09-13-selective-continuation-improvement/README.md) retains complete immutable selected rows and reuses only an unchanged checked root controller under the [fixed-policy argument](mathematics/policies.md#properness). New positive tails still require closure and native evaluation; a cheaper Amulet blocker estimate fails that check and supplies no upper. The small matched Ring improvement does not satisfy the two-family objective. Statement, preconditions and exactness status remain unchanged.
+- 2026-09-15 — `accepted` — Codex, conditional application: [owned-witness interruption](mathematics/search-and-resumption.md#interruptible-verified-results) selects a compatible complete graph/root-certificate/value tuple at a finite computational stop. Native Finish and transport checks are separately recorded in the [delivery programme](../active/2026-09-15-verified-delivery/README.md); no new rounded endpoint, crafting-duration bound or exactness follows. Statement and preconditions remain unchanged.
+
 
 <a id="clm-0003"></a>
 ## CLM-0003 — Observed-choice timing changes the value
@@ -109,6 +111,8 @@ cannot publish, and ordinary completion still goes through the existing
 properness/compiler/evaluator checks. The [C3 empty-five result](../active/2026-09-09-empty-start-partial-continuation/README.md)
 improves the verified upper while keeping the lower fixed. This application does
 not promote the general claim's open status or assert native optimality.
+- 2026-09-15 — `open` — Codex, conditional elaboration: [boundary response](mathematics/policies.md#boundary-response) eliminates a transient interior but still requires global boundary properness, complete terminal/reward categories and native semantic matching. Sparse response reuse and duration generating functions are research, not new implemented summaries or issuers. Original statement and broad correspondence status are preserved.
+
 
 <a id="clm-0005"></a>
 ## CLM-0005 — A behavioral quotient needs action-wise class-transition equality
@@ -473,6 +477,8 @@ removal of action coverage or promotion of an auxiliary optimum to a native uppe
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
 - 2026-09-09 — `open` — Codex, scoped continuation experiment: exact structural membership beyond a saved policy does not establish an owned decision. The [new-controller argument](mathematics/policies.md#properness) requires fresh rows, properness and evaluation. A focused out-of-snapshot completion fixture passes, but both ordinary variants fail the 90-second watchdog and are removed; [failure evidence](../active/2026-09-09-empty-start-partial-continuation/fresh-comparison.json) grants no native acceptance or exact closure.
+- 2026-09-15 — `open` — Codex, scoped implementation and self-review: Finish transfers an existing completed strict assertion before selection, preserving graph/root certificate and immutable work context; frozen memory-charge reuse requires unchanged transitive storage/capacity/cache/alias dependencies. [Delivery evidence](../active/2026-09-15-verified-delivery/README.md) separates tests and measurements. General reuse correspondence remains open.
+
 
 <a id="clm-0022"></a>
 ## CLM-0022 — Validity, eventual completion, and bounded performance are separate claims
@@ -493,6 +499,8 @@ removal of action coverage or promotion of an auxiliary optimum to a native uppe
 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
+- 2026-09-15 — `open` — Codex, measurement contract: [staged work](mathematics/search-and-resumption.md#cooperative-preparation) induction establishes safety only. Begin, stepped latency, cancellation/release and usable delivery are distinct empirical gates, independent of unchanged 240-second Finish and policy quality. Programme results do not establish general liveness or latency.
+
 
 <a id="clm-0023"></a>
 ## CLM-0023 — Stored-coefficient feasibility and small residuals are not native error guarantees
@@ -513,6 +521,8 @@ removal of action coverage or promotion of an auxiliary optimum to a native uppe
 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
+- 2026-09-15 — `open` — Codex, conditional derivation: [aligned residual/transience enclosures](mathematics/numerical-closure.md#aligned-residual-attribution) require finite nonnegative Q, a sound nonnegative witness, coefficient provenance and outward checks. An unaligned continuation remains explicit; a fixed-policy lower endpoint is not an MDP lower. No numerical issuer or source/native alignment was implemented.
+
 
 <a id="clm-0024"></a>
 ## CLM-0024 — Exact native closure requires compatible proof and executable evidence

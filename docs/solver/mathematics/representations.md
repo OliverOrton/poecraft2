@@ -159,6 +159,30 @@ The strict implementation uses split-only partitions and generation-bound rows a
 <a id="mapping"></a>
 ## 8. Correspondence and open obligations
 
+<a id="selected-controller-requirements"></a>
+### Selected-controller requirements
+
+An exact quotient for all compared actions is stronger than sharing for one
+selected controller. The latter requires equal selected legality, immediate
+reward and successor control-cell probabilities over the entire member domain,
+including goal truth and hidden offer/checkpoint state. Adding an alternative
+requires its observations too, refinement, or a separate context. A representative
+transition cannot prove whole-member equality.
+
+Existing backward observation contracts propagate requirements for legality,
+rewards, native goals, routing, surviving locks/affixes and selector preimages.
+For cycles, iterate their monotone requirement union to a fixed point on the
+finite observation vocabulary. Missing contracts mean unknown dependence, not
+permission to remove a distinction. Compare per-node requirements with the global
+union required by today's single CalcContext. A smaller per-node set may leave
+that union and the actual class count unchanged.
+
+The narrow [implied clean-entry predicate](policies.md#implied-entry-predicates)
+argument already exists: distinct goals exhausting exact side occupancy imply
+zero junk. It does not permit dropping predicates on dirty states, overlapping
+goals, below-tier members, bench conflicts or surviving control. A general
+contract-derived layout adapter remains research.
+
 ### Action-scoped private policy search
 
 For a legal candidate subset \(A'\subseteq A\),

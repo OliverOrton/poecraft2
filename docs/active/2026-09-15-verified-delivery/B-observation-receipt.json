@@ -1,0 +1,212 @@
+{
+  "command": [
+    "out/verified-delivery/observation-probe.exe",
+    "docs/active/2026-09-13-execution-aware-proposals/strategies/ring-four-count.strategy.json",
+    "docs/active/2026-09-14-progress-and-delivery/strategies/ring-native.strategy.json"
+  ],
+  "probe_sha256": "d99848d67c07a20b7ef3ae00fbbcd9629554ecc73fc1c89548139f5711d2034a",
+  "admission": {
+    "available_physical": 47165366272,
+    "available_commit": 59453046784,
+    "outside_bytes": 13681888461,
+    "reserved_bytes": 8589934592
+  },
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 22692,
+    "process_identity_token": "22692:134340039619999265",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 449.9285000056261
+  },
+  "result": [
+    {
+      "path": "docs/active/2026-09-13-execution-aware-proposals/strategies/ring-four-count.strategy.json",
+      "nodes": 161,
+      "goal_slots": 4,
+      "junk_classes": 109,
+      "count_membership_observations": 30,
+      "discriminating_tags": 0,
+      "rounds": 25,
+      "unique_requirements": 6,
+      "observation_peak_bytes": 231696,
+      "observation_retained_bytes": 75760,
+      "model_ms": 11.3102,
+      "fixed_point_ms": 6.1759,
+      "union": {
+        "item_features": 1015807,
+        "affixes": [
+          {
+            "features": 871366656,
+            "required_affix_traits": 0,
+            "forbidden_affix_traits": 0,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 871366656,
+            "required_affix_traits": 0,
+            "forbidden_affix_traits": 4,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 1048576,
+            "required_affix_traits": 4,
+            "forbidden_affix_traits": 8,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 871366656,
+            "required_affix_traits": 8,
+            "forbidden_affix_traits": 0,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 871366656,
+            "required_affix_traits": 8,
+            "forbidden_affix_traits": 4,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 34603008,
+            "required_affix_traits": 16,
+            "forbidden_affix_traits": 0,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 34603008,
+            "required_affix_traits": 16,
+            "forbidden_affix_traits": 4,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 34603008,
+            "required_affix_traits": 24,
+            "forbidden_affix_traits": 0,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 34603008,
+            "required_affix_traits": 24,
+            "forbidden_affix_traits": 4,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          }
+        ],
+        "tag_count": 0
+      }
+    },
+    {
+      "path": "docs/active/2026-09-14-progress-and-delivery/strategies/ring-native.strategy.json",
+      "nodes": 165,
+      "goal_slots": 4,
+      "junk_classes": 109,
+      "count_membership_observations": 30,
+      "discriminating_tags": 1,
+      "rounds": 20,
+      "unique_requirements": 8,
+      "observation_peak_bytes": 237704,
+      "observation_retained_bytes": 77560,
+      "model_ms": 10.6965,
+      "fixed_point_ms": 4.7578,
+      "union": {
+        "item_features": 1015807,
+        "affixes": [
+          {
+            "features": 871366656,
+            "required_affix_traits": 0,
+            "forbidden_affix_traits": 0,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 871366656,
+            "required_affix_traits": 0,
+            "forbidden_affix_traits": 4,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 1048576,
+            "required_affix_traits": 4,
+            "forbidden_affix_traits": 8,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 871366656,
+            "required_affix_traits": 8,
+            "forbidden_affix_traits": 0,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 871366656,
+            "required_affix_traits": 8,
+            "forbidden_affix_traits": 4,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 34603008,
+            "required_affix_traits": 16,
+            "forbidden_affix_traits": 0,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 34603008,
+            "required_affix_traits": 16,
+            "forbidden_affix_traits": 4,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 34603008,
+            "required_affix_traits": 24,
+            "forbidden_affix_traits": 0,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          },
+          {
+            "features": 34603008,
+            "required_affix_traits": 24,
+            "forbidden_affix_traits": 4,
+            "required_item_traits": 0,
+            "forbidden_item_traits": 0,
+            "tag_count": 0
+          }
+        ],
+        "tag_count": 0
+      }
+    }
+  ]
+}

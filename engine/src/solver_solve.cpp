@@ -563,14 +563,23 @@ SolveWork::Impl::Impl(
          * preserve root-row cap attribution when they stop before focused
          * proof work. */
         if (options.high_impact_executable_uppers) {
+            const auto cover_started = std::chrono::steady_clock::now();
+            record_progress_event("setup_goal_cover_start");
             try {
                 prepare_goal_cover_cost();
             } catch (const SolverResourceLimit& limit) {
                 setup_resource_limit.emplace(
                     limit.cap_name(), limit.limit());
             }
+            goal_cover_setup_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now()-cover_started).count();
+            record_progress_event("setup_goal_cover_completed");
         }
-        if (options.native_retention_lower) prepare_native_retention_lower();
+        if (options.native_retention_lower) {
+            record_progress_event("setup_retention_start");
+            prepare_native_retention_lower();
+            record_progress_event("setup_retention_completed");
+        }
         result.diagnostics.solve_setup_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - setup_started)

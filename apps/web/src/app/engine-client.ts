@@ -80,6 +80,8 @@ export interface StrategyEvaluationRunOptions {
 }
 
 export interface SolverRunOptions {
+    /** A request-scoped intent, inert after its terminal response. */
+    onControl?: (control: {requestFinish: () => void}) => void;
     chunkSize?: number;
     /** Instrumentation/control mode for callers that need cancellation
      * acknowledgement after each exact engine work unit. */
@@ -195,6 +197,7 @@ export class EngineClient {
             onProgress?: (progress: { done: number; total: number }) => void;
             onEvaluationProgress?: (progress: StrategyEvalProgress) => void;
             onSolveProgress?: (progress: SolveProgress) => void;
+            onControl?: SolverRunOptions["onControl"];
             signal?: AbortSignal;
         },
     ): Promise<T> {
@@ -211,9 +214,7 @@ export class EngineClient {
             this.pending.set(id, pending);
             const signal = options?.signal;
             if (signal) {
-                if (signal.aborted) {
-                    this.transport.postMessage({ kind: "cancel", id });
-                } else {
+                if (!signal.aborted) {
                     const onAbort = () =>
                         this.transport.postMessage({ kind: "cancel", id });
                     signal.addEventListener("abort", onAbort, { once: true });
@@ -222,9 +223,17 @@ export class EngineClient {
                 }
             }
             this.transport.postMessage(
-                { kind: "request", id, method, params },
+                { kind: "request", id, method, params,
+                    cancelled: signal?.aborted || undefined },
                 options?.transfer,
             );
+            if (signal?.aborted) this.transport.postMessage({kind: "cancel", id});
+            let finishSent = false;
+            options?.onControl?.({requestFinish: () => {
+                if (finishSent || this.pending.get(id) !== pending) return;
+                finishSent = true;
+                this.transport.postMessage({kind: "finish", id});
+            }});
         });
     }
 
@@ -567,6 +576,7 @@ export class EngineClient {
             },
             {
                 onSolveProgress: runOptions?.onProgress,
+                onControl: runOptions?.onControl,
                 signal: runOptions?.signal,
             },
         );

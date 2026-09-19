@@ -1,0 +1,44 @@
+[
+  {
+    "name": "A6-ring",
+    "binary": "build/engine/poecraft_solver_benchmark.exe",
+    "binary_sha256": "11bbb7b5472102613f014338f4c6bef725ef05c7b35dcefdb3e97e5d15ee93cb",
+    "manifest": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/manifest.json",
+    "cases": [
+      "cb07-cross-base-product8-long240"
+    ],
+    "host_watchdog": 870.0,
+    "mode": "execution-count",
+    "action_price": 0.389479993470349,
+    "source_commit": null,
+    "source_build": "build-A6.json"
+  },
+  {
+    "name": "A6-bow",
+    "binary": "build/engine/poecraft_solver_benchmark.exe",
+    "binary_sha256": "11bbb7b5472102613f014338f4c6bef725ef05c7b35dcefdb3e97e5d15ee93cb",
+    "manifest": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/manifest.json",
+    "cases": [
+      "cb04-cross-base-product8-long240"
+    ],
+    "host_watchdog": 870.0,
+    "mode": "execution-count",
+    "action_price": 0.159024756944986,
+    "source_commit": null,
+    "source_build": "build-A6.json"
+  },
+  {
+    "name": "A6-amulet",
+    "binary": "build/engine/poecraft_solver_benchmark.exe",
+    "binary_sha256": "11bbb7b5472102613f014338f4c6bef725ef05c7b35dcefdb3e97e5d15ee93cb",
+    "manifest": "docs/active/2026-09-13-execution-aware-proposals/native-600-final840-400m/manifest.json",
+    "cases": [
+      "cb08-cross-base-product8-long240"
+    ],
+    "host_watchdog": 870.0,
+    "mode": "execution-count",
+    "action_price": 0.49147026345105066,
+    "source_commit": null,
+    "source_build": "build-A6.json"
+  }
+]

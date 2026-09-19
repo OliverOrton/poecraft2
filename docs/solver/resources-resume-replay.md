@@ -70,11 +70,11 @@ An unfinished exact row owns scratch and cannot install a normal cached distribu
 Cancellation abandons unpublished work. Previously verified evidence survives only where the owning publication contract permits it. A successful cancellation of a process or cursor is not a successful solve.
 
 A requested bounded finish remains latched during refinement, compilation and
-certification. At a strict-work suspension, a compatible portfolio artifact can
-return through ordinary publication when its independently evaluated cost is
-no greater than the best verified cost reported by strict work. A cheaper
-verified strict artifact must first reach publication; an unverified estimate
-cannot replace either one. This stop retains only the existing independent
+certification. At a strict-work suspension, the owner transfers any already
+complete eligible assertion from its pass/cache without advancing speculative
+work. Publication then compares its graph/certificate bundle with the compatible
+retained portfolio; a cheaper strict scalar alone cannot delay or replace either
+artifact. The final tuple is sealed after publication checks. This stop retains only the existing independent
 lower and reports `requested_bounded_finish`, without declaring unresolved
 alternatives closed or manufacturing a resource cap. When no verified artifact
 is available, the finalizer still needs compilation and evaluation. Completed

@@ -1,0 +1,1051 @@
+{
+  "base": "4594e44b6b851511ae5471e52f232bce57d16856",
+  "build": "build-A7.json",
+  "worker_processes": "A7-worker-processes.json",
+  "worker": [
+    {
+      "name": "A7-manual-conquest-1",
+      "report": "out\\verified-delivery\\A7-manual-conquest-1.json",
+      "report_sha256": "06ec58d5e4da03969c46d747197f9cbf166ea86fea4ebd90a69a814ebe57a0d6",
+      "status": "refused_unsupported_action",
+      "expectations_met": false,
+      "cost": 85558.70618560436,
+      "expected_primitive_actions": 8407.202314771383,
+      "independent_evaluation": {
+        "converged": true,
+        "cost_complete": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 85558.70618560436,
+        "solver_policy_cost": 85558.70618560436,
+        "cost_delta_absolute": 0,
+        "cost_delta_relative": 0,
+        "cost_reconciled": true
+      },
+      "prepared_graph_sha256": "7669412762ab97801d277dc4d561685baada15824923adcdd03180561aef5b56",
+      "phase_wall_ms": {
+        "registry_layout": 134.748,
+        "solve": 70195.109,
+        "compile": 4452.124,
+        "verification": null,
+        "total": 79656.815
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.051499999999919055,
+        "native_begin_completed": 18423.3357,
+        "manual_finish_intent_observed": 69323.5311,
+        "finish_acknowledged": 69324.6213,
+        "native_done_observed": 70118.6243,
+        "result_export_start": 70118.633,
+        "result_export_completed": 70160.3763,
+        "terminal_response_committed": 70160.47929999999
+      },
+      "delivery": {
+        "finish_at_first_verified": true,
+        "finish_intent_host_ms": 69315.90149999999,
+        "max_step_context": {
+          "input_owner": "ladder_scheduling",
+          "output_owner": "compilation",
+          "input_cursor": 293,
+          "output_cursor": 295,
+          "quantum": 8,
+          "duration_ms": 623.0694999999978
+        },
+        "max_progress_read_ms": 3.312099999999191
+      },
+      "native_export_from_worker_start_ms": 70160.3763,
+      "finish_intent_to_worker_response_host_ms": 879.2075000000041,
+      "usable_graph_timestamp": "not separately instrumented in headless benchmark; see actual Calculator milestones",
+      "setup_goal_cover_ms": 11746.5327,
+      "setup_retention_ms": 6673.0203,
+      "events": [
+        {
+          "sequence": 298,
+          "native_elapsed_ms": 69263.2931,
+          "kind": "check_completed",
+          "reason": "compiled policy exact cost does not reconcile with the solver value",
+          "candidate_identity": "5598023219215714573",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 69,
+          "completed_rows": 29155,
+          "verified_upper": null
+        },
+        {
+          "sequence": 299,
+          "native_elapsed_ms": 69272.7249,
+          "kind": "incumbent_retained",
+          "reason": "anytime_reachable_proper_policy",
+          "candidate_identity": "18381843832106689921",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 69,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 301,
+          "native_elapsed_ms": 69273.1034,
+          "kind": "incumbent_retained",
+          "reason": "anytime_reachable_proper_policy",
+          "candidate_identity": "18381843832106689921",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 69,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 303,
+          "native_elapsed_ms": 69321.7229,
+          "kind": "finish_acknowledged",
+          "reason": "",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 70,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 304,
+          "native_elapsed_ms": 70112.4251,
+          "kind": "selection_sealed",
+          "reason": "owned_graph_root_certificate_and_cost",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 70,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 305,
+          "native_elapsed_ms": 70114.331,
+          "kind": "native_done",
+          "reason": "",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 70,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "A7-default-conquest-1",
+      "report": "out\\verified-delivery\\A7-default-conquest-1.json",
+      "report_sha256": "983cb2c656aaf0dd4a3d9c975c8abce14c9260be392858d391530065a9715506",
+      "status": "refused_unsupported_action",
+      "expectations_met": false,
+      "cost": 85558.70618560436,
+      "expected_primitive_actions": 8407.202314771383,
+      "independent_evaluation": {
+        "converged": true,
+        "cost_complete": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 85558.70618560436,
+        "solver_policy_cost": 85558.70618560436,
+        "cost_delta_absolute": 0,
+        "cost_delta_relative": 0,
+        "cost_reconciled": true
+      },
+      "prepared_graph_sha256": "7669412762ab97801d277dc4d561685baada15824923adcdd03180561aef5b56",
+      "phase_wall_ms": {
+        "registry_layout": 127.134,
+        "solve": 241011.32,
+        "compile": 4442.977,
+        "verification": null,
+        "total": 250431.791
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.06580000000008113,
+        "native_begin_completed": 18734.973800000003,
+        "finish_requested": 240000.1292,
+        "finish_acknowledged": 240000.3498,
+        "native_done_observed": 240877.68949999998,
+        "result_export_start": 240877.6935,
+        "result_export_completed": 240928.81459999998,
+        "terminal_response_committed": 240928.93839999998
+      },
+      "delivery": {
+        "finish_at_first_verified": false,
+        "finish_intent_host_ms": null,
+        "max_step_context": {
+          "input_owner": "ladder_scheduling",
+          "output_owner": "compilation",
+          "input_cursor": 293,
+          "output_cursor": 295,
+          "quantum": 8,
+          "duration_ms": 568.0823999999993
+        },
+        "max_progress_read_ms": 3.6415000000015425
+      },
+      "native_export_from_worker_start_ms": 240928.81459999998,
+      "finish_intent_to_worker_response_host_ms": null,
+      "usable_graph_timestamp": "not separately instrumented in headless benchmark; see actual Calculator milestones",
+      "setup_goal_cover_ms": 12003.7971,
+      "setup_retention_ms": 6725.6791,
+      "events": [
+        {
+          "sequence": 298,
+          "native_elapsed_ms": 64038.1068,
+          "kind": "check_completed",
+          "reason": "compiled policy exact cost does not reconcile with the solver value",
+          "candidate_identity": "5598023219215714573",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 69,
+          "completed_rows": 29155,
+          "verified_upper": null
+        },
+        {
+          "sequence": 299,
+          "native_elapsed_ms": 64047.7582,
+          "kind": "incumbent_retained",
+          "reason": "anytime_reachable_proper_policy",
+          "candidate_identity": "18381843832106689921",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 69,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 301,
+          "native_elapsed_ms": 64048.2829,
+          "kind": "incumbent_retained",
+          "reason": "anytime_reachable_proper_policy",
+          "candidate_identity": "18381843832106689921",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 69,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 308,
+          "native_elapsed_ms": 239995.6461,
+          "kind": "finish_acknowledged",
+          "reason": "",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 186,
+          "completed_rows": 38716,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 309,
+          "native_elapsed_ms": 240870.4727,
+          "kind": "selection_sealed",
+          "reason": "owned_graph_root_certificate_and_cost",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 186,
+          "completed_rows": 38716,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 310,
+          "native_elapsed_ms": 240871.7772,
+          "kind": "native_done",
+          "reason": "",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 186,
+          "completed_rows": 38716,
+          "verified_upper": 85558.70618560436
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "A7-default-conquest-2",
+      "report": "out\\verified-delivery\\A7-default-conquest-2.json",
+      "report_sha256": "9a64c8773710501881519bd5f38331b7318ed13b4a43990f80788a526c4f204f",
+      "status": "refused_unsupported_action",
+      "expectations_met": false,
+      "cost": 85558.70618560436,
+      "expected_primitive_actions": 8407.202314771383,
+      "independent_evaluation": {
+        "converged": true,
+        "cost_complete": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 85558.70618560436,
+        "solver_policy_cost": 85558.70618560436,
+        "cost_delta_absolute": 0,
+        "cost_delta_relative": 0,
+        "cost_reconciled": true
+      },
+      "prepared_graph_sha256": "7669412762ab97801d277dc4d561685baada15824923adcdd03180561aef5b56",
+      "phase_wall_ms": {
+        "registry_layout": 134.427,
+        "solve": 240962.908,
+        "compile": 4389.169,
+        "verification": null,
+        "total": 250358.465
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.055499999999938154,
+        "native_begin_completed": 18279.895,
+        "finish_requested": 240000.12960000001,
+        "finish_acknowledged": 240000.42130000002,
+        "native_done_observed": 240827.5581,
+        "result_export_start": 240827.5615,
+        "result_export_completed": 240876.5002,
+        "terminal_response_committed": 240876.6326
+      },
+      "delivery": {
+        "finish_at_first_verified": false,
+        "finish_intent_host_ms": null,
+        "max_step_context": {
+          "input_owner": "ladder_scheduling",
+          "output_owner": "compilation",
+          "input_cursor": 293,
+          "output_cursor": 295,
+          "quantum": 8,
+          "duration_ms": 593.2576999999947
+        },
+        "max_progress_read_ms": 3.646499999998923
+      },
+      "native_export_from_worker_start_ms": 240876.5002,
+      "finish_intent_to_worker_response_host_ms": null,
+      "usable_graph_timestamp": "not separately instrumented in headless benchmark; see actual Calculator milestones",
+      "setup_goal_cover_ms": 11705.7475,
+      "setup_retention_ms": 6568.9966,
+      "events": [
+        {
+          "sequence": 298,
+          "native_elapsed_ms": 68448.4586,
+          "kind": "check_completed",
+          "reason": "compiled policy exact cost does not reconcile with the solver value",
+          "candidate_identity": "5598023219215714573",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 69,
+          "completed_rows": 29155,
+          "verified_upper": null
+        },
+        {
+          "sequence": 299,
+          "native_elapsed_ms": 68459.6947,
+          "kind": "incumbent_retained",
+          "reason": "anytime_reachable_proper_policy",
+          "candidate_identity": "18381843832106689921",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 69,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 301,
+          "native_elapsed_ms": 68460.104,
+          "kind": "incumbent_retained",
+          "reason": "anytime_reachable_proper_policy",
+          "candidate_identity": "18381843832106689921",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 69,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 308,
+          "native_elapsed_ms": 239996.6706,
+          "kind": "finish_acknowledged",
+          "reason": "",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 184,
+          "completed_rows": 38715,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 309,
+          "native_elapsed_ms": 240820.9845,
+          "kind": "selection_sealed",
+          "reason": "owned_graph_root_certificate_and_cost",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 184,
+          "completed_rows": 38715,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 310,
+          "native_elapsed_ms": 240822.6995,
+          "kind": "native_done",
+          "reason": "",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 184,
+          "completed_rows": 38715,
+          "verified_upper": 85558.70618560436
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "A7-manual-conquest-2",
+      "report": "out\\verified-delivery\\A7-manual-conquest-2.json",
+      "report_sha256": "2e272ffee3aff7d81e341812060c6b12efdac3504cae5cee9b52a28be867b32e",
+      "status": "refused_unsupported_action",
+      "expectations_met": false,
+      "cost": 85558.70618560436,
+      "expected_primitive_actions": 8407.202314771383,
+      "independent_evaluation": {
+        "converged": true,
+        "cost_complete": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 85558.70618560436,
+        "solver_policy_cost": 85558.70618560436,
+        "cost_delta_absolute": 0,
+        "cost_delta_relative": 0,
+        "cost_reconciled": true
+      },
+      "prepared_graph_sha256": "7669412762ab97801d277dc4d561685baada15824923adcdd03180561aef5b56",
+      "phase_wall_ms": {
+        "registry_layout": 128.838,
+        "solve": 69496.67,
+        "compile": 4344.964,
+        "verification": null,
+        "total": 78834.27
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.04610000000002401,
+        "native_begin_completed": 18173.3034,
+        "manual_finish_intent_observed": 68632.5595,
+        "finish_acknowledged": 68633.8837,
+        "native_done_observed": 69417.1891,
+        "result_export_start": 69417.1955,
+        "result_export_completed": 69461.9158,
+        "terminal_response_committed": 69462.0454
+      },
+      "delivery": {
+        "finish_at_first_verified": true,
+        "finish_intent_host_ms": 68522.31090000001,
+        "max_step_context": {
+          "input_owner": "ladder_scheduling",
+          "output_owner": "compilation",
+          "input_cursor": 293,
+          "output_cursor": 295,
+          "quantum": 8,
+          "duration_ms": 659.7289999999994
+        },
+        "max_progress_read_ms": 4.192700000003242
+      },
+      "native_export_from_worker_start_ms": 69461.9158,
+      "finish_intent_to_worker_response_host_ms": 974.3590999999869,
+      "usable_graph_timestamp": "not separately instrumented in headless benchmark; see actual Calculator milestones",
+      "setup_goal_cover_ms": 11719.7821,
+      "setup_retention_ms": 6448.7783,
+      "events": [
+        {
+          "sequence": 298,
+          "native_elapsed_ms": 68465.2453,
+          "kind": "check_completed",
+          "reason": "compiled policy exact cost does not reconcile with the solver value",
+          "candidate_identity": "5598023219215714573",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 69,
+          "completed_rows": 29155,
+          "verified_upper": null
+        },
+        {
+          "sequence": 299,
+          "native_elapsed_ms": 68475.6978,
+          "kind": "incumbent_retained",
+          "reason": "anytime_reachable_proper_policy",
+          "candidate_identity": "18381843832106689921",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 69,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 301,
+          "native_elapsed_ms": 68476.0854,
+          "kind": "incumbent_retained",
+          "reason": "anytime_reachable_proper_policy",
+          "candidate_identity": "18381843832106689921",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 69,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 303,
+          "native_elapsed_ms": 68629.8635,
+          "kind": "finish_acknowledged",
+          "reason": "",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 70,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 304,
+          "native_elapsed_ms": 69409.9926,
+          "kind": "selection_sealed",
+          "reason": "owned_graph_root_certificate_and_cost",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 70,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        },
+        {
+          "sequence": 305,
+          "native_elapsed_ms": 69411.6169,
+          "kind": "native_done",
+          "reason": "",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 70,
+          "completed_rows": 29155,
+          "verified_upper": 85558.70618560436
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "A7-default-conquest-four",
+      "report": "out\\verified-delivery\\A7-default-conquest-four.json",
+      "report_sha256": "79cf2c7751dc681eb73c0debe8b9c5e97e889229ef499a8b0c9e48e29bc7dba5",
+      "status": "bounded_feasible",
+      "expectations_met": false,
+      "cost": 5218.040949685988,
+      "expected_primitive_actions": 14152.339714597114,
+      "independent_evaluation": {
+        "converged": true,
+        "cost_complete": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 5218.040949685988,
+        "solver_policy_cost": 5218.040949685988,
+        "cost_delta_absolute": 0,
+        "cost_delta_relative": 0,
+        "cost_reconciled": true
+      },
+      "prepared_graph_sha256": "8e4545da38b66c03a306b4b28a58ba3b24d9f3d6ab91e204db079819026b11a1",
+      "phase_wall_ms": {
+        "registry_layout": 127.108,
+        "solve": 247031.282,
+        "compile": 393.082,
+        "verification": null,
+        "total": 252352.066
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.05669999999997799,
+        "native_begin_completed": 8553.1191,
+        "finish_requested": 240000.221,
+        "finish_acknowledged": 240000.3531,
+        "native_done_observed": 246879.40720000002,
+        "result_export_start": 246879.4113,
+        "result_export_completed": 246948.5906,
+        "terminal_response_committed": 246948.6916
+      },
+      "delivery": {
+        "finish_at_first_verified": false,
+        "finish_intent_host_ms": null,
+        "max_step_context": {
+          "input_owner": "policy_assembly",
+          "output_owner": "compilation",
+          "input_cursor": 183,
+          "output_cursor": 186,
+          "quantum": 1,
+          "duration_ms": 1111.4389000000083
+        },
+        "max_progress_read_ms": 4.3641999999999825
+      },
+      "native_export_from_worker_start_ms": 246948.5906,
+      "finish_intent_to_worker_response_host_ms": null,
+      "usable_graph_timestamp": "not separately instrumented in headless benchmark; see actual Calculator milestones",
+      "setup_goal_cover_ms": 3093.5527,
+      "setup_retention_ms": 5453.3429,
+      "events": [
+        {
+          "sequence": 183,
+          "native_elapsed_ms": 239994.8544,
+          "kind": "finish_acknowledged",
+          "reason": "",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 623,
+          "completed_rows": 81133,
+          "verified_upper": null
+        },
+        {
+          "sequence": 187,
+          "native_elapsed_ms": 246140.1178,
+          "kind": "incumbent_retained",
+          "reason": "selected_coarse_policy",
+          "candidate_identity": "3127440214253484509",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 623,
+          "completed_rows": 81133,
+          "verified_upper": 5218.040949685988
+        },
+        {
+          "sequence": 191,
+          "native_elapsed_ms": 246871.7941,
+          "kind": "selection_sealed",
+          "reason": "owned_graph_root_certificate_and_cost",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 623,
+          "completed_rows": 81133,
+          "verified_upper": 5218.040949685988
+        },
+        {
+          "sequence": 192,
+          "native_elapsed_ms": 246873.5005,
+          "kind": "native_done",
+          "reason": "",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 623,
+          "completed_rows": 81133,
+          "verified_upper": 5218.040949685988
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "A7-regalia",
+      "report": "out\\verified-delivery\\A7-regalia.json",
+      "report_sha256": "7f45a5d821ca395cad93769e8b0fd14b03d672bcc36c01c8db8d69a9bd839591",
+      "status": "converged",
+      "expectations_met": true,
+      "cost": 65.60036144971359,
+      "expected_primitive_actions": 127.11597414558129,
+      "independent_evaluation": {
+        "converged": true,
+        "cost_complete": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 65.60036144971359,
+        "solver_policy_cost": 65.60036144971359,
+        "cost_delta_absolute": 0,
+        "cost_delta_relative": 0,
+        "cost_reconciled": true
+      },
+      "prepared_graph_sha256": "aa636eeeb8dfbe4613cddbbc6906cd68d8e9a7d5281372b18d0e36779d135c05",
+      "phase_wall_ms": {
+        "registry_layout": 104.405,
+        "solve": 70832.859,
+        "compile": 71.523,
+        "verification": null,
+        "total": 75862.069
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.04759999999998854,
+        "native_begin_completed": 224.29160000000002,
+        "native_done_observed": 70785.8244,
+        "result_export_start": 70785.8283,
+        "result_export_completed": 70792.9938,
+        "terminal_response_committed": 70793.14649999999
+      },
+      "delivery": {
+        "finish_at_first_verified": false,
+        "finish_intent_host_ms": null,
+        "max_step_context": {
+          "input_owner": "policy_assembly",
+          "output_owner": "compilation",
+          "input_cursor": 471,
+          "output_cursor": 472,
+          "quantum": 1,
+          "duration_ms": 99.51570000000356
+        },
+        "max_progress_read_ms": 2.841699999999946
+      },
+      "native_export_from_worker_start_ms": 70792.9938,
+      "finish_intent_to_worker_response_host_ms": null,
+      "usable_graph_timestamp": "not separately instrumented in headless benchmark; see actual Calculator milestones",
+      "setup_goal_cover_ms": 49.8819,
+      "setup_retention_ms": 164.5113,
+      "events": [
+        {
+          "sequence": 475,
+          "native_elapsed_ms": 70076.9973,
+          "kind": "check_completed",
+          "reason": "selected_core_policy:compiled policy exact cost does not reconcile with the solver value",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 398,
+          "completed_rows": 18423,
+          "verified_upper": null
+        },
+        {
+          "sequence": 476,
+          "native_elapsed_ms": 70107.8639,
+          "kind": "incumbent_retained",
+          "reason": "direct_compiled_core_policy",
+          "candidate_identity": "11885962952745718518",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 398,
+          "completed_rows": 18423,
+          "verified_upper": 65.60036144971359
+        },
+        {
+          "sequence": 479,
+          "native_elapsed_ms": 70775.2029,
+          "kind": "selection_sealed",
+          "reason": "owned_graph_root_certificate_and_cost",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 398,
+          "completed_rows": 18423,
+          "verified_upper": 65.60036144971359
+        },
+        {
+          "sequence": 480,
+          "native_elapsed_ms": 70776.3624,
+          "kind": "native_done",
+          "reason": "",
+          "candidate_identity": "0",
+          "state_namespace": "outer_calculator",
+          "state": null,
+          "numerical_generation": 398,
+          "completed_rows": 18423,
+          "verified_upper": 65.60036144971359
+        }
+      ],
+      "errors": []
+    }
+  ],
+  "calculator": [
+    {
+      "name": "A7-calculator-finish",
+      "report": "out\\verified-delivery\\A7-calculator-finish.json",
+      "report_sha256": "e22931b15aad881cc2ffa5cd0efb48b1c2adf171b0237f63517fb4aeb501b6b9",
+      "environment": "linkedom actual Calculator + node-worker_threads WASM",
+      "visual_review": "not performed",
+      "status": "completed",
+      "ui_milestones": {
+        "worker_solve_requested": 60.38270000000011,
+        "finish_intent": 70442.0213,
+        "worker_result_received": 71022.8128,
+        "strategy_export": 75850.3406,
+        "handle_cleanup": 75879.75039999999,
+        "ui_delivery_completed": 75924.73909999999
+      },
+      "worker": {
+        "step_count": 1077119,
+        "yield_count": 4042,
+        "max_step_ms": 604.664499999999,
+        "total_step_ms": 48715.82750000511,
+        "finalization_ms": 44.52069999999367,
+        "progress_observations_omitted": 0,
+        "milestones": [
+          {
+            "stage": "native_begin_requested",
+            "worker_elapsed_ms": 0.06570000000010623
+          },
+          {
+            "stage": "native_begin_completed",
+            "worker_elapsed_ms": 18426.9387
+          },
+          {
+            "stage": "manual_finish_intent_observed",
+            "worker_elapsed_ms": 70377.348
+          },
+          {
+            "stage": "finish_acknowledged",
+            "worker_elapsed_ms": 70378.29299999999
+          },
+          {
+            "stage": "native_done_observed",
+            "worker_elapsed_ms": 70873.4225
+          },
+          {
+            "stage": "result_export_start",
+            "worker_elapsed_ms": 70873.4302
+          },
+          {
+            "stage": "result_export_completed",
+            "worker_elapsed_ms": 70917.94249999999
+          },
+          {
+            "stage": "terminal_response_committed",
+            "worker_elapsed_ms": 70918.06539999999
+          }
+        ],
+        "max_step_context": {
+          "input_owner": "ladder_scheduling",
+          "output_owner": "compilation",
+          "input_cursor": 293,
+          "output_cursor": 295,
+          "quantum": 8,
+          "duration_ms": 604.664499999999
+        },
+        "max_progress_read_ms": 3.918499999999767
+      },
+      "usable_strategy": true,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "error": null,
+      "complete_graph_equal_to_independently_evaluated_manual_arm_excluding_economy_identity": true,
+      "finish_intent_to_ui_ready_ms": 5482.7177999999985
+    },
+    {
+      "name": "A7-calculator-cancel-setup",
+      "report": "out\\verified-delivery\\A7-calculator-cancel-setup.json",
+      "report_sha256": "bb83e64c19c6ca9d9951ef3c2461b563615b9d297faf39106b040925a24c852d",
+      "environment": "linkedom actual Calculator + node-worker_threads WASM",
+      "visual_review": "not performed",
+      "status": "cancelled",
+      "ui_milestones": {
+        "worker_solve_requested": 63.54959999999983,
+        "cancel_intent": 172.36619999999994,
+        "worker_result_received": 23233.732200000002,
+        "handle_cleanup": 23245.307200000003,
+        "ui_delivery_completed": 23253.4828
+      },
+      "worker": {
+        "step_count": 0,
+        "yield_count": 0,
+        "max_step_ms": 0,
+        "total_step_ms": 0,
+        "finalization_ms": 0,
+        "progress_observations_omitted": 0,
+        "milestones": [
+          {
+            "stage": "native_begin_requested",
+            "worker_elapsed_ms": 0.042000000000371074
+          },
+          {
+            "stage": "native_begin_completed",
+            "worker_elapsed_ms": 18346.0411
+          },
+          {
+            "stage": "cancel_acknowledged",
+            "worker_elapsed_ms": 18346.4882
+          },
+          {
+            "stage": "abandon_cleanup_start",
+            "worker_elapsed_ms": 18350.2042
+          },
+          {
+            "stage": "abandon_cleanup_completed",
+            "worker_elapsed_ms": 23163.4564
+          },
+          {
+            "stage": "terminal_response_committed",
+            "worker_elapsed_ms": 23163.5405
+          }
+        ],
+        "max_progress_read_ms": 3.5810999999994237
+      },
+      "usable_strategy": false,
+      "graph_sha256": null,
+      "error": null,
+      "cancel_intent_to_ui_release_ms": 23081.1166
+    }
+  ],
+  "native": [
+    {
+      "name": "A7-ring",
+      "report": "out\\verified-delivery\\A7-ring\\cases\\cb07-cross-base-product8-long240.json",
+      "report_sha256": "e088358de71a9ebe4254b606ef9fbe6ce28e420cbd48371f6343f608b8ead0a8",
+      "status": "refused_unsupported_action",
+      "expectations_met": true,
+      "cost": 220743.46354691702,
+      "expected_primitive_actions": 564673.7576801107,
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 9218.325,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 220743.46354691702,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "graph_sha256": "5a2ef4867ecb6bd6297b690dd5b67f50461f1cc35f28917467fd018addab883b",
+      "reference_graph_unchanged": true,
+      "reference": "docs/active/2026-09-14-progress-and-delivery/strategies/ring-native.strategy.json",
+      "phase_wall_ms": {
+        "registry_layout": 43.1233,
+        "solve": 604683.311,
+        "compile": 4.2791,
+        "verification": null,
+        "total": 614027.7793
+      },
+      "errors": []
+    },
+    {
+      "name": "A7-bow",
+      "report": "out\\verified-delivery\\A7-bow\\cases\\cb04-cross-base-product8-long240.json",
+      "report_sha256": "91f26d5ae9e858874d7981c1f454329f1a85f6fa8488dd6a324bfab1f6558c88",
+      "status": "bounded_feasible",
+      "expectations_met": true,
+      "cost": 12770.827062219498,
+      "expected_primitive_actions": 66914.72854184538,
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 1885.428,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 12770.827062219498,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "graph_sha256": "9b31512ecf4f68ba7693a50f13d77b95de487b1b42c6aae9f9228d2dea583d4d",
+      "reference_graph_unchanged": true,
+      "reference": "docs/active/2026-09-14-cross-base-strategy-recovery/strategies/bow-four.strategy.json",
+      "phase_wall_ms": {
+        "registry_layout": 34.7233,
+        "solve": 600185.0117,
+        "compile": 4.8234,
+        "verification": null,
+        "total": 602327.9143
+      },
+      "errors": []
+    },
+    {
+      "name": "A7-amulet",
+      "report": "out\\verified-delivery\\A7-amulet\\cases\\cb08-cross-base-product8-long240.json",
+      "report_sha256": "2aed2231f9bd984e89d1b648e39359ef729c12bb209462e42ccca100580ed8ad",
+      "status": "refused_sweep_cap",
+      "expectations_met": true,
+      "cost": 12541.579648544115,
+      "expected_primitive_actions": 25518.491313143768,
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 9223.0763,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 12541.579648544115,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "graph_sha256": "805f6161caff50680a35b171cc3f2541a79f38ee01e1c1bf20d86a94a9ffb6bb",
+      "reference_graph_unchanged": true,
+      "reference": "docs/active/2026-09-14-progress-and-delivery/strategies/amulet.strategy.json",
+      "phase_wall_ms": {
+        "registry_layout": 31.0423,
+        "solve": 600497.8411,
+        "compile": 2.8511,
+        "verification": null,
+        "total": 610062.6575
+      },
+      "errors": []
+    },
+    {
+      "name": "B-conquest-four",
+      "report": "out\\verified-delivery\\B-conquest-four\\cases\\cb02-cross-base-product8-long240.json",
+      "report_sha256": "aec7892dedd1515d22d0685d737e60d8c15dbe67bc8092ce1c4662a524059288",
+      "status": "bounded_feasible",
+      "expectations_met": true,
+      "cost": 3746.1319409485764,
+      "expected_primitive_actions": 8608.881793656798,
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 2226.0436,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 3746.1319409485764,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "graph_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+      "reference_graph_unchanged": true,
+      "reference": "docs/active/2026-09-14-progress-and-delivery/strategies/conquest-four.strategy.json",
+      "phase_wall_ms": {
+        "registry_layout": 37.6763,
+        "solve": 240508.9512,
+        "compile": 13.5642,
+        "verification": null,
+        "total": 243325.5761
+      },
+      "errors": []
+    },
+    {
+      "name": "A7-conquest-four",
+      "report": "out\\verified-delivery\\A7-conquest-four\\cases\\cb02-cross-base-product8-long240.json",
+      "report_sha256": "586dbf3c1a6758dd11d2c5614f8a6f2a7206bd010948392e6ed3a6ce920363bb",
+      "status": "bounded_feasible",
+      "expectations_met": true,
+      "cost": 3746.1319409485764,
+      "expected_primitive_actions": 8608.881793656798,
+      "independent_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 2233.8089,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 3746.1319409485764,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "graph_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+      "reference_graph_unchanged": true,
+      "reference": "docs/active/2026-09-14-progress-and-delivery/strategies/conquest-four.strategy.json",
+      "phase_wall_ms": {
+        "registry_layout": 39.0636,
+        "solve": 240806.7256,
+        "compile": 13.6339,
+        "verification": null,
+        "total": 243634.1598
+      },
+      "errors": []
+    }
+  ],
+  "rendered_UI_review": "not run; Oliver owns visual review",
+  "simulation": "unchanged retained graphs not resimulated",
+  "timing_interpretation": "Measured host windows; no latency theorem or numerical-authority change. A5 and A7 setup spans differ, so cross-build wall-time differences are not isolated algorithm effects."
+}

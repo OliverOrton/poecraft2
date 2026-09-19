@@ -9,6 +9,7 @@
 
 #include "../src/json.hpp"
 #include "../src/solver_solve_contracts.hpp"
+#include "../src/solver_diagnostic_options.hpp"
 
 #include <algorithm>
 #include <array>
@@ -3093,6 +3094,42 @@ void run_solver_native_continuation_api_tests(const char* artifact_dir) {
         pc_solver_solve_abandon(solver);
         const auto abandoned = parse_solver_api_fixture(solver_telemetry_json(solver, &error));
         PC_CHECK(abandoned.at("execution").at("status").as_string() == "abandoned");
+        pc_solver_destroy(solver);
+    }
+    // Resolve all five entry paths through the actual public/private option
+    // owners. This fixture establishes activation, not controller discovery.
+    using namespace poecraft::solver;
+    for (unsigned lane = 0; lane < 5; ++lane) {
+        pc_solver_handle solver = nullptr;
+        PC_CHECK(pc_solver_create(session, goal.c_str(), goal.size(), &solver, &error) == PC_RESULT_OK);
+        if (!solver) continue;
+        pc_solve_options options{};
+        options.struct_size = sizeof(options); options.abi_version = PC_ABI_VERSION;
+        options.max_states = options.max_discovered_states = 1000;
+        options.max_solver_owned_bytes = 256ull << 20;
+        if (lane != 0) options.solve_profile = PC_SOLVE_PROFILE_CALCULATOR_PRODUCT_V1;
+        if (lane == 1) PC_CHECK(configure_solver_native_retention_diagnostic(
+            solver, NativeRetentionDiagnosticMode::Reuse, &error) == PC_RESULT_OK);
+        if (lane == 2) options.solver_flags = PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH;
+        if (lane >= 3) PC_CHECK(configure_solver_native_continuation_search(solver,
+            lane == 3 ? NativeContinuationSearchMode::DirtyExecutionCost : NativeContinuationSearchMode::DirtyExecutionCount,
+            &error, lane == 4 ? 0.389479993470349 : 0) == PC_RESULT_OK);
+        PC_CHECK(pc_solver_solve_begin(solver, &start, economy, &options, &error) == PC_RESULT_OK);
+        std::size_t length = 0;
+        PC_CHECK(pc_solver_progress_trace(solver, 0, nullptr, 0, &length, &error) == PC_RESULT_OK);
+        std::string trace(length + 256, '\0');
+        PC_CHECK(pc_solver_progress_trace(solver, 0, trace.data(), trace.size(), &length, &error) == PC_RESULT_OK);
+        trace.resize(length);
+        const auto current = parse_solver_api_fixture(trace).at("current");
+        const auto& effective = current.at("effective_options");
+        const char* names[] = {"ordinary", "ordinary", "dirty_guided_static", "dirty_execution_cost", "dirty_execution_count"};
+        PC_CHECK(effective.at("continuation_mode").as_string() == names[lane]);
+        PC_CHECK(effective.at("retention_lower").as_bool() == (lane == 1));
+        PC_CHECK(effective.at("retention_reuse").as_bool() == (lane == 1));
+        PC_CHECK(effective.at("execution_action_price").as_number() == (lane == 4 ? 0.389479993470349 : 0));
+        PC_CHECK(current.at("ordinary_entry_query").at("queries").as_int() == 0);
+        PC_CHECK(!current.at("protected_essence_attempt_finished").as_bool());
+        pc_solver_solve_abandon(solver);
         pc_solver_destroy(solver);
     }
     pc_economy_destroy(economy);

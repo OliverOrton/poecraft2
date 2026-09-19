@@ -157,6 +157,53 @@ upper or exactness contracts. Its efficiency and candidate-readiness premises
 require same-budget measurements, as emphasized in the
 [proof-time review](../../active/2026-09-09-empty-start-partial-continuation/research-inputs/useful-proof-time-review.md).
 
+<a id="interruptible-verified-results"></a>
+### Interruption preserves an owned feasible witness
+
+Fix target theta (root, goal/laws, prices, actions, programmes and observations),
+separately from invocation and artifact identities. Let E_n contain compatible
+complete proper policies verified before computational step n. Each pi in E_n
+is feasible, so V*(root) <= J_pi(root). Selecting an owned minimizer at any finite
+computational stop preserves this inequality. This is feasibility, not optional
+stopping, convergence or a bound on subsequent crafting actions.
+
+The witness is graph, full root certificate, context and evaluated value together.
+A historical cost-7 scalar paired with a cost-10 graph does not certify 7.
+Root-only evidence stays root-only. Selection includes complete eligible
+strict/private evidence awaiting transfer before the publication owner's sealing
+point; unfinished proposals cannot delay a compatible fallback. Seal the tuple
+before transport and keep it immutable thereafter. Invocation-scoped intent,
+acknowledgement, sealing, terminal commitment and usable delivery are distinct.
+Cancellation precedence belongs to the control owner.
+
+This is safety. Bounded response also requires bounds on dispatch, noninterruptible
+work, transfer, release and packaging. Existing numerical reconciliation does not
+become a rigorously rounded endpoint through Finish.
+
+<a id="cooperative-preparation"></a>
+### Staged setup and observation
+
+Write W=(K,S,cursor,debit), with committed evidence K and staged scratch S. If each
+finer step preserves K or commits one complete result allowed by its original
+owner, induction preserves complete-evidence invariants at every prefix. A
+0.9-success partial row cannot normalize away its unfinished 0.1 trap branch.
+Interruption releases scratch through its owner without deleting committed
+premises or refunding cumulative logical work. Atomic sparse append and
+moved-lower-snapshot rollback remain prerequisites.
+
+Before ordinary search, heavy preparation may be suspended but no unfinished
+lower is published. Transfer pre-ledger proof reservation to normal accounting
+exactly once, without a gap or double charge. Deferred validation, cancellation,
+mathematical refusal and resource stop are distinct; a broad catch cannot turn
+cancellation into continued solving.
+
+A frozen memory charge is reusable only while transitive storage, capacities,
+lazy caches and alias context remain unchanged. Add growing storage, overlapping
+scratch and proposed allocations. Release changes live bytes, not consumed work.
+Logical read passivity is separate from deadline overhead. These invariants imply
+neither fairness, identical scheduling/arithmetic order nor a latency theorem.
+Source/host clocks, omissions and event coverage remain explicit.
+
 ### Releasing logical ownership also matters
 
 The reclamation archive records a candidate marked released while its large traversal payload and wrapper remained engaged, and its call site still suppressed ordinary assembly. That was a lifecycle defect with performance/progress consequences, not a refutation of resumable construction. [Recorded finding](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md).

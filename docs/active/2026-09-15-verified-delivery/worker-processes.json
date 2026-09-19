@@ -1,0 +1,79 @@
+[
+  {
+    "name": "A5-manual-conquest",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/solver-benchmark.ts",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "--case",
+      "cb01-cross-base-product8-long240",
+      "--skip-verification",
+      "--finish-at-first-verified",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\verified-delivery\\A5-manual-conquest.json"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-16T01:51:53.909871+00:00",
+      "available_physical": 44095737856,
+      "available_commit": 61326561280,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-A5.json",
+    "process": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 44584,
+      "process_identity_token": "44584:134339971139112788",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 257854.83260000183
+    }
+  },
+  {
+    "name": "A5-default-conquest",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/solver-benchmark.ts",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "--case",
+      "cb01-cross-base-product8-long240",
+      "--skip-verification",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\verified-delivery\\A5-default-conquest.json"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-16T01:56:11.766078+00:00",
+      "available_physical": 44485668864,
+      "available_commit": 61934149632,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-A5.json",
+    "process": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 4760,
+      "process_identity_token": "4760:134339973717669130",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 259680.78989999776
+    }
+  }
+]

@@ -38,7 +38,10 @@ const DEFAULT_CHUNK_SIZE = 1000;
 let bindings: EngineBindings;
 let post: (message: WorkerMessage, transfer?: ArrayBuffer[]) => void = () => {};
 const cancelled = new Set<number>();
-const respondedBeforeCleanup = new Set<number>();
+const activeRequests = new Set<number>();
+const activeSolves = new Set<number>();
+const finishIntents = new Set<number>();
+const solveClocks = new Map<number, number>();
 
 // Raw bundle bytes retained until a catalog is distilled from them, then the
 // compact catalog is cached and the bytes are dropped to reclaim memory.
@@ -320,6 +323,7 @@ async function solveSolver(
      * after beginSolverSolve silently granted release WASM an additional full
      * search window and changed the graph selected by the same fixture. */
     const solveStartedAt = performance.now();
+    solveClocks.set(id, solveStartedAt);
     const worker: SolverWorkerMetrics = {
         step_count: 0,
         yield_count: 0,
@@ -334,6 +338,7 @@ async function solveSolver(
         worker.milestones!.push({stage, worker_elapsed_ms: performance.now()-solveStartedAt});
     };
     const captureProgress = (stage = "native_work"): void => {
+        const readStarted = performance.now();
         // Diagnostic failure cannot refuse a valid solve, including an older
         // loaded module. Preserve the error and avoid repeated failed reads.
         let trace: SolveProgress["trace"];
@@ -352,6 +357,7 @@ async function solveSolver(
             observations.shift(); worker.progress_observations_omitted! += 1;
         }
         observations.push(progress);
+        worker.max_progress_read_ms = Math.max(worker.max_progress_read_ms ?? 0, performance.now()-readStarted);
     };
     const acknowledgeCancellation = (): SolverSolveResult => {
         milestone("cancel_acknowledged");
@@ -361,12 +367,9 @@ async function solveSolver(
             progress,
             worker,
         };
-        /* Abandoned-solve telemetry capture can be materially more expensive
-         * than observing cancellation. Acknowledge first, then let the
-         * function's finally block synchronously capture telemetry and release
-         * the solve before this worker accepts the caller's next request. */
-        respondedBeforeCleanup.add(id);
-        post({ kind: "response", id, ok: true, result });
+        // Acknowledge intent as progress; the one terminal response follows
+        // finally, so its receipt also contains measured resource release.
+        post({kind: "progress", id, done: 0, total: 1, solve: {...progress, delivery_stage: "cancel_acknowledged"}});
         return result;
     };
     /* A caller-supplied chunk size controls native work granularity; it does
@@ -424,21 +427,43 @@ async function solveSolver(
         );
         begun = true;
         milestone("native_begin_completed");
+        // Let a cancel queued during synchronous begin reach its owner before
+        // any search. This yield does not change the first native work quantum.
+        await yieldToEventLoop();
 
         do {
             if (cancelled.has(id)) {
                 return acknowledgeCancellation();
+            }
+            if (finishIntents.delete(id) && !boundedFinishRequested) {
+                milestone("manual_finish_intent_observed");
+                // An unreported step replaces progress and has no trace. Read
+                // the retained owner at this control boundary, never infer
+                // availability from the presence of a throttled JS snapshot.
+                captureProgress("manual_finish_intent");
+                if (progress.trace?.current.verified_artifact_available === true) {
+                    bindings.requestSolverSolveBoundedFinish(solver);
+                    boundedFinishRequested = true;
+                    milestone("finish_acknowledged");
+                } else milestone("finish_refused_no_verified_artifact");
             }
             /* S7.2 splits Bellman sweeps into bounded sparse-row units.
              * Expansion and iteration both adapt toward a 12 ms worker slice,
              * so cancellation is serviced inside a large sweep rather than
              * only between whole-table sweeps. */
             const stepWorkItems = workItems;
+            const inputOwner = progress.phase_owner;
+            const inputCursor = progress.lifecycle_sequence;
             const started = performance.now();
             progress = bindings.stepSolverSolve(solver, stepWorkItems);
             const measuredMs = Math.max(0, performance.now() - started);
             const elapsedMs = Math.max(0.1, measuredMs);
             worker.step_count += 1;
+            if (measuredMs > worker.max_step_ms) worker.max_step_context = {
+                input_owner: inputOwner, output_owner: progress.phase_owner,
+                input_cursor: inputCursor, output_cursor: progress.lifecycle_sequence,
+                quantum: stepWorkItems, duration_ms: measuredMs,
+            };
             worker.max_step_ms = Math.max(worker.max_step_ms, measuredMs);
             worker.total_step_ms += measuredMs;
             unyieldedStepMs += measuredMs;
@@ -466,6 +491,7 @@ async function solveSolver(
                 milestone("finish_requested");
                 bindings.requestSolverSolveBoundedFinish(solver);
                 boundedFinishRequested = true;
+                milestone("finish_acknowledged");
             }
 
             const now = performance.now();
@@ -508,6 +534,9 @@ async function solveSolver(
             }
         } while (!progress.done);
 
+        // A queued cancel wins until terminal commitment, including natural
+        // exact completion and a Finish that completed in the last work unit.
+        await yieldToEventLoop();
         if (cancelled.has(id)) {
             return acknowledgeCancellation();
         }
@@ -906,13 +935,23 @@ async function dispatch(
 
 async function handle(message: ClientMessage): Promise<void> {
     if (message.kind === "cancel") {
-        cancelled.add(message.id);
+        if (activeRequests.has(message.id)) cancelled.add(message.id);
+        return;
+    }
+    if (message.kind === "finish") {
+        if (activeSolves.has(message.id)) finishIntents.add(message.id);
         return;
     }
     if (message.kind !== "request") {
         return;
     }
     const { id, method, params } = message;
+    if (activeRequests.has(id)) return;
+    activeRequests.add(id);
+    // Bind an already-aborted signal to this invocation atomically. A fast
+    // synchronous operation can finish before a following cancel message.
+    if (message.cancelled) cancelled.add(id);
+    if (method === "solverSolve") activeSolves.add(id);
     try {
         const result = await dispatch(id, method, params);
         const strategyJson =
@@ -925,9 +964,12 @@ async function handle(message: ClientMessage): Promise<void> {
             strategyJson instanceof Uint8Array
                 ? [strategyJson.buffer as ArrayBuffer]
                 : undefined;
-        if (!respondedBeforeCleanup.delete(id)) {
-            post({ kind: "response", id, ok: true, result }, transfer);
+        if (method === "solverSolve") {
+            const solve = result as SolverSolveResult;
+            solve.worker.milestones?.push({stage: "terminal_response_committed",
+                worker_elapsed_ms: performance.now() - solveClocks.get(id)!});
         }
+        post({ kind: "response", id, ok: true, result }, transfer);
     } catch (error) {
         const info =
             error instanceof EngineError
@@ -937,11 +979,12 @@ async function handle(message: ClientMessage): Promise<void> {
                       detail:
                           error instanceof Error ? error.message : String(error),
                   };
-        if (!respondedBeforeCleanup.delete(id)) {
-            post({ kind: "response", id, ok: false, error: info });
-        }
+        post({ kind: "response", id, ok: false, error: info });
     } finally {
-        respondedBeforeCleanup.delete(id);
+        activeRequests.delete(id);
+        activeSolves.delete(id);
+        finishIntents.delete(id);
+        solveClocks.delete(id);
         cancelled.delete(id);
     }
 }

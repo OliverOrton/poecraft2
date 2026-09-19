@@ -1,0 +1,16 @@
+{
+  "reviewed_main": "4594e44b6b851511ae5471e52f232bce57d16856",
+  "request_sha256": "f79ce03231c7c9dcc5db9e63252d16531a4614db12964e372c204b39acbe7bd5",
+  "package_sha256": "4634af9bbf92adbba9ae828e61bd4a71f50caaf4ab9ab14f59123dd1a24e574d",
+  "package_manifest_verified": true,
+  "instruction_precedence": "Pasted REQUEST.md selects this task; package originals are research provenance, not competing instructions.",
+  "baseline_artifacts": {
+    "build/engine/poecraft_solver_benchmark.exe": "ed50f3be971b14d271ac2acf20334109c1d55e0e0ad1e4e39d1ba7c1d5ff03d1",
+    "build/engine/poecraft_engine.dll": "6c84d25469dece010596d45a0f46f63c5b9c14200d624367e4d1d29e53078a1a",
+    "bindings/wasm/dist/poecraft_engine.mjs": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502",
+    "bindings/wasm/dist/poecraft_engine.wasm": "ef87cbd44e50e5a679825acb83a8506f79ac86142344ab219643af13347b8b00"
+  },
+  "baseline_qualification": "../2026-09-14-progress-and-delivery/qualification.json",
+  "policy_references": "../2026-09-14-progress-and-delivery/retained-policies.json",
+  "working_state": "Reviewed main; no unrelated changes outside protected root, which was not inspected."
+}

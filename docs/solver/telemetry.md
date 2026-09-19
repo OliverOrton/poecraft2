@@ -56,6 +56,24 @@ Substantive research records its question, source identities, decisive observati
 
 ## Adding a field
 
+The cheap progress cursor reports effective continuation/retention options,
+configured limits, measured setup spans and fixed entry-query counters. The
+[activation audit](../active/2026-09-15-verified-delivery/activation.md) defines their
+populations and public/native distinction. Counters aggregate declarations and
+physical entries already visited by the existing bounded query. Zero uncalled
+queries do not prove that every possible entry was rejected. Availability observes
+the retained artifact owner's completed flags and a scope-guarded projection of
+complete evidence in the active strict owner. The latter is updated at work
+boundaries and cleared when that owner exits. Full compatibility remains a
+publication check, not a graph scan on every read.
+
+Focused upper work sets both scheduler mode flags. Its observation gives upper
+role/owner precedence while preserving both flags and numerical control. Worker
+timing records begin, maximum stepped call with input/output owner, lifecycle
+cursor and quantum, progress serialization, export and cleanup separately.
+Source event time, worker observation, UI intent and usable readiness are distinct.
+These fields extend JSON; the public `pc_solve_progress` remains 200 bytes.
+
 Define the counter in the owning phase, its unit/population, whether it is cumulative or retained, reset/snapshot behavior, and resource attribution. Then update collection, serialization, and actual consumers that expose it. Test only the affected contracts and outputs.
 
 A field that never reaches its intended consumer is an observability defect. Repairing it is not evidence of improved crafting policy or exact closure. [Change impact](../foundation/change-impact.md) identifies the downstream path without imposing a full-pipeline ritual.

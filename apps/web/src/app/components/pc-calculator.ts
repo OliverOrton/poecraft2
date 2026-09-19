@@ -85,9 +85,13 @@ import {
 } from "../craft-choices";
 import {
     buildCalculatorSolverGoal,
+    createCalculatorDeliveryTrace,
     prepareSolverStrategy,
     pricedSolverActionIds,
+    retainCalculatorProgress,
+    retainCalculatorWorkerMetrics,
     solvePriceReadiness,
+    type CalculatorDeliveryTrace,
 } from "../solve-workspace";
 import {
     certifiedFactorLabel,
@@ -263,9 +267,12 @@ export class PcCalculator extends HTMLElement {
     private solveElapsedMs = 0;
     private solveLastNativeUpdateAt: number | null = null;
     private solveDeliveryStage = "idle";
-    private solveProgressExport: unknown = null;
+    private solveProgressExport: CalculatorDeliveryTrace | null = null;
     private solveUiMilestones: Array<{stage: string; ui_elapsed_ms: number}> = [];
     private solveAbort: AbortController | null = null;
+    private solveFinish: (() => void) | null = null;
+    private solveFinishRequested = false;
+    private solveUiStartedAt = 0;
     private solveCancelled = false;
     private verificationRunning = false;
 
@@ -775,10 +782,35 @@ export class PcCalculator extends HTMLElement {
         this.solveEconomy = pinned;
         this.solveRunning = true;
         const solveStartedAt = performance.now();
+        const submittedSession = this.session;
+        const submittedItem = this.item;
+        const trace = createCalculatorDeliveryTrace({
+            run_id: crypto.randomUUID(),
+            submitted_at_utc: new Date().toISOString(),
+            base_path: this.base,
+            item_level: this.itemLevel,
+            goal_envelope: this.solverGoal("product_envelope"),
+            solve_options: calculatorSolveOptions(
+                this.solveAbsoluteGapTarget,
+                this.solveRelativeGapPercentTarget,
+                this.solveAllowEconomicRestart,
+                this.solveConsiderImprintPrograms,
+            ),
+            bounded_finish_after_ms: 4 * 60 * 1000,
+            economy: pinned,
+            identity: {
+                abi_version: this.client.getAbiVersion(),
+                source_revision: null,
+                runtime_wasm_sha256: null,
+                data_hash: null,
+                data_hash_source: "unavailable from the loaded runtime API",
+            },
+        });
         this.solveLastNativeUpdateAt = null;
-        this.solveProgressExport = null;
+        this.solveProgressExport = trace;
         this.solveDeliveryStage = "preparing";
-        this.solveUiMilestones = [];
+        this.solveUiMilestones = trace.ui_milestones;
+        this.solveUiStartedAt = solveStartedAt;
         const delivery = (stage: string): void => {
             this.solveDeliveryStage = stage;
             this.solveUiMilestones.push({stage, ui_elapsed_ms: performance.now()-solveStartedAt});
@@ -802,19 +834,30 @@ export class PcCalculator extends HTMLElement {
         }, 1000);
         const solveAbort = new AbortController();
         this.solveAbort = solveAbort;
+        this.solveFinish = null;
+        this.solveFinishRequested = false;
         this.setStatus("Solving — may take a while on large goals.");
         this.renderSolvePanel();
         let economy = 0;
         let envelopeSolver = 0;
         let solveSolver = 0;
+        let solveItem = 0;
         try {
+            // Clone the submitted carrier before asynchronous preparation.
+            // Later edits to the form or its native item cannot alter this run.
+            solveItem = await this.client.cloneItem(submittedItem);
+            trace.resolved.start_item = await this.client.exportItem(solveItem);
+            if (solveAbort.signal.aborted) {
+                this.solveCancelled = true;
+                return;
+            }
             /* Build the native product envelope before selecting its priced
              * subset. The ordinary Calculator handle stays exhaustive so
              * exact single-action odds and craft panels do not lose actions
              * merely because Solve uses a smaller abstraction. */
             envelopeSolver = await this.client.openSolver(
-                this.session,
-                this.solverGoal("product_envelope"),
+                submittedSession,
+                trace.request.goal_envelope,
             );
             const relevantActions =
                 await this.client.solverActions(envelopeSolver);
@@ -839,30 +882,32 @@ export class PcCalculator extends HTMLElement {
                     ),
                 ),
             ).sort((left, right) => left.localeCompare(right));
-            const solveGoal = this.solverGoal("scoped_solve", candidateIds);
+            const { fossil_mode: _fossilMode,
+                requested_fossil_actions: _requestedFossils,
+                ...frozenGoal } = trace.request.goal_envelope;
+            const solveGoal: SolverGoal = { ...frozenGoal, actions: candidateIds };
+            trace.resolved.goal = structuredClone(solveGoal);
             solveSolver = await this.client.openSolver(
-                this.session,
+                submittedSession,
                 solveGoal,
             );
             economy = await this.client.loadEconomy(pinned.snapshot);
-            const solveOptions = calculatorSolveOptions(
-                this.solveAbsoluteGapTarget,
-                this.solveRelativeGapPercentTarget,
-                this.solveAllowEconomicRestart,
-                this.solveConsiderImprintPrograms,
-            );
+            trace.status = "running";
+            delivery("worker_solve_requested");
             const result = await this.client.solverSolve(
                 solveSolver,
-                this.item,
+                solveItem,
                 economy,
-                solveOptions,
+                trace.request.solve_options,
                 {
                     signal: solveAbort.signal,
                     /* Reserve the last minute of the five-minute product
                      * boundary for compile/certify/exact evaluation of the
                      * best executable incumbent found during discovery. */
-                    boundedFinishAfterMs: 4 * 60 * 1000,
+                    boundedFinishAfterMs: trace.request.bounded_finish_after_ms,
+                    onControl: ({requestFinish}) => { this.solveFinish = requestFinish; },
                     onProgress: (progress) => {
+                        retainCalculatorProgress(trace, progress);
                         this.solveProgress = progress;
                         this.solveLastNativeUpdateAt = performance.now();
                         this.solveDeliveryStage = progress.delivery_stage ?? "native_work";
@@ -886,7 +931,7 @@ export class PcCalculator extends HTMLElement {
                     },
                 },
             );
-            this.solveProgressExport = result.worker;
+            retainCalculatorWorkerMetrics(trace, result.worker);
             delivery("worker_result_received");
             if (result.cancelled) {
                 this.solveCancelled = true;
@@ -942,6 +987,7 @@ export class PcCalculator extends HTMLElement {
             window.clearInterval(solveClock);
             refreshSolveElapsed();
             this.solveAbort = null;
+            this.solveFinish = null;
             delivery("handle_cleanup");
             const releases: Promise<unknown>[] = [];
             if (solveSolver) {
@@ -953,9 +999,24 @@ export class PcCalculator extends HTMLElement {
             if (economy) {
                 releases.push(this.client.closeEconomy(economy));
             }
-            await Promise.all(releases);
+            if (solveItem) {
+                releases.push(this.client.closeItem(solveItem));
+            }
+            const cleanup = await Promise.allSettled(releases);
+            const cleanupFailure = cleanup.find(
+                (result): result is PromiseRejectedResult => result.status === "rejected",
+            );
+            if (cleanupFailure && !this.solveError) {
+                this.solveError = {
+                    heading: "Solver cleanup could not complete.",
+                    detail: engineErrorDetail(cleanupFailure.reason),
+                };
+            }
             delivery("ui_delivery_completed");
             this.solveRunning = false;
+            trace.status = this.solveCancelled ? "cancelled" :
+                this.solveError ? "error" : "completed";
+            trace.error = this.solveError?.detail ?? null;
             this.renderSolvePanel();
         }
     }
@@ -1888,14 +1949,6 @@ export class PcCalculator extends HTMLElement {
     }
 
     private bindPriceInputs(host: HTMLElement): void {
-        host.querySelector("[data-progress-export]")?.addEventListener("click", () => {
-            const blob = new Blob([JSON.stringify({schema_version: "solver_delivery_trace_v1",
-                economy: this.solveEconomy?.identity, worker: this.solveProgressExport,
-                ui_milestones: this.solveUiMilestones}, null, 2)], {type: "application/json"});
-            const url = URL.createObjectURL(blob);
-            const anchor = document.createElement("a"); anchor.href = url;
-            anchor.download = "solver-progress.json"; anchor.click(); URL.revokeObjectURL(url);
-        });
         host.querySelectorAll<HTMLInputElement>("[data-price-key]").forEach(
             (input) => {
                 input.addEventListener("change", () => {
@@ -2004,7 +2057,8 @@ export class PcCalculator extends HTMLElement {
                   terminationDetail: this.solveStopDetail,
                   productActionScope: "goal_relevant",
                   goalProgressGatedReforges: true,
-                  considerImprintPrograms: this.solveConsiderImprintPrograms,
+                  considerImprintPrograms: this.solveProgressExport?.request
+                      .solve_options.consider_imprint_programs ?? false,
                   hasCompiledStrategy: this.solvedStrategy !== null,
                   compiledOperationTypes: this.solvedStrategy
                       ? this.solvedStrategy.nodes.flatMap((node) =>
@@ -2048,7 +2102,9 @@ export class PcCalculator extends HTMLElement {
                 </div>
                 ${
                     this.solveRunning
-                        ? '<button class="pc-calc-solve-cancel" data-solve-cmd="cancel">Cancel</button>'
+                        ? `<button data-solve-cmd="finish" ${this.solveFinish && !this.solveFinishRequested &&
+                            progress?.trace?.current.verified_artifact_available === true ? "" : "disabled"}>${this.solveFinishRequested ? "Finishing…" : "Finish with best verified strategy"}</button>
+                           <button class="pc-calc-solve-cancel" data-solve-cmd="cancel">Cancel</button>`
                         : `<span>
                             <button data-solve-cmd="copy-lab" ${canExport ? "" : "disabled"}>Copy Lab case</button>
                             <button class="pc-calc-solve-start" data-solve-cmd="start" ${canStart ? "" : "disabled"}>Start solve</button>
@@ -2114,12 +2170,23 @@ export class PcCalculator extends HTMLElement {
                 Waiting on ${progress.trace.current.missing_continuations} named continuations.
                 Numerical generation ${progress.trace.current.numerical_generation}; reforge source ${escapeHtml(progress.trace.current.reforge_source)}.</p>
                 <p>Recent source events: ${progress.trace.events.slice(-4).map(e => escapeHtml(`${(e.native_elapsed_ms/1000).toFixed(2)} s ${e.kind}: ${e.reason}`)).join("; ") || "No new lifecycle event in this observation"}.</p>
-                <button data-progress-export ${this.solveProgressExport ? "" : "disabled"}>Export progress trace</button>
             </details>` : ""}
+            <button data-progress-export ${this.solveProgressExport ? "" : "disabled"}>Export progress trace</button>
             ${resultMarkup}
             ${labExportMarkup}
             ${errorMarkup}`;
 
+        host.querySelector("[data-progress-export]")?.addEventListener("click", () => {
+            if (!this.solveProgressExport) return;
+            const blob = new Blob([JSON.stringify(this.solveProgressExport, null, 2)],
+                { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            anchor.href = url;
+            anchor.download = `solver-progress-${this.solveProgressExport.request.run_id}.json`;
+            anchor.click();
+            URL.revokeObjectURL(url);
+        });
         host.querySelectorAll<HTMLInputElement>("[data-price-key]").forEach(
             (input) => {
                 input.addEventListener("change", () => {
@@ -2183,6 +2250,15 @@ export class PcCalculator extends HTMLElement {
                     const command = button.dataset.solveCmd;
                     if (command === "cancel") {
                         this.cancelSolve();
+                        return;
+                    }
+                    if (command === "finish") {
+                        if (!this.solveRunning || !this.solveFinish || this.solveFinishRequested ||
+                            this.solveProgress?.trace?.current.verified_artifact_available !== true) return;
+                        this.solveFinishRequested = true;
+                        this.solveUiMilestones.push({stage: "finish_intent", ui_elapsed_ms: performance.now()-this.solveUiStartedAt});
+                        this.solveFinish();
+                        this.renderSolvePanel();
                         return;
                     }
                     void this.guard(async () => {

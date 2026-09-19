@@ -37,6 +37,7 @@ interface CliOptions {
     highImpactExecutableUppers?: boolean;
     watchdogSeconds?: number;
     solveOnly: boolean;
+    finishAtFirstVerified?: boolean;
 }
 
 type CompletedSolverSolveResult = Extract<
@@ -82,6 +83,7 @@ interface CaseReport {
     progress_trace: Array<Record<string, unknown>>;
     progress_trace_omitted: number;
     worker_milestones: Array<{stage: string; worker_elapsed_ms: number}>;
+    delivery_control?: Record<string, unknown>;
     memory: {
         measurement_kind: string;
         process_working_set_before_bytes: number | null;
@@ -178,6 +180,8 @@ function parseArgs(args: string[]): CliOptions {
             index += 1;
         } else if (args[index] === "--solve-only") {
             solveOnly = true;
+        } else if (args[index] === "--finish-at-first-verified") {
+            parsedOptions.finishAtFirstVerified = true;
         } else {
             throw new Error(`unknown or incomplete argument: ${args[index]}`);
         }
@@ -1070,6 +1074,7 @@ async function runCase(
     verificationRunsOverride?: number,
     progressOutputPath?: string,
     solveOnly = false,
+    finishAtFirstVerified = false,
 ): Promise<CaseReport> {
     const totalStarted = performance.now();
     const errors: string[] = [];
@@ -1094,6 +1099,8 @@ async function runCase(
     let verificationMs: number | null = null;
     let cancellationAckMs: number | null = null;
     let solveError: string | null = null;
+    let finishControl: (() => void) | undefined;
+    let finishIntentMs: number | null = null;
     const progressTrace: Array<Record<string, unknown>> = [];
     let progressTraceOmitted = 0;
     const persistProgressTrace = (reason: string): void => {
@@ -1221,6 +1228,11 @@ async function runCase(
 
         const solveStarted = performance.now();
         const recordSolveProgress = (progress: SolveProgress): void => {
+            if (finishAtFirstVerified && finishIntentMs === null &&
+                progress.trace?.current.verified_artifact_available === true && finishControl) {
+                finishIntentMs = performance.now() - solveStarted;
+                finishControl();
+            }
             if (progressTrace.length === 8192) { progressTrace.shift(); progressTraceOmitted += 1; }
             progressTrace.push({
                 elapsed_ms: roundMs(performance.now() - solveStarted),
@@ -1333,6 +1345,7 @@ async function runCase(
                                 : spec.requested_bounded_finish_seconds * 1000,
                         signal: caseAbort.signal,
                         onProgress: recordSolveProgress,
+                        onControl: control => { finishControl = control.requestFinish; },
                     },
                 );
             }
@@ -1732,6 +1745,10 @@ async function runCase(
         progress_trace: progressTrace,
         progress_trace_omitted: progressTraceOmitted,
         worker_milestones: worker?.milestones ?? [],
+        delivery_control: {finish_at_first_verified: finishAtFirstVerified,
+            finish_intent_host_ms: finishIntentMs,
+            max_step_context: worker?.max_step_context,
+            max_progress_read_ms: worker?.max_progress_read_ms},
         memory: {
             measurement_kind: "node_process_rss_sampled_5ms_and_wasm_heap_snapshots",
             process_working_set_before_bytes: memoryBefore || null,
@@ -1930,6 +1947,7 @@ try {
                 options.verificationRuns,
                 options.output ? `${options.output}.progress.json` : undefined,
                 options.solveOnly,
+                options.finishAtFirstVerified,
             ));
         }
     }
@@ -1965,6 +1983,7 @@ try {
                 options.highImpactExecutableUppers ?? null,
             watchdog_seconds: options.watchdogSeconds ?? null,
             solve_only: options.solveOnly,
+            finish_at_first_verified: options.finishAtFirstVerified ?? false,
         },
         cases: reports,
     };

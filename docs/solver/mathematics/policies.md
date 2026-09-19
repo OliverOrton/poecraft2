@@ -29,6 +29,7 @@ The series explanation is useful: \(Q^nr\) is the expected cost paid at the \(n\
 
 The same inverse gives expected visits and resource uses. If \(e_s\) selects the start, the row vector \(e_s^\top(I-Q)^{-1}\) records expected visits to nonterminal states. Multiplying by per-visit resource expectations yields totals whose price-weighted sum should reconcile with monetary cost. That is a consistency check, not an optimality proof.
 
+<a id="policy-difference"></a>
 ### Cost attribution and a changed controller
 
 For the evaluated controller, let \(d_\pi^\top=e_s^\top(I-P_\pi)^{-1}\).
@@ -110,6 +111,12 @@ and properness therefore do not imply short execution, and a long mean does
 not prove that a shorter allowed controller exists. The mean alone also does
 not determine finite-limit completion. Preserve capped sampling trials in the
 denominator and keep them separate from native unlimited expected totals.
+
+For finite-action-budget distributions, retain the joint duration/exit law:
+with generating functions H(z) for nonterminal exits and g(z) for goal exits,
+first-exit conditioning gives F(z)=g(z)+H(z)F(z). Separate means do not determine
+this law or its completion CDF. This is research mathematics, not an implemented
+issuer, a deadline guarantee or a change to the original-cost objective.
 
 The [execution-aware application](../../active/2026-09-13-execution-aware-proposals/README.md)
 uses accounted private cost/count rewards and the existing sparse policy
@@ -549,7 +556,7 @@ counterexamples are preserved in the [v2 mathematical input](../../active/2026-0
 For spend attribution, use expected visits times the native immediate priced
 action cost. Visits times continuation cost overlap across successive entries.
 Exact policy savings use the new-controller occupancy in the
-[policy-difference identity](#first-return-improvement); old-controller visits
+[policy-difference identity](#policy-difference); old-controller visits
 are only an ordering proxy. None of these observations changes CLM-0002's
 entry, properness, scope or complete-cost preconditions.
 
@@ -572,6 +579,38 @@ reuse unchanged \(g,H\); changed internal decisions require reevaluation. If new
 decisions control returns among several boundaries, their complete joint system
 must also be proper: locally exiting components can form a non-goal cycle.
 
+<a id="boundary-response"></a>
+For a complete selected controller Q on N=B union I, eliminate the transient
+interior through sparse solves:
+
+\[
+T=(I-Q_{II})^{-1}Q_{IB},\quad r_I=(I-Q_{II})^{-1}c_I,\quad
+H=Q_{BB}+Q_{BI}T,\quad \bar c=c_B+Q_{BI}r_I,\quad V_B=\bar c+HV_B.
+\]
+
+Transform each primitive/resource reward and terminal category through the same
+stopped law. Interior termination does not imply global properness: H=1 can
+repeat forever. Reuse needs unchanged native rows, whole member domains,
+observations/routes, hidden context and coefficients. Equal node text is
+insufficient; price-only reuse needs price-independent resource responses.
+Boundary fill, matching, invalidation, discovery and cold validation count in
+the all-in cost. This first-exit application is research, not an implemented cache.
+
+For a proper old/new pair on a common finite semantic domain, write Z=(I-Q)^-1
+and d^T=e_root^T Z. A one-row change at i gives, by subtracting the policy
+equations and solving the scalar feedback term,
+
+\[
+\Delta V_{root}=\frac{d_i(\Delta c+\Delta p^T V)}{1-\Delta p^TZe_i}.
+\]
+
+For Q'=Q+ED and c'=c+E Delta c, substitution gives
+V'-V=ZE(I-DZE)^-1(Delta c+DV). Both policies must be proper and all old tails
+legitimately known. One compiled node may change many physical rows. Expected
+visits times remaining cost is exposure, not additive spend or certified savings.
+These identities select neither a new ranking nor a numerical issuer.
+
+<a id="rooted-policy-reuse"></a>
 An exact nonempty item/control entry with independently evaluated continuation
 is sufficient for that entry. A goal mask or one materialized class member is
 not a uniform class certificate. A private-layout controller can instead be
@@ -580,6 +619,7 @@ as an original-scope root artifact. This grants no parent statewise values or
 private state-ID correspondence. Reuse must bind the complete graph, actual
 entry, terminal semantics, scope, vocabulary, mechanics and prices.
 
+<a id="graph-local-boundaries"></a>
 Graph-local decision provenance supplies an observable intervention boundary,
 not a state-space correspondence. A compiler declaration remapped with its graph
 can let the evaluator discover actual physical entries without importing private
@@ -597,6 +637,7 @@ Local option-prefix costs used for compilation bookkeeping are stripped from
 composition annotations and have no bound or acceptance authority. Only the
 independent whole-controller result enters the verified portfolio.
 
+<a id="implied-entry-predicates"></a>
 For a clean intervention whose distinct satisfied goal slots exhaust both exact
 side counts, zero junk counts follow from those observations. Exporting separate
 private junk-class predicates adds no routing distinction there and can enlarge

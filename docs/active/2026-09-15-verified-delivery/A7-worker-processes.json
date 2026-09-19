@@ -1,0 +1,300 @@
+[
+  {
+    "name": "A7-manual-conquest-1",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/solver-benchmark.ts",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "--case",
+      "cb01-cross-base-product8-long240",
+      "--skip-verification",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\verified-delivery\\A7-manual-conquest-1.json",
+      "--finish-at-first-verified"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-16T02:35:46.285617+00:00",
+      "available_physical": 35687161856,
+      "available_commit": 43220692992,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-A7.json",
+    "process": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 45788,
+      "process_identity_token": "45788:134339997462868818",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 95125.90460000501
+    }
+  },
+  {
+    "name": "A7-default-conquest-1",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/solver-benchmark.ts",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "--case",
+      "cb01-cross-base-product8-long240",
+      "--skip-verification",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\verified-delivery\\A7-default-conquest-1.json"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-16T02:37:21.419216+00:00",
+      "available_physical": 35805929472,
+      "available_commit": 43422736384,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-A7.json",
+    "process": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 51972,
+      "process_identity_token": "51972:134339998414206719",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 265484.4766000024
+    }
+  },
+  {
+    "name": "A7-default-conquest-2",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/solver-benchmark.ts",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "--case",
+      "cb01-cross-base-product8-long240",
+      "--skip-verification",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\verified-delivery\\A7-default-conquest-2.json"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-16T02:41:46.905908+00:00",
+      "available_physical": 35896455168,
+      "available_commit": 44133543936,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-A7.json",
+    "process": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 51240,
+      "process_identity_token": "51240:134340001069077422",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 265665.9871000011
+    }
+  },
+  {
+    "name": "A7-manual-conquest-2",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/solver-benchmark.ts",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "--case",
+      "cb01-cross-base-product8-long240",
+      "--skip-verification",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\verified-delivery\\A7-manual-conquest-2.json",
+      "--finish-at-first-verified"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-16T02:46:12.574681+00:00",
+      "available_physical": 35760242688,
+      "available_commit": 43645169664,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-A7.json",
+    "process": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 13272,
+      "process_identity_token": "13272:134340003725759094",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 94752.22939999367
+    }
+  },
+  {
+    "name": "A7-default-conquest-four",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/solver-benchmark.ts",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "--case",
+      "cb02-cross-base-product8-long240",
+      "--skip-verification",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\verified-delivery\\A7-default-conquest-four.json"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-16T02:47:47.328511+00:00",
+      "available_physical": 35857481728,
+      "available_commit": 43598966784,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-A7.json",
+    "process": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 52632,
+      "process_identity_token": "52632:134340004673299959",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 272654.495099996
+    }
+  },
+  {
+    "name": "A7-regalia",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/solver-benchmark.ts",
+      "--corpus",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "--case",
+      "cb12-cross-base-product8-long240",
+      "--skip-verification",
+      "--output",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\verified-delivery\\A7-regalia.json"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-16T02:52:19.985081+00:00",
+      "available_physical": 40492072960,
+      "available_commit": 40731713536,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-A7.json",
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 46844,
+      "process_identity_token": "46844:134340007399865567",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 95395.1578999986
+    }
+  },
+  {
+    "name": "A7-calculator-finish",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/calculator-delivery-probe.ts",
+      "cb01-cross-base-product8-long240",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\verified-delivery\\A7-calculator-finish.json",
+      "finish"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-16T02:53:55.381930+00:00",
+      "available_physical": 40434524160,
+      "available_commit": 40712024064,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-A7.json",
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 7948,
+      "process_identity_token": "7948:134340008353831327",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 97952.29659999313
+    }
+  },
+  {
+    "name": "A7-calculator-cancel-setup",
+    "command": [
+      "C:/Program Files/nodejs/node.exe",
+      "--import",
+      "tsx",
+      "test/calculator-delivery-probe.ts",
+      "cb01-cross-base-product8-long240",
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\verified-delivery\\A7-calculator-cancel-setup.json",
+      "cancel_setup"
+    ],
+    "watchdog_seconds": 315,
+    "admission": {
+      "utc": "2026-09-16T02:55:33.336092+00:00",
+      "available_physical": 40423870464,
+      "available_commit": 40693977088,
+      "outside_bytes": 13681888461,
+      "reserved_bytes": 8589934592,
+      "admitted": true
+    },
+    "build": "build-A7.json",
+    "process": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 51404,
+      "process_identity_token": "51404:134340009333375040",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 44073.99570000416
+    }
+  }
+]

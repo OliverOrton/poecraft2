@@ -855,6 +855,9 @@ export interface SolverWorkerMetrics {
     total_step_ms: number;
     /** Packaging-only public-result transfer after native bounded stepping. */
     finalization_ms: number;
+    max_step_context?: { input_owner: string; output_owner: string; input_cursor: number | undefined;
+        output_cursor: number | undefined; quantum: number; duration_ms: number };
+    max_progress_read_ms?: number;
     progress_observations?: SolveProgress[];
     progress_observations_omitted?: number;
     milestones?: Array<{stage: string; worker_elapsed_ms: number}>;
@@ -949,6 +952,7 @@ export interface ItemInfo {
 
 export interface RequestMessage {
     kind: "request";
+    cancelled?: boolean;
     id: number;
     method: string;
     params: Record<string, unknown>;
@@ -981,5 +985,5 @@ export interface ResponseMessage {
     error?: EngineErrorInfo;
 }
 
-export type ClientMessage = RequestMessage | CancelMessage;
+export type ClientMessage = RequestMessage | CancelMessage | {kind: "finish"; id: number};
 export type WorkerMessage = ReadyMessage | ProgressMessage | ResponseMessage;

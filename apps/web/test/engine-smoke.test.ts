@@ -1603,7 +1603,7 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     assert.ok(cancelProgress.length >= 2);
     assert.ok(
         performance.now() - cancelStarted < 5000,
-        "cancelled solve should abandon promptly",
+        `cancelled solve should abandon promptly: ${performance.now()-cancelStarted} ms; ${JSON.stringify(cancelledSolve.worker.milestones)}`,
     );
     await client.closeSolver(partialSolver);
 

@@ -60,6 +60,31 @@ The final classifier must bind the evaluated artifact to the same target and pri
 
 Product callers transfer and validate the already asserted graph. Presentation cost annotations and editable board positions do not become numerical proof inputs.
 
+## Requested Finish and sealing
+
+Calculator's explicit Finish is enabled by the native retained-artifact observation,
+not a displayed finite cost. Its invocation-ID intent is latched by the worker
+between native units and invokes the existing bounded-finish owner. The ordinary
+240-second trigger and Cancel remain separate. Duplicate/stale controls are inert;
+an observed cancellation wins before terminal commitment. No message handler
+reenters active WASM.
+
+`PolicyExactLiftWork::request_bounded_finish` stops without advancing the proof.
+It transfers the cheapest complete assertion currently held by the suspended pass
+or its existing checked-assertion cache, including root evaluation, graph and
+compiler context. Incomplete scratch is destroyed. It supplies no new global
+lower or reconciliation claim. The enclosing publication compares that artifact
+with its retained compatible fallback; private root-only evidence stays root-only.
+The final `selection_sealed` event follows publication normalization, cap checks
+and invariant checks. `Done` and packaging follow; no independent graph/value
+mutation is permitted after that point.
+
+The [owned-witness argument](mathematics/search-and-resumption.md#interruptible-verified-results)
+establishes conditional safety. The [delivery programme](../active/2026-09-15-verified-delivery/README.md)
+separately owns invocation tests, source/build identities, latency qualification
+and any unmet response gates. A progress field or mocked transport test does not
+establish native discovery, exact closure or a host response bound.
+
 The compiler can run before independent evaluation and final classification.
 A preliminary `Exact` solve status can still produce a final bounded result,
 as the Conquest-four qualification demonstrated. Future graph descriptions

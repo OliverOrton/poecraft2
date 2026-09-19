@@ -2030,15 +2030,32 @@ std::string SolveWork::Impl::progress_trace_json(std::uint64_t after_sequence) c
     const auto quote = [](const std::string& x) {
         std::string result; append_json_string(result, x); return result;
     };
+    const auto entry_counts = [](const PublicationPipeline::EntryQueryCounters& c) {
+        return std::string("{\"queries\":") + std::to_string(c.queries) +
+            ",\"no_authored_decision\":" + std::to_string(c.no_authored_decision) +
+            ",\"unsupported_operation\":" + std::to_string(c.unsupported_operation) +
+            ",\"requested_decisions\":" + std::to_string(c.requested_decisions) +
+            ",\"visited\":" + std::to_string(c.visited) +
+            ",\"hidden_context\":" + std::to_string(c.hidden_context) +
+            ",\"unavailable_tail\":" + std::to_string(c.unavailable_tail) +
+            ",\"clean_rarity_occupancy_goal_debt\":" + std::to_string(c.rarity_occupancy_goal_debt) +
+            ",\"clean_eligible\":" + std::to_string(c.clean_eligible) +
+            ",\"shortlisted\":" + std::to_string(c.shortlisted) +
+            ",\"serviced\":" + std::to_string(c.serviced) +
+            ",\"not_serviced\":" + std::to_string(c.shortlisted - std::min(c.shortlisted,c.serviced)) +
+            ",\"missing_prerequisite\":" + std::to_string(c.missing_prerequisite) +
+            ",\"refused\":" + std::to_string(c.refused) +
+            ",\"capped\":" + std::to_string(c.capped) + "}";
+    };
     const char* owner = finalization_task ? "publication" :
         publication_pipeline.initial_candidate_task ? "candidate_service" :
         incremental_refinement_active ? "named_continuation" :
         incremental_dynamic_prepare_active ? "automatic_synthesis" :
         expansion_active ? "row_construction" : focus_optimizing ?
-        (focused_lower_mode ? "focused_lower" : "focused_upper") : "ordinary_search";
+        (focused_upper_mode ? "focused_upper" : "focused_lower") : "ordinary_search";
     const char* role = finalized_result ? "finalized_result" :
-        focused_lower_mode ? "restricted_lower_workspace" :
         (incremental_upper_policy_pass || focused_upper_mode) ? "upper_policy_workspace" :
+        focused_lower_mode ? "restricted_lower_workspace" :
         "search_workspace";
     const BoundedPolicyIncumbent* selected = unverified_selected_policy_candidate ?
         &unverified_selected_policy_candidate->snapshot :
@@ -2068,6 +2085,34 @@ std::string SolveWork::Impl::progress_trace_json(std::uint64_t after_sequence) c
         ",\"verified_identity\":" + quote(std::to_string(incumbent_portfolio.best_verified_identity)) +
         ",\"verified_replacements\":" + std::to_string(incumbent_portfolio.verified_replacements) +
         ",\"finish_requested\":" + boolean(requested_bounded_finish) +
+        ",\"setup_goal_cover_ns\":" + std::to_string(goal_cover_setup_ns) +
+        ",\"setup_retention_ns\":" + std::to_string(native_retention_prepare_ns) +
+        // Availability observes the retained owner's completed artifact flags.
+        // Publication performs its full context check; a progress read must not
+        // hash graphs or walk certificate/member/state storage.
+        ",\"verified_artifact_available\":" + boolean(publication_pipeline.private_verified_artifact_available ||
+            (fallback && fallback->independently_evaluated &&
+            fallback->independently_certified && fallback->proper && fallback->executable &&
+            !fallback->compiled_artifact.strategy_json.empty())) +
+        ",\"effective_options\":{\"continuation_mode\":" + quote(native_continuation_search_name(options.native_continuation_search)) +
+        ",\"execution_action_price\":" + number(options.native_execution_action_price) +
+        ",\"retention_lower\":" + boolean(options.native_retention_lower) +
+        ",\"retention_reuse\":" + boolean(options.native_retention_numerical_reuse) +
+        ",\"retention_consume\":" + boolean(options.native_retention_consume) +
+        ",\"high_impact_uppers\":" + boolean(options.high_impact_executable_uppers) +
+        ",\"goal_progress_gated_reforges\":" + boolean(options.goal_progress_gated_reforges) +
+        ",\"economic_restart\":" + boolean(options.allow_economic_restart) +
+        ",\"imprint_programs\":" + boolean(options.consider_imprint_programs) +
+        ",\"max_discovered_states\":" + std::to_string(options.max_discovered_states) +
+        ",\"max_rows\":" + std::to_string(options.max_state_action_rows) +
+        ",\"max_transitions\":" + std::to_string(options.max_transitions) +
+        ",\"candidate_override_states\":" + std::to_string(options.candidate_evaluation_limits.max_states) +
+        ",\"candidate_override_pairs\":" + std::to_string(options.candidate_evaluation_limits.max_pairs) +
+        ",\"candidate_override_transitions\":" + std::to_string(options.candidate_evaluation_limits.max_transitions) +
+        ",\"candidate_override_bytes\":" + std::to_string(options.candidate_evaluation_limits.max_owned_bytes) + "}" +
+        ",\"protected_essence_attempt_finished\":" + boolean(publication_pipeline.protected_essence_attempt_finished) +
+        ",\"legacy_entry_query\":" + entry_counts(publication_pipeline.legacy_entries) +
+        ",\"ordinary_entry_query\":" + entry_counts(publication_pipeline.ordinary_entries) +
         ",\"ordinary_entry_attempted\":" + boolean(publication_pipeline.ordinary_entry_attempted) +
         ",\"complete_candidate_attempted\":" + boolean(publication_pipeline.complete_candidate_attempted_identity != 0) +
         ",\"dirty_attempted\":" + boolean(publication_pipeline.dirty_continuation_attempted) +

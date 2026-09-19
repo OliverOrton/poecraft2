@@ -1948,7 +1948,7 @@
         }
         return CompiledPolicyAssertionWork(
             *strict_, prepared.lifted, prices_, prepared.options,
-            std::move(strategy_name), &prepared.routing);
+            std::move(strategy_name), &prepared.routing, nullptr, nullptr, true);
     }
 
     CompiledPolicyAssertion assert_lifted_policy(

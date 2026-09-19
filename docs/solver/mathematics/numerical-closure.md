@@ -81,6 +81,36 @@ That is not an argument against floating point. It is an argument against equati
 
 The example also explains why a selected-policy numerical residual cannot, by itself, certify every alternative Bellman inequality.
 
+<a id="aligned-residual-attribution"></a>
+### Alignment and transience are separate obligations
+
+For a legitimately aligned source vector v on a proper finite selected controller,
+let d^T=e_root^T(I-Q)^-1. Then V(root)-v(root)=d^T(c+Qv-v), by multiplying the
+fixed-policy residual identity above. A large scalar discrepancy alone diagnoses
+neither arithmetic failure nor source/native correspondence.
+
+If only K containing the root is aligned and U is not, stop at first entry to U:
+
+\[
+d_K^T=e_{root}^T(I-Q_{KK})^{-1},\quad h^T=d_K^TQ_{KU},
+\]
+\[
+V(root)-v_K(root)=d_K^T(c_K+Q_{KK}v_K-v_K)+h^TV_U.
+\]
+
+V_U is the full continuation and may return to K. It stays an explicit unknown
+remainder; setting it to zero does not complete attribution. If the root is
+unaligned, no source-root decomposition has been established.
+
+For finite Q>=0, a checked finite w>=1+Qw with w>=0 proves transience: weighted
+sup-norm contraction follows from Qw<=w-1 and w>=1. Thus Z=(I-Q)^-1 exists,
+Z>=0 and Z1<=w (also obtained by summing the inequalities). With a sound bound
+|c+Qv-v|<=epsilon, multiplication by Z gives
+v-epsilon*w <= V <= v+epsilon*w. Coefficient provenance and outward checks are
+still necessary. This encloses one fixed policy in the declared coefficient
+model; its lower endpoint is not an MDP-optimum lower. No new runtime issuer is
+selected by this derivation.
+
 ### Execution-count-weighted residual sensitivity
 
 For the same proper finite controller, let r=c+Pv-v. Then

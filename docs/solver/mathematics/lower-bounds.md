@@ -590,6 +590,14 @@ semantics, allowed decisions, boundaries or prices without rechecking. Local
 option termination alone does not establish its required global properness:
 the [two-option non-goal cycle](policies.md#programs) remains a counterexample.
 
+Persistent-witness refinement is a separate native hypothesis. First freeze the
+actual cheap optimistic policy and exhibit an incompatible persistent witness or
+outside-domain relaxation. A synthetic impossible switch between modes does not
+diagnose a native bug. Any proposed coupling must still contain projections of
+all relevant proper native policies and charge original cost once. Strengthening
+an isolated row while the same cheap root route remains does not establish a
+useful whole-model gain. No new lower producer is selected by this observation.
+
 If an abstract action costs \(\varepsilon\) and jumps to an abstract goal with certainty, every feasible potential at that source satisfies \(h(s)\le\varepsilon\). A new candidate vector, cache, or Bellman solver cannot overcome that row. The documented support-only phase relaxation exhibited this kind of 0.01165 ceiling. [CLM-0018](../claims.md#clm-0018); [phase history](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/lower-pruning.md).
 
 At the applied-reforge snapshot, an exact policy of the **optimistic** model used a 212-cost metamod exit whose remaining continuation was zero. It bounded that model even after minimum-occupancy information became stronger. That is why the occupancy proof produced no additional numerical gain in that experiment. It does not prove a native 212-cost completion policy. [Applied-reforge evidence](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md).

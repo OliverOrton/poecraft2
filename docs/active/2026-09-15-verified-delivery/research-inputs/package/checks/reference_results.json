@@ -1,0 +1,124 @@
+{
+  "schema": "integrated_plan_rational_checks_v1",
+  "basis": "new independent synthetic checks; exact rational arithmetic",
+  "randomized": {
+    "fixtures": 48,
+    "seed": 459444,
+    "identities_by_category": {
+      "policy_equations": 48,
+      "occupation_accounting": 48,
+      "boundary_cost_count": 48,
+      "boundary_exit_mass": 48,
+      "rank_one_recurrence": 48,
+      "multi_row_recurrence": 48,
+      "partial_alignment_remainder": 48,
+      "transience_residual_enclosure": 48
+    },
+    "identity_checks": 384
+  },
+  "named_examples": [
+    {
+      "name": "old_occupancy_requires_feedback",
+      "passed": true,
+      "detail": "10 -> 5; old-occupancy estimate -10; corrected change -5"
+    },
+    {
+      "name": "remaining_cost_score_double_counts",
+      "passed": true,
+      "detail": "Ten unit-cost states cost 10, but visits times remaining cost sums to 55."
+    },
+    {
+      "name": "proper_interiors_can_make_improper_boundary",
+      "passed": true,
+      "detail": "An interior exits almost surely to B; deterministic re-entry at B yields H=1 and no goal."
+    },
+    {
+      "name": "zero_cost_trap_not_value_authority",
+      "passed": true,
+      "detail": "Singular I-Q refused, even though every scalar solves V=V."
+    },
+    {
+      "name": "probability_prefix_not_normalized",
+      "passed": true,
+      "detail": "A known 0.9 goal prefix with unknown remaining mass is not unit success."
+    },
+    {
+      "name": "partial_discrepancy_needs_unmapped_tail",
+      "passed": true,
+      "detail": "Unknown native continuation remains 0.5*V_U, not zero."
+    },
+    {
+      "name": "router_change_invalidates_response",
+      "passed": true,
+      "detail": "Old destination value 2 versus 20; same interior text is insufficient."
+    },
+    {
+      "name": "sparse_elimination_can_fill_boundary",
+      "passed": true,
+      "detail": "A single eliminated hub creates all 9 boundary-to-boundary entries."
+    },
+    {
+      "name": "optimistic_model_ceiling_is_structural",
+      "passed": true,
+      "detail": "Independent favourable modes give valid but weak 2 versus coupled optimum 101."
+    },
+    {
+      "name": "mean_does_not_determine_deadline",
+      "passed": true,
+      "detail": "Deterministic length 10: P(T<=5)=0; geometric mean 10: 0.40951."
+    },
+    {
+      "name": "duration_and_exit_correlation_matters",
+      "passed": true,
+      "detail": "Equal exit marginals/mean duration; unequal one-action goal probability."
+    },
+    {
+      "name": "selected_equivalence_not_all_action_equivalence",
+      "passed": true,
+      "detail": "Fixed-policy equality for a does not justify evaluating b on a merged type."
+    },
+    {
+      "name": "goal_bits_not_injective_occupancy",
+      "passed": true,
+      "detail": "Two overlapping goals can match one affix; second occupied slot may be junk."
+    },
+    {
+      "name": "fixed_policy_lower_is_not_optimal_lower",
+      "passed": true,
+      "detail": "Policy interval [99,101] cannot lower-bound an MDP with another cost-1 policy."
+    },
+    {
+      "name": "no_work_refund_on_resume",
+      "passed": true,
+      "detail": "Two slices of work 2 exceed cumulative budget 3."
+    },
+    {
+      "name": "frozen_audit_requires_capacity_identity",
+      "passed": true,
+      "detail": "Growth of a lazily retained object invalidates its old footprint identity."
+    },
+    {
+      "name": "trace_flag_precedence_characterization",
+      "passed": true,
+      "detail": "Synthetic branch characterization; not a native execution test."
+    },
+    {
+      "name": "mode_mapping_is_not_capability_equivalence",
+      "passed": true,
+      "detail": "Characterizes the inspected execution guard; no native mode qualification."
+    }
+  ],
+  "lifecycle": {
+    "states": 14,
+    "command_transitions_checked": 126,
+    "passed": true,
+    "scope": "finite specification, no concurrency fairness/latency or native verification claim"
+  },
+  "not_performed": [
+    "native solver runs",
+    "WASM/browser runs",
+    "PoE mechanics simulation",
+    "upstream audit suite rerun",
+    "formal proof of native code"
+  ]
+}

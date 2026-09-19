@@ -1,0 +1,92 @@
+{
+  "schema": "research_package_manifest_v1",
+  "review_date": "2026-09-15",
+  "main_at_start_and_final_check": "4594e44b6b851511ae5471e52f232bce57d16856",
+  "status": "proposed replacement plan; repository unchanged",
+  "authoritative_prompt": "PLAN_AND_CODEX_PROMPT.md",
+  "source_copy_policy": "input originals preserved unchanged; not competing instructions",
+  "files": [
+    {
+      "path": "CANONICAL_DOC_INTEGRATION.md",
+      "bytes": 15653,
+      "sha256": "b98cfe583caaa421bd5376b9852f7b06b52ce22e1ee7722ce95190a5b2636fc8"
+    },
+    {
+      "path": "MATHEMATICS.md",
+      "bytes": 19636,
+      "sha256": "ed92ff4cb73013793c0a7bd0257a607829c42eeeeca75f8f45330b81c19e41fc"
+    },
+    {
+      "path": "PLAN_AND_CODEX_PROMPT.md",
+      "bytes": 24269,
+      "sha256": "7b07783e47e1f569c17d775f9806f17542bd42dcd6a696b421cd5f9ca9a934e0"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3678,
+      "sha256": "b07a13545a75b58da909a4fab733fa79d2ad7938c5eac166dc0b039f7c8d3db2"
+    },
+    {
+      "path": "RESEARCH_GATE_SPECS.md",
+      "bytes": 10485,
+      "sha256": "6bea88d5faae776f9d64ba2584bbeeec43c99297b3f10e955c180cee203d9bb0"
+    },
+    {
+      "path": "RESEARCH_REVIEW.md",
+      "bytes": 17867,
+      "sha256": "50d24930f6dd6806d2385c3bb78cc427981ce4d871ed419624d96559c446c6d0"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 10834,
+      "sha256": "07f22196ba71eb9fa21c60c05ab1479ddf4d58921c8e100a60f91128a53131a7"
+    },
+    {
+      "path": "checks/reference_results.json",
+      "bytes": 4126,
+      "sha256": "bfa5296a932225b6050c7ebaf07ca9fc3a7e5db95571edb7586d76bded7032dd"
+    },
+    {
+      "path": "checks/verify_models.py",
+      "bytes": 11893,
+      "sha256": "f45a4a528339ae8cff653548e5fc2b34b7d76a03eb1351a3cd15a2217f91969c"
+    },
+    {
+      "path": "inputs/new_audit_verdict.original.md",
+      "bytes": 25801,
+      "sha256": "434b3c7b8ced9a924b69b41abba230d4f81166d9968dc83150c2183a256786fb"
+    },
+    {
+      "path": "inputs/new_research_handoff.original.md",
+      "bytes": 48466,
+      "sha256": "0d558d19baf9a5235de8ebb314d7c68dd7e473bebdb7fa85fc75a5ae54e16de2"
+    },
+    {
+      "path": "inputs/previous_anytime_mathematics.original.md",
+      "bytes": 22865,
+      "sha256": "a13ec7344da5db548065cedbca142099a53fee0c0fc89006dc34df516826b4a5"
+    },
+    {
+      "path": "inputs/previous_doc_insertions.original.md",
+      "bytes": 15636,
+      "sha256": "b8e870b48a8523228eb8c4b6dd24f8da403de1a816722d012d36d005020c197c"
+    },
+    {
+      "path": "inputs/previous_unsent_plan.original.md",
+      "bytes": 23755,
+      "sha256": "6b4a36df8c710d8ec68c152147d93fa70e70700d1fca28a917ca2b4a35f6c6f4"
+    },
+    {
+      "path": "recorded_metrics.json",
+      "bytes": 1812,
+      "sha256": "6c58e73b8bb0413958a0111c112ed0911c8a38c0606ed808048cebbd10084f95"
+    }
+  ],
+  "checks": {
+    "package_local_links": "passed",
+    "python_syntax": "passed",
+    "reference_suite": "checks/reference_results.json",
+    "native_wasm_benchmarks": "not run",
+    "upstream_reported_suite": "not rerun; companion script not uploaded"
+  }
+}

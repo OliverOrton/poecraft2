@@ -1,0 +1,49 @@
+{
+  "schema": "recorded_receipt_arithmetic_v1",
+  "status": "derived from recorded receipt numbers, not newly measured",
+  "repository_pin": "4594e44b6b851511ae5471e52f232bce57d16856",
+  "source_refs": [
+    "SOURCES.md#repository",
+    "worker-conquest-M12-qualification.json",
+    "qualification.json",
+    "retained-policies.json"
+  ],
+  "worker": {
+    "begin_ms": "13092.7645",
+    "max_step_ms": "387.339",
+    "begin_over_max_step": "33.80182346729867118983629327281786755271",
+    "source_verified_ms": "45032.4439",
+    "worker_export_ms": "243734.73450000002",
+    "clock_warning": "source and worker clocks differ; their subtraction is not an exact delay measurement",
+    "proposed_setup_gates_are_not_current_rules": true
+  },
+  "conquest_native_counterbalanced": {
+    "baseline_seconds": [
+      "244.6783095",
+      "244.8998977"
+    ],
+    "treatment_seconds": [
+      "46.6442546",
+      "47.0061799"
+    ],
+    "paired_verification_reductions_percent": [
+      "80.93649792851785253976507468063898814864",
+      "80.80596180665534022393346226375332618197"
+    ],
+    "mean_saved_seconds": "197.96388635",
+    "scope": "earlier verification at same native surrogate cost, not earlier default UI delivery"
+  },
+  "ring_native_cost_reduction_percent": "2.917445473292029912600186188720609838970",
+  "source_native_conquest_value_ratio": "4186.706363779499480073703053440144266981",
+  "interpretation_warning": "source/native ratio alone does not identify a numerical bug or supply a calibration model",
+  "audit_companion_tests": {
+    "reported_upstream": {
+      "fixtures": 96,
+      "property_groups": 576,
+      "named_examples": 9
+    },
+    "companion_scripts_received_with_new_uploads": false,
+    "rerun_here": false
+  },
+  "new_local_reference_suite": "checks/reference_results.json"
+}

@@ -1,0 +1,24 @@
+[
+  {
+    "name": "B-conquest-four",
+    "binary": "out/verified-delivery/baseline/poecraft_solver_benchmark.exe",
+    "binary_sha256": "ed50f3be971b14d271ac2acf20334109c1d55e0e0ad1e4e39d1ba7c1d5ff03d1",
+    "manifest": "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+    "cases": [
+      "cb02-cross-base-product8-long240"
+    ],
+    "host_watchdog": 315.0,
+    "source_commit": "4594e44b6b851511ae5471e52f232bce57d16856"
+  },
+  {
+    "name": "A7-conquest-four",
+    "binary": "build/engine/poecraft_solver_benchmark.exe",
+    "binary_sha256": "96f4aa82336fe64f1eaed9f35deec2e0ea23c676a8a9a8129a51b8a5e5b76b15",
+    "manifest": "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+    "cases": [
+      "cb02-cross-base-product8-long240"
+    ],
+    "host_watchdog": 315.0,
+    "source_commit": null
+  }
+]

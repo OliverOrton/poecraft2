@@ -1,0 +1,189 @@
+{
+  "base": "4594e44b6b851511ae5471e52f232bce57d16856",
+  "final_build": "build-A7.json",
+  "tests": [
+    {
+      "build": "A7",
+      "owner": "native bounded Finish",
+      "checks": 202,
+      "failures": 0,
+      "log": "A7-native-finish.log"
+    },
+    {
+      "build": "A6",
+      "owner": "native continuation activation",
+      "checks": 88,
+      "failures": 0,
+      "log": "A6--solver-native-continuation-api-only.log"
+    },
+    {
+      "build": "A6",
+      "owner": "native return bridge",
+      "checks": 648,
+      "failures": 0,
+      "log": "A6--solver-return-bridge-only.log"
+    },
+    {
+      "build": "A6",
+      "owner": "native joint continuation",
+      "checks": 313,
+      "failures": 0,
+      "log": "A6--solver-joint-policy-continuation-only.log"
+    },
+    {
+      "build": "A7",
+      "owner": "apps/web npm test",
+      "status": "passed",
+      "log": "A7-final-web-tests.log"
+    },
+    {
+      "build": "A7",
+      "owner": "apps/web npx tsc --noEmit",
+      "status": "passed",
+      "log": "A7-final-typecheck.log"
+    }
+  ],
+  "native_test_scope": "A6 broader fixtures were not repeated after the final A7 ownership/visibility fix; A7 focused Finish fixtures and affected native/WASM policy runs qualify that change.",
+  "abi": {
+    "build": "A7",
+    "checks": {
+      "old_header_progress_bytes": 200,
+      "adjacent_canary_unchanged": true,
+      "sequence_reads_passive": true,
+      "trace_read_passive": true,
+      "null_and_abandon_zero": true
+    },
+    "probe_source": "docs/active/2026-09-14-progress-and-delivery/probes/legacy-progress-probe.cpp",
+    "shared_dll_accessor_export_and_null_zero": true
+  },
+  "builds": {
+    "native": "passed",
+    "shared_dll": "passed",
+    "wasm": "passed; existing compiler warnings retained"
+  },
+  "historical_failures": [
+    "M0 export click failed before listener-owner repair.",
+    "A5 manual intent refused after throttled progress lost its trace; A7 reads the cheap native projection at control.",
+    "A5 optional capture/compile followed Finish; final code transfers completed evidence and interrupts optional checking with a fallback.",
+    "A6 web pre-aborted request ordering failed; initial cancelled state now travels atomically with the request.",
+    "A7 concurrent-build smoke exceeded the unchanged five-second cancellation assertion; final post-build full suite passes."
+  ],
+  "unrun": [
+    "Rendered visual UI review (Oliver owns it)",
+    "New simulations of unchanged retained controllers",
+    "Imported mathematical reference scripts",
+    "Full native acceptance suite (focused affected-owner checks used)"
+  ],
+  "simulation_note": "The existing full web suite includes its ordinary small simulator fixtures; no retained cross-base controller was resimulated.",
+  "identity_checks": {
+    "A7_pins_match": true,
+    "artifact_manifest_matches": true,
+    "original_import_payloads_verified": 15,
+    "request_matches": true,
+    "qualified_raw_reports_match": true,
+    "retained_policy_files_match": true
+  },
+  "closeout_UI_source_sha256": {
+    "apps/web/src/app/components/pc-calculator.ts": "9b727f836c7ac8659380a6fb513fff720af13bdf39004618e19cf89ff2474af2",
+    "apps/web/src/app/solve-workspace.ts": "6959bd39f23d6421a019f8aa7a88e10b0211b69aa6a916f4f94a668012fee1d9",
+    "apps/web/package.json": "3aa35dd637c9b540d95eaa47c9ba6e35fc62c0014d5fdee81a818c441ac61d4b",
+    "apps/web/package-lock.json": "9e6c5c43647b44d86adc5c67d19ff6352efb8f9a38d9fc9687cb855e2cb2bec6"
+  },
+  "closeout_UI_pin_note": "Supplemental closeout hashes for UI/dependency files omitted from the original A7 build receipt; not retroactively labelled pre-build hashes.",
+  "knowledge_lint": {
+    "base": "4594e44b6b851511ae5471e52f232bce57d16856",
+    "errors": [],
+    "warnings": [
+      "CLM-0004: open",
+      "CLM-0005: open",
+      "CLM-0013: open",
+      "CLM-0016: open",
+      "CLM-0017: open",
+      "CLM-0018: open",
+      "CLM-0019: open",
+      "CLM-0019: prerequisite CLM-0018 is open",
+      "CLM-0020: open",
+      "CLM-0021: open",
+      "CLM-0022: open",
+      "CLM-0023: open",
+      "CLM-0024: open",
+      "CLM-0024: prerequisite CLM-0020 is open",
+      "CLM-0024: prerequisite CLM-0023 is open",
+      "CLM-0025: open",
+      "engine/src/solver_quotient_lower.cpp:250 obligation: CLM-0023 is open; review its premises",
+      "tools/ingest/poecraft_ingest/solver_reports.py:995 obligation: CLM-0024 is open; review its premises"
+    ],
+    "scope": "traceability only; no mathematical or runtime certification"
+  },
+  "logs": {
+    "A7-native-finish.log": {
+      "path": "out/verified-delivery/A7-native-finish.log",
+      "sha256": "e9e77d4c3201089336141858deb07727661e692ac824cfa75d0c036f212f85a2"
+    },
+    "A6--solver-native-continuation-api-only.log": {
+      "path": "out/verified-delivery/A6--solver-native-continuation-api-only.log",
+      "sha256": "d00c978196fc8ee8179d17c97d1d269c7ba19fa4e6f515e18784967be016507f"
+    },
+    "A6--solver-return-bridge-only.log": {
+      "path": "out/verified-delivery/A6--solver-return-bridge-only.log",
+      "sha256": "83a6465c45d81b197206c065f3ab8eabf4d76a5926b95f6897843f73b3d6d8e2"
+    },
+    "A6--solver-joint-policy-continuation-only.log": {
+      "path": "out/verified-delivery/A6--solver-joint-policy-continuation-only.log",
+      "sha256": "0a71a1c48500d0585760e4369aa5433f870e4a208660553b5ab6a09cf8098a4c"
+    },
+    "A7-final-web-tests.log": {
+      "path": "out/verified-delivery/A7-final-web-tests.log",
+      "sha256": "610f0532b2e502760ab02391d67b18d15395d8d6c869bc62327c906129854921"
+    },
+    "A7-final-typecheck.log": {
+      "path": "out/verified-delivery/A7-final-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "A7-abi.log": {
+      "path": "out/verified-delivery/A7-abi.log",
+      "sha256": "6966aa6739b70b93c17a44a51f451ed7342ecf98b7f975991474a2901dc5b6c0"
+    },
+    "A7-native-build.log": {
+      "path": "out/verified-delivery/A7-native-build.log",
+      "sha256": "800609a2bec2743930a591c981082d3ce448c778392701658ca6d7924209023d"
+    },
+    "A7-benchmark-build.log": {
+      "path": "out/verified-delivery/A7-benchmark-build.log",
+      "sha256": "0d5364221e86172df0f02ed7ff8cda04509bef7ccbd4d33e87d408be819ca8eb"
+    },
+    "A7-shared-build.log": {
+      "path": "out/verified-delivery/A7-shared-build.log",
+      "sha256": "29993a297ff49bc5657073e6f3b8d978fb0c90027da8b9bcbf4fd3c1401a3fec"
+    },
+    "A7-wasm-build.log": {
+      "path": "out/verified-delivery/A7-wasm-build.log",
+      "sha256": "44e5391698c39926fce42def13d0b116e7ceeceb6bed732cb2613babeacfdb99"
+    },
+    "B-probe-build.log": {
+      "path": "out/verified-delivery/B-probe-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "B-response-build.log": {
+      "path": "out/verified-delivery/B-response-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "final-knowledge-lint.json": {
+      "path": "out/verified-delivery/final-knowledge-lint.json",
+      "sha256": "e65b590578123c28882a7d8291fcadab11061ed04fedc4f10f0baefff7bf5aef"
+    }
+  },
+  "edited_links": {
+    "checked": 59,
+    "errors": []
+  },
+  "staged_checks": {
+    "import_payload_blobs_verified": 15,
+    "affected_A7_source_runtime_blobs_match": true,
+    "knowledge_lint_errors": [],
+    "knowledge_lint_warning_count": 18,
+    "knowledge_lint_log": "out\\verified-delivery\\final-staged-knowledge-lint.json",
+    "knowledge_lint_sha256": "e65b590578123c28882a7d8291fcadab11061ed04fedc4f10f0baefff7bf5aef",
+    "diff_check": "passed with cr-at-eol for Windows receipt line endings; untouched imported originals excluded"
+  }
+}

@@ -2145,6 +2145,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
      * ordinary step catch/publication path as a cap reached by expansion. */
     std::optional<std::pair<std::string, std::uint64_t>>
         setup_resource_limit;
+    std::uint64_t goal_cover_setup_ns = 0;
     /*
      * One owner for direct assertion, strict repair, publication
      * classification, packaging, and the continuation that makes those
@@ -2153,6 +2154,17 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
      * across SolveWork::Impl.
      */
     struct PublicationPipeline {
+        // Counts only declarations and physical entries already visited by the
+        // bounded query. These are observations, never admission authority.
+        struct EntryQueryCounters {
+            std::uint64_t queries = 0, no_authored_decision = 0, unsupported_operation = 0;
+            std::uint64_t requested_decisions = 0, visited = 0, hidden_context = 0;
+            std::uint64_t unavailable_tail = 0, rarity_occupancy_goal_debt = 0;
+            std::uint64_t clean_eligible = 0, shortlisted = 0, serviced = 0;
+            std::uint64_t missing_prerequisite = 0, refused = 0, capped = 0;
+        } legacy_entries, ordinary_entries;
+        bool protected_essence_attempt_finished = false;
+        bool private_verified_artifact_available = false;
         std::uint64_t work_items = 0;
         std::uint32_t refinement_states = 0;
         std::uint32_t refinement_kernels = 0;

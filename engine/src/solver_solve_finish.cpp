@@ -19,6 +19,26 @@ using namespace solve_detail;
 constexpr std::uint32_t kCooperativePolicyLiftBatch = 32;
 constexpr std::uint32_t kCooperativeAlternativeProofBatch = 128;
 
+struct ScopedVerifiedArtifactVisibility {
+    bool& available;
+    ~ScopedVerifiedArtifactVisibility() { available = false; }
+};
+
+static refinement::CompiledPolicyAssertion take_or_interrupt_assertion(
+        refinement::CompiledPolicyAssertionWork& work) {
+    if (work.progress().done) return work.take_result();
+    // Called only at a Finish boundary with another compatible verified
+    // artifact. Keep spent work/peak accounting, but transfer no partial row,
+    // probability, graph, value or certificate as executable evidence.
+    const auto& used = work.diagnostic_evaluation();
+    refinement::CompiledPolicyAssertion interrupted;
+    interrupted.failure_reason = "requested_finish_with_verified_fallback";
+    interrupted.evaluation.reforge_work = used.reforge_work;
+    interrupted.evaluation.reforge_logical_work_v1 = used.reforge_logical_work_v1;
+    interrupted.evaluation.peak_owned_bytes_estimate = used.peak_owned_bytes_estimate;
+    return interrupted;
+}
+
 void order_observed_modifier_choices(
         const ActionDescriptor& action,
         std::vector<OutcomeChoiceOption>& choices,
@@ -384,9 +404,10 @@ SolveWork::Impl::run_publication_pipeline() {
             !incremental_envelope_closed &&
             output_incumbent.has_value() &&
             !incremental_alternative_rows.empty();
-        if (result.diagnostics.resource_cap_hit ||
+        if (!(requested_bounded_finish && best_current_certified_fallback() != nullptr) &&
+            (result.diagnostics.resource_cap_hit ||
             (requested_bounded_finish && output_incumbent.has_value()) ||
-            open_incremental_anytime_candidate) {
+            open_incremental_anytime_candidate)) {
             (void)try_install_reachable_incumbent(
                 result.diagnostics.resource_cap_hit &&
                 !requested_bounded_finish,
@@ -2312,7 +2333,8 @@ SolveWork::Impl::run_publication_pipeline() {
                         .verified_policy_alternative_shadow_diagnostic,
                     options
                         .verified_policy_alternative_shadow_diagnostic);
-                while (!assertion_work.progress().done) {
+                while (!assertion_work.progress().done &&
+                    !(requested_bounded_finish && best_current_certified_fallback() != nullptr)) {
                     const auto verification_progress =
                         assertion_work.progress();
                     phase = verification_progress.phase ==
@@ -2328,7 +2350,7 @@ SolveWork::Impl::run_publication_pipeline() {
                             assertion_work.retained_bytes())};
                 }
                 refinement::CompiledPolicyAssertion assertion =
-                    assertion_work.take_result();
+                    take_or_interrupt_assertion(assertion_work);
                 result.diagnostics.reforge_frontier_work =
                     saturated_publication_add(
                         result.diagnostics.reforge_frontier_work,
@@ -2798,13 +2820,16 @@ SolveWork::Impl::run_publication_pipeline() {
                 result.termination = SolveTermination::TargetGap;
             }
         };
-        bool skip_strict_lift = false;
+        bool skip_strict_lift = requested_bounded_finish &&
+            publish_certified_fallback(SolveTermination::RequestedBoundedFinish);
         bool direct_certification_requires_strict_lift = false;
         const bool defer_selected_snapshot_for_closed_exact_path =
             unverified_selected_policy_candidate.has_value() &&
             closed_coarse_exact_path_defers_selected_snapshot(
                 coarse_discovery_closed, result.policy_available);
-        if (defer_selected_snapshot_for_closed_exact_path) {
+        if (skip_strict_lift) {
+            unverified_selected_policy_candidate.reset();
+        } else if (defer_selected_snapshot_for_closed_exact_path) {
             PolicyRefinementTelemetry& telemetry =
                 result.diagnostics.policy_refinement;
             telemetry.selected_candidate_status =
@@ -3027,7 +3052,9 @@ SolveWork::Impl::run_publication_pipeline() {
                                 assertion_work(
                                     calc, proof, prices, *scoped,
                                     "selected coarse policy");
-                            while (!assertion_work.progress().done) {
+                            while (!assertion_work.progress().done &&
+                                !(requested_bounded_finish &&
+                                  best_current_certified_fallback() != nullptr)) {
                                 const auto assertion_progress =
                                     assertion_work.progress();
                                 phase = assertion_progress.phase ==
@@ -3045,7 +3072,7 @@ SolveWork::Impl::run_publication_pipeline() {
                                         assertion_work.retained_bytes()};
                             }
                             refinement::CompiledPolicyAssertion assertion =
-                                assertion_work.take_result();
+                                take_or_interrupt_assertion(assertion_work);
                             result.diagnostics.reforge_frontier_work =
                                 saturated_add(
                                     result.diagnostics.reforge_frontier_work,
@@ -3221,6 +3248,8 @@ SolveWork::Impl::run_publication_pipeline() {
                                                 ? 1
                                                 : 0;
                                     }
+                                    ScopedVerifiedArtifactVisibility visibility{
+                                        publication_pipeline.private_verified_artifact_available};
                                     refinement::PolicyExactLiftWork
                                         selected_lift_work(
                                             calc, proof,
@@ -3233,6 +3262,10 @@ SolveWork::Impl::run_publication_pipeline() {
                                                 .retained_bytes()};
                                     while (!selected_lift_work
                                                 .progress().done) {
+                                        if (requested_bounded_finish) {
+                                            selected_lift_work.request_bounded_finish();
+                                            break;
+                                        }
                                         const refinement::
                                             PolicyExactLiftProgress
                                                 lift_progress =
@@ -3280,6 +3313,8 @@ SolveWork::Impl::run_publication_pipeline() {
                                                             LocalReoptimization
                                                 ? kCooperativeAlternativeProofBatch
                                                 : kCooperativePolicyLiftBatch);
+                                        publication_pipeline.private_verified_artifact_available =
+                                            selected_lift_work.has_verified_artifact();
                                         record_live_policy_lift_telemetry(
                                             telemetry,
                                             selected_lift_work
@@ -3678,7 +3713,8 @@ SolveWork::Impl::run_publication_pipeline() {
                     true,
                     options
                         .verified_policy_alternative_shadow_diagnostic);
-                while (!assertion_work.progress().done) {
+                while (!assertion_work.progress().done &&
+                    !(requested_bounded_finish && best_current_certified_fallback() != nullptr)) {
                     const auto assertion_progress =
                         assertion_work.progress();
                     if (phase == SolvePhase::Compiling && assertion_progress.phase !=
@@ -3697,7 +3733,7 @@ SolveWork::Impl::run_publication_pipeline() {
                     co_await solve_detail::CooperativeCheckpoint{
                         assertion_work.retained_bytes()};
                 }
-                assertion = assertion_work.take_result();
+                assertion = take_or_interrupt_assertion(assertion_work);
                 record_progress_event(assertion.executable && assertion.proper ? "check_completed" : "check_refused",
                     "selected_core_policy:" + assertion.failure_reason);
                 co_await solve_detail::CooperativeCheckpoint{};
@@ -4478,6 +4514,8 @@ SolveWork::Impl::run_publication_pipeline() {
                             static_cast<Impl*>(owner)->native_retention_lower_value(state)};
                     };
                 }
+                ScopedVerifiedArtifactVisibility visibility{
+                    publication_pipeline.private_verified_artifact_available};
                 refinement::PolicyExactLiftWork lift_work(
                     calc, result, exact_start_item, prices,
                     scoped_lift_options, "solved policy", nullptr,
@@ -4491,25 +4529,8 @@ SolveWork::Impl::run_publication_pipeline() {
                     const refinement::PolicyExactLiftProgress
                         lift_progress = lift_work.progress();
                     if (requested_bounded_finish) {
-                        const BoundedPolicyIncumbent* retained =
-                            best_current_certified_fallback();
-                        if (retained != nullptr &&
-                            retained->evaluated_policy_cost <=
-                                lift_progress.verified_executable_upper_bound) {
-                            /* This exact-scope graph is already independently
-                             * evaluated. A host finish request stops optional
-                             * strict work at this suspension, without claiming
-                             * closure or losing a cheaper verified strict
-                             * artifact that has not reached the portfolio yet.
-                             * Destroying lift_work releases only unpublished
-                             * coroutine/proof work; ordinary publication below
-                             * still selects the compatible verified artifact. */
-                            certificate.status = refinement::
-                                PolicyExactLiftStatus::RequestedBoundedFinish;
-                            certificate.solver_cost = result.evaluated_policy_cost;
-                            certificate.adapter = lift_work.live_adapter_telemetry();
-                            break;
-                        }
+                        lift_work.request_bounded_finish();
+                        break;
                     }
                     switch (lift_progress.phase) {
                     case refinement::PolicyExactLiftPhase::Compiling:
@@ -4545,6 +4566,8 @@ SolveWork::Impl::run_publication_pipeline() {
                                 PolicyExactLiftPhase::LocalReoptimization
                             ? kCooperativeAlternativeProofBatch
                             : kCooperativePolicyLiftBatch);
+                    publication_pipeline.private_verified_artifact_available =
+                        lift_work.has_verified_artifact();
                     {
                         PolicyRefinementTelemetry& live_telemetry =
                             result.diagnostics.policy_refinement;
@@ -5116,126 +5139,7 @@ SolveWork::Impl::run_publication_pipeline() {
                 certificate.lumpable &&
                 certificate.compiled.executable;
             if (lift_complete) {
-                RetainedCompiledPolicyArtifact artifact;
-                artifact.strategy_json =
-                    std::move(certificate.compiled.strategy_json);
-                artifact.certification_strategy_json =
-                    std::move(
-                        certificate.compiled
-                            .certification_strategy_json);
-                artifact.working_states =
-                    certificate.compiled.compilation.working_states;
-                artifact.closed_coarse_domain_added_states =
-                    certificate.compiled.compilation
-                        .closed_coarse_domain_added_states;
-                artifact.closed_coarse_domain_route_states =
-                    certificate.compiled.compilation
-                        .closed_coarse_domain_route_states;
-                artifact.behavioral_classes =
-                    certificate.compiled.compilation.behavioral_classes;
-                artifact.policy_regions =
-                    certificate.compiled.compilation.policy_regions;
-                artifact.infrastructure_nodes =
-                    certificate.compiled.compilation.infrastructure_nodes;
-                artifact.policy_route_nodes =
-                    certificate.compiled.compilation.policy_route_nodes;
-                artifact.local_gated_route_nodes =
-                    certificate.compiled.compilation
-                        .local_gated_route_nodes;
-                artifact.primitive_region_nodes =
-                    certificate.compiled.compilation
-                        .primitive_region_nodes;
-                artifact.additional_recipe_nodes =
-                    certificate.compiled.compilation
-                        .additional_recipe_nodes;
-                artifact.policy_decision_bindings =
-                    certificate.compiled.compilation
-                        .policy_decision_bindings;
-                artifact.graph_local_provenance = certificate.compiled.compilation.graph_local_provenance;
-                artifact.nodes =
-                    certificate.compiled.compilation.nodes;
-                artifact.edges =
-                    certificate.compiled.compilation.edges;
-                artifact.total_condition_bytes =
-                    certificate.compiled.compilation.total_condition_bytes;
-                artifact.max_condition_bytes =
-                    certificate.compiled.compilation.max_condition_bytes;
-                artifact.condition_edges =
-                    certificate.compiled.compilation.condition_edges;
-                artifact.unique_condition_literals =
-                    certificate.compiled.compilation
-                        .unique_condition_literals;
-                artifact.repeated_condition_occurrences =
-                    certificate.compiled.compilation
-                        .repeated_condition_occurrences;
-                artifact.repeated_condition_bytes =
-                    certificate.compiled.compilation
-                        .repeated_condition_bytes;
-                artifact.policy_route_nondefault_edges =
-                    certificate.compiled.compilation
-                        .policy_route_nondefault_edges;
-                artifact.policy_route_distinct_targets =
-                    certificate.compiled.compilation
-                        .policy_route_distinct_targets;
-                artifact.same_target_branch_groups =
-                    certificate.compiled.compilation
-                        .same_target_branch_groups;
-                artifact.same_target_branch_edges =
-                    certificate.compiled.compilation
-                        .same_target_branch_edges;
-                artifact.projected_same_target_edge_savings =
-                    certificate.compiled.compilation
-                        .projected_same_target_edge_savings;
-                artifact.max_policy_route_out_degree =
-                    certificate.compiled.compilation
-                        .max_policy_route_out_degree;
-                artifact.max_policy_route_distinct_targets =
-                    certificate.compiled.compilation
-                        .max_policy_route_distinct_targets;
-                artifact.exact_state_fallbacks =
-                    certificate.compiled.compilation.exact_state_fallbacks;
-                artifact.junk_predicates =
-                    certificate.compiled.compilation.junk_predicates;
-                artifact.policy_route_default_edges =
-                    certificate.compiled.compilation
-                        .policy_route_default_edges;
-                artifact.policy_route_restart_default_edges =
-                    certificate.compiled.compilation
-                        .policy_route_restart_default_edges;
-                artifact.policy_route_offpolicy_default_edges =
-                    certificate.compiled.compilation
-                        .policy_route_offpolicy_default_edges;
-                artifact.policy_route_root_default_edges =
-                    certificate.compiled.compilation
-                        .policy_route_root_default_edges;
-                artifact.policy_route_refined_parent_default_edges =
-                    certificate.compiled.compilation
-                        .policy_route_refined_parent_default_edges;
-                artifact.policy_route_internal_default_edges =
-                    certificate.compiled.compilation
-                        .policy_route_internal_default_edges;
-                artifact.policy_route_default_mode =
-                    certificate.compiled.compilation
-                        .policy_route_default_mode;
-                artifact.certification_policy_route_default_edges =
-                    certificate.compiled.certification_compilation
-                        .policy_route_default_edges;
-                artifact.certification_policy_route_offpolicy_default_edges =
-                    certificate.compiled.certification_compilation
-                        .policy_route_offpolicy_default_edges;
-                artifact.certification_policy_route_default_mode =
-                    certificate.compiled.certification_compilation
-                        .policy_route_default_mode;
-                artifact.paired_default_only =
-                    certificate.compiled.paired_default_only;
-                artifact.peak_owned_bytes =
-                    certificate.compiled.compilation.peak_owned_bytes;
-                artifact.previously_accounted_peak_owned_bytes =
-                    certificate.compiled.compilation
-                        .previously_accounted_peak_owned_bytes;
-                artifact.complete_peak_owned_bytes =
-                    certificate.compiled.compilation
-                        .complete_peak_owned_bytes;
+                auto artifact = retained_artifact_from_assertion(certificate.compiled);
                 result.refined_policy_artifact =
                     std::move(artifact);
                 telemetry.retained_artifact_bytes =
@@ -5515,6 +5419,13 @@ SolveWork::Impl::run_publication_pipeline() {
                     SolveTermination::RequestedBoundedFinish : result.termination);
             co_await solve_detail::CooperativeCheckpoint{0};
         }
+        // Selection includes complete retained private/strict artifacts that
+        // reached this owner before sealing. No cost-only historical scalar
+        // can replace the graph/certificate/context bundle.
+        if (const auto* eligible = best_current_certified_fallback(); eligible &&
+            (!result.policy_available || eligible->evaluated_policy_cost < result.upper_bound))
+            (void)publish_certified_fallback(requested_bounded_finish ?
+                SolveTermination::RequestedBoundedFinish : result.termination);
         const bool unclosed_strict_refinement =
             result.diagnostics.policy_refinement.strict_lift_status !=
                 "not_run" &&
@@ -5916,6 +5827,7 @@ SolveWork::Impl::run_publication_pipeline() {
                 solve_detail::publication_invariant_invalid_reason(result)) {
             throw std::logic_error(invariant);
         }
+        record_progress_event("selection_sealed", "owned_graph_root_certificate_and_cost");
         consumed = true;
         co_return std::move(result);
     }
@@ -6112,7 +6024,9 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
                 ? SolvePhase::Compiling : SolvePhase::Certifying;
             finalization_evaluation_progress = progress.evaluation;
             work.step(kCooperativePolicyLiftBatch);
-            co_await solve_detail::CooperativeCheckpoint{work.retained_bytes()};
+            // Transfer a completed check before exposing an interrupt boundary.
+            if (!work.progress().done)
+                co_await solve_detail::CooperativeCheckpoint{work.retained_bytes()};
         }
         auto assertion = work.take_result();
         auto& telemetry = result.diagnostics.policy_refinement;

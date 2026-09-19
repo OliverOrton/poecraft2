@@ -2,7 +2,11 @@ import type {
     SolverActionFamily,
     SolverActionInfo,
     SolverGoal,
+    SolveOptions,
+    SolveProgress,
+    SolverWorkerMetrics,
 } from "./engine-protocol";
+import type { PinnedEconomy } from "./workspace/economy-service";
 import {
     isStrategyDocument,
     validateStrategy,
@@ -28,6 +32,73 @@ export type CalculatorSolverGoalMode =
     | "odds"
     | "product_envelope"
     | "scoped_solve";
+
+export interface CalculatorSolveRequest {
+    run_id: string;
+    submitted_at_utc: string;
+    base_path: string;
+    item_level: number;
+    goal_envelope: SolverGoal;
+    solve_options: SolveOptions;
+    bounded_finish_after_ms: number;
+    economy: PinnedEconomy;
+    identity: {
+        abi_version: number;
+        source_revision: string | null;
+        runtime_wasm_sha256: string | null;
+        data_hash: string | null;
+        data_hash_source: string;
+    };
+}
+
+/** One bounded UI-observed history; worker/native clocks remain in each sample. */
+export interface CalculatorDeliveryTrace {
+    schema_version: "solver_delivery_trace_v2";
+    request: CalculatorSolveRequest;
+    resolved: { start_item: unknown; goal: SolverGoal | null };
+    observations: SolveProgress[];
+    observations_omitted: number;
+    worker: Omit<SolverWorkerMetrics, "progress_observations"> | null;
+    ui_milestones: Array<{ stage: string; ui_elapsed_ms: number }>;
+    status: "preparing" | "running" | "completed" | "cancelled" | "error";
+    error: string | null;
+}
+
+export function createCalculatorDeliveryTrace(
+    request: CalculatorSolveRequest,
+): CalculatorDeliveryTrace {
+    return {
+        schema_version: "solver_delivery_trace_v2",
+        request: structuredClone(request),
+        resolved: { start_item: null, goal: null },
+        observations: [],
+        observations_omitted: 0,
+        worker: null,
+        ui_milestones: [],
+        status: "preparing",
+        error: null,
+    };
+}
+
+export function retainCalculatorProgress(
+    trace: CalculatorDeliveryTrace, progress: SolveProgress,
+): void {
+    if (trace.observations.length === 4096) {
+        trace.observations.shift();
+        trace.observations_omitted += 1;
+    }
+    trace.observations.push(progress);
+}
+
+export function retainCalculatorWorkerMetrics(
+    trace: CalculatorDeliveryTrace, worker: SolverWorkerMetrics | undefined,
+): void {
+    if (!worker) return;
+    // The UI already retained every delivered sample. Do not retain a second
+    // full history from the final worker response, or resend one on each update.
+    const { progress_observations: _workerHistory, ...metrics } = worker;
+    trace.worker = metrics;
+}
 
 /** Build one of Calculator's three solver-goal contracts. */
 export function buildCalculatorSolverGoal(

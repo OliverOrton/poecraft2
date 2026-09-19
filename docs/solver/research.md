@@ -126,6 +126,29 @@ according to their individual histories; the living record owns run chronology.
 <a id="rq-003"></a>
 ### RQ-003 — Can executable-policy quality be preserved while proof work scales?
 
+The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
+applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)
+to explicit Finish and frozen request export, and attributes setup latency. Its activation
+audit separates ordinary Calculator retention-lower reuse, public static dirty
+opt-in and the separately qualified wide native execution-count Ring controller.
+The public mapping/caps remain unchanged. Safety, actual usable delivery,
+initialization latency, stepped responsiveness and policy preservation have
+separate dispositions. Actual Calculator Finish-to-usable passes at 5.483 seconds;
+total delivery, begin, setup release and stepped response gates fail. No bounded
+cooperative setup conversion was retained. Native reference policies are preserved;
+Conquest-four WASM remains unqualified against its cheaper native reference.
+Broad exact closure remains open.
+
+The same imported research preserves conditional
+[boundary-response/feedback algebra](mathematics/policies.md#boundary-response),
+[selected-controller requirements](mathematics/representations.md#selected-controller-requirements)
+and [aligned residual attribution](mathematics/numerical-closure.md#aligned-residual-attribution).
+These are not implemented cache/layout architectures or a diagnosis of the
+source/native scalar discrepancy. The two saved-Ring
+[diagnostics](../active/2026-09-15-verified-delivery/B-disposition.md) select neither:
+no global discriminator reduction or reusable native interior was established.
+The conditional architectures remain open, without an automatic next experiment.
+
 A compatible proper executable policy supplies an upper witness. Study its
 continuation coverage and the interaction of proof preparation with useful
 ordinary work, without turning search preferences into proof or sacrificing

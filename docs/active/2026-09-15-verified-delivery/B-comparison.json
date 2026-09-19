@@ -1,0 +1,126 @@
+{
+  "probe_sources": {
+    "observation-probe.cpp": "de97d3834d0cd30235a977b1e954e3c57e6b33e67b25f3aa7391833d1bbca7fb",
+    "response-cost-probe.cpp": "49bcffd73792ac2b1687a666303d26a95c4736ae07870d5f8d67fb646f60f054",
+    "run-response-cost.py": "79e003583a715e46e24b963517c1d39370f91f3a15774af720b109de0fa5b2fb",
+    "summarize-diagnostics.py": "ff10b2e28487760e671bad286002b2738c79bd27a31e3a3fc7ca2754724d3951"
+  },
+  "raw_observations_sha256": "f497931f793ec10b3bb3e8dc0820354bd0686cf48e5c61aabca14c67d9d42e24",
+  "representation": [
+    {
+      "path": "docs/active/2026-09-13-execution-aware-proposals/strategies/ring-four-count.strategy.json",
+      "nodes": 161,
+      "nodes_equal_to_global_union": 142,
+      "nodes_different_from_global_union": 19,
+      "established_removed_global_classes": 0,
+      "established_removed_membership_predicates": 0,
+      "private_candidate_layout_replay": false
+    },
+    {
+      "path": "docs/active/2026-09-14-progress-and-delivery/strategies/ring-native.strategy.json",
+      "nodes": 165,
+      "nodes_equal_to_global_union": 143,
+      "nodes_different_from_global_union": 22,
+      "established_removed_global_classes": 0,
+      "established_removed_membership_predicates": 0,
+      "private_candidate_layout_replay": false
+    }
+  ],
+  "graph_control_syntax": {
+    "nodes": [
+      161,
+      165
+    ],
+    "edges": [
+      528,
+      533
+    ],
+    "local_bodies": {
+      "shared_classes": 9,
+      "nodes_in_shared_classes": [
+        161,
+        164
+      ],
+      "multiplicity_limited_matches": 161
+    },
+    "fixed_point": {
+      "shared_classes": 2,
+      "nodes_in_shared_classes": [
+        2,
+        2
+      ],
+      "multiplicity_limited_matches": 2
+    },
+    "refinement_rounds": 5,
+    "shared_fixed_point_node_labels": [
+      [
+        "goal",
+        "offpolicy"
+      ],
+      [
+        "goal",
+        "offpolicy"
+      ]
+    ],
+    "analysis_ms": 30.671900021843612,
+    "semantics": "Control syntax only: no member-domain/native-row/physical-entry correspondence."
+  },
+  "response": {
+    "comparisons": 2,
+    "cold_evaluations": [
+      {
+        "path": "docs/active/2026-09-13-execution-aware-proposals/strategies/ring-four-count.strategy.json",
+        "cost": 227377.06545019808,
+        "expected_primitive_actions": 583110.3499596338,
+        "success_probability": 1,
+        "raw_pairs": 185337,
+        "refined_pairs": 10994,
+        "peak_bytes": 267559099,
+        "retained_output_bytes": 43536415,
+        "logical_work": 6796680,
+        "wall_ms": 10022.0426,
+        "model_ms": 2.3971,
+        "observations_ms": 6.1131,
+        "discovery_ms": 2168.8191,
+        "refinement_ms": 4035.0199,
+        "components_ms": 254.6771,
+        "solve_ms": 2247.0153,
+        "continuation_ms": 0.0039
+      },
+      {
+        "path": "docs/active/2026-09-14-progress-and-delivery/strategies/ring-native.strategy.json",
+        "cost": 220743.46354691702,
+        "expected_primitive_actions": 564673.7576801107,
+        "success_probability": 1,
+        "raw_pairs": 185344,
+        "refined_pairs": 11001,
+        "peak_bytes": 267566717,
+        "retained_output_bytes": 43542288,
+        "logical_work": 6796680,
+        "wall_ms": 9998.7707,
+        "model_ms": 1.9577,
+        "observations_ms": 4.6924,
+        "discovery_ms": 2173.8119,
+        "refinement_ms": 3984.0448,
+        "components_ms": 236.6607,
+        "solve_ms": 2268.8081,
+        "continuation_ms": 0.0036
+      }
+    ],
+    "native_semantic_pair_overlap": null,
+    "new_physical_entries": null,
+    "response_boundary_pairs": null,
+    "response_nonzeros": null,
+    "verified_reusable_physical_pairs_established": 0,
+    "response_retained_bytes": null,
+    "response_peak_scratch_bytes": null,
+    "matching_native_dependencies_ms": null,
+    "response_build_ms": null,
+    "invalidation_ms": null,
+    "cold_pair_wall_ms": 20020.8133,
+    "second_check_component_and_solve_ms": 2505.4724,
+    "savings_established_ms": 0
+  },
+  "decision": "neither",
+  "limitation": "No smaller native layout or reusable physical interior was established. Unknown fields are not zero costs."
+}

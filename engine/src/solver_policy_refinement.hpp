@@ -1003,6 +1003,10 @@ class PolicyExactLiftWork {
     PolicyExactLiftWork& operator=(const PolicyExactLiftWork&) = delete;
 
     void step(std::uint32_t max_work_items);
+    // Stop at the current cooperative boundary. Transfer an already complete
+    // owned assertion (including its root certificate); never advance proof.
+    void request_bounded_finish();
+    bool has_verified_artifact() const;
     PolicyExactLiftProgress progress() const;
     const PolicyLiftAdapterTelemetry& live_adapter_telemetry();
     PolicyExactLiftCertificate take_result();

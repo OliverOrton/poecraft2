@@ -2292,6 +2292,21 @@ struct PersistentQuotientSession {
     }
 };
 
+struct FinishArtifactSources {
+    std::optional<CompiledPolicyAssertion>* previous = nullptr;
+    std::uint64_t* previous_owned_bytes = nullptr;
+    CompiledPolicyAssertion* rollback = nullptr;
+    CompiledPolicyAssertion* final_rollback = nullptr;
+};
+
+template<class T> struct ScopedFinishArtifactSource {
+    T*& slot;
+    T* previous;
+    ScopedFinishArtifactSource(T*& destination, T* value)
+        : slot(destination), previous(destination) { slot = value; }
+    ~ScopedFinishArtifactSource() { slot = previous; }
+};
+
 solve_detail::CooperativeTask<QuotientPassResult>
 lift_policy_quotient_pass_task(
         CalcContext& coarse,
@@ -2304,8 +2319,11 @@ lift_policy_quotient_pass_task(
         std::vector<AbstractState> frontier_seeds,
         PolicyExactLiftProgress& progress,
         std::optional<CompiledPolicyAssertion>* reusable_assertion,
+        PolicyExactLiftCertificate*& suspended_certificate,
+        FinishArtifactSources& finish_sources,
         const double verified_rollback_upper_bound) {
     PolicyExactLiftCertificate certificate;
+    suspended_certificate = &certificate;
     certificate.solver_cost = solved.evaluated_policy_cost;
     const RefinementLimits& limits = session.limits;
     PolicyLiftAdapterTelemetry& telemetry = session.telemetry;
@@ -4145,6 +4163,8 @@ lift_policy_quotient_pass_task(
                     const bool materialize_compiled_assertion = true)
                     -> solve_detail::CooperativeTask<bool> {
         std::optional<CompiledPolicyAssertion> previous_assertion;
+        ScopedFinishArtifactSource previous_source(
+            finish_sources.previous, &previous_assertion);
         bool previous_assertion_already_debited = false;
         if (!certificate.compiled.strategy_json.empty() ||
             !certificate.compiled.certification_strategy_json.empty()) {
@@ -4158,6 +4178,13 @@ lift_policy_quotient_pass_task(
             reusable_assertion->reset();
             previous_assertion_already_debited = true;
         }
+        // The cached assertion is immutable on a reuse miss; a hit consumes
+        // it. Freeze only that transitive storage, and charge it separately
+        // from the changing oracle/assertion scratch in each live snapshot.
+        std::uint64_t previous_owned_bytes = previous_assertion
+            ? compiled_policy_assertion_retained_bytes(*previous_assertion) : 0;
+        ScopedFinishArtifactSource previous_charge(
+            finish_sources.previous_owned_bytes, &previous_owned_bytes);
         certificate.refinement = {};
         certificate.class_evaluation = {};
         certificate.compiled = {};
@@ -4621,15 +4648,17 @@ lift_policy_quotient_pass_task(
                     (void)assertion_work
                         .try_reuse_completed_evaluation(
                             previous_assertion);
-                    previous_assertion.reset();
+                    // On a miss, the old owned witness remains available to
+                    // Finish until this changed assertion completes. The
+                    // prepared allowance already subtracts its storage.
                 }
                 ++progress.work_items;
                 std::uint64_t retained =
                     oracle.estimated_owned_bytes();
                 saturating_add(
                     retained, assertion_work.retained_bytes());
-                co_await solve_detail::CooperativeCheckpoint{
-                    retained};
+                if (!assertion_work.progress().done)
+                    co_await solve_detail::CooperativeCheckpoint{retained};
             }
             certificate.compiled =
                 oracle.finish_lifted_policy_assertion(
@@ -4809,6 +4838,8 @@ lift_policy_quotient_pass_task(
          */
         quotient::QuotientBellmanResult current_solved = solved_quotient;
         PolicyExactLiftCertificate retained_publication = certificate;
+        ScopedFinishArtifactSource rollback_source(
+            finish_sources.rollback, &retained_publication.compiled);
         bool publication_blocked_after_improvement = false;
         bool stop_alternative_scheduling =
             certificate.global_lower_bound_closed;
@@ -5543,7 +5574,9 @@ lift_policy_quotient_pass_task(
             /* A retained incumbent is sufficient during lazy proof work.
              * Exact closure additionally needs the final selected quotient
              * policy to compile and independently evaluate once. */
-            const PolicyExactLiftCertificate retained = certificate;
+            PolicyExactLiftCertificate retained = certificate;
+            ScopedFinishArtifactSource final_source(
+                finish_sources.final_rollback, &retained.compiled);
             try {
                 auto publication_task =
                     publish_current_upper(current_solved, false);
@@ -5745,9 +5778,12 @@ struct PolicyExactLiftWork::Impl {
     SolveOptions active_pass_options;
     PolicyExactLiftProgress progress;
     double best_verified_executable_upper_bound = kInfinity;
+    FinishArtifactSources finish_sources; // outlives coroutine scope guards
     solve_detail::CooperativeTask<QuotientPassResult> pass;
     std::optional<CompiledPolicyAssertion> reusable_assertion;
     std::optional<PolicyExactLiftCertificate> completed;
+    // Non-owning view into pass, valid only while that coroutine is suspended.
+    PolicyExactLiftCertificate* suspended_certificate = nullptr;
 
     Impl(
             CalcContext& coarse_value,
@@ -5817,7 +5853,7 @@ struct PolicyExactLiftWork::Impl {
             coarse, solved, exact_start, prices,
             active_pass_options,
             strategy_name, *session, std::move(frontier_seeds),
-            progress, &reusable_assertion,
+            progress, &reusable_assertion, suspended_certificate, finish_sources,
             best_verified_executable_upper_bound);
         progress.verified_executable_upper_bound =
             best_verified_executable_upper_bound;
@@ -5923,6 +5959,7 @@ struct PolicyExactLiftWork::Impl {
             }
             retain_verified_progress_upper();
             QuotientPassResult result = pass.take_result();
+            suspended_certificate = nullptr;
             if (!result.frontier_states.empty()) {
                 accept_frontier(std::move(result.frontier_states));
                 continue;
@@ -5936,6 +5973,52 @@ struct PolicyExactLiftWork::Impl {
             reusable_assertion.reset();
             completed = std::move(*result.certificate);
         }
+    }
+
+    CompiledPolicyAssertion* finish_artifact() {
+        const auto eligible = [](const CompiledPolicyAssertion& a) {
+            return a.status == CompiledPolicyAssertionStatus::Complete &&
+                a.paired_default_only && a.executable && a.proper && a.zero_off_policy &&
+                a.evaluation.cost_complete && std::isfinite(a.exact_cost) && a.exact_cost >= 0 &&
+                !a.strategy_json.empty();
+        };
+        // These sources were compiled/checked by this exact work owner with
+        // the same immutable root, prices, laws and observation context.
+        auto* live = suspended_certificate && eligible(suspended_certificate->compiled)
+            ? &suspended_certificate->compiled : nullptr;
+        auto* cached = reusable_assertion && eligible(*reusable_assertion) ? &*reusable_assertion : nullptr;
+        auto* selected = live && (!cached || live->exact_cost <= cached->exact_cost) ? live : cached;
+        const auto consider = [&](CompiledPolicyAssertion* a) {
+            if (a && eligible(*a) && (!selected || a->exact_cost < selected->exact_cost)) selected = a;
+        };
+        if (finish_sources.previous && *finish_sources.previous) consider(&**finish_sources.previous);
+        consider(finish_sources.rollback);
+        consider(finish_sources.final_rollback);
+        if (completed) consider(&completed->compiled);
+        return selected;
+    }
+
+    void request_bounded_finish() {
+        if (completed) return;
+        auto* selected = finish_artifact();
+        PolicyExactLiftCertificate sealed;
+        sealed.solver_cost = solved.evaluated_policy_cost;
+        sealed.adapter = session->telemetry;
+        if (selected) {
+            sealed.compiled = std::move(*selected);
+            sealed.status = PolicyExactLiftStatus::Complete;
+            sealed.executable = sealed.lumpable = true;
+            // Only a feasible graph is transferred. Interrupted quotient work
+            // supplies no new statewise, reconciliation or global lower claim.
+            sealed.exact_start_cost = sealed.compiled.exact_cost;
+            sealed.exact_root_key = exact_item_state_key(exact_start);
+        } else sealed.status = PolicyExactLiftStatus::RequestedBoundedFinish;
+        pass.reset();
+        suspended_certificate = nullptr;
+        reusable_assertion.reset();
+        completed = std::move(sealed);
+        progress.done = true;
+        progress.phase = PolicyExactLiftPhase::Done;
     }
 
     std::uint64_t retained_bytes() const {
@@ -5959,6 +6042,10 @@ struct PolicyExactLiftWork::Impl {
         std::uint64_t bytes = std::max<std::uint64_t>(
             static_cast<std::uint64_t>(pass.retained_bytes()),
             session_bytes);
+        if (finish_sources.previous && *finish_sources.previous &&
+            finish_sources.previous_owned_bytes) {
+            saturating_add(bytes, *finish_sources.previous_owned_bytes);
+        }
         if (reusable_assertion.has_value()) {
             saturating_add(
                 bytes,
@@ -6043,6 +6130,12 @@ PolicyExactLiftWork& PolicyExactLiftWork::operator=(
 
 void PolicyExactLiftWork::step(const std::uint32_t max_work_items) {
     impl_->step(max_work_items);
+}
+
+void PolicyExactLiftWork::request_bounded_finish() { impl_->request_bounded_finish(); }
+
+bool PolicyExactLiftWork::has_verified_artifact() const {
+    return impl_->finish_artifact() != nullptr;
 }
 
 PolicyExactLiftProgress PolicyExactLiftWork::progress() const {

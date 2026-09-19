@@ -4249,7 +4249,39 @@ void run_bounded_finish_publication_tests() {
     PC_CHECK(evaluated.cost_complete);
     PC_CHECK(evaluated.success_probability >= 1.0 - 1e-10);
     PC_CHECK(near(evaluated.total_expected_cost, result.upper_bound, 1e-7));
+    refinement::PolicyExactLiftWork lift(calc, result, start, prices, result.options, "finish transfer fixture");
+    unsigned transfer_steps = 0;
+    while (!lift.progress().done && !std::isfinite(lift.progress().verified_executable_upper_bound) && ++transfer_steps < 100000)
+        lift.step(1);
+    const double verified = lift.progress().verified_executable_upper_bound;
+    PC_CHECK(std::isfinite(verified));
+    PC_CHECK(!lift.progress().done); // complete private artifact, not yet transferred
+    PC_CHECK(lift.has_verified_artifact());
+    const auto work_before = lift.progress().work_items;
+    lift.request_bounded_finish(); lift.request_bounded_finish();
+    PC_CHECK(lift.progress().done);
+    PC_CHECK(lift.progress().work_items == work_before);
+    const auto certificate = lift.take_result();
+    PC_CHECK(certificate.executable);
+    PC_CHECK(certificate.compiled.evaluation.continuation_upper.requested);
+    PC_CHECK(!certificate.compiled.evaluation.continuation_upper.members.empty());
+    PC_CHECK(near(certificate.compiled.exact_cost, verified, 1e-8));
+    PC_CHECK(!certificate.compiled.strategy_json.empty());
+    if (certificate.compiled.strategy_json.empty()) return;
+    const auto graph = compile_strategy_json(session, certificate.compiled.strategy_json.data(), certificate.compiled.strategy_json.size());
+    auto transfer_economy = std::make_shared<EconomyImpl>(); transfer_economy->prices = prices;
+    StrategyEvalOptions eval_options; eval_options.economy = transfer_economy;
+    const auto transfer_evaluated = evaluate_strategy(*graph, eval_options);
+    PC_CHECK(transfer_evaluated.cost_complete && transfer_evaluated.converged);
+    PC_CHECK(near(transfer_evaluated.total_expected_cost, verified, 1e-8));
+    // Cancellation/finish with no complete assertion does not fabricate one.
+    refinement::PolicyExactLiftWork empty(calc, result, start, prices, result.options, "early finish fixture");
+    PC_CHECK(!empty.has_verified_artifact());
+    empty.request_bounded_finish();
+    const auto early = empty.take_result();
+    PC_CHECK(!early.executable && early.compiled.strategy_json.empty());
 }
+
 
 void run_policy_guided_exact_lift_tests() {
     std::uint32_t unresolved_rounds = 0;
@@ -14001,6 +14033,21 @@ void run_solver_bounded_finish_tests() {
     PC_CHECK(count_occurrences(trace, "\"kind\":") == 128);
     PC_CHECK(observed.progress_trace_json(observed.progress_event_sequence)
         .find("\"events\":[]") != std::string::npos);
+    // Upper iteration deliberately shares the lower scheduler flag. Display
+    // its actual numerical role without changing either control flag.
+    CalcContext label_calc(session, goal, registry, actions);
+    SolveWorkTestAccess::Impl labels(label_calc, start, prices, options);
+    labels.focus_optimizing = true;
+    labels.focused_lower_mode = true;
+    labels.focused_upper_mode = true;
+    const auto upper_trace = labels.progress_trace_json(0);
+    PC_CHECK(upper_trace.find("\"working_value_role\":\"upper_policy_workspace\"") != std::string::npos);
+    PC_CHECK(upper_trace.find("\"active_work_owner\":\"focused_upper\"") != std::string::npos);
+    PC_CHECK(labels.focused_lower_mode && labels.focused_upper_mode);
+    labels.focused_upper_mode = false;
+    const auto lower_trace = labels.progress_trace_json(0);
+    PC_CHECK(lower_trace.find("\"working_value_role\":\"restricted_lower_workspace\"") != std::string::npos);
+    PC_CHECK(lower_trace.find("\"active_work_owner\":\"focused_lower\"") != std::string::npos);
     // A displaced unverified capture must not reopen the pre-first-policy
     // checker while the portfolio already owns a verified artifact. The
     // finalization-only scalar may still be infinite at this live boundary.

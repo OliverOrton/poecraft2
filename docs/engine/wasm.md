@@ -148,8 +148,10 @@ C++ step.
 
 The worker calls `pcw_solver_solve_begin`, repeatedly calls `step`, then calls
 `finish` only after native progress reports done. It starts with the requested
-chunk size or 8 work items, adapts toward roughly 12 ms steps, and clamps later
-chunks to 1–4 work items; a phase change resets the chunk to 1. It yields after
+chunk's conservative first quantum (at most 4), adapts toward roughly 12 ms steps,
+and clamps later chunks to the caller's maximum (8 in ordinary Calculator);
+a phase change resets the chunk to 1. The explicit 1024-unit qualification lane
+retains its fixed scheduling contract. It yields after
 about 8 ms of accumulated unyielded work or when `yieldEveryStep` is requested.
 Progress covers expanding, iterating, refining, compiling, certifying, and
 done phases and is throttled to roughly 100 ms apart except for first,
@@ -169,8 +171,10 @@ the audited live selection, but it must never undercount it. This avoids
 repeating a whole-graph accounting walk after each 1–4-item worker step without
 changing cap enforcement or final accounting.
 
-On cancellation the worker returns a cancelled result with its latest
-progress/worker telemetry and calls `pcw_solver_solve_abandon` in cleanup.
+On cancellation the worker acknowledges intent as progress, calls
+`pcw_solver_solve_abandon` in cleanup, then returns one cancelled result with
+the resource-release milestone. Queued cancellation is serviced at an event-loop
+boundary before terminal commitment, including natural native completion.
 Abandon resets the native in-progress solve while retaining bounded abandoned
 telemetry for diagnosis.
 
@@ -182,6 +186,30 @@ independently evaluated, and the result reports
 `requested_bounded_finish` without a cap or exactness claim. Calculator uses
 four minutes, reserving the remainder of its five-minute product target for
 finalization. AbortSignal remains the prompt abandon path.
+
+The explicit Calculator **Finish with best verified strategy** control uses a
+solve-request-ID message, not a queued RPC or a solver handle. It becomes enabled
+when a native retained or active strict owner reports a complete verified artifact,
+including eligible evidence awaiting transfer. The worker
+only latches messages; its loop calls native bounded finish between work units.
+Missing-artifact requests are refused; duplicate or stale IDs cannot affect a
+later solve reusing the handle. “Finishing…” records intent, not completion.
+
+Calculator captures start item, ordered goals, options, scope, pinned prices and
+run identity at submission. Its renderer owns the progress-export button listener.
+Partial/preparing/cancelled/error/completed exports use that captured request and
+one bounded observed history with omissions; unavailable source/runtime/data
+hashes are explicitly null. Final worker metadata omits the duplicate history.
+The [delivery record](../active/2026-09-15-verified-delivery/README.md) distinguishes
+DOM tests, worker controls, actual WASM measurements and Oliver's visual review.
+Its actual Calculator probe passes Finish-to-usable (5.483 s) but fails total
+delivery, synchronous initialization, setup cancellation/release and stepped
+responsiveness targets. Conquest-four WASM also remains unqualified against its
+cheaper native reference. These measured gaps are not fixed by the control.
+
+`pcw_solver_open` enables native retention-lower reuse. It does not select
+execution-count continuation proposals. Public dirty opt-in remains static
+guidance; wide Ring recovery has a separate native treatment and resource profile.
 
 Policy extraction, exact lift, compilation, and independent graph assertion
 all remain inside repeated native `step` calls. Native `Done` is emitted only
