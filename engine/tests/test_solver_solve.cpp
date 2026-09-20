@@ -101,6 +101,145 @@ void run_incumbent_portfolio_monotonicity_tests() {
     PC_CHECK(!portfolio.monotonicity_violation);
 }
 
+void run_retained_pool_ownership_tests() {
+    using Impl = SolveWorkTestAccess::Impl;
+    using Candidate = Impl::BoundedPolicyIncumbent;
+    using Pool = Impl::IncumbentPortfolio;
+    using Retention = Pool::Retention;
+    static_assert(std::is_same_v<decltype(*std::declval<const Pool&>().retained().begin()),
+        const Candidate&>);
+    static_assert(!std::is_copy_assignable_v<Pool>);
+    auto session = make_solve_session();
+    auto registry = build_action_registry(*session);
+    const auto chaos = registry.index_by_id.at("chaos");
+    GoalSpec goal; goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot; slot.family_id = 100; slot.min_tier = 1; goal.slots.push_back(slot);
+    CalcContext calc(session, goal, registry, {chaos});
+    pc_item_state start; pc_item_clear(&start); start.rarity = PC_RARITY_RARE;
+    SolveOptions options; options.allow_economic_restart = false;
+    options.goal_progress_gated_reforges = false;
+    Impl work(calc, start, {{"chaos", 1}}, options);
+    const auto bytes = [&](const Candidate& c) { return work.incumbent_owned_bytes(c); };
+    const auto invalid = [&](const Candidate& c) { return work.retained_incumbent_invalid_reason(c); };
+    const auto verified = [&](const Candidate& c) { return work.certified_incumbent_invalid_reason(c); };
+    const auto precedes = [&](const Candidate& a, const Candidate& b) { return work.incumbent_precedes(a, b); };
+    // Structural ownership fixtures only. Native issuance is exercised by the
+    // real selected-fallback/private-assertion tests, not by these flag values.
+    const auto candidate = [&](std::uint64_t id, double cost, bool ready) {
+        Candidate c;
+        c.portfolio_identity = id; c.certified_upper_bound = cost;
+        c.evaluated_policy_cost = ready ? cost : solve_detail::kInfinity;
+        c.kind = "ownership_fixture"; c.compilation_provenance = "structural_fixture";
+        c.policy_materialized = true;
+        c.policy.assign(calc.state_count(), PolicyOperatorRef{chaos});
+        c.values.assign(calc.state_count(), cost);
+        c.goal_identity = work.goal_identity(); c.economy_identity = work.economy_identity();
+        c.caller_scope_identity = work.caller_scope_identity(); c.artifact_identity = work.artifact_identity();
+        c.action_vocabulary_size = work.operators.size();
+        c.action_vocabulary_identity = work.action_vocabulary_prefix_identity(c.action_vocabulary_size);
+        c.source_generation = work.transition_cache->rows.size(); c.target_generation = calc.state_count();
+        c.graph_prefix_identity = work.incumbent_graph_prefix_identity(0, 0, 0, 0, 0, 0, 0);
+        c.compiled_artifact.strategy_json = std::string(4096, 'g') + std::to_string(id);
+        c.compiled_artifact.certification_strategy_json = c.compiled_artifact.strategy_json;
+        c.independently_certified = c.independently_evaluated = c.proper = c.executable = ready;
+        return c;
+    };
+    Pool pool;
+    std::size_t memory_queries = 0;
+    const auto offer = [&](const Candidate& c, std::uint64_t limit = UINT64_MAX) {
+        return pool.retain(c, [&] { ++memory_queries; return pool.retained_dynamic_bytes(bytes); },
+            limit, invalid, precedes, bytes);
+    };
+    for (auto id : {4u, 2u, 3u, 1u}) PC_CHECK(offer(candidate(id, 10, id == 2)) == Retention::Stored);
+    std::uint64_t expected_id = 1;
+    for (const auto& c : pool.retained()) PC_CHECK(c.portfolio_identity == expected_id++);
+    PC_CHECK(pool.retained().size() == 4);
+    const auto queries = memory_queries;
+    PC_CHECK(offer(candidate(1, 10, false), 0) == Retention::AlreadyPresent);
+    PC_CHECK(offer(candidate(5, 10, false), 0) == Retention::HandledNotStored);
+    PC_CHECK(memory_queries == queries);
+    PC_CHECK(offer(candidate(6, 1, true), 0) == Retention::ResourceRefused);
+    PC_CHECK(pool.retained().size() == 4);
+    PC_CHECK(pool.best_retained(verified, precedes)->portfolio_identity == 2);
+    const auto footprint = pool.retained_dynamic_bytes(bytes);
+    for (unsigned read = 0; read < 1000; ++read) {
+        PC_CHECK(pool.retained().front().portfolio_identity == 1);
+        PC_CHECK(pool.best_retained(verified, precedes)->portfolio_identity == 2);
+    }
+    PC_CHECK(pool.retained_dynamic_bytes(bytes) == footprint);
+    PC_CHECK(memory_queries == queries + 1);
+    auto stale = candidate(7, 1, true); stale.economy_identity ^= 1;
+    PC_CHECK(offer(stale) == Retention::Invalid);
+    PC_CHECK(pool.prune_retained([&](const auto& c) -> const char* {
+        return c.portfolio_identity == 1 ? "fixture_explicit_invalidation" : invalid(c);
+    }) == 1);
+    auto taken = pool.take_retained(2);
+    PC_CHECK(taken.has_value());
+    const auto graph = taken->compiled_artifact.strategy_json;
+    pool.release_retained();
+    PC_CHECK(pool.retained_dynamic_bytes(bytes) == 0);
+    PC_CHECK(taken->compiled_artifact.strategy_json == graph);
+    PC_CHECK(taken->compiled_artifact.certification_strategy_json == graph);
+    PC_CHECK(taken->evaluated_policy_cost == 10);
+    PC_CHECK(verified(*taken) == nullptr);
+
+    // The displaced valid output survives refusal to retain its old/new overlap.
+    work.output_incumbent = candidate(8, 10, true);
+    work.options.max_solver_owned_bytes = work.fast_estimated_owned_bytes();
+    PC_CHECK(!work.commit_output_incumbent(candidate(9, 1, false)));
+    PC_CHECK(work.output_incumbent->portfolio_identity == 8);
+    PC_CHECK(work.output_incumbent->evaluated_policy_cost == 10);
+
+    // Real coroutine suspension with a staged complete bundle: mutation of the
+    // remaining vector cannot invalidate the evaluator's graph/certificate.
+    for (unsigned mode = 0; mode != 3; ++mode) {
+        Pool suspended;
+        auto c = candidate(10, 20, false);
+        PC_CHECK(suspended.retain(c, [] { return 0; }, UINT64_MAX, invalid, precedes, bytes) == Retention::Stored);
+        const auto before = suspended.retained_dynamic_bytes(bytes);
+        // A string/vector copy need not preserve the producer's spare capacity.
+        const auto staged_payload = bytes(suspended.retained().front()) - sizeof(Candidate);
+        std::uint64_t consumed = 0;
+        const auto evaluate = [&](Candidate& owned) -> solve_detail::CooperativeTask<bool> {
+            ++consumed;
+            if (mode == 1) {
+                owned.independently_certified = owned.independently_evaluated = true;
+                owned.proper = owned.executable = true; owned.evaluated_policy_cost = 20;
+            }
+            co_await solve_detail::CooperativeCheckpoint{};
+            PC_CHECK(owned.compiled_artifact.strategy_json == c.compiled_artifact.strategy_json);
+            PC_CHECK(owned.compiled_artifact.certification_strategy_json == c.compiled_artifact.certification_strategy_json);
+            ++consumed;
+            co_return true;
+        };
+        auto task = suspended.evaluate_retained(evaluate, verified, precedes);
+        PC_CHECK(!task.resume()); // publication of both frame charges
+        PC_CHECK(!task.resume()); // evaluator suspension
+        PC_CHECK(suspended.retained_dynamic_bytes(bytes) == before);
+        PC_CHECK(task.retained_bytes() >= sizeof(Candidate));
+        PC_CHECK(!suspended.take_retained(10));
+        PC_CHECK((suspended.best_retained(verified, precedes) != nullptr) == (mode == 1));
+        if (mode == 2) {
+            PC_CHECK(suspended.prune_retained([](const auto&) { return "stale"; }) == 1);
+            suspended.release_retained();
+            PC_CHECK(suspended.retained().empty());
+            PC_CHECK(suspended.retained_dynamic_bytes(bytes) == staged_payload);
+            PC_CHECK(task.resume());
+            PC_CHECK(task.take_result());
+            PC_CHECK(consumed == 2);
+        }
+        task.reset();
+        PC_CHECK(consumed >= 1); // release does not refund work
+        PC_CHECK(task.retained_bytes() == 0);
+        if (mode != 2) {
+            PC_CHECK(suspended.retained().size() == 1);
+            PC_CHECK(suspended.retained_dynamic_bytes(bytes) == before);
+            PC_CHECK((suspended.best_retained(verified, precedes) != nullptr) == (mode == 1));
+        } else PC_CHECK(suspended.retained_dynamic_bytes(bytes) == 0);
+    }
+    std::printf("retained owner: admission/order/cap/read/take and suspended complete/partial/detached lifetimes checked\n");
+}
+
 void run_resumable_joint_policy_continuation_fixture_tests() {
     using Candidate =
         solve_detail::ResumableJointPolicyContinuation;
@@ -13643,7 +13782,7 @@ void run_solver_return_bridge_lifecycle_tests() {
         // After a candidate cap the ordinary upper owner may allocate its own
         // next pass. The released bridge contributes no frame or new upper.
         PC_CHECK(calc.outcome_cursor_bytes() == 0);
-        for (const auto& retained : work.certified_fallback_portfolio)
+        for (const auto& retained : work.incumbent_portfolio.retained())
             PC_CHECK(retained.evaluated_policy_cost >= cost);
     }
 }
@@ -13763,9 +13902,9 @@ void run_solver_dirty_continuation_tests() {
     PC_CHECK(calc.state_count() == original_states);
     PC_CHECK(work.transition_cache->rows.empty());
     PC_CHECK(!work.output_incumbent.has_value());
-    PC_CHECK(!work.certified_fallback_portfolio.empty());
-    if (work.certified_fallback_portfolio.empty()) return;
-    const auto& candidate = work.certified_fallback_portfolio.front();
+    PC_CHECK(!work.incumbent_portfolio.retained().empty());
+    if (work.incumbent_portfolio.retained().empty()) return;
+    const auto& candidate = work.incumbent_portfolio.retained().front();
     PC_CHECK(candidate.compiled_root_entry_only);
     PC_CHECK(work.retained_incumbent_invalid_reason(candidate) == nullptr);
     PC_CHECK(std::isfinite(candidate.evaluated_policy_cost));
@@ -13988,6 +14127,7 @@ void run_solver_policy_refinement_tests() {
 }
 
 void run_solver_selected_fallback_tests() {
+    run_retained_pool_ownership_tests();
     run_selected_fallback_successor_tests();
     run_frontier_incumbent_epoch_skew_tests();
 }

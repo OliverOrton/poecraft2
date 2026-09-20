@@ -10,6 +10,18 @@ Publication chooses a compatible verified incumbent, compiles the candidate into
 
 The retained `PublicationPipeline` carries cooperative work through direct assertion, strict repair when selected by its contract, classification, and packaging. `IncumbentPortfolio` compares independently evaluated candidates; estimates and unverified numerical candidates remain separate.
 
+Pool admission also permits compatible materialized-but-unverified candidates.
+Retention alone supplies no executable upper. The native provenance and complete
+certificate/context/evaluation checks still decide eligibility. Passive views
+do not prune, verify or cache an eligibility verdict. Explicit pruning occurs at
+the existing service boundaries, and publication transfers the chosen complete
+bundle through the pool owner after any active verification returns it.
+Verification owns its staged entry across suspension; moving or removing another
+vector entry cannot mix its graph and certificate. A detached staged entry does
+not reappear on return. Failed replacement preserves the previous valid witness.
+This boundary grants no statewise authority to a private root-only assertion and
+does not move final normalization, classification or sealing out of publication.
+
 Primary owners are `solver_solve_finish.cpp`, `solver_compile.cpp`, `solver_compile_conditions.hpp`, `solver_compile_serialization.hpp`, `solver_policy_assertion.cpp`, `solver_eval.cpp`, `solver_eval_resolve.cpp`, and `solver_eval_report.cpp`.
 
 ## Compiler Contract

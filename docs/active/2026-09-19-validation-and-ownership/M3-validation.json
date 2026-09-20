@@ -1,0 +1,157 @@
+{
+  "base": "75504e4ee2d5700629b23e2ed06eec63812cbd78",
+  "scope": "M2/M3 Windows qualification; M1 is validation.json",
+  "python": {
+    "executable": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\validation-and-ownership\\python\\Scripts\\python.exe",
+    "version": "3.14.2",
+    "pytest": "9.1.1",
+    "binding_pythonpath": "bindings/python/tests;bindings/python;tools/ingest;tools/economy",
+    "ingest_pythonpath": "tools/ingest"
+  },
+  "build": "M3-build.json",
+  "qualification": "qualification.json",
+  "checks": [
+    {
+      "name": "native build",
+      "command": "scripts/build.ps1",
+      "status": "passed",
+      "log": "out/validation-and-ownership/M2-build-final.log",
+      "sha256": "5a3b90d0fdd2cf9c73698708a19491ce1a3c7efdb9a7a945ebf864c0ecd5a283"
+    },
+    {
+      "name": "selected fallback",
+      "command": "build/engine/poecraft_engine_tests.exe --solver-selected-fallback-only",
+      "status": "2440 checks passed",
+      "log": "out/validation-and-ownership/M2-selected-fallback-final.log",
+      "sha256": "2bba95a2bd33ec6dcf93e778004de9c2be349656bfe4a5a1935b1a9f800944fc"
+    },
+    {
+      "name": "bounded Finish",
+      "command": "build/engine/poecraft_engine_tests.exe --solver-bounded-finish-only",
+      "status": "202 checks passed",
+      "log": "out/validation-and-ownership/M2-bounded-finish-final.log",
+      "sha256": "e9e77d4c3201089336141858deb07727661e692ac824cfa75d0c036f212f85a2"
+    },
+    {
+      "name": "return bridge",
+      "command": "build/engine/poecraft_engine_tests.exe --solver-return-bridge-only",
+      "status": "648 checks passed",
+      "log": "out/validation-and-ownership/M2-return-bridge-final.log",
+      "sha256": "83a6465c45d81b197206c065f3ab8eabf4d76a5926b95f6897843f73b3d6d8e2"
+    },
+    {
+      "name": "proof handoff",
+      "command": "build/engine/poecraft_engine_tests.exe --solver-proof-handoff-only",
+      "status": "49 checks passed",
+      "log": "out/validation-and-ownership/M2-proof-handoff-final.log",
+      "sha256": "21f324345156c06f7ac3a9089ae000e702648a5566ccbe078232c3acf2fcad42"
+    },
+    {
+      "name": "native API",
+      "command": "build/engine/poecraft_engine_tests.exe --solver-api-only data/compiled/current",
+      "status": "2899 checks passed; includes embedded 10000-run fixtures",
+      "log": "out/validation-and-ownership/M3-api.log",
+      "sha256": "54ed63bca00e11b1a3b3d7cd896bf96e1595130db0744bd24f37049df3658782"
+    },
+    {
+      "name": "old header build",
+      "command": "g++ -std=c++20 -O2 -static-libstdc++ -static-libgcc -Iout/verified-delivery/old-include -Iengine/include docs/active/2026-09-14-progress-and-delivery/probes/legacy-progress-probe.cpp build/engine/libpoecraft_engine.a -o out/validation-and-ownership/M3-legacy-progress.exe",
+      "status": "passed; compiler resolved by scripts/engine-build-common.ps1",
+      "log": "out/validation-and-ownership/M3-legacy-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "old header ABI",
+      "command": "out/validation-and-ownership/M3-legacy-progress.exe",
+      "status": "passed; 200-byte progress, canary and passive read checks",
+      "log": "out/validation-and-ownership/M3-legacy-progress.json",
+      "sha256": "6966aa6739b70b93c17a44a51f451ed7342ecf98b7f975991474a2901dc5b6c0"
+    },
+    {
+      "name": "bindings",
+      "command": "python -m pytest bindings/python/tests --import-mode=importlib -q",
+      "status": "18 passed; discovery root from scripts/test.ps1",
+      "log": "out/validation-and-ownership/M3-bindings-final.log",
+      "sha256": "1002c50afcd688d458de884e2362b40945b793034596d1fa1798aa406af55f7c"
+    },
+    {
+      "name": "release WASM",
+      "command": "scripts/build-wasm.ps1",
+      "status": "passed; existing release flags and finish-TU exception preserved; warnings retained",
+      "log": "out/validation-and-ownership/M3-wasm-build.log",
+      "sha256": "44e5391698c39926fce42def13d0b116e7ceeceb6bed732cb2613babeacfdb99"
+    },
+    {
+      "name": "web",
+      "command": "npm test (cwd apps/web)",
+      "status": "passed full command chain with rebuilt WASM",
+      "log": "out/validation-and-ownership/M3-web-test.log",
+      "sha256": "d1a7f79b1b9d98f35a0d8901a473b0e11b6fd22549bfecf1a589aaba15445c42"
+    },
+    {
+      "name": "typecheck",
+      "command": "npm run typecheck (cwd apps/web)",
+      "status": "passed",
+      "log": "out/validation-and-ownership/M3-web-typecheck.log",
+      "sha256": "7f7a8418135a245eb811a1588fd8fe8a1feae98069d0d28d34ac72dfc2083cb1"
+    },
+    {
+      "name": "knowledge",
+      "command": "python -m poecraft_ingest.solver_knowledge lint --base 75504e4",
+      "status": "passed; 25 claims, no errors, existing open-claim warnings",
+      "log": "out/validation-and-ownership/M3-closeout-knowledge-lint.log",
+      "sha256": "e5a4dd8355088597f9bd53a0b295c6285c2a228252cd17ae6a76d89295de65bb"
+    },
+    {
+      "name": "serial qualification",
+      "command": "python docs/active/2026-09-19-validation-and-ownership/probes/qualify.py",
+      "status": "native arms and Calculator passed; initial adapter exit 1 after evidence writes from returncode/exit_code typo, subsequently corrected",
+      "log": "out/validation-and-ownership/M3-qualification-batch.log",
+      "sha256": "1094350c64b20808ad429fdc2d49c85e0c2dc995c7b5088e79e61ee332d3e79c"
+    },
+    {
+      "name": "saved-evidence checks",
+      "command": "python docs/active/2026-09-19-validation-and-ownership/probes/summarize.py",
+      "status": "passed; no timed repetition",
+      "log": "out/validation-and-ownership/M3-summary-final.log",
+      "sha256": "5ee6d04013259f57e385db9796fffc3f60da64cb95c5629aa8c025a0c40926c6"
+    }
+  ],
+  "corrected_failures": [
+    {
+      "name": "retained allocation fixture",
+      "status": "failed then corrected",
+      "reason": "1 failure: original string spare capacity differed from stored copy; fixed by measuring owned allocation",
+      "log": "out/validation-and-ownership/M2-selected-fallback.log",
+      "sha256": "81610b46cff1a0846131e5067b5d61c771aba29d531c78c07f3e7ea1abd3360f"
+    },
+    {
+      "name": "binding direct invocation",
+      "status": "failed then corrected",
+      "reason": "collection error: omitted documented tests import root; final invocation uses wrapper import root",
+      "log": "out/validation-and-ownership/M3-bindings.log",
+      "sha256": "905c0f3b959bf0b13bd3b0ceecf3ca74e0460ff90eb081d001a353db57038beb"
+    },
+    {
+      "name": "claim edit encoding",
+      "status": "failed then corrected",
+      "reason": "empty ledger: Windows default text encoding corrupted em dashes; restored original UTF-8 then appended scoped notes",
+      "log": "out/validation-and-ownership/M3-knowledge-lint.log",
+      "sha256": "b101dbcfd623fb574731e3f7a6e6e78e97410eebb3d16efdf5e63236b72ecd90"
+    }
+  ],
+  "non_windows": "waived by Oliver on 2026-09-20, not passed",
+  "hosted_ci": "not run; no push",
+  "rendered_UI": "not run; Oliver owns review",
+  "optional_GUI": "not selected in M3; M1 records 5 optional PySide6 skips",
+  "simulation": "no separate campaign; full API selector was broader than necessary and invoked embedded 10000-run fixtures",
+  "remaining_gates": [
+    "begin >250ms",
+    "step >250ms",
+    "historical setup Cancel >1s, not rerun",
+    "Conquest-four WASM/native cost gap remains open"
+  ],
+  "current_delivery": "Finish 3.571289s <=10s; worker-request-to-UI 45.185117s <=65s in one actual Calculator probe; no causal speedup claim",
+  "execution": "sequential timed jobs through existing corpus/worker supervision, fresh host admission, 300-second terminal waits; outer tool yields do not change watchdogs",
+  "research_disposition": "M0-M3 complete on Windows; one retained boundary, canonical owners updated, claim statuses unchanged; queued setup unselected"
+}

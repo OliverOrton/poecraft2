@@ -675,7 +675,7 @@ bool SolveWork::Impl::execution_bottleneck_ready() {
     if ((options.native_continuation_search != NativeContinuationSearchMode::DirtyExecutionCost &&
          options.native_continuation_search != NativeContinuationSearchMode::DirtyExecutionCount) ||
         publication_pipeline.execution_bottleneck_attempted || requested_bounded_finish) return false;
-    const auto* current = best_current_certified_fallback();
+    const auto* current = prune_and_select_certified_fallback();
     return current && certified_incumbent_invalid_reason(*current)==nullptr &&
         !current->compiled_artifact.policy_decision_bindings.empty() &&
         current->compiled_artifact.strategy_json.find("\"fracture\"")!=std::string::npos;
@@ -801,7 +801,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
     const auto collect_current_entries = [&](const bool ordinary_wave) -> CooperativeTask<bool> {
     auto& counts = ordinary_wave ? publication_pipeline.ordinary_entries : publication_pipeline.legacy_entries;
     ++counts.queries;
-    const auto* current = best_current_certified_fallback();
+    const auto* current = prune_and_select_certified_fallback();
     if (current && certified_incumbent_invalid_reason(*current) == nullptr &&
         (((execution || current->compiled_artifact.strategy_json.find("\"fracture\"") != std::string::npos) &&
           !current->compiled_artifact.policy_decision_bindings.empty()) ||
@@ -2252,7 +2252,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             }
             compiled_graph_bytes=graph.size();
             if (!proposal.nonempty_handoff) {
-                const auto* existing=best_current_certified_fallback();
+                const auto* existing=prune_and_select_certified_fallback();
                 if (existing && certified_incumbent_invalid_reason(*existing)==nullptr &&
                     existing->compiled_artifact.strategy_json==graph) {
                     exact_cost=existing->evaluated_policy_cost;
@@ -2477,7 +2477,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_dirty_continuation_cand
             proposal.expansion >= 2 && proposal.root_type == ActionType::Essence &&
             !blocker_refinement && !publication_pipeline.ordinary_entry_attempted &&
             !requested_bounded_finish && !result.diagnostics.resource_cap_hit) {
-            const auto* winner = best_current_certified_fallback();
+            const auto* winner = prune_and_select_certified_fallback();
             if (winner && winner->compiled_root_entry_only &&
                 winner->compiled_artifact.graph_local_provenance.matches(winner->compiled_artifact.strategy_json)) {
                 publication_pipeline.ordinary_entry_attempted = true;

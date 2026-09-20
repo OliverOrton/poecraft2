@@ -180,6 +180,18 @@ This is safety. Bounded response also requires bounds on dispatch, noninterrupti
 work, transfer, release and packaging. Existing numerical reconciliation does not
 become a rigorously rounded endpoint through Finish.
 
+The retained-pool implementation now enforces a scoped part of this premise:
+only its owner admits, prunes or takes retained bundles. Verification moves an
+entry into coroutine-owned storage while a reserved identity supplies a passive
+view; vector mutation cannot invalidate the suspended witness. Returning that
+entry restores it only while the slot still exists. Dynamic payload and both
+coroutine frames stay charged, including after detachment, and releasing them
+does not refund work. Existing native identity/certificate checks and publication
+sealing still supply the compatibility and completeness premises. This is
+implementation correspondence for retained ownership, not a discharge of all
+CLM-0002/CLM-0021 obligations or a bounded-latency theorem. Output/proposal and
+setup work retain their existing separate owners.
+
 <a id="cooperative-preparation"></a>
 ### Staged setup and observation
 

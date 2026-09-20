@@ -3377,66 +3377,27 @@ bool SolveWork::Impl::certify_incumbent_for_fallback(
 bool SolveWork::Impl::retain_certified_incumbent(
         const BoundedPolicyIncumbent& incumbent,
         const std::uint64_t additional_live_bytes) {
-        PolicyRefinementTelemetry& telemetry =
-            result.diagnostics.policy_refinement;
-        if (const char* reason =
-                retained_incumbent_invalid_reason(incumbent)) {
-            (void)reason;
+        auto& telemetry = result.diagnostics.policy_refinement;
+        const auto current_bytes = [&] {
+            const std::uint64_t current = fast_estimated_owned_bytes();
+            return additional_live_bytes > std::numeric_limits<std::uint64_t>::max() - current
+                ? std::numeric_limits<std::uint64_t>::max() : current + additional_live_bytes;
+        };
+        const auto disposition = incumbent_portfolio.retain(incumbent, current_bytes,
+            options.max_solver_owned_bytes,
+            [&](const auto& entry) { return retained_incumbent_invalid_reason(entry); },
+            [&](const auto& left, const auto& right) { return incumbent_precedes(left, right); },
+            [&](const auto& entry) { return incumbent_owned_bytes(entry); });
+        using Retention = IncumbentPortfolio::Retention;
+        if (disposition == Retention::Invalid) {
             ++telemetry.fallback_portfolio_invalidations;
             return false;
         }
-        for (const BoundedPolicyIncumbent& retained :
-             certified_fallback_portfolio) {
-            if (retained.portfolio_identity ==
-                incumbent.portfolio_identity) {
-                return true;
-            }
-        }
-        constexpr std::size_t kMaximumFallbacks = 4;
-        if (certified_fallback_portfolio.size() >= kMaximumFallbacks &&
-            !incumbent_precedes(
-                incumbent, certified_fallback_portfolio.back())) {
-            return true;
-        }
-        const std::uint64_t candidate_dynamic_bytes =
-            incumbent_owned_bytes(incumbent) -
-            sizeof(BoundedPolicyIncumbent);
-        std::uint64_t current_bytes = fast_estimated_owned_bytes();
-        current_bytes = additional_live_bytes >
-                std::numeric_limits<std::uint64_t>::max() - current_bytes
-            ? std::numeric_limits<std::uint64_t>::max()
-            : current_bytes + additional_live_bytes;
-        std::uint64_t added_bytes = candidate_dynamic_bytes;
-        if (certified_fallback_portfolio.size() < kMaximumFallbacks &&
-            certified_fallback_portfolio.capacity() <
-                   kMaximumFallbacks) {
-            added_bytes +=
-                (kMaximumFallbacks -
-                 certified_fallback_portfolio.capacity()) *
-                sizeof(BoundedPolicyIncumbent);
-        }
-        if (!certified_fallback_fits_memory(
-                current_bytes, added_bytes,
-                options.max_solver_owned_bytes)) {
+        if (disposition == Retention::ResourceRefused) {
             ++telemetry.fallback_portfolio_memory_rejections;
             return false;
         }
-        if (certified_fallback_portfolio.capacity() <
-            kMaximumFallbacks) {
-            certified_fallback_portfolio.reserve(kMaximumFallbacks);
-        }
-        if (certified_fallback_portfolio.size() >= kMaximumFallbacks) {
-            certified_fallback_portfolio.back() = incumbent;
-        } else {
-            certified_fallback_portfolio.push_back(incumbent);
-        }
-        std::sort(
-            certified_fallback_portfolio.begin(),
-            certified_fallback_portfolio.end(),
-            [&](const BoundedPolicyIncumbent& left,
-                const BoundedPolicyIncumbent& right) {
-                return incumbent_precedes(left, right);
-            });
+        if (disposition != Retention::Stored) return true;
         incumbent_portfolio.observe_verified(incumbent);
         record_progress_event(incumbent.independently_evaluated && incumbent.executable
             ? "incumbent_retained" : "candidate_retained", incumbent.kind, incumbent.portfolio_identity);
@@ -3448,16 +3409,16 @@ bool SolveWork::Impl::retain_certified_incumbent(
                 CarrierLadderExactBoundaryMode::ResumableContinuation) {
             audit_verified_incumbent_operator_proof_shadow(incumbent);
         }
-        telemetry.fallback_portfolio_candidates =
-            certified_fallback_portfolio.size();
-        telemetry.fallback_portfolio_owned_bytes = 0;
-        for (BoundedPolicyIncumbent& retained :
-             certified_fallback_portfolio) {
-            retained.retained_owned_bytes = incumbent_owned_bytes(retained);
-            telemetry.fallback_portfolio_owned_bytes +=
-                retained.retained_owned_bytes;
-        }
+        refresh_retained_incumbent_telemetry();
         return true;
+    }
+
+void SolveWork::Impl::refresh_retained_incumbent_telemetry() {
+        auto& telemetry = result.diagnostics.policy_refinement;
+        telemetry.fallback_portfolio_candidates = incumbent_portfolio.retained().size();
+        telemetry.fallback_portfolio_owned_bytes = 0;
+        for (const auto& entry : incumbent_portfolio.retained())
+            telemetry.fallback_portfolio_owned_bytes += incumbent_owned_bytes(entry);
     }
 
 bool SolveWork::Impl::retain_current_certified_incumbent() {
@@ -3468,43 +3429,25 @@ bool SolveWork::Impl::retain_current_certified_incumbent() {
         return retain_certified_incumbent(*output_incumbent);
     }
 
-auto SolveWork::Impl::best_current_certified_fallback()
-        -> BoundedPolicyIncumbent* {
-        PolicyRefinementTelemetry& telemetry =
-            result.diagnostics.policy_refinement;
-        for (auto candidate = certified_fallback_portfolio.begin();
-             candidate != certified_fallback_portfolio.end();) {
-            const char* retained_reason =
-                retained_incumbent_invalid_reason(*candidate);
-            if (retained_reason != nullptr) {
-                ++telemetry.fallback_portfolio_invalidations;
-                candidate = certified_fallback_portfolio.erase(candidate);
-            } else if (certified_incumbent_invalid_reason(*candidate) ==
-                       nullptr) {
-                ++candidate;
-            } else {
-                ++candidate;
-            }
-        }
-        telemetry.fallback_portfolio_candidates =
-            certified_fallback_portfolio.size();
-        telemetry.fallback_portfolio_owned_bytes = 0;
-        for (const BoundedPolicyIncumbent& retained :
-             certified_fallback_portfolio) {
-            telemetry.fallback_portfolio_owned_bytes +=
-                incumbent_owned_bytes(retained);
-        }
-        BoundedPolicyIncumbent* best = nullptr;
-        for (BoundedPolicyIncumbent& retained :
-             certified_fallback_portfolio) {
-            if (certified_incumbent_invalid_reason(retained) != nullptr) {
-                continue;
-            }
-            if (best == nullptr || incumbent_precedes(retained, *best)) {
-                best = &retained;
-            }
-        }
-        return best;
+void SolveWork::Impl::prune_retained_incumbents() {
+        result.diagnostics.policy_refinement.fallback_portfolio_invalidations +=
+            incumbent_portfolio.prune_retained([&](const auto& entry) {
+                return retained_incumbent_invalid_reason(entry);
+            });
+        refresh_retained_incumbent_telemetry();
+    }
+
+auto SolveWork::Impl::best_current_certified_fallback() const
+        -> const BoundedPolicyIncumbent* {
+        return incumbent_portfolio.best_retained(
+            [&](const auto& entry) { return certified_incumbent_invalid_reason(entry); },
+            [&](const auto& left, const auto& right) { return incumbent_precedes(left, right); });
+    }
+
+auto SolveWork::Impl::prune_and_select_certified_fallback()
+        -> const BoundedPolicyIncumbent* {
+        prune_retained_incumbents();
+        return best_current_certified_fallback();
     }
 
 bool SolveWork::Impl::commit_output_incumbent(
@@ -3543,8 +3486,8 @@ bool SolveWork::Impl::commit_output_incumbent(
             options.carrier_ladder_exact_boundary_mode !=
                 CarrierLadderExactBoundaryMode::Off) {
             const bool retained = std::any_of(
-                certified_fallback_portfolio.begin(),
-                certified_fallback_portfolio.end(),
+                incumbent_portfolio.retained().begin(),
+                incumbent_portfolio.retained().end(),
                 [&](const BoundedPolicyIncumbent& fallback) {
                     return fallback.portfolio_identity ==
                         displaced_identity;

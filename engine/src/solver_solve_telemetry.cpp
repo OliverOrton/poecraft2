@@ -65,11 +65,12 @@ constexpr std::uint64_t kUpperPolicyProvenanceStructuralBytes =
  */
 constexpr std::uint64_t kUpperPolicyProvenanceAccountingOffset =
     2 * kUpperPolicyProvenanceStructuralBytes;
-/* Gate 2 keeps four source-compatible references into the typed portfolio
- * while call sites migrate. Their pointer-sized shells are not independent
+/* Three compatibility references remain: output, pending candidate and
+ * finalization verified upper. The retained-vector alias was removed.
+ * Their pointer-sized shells are not independent
  * solver-owned payload and must not perturb the legacy cap authority. */
 constexpr std::uint64_t kIncumbentPortfolioAliasAccountingOffset =
-    4 * sizeof(void*);
+    3 * sizeof(void*);
 
 std::uint64_t SparseVariantArena::selected_bytes() const {
         return sizeof(*this) +
@@ -2061,8 +2062,8 @@ std::string SolveWork::Impl::progress_trace_json(std::uint64_t after_sequence) c
         &unverified_selected_policy_candidate->snapshot :
         output_incumbent ? &*output_incumbent : nullptr;
     // Observe existing retained storage without the service accessor's pruning.
-    const BoundedPolicyIncumbent* fallback = certified_fallback_portfolio.empty() ?
-        nullptr : &certified_fallback_portfolio.front();
+    const BoundedPolicyIncumbent* fallback = incumbent_portfolio.retained().empty() ?
+        nullptr : &incumbent_portfolio.retained().front();
     if (output_incumbent && output_incumbent->independently_evaluated &&
         (!fallback || output_incumbent->evaluated_policy_cost < fallback->evaluated_policy_cost))
         fallback = &*output_incumbent;
@@ -2681,8 +2682,8 @@ std::uint64_t SolveWork::Impl::audited_estimated_owned_bytes() const {
     }
 
 std::uint64_t SolveWork::Impl::output_incumbent_owned_bytes() const {
-        std::uint64_t bytes = certified_fallback_portfolio.capacity() *
-            sizeof(BoundedPolicyIncumbent);
+        std::uint64_t bytes = incumbent_portfolio.retained_dynamic_bytes(
+            [&](const auto& entry) { return incumbent_owned_bytes(entry); });
         if (output_incumbent.has_value()) {
             /* std::optional owns its inline object inside Impl; only the
              * selected dynamic allocations are additional live storage. */
@@ -2693,11 +2694,6 @@ std::uint64_t SolveWork::Impl::output_incumbent_owned_bytes() const {
             /* The wrapper and nested incumbent are inline in Impl. */
             bytes += incumbent_owned_bytes(
                          unverified_selected_policy_candidate->snapshot) -
-                sizeof(BoundedPolicyIncumbent);
-        }
-        for (const BoundedPolicyIncumbent& incumbent :
-             certified_fallback_portfolio) {
-            bytes += incumbent_owned_bytes(incumbent) -
                 sizeof(BoundedPolicyIncumbent);
         }
         return bytes;

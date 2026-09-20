@@ -49,6 +49,23 @@ These registered claim IDs map implementation responsibilities to propositions i
 
 None of these changes mechanics or scope by naming an item complete. A lower-only certificate is not an executable policy; a completed numerical solve is not native projection proof; a retained candidate is not a public incumbent.
 
+`IncumbentPortfolio` privately owns the retained vector. Its operations cover
+admission, identity deduplication, four-entry replacement, explicit pruning,
+const views, verification staging and complete-bundle transfer. The existing
+validation helpers and storage comparator remain the authorities. A
+noncompetitive fifth candidate is handled without storage; it is not a memory
+refusal. `prune_and_select_certified_fallback` names the existing mutating service
+boundary; `best_current_certified_fallback` only reads and selects.
+
+Verification moves one complete entry into the owner coroutine, reserving its
+identity in the vector. Const views resolve that slot to the staged bundle.
+Pruning or replacement cannot invalidate the verifier's graph/certificate
+references across suspension. Scope exit restores the bundle only if its slot
+still exists; a detached entry is released after its work finishes or is cancelled.
+Publication takes a complete owned bundle through the same owner. Output/pending
+storage, proposal construction and scheduler migration remain outside this
+boundary; final normalization and sealing remain `PublicationPipeline` work.
+
 ### Generated-operator lineage and narrow phase owner
 
 `SolveDiagnostics::operator_lineage_json` is a bounded observational join across those owners. It follows registry roles through generated programs, prices, ledger states, completed rows, assembly, and consumption. Its complete count/hash is not reconstructed from a truncated sample. Program dependencies can make family relations non-disjoint.

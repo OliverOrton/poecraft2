@@ -94,6 +94,25 @@ finalization the first missing continuation still refuses immediately.
 
 Retained arrays, nested row capacities, active scratch, emitted strategy payload, and optional diagnostics have different lifetimes. Accounting must follow the actual owner, including storage grown before an allocation failure.
 
+The retained pool charges reserved vector capacity and each owned dynamic
+payload. During verification, a complete candidate moves into the owner
+coroutine and its vector slot contains only the reserved identity. The payload is
+charged once through the pool, even if pruning detaches that slot; its inline
+shell and the verifier frame remain charged through cooperative-task accounting.
+The first checkpoint exposes both frame charges before verifier admission.
+Cancellation restores an attached bundle or releases detached storage; neither
+operation refunds consumed work. Admission includes candidate-copy and old/new
+overlap before replacing an existing witness.
+
+Removing the mutable retained-vector alias leaves three portfolio compatibility
+references (output, pending candidate and finalization upper). Both fast and full
+ledgers subtract exactly those three pointer shells. On the qualified Windows
+64-bit build, `Impl` grows from 75,512 to 75,520 bytes and the portfolio from 4,496
+to 4,512 bytes: two evaluation fields add 16 bytes and the removed alias removes
+8. With the matching subtraction change, charged structural storage increases
+by 16 bytes. Candidate size remains 1,608 bytes. These layout measurements are
+platform-specific; no cap or numerical tolerance was increased.
+
 The retention preparation reserves its additional proof workspace inside the existing total native cap. It reuses compatible value-independent support/caps, not stale final-value minimizers. Do not create a second uncharged cache or count discarded scratch as a durable result.
 
 Some observational JSON projections are deliberately outside the proof's solver-owned cap and remain bounded by serialization limits. That does not make their process memory or elapsed construction time zero. Preserve the declared attribution in comparisons.

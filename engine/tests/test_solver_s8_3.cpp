@@ -2869,8 +2869,8 @@ void run_selective_dirty_growth() {
         PC_CHECK(calc.candidates()==candidates); PC_CHECK(work.transition_cache->rows.empty());
         if (pass==2 || pass==4 || pass==7) {
             PC_CHECK(abandoned); PC_CHECK(upper==preserved_upper);
-            PC_CHECK(!work.certified_fallback_portfolio.empty());
-            for (const auto& retained:work.certified_fallback_portfolio)
+            PC_CHECK(!work.incumbent_portfolio.retained().empty());
+            for (const auto& retained:work.incumbent_portfolio.retained())
                 PC_CHECK(work.retained_incumbent_invalid_reason(retained)==nullptr);
             continue;
         }

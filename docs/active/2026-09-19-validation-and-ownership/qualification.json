@@ -1,0 +1,657 @@
+{
+  "base": "75504e4ee2d5700629b23e2ed06eec63812cbd78",
+  "build": "M3-build.json",
+  "native_comparison": {
+    "baseline": "75504e4",
+    "candidate": "retained owner",
+    "shared_case_ids": 1,
+    "paired_cases": 1,
+    "missing_from_baseline": [],
+    "missing_from_candidate": [],
+    "excluded": [],
+    "delta_distributions": {
+      "wall_ms": {
+        "count": 1,
+        "min": 171.28960000001825,
+        "median": 171.28960000001825,
+        "p90": 171.28960000001825,
+        "p99": 171.28960000001825,
+        "max": 171.28960000001825
+      },
+      "solve_ms": {
+        "count": 1,
+        "min": 108.28549999999814,
+        "median": 108.28549999999814,
+        "p90": 108.28549999999814,
+        "p99": 108.28549999999814,
+        "max": 108.28549999999814
+      },
+      "solve_step_median_ms": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "solve_step_p95_ms": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "solve_step_max_ms": {
+        "count": 1,
+        "min": 4.476600000000019,
+        "median": 4.476600000000019,
+        "p90": 4.476600000000019,
+        "p99": 4.476600000000019,
+        "max": 4.476600000000019
+      },
+      "peak_memory_bytes": {
+        "count": 1,
+        "min": 16.0,
+        "median": 16.0,
+        "p90": 16.0,
+        "p99": 16.0,
+        "max": 16.0
+      },
+      "time_to_incumbent_ms": {
+        "count": 1,
+        "min": -241.295100000003,
+        "median": -241.295100000003,
+        "p90": -241.295100000003,
+        "p99": -241.295100000003,
+        "max": -241.295100000003
+      },
+      "time_to_target_ms": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p90": null,
+        "p99": null,
+        "max": null
+      },
+      "final_lower_bound": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_upper_bound": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_absolute_gap": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_relative_gap": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "states": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "expanded_states": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "rows": {
+        "count": 1,
+        "min": 1.0,
+        "median": 1.0,
+        "p90": 1.0,
+        "p99": 1.0,
+        "max": 1.0
+      },
+      "transitions": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "reforge_work": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "compiled_nodes": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "compiled_edges": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "strategy_json_bytes": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      }
+    },
+    "status_transitions": {
+      "bounded_feasible->bounded_feasible": 1
+    },
+    "regressions": [],
+    "pairs": [
+      {
+        "id": "cb01-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Conquest Lamellar",
+          "class": "Body Armour",
+          "base_class": "Body Armour / Conquest Lamellar",
+          "natural_t1_count": "5",
+          "side_mix": "unknown",
+          "pool_density": "unknown",
+          "goal_probability": "unknown",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\validation-and-ownership\\baseline-75504e4\\poecraft_solver_benchmark.exe",
+            "sha256": "96f4aa82336fe64f1eaed9f35deec2e0ea23c676a8a9a8129a51b8a5e5b76b15"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+            "sha256": "850539e63d6e96886eada81df0a4523113986272db888e1b571448adc7f19a87"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_unsupported_action",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "candidate_status": {
+          "actual": "refused_unsupported_action",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "deltas": {
+          "wall_ms": 171.28960000001825,
+          "solve_ms": 108.28549999999814,
+          "solve_step_median_ms": 0.0,
+          "solve_step_p95_ms": 0.0,
+          "solve_step_max_ms": 4.476600000000019,
+          "peak_memory_bytes": 16.0,
+          "time_to_incumbent_ms": -241.295100000003,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": 1.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      }
+    ]
+  },
+  "native": [
+    {
+      "arm": "baseline",
+      "report": "out\\validation-and-ownership\\M3-baseline\\cases\\cb01-cross-base-product8-long240.json",
+      "report_sha256": "f89dfcc315aaef31ac5b60ea9b8fa44aa0ff8b15ff720f30d4a7deb9169703f7",
+      "graph": "out\\validation-and-ownership\\M3-baseline\\strategies\\cb01-cross-base-product8-long240.strategy.json",
+      "graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+      "status": "refused_unsupported_action",
+      "expectation_met": true,
+      "solve_summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 358209179.6640102,
+        "expanded_states": 3274,
+        "sweeps": 0,
+        "residual": 1000000000000,
+        "skipped_action_count": 1,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 187,
+          "candidate": 28,
+          "evaluator_supported": 28,
+          "supported_priced": 252,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 1
+        },
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436,
+        "absolute_optimality_gap": 85153.33678349802,
+        "relative_optimality_gap": 210.06355275221262,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "compiled_graph": {
+        "nodes": 469,
+        "edges": 1117,
+        "strategy_json_bytes": 320192,
+        "strategy_output_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\validation-and-ownership\\M3-baseline\\strategies\\cb01-cross-base-product8-long240.strategy.json"
+      },
+      "evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 2465.1647,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 85558.70618560436,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "expected_primitive_actions": 8407.202314771383,
+      "phase_wall_ms": {
+        "registry_layout": 36.9963,
+        "solve": 240537.6925,
+        "compile": 4.1005,
+        "verification": null,
+        "total": 243387.308
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33873920,
+        "process_working_set_after_bytes": 300613632,
+        "process_working_set_delta_bytes": 266739712,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 153544834,
+        "native_peak_owned_bytes": 253288221,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 790373
+      },
+      "ledger_audit": {
+        "calc_owned_byte_ledger_requests": 13461820,
+        "calc_owned_byte_ledger_ns": 1377255500,
+        "calc_owned_byte_ledger_child_context_visits": 12865438,
+        "calc_owned_byte_ledger_max_recursion_depth": 1,
+        "calc_owned_byte_ledger_max_overestimate": 16,
+        "solve_owned_byte_ledger_requests": 12779582,
+        "solve_owned_byte_ledger_max_overestimate": 16
+      },
+      "retention": {
+        "fallback_portfolio": {
+          "candidates": 0,
+          "invalidations": 1,
+          "compilation_failures": 0,
+          "memory_rejections": 0,
+          "owned_bytes": 0,
+          "publication_attempts": 1,
+          "publication_successes": 1,
+          "cheapest_independently_evaluated_selected": true,
+          "preferred_candidate_upper": 85558.70618560436,
+          "published_upper": 85558.70618560436,
+          "published_evaluated_cost": 85558.70618560436,
+          "published_witness_hash": "3fc9a56d2a8c1049",
+          "published_kind": "anytime_reachable_proper_policy",
+          "preferred_failure_reason": null
+        }
+      },
+      "portfolio": {
+        "candidate_estimate": {
+          "present": true,
+          "cost": 85558.70618560436,
+          "source": "anytime_reachable_proper_policy",
+          "stage": "exact_evaluated_policy",
+          "verified": true,
+          "identity": {
+            "portfolio": "ff196d92f96ca581",
+            "goal": "746d448eabb2df71",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "e6e0f4d88e5e947c",
+            "caller_scope": "3f869144f3cf3e01",
+            "graph_prefix": "1b92948fcbe9f881",
+            "artifact": "f936a0dc37501788",
+            "source_generation": 29155
+          }
+        },
+        "verified_executable_upper": {
+          "present": true,
+          "cost": 85558.70618560436,
+          "portfolio_identity": "ff196d92f96ca581",
+          "identity": {
+            "portfolio": "ff196d92f96ca581",
+            "goal": "746d448eabb2df71",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "e6e0f4d88e5e947c",
+            "caller_scope": "3f869144f3cf3e01",
+            "graph_prefix": "1b92948fcbe9f881",
+            "artifact": "f936a0dc37501788",
+            "source_generation": 29155
+          },
+          "observations": 2,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        },
+        "independent_global_lower": {
+          "value": 405.3694021063399,
+          "certified": true,
+          "provenance": "global_action_relaxation"
+        },
+        "restricted_search_lower": {
+          "value": 405.3694021063399,
+          "envelope_global": false
+        },
+        "exact_closure": {
+          "proved": false,
+          "value": null
+        }
+      },
+      "errors": []
+    },
+    {
+      "arm": "retained-owner",
+      "report": "out\\validation-and-ownership\\M3-retained-owner\\cases\\cb01-cross-base-product8-long240.json",
+      "report_sha256": "0e294e77e872cde5d2b2cea07ad13fff967668d10bd5c39f3b1ace251f38a5ff",
+      "graph": "out\\validation-and-ownership\\M3-retained-owner\\strategies\\cb01-cross-base-product8-long240.strategy.json",
+      "graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+      "status": "refused_unsupported_action",
+      "expectation_met": true,
+      "solve_summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 358209179.6640102,
+        "expanded_states": 3274,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 1,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 187,
+          "candidate": 28,
+          "evaluator_supported": 28,
+          "supported_priced": 252,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 1
+        },
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436,
+        "absolute_optimality_gap": 85153.33678349802,
+        "relative_optimality_gap": 210.06355275221262,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "compiled_graph": {
+        "nodes": 469,
+        "edges": 1117,
+        "strategy_json_bytes": 320192,
+        "strategy_output_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\validation-and-ownership\\M3-retained-owner\\strategies\\cb01-cross-base-product8-long240.strategy.json"
+      },
+      "evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 2523.1983,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 85558.70618560436,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "expected_primitive_actions": 8407.202314771383,
+      "phase_wall_ms": {
+        "registry_layout": 37.7949,
+        "solve": 240645.978,
+        "compile": 4.1118,
+        "verification": null,
+        "total": 243558.5976
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 33878016,
+        "process_working_set_after_bytes": 300834816,
+        "process_working_set_delta_bytes": 266956800,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 153544315,
+        "native_peak_owned_bytes": 253288237,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 790032
+      },
+      "ledger_audit": {
+        "calc_owned_byte_ledger_requests": 13524892,
+        "calc_owned_byte_ledger_ns": 1348793400,
+        "calc_owned_byte_ledger_child_context_visits": 12928510,
+        "calc_owned_byte_ledger_max_recursion_depth": 1,
+        "calc_owned_byte_ledger_max_overestimate": 16,
+        "solve_owned_byte_ledger_requests": 12842654,
+        "solve_owned_byte_ledger_max_overestimate": 16
+      },
+      "retention": {
+        "fallback_portfolio": {
+          "candidates": 0,
+          "invalidations": 1,
+          "compilation_failures": 0,
+          "memory_rejections": 0,
+          "owned_bytes": 0,
+          "publication_attempts": 1,
+          "publication_successes": 1,
+          "cheapest_independently_evaluated_selected": true,
+          "preferred_candidate_upper": 85558.70618560436,
+          "published_upper": 85558.70618560436,
+          "published_evaluated_cost": 85558.70618560436,
+          "published_witness_hash": "3fc9a56d2a8c1049",
+          "published_kind": "anytime_reachable_proper_policy",
+          "preferred_failure_reason": null
+        }
+      },
+      "portfolio": {
+        "candidate_estimate": {
+          "present": true,
+          "cost": 85558.70618560436,
+          "source": "anytime_reachable_proper_policy",
+          "stage": "exact_evaluated_policy",
+          "verified": true,
+          "identity": {
+            "portfolio": "ff196d92f96ca581",
+            "goal": "746d448eabb2df71",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "e6e0f4d88e5e947c",
+            "caller_scope": "3f869144f3cf3e01",
+            "graph_prefix": "1b92948fcbe9f881",
+            "artifact": "f936a0dc37501788",
+            "source_generation": 29155
+          }
+        },
+        "verified_executable_upper": {
+          "present": true,
+          "cost": 85558.70618560436,
+          "portfolio_identity": "ff196d92f96ca581",
+          "identity": {
+            "portfolio": "ff196d92f96ca581",
+            "goal": "746d448eabb2df71",
+            "economy": "ad2373d65bde3138",
+            "action_vocabulary": "e6e0f4d88e5e947c",
+            "caller_scope": "3f869144f3cf3e01",
+            "graph_prefix": "1b92948fcbe9f881",
+            "artifact": "f936a0dc37501788",
+            "source_generation": 29155
+          },
+          "observations": 2,
+          "strictly_cheaper_replacements": 0,
+          "monotone": true
+        },
+        "independent_global_lower": {
+          "value": 405.3694021063399,
+          "certified": true,
+          "provenance": "global_action_relaxation"
+        },
+        "restricted_search_lower": {
+          "value": 405.3694021063399,
+          "envelope_global": false
+        },
+        "exact_closure": {
+          "proved": false,
+          "value": null
+        }
+      },
+      "errors": []
+    }
+  ],
+  "native_graph_bytes_equal": true,
+  "calculator": {
+    "report": "out\\validation-and-ownership\\M3-calculator-finish.json",
+    "sha256": "04143d1070c3307db0574ec25f8e4d0e8f01bd2a32306c3a98d59c3524728797",
+    "environment": "linkedom actual Calculator + node-worker_threads WASM",
+    "visual_review": "not performed",
+    "status": "completed",
+    "usable_strategy": true,
+    "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+    "ui_milestones": {
+      "worker_solve_requested": 52.07670000000007,
+      "finish_intent": 41665.9052,
+      "worker_result_received": 41975.5424,
+      "strategy_export": 45194.3137,
+      "handle_cleanup": 45211.2581,
+      "ui_delivery_completed": 45237.1941
+    },
+    "worker": {
+      "step_count": 1077114,
+      "yield_count": 2464,
+      "max_step_ms": 369.0194000000047,
+      "total_step_ms": 27447.916800011488,
+      "finalization_ms": 19.172200000000885,
+      "progress_observations_omitted": 0,
+      "milestones": [
+        {
+          "stage": "native_begin_requested",
+          "worker_elapsed_ms": 0.06350000000020373
+        },
+        {
+          "stage": "native_begin_completed",
+          "worker_elapsed_ms": 12599.0599
+        },
+        {
+          "stage": "manual_finish_intent_observed",
+          "worker_elapsed_ms": 41609.8437
+        },
+        {
+          "stage": "finish_acknowledged",
+          "worker_elapsed_ms": 41610.471399999995
+        },
+        {
+          "stage": "native_done_observed",
+          "worker_elapsed_ms": 41880.6345
+        },
+        {
+          "stage": "result_export_start",
+          "worker_elapsed_ms": 41880.6365
+        },
+        {
+          "stage": "result_export_completed",
+          "worker_elapsed_ms": 41899.8056
+        },
+        {
+          "stage": "terminal_response_committed",
+          "worker_elapsed_ms": 41899.8793
+        }
+      ],
+      "max_step_context": {
+        "input_owner": "ladder_scheduling",
+        "output_owner": "compilation",
+        "input_cursor": 293,
+        "output_cursor": 295,
+        "quantum": 8,
+        "duration_ms": 369.0194000000047
+      },
+      "max_progress_read_ms": 2.230600000000777
+    },
+    "finish_intent_to_ui_ready_ms": 3571.2888999999996,
+    "finish_gate_10s_passed": true,
+    "worker_request_to_ui_ready_ms": 45185.1174,
+    "delivery_gate_65s_passed": true,
+    "native_begin_ms": 12598.9964,
+    "begin_gate_250ms_passed": false,
+    "step_gate_250ms_passed": false,
+    "setup_cancel_gate": "not rerun; historical 23.081s/1s failure remains",
+    "reference": "out\\verified-delivery\\A7-manual-conquest-1.json",
+    "reference_sha256": "06ec58d5e4da03969c46d747197f9cbf166ea86fea4ebd90a69a814ebe57a0d6",
+    "same_goal_actions_prices_as_reference": true,
+    "same_complete_graph_as_evaluated_reference_excluding_attached_economy": true,
+    "same_complete_graph_as_current_native_excluding_attached_economy": false,
+    "native_consumer_comparison": {
+      "same_except_attached_economy_and_display_positions": true,
+      "calculator_nodes_with_position": 469,
+      "native_nodes_with_position": 0,
+      "authority": "docs/solver/publication.md: editable board positions are presentation, not numerical proof inputs; raw equality stays separate"
+    },
+    "clock_contract": "Each subtraction uses one clock; delivery starts at UI worker request, before any worker-origin timestamp"
+  },
+  "simulation": "No separate Simulator campaign; unchanged graph evidence reused. Existing API selector included its built-in 10000-run fixture.",
+  "performance_scope": "One serial baseline/current pair, no speedup claim or counterbalancing; known other failures remain open.",
+  "non_windows": "Explicitly waived by Oliver, not passed",
+  "hosted_ci": "Not run; no push"
+}

@@ -1,0 +1,37 @@
+{
+  "command": [
+    "C:/Program Files/nodejs/node.exe",
+    "--import",
+    "tsx",
+    "test/calculator-delivery-probe.ts",
+    "cb01-cross-base-product8-long240",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\validation-and-ownership\\M3-calculator-finish.json",
+    "finish"
+  ],
+  "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web",
+  "watchdog_seconds": 315,
+  "admission": {
+    "utc": "2026-09-20T12:44:01.150444+00:00",
+    "available_physical": 31168765952,
+    "available_commit": 17397514240,
+    "reserved_bytes": 8589934592,
+    "outside_bytes": 13681888461,
+    "admitted": true
+  },
+  "wasm": {
+    "bindings\\wasm\\dist\\poecraft_engine.mjs": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502",
+    "bindings\\wasm\\dist\\poecraft_engine.wasm": "477c2e5a89f73cf1a82bd50742eabfc15f48647138105bdc3afb309b5d6b1c32"
+  },
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 11688,
+    "process_identity_token": "11688:134343818411585301",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 57503.37029999355
+  }
+}

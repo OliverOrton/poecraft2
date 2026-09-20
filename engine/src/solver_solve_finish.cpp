@@ -404,7 +404,7 @@ SolveWork::Impl::run_publication_pipeline() {
             !incremental_envelope_closed &&
             output_incumbent.has_value() &&
             !incremental_alternative_rows.empty();
-        if (!(requested_bounded_finish && best_current_certified_fallback() != nullptr) &&
+        if (!(requested_bounded_finish && prune_and_select_certified_fallback() != nullptr) &&
             (result.diagnostics.resource_cap_hit ||
             (requested_bounded_finish && output_incumbent.has_value()) ||
             open_incremental_anytime_candidate)) {
@@ -481,25 +481,20 @@ SolveWork::Impl::run_publication_pipeline() {
          * artifact only when the normal output slot is empty. If a current
          * incumbent exists, preserve both for final evaluated-cost selection
          * instead of displacing either by an unverified estimate. */
-        if (!certified_fallback_portfolio.empty()) {
-            auto best_retained = std::min_element(
-                certified_fallback_portfolio.begin(),
-                certified_fallback_portfolio.end(),
-                [&](const BoundedPolicyIncumbent& left,
-                    const BoundedPolicyIncumbent& right) {
-                    return incumbent_precedes(left, right);
-                });
+        if (!incumbent_portfolio.retained().empty()) {
             if (!output_incumbent.has_value()) {
-                output_incumbent = std::move(*best_retained);
-                certified_fallback_portfolio.erase(best_retained);
+                output_incumbent = incumbent_portfolio.take_best_retained(
+                    [&](const auto& left, const auto& right) {
+                        return incumbent_precedes(left, right);
+                    });
             }
             PolicyRefinementTelemetry& portfolio =
                 result.diagnostics.policy_refinement;
             portfolio.fallback_portfolio_candidates =
-                certified_fallback_portfolio.size();
+                incumbent_portfolio.retained().size();
             portfolio.fallback_portfolio_owned_bytes = 0;
             for (const BoundedPolicyIncumbent& retained :
-                 certified_fallback_portfolio) {
+                 incumbent_portfolio.retained()) {
                 portfolio.fallback_portfolio_owned_bytes +=
                     incumbent_owned_bytes(retained);
             }
@@ -2334,7 +2329,7 @@ SolveWork::Impl::run_publication_pipeline() {
                     options
                         .verified_policy_alternative_shadow_diagnostic);
                 while (!assertion_work.progress().done &&
-                    !(requested_bounded_finish && best_current_certified_fallback() != nullptr)) {
+                    !(requested_bounded_finish && prune_and_select_certified_fallback() != nullptr)) {
                     const auto verification_progress =
                         assertion_work.progress();
                     phase = verification_progress.phase ==
@@ -2490,40 +2485,17 @@ SolveWork::Impl::run_publication_pipeline() {
                 }
                 co_return false;
             };
-        const auto verify_retained_portfolio = [&]()
-            -> solve_detail::CooperativeTask<bool> {
-            for (BoundedPolicyIncumbent& candidate :
-                 certified_fallback_portfolio) {
-                auto verification =
-                    verify_retained_final_graph(candidate);
-                while (!verification.resume()) {
-                    co_await solve_detail::CooperativeCheckpoint{
-                        verification.retained_bytes()};
-                }
-                (void)verification.take_result();
-            }
-            std::sort(
-                certified_fallback_portfolio.begin(),
-                certified_fallback_portfolio.end(),
-                [&](const BoundedPolicyIncumbent& left,
-                    const BoundedPolicyIncumbent& right) {
-                    const bool left_verified =
-                        certified_incumbent_invalid_reason(left) == nullptr;
-                    const bool right_verified =
-                        certified_incumbent_invalid_reason(right) == nullptr;
-                    if (left_verified != right_verified) {
-                        return left_verified;
-                    }
-                    return incumbent_precedes(left, right);
-                });
-            co_return true;
+        const auto verify_retained_portfolio = [&]() {
+            return incumbent_portfolio.evaluate_retained(verify_retained_final_graph,
+                [&](const auto& entry) { return certified_incumbent_invalid_reason(entry); },
+                [&](const auto& left, const auto& right) { return incumbent_precedes(left, right); });
         };
         const auto publish_certified_fallback =
             [&](const SolveTermination coarse_solve_termination) {
                 PolicyRefinementTelemetry& telemetry =
                     result.diagnostics.policy_refinement;
-                BoundedPolicyIncumbent* retained =
-                    best_current_certified_fallback();
+                const BoundedPolicyIncumbent* retained =
+                    prune_and_select_certified_fallback();
                 if (retained == nullptr) return false;
                 ++telemetry.fallback_publication_attempts;
                 // Preserve the newly available compiler-bound entry through
@@ -2533,7 +2505,13 @@ SolveWork::Impl::run_publication_pipeline() {
                 const bool keep_execution_entry = execution_bottleneck_ready() &&
                     certified_fallback_fits_memory(fast_estimated_owned_bytes(),
                         incumbent_owned_bytes(*retained),options.max_solver_owned_bytes);
-                BoundedPolicyIncumbent fallback = keep_execution_entry ? *retained : std::move(*retained);
+                BoundedPolicyIncumbent fallback;
+                if (keep_execution_entry) fallback = *retained;
+                else {
+                    auto owned = incumbent_portfolio.take_retained(retained->portfolio_identity);
+                    if (!owned) return false;
+                    fallback = std::move(*owned);
+                }
                 const bool direct_core_policy =
                     fallback.compilation_provenance ==
                         "direct_compiled_policy_assertion_v1" ||
@@ -2546,7 +2524,7 @@ SolveWork::Impl::run_publication_pipeline() {
                     "selected_for_publication",
                     "strict cheapest independently evaluated candidate");
                 for (const BoundedPolicyIncumbent& candidate :
-                     certified_fallback_portfolio) {
+                     incumbent_portfolio.retained()) {
                     if (candidate.portfolio_identity ==
                         fallback.portfolio_identity) {
                         continue;
@@ -2560,8 +2538,7 @@ SolveWork::Impl::run_publication_pipeline() {
                               "executable cost");
                 }
                 if (!keep_execution_entry) {
-                    certified_fallback_portfolio.clear();
-                    certified_fallback_portfolio.shrink_to_fit();
+                    incumbent_portfolio.release_retained();
                     telemetry.fallback_portfolio_candidates = 0;
                     telemetry.fallback_portfolio_owned_bytes = 0;
                 }
@@ -3054,7 +3031,7 @@ SolveWork::Impl::run_publication_pipeline() {
                                     "selected coarse policy");
                             while (!assertion_work.progress().done &&
                                 !(requested_bounded_finish &&
-                                  best_current_certified_fallback() != nullptr)) {
+                                  prune_and_select_certified_fallback() != nullptr)) {
                                 const auto assertion_progress =
                                     assertion_work.progress();
                                 phase = assertion_progress.phase ==
@@ -3541,7 +3518,7 @@ SolveWork::Impl::run_publication_pipeline() {
         const bool bottleneck_only = publication_pipeline.dirty_continuation_attempted && execution_bottleneck_ready();
         if (dirty_continuation_search_enabled(options.native_continuation_search) &&
             (!publication_pipeline.dirty_continuation_attempted || bottleneck_only) &&
-            !requested_bounded_finish && best_current_certified_fallback() != nullptr) {
+            !requested_bounded_finish && prune_and_select_certified_fallback() != nullptr) {
             publication_pipeline.dirty_continuation_attempted = true;
             if (bottleneck_only) publication_pipeline.execution_bottleneck_attempted=true;
             // Selected-policy certification can provide the first executable
@@ -3557,7 +3534,7 @@ SolveWork::Impl::run_publication_pipeline() {
             co_await solve_detail::CooperativeCheckpoint{0};
         }
         if (!result.policy_available &&
-            best_current_certified_fallback() != nullptr) {
+            prune_and_select_certified_fallback() != nullptr) {
             /* Selected-policy certification can be the first executable
              * evidence in an open incremental envelope. It is already
              * compiled and independently exact-evaluated here, so publish
@@ -3578,7 +3555,7 @@ SolveWork::Impl::run_publication_pipeline() {
                 result.diagnostics.policy_refinement;
             telemetry.core_policy_candidate_present =
                 result.policy_available || output_incumbent.has_value() ||
-                !certified_fallback_portfolio.empty();
+                !incumbent_portfolio.retained().empty();
             if (!result.policy_available &&
                 telemetry.core_policy_candidate_present) {
                 telemetry.core_policy_status =
@@ -3714,7 +3691,7 @@ SolveWork::Impl::run_publication_pipeline() {
                     options
                         .verified_policy_alternative_shadow_diagnostic);
                 while (!assertion_work.progress().done &&
-                    !(requested_bounded_finish && best_current_certified_fallback() != nullptr)) {
+                    !(requested_bounded_finish && prune_and_select_certified_fallback() != nullptr)) {
                     const auto assertion_progress =
                         assertion_work.progress();
                     if (phase == SolvePhase::Compiling && assertion_progress.phase !=
@@ -4153,8 +4130,8 @@ SolveWork::Impl::run_publication_pipeline() {
                  * without consuming a second exact evaluation first. */
                 co_await solve_detail::CooperativeCheckpoint{
                     candidate.retained_owned_bytes};
-                BoundedPolicyIncumbent* cheaper_verified =
-                    best_current_certified_fallback();
+                const BoundedPolicyIncumbent* cheaper_verified =
+                    prune_and_select_certified_fallback();
                 const bool direct_superseded =
                     cheaper_verified != nullptr &&
                     cheaper_verified->evaluated_policy_cost <
@@ -4204,7 +4181,7 @@ SolveWork::Impl::run_publication_pipeline() {
                         "direct_core_policy_exact";
                     executable_policy_abstraction_supported = true;
                     for (const BoundedPolicyIncumbent& retained :
-                         certified_fallback_portfolio) {
+                         incumbent_portfolio.retained()) {
                         record_candidate_sample(
                             retained, "publication", "not_selected",
                             retained.independently_evaluated
@@ -4214,8 +4191,7 @@ SolveWork::Impl::run_publication_pipeline() {
                                 : "final graph evaluation did not establish "
                                   "an executable cost");
                     }
-                    certified_fallback_portfolio.clear();
-                    certified_fallback_portfolio.shrink_to_fit();
+                    incumbent_portfolio.release_retained();
                     telemetry.fallback_portfolio_candidates = 0;
                     telemetry.fallback_portfolio_owned_bytes = 0;
                     skip_strict_lift = true;
@@ -4318,8 +4294,8 @@ SolveWork::Impl::run_publication_pipeline() {
                         }
                         (void)verification.take_result();
                     }
-                    BoundedPolicyIncumbent* retained =
-                        best_current_certified_fallback();
+                    const BoundedPolicyIncumbent* retained =
+                        prune_and_select_certified_fallback();
                     if (retained != nullptr &&
                         incumbent_precedes(*retained, candidate)) {
                         skip_strict_lift =
@@ -4422,7 +4398,7 @@ SolveWork::Impl::run_publication_pipeline() {
                         }
                         (void)verification.take_result();
                     }
-                    if (best_current_certified_fallback() != nullptr) {
+                    if (prune_and_select_certified_fallback() != nullptr) {
                         skip_strict_lift = publish_certified_fallback(
                             core_solve_termination);
                     }
@@ -4446,7 +4422,7 @@ SolveWork::Impl::run_publication_pipeline() {
              * Preserve the old safeguard only when no verified fallback is
              * available; otherwise start exact proof work immediately. */
             if (strict_lift_requires_eager_fallback_verification(
-                    best_current_certified_fallback() != nullptr)) {
+                    prune_and_select_certified_fallback() != nullptr)) {
                 auto verification = verify_retained_portfolio();
                 while (!verification.resume()) {
                     co_await solve_detail::CooperativeCheckpoint{
@@ -4493,7 +4469,7 @@ SolveWork::Impl::run_publication_pipeline() {
                 }
                 co_await solve_detail::CooperativeCheckpoint{};
                 const BoundedPolicyIncumbent* verified_rollback =
-                    best_current_certified_fallback();
+                    prune_and_select_certified_fallback();
                 std::optional<
                     refinement::PolicyExactLiftRollbackUpper>
                     rollback_upper;
@@ -5223,8 +5199,8 @@ SolveWork::Impl::run_publication_pipeline() {
                         }
                         (void)verification.take_result();
                     }
-                    BoundedPolicyIncumbent* cheaper_verified =
-                        best_current_certified_fallback();
+                    const BoundedPolicyIncumbent* cheaper_verified =
+                        prune_and_select_certified_fallback();
                     const bool strict_superseded =
                         cheaper_verified != nullptr &&
                         cheaper_verified->evaluated_policy_cost <
@@ -5343,7 +5319,7 @@ SolveWork::Impl::run_publication_pipeline() {
                         classify_bounded_publication();
                     }
                     for (const BoundedPolicyIncumbent& candidate :
-                         certified_fallback_portfolio) {
+                         incumbent_portfolio.retained()) {
                         record_candidate_sample(
                             candidate, "publication", "not_selected",
                             candidate.independently_evaluated
@@ -5352,8 +5328,7 @@ SolveWork::Impl::run_publication_pipeline() {
                                 : "final graph evaluation did not establish "
                                   "an executable cost");
                     }
-                    certified_fallback_portfolio.clear();
-                    certified_fallback_portfolio.shrink_to_fit();
+                    incumbent_portfolio.release_retained();
                     telemetry.fallback_portfolio_candidates = 0;
                     telemetry.fallback_portfolio_owned_bytes = 0;
                     }
@@ -5412,7 +5387,7 @@ SolveWork::Impl::run_publication_pipeline() {
             // A completed candidate can precede the finish latch in this
             // optional pass. Abandon unfinished proposal work, but retain the
             // cheapest independently checked artifact even on that path.
-            const auto* improved=best_current_certified_fallback();
+            const auto* improved=prune_and_select_certified_fallback();
             if (improved && certified_incumbent_invalid_reason(*improved)==nullptr &&
                 (!result.policy_available || improved->evaluated_policy_cost<result.upper_bound))
                 (void)publish_certified_fallback(requested_bounded_finish ?
@@ -5422,7 +5397,7 @@ SolveWork::Impl::run_publication_pipeline() {
         // Selection includes complete retained private/strict artifacts that
         // reached this owner before sealing. No cost-only historical scalar
         // can replace the graph/certificate/context bundle.
-        if (const auto* eligible = best_current_certified_fallback(); eligible &&
+        if (const auto* eligible = prune_and_select_certified_fallback(); eligible &&
             (!result.policy_available || eligible->evaluated_policy_cost < result.upper_bound))
             (void)publish_certified_fallback(requested_bounded_finish ?
                 SolveTermination::RequestedBoundedFinish : result.termination);

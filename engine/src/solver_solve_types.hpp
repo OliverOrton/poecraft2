@@ -16,6 +16,7 @@
 #include <cmath>
 #include <deque>
 #include <functional>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -1540,8 +1541,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     /*
      * One owner for candidates produced by coarse selection, constructive
      * renewal, direct certification, strict lift, and final graph assertion.
-     * The compatibility aliases below keep Gate 2 behavior-neutral while
-     * later gates migrate the remaining call sites to portfolio methods.
+     * Retained storage mutates only through this owner. Output and pending
+     * candidate aliases below remain outside the retained-pool boundary.
      */
     struct IncumbentPortfolio {
         std::optional<BoundedPolicyIncumbent> output;
@@ -1549,7 +1550,193 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         /* Best-first, deterministic, bounded collection of materialized or
          * independently verified candidates displaced by another preferred
          * output. Verification state remains explicit on every entry. */
-        std::vector<BoundedPolicyIncumbent> retained_candidates;
+    private:
+        std::vector<BoundedPolicyIncumbent> retained_candidates_;
+        // The evaluation coroutine owns this complete bundle. Its reserved
+        // vector slot keeps the same identity/order, but never supplies a
+        // borrowed vector reference across suspension. Reads see the bundle;
+        // pruning/replacement may detach its slot without destroying the work.
+        const BoundedPolicyIncumbent* evaluating_ = nullptr;
+        std::uint64_t evaluating_identity_ = 0;
+
+        bool evaluation_slot(const BoundedPolicyIncumbent& entry) const {
+            return evaluating_ && entry.portfolio_identity == evaluating_identity_;
+        }
+        const BoundedPolicyIncumbent& logical_entry(
+                const BoundedPolicyIncumbent& entry) const {
+            return evaluation_slot(entry) ? *evaluating_ : entry;
+        }
+        struct EvaluationReturn {
+            IncumbentPortfolio& owner;
+            BoundedPolicyIncumbent& candidate;
+            ~EvaluationReturn() {
+                static_assert(std::is_nothrow_move_assignable_v<BoundedPolicyIncumbent>);
+                for (auto& entry : owner.retained_candidates_) {
+                    if (owner.evaluation_slot(entry)) {
+                        entry = std::move(candidate);
+                        break;
+                    }
+                }
+                owner.evaluating_ = nullptr;
+                owner.evaluating_identity_ = 0;
+            }
+        };
+
+    public:
+        IncumbentPortfolio() = default;
+        IncumbentPortfolio(const IncumbentPortfolio&) = delete;
+        IncumbentPortfolio& operator=(const IncumbentPortfolio&) = delete;
+        enum class Retention {
+            Stored, AlreadyPresent, HandledNotStored, Invalid, ResourceRefused,
+        };
+        // Views borrow only until the next owner mutation. They expose const
+        // bundles, not a vector, mutable certificate, or cached certificate.
+        struct RetainedView {
+            const IncumbentPortfolio* owner;
+            struct Iterator {
+                using iterator_category = std::forward_iterator_tag;
+                using value_type = BoundedPolicyIncumbent;
+                using difference_type = std::ptrdiff_t;
+                using pointer = const value_type*;
+                using reference = const value_type&;
+                const IncumbentPortfolio* owner = nullptr;
+                std::size_t index = 0;
+                reference operator*() const {
+                    return owner->logical_entry(owner->retained_candidates_[index]);
+                }
+                pointer operator->() const { return &**this; }
+                Iterator& operator++() { ++index; return *this; }
+                Iterator operator++(int) { auto old = *this; ++*this; return old; }
+                bool operator==(const Iterator&) const = default;
+            };
+            std::size_t size() const { return owner->retained_candidates_.size(); }
+            bool empty() const { return size() == 0; }
+            Iterator begin() const { return {owner, 0}; }
+            Iterator end() const { return {owner, size()}; }
+            const BoundedPolicyIncumbent& front() const { return *begin(); }
+        };
+        RetainedView retained() const { return {this}; }
+
+        template<class CurrentBytes, class Invalid, class Precedes, class Bytes>
+        Retention retain(const BoundedPolicyIncumbent& candidate,
+                CurrentBytes current_bytes, std::uint64_t limit,
+                Invalid invalid, Precedes precedes, Bytes bytes) {
+            if (invalid(candidate)) return Retention::Invalid;
+            for (const auto& entry : retained())
+                if (entry.portfolio_identity == candidate.portfolio_identity)
+                    return Retention::AlreadyPresent;
+            // A detached evaluation still owns this identity until it returns.
+            if (evaluating_ && evaluating_identity_ == candidate.portfolio_identity)
+                return Retention::HandledNotStored;
+            constexpr std::size_t maximum = 4;
+            if (retained_candidates_.size() >= maximum &&
+                !precedes(candidate, logical_entry(retained_candidates_.back())))
+                return Retention::HandledNotStored;
+            std::uint64_t added = bytes(candidate) - sizeof(BoundedPolicyIncumbent);
+            if (retained_candidates_.capacity() < maximum)
+                added += (maximum - retained_candidates_.capacity()) * sizeof(BoundedPolicyIncumbent);
+            if (!solve_detail::certified_fallback_fits_memory(current_bytes(), added, limit))
+                return Retention::ResourceRefused;
+            try {
+                retained_candidates_.reserve(maximum);
+                // Copy before replacing the old witness; allocation failure
+                // cannot leave its graph/certificate tuple partly overwritten.
+                BoundedPolicyIncumbent staged(candidate);
+                if (retained_candidates_.size() >= maximum)
+                    retained_candidates_.back() = std::move(staged);
+                else retained_candidates_.push_back(std::move(staged));
+            } catch (const std::bad_alloc&) {
+                return Retention::ResourceRefused;
+            }
+            std::sort(retained_candidates_.begin(), retained_candidates_.end(),
+                [&](const auto& left, const auto& right) {
+                    return precedes(logical_entry(left), logical_entry(right));
+                });
+            for (auto& entry : retained_candidates_)
+                if (!evaluation_slot(entry)) entry.retained_owned_bytes = bytes(entry);
+            return Retention::Stored;
+        }
+
+        template<class Invalid>
+        std::size_t prune_retained(Invalid invalid) {
+            const auto before = retained_candidates_.size();
+            std::erase_if(retained_candidates_, [&](const auto& entry) {
+                return invalid(logical_entry(entry)) != nullptr;
+            });
+            return before - retained_candidates_.size();
+        }
+        template<class Invalid, class Precedes>
+        const BoundedPolicyIncumbent* best_retained(Invalid invalid, Precedes precedes) const {
+            const BoundedPolicyIncumbent* best = nullptr;
+            for (const auto& entry : retained())
+                if (!invalid(entry) && (!best || precedes(entry, *best))) best = &entry;
+            return best;
+        }
+        std::optional<BoundedPolicyIncumbent> take_retained(std::uint64_t identity) {
+            // The synchronous caller must wait for the evaluation owner to
+            // return its staged bundle before taking it for publication.
+            if (evaluating_ && evaluating_identity_ == identity) return std::nullopt;
+            for (auto it = retained_candidates_.begin(); it != retained_candidates_.end(); ++it) {
+                if (it->portfolio_identity != identity) continue;
+                std::optional<BoundedPolicyIncumbent> result(std::move(*it));
+                retained_candidates_.erase(it);
+                return result;
+            }
+            return std::nullopt;
+        }
+        template<class Precedes>
+        std::optional<BoundedPolicyIncumbent> take_best_retained(Precedes precedes) {
+            const auto* best = best_retained([](const auto&) -> const char* { return nullptr; }, precedes);
+            return best ? take_retained(best->portfolio_identity) : std::nullopt;
+        }
+        void release_retained() {
+            retained_candidates_.clear();
+            retained_candidates_.shrink_to_fit();
+        }
+        template<class Bytes>
+        std::uint64_t retained_dynamic_bytes(Bytes bytes) const {
+            std::uint64_t total = retained_candidates_.capacity() * sizeof(BoundedPolicyIncumbent);
+            for (const auto& entry : retained_candidates_)
+                if (!evaluation_slot(entry)) total += bytes(entry) - sizeof(BoundedPolicyIncumbent);
+            // Also charge a detached in-flight bundle. Its inline shell is in
+            // the accounted coroutine frame, not another vector allocation.
+            if (evaluating_) total += bytes(*evaluating_) - sizeof(BoundedPolicyIncumbent);
+            return total;
+        }
+        template<class Evaluate, class Invalid, class Precedes>
+        solve_detail::CooperativeTask<bool> evaluate_retained(
+                Evaluate evaluate, Invalid invalid, Precedes precedes) {
+            if (evaluating_) throw std::logic_error("retained evaluation reentry");
+            std::array<std::uint64_t, 4> identities{};
+            std::size_t count = 0;
+            for (const auto& entry : retained()) identities[count++] = entry.portfolio_identity;
+            for (std::size_t index = 0; index < count; ++index) {
+                auto it = std::find_if(retained_candidates_.begin(), retained_candidates_.end(),
+                    [&](const auto& entry) { return entry.portfolio_identity == identities[index]; });
+                if (it == retained_candidates_.end()) continue;
+                BoundedPolicyIncumbent owned = std::move(*it);
+                *it = BoundedPolicyIncumbent{};
+                it->portfolio_identity = owned.portfolio_identity;
+                evaluating_ = &owned;
+                evaluating_identity_ = owned.portfolio_identity;
+                EvaluationReturn restore{*this, owned};
+                auto verification = evaluate(owned);
+                // Publish both real frame charges before the verifier's
+                // memory admission. The moved payload stays charged above.
+                co_await solve_detail::CooperativeCheckpoint{verification.retained_bytes()};
+                while (!verification.resume()) {
+                    co_await solve_detail::CooperativeCheckpoint{verification.retained_bytes()};
+                }
+                (void)verification.take_result();
+            }
+            std::sort(retained_candidates_.begin(), retained_candidates_.end(),
+                [&](const auto& left, const auto& right) {
+                    const bool left_verified = invalid(left) == nullptr;
+                    const bool right_verified = invalid(right) == nullptr;
+                    return left_verified != right_verified ? left_verified : precedes(left, right);
+                });
+            co_return true;
+        }
         double finalization_verified_upper = kInfinity;
         double best_verified_upper = kInfinity;
         std::uint64_t best_verified_identity = 0;
@@ -1643,8 +1830,6 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     std::optional<UnverifiedSelectedPolicyCandidate>&
         unverified_selected_policy_candidate =
             incumbent_portfolio.pending_candidate;
-    std::vector<BoundedPolicyIncumbent>& certified_fallback_portfolio =
-        incumbent_portfolio.retained_candidates;
     /* Separate observational owner. Nothing in incumbent_portfolio,
      * scheduling, Bellman optimization, or publication reads this record. */
     std::optional<CarrierLadderBoundaryCapture>
@@ -2363,7 +2548,10 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
 
     bool retain_current_certified_incumbent();
 
-    BoundedPolicyIncumbent* best_current_certified_fallback();
+    void prune_retained_incumbents();
+    const BoundedPolicyIncumbent* best_current_certified_fallback() const;
+    const BoundedPolicyIncumbent* prune_and_select_certified_fallback();
+    void refresh_retained_incumbent_telemetry();
 
     bool commit_output_incumbent(BoundedPolicyIncumbent candidate);
 

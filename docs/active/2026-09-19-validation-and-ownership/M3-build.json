@@ -1,0 +1,35 @@
+{
+  "base": "75504e4ee2d5700629b23e2ed06eec63812cbd78",
+  "source_patch": {
+    "path": "out\\validation-and-ownership\\M2-source.patch",
+    "sha256": "e1e10e6851029aaf17ecea0646e8a197ed512867e837ce6820e6c216e8a6251e"
+  },
+  "files": {
+    "build/engine/poecraft_engine.dll": "2275798ab769f2c3c65773b6e0f450329d2ad5ac49731a6b2ef128d6f9c89e3d",
+    "build/engine/poecraft_engine_tests.exe": "747d6b3b51da1e1c84fa42e88a5aa7fe05b5453db31b61c926268dbf9db5a3f9",
+    "build/engine/poecraft_solver_benchmark.exe": "850539e63d6e96886eada81df0a4523113986272db888e1b571448adc7f19a87",
+    "bindings/wasm/dist/poecraft_engine.mjs": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502",
+    "bindings/wasm/dist/poecraft_engine.wasm": "477c2e5a89f73cf1a82bd50742eabfc15f48647138105bdc3afb309b5d6b1c32",
+    "scripts/build-wasm.ps1": "f138c5dc3df053b02d2311858b746189673e13a549d1a51fae57e34e2d3abf9c",
+    "out/verified-delivery/old-include/poecraft/solver.h": "46409e51c36ee4583e37f0530b468c256a184098d0d0b50b10fb58eef4bf64d5",
+    "engine/src/solver_solve_types.hpp": "7a6dc1c6e7faf829e9bc32c59c19d672100fe88865e6bda53755282247da177e",
+    "engine/src/solver_solve_constructive.cpp": "84c157d206e1697a4bd01fbd9e6a151c4141673bd06f73a1402f7ec9aca2ca7d",
+    "engine/src/solver_solve_finish.cpp": "e2cdd755270afd03689342c7915c8d80c74f3aa2c014d87f2f5f4372ffe63c85",
+    "engine/src/solver_solve_return_bridge.cpp": "0a8810b2ec357fe47fb0ecae69380ff4b9bcfd61e7112d9e7fa6af9fa6a94cf1",
+    "engine/src/solver_solve_telemetry.cpp": "1353925204262801b8f9d968a4457e4d1ba48d40c1d64dc0b49b9d24e6c602b9",
+    "engine/tests/test_solver_solve.cpp": "7680bd93e09d1a0656e956ed99f27422143efd2a2c3bc91c4aecb3b10f2dcd68",
+    "engine/tests/test_solver_s8_3.cpp": "cad800fcb6aa8412969f27381c93f3df04f10ff88ea0fe11be32cfc3e06ba61d"
+  },
+  "layout_before": {
+    "impl": 75512,
+    "portfolio": 4496,
+    "candidate": 1608,
+    "pointer": 8
+  },
+  "layout_after": {
+    "impl": 75520,
+    "portfolio": 4512,
+    "candidate": 1608,
+    "pointer": 8
+  }
+}
