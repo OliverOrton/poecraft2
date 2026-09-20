@@ -1,0 +1,300 @@
+{
+  "baseline": "d13c9b835186ce35cb51aef0de6d0027f8b8a1a7",
+  "milestones": {
+    "M0": "complete",
+    "M1": "implemented; local checks passed; actual non-Windows checkout qualification unavailable",
+    "M2": "not started pending M1 qualification",
+    "M3": "not reached"
+  },
+  "python": {
+    "executable": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\validation-and-ownership\\python\\Scripts\\python.exe",
+    "version": "3.14.2 (tags/v3.14.2:df79316, Dec  5 2025, 17:18:21) [MSC v.1944 64 bit (AMD64)]",
+    "pytest": "9.1.1",
+    "dependency_command": [
+      "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\validation-and-ownership\\python\\Scripts\\python.exe",
+      "-m",
+      "pip",
+      "install",
+      "-e",
+      "./tools/ingest[test]"
+    ],
+    "gui_extra": "not installed; deliberately optional"
+  },
+  "collection": {
+    "before_unittest": 26,
+    "before_pytest": 151,
+    "after_pytest": 156,
+    "added_cases": {
+      "support_order_variants": 2,
+      "locked_source_tests": 3
+    },
+    "negative_canary": "1 passed, 1 deliberately failed; exit 1",
+    "custom_load_tests_hooks": "none found",
+    "imports": "separate test processes; ingest tests.test_ingest and binding test_stress -> test_bindings discovery roots preserved"
+  },
+  "tests": {
+    "python": "181 passed; 5 optional PySide6 skips; 2 economy subtests passed",
+    "web": "npm ci, build:data, full npm test and npm run typecheck passed using unchanged release WASM",
+    "knowledge": "8 unittest tests, report/id/order tests, lint, metadata and exact generated Markdown comparison passed",
+    "portable_s8_fixtures": "10 passed on Windows; added to existing Ubuntu knowledge workflow",
+    "negative_prerequisites": "missing required Python binding and native executables each failed explicitly",
+    "powershell_parse": "all 8 changed/new PowerShell scripts passed",
+    "native_build_and_ctest": "not run; no native implementation change; existing A7 DLL used by real-data/binding tests",
+    "new_wasm_build_and_calculator_probe": "not reached; no native or strategy-vocabulary change",
+    "simulation": "not run; executable graphs unchanged",
+    "hosted_workflows": "not run; no hosted green claim"
+  },
+  "commands": [
+    "$env:POECRAFT_PYTHON=(Resolve-Path out/validation-and-ownership/python/Scripts/python.exe).Path; & scripts/test.ps1 -Scope Python -SkipBuild",
+    "$env:POECRAFT_PYTHON=(Resolve-Path out/validation-and-ownership/python/Scripts/python.exe).Path; & scripts/test.ps1 -Scope Web -SkipBuild",
+    "python out/validation-and-ownership/check-validation.py",
+    "python -m poecraft_ingest.cli fetch --output out/validation-and-ownership/reproduced/source --locked-manifest fixtures/repoe/production-source-manifest.json",
+    "python -m poecraft_ingest.cli ingest --source out/validation-and-ownership/reproduced/source --database out/validation-and-ownership/reproduced/poecraft.db --report out/validation-and-ownership/reproduced/ingest.json",
+    "python tools/ingest/compile_engine_data.py compile --database out/validation-and-ownership/reproduced/poecraft.db --output out/validation-and-ownership/reproduced/artifact --generated-at-utc 2026-08-30T02:54:53Z"
+  ],
+  "source_reproduction": {
+    "upstream_commit": "b6379c408e4a275f2d0d39655daabe44842c60f7",
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+    "files": 12,
+    "runtime": [
+      {
+        "current": {
+          "path": "data/compiled/current/manifest.json",
+          "bytes": 5810,
+          "sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb"
+        },
+        "reproduced": {
+          "path": "out/validation-and-ownership/reproduced/artifact/manifest.json",
+          "bytes": 5810,
+          "sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb"
+        },
+        "exact_bytes": true
+      },
+      {
+        "current": {
+          "path": "data/compiled/current/strings.json",
+          "bytes": 6534428,
+          "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        },
+        "reproduced": {
+          "path": "out/validation-and-ownership/reproduced/artifact/strings.json",
+          "bytes": 6534428,
+          "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        },
+        "exact_bytes": true
+      },
+      {
+        "current": {
+          "path": "data/compiled/current/game-data.json",
+          "bytes": 16439442,
+          "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+        },
+        "reproduced": {
+          "path": "out/validation-and-ownership/reproduced/artifact/game-data.json",
+          "bytes": 16439442,
+          "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+        },
+        "exact_bytes": true
+      }
+    ],
+    "economy": "unchanged; no refresh or local data publication"
+  },
+  "checkout_bytes": [
+    {
+      "path": "fixtures/solver-baselines/s8.0/examples/evaluator-straight.strategy.json",
+      "autocrlf": "false",
+      "sha256": "71bd8aea350928a3da87103b7d78c454b9e024cb5502fb3af66c9ad2987e333f",
+      "CRLF": 0,
+      "LF": 35
+    },
+    {
+      "path": "experiments/solver-research/backbone-pilot-v1.json",
+      "autocrlf": "false",
+      "sha256": "8793673b263fe69151c16028b55e05a04110b54651d45f9e5b6a3d4781ab0a13",
+      "CRLF": 0,
+      "LF": 973
+    },
+    {
+      "path": "docs/active/2026-09-15-verified-delivery/build-A7.json",
+      "autocrlf": "false",
+      "sha256": "ebb6a702b445f4bf6aa3c5237b5cdf6e7764977a64a91bbfaf961e8e4bbf437e",
+      "CRLF": 184,
+      "LF": 184
+    },
+    {
+      "path": "fixtures/solver-baselines/s8.0/examples/evaluator-straight.strategy.json",
+      "autocrlf": "true",
+      "sha256": "71bd8aea350928a3da87103b7d78c454b9e024cb5502fb3af66c9ad2987e333f",
+      "CRLF": 0,
+      "LF": 35
+    },
+    {
+      "path": "experiments/solver-research/backbone-pilot-v1.json",
+      "autocrlf": "true",
+      "sha256": "8793673b263fe69151c16028b55e05a04110b54651d45f9e5b6a3d4781ab0a13",
+      "CRLF": 0,
+      "LF": 973
+    },
+    {
+      "path": "docs/active/2026-09-15-verified-delivery/build-A7.json",
+      "autocrlf": "true",
+      "sha256": "ebb6a702b445f4bf6aa3c5237b5cdf6e7764977a64a91bbfaf961e8e4bbf437e",
+      "CRLF": 184,
+      "LF": 184
+    }
+  ],
+  "non_windows_checkout": "unavailable locally (WSL not installed); both Git conversion modes checked on Windows; hosted Ubuntu run not performed",
+  "reused_runtime": [
+    {
+      "path": "build/engine/poecraft_engine.dll",
+      "bytes": 13120035,
+      "sha256": "58b2aebffe3c652cea2ec6fcfe67f883dc6b4a3d5766778d0bc0de140fac8f5b"
+    },
+    {
+      "path": "build/engine/poecraft_solver_benchmark.exe",
+      "bytes": 13691048,
+      "sha256": "96f4aa82336fe64f1eaed9f35deec2e0ea23c676a8a9a8129a51b8a5e5b76b15"
+    },
+    {
+      "path": "build/engine/poecraft_engine_tests.exe",
+      "bytes": 17386086,
+      "sha256": "961b4f35c6f6f0596752d4782e25a6b3b63d7d8a3f24adbf149f2bfd75fb16aa"
+    },
+    {
+      "path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "bytes": 20328,
+      "sha256": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502"
+    },
+    {
+      "path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "bytes": 8280313,
+      "sha256": "b3537e392db4df15041d152a66a4bf2f51441d2f2e4679a003d924e2242a2fc8"
+    }
+  ],
+  "harvest_generator": {
+    "executable": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\validation-and-ownership\\python\\Scripts\\python.exe",
+    "result": "passes; content matches prior generated header after CRLF/LF comparison only",
+    "raw_byte_equality": false,
+    "prior_CRLF": 65,
+    "new_CRLF": 0,
+    "existing_header": "preserved; no expected hash rewritten"
+  },
+  "raw_evidence": [
+    {
+      "path": "out/validation-and-ownership/M0-unittest-ids.json",
+      "bytes": 2871,
+      "sha256": "9d80a75d6b7ba1a95b747970327ba03622bb138962c5b05a60cba788740838a9"
+    },
+    {
+      "path": "out/validation-and-ownership/M0-ingest-collection.log",
+      "bytes": 15482,
+      "sha256": "1737c1b13ba155ce9032a66e61365a42e18d0b41ff9a29c6ca34aca55e18f5ca"
+    },
+    {
+      "path": "out/validation-and-ownership/M0-focused.log",
+      "bytes": 1275,
+      "sha256": "825bf2dbadc41bd68d3cc2ab902baa962a72ff54b498c22f3bfa5e9086eb2a29"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-collection.log",
+      "bytes": 15971,
+      "sha256": "9971f0afe0a6fa41898878268806bbaaa09646146f19818b85d319648dd0153d"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-canary.log",
+      "bytes": 683,
+      "sha256": "ed5f422229b25fd3e0a7ad45f28f3d65b0e129bcb88c20ee7f8e9b185fa624b6"
+    },
+    {
+      "path": "out/validation-and-ownership/declared-dependencies.log",
+      "bytes": 2576,
+      "sha256": "b1ac8df7f0ac5d89b358731b25488ac2f2495d2b60bef973364f471f7dab149b"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-python.log",
+      "bytes": 5012,
+      "sha256": "e4583fb682695e8b91a754940341ab8eba1a744d83e73a22bd0b2ac8c9ceb95d"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-bindings.log",
+      "bytes": 967,
+      "sha256": "683fdd36759dcc1d14a4b20bd9fa15fac74cfa4b7a4d7ad561a4aa3c90df693d"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-bindings-import-fixed.log",
+      "bytes": 101,
+      "sha256": "52c55ecff5cd353284410ac83e04931cfc1d58ef648cee0b2e93a0b6a06664b7"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-python-final.log",
+      "bytes": 4487,
+      "sha256": "f2955183b9c5299fddda85787e5758f73bdb8b087269cfdbd3ea7cf67ddd811d"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-web.log",
+      "bytes": 15107,
+      "sha256": "d70d065029f661d267afbdea6c90cebbf4095ac0a1b50088f2df3fe563322e29"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-portable-fixtures.log",
+      "bytes": 101,
+      "sha256": "b8ce221861bdc87f4538f88eff7caa07e874f5abbe7c7047fa3c0fcb8f198b76"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-missing-Python.log",
+      "bytes": 668,
+      "sha256": "ad6524a93006f958098d6f7c0a7b82ebc0d39b2e9f73dadcc8233c1bc21eb583"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-missing-Native.log",
+      "bytes": 708,
+      "sha256": "afd1b8d31168fc8040f924f498b14d325195ee041b7b0e4635ebb83679907d1e"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-knowledge-tests.log",
+      "bytes": 111,
+      "sha256": "4715334950b5c03dfc348ceef3b14e5c4328127efd482b396d5362c8a2f14282"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-knowledge-lint.log",
+      "bytes": 1876,
+      "sha256": "cb93ebc8667bb115bbd6915d0f5488b1e361394d38c2665ac97d132b3aa2adfd"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-knowledge-metadata.log",
+      "bytes": 734282,
+      "sha256": "24ebc92497b7c9ab09d785354c95ae632339961751cf553ec50a9397e1811454"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-knowledge-render.log",
+      "bytes": 120,
+      "sha256": "4cf30ca683f06ff2b3825cbec565cc025a8230cab89bf0d589f304238f4d32c1"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-final-knowledge-lint.log",
+      "bytes": 1876,
+      "sha256": "cb93ebc8667bb115bbd6915d0f5488b1e361394d38c2665ac97d132b3aa2adfd"
+    },
+    {
+      "path": "out/validation-and-ownership/M1-validation.json",
+      "bytes": 5935,
+      "sha256": "a985ba3090daa47d688ae7c86549f02f2736d9bb5e4d70ac9ce092c9f1f55f94"
+    },
+    {
+      "path": "out/validation-and-ownership/upstream-verified.json",
+      "bytes": 6597,
+      "sha256": "37b30df0652d07b277cb24eb0751077d745fc3917e61b3eb6f538661118f9411"
+    },
+    {
+      "path": "out/validation-and-ownership/reproduction.log",
+      "bytes": 2570,
+      "sha256": "54990e1766957709b5fc1d286b1688f834f76ecddeb0ff73bfc27577850b0f27"
+    }
+  ],
+  "staged_packet": {
+    "files": 23,
+    "hashes": "all match original manifest",
+    "whitespace_exceptions": "4 authored Markdown hard-break lines in imported README/02_MILESTONES preserved byte-for-byte"
+  }
+}

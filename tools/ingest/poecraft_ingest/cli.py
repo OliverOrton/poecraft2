@@ -100,6 +100,8 @@ def build_parser() -> argparse.ArgumentParser:
     fetch.add_argument("--output", type=_path, default=DEFAULT_SOURCE)
     fetch.add_argument("--base-url", default=REPOE_BASE_URL)
     fetch.add_argument("--force", action="store_true")
+    fetch.add_argument("--locked-manifest", type=_path,
+        help="Fetch the declared historical input/output hashes instead of current upstream data.")
 
     ingest = subparsers.add_parser(
         "ingest",
@@ -143,6 +145,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.output,
                 force=args.force,
                 base_url=args.base_url,
+                locked_manifest=args.locked_manifest,
             )
             print(
                 f"fetched {len(manifest['files'])} files "

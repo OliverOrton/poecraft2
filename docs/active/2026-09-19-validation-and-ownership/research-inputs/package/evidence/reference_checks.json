@@ -1,0 +1,43 @@
+{
+  "schema": "poecraft2_planning_reference_checks_v1",
+  "execution_environment": {
+    "python": "3.13.5",
+    "system": "Linux"
+  },
+  "byte_identity": {
+    "status": "reproduced",
+    "repository_ref": "d13c9b835186ce35cb51aef0de6d0027f8b8a1a7",
+    "source_path": "fixtures/solver-baselines/s8.0/examples/evaluator-straight.strategy.json",
+    "git_blob_sha1": "4a0d0f3bb04c6a38770537d23cbfd86ec59dcfa7",
+    "git_blob_bytes": 763,
+    "lf_count": 35,
+    "lf_sha256": "71bd8aea350928a3da87103b7d78c454b9e024cb5502fb3af66c9ad2987e333f",
+    "crlf_sha256": "fd46a2e64f3e75aeff0b6086ff7516d6214506ced3ba58d3974d244b03d015eb",
+    "matches_recorded_windows_failure": true,
+    "parsed_json_equal": true,
+    "scope": "This fixture only; not a diagnosis of every failed archive hash."
+  },
+  "test_collection": {
+    "status": "reproduced",
+    "scope": "Isolated two-test toy, not repository collection counts.",
+    "declared_class_methods": 1,
+    "declared_top_level_functions": [
+      "test_top_level_must_not_be_omitted"
+    ],
+    "unittest_collected": 1,
+    "unittest_passed": true,
+    "pytest": {
+      "status": "expected_failure_observed",
+      "version": "9.0.2",
+      "exit_code": 1,
+      "test_outcomes": {
+        "failed": 1,
+        "passed": 1
+      },
+      "meaning": "The deliberately failing top-level function was collected."
+    }
+  },
+  "native_or_wasm_execution": false,
+  "repository_files_modified": false,
+  "claim": "Byte portability and test-collection demonstrations only; no solver qualification."
+}

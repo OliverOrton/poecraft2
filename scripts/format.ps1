@@ -4,24 +4,8 @@ param()
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 
-$Python = if ($env:POECRAFT_PYTHON) {
-    @{
-        Command = $env:POECRAFT_PYTHON
-        Prefix = @()
-    }
-}
-elseif (Get-Command py -ErrorAction SilentlyContinue) {
-    @{
-        Command = (Get-Command py).Source
-        Prefix = @("-3")
-    }
-}
-else {
-    @{
-        Command = (Get-Command python -ErrorAction Stop).Source
-        Prefix = @()
-    }
-}
+. "$PSScriptRoot/python-common.ps1"
+$Python = Get-PoeCraftPython
 
 $RuffAvailable = $false
 & $Python.Command @($Python.Prefix) -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('ruff') else 1)"

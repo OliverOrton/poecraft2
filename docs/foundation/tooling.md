@@ -8,7 +8,11 @@ contracts; they are different entry points, not competing solvers.
 
 Run from the repository root with
 `$env:PYTHONPATH = "tools/ingest;bindings/python"`. The commands below use
-`py -3 -m poecraft_ingest.<module>`; replace capitalized placeholders with actual
+`py -3 -m poecraft_ingest.<module>` as a local-launcher shorthand; use
+`& $env:POECRAFT_PYTHON -m poecraft_ingest.<module>` once the project interpreter
+is selected. `scripts/python-common.ps1` resolves it for project wrappers;
+the [validation quickstart](../../README.md#quickstart) binds installation and
+tests to that same executable. Replace capitalized placeholders with actual
 IDs or paths. Common Lab options such as `--root .`, `--executable EXE`,
 `--corpus MANIFEST` and `--profile PROFILE` go before the operation.
 

@@ -25,6 +25,20 @@ jobs:
         if: steps.changes.outputs.native_required == 'false'
         shell: pwsh
         run: Write-Output 'Only known documentation paths changed. Solver knowledge checks validate the affected layer; native build/test is not applicable.'
+      - name: Bind project Python and install test dependencies
+        if: steps.changes.outputs.native_required == 'true'
+        shell: pwsh
+        run: |
+          $selectedPython = (Get-Command python).Source
+          "POECRAFT_PYTHON=$selectedPython" >> $env:GITHUB_ENV
+          & $selectedPython -m pip install -e './tools/ingest[test]'
+          if ($LASTEXITCODE -ne 0) { throw 'Project test dependency installation failed.' }
+      - uses: actions/setup-node@v4
+        if: steps.changes.outputs.native_required == 'true'
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
       - uses: msys2/setup-msys2@v2
         if: steps.changes.outputs.native_required == 'true'
         id: msys2
@@ -52,4 +66,4 @@ jobs:
       - name: Test
         if: steps.changes.outputs.native_required == 'true'
         shell: pwsh
-        run: ./scripts/test.ps1
+        run: ./scripts/test.ps1 -SkipBuild -FetchPinnedData

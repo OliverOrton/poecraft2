@@ -1,0 +1,204 @@
+{
+  "base_url": "https://repoe-fork.github.io",
+  "files": [
+    {
+      "archive": {
+        "encoding": "compact_without_null_fields",
+        "sha256": "f39f4b5b9d18a269823d3d9970e5bc997b9d1e97c7f3450ebd5d25f38f4f9fea",
+        "url": "https://raw.githubusercontent.com/repoe-fork/repoe-fork.github.io/b6379c408e4a275f2d0d39655daabe44842c60f7/data/base_items.json"
+      },
+      "byte_size": 2809021,
+      "content_hash": "f6c7d47e6da5f40f339cf9240994287c8b3362df9e5d42ee0738ef2262819519",
+      "etag": "\"6a323915-2adcbd\"",
+      "last_modified": "Wed, 17 Jun 2026 06:05:09 GMT",
+      "logical_name": "base_items.json",
+      "remote_name": "base_items.min.json",
+      "row_count": 5052,
+      "source_url": "https://repoe-fork.github.io/base_items.min.json"
+    },
+    {
+      "archive": {
+        "encoding": "identity",
+        "sha256": "f5d488483819a9f5854b739db2b25a2a422bd2b228530dc5bbfc734f87694fd8",
+        "url": "https://raw.githubusercontent.com/repoe-fork/repoe-fork.github.io/b6379c408e4a275f2d0d39655daabe44842c60f7/data/cluster_jewel_notables.json"
+      },
+      "byte_size": 45203,
+      "content_hash": "f5d488483819a9f5854b739db2b25a2a422bd2b228530dc5bbfc734f87694fd8",
+      "etag": "\"6a323912-b093\"",
+      "last_modified": "Wed, 17 Jun 2026 06:05:06 GMT",
+      "logical_name": "cluster_jewel_notables.json",
+      "remote_name": "cluster_jewel_notables.json",
+      "row_count": 309,
+      "source_url": "https://repoe-fork.github.io/cluster_jewel_notables.json"
+    },
+    {
+      "archive": {
+        "encoding": "identity",
+        "sha256": "415d799b733e88454f5c724a64d0f860f43e1d557f0e6e7df874beeb3b83d1ed",
+        "url": "https://raw.githubusercontent.com/repoe-fork/repoe-fork.github.io/b6379c408e4a275f2d0d39655daabe44842c60f7/data/cluster_jewels.json"
+      },
+      "byte_size": 18550,
+      "content_hash": "415d799b733e88454f5c724a64d0f860f43e1d557f0e6e7df874beeb3b83d1ed",
+      "etag": "\"6a323912-4876\"",
+      "last_modified": "Wed, 17 Jun 2026 06:05:06 GMT",
+      "logical_name": "cluster_jewels.json",
+      "remote_name": "cluster_jewels.json",
+      "row_count": 3,
+      "source_url": "https://repoe-fork.github.io/cluster_jewels.json"
+    },
+    {
+      "archive": {
+        "encoding": "compact_without_null_fields",
+        "sha256": "0c013620161647e8af8e9a240f39290cdc9fa2563789ddab9749f37f0daa51bb",
+        "url": "https://raw.githubusercontent.com/repoe-fork/repoe-fork.github.io/b6379c408e4a275f2d0d39655daabe44842c60f7/data/crafting_bench_options.json"
+      },
+      "byte_size": 216321,
+      "content_hash": "9578baf9f2fe9b3ccbfeb9aa442ab1bd9b026ae073f0e7e2e24424ff3cf82d7f",
+      "etag": "\"6a323917-34d01\"",
+      "last_modified": "Wed, 17 Jun 2026 06:05:11 GMT",
+      "logical_name": "crafting_bench_options.json",
+      "remote_name": "crafting_bench_options.min.json",
+      "row_count": 774,
+      "source_url": "https://repoe-fork.github.io/crafting_bench_options.min.json"
+    },
+    {
+      "archive": {
+        "encoding": "compact_without_null_fields",
+        "sha256": "552ab2070593939ac1b8aa89757daf79c4773b30b76f2589c5548a5705797971",
+        "url": "https://raw.githubusercontent.com/repoe-fork/repoe-fork.github.io/b6379c408e4a275f2d0d39655daabe44842c60f7/data/essences.json"
+      },
+      "byte_size": 113378,
+      "content_hash": "7ad26c77acdb6aa35b8e7a1d07a1123a457a190f643e465dc4f10c60fed5b1f6",
+      "etag": "\"6a323917-1bae2\"",
+      "last_modified": "Wed, 17 Jun 2026 06:05:11 GMT",
+      "logical_name": "essences.json",
+      "remote_name": "essences.min.json",
+      "row_count": 106,
+      "source_url": "https://repoe-fork.github.io/essences.min.json"
+    },
+    {
+      "archive": {
+        "encoding": "compact_without_null_fields",
+        "sha256": "412ca5dc92dc5a5b9fa4e0012878e392da51ea11afb2d8bd4146c632c944e1be",
+        "url": "https://raw.githubusercontent.com/repoe-fork/repoe-fork.github.io/b6379c408e4a275f2d0d39655daabe44842c60f7/data/fossils.json"
+      },
+      "byte_size": 267968,
+      "content_hash": "d081622a873d417bf5382b9c9b4234685e833d580c936178607226c5f97ba5de",
+      "etag": "\"6a323912-416c0\"",
+      "last_modified": "Wed, 17 Jun 2026 06:05:06 GMT",
+      "logical_name": "fossils.json",
+      "remote_name": "fossils.min.json",
+      "row_count": 445,
+      "source_url": "https://repoe-fork.github.io/fossils.min.json"
+    },
+    {
+      "archive": {
+        "encoding": "compact_without_null_fields",
+        "sha256": "b53d019f9a9997d75b4305485127f1863225a9cdedb89bbc4b39d519f0153a9f",
+        "url": "https://raw.githubusercontent.com/repoe-fork/repoe-fork.github.io/b6379c408e4a275f2d0d39655daabe44842c60f7/data/item_classes.json"
+      },
+      "byte_size": 10554,
+      "content_hash": "9f31b1fbfbf91f79a6c2d4de3f741a18d0d7306cd4e444145e4a2de9b1e76063",
+      "etag": "\"6a323917-293a\"",
+      "last_modified": "Wed, 17 Jun 2026 06:05:11 GMT",
+      "logical_name": "item_classes.json",
+      "remote_name": "item_classes.min.json",
+      "row_count": 99,
+      "source_url": "https://repoe-fork.github.io/item_classes.min.json"
+    },
+    {
+      "archive": {
+        "encoding": "compact_without_null_fields",
+        "sha256": "dd0f155655aaf5e9f4357014c7b852255e4edb0149b798d764e6125b93447748",
+        "url": "https://raw.githubusercontent.com/repoe-fork/repoe-fork.github.io/b6379c408e4a275f2d0d39655daabe44842c60f7/data/mod_types.json"
+      },
+      "byte_size": 900940,
+      "content_hash": "983e26bea656bcbd8f26c636fb07fd7640681a321a386cc7a6d3248941af0435",
+      "etag": "\"6a323916-dbf4c\"",
+      "last_modified": "Wed, 17 Jun 2026 06:05:10 GMT",
+      "logical_name": "mod_types.json",
+      "remote_name": "mod_types.min.json",
+      "row_count": 14240,
+      "source_url": "https://repoe-fork.github.io/mod_types.min.json"
+    },
+    {
+      "archive": {
+        "encoding": "compact_without_null_fields",
+        "sha256": "bdc60bb66c50e20aeba3adccb155bc9de3f8d54d65382742953a9f4dc2171bc0",
+        "url": "https://raw.githubusercontent.com/repoe-fork/repoe-fork.github.io/b6379c408e4a275f2d0d39655daabe44842c60f7/data/mods.json"
+      },
+      "byte_size": 22248499,
+      "content_hash": "c34b1a810d4440c054aeb7090b53e38c9421ab542667d25d4303fa09e41cdd11",
+      "etag": "\"6a323912-1537c33\"",
+      "last_modified": "Wed, 17 Jun 2026 06:05:06 GMT",
+      "logical_name": "mods.json",
+      "remote_name": "mods.min.json",
+      "row_count": 39292,
+      "source_url": "https://repoe-fork.github.io/mods.min.json"
+    },
+    {
+      "archive": {
+        "encoding": "compact_without_null_fields",
+        "sha256": "abc06b505213fb4c07b599c88249eb695be13c4e343240898b0674e294c6dbf6",
+        "url": "https://raw.githubusercontent.com/repoe-fork/repoe-fork.github.io/b6379c408e4a275f2d0d39655daabe44842c60f7/data/stat_translations.json"
+      },
+      "byte_size": 4475449,
+      "content_hash": "b21d744650e35d93ea3b8a7fccc5e34104d377d2b5e9603d26c33436edabc30d",
+      "etag": "\"6a323917-444a39\"",
+      "last_modified": "Wed, 17 Jun 2026 06:05:11 GMT",
+      "logical_name": "stat_translations.json",
+      "remote_name": "stat_translations.min.json",
+      "row_count": 11075,
+      "source_url": "https://repoe-fork.github.io/stat_translations.min.json"
+    },
+    {
+      "archive": {
+        "encoding": "compact_without_null_fields",
+        "sha256": "3b2063509e8340e6ea702651fe34ab7afc4004b79bf9fed8ff4c1218d10cf2b4",
+        "url": "https://raw.githubusercontent.com/repoe-fork/repoe-fork.github.io/b6379c408e4a275f2d0d39655daabe44842c60f7/data/stats.json"
+      },
+      "byte_size": 2131592,
+      "content_hash": "b0ac7ae1f8c1c65ba304302e1dd49d54f07a65138bb61320d1c73a7780e49f7e",
+      "etag": "\"6a323912-208688\"",
+      "last_modified": "Wed, 17 Jun 2026 06:05:06 GMT",
+      "logical_name": "stats.json",
+      "remote_name": "stats.min.json",
+      "row_count": 22773,
+      "source_url": "https://repoe-fork.github.io/stats.min.json"
+    },
+    {
+      "archive": {
+        "encoding": "compact_without_null_fields",
+        "sha256": "955fe6dfc6b30a690fd40a917d7a55285a5d7f701ad187798e260a8960eec743",
+        "url": "https://raw.githubusercontent.com/repoe-fork/repoe-fork.github.io/b6379c408e4a275f2d0d39655daabe44842c60f7/data/tags.json"
+      },
+      "byte_size": 26990,
+      "content_hash": "17cf96a7721b3c076f161c1b8fd1831b9dc16d68decec21c448f4a42dc2ff57b",
+      "etag": "\"6a323916-696e\"",
+      "last_modified": "Wed, 17 Jun 2026 06:05:10 GMT",
+      "logical_name": "tags.json",
+      "remote_name": "tags.min.json",
+      "row_count": 1355,
+      "source_url": "https://repoe-fork.github.io/tags.min.json"
+    }
+  ],
+  "generated_at_utc": "2026-06-19T18:55:56Z",
+  "manifest_version": 1,
+  "runtime_artifact": {
+    "files": {
+      "game-data.json": {
+        "byte_size": 16439442,
+        "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+      },
+      "strings.json": {
+        "byte_size": 6534428,
+        "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+      }
+    },
+    "generated_at_utc": "2026-08-30T02:54:53Z",
+    "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb"
+  },
+  "source": "RePoE fork",
+  "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+  "source_version": "repoe-e4eaf06c20e1ddb4"
+}

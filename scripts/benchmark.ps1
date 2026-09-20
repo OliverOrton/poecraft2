@@ -5,6 +5,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
+. "$PSScriptRoot/python-common.ps1"
+$Python = Get-PoeCraftPython
 $Output = Join-Path $Root "build/performance"
 New-Item -ItemType Directory -Force -Path $Output | Out-Null
 
@@ -16,7 +18,7 @@ if ($LASTEXITCODE -ne 0) {
 $env:PYTHONPATH = "$Root/bindings/python"
 foreach ($ActionsPerRun in @(1, 10)) {
     foreach ($Action in @("alteration", "chaos")) {
-        & py -3 "$Root/tools/benchmark_engine.py" `
+        & $Python.Command @($Python.Prefix) "$Root/tools/benchmark_engine.py" `
             --artifact "$Root/data/compiled/current" `
             --runs $Runs `
             --action $Action `

@@ -5,29 +5,7 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 . "$PSScriptRoot/engine-build-common.ps1"
 
-function Get-PoeCraftPython {
-    if ($env:POECRAFT_PYTHON) {
-        return @{
-            Command = $env:POECRAFT_PYTHON
-            Prefix = @()
-        }
-    }
-    $launcher = Get-Command py -ErrorAction SilentlyContinue
-    if ($launcher) {
-        return @{
-            Command = $launcher.Source
-            Prefix = @("-3")
-        }
-    }
-    $command = Get-Command python -ErrorAction SilentlyContinue
-    if ($command) {
-        return @{
-            Command = $command.Source
-            Prefix = @()
-        }
-    }
-    throw "Python was not found. Set POECRAFT_PYTHON to a Python 3.11+ executable."
-}
+. "$PSScriptRoot/python-common.ps1"
 
 $Python = Get-PoeCraftPython
 & $Python.Command @($Python.Prefix) -m compileall -q "$Root/tools/ingest/poecraft_ingest"
@@ -192,7 +170,7 @@ toolchain is installed.
         }
     }
     else {
-        Write-Warning "CMake and a C++20 compiler were not found; C++ engine build was skipped."
+        throw "Required C++20 compiler is unavailable; the native engine was not built."
     }
 }
 

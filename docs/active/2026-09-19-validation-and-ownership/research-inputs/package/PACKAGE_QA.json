@@ -1,0 +1,17 @@
+{
+  "schema": "planning_packet_qa_v1",
+  "checked_at_utc": "2026-09-19T20:29:29+00:00",
+  "status": "passed",
+  "checks": {
+    "local_markdown_links_checked": 136,
+    "primary_markdown_files_checked": 11,
+    "historical_document_excluded_from_local_link_repair": "background/previous_structural_audit_4594e44.md; preserved original references and bytes, expressly historical",
+    "json_documents_parsed_before_manifest": 8,
+    "python_sources_ast_validated": 2,
+    "reference_checks_rerun_same_results": true,
+    "historical_audit_preserved_sha256": "a67710fe2c408541911c93f723d4c43b528706bb7e5da07e86f5f15130de1cef",
+    "all_five_current_A_time_gates_preserved": true
+  },
+  "errors": [],
+  "scope": "Packet structure and two reproducible audit demonstrations only. Not repository/native/WASM/latency qualification. Archive CRC and manifest are checked after creation."
+}

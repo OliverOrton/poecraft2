@@ -1,0 +1,97 @@
+{
+  "schema": "poecraft2_post_delivery_baseline_v1",
+  "repository": "OliverOrton/poecraft2",
+  "ref": "d13c9b835186ce35cb51aef0de6d0027f8b8a1a7",
+  "parent": "4594e44b6b851511ae5471e52f232bce57d16856",
+  "tree": "cc6d4bd642bcefb422158d7cefc51ade34d5a63f",
+  "commit_time_utc": "2026-09-19T19:27:01Z",
+  "review_date": "2026-09-19",
+  "programme": "docs/active/2026-09-15-verified-delivery",
+  "recorded_not_remeasured": {
+    "calculator_finish_to_usable_seconds": 5.483,
+    "finish_gate_seconds": 10,
+    "calculator_total_delivery_seconds": 75.925,
+    "total_delivery_gate_seconds": 65,
+    "begin_seconds_range": [
+      18.17,
+      18.73
+    ],
+    "setup_cancel_to_released_seconds": 23.081,
+    "step_max_ms_range": [
+      568,
+      660
+    ],
+    "step_gate_ms": 250,
+    "conquest_four_first_policy_step_ms": 1111,
+    "conquest_five_verified_cost_chaos": 85558.70618560436,
+    "conquest_five_expected_primitive_actions": 8407.202314771383,
+    "regalia_exact_cost_chaos": 65.60036144971359,
+    "conquest_four_native_reference_cost_chaos": 3746.1319409485764,
+    "conquest_four_wasm_observation_cost_chaos": 5218.04095,
+    "conquest_four_gap_cause": null,
+    "progress_abi_bytes": 200,
+    "B_ring_old_cost": 227377.06545019808,
+    "B_ring_new_cost": 220743.46354691702,
+    "B_raw_pairs": [
+      185337,
+      185344
+    ],
+    "B_refined_pairs": [
+      10994,
+      11001
+    ],
+    "B_cold_evaluation_seconds": [
+      10.022,
+      9.999
+    ],
+    "B_component_build_seconds": [
+      0.255,
+      0.237
+    ],
+    "B_component_solve_seconds": [
+      2.247,
+      2.269
+    ],
+    "B_layout_junk_classes": [
+      109,
+      109
+    ],
+    "B_layout_count_observations": [
+      30,
+      30
+    ],
+    "B_selected_implementation": "neither",
+    "cooperative_setup_conversion_variants": 0,
+    "initialization_gate_ms": 250,
+    "setup_cancel_to_released_gate_seconds": 1,
+    "time_contract_note": "All 10s Finish, 65s worker-start delivery, 250ms begin, 1s setup cancellation and 250ms step gates already appear in the current A-disposition. They are not newly invented by this package.",
+    "calculator_total_clock_note": "75.925s is Calculator request-to-ready and includes 60ms preparation before the worker request. The 65s contract is worker-start-to-usable; do not subtract unlike clock values without the trace."
+  },
+  "A7_recorded_build_hashes": {
+    "wasm_wrapper_sha256": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502",
+    "wasm_binary_sha256": "b3537e392db4df15041d152a66a4bf2f51441d2f2e4679a003d924e2242a2fc8",
+    "native_benchmark_sha256": "96f4aa82336fe64f1eaed9f35deec2e0ea23c676a8a9a8129a51b8a5e5b76b15",
+    "native_dll_sha256": "58b2aebffe3c652cea2ec6fcfe67f883dc6b4a3d5766778d0bc0de140fac8f5b",
+    "native_tests_sha256": "961b4f35c6f6f0596752d4782e25a6b3b63d7d8a3f24adbf149f2bfd75fb16aa",
+    "compiled_artifact_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+    "worker_prepared_data_sha256_selected_arms": "7669412762ab97801d277dc4d561685baada15824923adcdd03180561aef5b56"
+  },
+  "hash_caveat": "These are copied recorded identities, not freshly recomputed binaries. Compiled manifest and worker-prepared data are different objects. Build source hashes can reflect worktree bytes; Git blob ids are different identities.",
+  "active_plan": [
+    "M0 baseline lock",
+    "M1 validation repair",
+    "M2 retained-artifact boundary",
+    "M3 qualification and closeout"
+  ],
+  "queued_not_authorized_by_default": [
+    "P1 coordinated setup responsiveness with Conquest-four parity triage",
+    "observer-layout adapter",
+    "response cache",
+    "expected/hard/chance-constrained action-budget optimizer"
+  ],
+  "fresh_checks_by_audit": [
+    "current-pin exact Git blob LF/CRLF reproduction",
+    "isolated unittest/pytest collection demonstration"
+  ],
+  "no_new_native_or_wasm_measurements": true
+}

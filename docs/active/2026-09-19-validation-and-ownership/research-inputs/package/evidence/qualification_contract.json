@@ -1,0 +1,65 @@
+{
+  "schema": "planning_qualification_contract_v1",
+  "runnable_corpus": false,
+  "baseline_ref": "d13c9b835186ce35cb51aef0de6d0027f8b8a1a7",
+  "source": "docs/active/2026-09-15-verified-delivery/A-disposition.md",
+  "gates": [
+    {
+      "metric": "finish_intent_to_usable_and_cleanup",
+      "unit": "seconds",
+      "maximum": 10,
+      "baseline": "passed in actual Calculator probe",
+      "M3": "preserve; source-matched changed-path evidence"
+    },
+    {
+      "metric": "worker_start_to_usable",
+      "unit": "seconds",
+      "maximum": 65,
+      "baseline": "failed",
+      "M3": "retain explicit failure unless actually fixed; do not mix UI/worker clocks"
+    },
+    {
+      "metric": "native_begin",
+      "unit": "milliseconds",
+      "maximum": 250,
+      "baseline": "failed",
+      "M3": "no regression laundering; queued P1 repairs"
+    },
+    {
+      "metric": "setup_cancel_intent_to_resources_released",
+      "unit": "seconds",
+      "maximum": 1,
+      "baseline": "failed",
+      "M3": "queued P1 includes cleanup"
+    },
+    {
+      "metric": "individual_stepped_call",
+      "unit": "milliseconds",
+      "maximum": 250,
+      "baseline": "failed on Conquest; Regalia positive control",
+      "M3": "keep known failures and detect changed-lifecycle regressions"
+    }
+  ],
+  "unqualified_quality_control": {
+    "case": "Conquest-four WASM",
+    "observed_cost": 5218.04094969,
+    "native_reference_cost": 3746.13194095,
+    "cause": null
+  },
+  "no_waivers": [
+    "No changed price/objective/cap/tolerance",
+    "No uncharged ownership",
+    "No omitted required tests called pass",
+    "No scalar without supporting artifact",
+    "No probe exit-code shortcut for latency"
+  ],
+  "separate_authorities": [
+    "proposal ordering",
+    "retained materialized candidate",
+    "verified fixed-policy cost",
+    "public admissible lower",
+    "full-scope exact closure",
+    "historical best scalar",
+    "currently owned available artifact"
+  ]
+}

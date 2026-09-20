@@ -1,158 +1,119 @@
 [CmdletBinding()]
-param()
+param(
+    [ValidateSet("All", "Python", "Native", "Web")]
+    [string]$Scope = "All",
+    [switch]$SkipBuild,
+    [switch]$FetchPinnedData
+)
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
-
-function Get-PoeCraftPython {
-    if ($env:POECRAFT_PYTHON) {
-        return @{
-            Command = $env:POECRAFT_PYTHON
-            Prefix = @()
-        }
-    }
-    $launcher = Get-Command py -ErrorAction SilentlyContinue
-    if ($launcher) {
-        return @{
-            Command = $launcher.Source
-            Prefix = @("-3")
-        }
-    }
-    $command = Get-Command python -ErrorAction SilentlyContinue
-    if ($command) {
-        return @{
-            Command = $command.Source
-            Prefix = @()
-        }
-    }
-    throw "Python was not found. Set POECRAFT_PYTHON to a Python 3.11+ executable."
-}
-
+. "$PSScriptRoot/python-common.ps1"
 $Python = Get-PoeCraftPython
 $env:PYTHONPATH = "$Root/tools/ingest;$Root/bindings/python"
-& $Python.Command @($Python.Prefix) -m unittest discover -s "$Root/tools/ingest/tests" -t "$Root/tools/ingest"
-if ($LASTEXITCODE -ne 0) {
-    throw "Python tests failed with exit code $LASTEXITCODE."
+Write-Host "Validation scope: $Scope; Python: $($Python.Command)"
+
+function Invoke-ProjectPython {
+    param([string[]]$Arguments)
+    & $Python.Command @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "Python command failed ($LASTEXITCODE): $($Arguments -join ' ')"
+    }
 }
 
-$env:PYTHONPATH = "$Root/tools/economy;$Root/tools/ingest;$Root/bindings/python"
-& $Python.Command @($Python.Prefix) -m unittest discover `
-    -s "$Root/tools/economy/tests" -t "$Root/tools/economy"
-if ($LASTEXITCODE -ne 0) {
-    throw "Economy tests failed with exit code $LASTEXITCODE."
+$NeedsPython = $Scope -in @("All", "Python")
+$NeedsNative = $Scope -in @("All", "Native")
+$NeedsWeb = $Scope -in @("All", "Web")
+if (($NeedsPython -or $NeedsNative) -and -not $SkipBuild) {
+    & "$PSScriptRoot/build.ps1"
 }
-$env:PYTHONPATH = "$Root/tools/ingest;$Root/tools/economy;$Root/bindings/python"
+$EngineTests = "$Root/build/engine/poecraft_engine_tests.exe"
+$SolverBenchmark = "$Root/build/engine/poecraft_solver_benchmark.exe"
+if ($NeedsPython -and -not (Test-Path "$Root/build/engine/poecraft_engine.dll")) {
+    throw "Required native binding is unavailable; run scripts/build.ps1."
+}
+if ($NeedsNative -and
+    (-not (Test-Path $EngineTests) -or -not (Test-Path $SolverBenchmark))) {
+    throw "Required native test/benchmark executables are unavailable; run scripts/build.ps1."
+}
+if ($NeedsPython) {
+    Invoke-ProjectPython @("-c", "import pytest; print('pytest', pytest.__version__)")
+}
 
-# Build/validate the canonical database derivatives before the engine tests run,
-# so the engine data-loader suite has a complete runtime artifact to load.
+# Full frozen game data is required by these lanes. This is independent of
+# economy refresh. Existing canonical data is validated, never silently replaced.
+$LockPath = "$Root/fixtures/repoe/production-source-manifest.json"
+$Lock = Get-Content -LiteralPath $LockPath -Raw | ConvertFrom-Json
+$Source = "$Root/data/raw/repoe"
 $Database = "$Root/data/sqlite/poecraft.db"
 $Artifact = "$Root/data/compiled/current"
-if (Test-Path $Database) {
-    & $Python.Command @($Python.Prefix) -m poecraft_ingest.cli validate --database $Database
-    if ($LASTEXITCODE -ne 0) {
-        throw "Canonical database validation failed with exit code $LASTEXITCODE."
+$ValidationOutput = "$Root/build/validation"
+New-Item -ItemType Directory -Force -Path $ValidationOutput | Out-Null
+if (-not (Test-Path -LiteralPath $Database)) {
+    if ($FetchPinnedData) {
+        Invoke-ProjectPython @("-m", "poecraft_ingest.cli", "fetch", "--output", $Source,
+            "--locked-manifest", $LockPath)
     }
-
-    & $Python.Command @($Python.Prefix) `
-        "$Root/tools/ingest/validate_spec_fixtures.py" `
-        --database $Database `
-        --fixtures "$Root/fixtures/spec"
-    if ($LASTEXITCODE -ne 0) {
-        throw "Spec fixture validation failed with exit code $LASTEXITCODE."
-    }
-
-    & $Python.Command @($Python.Prefix) `
-        "$Root/tools/ingest/compile_engine_data.py" `
-        compile `
-        --database $Database `
-        --output $Artifact
-    if ($LASTEXITCODE -ne 0) {
-        throw "Complete runtime data compilation failed with exit code $LASTEXITCODE."
-    }
-    & $Python.Command @($Python.Prefix) `
-        "$Root/tools/ingest/compile_engine_data.py" `
-        validate `
-        --database $Database `
-        --artifact $Artifact
-    if ($LASTEXITCODE -ne 0) {
-        throw "Compiled data validation failed with exit code $LASTEXITCODE."
-    }
-}
-
-# Binding tests run after artifact compilation so fixture parity cannot
-# accidentally exercise a stale generated dataset.
-& $Python.Command @($Python.Prefix) -m unittest discover `
-    -s "$Root/bindings/python/tests"
-if ($LASTEXITCODE -ne 0) {
-    throw "Python binding tests failed with exit code $LASTEXITCODE."
-}
-
-# Engine tests. Prefer CTest (CMake build); fall back to the g++ test binary,
-# then to the header smoke test. The data-loader suite needs the artifact path.
-$CTest = Get-Command ctest -ErrorAction SilentlyContinue
-$EngineTests = "$Root/build/engine/poecraft_engine_tests.exe"
-$HeaderSmoke = "$Root/build/engine/poecraft_header_smoke.exe"
-if ($CTest -and (Test-Path "$Root/build/engine/CMakeCache.txt")) {
-    & $CTest.Source --test-dir "$Root/build/engine" -C Release --output-on-failure
-    if ($LASTEXITCODE -ne 0) {
-        throw "C++ tests failed with exit code $LASTEXITCODE."
-    }
-}
-elseif (Test-Path $EngineTests) {
-    $Fixtures = "$Root/fixtures/spec"
-    if (Test-Path $Artifact) {
-        & $EngineTests $Artifact $Fixtures
-    }
-    else {
-        & $EngineTests
-    }
-    if ($LASTEXITCODE -ne 0) {
-        throw "C++ engine tests failed with exit code $LASTEXITCODE."
-    }
-}
-elseif (Test-Path $HeaderSmoke) {
-    & $HeaderSmoke
-    if ($LASTEXITCODE -ne 0) {
-        throw "C++ header smoke test failed with exit code $LASTEXITCODE."
-    }
-}
-
-$SolverBenchmark = "$Root/build/engine/poecraft_solver_benchmark.exe"
-$SolverCorpus = "$Root/fixtures/solver-benchmarks/v1/manifest.json"
-if ((Test-Path $SolverBenchmark) -and
-    (Test-Path $Artifact) -and
-    (Test-Path $SolverCorpus)) {
-    & $SolverBenchmark `
-        --artifact $Artifact `
-        --corpus $SolverCorpus `
-        --validate-only
-    if ($LASTEXITCODE -ne 0) {
-        throw "Solver benchmark corpus validation failed with exit code $LASTEXITCODE."
-    }
-}
-
-# Web/WASM acceptance checks use the generated Emscripten module and the same
-# EngineClient/worker path as the browser application.
-$Npm = Get-Command npm -ErrorAction SilentlyContinue
-$WebPackage = "$Root/apps/web/package.json"
-$WasmModule = "$Root/bindings/wasm/dist/poecraft_engine.mjs"
-if ($Npm -and (Test-Path $WebPackage) -and (Test-Path $WasmModule)) {
-    Push-Location "$Root/apps/web"
-    try {
-        & $Npm.Source test
-        if ($LASTEXITCODE -ne 0) {
-            throw "Web/WASM tests failed with exit code $LASTEXITCODE."
+    foreach ($Entry in $Lock.files) {
+        $SourceFile = Join-Path $Source $Entry.logical_name
+        if (-not (Test-Path -LiteralPath $SourceFile) -or
+            (Get-FileHash -LiteralPath $SourceFile -Algorithm SHA256).Hash.ToLowerInvariant() -ne $Entry.content_hash) {
+            throw "Required frozen source $($Entry.logical_name) is unavailable or mismatched. Use -FetchPinnedData for the pinned archive; current data is not a substitute."
         }
     }
-    finally {
-        Pop-Location
-    }
+    Invoke-ProjectPython @("-m", "poecraft_ingest.cli", "ingest", "--source", $Source,
+        "--database", $Database, "--report", "$ValidationOutput/ingest.json")
 }
-elseif (-not $Npm) {
-    Write-Warning "npm was not found; web/WASM tests were skipped."
+Invoke-ProjectPython @("-m", "poecraft_ingest.cli", "validate", "--database", $Database)
+Invoke-ProjectPython @("$Root/tools/ingest/validate_spec_fixtures.py", "--database", $Database,
+    "--fixtures", "$Root/fixtures/spec")
+if (-not (Test-Path -LiteralPath "$Artifact/manifest.json")) {
+    Invoke-ProjectPython @("$Root/tools/ingest/compile_engine_data.py", "compile", "--database", $Database,
+        "--output", $Artifact, "--generated-at-utc", $Lock.runtime_artifact.generated_at_utc)
 }
-elseif (-not (Test-Path $WasmModule)) {
-    Write-Warning "WASM module is absent; run scripts/build-wasm.ps1 before web tests."
+$ActualManifestHash = (Get-FileHash -LiteralPath "$Artifact/manifest.json" -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($ActualManifestHash -ne $Lock.runtime_artifact.manifest_sha256) {
+    throw "The runtime manifest differs from the required frozen fixture. Preserve it and resolve the data identity before testing."
 }
+Invoke-ProjectPython @("$Root/tools/ingest/compile_engine_data.py", "validate", "--database", $Database,
+    "--artifact", $Artifact)
 
-Write-Host "Tests completed."
+if ($NeedsPython) {
+    # Separate processes preserve the established tests.test_ingest fixture
+    # import without colliding with the other packages' tests namespaces.
+    Invoke-ProjectPython @("-m", "pytest", "$Root/tools/ingest/tests", "--import-mode=importlib", "-q")
+    $env:PYTHONPATH = "$Root/tools/economy;$Root/tools/ingest;$Root/bindings/python"
+    Invoke-ProjectPython @("-m", "pytest", "$Root/tools/economy/tests", "--import-mode=importlib", "-q")
+    # Preserve the original unittest discovery root for test_stress's
+    # top-level test_bindings fixture import, within this isolated process.
+    $env:PYTHONPATH = "$Root/bindings/python/tests;$Root/bindings/python;$Root/tools/ingest;$Root/tools/economy"
+    Invoke-ProjectPython @("-m", "pytest", "$Root/bindings/python/tests", "--import-mode=importlib", "-q")
+}
+if ($NeedsNative) {
+    $CTest = Get-Command ctest -ErrorAction SilentlyContinue
+    if ($CTest -and (Test-Path "$Root/build/engine/CMakeCache.txt")) {
+        & $CTest.Source --test-dir "$Root/build/engine" -C Release --output-on-failure
+    }
+    else {
+        & $EngineTests $Artifact "$Root/fixtures/spec"
+    }
+    if ($LASTEXITCODE -ne 0) { throw "C++ tests failed with exit code $LASTEXITCODE." }
+    & $SolverBenchmark --artifact $Artifact --corpus "$Root/fixtures/solver-benchmarks/v1/manifest.json" --validate-only
+    if ($LASTEXITCODE -ne 0) { throw "Solver corpus validation failed with exit code $LASTEXITCODE." }
+}
+if ($NeedsWeb) {
+    $Npm = Get-Command npm -ErrorAction SilentlyContinue
+    if (-not $Npm -or -not (Test-Path "$Root/bindings/wasm/dist/poecraft_engine.mjs") -or
+        -not (Test-Path "$Root/bindings/wasm/dist/poecraft_engine.wasm")) {
+        throw "Required web runtime is unavailable: npm and the release WASM module are required."
+    }
+    Push-Location "$Root/apps/web"
+    try {
+        foreach ($NpmArguments in @(@("ci"), @("run", "build:data"), @("test"), @("run", "typecheck"))) {
+            & $Npm.Source @NpmArguments
+            if ($LASTEXITCODE -ne 0) { throw "npm $NpmArguments failed with exit code $LASTEXITCODE." }
+        }
+    }
+    finally { Pop-Location }
+}
+Write-Host "Validation completed for scope $Scope. Other scopes were not selected. Optional GUI coverage is reported by pytest."

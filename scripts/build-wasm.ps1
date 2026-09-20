@@ -7,6 +7,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
+. "$PSScriptRoot/python-common.ps1"
+$Python = Get-PoeCraftPython
 . "$PSScriptRoot/engine-build-common.ps1"
 
 if (-not $EmsdkRoot) {
@@ -35,7 +37,7 @@ New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $Output = Join-Path $OutputDirectory "poecraft_engine.mjs"
 $GeneratedDirectory = Join-Path $Root "build/wasm/generated"
 $GeneratedHeader = Join-Path $GeneratedDirectory "harvest_crafts.generated.hpp"
-py -3 "$Root/scripts/generate-harvest-crafts.py" `
+& $Python.Command @($Python.Prefix) "$Root/scripts/generate-harvest-crafts.py" `
     --recipes "$Root/fixtures/economy/harvest-recipes-v1.json" `
     --output $GeneratedHeader
 if ($LASTEXITCODE -ne 0) {

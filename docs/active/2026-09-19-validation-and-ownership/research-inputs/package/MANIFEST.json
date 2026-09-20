@@ -1,0 +1,126 @@
+{
+  "schema": "planning_packet_manifest_v1",
+  "created_at_utc": "2026-09-19T20:29:29+00:00",
+  "repository_ref": "d13c9b835186ce35cb51aef0de6d0027f8b8a1a7",
+  "hash_algorithm": "sha256",
+  "excludes": [
+    "MANIFEST.json"
+  ],
+  "files": [
+    {
+      "path": "01_MAIN_REVIEW.md",
+      "bytes": 11812,
+      "sha256": "d48d744b6709f8830dec1c762691a75b77e0715dbdbb66ae4252c864fb11b870"
+    },
+    {
+      "path": "02_MILESTONES.md",
+      "bytes": 16567,
+      "sha256": "225785874c278484dd2410b29f700cd3c8a1a3b95844f5028c5c5e35b20947ab"
+    },
+    {
+      "path": "03_ARTIFACT_OWNERSHIP_DESIGN.md",
+      "bytes": 13421,
+      "sha256": "7784635916464149b490946eb583d8f64f08eee0ea5d7a265eefe0ba925f2b05"
+    },
+    {
+      "path": "04_VALIDATION_AND_EXPERIMENTS.md",
+      "bytes": 12520,
+      "sha256": "1ff962932b5f55a0e5fec979398a1b4002186b11606cdf5bb8445c3f21ae4dfc"
+    },
+    {
+      "path": "05_RESEARCH_AND_MATHEMATICS.md",
+      "bytes": 11758,
+      "sha256": "cf13ed7e068138e9adbf531f0348bd71e613bd54902811a84ff9699a6dcce46a"
+    },
+    {
+      "path": "06_CANONICAL_DOC_MAINTENANCE.md",
+      "bytes": 7829,
+      "sha256": "163bde01bfa327aeb5ec1eee347cc117ad6ff5bfc28db5466328b8c68b161ce6"
+    },
+    {
+      "path": "07_NEXT_PERFORMANCE_PROGRAMME.md",
+      "bytes": 8366,
+      "sha256": "cebe058cda2f07ea55fc838ce9cbd1a50c921edcd737b03f65d5ae9c1634daaf"
+    },
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 8937,
+      "sha256": "b76e366404dcb13812e541aa7faf7ac0d02d907849f7cc3881d0655f374ef535"
+    },
+    {
+      "path": "PACKAGE_QA.json",
+      "bytes": 881,
+      "sha256": "deced7492285f00363c9f4147ec123c9a0166df68c4ba5e109533fc87e3a8cec"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5721,
+      "sha256": "9c76a9f3882ec3eddd5c7cf135a28d36f3526098db97ba670c48c61a8e5db057"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 13224,
+      "sha256": "59398c546299ec19299cdb2e97802fdae2bc567eb69dd50f71da01116fbfc7a5"
+    },
+    {
+      "path": "background/README.md",
+      "bytes": 604,
+      "sha256": "cdee8ae56551b7523d7341498e2a2a19a34c867d67170cdaa49de5dd6dd54ce8"
+    },
+    {
+      "path": "background/previous_structural_audit_4594e44.md",
+      "bytes": 31300,
+      "sha256": "a67710fe2c408541911c93f723d4c43b528706bb7e5da07e86f5f15130de1cef"
+    },
+    {
+      "path": "checks/reproduce_audit_checks.py",
+      "bytes": 5457,
+      "sha256": "3302031e65cbc0a7a572e458fbc524b2dcaae1278c1de130edab3d28ba3b25c9"
+    },
+    {
+      "path": "checks/verify_package.py",
+      "bytes": 1838,
+      "sha256": "f2e799639c470528ea7a3684a289c32791f4a2e85e8d1ff33499c650221f91df"
+    },
+    {
+      "path": "evidence/ci_observations.json",
+      "bytes": 2585,
+      "sha256": "69375fb90ed5f42bd912a929420631cfa1c3421d4d3956c2f7fc82f3c5b20d25"
+    },
+    {
+      "path": "evidence/current_baseline.json",
+      "bytes": 3917,
+      "sha256": "a39ddd433128c52baa44ddfce5a66bb762c1c332d5d5a4bf7b7efa869abf3590"
+    },
+    {
+      "path": "evidence/debt_disposition.json",
+      "bytes": 4726,
+      "sha256": "0aaaf59828c2dbea06df2283e773d4939727192378cb0754c24cc0fced333b0c"
+    },
+    {
+      "path": "evidence/evaluator-straight.git-blob.json",
+      "bytes": 763,
+      "sha256": "71bd8aea350928a3da87103b7d78c454b9e024cb5502fb3af66c9ad2987e333f"
+    },
+    {
+      "path": "evidence/final_remote_recheck.json",
+      "bytes": 762,
+      "sha256": "a8a89bbf27e8d5b900d7c25f01cbba0a44b7d3b23e3dc0596e50bda2b437c64e"
+    },
+    {
+      "path": "evidence/qualification_contract.json",
+      "bytes": 1975,
+      "sha256": "707e70f3f24028b4a9c37980bc05cc8be591dcba4da4c451191304a2343a3a84"
+    },
+    {
+      "path": "evidence/reference_checks.json",
+      "bytes": 1541,
+      "sha256": "9220ffcc1953650b323160d3a3e7e39d2f492ab8ccc7d6e1153fbe526499da37"
+    },
+    {
+      "path": "evidence/reviewed_sources.json",
+      "bytes": 14003,
+      "sha256": "8bc157b6f3272f3693fa13d18bf53beba07c64295a01f81f6f8819dcf7ae1834"
+    }
+  ]
+}

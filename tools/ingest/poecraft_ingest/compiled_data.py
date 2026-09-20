@@ -1700,6 +1700,8 @@ def build_parser() -> argparse.ArgumentParser:
     compile_parser = subparsers.add_parser("compile")
     compile_parser.add_argument("--database", type=Path, required=True)
     compile_parser.add_argument("--output", type=Path, required=True)
+    compile_parser.add_argument("--generated-at-utc",
+        help="Recorded build timestamp for reproducing an existing pinned artifact.")
 
     validate_parser = subparsers.add_parser("validate")
     validate_parser.add_argument("--database", type=Path, required=True)
@@ -1710,7 +1712,8 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "compile":
-        manifest = compile_engine_data(args.database, args.output)
+        manifest = compile_engine_data(args.database, args.output,
+            generated_at_utc=args.generated_at_utc)
         print(
             f"compiled {manifest['row_counts']['mods']} mods and "
             f"{manifest['row_counts']['base_items']} bases to {args.output} "

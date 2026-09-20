@@ -1,0 +1,24 @@
+{
+  "checked_at_utc": "2026-09-19T20:29:29+00:00",
+  "method": "GitHub connector GET branch plus latest jobs for the two inspected push runs",
+  "repository": "OliverOrton/poecraft2",
+  "branch": "main",
+  "commit": "d13c9b835186ce35cb51aef0de6d0027f8b8a1a7",
+  "tree": "cc6d4bd642bcefb422158d7cefc51ade34d5a63f",
+  "changed_since_review_start": false,
+  "windows": {
+    "run_id": 35465746330,
+    "job_id": 105957628596,
+    "status": "completed",
+    "conclusion": "failure",
+    "build": "success",
+    "test": "failure"
+  },
+  "knowledge": {
+    "run_id": 35465746343,
+    "job_id": 105957628688,
+    "status": "completed",
+    "conclusion": "failure"
+  },
+  "scope": "No claim about unpushed local edits or all scheduled workflows; no writes or reruns."
+}

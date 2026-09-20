@@ -1,0 +1,183 @@
+{
+  "schema": "post_delivery_debt_disposition_v1",
+  "ref": "d13c9b835186ce35cb51aef0de6d0027f8b8a1a7",
+  "authority": "planning; not a static-analysis or runtime certificate",
+  "findings": [
+    {
+      "id": "D01",
+      "subject": "Windows validation",
+      "current_evidence": "confirmed on new main",
+      "disposition": "M1",
+      "sources": [
+        "R20",
+        "R21",
+        "R31"
+      ]
+    },
+    {
+      "id": "D02",
+      "subject": "Byte portability",
+      "current_evidence": "one current-pin witness reproduced; other hash failures still require diagnosis",
+      "disposition": "M1",
+      "sources": [
+        "R33"
+      ]
+    },
+    {
+      "id": "D03",
+      "subject": "Positional research test",
+      "current_evidence": "confirmed on new main",
+      "disposition": "M1",
+      "sources": [
+        "R23",
+        "R24",
+        "R32"
+      ]
+    },
+    {
+      "id": "D04",
+      "subject": "Portfolio ownership",
+      "current_evidence": "Finish improved; retained-pool mutable boundary remains",
+      "disposition": "M2",
+      "sources": [
+        "R12",
+        "R13",
+        "R14"
+      ]
+    },
+    {
+      "id": "D05",
+      "subject": "Action ledger consumer migration",
+      "current_evidence": "historical coexistence; no new all-caller audit; not selected",
+      "disposition": "defer algorithm treatment",
+      "sources": [
+        "R18"
+      ]
+    },
+    {
+      "id": "D06",
+      "subject": "Mixed candidate stages",
+      "current_evidence": "confirmed; preserve pending/materialized versus verified roles",
+      "disposition": "M2",
+      "sources": [
+        "R12",
+        "R13"
+      ]
+    },
+    {
+      "id": "D07",
+      "subject": "Observation versus mutation",
+      "current_evidence": "mutating best-fallback getter confirmed; current full projection not exhaustively reviewed",
+      "disposition": "M2",
+      "sources": [
+        "R13",
+        "R15"
+      ]
+    },
+    {
+      "id": "D08",
+      "subject": "Coordinator reasoning surface",
+      "current_evidence": "selected excerpts confirm shared lifecycle; no current size census",
+      "disposition": "one boundary only",
+      "sources": [
+        "R12",
+        "R14"
+      ]
+    },
+    {
+      "id": "D09",
+      "subject": "Lab authoring dependency",
+      "current_evidence": "historical finding not revalidated on new main",
+      "disposition": "defer",
+      "sources": [
+        "R18"
+      ]
+    },
+    {
+      "id": "D10",
+      "subject": "Large Python modules",
+      "current_evidence": "historical sizes not freshly measured",
+      "disposition": "defer",
+      "sources": []
+    },
+    {
+      "id": "D11",
+      "subject": "Comparison relations",
+      "current_evidence": "preserve distinctions; broad comparator refactor not revalidated or selected",
+      "disposition": "M1/M3 only where affected",
+      "sources": [
+        "R05",
+        "R11"
+      ]
+    },
+    {
+      "id": "D12",
+      "subject": "Source/binary qualification",
+      "current_evidence": "current A7 identity and local-versus-hosted distinction confirmed",
+      "disposition": "M0/M3",
+      "sources": [
+        "R09",
+        "R11",
+        "R29",
+        "R31"
+      ]
+    },
+    {
+      "id": "D13",
+      "subject": "WASM optimizer workaround",
+      "current_evidence": "current script confirms fallback; no compiler failure reproduced",
+      "disposition": "preserve",
+      "sources": [
+        "R29",
+        "R19"
+      ]
+    },
+    {
+      "id": "D14",
+      "subject": "Header fan-out",
+      "current_evidence": "no fresh build/fan-out census",
+      "disposition": "defer",
+      "sources": []
+    },
+    {
+      "id": "D15",
+      "subject": "Shared utilities",
+      "current_evidence": "only project Python resolver encountered selected; no repo-wide migration",
+      "disposition": "limited M1",
+      "sources": [
+        "R20",
+        "R29"
+      ]
+    },
+    {
+      "id": "D16",
+      "subject": "Math correspondence",
+      "current_evidence": "current conditional interruption/staging arguments maintained; full ledger not re-proved",
+      "disposition": "affected canonical updates",
+      "sources": [
+        "R17",
+        "R18",
+        "R34"
+      ]
+    },
+    {
+      "id": "D17",
+      "subject": "Diagnostic retirement",
+      "current_evidence": "no new consumer audit permitting purge",
+      "disposition": "preserve/defer",
+      "sources": [
+        "R18"
+      ]
+    },
+    {
+      "id": "D18",
+      "subject": "Context burden",
+      "current_evidence": "engineering hypothesis; no quantitative LLM-scale limit established",
+      "disposition": "localize selected reasoning boundary",
+      "sources": [
+        "R12",
+        "R18"
+      ]
+    }
+  ]
+}

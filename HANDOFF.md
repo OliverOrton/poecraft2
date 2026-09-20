@@ -1,36 +1,22 @@
 # Handoff
 
-[Verified delivery and continuation research gates](docs/active/2026-09-15-verified-delivery/README.md)
-is complete locally against `4594e44b6b851511ae5471e52f232bce57d16856`, with
-precise unqualified gates. The containing commit is the review revision; no push
-or automatic successor is authorized. Protected root `0` was not inspected,
-staged or changed. Work was sequential, using existing admission/supervision and
-long batched waits.
+Active: [Reliable validation and retained-artifact ownership](docs/active/2026-09-19-validation-and-ownership/README.md),
+selected against `d13c9b8`. M0 is complete. M1 validation repairs and the exact
+frozen-data route pass local checks; an actual non-Windows checkout check remains
+unavailable and an environment question is pending. M1 is not fully qualified;
+M2 ownership edits and M3 qualification have not started. The living record and
+[receipt](docs/active/2026-09-19-validation-and-ownership/validation.json) own the
+commands, byte identities, tests and precise continuation gate.
 
-A retains working progress export/frozen requests, corrected role labels,
-activation counters and request-scoped Finish with complete native artifact
-ownership/sealing. Actual Calculator Finish-to-usable is 5.483 s at unchanged
-Conquest-five cost. Total delivery (75.925 s), begin (18.17–18.73 s), setup cancel
-to release (23.081 s) and ordinary stepped latency (568–660 ms) fail their gates.
-Setup has two synchronous owners; no bounded one-owner cooperative conversion
-was identified or claimed. Browser defaults and 240-second finish remain.
+Keep commits local and work sequentially without subagents. Preserve protected
+root `0`. Economy stays frozen. No automatic restart, push, queued setup work or
+repeat Ring diagnostics is selected. Once the missing M1 gate is resolved,
+continue with the existing retained-pool mutation/read boundary from the packet.
 
-Native Bow/Ring/Amulet/Conquest-four preserve reference graph bytes and independent
-cost/count checks; Regalia remains exact. Conquest-four WASM C5218.04095 remains
-unqualified against retained C3746.13194; matched native B/A preservation does not
-resolve that gap. Full-scope exactness and historical CB03/CB05/CB09/default-Ring
-limits remain open. The 200-byte public progress ABI and final web checks pass.
-Oliver owns rendered visual review.
-
-B completed two saved-Ring diagnostics and selects **neither** successor: no
-established global representation reduction or measured reusable native interior.
-No layout adapter, response cache, lower campaign or new search is selected.
-The living record owns A/B dispositions, build/request/graph identities, tests,
-failed histories, canonical integration and reproduction sources.
-
-Prior delivered programmes remain recorded in
-[progress and native Ring recovery](docs/active/2026-09-14-progress-and-delivery/README.md)
-and [cross-base recovery](docs/active/2026-09-14-cross-base-strategy-recovery/README.md).
-Their preserved policies and failure evidence remain applicable under their
-original identities; this programme does not relabel wide native qualification
-as browser-default capability.
+The completed [verified-delivery programme](docs/active/2026-09-15-verified-delivery/README.md)
+retains the 5.483-second Finish result and the other failed latency/WASM gates.
+Earlier [progress/Ring recovery](docs/active/2026-09-14-progress-and-delivery/README.md)
+and [cross-base recovery](docs/active/2026-09-14-cross-base-strategy-recovery/README.md)
+remain evidence under their original identities; no solver policy, memory cap,
+mathematical authority, browser default or historical high-water result changed
+in this validation-only revision.

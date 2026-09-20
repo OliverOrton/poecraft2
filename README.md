@@ -35,13 +35,30 @@ The canonical engine translation-unit inventory is
 Run the full acceptance pipeline:
 
 ```powershell
-powershell -File scripts/test.ps1
+. ./scripts/python-common.ps1
+$projectPython = Get-PoeCraftPython
+& $projectPython.Command -m pip install -e './tools/ingest[test]'
+powershell -File scripts/test.ps1 -FetchPinnedData
 ```
 
-The full pipeline covers ingest, database validation, fixture parity, artifact
-compile/validation, bindings, engine CTest, and web tests. During development,
-prefer the changed layer and its downstream consumers; run the appropriate
-complete suite once at the end of the selected plan.
+Set `POECRAFT_PYTHON` to a Python 3.11+ executable to select an interpreter.
+The shared resolver otherwise resolves the local launcher/PATH once and binds
+nested project scripts to that exact executable. Install dependencies with its
+own `-m pip`; the optional `solver-lab` GUI extra remains separate. Emscripten's
+SDK interpreter is independent.
+
+The full pipeline prepares native/data prerequisites before pytest collects
+ingest, economy and binding tests, then runs engine CTest, web tests and explicit
+TypeScript checking. `-FetchPinnedData` provisions the existing frozen game
+snapshot when needed, through the [pinned ingest route](docs/engine/data.md#frozen-validation-inputs).
+It does not refresh economy prices. Unexpected existing data fails validation
+and is preserved. Missing selected prerequisites fail instead of silently
+skipping integration.
+
+Use `-Scope Python`, `-Scope Native` or `-Scope Web` for the affected lane;
+`-SkipBuild` explicitly reuses an existing native build. Other lanes are reported
+as not selected. During development, prefer the changed layer and its downstream
+consumers; run the appropriate complete suite once at the end of the selected plan.
 
 Run the web app from `apps/web`:
 
@@ -52,7 +69,7 @@ npm test
 npx tsc --noEmit
 ```
 
-Python layers use `py -3` with both package roots when required:
+Direct Python commands use the selected executable and the needed package roots:
 
 ```powershell
 $env:PYTHONPATH = "tools/ingest;bindings/python"

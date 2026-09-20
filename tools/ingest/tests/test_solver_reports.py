@@ -4,6 +4,8 @@ import copy
 import json
 from pathlib import Path
 
+import pytest
+
 from poecraft_ingest.bounded_policy_workflow import (
     load_stage,
     require_completed_predecessors,
@@ -207,15 +209,32 @@ def test_declared_exact_cohort_keeps_missing_and_refuses_bare_status() -> None:
     assert "exact_closure" not in build_report({"candidate": (ledger, cases)})
 
 
-def test_research_series_uses_original_predecessor_and_available_states() -> None:
+@pytest.mark.parametrize("order", ["authored", "reversed", "prepended"])
+def test_research_series_uses_original_predecessor_and_available_states(
+    tmp_path: Path, order: str,
+) -> None:
     root = Path(__file__).resolve().parents[3]
-    report = build_research_report(root, Path("experiments/solver-research/backbone-pilot-v1.json"))
+    series_path = root / "experiments/solver-research/backbone-pilot-v1.json"
+    if order != "authored":
+        series = json.loads(series_path.read_text(encoding="utf-8"))
+        if order == "reversed":
+            series["observations"].reverse()
+        else:
+            first = copy.deepcopy(series["observations"][0])
+            first["id"] = "prepended-conditional-fixture"
+            series["observations"].insert(0, first)
+        series_path = tmp_path / "series.json"
+        series_path.write_text(json.dumps(series), encoding="utf-8")
+    report = build_research_report(root, series_path)
     filtered = next(row for row in report["observations"] if row["id"] == "filtered-continuation")
     source = filtered["sources"][0]
     assert source["donor_comparison"]["before"] == 211.22756690011138
     assert source["portfolio_comparison"]["gain"] == 141.08260343868366
     assert source["program"] == 355.789813661076
-    support = report["observations"][0]["sources"][0]
+    support_observation = next(row for row in report["observations"] if row["id"] == "support")
+    assert support_observation["kind"] == "certified_native_lower"
+    assert support_observation["role"] == "development; repeatedly inspected and tuned, not unseen validation"
+    support = support_observation["sources"][0]
     assert support["portfolio"] is None and support["reported_portfolio_gain"] == 0
     pair = report["ordinary_comparisons"][0]
     assert pair["status"] == "compatible_archived_observation"

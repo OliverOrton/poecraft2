@@ -1,0 +1,35 @@
+{
+  "version": "v1",
+  "name": "S8.0 accounting contract - existing deterministic evaluator fixture",
+  "base_state": {
+    "base_key": "synthetic/base",
+    "item_level": 1,
+    "rarity": "rare"
+  },
+  "start_node_id": "start",
+  "nodes": [
+    {"id": "start", "kind": "start"},
+    {
+      "id": "restart",
+      "kind": "operation",
+      "operation": {"type": "restart", "params": {}}
+    },
+    {"id": "success", "kind": "terminal", "terminal": "success"}
+  ],
+  "edges": [
+    {
+      "id": "begin",
+      "from": "start",
+      "to": "restart",
+      "priority": 0,
+      "condition": {"type": "always"}
+    },
+    {
+      "id": "done",
+      "from": "restart",
+      "to": "success",
+      "priority": 0,
+      "condition": {"type": "always"}
+    }
+  ]
+}

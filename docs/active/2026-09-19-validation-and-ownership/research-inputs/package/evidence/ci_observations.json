@@ -1,0 +1,68 @@
+{
+  "schema": "poecraft2_ci_review_v1",
+  "ref": "d13c9b835186ce35cb51aef0de6d0027f8b8a1a7",
+  "method": "GitHub run metadata, job metadata, and complete job logs read; this JSON is a compact manually extracted observation, not the raw log.",
+  "raw_log_hash": null,
+  "workflows": [
+    {
+      "name": "Windows",
+      "run_id": 35465746330,
+      "job_id": 105957628596,
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35465746330",
+      "status": "completed",
+      "conclusion": "failure",
+      "build": "success",
+      "failure_stage": "initial ingest Python discovery",
+      "test_result": {
+        "reported_count": 35,
+        "failures": 4,
+        "errors": 12,
+        "seconds": 13.064
+      },
+      "configured_python": "3.12.10",
+      "traceback_python": "3.14.7",
+      "failure_classes": [
+        "3 real-data artifact errors before artifact preparation",
+        "9 pytest import errors",
+        "4 raw-byte/hash assertion failures"
+      ],
+      "native_tests": "not reached in this workflow",
+      "web_tests": "not reached in this workflow",
+      "warnings": [
+        "Compiler stringop-overflow warnings in inlined vector resize were present; build succeeded. This review does not determine whether those warnings are false positives."
+      ],
+      "qualification_boundary": "This does not negate the separately recorded local A7 focused native/web qualifications."
+    },
+    {
+      "name": "Solver knowledge",
+      "run_id": 35465746343,
+      "job_id": 105957628688,
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35465746343",
+      "status": "completed",
+      "conclusion": "failure",
+      "knowledge_lint": {
+        "claims": 25,
+        "errors": 0,
+        "warnings": 18,
+        "authority": "traceability only"
+      },
+      "knowledge_unit_tests": {
+        "passed": 8
+      },
+      "focused_pytest": {
+        "passed": 10,
+        "failed": 1
+      },
+      "failure": "test_research_series_uses_original_predecessor_and_available_states: KeyError sources at test_solver_reports.py:218",
+      "failing_expression": "report[\"observations\"][0][\"sources\"][0]",
+      "actual_support_id": "support",
+      "first_observation_id": "out-of-snapshot-continuation-failures-20260909",
+      "later_metadata_and_generated_report_checks": "not reached after pytest failure"
+    }
+  ],
+  "not_a_claim": [
+    "Not every hash failure has been independently diagnosed.",
+    "A green partial lane is not full acceptance.",
+    "No workflow was rerun, edited, or cancelled by this audit."
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "repository": "OliverOrton/poecraft2",
+  "ref": "d13c9b835186ce35cb51aef0de6d0027f8b8a1a7",
+  "review_date": "2026-09-19",
+  "sources": [
+    {
+      "id": "R01",
+      "title": "Completed programme commit",
+      "url": "https://github.com/OliverOrton/poecraft2/commit/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7",
+      "coverage": "Commit metadata and parent, not an independent runtime qualification."
+    },
+    {
+      "id": "R02",
+      "title": "Operating constraints",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/AGENTS.md",
+      "coverage": "Complete operating instructions."
+    },
+    {
+      "id": "R03",
+      "title": "Current handoff",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/HANDOFF.md",
+      "coverage": "Current selected/completed boundary and explicit unqualified outcomes."
+    },
+    {
+      "id": "R04",
+      "title": "Verified-delivery closeout",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/active/2026-09-15-verified-delivery/README.md",
+      "coverage": "Complete closeout narrative and evidence routes."
+    },
+    {
+      "id": "R05",
+      "title": "A disposition",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/active/2026-09-15-verified-delivery/A-disposition.md",
+      "coverage": "Recorded delivery, cancellation, timing, and preservation findings."
+    },
+    {
+      "id": "R06",
+      "title": "Setup disposition",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/active/2026-09-15-verified-delivery/setup-disposition.md",
+      "coverage": "Two synchronous owners; zero cooperative conversion variants."
+    },
+    {
+      "id": "R07",
+      "title": "B disposition",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/active/2026-09-15-verified-delivery/B-disposition.md",
+      "coverage": "Both saved-Ring diagnoses and explicit selection of neither implementation."
+    },
+    {
+      "id": "R08",
+      "title": "Activation matrix",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/active/2026-09-15-verified-delivery/activation.md",
+      "coverage": "Public/private modes, original-cost authority, resources, and eligibility."
+    },
+    {
+      "id": "R09",
+      "title": "Recorded validation receipt",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/active/2026-09-15-verified-delivery/validation.json",
+      "coverage": "Existing local tests and unrun work; not this audit execution."
+    },
+    {
+      "id": "R10",
+      "title": "Recorded qualification receipt",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/active/2026-09-15-verified-delivery/qualification.json",
+      "coverage": "Selected early worker arms read; large receipt not exhaustively inspected."
+    },
+    {
+      "id": "R11",
+      "title": "A7 build provenance",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/active/2026-09-15-verified-delivery/build-A7.json",
+      "coverage": "Opening source records and lines 145\u2013end: output hashes and manifest. Full source-hash inventory not independently recomputed."
+    },
+    {
+      "id": "R12",
+      "title": "Portfolio and publication storage",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/engine/src/solver_solve_types.hpp",
+      "coverage": "Inspected 1480\u20131770 and 2180\u20132480: containers, aliases, owner methods."
+    },
+    {
+      "id": "R13",
+      "title": "Retention, invalidation and adoption",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/engine/src/solver_solve_constructive.cpp",
+      "coverage": "Inspected 1\u2013300 and 2960\u20133710, plus a diagnostic excerpt. In particular incumbent_precedes, retain_certified_incumbent, best_current_certified_fallback, commit_output_incumbent."
+    },
+    {
+      "id": "R14",
+      "title": "Publication orchestration",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/engine/src/solver_solve_finish.cpp",
+      "coverage": "Selected excerpts in 1\u2013715: interruption, invariants, and direct retained-container mutation; not the entire coroutine."
+    },
+    {
+      "id": "R15",
+      "title": "Memory and telemetry implementation",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/engine/src/solver_solve_telemetry.cpp",
+      "coverage": "Inspected 1\u2013235 and 3040\u2013end, including the four-pointer alias accounting offset; not all progress projection logic."
+    },
+    {
+      "id": "R16",
+      "title": "Publication contract",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/solver/publication.md",
+      "coverage": "Requested Finish, complete private transfer, final sealing, and source/output distinction."
+    },
+    {
+      "id": "R17",
+      "title": "Search/resumption mathematics",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/solver/mathematics/search-and-resumption.md",
+      "coverage": "Read interruption-preserves-owned-witness and cooperative-preparation arguments, plus surrounding scope/reuse sections; later text truncated."
+    },
+    {
+      "id": "R18",
+      "title": "Source ownership map",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/foundation/solver-internals.md",
+      "coverage": "Existing owners, single-TU constraints, documentation/implementation distinction."
+    },
+    {
+      "id": "R19",
+      "title": "Native CMake ownership",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/engine/CMakeLists.txt",
+      "coverage": "Inspected 1\u2013300: source inventory, two runtime build routes, test commands and data paths."
+    },
+    {
+      "id": "R20",
+      "title": "Current full test wrapper",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/scripts/test.ps1",
+      "coverage": "Complete script: interpreter selection, collection, dependency ordering, conditional omissions."
+    },
+    {
+      "id": "R21",
+      "title": "Windows workflow",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/.github/workflows/windows.yml",
+      "coverage": "Complete workflow; no pytest install or npm dependency preparation in this definition."
+    },
+    {
+      "id": "R22",
+      "title": "Knowledge workflow",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/.github/workflows/solver-knowledge.yml",
+      "coverage": "Complete workflow and exact command sequence."
+    },
+    {
+      "id": "R23",
+      "title": "Failing research-report test",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/tools/ingest/tests/test_solver_reports.py#L209-L235",
+      "coverage": "Positional support lookup at line 218; surrounding stable-id lookup works."
+    },
+    {
+      "id": "R24",
+      "title": "Observation identity and kind",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/experiments/solver-research/backbone-pilot-v1.json#L231-L261",
+      "coverage": "First observation is conditional; actual support observation has id support. Selected additional ranges read, not the full metadata file."
+    },
+    {
+      "id": "R25",
+      "title": "Python package dependencies",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/tools/ingest/pyproject.toml",
+      "coverage": "No declared test extra; solver-lab GUI optional dependency is a separate feature."
+    },
+    {
+      "id": "R26",
+      "title": "Real-data-dependent Python tests",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/tools/ingest/tests/test_natural_t1_corpus.py#L1-L150",
+      "coverage": "Imports binding and hard-codes production artifact plus concrete native goals; not replaceable by arbitrary tiny data."
+    },
+    {
+      "id": "R27",
+      "title": "Existing self-contained data fixture route",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/tools/ingest/tests/test_compiled_data.py#L1-L100",
+      "coverage": "Temporary source snapshot -> owning database builder -> compile/validate. This small fixture does not cover the real-data corpus tests."
+    },
+    {
+      "id": "R28",
+      "title": "Native test selectors",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/engine/tests/test_main.cpp#L1-L270",
+      "coverage": "Verified existing focused flags, argument requirements and one simulation-bearing selector."
+    },
+    {
+      "id": "R29",
+      "title": "Release WASM build",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/scripts/build-wasm.ps1",
+      "coverage": "Complete script; O1/non-LTO finish TU, O3/LTO hot sources, direct py -3 generator and wrapper newline normalization."
+    },
+    {
+      "id": "R30",
+      "title": "Web scripts and dependencies",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/apps/web/package.json",
+      "coverage": "Current tests include Calculator delivery and worker Finish control; separate typecheck; linkedom dependency."
+    },
+    {
+      "id": "R31",
+      "title": "New-main Windows CI",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35465746330",
+      "coverage": "Completed failure. Job 105957628596 and its full log inspected through the GitHub connector; compact observations in evidence/ci_observations.json."
+    },
+    {
+      "id": "R32",
+      "title": "New-main knowledge CI",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35465746343",
+      "coverage": "Completed failure. Job 105957628688 and its full log inspected through the GitHub connector; compact observations in evidence/ci_observations.json."
+    },
+    {
+      "id": "R33",
+      "title": "Exact byte witness",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/fixtures/solver-baselines/s8.0/examples/evaluator-straight.strategy.json",
+      "coverage": "Retrieved base64 Git contents at current pin; verified Git blob SHA-1 and reproduced recorded LF/CRLF SHA-256 mismatch."
+    },
+    {
+      "id": "R34",
+      "title": "Documentation map",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/README.md",
+      "coverage": "Canonical arguments, claim history, mechanism owners, original evidence, and one current sequencing owner."
+    },
+    {
+      "id": "R35",
+      "title": "Project direction",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/docs/direction.md",
+      "coverage": "Certified exact closure is research objective; intermediate policy/bound/resource gains remain separately qualified."
+    },
+    {
+      "id": "R36",
+      "title": "Actual Calculator probe",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7/apps/web/test/calculator-delivery-probe.ts",
+      "coverage": "Complete file. Positional args caseId output [finish|cancel_setup]; fixed corpus; asserts status/usability, not latency thresholds."
+    },
+    {
+      "id": "P01",
+      "title": "pytest: unittest interoperability",
+      "url": "https://docs.pytest.org/en/stable/how-to/unittest.html",
+      "coverage": "Current official documentation: pytest collects TestCase methods; load_tests remains unsupported. Use a collection audit, not an assumption of equivalent selectors."
+    },
+    {
+      "id": "P02",
+      "title": "Git path attributes",
+      "url": "https://git-scm.com/docs/gitattributes",
+      "coverage": "Current official documentation: path-specific conversion and -text. Preserving stored evidence bytes is different from normalizing historical files."
+    },
+    {
+      "id": "P03",
+      "title": "C++ Core Guidelines C.134",
+      "url": "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#c134-ensure-all-non-const-data-members-have-the-same-access-level",
+      "coverage": "Primary project guidance: invariant-bearing writable state needs encapsulation. This motivates the design; it does not prove the proposed refactor correct or faster."
+    },
+    {
+      "id": "P04",
+      "title": "CTest fixture prerequisites",
+      "url": "https://cmake.org/cmake/help/latest/prop_test/FIXTURES_REQUIRED.html",
+      "coverage": "Existing standard mechanism for setup/cleanup prerequisites when a selected CTest consumer needs it. Not a requirement to add a custom scheduler."
+    },
+    {
+      "id": "P05",
+      "title": "Parnas, modular decomposition (1972)",
+      "url": "https://doi.org/10.1145/361598.361623",
+      "coverage": "Publisher abstract and bibliographic record reviewed. Background only; no full-paper or performance claim is based on that abstract."
+    }
+  ],
+  "root_gitattributes_fetch": "404 at pinned revision; nested/user-specific attributes not exhaustively inventoried",
+  "full_diff_reviewed": false,
+  "native_or_wasm_run_by_this_audit": false,
+  "full_repo_complexity_census": false
+}

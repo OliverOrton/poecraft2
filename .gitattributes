@@ -1,0 +1,7 @@
+# Immutable fixtures/evidence are identified by their stored bytes. Some
+# historical objects use CRLF, so preserve blobs instead of normalizing to LF.
+/fixtures/** -text whitespace=cr-at-eol
+/experiments/** -text whitespace=cr-at-eol
+/docs/archive/** -text whitespace=cr-at-eol
+/docs/active/** -text whitespace=cr-at-eol
+/apps/web/public/economy/snapshots/*.json -text whitespace=cr-at-eol

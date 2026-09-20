@@ -44,6 +44,37 @@ The schema preserves stable keys and source relationships for:
 SQLite is inspectable build input. The native engine and browser never query it
 during simulation.
 
+<a id="frozen-validation-inputs"></a>
+### Frozen validation inputs
+
+Required validation uses `fixtures/repoe/production-source-manifest.json`, which
+pins the full `repoe-e4eaf06c20e1ddb4` snapshot. Its archive URLs address upstream
+commit `b6379c408e4a275f2d0d39655daabe44842c60f7` in
+[the RePoE data repository](https://github.com/repoe-fork/repoe-fork.github.io/tree/b6379c408e4a275f2d0d39655daabe44842c60f7/data).
+Both archived inputs and reconstructed source outputs have SHA-256 checks.
+Ten compact exports omit null-valued object fields while retaining array
+positions and Unicode; the two noncompact cluster files use their original
+bytes. All 12 outputs reproduce the frozen inputs exactly.
+
+`poecraft_ingest.cli fetch --locked-manifest LOCK --output DIRECTORY` uses this
+route. It validates every download and output before installing staged files;
+mismatched existing files are refused unless replacement is explicitly requested
+with `--force`. The ordinary current-data fetch/refresh route remains distinct.
+The lock's original mutable source URLs are provenance, not download fallbacks.
+
+`scripts/test.ps1 -FetchPinnedData` provisions missing required data through this
+fetcher, the existing SQLite ingest and compiled-data owners. Compilation uses
+the lock's recorded `--generated-at-utc` so the manifest and both payload hashes
+remain the established fixture identity. Existing unexpected artifacts fail
+validation rather than being overwritten. This provisions game mechanics data;
+it does not refresh the economy snapshot.
+
+Hash-bound fixtures, experiments and historical evidence use scoped `-text`
+Git attributes. They preserve the bytes stored in each blob, including records
+that already use CRLF; they do not normalize all JSON or revise expected hashes.
+The existing S8 baseline tests check raw graph/evidence identities on both CI
+platforms. Local qualification and an actual hosted pass remain separate claims.
+
 ## Compiled Runtime Artifact
 
 `tools/ingest/compile_engine_data.py` delegates to

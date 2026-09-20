@@ -51,29 +51,7 @@ New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 Get-ChildItem -LiteralPath $OutputDirectory -Filter "poecraft_engine-*.whl" |
     Remove-Item -Force
 
-function Get-PoeCraftPython {
-    if ($env:POECRAFT_PYTHON) {
-        return @{
-            Command = $env:POECRAFT_PYTHON
-            Prefix = @()
-        }
-    }
-    $Launcher = Get-Command py -ErrorAction SilentlyContinue
-    if ($Launcher) {
-        return @{
-            Command = $Launcher.Source
-            Prefix = @("-3")
-        }
-    }
-    $Command = Get-Command python -ErrorAction SilentlyContinue
-    if ($Command) {
-        return @{
-            Command = $Command.Source
-            Prefix = @()
-        }
-    }
-    throw "Python was not found."
-}
+. "$PSScriptRoot/python-common.ps1"
 
 $Python = Get-PoeCraftPython
 & $Python.Command @($Python.Prefix) -m pip wheel `

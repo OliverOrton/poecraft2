@@ -23,6 +23,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
+. "$PSScriptRoot/python-common.ps1"
+$Python = Get-PoeCraftPython
 $CorpusPath = if ([System.IO.Path]::IsPathRooted($Corpus)) {
     $Corpus
 } else {
@@ -124,7 +126,7 @@ if ($Runner -in @("all", "wasm")) {
 }
 
 if ($Runner -eq "all") {
-    & py -3 "$Root/scripts/compare-solver-benchmarks.py" `
+    & $Python.Command @($Python.Prefix) "$Root/scripts/compare-solver-benchmarks.py" `
         --native $NativeReport `
         --wasm $WasmReport `
         --output $ComparisonReport
