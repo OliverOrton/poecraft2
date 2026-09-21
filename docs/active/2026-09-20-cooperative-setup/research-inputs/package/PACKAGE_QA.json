@@ -1,0 +1,10 @@
+{
+  "payload_files_verified": 22,
+  "manifest_self_excluded": true,
+  "local_markdown_links_checked": 31,
+  "json_files_parsed": 9,
+  "python_files_syntax_checked": 3,
+  "powershell_syntax_or_execution_checked": false,
+  "errors": [],
+  "passed": true
+}

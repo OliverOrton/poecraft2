@@ -1,0 +1,206 @@
+{
+  "head": "0f376f4249789e0bbe4680494d8c01609c84a765",
+  "scope": "targeted; inspected ranges are specified in SOURCES.md",
+  "sources": [
+    {
+      "id": "R01",
+      "title": "Main and two-commit change range",
+      "url": "https://github.com/OliverOrton/poecraft2/compare/d13c9b835186ce35cb51aef0de6d0027f8b8a1a7...0f376f4249789e0bbe4680494d8c01609c84a765",
+      "inspection": "Fresh branch metadata and compact comparison; 2 commits ahead."
+    },
+    {
+      "id": "R02",
+      "title": "Current HANDOFF",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/HANDOFF.md",
+      "inspection": "Current sequencing and selected scope."
+    },
+    {
+      "id": "R03",
+      "title": "Completed validation/ownership programme",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/docs/active/2026-09-19-validation-and-ownership/README.md",
+      "inspection": "Full living record; earlier M1 versus later M2/M3 distinguished."
+    },
+    {
+      "id": "R04",
+      "title": "Native/Calculator qualification",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/docs/active/2026-09-19-validation-and-ownership/qualification.json",
+      "inspection": "Inspected 1–250 and 420–645; clock values and graph/evaluation evidence."
+    },
+    {
+      "id": "R05",
+      "title": "M3 build and layout receipt",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/docs/active/2026-09-19-validation-and-ownership/M3-build.json",
+      "inspection": "Full receipt; recorded hashes, not reviewer-built binaries."
+    },
+    {
+      "id": "R06",
+      "title": "Validation wrapper",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/scripts/test.ps1",
+      "inspection": "Full wrapper; default JSON conversion, string-array binding, manifest gate and selected lanes."
+    },
+    {
+      "id": "R07",
+      "title": "Frozen source/runtime lock",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/fixtures/repoe/production-source-manifest.json",
+      "inspection": "Full lock; twelve upstream files and runtime identities."
+    },
+    {
+      "id": "R08",
+      "title": "Compiled runtime producer",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/tools/ingest/poecraft_ingest/compiled_data.py",
+      "inspection": "1–190 and 1110–1280 relevant; timestamp and explicit UTF-8 serialization."
+    },
+    {
+      "id": "R09",
+      "title": "Expected database/runtime identity",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/fixtures/solver-benchmarks/v1/manifest.json",
+      "inspection": "1–65; identity only. Historical simulation/timing policy does not supersede current rules."
+    },
+    {
+      "id": "R10",
+      "title": "Retained-pool owner",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/engine/src/solver_solve_types.hpp",
+      "inspection": "1540–1780; private storage, lifetime, const views and frame accounting."
+    },
+    {
+      "id": "R11",
+      "title": "Solve construction and convenience entry",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/engine/src/solver_solve.cpp",
+      "inspection": "1–330, 380–850; preparation order, pre-ledger work, ordinary lazy behavior and destructor."
+    },
+    {
+      "id": "R12",
+      "title": "Cover and retention integration",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/engine/src/solver_solve_bounds.cpp",
+      "inspection": "1–305, 575–760, 2555–2849; readiness, consumers, commits and broad refusal catch."
+    },
+    {
+      "id": "R13",
+      "title": "Retention probability construction/checking",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/engine/src/solver_phase_probability.cpp",
+      "inspection": "1–230, 315–470, 1065–1457; native domains, frozen minima, checking/repair, release."
+    },
+    {
+      "id": "R14",
+      "title": "Existing coroutine task",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/engine/src/solver_cooperative_task.hpp",
+      "inspection": "Full header; explicit checkpoint-only await, frame charge and synchronous destroy."
+    },
+    {
+      "id": "R15",
+      "title": "Native abandonment and result APIs",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/engine/src/solver_api.cpp",
+      "inspection": "1890–2090; snapshot+serialization precede task reset."
+    },
+    {
+      "id": "R16",
+      "title": "Worker controls and clocks",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/apps/web/src/app/engine-worker.ts",
+      "inspection": "310–580; begin, adaptive steps, real yields, Finish and Cancel precedence."
+    },
+    {
+      "id": "R17",
+      "title": "Progress, snapshots and memory observation",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/engine/src/solver_solve_telemetry.cpp",
+      "inspection": "1850–2040 and 2240–2450; targeted excerpts, not complete caller census."
+    },
+    {
+      "id": "R18",
+      "title": "Existing proof-pattern owner",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/engine/src/solver_proof_pattern_manager.hpp",
+      "inspection": "1–255; typed proof contribution and current fallback contracts."
+    },
+    {
+      "id": "R19",
+      "title": "Existing qualification adapter",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/docs/active/2026-09-19-validation-and-ownership/probes/qualify.py",
+      "inspection": "Full file; historical paths must not be rerun over completed evidence."
+    },
+    {
+      "id": "R20",
+      "title": "Negative saved-Ring diagnostic disposition",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/docs/active/2026-09-15-verified-delivery/B-disposition.md",
+      "inspection": "Read in preceding review; unchanged in inspected two-commit diff. No new experiment here."
+    },
+    {
+      "id": "R21",
+      "title": "Hosted knowledge run",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35543052164",
+      "inspection": "Fresh run/jobs observation: success on pinned HEAD."
+    },
+    {
+      "id": "R22",
+      "title": "Hosted Windows run",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35543052184",
+      "inspection": "Fresh jobs/full failure log read. Job106164064854; manifest unavailable; artifact list empty."
+    },
+    {
+      "id": "R23",
+      "title": "Canonical database hash",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/tools/ingest/poecraft_ingest/write_sqlite.py",
+      "inspection": "885–1250; normalized table digest and source metadata, not SQLite raw-file hash."
+    },
+    {
+      "id": "R24",
+      "title": "Byte-preserving checkout rules",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/.gitattributes",
+      "inspection": "Full file; scoped -text rules, no global renormalization."
+    },
+    {
+      "id": "R25",
+      "title": "Operating rules",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/AGENTS.md",
+      "inspection": "Fresh read; no protected root inspection, no unnecessary simulation, existing supervision."
+    },
+    {
+      "id": "R26",
+      "title": "Prior queued setup programme",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/docs/active/2026-09-19-validation-and-ownership/research-inputs/package/07_NEXT_PERFORMANCE_PROGRAMME.md",
+      "inspection": "Read original prior ZIP bytes; existing queued sequencing advanced, not new missing feature claim."
+    },
+    {
+      "id": "R27",
+      "title": "Existing setup stop",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/docs/active/2026-09-15-verified-delivery/setup-disposition.md",
+      "inspection": "Read in preceding review, unchanged in inspected diff; two-owner stop was scope-limited, not impossibility."
+    },
+    {
+      "id": "R28",
+      "title": "Historical M1 checkpoint",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/docs/active/2026-09-19-validation-and-ownership/validation.json",
+      "inspection": "1–235; not the final current M2/M3 status."
+    },
+    {
+      "id": "R29",
+      "title": "Historical A7 delivery and cancellation disposition",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/0f376f4249789e0bbe4680494d8c01609c84a765/docs/active/2026-09-15-verified-delivery/A-disposition.md",
+      "inspection": "Read in prior review; unchanged in inspected two-commit comparison; historical 4.813s cleanup portion."
+    }
+  ],
+  "primary_research": [
+    {
+      "id": "P01",
+      "title": "Microsoft Learn — ConvertFrom-Json",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/convertfrom-json?view=powershell-7.6",
+      "use": "DateKind section and notes. Default DateTime behavior; String preserves lexical value; parameter introduced7.5. The page has a nearby cmdlet-name typo; use the explicit parameter behavior, not that typo as a specification."
+    },
+    {
+      "id": "P02",
+      "title": "C++ working draft — coroutine handle resumption",
+      "url": "https://eel.is/c++draft/coroutine.handle.resumption",
+      "use": "Primary standards draft; valid resumption/destruction state. No native timing claim."
+    },
+    {
+      "id": "P03",
+      "title": "Emscripten — Asynchronous Code",
+      "url": "https://emscripten.org/docs/porting/asyncify.html",
+      "use": "Current primary docs; Asyncify/JSPI mechanisms and reentrancy. Documentation version is not the project installed SDK pin."
+    },
+    {
+      "id": "P04",
+      "title": "Chatterjee et al. — Fixed Point Certificates for Reachability and Expected Rewards in MDPs",
+      "url": "https://arxiv.org/abs/2501.11467",
+      "use": "2025 primary research abstract/metadata revisited. Certificate/algorithm separation only; no claim of a full new literature/novelty audit."
+    }
+  ]
+}

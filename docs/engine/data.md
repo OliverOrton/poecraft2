@@ -64,10 +64,19 @@ The lock's original mutable source URLs are provenance, not download fallbacks.
 
 `scripts/test.ps1 -FetchPinnedData` provisions missing required data through this
 fetcher, the existing SQLite ingest and compiled-data owners. Compilation uses
-the lock's recorded `--generated-at-utc` so the manifest and both payload hashes
+`--timestamp-from-lock LOCK`: Python reads the original JSON timestamp string,
+avoiding PowerShell's automatic DateTime conversion at the native argument
+boundary. The manifest and both payload hashes
 remain the established fixture identity. Existing unexpected artifacts fail
 validation rather than being overwritten. This provisions game mechanics data;
 it does not refresh the economy snapshot.
+
+A manifest mismatch preserves its actual bytes and a compact shell/interpreter/
+payload diagnostic under `build/validation/runtime-identity-*`; the existing
+Windows workflow uploads these on failure. Expected identities remain fixed.
+The isolated September 20 Windows qualification reproduced the original hashes
+and passed the Python lane; altered timestamp and payload bytes still refused.
+This is local qualification, not a claim that a hosted rerun has passed.
 
 Hash-bound fixtures, experiments and historical evidence use scoped `-text`
 Git attributes. They preserve the bytes stored in each blob, including records

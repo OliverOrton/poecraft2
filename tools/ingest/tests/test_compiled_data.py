@@ -5,8 +5,12 @@ from pathlib import Path
 import tempfile
 import unittest
 
+import pytest
+
 from poecraft_ingest.compiled_data import (
     compile_engine_data,
+    main,
+    runtime_timestamp_from_lock,
     validate_engine_data,
 )
 from poecraft_ingest.engine_selection import (
@@ -17,6 +21,38 @@ from poecraft_ingest.engine_selection import (
 from poecraft_ingest.repo_loader import load_source_snapshot
 from poecraft_ingest.write_sqlite import build_database
 from tests.test_ingest import SCHEMA_PATH, _fixture_sources, _write_json
+
+
+@pytest.mark.parametrize("timestamp", ["2026-08-30T02:54:53Z", "2026-08-30T02:54:53.1200+05:30"])
+def test_compile_cli_preserves_literal_lock_timestamp(tmp_path, monkeypatch, timestamp):
+    lock = tmp_path / "source lock.json"
+    lock.write_text(json.dumps({"runtime_artifact": {"generated_at_utc": timestamp}}), encoding="utf-8")
+    received = []
+
+    def compiler(database, output, *, generated_at_utc):
+        received.append(generated_at_utc)
+        return {"row_counts": {"mods": 0, "base_items": 0}, "complete_dataset": True}
+
+    monkeypatch.setattr("poecraft_ingest.compiled_data.compile_engine_data", compiler)
+    assert main(["compile", "--database", str(tmp_path / "source.db"),
+                 "--output", str(tmp_path / "runtime"), "--timestamp-from-lock", str(lock)]) == 0
+    assert received == [timestamp]
+
+
+@pytest.mark.parametrize("value", [None, 42, [], {}, "", "   "])
+def test_runtime_lock_requires_literal_timestamp_string(tmp_path, value):
+    lock = tmp_path / "lock.json"
+    lock.write_text(json.dumps({"runtime_artifact": {"generated_at_utc": value}}), encoding="utf-8")
+    with pytest.raises(ValueError, match="must be a nonempty string"):
+        runtime_timestamp_from_lock(lock)
+
+
+@pytest.mark.parametrize("document", ["{", "[]", '{"runtime_artifact": []}', '{}'])
+def test_runtime_lock_rejects_malformed_structure(tmp_path, document):
+    lock = tmp_path / "lock.json"
+    lock.write_text(document, encoding="utf-8")
+    with pytest.raises(ValueError):
+        runtime_timestamp_from_lock(lock)
 
 
 class CompiledDataTests(unittest.TestCase):

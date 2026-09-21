@@ -1,5 +1,11 @@
 # Handoff
 
+Active: [Frozen runtime identity and cooperative setup](docs/active/2026-09-20-cooperative-setup/README.md),
+selected S0–S4 against `0f376f4`. S0 reproduced timestamp coercion and isolated the
+manifest-only difference; the narrow fix is undergoing clean-wrapper validation.
+S1–S4 are selected next, not yet implemented. Keep commits local; no automatic
+restart, public action, subagents or unrelated successor is selected.
+
 Completed: [Reliable validation and retained-artifact ownership](docs/active/2026-09-19-validation-and-ownership/README.md),
 M0–M3. M1 is local `75504e4`; Oliver explicitly waived non-Windows on September 20.
 The existing retained-pool owner now controls every selected mutation, passive
@@ -10,9 +16,8 @@ Calculator Finish pass their selected checks. The living record and
 own exact commands, identities, cap/lifetime evidence and limitations.
 
 Keep commits local and work sequentially without subagents. Preserve protected
-root `0`; economy stays frozen. No automatic restart, push or further programme
-is selected. Recommend the queued two-owner cooperative setup work only after
-Oliver selects it; do not repeat saved-Ring diagnostics or expand ownership scope.
+root `0`; economy stays frozen. The successor above is now selected; preserve the
+completed pool boundary and do not repeat saved-Ring diagnostics or expand scope.
 
 The matched native pair preserves graph bytes, C85558.70618560436 and
 N8407.202314771383; peak owned memory increases by the accounted 16 bytes.

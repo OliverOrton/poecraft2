@@ -1,0 +1,130 @@
+{
+  "source": "0f376f4249789e0bbe4680494d8c01609c84a765",
+  "python": "3.14.2",
+  "shells": [
+    "PowerShell 7.6.5",
+    "Windows PowerShell 5.1"
+  ],
+  "fresh_wrapper": {
+    "scope": "Python",
+    "ingest_tests_passed": 163,
+    "optional_skips": 5,
+    "economy_tests_passed": 12,
+    "economy_subtests_passed": 2,
+    "binding_tests_passed": 18,
+    "fresh_database_and_runtime": true,
+    "native_prerequisites": "source-matched preserved DLL and benchmark; no rebuild"
+  },
+  "negatives": {
+    "altered_timestamp": "refused with preserved manifest and diagnostic",
+    "altered_payload": "refused",
+    "missing_benchmark": "refused before test collection"
+  },
+  "checks": {
+    "S0-fresh-identity": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 9132,
+      "process_identity_token": "9132:134344369587621612",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 214.44130002055317
+    },
+    "S0-negative-timestamp": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 49464,
+      "process_identity_token": "49464:134344369589776820",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1819.3141000228934
+    },
+    "S0-negative-payload": {
+      "exit_code": 1,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 73776,
+      "process_identity_token": "73776:134344369608095883",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 2759.9914000020362
+    },
+    "S0-pwsh-z": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 30156,
+      "process_identity_token": "30156:134344369635764665",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1736.6140999947675,
+      "literal": "2026-08-30T02:54:53Z"
+    },
+    "S0-pwsh-offset": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 48564,
+      "process_identity_token": "48564:134344369653485057",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1710.2749000187032,
+      "literal": "2026-08-30T02:54:53.1200+05:30"
+    },
+    "S0-windows-powershell-z": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 1956,
+      "process_identity_token": "1956:134344369670915650",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1335.6807000236586,
+      "literal": "2026-08-30T02:54:53Z"
+    },
+    "S0-windows-powershell-offset": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 43048,
+      "process_identity_token": "43048:134344369684563348",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1343.4586999937892,
+      "literal": "2026-08-30T02:54:53.1200+05:30"
+    }
+  },
+  "evidence": {
+    "S0-clean-wrapper-final.log": "bead222c886e673c2dbbb5c8c8ee9e7727817ab18df5b77f3b1efece7419351d",
+    "S0-clean-wrapper.log": "996a47bcbc75e9674e53821b696843b87e8d1e860dd15a7311b4af4a29fbdf0f",
+    "S0-coerced-compile.log": "9c616247a5ec6f8de3dcce9b8bfb5ef2bd673908de148aff8d226d84565c244b",
+    "S0-compiled-data-tests.log": "e848757bac0e2626c3d7e78ce45a5c4bfd3221e82555d5dd6955881f22ee2927",
+    "S0-fresh-identity.log": "c4af4f4c5619c2d55c62dff576911ea1ad97f571d55fee2174d4002c5fe0cd65",
+    "S0-missing-benchmark.log": "eca972ad46cbe8f0e0b8d4b884c34957d8b89aaad53d300bf2a8018c8ff7da6c",
+    "S0-negative-payload.log": "7827e3eff88eb27ae1a05694912f550bfcbbe8fc6e5b5950bbb1f952953119e3",
+    "S0-negative-timestamp.log": "d60b2042c7da2909d5a260ff15cd7f1b98ac3e835e785a7e1b8aa8cd32efbf5a",
+    "S0-pwsh-offset.log": "f7e09f7d9afca12d027b235c02a8aea37385dfbd25dfbe6bf7839437cd561a39",
+    "S0-pwsh-z.log": "7065bac35367a2eeddffba7a4d0e5766d363e7719ed9814433bfce388f6a7ea5",
+    "S0-python-install.log": "37d867f51b0c6187edf0bef19dc76554371ca2beea82e17a0146c872a6950aaa",
+    "S0-windows-powershell-offset.log": "91021ce4662ce9f5958f423f80c7d5eead806a6bdb1effde97cec8c2cda6d379",
+    "S0-windows-powershell-z.log": "a7708f36902a645a5f57ed49c296d2104e5dd6e305a2163f6da576ae631d62f7"
+  },
+  "hosted_rerun": "not invoked; unavailable actual hosted manifest not inferred",
+  "non_windows": "owner waiver; not passed"
+}

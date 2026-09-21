@@ -1,0 +1,56 @@
+{
+  "head": "0f376f4249789e0bbe4680494d8c01609c84a765",
+  "evidence_kind": "fresh connector read of runs, jobs, Windows job log and artifact list",
+  "knowledge": {
+    "run_id": 35543052164,
+    "job_id": 106164064825,
+    "conclusion": "success",
+    "created_at": "2026-09-20T22:54:18Z",
+    "updated_at": "2026-09-20T22:54:54Z"
+  },
+  "windows": {
+    "run_id": 35543052184,
+    "job_id": 106164064854,
+    "conclusion": "failure",
+    "created_at": "2026-09-20T22:54:18Z",
+    "updated_at": "2026-09-20T23:02:33Z",
+    "build": "success",
+    "selected_python": "3.12.10",
+    "pytest": "9.1.1",
+    "command": "./scripts/test.ps1 -SkipBuild -FetchPinnedData",
+    "pinned_source_files_passed": 12,
+    "database_validation": "passed",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "source_data_hash_matches_corpus": true,
+    "spec_fixtures_passed": 6,
+    "compiled_mods": 39292,
+    "compiled_bases": 4974,
+    "failure_owner": "scripts/test.ps1:76 runtime manifest identity guard",
+    "failure_message": "The runtime manifest differs from the required frozen fixture. Preserve it and resolve the data identity before testing.",
+    "actual_manifest_sha256": null,
+    "actual_manifest_content": null,
+    "actual_payload_hashes": null,
+    "downloadable_artifacts": [],
+    "later_python_native_web_suites": "not reached"
+  },
+  "hypothesis": {
+    "id": "H0_timestamp_coercion",
+    "status": "unconfirmed",
+    "support": [
+      "default ConvertFrom-Json timestamp type",
+      "string[] argument binding",
+      "compiler persists argument in manifest"
+    ],
+    "missing": [
+      "actual hosted timestamp/argv",
+      "actual generated manifest field diff",
+      "payload hashes"
+    ],
+    "prohibited_shortcuts": [
+      "change expected hash",
+      "disable identity guard",
+      "assume all payloads match",
+      "call native solver failed"
+    ]
+  }
+}

@@ -32,9 +32,11 @@ $SolverBenchmark = "$Root/build/engine/poecraft_solver_benchmark.exe"
 if ($NeedsPython -and -not (Test-Path "$Root/build/engine/poecraft_engine.dll")) {
     throw "Required native binding is unavailable; run scripts/build.ps1."
 }
-if ($NeedsNative -and
-    (-not (Test-Path $EngineTests) -or -not (Test-Path $SolverBenchmark))) {
-    throw "Required native test/benchmark executables are unavailable; run scripts/build.ps1."
+if (($NeedsPython -or $NeedsNative) -and -not (Test-Path $SolverBenchmark)) {
+    throw "Required solver benchmark is unavailable (also needed by Python Lab tests); run scripts/build.ps1."
+}
+if ($NeedsNative -and -not (Test-Path $EngineTests)) {
+    throw "Required native test executable is unavailable; run scripts/build.ps1."
 }
 if ($NeedsPython) {
     Invoke-ProjectPython @("-c", "import pytest; print('pytest', pytest.__version__)")
@@ -69,10 +71,25 @@ Invoke-ProjectPython @("$Root/tools/ingest/validate_spec_fixtures.py", "--databa
     "--fixtures", "$Root/fixtures/spec")
 if (-not (Test-Path -LiteralPath "$Artifact/manifest.json")) {
     Invoke-ProjectPython @("$Root/tools/ingest/compile_engine_data.py", "compile", "--database", $Database,
-        "--output", $Artifact, "--generated-at-utc", $Lock.runtime_artifact.generated_at_utc)
+        "--output", $Artifact, "--timestamp-from-lock", $LockPath)
 }
 $ActualManifestHash = (Get-FileHash -LiteralPath "$Artifact/manifest.json" -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($ActualManifestHash -ne $Lock.runtime_artifact.manifest_sha256) {
+    # Preserve the actual bytes, not a ConvertFrom-Json timestamp rendering.
+    Copy-Item -LiteralPath "$Artifact/manifest.json" -Destination "$ValidationOutput/runtime-identity-$ActualManifestHash.manifest.json"
+    $PayloadIdentities = foreach ($Name in @("game-data.json", "strings.json")) {
+        $PayloadPath = Join-Path $Artifact $Name
+        $Present = Test-Path -LiteralPath $PayloadPath -PathType Leaf
+        [ordered]@{ name = $Name; present = $Present
+            sha256 = $(if ($Present) { (Get-FileHash -LiteralPath $PayloadPath -Algorithm SHA256).Hash.ToLowerInvariant() } else { $null })
+            byte_size = $(if ($Present) { (Get-Item -LiteralPath $PayloadPath).Length } else { $null }) }
+    }
+    $Identity = [ordered]@{ powershell_version = $PSVersionTable.PSVersion.ToString()
+        python = $Python.Command; python_version = (& $Python.Command --version)
+        expected_manifest_sha256 = $Lock.runtime_artifact.manifest_sha256
+        actual_manifest_sha256 = $ActualManifestHash; payloads = @($PayloadIdentities) }
+    [System.IO.File]::WriteAllText("$ValidationOutput/runtime-identity-$ActualManifestHash.json",
+        ($Identity | ConvertTo-Json -Depth 5), [System.Text.UTF8Encoding]::new($false))
     throw "The runtime manifest differs from the required frozen fixture. Preserve it and resolve the data identity before testing."
 }
 Invoke-ProjectPython @("$Root/tools/ingest/compile_engine_data.py", "validate", "--database", $Database,

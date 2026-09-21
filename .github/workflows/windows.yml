@@ -67,3 +67,10 @@ jobs:
         if: steps.changes.outputs.native_required == 'true'
         shell: pwsh
         run: ./scripts/test.ps1 -SkipBuild -FetchPinnedData
+      - name: Preserve frozen runtime identity failure
+        if: failure() && steps.changes.outputs.native_required == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frozen-runtime-identity-failure
+          path: build/validation/runtime-identity-*.json
+          if-no-files-found: ignore

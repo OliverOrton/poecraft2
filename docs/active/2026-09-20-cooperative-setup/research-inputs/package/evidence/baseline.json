@@ -1,0 +1,64 @@
+{
+  "schema": "poecraft2_handoff_baseline_v1",
+  "repository": "OliverOrton/poecraft2",
+  "head": "0f376f4249789e0bbe4680494d8c01609c84a765",
+  "previous_review": "d13c9b835186ce35cb51aef0de6d0027f8b8a1a7",
+  "intermediate": "75504e4ee2d5700629b23e2ed06eec63812cbd78",
+  "ahead_by": 2,
+  "kind": "curated from inspected source/receipts, not raw benchmark output",
+  "completed_programme": "M0–M3, selected Windows scope; non-Windows waived",
+  "source_version": "repoe-e4eaf06c20e1ddb4",
+  "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+  "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+  "runtime": {
+    "generated_at_utc": "2026-08-30T02:54:53Z",
+    "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+    "files": {
+      "strings.json": {
+        "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f",
+        "byte_size": 6534428
+      },
+      "game-data.json": {
+        "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+        "byte_size": 16439442
+      }
+    }
+  },
+  "recorded_m3_build_hashes": {
+    "native_benchmark": "850539e63d6e96886eada81df0a4523113986272db888e1b571448adc7f19a87",
+    "native_dll": "2275798ab769f2c3c65773b6e0f450329d2ad5ac49731a6b2ef128d6f9c89e3d",
+    "wasm": "477c2e5a89f73cf1a82bd50742eabfc15f48647138105bdc3afb309b5d6b1c32",
+    "wasm_wrapper": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502"
+  },
+  "native_reference": {
+    "case": "cb01-cross-base-product8-long240",
+    "cost": 85558.70618560436,
+    "expected_primitive_actions": 8407.202314771383,
+    "lower": 405.3694021063399,
+    "nodes": 469,
+    "edges": 1117,
+    "graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+    "success_probability": 1,
+    "off_policy_mass": 0,
+    "policy": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "separate_status": "refused_unsupported_action"
+  },
+  "calculator_recorded": {
+    "environment": "linkedom actual component + node-worker_threads + release WASM; not rendered browser",
+    "finish_ms": 3571.2889,
+    "delivery_ms": 45185.1174,
+    "native_begin_ms": 12598.9964,
+    "max_step_ms": 369.0194,
+    "setup_cancel_ms": null,
+    "historical_setup_cancel_ms": 23081,
+    "historical_setup_cancel_rerun": false,
+    "matched_wasm_speedup": false
+  },
+  "conquest_four": {
+    "retained_native_reference_cost": 3746.13194095,
+    "recorded_wasm_result_cost": 5218.04094969,
+    "cause": "unresolved; same-graph fixed evaluation selected first"
+  },
+  "readiness": "No fresh runtime performance measurement by reviewer."
+}

@@ -1,0 +1,17 @@
+{
+  "kind": "reviewer activity disclosure",
+  "github": "read-only branch, commits, source, receipts and hosted CI inspection",
+  "external_research": "primary documentation and cited paper abstract/metadata",
+  "previous_zip": "opened from actual mounted path",
+  "native_build": false,
+  "native_solver_runs": false,
+  "wasm_build_or_qualification": false,
+  "simulator_runs": false,
+  "rendered_browser_review": false,
+  "powershell_available": false,
+  "powershell_probe_run": false,
+  "raw_source_download": "attempt failed because network hostname could not resolve; GitHub connector used",
+  "protected_root_0": "not inspected",
+  "repository_mutations_or_public_actions": false,
+  "local_checks": "see check_results.json; diagnostic utility and abstract examples only"
+}

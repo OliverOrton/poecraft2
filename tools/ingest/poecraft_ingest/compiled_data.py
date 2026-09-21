@@ -1691,6 +1691,16 @@ def validate_engine_data(
     }
 
 
+def runtime_timestamp_from_lock(path: Path) -> str:
+    """Preserve the lock's literal spelling without a shell DateTime round-trip."""
+    lock = json.loads(path.read_text(encoding="utf-8"))
+    runtime = lock.get("runtime_artifact") if isinstance(lock, dict) else None
+    value = runtime.get("generated_at_utc") if isinstance(runtime, dict) else None
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{path}: runtime_artifact.generated_at_utc must be a nonempty string")
+    return value
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Compile and validate the complete poecraft runtime dataset."
@@ -1700,8 +1710,11 @@ def build_parser() -> argparse.ArgumentParser:
     compile_parser = subparsers.add_parser("compile")
     compile_parser.add_argument("--database", type=Path, required=True)
     compile_parser.add_argument("--output", type=Path, required=True)
-    compile_parser.add_argument("--generated-at-utc",
+    timestamp = compile_parser.add_mutually_exclusive_group()
+    timestamp.add_argument("--generated-at-utc",
         help="Recorded build timestamp for reproducing an existing pinned artifact.")
+    timestamp.add_argument("--timestamp-from-lock", type=Path,
+        help="Read the literal runtime_artifact.generated_at_utc string from the source lock.")
 
     validate_parser = subparsers.add_parser("validate")
     validate_parser.add_argument("--database", type=Path, required=True)
@@ -1712,8 +1725,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "compile":
+        generated_at = (runtime_timestamp_from_lock(args.timestamp_from_lock)
+                        if args.timestamp_from_lock is not None else args.generated_at_utc)
         manifest = compile_engine_data(args.database, args.output,
-            generated_at_utc=args.generated_at_utc)
+            generated_at_utc=generated_at)
         print(
             f"compiled {manifest['row_counts']['mods']} mods and "
             f"{manifest['row_counts']['base_items']} bases to {args.output} "

@@ -1,0 +1,131 @@
+{
+  "source": "0f376f4249789e0bbe4680494d8c01609c84a765",
+  "graph": "docs/active/2026-09-14-progress-and-delivery/strategies/conquest-four.strategy.json",
+  "graph_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+  "request_sha256": "a420d0976d654136dfb02e26817c3da22ccda81e8d62810262bb3029869a4af3",
+  "options": {
+    "epsilon": 0,
+    "max_sweeps": 0,
+    "max_states": 1000000,
+    "max_pairs": 5000000,
+    "max_transitions": 20000000,
+    "max_owned_bytes": 1073741824,
+    "max_output_json_bytes": 67108864
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "action_mode": "goal_relevant",
+    "min_satisfied_slots": 4,
+    "slots": [
+      {
+        "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+        "min_tier": 1
+      }
+    ]
+  },
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+    "base_name": "Conquest Lamellar",
+    "item_class_key": "Body Armour",
+    "item_level": 86,
+    "minimum_item_level": 86
+  },
+  "economy_id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+  "arms": {
+    "native": {
+      "sha256": "89a2d82035ffccd0835ab06a566ca0890a65cf2ab1ae238392ed9e3b2d7be64b",
+      "wall_ms": 5273.618399980478,
+      "converged": true,
+      "sweeps": 781,
+      "residual_mass": 0,
+      "terminals": {
+        "success": 1,
+        "failure": 0,
+        "stop": 0,
+        "action_not_applied": 0,
+        "no_matching_edge": 0,
+        "unresolved": 0,
+        "by_node": [
+          {
+            "node_id": "goal",
+            "kind": "success",
+            "p": 1
+          },
+          {
+            "node_id": "offpolicy",
+            "kind": "failure",
+            "p": 0
+          }
+        ]
+      },
+      "totals": {
+        "expected_actions": 8608.88179365679,
+        "known_expected_cost": 3746.131940948572,
+        "total_expected_cost": 3746.131940948572,
+        "cost_complete": true
+      },
+      "memory": {
+        "owned_bytes_estimate": 23734383,
+        "peak_owned_bytes_estimate": 38190833,
+        "retained_output_owned_bytes_estimate": 0,
+        "max_owned_bytes": 1073741824,
+        "max_output_json_bytes": 67108864
+      }
+    },
+    "wasm": {
+      "sha256": "0678049b3c3be7486d6108191ffa55b7364eff8f4cab7fcdc82eed5f24a7a94a",
+      "wall_ms": 2486.5667,
+      "converged": true,
+      "sweeps": 703,
+      "residual_mass": 0,
+      "terminals": {
+        "success": 1,
+        "failure": 0,
+        "stop": 0,
+        "action_not_applied": 0,
+        "no_matching_edge": 0,
+        "unresolved": 0,
+        "by_node": [
+          {
+            "node_id": "goal",
+            "kind": "success",
+            "p": 1
+          },
+          {
+            "node_id": "offpolicy",
+            "kind": "failure",
+            "p": 0
+          }
+        ]
+      },
+      "totals": {
+        "expected_actions": 8608.881793656798,
+        "known_expected_cost": 3746.1319409485764,
+        "total_expected_cost": 3746.1319409485764,
+        "cost_complete": true
+      },
+      "memory": {
+        "owned_bytes_estimate": 20549425,
+        "peak_owned_bytes_estimate": 33180092,
+        "retained_output_owned_bytes_estimate": 0,
+        "max_owned_bytes": 1073741824,
+        "max_output_json_bytes": 67108864
+      }
+    }
+  },
+  "disposition": "Matched fixed-policy semantics within original tolerance; discovery/service gap remains open. No search or Simulator invoked.",
+  "timing_claim": null
+}

@@ -1,0 +1,15 @@
+{
+  "reviewed_head": "0f376f4249789e0bbe4680494d8c01609c84a765",
+  "final_branch_head": "0f376f4249789e0bbe4680494d8c01609c84a765",
+  "head_unchanged_during_review": true,
+  "windows_run": 35543052184,
+  "windows_job": 106164064854,
+  "windows_final_job_status": "completed",
+  "windows_final_job_conclusion": "failure",
+  "windows_build": "success",
+  "windows_test": "failure",
+  "knowledge_run": 35543052164,
+  "knowledge_last_observed_conclusion": "success",
+  "failed_windows_artifacts_returned": [],
+  "note": "Fresh branch and Windows job rechecked before packaging; knowledge success read earlier in this review. These are observations, not a triggered rerun."
+}

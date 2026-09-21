@@ -1,0 +1,33 @@
+{
+  "schema": "cooperative_setup_handoff_gates_v1",
+  "runtime_profile": "existing CB01 product8/240s; unchanged resolved native/worker limits",
+  "thresholds_ms": {
+    "begin": 250,
+    "setup_slice": 250,
+    "setup_cancel_to_release": 1000,
+    "finish_to_ui_ready": 10000,
+    "worker_request_to_ui_ready": 65000,
+    "ordinary_step": 250
+  },
+  "separate_classification": {
+    "ordinary_compilation_outlier": "report independently; cannot claim full responsiveness while failed",
+    "rendered_browser": "unqualified unless actually performed",
+    "non_windows": "existing waiver; no automatic mandatory lane"
+  },
+  "identity": "root, goals/order, actions/options, observation/control scope, original economy, native artifact, binaries, checker/solver budgets",
+  "native_comparison": "logical-fence equality and separately same wall-budget outcomes",
+  "timing": "serial; reversed-order confirmation for improvement claims",
+  "controls": [
+    "high-impact retention reuse",
+    "retention off",
+    "ordinary lazy cover and early cap",
+    "same-graph Conquest-four evaluator comparison",
+    "small exact control",
+    "cancel at every setup stage"
+  ],
+  "simulation": "none for unchanged graphs; current 1000-trial rule only if fresh execution qualification genuinely required",
+  "partial_mass": "never admit or normalize incomplete rows",
+  "lower_evidence": "committed complete compatible evidence or existing authorized fallback only",
+  "ownership": "charge staged/detached/frame/overlap storage and transfer reservations once",
+  "implementation_by_reviewer": false
+}
