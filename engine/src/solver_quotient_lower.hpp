@@ -2,6 +2,7 @@
 
 #include "solver_action_coverage.hpp"
 #include "solver_quotient_proof.hpp"
+#include "solver_cooperative_task.hpp"
 
 #include <functional>
 #include <memory>
@@ -135,6 +136,37 @@ struct QuotientLowerResult {
     /* Diagnostic result storage, distinct from the immutable certificate. */
     std::shared_ptr<void> storage_charge;
 };
+
+/* The graph/query/candidate remain immutable and alive until reset. The frame
+ * is charged before allocation; destroying suspended work releases the
+ * frame before its charge/store. Results keep their own existing charges. */
+template<class Result> class CooperativeProofWork {
+public:
+    using Task = solve_detail::CooperativeTask<Result>;
+    template<class Factory>
+    CooperativeProofWork(std::shared_ptr<ProofStore> store, Factory factory)
+        : store_(std::move(store)), task_(make_task(factory)) {}
+    CooperativeProofWork(CooperativeProofWork&&) noexcept = default;
+    CooperativeProofWork& operator=(CooperativeProofWork&&) = delete;
+    bool resume() { return task_.resume(); }
+    bool done() const { return task_.done(); }
+    Result take_result() { return task_.take_result(); }
+    std::uint64_t frame_bytes() const { return task_.frame_bytes(); }
+private:
+    template<class Factory> Task make_task(Factory& factory) {
+        solve_detail::CooperativeFrameAdmission admission(this, [](void* owner, std::size_t bytes) {
+            auto& work = *static_cast<CooperativeProofWork*>(owner);
+            work.frame_charge_ = ScopedProofMemoryCharge(work.store_->ledger(),
+                ProofMemoryCategory::Scratch, bytes);
+        });
+        return factory();
+    }
+    std::shared_ptr<ProofStore> store_;
+    ScopedProofMemoryCharge frame_charge_;
+    Task task_;
+};
+
+using QuotientLowerWork = CooperativeProofWork<QuotientLowerResult>;
 
 StableKey quotient_lower_model_identity(const QuotientLowerQuery& query);
 

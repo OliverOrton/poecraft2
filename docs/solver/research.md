@@ -139,6 +139,17 @@ cooperative setup conversion was retained. Native reference policies are preserv
 Conquest-four WASM remains unqualified against its cheaper native reference.
 Broad exact closure remains open.
 
+The later [cooperative-setup programme](../active/2026-09-20-cooperative-setup/README.md)
+preserves those dated observations. It resolves the frozen runtime timestamp
+boundary locally and evaluates the same cheaper Conquest-four graph through
+native and WASM owners with matching limits: both succeed with the same original
+cost/count within tolerance. Discovery under browser defaults remains a separate
+question. The selected setup implementation preserves conditional prefix,
+frozen-value and ownership arguments in their existing mathematical chapters;
+its real responsiveness and policy-preservation gates are recorded separately.
+No new lower model, response cache, controller-layout reduction or broad exact
+closure is inferred from this conversion.
+
 The same imported research preserves conditional
 [boundary-response/feedback algebra](mathematics/policies.md#boundary-response),
 [selected-controller requirements](mathematics/representations.md#selected-controller-requirements)

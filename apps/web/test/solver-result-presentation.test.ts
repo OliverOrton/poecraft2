@@ -34,6 +34,7 @@ import {
         converged: false,
         policy_available: true,
         policy_status: "bounded_near_optimal",
+        residual: null,
         termination: "target_gap",
         lower_bound: 100,
         upper_bound: 110,
@@ -97,6 +98,7 @@ import {
         },
     });
     assert.match(markup, /data-policy-status="bounded_near_optimal"/);
+    assert.match(markup, /residual unavailable/);
     assert.match(markup, /data-policy-available="true"/);
     assert.match(markup, /data-exact-authority="false"/);
     assert.match(markup, /Returned policy expected cost/);

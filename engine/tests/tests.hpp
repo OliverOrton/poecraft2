@@ -68,5 +68,6 @@ void run_solver_phase_lower_tests();
 void run_solver_selected_fallback_tests();
 void run_solver_attribution_recovery_tests();
 void run_solver_protected_setup_tests();
+void run_solver_setup_service_tests();
 
 #endif

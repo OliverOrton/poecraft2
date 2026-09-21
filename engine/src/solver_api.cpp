@@ -1923,6 +1923,8 @@ pc_result pc_solver_solve_finish(
 
 void pc_solver_solve_abandon(pc_solver_handle solver) {
     if (solver == nullptr || !solver->solve_work) return;
+    const auto began = std::chrono::steady_clock::now();
+    auto snapshot_completed = began;
     solver->abandoned_telemetry_capped = false;
     solver->abandoned_telemetry_limit = 0;
     try {
@@ -1931,6 +1933,7 @@ void pc_solver_solve_abandon(pc_solver_handle solver) {
             sizeof(*solver) + solver->solve_work->peak_owned_bytes());
         const solver::SolveTelemetrySnapshot snapshot =
             solver->solve_work->telemetry_snapshot(true);
+        snapshot_completed = std::chrono::steady_clock::now();
         solver->abandoned_telemetry_limit =
             snapshot.diagnostics.telemetry_json_byte_limit;
         solver->abandoned_telemetry = solver::serialize_solver_telemetry(
@@ -1942,7 +1945,31 @@ void pc_solver_solve_abandon(pc_solver_handle solver) {
     } catch (const std::exception&) {
         solver->abandoned_telemetry.clear();
     }
+    const auto serialized = std::chrono::steady_clock::now();
+    const auto [task_release_ns, rollback_ns] = solver->solve_work->release_pending_work();
+    const auto remaining_release_started = std::chrono::steady_clock::now();
     solver->solve_work.reset();
+    const auto released = std::chrono::steady_clock::now();
+    const auto ns = [](auto duration) { return std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count(); };
+    // Diagnostic only, after actual synchronous release. Preserve the same
+    // telemetry byte cap; this never acknowledges cancellation early.
+    if (!solver->abandoned_telemetry.empty() && solver->abandoned_telemetry.back() == '}') {
+        const std::string release = ",\"abandon_lifecycle\":{\"version\":1,\"snapshot_and_peak_audit_ns\":" +
+            std::to_string(ns(snapshot_completed-began)) + ",\"serialization_ns\":" +
+            std::to_string(ns(serialized-snapshot_completed)) + ",\"calculator_rollback_ns\":" +
+            std::to_string(rollback_ns) + ",\"task_storage_release_ns\":" +
+            std::to_string(task_release_ns) + ",\"remaining_storage_release_ns\":" +
+            std::to_string(ns(released-remaining_release_started)) + ",\"native_release_ns\":" +
+            std::to_string(ns(released-began)) + "}}";
+        if (release.size() <= solver->abandoned_telemetry_limit &&
+            solver->abandoned_telemetry.size()-1 <= solver->abandoned_telemetry_limit-release.size()) {
+            solver->abandoned_telemetry.pop_back();
+            solver->abandoned_telemetry += release;
+        } else {
+            solver->abandoned_telemetry.clear();
+            solver->abandoned_telemetry_capped = true;
+        }
+    }
 }
 
 pc_result pc_solver_state_value(

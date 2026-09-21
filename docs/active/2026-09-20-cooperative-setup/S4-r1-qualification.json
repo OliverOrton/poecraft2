@@ -1,0 +1,287 @@
+{
+  "label": "r1",
+  "wasm": [
+    {
+      "report": "out\\cooperative-setup\\S4-r1-wasm-0-candidate-cancel_setup.json",
+      "sha256": "0ae967dcfdf25b7245aacbf720a592999cd33513b95e697a1d9f2bef7aa3de23",
+      "control": "cancel_setup",
+      "status": "cancelled",
+      "usable": false,
+      "error": null,
+      "timings_ms": {
+        "begin_ms": 2.490099999999984,
+        "setup_step_ms": 26.436899999999923,
+        "ordinary_step_ms": 0,
+        "cancel_to_release_ms": 3341.3390999999992
+      },
+      "gates": {
+        "begin_ms": true,
+        "setup_step_ms": true,
+        "ordinary_step_ms": true,
+        "cancel_to_release_ms": false
+      },
+      "max_setup_context": {
+        "input_owner": "setup",
+        "output_owner": "setup",
+        "output_cursor": 1,
+        "quantum": 4,
+        "duration_ms": 26.436899999999923
+      },
+      "max_ordinary_context": null,
+      "first_verified_worker_ms": null,
+      "setup_goal_cover_ns": null,
+      "setup_retention_ns": null,
+      "graph_sha256": null,
+      "same_goal_actions_prices_as_reference": true,
+      "same_complete_graph_as_evaluated_reference_excluding_attached_economy": null,
+      "policy": {
+        "policy_status": null,
+        "termination": null,
+        "lower_bound": null,
+        "upper_bound": null,
+        "evaluated_policy_cost": null
+      },
+      "release_telemetry": {
+        "version": 1,
+        "snapshot_and_peak_audit_ns": 10789000,
+        "serialization_ns": 3265549800,
+        "calculator_rollback_ns": 3400,
+        "task_storage_release_ns": 1116900,
+        "remaining_storage_release_ns": 2693700,
+        "native_release_ns": 3280154500
+      },
+      "release_telemetry_read_ms": 2.6525999999994383,
+      "ui_milestones": {
+        "worker_solve_requested": 51.14249999999993,
+        "cancel_intent": 158.81060000000002,
+        "worker_result_received": 3490.0031999999997,
+        "handle_cleanup": 3494.7773999999995,
+        "ui_delivery_completed": 3500.1496999999995
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.03969999999981155,
+        "native_begin_completed": 2.5297999999997955,
+        "cancel_acknowledged": 150.33039999999983,
+        "abandon_cleanup_start": 150.42399999999998,
+        "abandon_cleanup_completed": 3430.9429,
+        "terminal_response_committed": 3430.9508000000005
+      }
+    },
+    {
+      "report": "out\\cooperative-setup\\S4-r1-wasm-1-candidate-cancel_retention.json",
+      "sha256": "fbdadd5628cec2862496ddcd537e432b7d12aefc16d88c71d42da72a0b01653d",
+      "control": "cancel_retention",
+      "status": "cancelled",
+      "usable": false,
+      "error": null,
+      "timings_ms": {
+        "begin_ms": 2.047800000000052,
+        "setup_step_ms": 27.279899999999998,
+        "ordinary_step_ms": 0,
+        "cancel_to_release_ms": 3324.6926000000003
+      },
+      "gates": {
+        "begin_ms": true,
+        "setup_step_ms": true,
+        "ordinary_step_ms": true,
+        "cancel_to_release_ms": false
+      },
+      "max_setup_context": {
+        "input_owner": "setup",
+        "output_owner": "setup",
+        "output_cursor": 1,
+        "quantum": 4,
+        "duration_ms": 27.279899999999998
+      },
+      "max_ordinary_context": null,
+      "first_verified_worker_ms": null,
+      "setup_goal_cover_ns": null,
+      "setup_retention_ns": null,
+      "graph_sha256": null,
+      "same_goal_actions_prices_as_reference": true,
+      "same_complete_graph_as_evaluated_reference_excluding_attached_economy": null,
+      "policy": {
+        "policy_status": null,
+        "termination": null,
+        "lower_bound": null,
+        "upper_bound": null,
+        "evaluated_policy_cost": null
+      },
+      "release_telemetry": {
+        "version": 1,
+        "snapshot_and_peak_audit_ns": 13942400,
+        "serialization_ns": 3294846700,
+        "calculator_rollback_ns": 1900,
+        "task_storage_release_ns": 4503700,
+        "remaining_storage_release_ns": 717500,
+        "native_release_ns": 3314014200
+      },
+      "release_telemetry_read_ms": 2.504499999999098,
+      "ui_milestones": {
+        "worker_solve_requested": 52.08989999999994,
+        "cancel_intent": 9509.1751,
+        "worker_result_received": 12828.647200000001,
+        "handle_cleanup": 12831.083700000001,
+        "ui_delivery_completed": 12833.8677
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.03469999999992979,
+        "native_begin_completed": 2.082499999999982,
+        "cancel_acknowledged": 9454.056700000001,
+        "abandon_cleanup_start": 9454.141599999999,
+        "abandon_cleanup_completed": 12768.586899999998,
+        "terminal_response_committed": 12768.593700000001
+      }
+    },
+    {
+      "report": "out\\cooperative-setup\\S4-r1-wasm-2-baseline-finish.json",
+      "sha256": "8ff327633e82c871c90bce94a02a7a7115b11fb19145efb66627055393f777b0",
+      "control": "finish",
+      "status": "completed",
+      "usable": true,
+      "error": null,
+      "timings_ms": {
+        "begin_ms": 12518.3289,
+        "setup_step_ms": 94.81079999999929,
+        "ordinary_step_ms": 360.22649999999703,
+        "finish_ms": 3673.8012000000017,
+        "delivery_ms": 45038.021100000005
+      },
+      "gates": {
+        "begin_ms": false,
+        "setup_step_ms": true,
+        "ordinary_step_ms": false,
+        "finish_ms": true,
+        "delivery_ms": true
+      },
+      "max_setup_context": {
+        "input_owner": "setup",
+        "output_owner": "primitive_rows",
+        "output_cursor": 5,
+        "quantum": 4,
+        "duration_ms": 94.81079999999929
+      },
+      "max_ordinary_context": {
+        "input_owner": "ladder_scheduling",
+        "output_owner": "compilation",
+        "input_cursor": 293,
+        "output_cursor": 295,
+        "quantum": 8,
+        "duration_ms": 360.22649999999703
+      },
+      "first_verified_worker_ms": null,
+      "setup_goal_cover_ns": null,
+      "setup_retention_ns": null,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_goal_actions_prices_as_reference": true,
+      "same_complete_graph_as_evaluated_reference_excluding_attached_economy": true,
+      "policy": {
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436
+      },
+      "release_telemetry": null,
+      "release_telemetry_read_ms": 0,
+      "ui_milestones": {
+        "worker_solve_requested": 51.318300000000136,
+        "finish_intent": 41415.5382,
+        "worker_result_received": 41736.9047,
+        "strategy_export": 45052.1495,
+        "handle_cleanup": 45065.7676,
+        "ui_delivery_completed": 45089.339400000004
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.040400000000090586,
+        "native_begin_completed": 12518.3693,
+        "manual_finish_intent_observed": 41360.569299999996,
+        "finish_acknowledged": 41361.1878,
+        "native_done_observed": 41646.051999999996,
+        "result_export_start": 41646.0542,
+        "result_export_completed": 41665.325699999994,
+        "terminal_response_committed": 41665.4071
+      }
+    },
+    {
+      "report": "out\\cooperative-setup\\S4-r1-wasm-3-candidate-finish.json",
+      "sha256": "6d1f76daa55a1cbe89907819e19e9e6a229c7d514303c62c806a9bde24cf2856",
+      "control": "finish",
+      "status": "completed",
+      "usable": true,
+      "error": null,
+      "timings_ms": {
+        "begin_ms": 2.343399999999974,
+        "setup_step_ms": 28.158100000000104,
+        "ordinary_step_ms": 370.3622000000032,
+        "finish_ms": 3877.7320000000036,
+        "delivery_ms": 47254.0143
+      },
+      "gates": {
+        "begin_ms": true,
+        "setup_step_ms": true,
+        "ordinary_step_ms": false,
+        "finish_ms": true,
+        "delivery_ms": true
+      },
+      "max_setup_context": {
+        "input_owner": "setup",
+        "output_owner": "setup",
+        "output_cursor": 1,
+        "quantum": 4,
+        "duration_ms": 28.158100000000104
+      },
+      "max_ordinary_context": {
+        "input_owner": "exact_evaluation",
+        "output_owner": "ladder_scheduling",
+        "input_cursor": 297,
+        "output_cursor": 301,
+        "quantum": 8,
+        "duration_ms": 370.3622000000032
+      },
+      "first_verified_worker_ms": null,
+      "setup_goal_cover_ns": null,
+      "setup_retention_ns": null,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_goal_actions_prices_as_reference": true,
+      "same_complete_graph_as_evaluated_reference_excluding_attached_economy": true,
+      "policy": {
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436
+      },
+      "release_telemetry": null,
+      "release_telemetry_read_ms": 0,
+      "ui_milestones": {
+        "worker_solve_requested": 51.269599999999855,
+        "finish_intent": 43427.5519,
+        "worker_result_received": 43796.8317,
+        "strategy_export": 47256.8122,
+        "handle_cleanup": 47282.5467,
+        "ui_delivery_completed": 47305.2839
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.054099999999834836,
+        "native_begin_completed": 2.397499999999809,
+        "manual_finish_intent_observed": 43372.6,
+        "finish_acknowledged": 43373.2644,
+        "native_done_observed": 43701.624,
+        "result_export_start": 43701.6263,
+        "result_export_completed": 43722.9736,
+        "terminal_response_committed": 43723.0679
+      }
+    }
+  ],
+  "native": [],
+  "wasm_complete_graphs_equal_excluding_attached_economy": true,
+  "native_comparison": null,
+  "native_cb01_graph_bytes_equal": null,
+  "historical_reference": "out\\verified-delivery\\A7-manual-conquest-1.json",
+  "historical_reference_sha256": "06ec58d5e4da03969c46d747197f9cbf166ea86fea4ebd90a69a814ebe57a0d6",
+  "non_windows": "waived, not passed",
+  "rendered_browser": "not performed",
+  "hosted_ci": "not run; no push",
+  "clock_contract": "Every duration subtracts milestones on one clock. Cancel includes probe telemetry retrieval and Calculator handle release."
+}

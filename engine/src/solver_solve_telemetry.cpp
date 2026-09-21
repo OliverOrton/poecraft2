@@ -300,7 +300,8 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
         co_return false;
     }
     using Work = CarrierBoundAttributionWork;
-    prepare_goal_cover_cost();
+    goal_cover_requested = true;
+    while (!advance_setup()) co_await CooperativeCheckpoint{};
 
     struct LowerComponents {
         std::uint32_t satisfied = 0;
@@ -2048,7 +2049,8 @@ std::string SolveWork::Impl::progress_trace_json(std::uint64_t after_sequence) c
             ",\"refused\":" + std::to_string(c.refused) +
             ",\"capped\":" + std::to_string(c.capped) + "}";
     };
-    const char* owner = finalization_task ? "publication" :
+    const char* owner = goal_cover_stage == SetupStage::Preparing ? "goal_cover_setup" :
+        retention_setup_task ? "retention_setup" : finalization_task ? "publication" :
         publication_pipeline.initial_candidate_task ? "candidate_service" :
         incremental_refinement_active ? "named_continuation" :
         incremental_dynamic_prepare_active ? "automatic_synthesis" :
@@ -2144,6 +2146,10 @@ std::string SolveWork::Impl::progress_trace_json(std::uint64_t after_sequence) c
 }
 
 SolvePhaseOwner SolveWork::Impl::current_phase_owner() const {
+        if (goal_cover_requested &&
+            (goal_cover_stage == SetupStage::NotStarted ||
+             goal_cover_stage == SetupStage::Preparing || retention_setup_pending))
+            return SolvePhaseOwner::Setup;
         switch (phase) {
         case SolvePhase::Iterating:
             return SolvePhaseOwner::BellmanOptimization;
@@ -2735,6 +2741,9 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
             kUpperPolicyProvenanceAccountingOffset -
             kIncumbentPortfolioAliasAccountingOffset +
             calc_bytes;
+        bytes += setup_storage.live + setup_storage.reserved;
+        if (retention_setup_task) bytes += retention_setup_task->frame_bytes() + sizeof(CooperativeTask<bool>::promise_type::AllocationHeader);
+        if (goal_cover_task) bytes += goal_cover_task->frame_bytes() + sizeof(CooperativeTask<bool>::promise_type::AllocationHeader);
         bytes += native_retention_live_bytes + native_retention_junk_safe.capacity();
         bytes += native_retention_refusal.capacity()+1;
         bytes += prices.bucket_count() * sizeof(void*);
@@ -2998,6 +3007,9 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
             kUpperPolicyProvenanceAccountingOffset -
             kIncumbentPortfolioAliasAccountingOffset +
             calc_bytes;
+        bytes += setup_storage.live + setup_storage.reserved;
+        if (retention_setup_task) bytes += retention_setup_task->frame_bytes() + sizeof(CooperativeTask<bool>::promise_type::AllocationHeader);
+        if (goal_cover_task) bytes += goal_cover_task->frame_bytes() + sizeof(CooperativeTask<bool>::promise_type::AllocationHeader);
         bytes += native_retention_live_bytes + native_retention_junk_safe.capacity();
         bytes += native_retention_refusal.capacity()+1;
         bytes += prices.bucket_count() * sizeof(void*);

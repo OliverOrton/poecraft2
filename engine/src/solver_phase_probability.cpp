@@ -18,7 +18,7 @@ std::uint64_t elapsed_ns(PreparationClock::time_point start) {
 constexpr std::uint32_t mass = 1u << 24;
 double down(double x) { return x == 0 ? 0 : std::max(0.0, std::nextafter(x, 0.0)); }
 void checkpoint(const QuotientLowerBudget& b) {
-    if (b.cancelled && b.cancelled()) throw std::runtime_error("phase probability cancelled");
+    if (b.cancelled && b.cancelled()) throw PhasePreparationCancelled();
 }
 std::uint32_t mod_mask(const CalcContext& calc, std::uint32_t mod) {
     std::uint32_t result = 0;
@@ -306,6 +306,34 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         const PhaseLowerProposal& proposal, std::shared_ptr<const PreparedPhaseLowerView> support,
         const PreparedPhaseRestartLower& issued_restart_boundary,
         bool consider_imprint, bool retain_scour, const QuotientLowerBudget& budget,
+        bool joint_refinement, std::shared_ptr<const PreparedPhasePotential> reuse_draws, PhaseContinuation continuation,
+        PhaseRetention retention, bool retain_diagnostics, PhasePreparationOptions preparation_options,
+        std::optional<CoupledFractureFrame> frame,
+        const PhaseLowerQueryDiagnostic* query_diagnostic) {
+    auto work = prepare_probabilistic_work(calc, prices, anchor, proposal, support, issued_restart_boundary, consider_imprint, retain_scour, budget, joint_refinement, reuse_draws, continuation, retention, retain_diagnostics, preparation_options, frame, query_diagnostic);
+    while (!work.resume()) {}
+    return work.take_result();
+}
+
+quotient::CooperativeProofWork<std::shared_ptr<const PreparedPhasePotential>> PhaseLowerProducer::prepare_probabilistic_work(
+        CalcContext& calc, const PhaseLowerPrices& prices, const pc_item_state& anchor,
+        const PhaseLowerProposal& proposal, std::shared_ptr<const PreparedPhaseLowerView> support,
+        const PreparedPhaseRestartLower& issued_restart_boundary,
+        bool consider_imprint, bool retain_scour, QuotientLowerBudget budget,
+        bool joint_refinement, std::shared_ptr<const PreparedPhasePotential> reuse_draws, PhaseContinuation continuation,
+        PhaseRetention retention, bool retain_diagnostics, PhasePreparationOptions preparation_options,
+        std::optional<CoupledFractureFrame> frame,
+        const PhaseLowerQueryDiagnostic* query_diagnostic) {
+    if (!support) throw std::invalid_argument("probabilistic phase support/context mismatch");
+    auto store = support->store_;
+    return {store, [&] { return prepare_probabilistic_impl_work(calc, prices, anchor, proposal, support, issued_restart_boundary, consider_imprint, retain_scour, budget, joint_refinement, reuse_draws, continuation, retention, retain_diagnostics, preparation_options, frame, query_diagnostic); }};
+}
+
+solve_detail::CooperativeTask<std::shared_ptr<const PreparedPhasePotential>> PhaseLowerProducer::prepare_probabilistic_impl_work(
+        CalcContext& calc, const PhaseLowerPrices& prices, const pc_item_state& anchor,
+        const PhaseLowerProposal& proposal, std::shared_ptr<const PreparedPhaseLowerView> support,
+        const PreparedPhaseRestartLower& issued_restart_boundary,
+        bool consider_imprint, bool retain_scour, QuotientLowerBudget budget,
         bool joint_refinement, std::shared_ptr<const PreparedPhasePotential> reuse_draws, PhaseContinuation continuation,
         PhaseRetention retention, bool retain_diagnostics, PhasePreparationOptions preparation_options,
         std::optional<CoupledFractureFrame> frame,
@@ -751,6 +779,8 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
     bool diagnostic_proposed=false, diagnostic_pending=false;
     stats.projection_ns = elapsed_ns(preparation_start);
     for (; rounds < max_rounds || exporting; ++rounds) {
+            co_await solve_detail::CooperativeCheckpoint{};
+            checkpoint(budget);
         const auto relation_start = PreparationClock::now();
         checkpoint(budget);
         if (renewal_geometry.size()==5) {
@@ -823,6 +853,8 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         };
         std::vector<PhasePriceReactivation> shortcuts;
         for (const auto& c : cells) {
+            co_await solve_detail::CooperativeCheckpoint{};
+            checkpoint(budget);
             checkpoint(budget);
             const unsigned offset = c.base >= fresh_offset ? fresh_offset : 0;
             const unsigned frame_mask = offset ? 0 : fm, frame_side = offset ? 2 : fs;
@@ -833,6 +865,10 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 std::vector<PhasePotentialRelation::Event> events; int phase_branch; unsigned removable; };
             std::map<StableKey, Row> rows;
             for (unsigned a = 0; a < calc.registry().actions.size(); ++a) {
+                if ((a & 31u) == 0) {
+                    co_await solve_detail::CooperativeCheckpoint{};
+                    checkpoint(budget);
+                }
                 const auto& action = calc.registry().actions[a];
                 if (action.synthetic && action.id != "restart")
                     throw std::invalid_argument("uncovered synthetic phase action");
@@ -1283,7 +1319,12 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         };
         QuotientLowerResult checked;
         const auto check_start = PreparationClock::now();
-        try { checked = graph.check_lower(query, dense_candidate, local_budget); }
+        try {
+            auto child = graph.check_lower_work(query, dense_candidate, local_budget);
+            while (!child.resume()) co_await solve_detail::CooperativeCheckpoint{};
+            checked = child.take_result();
+            if (checked.status == QuotientLowerStatus::Cancelled) throw PhasePreparationCancelled();
+        }
         catch (const std::length_error& e) { throw std::length_error(resource_context(e)); }
         combined_peak = std::max(combined_peak, graph.proof_store()->ledger().snapshot().peak_total_bytes + support->memory_snapshot().total_bytes);
         stats.check_ns += elapsed_ns(check_start);
@@ -1345,7 +1386,12 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
                 query.model_revision,graph.proof_store()->price_generation(),query.coefficients,&graph_cells,&dense_candidate});
         QuotientLowerResult repaired;
         const auto solve_start = PreparationClock::now();
-        try { repaired = graph.solve_lower(query, local_budget, std::move(initializer), numerical_proposal ? &*numerical_proposal : nullptr); }
+        try {
+            auto child = graph.solve_lower_work(query, local_budget, std::move(initializer), numerical_proposal ? &*numerical_proposal : nullptr);
+            while (!child.resume()) co_await solve_detail::CooperativeCheckpoint{};
+            repaired = child.take_result();
+            if (repaired.status == QuotientLowerStatus::Cancelled) throw PhasePreparationCancelled();
+        }
         catch (const std::length_error& e) { throw std::length_error(resource_context(e)); }
         combined_peak = std::max(combined_peak, graph.proof_store()->ledger().snapshot().peak_total_bytes + support->memory_snapshot().total_bytes);
         const auto numerical_ns = elapsed_ns(solve_start);
@@ -1378,6 +1424,8 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
             // reoptimized model and continue whenever it can improve a cell.
             bool improves = false;
             for (const auto& c : cells) {
+            co_await solve_detail::CooperativeCheckpoint{};
+            checkpoint(budget);
                 const auto next = repaired_projection[c.id];
                 last_improvement=std::max(last_improvement,next-candidate[c.id]);
                 improves |= next > candidate[c.id] + 64*std::numeric_limits<double>::epsilon()*std::max(1.0, next);
@@ -1449,6 +1497,6 @@ std::shared_ptr<const PreparedPhasePotential> PhaseLowerProducer::prepare_probab
         combined_peak, action_relations, std::move(reuse_draws), std::move(joint_events),
         std::move(reactivations), joint_refinement, continuation, retention, std::move(coordinates), crafted_domain, crafted_limit,
         filter_mods, std::move(nonempty_witnesses), std::move(refill_witnesses), preparation_options, stats));
-    return result;
+    co_return result;
 }
 } // namespace poecraft::solver

@@ -284,6 +284,11 @@ private:
     quotient::ScopedProofMemoryCharge charge_;
 };
 
+class PhasePreparationCancelled final : public std::runtime_error {
+public:
+    PhasePreparationCancelled() : std::runtime_error("phase preparation cancelled") {}
+};
+
 class PhaseLowerProducer {
 public:
     // Selects a quantified certificate region, never a replacement start item
@@ -310,11 +315,43 @@ public:
         PhasePreparationOptions preparation_options = {},
         std::optional<CoupledFractureFrame> frame = {},
         const PhaseLowerQueryDiagnostic* query_diagnostic = nullptr);
+    static quotient::CooperativeProofWork<std::shared_ptr<const PreparedPhaseLowerView>> prepare_work(
+        CalcContext&, const PhaseLowerPrices&, const pc_item_state& phase,
+        const PhaseLowerProposal& existing_candidate,
+        quotient::QuotientLowerBudget budget = {});
+    static quotient::CooperativeProofWork<std::shared_ptr<const PreparedPhasePotential>> prepare_probabilistic_work(
+        CalcContext&, const PhaseLowerPrices&, const pc_item_state&,
+        const PhaseLowerProposal&, std::shared_ptr<const PreparedPhaseLowerView>,
+        const PreparedPhaseRestartLower& restart_boundary,
+        bool consider_imprint_programs, bool retain_scour,
+        quotient::QuotientLowerBudget budget = {}, bool joint_refinement = false,
+        std::shared_ptr<const PreparedPhasePotential> reuse_draws = {},
+        PhaseContinuation continuation = PhaseContinuation::PriceOnly,
+        PhaseRetention retention = PhaseRetention::None, bool retain_diagnostics = true,
+        PhasePreparationOptions preparation_options = {},
+        std::optional<CoupledFractureFrame> frame = {},
+        const PhaseLowerQueryDiagnostic* query_diagnostic = nullptr);
     static PreparedPhaseRestartLower zero_restart_boundary(const PreparedPhaseLowerView&);
     static PhaseProgramLowerWitness compose(CalcContext&, const PhaseLowerPrices&,
         const pc_item_state&, const std::string&, const PreparedPhasePotential&,
         const quotient::QuotientLowerBudget& budget = {});
 private:
+    static solve_detail::CooperativeTask<std::shared_ptr<const PreparedPhaseLowerView>> prepare_impl_work(
+        std::shared_ptr<quotient::ProofStore>, CalcContext&, const PhaseLowerPrices&, const pc_item_state& phase,
+        const PhaseLowerProposal& existing_candidate,
+        quotient::QuotientLowerBudget budget = {});
+    static solve_detail::CooperativeTask<std::shared_ptr<const PreparedPhasePotential>> prepare_probabilistic_impl_work(
+        CalcContext&, const PhaseLowerPrices&, const pc_item_state&,
+        const PhaseLowerProposal&, std::shared_ptr<const PreparedPhaseLowerView>,
+        const PreparedPhaseRestartLower& restart_boundary,
+        bool consider_imprint_programs, bool retain_scour,
+        quotient::QuotientLowerBudget budget = {}, bool joint_refinement = false,
+        std::shared_ptr<const PreparedPhasePotential> reuse_draws = {},
+        PhaseContinuation continuation = PhaseContinuation::PriceOnly,
+        PhaseRetention retention = PhaseRetention::None, bool retain_diagnostics = true,
+        PhasePreparationOptions preparation_options = {},
+        std::optional<CoupledFractureFrame> frame = {},
+        const PhaseLowerQueryDiagnostic* query_diagnostic = nullptr);
     static PhaseProgramLowerWitness compose_impl(CalcContext&, const PhaseLowerPrices&,
         const pc_item_state&, const std::string&, const PreparedPhaseLowerView&,
         const PreparedPhasePotential*, const quotient::QuotientLowerBudget&);

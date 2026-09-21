@@ -91,6 +91,13 @@ The final `selection_sealed` event follows publication normalization, cap checks
 and invariant checks. `Done` and packaging follow; no independent graph/value
 mutation is permitted after that point.
 
+Attribution finalization explicitly services any required pending cover setup;
+passive progress and abandon snapshots cannot activate it. If setup admission
+refuses while publication is already staged, that producer remains refused and
+the existing publication task finishes the resource-stop result before `Done`
+is exposed. The early ordinary root-cap path keeps its lazy setup disposition.
+No incomplete setup scratch becomes returned lower or executable evidence.
+
 The [owned-witness argument](mathematics/search-and-resumption.md#interruptible-verified-results)
 establishes conditional safety. The [delivery programme](../active/2026-09-15-verified-delivery/README.md)
 separately owns invocation tests, source/build identities, latency qualification
@@ -116,6 +123,10 @@ and require entry-scoped evidence before using any value as an upper tail.
 Node, edge, JSON-size, pair, memory, or work caps can prevent a candidate from being certified. Invalid operations, missing prices, improperness, off-policy mass, incomplete accounting, stale identities, or cost mismatch are reported under the relevant refusal/classification contract.
 
 Inspect candidate source and identity, direct versus strict stage, compiler graph sizes, evaluator pair counts, success/off-policy results, known-cost completeness, exact evaluated cost, and reconciliation. A failing optional candidate is not automatically loss of the incumbent already verified under the same request.
+
+A nonfinite residual can serialize as null. Presentation treats it as unavailable;
+that diagnostic alone cannot discard an otherwise usable returned strategy or
+change its native policy classification.
 
 ## Sampled validation is separate
 

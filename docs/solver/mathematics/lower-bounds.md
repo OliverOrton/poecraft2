@@ -665,6 +665,15 @@ They must be reconstructed/minimized for x and checked with complete native
 coverage. Numerical reuse must not reuse the previous outcome selection as native
 authority. See [CLM-0014](../claims.md#clm-0014).
 
+Cooperative preparation preserves this distinction across suspension. The parent
+retains the query, candidate vector and relation generation while its checker
+child borrows them; none may be replaced until the child completes or is
+destroyed. A repaired vector starts the existing reconstruction/minimization
+round before native acceptance. A paused checker cannot expose its candidate as
+a certificate, and an immutable checked vector still requires the final native
+member-domain guard. The blocking and staged entry points execute the same
+arithmetic and acceptance order; checkpoints alone add no lower authority.
+
 A current-query checked vector is the simplest eligible numerical seed. If most
 outer-round vectors fail the rebuilt query, that optimization may save little.
 Measure eligible rounds and their numerical cost before predicting its benefit.

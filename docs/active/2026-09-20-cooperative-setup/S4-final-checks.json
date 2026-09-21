@@ -1,0 +1,137 @@
+{
+  "checks": [
+    {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-quotient-proof-only",
+      "checks": 2075,
+      "failures": 0,
+      "log": "out\\cooperative-setup\\S3-qualified--solver-quotient-proof-only.log",
+      "sha256": "426bcddb5b7afc3dab27b09055ac10ef89578c4018dc1fe09b7592f98d8b56b9"
+    },
+    {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-phase-lower-only",
+      "checks": 5940,
+      "failures": 0,
+      "log": "out\\cooperative-setup\\S3-publication-cap--solver-phase-lower-only.log",
+      "sha256": "3d69ef3b9b50a295ee142c24e7a161e2763a49062cc8718379bd1dad1e6adaa9"
+    },
+    {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-proof-pattern-only",
+      "checks": 334,
+      "failures": 0,
+      "log": "out\\cooperative-setup\\S3-qualified--solver-proof-pattern-only.log",
+      "sha256": "8b1be77e58ae22016f64107b3a7f7a466637912333490ab2cde386116f274d87"
+    },
+    {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-bounded-finish-only",
+      "checks": 202,
+      "failures": 0,
+      "log": "out\\cooperative-setup\\S3-publication-cap--solver-bounded-finish-only.log",
+      "sha256": "6191aa6bf1ffeb372fefaf381e212cc95ffbd22b1b974282ce594d89261e4d58"
+    },
+    {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-selected-fallback-only",
+      "checks": 2440,
+      "failures": 0,
+      "log": "out\\cooperative-setup\\S3-qualified--solver-selected-fallback-only.log",
+      "sha256": "2bba95a2bd33ec6dcf93e778004de9c2be349656bfe4a5a1935b1a9f800944fc"
+    },
+    {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-return-bridge-only",
+      "checks": 648,
+      "failures": 0,
+      "log": "out\\cooperative-setup\\S3-qualified--solver-return-bridge-only.log",
+      "sha256": "83a6465c45d81b197206c065f3ab8eabf4d76a5926b95f6897843f73b3d6d8e2"
+    },
+    {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-setup-service-only",
+      "checks": 674,
+      "failures": 0,
+      "log": "out\\cooperative-setup\\S4-final-setup-tests.log",
+      "sha256": "91a58cced29dc8d23236b286d537b6d82fb608aef6f6daa07591e0a7cb59c986"
+    },
+    {
+      "name": "web",
+      "command": "npm test (apps/web)",
+      "observed_exit_code": 0,
+      "log": "out\\cooperative-setup\\S4-null-residual-web-tests.log",
+      "sha256": "9da8292bef0ba5eaa9003432a5fd2ab170c16b30a54c3d99fb29a904d00d84be"
+    },
+    {
+      "name": "typescript",
+      "command": "npx tsc --noEmit (apps/web)",
+      "observed_exit_code": 0,
+      "log": "out\\cooperative-setup\\S4-null-residual-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "probe-typescript",
+      "command": "npx tsc --noEmit (apps/web)",
+      "observed_exit_code": 0,
+      "log": "out\\cooperative-setup\\S4-probe-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "native-build",
+      "command": "powershell -File scripts/build.ps1",
+      "observed_exit_code": 0,
+      "log": "out\\cooperative-setup\\S4-final-test-build.log",
+      "sha256": "7e2f19cdaf3230167a9c7ad7597d811bf25b252813ad42311a5c7da89e596988"
+    },
+    {
+      "name": "wasm-build",
+      "command": "powershell -File scripts/build-wasm.ps1",
+      "observed_exit_code": 0,
+      "log": "out\\cooperative-setup\\S4-serializer-wasm-build.log",
+      "sha256": "44e5391698c39926fce42def13d0b116e7ceeceb6bed732cb2613babeacfdb99"
+    },
+    {
+      "command": "PYTHONPATH=tools/ingest;bindings/python python -m poecraft_ingest.solver_knowledge lint --base 0f376f4",
+      "errors": [],
+      "warnings": [
+        "CLM-0004: open",
+        "CLM-0005: open",
+        "CLM-0013: open",
+        "CLM-0016: open",
+        "CLM-0017: open",
+        "CLM-0018: open",
+        "CLM-0019: open",
+        "CLM-0019: prerequisite CLM-0018 is open",
+        "CLM-0020: open",
+        "CLM-0021: open",
+        "CLM-0022: open",
+        "CLM-0023: open",
+        "CLM-0024: open",
+        "CLM-0024: prerequisite CLM-0020 is open",
+        "CLM-0024: prerequisite CLM-0023 is open",
+        "CLM-0025: open",
+        "engine/src/solver_quotient_lower.cpp:276 uses: CLM-0023 is open; review its premises",
+        "tools/ingest/poecraft_ingest/solver_reports.py:995 obligation: CLM-0024 is open; review its premises"
+      ],
+      "log": "out/cooperative-setup/S4-final-knowledge-lint.log",
+      "sha256": "268e38c74ff7489de8380ec9947cee494389253991406bd48c1dd9cc06ae072f",
+      "scope": "traceability only; no mathematical or runtime certification"
+    },
+    {
+      "command": "git diff --check -- . :(exclude)0",
+      "exit_code": 0,
+      "output": ""
+    }
+  ],
+  "final_binaries_match_control_receipts": true,
+  "real_controls": "S4-r2-qualification.json (WASM r2, native r3)",
+  "earlier_qualification": [
+    "S0-qualification.json",
+    "S1-fixed-policy.json"
+  ],
+  "unrun": [
+    "full default/API native suite with embedded simulations",
+    "Simulator for unchanged controllers",
+    "hosted CI",
+    "rendered browser review"
+  ],
+  "waived": [
+    "non-Windows"
+  ],
+  "failed_gate": "ordinary compilation step remains 362\u2013373 ms against 250 ms",
+  "retained_build_warning": "WASM 32-bit size_type comparison against a 64-bit maximum in solver_solve_bellman.cpp is always false; build completed."
+}

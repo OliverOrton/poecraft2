@@ -18,6 +18,15 @@ native request / product request
 
 Native mechanics are shared, but physical items, calculator states, strict carriers, quotient cells, and strategy operations remain different identities. The evaluator's product includes the operation and applicable observation/checkpoint context as well as item state.
 
+Heavy cover/retention preparation belongs to explicit setup tasks in
+`solver_solve_bounds.cpp`, serviced by the existing solve loop. The constructor
+records dependencies; ordinary work requests them at its proof boundary.
+`solver_phase_lower.cpp`, `solver_phase_probability.cpp` and the lower quotient
+retain their own suspended child state. `solver_setup_storage.hpp` accounts
+cover scratch; the shared proof store owns retention children. Passive progress
+and snapshots do not prepare these models. See the
+[prefix/ownership argument](../solver/mathematics/search-and-resumption.md#cooperative-preparation).
+
 ## Phase And File Map
 
 Paths in this table are under `engine/src/` unless indicated otherwise.

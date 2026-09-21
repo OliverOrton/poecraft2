@@ -328,6 +328,8 @@ async function solveSolver(
         step_count: 0,
         yield_count: 0,
         max_step_ms: 0,
+        max_setup_step_ms: 0,
+        max_ordinary_step_ms: 0,
         total_step_ms: 0,
         finalization_ms: 0,
         progress_observations: [],
@@ -459,12 +461,20 @@ async function solveSolver(
             const measuredMs = Math.max(0, performance.now() - started);
             const elapsedMs = Math.max(0.1, measuredMs);
             worker.step_count += 1;
-            if (measuredMs > worker.max_step_ms) worker.max_step_context = {
+            const stepContext = {
                 input_owner: inputOwner, output_owner: progress.phase_owner,
                 input_cursor: inputCursor, output_cursor: progress.lifecycle_sequence,
                 quantum: stepWorkItems, duration_ms: measuredMs,
             };
+            if (measuredMs > worker.max_step_ms) worker.max_step_context = stepContext;
             worker.max_step_ms = Math.max(worker.max_step_ms, measuredMs);
+            if (inputOwner === "setup") {
+                if (measuredMs > (worker.max_setup_step_ms ?? 0)) worker.max_setup_step_context = stepContext;
+                worker.max_setup_step_ms = Math.max(worker.max_setup_step_ms ?? 0, measuredMs);
+            } else {
+                if (measuredMs > (worker.max_ordinary_step_ms ?? 0)) worker.max_ordinary_step_context = stepContext;
+                worker.max_ordinary_step_ms = Math.max(worker.max_ordinary_step_ms ?? 0, measuredMs);
+            }
             worker.total_step_ms += measuredMs;
             unyieldedStepMs += measuredMs;
             const phaseChanged = progress.phase !== observedPhase;

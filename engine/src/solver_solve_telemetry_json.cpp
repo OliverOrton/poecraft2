@@ -221,6 +221,13 @@ std::string telemetry_hex_u64(const std::uint64_t value) {
     return buffer;
 }
 
+#if defined(__EMSCRIPTEN__) && defined(__clang__)
+// O3/LTO expands this observational formatter to an 840-KiB function. Its
+// first WASM call blocked synchronous abandonment for 3.36 s while the same
+// warm call took 0.25 ms. Keep cold compilation bounded at this diagnostic
+// boundary; solver kernels and the release build flags remain unchanged.
+[[clang::optnone]]
+#endif
 std::string serialize_solver_telemetry(
     const CalcContext& calc,
     const SolveResult* result,

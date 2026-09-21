@@ -12,6 +12,7 @@ void SolveWork::Impl::begin_focused_lower_solve() {
             throw std::logic_error(
                 "focused lower preparation already active");
         }
+        goal_cover_requested = true;
         focused_mode = true;
         focus_optimizing = true;
         focused_lower_mode = true;

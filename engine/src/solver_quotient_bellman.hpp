@@ -175,6 +175,15 @@ public:
         const QuotientLowerQuery& query,
         const std::vector<double>& values,
         const QuotientLowerBudget& budget = {}) const;
+    /* Explicitly stepped variants of the same producer/checker. Borrowed query,
+     * candidate and proposal storage must stay frozen through completion. */
+    QuotientLowerWork solve_lower_work(
+        const QuotientLowerQuery& query, QuotientLowerBudget budget = {},
+        std::shared_ptr<const QuotientLowerCertificate> initializer = {},
+        const QuotientLowerProposal* proposal = nullptr) const;
+    QuotientLowerWork check_lower_work(
+        const QuotientLowerQuery& query, const std::vector<double>& values,
+        QuotientLowerBudget budget = {}) const;
     std::uint64_t model_revision() const { return model_revision_; }
     bool lower_certificate_current(const QuotientLowerCertificate& certificate,
                                    const QuotientLowerQuery& query) const;
@@ -249,9 +258,9 @@ private:
     };
     std::vector<LowerRowBinding> lower_row_bindings_;
 
-    QuotientLowerResult run_lower(
+    solve_detail::CooperativeTask<QuotientLowerResult> run_lower(
         const QuotientLowerQuery& query,
-        const QuotientLowerBudget& budget,
+        QuotientLowerBudget budget,
         const std::vector<double>* candidate,
         std::shared_ptr<const QuotientLowerCertificate> initializer = {},
         const QuotientLowerProposal* proposal = nullptr) const;

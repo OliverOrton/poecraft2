@@ -730,7 +730,7 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
             <strong data-solve-result="policy-quality">${policyQualityLabel(summary, exactExecutablePolicy)}</strong>
             &middot; ${summary.expanded_states.toLocaleString()} states
             &middot; ${summary.sweeps.toLocaleString()} sweeps
-            &middot; residual ${summary.residual.toExponential(2)}
+            &middot; residual ${summary.residual !== null && Number.isFinite(summary.residual) ? summary.residual.toExponential(2) : "unavailable"}
         </div>
         <p class="pc-calc-solve-certificate" data-solve-result="certificate">${escapeHtml(certificateText(summary, exactExecutablePolicy))}</p>
         <p class="pc-calc-solve-policy-authority" data-solve-result="policy-authority">${escapeHtml(policyAuthorityText(summary, exactExecutablePolicy, compiledOperationTypes))}</p>

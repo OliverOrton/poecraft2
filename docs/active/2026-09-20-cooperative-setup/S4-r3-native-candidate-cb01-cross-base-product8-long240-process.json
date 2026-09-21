@@ -1,0 +1,328 @@
+{
+  "arm": "candidate",
+  "case": {
+    "case_id": "cb01-cross-base-product8-long240",
+    "command": {
+      "argv": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\candidate-r3\\poecraft_solver_benchmark.exe",
+        "--artifact",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "--corpus",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+        "--output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\S4-r3-native-candidate-cb01-cross-base-product8-long240\\cases\\cb01-cross-base-product8-long240.json",
+        "--partial-output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\S4-r3-native-candidate-cb01-cross-base-product8-long240\\partials\\cb01-cross-base-product8-long240.preflight.json",
+        "--strategy-output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\S4-r3-native-candidate-cb01-cross-base-product8-long240\\strategies",
+        "--case",
+        "cb01-cross-base-product8-long240",
+        "--skip-verification",
+        "--exact-strategy-evaluation",
+        "--native-retention-diagnostic",
+        "reuse"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+    },
+    "paths": {
+      "attempt_id": "preflight",
+      "attempt_directory": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\S4-r3-native-candidate-cb01-cross-base-product8-long240",
+      "report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\S4-r3-native-candidate-cb01-cross-base-product8-long240\\cases\\cb01-cross-base-product8-long240.json",
+      "partial_report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\S4-r3-native-candidate-cb01-cross-base-product8-long240\\partials\\cb01-cross-base-product8-long240.preflight.json",
+      "strategy_output_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\S4-r3-native-candidate-cb01-cross-base-product8-long240\\strategies",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\S4-r3-native-candidate-cb01-cross-base-product8-long240\\logs\\cb01-cross-base-product8-long240.log"
+    },
+    "watchdog_seconds": 315.0,
+    "reservation": {
+      "solver_owned_cap_bytes": 1073741824,
+      "worker_headroom_bytes": 6442450944,
+      "policy_version": "solver_lab_host_reservation_v2"
+    }
+  },
+  "identity": {
+    "corpus": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "sha256": "4f8d6ec386e7b65a8a1975bf762e9da020a3a3593c0dbc6d861de7372264c9fe",
+      "corpus_id": "cross-base-capability-recovery-core-v1",
+      "schema_version": "solver_benchmark_corpus_v1",
+      "generator_config_sha256": null
+    },
+    "artifact": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+      "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+      "declared_files_verified": true,
+      "files": [
+        {
+          "path": "game-data.json",
+          "size_bytes": 16439442,
+          "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+        },
+        {
+          "path": "strings.json",
+          "size_bytes": 6534428,
+          "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      ],
+      "identity": {
+        "artifact_schema_version": 4,
+        "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+        "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+        "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+      }
+    },
+    "executable": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\candidate-r3\\poecraft_solver_benchmark.exe",
+      "sha256": "4753500e5363bb6045a66ba84ce88880887a633ae797dfa72adbb1fe2e780372"
+    },
+    "machine": {
+      "system": "Windows",
+      "release": "11",
+      "machine": "AMD64",
+      "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "logical_cpu_count": 24,
+      "python": "3.14.2"
+    },
+    "source": {
+      "commit": "5a923d1fa57c37319a82bd838c95412ed93738df",
+      "dirty": true,
+      "dirty_paths": [
+        {
+          "status": " M",
+          "path": "apps/web/src/app/engine-worker.ts"
+        },
+        {
+          "status": " M",
+          "path": "apps/web/src/app/solver-result-presentation.ts"
+        },
+        {
+          "status": " M",
+          "path": "apps/web/test/calculator-delivery-probe.ts"
+        },
+        {
+          "status": " M",
+          "path": "apps/web/test/solver-result-presentation.test.ts"
+        },
+        {
+          "status": " M",
+          "path": "bindings/wasm/dist/poecraft_engine.wasm"
+        },
+        {
+          "status": " M",
+          "path": "docs/active/2026-09-20-cooperative-setup/README.md"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r1-qualification.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r1-wasm-0-candidate-cancel_setup-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r1-wasm-1-candidate-cancel_retention-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r1-wasm-2-baseline-finish-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r1-wasm-3-candidate-finish-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r1-wasm-4-candidate-finish-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r2-qualification.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r2-wasm-0-candidate-cancel_setup-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r2-wasm-1-candidate-cancel_retention-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r2-wasm-2-baseline-finish-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r2-wasm-3-candidate-finish-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r2-wasm-4-candidate-finish-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r2-wasm-5-baseline-finish-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/S4-r3-native-baseline-cb01-cross-base-product8-long240-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/probes/layout.cpp"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/probes/qualify.py"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-20-cooperative-setup/probes/summarize.py"
+        },
+        {
+          "status": " M",
+          "path": "docs/foundation/solver-internals.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/claims.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/flow.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/lower-pruning.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/mathematics/lower-bounds.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/mathematics/search-and-resumption.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/research.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/resources-resume-replay.md"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_api.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_cooperative_task.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_phase_lower.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_phase_lower.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_phase_probability.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_quotient_bellman.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_quotient_lower.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_quotient_lower.hpp"
+        },
+        {
+          "status": "??",
+          "path": "engine/src/solver_setup_storage.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_bellman.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_bounds.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_carrier_pattern.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_contracts.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_finish.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_focused.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_telemetry.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_telemetry_json.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_types.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_main.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_solver_calc.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_solver_quotient_lower.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_solver_solve.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/tests.hpp"
+        },
+        {
+          "status": "M ",
+          "path": "pps/web/src/app/engine-protocol.ts"
+        }
+      ]
+    }
+  },
+  "admission": {
+    "utc": "2026-09-21T05:33:18.057082+00:00",
+    "available_physical": 39293403136,
+    "available_commit": 21926723584,
+    "reserved_bytes": 7516192768,
+    "outside_bytes": 13681888461,
+    "admitted": true
+  },
+  "all_completed": true,
+  "survivors": []
+}

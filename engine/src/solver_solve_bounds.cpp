@@ -7,9 +7,20 @@ namespace solver {
 using namespace solve_detail;
 
 void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagnostic* diagnostic) {
-    if (!options.native_retention_lower || native_retention_attempted) return;
+    prepare_goal_cover_cost();
+    if (native_retention_attempted) return;
+    {
+        CooperativeFrameAdmission admission(this, [](void* owner, std::size_t bytes) {
+            static_cast<Impl*>(owner)->admit_setup_bytes(bytes);
+        });
+        retention_setup_task.emplace(run_retention_setup(diagnostic));
+    }
+    while (!advance_setup()) {}
+}
+
+CooperativeTask<bool> SolveWork::Impl::run_retention_setup(const PhaseLowerQueryDiagnostic* diagnostic) {
+    if (!options.native_retention_lower || native_retention_attempted) co_return true;
     native_retention_attempted = true;
-    const auto began = std::chrono::steady_clock::now();
     try {
         if (options.consider_imprint_programs) throw std::invalid_argument("unmodelled Imprint scope");
         unsigned fractures = 0;
@@ -44,15 +55,26 @@ void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagno
         quotient::QuotientLowerBudget budget; budget.max_scratch_bytes = cap;
         const auto mask_proposal = phase_lower_proposal(false);
         const auto proposal = phase_lower_proposal(true);
-        auto support = PhaseLowerProducer::prepare(calc,prices,exact_start_item,mask_proposal,budget);
+        std::shared_ptr<const PreparedPhaseLowerView> support;
+        {
+            auto child = PhaseLowerProducer::prepare_work(calc,prices,exact_start_item,mask_proposal,budget);
+            while (!child.resume()) co_await CooperativeCheckpoint{};
+            support = child.take_result();
+        }
         // A coupled region is solved jointly; zero is a valid unused initial
         // boundary. Never recursively prepare through completion lookup.
         const auto zero = PhaseLowerProducer::zero_restart_boundary(*support);
-        auto prepared = PhaseLowerProducer::prepare_probabilistic(calc,prices,exact_start_item,
+        std::shared_ptr<const PreparedPhasePotential> prepared;
+        {
+            auto child = PhaseLowerProducer::prepare_probabilistic_work(calc,prices,exact_start_item,
             proposal,support,zero,false,true,budget,true,{},PhaseContinuation::CoupledFresh,
             PhaseRetention::AnnulNonempty,false,{true,true,3,
                 options.native_retention_numerical_reuse,options.native_retention_numerical_reuse,
                 options.native_retention_checked_target>0,options.native_retention_checked_target},frame,diagnostic);
+            while (!child.resume()) co_await CooperativeCheckpoint{};
+            prepared = child.take_result();
+        }
+
         const auto safe_member = [&](unsigned mod) {
             // A class mask is only one part of its member domain. The query
             // also requires absence of every metamod flag. project_item adds
@@ -64,6 +86,7 @@ void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagno
                 (session.metamod_type.at(mod)<0 || modifier_metamod_flag(session,mod)!=0);
         };
         for (unsigned slot=0;slot<calc.layout().slots.size();++slot) {
+            co_await CooperativeCheckpoint{};
             int side=-1; bool safe=true;
             const auto& members=calc.layout().slots[slot].member_mask;
             for (unsigned mod=0;mod<session.mod_count;++mod) if (pc_bitset_test(members.data(),mod)) {
@@ -76,6 +99,7 @@ void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagno
         }
         native_retention_junk_safe.assign(calc.layout().junk_classes.size(),true);
         for (unsigned c=0;c<calc.layout().junk_classes.size();++c) {
+            co_await CooperativeCheckpoint{};
             const auto& group=calc.layout().junk_classes[c];
             bool safe=group.gen_type>=0 && group.gen_type<=1;
             for (unsigned mod=0;mod<session.mod_count;++mod)
@@ -83,8 +107,8 @@ void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagno
             native_retention_junk_safe[c]=safe;
         }
         native_retention_peak_bytes=prepared->peak_additional_bytes;
-        // The regular owner ledger is initialized after constructor setup.
-        // Audit the shared calculator once and retain this construction peak.
+        // Audit the shared calculator and retain the staged construction peak;
+        // the proof reservation already includes all child frame charges.
         peak_owned_bytes=std::max(peak_owned_bytes,estimated_owned_bytes_with_calc(calc.audited_estimated_owned_bytes())-cap+native_retention_peak_bytes);
         native_retention_live_bytes=prepared->memory_snapshot().total_bytes;
         native_retention_potential=std::move(prepared); // only after full checking
@@ -100,13 +124,14 @@ void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagno
         // patterns (including the envelope pattern), despite its historic name.
         result.diagnostics.independent_goal_cover_lower_bound=std::max(
             result.diagnostics.independent_goal_cover_lower_bound,completion_proof_lower_value(result.start_state));
+    } catch (const PhasePreparationCancelled&) {
+        throw;
     } catch (const std::exception& e) {
         native_retention_potential.reset(); native_retention_live_bytes=0;
         native_retention_refusal=e.what();
         contract(ProofPatternKind::NativeRetention).fallback_reason=native_retention_refusal;
     }
-    native_retention_prepare_ns=static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now()-began).count());
+    co_return true;
 }
 
 double SolveWork::Impl::native_retention_lower_value(std::uint32_t state_id) {
@@ -188,7 +213,7 @@ std::shared_ptr<const PreparedPhaseLowerView> SolveWork::Impl::prepare_phase_low
 }
 
 PhaseLowerProposal SolveWork::Impl::phase_lower_proposal(bool clean) {
-    prepare_goal_cover_cost();
+    if (!goal_cover_cost_ready) throw std::logic_error("phase proposal requires committed cover setup");
     if (clean) return {PhaseTableRole::CleanCompletion,
         static_cast<std::uint32_t>(goal_cover_cost.size()),
         static_cast<std::uint32_t>(calc.goal().required_satisfied_slots()), clean_goal_cover_cost};
@@ -590,18 +615,137 @@ std::uint32_t SolveWork::Impl::planner_goal_may_survive_mask(
         return survivors;
     }
 
+void SolveWork::Impl::admit_setup_bytes(std::uint64_t additional) {
+    const auto live = fast_estimated_owned_bytes();
+    if (live > options.max_solver_owned_bytes || additional > options.max_solver_owned_bytes - live)
+        throw SolverResourceLimit("max_solver_owned_bytes", options.max_solver_owned_bytes);
+    peak_owned_bytes = std::max(peak_owned_bytes, live + additional);
+}
+
+bool SolveWork::Impl::advance_setup() {
+    try {
+    if (!goal_cover_requested) return true;
+    if (goal_cover_stage == SetupStage::NotStarted) {
+        setup_storage.owner = this;
+        setup_storage.admit = [](void* owner, std::uint64_t bytes) {
+            static_cast<Impl*>(owner)->admit_setup_bytes(bytes);
+        };
+        try {
+            CooperativeFrameAdmission admission(this, [](void* owner, std::size_t bytes) {
+                static_cast<Impl*>(owner)->admit_setup_bytes(bytes);
+            });
+            goal_cover_task.emplace(run_goal_cover_setup());
+        } catch (...) {
+            goal_cover_stage = SetupStage::Refused;
+            retention_setup_pending = false;
+            throw;
+        }
+        goal_cover_stage = SetupStage::Preparing;
+        record_progress_event("setup_goal_cover_start");
+    }
+    if (goal_cover_stage == SetupStage::Preparing) {
+        const auto began = std::chrono::steady_clock::now();
+        try {
+            admit_setup_bytes(0); // includes the frame before its first resume
+            SetupStorage::Scope allocation_scope(setup_storage);
+            const bool done = goal_cover_task->resume();
+            goal_cover_setup_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()-began).count();
+            if (!done) return false;
+            (void)goal_cover_task->take_result();
+            goal_cover_task.reset();
+            goal_cover_stage = SetupStage::Committed;
+            initialize_owned_bytes_ledger();
+            record_progress_event("setup_goal_cover_completed");
+        } catch (...) {
+            goal_cover_task.reset();
+            goal_cover_stage = SetupStage::Refused;
+            retention_setup_pending = false;
+            initialize_owned_bytes_ledger();
+            throw;
+        }
+        return false;
+    }
+    if (retention_setup_pending) {
+        try {
+        if (!retention_setup_task) {
+            CooperativeFrameAdmission admission(this, [](void* owner, std::size_t bytes) {
+                static_cast<Impl*>(owner)->admit_setup_bytes(bytes);
+            });
+            retention_setup_task.emplace(run_retention_setup(nullptr));
+            record_progress_event("setup_retention_start");
+        }
+        admit_setup_bytes(0);
+        const auto began = std::chrono::steady_clock::now();
+        const bool done = retention_setup_task->resume();
+        native_retention_prepare_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now()-began).count();
+        if (!done) return false;
+        (void)retention_setup_task->take_result();
+        retention_setup_task.reset();
+        retention_setup_pending = false;
+        initialize_owned_bytes_ledger();
+        record_progress_event("setup_retention_completed");
+        return false;
+        } catch (...) {
+            retention_setup_task.reset();
+            retention_setup_pending = false;
+            if (!native_retention_potential) native_retention_live_bytes = 0;
+            initialize_owned_bytes_ledger();
+            throw;
+        }
+    }
+    return true;
+    } catch (const SolverResourceLimit& limit) {
+        // A publication task may already be suspended at its setup dependency.
+        // Keep it resumable after refusal; reporting Done here would expose a
+        // terminal state without the finalized result it still has to produce.
+        if (!finalization_task) throw;
+        record_cap(limit.cap_name(), limit.cap_name() == "max_discovered_states");
+        return false;
+    }
+}
+
 void SolveWork::Impl::prepare_goal_cover_cost() {
-        if (goal_cover_cost_ready) return;
-        goal_cover_cost_ready = true;
-        ProofPatternContract& universal_contract = contract(
+    // Explicit blocking diagnostics only. Passive lower reads cannot call it.
+    goal_cover_requested = true;
+    while (goal_cover_stage == SetupStage::NotStarted || goal_cover_stage == SetupStage::Preparing)
+        (void)advance_setup();
+}
+
+CooperativeTask<bool> SolveWork::Impl::run_goal_cover_setup() {
+        std::uint32_t setup_units = 0;
+        auto slice_started = std::chrono::steady_clock::now();
+        const auto slice_due = [&] {
+            return ++setup_units >= 2048 || std::chrono::steady_clock::now() - slice_started >= std::chrono::milliseconds(20);
+        };
+        // Construction-only containers allocate through the existing invocation.
+        // Contracts hold only bounded action IDs/status strings beyond their
+        // frame; reserve that overlap separately from tracked container bytes.
+        std::uint64_t max_action_id = 0;
+        for (const auto& action : calc.registry().actions) max_action_id = std::max<std::uint64_t>(max_action_id, action.id.capacity());
+        SetupStorage::Reservation contract_strings(setup_storage, 4096 + 16 * (max_action_id + 1));
+        SetupVector<double> goal_cover_cost, clean_goal_cover_cost, carrier_goal_progress_cost, carrier_goal_action_floor, bounded_gain_goal_progress_cost, bounded_gain_action_floor, clean_goal_escape_cost, clean_goal_no_exalt_escape_cost, clean_goal_start_action_floor;
+        SetupVector<std::uint32_t> carrier_unproved_first_step_actions, clean_goal_escape_action, clean_goal_no_exalt_escape_action;
+        SetupVector<std::pair<std::uint32_t, double>> carrier_priced_first_step_actions;
+
+        const auto publish = [&](auto& target, const auto& staged) {
+            using Value = typename std::remove_reference_t<decltype(target)>::value_type;
+            // The copy overlaps the private buffer until the task completes.
+            admit_setup_bytes(staged.size() * sizeof(Value));
+            target.assign(staged.begin(), staged.end());
+            initialize_owned_bytes_ledger();
+        };
+
+
+        ProofPatternContract universal_contract = contract(
             ProofPatternKind::UniversalCover);
-        ProofPatternContract& clean_contract = contract(
+        ProofPatternContract clean_contract = contract(
             ProofPatternKind::CleanMdp);
-        ProofPatternContract& carrier_contract = contract(
+        ProofPatternContract carrier_contract = contract(
             ProofPatternKind::CarrierMdp);
-        ProofPatternContract& bounded_gain_contract = contract(
+        ProofPatternContract bounded_gain_contract = contract(
             ProofPatternKind::BoundedGainMdp);
-        ProofPatternContract& debt_contract = contract(
+        ProofPatternContract debt_contract = contract(
             ProofPatternKind::TerminalDebt);
         universal_contract.residual = 0.0;
         universal_contract.solution_sweeps = 1;
@@ -615,9 +759,9 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         goal_cover_cost[0] = 0.0;
         clean_goal_cover_cost.assign(mask_count, kInfinity);
         clean_goal_cover_cost[0] = 0.0;
-        std::vector<std::uint32_t> cover_predecessor(mask_count, kNoId);
-        std::vector<std::uint32_t> cover_action(mask_count, kNoId);
-        std::vector<std::uint32_t> cover_subset(mask_count, 0);
+        SetupVector<std::uint32_t> cover_predecessor(mask_count, kNoId);
+        SetupVector<std::uint32_t> cover_action(mask_count, kNoId);
+        SetupVector<std::uint32_t> cover_subset(mask_count, 0);
         /* Probability-aware optimistic cover. Every stochastic primitive is
          * replaced by a stronger macro that retries for a requested nonempty
          * goal subset, preserves all prior progress, receives the best legal
@@ -626,7 +770,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
          * probability or lose more carrier state, so this relaxed acyclic MDP
          * remains an admissible lower bound. Unknown transition families keep
          * the former p=1 set-cover behavior. */
-        std::vector<std::int8_t> slot_side(slot_count, -1);
+        SetupVector<std::int8_t> slot_side(slot_count, -1);
         for (std::uint32_t slot = 0; slot < slot_count; ++slot) {
             for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
                 if (pc_bitset_test(
@@ -640,7 +784,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         using DrawKey = std::tuple<
             std::uint32_t, std::uint32_t, std::uint32_t,
             std::uint8_t, std::uint8_t, bool>;
-        std::map<DrawKey, double> draw_probability;
+        SetupMap<DrawKey, double> draw_probability;
         const auto draw_upper = [&] (
             const std::uint32_t action,
             const std::uint32_t slot,
@@ -705,7 +849,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             const std::uint32_t subset_count = std::popcount(subset);
             if (one_total_draw && subset_count > 1) return 0.0;
 
-            std::array<std::vector<std::uint32_t>, 2> by_side;
+            std::array<SetupVector<std::uint32_t>, 2> by_side;
             for (std::uint32_t slot = 0; slot < slot_count; ++slot) {
                 const std::int8_t side = slot_side[slot];
                 if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX) {
@@ -775,7 +919,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             return std::min(1.0, probability);
         };
 
-        std::vector<std::uint32_t> relaxation_actions = calc.candidates();
+        SetupVector<std::uint32_t> relaxation_actions(calc.candidates().begin(), calc.candidates().end());
         const auto include_action = [&](const std::uint32_t action) {
             if (action != kNoId && action < calc.registry().actions.size() &&
                 std::find(
@@ -866,8 +1010,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         };
         carrier_unproved_first_step_actions.clear();
         carrier_priced_first_step_actions.clear();
-        carrier_goal_progress_eligibility_cache.clear();
-        carrier_terminal_debt_cache.clear();
+
         for (const std::uint32_t action_index : relaxation_actions) {
             const ActionDescriptor& action =
                 calc.registry().actions[action_index];
@@ -962,10 +1105,10 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         };
         const std::size_t carrier_state_count =
             kCarrierRarityCount * mask_count;
-        std::vector<std::vector<CarrierTransition>> carrier_transitions(
+        SetupVector<SetupVector<CarrierTransition>> carrier_transitions(
             carrier_state_count);
-        std::vector<std::uint8_t> carrier_goal(carrier_state_count, 0);
-        std::map<std::pair<std::uint32_t, std::uint32_t>, double>
+        SetupVector<std::uint8_t> carrier_goal(carrier_state_count, 0);
+        SetupMap<std::pair<std::uint32_t, std::uint32_t>, double>
             carrier_progress_probability;
         const auto carrier_probability_upper = [&] (
             const std::uint32_t action,
@@ -1015,6 +1158,11 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         };
         for (std::uint8_t rarity = 0;
              rarity < kCarrierRarityCount; ++rarity) {
+            if (slice_due()) {
+                        co_await CooperativeCheckpoint{};
+                        setup_units = 0;
+                        slice_started = std::chrono::steady_clock::now();
+                    }
             for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
                 const std::size_t current = carrier_index(rarity, mask);
                 if (rarity == calc.goal().rarity &&
@@ -1023,6 +1171,11 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                     continue;
                 }
                 for (const std::uint32_t action : relaxation_actions) {
+                    if (slice_due()) {
+                        co_await CooperativeCheckpoint{};
+                        setup_units = 0;
+                        slice_started = std::chrono::steady_clock::now();
+                    }
                     const ActionDescriptor& descriptor =
                         calc.registry().actions.at(action);
                     if ((descriptor.legality.rarity_mask &
@@ -1129,7 +1282,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                                right.terminal, right.success, right.failure,
                                -right.success_probability, right.cost};
                 });
-            std::vector<CarrierTransition> reduced;
+            SetupVector<CarrierTransition> reduced;
             reduced.reserve(transitions.size());
             std::size_t begin = 0;
             while (begin < transitions.size()) {
@@ -1159,7 +1312,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         /* Exclude nonproductive rarity cycles before value iteration. They
          * otherwise increase forever from the zero lower seed and force the
          * iteration cap despite having no path to the relaxed goal. */
-        std::vector<std::uint8_t> carrier_can_finish = carrier_goal;
+        SetupVector<std::uint8_t> carrier_can_finish = carrier_goal;
         for (std::size_t pass = 0; pass < carrier_state_count; ++pass) {
             bool changed = false;
             for (std::size_t state = 0;
@@ -1184,7 +1337,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         }
         carrier_goal_progress_cost.assign(
             carrier_state_count, 0.0);
-        std::vector<double> next_carrier_cost =
+        SetupVector<double> next_carrier_cost =
             carrier_goal_progress_cost;
         /* Solve to the reported residual. If the defensive sweep ceiling is
          * ever reached, the monotone iterate remains a safe subsolution but
@@ -1199,6 +1352,11 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             next_carrier_cost = carrier_goal_progress_cost;
             for (std::size_t current = 0;
                  current < carrier_state_count; ++current) {
+                if (slice_due()) {
+                    co_await CooperativeCheckpoint{};
+                    setup_units = 0;
+                    slice_started = std::chrono::steady_clock::now();
+                }
                 if (carrier_goal[current] ||
                     !carrier_can_finish[current]) continue;
                 double best = kInfinity;
@@ -1353,6 +1511,17 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             "included:carrier_persistent_progress_relaxation:" +
             finite_json(start_carrier_progress));
 
+
+        publish(this->carrier_goal_progress_cost, carrier_goal_progress_cost);
+        publish(this->carrier_goal_action_floor, carrier_goal_action_floor);
+        publish(this->carrier_unproved_first_step_actions, carrier_unproved_first_step_actions);
+        publish(this->carrier_priced_first_step_actions, carrier_priced_first_step_actions);
+        contract(ProofPatternKind::CarrierMdp) = carrier_contract;
+        contract(ProofPatternKind::TerminalDebt) = debt_contract;
+        goal_cover_carrier_committed = true;
+        initialize_owned_bytes_ledger();
+        co_await CooperativeCheckpoint{};
+
         /* A second, independent carrier pattern keeps only goal cardinality
          * but limits a successful action to at most one new goal per affix
          * draw. This removes the exact counterexample in which Regal (one
@@ -1378,11 +1547,16 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         };
         const std::size_t gain_state_count =
             kCarrierRarityCount * gain_count;
-        std::vector<std::vector<GainTransition>> gain_transitions(
+        SetupVector<SetupVector<GainTransition>> gain_transitions(
             gain_state_count);
-        std::vector<std::uint8_t> gain_goal(gain_state_count, 0);
+        SetupVector<std::uint8_t> gain_goal(gain_state_count, 0);
         for (std::uint8_t rarity = 0;
              rarity < kCarrierRarityCount; ++rarity) {
+            if (slice_due()) {
+                        co_await CooperativeCheckpoint{};
+                        setup_units = 0;
+                        slice_started = std::chrono::steady_clock::now();
+                    }
             for (std::uint32_t progress = 0;
                  progress <= required; ++progress) {
                 const std::size_t current = gain_index(rarity, progress);
@@ -1391,6 +1565,11 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                     continue;
                 }
                 for (const std::uint32_t action : relaxation_actions) {
+                    if (slice_due()) {
+                        co_await CooperativeCheckpoint{};
+                        setup_units = 0;
+                        slice_started = std::chrono::steady_clock::now();
+                    }
                     const ActionDescriptor& descriptor =
                         calc.registry().actions.at(action);
                     if ((descriptor.legality.rarity_mask &
@@ -1484,7 +1663,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                                right.terminal, right.success, right.failure,
                                -right.success_probability, right.cost};
                 });
-            std::vector<GainTransition> reduced;
+            SetupVector<GainTransition> reduced;
             std::size_t begin = 0;
             while (begin < transitions.size()) {
                 std::size_t end = begin + 1;
@@ -1509,7 +1688,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             }
             transitions = std::move(reduced);
         }
-        std::vector<std::uint8_t> gain_can_finish = gain_goal;
+        SetupVector<std::uint8_t> gain_can_finish = gain_goal;
         for (std::size_t pass = 0; pass < gain_state_count; ++pass) {
             bool changed = false;
             for (std::size_t state = 0;
@@ -1533,7 +1712,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             if (!changed) break;
         }
         bounded_gain_goal_progress_cost.assign(gain_state_count, 0.0);
-        std::vector<double> next_gain_cost =
+        SetupVector<double> next_gain_cost =
             bounded_gain_goal_progress_cost;
         double gain_residual = kInfinity;
         std::uint32_t gain_sweeps = 0;
@@ -1545,6 +1724,11 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             next_gain_cost = bounded_gain_goal_progress_cost;
             for (std::size_t current = 0;
                  current < gain_state_count; ++current) {
+                if (slice_due()) {
+                    co_await CooperativeCheckpoint{};
+                    setup_units = 0;
+                    slice_started = std::chrono::steady_clock::now();
+                }
                 if (gain_goal[current] || !gain_can_finish[current]) continue;
                 double best = kInfinity;
                 for (const GainTransition& transition :
@@ -1660,12 +1844,18 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             }
         }
 
+
+        publish(this->bounded_gain_goal_progress_cost, bounded_gain_goal_progress_cost);
+        publish(this->bounded_gain_action_floor, bounded_gain_action_floor);
+        contract(ProofPatternKind::BoundedGainMdp) = bounded_gain_contract;
+        initialize_owned_bytes_ledger();
+
         /* Keep a probability-free cover as the universal proof used for
          * price-bound action pruning and for carriers whose preserved
          * structure can change the pool. It gives every action any reachable
          * goal subset deterministically for one immediate price. */
         const auto relax_cover = [&] (
-            std::vector<double>& cover,
+            SetupVector<double>& cover,
             const bool probability_aware) {
             for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
                 if (!std::isfinite(cover[mask])) continue;
@@ -1727,6 +1917,12 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             universal_contract.minimizing_action =
                 calc.registry().actions[universal_action].id;
         }
+
+        publish(this->goal_cover_cost, goal_cover_cost);
+        contract(ProofPatternKind::UniversalCover) = universal_contract;
+        initialize_owned_bytes_ledger();
+        goal_cover_universal_committed = true;
+        co_await CooperativeCheckpoint{};
         (void)cover_predecessor;
         (void)cover_subset;
         if (slot_count < 2) {
@@ -1735,7 +1931,18 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             clean_goal_escape_action.clear();
             clean_goal_no_exalt_escape_cost.clear();
             clean_goal_no_exalt_escape_action.clear();
-            return;
+
+        publish(this->clean_goal_cover_cost, clean_goal_cover_cost);
+        publish(this->clean_goal_escape_cost, clean_goal_escape_cost);
+        publish(this->clean_goal_escape_action, clean_goal_escape_action);
+        publish(this->clean_goal_no_exalt_escape_cost, clean_goal_no_exalt_escape_cost);
+        publish(this->clean_goal_no_exalt_escape_action, clean_goal_no_exalt_escape_action);
+        publish(this->clean_goal_start_action_floor, clean_goal_start_action_floor);
+        contract(ProofPatternKind::CleanMdp) = clean_contract;
+        initialize_owned_bytes_ledger();
+        goal_cover_clean_committed = true;
+        goal_cover_cost_ready = true;
+        co_return true;
         }
 
         /* Goal-progress/rarity relaxation for clean carriers. It is a real
@@ -1767,7 +1974,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             clean_goal_cover_cost.size(), kInfinity);
         clean_goal_no_exalt_escape_action.assign(
             clean_goal_cover_cost.size(), kNoId);
-        std::vector<std::uint32_t> clean_goal_policy(
+        SetupVector<std::uint32_t> clean_goal_policy(
             clean_goal_cover_cost.size(), kNoId);
         const auto is_abstract_goal = [&](const std::uint8_t rarity,
                                           const std::uint32_t mask,
@@ -1805,13 +2012,13 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                    type == ActionType::Fossil ||
                    type == ActionType::HarvestReforge;
         };
-        std::vector<std::array<std::uint8_t, 2>> minimum_goal_affixes(
+        SetupVector<std::array<std::uint8_t, 2>> minimum_goal_affixes(
             mask_count,
             {std::numeric_limits<std::uint8_t>::max(),
              std::numeric_limits<std::uint8_t>::max()});
         minimum_goal_affixes[0] = {0, 0};
         for (std::size_t side = 0; side < 2; ++side) {
-            std::vector<std::uint8_t> minimum(
+            SetupVector<std::uint8_t> minimum(
                 mask_count, std::numeric_limits<std::uint8_t>::max());
             minimum[0] = 0;
             for (std::uint32_t covered = 0; covered < mask_count; ++covered) {
@@ -1853,12 +2060,12 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                 minimum_goal_affixes[mask][side] = minimum[side_mask];
             }
         }
-        std::unordered_map<std::uint32_t, std::size_t>
+        SetupHashMap<std::uint32_t, std::size_t>
             relaxation_action_position;
         for (std::size_t i = 0; i < relaxation_actions.size(); ++i) {
             relaxation_action_position.emplace(relaxation_actions[i], i);
         }
-        std::vector<double> subset_probability_cache(
+        SetupVector<double> subset_probability_cache(
             relaxation_actions.size() * mask_count * mask_count *
                 kAffixCountStates * kAffixCountStates,
             -1.0);
@@ -1885,17 +2092,17 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         struct RelaxedStochasticEnvelope {
             bool ready = false;
             double failure_probability = 1.0;
-            std::vector<std::size_t> failure_successors;
-            std::vector<double> success_probability;
-            std::vector<std::vector<std::size_t>> success_successors;
+            SetupVector<std::size_t> failure_successors;
+            SetupVector<double> success_probability;
+            SetupVector<SetupVector<std::size_t>> success_successors;
         };
-        std::vector<RelaxedStochasticEnvelope> stochastic_envelopes(
+        SetupVector<RelaxedStochasticEnvelope> stochastic_envelopes(
             clean_goal_cover_cost.size() * relaxation_actions.size());
         struct ExactRelaxedEntry {
             std::size_t successor = 0;
             double probability = 0.0;
         };
-        std::unordered_map<std::uint32_t, std::vector<ExactRelaxedEntry>>
+        SetupHashMap<std::uint32_t, SetupVector<ExactRelaxedEntry>>
             exact_destructive_envelopes;
         const AbstractState& probability_anchor =
             calc.state(result.start_state);
@@ -1916,7 +2123,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
          */
         for (const std::uint32_t action :
              incremental_action_generation
-                 ? std::vector<std::uint32_t>{}
+                 ? SetupVector<std::uint32_t>{}
                  : relaxation_actions) {
             const ActionDescriptor& descriptor =
                 calc.registry().actions.at(action);
@@ -1951,16 +2158,17 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                 break;
             }
             if (carrier == kNoId) continue;
-            const OutcomeDistribution& distribution =
-                calc.outcomes(
-                    carrier, action,
-                    options.goal_progress_gated_reforges);
+            std::shared_ptr<const OutcomeDistribution> completed;
+            while (!calc.advance_outcomes(carrier, action,
+                    options.goal_progress_gated_reforges, completed))
+                co_await CooperativeCheckpoint{};
+            const OutcomeDistribution& distribution = *completed;
             if (!distribution.supported ||
                 !distribution.choice_groups.empty() ||
                 !distribution.choice_options.empty()) {
                 continue;
             }
-            std::map<std::size_t, double> aggregated;
+            SetupMap<std::size_t, double> aggregated;
             for (const OutcomeEntry& outcome : distribution.entries) {
                 const AbstractState& successor = calc.state(outcome.state);
                 if (successor.rarity > PC_RARITY_RARE ||
@@ -1985,6 +2193,11 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
         std::uint32_t relaxation_sweeps = 0;
         double relaxation_delta = kInfinity;
         for (std::uint32_t sweep = 0; sweep < kRelaxationSweeps; ++sweep) {
+            if (slice_due()) {
+                        co_await CooperativeCheckpoint{};
+                        setup_units = 0;
+                        slice_started = std::chrono::steady_clock::now();
+                    }
             relaxation_sweeps = sweep + 1;
             double delta = 0.0;
             for (std::uint8_t rarity = PC_RARITY_NORMAL;
@@ -2088,6 +2301,11 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                             clean_goal_no_exalt_escape_action[current] =
                                 kNoId;
                             for (const std::uint32_t action : relaxation_actions) {
+                    if (slice_due()) {
+                        co_await CooperativeCheckpoint{};
+                        setup_units = 0;
+                        slice_started = std::chrono::steady_clock::now();
+                    }
                         const ActionDescriptor& descriptor =
                             calc.registry().actions.at(action);
                         if (descriptor.synthetic &&
@@ -2321,7 +2539,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                             envelope.ready = true;
                             const std::uint32_t max_count =
                                 std::popcount(available);
-                            std::vector<double> cumulative(
+                            SetupVector<double> cumulative(
                                 max_count + 2, 0.0);
                             envelope.success_probability.assign(
                                 max_count + 1, 0.0);
@@ -2781,6 +2999,18 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                         : calc.registry().actions.at(escape).id));
             }
         }
+
+        publish(this->clean_goal_cover_cost, clean_goal_cover_cost);
+        publish(this->clean_goal_escape_cost, clean_goal_escape_cost);
+        publish(this->clean_goal_escape_action, clean_goal_escape_action);
+        publish(this->clean_goal_no_exalt_escape_cost, clean_goal_no_exalt_escape_cost);
+        publish(this->clean_goal_no_exalt_escape_action, clean_goal_no_exalt_escape_action);
+        publish(this->clean_goal_start_action_floor, clean_goal_start_action_floor);
+        contract(ProofPatternKind::CleanMdp) = clean_contract;
+        initialize_owned_bytes_ledger();
+        goal_cover_clean_committed = true;
+        goal_cover_cost_ready = true;
+        co_return true;
     }
 
 std::uint32_t SolveWork::Impl::satisfied_goal_mask_for_state(
@@ -2809,7 +3039,6 @@ double SolveWork::Impl::optimistic_completion_cost(
         const std::uint8_t carrier_rarity ,
         const std::uint8_t carrier_prefixes ,
         const std::uint8_t carrier_suffixes ) {
-        prepare_goal_cover_cost();
         const std::uint32_t required =
             calc.goal().required_satisfied_slots();
         const std::uint32_t satisfied_count =
@@ -2823,6 +3052,7 @@ double SolveWork::Impl::optimistic_completion_cost(
             return 0.0;
         }
         if (clean_carrier) {
+            if (!goal_cover_clean_committed) return 0.0;
             const std::size_t mask_count = goal_cover_cost.size();
             constexpr std::size_t kAffixCountStates = 4;
             const std::size_t index =
@@ -2833,6 +3063,7 @@ double SolveWork::Impl::optimistic_completion_cost(
                 ? clean_goal_cover_cost[index]
                 : 0.0;
         }
+        if (!goal_cover_universal_committed) return 0.0;
         double best = kInfinity;
         for (std::uint32_t produced = 0;
              produced < goal_cover_cost.size(); ++produced) {

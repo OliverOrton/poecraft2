@@ -389,6 +389,14 @@ void SolveWork::Impl::count_policy_actions(
 
 solve_detail::CooperativeTask<SolveResult>
 SolveWork::Impl::run_publication_pipeline() {
+        // An ordinary root-row cap must not activate optional heavy setup.
+        // Other publication paths retain their explicit lower dependency.
+        if (goal_cover_requested ||
+            !(result.diagnostics.resource_cap_hit || result.diagnostics.state_cap_hit) ||
+            expanded_count > 1) {
+            goal_cover_requested = true;
+            while (!advance_setup()) co_await CooperativeCheckpoint{};
+        }
         if (phase != SolvePhase::Refining &&
             phase != SolvePhase::Compiling &&
             phase != SolvePhase::Certifying) {

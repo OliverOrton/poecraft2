@@ -235,29 +235,56 @@ const char* quotient_lower_status_name(QuotientLowerStatus status) {
     return "numeric_inconclusive";
 }
 
-QuotientLowerResult QuotientBellmanGraph::solve_lower(
-        const QuotientLowerQuery& query,
-        const QuotientLowerBudget& budget,
+QuotientLowerWork QuotientBellmanGraph::solve_lower_work(
+        const QuotientLowerQuery& query, QuotientLowerBudget budget,
         std::shared_ptr<const QuotientLowerCertificate> initializer,
-        const QuotientLowerProposal* numerical_proposal) const {
-    return run_lower(query, budget, nullptr, std::move(initializer), numerical_proposal);
+        const QuotientLowerProposal* proposal) const {
+    return {proof_store(), [&] { return run_lower(query, std::move(budget), nullptr, std::move(initializer), proposal); }};
+}
+
+QuotientLowerWork QuotientBellmanGraph::check_lower_work(
+        const QuotientLowerQuery& query, const std::vector<double>& values,
+        QuotientLowerBudget budget) const {
+    return {proof_store(), [&] { return run_lower(query, std::move(budget), &values); }};
+}
+
+namespace {
+template<class Factory> QuotientLowerResult drain_lower(Factory factory) {
+    try {
+        auto work = factory();
+        while (!work.resume()) {}
+        return work.take_result();
+    } catch (const ProofMemoryLimit& error) {
+        QuotientLowerResult out;
+        out.status = QuotientLowerStatus::ResourceCap;
+        out.reason = std::string("proof frame reservation refused: ") + error.what();
+        return out;
+    }
+}
+}
+
+QuotientLowerResult QuotientBellmanGraph::solve_lower(
+        const QuotientLowerQuery& query, const QuotientLowerBudget& budget,
+        std::shared_ptr<const QuotientLowerCertificate> initializer,
+        const QuotientLowerProposal* proposal) const {
+    return drain_lower([&] { return solve_lower_work(query, budget, std::move(initializer), proposal); });
 }
 
 QuotientLowerResult QuotientBellmanGraph::check_lower(
         const QuotientLowerQuery& query, const std::vector<double>& values,
         const QuotientLowerBudget& budget) const {
-    // math: uses CLM-0007 — Acceptance checks the supplied finite inequalities.
-    // math: obligation CLM-0023 — Native coefficient provenance and uniform
-    // source/action semantics remain with the producer, not this numeric entry.
-    return run_lower(query, budget, &values);
+    // math: uses CLM-0007; obligation CLM-0023. Stepping changes neither the
+    // raw inequality check nor the native producer's correspondence duty.
+    return drain_lower([&] { return check_lower_work(query, values, budget); });
 }
 
-QuotientLowerResult QuotientBellmanGraph::run_lower(
-        const QuotientLowerQuery& query, const QuotientLowerBudget& budget,
+solve_detail::CooperativeTask<QuotientLowerResult> QuotientBellmanGraph::run_lower(
+        const QuotientLowerQuery& query, QuotientLowerBudget budget,
         const std::vector<double>* candidate,
         std::shared_ptr<const QuotientLowerCertificate> initializer,
         const QuotientLowerProposal* numerical_proposal) const {
     QuotientLowerResult out;
+    std::uint32_t quantum = 0;
     const auto release_diagnostics = [&] {
         std::vector<double>().swap(out.candidate_values_by_state);
         std::vector<QuotientLowerLimitingConstraint>().swap(out.ranked_constraints);
@@ -270,23 +297,23 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
     if (mode_ != QuotientBellmanMode::LowerOnly || query.roots.empty() ||
         query.request_identity.empty() || query.caller_scope.empty()) {
         out.reason = "lower-only graph, roots and full request scope required";
-        return out;
+        co_return out;
     }
     if (query.model_revision != model_revision_) {
         refuse(QuotientLowerStatus::StaleModel, "query revision is stale");
-        return out;
+        co_return out;
     }
     if (candidate && candidate->size() != cell_by_state_.size()) {
         refuse(QuotientLowerStatus::NumericInconclusive,
             "candidate dimension does not match this graph");
-        return out;
+        co_return out;
     }
     const auto cancelled = [&] {
         return budget.cancelled && budget.cancelled();
     };
     if (cancelled()) {
         refuse(QuotientLowerStatus::Cancelled, "cancelled before query");
-        return out;
+        co_return out;
     }
     try {
         const auto count = cell_by_state_.size();
@@ -327,6 +354,16 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
         }
         std::uint64_t peak_partition = 0;
         for (const auto& source : query.sources) {
+            if (++quantum == 32) {
+                quantum = 0;
+                co_await solve_detail::CooperativeCheckpoint{};
+                if (cancelled() || model_revision_ != query.model_revision) {
+                    release_diagnostics();
+                    refuse(cancelled() ? QuotientLowerStatus::Cancelled : QuotientLowerStatus::StaleModel,
+                           "query interrupted at cooperative boundary");
+                    co_return out;
+                }
+            }
             // Borrowed query buffers remain live for the full check/solve.
             // Coverage copies and tree partitions exist for ONE source at a
             // time. Count actual borrowed capacities plus that temporary peak.
@@ -378,19 +415,29 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
             if (record.cell.terminal) known[record.state] = 1;
         }
         for (const auto& source : query.sources) {
+            if (++quantum == 32) {
+                quantum = 0;
+                co_await solve_detail::CooperativeCheckpoint{};
+                if (cancelled() || model_revision_ != query.model_revision) {
+                    release_diagnostics();
+                    refuse(cancelled() ? QuotientLowerStatus::Cancelled : QuotientLowerStatus::StaleModel,
+                           "query interrupted at cooperative boundary");
+                    co_return out;
+                }
+            }
             const auto state = state_for_cell(source.cell_id);
             if (!state || known[*state] ||
                 source.source_identity != semantic_identity_for_cell(source.cell_id) ||
                 source.expected_actions.scope_identity != query.caller_scope) {
                 out.reason = "duplicate, terminal or mismatched modeled source";
-                return out;
+                co_return out;
             }
             std::vector<CanonicalActionCover> cover;
             for (const auto& constraint : source.constraints)
                 cover.push_back(constraint.cover);
             out.reason = validate_canonical_action_coverage(
                 source.expected_actions, cover);
-            if (!out.reason.empty()) return out;
+            if (!out.reason.empty()) co_return out;
             sources[*state] = &source;
             known[*state] = 1;
         }
@@ -402,7 +449,7 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
                 boundary.evidence_identity.empty() ||
                 !std::isfinite(boundary.lower) || boundary.lower < 0.0) {
                 out.reason = "frontier requires independent exact-key evidence";
-                return out;
+                co_return out;
             }
             values[*state] = boundary.lower;
             known[*state] = 1;
@@ -411,40 +458,50 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
             const auto state = state_for_cell(root);
             if (!state || !known[*state]) {
                 out.reason = "uncovered query root";
-                return out;
+                co_return out;
             }
         }
         std::vector<double> mass_upper(transition_cache_.rows.size(), 1.0);
         for (std::uint32_t state = 0; state < count; ++state) {
+            if (++quantum == 32) {
+                quantum = 0;
+                co_await solve_detail::CooperativeCheckpoint{};
+                if (cancelled() || model_revision_ != query.model_revision) {
+                    release_diagnostics();
+                    refuse(cancelled() ? QuotientLowerStatus::Cancelled : QuotientLowerStatus::StaleModel,
+                           "query interrupted at cooperative boundary");
+                    co_return out;
+                }
+            }
             if (!sources[state]) continue;
             for (const auto& constraint : sources[state]->constraints) {
                 if (constraint.evidence_identity.empty()) {
                     out.reason = "constraint lacks lower provenance";
-                    return out;
+                    co_return out;
                 }
                 if (constraint.kind == LowerConstraintKind::Scalar) {
                     if (constraint.evidence != LowerEvidenceKind::IndependentLower ||
                         !std::isfinite(constraint.lower) || constraint.lower < 0.0) {
                         out.reason = "scalar/family requires independent lower evidence";
-                        return out;
+                        co_return out;
                     }
                     continue;
                 }
                 if (constraint.cover.family) {
                     out.reason = "residual families require whole-family scalar evidence";
-                    return out;
+                    co_return out;
                 }
                 if (constraint.kind == LowerConstraintKind::Inapplicable) {
                     if (constraint.evidence != LowerEvidenceKind::ExactInapplicability) {
                         out.reason = "unsupported is not exact native inapplicability";
-                        return out;
+                        co_return out;
                     }
                     continue;
                 }
                 if (constraint.evidence != LowerEvidenceKind::ExactDeclaredKernel ||
                     constraint.row >= lower_row_bindings_.size()) {
                     out.reason = "row lacks declared complete kernel evidence";
-                    return out;
+                    co_return out;
                 }
                 const auto& binding = lower_row_bindings_[constraint.row];
                 const auto& provenance = binding.provenance;
@@ -459,18 +516,18 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
                     binding.price_generation != proof_store()->price_generation()) {
                     refuse(QuotientLowerStatus::StaleModel,
                         "row source, price, request or action evidence is stale");
-                    return out;
+                    co_return out;
                 }
                 for (const auto& dependency : binding.targets) {
                     const auto& target = cells_.at(dependency.cell_id);
                     if (target.target_generation != dependency.generation) {
                         refuse(QuotientLowerStatus::StaleModel,
                             "row target generation is stale");
-                        return out;
+                        co_return out;
                     }
                     if (!known[target.state]) {
                         out.reason = "row target has no modeled value or independent frontier";
-                        return out;
+                        co_return out;
                     }
                 }
                 ExactMass mass;
@@ -492,7 +549,7 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
                      !mass.one())) {
                     refuse(QuotientLowerStatus::NumericInconclusive,
                         "declared exact binary probability mass is not one");
-                    return out;
+                    co_return out;
                 }
                 mass_upper[constraint.row] = mass.one() ? 1.0 : upper;
             }
@@ -528,18 +585,28 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
                 future = down(future / mass_upper[constraint.row]);
             return add_down(priced_rows_[constraint.row].cost, future);
         };
-        const auto feasible = [&](const std::vector<double>& x) {
-            if (x.size() != count) return false;
+        const auto feasible = [&](const std::vector<double>& x) -> solve_detail::CooperativeTask<bool> {
+            if (x.size() != count) co_return false;
+            std::uint32_t checked_constraints = 0;
             for (std::uint32_t state = 0; state < count; ++state) {
-                if (!std::isfinite(x[state]) || x[state] < 0.0) return false;
+                if ((state & 31u) == 0) {
+                    co_await solve_detail::CooperativeCheckpoint{};
+                    if (cancelled() || model_revision_ != query.model_revision) co_return false;
+                }
+                if (!std::isfinite(x[state]) || x[state] < 0.0) co_return false;
                 if (!sources[state]) {
-                    if (x[state] != values[state]) return false;
+                    if (x[state] != values[state]) co_return false;
                     continue;
                 }
                 for (const auto& constraint : sources[state]->constraints) {
+                    if (++checked_constraints == 128) {
+                        checked_constraints = 0;
+                        co_await solve_detail::CooperativeCheckpoint{};
+                        if (cancelled() || model_revision_ != query.model_revision) co_return false;
+                    }
                     if (constraint.kind == LowerConstraintKind::Inapplicable) continue;
                     if (constraint.kind == LowerConstraintKind::Scalar) {
-                        if (x[state] > constraint.lower) return false;
+                        if (x[state] > constraint.lower) co_return false;
                         continue;
                     }
                     const auto& row = transition_cache_.rows[constraint.row];
@@ -573,10 +640,10 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
                                 choice.successor_offset + j]]);
                         term(choice.probability, best);
                     }
-                    if (!left.at_most(right)) return false;
+                    if (!left.at_most(right)) co_return false;
                 }
             }
-            return true;
+            co_return true;
         };
         if (numerical_proposal && !candidate && !out.initializer_used) {
             const auto& seed=*numerical_proposal;
@@ -609,10 +676,20 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
             for (std::uint32_t sweep = 0; sweep < budget.max_sweeps; ++sweep) {
                 if (cancelled()) {
                     refuse(QuotientLowerStatus::Cancelled, "cancelled between complete sweeps");
-                    return out;
+                    co_return out;
                 }
                 bool changed = false;
                 for (std::uint32_t state = 0; state < count; ++state) {
+                    if (++quantum == 32) {
+                        quantum = 0;
+                        co_await solve_detail::CooperativeCheckpoint{};
+                        if (cancelled() || model_revision_ != query.model_revision) {
+                            release_diagnostics();
+                            refuse(cancelled() ? QuotientLowerStatus::Cancelled : QuotientLowerStatus::StaleModel,
+                                   "query interrupted at cooperative boundary");
+                            co_return out;
+                        }
+                    }
                     if (!sources[state]) continue;
                     double best = std::numeric_limits<double>::infinity();
                     for (const auto& constraint : sources[state]->constraints) {
@@ -637,32 +714,44 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
             out.candidate_values_by_state = std::move(proposal);
         }
         auto accepted = out.candidate_values_by_state;
-        bool checked = feasible(accepted);
-        if (!checked && !candidate) {
-            /* A proposal repair, not an acceptance tolerance. Every repaired
-             * vector is checked against ALL raw inequalities afterwards. */
-            for (std::uint32_t state = 0; state < count; ++state)
-                if (sources[state]) accepted[state] *= 1.0 - 1e-10;
-            checked = feasible(accepted);
-            if (!checked) {
+        bool checked = false;
+        for (unsigned attempt = 0; attempt < 3; ++attempt) {
+            if (attempt == 1) {
+                // Proposal repair only: acceptance still checks every raw
+                // inequality without a residual tolerance.
+                for (std::uint32_t state = 0; state < count; ++state)
+                    if (sources[state]) accepted[state] *= 1.0 - 1e-10;
+            } else if (attempt == 2) {
                 accepted = values;
                 out.proposal_zero_fallback = true;
-                checked = feasible(accepted);
-                out.reason = "proposal refused; checked zero modeled-state fallback";
             }
+            {
+                // Charge lifetime encloses the child frame, including unwind.
+                CooperativeProofWork<bool> check(proof_store(), [&] { return feasible(accepted); });
+                while (!check.resume()) co_await solve_detail::CooperativeCheckpoint{check.frame_bytes()};
+                checked = check.take_result();
+            }
+            if (cancelled() || model_revision_ != query.model_revision) {
+                release_diagnostics();
+                refuse(cancelled() ? QuotientLowerStatus::Cancelled : QuotientLowerStatus::StaleModel,
+                       "query interrupted during raw inequality checking");
+                co_return out;
+            }
+            if (attempt == 2) out.reason = "proposal refused; checked zero modeled-state fallback";
+            if (checked || candidate) break;
         }
         if (!checked) {
             release_diagnostics();
             refuse(QuotientLowerStatus::NumericInconclusive,
                 "exact raw inequalities refuse candidate; no residual tolerance");
-            return out;
+            co_return out;
         }
         const bool cancelled_at_acceptance = cancelled();
         if (cancelled_at_acceptance || model_revision_ != query.model_revision) {
             release_diagnostics();
             refuse(cancelled_at_acceptance ? QuotientLowerStatus::Cancelled :
                 QuotientLowerStatus::StaleModel, "query changed before acceptance");
-            return out;
+            co_return out;
         }
         if (budget.retain_ranked_constraints) for (const auto& source : query.sources)
             for (const auto& constraint : source.constraints)
@@ -692,13 +781,13 @@ QuotientLowerResult QuotientBellmanGraph::run_lower(
             proof_store(), query.request_identity, quotient_lower_model_identity(query),
             model_revision_, query.coefficients, std::move(accepted)));
         out.status = QuotientLowerStatus::CheckedFiniteLower;
-        return out;
+        co_return out;
     } catch (const ProofMemoryLimit& error) {
         release_diagnostics();
         out.checked.reset();
         refuse(QuotientLowerStatus::ResourceCap, "proof memory reservation refused: ");
         out.reason += error.what();
-        return out;
+        co_return out;
     }
 }
 

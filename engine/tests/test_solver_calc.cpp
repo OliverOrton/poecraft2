@@ -4335,6 +4335,62 @@ void run_solver_phase_lower_tests() {
         PC_CHECK(!off.native_retention_attempted && !off.native_retention_potential);
         options.native_retention_lower=true;
         SolveWorkTestAccess::Impl on(typed_calc,anchor,typed_prices,options);
+        PC_CHECK(on.goal_cover_stage == SolveWorkTestAccess::Impl::SetupStage::NotStarted);
+        PC_CHECK(!on.goal_cover_cost_ready && !on.native_retention_attempted);
+        // Reject the real frame size before allocation; constructor remains
+        // cheap and ordinary requests still leave setup dormant.
+        {
+            SolveWorkTestAccess::Impl capped(typed_calc,anchor,typed_prices,options);
+            capped.options.max_solver_owned_bytes = capped.fast_estimated_owned_bytes();
+            bool hit = false;
+            try { (void)capped.advance_setup(); } catch (const SolverResourceLimit&) { hit = true; }
+            PC_CHECK(hit && !capped.goal_cover_task && capped.setup_storage.live == 0);
+        }
+        for (unsigned fence : {0u, 1u, 2u, 3u}) {
+            SolveWorkTestAccess::Impl pending(typed_calc,anchor,typed_prices,options);
+            if (fence == 1) (void)pending.advance_setup();
+            if (fence >= 2) {
+                while (!pending.goal_cover_cost_ready) (void)pending.advance_setup();
+                if (fence == 3) {
+                    for (unsigned i=0;i<20;++i) (void)pending.advance_setup();
+                    PC_CHECK(pending.native_retention_attempted && !pending.native_retention_potential);
+                }
+            }
+            const auto live=pending.setup_storage.live;
+            const auto stage=pending.goal_cover_stage;
+            const auto states=typed_calc.state_count();
+            (void)pending.progress(); (void)pending.progress_trace_json(0);
+            (void)pending.telemetry_snapshot(true);
+            if (!pending.goal_cover_cost_ready) PC_CHECK(pending.completion_proof_lower_value(pending.result.start_state)==0);
+            PC_CHECK(pending.setup_storage.live==live && pending.goal_cover_stage==stage && typed_calc.state_count()==states);
+            pending.retention_setup_task.reset(); pending.goal_cover_task.reset();
+            PC_CHECK(pending.setup_storage.live==0 && pending.setup_storage.reserved==0);
+        }
+        {
+            SolveWorkTestAccess::Impl partial(typed_calc,anchor,typed_prices,options);
+            while (!partial.goal_cover_carrier_committed) (void)partial.advance_setup();
+            const auto carrier = partial.carrier_goal_progress_cost;
+            partial.options.max_solver_owned_bytes = partial.fast_estimated_owned_bytes();
+            bool hit=false;
+            try { while (!partial.advance_setup()) {} } catch (const SolverResourceLimit&) { hit=true; }
+            PC_CHECK(hit && partial.goal_cover_stage==SolveWorkTestAccess::Impl::SetupStage::Refused);
+            PC_CHECK(partial.goal_cover_carrier_committed && partial.carrier_goal_progress_cost==carrier);
+            PC_CHECK(!partial.goal_cover_cost_ready && partial.setup_storage.live==0 && partial.setup_storage.reserved==0);
+            PC_CHECK(partial.completion_proof_lower_value(partial.result.start_state)>=0);
+        }
+        unsigned setup_slices = 0;
+        while (!on.advance_setup()) {
+            ++setup_slices;
+            const auto stage = on.goal_cover_stage;
+            const auto bytes = on.setup_storage.live;
+            const auto ready = on.goal_cover_cost_ready;
+            (void)on.progress();
+            (void)on.progress_trace_json(0);
+            PC_CHECK(on.goal_cover_stage == stage && on.setup_storage.live == bytes && on.goal_cover_cost_ready == ready);
+            if (stage == SolveWorkTestAccess::Impl::SetupStage::Preparing) PC_CHECK(!ready && !on.native_retention_potential);
+        }
+        PC_CHECK(setup_slices > 1 && on.setup_storage.live == 0 && on.setup_storage.reserved == 0);
+
         if (!on.native_retention_potential) std::fprintf(stderr,"native retention fixture refusal: %s\n",on.native_retention_refusal.c_str());
         PC_CHECK(on.native_retention_potential && on.native_retention_refusal.empty());
         if (!on.native_retention_potential) return;
@@ -4366,6 +4422,7 @@ void run_solver_phase_lower_tests() {
         // entries. This negative control failed at the old anchored guard.
         pc_item_state empty; pc_item_clear(&empty); empty.rarity=PC_RARITY_RARE;
         SolveWorkTestAccess::Impl empty_work(typed_calc,empty,typed_prices,options);
+        while (!empty_work.advance_setup()) {}
         PC_CHECK(empty_work.native_retention_potential && empty_work.native_retention_refusal.empty());
         PC_CHECK(empty_work.exact_start_item.prefix_count==0 && empty_work.exact_start_item.suffix_count==0);
         if (empty_work.native_retention_potential) {
@@ -4385,15 +4442,18 @@ void run_solver_phase_lower_tests() {
         PC_CHECK(on.native_retention_lower_value(typed_calc.intern_item(influenced))==0);
         options.max_solver_owned_bytes=1ull<<20;
         SolveWorkTestAccess::Impl refused(typed_calc,anchor,typed_prices,options);
+        while (!refused.advance_setup()) {}
         PC_CHECK(refused.native_retention_attempted && !refused.native_retention_potential && refused.native_retention_live_bytes==0);
         options.max_solver_owned_bytes=1ull<<30;
         options.max_states=options.max_discovered_states=options.max_expanded_states=200000;
         SolveWorkTestAccess::Impl ordinary_capacity(typed_calc,anchor,typed_prices,options);
+        while (!ordinary_capacity.advance_setup()) {}
         PC_CHECK(ordinary_capacity.native_retention_potential && ordinary_capacity.native_retention_refusal.empty());
         auto ambiguous_goal=goal; ambiguous_goal.slots[0].min_tier=2;
         CalcContext ambiguous_calc(typed_session,ambiguous_goal,typed_registry,basic_indices(typed_registry));
         options.max_solver_owned_bytes=1ull<<30;
         SolveWorkTestAccess::Impl ambiguous(ambiguous_calc,anchor,typed_prices,options);
+        while (!ambiguous.advance_setup()) {}
         PC_CHECK(ambiguous.native_retention_potential && ambiguous.native_retention_lower_value(ambiguous.result.start_state)==0);
         PC_CHECK(ambiguous.native_retention_potential->lookup(ambiguous_calc,typed_prices,anchor,false).value()>0);
     }
@@ -4490,6 +4550,7 @@ void run_solver_phase_lower_tests() {
         SolveOptions ordinary_options; ordinary_options.consider_imprint_programs=false;
         ordinary_options.native_retention_lower=true;
         SolveWorkTestAccess::Impl ordinary(coarse,frame,prices,ordinary_options);
+        while (!ordinary.advance_setup()) {}
         PC_CHECK(bool(ordinary.native_retention_potential));
         auto ordinary_junk=frame; place(&ordinary_junk,PC_SIDE_SUFFIX,6,21);
         const auto ordinary_id=coarse.intern_item(ordinary_junk);

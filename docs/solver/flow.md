@@ -64,6 +64,13 @@ pcw_solver_solve_finish → pc_solver_solve_finish
 
 Native work constructs action contracts and layout, admits source-local operators, builds completed rows, prices them, and alternates search/Bellman/policy work. It retains candidates and independent lower evidence under their own authorities.
 
+Begin leaves heavy goal-cover and retention work pending. Steps report the
+existing setup owner until the requested producers commit or refuse. Cover
+components and the final retention view retain their original acceptance
+boundaries; partial scratch is never published as proof. Ordinary requests retain
+lazy setup at their first proof dependency. Cancellation includes synchronous
+native scratch/handle release before the worker reports completion.
+
 Publication work is also cooperative: direct assertion, optional strict repair, evaluation, and classification occur before the final result transfer. A numerical candidate remains unverified until it passes the relevant executable checks. A previously verified incumbent is not replaced by a promising estimate.
 
 The current closed-domain assertion has narrow exact-coarse/closed/uncapped preconditions. It can make already-solved representatives executable while unmatched routes stay fail-closed. Independently evaluated bounded publication does not erase a source estimate mismatch or remove the need for strict exactness.

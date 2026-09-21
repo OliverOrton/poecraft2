@@ -187,6 +187,16 @@ Positive exact-fresh recovery evidence is immutable and comes from its existing 
 
 ## Consumers And Failure
 
+Goal-cover and native retention are explicit setup services. Begin records the
+dependency; existing solve steps advance it. Ordinary focused work retains lazy
+activation. A pending table or suspended checker is not a lower: completion
+reads use the existing zero fallback until setup is ready, and cannot start
+preparation. Independently committed components remain available after later
+refusal. The final retention pointer is installed only after complete relation
+checking and the original modifier-member safety pass. Typed cancellation
+escapes optional-proof refusal handling. No action coverage, coefficient,
+projection, pricing or acceptance tolerance changes at a yield boundary.
+
 A local action retirement requires a valid action lower and a compatible proper executable upper at the same source/class, using the actual strict comparison and tie contract. A cheap root upper cannot stand in for an uncovered successor upper. Retirement creates no executable row and closes no other unknown action.
 
 Public lower fallback for an open incremental graph uses independently valid patterns, including an eligible ordinary retention contribution. It never republishes the restricted graph value merely because that value is larger.

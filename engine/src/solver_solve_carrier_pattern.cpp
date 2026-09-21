@@ -98,6 +98,7 @@ bool SolveWork::Impl::carrier_goal_progress_eligible(
 
 double SolveWork::Impl::carrier_goal_progress_lower_value(
         const std::uint32_t state) const {
+        if (!goal_cover_carrier_committed) return kInfinity;
         if (!carrier_goal_progress_eligible(state)) return kInfinity;
         constexpr std::size_t kCarrierRarityCount = 3;
         const std::uint32_t satisfied =
@@ -148,6 +149,7 @@ bool SolveWork::Impl::identity_clean_goal_progress_eligible(
 
 double SolveWork::Impl::identity_clean_goal_progress_lower_value(
         const std::uint32_t state) const {
+        if (!goal_cover_clean_committed) return kInfinity;
         if (!identity_clean_goal_progress_eligible(state)) return kInfinity;
         constexpr std::size_t kAffixCountStates = 4;
         const AbstractState& carrier = calc.state(state);
@@ -170,6 +172,7 @@ double SolveWork::Impl::identity_clean_goal_progress_lower_value(
 
 double SolveWork::Impl::carrier_terminal_debt_lower_value(
         const std::uint32_t state) const {
+        if (!goal_cover_carrier_committed) return 0.0;
         if (state >= calc.state_count() ||
             calc.is_goal_state(calc.state(state))) {
             return 0.0;
@@ -213,6 +216,9 @@ double SolveWork::Impl::carrier_terminal_debt_lower_value(
 
 double SolveWork::Impl::completion_proof_lower_value(
         const std::uint32_t state) {
+        // Passive pending reads cannot prepare proof rows or populate lookup
+        // caches. On refusal, independently committed components remain usable.
+        if (!goal_cover_cost_ready && goal_cover_stage != SetupStage::Refused) return 0.0;
         if (state >= calc.state_count()) return 0.0;
         const AbstractState& carrier = calc.state(state);
         const std::uint32_t satisfied =

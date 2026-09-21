@@ -216,6 +216,30 @@ Logical read passivity is separate from deadline overhead. These invariants impl
 neither fairness, identical scheduling/arithmetic order nor a latency theorem.
 Source/host clocks, omissions and event coverage remain explicit.
 
+The selected implementation keeps goal-cover scratch in its invocation's task
+and admits tracked container allocations before growth. Carrier/debt, universal
+and clean tables publish only at their own completed boundaries; a later refusal
+does not revoke an earlier independent component. Pending completion reads use
+the existing zero fallback without resuming construction. Retention owns support,
+native relation rounds, quotient solve/check children and final member safety.
+Its immutable view is installed only after all those obligations complete.
+
+The induction requires more than a cursor. Native relation coefficients and
+event minima belong to one frozen candidate generation; repair invalidates the
+value-dependent minima and requires reconstruction and final checking. A yielded
+quotient result is inaccessible until completion, and cancellation/stale-model
+results cannot carry an accepted certificate. Blocking diagnostics drain the
+same producer. This is correspondence for staged ownership, not a new proof of
+native domination, numerical convergence or broad exact closure.
+
+Frame admission precedes allocation, and destruction precedes release of its
+charge. Cover scratch, committed copies and their overlap remain distinct;
+retention child frames fit within the existing proof reservation. Synchronous
+abandon includes observational snapshot/serialization, calculator rollback and
+actual destruction. Its release telemetry is produced after release; it cannot
+serve as an early acknowledgement. Measured responsiveness remains a separate
+[qualification obligation](../../active/2026-09-20-cooperative-setup/README.md).
+
 ### Releasing logical ownership also matters
 
 The reclamation archive records a candidate marked released while its large traversal payload and wrapper remained engaged, and its call site still suppressed ordinary assembly. That was a lifecycle defect with performance/progress consequences, not a refutation of resumable construction. [Recorded finding](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md).

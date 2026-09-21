@@ -489,9 +489,73 @@ void numerical_and_memory() {
     PC_CHECK(small.transition_cache().rows.size() == rows_before);
     PC_CHECK(small.model_revision() == sq.model_revision);
 }
+void cooperative_lower_lifetime() {
+    QuotientBellmanGraph graph(cap, QuotientBellmanMode::LowerOnly);
+    constexpr unsigned count = 96;
+    std::vector<QuotientBellmanCellInput> cells;
+    for (unsigned i = 0; i <= count; ++i) cells.push_back(cell(i, i == count));
+    graph.install_cells(std::move(cells));
+    std::vector<QuotientLowerSource> sources;
+    for (unsigned i = 0; i < count; ++i)
+        sources.push_back(source(i, {10}, {row(graph, i, 10, 1,
+            {{{1}, i, .5}, {{2}, i + 1, .5}})}));
+    auto q = query(graph, std::move(sources));
+    std::vector<double> expected;
+    std::uint64_t expected_work = 0;
+    std::uint32_t expected_sweeps = 0;
+    {
+        const auto result = graph.solve_lower(q);
+        PC_CHECK(std::abs(root(result) - 2 * count) < 1e-7);
+        expected = result.checked->values_by_state;
+        expected_work = result.numerical_transition_work;
+        expected_sweeps = result.sweeps;
+    }
+    const auto baseline = graph.proof_store()->ledger().snapshot().total_bytes;
+    unsigned resumes = 0;
+    {
+        auto work = graph.solve_lower_work(q);
+        PC_CHECK(graph.proof_store()->ledger().snapshot().total_bytes >= baseline + work.frame_bytes());
+        while (!work.resume()) {
+            ++resumes;
+            bool refused = false;
+            try { (void)work.take_result(); } catch (const std::logic_error&) { refused = true; }
+            PC_CHECK(refused); // A suspended proposal cannot escape as a result.
+        }
+        const auto result = work.take_result();
+        PC_CHECK(result.checked->values_by_state == expected);
+        PC_CHECK(result.numerical_transition_work == expected_work);
+        PC_CHECK(result.sweeps == expected_sweeps);
+    }
+    PC_CHECK(resumes > 10);
+    PC_CHECK(graph.proof_store()->ledger().snapshot().total_bytes == baseline);
+    // Cover preparation, numerical sweeps and the nested exact checker.
+    for (unsigned fence : {0u, 2u, resumes / 2, resumes - 1}) {
+        bool cancel = false;
+        QuotientLowerBudget budget;
+        budget.cancelled = [&] { return cancel; };
+        {
+            auto work = graph.solve_lower_work(q, budget);
+            for (unsigned i = 0; i < fence; ++i) PC_CHECK(!work.resume());
+            cancel = true;
+            while (!work.resume()) {}
+            const auto result = work.take_result();
+            PC_CHECK(result.status == QuotientLowerStatus::Cancelled);
+            PC_CHECK(!result.checked);
+        }
+        PC_CHECK(graph.proof_store()->ledger().snapshot().total_bytes == baseline);
+        // Destruction of suspended work, without resuming its checker, also
+        // releases invocation-owned storage through the same owner.
+        {
+            auto work = graph.solve_lower_work(q);
+            for (unsigned i = 0; i < fence; ++i) PC_CHECK(!work.resume());
+        }
+        PC_CHECK(graph.proof_store()->ledger().snapshot().total_bytes == baseline);
+    }
+}
 } // namespace
 
 void run_solver_quotient_lower_tests() {
+    cooperative_lower_lifetime();
     checked_numerical_initializer();
     untrusted_numerical_initializer();
     cyclic_and_revisions();

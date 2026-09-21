@@ -1,0 +1,40 @@
+{
+  "arm": "candidate",
+  "control": "finish",
+  "command": [
+    "C:/Program Files/nodejs/node.exe",
+    "--import",
+    "tsx",
+    "test/calculator-delivery-probe.ts",
+    "cb01-cross-base-product8-long240",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\S4-r1-wasm-3-candidate-finish.json",
+    "finish"
+  ],
+  "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web",
+  "watchdog_seconds": 315,
+  "admission": {
+    "utc": "2026-09-21T05:05:39.516374+00:00",
+    "available_physical": 39588974592,
+    "available_commit": 22273601536,
+    "reserved_bytes": 8589934592,
+    "outside_bytes": 13681888461,
+    "admitted": true
+  },
+  "wasm": {
+    "poecraft_engine.mjs": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502",
+    "poecraft_engine.wasm": "69f85ee53ab610780dda60e5777f1263e9fa9e9a04d513cf76fad22d669016eb"
+  },
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 70984,
+    "process_identity_token": "70984:134344407395461525",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 59378.36710002739
+  },
+  "report_sha256": "6d1f76daa55a1cbe89907819e19e9e6a229c7d514303c62c806a9bde24cf2856"
+}

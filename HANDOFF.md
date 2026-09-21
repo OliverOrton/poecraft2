@@ -1,29 +1,22 @@
 # Handoff
 
-Active: [Frozen runtime identity and cooperative setup](docs/active/2026-09-20-cooperative-setup/README.md),
-selected S0–S4 against `0f376f4`. S0 reproduced timestamp coercion and isolated the
-manifest-only difference; the narrow fix is undergoing clean-wrapper validation.
-S1–S4 are selected next, not yet implemented. Keep commits local; no automatic
-restart, public action, subagents or unrelated successor is selected.
+Completed selected S0–S4: [Frozen runtime identity and cooperative setup](docs/active/2026-09-20-cooperative-setup/README.md).
+The record owns source/build identities, failed history, commands and
+[final controls](docs/active/2026-09-20-cooperative-setup/S4-r2-qualification.json).
+S0 fixes the local timestamp boundary without changing frozen pins. S1 confirms
+same-graph native/WASM Conquest-four compatibility. Goal-cover, retention and
+nested checker work now stage through existing owners with charged private
+storage, complete-evidence publication and synchronous release.
 
-Completed: [Reliable validation and retained-artifact ownership](docs/active/2026-09-19-validation-and-ownership/README.md),
-M0–M3. M1 is local `75504e4`; Oliver explicitly waived non-Windows on September 20.
-The existing retained-pool owner now controls every selected mutation, passive
-read and complete-bundle take, including safe suspended verification. Native and
-release WASM builds, affected tests, bindings, full web/typecheck and actual
-Calculator Finish pass their selected checks. The living record and
-[qualification](docs/active/2026-09-19-validation-and-ownership/qualification.json)
-own exact commands, identities, cap/lifetime evidence and limitations.
+Begin (~2 ms), setup calls (<29 ms), full cancellation (89/35 ms), Finish
+(~0.413 s) and delivery (<44 s) pass the selected WASM controls. Ordinary steps
+still reach 362–373 ms against 250 ms, spanning ladder scheduling to compilation.
+That is the recommended separate successor, not selected work. The native
+Conquest-five graph/cost/count/lower are unchanged; Regalia remains exact.
+Conquest-four browser discovery remains a separate open gap.
 
-Keep commits local and work sequentially without subagents. Preserve protected
-root `0`; economy stays frozen. The successor above is now selected; preserve the
-completed pool boundary and do not repeat saved-Ring diagnostics or expand scope.
-
-The matched native pair preserves graph bytes, C85558.70618560436 and
-N8407.202314771383; peak owned memory increases by the accounted 16 bytes.
-Actual Calculator Finish is 3.571 s and worker-request delivery 45.185 s in this
-probe. Begin 12.599 s and maximum step 369 ms still fail; historical setup-Cancel
-23.081 s and the Conquest-four WASM quality gap remain open. Earlier A7's 5.483 s
-Finish, delivery failure and all other high-water evidence remain intact.
-No cap, authority, objective, public ABI or browser-default change; no hosted CI
-green claim. The non-Windows lane is waived, not passed.
+Stop at S4. Preserve completed M0–M3, historical policies and high-water evidence.
+No automatic restart, inherited deadline, public action, push or subagents.
+Protected root `0` remains untouched; economy and browser defaults stay frozen.
+Non-Windows is waived, hosted CI unrun, rendered review Oliver's. No Simulator
+was repeated for unchanged controllers. Keep commits local.

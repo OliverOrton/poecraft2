@@ -1,0 +1,145 @@
+{
+  "reviewed_base": "0f376f4249789e0bbe4680494d8c01609c84a765",
+  "implementation_parent": "5a923d1fa57c37319a82bd838c95412ed93738df",
+  "baseline": {
+    "build/engine/poecraft_engine.dll": {
+      "saved": "out/cooperative-setup/baseline-0f376f4/poecraft_engine.dll",
+      "sha256": "2275798ab769f2c3c65773b6e0f450329d2ad5ac49731a6b2ef128d6f9c89e3d"
+    },
+    "build/engine/poecraft_solver_benchmark.exe": {
+      "saved": "out/cooperative-setup/baseline-0f376f4/poecraft_solver_benchmark.exe",
+      "sha256": "850539e63d6e96886eada81df0a4523113986272db888e1b571448adc7f19a87"
+    },
+    "build/engine/poecraft_engine_tests.exe": {
+      "saved": "out/cooperative-setup/baseline-0f376f4/poecraft_engine_tests.exe",
+      "sha256": "747d6b3b51da1e1c84fa42e88a5aa7fe05b5453db31b61c926268dbf9db5a3f9"
+    },
+    "build/engine/libwinpthread-1.dll": {
+      "saved": "out/cooperative-setup/baseline-0f376f4/libwinpthread-1.dll",
+      "sha256": "f433c911e46c1311c31edb162f9a898202c8969f59b982e4e66f1781c2ce2b22"
+    },
+    "bindings/wasm/dist/poecraft_engine.mjs": {
+      "saved": "out/cooperative-setup/baseline-0f376f4/poecraft_engine.mjs",
+      "sha256": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502"
+    },
+    "bindings/wasm/dist/poecraft_engine.wasm": {
+      "saved": "out/cooperative-setup/baseline-0f376f4/poecraft_engine.wasm",
+      "sha256": "477c2e5a89f73cf1a82bd50742eabfc15f48647138105bdc3afb309b5d6b1c32"
+    }
+  },
+  "wasm_control_build": {
+    "head": "5a923d1fa57c37319a82bd838c95412ed93738df",
+    "patch_sha256": "b02a4d0e901dd32c39801c89c18dc201317681e291cc67fbf1c7301430220043",
+    "binaries": {
+      "libwinpthread-1.dll": "f433c911e46c1311c31edb162f9a898202c8969f59b982e4e66f1781c2ce2b22",
+      "poecraft_engine.dll": "97a8321eb23beae4ea0f4e8a4e9cf242cb4334ed4d4f14d81f513dc84a22c094",
+      "poecraft_engine.mjs": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502",
+      "poecraft_engine.wasm": "2d730afa998bc51fd9ff400b0cef63acec55ff4fac0aa45a175d5f7a271d981d",
+      "poecraft_solver_benchmark.exe": "1d683aefa2764f3c12aad26bb54a135259a7bb510aa3fcdc1719021d774fc218"
+    },
+    "new_setup_header_sha256": "600427d40d4ff91cd0e49d0dd7af014c63601724f21a11c7a5fad8c017372238"
+  },
+  "native_control_build": {
+    "head": "5a923d1fa57c37319a82bd838c95412ed93738df",
+    "patch_sha256": "25e96616d31628a5eb4f739203faaf5b63851c0ddc124374a7ca94653e0a95f5",
+    "binaries": {
+      "libwinpthread-1.dll": "f433c911e46c1311c31edb162f9a898202c8969f59b982e4e66f1781c2ce2b22",
+      "poecraft_engine.dll": "406dc832696a15cf510eaf0e45f703262c5ea98a998fe29534e7e1decc6389a7",
+      "poecraft_engine.mjs": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502",
+      "poecraft_engine.wasm": "2d730afa998bc51fd9ff400b0cef63acec55ff4fac0aa45a175d5f7a271d981d",
+      "poecraft_solver_benchmark.exe": "4753500e5363bb6045a66ba84ce88880887a633ae797dfa72adbb1fe2e780372"
+    },
+    "new_setup_header_sha256": "600427d40d4ff91cd0e49d0dd7af014c63601724f21a11c7a5fad8c017372238"
+  },
+  "wasm_source_patch": "out\\cooperative-setup\\candidate-r2\\source.patch",
+  "native_source_patch": "out\\cooperative-setup\\candidate-r3\\source-native.patch",
+  "engine_source_patch_comparison": {
+    "equal_to_each_other_and_final_working_tree": true,
+    "tracked_source_files": 18,
+    "new_header_separately_hashed": true
+  },
+  "provenance_note": "Native test fixture changes caused generated build provenance and executable hashes to change. The r2 native archive guard refused before launch. r3 ran the native controls; unchanged production engine source and identical WASM bytes bind r2 WASM controls.",
+  "layout_probe": "docs\\active\\2026-09-20-cooperative-setup\\probes\\layout.cpp",
+  "layout_probe_sha256": "ab1166332599d1d0efb391d338876ed2bb5493ea0c66b162e48be1ff6ea4bf1b",
+  "layout_baseline_headers": {
+    "revision": "0f376f4",
+    "checked_headers": 52,
+    "all_equal_after_crlf_normalization": true,
+    "directory": "out/cooperative-setup/S0-checkout"
+  },
+  "layout": {
+    "native": {
+      "baseline": {
+        "impl_bytes": 75520,
+        "portfolio_bytes": 4512,
+        "candidate_bytes": 1608,
+        "public_progress_bytes": 200
+      },
+      "candidate": {
+        "impl_bytes": 75600,
+        "portfolio_bytes": 4512,
+        "candidate_bytes": 1608,
+        "public_progress_bytes": 200,
+        "setup_domain_bytes": 32,
+        "setup_task_shell_bytes": 16,
+        "frame_header_bytes": 16,
+        "static_layout_only": true
+      }
+    },
+    "wasm": {
+      "baseline": {
+        "impl_bytes": 67936,
+        "portfolio_bytes": 3584,
+        "candidate_bytes": 1152,
+        "public_progress_bytes": 200
+      },
+      "candidate": {
+        "impl_bytes": 67992,
+        "portfolio_bytes": 3584,
+        "candidate_bytes": 1152,
+        "public_progress_bytes": 200,
+        "setup_domain_bytes": 24,
+        "setup_task_shell_bytes": 8,
+        "frame_header_bytes": 8,
+        "static_layout_only": true
+      }
+    }
+  },
+  "layout_flags": {
+    "native": "g++ -std=c++20 -O3 -DNDEBUG -static-libgcc -static-libstdc++",
+    "wasm": "emcc -std=c++20 -O3 -flto -msimd128 -ffp-contract=off -fwasm-exceptions",
+    "baseline": "Same probe with POECRAFT_BASELINE_LAYOUT and verified baseline include paths"
+  },
+  "layout_scope": "Static sizeof only; dynamic task frames/headers and container/copy overlap are admitted by their native owners and included in measured live/peak. No numerical claim is inferred from layout.",
+  "native_cb01_memory": {
+    "baseline": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 34738176,
+      "process_working_set_after_bytes": 302059520,
+      "process_working_set_delta_bytes": 267321344,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 153544866,
+      "native_peak_owned_bytes": 253288237,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 790369
+    },
+    "candidate": {
+      "measurement_kind": "working_set_snapshots_not_peak",
+      "process_working_set_before_bytes": 34734080,
+      "process_working_set_after_bytes": 314499072,
+      "process_working_set_delta_bytes": 279764992,
+      "process_working_set_peak_bytes": null,
+      "wasm_heap_before_bytes": null,
+      "wasm_heap_after_bytes": null,
+      "wasm_heap_growth_bytes": null,
+      "native_live_owned_bytes": 153544716,
+      "native_peak_owned_bytes": 254140287,
+      "native_serialized_output_bytes": 45,
+      "solver_telemetry_json_bytes": 790268
+    }
+  },
+  "release_flags": "Existing O1/non-LTO finalization TU and O3/LTO kernels unchanged. WASM telemetry formatter alone uses clang::optnone to bound cold compilation in controls; native formatter unchanged."
+}

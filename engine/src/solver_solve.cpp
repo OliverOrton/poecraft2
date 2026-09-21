@@ -555,31 +555,9 @@ SolveWork::Impl::Impl(
             }
             enqueue(result.start_state);
         }
-        /* Universal/clean proof tables depend only on the immutable solve
-         * goal, economy, and registered action vocabulary. High-impact
-         * anytime mode consumes them during its first upper/lower cycle, so
-         * compile them as measured model setup before its first public work
-         * boundary. Default solves retain lazy construction and therefore
-         * preserve root-row cap attribution when they stop before focused
-         * proof work. */
-        if (options.high_impact_executable_uppers) {
-            const auto cover_started = std::chrono::steady_clock::now();
-            record_progress_event("setup_goal_cover_start");
-            try {
-                prepare_goal_cover_cost();
-            } catch (const SolverResourceLimit& limit) {
-                setup_resource_limit.emplace(
-                    limit.cap_name(), limit.limit());
-            }
-            goal_cover_setup_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                std::chrono::steady_clock::now()-cover_started).count();
-            record_progress_event("setup_goal_cover_completed");
-        }
-        if (options.native_retention_lower) {
-            record_progress_event("setup_retention_start");
-            prepare_native_retention_lower();
-            record_progress_event("setup_retention_completed");
-        }
+        // Preserve the ordinary lazy proof dependency and early root caps.
+        goal_cover_requested = options.high_impact_executable_uppers || options.native_retention_lower;
+        retention_setup_pending = options.native_retention_lower;
         result.diagnostics.solve_setup_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - setup_started)
@@ -591,6 +569,8 @@ SolveWork::Impl::~Impl() {
     /* A suspended admission owns staged parent operators through its
      * CalcContext. Abandonment destroys the continuation synchronously and
      * rolls that append-only range back before the context can be reused. */
+    retention_setup_task.reset();
+    goal_cover_task.reset();
     calc.cancel_state_local_automatic_candidates();
     calc.cancel_outcomes();
 }
@@ -626,6 +606,20 @@ SolveWork::SolveWork(
     : impl_(std::make_unique<Impl>(calc, start_item, prices, options)) {}
 
 SolveWork::~SolveWork() = default;
+std::pair<std::uint64_t, std::uint64_t> SolveWork::release_pending_work() {
+    const auto began = std::chrono::steady_clock::now();
+    impl_->phase = SolvePhase::Done;
+    impl_->goal_cover_requested = false;
+    impl_->retention_setup_pending = false;
+    impl_->retention_setup_task.reset();
+    impl_->goal_cover_task.reset();
+    const auto tasks_released = std::chrono::steady_clock::now();
+    impl_->calc.cancel_state_local_automatic_candidates();
+    impl_->calc.cancel_outcomes();
+    const auto rolled_back = std::chrono::steady_clock::now();
+    return {std::chrono::duration_cast<std::chrono::nanoseconds>(tasks_released-began).count(),
+            std::chrono::duration_cast<std::chrono::nanoseconds>(rolled_back-tasks_released).count()};
+}
 SolveWork::SolveWork(SolveWork&&) noexcept = default;
 SolveWork& SolveWork::operator=(SolveWork&&) noexcept = default;
 

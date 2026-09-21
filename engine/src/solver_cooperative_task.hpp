@@ -14,6 +14,19 @@ namespace poecraft {
 namespace solver {
 namespace solve_detail {
 
+// Installed only around a selected task factory, never across suspension.
+// The allocation size is known here before operator new; the caller retains
+// the admitted charge for the resulting frame's entire lifetime.
+struct CooperativeFrameAdmission {
+    void* owner;
+    void (*admit)(void*, std::size_t);
+    CooperativeFrameAdmission* previous;
+    inline static thread_local CooperativeFrameAdmission* current = nullptr;
+    CooperativeFrameAdmission(void* context, void (*callback)(void*, std::size_t))
+        : owner(context), admit(callback), previous(current) { current = this; }
+    ~CooperativeFrameAdmission() { current = previous; }
+};
+
 struct CooperativeCheckpoint {
     std::size_t retained_nested_bytes = 0;
 
@@ -50,6 +63,10 @@ class CooperativeTask {
         std::size_t retained_nested_bytes = 0;
 
         static void* operator new(const std::size_t size) {
+            if (size > std::numeric_limits<std::size_t>::max() - sizeof(AllocationHeader))
+                throw std::bad_alloc();
+            if (auto* admission = CooperativeFrameAdmission::current)
+                admission->admit(admission->owner, size + sizeof(AllocationHeader));
             auto* storage = static_cast<std::byte*>(
                 ::operator new(size + sizeof(AllocationHeader)));
             reinterpret_cast<AllocationHeader*>(storage)->size = size;

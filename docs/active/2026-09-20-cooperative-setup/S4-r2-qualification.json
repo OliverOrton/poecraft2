@@ -1,0 +1,809 @@
+{
+  "label": "r2",
+  "native_label": "r3",
+  "wasm": [
+    {
+      "report": "out\\cooperative-setup\\S4-r2-wasm-0-candidate-cancel_setup.json",
+      "sha256": "9226b471685cdd3748ad23fb2c8721d4ce19c85551b23414275649a6e3ac8d9b",
+      "control": "cancel_setup",
+      "status": "cancelled",
+      "usable": false,
+      "error": null,
+      "timings_ms": {
+        "begin_ms": 2.3694000000000415,
+        "setup_step_ms": 26.96050000000014,
+        "ordinary_step_ms": 0,
+        "cancel_to_release_ms": 89.02459999999996
+      },
+      "gates": {
+        "begin_ms": true,
+        "setup_step_ms": true,
+        "ordinary_step_ms": null,
+        "cancel_to_release_ms": true
+      },
+      "max_setup_context": {
+        "input_owner": "setup",
+        "output_owner": "setup",
+        "output_cursor": 1,
+        "quantum": 4,
+        "duration_ms": 26.96050000000014
+      },
+      "max_ordinary_context": null,
+      "first_verified_worker_ms": null,
+      "setup_goal_cover_ns": 133168600,
+      "setup_retention_ns": 0,
+      "graph_sha256": null,
+      "same_goal_actions_prices_as_reference": true,
+      "same_complete_graph_as_evaluated_reference_excluding_attached_economy": null,
+      "policy": {
+        "policy_status": null,
+        "termination": null,
+        "lower_bound": null,
+        "upper_bound": null,
+        "evaluated_policy_cost": null
+      },
+      "release_telemetry": {
+        "version": 1,
+        "snapshot_and_peak_audit_ns": 10668200,
+        "serialization_ns": 6252200,
+        "calculator_rollback_ns": 300,
+        "task_storage_release_ns": 155900,
+        "remaining_storage_release_ns": 360700,
+        "native_release_ns": 17438600
+      },
+      "release_telemetry_read_ms": 2.1264000000001033,
+      "ui_milestones": {
+        "worker_solve_requested": 53.54559999999992,
+        "cancel_intent": 171.2143000000001,
+        "worker_result_received": 253.71690000000012,
+        "handle_cleanup": 256.70550000000003,
+        "ui_delivery_completed": 260.23890000000006
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.03710000000000946,
+        "native_begin_completed": 2.406500000000051,
+        "cancel_acknowledged": 175.43200000000002,
+        "abandon_cleanup_start": 175.5717000000002,
+        "abandon_cleanup_completed": 194.05860000000007,
+        "terminal_response_committed": 194.06670000000008
+      }
+    },
+    {
+      "report": "out\\cooperative-setup\\S4-r2-wasm-1-candidate-cancel_retention.json",
+      "sha256": "378913a6ec059e7ba6c2243eeab4c9f9f0fc7bffe4db179a8f1a953d2161fc78",
+      "control": "cancel_retention",
+      "status": "cancelled",
+      "usable": false,
+      "error": null,
+      "timings_ms": {
+        "begin_ms": 2.2069000000001324,
+        "setup_step_ms": 27.314200000000028,
+        "ordinary_step_ms": 0,
+        "cancel_to_release_ms": 34.83479999999872
+      },
+      "gates": {
+        "begin_ms": true,
+        "setup_step_ms": true,
+        "ordinary_step_ms": null,
+        "cancel_to_release_ms": true
+      },
+      "max_setup_context": {
+        "input_owner": "setup",
+        "output_owner": "setup",
+        "output_cursor": 1,
+        "quantum": 4,
+        "duration_ms": 27.314200000000028
+      },
+      "max_ordinary_context": null,
+      "first_verified_worker_ms": null,
+      "setup_goal_cover_ns": 8543251000,
+      "setup_retention_ns": 34545700,
+      "graph_sha256": null,
+      "same_goal_actions_prices_as_reference": true,
+      "same_complete_graph_as_evaluated_reference_excluding_attached_economy": null,
+      "policy": {
+        "policy_status": null,
+        "termination": null,
+        "lower_bound": null,
+        "upper_bound": null,
+        "evaluated_policy_cost": null
+      },
+      "release_telemetry": {
+        "version": 1,
+        "snapshot_and_peak_audit_ns": 12755200,
+        "serialization_ns": 8341200,
+        "calculator_rollback_ns": 1300,
+        "task_storage_release_ns": 1055600,
+        "remaining_storage_release_ns": 262900,
+        "native_release_ns": 22418300
+      },
+      "release_telemetry_read_ms": 2.1347999999998137,
+      "ui_milestones": {
+        "worker_solve_requested": 51.393800000000056,
+        "cancel_intent": 9258.3124,
+        "worker_result_received": 9288.0098,
+        "handle_cleanup": 9290.4191,
+        "ui_delivery_completed": 9293.1472
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.035899999999855936,
+        "native_begin_completed": 2.2427999999999884,
+        "cancel_acknowledged": 9205.7144,
+        "abandon_cleanup_start": 9205.8092,
+        "abandon_cleanup_completed": 9228.5892,
+        "terminal_response_committed": 9228.5969
+      }
+    },
+    {
+      "report": "out\\cooperative-setup\\S4-r2-wasm-2-baseline-finish.json",
+      "sha256": "83a580f654ac631db143dcadd583387103c68f6a7ecc76895735c68fc3cff45e",
+      "control": "finish",
+      "status": "completed",
+      "usable": true,
+      "error": null,
+      "timings_ms": {
+        "begin_ms": 12397.193000000001,
+        "setup_step_ms": 85.81999999999971,
+        "ordinary_step_ms": 377.39800000000105,
+        "finish_ms": 3688.7333999999973,
+        "delivery_ms": 45086.9021
+      },
+      "gates": {
+        "begin_ms": false,
+        "setup_step_ms": true,
+        "ordinary_step_ms": false,
+        "finish_ms": true,
+        "delivery_ms": true
+      },
+      "max_setup_context": {
+        "input_owner": "setup",
+        "output_owner": "primitive_rows",
+        "output_cursor": 5,
+        "quantum": 4,
+        "duration_ms": 85.81999999999971
+      },
+      "max_ordinary_context": {
+        "input_owner": "ladder_scheduling",
+        "output_owner": "compilation",
+        "input_cursor": 293,
+        "output_cursor": 295,
+        "quantum": 8,
+        "duration_ms": 377.39800000000105
+      },
+      "first_verified_worker_ms": 41391.0755,
+      "setup_goal_cover_ns": 8167709600,
+      "setup_retention_ns": 4226358400,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_goal_actions_prices_as_reference": true,
+      "same_complete_graph_as_evaluated_reference_excluding_attached_economy": true,
+      "policy": {
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436
+      },
+      "release_telemetry": null,
+      "release_telemetry_read_ms": 0,
+      "ui_milestones": {
+        "worker_solve_requested": 52.36030000000005,
+        "finish_intent": 41450.529,
+        "worker_result_received": 41780.8136,
+        "strategy_export": 45105.2167,
+        "handle_cleanup": 45118.6973,
+        "ui_delivery_completed": 45139.2624
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.04099999999993997,
+        "native_begin_completed": 12397.234,
+        "manual_finish_intent_observed": 41394.3691,
+        "finish_acknowledged": 41394.9935,
+        "native_done_observed": 41682.6256,
+        "result_export_start": 41682.6277,
+        "result_export_completed": 41706.515,
+        "terminal_response_committed": 41706.5938
+      }
+    },
+    {
+      "report": "out\\cooperative-setup\\S4-r2-wasm-3-candidate-finish.json",
+      "sha256": "c5d1df7a0fa82ba6f59f8998179e0d170e5c19e26402df091d06ef3dbc8151ec",
+      "control": "finish",
+      "status": "completed",
+      "usable": true,
+      "error": null,
+      "timings_ms": {
+        "begin_ms": 2.3532000000000153,
+        "setup_step_ms": 28.746200000000044,
+        "ordinary_step_ms": 362.2780000000057,
+        "finish_ms": 411.9543000000049,
+        "delivery_ms": 43060.2705
+      },
+      "gates": {
+        "begin_ms": true,
+        "setup_step_ms": true,
+        "ordinary_step_ms": false,
+        "finish_ms": true,
+        "delivery_ms": true
+      },
+      "max_setup_context": {
+        "input_owner": "setup",
+        "output_owner": "setup",
+        "input_cursor": 1,
+        "output_cursor": 1,
+        "quantum": 1,
+        "duration_ms": 28.746200000000044
+      },
+      "max_ordinary_context": {
+        "input_owner": "ladder_scheduling",
+        "output_owner": "compilation",
+        "input_cursor": 293,
+        "output_cursor": 295,
+        "quantum": 8,
+        "duration_ms": 362.2780000000057
+      },
+      "first_verified_worker_ms": 42641.8461,
+      "setup_goal_cover_ns": 8309173500,
+      "setup_retention_ns": 3931425400,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_goal_actions_prices_as_reference": true,
+      "same_complete_graph_as_evaluated_reference_excluding_attached_economy": true,
+      "policy": {
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436
+      },
+      "release_telemetry": null,
+      "release_telemetry_read_ms": 0,
+      "ui_milestones": {
+        "worker_solve_requested": 51.296299999999974,
+        "finish_intent": 42699.612499999996,
+        "worker_result_received": 43027.7196,
+        "strategy_export": 43072.297099999996,
+        "handle_cleanup": 43086.7532,
+        "ui_delivery_completed": 43111.5668
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.03899999999998727,
+        "native_begin_completed": 2.3922000000000025,
+        "manual_finish_intent_observed": 42644.8115,
+        "finish_acknowledged": 42645.4319,
+        "native_done_observed": 42935.5815,
+        "result_export_start": 42935.5838,
+        "result_export_completed": 42954.9201,
+        "terminal_response_committed": 42954.989700000006
+      }
+    },
+    {
+      "report": "out\\cooperative-setup\\S4-r2-wasm-4-candidate-finish.json",
+      "sha256": "e133bc87d8d7b78ddd2d3dc4ba64d564a12bf04b1d04c1f4b4dcf94cafef0c20",
+      "control": "finish",
+      "status": "completed",
+      "usable": true,
+      "error": null,
+      "timings_ms": {
+        "begin_ms": 2.1702999999999975,
+        "setup_step_ms": 26.288600000000088,
+        "ordinary_step_ms": 373.0483999999997,
+        "finish_ms": 413.3165999999983,
+        "delivery_ms": 43647.756199999996
+      },
+      "gates": {
+        "begin_ms": true,
+        "setup_step_ms": true,
+        "ordinary_step_ms": false,
+        "finish_ms": true,
+        "delivery_ms": true
+      },
+      "max_setup_context": {
+        "input_owner": "setup",
+        "output_owner": "setup",
+        "output_cursor": 1,
+        "quantum": 4,
+        "duration_ms": 26.288600000000088
+      },
+      "max_ordinary_context": {
+        "input_owner": "ladder_scheduling",
+        "output_owner": "compilation",
+        "input_cursor": 293,
+        "output_cursor": 295,
+        "quantum": 8,
+        "duration_ms": 373.0483999999997
+      },
+      "first_verified_worker_ms": 43227.9535,
+      "setup_goal_cover_ns": 8676924400,
+      "setup_retention_ns": 3938578000,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_goal_actions_prices_as_reference": true,
+      "same_complete_graph_as_evaluated_reference_excluding_attached_economy": true,
+      "policy": {
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436
+      },
+      "release_telemetry": null,
+      "release_telemetry_read_ms": 0,
+      "ui_milestones": {
+        "worker_solve_requested": 51.2027999999998,
+        "finish_intent": 43285.6424,
+        "worker_result_received": 43616.764299999995,
+        "strategy_export": 43655.9528,
+        "handle_cleanup": 43672.4994,
+        "ui_delivery_completed": 43698.958999999995
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.051199999999880674,
+        "native_begin_completed": 2.221499999999878,
+        "manual_finish_intent_observed": 43231.0466,
+        "finish_acknowledged": 43231.745800000004,
+        "native_done_observed": 43523.9475,
+        "result_export_start": 43523.9496,
+        "result_export_completed": 43544.0987,
+        "terminal_response_committed": 43544.171500000004
+      }
+    },
+    {
+      "report": "out\\cooperative-setup\\S4-r2-wasm-5-baseline-finish.json",
+      "sha256": "cd37aef50b2902e9c1ad2d3efe9f293ee1788022d02cb3f889038f034ec1ebf2",
+      "control": "finish",
+      "status": "completed",
+      "usable": true,
+      "error": null,
+      "timings_ms": {
+        "begin_ms": 12624.976299999998,
+        "setup_step_ms": 83.0099999999984,
+        "ordinary_step_ms": 380.0058000000063,
+        "finish_ms": 3749.616799999996,
+        "delivery_ms": 45799.654599999994
+      },
+      "gates": {
+        "begin_ms": false,
+        "setup_step_ms": true,
+        "ordinary_step_ms": false,
+        "finish_ms": true,
+        "delivery_ms": true
+      },
+      "max_setup_context": {
+        "input_owner": "setup",
+        "output_owner": "primitive_rows",
+        "output_cursor": 5,
+        "quantum": 4,
+        "duration_ms": 83.0099999999984
+      },
+      "max_ordinary_context": {
+        "input_owner": "ladder_scheduling",
+        "output_owner": "compilation",
+        "input_cursor": 293,
+        "output_cursor": 295,
+        "quantum": 8,
+        "duration_ms": 380.0058000000063
+      },
+      "first_verified_worker_ms": 42043.225099999996,
+      "setup_goal_cover_ns": 8296640200,
+      "setup_retention_ns": 4325220700,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_goal_actions_prices_as_reference": true,
+      "same_complete_graph_as_evaluated_reference_excluding_attached_economy": true,
+      "policy": {
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436
+      },
+      "release_telemetry": null,
+      "release_telemetry_read_ms": 0,
+      "ui_milestones": {
+        "worker_solve_requested": 50.55060000000003,
+        "finish_intent": 42100.5884,
+        "worker_result_received": 42424.7147,
+        "strategy_export": 45811.7478,
+        "handle_cleanup": 45827.109,
+        "ui_delivery_completed": 45850.2052
+      },
+      "worker_milestones": {
+        "native_begin_requested": 0.03700000000003456,
+        "native_begin_completed": 12625.013299999999,
+        "manual_finish_intent_observed": 42046.3345,
+        "finish_acknowledged": 42046.974599999994,
+        "native_done_observed": 42329.173899999994,
+        "result_export_start": 42329.1766,
+        "result_export_completed": 42349.7063,
+        "terminal_response_committed": 42349.7824
+      }
+    }
+  ],
+  "native": [
+    {
+      "arm": "baseline",
+      "case_id": "cb01-cross-base-product8-long240",
+      "report": "out\\cooperative-setup\\S4-r3-native-baseline-cb01-cross-base-product8-long240\\cases\\cb01-cross-base-product8-long240.json",
+      "sha256": "f8dff1c06ce17a925c81876894cd0d22b7acdfc6ca4b872cdfa80c7eeac53f93",
+      "status": "refused_unsupported_action",
+      "expectation_met": true,
+      "errors": [],
+      "graph": "out\\cooperative-setup\\S4-r3-native-baseline-cb01-cross-base-product8-long240\\strategies\\cb01-cross-base-product8-long240.strategy.json",
+      "graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+      "policy": {
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436
+      },
+      "evaluation": {
+        "completed": true,
+        "converged": true,
+        "cost_complete": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "zero_off_policy_mass": true
+      },
+      "primitive_actions": 8407.202314771383,
+      "phase_wall_ms": {
+        "registry_layout": 36.8766,
+        "solve": 240467.5654,
+        "compile": 4.0858,
+        "verification": null,
+        "total": 243332.7425
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 34738176,
+        "process_working_set_after_bytes": 302059520,
+        "process_working_set_delta_bytes": 267321344,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 153544866,
+        "native_peak_owned_bytes": 253288237,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 790369
+      }
+    },
+    {
+      "arm": "candidate",
+      "case_id": "cb01-cross-base-product8-long240",
+      "report": "out\\cooperative-setup\\S4-r3-native-candidate-cb01-cross-base-product8-long240\\cases\\cb01-cross-base-product8-long240.json",
+      "sha256": "57aa26b6ab1235f46e01a095d8d8e90c693bbaed7111d0d5872bf3cd0312d224",
+      "status": "refused_unsupported_action",
+      "expectation_met": true,
+      "errors": [],
+      "graph": "out\\cooperative-setup\\S4-r3-native-candidate-cb01-cross-base-product8-long240\\strategies\\cb01-cross-base-product8-long240.strategy.json",
+      "graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+      "policy": {
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436
+      },
+      "evaluation": {
+        "completed": true,
+        "converged": true,
+        "cost_complete": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "zero_off_policy_mass": true
+      },
+      "primitive_actions": 8407.202314771383,
+      "phase_wall_ms": {
+        "registry_layout": 37.0592,
+        "solve": 240655.4261,
+        "compile": 4.3765,
+        "verification": null,
+        "total": 243638.7429
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 34734080,
+        "process_working_set_after_bytes": 314499072,
+        "process_working_set_delta_bytes": 279764992,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 153544716,
+        "native_peak_owned_bytes": 254140287,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 790268
+      }
+    },
+    {
+      "arm": "candidate",
+      "case_id": "cb12-cross-base-product8-long240",
+      "report": "out\\cooperative-setup\\S4-r3-native-candidate-cb12-cross-base-product8-long240\\cases\\cb12-cross-base-product8-long240.json",
+      "sha256": "6036b6911d65bca55ad23d32cd32a058387ee1029c0dce191d68950542ebe404",
+      "status": "converged",
+      "expectation_met": true,
+      "errors": [],
+      "graph": "out\\cooperative-setup\\S4-r3-native-candidate-cb12-cross-base-product8-long240\\strategies\\cb12-cross-base-product8-long240.strategy.json",
+      "graph_sha256": "5161ab859825a667f6c61dc3cc62ee5c854031f133f2434448bf535501ba9659",
+      "policy": {
+        "policy_status": "exact",
+        "termination": "exact_closed",
+        "lower_bound": 65.60036144971359,
+        "upper_bound": 65.60036144971359,
+        "evaluated_policy_cost": 65.60036144971359
+      },
+      "evaluation": {
+        "completed": true,
+        "converged": true,
+        "cost_complete": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "zero_off_policy_mass": true
+      },
+      "primitive_actions": 127.11597414558129,
+      "phase_wall_ms": {
+        "registry_layout": 29.6674,
+        "solve": 20708.0779,
+        "compile": 1.3766,
+        "verification": null,
+        "total": 20830.9275
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 34721792,
+        "process_working_set_after_bytes": 80265216,
+        "process_working_set_delta_bytes": 45543424,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 16842968,
+        "native_peak_owned_bytes": 47608693,
+        "native_serialized_output_bytes": 45,
+        "solver_telemetry_json_bytes": 561089
+      }
+    }
+  ],
+  "wasm_complete_graphs_equal_excluding_attached_economy": true,
+  "native_comparison": {
+    "baseline": "0f376f4",
+    "candidate": "r3",
+    "shared_case_ids": 1,
+    "paired_cases": 1,
+    "missing_from_baseline": [],
+    "missing_from_candidate": [],
+    "excluded": [],
+    "delta_distributions": {
+      "wall_ms": {
+        "count": 1,
+        "min": 306.000400000019,
+        "median": 306.000400000019,
+        "p90": 306.000400000019,
+        "p99": 306.000400000019,
+        "max": 306.000400000019
+      },
+      "solve_ms": {
+        "count": 1,
+        "min": 187.86070000001928,
+        "median": 187.86070000001928,
+        "p90": 187.86070000001928,
+        "p99": 187.86070000001928,
+        "max": 187.86070000001928
+      },
+      "solve_step_median_ms": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "solve_step_p95_ms": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "solve_step_max_ms": {
+        "count": 1,
+        "min": 16.847399999999993,
+        "median": 16.847399999999993,
+        "p90": 16.847399999999993,
+        "p99": 16.847399999999993,
+        "max": 16.847399999999993
+      },
+      "peak_memory_bytes": {
+        "count": 1,
+        "min": 852050.0,
+        "median": 852050.0,
+        "p90": 852050.0,
+        "p99": 852050.0,
+        "max": 852050.0
+      },
+      "time_to_incumbent_ms": {
+        "count": 1,
+        "min": 1204.3134000000027,
+        "median": 1204.3134000000027,
+        "p90": 1204.3134000000027,
+        "p99": 1204.3134000000027,
+        "max": 1204.3134000000027
+      },
+      "time_to_target_ms": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p90": null,
+        "p99": null,
+        "max": null
+      },
+      "final_lower_bound": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_upper_bound": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_absolute_gap": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "final_relative_gap": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "states": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "expanded_states": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "rows": {
+        "count": 1,
+        "min": -1.0,
+        "median": -1.0,
+        "p90": -1.0,
+        "p99": -1.0,
+        "max": -1.0
+      },
+      "transitions": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "reforge_work": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "compiled_nodes": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "compiled_edges": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      },
+      "strategy_json_bytes": {
+        "count": 1,
+        "min": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "max": 0.0
+      }
+    },
+    "status_transitions": {
+      "bounded_feasible->bounded_feasible": 1
+    },
+    "regressions": [],
+    "pairs": [
+      {
+        "id": "cb01-cross-base-product8-long240",
+        "dimensions": {
+          "base": "Conquest Lamellar",
+          "class": "Body Armour",
+          "base_class": "Body Armour / Conquest Lamellar",
+          "natural_t1_count": "5",
+          "side_mix": "unknown",
+          "pool_density": "unknown",
+          "goal_probability": "unknown",
+          "incumbent": "other",
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "evaluation_role": "unassigned",
+          "observation_status": "completed"
+        },
+        "treatments": {
+          "baseline_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\baseline-0f376f4\\poecraft_solver_benchmark.exe",
+            "sha256": "850539e63d6e96886eada81df0a4523113986272db888e1b571448adc7f19a87"
+          },
+          "candidate_executable": {
+            "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\candidate-r3\\poecraft_solver_benchmark.exe",
+            "sha256": "4753500e5363bb6045a66ba84ce88880887a633ae797dfa72adbb1fe2e780372"
+          }
+        },
+        "baseline_status": {
+          "actual": "refused_unsupported_action",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "candidate_status": {
+          "actual": "refused_unsupported_action",
+          "policy": "bounded_feasible",
+          "termination": "requested_bounded_finish"
+        },
+        "deltas": {
+          "wall_ms": 306.000400000019,
+          "solve_ms": 187.86070000001928,
+          "solve_step_median_ms": 0.0,
+          "solve_step_p95_ms": 0.0,
+          "solve_step_max_ms": 16.847399999999993,
+          "peak_memory_bytes": 852050.0,
+          "time_to_incumbent_ms": 1204.3134000000027,
+          "time_to_target_ms": null,
+          "final_lower_bound": 0.0,
+          "final_upper_bound": 0.0,
+          "final_absolute_gap": 0.0,
+          "final_relative_gap": 0.0,
+          "states": 0.0,
+          "expanded_states": 0.0,
+          "rows": -1.0,
+          "transitions": 0.0,
+          "reforge_work": 0.0,
+          "compiled_nodes": 0.0,
+          "compiled_edges": 0.0,
+          "strategy_json_bytes": 0.0
+        }
+      }
+    ]
+  },
+  "native_cb01_graph_bytes_equal": true,
+  "historical_reference": "out\\verified-delivery\\A7-manual-conquest-1.json",
+  "historical_reference_sha256": "06ec58d5e4da03969c46d747197f9cbf166ea86fea4ebd90a69a814ebe57a0d6",
+  "non_windows": "waived, not passed",
+  "rendered_browser": "not performed",
+  "hosted_ci": "not run; no push",
+  "clock_contract": "Every duration subtracts milestones on one clock. Cancel includes probe telemetry retrieval and Calculator handle release."
+}

@@ -1548,6 +1548,9 @@ class SolveWork {
     std::uint64_t progress_sequence() const;
     std::string progress_trace_json(std::uint64_t after_sequence = 0) const;
     SolveTelemetrySnapshot telemetry_snapshot(bool abandoned = false) const;
+    /* Terminal synchronous abandonment only: task storage, then calculator
+     * rollback. Returned nanoseconds separate those two release intervals. */
+    std::pair<std::uint64_t, std::uint64_t> release_pending_work();
     SolveResult finish();
     std::uint64_t live_owned_bytes() const;
     std::uint64_t peak_owned_bytes() const;

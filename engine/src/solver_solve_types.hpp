@@ -5,6 +5,7 @@
 #include "solver_joint_policy_continuation.hpp"
 #include "solver_proof_pattern_manager.hpp"
 #include "solver_solve_contracts.hpp"
+#include "solver_setup_storage.hpp"
 
 #include "poecraft/bitset.h"
 
@@ -768,6 +769,16 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     SolveOptions options;
     std::unordered_map<std::string, double> prices;
     SolveResult result;
+    enum class SetupStage { NotStarted, Preparing, Committed, Refused };
+    SetupStage goal_cover_stage = SetupStage::NotStarted;
+    bool goal_cover_requested = false;
+    bool retention_setup_pending = false;
+    bool goal_cover_carrier_committed = false;
+    bool goal_cover_universal_committed = false;
+    bool goal_cover_clean_committed = false;
+    solve_detail::SetupStorage setup_storage;
+    std::optional<solve_detail::CooperativeTask<bool>> goal_cover_task;
+    std::optional<solve_detail::CooperativeTask<bool>> retention_setup_task;
     std::shared_ptr<const class PreparedPhasePotential> native_retention_potential;
     bool native_retention_attempted = false;
     std::array<std::uint8_t, kMaxGoalSlots> native_retention_slot_side{};
@@ -2664,6 +2675,10 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         const std::uint32_t operator_index);
 
     void prepare_goal_cover_cost();
+    bool advance_setup();
+    solve_detail::CooperativeTask<bool> run_retention_setup(const struct PhaseLowerQueryDiagnostic* diagnostic);
+    void admit_setup_bytes(std::uint64_t bytes);
+    solve_detail::CooperativeTask<bool> run_goal_cover_setup();
     void prepare_native_retention_lower(const struct PhaseLowerQueryDiagnostic* diagnostic = nullptr);
     double native_retention_lower_value(std::uint32_t state);
     std::optional<double> project_native_retention_lower(std::uint32_t state) const;

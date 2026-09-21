@@ -648,7 +648,7 @@ export interface SolveSummary {
     start_value: number | null;
     expanded_states: number;
     sweeps: number;
-    residual: number;
+    residual: number | null;
     /** Compatibility aggregate; prefer the two categorized counts below. */
     skipped_actions: number;
     stop_cause:
@@ -852,6 +852,10 @@ export interface SolverWorkerMetrics {
     step_count: number;
     yield_count: number;
     max_step_ms: number;
+    max_setup_step_ms?: number;
+    max_ordinary_step_ms?: number;
+    max_setup_step_context?: SolverWorkerMetrics["max_step_context"];
+    max_ordinary_step_context?: SolverWorkerMetrics["max_step_context"];
     total_step_ms: number;
     /** Packaging-only public-result transfer after native bounded stepping. */
     finalization_ms: number;

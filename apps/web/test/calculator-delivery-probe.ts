@@ -14,7 +14,7 @@ import { getPrices, setPrice, setFallbackPrice } from "../src/app/workspace/pric
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [caseId, output, control = "finish"] = process.argv.slice(2);
-assert.ok(caseId && output && ["finish", "cancel_setup"].includes(control));
+assert.ok(caseId && output && ["finish", "cancel_setup", "cancel_retention"].includes(control));
 const corpus = loadSolverBenchmarkCorpus(resolve(root,
     "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json"));
 const spec = corpus.cases.find(c => c.id === caseId)!;
@@ -32,6 +32,21 @@ const client = new EngineClient({
 });
 let data = 0, session = 0, item = 0, solver = 0;
 let nativeGraph: unknown = null;
+let releaseTelemetry: unknown = null;
+let releaseTelemetryReadMs = 0;
+const solve = client.solverSolve.bind(client);
+client.solverSolve = async (...args) => {
+    const result = await solve(...args);
+    if (result.cancelled) {
+        // Probe-only projection after native release, before Calculator closes
+        // the solver handle. Its measured overhead remains in the UI gate.
+        const began = performance.now();
+        const telemetry = await client.solverTelemetry(args[0]);
+        releaseTelemetry = telemetry.abandon_lifecycle ?? null;
+        releaseTelemetryReadMs = performance.now() - began;
+    }
+    return result;
+};
 try {
     await client.whenReady();
     const artifact = resolve(root, "data/compiled/current");
@@ -78,19 +93,31 @@ try {
                 fields.solveUiMilestones.push({stage: "cancel_intent", ui_elapsed_ms: performance.now()-fields.solveUiStartedAt});
                 calculator.querySelector<HTMLButtonElement>('[data-solve-cmd="cancel"]')!.click();
             }, 100);
+        } else if (control === "cancel_retention" &&
+                fields.solveProgress?.trace?.current?.active_work_owner === "retention_setup") {
+            intent = true;
+            fields.solveUiMilestones.push({stage: "cancel_intent", ui_elapsed_ms: performance.now()-fields.solveUiStartedAt});
+            calculator.querySelector<HTMLButtonElement>('[data-solve-cmd="cancel"]')!.click();
         }
     };
-    await fields.startSolve();
+    let probeError: string | null = null;
+    try {
+        await fields.startSolve();
+    } catch (error) {
+        probeError = error instanceof Error ? error.message : String(error);
+    }
     const trace = fields.solveProgressExport;
     const graphText = nativeGraph === null ? null : typeof nativeGraph === "string" ? nativeGraph : JSON.stringify(nativeGraph);
     const report = {case_id: caseId, control, environment: "linkedom actual Calculator + node-worker_threads WASM",
         visual_review: "not performed", request: trace?.request, resolved: trace?.resolved,
         trace, solve_summary: fields.solveSummary, error: fields.solveError,
         usable_strategy: !!fields.solvedStrategy, graph_sha256: graphText === null ? null : createHash("sha256").update(graphText).digest("hex"),
-        graph: nativeGraph};
+        graph: nativeGraph, probe_error: probeError, release_telemetry: releaseTelemetry,
+        release_telemetry_read_ms: releaseTelemetryReadMs};
     writeFileSync(output, JSON.stringify(report, null, 2)+"\n");
     console.log(JSON.stringify({case_id: caseId, control, status: trace?.status, usable: report.usable_strategy,
-        error: report.error, ui_milestones: trace?.ui_milestones}));
+        error: report.error, probe_error: probeError, ui_milestones: trace?.ui_milestones}));
+    assert.equal(probeError, null);
     assert.equal(trace?.status, control === "finish" ? "completed" : "cancelled");
     assert.equal(report.usable_strategy, control === "finish");
 } finally {

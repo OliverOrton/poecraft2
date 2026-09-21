@@ -3270,10 +3270,10 @@ void run_alt_spam_tests() {
                      "\"strictly_cheaper_replacements\":1,"
                      "\"monotone\":true}") !=
                  std::string::npos);
-        PC_CHECK(refinement_telemetry.find(
-                     "\"policy_refinement\":{\"triggers\":1,"
-                     "\"status\":\"complete\",\"resource_cap\":null,") !=
-                 std::string::npos);
+        const auto parsed_refinement = json::Parser(refinement_telemetry.data(), refinement_telemetry.size()).parse().at("policy_refinement");
+        PC_CHECK(parsed_refinement.at("triggers").as_int() == 1);
+        PC_CHECK(parsed_refinement.at("status").string == "complete");
+        PC_CHECK(parsed_refinement.at("resource_cap").is_null());
         PC_CHECK(refinement_telemetry.find(
                      "\"core_policy\":{\"candidate_present\":true,"
                      "\"status\":\"exact\","
@@ -3405,18 +3405,14 @@ void run_alt_spam_tests() {
         PC_CHECK(refinement_telemetry.find(
                      "\"refinement_rounds\":18") !=
                  std::string::npos);
-        PC_CHECK(refinement_telemetry.find(
-                     "\"backward_observation_rounds\":1,"
-                     "\"selected_action_routing_rounds\":2,"
-                     "\"observation_propagation_rounds\":3,"
-                     "\"partition_refinement_rounds\":4,"
-                     "\"local_reoptimization_rounds\":5,"
-                     "\"local_state_action_rows_scheduled\":24,"
-                     "\"local_state_action_rows_evaluated\":23,"
-                     "\"local_reoptimizations\":6,"
-                     "\"local_policy_changes\":22,"
-                     "\"local_value_changes\":21") !=
-                 std::string::npos);
+        // Additive diagnostic objects do not change these named values.
+        for (const auto& [key, value] : std::initializer_list<std::pair<const char*, int>>{
+                {"backward_observation_rounds",1}, {"selected_action_routing_rounds",2},
+                {"observation_propagation_rounds",3}, {"partition_refinement_rounds",4},
+                {"local_reoptimization_rounds",5}, {"local_state_action_rows_scheduled",24},
+                {"local_state_action_rows_evaluated",23}, {"local_reoptimizations",6},
+                {"local_policy_changes",22}, {"local_value_changes",21}})
+            PC_CHECK(parsed_refinement.at(key).as_int() == value);
         PC_CHECK(refinement_telemetry.find(
                      "\"fixed_point\":{\"checked\":true,"
                      "\"complete\":true,\"lumpability_checked\":true,"
@@ -3493,11 +3489,10 @@ void run_alt_spam_tests() {
             serialize_solver_telemetry(
                 calc, &refinement_sample, nullptr, std::nullopt,
                 &compilation_sample);
-        PC_CHECK(refinement_cap_telemetry.find(
-                     "\"policy_refinement\":{\"triggers\":1,"
-                     "\"status\":\"resource_cap\","
-                     "\"resource_cap\":\"max_sweeps\"") !=
-                 std::string::npos);
+        const auto parsed_cap = json::Parser(refinement_cap_telemetry.data(), refinement_cap_telemetry.size()).parse().at("policy_refinement");
+        PC_CHECK(parsed_cap.at("triggers").as_int() == 1);
+        PC_CHECK(parsed_cap.at("status").string == "resource_cap");
+        PC_CHECK(parsed_cap.at("resource_cap").string == "max_sweeps");
 
         SolveOptions capped_options;
         capped_options.max_states = 1;
@@ -11111,6 +11106,7 @@ void run_carrier_aware_completion_bound_tests() {
         calc.intern_item(fractured_partial);
     SolveWorkTestAccess::Impl work(
         calc, fractured_partial, prices, options);
+    work.prepare_goal_cover_cost();
     const std::uint32_t fractured_mask =
         work.satisfied_goal_mask_for_state(fractured_state);
     PC_CHECK(std::popcount(fractured_mask) == 1);
@@ -11199,6 +11195,7 @@ void run_carrier_aware_completion_bound_tests() {
     SolveWorkTestAccess::Impl bench_work(
         bench_calc, fractured_partial,
         {{"bench:mod5", 2.0}}, options);
+    bench_work.prepare_goal_cover_cost();
     const std::uint32_t bench_mask =
         bench_work.satisfied_goal_mask_for_state(bench_state);
     const double bench_universal =
@@ -11219,6 +11216,7 @@ void run_carrier_aware_completion_bound_tests() {
     SolveWorkTestAccess::Impl expanded_work(
         expanded_calc, fractured_partial,
         {{"chaos", 10.0}, {"bench:mod5", 2.0}}, options);
+    expanded_work.prepare_goal_cover_cost();
     const double expanded_lower =
         expanded_work.completion_proof_lower(expanded_state).value;
     const double original_lower =
@@ -11382,6 +11380,7 @@ void run_carrier_aware_completion_bound_tests() {
         restart_calc, fractured_partial,
         {{"alchemy", 10.0}, {"chaos", 1.0e9}, {"base", 1.0}},
         options);
+    restart_work.prepare_goal_cover_cost();
     (void)restart_work.completion_proof_lower(restart_source);
     const OutcomeDistribution& restart_exact =
         restart_calc.outcomes(restart_source, restart);
@@ -11647,6 +11646,7 @@ void run_automatic_eldritch_side_tests() {
         const StateLocalAutomaticBatch& batch) {
         SolveWorkTestAccess::Impl work(
             context, start, prices, automatic_lower_options);
+    work.prepare_goal_cover_cost();
         const double state_lower =
             work.completion_proof_lower(state).value;
         PC_CHECK(std::isfinite(state_lower));
@@ -11701,6 +11701,7 @@ void run_automatic_eldritch_side_tests() {
     SolveWorkTestAccess::Impl automatic_lower_work(
         automatic_lower_calc, repair_prefix, prices,
         automatic_lower_options);
+    automatic_lower_work.prepare_goal_cover_cost();
     const double eligible_completion_lower =
         automatic_lower_work.completion_proof_lower(
             automatic_lower_state).value;
@@ -11723,6 +11724,7 @@ void run_automatic_eldritch_side_tests() {
     SolveWorkTestAccess::Impl missing_price_work(
         missing_price_calc, repair_prefix, missing_eldritch_prices,
         automatic_lower_options);
+    missing_price_work.prepare_goal_cover_cost();
     const double missing_price_lower =
         missing_price_work.completion_proof_lower(
             missing_price_state).value;
@@ -11742,6 +11744,7 @@ void run_automatic_eldritch_side_tests() {
     SolveWorkTestAccess::Impl ineligible_work(
         ineligible_calc, repair_prefix, missing_eldritch_prices,
         automatic_lower_options);
+    ineligible_work.prepare_goal_cover_cost();
     const double ineligible_lower =
         ineligible_work.completion_proof_lower(
             ineligible_state).value;
@@ -11755,6 +11758,7 @@ void run_automatic_eldritch_side_tests() {
     SolveWorkTestAccess::Impl repeated_lower_work(
         repeated_lower_calc, repair_prefix, prices,
         automatic_lower_options);
+    repeated_lower_work.prepare_goal_cover_cost();
     PC_CHECK(near(
         eligible_completion_lower,
         repeated_lower_work.completion_proof_lower(
@@ -11875,6 +11879,7 @@ void run_automatic_eldritch_side_tests() {
     SolveWorkTestAccess::Impl restart_lower_work(
         restart_lower_calc, partial_restart_source,
         restart_lower_prices, automatic_lower_options);
+    restart_lower_work.prepare_goal_cover_cost();
     const std::uint32_t restart_source_state =
         restart_lower_work.result.start_state;
     const std::uint32_t restart_operator =
@@ -14243,4 +14248,35 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_incremental_action_generation_tests();
     run_automatic_eldritch_side_tests();
     run_artifact_solve_tests(artifact_dir);
+}
+
+void run_solver_setup_service_tests() {
+    run_alt_spam_tests();
+    run_mixed_side_rare_cap_reporting_regression();
+    auto session=make_solve_session();
+    auto registry=build_action_registry(*session);
+    GoalSpec goal; GoalSlot slot; slot.family_id=100; slot.min_tier=1;
+    goal.slots.push_back(slot); goal.rarity=PC_RARITY_MAGIC;
+    CalcContext calc(session,goal,registry,{registry.index_by_id.at("transmute"),
+        registry.index_by_id.at("alteration"),registry.index_by_id.at("restart")});
+    pc_item_state start; pc_item_clear(&start);
+    const std::unordered_map<std::string,double> prices{{"transmute",1},{"alteration",1},{"base",10}};
+    {
+        SolveOptions options; options.max_states=1;
+        SolveWorkTestAccess::Impl early(calc,start,prices,options);
+        PC_CHECK(!early.goal_cover_requested && !early.goal_cover_task);
+        early.step(1);
+        PC_CHECK(early.goal_cover_stage==SolveWorkTestAccess::Impl::SetupStage::NotStarted);
+        for (unsigned i=0;i<10000 && !early.progress().done;++i) early.step(8);
+        PC_CHECK(early.progress().done);
+        const auto result=early.finish();
+        PC_CHECK(!result.policy_available && result.diagnostics.state_cap_hit);
+        PC_CHECK(early.goal_cover_stage==SolveWorkTestAccess::Impl::SetupStage::NotStarted);
+    }
+    const auto reference=solve(calc,start,prices);
+    PC_CHECK(reference.converged && near(reference.upper_bound,22));
+    for (const auto quantum : {1u,2u,7u,64u,4096u}) {
+        const auto replay=solve_stepped(calc,start,prices,quantum);
+        PC_CHECK(identical_solve(reference,replay));
+    }
 }

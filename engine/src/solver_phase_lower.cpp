@@ -21,7 +21,7 @@ void numeric_mode() {
         throw std::invalid_argument("phase lower requires binary64 round-to-nearest");
 }
 void checkpoint(const QuotientLowerBudget& budget) {
-    if (budget.cancelled && budget.cancelled()) throw std::runtime_error("phase lower cancelled");
+    if (budget.cancelled && budget.cancelled()) throw PhasePreparationCancelled();
 }
 void append(StableKey& key, const std::string& text) {
     key.push_back(text.size());
@@ -236,9 +236,24 @@ std::optional<double> PreparedPhaseLowerView::lookup(const CalcContext& calc,
     return values.at(mask_for_item(calc, item));
 }
 
+quotient::CooperativeProofWork<std::shared_ptr<const PreparedPhaseLowerView>> PhaseLowerProducer::prepare_work(
+        CalcContext& calc, const PhaseLowerPrices& prices, const pc_item_state& phase,
+        const PhaseLowerProposal& proposal, QuotientLowerBudget budget) {
+    auto store = std::make_shared<ProofStore>(std::min<std::uint64_t>(64ull<<20,budget.max_scratch_bytes));
+    return {store, [&] { return prepare_impl_work(store, calc, prices, phase, proposal, std::move(budget)); }};
+}
+
 std::shared_ptr<const PreparedPhaseLowerView> PhaseLowerProducer::prepare(
         CalcContext& calc, const PhaseLowerPrices& prices, const pc_item_state& phase,
         const PhaseLowerProposal& proposal, const QuotientLowerBudget& budget) {
+    auto work = prepare_work(calc, prices, phase, proposal, budget);
+    while (!work.resume()) {}
+    return work.take_result();
+}
+
+solve_detail::CooperativeTask<std::shared_ptr<const PreparedPhaseLowerView>> PhaseLowerProducer::prepare_impl_work(
+        std::shared_ptr<ProofStore> store, CalcContext& calc, const PhaseLowerPrices& prices, const pc_item_state& phase,
+        const PhaseLowerProposal& proposal, QuotientLowerBudget budget) {
     numeric_mode(); checkpoint(budget);
     for (const auto& [key, value] : prices) {
         (void)key;
@@ -251,7 +266,7 @@ std::shared_ptr<const PreparedPhaseLowerView> PhaseLowerProducer::prepare(
     // This store also owns a later coupled potential and its compatibility
     // checks. Honor the explicit whole-query reservation; the support-only
     // construction itself keeps its existing smaller cap above.
-    auto store = std::make_shared<ProofStore>(std::min<std::uint64_t>(64ull<<20,budget.max_scratch_bytes));
+
     // Reserve native evidence, identity, candidate and checker workspace before
     // allocation. The other half is the existing transient quotient owner.
     ScopedProofMemoryCharge workspace(store->ledger(), ProofMemoryCategory::Scratch, cap/2);
@@ -264,6 +279,7 @@ std::shared_ptr<const PreparedPhaseLowerView> PhaseLowerProducer::prepare(
     const std::uint32_t size = 1u << calc.layout().slots.size();
     for (const auto& action : calc.registry().actions) {
         checkpoint(budget);
+        co_await solve_detail::CooperativeCheckpoint{};
         if (action.uses_companion_state || (!action.synthetic &&
                 (static_cast<int>(action.params.type) < 0 || static_cast<int>(action.params.type) > 25)))
             throw std::invalid_argument("phase lower unknown primitive relation");
@@ -313,6 +329,7 @@ std::shared_ptr<const PreparedPhaseLowerView> PhaseLowerProducer::prepare(
         }
         for (std::uint32_t mask = 0; mask < size; ++mask) {
             checkpoint(budget);
+        co_await solve_detail::CooperativeCheckpoint{};
             if (std::popcount(mask) >= calc.goal().required_satisfied_slots()) continue;
             QuotientLowerSource source{mask, {version, mask}, {query.caller_scope, 1, true, {}, {}}, {}};
             for (const auto& [reach, cost] : cheapest) {
@@ -330,7 +347,13 @@ std::shared_ptr<const PreparedPhaseLowerView> PhaseLowerProducer::prepare(
         }
         query.model_revision = graph.model_revision();
         const auto& candidate = proposal.values;
-        auto checked = graph.check_lower(query, candidate, budget);
+        QuotientLowerResult checked;
+        {
+            auto child = graph.check_lower_work(query, candidate, budget);
+            while (!child.resume()) co_await solve_detail::CooperativeCheckpoint{};
+            checked = child.take_result();
+        }
+        if (checked.status == QuotientLowerStatus::Cancelled) throw PhasePreparationCancelled();
         PhaseProposalRefusal refusal;
         if (proposal.role != PhaseTableRole::MaskCompletion || proposal.mask_count != size ||
             proposal.required != calc.goal().required_satisfied_slots() || candidate.size() != size)
@@ -363,7 +386,12 @@ std::shared_ptr<const PreparedPhaseLowerView> PhaseLowerProducer::prepare(
         original = bool(checked.checked) && monotone(candidate);
         original &= refusal.kind.empty();
         proposal_refusal = std::move(refusal);
-        if (!original) checked = graph.solve_lower(query, budget);
+        if (!original) {
+            auto child = graph.solve_lower_work(query, budget);
+            while (!child.resume()) co_await solve_detail::CooperativeCheckpoint{};
+            checked = child.take_result();
+        }
+        if (checked.status == QuotientLowerStatus::Cancelled) throw PhasePreparationCancelled();
         if (!checked.checked || !monotone(checked.checked->values_by_state))
             throw std::runtime_error("phase lower finite checker refused: " + checked.reason);
         table = checked.checked->values_by_state;
@@ -381,7 +409,7 @@ std::shared_ptr<const PreparedPhaseLowerView> PhaseLowerProducer::prepare(
         phase.searing_exarch_tier, phase.eater_of_worlds_tier, original, proposal, std::move(proposal_refusal),
         calc.shared_session(), std::move(store), bytes));
     workspace.reset();
-    return result;
+    co_return result;
 }
 
 PhaseProgramLowerWitness::PhaseProgramLowerWitness(PhaseProgramLowerRecord value,

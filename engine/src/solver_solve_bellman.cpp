@@ -1918,6 +1918,7 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
         std::uint32_t remaining = std::max<std::uint32_t>(
             1, std::min(max_work_items, kMaxCooperativeUnitsPerStep));
         while (remaining > 0 && phase != SolvePhase::Done) {
+            if (!advance_setup()) break;
             if (publication_pipeline.initial_candidate_task.has_value()) {
                 if (advance_initial_candidate_publication()) break;
                 // Finish discarded only the in-flight verification scratch;

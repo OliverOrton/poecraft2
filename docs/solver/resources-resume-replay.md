@@ -69,6 +69,25 @@ An unfinished exact row owns scratch and cannot install a normal cached distribu
 
 Cancellation abandons unpublished work. Previously verified evidence survives only where the owning publication contract permits it. A successful cancellation of a process or cursor is not a successful solve.
 
+The goal-cover task and retention task now use the existing setup phase. Support,
+probability construction and the quotient checker expose child checkpoints;
+ordinary diagnostic facades drain the same work. Progress, trace and abandonment
+snapshot reads do not advance setup. Full read passivity does not mean zero
+snapshot/JSON allocation or elapsed time.
+
+Abandon remains synchronous. It destroys the setup children before calculator
+rollback and the rest of the invocation. The bounded `abandon_lifecycle` telemetry
+records snapshot/peak audit, serialization, task release, calculator rollback and
+remaining destruction separately, after actual release. The end-to-end control
+gate includes worker/host observation too; native release alone is not that gate.
+
+Cold WASM compilation of the large diagnostic formatter was part of that release
+latency. The formatter alone now disables Clang optimization on WASM; the numeric
+kernels, release build flags and existing finalization workaround are unchanged.
+The [cold controls](../active/2026-09-20-cooperative-setup/S4-r2-qualification.json)
+qualify setup release separately from the still-failing ordinary compilation
+step. This narrow formatting repair supplies no solver speed or memory theorem.
+
 A requested bounded finish remains latched during refinement, compilation and
 certification. At a strict-work suspension, the owner transfers any already
 complete eligible assertion from its pass/cache without advancing speculative
@@ -114,6 +133,15 @@ by 16 bytes. Candidate size remains 1,608 bytes. These layout measurements are
 platform-specific; no cap or numerical tolerance was increased.
 
 The retention preparation reserves its additional proof workspace inside the existing total native cap. It reuses compatible value-independent support/caps, not stale final-value minimizers. Do not create a second uncharged cache or count discarded scratch as a durable result.
+
+Setup frame sizes (including allocation headers) are admitted before allocation.
+Cover's invocation allocator tracks live map/vector capacities and growth overlap;
+bounded contract strings have a separate reservation. Committed destination copies
+are admitted while scratch remains live, then enter the normal ledger. Retention
+children charge their shared `ProofStore` within the existing 32/64-MiB reservation;
+the final immutable view replaces that reservation exactly once. Task destruction
+releases live charges, never cumulative native work. New setup storage is distinct
+from the completed retained-pool change's historical +16-byte measurement above.
 
 Some observational JSON projections are deliberately outside the proof's solver-owned cap and remain bounded by serialization limits. That does not make their process memory or elapsed construction time zero. Preserve the declared attribution in comparisons.
 
