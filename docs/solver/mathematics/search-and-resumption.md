@@ -96,6 +96,24 @@ decision, preserving commitment and information timing.
 <a id="pruning"></a>
 ## 2. A sufficient local dominance argument
 
+### Proposal screening is not sound exclusion
+
+For a complete candidate pi and incumbent cost U, a compatible candidate lower
+L_pi >= U, or its reconciled native cost, can establish non-improvement under
+the applicable tie contract. An upper estimate H_pi >= J_pi cannot: U=10,
+J_pi=6 and H_pi=20 satisfy the upper inequality while the candidate improves U.
+An unconnected source heuristic grants still less rejection authority.
+
+A bounded search may use that score to withhold expensive checking. The result
+is an unserviced proposal, not economic domination or closed action coverage.
+Relaxing such a screen changes which proposals receive service; complete native
+support, properness, entry compatibility, prices and independent evaluation
+still own acceptance. Distinct selected semantics can justify reconsideration;
+unrelated row growth or another timer tick alone cannot establish a new policy.
+The [capability programme](../../active/2026-09-22-ordinary-capability/README.md)
+treats a source-screen false negative as a hypothesis requiring a current native
+witness, not as a conclusion from this scalar counterexample.
+
 At the same semantic state \(s\), suppose a permitted executable proper continuation has cost \(U(s)\), and an alternative action has independently valid lower \(L(s,a)\). If
 
 \[
@@ -184,6 +202,15 @@ point; unfinished proposals cannot delay a compatible fallback. Seal the tuple
 before transport and keep it immutable thereafter. Invocation-scoped intent,
 acknowledgement, sealing, terminal commitment and usable delivery are distinct.
 Cancellation precedence belongs to the control owner.
+
+The first usable result and unattended final quality sample different sets of
+owned evidence. With E(t) the compatible complete policies verified by time t,
+U(t)=min_{pi in E(t)} J_pi(root), with infinity for an empty set. A probe
+requesting Finish at the first such artifact measures U(t_first), not U(T) with
+ordinary search permitted until T.
+A saved feasible graph establishes existence, not discovery or internal checker
+admission under the current runtime and resource profile. A current unattended
+baseline is therefore required before attributing recovery to a new treatment.
 
 An assertion may return at the existing prefix after complete graph construction
 and evaluator admission but before evaluation service. Its private graph adds no

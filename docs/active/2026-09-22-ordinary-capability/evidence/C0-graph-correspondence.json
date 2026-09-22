@@ -1,0 +1,10 @@
+{
+  "wasm_graph_without_ui_economy_annotations_equals_native_diagnostic": true,
+  "native_graph_sha256": "e506b8a14c642281eeca221472ce46a01a6ab4533210da60fd6427ffc73a20c6",
+  "removed_fields": [
+    "economy",
+    "nodes[].position",
+    "nodes[].expected_cost"
+  ],
+  "native_graph": "out/ordinary-capability/C1-handoff120/strategies/cb02-cross-base-product8-long240.strategy.json"
+}

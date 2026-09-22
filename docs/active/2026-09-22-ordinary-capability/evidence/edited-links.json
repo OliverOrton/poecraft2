@@ -1,0 +1,15 @@
+{
+  "files": [
+    "HANDOFF.md",
+    "docs\\foundation\\tooling.md",
+    "docs\\solver\\benchmarking.md",
+    "docs\\solver\\claims.md",
+    "docs\\solver\\mathematics\\policies.md",
+    "docs\\solver\\mathematics\\search-and-resumption.md",
+    "docs\\solver\\research.md",
+    "docs\\solver\\scheduling-bellman.md",
+    "docs\\active\\2026-09-22-ordinary-capability\\README.md"
+  ],
+  "local_links_checked": 274,
+  "errors": []
+}

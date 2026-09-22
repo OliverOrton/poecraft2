@@ -82,6 +82,32 @@ V^*(s)\le J_\pi(s).
 
 This subset argument is the entire reason a fixed-policy evaluation supplies an upper. No greediness premise is required. [CLM-0002](../claims.md#clm-0002).
 
+<a id="complementary-decisions"></a>
+### Complementary decisions in a bounded proposal search
+
+Consider complete deterministic states r, t and goal g. The incumbent chooses
+r->g at cost 10 and t->g at cost 100. Alternatives r->t at cost 1 and t->g at
+cost 1 give these root costs:
+
+| Changed decisions | Root cost |
+|---|---:|
+| None | 10 |
+| Bridge only | 101 |
+| Tail only | 10 |
+| Bridge and tail | 2 |
+
+All four controllers are proper. The cheaper tail has zero incumbent occupancy,
+so demanding immediate strict root improvement from each isolated edit can reject
+both useful ingredients. Joint completion exposes the gain. This is a limitation
+of that bounded proposal filter, not of full-domain policy iteration, which can
+improve t before r. It authorizes neither arbitrary family expansion nor copying
+the old root value onto an unknown tail. Native applications still need every
+positive outcome, observed decision, paid setup/cleanup and compatible entry
+under [properness](#properness), then complete original-root evaluation. The
+[policy-difference identity](#policy-difference) uses the new controller's visits.
+The imported [exact toy checks](../../active/2026-09-22-ordinary-capability/research-inputs/package/checks/check_concepts.py)
+illustrate the argument; they establish no native crafting correspondence.
+
 <a id="primitive-execution-reward"></a>
 ### Primitive execution count is a separate reward
 

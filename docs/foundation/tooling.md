@@ -32,6 +32,7 @@ IDs or paths. Common Lab options such as `--root .`, `--executable EXE`,
 | Reproduce a Lab attempt | `solver_lab export-bundle --attempt-id ATTEMPT --idempotency-key KEY`; this is an evidence bundle, not necessarily the smallest context |
 | Send selected mathematical context | `solver_knowledge context --claim CLM-0012 --max-chars 20000`; use the relevant claim and preserve its argument/dependencies |
 | Use a native-only diagnostic | The benchmark's existing flags or shared worker adapter; preserve exact activation when Lab normalization would change the request |
+| Measure actual Calculator final quality | `apps/web/test/calculator-delivery-probe.ts CASE OUTPUT default_finish` through the existing isolated-process supervisor; `finish` remains the early verified-policy control |
 
 Inspect operation `--help` for less common flags. Detailed contracts remain in
 [benchmarking](../solver/benchmarking.md), [Lab operations](solver-lab.md) and

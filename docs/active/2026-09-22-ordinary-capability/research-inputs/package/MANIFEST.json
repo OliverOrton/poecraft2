@@ -1,0 +1,82 @@
+{
+  "schema": "sha256_payload_manifest_v1",
+  "reviewed_ref": "343b6155fa1594ced4914858f1b25aca1e048e48",
+  "self_exclusion": "MANIFEST.json does not hash itself; ZIP outside payload.",
+  "files": [
+    {
+      "path": "01_CURRENT_MAIN_REVIEW.md",
+      "bytes": 9895,
+      "sha256": "71dbde5b89458be203083fbe077f56d87a0d4f242edefbbc02c3944f8b6b05b9"
+    },
+    {
+      "path": "02_MILESTONES.md",
+      "bytes": 11693,
+      "sha256": "0c1083323ab533e0cae3f88d54eb432d30c45c40ee159e496b45abfb1159444f"
+    },
+    {
+      "path": "03_CAPABILITY_DESIGN.md",
+      "bytes": 8484,
+      "sha256": "764b3b8f630594e04278a651a6b01dd862b4dfbe3e1d9d8a366c3282803a6d6f"
+    },
+    {
+      "path": "04_MATHEMATICS.md",
+      "bytes": 8763,
+      "sha256": "6297f9126bbaf2b2b5a1dc999b7531bd49137b7c6751037372c81965df513f8a"
+    },
+    {
+      "path": "05_VALIDATION.md",
+      "bytes": 8730,
+      "sha256": "b3e8feb580a6fc1cf4e441577083682408fa903e6b9a36e63d52b5dd8f6c888f"
+    },
+    {
+      "path": "06_DOCUMENTATION_AND_DEBT.md",
+      "bytes": 4838,
+      "sha256": "ce462d059e2dba5391706ca0f3fbaa573ccfc3126808ee6b6b25a159b4388614"
+    },
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 16884,
+      "sha256": "514c4f543fbd05a451c188c01c6969d42870e2c6a452108796a44069407b9bab"
+    },
+    {
+      "path": "PACKAGE_CHECKS.json",
+      "bytes": 453,
+      "sha256": "e7f422cf271c4d619d0e8e099d018accbad9b0cbfd8d7741f94f6f4caf901589"
+    },
+    {
+      "path": "README.md",
+      "bytes": 4275,
+      "sha256": "4a3abc6c4172fa2b9fa6c75d648a601d162d24d21e335f3c72269c627ca22055"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 9282,
+      "sha256": "4546ee56c32fd7ed552b9046eb63356c05f47f4fe57318293bd0a5ef69e8ccf4"
+    },
+    {
+      "path": "checks/check_concepts.py",
+      "bytes": 10477,
+      "sha256": "fc687c58b372f9d587bdb36054d964b6622cbb53cdc3e78fcd0eef9dfabe64b6"
+    },
+    {
+      "path": "checks/results.json",
+      "bytes": 2635,
+      "sha256": "08b296d83e2ab1a542ade4050cbb283d7d5a330ca7ee8626512171ee28302478"
+    },
+    {
+      "path": "evidence/baseline.json",
+      "bytes": 5172,
+      "sha256": "f580312d334163c1cf587689bc3df780036ad4cb3c1c914fbec280d565259e09"
+    },
+    {
+      "path": "evidence/ci_observations.json",
+      "bytes": 910,
+      "sha256": "fa99698bfc770bfcb009fc5d0f24b4359f853740de933e479965af69cb974ef2"
+    },
+    {
+      "path": "evidence/review_scope.json",
+      "bytes": 1563,
+      "sha256": "8273e03e5779e169343786119424817c682d13840e40570f33774546579bcb0f"
+    }
+  ]
+}

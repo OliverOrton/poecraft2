@@ -1,0 +1,57 @@
+{
+  "reviewed_head": "343b6155fa1594ced4914858f1b25aca1e048e48",
+  "production_source_unchanged": true,
+  "restored_build": "powershell -File scripts/build.ps1",
+  "restored_native_joint_tests": {
+    "checks": 313,
+    "failures": 0
+  },
+  "experimental_native_joint_tests": {
+    "v1": {
+      "checks": 321,
+      "failures": 0
+    },
+    "v2": {
+      "checks": 321,
+      "failures": 0
+    },
+    "retained": false
+  },
+  "web": {
+    "command": "npm test",
+    "smoke_filter": "calculator picker: full-registry solver, filtered actions, fossil combos",
+    "remaining_web_tests": "all script entries",
+    "exit_code": 0,
+    "typescript": {
+      "command": "npx tsc --noEmit",
+      "exit_code": 0
+    },
+    "full_unfiltered_wasm_smoke": "not run; avoids unchanged-policy simulations"
+  },
+  "knowledge_lint": {
+    "base": "343b6155fa1594ced4914858f1b25aca1e048e48",
+    "exit_code": 0,
+    "errors": 0,
+    "open_claim_warnings": 18
+  },
+  "edited_local_links": {
+    "checked": 274,
+    "errors": 0
+  },
+  "diff_check": {
+    "owned_source_exit_code": 0,
+    "immutable_payload_whitespace_reports": 5,
+    "exclusions": [
+      "research-inputs/package/README.md: three Markdown hard breaks",
+      "evidence/rejected-v1.patch: unified-diff blank context",
+      "evidence/rejected-v2.patch: unified-diff blank context"
+    ]
+  },
+  "identities": {
+    "build/engine/poecraft_solver_benchmark.exe": "8e6d462764d40b69a21fb7bce07a0f5bd0311bf5a7496773c3590f85648aa96e",
+    "build/engine/poecraft_engine.dll": "dc28fbf40b8fb2203b83d56bfd82103ed49cdd900d49c7cb9a51aea2734ca5cf",
+    "bindings/wasm/dist/poecraft_engine.wasm": "c35f4ccf56ccd1f703eec82f92f68e9f1bbdc0f009f2cb96437d95b81b0737d1",
+    "bindings/wasm/dist/poecraft_engine.mjs": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502"
+  },
+  "import_staged_payloads_verified": 15
+}

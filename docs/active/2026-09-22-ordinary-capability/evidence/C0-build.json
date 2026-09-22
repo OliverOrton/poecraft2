@@ -1,0 +1,11 @@
+{
+  "head": "343b6155fa1594ced4914858f1b25aca1e048e48",
+  "identities": {
+    "poecraft_engine.dll": "1ac5bbd3e04eb2b81109348571702a0d33d605fa35aab56696f68132826d2e09",
+    "poecraft_solver_benchmark.exe": "3ac79d0dc76ce69152a3cb50d2b50955be51bc98b1d90fba169628fbe40b62fd",
+    "poecraft_engine_tests.exe": "5d75e4474c1e716f51f64dde57b2635ab47256ae03bf4c44f8dd7dee8acfa0e0",
+    "libwinpthread-1.dll": "f433c911e46c1311c31edb162f9a898202c8969f59b982e4e66f1781c2ce2b22",
+    "poecraft_engine.wasm": "c35f4ccf56ccd1f703eec82f92f68e9f1bbdc0f009f2cb96437d95b81b0737d1",
+    "poecraft_engine.mjs": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502"
+  }
+}

@@ -1,26 +1,29 @@
 # Handoff
 
-Selected programme stopped at its explicit scope gate:
-[First-policy service and integrity](docs/active/2026-09-21-first-policy-service/README.md).
-T0 repairs all reproduced native failure groups and is committed separately as
-`097bc12`. Final work adds real compilation/recovery returns, bounded paired-edge
-searches and fail-closed product authority. The expensive per-evaluator-unit
-return experiment was rejected; ordinary batching is preserved.
+The [ordinary capability programme](docs/active/2026-09-22-ordinary-capability/README.md)
+stopped at its two-failed-variant gate. Fresh unchanged Conquest-four controls:
+native C3746.1319409485764/N8608.881793656798; actual unattended Calculator
+C5218.040949685988/N14152.339714597101 at the normal four-minute Finish. Both are
+bounded with L198.8334996747695. The 20% browser improvement/full-recovery target
+is **unmet**. Two proof-handoff diagnostics found no cheaper candidate. Two
+captured-row/root seed variants regressed native output to C5218.04 and are removed;
+negative patches and compact matched evidence remain in the programme record.
 
-Policy/control checks pass: final C5 graph/lower/cost/count are unchanged,
-Regalia remains exact in the compatible control, and complete cancellation and
-delivery meet their selected gates. **Ordinary calls still reach 300–308 ms
-against 250 ms.** The named residual is synchronous replay-backed partition
-refinement inside the evaluator. First-verified observations and all failed
-variants remain in the living record. Do not report this latency target as met.
+Retained changes are test-only `default_finish`, one final diagnostic read after
+delivery, and canonical mathematical/measurement integration. The native source
+is unchanged from reviewed `343b615`; restored build/joint tests pass. The final
+actual Regalia probe remains exact at C65.60036144971359 without manual intent.
+Existing [first-policy/integrity](docs/active/2026-09-21-first-policy-service/README.md)
+and [cooperative setup](docs/active/2026-09-20-cooperative-setup/README.md) work is
+preserved. C4 baseline ordinary max is 981.78 ms; historical C5 is 300–308 ms,
+both over 250 ms. Do not claim a response or new quality pass.
 
-Further partition staging requires a separate shared-proof-owner scope. C4
-ordinary discovery/service remains the next capability decision, not automatic
-work. Its saved-graph compatibility and the completed
-[cooperative setup programme](docs/active/2026-09-20-cooperative-setup/README.md)
-remain preserved, along with prior programmes and historical high-water evidence.
+Remaining capability work needs a complete useful native continuation at its
+actual entry; captured coarse choices alone did not satisfy selected fixed-option
+closure/frontier obligations. No successor, broad retry, partition staging,
+public Ring activation or capacity increase is selected automatically.
 
 Work stays local: no push, hosted dispatch, automatic restart, inherited deadline
 or subagents. Protected root `0`, frozen economy and browser defaults are preserved.
-Non-Windows remains waived; rendered review belongs to Oliver. Required suites'
-embedded simulations are documented; no standalone Simulator campaign was added.
+Non-Windows remains waived; rendered review belongs to Oliver. No changed-controller
+simulation campaign or treatment WASM/wide qualification was justified after rejection.

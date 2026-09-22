@@ -10,6 +10,7 @@ import {
     type CalculatorDeliveryTrace,
 } from "../src/app/solve-workspace";
 import { pinEconomy, setPrice } from "../src/app/workspace/prices";
+import { finishVerifiedCalculatorProbe } from "./calculator-delivery-probe-control";
 
 const dom = parseHTML("<!doctype html><html><body></body></html>");
 Object.assign(globalThis, {
@@ -146,9 +147,12 @@ for (const fail of [false, true]) {
         },
         closeEconomy: async () => {},
         closeItem: async (item: number) => { released.push(item); },
-        solverSolve: async (_solver: number, item: number, _economy: number, options: SolveOptions) => {
+        solverSolve: async (_solver: number, item: number, _economy: number, options: SolveOptions,
+            execution: { boundedFinishAfterMs: number }) => {
             assert.equal(item, 17);
             assert.equal(options.max_absolute_optimality_gap, 2);
+            assert.equal(execution.boundedFinishAfterMs, 240000,
+                "unattended Calculator requests retain the ordinary four-minute finish");
             if (fail) throw new Error("fixture worker failure");
             return { cancelled: true };
         },
@@ -187,7 +191,16 @@ assert.equal(calculator.querySelector<HTMLButtonElement>('[data-solve-cmd="finis
 controls.solveProgress.trace!.current.verified_artifact_available = true;
 access.renderSolvePanel();
 const finishButton = calculator.querySelector<HTMLButtonElement>('[data-solve-cmd="finish"]')!;
-assert.equal(finishButton.disabled, false); finishButton.click(); finishButton.click();
+assert.equal(finishButton.disabled, false);
+for (let observation = 0; observation < 3; ++observation) {
+    access.renderSolvePanel();
+    assert.equal(finishVerifiedCalculatorProbe("default_finish", calculator), false);
+    assert.equal(intents, 0, "unattended probe never clicks an enabled Finish button");
+    assert.equal(controls.solveFinishRequested, false);
+    assert.equal(controls.solveAbort.signal.aborted, false);
+}
+assert.equal(finishVerifiedCalculatorProbe("finish", calculator), true);
+finishButton.click();
 assert.equal(intents, 1);
 assert.match(calculator.querySelector('[data-solve-cmd="finish"]')!.textContent!, /Finishing/);
 assert.equal(controls.solveAbort.signal.aborted, false);

@@ -1,0 +1,97 @@
+{
+  "schema": "poecraft2_abstract_capability_checks_v1",
+  "native_validation": false,
+  "claims": "Finite exact rational examples and abstract lifecycle distinctions only; no PoE mechanics, scheduler or platform qualification.",
+  "tests_run": 20,
+  "passed": 20,
+  "failed": 0,
+  "tests": [
+    {
+      "test": "test_known_chain_and_cost_accounting",
+      "status": "pass"
+    },
+    {
+      "test": "test_upper_filter_false_negative",
+      "status": "pass"
+    },
+    {
+      "test": "test_valid_lower_filter_case",
+      "status": "pass"
+    },
+    {
+      "test": "test_exact_native_candidate_screen",
+      "status": "pass"
+    },
+    {
+      "test": "test_complementary_decisions",
+      "status": "pass"
+    },
+    {
+      "test": "test_old_occupancy_misses_unreachable_tail",
+      "status": "pass"
+    },
+    {
+      "test": "test_row_change_needs_new_occupancy",
+      "status": "pass"
+    },
+    {
+      "test": "test_recurrence_correction",
+      "status": "pass"
+    },
+    {
+      "test": "test_zero_cost_loop_is_not_goal",
+      "status": "pass"
+    },
+    {
+      "test": "test_tiny_positive_trap_must_remain",
+      "status": "pass"
+    },
+    {
+      "test": "test_proper_options_can_form_improper_composition",
+      "status": "pass"
+    },
+    {
+      "test": "test_root_certificate_does_not_certify_other_entry",
+      "status": "pass"
+    },
+    {
+      "test": "test_real_tail_not_root_scalar",
+      "status": "pass"
+    },
+    {
+      "test": "test_reward_and_primitive_count_distinct",
+      "status": "pass"
+    },
+    {
+      "test": "test_finite_prefix_and_final_quality_differ",
+      "status": "pass"
+    },
+    {
+      "test": "test_more_unselected_rows_not_a_new_policy",
+      "status": "pass"
+    },
+    {
+      "test": "test_bounded_semantic_opportunity_not_timer",
+      "status": "pass"
+    },
+    {
+      "test": "test_pending_capped_and_dominated_are_different",
+      "status": "pass"
+    },
+    {
+      "test": "test_verified_artifact_selection_keeps_failed_proposals_out",
+      "status": "pass"
+    },
+    {
+      "test": "test_renaming_changes_no_root_cost",
+      "status": "pass"
+    }
+  ],
+  "derived_recorded_metrics": {
+    "historical_cost_difference": "1471.9090087374116",
+    "historical_relative_cost_reduction": "0.2820807699537099927770218787286248096967",
+    "historical_relative_action_reduction": "0.3916990428955461277659144290284652908117",
+    "twenty_percent_threshold_using_historical_not_current_baseline": "4174.4327597487904",
+    "note": "Arithmetic on recorded rounded numbers. Current-main unattended baseline and new native performance are unmeasured."
+  }
+}

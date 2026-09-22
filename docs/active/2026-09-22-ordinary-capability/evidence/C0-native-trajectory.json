@@ -1,0 +1,406 @@
+{
+  "changes": [
+    {
+      "ms": null,
+      "rows": 0,
+      "state": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "source": null,
+      "owner": null
+    },
+    {
+      "ms": 20.6743,
+      "rows": 0,
+      "state": [
+        "",
+        "none",
+        0,
+        "0"
+      ],
+      "source": "none",
+      "owner": "goal_cover_setup"
+    },
+    {
+      "ms": 6799.9958,
+      "rows": 2,
+      "state": [
+        "12191169191983815949",
+        "compiled",
+        0,
+        "0"
+      ],
+      "source": "gated_primitive_destructive_renewal",
+      "owner": "row_construction"
+    },
+    {
+      "ms": 6923.6341,
+      "rows": 5867,
+      "state": [
+        "11850949245056450803",
+        "estimate",
+        0,
+        "0"
+      ],
+      "source": "initial_selected_coarse_policy",
+      "owner": "focused_upper"
+    },
+    {
+      "ms": 13556.4494,
+      "rows": 12735,
+      "state": [
+        "11850949245056450803",
+        "estimate",
+        1,
+        "0"
+      ],
+      "source": "initial_selected_coarse_policy",
+      "owner": "ordinary_search"
+    },
+    {
+      "ms": 14739.598,
+      "rows": 14378,
+      "state": [
+        "11850949245056450803",
+        "estimate",
+        2,
+        "0"
+      ],
+      "source": "initial_selected_coarse_policy",
+      "owner": "ordinary_search"
+    },
+    {
+      "ms": 24498.4957,
+      "rows": 24844,
+      "state": [
+        "11850949245056450803",
+        "estimate",
+        3,
+        "0"
+      ],
+      "source": "initial_selected_coarse_policy",
+      "owner": "named_continuation"
+    },
+    {
+      "ms": 48888.7032,
+      "rows": 42681,
+      "state": [
+        "11850949245056450803",
+        "estimate",
+        4,
+        "0"
+      ],
+      "source": "initial_selected_coarse_policy",
+      "owner": "ordinary_search"
+    },
+    {
+      "ms": 86269.1353,
+      "rows": 83570,
+      "state": [
+        "11850949245056450803",
+        "estimate",
+        5,
+        "0"
+      ],
+      "source": "initial_selected_coarse_policy",
+      "owner": "ordinary_search"
+    },
+    {
+      "ms": 176583.0535,
+      "rows": 135519,
+      "state": [
+        "13891907023594821832",
+        "estimate",
+        5,
+        "0"
+      ],
+      "source": "partial_upper_plus_destructive_renewal",
+      "owner": "publication"
+    },
+    {
+      "ms": 184238.0192,
+      "rows": 135519,
+      "state": [
+        "13891907023594821832",
+        "estimate",
+        5,
+        "8675727558474990511"
+      ],
+      "source": "partial_upper_plus_destructive_renewal",
+      "owner": "publication"
+    }
+  ],
+  "events": [
+    {
+      "sequence": 1,
+      "native_elapsed_ms": 0.1957,
+      "kind": "setup_goal_cover_start",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 0,
+      "completed_rows": 0,
+      "verified_upper": null
+    },
+    {
+      "sequence": 2,
+      "native_elapsed_ms": 1564.2176,
+      "kind": "setup_goal_cover_completed",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 0,
+      "completed_rows": 0,
+      "verified_upper": null
+    },
+    {
+      "sequence": 3,
+      "native_elapsed_ms": 1564.2565,
+      "kind": "setup_retention_start",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 0,
+      "completed_rows": 0,
+      "verified_upper": null
+    },
+    {
+      "sequence": 4,
+      "native_elapsed_ms": 6781.3883,
+      "kind": "setup_retention_completed",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 0,
+      "completed_rows": 0,
+      "verified_upper": null
+    },
+    {
+      "sequence": 5,
+      "native_elapsed_ms": 6799.9257,
+      "kind": "candidate_captured",
+      "reason": "gated_primitive_destructive_renewal",
+      "candidate_identity": "12191169191983815949",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 0,
+      "completed_rows": 1,
+      "verified_upper": null
+    },
+    {
+      "sequence": 6,
+      "native_elapsed_ms": 6923.5447,
+      "kind": "candidate_captured",
+      "reason": "selected_policy",
+      "candidate_identity": "11850949245056450803",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 0,
+      "completed_rows": 5867,
+      "verified_upper": null
+    },
+    {
+      "sequence": 7,
+      "native_elapsed_ms": 6932.179,
+      "kind": "candidate_retained",
+      "reason": "gated_primitive_destructive_renewal",
+      "candidate_identity": "12191169191983815949",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 1,
+      "completed_rows": 5867,
+      "verified_upper": null
+    },
+    {
+      "sequence": 8,
+      "native_elapsed_ms": 6932.1846,
+      "kind": "entry_provenance",
+      "reason": "root_only=0;parent_bindings=1;fracture=0",
+      "candidate_identity": "12191169191983815949",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 1,
+      "completed_rows": 5867,
+      "verified_upper": null
+    },
+    {
+      "sequence": 9,
+      "native_elapsed_ms": 6932.1883,
+      "kind": "candidate_captured",
+      "reason": "partial_upper_plus_destructive_renewal",
+      "candidate_identity": "465683976748270791",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 1,
+      "completed_rows": 5867,
+      "verified_upper": null
+    },
+    {
+      "sequence": 140,
+      "native_elapsed_ms": 13585.6655,
+      "kind": "candidate_captured",
+      "reason": "partial_upper_plus_destructive_renewal",
+      "candidate_identity": "258583987644483216",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 5,
+      "completed_rows": 12735,
+      "verified_upper": null
+    },
+    {
+      "sequence": 141,
+      "native_elapsed_ms": 13610.221,
+      "kind": "candidate_captured",
+      "reason": "partial_upper_plus_destructive_renewal",
+      "candidate_identity": "10629403456434961361",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 7,
+      "completed_rows": 12735,
+      "verified_upper": null
+    },
+    {
+      "sequence": 142,
+      "native_elapsed_ms": 13633.2863,
+      "kind": "candidate_captured",
+      "reason": "partial_upper_plus_destructive_renewal",
+      "candidate_identity": "5580728310419316352",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 9,
+      "completed_rows": 12735,
+      "verified_upper": null
+    },
+    {
+      "sequence": 143,
+      "native_elapsed_ms": 13656.7742,
+      "kind": "candidate_captured",
+      "reason": "partial_upper_plus_destructive_renewal",
+      "candidate_identity": "13891907023594821832",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 11,
+      "completed_rows": 12735,
+      "verified_upper": null
+    },
+    {
+      "sequence": 226,
+      "native_elapsed_ms": 176583.008,
+      "kind": "compile_start",
+      "reason": "publication_pipeline",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 728,
+      "completed_rows": 135519,
+      "verified_upper": null
+    },
+    {
+      "sequence": 227,
+      "native_elapsed_ms": 179235.5096,
+      "kind": "compile_completed",
+      "reason": "selected_core_policy",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 728,
+      "completed_rows": 135519,
+      "verified_upper": null
+    },
+    {
+      "sequence": 228,
+      "native_elapsed_ms": 179235.5098,
+      "kind": "check_start",
+      "reason": "selected_core_policy",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 728,
+      "completed_rows": 135519,
+      "verified_upper": null
+    },
+    {
+      "sequence": 229,
+      "native_elapsed_ms": 184207.3896,
+      "kind": "check_completed",
+      "reason": "selected_core_policy:compiled policy exact cost does not reconcile with the solver value",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 728,
+      "completed_rows": 135519,
+      "verified_upper": null
+    },
+    {
+      "sequence": 230,
+      "native_elapsed_ms": 184234.6708,
+      "kind": "incumbent_retained",
+      "reason": "direct_compiled_core_policy",
+      "candidate_identity": "8675727558474990511",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 728,
+      "completed_rows": 135519,
+      "verified_upper": 3746.1319409485764
+    },
+    {
+      "sequence": 231,
+      "native_elapsed_ms": 184234.6935,
+      "kind": "entry_provenance",
+      "reason": "root_only=0;parent_bindings=52;fracture=1",
+      "candidate_identity": "8675727558474990511",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 728,
+      "completed_rows": 135519,
+      "verified_upper": 3746.1319409485764
+    },
+    {
+      "sequence": 232,
+      "native_elapsed_ms": 240006.888,
+      "kind": "finish_requested",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 728,
+      "completed_rows": 135519,
+      "verified_upper": 3746.1319409485764
+    },
+    {
+      "sequence": 233,
+      "native_elapsed_ms": 240158.282,
+      "kind": "selection_sealed",
+      "reason": "owned_graph_root_certificate_and_cost",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 728,
+      "completed_rows": 135519,
+      "verified_upper": 3746.1319409485764
+    },
+    {
+      "sequence": 234,
+      "native_elapsed_ms": 240158.3463,
+      "kind": "native_done",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 728,
+      "completed_rows": 135519,
+      "verified_upper": 3746.1319409485764
+    }
+  ],
+  "missing_event_sequences": [
+    10,
+    11
+  ]
+}

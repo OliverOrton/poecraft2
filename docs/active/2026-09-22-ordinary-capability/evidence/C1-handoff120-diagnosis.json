@@ -1,0 +1,404 @@
+{
+  "source_report": "out\\ordinary-capability\\C1-handoff120\\report.json",
+  "source_report_sha256": "dcb381f6fbe5b20935a9a9b92c7f1110c527f9cd28d4021dde9db6c9e538929e",
+  "phase_wall_ms": {
+    "registry_layout": 39.2125,
+    "solve": 240579.0411,
+    "compile": 2.2882,
+    "verification": null,
+    "total": 241296.6097
+  },
+  "policy_refinement": {
+    "proof_handoff": {
+      "requested": true,
+      "started": true,
+      "expanded_states": 6067,
+      "rows": 112716,
+      "candidate_estimate": 377239.4955456879
+    },
+    "core_policy": {
+      "candidate_present": true,
+      "status": "bounded_feasible",
+      "pre_extraction_non_goal_closed": false,
+      "coarse_action_envelope_closed": false,
+      "coarse_discovery_closed": false,
+      "lower_bound": 198.8334996747695,
+      "upper_bound": 8628.62104517741,
+      "evaluated_cost": 8628.62104517741,
+      "transition_bits_hash": "82d900655c3f7986",
+      "policy_bits_hash": "0db3045b542057cf",
+      "selected_states": 599,
+      "distinct_actions": 14,
+      "root_action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "goal_identity": "21174573b54f9d53",
+      "economy_identity": "ad2373d65bde3138",
+      "action_vocabulary_identity": "6183c2a63ec549a5",
+      "graph_identity": "01d79b260c05e6d7",
+      "artifact_identity": "f936a0dc37501788",
+      "owned_bytes": 505116613
+    },
+    "selected_policy_candidate": {
+      "capture_attempted": true,
+      "captured": true,
+      "memory_rejected": false,
+      "identity_valid": true,
+      "certification_attempted": true,
+      "independently_evaluated": true,
+      "retained": true,
+      "estimated_cost": 5322.492987625119,
+      "exact_cost": 5218.040949685988,
+      "owned_bytes": 576041,
+      "identity": "93e61bfaaca1880c",
+      "capture_ns": 6601300,
+      "certification_ns": 298625500,
+      "status": "verified_retained",
+      "failure_reason": null
+    },
+    "direct_certification": {
+      "status": "cost_mismatch",
+      "failure_reason": "compiled policy exact cost does not reconcile with the solver value",
+      "failure_classification": "solver_exact_cost_mismatch",
+      "resource_cap": null,
+      "solver_cost": 8628.62104517741,
+      "exact_cost": 8473.163658868356,
+      "offpolicy_probability": 0,
+      "reforge_work": 276984,
+      "artifact_bytes": 259945,
+      "closed_coarse_domain": {
+        "working_states": 599,
+        "added_states": 0,
+        "route_states": 0
+      },
+      "peak_owned_bytes": 546734342,
+      "evaluation_stages_ns": {
+        "model_setup": 1547800,
+        "observation_preparation": 4838700,
+        "pair_discovery": 339823600,
+        "pair_interning": 11228400,
+        "exact_kernel": 202580400,
+        "pair_refinement": 757600200,
+        "pair_partition": 263022100,
+        "pair_quotient_conversion": 42455600,
+        "component_construction": 8562100,
+        "component_solve": 241630600,
+        "finalization": 469931700
+      },
+      "evaluation_max_work_item_ns": 270010500,
+      "evaluation_max_work_item_subphase": "pair_refinement",
+      "evaluation_boundary": {
+        "subphase": "done",
+        "raw_pairs": 31405,
+        "refined_pairs": 14187,
+        "refined_pair_limit": 1215000,
+        "discovery_index_peak_bytes": 163856
+      },
+      "route_defaults": {
+        "paired_default_only": true,
+        "certification": {
+          "mode": "certification_fail_closed",
+          "edges": 99,
+          "source_edges": {
+            "root": 1,
+            "refined_parent": 0,
+            "internal_tree": 98
+          }
+        },
+        "product": {
+          "mode": "product_fail_closed_no_economic_restart",
+          "edges": 99
+        }
+      },
+      "offpolicy_state_classes": {
+        "expected_visits": 0,
+        "classes_truncated_share": 0,
+        "samples": [],
+        "retained": 0,
+        "omitted": 0,
+        "retained_bytes": 0,
+        "limit": 64
+      },
+      "executable": true,
+      "proper": true,
+      "cost_complete": true,
+      "zero_off_policy": true,
+      "cost_reconciled": false,
+      "candidate_retained": true
+    },
+    "strict_lift": {
+      "status": "resource_cap",
+      "failure_reason": "streamed quotient discovery reached memory cap",
+      "resource_cap": "max_estimated_memory_bytes",
+      "global_lower_bound_closed": false
+    },
+    "finalization_stages_ns": {
+      "incumbent_restore": 319800,
+      "extraction_materialization": 67730900,
+      "direct_certification": 2802183400,
+      "strict_lift_total": 114713890100,
+      "strict_carrier_discovery": 80057263400,
+      "strict_partition_refinement": 365902100,
+      "strict_policy_evaluation": 1267311200,
+      "strict_local_reoptimization": 0,
+      "strategy_compilation": 23545600,
+      "exact_graph_evaluation": 2624901500
+    }
+  },
+  "joint": {
+    "attempts": 5,
+    "successes": 0,
+    "last_completed_rows": 63511,
+    "best_upper": null,
+    "last_failure": "resumable_candidate_waiting_for_next_continuation"
+  },
+  "upper_passes": {
+    "requested": 340,
+    "started": 340,
+    "proper": 117,
+    "rejected": 223,
+    "fixed_policy_proofs": 117,
+    "last_failure": "improper_closed_component"
+  },
+  "first_verified_ms": 122611.6518,
+  "events": [
+    {
+      "sequence": 5,
+      "native_elapsed_ms": 6723.2575,
+      "kind": "candidate_captured",
+      "reason": "gated_primitive_destructive_renewal",
+      "candidate_identity": "12191169191983815949",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 0,
+      "completed_rows": 1,
+      "verified_upper": null
+    },
+    {
+      "sequence": 6,
+      "native_elapsed_ms": 6839.5817,
+      "kind": "candidate_captured",
+      "reason": "selected_policy",
+      "candidate_identity": "11850949245056450803",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 0,
+      "completed_rows": 5867,
+      "verified_upper": null
+    },
+    {
+      "sequence": 9,
+      "native_elapsed_ms": 6847.9649,
+      "kind": "candidate_captured",
+      "reason": "partial_upper_plus_destructive_renewal",
+      "candidate_identity": "465683976748270791",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 1,
+      "completed_rows": 5867,
+      "verified_upper": null
+    },
+    {
+      "sequence": 139,
+      "native_elapsed_ms": 13192.8806,
+      "kind": "candidate_blocked",
+      "reason": "missing_completed_row_and_certified_frontier:state=2852:goal_mask=11:broad_expanded=0:is_carrier=0:owner_rows=0:frontier_uses=0",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 3,
+      "completed_rows": 12735,
+      "verified_upper": null
+    },
+    {
+      "sequence": 140,
+      "native_elapsed_ms": 13221.3596,
+      "kind": "candidate_captured",
+      "reason": "partial_upper_plus_destructive_renewal",
+      "candidate_identity": "258583987644483216",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 5,
+      "completed_rows": 12735,
+      "verified_upper": null
+    },
+    {
+      "sequence": 141,
+      "native_elapsed_ms": 13243.7465,
+      "kind": "candidate_captured",
+      "reason": "partial_upper_plus_destructive_renewal",
+      "candidate_identity": "10629403456434961361",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 7,
+      "completed_rows": 12735,
+      "verified_upper": null
+    },
+    {
+      "sequence": 142,
+      "native_elapsed_ms": 13266.7823,
+      "kind": "candidate_captured",
+      "reason": "partial_upper_plus_destructive_renewal",
+      "candidate_identity": "5580728310419316352",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 9,
+      "completed_rows": 12735,
+      "verified_upper": null
+    },
+    {
+      "sequence": 143,
+      "native_elapsed_ms": 13289.3584,
+      "kind": "candidate_captured",
+      "reason": "partial_upper_plus_destructive_renewal",
+      "candidate_identity": "13891907023594821832",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 11,
+      "completed_rows": 12735,
+      "verified_upper": null
+    },
+    {
+      "sequence": 148,
+      "native_elapsed_ms": 14301.8868,
+      "kind": "candidate_blocked",
+      "reason": "resumable_candidate_waiting_for_next_continuation",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 15,
+      "completed_rows": 14378,
+      "verified_upper": null
+    },
+    {
+      "sequence": 157,
+      "native_elapsed_ms": 23532.617,
+      "kind": "candidate_blocked",
+      "reason": "resumable_candidate_waiting_for_next_continuation",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 97,
+      "completed_rows": 24844,
+      "verified_upper": null
+    },
+    {
+      "sequence": 165,
+      "native_elapsed_ms": 45769.2854,
+      "kind": "candidate_blocked",
+      "reason": "resumable_candidate_waiting_for_next_continuation",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 587,
+      "completed_rows": 42681,
+      "verified_upper": null
+    },
+    {
+      "sequence": 186,
+      "native_elapsed_ms": 77993.9412,
+      "kind": "candidate_blocked",
+      "reason": "resumable_candidate_waiting_for_next_continuation",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 629,
+      "completed_rows": 83570,
+      "verified_upper": null
+    },
+    {
+      "sequence": 196,
+      "native_elapsed_ms": 101086.7624,
+      "kind": "candidate_blocked",
+      "reason": "resumable_candidate_waiting_for_next_continuation",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 649,
+      "completed_rows": 99694,
+      "verified_upper": null
+    },
+    {
+      "sequence": 210,
+      "native_elapsed_ms": 122063.7145,
+      "kind": "candidate_captured",
+      "reason": "anytime_reachable_proper_policy",
+      "candidate_identity": "13310160153597805832",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 680,
+      "completed_rows": 112716,
+      "verified_upper": null
+    },
+    {
+      "sequence": 211,
+      "native_elapsed_ms": 122528.8009,
+      "kind": "incumbent_retained",
+      "reason": "selected_coarse_policy",
+      "candidate_identity": "10657236331670898700",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 680,
+      "completed_rows": 112716,
+      "verified_upper": 5218.040949685988
+    },
+    {
+      "sequence": 215,
+      "native_elapsed_ms": 122950.4322,
+      "kind": "check_start",
+      "reason": "selected_core_policy",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 680,
+      "completed_rows": 112716,
+      "verified_upper": 5218.040949685988
+    },
+    {
+      "sequence": 216,
+      "native_elapsed_ms": 125413.6281,
+      "kind": "check_completed",
+      "reason": "selected_core_policy:compiled policy exact cost does not reconcile with the solver value",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 680,
+      "completed_rows": 112716,
+      "verified_upper": 5218.040949685988
+    },
+    {
+      "sequence": 217,
+      "native_elapsed_ms": 125445.9338,
+      "kind": "incumbent_retained",
+      "reason": "direct_compiled_core_policy",
+      "candidate_identity": "910708486785373223",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 680,
+      "completed_rows": 112716,
+      "verified_upper": 5218.040949685988
+    },
+    {
+      "sequence": 219,
+      "native_elapsed_ms": 240280.1945,
+      "kind": "finish_requested",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 680,
+      "completed_rows": 112716,
+      "verified_upper": 5218.040949685988
+    },
+    {
+      "sequence": 221,
+      "native_elapsed_ms": 240295.0621,
+      "kind": "native_done",
+      "reason": "",
+      "candidate_identity": "0",
+      "state_namespace": "outer_calculator",
+      "state": null,
+      "numerical_generation": 680,
+      "completed_rows": 112716,
+      "verified_upper": 5218.040949685988
+    }
+  ]
+}

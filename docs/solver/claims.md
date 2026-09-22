@@ -220,6 +220,7 @@ not promote the general claim's open status or assert native optimality.
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
 - 2026-09-06 — `accepted` — Codex, responsible integration self-review: conditional mathematical argument accepted on the inclusion of permitted proper-policy sets. Statement and preconditions unchanged; no independent reviewer or blanket native correspondence is claimed. Native applications still require the named GAP obligations.
 - 2026-09-12 — `accepted` — Codex, scoped availability application and responsible self-review: the [candidate-coverage argument](mathematics/policies.md#dirty-guidance) distinguishes the generated subset from the caller's unchanged admitted policy scope. Expanded candidates improve native upper search, while correction orders the next construction only. The measured static gain does not imply adaptive superiority or an exact infimum. Statement and preconditions are unchanged.
+- 2026-09-22 — `accepted` — Codex, conditional application: [proposal screening](mathematics/search-and-resumption.md#pruning) cannot derive domination from an upper estimate, and [complementary decisions](mathematics/policies.md#complementary-decisions) explain why an isolated strict-root-improvement filter may miss a joint gain. These finite counterexamples preserve the claim's inclusion premise; they neither diagnose a native false negative nor imply failure of full-domain policy iteration. The [current programme](../active/2026-09-22-ordinary-capability/README.md) keeps source inspection and measurements separate.
 
 <a id="clm-0010"></a>
 ## CLM-0010 — Independent lowers compose by maximum; sums need a cost argument
@@ -504,6 +505,7 @@ removal of action coverage or promotion of an auxiliary optimum to a native uppe
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
 - 2026-09-15 — `open` — Codex, measurement contract: [staged work](mathematics/search-and-resumption.md#cooperative-preparation) induction establishes safety only. Begin, stepped latency, cancellation/release and usable delivery are distinct empirical gates, independent of unchanged 240-second Finish and policy quality. Programme results do not establish general liveness or latency.
+- 2026-09-22 — `open` — Codex, scoped measurement distinction: [first verified Finish versus unattended quality](mathematics/search-and-resumption.md#interruptible-verified-results) samples different sets of completed policy evidence. The [fresh native and actual Calculator controls](../active/2026-09-22-ordinary-capability/README.md) confirm a bounded-quality gap despite fixed-graph compatibility. No general discovery, exactness or response guarantee follows; the ordinary call gate remains failed.
 
 
 <a id="clm-0023"></a>

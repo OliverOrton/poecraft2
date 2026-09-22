@@ -1,0 +1,28 @@
+{
+  "schema": "poecraft2_ci_read_observations_v1",
+  "ref": "343b6155fa1594ced4914858f1b25aca1e048e48",
+  "review_date": "2026-09-22",
+  "read_only": true,
+  "triggered_workflows": false,
+  "runs": [
+    {
+      "id": 35744513345,
+      "name": "Windows",
+      "status": "completed",
+      "conclusion": "success",
+      "job_id": 106802509123,
+      "build_step": "success",
+      "test_step": "success",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35744513345"
+    },
+    {
+      "id": 35744513341,
+      "name": "Solver knowledge",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35744513341"
+    }
+  ],
+  "scope": "Workflow and job metadata read; no logs downloaded for passing run, no local independent qualification performed.",
+  "review_packet_finalized_utc": "2026-09-22T15:36:12.325813+00:00"
+}

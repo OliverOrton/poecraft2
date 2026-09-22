@@ -1,0 +1,73 @@
+{
+  "same_base_level_goal_actions_prices": true,
+  "price_keys": 864,
+  "action_count": 21,
+  "native_input_caps": {
+    "solve_profile": "calculator_product_v1",
+    "max_states": 200000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 8,
+    "max_discovered_states": 200000,
+    "max_expanded_states": 200000,
+    "max_state_action_rows": 1215000,
+    "max_transitions": 10000000,
+    "max_reforge_work": 50000000,
+    "max_solver_owned_bytes": 1073741824,
+    "max_diagnostic_samples": 64,
+    "max_telemetry_json_bytes": 2097152,
+    "max_compiled_nodes": 100000,
+    "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864,
+    "worker_step_ms": 250,
+    "cancel_ack_ms": 250,
+    "full_evidence": true
+  },
+  "native_profile": {
+    "status": "complete",
+    "phase": "done",
+    "solution_scope": "direct_certified_core_policy_bounded",
+    "solve_profile": {
+      "id": "calculator_product_v1",
+      "override_mask": 0
+    },
+    "native_continuation_search": "ordinary",
+    "configured_candidate_evaluation_limits": {
+      "max_states": 0,
+      "max_pairs": 0,
+      "max_transitions": 0,
+      "max_owned_bytes": 0
+    }
+  },
+  "wasm_profile": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 5322.492987625119,
+    "expanded_states": 6315,
+    "sweeps": 0,
+    "residual": 1.2732925824820995e-11,
+    "skipped_actions": 0,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "lower_bound": 198.8334996747695,
+    "upper_bound": 5218.040949685988,
+    "evaluated_policy_cost": 5218.040949685988,
+    "absolute_optimality_gap": 5019.2074500112185,
+    "relative_optimality_gap": 25.243268655538927,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "registry_actions": 180,
+    "candidate_actions": 21,
+    "evaluator_supported_actions": 21,
+    "supported_priced_actions": 302,
+    "skipped_missing_price_actions": 0,
+    "skipped_unsupported_actions": 0,
+    "cancelled": false
+  },
+  "clock_difference": "native fixed maximum 8 work units vs actual adaptive worker <=8 with browser yields; requested 240 seconds; both ordinary and retention reuse",
+  "metadata_difference": "WASM effective snapshot id includes pinned manual profile; all price keys and values match"
+}

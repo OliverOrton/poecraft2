@@ -1,0 +1,83 @@
+diff --git a/engine/src/solver_solve_constructive.cpp b/engine/src/solver_solve_constructive.cpp
+index 38ea32a..e64e35d 100644
+--- a/engine/src/solver_solve_constructive.cpp
++++ b/engine/src/solver_solve_constructive.cpp
+@@ -4116,6 +4116,28 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
+     const std::uint64_t no_row =
+         std::numeric_limits<std::uint64_t>::max();
+     if (state >= transition_cache->state_rows.size()) return no_row;
++    if (options.high_impact_executable_uppers && output_incumbent &&
++        unverified_selected_policy_candidate) {
++        // Preserve a captured setup prefix when proposing a joint policy.
++        // Progress-per-attempt alone can replace a goal-neutral setup by a
++        // costly redraw. This is a row preference, never a boundary value:
++        // the joint walk still closes every positive exit, evaluates its own
++        // policy and submits the complete native graph for independent checking.
++        const auto& selected = unverified_selected_policy_candidate->snapshot;
++        if (state < selected.policy_rows.size() &&
++            state < selected.policy_reachable.size() &&
++            selected.policy_reachable[state] &&
++            state < selected.policy.size() &&
++            state < selected.policy_row_costs.size()) {
++            const auto row = selected.policy_rows[state];
++            if (joint_policy_row_completed(row) &&
++                transition_cache->rows[row].owner_state == state &&
++                priced_rows[row].operator_index == selected.policy[state].index &&
++                priced_rows[row].cost == selected.policy_row_costs[state]) {
++                return row;
++            }
++        }
++    }
+     const bool first_policy = options.high_impact_executable_uppers &&
+         incremental_action_generation && !output_incumbent.has_value();
+     const auto goal_probability = [&](const std::uint64_t row_index) {
+@@ -4590,6 +4612,12 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
+             return false;
+         }
+ 
++        if (options.high_impact_executable_uppers && output_incumbent &&
++            unverified_selected_policy_candidate) {
++            record_progress_event("proposal_seed", "captured_selected_rows",
++                unverified_selected_policy_candidate->capture_identity);
++        }
++
+         ResumableJointPolicyAdvance continuation_advance =
+             ResumableJointPolicyAdvance::NoProgress;
+         if (!require_resource_stop) {
+diff --git a/engine/tests/test_solver_solve.cpp b/engine/tests/test_solver_solve.cpp
+index 931087c..ed87b14 100644
+--- a/engine/tests/test_solver_solve.cpp
++++ b/engine/tests/test_solver_solve.cpp
+@@ -2177,6 +2177,32 @@ void run_first_proper_candidate_retention_tests() {
+             std::numeric_limits<std::uint64_t>::max());
+         PC_CHECK(work.priced_rows[candidate.policy_rows[work.result.start_state]]
+             .operator_index == annul);
++        // A captured setup is proposal evidence only. Prefer its actual native
++        // row over a progress-ranked seed, without borrowing its values or
++        // treating the missing Normal continuation as a terminal.
++        SolveWorkTestAccess::Impl::UnverifiedSelectedPolicyCandidate selected;
++        selected.snapshot = candidate;
++        const auto root = work.result.start_state;
++        const auto scour_row = work.priced_rows.size() - 1;
++        PC_CHECK(work.priced_rows[scour_row].operator_index == scour);
++        selected.snapshot.policy_rows[root] = scour_row;
++        selected.snapshot.policy_reachable[root] = 1;
++        selected.snapshot.policy[root] = {PlannerOperatorKind::Primitive, scour};
++        selected.snapshot.policy_row_costs[root] = .001;
++        selected.snapshot.values[root] = 0; // Not an executable tail or upper.
++        work.unverified_selected_policy_candidate = selected;
++        const auto original_values = work.result.values;
++        PC_CHECK(work.select_joint_policy_seed_row(root, original_values) == scour_row);
++        PC_CHECK(work.select_joint_policy_seed_row(root, original_values) == scour_row);
++        PC_CHECK(work.result.values == original_values);
++        PC_CHECK(!work.try_install_reachable_incumbent(false));
++        PC_CHECK(!work.incremental_anytime_missing_frontier_states.empty());
++        PC_CHECK(!work.output_incumbent->independently_evaluated);
++        // Changed row identity/price removes the preference; ordinary native
++        // proposal order still applies and no stored value becomes authority.
++        work.unverified_selected_policy_candidate->snapshot.policy_row_costs[root] = 5;
++        PC_CHECK(work.select_joint_policy_seed_row(root, original_values) != scour_row);
++        work.unverified_selected_policy_candidate.reset();
+         work.incremental_upper_policy_dirty = true;
+         PC_CHECK(work.begin_incremental_upper_policy_pass());
+         PC_CHECK(!std::isfinite(work.result.values.back()));

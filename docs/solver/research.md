@@ -126,6 +126,17 @@ according to their individual histories; the living record owns run chronology.
 <a id="rq-003"></a>
 ### RQ-003 — Can executable-policy quality be preserved while proof work scales?
 
+The [September 22 capability programme](../active/2026-09-22-ordinary-capability/README.md)
+measures the current ordinary gap with matched base/goal/action/pricing scope:
+native Conquest-four C3746.1319409485764 versus actual unattended Calculator
+C5218.040949685988. Two current-run proof handoffs find no cheaper candidate;
+two captured-row/root seed variants regress the native policy and are removed.
+Only the unattended probe and mathematical/measurement clarification are retained.
+Full recovery and the 20% browser improvement target remain unmet. The exact
+Regalia probe control passes; no treatment WASM or generalization win is claimed.
+The programme stops at its two-variant gate, preserving existing native and
+browser defaults and the failed ordinary-response measurements.
+
 The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
 applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)
 to explicit Finish and frozen request export, and attributes setup latency. Its activation

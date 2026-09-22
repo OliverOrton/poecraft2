@@ -10,6 +10,19 @@ This page describes how the current work owners cooperate. [Search and resumptio
 
 The ordinary ladder remains the planner. Candidate-local continuation is retained state from one ordinary joint-policy attempt, not a second planner or a permanent fragment library.
 
+The [September 22 ordinary capability comparison](../active/2026-09-22-ordinary-capability/README.md)
+finds current native Conquest-four C3746.13 versus actual unattended Calculator
+C5218.04 at the unchanged four-minute boundary. Early proof handoffs check the
+selected C5218.04 controller and more expensive renewal/joint controllers; they
+do not establish a useful source-screen false negative. Two joint-seed variants
+prefer captured selected rows, then only a captured primitive root action. Both
+return the more expensive C5218.04 native policy and are removed. Their failures
+name fixed-option closure and an unexpanded selected frontier. A captured coarse
+setup and additional completed rows do not by themselves supply complete native
+continuations. No exceptional-check slot or new scheduler treatment is retained.
+First verification timing does not replace the
+[unattended final-quality contract](benchmarking.md).
+
 Primary owners are `solver_solve.cpp`, `solver_solve_expand.cpp`, `solver_solve_incremental.cpp`, `solver_solve_focused.cpp`, `solver_solve_priority.cpp`, `solver_solve_bellman.cpp`, `solver_sparse_policy.cpp`, and the joint-policy continuation owner.
 
 ## Ordering Versus Proof

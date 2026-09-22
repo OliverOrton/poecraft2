@@ -1,0 +1,90 @@
+{
+  "admission": {
+    "available_physical": 38029942784,
+    "available_commit": 18800226304,
+    "reserved": 7516192768,
+    "outside": 13681888461
+  },
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 58720,
+    "process_identity_token": "58720:134345674817075203",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 901.0622000787407
+  },
+  "evaluation_file": "out\\ordinary-capability\\C0-wasm\\independent-evaluation.json",
+  "evaluation_sha256": "87a57c85bf0db4dbb692b38142a81d895a88dc8911c3263cd1d29280e2a9f45e",
+  "wall_ms": 598.1241000117734,
+  "result_keys": [
+    "version",
+    "converged",
+    "sweeps",
+    "residual_mass",
+    "terminals",
+    "unresolved_by_node",
+    "observation_propagation",
+    "operation_row_census",
+    "failures_by_node",
+    "expected_actions",
+    "expected_consumption",
+    "accounting",
+    "memory",
+    "reforge_resource_accounting",
+    "targets",
+    "nodes",
+    "edges"
+  ],
+  "evaluation": {
+    "converged": true,
+    "terminals": {
+      "success": 1,
+      "failure": 0,
+      "stop": 0,
+      "action_not_applied": 0,
+      "no_matching_edge": 0,
+      "unresolved": 0,
+      "by_node": [
+        {
+          "node_id": "goal",
+          "kind": "success",
+          "p": 1
+        },
+        {
+          "node_id": "offpolicy",
+          "kind": "failure",
+          "p": 0
+        }
+      ]
+    },
+    "expected_actions": 14152.339714597101,
+    "known_expected_cost": 5218.040949685984,
+    "total_expected_cost": 5218.040949685984,
+    "cost_complete": true,
+    "reconciliation": {
+      "action_descriptor_visits_difference": 1.0913936421275139e-11,
+      "action_descriptor_applied_difference": -1.8189894035458565e-12,
+      "node_operation_visits_difference": 1.2732925824820995e-11,
+      "material_quantity_differences": {
+        "alteration": -9.094947017729282e-13,
+        "annul": 0,
+        "augment": 0,
+        "base": 0,
+        "eldritch_annul": 0,
+        "eldritch_ichor:1": 0,
+        "exalt": 0,
+        "fracture": 0,
+        "regal": 0,
+        "scour": 0,
+        "transmute": 0
+      },
+      "cost_dot_product_difference": 0,
+      "section_actions_difference": 0,
+      "section_material_differences": {}
+    }
+  }
+}

@@ -11,10 +11,12 @@ import { EngineClient } from "../src/app/engine-client";
 import { loadSolverBenchmarkCorpus, materializeSolverBenchmarkEconomy,
     validateCorpusArtifactPins } from "./solver-benchmark-corpus";
 import { getPrices, setPrice, setFallbackPrice } from "../src/app/workspace/prices";
+import { finishVerifiedCalculatorProbe } from "./calculator-delivery-probe-control";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [caseId, output, control = "finish", repeatText = "1"] = process.argv.slice(2);
-assert.ok(caseId && output && ["finish", "cancel_setup", "cancel_retention", "cancel_compile"].includes(control));
+assert.ok(caseId && output && ["finish", "default_finish", "cancel_setup", "cancel_retention", "cancel_compile"].includes(control));
+const expectsDelivery = control === "finish" || control === "default_finish";
 const repetitions = Number(repeatText);
 assert.ok(repetitions === 1 || repetitions === 2);
 assert.ok(repetitions === 1 || output.endsWith(".json"));
@@ -90,9 +92,8 @@ try {
     fields.renderSolvePanel = () => {
         render();
         if (intent) return;
-        const button = calculator.querySelector<HTMLButtonElement>('[data-solve-cmd="finish"]');
-        if (control === "finish" && button && !button.disabled) {
-            intent = true; button.click();
+        if (finishVerifiedCalculatorProbe(control, calculator)) {
+            intent = true;
         } else if (control === "cancel_setup" && fields.solveDeliveryStage === "worker_solve_requested") {
             intent = true;
             setTimeout(() => {
@@ -125,8 +126,14 @@ try {
         probeError = error instanceof Error ? error.message : String(error);
     }
     const trace = fields.solveProgressExport;
+    // Read bounded final diagnostics after actual delivery. This does not add
+    // polling or checker work to the measured solve/Finish-to-usable interval.
+    const diagnosticsStarted = performance.now();
+    const finalTelemetry = expectsDelivery && trace?.status === "completed"
+        ? await client.solverTelemetry(solver) : null;
+    const finalTelemetryReadMs = performance.now() - diagnosticsStarted;
     const graphText = nativeGraph === null ? null : typeof nativeGraph === "string" ? nativeGraph : JSON.stringify(nativeGraph);
-    const report = {case_id: caseId, control, repetition, runtime_warm: repetition > 0,
+    const report = {case_id: caseId, control, probe_control_intent: intent, repetition, runtime_warm: repetition > 0,
         runtime_versions: process.versions,
         cache_context: "same runtime; fresh native data, session, item and solver handles on each repetition",
         environment: "linkedom actual Calculator + node-worker_threads WASM",
@@ -134,14 +141,20 @@ try {
         trace, solve_summary: fields.solveSummary, error: fields.solveError,
         usable_strategy: !!fields.solvedStrategy, graph_sha256: graphText === null ? null : createHash("sha256").update(graphText).digest("hex"),
         graph: nativeGraph, probe_error: probeError, release_telemetry: releaseTelemetry,
-        release_telemetry_read_ms: releaseTelemetryReadMs, control_boundary: controlBoundary};
+        release_telemetry_read_ms: releaseTelemetryReadMs, control_boundary: controlBoundary,
+        final_telemetry: finalTelemetry, final_telemetry_read_ms: finalTelemetryReadMs};
     writeFileSync(repetition === 0 ? output : output.replace(/\.json$/, ".warm.json"),
         JSON.stringify(report, null, 2)+"\n");
     console.log(JSON.stringify({case_id: caseId, control, status: trace?.status, usable: report.usable_strategy,
         error: report.error, probe_error: probeError, ui_milestones: trace?.ui_milestones}));
     assert.equal(probeError, null);
-    assert.equal(trace?.status, control === "finish" ? "completed" : "cancelled");
-    assert.equal(report.usable_strategy, control === "finish");
+    assert.equal(trace?.status, expectsDelivery ? "completed" : "cancelled");
+    assert.equal(report.usable_strategy, expectsDelivery);
+    if (control === "default_finish") {
+        assert.equal(intent, false);
+        assert.equal(trace.request.bounded_finish_after_ms, 240000);
+        assert.ok(!trace.ui_milestones.some((entry: {stage: string}) => entry.stage === "finish_intent"));
+    }
     if (control === "cancel_compile") assert.ok(controlBoundary);
 } finally {
     if (solver) await client.closeSolver(solver);

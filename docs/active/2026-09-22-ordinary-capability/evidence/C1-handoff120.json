@@ -1,0 +1,101 @@
+{
+  "diagnostic_only": true,
+  "number": 2,
+  "purpose": "Current ordinary restricted candidate after the saved named support received further native service; handoff at 120 seconds requests no new actions or capacity. Checks retain their native internal allowances. This is not a product result.",
+  "command": [
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\baseline-343b615\\poecraft_solver_benchmark.exe",
+    "--artifact",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+    "--corpus",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+    "--output",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\C1-handoff120\\report.json",
+    "--partial-output",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\C1-handoff120\\partial.json",
+    "--strategy-output",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\C1-handoff120\\strategies",
+    "--case",
+    "cb02-cross-base-product8-long240",
+    "--skip-verification",
+    "--exact-strategy-evaluation",
+    "--native-retention-diagnostic",
+    "reuse",
+    "--proof-handoff-seconds",
+    "120"
+  ],
+  "admission": {
+    "physical": 38157189120,
+    "commit": 18844446720,
+    "reserved": 7516192768,
+    "outside": 13681888461
+  },
+  "baseline_executable_sha256": "3ac79d0dc76ce69152a3cb50d2b50955be51bc98b1d90fba169628fbe40b62fd",
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 30128,
+    "process_identity_token": "30128:134345679131986861",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 242205.71170002222
+  },
+  "result": {
+    "policy": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 5322.492987625119,
+      "expanded_states": 6067,
+      "sweeps": 2,
+      "residual": 1.2732925824820995e-11,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "refused_resource_cap",
+      "stop_cause": "memory_cap",
+      "cap_hit_mask": 4,
+      "action_counts": {
+        "registry": 180,
+        "candidate": 21,
+        "evaluator_supported": 21,
+        "supported_priced": 302,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 198.8334996747695,
+      "upper_bound": 5218.040949685988,
+      "evaluated_policy_cost": 5218.040949685988,
+      "absolute_optimality_gap": 5019.2074500112185,
+      "relative_optimality_gap": 25.243268655538927,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "handoff": null,
+    "evaluation": {
+      "completed": true,
+      "time_limited": false,
+      "status": "matched",
+      "wall_ms": 191.7599,
+      "converged": true,
+      "cost_complete": true,
+      "zero_off_policy_mass": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "total_expected_cost": 5218.040949685988,
+      "solver_cost_delta_absolute": 0,
+      "solver_cost_delta_relative": 0
+    },
+    "graph": {
+      "nodes": 65,
+      "edges": 182,
+      "strategy_json_bytes": 189413,
+      "strategy_output_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\C1-handoff120\\strategies\\cb02-cross-base-product8-long240.strategy.json"
+    },
+    "graph_sha256": "e506b8a14c642281eeca221472ce46a01a6ab4533210da60fd6427ffc73a20c6"
+  }
+}

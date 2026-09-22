@@ -1,0 +1,185 @@
+{
+  "source_report": "out\\ordinary-capability\\native-comparison.full.json",
+  "source_sha256": "d46493233fff26b8909fcf1deffa590cb25bb23dfe324454f427284035386786",
+  "source_schema_version": "bounded_policy_stratified_report_v2",
+  "projection": "Existing reporter comparison pairs only; full run summaries and repeated distributions stay with bulk evidence. Reporter regression labels are descriptive; the programme rejects both final-cost increases.",
+  "comparisons": [
+    {
+      "baseline": "base",
+      "candidate": "v1",
+      "excluded": [],
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "paired_cases": 1,
+      "pairs": [
+        {
+          "baseline_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "compiled_edges": -2018.0,
+            "compiled_nodes": -746.0,
+            "expanded_states": -6006.0,
+            "final_absolute_gap": 1471.9090087374116,
+            "final_lower_bound": 0.0,
+            "final_relative_gap": 7.402721428456484,
+            "final_upper_bound": 1471.909008737412,
+            "peak_memory_bytes": -289035654.0,
+            "reforge_work": -4953338.0,
+            "rows": -99551.0,
+            "solve_ms": -36.05350000000908,
+            "solve_step_max_ms": 682.6412,
+            "solve_step_median_ms": -0.00010000000000000005,
+            "solve_step_p95_ms": 0.006699999999999999,
+            "states": -6006.0,
+            "strategy_json_bytes": -1318383.0,
+            "time_to_incumbent_ms": -146245.4623,
+            "time_to_target_ms": null,
+            "transitions": -137400.0,
+            "wall_ms": -2557.0646000000124
+          },
+          "dimensions": {
+            "base": "Conquest Lamellar",
+            "base_class": "Body Armour / Conquest Lamellar",
+            "class": "Body Armour",
+            "evaluation_role": "unassigned",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "natural_t1_count": "4",
+            "observation_status": "completed",
+            "policy_status": "bounded_feasible",
+            "pool_density": "unknown",
+            "side_mix": "unknown",
+            "termination": "requested_bounded_finish"
+          },
+          "id": "cb02-cross-base-product8-long240",
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\baseline-343b615\\poecraft_solver_benchmark.exe",
+              "sha256": "3ac79d0dc76ce69152a3cb50d2b50955be51bc98b1d90fba169628fbe40b62fd"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+              "sha256": "4a1afaa4a548df765899ebde7b38aed0fc6f5f65a9f962bab98004e976b864d0"
+            }
+          }
+        }
+      ],
+      "regressions": [],
+      "shared_case_ids": 1,
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      }
+    },
+    {
+      "baseline": "base",
+      "candidate": "v2",
+      "excluded": [],
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "paired_cases": 1,
+      "pairs": [
+        {
+          "baseline_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "bounded_feasible",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "compiled_edges": -2018.0,
+            "compiled_nodes": -746.0,
+            "expanded_states": -6006.0,
+            "final_absolute_gap": 1471.9090087374116,
+            "final_lower_bound": 0.0,
+            "final_relative_gap": 7.402721428456484,
+            "final_upper_bound": 1471.909008737412,
+            "peak_memory_bytes": 118993527.0,
+            "reforge_work": -918243.0,
+            "rows": 2376.0,
+            "solve_ms": 1736.2748999999894,
+            "solve_step_max_ms": -339.51839999999993,
+            "solve_step_median_ms": 0.0,
+            "solve_step_p95_ms": -0.00010000000000000026,
+            "states": -6006.0,
+            "strategy_json_bytes": -1318383.0,
+            "time_to_incumbent_ms": -21612.663900000014,
+            "time_to_target_ms": null,
+            "transitions": 3143.0,
+            "wall_ms": -454.7155999999959
+          },
+          "dimensions": {
+            "base": "Conquest Lamellar",
+            "base_class": "Body Armour / Conquest Lamellar",
+            "class": "Body Armour",
+            "evaluation_role": "unassigned",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "natural_t1_count": "4",
+            "observation_status": "completed",
+            "policy_status": "bounded_feasible",
+            "pool_density": "unknown",
+            "side_mix": "unknown",
+            "termination": "requested_bounded_finish"
+          },
+          "id": "cb02-cross-base-product8-long240",
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\baseline-343b615\\poecraft_solver_benchmark.exe",
+              "sha256": "3ac79d0dc76ce69152a3cb50d2b50955be51bc98b1d90fba169628fbe40b62fd"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+              "sha256": "de5cadeae7af038298a5dd2c50be225fe4a4bcc10fdce23e61a01fe984c3f41f"
+            }
+          }
+        }
+      ],
+      "regressions": [
+        {
+          "deltas": {
+            "compiled_edges": -2018.0,
+            "compiled_nodes": -746.0,
+            "expanded_states": -6006.0,
+            "final_absolute_gap": 1471.9090087374116,
+            "final_lower_bound": 0.0,
+            "final_relative_gap": 7.402721428456484,
+            "final_upper_bound": 1471.909008737412,
+            "peak_memory_bytes": 118993527.0,
+            "reforge_work": -918243.0,
+            "rows": 2376.0,
+            "solve_ms": 1736.2748999999894,
+            "solve_step_max_ms": -339.51839999999993,
+            "solve_step_median_ms": 0.0,
+            "solve_step_p95_ms": -0.00010000000000000026,
+            "states": -6006.0,
+            "strategy_json_bytes": -1318383.0,
+            "time_to_incumbent_ms": -21612.663900000014,
+            "time_to_target_ms": null,
+            "transitions": 3143.0,
+            "wall_ms": -454.7155999999959
+          },
+          "id": "cb02-cross-base-product8-long240",
+          "reasons": [
+            "peak_memory_gt_10_percent"
+          ]
+        }
+      ],
+      "shared_case_ids": 1,
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      }
+    }
+  ]
+}

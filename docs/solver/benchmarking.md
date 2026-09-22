@@ -274,6 +274,17 @@ being mistaken for lifetime work or verified policy cost.
 The existing `apps/web/test/calculator-delivery-probe.ts` accepts an optional
 fourth argument `2` for a fresh-solver warm repeat in the same worker/module;
 it writes `.warm.json` alongside the cold report and records runtime versions.
+Its third argument `finish` requests manual Finish at the first enabled verified
+policy, measuring first-result service. `default_finish` sends no manual control
+and lets the unchanged Calculator 240-second deadline operate, measuring ordinary
+unattended quality. An earlier natural completion remains possible. Neither mode
+changes production scheduling, action scope or caps. Compare treatments within
+one runtime on matched requests; native/worker comparisons additionally disclose
+actual activation, stepping and checker headroom. External saved-graph evaluation
+is a separate compatibility witness and does not establish product discovery.
+The probe reads the existing bounded final telemetry once after actual delivery;
+its separately reported read time is outside the solve and Finish-to-usable
+intervals. This is not another solve-time observation loop.
 `cancel_compile` synchronizes cancellation on the observed initial-candidate
 compilation return, retaining that native identity/sequence and full release
 telemetry. It does not inject a message into executing WASM. Existing setup and

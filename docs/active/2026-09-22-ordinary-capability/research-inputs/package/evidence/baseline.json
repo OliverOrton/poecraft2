@@ -1,0 +1,152 @@
+{
+  "schema": "poecraft2_capability_plan_baseline_v1",
+  "reviewed_ref": "343b6155fa1594ced4914858f1b25aca1e048e48",
+  "review_date": "2026-09-22",
+  "scope": "Recorded repository facts plus explicit unknown current C4 unattended baseline; no new native measurements",
+  "current_programme": "docs/active/2026-09-21-first-policy-service/README.md",
+  "latest_recorded_cold_controls": {
+    "baseline_ordinary_max_ms": [
+      366.25,
+      376.76
+    ],
+    "candidate_ordinary_max_ms": [
+      308.36,
+      303.69
+    ],
+    "candidate_warm_max_ms": 300.39,
+    "ordinary_gate_ms": 250,
+    "ordinary_gate_pass": false,
+    "candidate_begin_ms": [
+      2.29,
+      2.39
+    ],
+    "candidate_setup_max_ms": [
+      31.27,
+      25.44
+    ],
+    "candidate_first_verified_observation_s": [
+      42.867,
+      43.574
+    ],
+    "candidate_finish_to_usable_s": [
+      0.39,
+      0.406
+    ],
+    "candidate_request_to_usable_s": [
+      43.263,
+      43.986
+    ],
+    "candidate_compilation_return_cancel_ms": [
+      127.82,
+      112.03
+    ],
+    "source": "current programme final r3 table; values rounded as documented, not fresh timings"
+  },
+  "policies": {
+    "conquest_four_native_reference": {
+      "cost": 3746.1319409485764,
+      "expected_primitive_actions": 8608.881793656798,
+      "nodes": 811,
+      "edges": 2200,
+      "graph_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+      "status": "historical native reference; fixed graph runtime-compatible under S1 profile"
+    },
+    "conquest_four_browser_reference": {
+      "cost": 5218.040949685988,
+      "expected_primitive_actions": 14152.339714597114,
+      "nodes": 65,
+      "edges": 182,
+      "status": "historical distinct browser reference, NOT current-main unattended baseline"
+    },
+    "conquest_four_current_unattended": {
+      "cost": null,
+      "graph_sha256": null,
+      "status": "not measured in this review; C0 required"
+    },
+    "conquest_five": {
+      "cost": 85558.70618560436,
+      "expected_primitive_actions": 8407.202314771383,
+      "lower": 405.3694021063399,
+      "graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+      "status": "current recorded native bounded preservation"
+    },
+    "bow_four": {
+      "cost": 12770.827062219498,
+      "expected_primitive_actions": 66914.72854184538,
+      "status": "historical qualified native profile; not current ordinary-browser evidence"
+    },
+    "ring_four": {
+      "cost": 220743.46354691702,
+      "expected_primitive_actions": 564673.7576801107,
+      "status": "historical wide native execution-count qualified; not public static/browser claim"
+    },
+    "amulet": {
+      "cost": 12541.579648544115,
+      "expected_primitive_actions": 25518.491313143768,
+      "status": "historical qualified wide native profile"
+    },
+    "regalia": {
+      "cost": 65.60036144971359,
+      "expected_primitive_actions": 127.11597414558129,
+      "status": "exact control; current r2 evidence reused by r3 scope"
+    }
+  },
+  "historical_c4_accounting": {
+    "alteration": {
+      "native_count": 5027.968272553488,
+      "browser_count": 8051.460187262977,
+      "native_spend": 769.2791457006836,
+      "browser_spend": 1231.8734086512354
+    },
+    "annul": {
+      "native_count": 32.59456755083028,
+      "browser_count": 66.64766822394884,
+      "native_spend": 315.8413595675454,
+      "browser_spend": 645.8159050900642
+    },
+    "exalt": {
+      "native_count": 333.0663466006782,
+      "browser_count": 623.0782028661393,
+      "native_spend": 589.5274334832004,
+      "browser_spend": 1102.8484190730667
+    },
+    "fracture": {
+      "native_count": 3.9975210114420374,
+      "browser_count": 4.00000000000013,
+      "native_spend": 1619.3957617351693,
+      "browser_spend": 1620.4000000000526
+    }
+  },
+  "comparison_profiles": {
+    "product_case_path": "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb02-cross-base-product8-long240.json",
+    "product_finish_s": 240,
+    "native_watchdog_s": 300,
+    "host_timeout_s": 315,
+    "product_step_max": 8,
+    "product_max_discovered_states": 200000,
+    "product_max_expanded_states": 200000,
+    "product_max_rows": 1215000,
+    "product_max_transitions": 10000000,
+    "product_max_reforge_work": 50000000,
+    "product_aggregate_bytes": 1073741824,
+    "independent_reference_eval": {
+      "max_states": 1000000,
+      "max_pairs": 5000000,
+      "max_transitions": 20000000,
+      "max_owned_bytes": 1073741824,
+      "note": "external qualification limits, not automatic internal candidate allowances"
+    },
+    "abs_comparison_tolerance": 1e-07,
+    "rel_comparison_tolerance": 1e-09
+  },
+  "selected_scope": "C0-C4 capability; no ordinary replay-partition rewrite unless witnessed blocker",
+  "proposed_targets": {
+    "full_recovery_cost": 3746.1319409485764,
+    "material_partial_relative_improvement": 0.2,
+    "separate_time_target_improvement": 0.1,
+    "exceptional_check_slots_initial": 1,
+    "max_diagnostic_candidate_checks": 3,
+    "max_substantive_failed_variants": 2
+  },
+  "review_packet_finalized_utc": "2026-09-22T15:36:12.325813+00:00"
+}
