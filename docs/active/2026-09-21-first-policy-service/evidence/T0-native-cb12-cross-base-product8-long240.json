@@ -1,0 +1,468 @@
+{
+  "case": {
+    "case_id": "cb12-cross-base-product8-long240",
+    "command": {
+      "argv": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-binaries\\poecraft_solver_benchmark.exe",
+        "--artifact",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "--corpus",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+        "--output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-cb12-cross-base-product8-long240\\cases\\cb12-cross-base-product8-long240.json",
+        "--partial-output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-cb12-cross-base-product8-long240\\partials\\cb12-cross-base-product8-long240.preflight.json",
+        "--strategy-output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-cb12-cross-base-product8-long240\\strategies",
+        "--case",
+        "cb12-cross-base-product8-long240",
+        "--skip-verification",
+        "--exact-strategy-evaluation",
+        "--native-retention-diagnostic",
+        "reuse"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+    },
+    "paths": {
+      "attempt_id": "preflight",
+      "attempt_directory": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-cb12-cross-base-product8-long240",
+      "report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-cb12-cross-base-product8-long240\\cases\\cb12-cross-base-product8-long240.json",
+      "partial_report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-cb12-cross-base-product8-long240\\partials\\cb12-cross-base-product8-long240.preflight.json",
+      "strategy_output_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-cb12-cross-base-product8-long240\\strategies",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-cb12-cross-base-product8-long240\\logs\\cb12-cross-base-product8-long240.log"
+    },
+    "watchdog_seconds": 315.0,
+    "reservation": {
+      "solver_owned_cap_bytes": 1073741824,
+      "worker_headroom_bytes": 6442450944,
+      "policy_version": "solver_lab_host_reservation_v2"
+    }
+  },
+  "identity": {
+    "corpus": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "sha256": "4f8d6ec386e7b65a8a1975bf762e9da020a3a3593c0dbc6d861de7372264c9fe",
+      "corpus_id": "cross-base-capability-recovery-core-v1",
+      "schema_version": "solver_benchmark_corpus_v1",
+      "generator_config_sha256": null
+    },
+    "artifact": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+      "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+      "declared_files_verified": true,
+      "files": [
+        {
+          "path": "game-data.json",
+          "size_bytes": 16439442,
+          "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+        },
+        {
+          "path": "strings.json",
+          "size_bytes": 6534428,
+          "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      ],
+      "identity": {
+        "artifact_schema_version": 4,
+        "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+        "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+        "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+      }
+    },
+    "executable": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-binaries\\poecraft_solver_benchmark.exe",
+      "sha256": "62d4fc6944a0d4abe4bbee514b07e27d52f704b3dcc020e175ac6f5abf9f9bb9"
+    },
+    "machine": {
+      "system": "Windows",
+      "release": "11",
+      "machine": "AMD64",
+      "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "logical_cpu_count": 24,
+      "python": "3.14.2"
+    },
+    "source": {
+      "commit": "a48f055ccc07751807c334386f1fd25c6b4717de",
+      "dirty": true,
+      "dirty_paths": [
+        {
+          "status": " M",
+          "path": "HANDOFF.md"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/claims.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/lower-pruning.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/mathematics/lower-bounds.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/mathematics/search-and-resumption.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/publication.md"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_bellman.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_bounds.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_carrier_pattern.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_constructive.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_finish.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_telemetry.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_types.hpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_main.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_solver_api.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_solver_s8_3.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_solver_solve.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/tests.hpp"
+        },
+        {
+          "status": "M ",
+          "path": "github/workflows/windows.yml"
+        }
+      ]
+    }
+  },
+  "patch_sha256": "63054e34bdf646afddc186b149862ccf7a6252d1bb91fcc621ae5a6b597d429f",
+  "admission": {
+    "physical": 39140626432,
+    "commit": 18908786688,
+    "reserved": 7516192768,
+    "outside": 13681888461,
+    "admitted": true
+  },
+  "result": {
+    "case": "cb12-cross-base-product8-long240",
+    "status": "converged",
+    "errors": [],
+    "policy": {
+      "converged": true,
+      "start_state": 0,
+      "start_value": 65.60036144971359,
+      "expanded_states": 1826,
+      "sweeps": 12,
+      "residual": 1.4210854715202004e-14,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "exact",
+      "termination": "exact_closed",
+      "stop_cause": "exact_closed",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 158,
+        "candidate": 21,
+        "evaluator_supported": 21,
+        "supported_priced": 74,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 65.60036144971359,
+      "upper_bound": 65.60036144971359,
+      "evaluated_policy_cost": 65.60036144971359,
+      "absolute_optimality_gap": 0,
+      "relative_optimality_gap": 0,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "evaluation": {
+      "completed": true,
+      "converged": true,
+      "cost_complete": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "zero_off_policy_mass": true
+    },
+    "primitive_actions": 127.11597414558129,
+    "graph_sha256": "5161ab859825a667f6c61dc3cc62ee5c854031f133f2434448bf535501ba9659",
+    "baseline_graph_sha256": "5161ab859825a667f6c61dc3cc62ee5c854031f133f2434448bf535501ba9659",
+    "comparison": {
+      "baseline": "a48f055",
+      "candidate": "T0",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": 917.9884999999995,
+          "median": 917.9884999999995,
+          "p90": 917.9884999999995,
+          "p99": 917.9884999999995,
+          "max": 917.9884999999995
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": 919.0590999999986,
+          "median": 919.0590999999986,
+          "p90": 919.0590999999986,
+          "p99": 919.0590999999986,
+          "max": 919.0590999999986
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": 0.0004999999999999987,
+          "median": 0.0004999999999999987,
+          "p90": 0.0004999999999999987,
+          "p99": 0.0004999999999999987,
+          "max": 0.0004999999999999987
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": 6.924499999999998,
+          "median": 6.924499999999998,
+          "p90": 6.924499999999998,
+          "p99": 6.924499999999998,
+          "max": 6.924499999999998
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 24.0,
+          "median": 24.0,
+          "p90": 24.0,
+          "p99": 24.0,
+          "max": 24.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": 923.538700000001,
+          "median": 923.538700000001,
+          "p90": 923.538700000001,
+          "p99": 923.538700000001,
+          "max": 923.538700000001
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "exact->exact": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb12-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Vaal Regalia",
+            "class": "Body Armour",
+            "base_class": "Body Armour / Vaal Regalia",
+            "natural_t1_count": "1",
+            "side_mix": "S",
+            "pool_density": "dense_ge_100",
+            "goal_probability": "moderate_le_0.02",
+            "incumbent": "other",
+            "policy_status": "exact",
+            "termination": "exact_closed",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\candidate-r3\\poecraft_solver_benchmark.exe",
+              "sha256": "4753500e5363bb6045a66ba84ce88880887a633ae797dfa72adbb1fe2e780372"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-binaries\\poecraft_solver_benchmark.exe",
+              "sha256": "62d4fc6944a0d4abe4bbee514b07e27d52f704b3dcc020e175ac6f5abf9f9bb9"
+            }
+          },
+          "baseline_status": {
+            "actual": "converged",
+            "policy": "exact",
+            "termination": "exact_closed"
+          },
+          "candidate_status": {
+            "actual": "converged",
+            "policy": "exact",
+            "termination": "exact_closed"
+          },
+          "deltas": {
+            "wall_ms": 917.9884999999995,
+            "solve_ms": 919.0590999999986,
+            "solve_step_median_ms": 0.0,
+            "solve_step_p95_ms": 0.0004999999999999987,
+            "solve_step_max_ms": 6.924499999999998,
+            "peak_memory_bytes": 24.0,
+            "time_to_incumbent_ms": 923.538700000001,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 0.0,
+            "transitions": 0.0,
+            "reforge_work": 0.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    }
+  }
+}

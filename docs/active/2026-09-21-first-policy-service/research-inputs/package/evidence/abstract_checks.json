@@ -1,0 +1,37 @@
+{
+  "test_kind": "abstract examples only; no repository native/WASM execution",
+  "tests_run": 23,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "passed": true,
+  "details": "test_body_yields_do_not_remove_runtime_entry (__main__.ArgumentChecks.test_body_yields_do_not_remove_runtime_entry) ... ok\ntest_cancel_at_each_prefix_preserves_debit (__main__.ArgumentChecks.test_cancel_at_each_prefix_preserves_debit) ... ok\ntest_clamping_to_policy_cost_does_not_validate_a_lower (__main__.ArgumentChecks.test_clamping_to_policy_cost_does_not_validate_a_lower) ... ok\ntest_compile_completion_is_not_check_evidence (__main__.ArgumentChecks.test_compile_completion_is_not_check_evidence) ... ok\ntest_complete_emission_matches_all_quanta (__main__.ArgumentChecks.test_complete_emission_matches_all_quanta) ... ok\ntest_different_clock_subtraction_refuses (__main__.ArgumentChecks.test_different_clock_subtraction_refuses) ... ok\ntest_every_incomplete_prefix_refuses_result (__main__.ArgumentChecks.test_every_incomplete_prefix_refuses_result) ... ok\ntest_frozen_charge_matches_mutation_delta (__main__.ArgumentChecks.test_frozen_charge_matches_mutation_delta) ... ok\ntest_limit_failure_cannot_create_partial_result (__main__.ArgumentChecks.test_limit_failure_cannot_create_partial_result) ... ok\ntest_matching_abstract_bundle_can_commit (__main__.ArgumentChecks.test_matching_abstract_bundle_can_commit) ... ok\ntest_mutation_of_frozen_domain_breaks_shortcut (__main__.ArgumentChecks.test_mutation_of_frozen_domain_breaks_shortcut) ... ok\ntest_observation_is_passive (__main__.ArgumentChecks.test_observation_is_passive) ... ok\ntest_old_artifact_survives_new_bad_evidence (__main__.ArgumentChecks.test_old_artifact_survives_new_bad_evidence) ... ok\ntest_only_designated_default_changes_allowed (__main__.ArgumentChecks.test_only_designated_default_changes_allowed) ... ok\ntest_pair_rejects_other_field_changes (__main__.ArgumentChecks.test_pair_rejects_other_field_changes) ... ok\ntest_pending_debt_consumes_committed_generation_once (__main__.ArgumentChecks.test_pending_debt_consumes_committed_generation_once) ... ok\ntest_post_move_fit_does_not_establish_overlap_fit (__main__.ArgumentChecks.test_post_move_fit_does_not_establish_overlap_fit) ... ok\ntest_recorded_first_verification_and_delivery_are_separate (__main__.ArgumentChecks.test_recorded_first_verification_and_delivery_are_separate) ... ok\ntest_safe_pending_lower_can_lose_one_shot_service (__main__.ArgumentChecks.test_safe_pending_lower_can_lose_one_shot_service) ... ok\ntest_small_quota_cannot_remove_single_long_unit (__main__.ArgumentChecks.test_small_quota_cannot_remove_single_long_unit) ... ok\ntest_stale_input_refuses_after_suspension (__main__.ArgumentChecks.test_stale_input_refuses_after_suspension) ... ok\ntest_target_is_part_of_evidence (__main__.ArgumentChecks.test_target_is_part_of_evidence) ... ok\ntest_unassigned_remainder_is_not_forced_to_a_cause (__main__.ArgumentChecks.test_unassigned_remainder_is_not_forced_to_a_cause) ... ok\n\n----------------------------------------------------------------------\nRan 23 tests in 0.003s\n\nOK\n",
+  "derived_recorded_metrics": {
+    "kind": "arithmetic on recorded projections, not new runtime measurements",
+    "pairs": [
+      {
+        "order": "AB",
+        "candidate_minus_baseline_ms": {
+          "begin_ms": "-12394.8398",
+          "max_ordinary_ms": "-15.1200",
+          "finish_ui_ms": "-3276.7791",
+          "delivery_ui_ms": "-2026.6316",
+          "first_verified_worker_ms": "1250.7706"
+        }
+      },
+      {
+        "order": "BA",
+        "candidate_minus_baseline_ms": {
+          "begin_ms": "-12622.8060",
+          "max_ordinary_ms": "-6.9574",
+          "finish_ui_ms": "-3336.3002",
+          "delivery_ui_ms": "-2151.8984",
+          "first_verified_worker_ms": "1184.7284"
+        }
+      }
+    ],
+    "native_peak_owned_delta_bytes": 852050,
+    "native_live_owned_delta_bytes": -150,
+    "statistical_claim": "none; two pairs do not establish universal effects or a causal allocation of the deltas"
+  }
+}

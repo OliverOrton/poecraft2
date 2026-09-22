@@ -17,8 +17,11 @@
 #include <cctype>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <deque>
+#include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <map>
 #include <memory>
 #include <set>
@@ -6777,6 +6780,63 @@ void run_constructive_state_certificate_tests() {
     PC_CHECK(oracle.diagnostics.constructive_state_certificates == 0);
     PC_CHECK(oracle.diagnostics.discovered_states >
              certified.diagnostics.discovered_states);
+
+    for (const unsigned quantum : {1u, 2u, 7u, 64u}) {
+        CalcContext stepped_calc(session, goal, registry, {chaos, restart, bench_index});
+        SolveWorkTestAccess::Impl work(stepped_calc, start, prices, SolveOptions{});
+        bool saw_pending = false;
+        std::size_t pending_rows = 0;
+        for (unsigned calls = 0; calls < 10000 && !work.progress().done; ++calls) {
+            if (work.pending_constructive_certificate) {
+                if (!saw_pending) pending_rows = work.transition_cache->rows.size();
+                saw_pending = true;
+                PC_CHECK(work.transition_cache->rows.size() == pending_rows);
+                const auto sequence = work.progress_event_sequence;
+                const auto obligation = work.pending_constructive_certificate;
+                for (unsigned read = 0; read < 4; ++read) {
+                    (void)work.progress();
+                    (void)work.progress_trace_json(sequence);
+                }
+                PC_CHECK(work.progress_event_sequence == sequence);
+                PC_CHECK(work.pending_constructive_certificate == obligation);
+            }
+            work.step(quantum);
+        }
+        PC_CHECK(saw_pending);
+        PC_CHECK(work.progress().done);
+        PC_CHECK(!work.pending_constructive_certificate);
+        PC_CHECK(work.result.diagnostics.constructive_state_certificates == 1);
+        PC_CHECK(work.result.diagnostics.constructive_state_operators_pruned == 2);
+        PC_CHECK(work.result.diagnostics.discovered_states == 2);
+    }
+
+    // Exercise the same fail-closed guard used before bounded publication.
+    CalcContext interval_calc(session, goal, registry, {chaos, restart, bench_index});
+    SolveWorkTestAccess::Impl interval(interval_calc, start, prices, SolveOptions{});
+    SolveWorkTestAccess::Impl::BoundedPolicyIncumbent candidate;
+    candidate.kind = "interval_negative_control";
+    interval.result.lower_bound = 1;
+    interval.result.evaluated_policy_cost = interval.result.upper_bound = 3;
+    interval.validate_bounded_interval(candidate);
+    for (const bool bad_lower : {true, false}) {
+        interval.result.lower_bound = bad_lower ? 4 : 1;
+        interval.result.evaluated_policy_cost = bad_lower ? 3 : 4;
+        bool refused = false;
+        try {
+            interval.validate_bounded_interval(candidate);
+        } catch (const std::logic_error& error) {
+            const std::string message = error.what();
+            const auto tuple = message.find("{\"version\":");
+            PC_CHECK(tuple != std::string::npos);
+            if (tuple != std::string::npos) {
+                const auto record = json::Parser(message.data() + tuple, message.size() - tuple).parse();
+                PC_CHECK(record.at("failing_side").as_string() ==
+                         (bad_lower ? "L_gt_J" : "J_gt_U"));
+            }
+            refused = true;
+        }
+        PC_CHECK(refused);
+    }
 }
 
 /* An automatic renewal may establish a finite executable policy before its
@@ -6911,7 +6971,7 @@ void run_constructive_renewal_upper_tests() {
  * destructive roll is still an executable renewal when every miss is legal
  * and reproduces the exact engine-owned preserved-base signature. Restart's
  * fresh normal carrier must pay for a real rare setup before joining it. */
-void run_primitive_destructive_renewal_upper_tests() {
+void run_primitive_destructive_renewal_upper_tests(bool sample = true) {
     auto session = make_solve_session();
     /* Give this exact four-affix renewal both genuine successes and genuine
      * zero-progress retries. Mod1 is a non-goal family member in group 10;
@@ -7555,6 +7615,7 @@ void run_primitive_destructive_renewal_upper_tests() {
     product_fracture_economy->id =
         "product-fracture-replacement-recovery-test";
     product_fracture_economy->prices = fracture_prices;
+    if (sample) {
     SimulatorImpl product_fracture_simulator;
     product_fracture_simulator.session = fracture_session;
     product_fracture_simulator.strategy = product_fracture_strategy;
@@ -7574,6 +7635,7 @@ void run_primitive_destructive_renewal_upper_tests() {
         product_fracture_simulator.summary.action_not_applied_count == 0);
     PC_CHECK(
         product_fracture_simulator.summary.no_matching_edge_count == 0);
+    }
     std::set<std::pair<std::string, std::uint32_t>>
         product_fracture_behaviors;
     std::uint64_t product_fracture_selected_states = 0;
@@ -7680,6 +7742,45 @@ void run_primitive_destructive_renewal_upper_tests() {
         evaluate_strategy(
             *shared_product_fracture_strategy,
             shared_product_fracture_eval_options);
+    if (const char* directory = std::getenv("POECRAFT_TEST_EVIDENCE_DIR")) {
+        const auto base = std::filesystem::path(directory);
+        std::filesystem::create_directories(base);
+        std::ofstream(base / "fracture-lift.strategy.json")
+            << product_fracture_lift.compiled.strategy_json;
+        std::ofstream(base / "fracture-shared.strategy.json")
+            << shared_product_fracture_json;
+        std::ofstream report(base / "fracture-evaluations.json");
+        report << std::setprecision(17) << "{\"lift_policy_changed\":"
+            << (product_fracture_lift.policy_changed ? "true" : "false")
+            << ",\"lift_solver_cost\":" << product_fracture_lift.solver_cost
+            << ",\"published_cost\":" << product_fracture_result.evaluated_policy_cost
+            << ",\"prices\":{";
+        bool first = true;
+        for (const auto& [key, value] : fracture_prices) {
+            if (!first) report << ',';
+            first = false;
+            report << '"' << key << "\":" << value;
+        }
+        report << '}';
+        const auto evaluated = [&](const char* name, const StrategyEvalResult& value) {
+            report << ",\"" << name << "\":{\"cost\":" << value.total_expected_cost
+                << ",\"success\":" << value.success_probability
+                << ",\"failure\":" << value.failure_probability
+                << ",\"action_not_applied\":" << value.action_not_applied_probability
+                << ",\"no_matching_edge\":" << value.no_matching_edge_probability
+                << ",\"consumption\":{";
+            bool first_resource = true;
+            for (const auto& [key, amount] : value.expected_consumption) {
+                if (!first_resource) report << ',';
+                first_resource = false;
+                report << '"' << key << "\":" << amount;
+            }
+            report << "}}";
+        };
+        evaluated("shared", shared_product_fracture_evaluation);
+        evaluated("lift", product_fracture_lift.compiled.evaluation);
+        report << "}\n";
+    }
     PC_CHECK(shared_product_fracture_evaluation.converged);
     PC_CHECK(shared_product_fracture_evaluation.cost_complete);
     PC_CHECK(near(
@@ -7697,17 +7798,38 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(near(
         shared_product_fracture_evaluation.total_expected_cost,
         product_fracture_result.evaluated_policy_cost, 1e-10));
+    // The independent lift is allowed to reoptimize. Keep its quality
+    // comparison separate from compilation of the original selected policy.
+    PC_CHECK(product_fracture_lift.policy_changed);
+    PC_CHECK(product_fracture_lift.compiled.evaluation.total_expected_cost <
+             shared_product_fracture_evaluation.total_expected_cost);
+    SolveResult recompiled_fracture = product_fracture_result;
+    recompiled_fracture.refined_policy_artifact = {};
+    const auto recompiled_fracture_json = compile_policy_strategy_json(
+        product_fracture_calc, recompiled_fracture, "same selected Fracture policy");
+    const auto recompiled_fracture_strategy = compile_strategy_json(
+        fracture_session, recompiled_fracture_json.data(), recompiled_fracture_json.size());
+    const auto recompiled_fracture_evaluation = evaluate_strategy(
+        *recompiled_fracture_strategy, shared_product_fracture_eval_options);
+    if (const char* directory = std::getenv("POECRAFT_TEST_EVIDENCE_DIR")) {
+        std::ofstream(std::filesystem::path(directory) / "fracture-recompiled.strategy.json")
+            << recompiled_fracture_json;
+    }
+    PC_CHECK(recompiled_fracture_evaluation.converged &&
+             recompiled_fracture_evaluation.cost_complete);
+    PC_CHECK(near(recompiled_fracture_evaluation.success_probability, 1.0, 1e-12));
+    PC_CHECK(recompiled_fracture_evaluation.failure_probability == 0);
+    PC_CHECK(recompiled_fracture_evaluation.action_not_applied_probability == 0);
+    PC_CHECK(recompiled_fracture_evaluation.no_matching_edge_probability == 0);
     PC_CHECK(near(
         shared_product_fracture_evaluation.total_expected_cost,
-        product_fracture_lift.compiled.evaluation.total_expected_cost,
+        recompiled_fracture_evaluation.total_expected_cost,
         1e-10));
     PC_CHECK(
         shared_product_fracture_evaluation.expected_consumption.size() ==
-        product_fracture_lift.compiled.evaluation
-            .expected_consumption.size());
+        recompiled_fracture_evaluation.expected_consumption.size());
     for (const auto& [action, expected] :
-         product_fracture_lift.compiled.evaluation
-             .expected_consumption) {
+         recompiled_fracture_evaluation.expected_consumption) {
         const auto shared =
             shared_product_fracture_evaluation.expected_consumption.find(
                 action);
@@ -9363,6 +9485,10 @@ void run_incremental_action_generation_tests() {
          {"alteration", 1.0},
          {"essence:incremental_inapplicable", 1000.0}},
         numerical_lower_options);
+    for (unsigned step = 0; step < 10000 &&
+         !numerical_lower_work.goal_cover_cost_ready; ++step)
+        numerical_lower_work.step(1);
+    PC_CHECK(numerical_lower_work.goal_cover_cost_ready);
     numerical_lower_work.incremental_action_generation = true;
     numerical_lower_work.incremental_envelope_closed = false;
     numerical_lower_work.incremental_carriers.clear();
@@ -14216,6 +14342,17 @@ void run_solver_bounded_finish_tests() {
 
 void run_solver_proof_handoff_tests() {
     run_proof_handoff_tests();
+}
+
+void run_solver_integrity_tests(const char* case_name) {
+    const std::string name = case_name;
+    if (name == "constructive") {
+        run_constructive_state_certificate_tests();
+        run_certified_fallback_contract_tests();
+    }
+    else if (name == "incremental") run_incremental_action_generation_tests();
+    else if (name == "fracture") run_primitive_destructive_renewal_upper_tests(false);
+    else throw std::invalid_argument("unknown solver integrity subcase");
 }
 
 void run_solver_solve_tests(const char* artifact_dir) {

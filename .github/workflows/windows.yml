@@ -74,3 +74,12 @@ jobs:
           name: frozen-runtime-identity-failure
           path: build/validation/runtime-identity-*.json
           if-no-files-found: ignore
+      - name: Preserve native test failure
+        if: failure() && steps.changes.outputs.native_required == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-test-failure
+          path: |
+            build/engine/Testing/Temporary/LastTest.log
+            build/engine/Testing/Temporary/LastTestsFailed.log
+          if-no-files-found: ignore

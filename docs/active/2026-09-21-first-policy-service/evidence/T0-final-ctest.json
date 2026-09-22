@@ -1,0 +1,27 @@
+{
+  "source": "a48f055ccc07751807c334386f1fd25c6b4717de + T0 patch",
+  "patch_sha256": "2a69957bef84ffd36efe109a6e615516b75e82a538eb89790381edc9c5d06328",
+  "tests_sha256": "0ba2a260cb2c80bc1a5dcc9bd2269374c7b173b781df2d772d8cf1edda3bfbf1",
+  "command": [
+    "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/ctest.exe",
+    "--test-dir",
+    "build/engine",
+    "-C",
+    "Release",
+    "--output-on-failure",
+    "-R",
+    "^(poecraft_solver_solve|poecraft_solver_api|poecraft_solver_s8_3)$"
+  ],
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 63328,
+    "process_identity_token": "63328:134345258060261872",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 49382.358200033195
+  }
+}

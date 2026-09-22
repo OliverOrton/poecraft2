@@ -1,0 +1,45 @@
+{
+  "reviewed_head": "a48f055ccc07751807c334386f1fd25c6b4717de",
+  "zip_sha256": "0a4b3c9a7749acdacc6a73008e9f6a9f3e78aabfeb8794063ad9eb8a11669771",
+  "verified_payload_records": 20,
+  "binaries": {
+    "build/engine/poecraft_engine.dll": {
+      "saved": "out\\first-policy-service\\baseline-a48f055\\poecraft_engine.dll",
+      "sha256": "406dc832696a15cf510eaf0e45f703262c5ea98a998fe29534e7e1decc6389a7"
+    },
+    "build/engine/poecraft_solver_benchmark.exe": {
+      "saved": "out\\first-policy-service\\baseline-a48f055\\poecraft_solver_benchmark.exe",
+      "sha256": "4753500e5363bb6045a66ba84ce88880887a633ae797dfa72adbb1fe2e780372"
+    },
+    "build/engine/poecraft_engine_tests.exe": {
+      "saved": "out\\first-policy-service\\baseline-a48f055\\poecraft_engine_tests.exe",
+      "sha256": "f70bf260a4d0ba883e75aba12a9c4da5f53a5fe568bb4e92f481ae5d5ce6d665"
+    },
+    "build/engine/libwinpthread-1.dll": {
+      "saved": "out\\first-policy-service\\baseline-a48f055\\libwinpthread-1.dll",
+      "sha256": "f433c911e46c1311c31edb162f9a898202c8969f59b982e4e66f1781c2ce2b22"
+    },
+    "bindings/wasm/dist/poecraft_engine.mjs": {
+      "saved": "out\\first-policy-service\\baseline-a48f055\\poecraft_engine.mjs",
+      "sha256": "d45eae36bb1e7eab6c761bac2dd0c0495fe933a9435264a172e179517a9e7502"
+    },
+    "bindings/wasm/dist/poecraft_engine.wasm": {
+      "saved": "out\\first-policy-service\\baseline-a48f055\\poecraft_engine.wasm",
+      "sha256": "2d730afa998bc51fd9ff400b0cef63acec55ff4fac0aa45a175d5f7a271d981d"
+    }
+  },
+  "artifact": {
+    "manifest.json": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+    "game-data.json": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings.json": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+  },
+  "local_compiler": "GCC 14.2.0 UCRT64",
+  "admission": {
+    "available_physical": 38752890880,
+    "available_commit": 16219512832,
+    "reservation": 8589934592,
+    "outside": 13681888461,
+    "admitted": true
+  },
+  "source_note": "Clean selected paths at entry; protected root 0 excluded. Production source/binaries match prior S4 receipt; provenance generated at parent plus archived patch."
+}

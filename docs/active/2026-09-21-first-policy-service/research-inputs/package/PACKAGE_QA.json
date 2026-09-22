@@ -1,0 +1,19 @@
+{
+  "reviewed_ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+  "abstract_tests": {
+    "run": 23,
+    "failed": 0,
+    "errors": 0,
+    "scope": "Toy arguments/arithmetic only; no native code"
+  },
+  "documentation_checks": {
+    "local_markdown_links_checked": 33,
+    "broken_links": 0,
+    "replacement_characters": 0
+  },
+  "gate_consistency": "README, prompt, milestones and validation all require integrity gate before performance work",
+  "ci": "Current completed Windows failure and knowledge success retained, not labelled passing native acceptance",
+  "sealing_protocol": "Manifest binds every other file. Run checks/verify_package.py. ZIP must match file inventory/content and pass CRC.",
+  "reviewer_native_wasm_simulation_execution": false,
+  "repository_mutation": false
+}

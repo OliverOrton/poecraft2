@@ -1994,15 +1994,7 @@ SolveWork::Impl::run_publication_pipeline() {
                 incumbent.independently_evaluated
                     ? incumbent.evaluated_policy_cost
                     : incumbent.certified_upper_bound;
-            const double bracket_tolerance =
-                value_comparison_tolerance(result.upper_bound);
-            if (result.lower_bound > result.evaluated_policy_cost +
-                                         bracket_tolerance ||
-                result.evaluated_policy_cost > result.upper_bound +
-                                                   bracket_tolerance) {
-                throw std::logic_error(
-                    "bounded incumbent evaluation violates L <= J_pi <= U");
-            }
+            validate_bounded_interval(incumbent);
             result.absolute_optimality_gap = std::max(
                 0.0, result.upper_bound - result.lower_bound);
             result.relative_optimality_gap =

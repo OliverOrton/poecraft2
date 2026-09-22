@@ -1,0 +1,154 @@
+{
+  "reviewed_source": "a48f055ccc07751807c334386f1fd25c6b4717de",
+  "case": "run_automatic_veiled_program/high_impact",
+  "origin": "Initial failure after diagnostic-only instrumentation and deferred consumer repair; the earlier full reproduction fails the same guard.",
+  "failure": {
+    "version": 1,
+    "owner": "restore_output_incumbent",
+    "L": 21,
+    "L_bits": "4626604192193052672",
+    "J_pi": 6.249999999999999,
+    "J_pi_bits": "4618722892845154303",
+    "U": 6.249999999999999,
+    "U_bits": "4618722892845154303",
+    "tolerance": 6.25e-08,
+    "tolerance_bits": "4499314794598624653",
+    "independent_goal_cover": 21,
+    "independent_goal_cover_bits": "4626604192193052672",
+    "focused_lower": 21,
+    "focused_lower_bits": "4626604192193052672",
+    "working_root": 6.249999999999999,
+    "working_root_bits": "4618722892845154303",
+    "failing_side": "L_gt_J",
+    "lower_authority": "certified_global_lower_bound",
+    "upper_authority": "selected_incumbent",
+    "candidate_kind": "anytime_reachable_proper_policy",
+    "entry_state": "0",
+    "goal": "15980474229614822542",
+    "economy": "10783384938448008749",
+    "actions": "17266793397752555643",
+    "runtime_artifact": "14889264229330518631",
+    "candidate": "2146670846839848111",
+    "candidate_graph": "5003150757929702051",
+    "candidate_artifact": "14889264229330518631",
+    "candidate_source_generation": "7",
+    "candidate_target_generation": "7",
+    "numerical_generation": "7",
+    "setup_stage": "2",
+    "solver_byte_limit": "1073741824",
+    "independently_evaluated": false,
+    "root_only": false,
+    "strict_provenance": true,
+    "cover_ready": true,
+    "envelope_closed": false,
+    "finish_requested": false,
+    "resource_cap": false,
+    "exact_entry": [
+      "8098432503581079089",
+      "1",
+      "2",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "3",
+      "6",
+      "1",
+      "20",
+      "0",
+      "0",
+      "0",
+      "4294967295",
+      "6",
+      "2",
+      "21",
+      "0",
+      "0",
+      "0",
+      "4294967295",
+      "6",
+      "13",
+      "22",
+      "0",
+      "0",
+      "0",
+      "4294967295",
+      "0",
+      "0"
+    ],
+    "patterns": [
+      {
+        "id": "universal_cover",
+        "start": 1,
+        "minimizing_action": "alchemy"
+      },
+      {
+        "id": "clean_mdp",
+        "start": 21,
+        "minimizing_action": "restart"
+      },
+      {
+        "id": "identity_clean_mdp",
+        "start": null,
+        "minimizing_action": ""
+      },
+      {
+        "id": "carrier_mdp",
+        "start": 1,
+        "minimizing_action": "veiled_exalt"
+      },
+      {
+        "id": "bounded_gain_mdp",
+        "start": 1,
+        "minimizing_action": "veiled_exalt"
+      },
+      {
+        "id": "terminal_debt",
+        "start": 1,
+        "minimizing_action": "veiled_exalt"
+      },
+      {
+        "id": "strict_clean",
+        "start": null,
+        "minimizing_action": ""
+      },
+      {
+        "id": "envelope_bellman",
+        "start": 21,
+        "minimizing_action": "option:renewal:veiled_exalt+unveil:until:1:0"
+      },
+      {
+        "id": "operator_lower",
+        "start": null,
+        "minimizing_action": ""
+      },
+      {
+        "id": "native_retention",
+        "start": null,
+        "minimizing_action": ""
+      }
+    ]
+  },
+  "independent_evaluation": {
+    "cost": 6.249999999999999,
+    "success": 0.9999999999999998,
+    "failure": 0,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "prices": {
+      "harvest_reforge:test": 1000,
+      "veiled_chaos": 1000,
+      "veiled_exalt": 1,
+      "scour": 1,
+      "alchemy": 1,
+      "base": 20
+    }
+  },
+  "comparison_note": "The complete ordinary controller is independently parsed/evaluated in the failing high-impact session and original prices. This witnesses L > a legal proper controller cost, independently of the provisional incumbent.",
+  "graph_sha256": "88afb00b72b6f64fdfd58e833bbbc72d675bdd04a31ac8b0fb17f99a37a4e97a"
+}

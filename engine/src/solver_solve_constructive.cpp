@@ -6277,6 +6277,15 @@ bool SolveWork::Impl::try_constructive_state_certificate(
         const std::optional<double> candidate =
             constructive_row_upper(state, row_index);
         if (!candidate.has_value()) return false;
+        if (expansion_operator_cursor >= expansion_operator_indices.size()) return false;
+        if (goal_cover_stage == SetupStage::NotStarted ||
+            goal_cover_stage == SetupStage::Preparing) {
+            // A safe pending lower is not a completed rejection of this
+            // one-shot certificate. Resume it before another expansion row.
+            goal_cover_requested = true;
+            pending_constructive_certificate.emplace(state, row_index);
+            return false;
+        }
         const double upper = *candidate;
         const std::uint32_t selected_operator =
             priced_rows.at(row_index).operator_index;

@@ -10,6 +10,85 @@ namespace solver {
 
 using namespace solve_detail;
 
+void SolveWork::Impl::validate_bounded_interval(
+        const BoundedPolicyIncumbent& incumbent) const {
+    const double tolerance = value_comparison_tolerance(result.upper_bound);
+    if (result.lower_bound > result.evaluated_policy_cost + tolerance ||
+        result.evaluated_policy_cost > result.upper_bound + tolerance) {
+        throw std::logic_error(
+            "bounded incumbent evaluation violates L <= J_pi <= U: " +
+            bounded_interval_failure(incumbent));
+    }
+}
+
+std::string SolveWork::Impl::bounded_interval_failure(
+        const BoundedPolicyIncumbent& incumbent) const {
+    // Failure-only, bounded identity/number projection. Preserve the original
+    // fail-closed check; this never repairs or reclassifies its evidence.
+    std::string json = "{\"version\":1,\"owner\":\"restore_output_incumbent\"";
+    const auto number = [&](const char* name, double value) {
+        json += ",\"" + std::string(name) + "\":" + finite_json(value) +
+            ",\"" + name + "_bits\":\"" +
+            std::to_string(std::bit_cast<std::uint64_t>(value)) + "\"";
+    };
+    const auto identity = [&](const char* name, std::uint64_t value) {
+        json += ",\"" + std::string(name) + "\":\"" + std::to_string(value) + "\"";
+    };
+    number("L", result.lower_bound);
+    number("J_pi", result.evaluated_policy_cost);
+    number("U", result.upper_bound);
+    number("tolerance", value_comparison_tolerance(result.upper_bound));
+    number("independent_goal_cover", result.diagnostics.independent_goal_cover_lower_bound);
+    number("focused_lower", result.diagnostics.focused_lower_bound);
+    number("working_root", result.start_state < result.values.size()
+        ? result.values[result.start_state] : kInfinity);
+    json += ",\"failing_side\":\"";
+    json += result.lower_bound > result.evaluated_policy_cost + value_comparison_tolerance(result.upper_bound)
+        ? "L_gt_J" : "J_gt_U";
+    json += "\",\"lower_authority\":\"certified_global_lower_bound\","
+            "\"upper_authority\":\"selected_incumbent\",\"candidate_kind\":";
+    append_json_string(json, incumbent.kind.substr(0, 256));
+    identity("entry_state", result.start_state);
+    identity("goal", goal_identity());
+    identity("economy", economy_identity());
+    identity("actions", action_vocabulary_identity());
+    identity("runtime_artifact", artifact_identity());
+    identity("candidate", incumbent.portfolio_identity);
+    identity("candidate_graph", incumbent.graph_identity);
+    identity("candidate_artifact", incumbent.artifact_identity);
+    identity("candidate_source_generation", incumbent.source_generation);
+    identity("candidate_target_generation", incumbent.target_generation);
+    identity("numerical_generation", progress_generation);
+    identity("setup_stage", static_cast<unsigned>(goal_cover_stage));
+    identity("solver_byte_limit", options.max_solver_owned_bytes);
+    json += ",\"independently_evaluated\":" + std::string(incumbent.independently_evaluated ? "true" : "false") +
+        ",\"root_only\":" + (incumbent.compiled_root_entry_only ? "true" : "false") +
+        ",\"strict_provenance\":" + (incumbent.strict_state_provenance ? "true" : "false") +
+        ",\"cover_ready\":" + (goal_cover_cost_ready ? "true" : "false") +
+        ",\"envelope_closed\":" + (incremental_envelope_closed ? "true" : "false") +
+        ",\"finish_requested\":" + (requested_bounded_finish ? "true" : "false") +
+        ",\"resource_cap\":" + (result.diagnostics.resource_cap_hit ? "true" : "false") +
+        ",\"exact_entry\":[";
+    bool first = true;
+    for (const auto word : exact_item_state_key(exact_start_item)) {
+        if (!first) json += ',';
+        first = false;
+        json += '"' + std::to_string(word) + '"';
+    }
+    json += "],\"patterns\":[";
+    first = true;
+    for (const auto& pattern : contracts) {
+        if (!first) json += ',';
+        first = false;
+        json += "{\"id\":";
+        append_json_string(json, std::string(pattern.id));
+        json += ",\"start\":" + finite_json(pattern.start_contribution) + ",\"minimizing_action\":";
+        append_json_string(json, pattern.minimizing_action.substr(0, 256));
+        json += '}';
+    }
+    return json + "]}";
+}
+
 void SolveWork::Impl::retain_bounded_json_sample(std::vector<std::string>& samples,
         std::uint64_t& omitted, std::uint64_t& retained_bytes, std::string sample) {
     const auto& telemetry = result.diagnostics.policy_refinement;
@@ -550,7 +629,7 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
             "invalid_state", "active_protection", "fractured_goal",
             "fractured_metamod", "influence_identity",
             "searing_identity", "eater_identity", "fractured_junk",
-            "fractured_crafted_junk"}};
+            "fractured_crafted_junk", "unresolved_veil"}};
     static constexpr std::array<const char*, OwnerCount> kOwnerNames{{
         "universal", "clean_mdp", "carrier_progress",
         "terminal_debt", "strict_clean", "envelope_bellman",

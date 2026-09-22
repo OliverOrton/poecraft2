@@ -1,0 +1,108 @@
+{
+  "evidence_kind": "selected recorded projection, manually transcribed from pinned repository receipts; not a new benchmark",
+  "reviewed_main": "a48f055ccc07751807c334386f1fd25c6b4717de",
+  "previous_main": "0f376f4249789e0bbe4680494d8c01609c84a765",
+  "programme": "docs/active/2026-09-20-cooperative-setup",
+  "source_receipt": "docs/active/2026-09-20-cooperative-setup/S4-r2-qualification.json",
+  "wasm_label": "r2",
+  "native_label": "r3",
+  "runtime_scope": "linkedom actual Calculator + node-worker_threads WASM; no rendered-browser visual qualification",
+  "frozen_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+  "candidate_wasm_sha256": "2d730afa998bc51fd9ff400b0cef63acec55ff4fac0aa45a175d5f7a271d981d",
+  "candidate_native_benchmark_sha256": "4753500e5363bb6045a66ba84ce88880887a633ae797dfa72adbb1fe2e780372",
+  "payload_availability": "Hashes are recorded identities; native binaries and production data are not included in this packet.",
+  "native_c5": {
+    "case_id": "cb01-cross-base-product8-long240",
+    "graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+    "cost": 85558.70618560436,
+    "primitive_count": 8407.202314771383,
+    "lower": 405.3694021063399,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "corpus_status": "refused_unsupported_action",
+    "peak_owned_baseline": 253288237,
+    "peak_owned_candidate": 254140287,
+    "live_owned_baseline": 153544866,
+    "live_owned_candidate": 153544716
+  },
+  "regalia": {
+    "source": "programme README",
+    "cost": 65.60036144971359,
+    "primitive_count": 127.11597414558129,
+    "status": "exact control"
+  },
+  "c4_fixed_graph": {
+    "source": "programme README / S1 fixed policy receipt",
+    "graph_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+    "evaluator_bytes": 1073741824,
+    "native_cost": 3746.131940948572,
+    "wasm_cost": 3746.1319409485764,
+    "native_count": 8608.88179365679,
+    "wasm_count": 8608.881793656798,
+    "success_probability": 1,
+    "discovery_gap_status": "still open; same-graph compatibility passed in the declared profile"
+  },
+  "finish_runs": [
+    {
+      "arm": "baseline",
+      "order": 0,
+      "begin_ms": "12397.1930",
+      "max_setup_ms": "85.8200",
+      "max_ordinary_ms": "377.3980",
+      "finish_ui_ms": "3688.7334",
+      "delivery_ui_ms": "45086.9021",
+      "first_verified_worker_ms": "41391.0755"
+    },
+    {
+      "arm": "candidate",
+      "order": 1,
+      "begin_ms": "2.3532",
+      "max_setup_ms": "28.7462",
+      "max_ordinary_ms": "362.2780",
+      "finish_ui_ms": "411.9543",
+      "delivery_ui_ms": "43060.2705",
+      "first_verified_worker_ms": "42641.8461"
+    },
+    {
+      "arm": "candidate",
+      "order": 2,
+      "begin_ms": "2.1703",
+      "max_setup_ms": "26.2886",
+      "max_ordinary_ms": "373.0484",
+      "finish_ui_ms": "413.3166",
+      "delivery_ui_ms": "43647.7562",
+      "first_verified_worker_ms": "43227.9535"
+    },
+    {
+      "arm": "baseline",
+      "order": 3,
+      "begin_ms": "12624.9763",
+      "max_setup_ms": "83.0100",
+      "max_ordinary_ms": "380.0058",
+      "finish_ui_ms": "3749.6168",
+      "delivery_ui_ms": "45799.6546",
+      "first_verified_worker_ms": "42043.2251"
+    }
+  ],
+  "run_projection_note": "Decimal strings preserve the displayed receipt precision for derived arithmetic; raw reports retain floating representation and true clocks.",
+  "ordinary_span": {
+    "input_owner": "ladder_scheduling",
+    "output_owner": "compilation",
+    "input_cursor": 293,
+    "output_cursor": 295,
+    "quantum": 8,
+    "cause": "not localized by phase labels"
+  },
+  "cancellations": {
+    "setup_to_complete_release_ui_ms": "89.0246",
+    "retention_to_complete_release_ui_ms": "34.8348",
+    "setup_native_release_ns": 17438600,
+    "retention_native_release_ns": 22418300,
+    "native_release_scope": "audit/snapshot + serialization + rollback + destruction; UI interval also includes transport/probe/handle cleanup"
+  },
+  "readiness": "completed controls do not prove hard real-time responsiveness on arbitrary hosts or inputs",
+  "first_verification_note": "First observed worker event is not interchangeable with UI usable delivery; no direct cross-clock subtraction is made.",
+  "review_native_runs": 0,
+  "review_wasm_runs": 0,
+  "review_simulator_runs": 0
+}

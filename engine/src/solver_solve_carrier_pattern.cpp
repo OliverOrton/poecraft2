@@ -19,6 +19,9 @@ std::uint32_t SolveWork::Impl::clean_goal_cover_rejection_mask(
         if ((carrier.flags & kProtectionFlags) != 0) {
             rejection |= Rejection::ActiveProtection;
         }
+        if ((carrier.flags & kFlagVeiledMod) != 0 || carrier.veiled_side >= 0) {
+            rejection |= Rejection::UnresolvedVeil;
+        }
         if (carrier.fractured_goal_mask != 0) {
             rejection |= Rejection::FracturedGoal;
         }
@@ -131,6 +134,9 @@ bool SolveWork::Impl::identity_clean_goal_progress_eligible(
         }
         const AbstractState& carrier = calc.state(state);
         const AbstractState& start = calc.state(result.start_state);
+        if ((carrier.flags & kFlagVeiledMod) != 0 || carrier.veiled_side >= 0) {
+            return false;
+        }
         return (carrier.flags & kProtectionFlags) ==
                    (start.flags & kProtectionFlags) &&
                carrier.fractured_goal_mask == start.fractured_goal_mask &&

@@ -85,6 +85,15 @@ records reduced preparation with unchanged bounds and no target/closure gain.
 
 Unsupported effects and outside-domain continuations can use deliberately favorable fallbacks. Extra optimistic recovery, early cleanup, broader reach, or weaker blocker constraints can preserve lower validity while reducing usefulness. Removing a native alternative has the opposite direction unless it is independently retired.
 
+The clean occupancy table excludes unresolved veils, including its fixed-identity
+consumer. Veiled acquisition is a paid first exit: grant the whole remaining goal
+after paying the acquisition primitive, just as for protection/Fracture exits.
+Unveil requires an unresolved veil and is therefore not an action of a clean
+table state. This preserves the primitive in the original action scope without
+inventing a clean successor whose goal mask and affix count disagree. The
+[integrity witness](../active/2026-09-21-first-policy-service/README.md) records the
+previous invalid lower and the independent complete controller.
+
 A price-only relation needs a reason. An independent outside exit is a semantic relaxation; a candidate-price shortcut may merely defer expensive construction. Minimum-owning computational floors reactivate even at equality, and the changed model is solved before an older feasible vector ends refinement. [CLM-0019](claims.md#clm-0019) explains why a temporary floor is not necessarily a permanent ceiling.
 
 Joint retention preparation now constructs supported native relations immediately.
@@ -196,6 +205,12 @@ refusal. The final retention pointer is installed only after complete relation
 checking and the original modifier-member safety pass. Typed cancellation
 escapes optional-proof refusal handling. No action coverage, coefficient,
 projection, pricing or acceptance tolerance changes at a yield boundary.
+
+The one-shot constructive-certificate consumer retains its completed row index
+when that dependency is pending. Before another expansion row is constructed,
+the existing setup owner finishes or refuses the table and the consumer retries
+once. Refusal keeps the existing conservative components; cap/Finish may discharge
+the obligation. Passive reads neither advance setup nor consume that obligation.
 
 A local action retirement requires a valid action lower and a compatible proper executable upper at the same source/class, using the actual strict comparison and tie contract. A cheap root upper cannot stand in for an uncovered successor upper. Retirement creates no executable row and closes no other unknown action.
 

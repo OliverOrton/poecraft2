@@ -2341,11 +2341,18 @@ CooperativeTask<bool> SolveWork::Impl::run_goal_cover_setup() {
                             }
                             continue;
                         }
-                        if ((descriptor.sets_flags & kProtectionFlags) != 0 ||
+                        if ((descriptor.sets_flags &
+                             (kProtectionFlags | kFlagVeiledMod)) != 0 ||
                             descriptor.params.type == ActionType::Fracture) {
                             /* Any route that leaves the clean domain first
                              * pays this action. Grant it the whole goal. */
                             consider(cost, action);
+                            continue;
+                        }
+                        // An unresolved veil is outside the clean projection.
+                        // Acquisition above pays its first-exit floor; Unveil
+                        // is legal only after that exit, never at a clean row.
+                        if (descriptor.params.type == ActionType::Unveil) {
                             continue;
                         }
                         if (descriptor.params.type == ActionType::Scour) {

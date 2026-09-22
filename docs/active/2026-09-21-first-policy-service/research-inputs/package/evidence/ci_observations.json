@@ -1,0 +1,131 @@
+{
+  "checked_during_review": "2026-09-21",
+  "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+  "source": "Connected GitHub Actions run metadata, job steps and decoded job log, read-only. Selected log lines below are a transcription, not downloaded artifact bytes.",
+  "windows": {
+    "run_id": 35618066993,
+    "job_id": 106393816191,
+    "status": "completed",
+    "conclusion": "failure",
+    "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35618066993",
+    "updated_at": "2026-09-21T15:33:07Z",
+    "build": "success",
+    "frozen_source_database_runtime": "passed; timestamp/manifest prerequisite failure no longer blocks this job",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "python": {
+      "version": "3.12.10",
+      "ingest": {
+        "passed": 163,
+        "skipped": 5
+      },
+      "economy": {
+        "passed": 12,
+        "subtests_passed": 2
+      },
+      "bindings": {
+        "passed": 18
+      }
+    },
+    "compiler": "GCC 16.2.0; environment identity, not an assigned cause",
+    "ctest": {
+      "total_tests": 17,
+      "passed": 14,
+      "failed": 3,
+      "wall_seconds": 211.36,
+      "failed_suites": [
+        {
+          "name": "poecraft_solver_solve",
+          "checks": 87407,
+          "failed_assertions": 17,
+          "seconds": 71.37,
+          "groups": [
+            {
+              "kind": "constructive_certificate_behavior",
+              "failed_assertions": 10,
+              "file": "engine/tests/test_solver_solve.cpp",
+              "lines": [
+                6742,
+                6743,
+                6744,
+                6746,
+                6748,
+                6749,
+                6754,
+                6757,
+                6765,
+                6778
+              ],
+              "summary": "Certificate/pruning/witness/discovery/cache expectations fail; final C3 and selected bench checks are not listed as failures."
+            },
+            {
+              "kind": "product_fracture_comparison",
+              "failed_assertions": 5,
+              "file": "engine/tests/test_solver_solve.cpp",
+              "lines": [
+                7700,
+                7719
+              ],
+              "summary": "One expected cost equality and four expected-consumption equalities against separate exact-lift result fail; full values and graph identities absent."
+            },
+            {
+              "kind": "one_step_stage_assumption",
+              "failed_assertions": 2,
+              "file": "engine/tests/test_solver_solve.cpp",
+              "lines": [
+                9384,
+                9385
+              ],
+              "summary": "One step after manually staging Iterating does not meet expected expansion state; cooperative setup may be a missing test precondition, not yet diagnosed."
+            }
+          ]
+        },
+        {
+          "name": "poecraft_solver_api",
+          "checks": 2920,
+          "failed_assertions": 4,
+          "seconds": 10.56,
+          "file": "engine/tests/test_solver_api.cpp",
+          "lines": [
+            2345,
+            2352
+          ],
+          "summary": "Phase-owner lower-range and Refining=>PolicyAssembly assertions each fail twice. Actual new setup owner must be handled deliberately."
+        },
+        {
+          "name": "poecraft_solver_s8_3",
+          "seconds": 0.91,
+          "exit": "0xc0000409",
+          "exception_type": "std::logic_error",
+          "message": "bounded incumbent evaluation violates L <= J_pi <= U",
+          "throw_owner": "engine/src/solver_solve_finish.cpp, provisional restored-incumbent bracket in run_publication_pipeline",
+          "missing": [
+            "specific failing fixture",
+            "L",
+            "J_pi",
+            "U",
+            "tolerance",
+            "candidate graph and identity",
+            "which inequality failed",
+            "previous-revision reproduction"
+          ]
+        }
+      ]
+    },
+    "later_web_typecheck": "not reached in this hosted job after native failure; earlier local selected web/typecheck pass remains historical",
+    "artifacts": [],
+    "upload_step": {
+      "name": "frozen-runtime-identity-failure",
+      "path": "build/validation/runtime-identity-*.json",
+      "result": "No matching files; no artifacts uploaded"
+    },
+    "causality": "Not established. Do not label all failures new runtime bugs or dismiss all as stale tests."
+  },
+  "knowledge": {
+    "run_id": 35618067061,
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35618067061"
+  },
+  "planning_effect": "T0 now selects integrity/consumer-contract repair before compiler performance work. T1-T3 depend on affected integrity qualification.",
+  "public_actions_taken": false
+}

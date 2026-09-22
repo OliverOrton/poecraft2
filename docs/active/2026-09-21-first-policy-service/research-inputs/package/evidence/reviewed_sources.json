@@ -1,0 +1,418 @@
+[
+  {
+    "id": "R1",
+    "title": "Current branch and commit",
+    "path": null,
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/commit/a48f055ccc07751807c334386f1fd25c6b4717de",
+    "inspected_ranges": null,
+    "note": "Branch API; exact HEAD at inspection. Recheck at close."
+  },
+  {
+    "id": "R2",
+    "title": "Handoff",
+    "path": "HANDOFF.md",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/HANDOFF.md",
+    "inspected_ranges": null,
+    "note": "Completed scope, preserved baselines, next recommendation."
+  },
+  {
+    "id": "R3",
+    "title": "Completed cooperative setup programme",
+    "path": "docs/active/2026-09-20-cooperative-setup/README.md",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/docs/active/2026-09-20-cooperative-setup/README.md",
+    "inspected_ranges": null,
+    "note": "Recorded S0\u2013S4 evidence and limitations; reviewer did not rerun these measurements."
+  },
+  {
+    "id": "R4",
+    "title": "Final paired WASM and native receipt",
+    "path": "docs/active/2026-09-20-cooperative-setup/S4-r2-qualification.json",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/docs/active/2026-09-20-cooperative-setup/S4-r2-qualification.json",
+    "inspected_ranges": [
+      [
+        1,
+        355
+      ],
+      [
+        350,
+        510
+      ]
+    ],
+    "note": "WASM r2, native label r3; selected measurements. Later native peak/Regalia totals also documented in R3."
+  },
+  {
+    "id": "R5",
+    "title": "Early candidate and publication service",
+    "path": "engine/src/solver_solve_finish.cpp",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/src/solver_solve_finish.cpp",
+    "inspected_ranges": [
+      [
+        1,
+        375
+      ],
+      [
+        5890,
+        6250
+      ]
+    ],
+    "note": "certify_initial_candidate; parent resume; source references and first yield."
+  },
+  {
+    "id": "R6",
+    "title": "Compiled policy assertion lifecycle",
+    "path": "engine/src/solver_policy_assertion_work.cpp",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/src/solver_policy_assertion_work.cpp",
+    "inspected_ranges": [
+      [
+        1,
+        420
+      ],
+      [
+        390,
+        800
+      ]
+    ],
+    "note": "First emission/parse/eval admission, second successful product emission, default pairing, recovery, inner work batching."
+  },
+  {
+    "id": "R7",
+    "title": "Parent solve dispatcher",
+    "path": "engine/src/solver_solve_bellman.cpp",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/src/solver_solve_bellman.cpp",
+    "inspected_ranges": [
+      [
+        1900,
+        2090
+      ]
+    ],
+    "note": "Setup service, one early/publication resume per parent boundary, outer work ceiling."
+  },
+  {
+    "id": "R8",
+    "title": "Policy compiler and per-edge accounting",
+    "path": "engine/src/solver_compile.cpp",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/src/solver_compile.cpp",
+    "inspected_ranges": [
+      [
+        1,
+        260
+      ],
+      [
+        2650,
+        2795
+      ],
+      [
+        2790,
+        3100
+      ],
+      [
+        3240,
+        3370
+      ]
+    ],
+    "note": "Retained fast path, output construction, complete audit traversals and per-edge call. Additional occurrences located within the fetched resource."
+  },
+  {
+    "id": "R9",
+    "title": "Immutable condition expression",
+    "path": "engine/src/solver_condition_expr.hpp",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/src/solver_condition_expr.hpp",
+    "inspected_ranges": [
+      [
+        1,
+        230
+      ]
+    ],
+    "note": "Stored JSON versus recursive owned_bytes; no proposed lazy-JSON cache needed."
+  },
+  {
+    "id": "R10",
+    "title": "Invocation setup allocation domain",
+    "path": "engine/src/solver_setup_storage.hpp",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/src/solver_setup_storage.hpp",
+    "inspected_ranges": null,
+    "note": "Current domain/lifetime/admission infrastructure; not automatic permission to extend its lifetime."
+  },
+  {
+    "id": "R11",
+    "title": "Current staged retention and cover consumers",
+    "path": "engine/src/solver_solve_bounds.cpp",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/src/solver_solve_bounds.cpp",
+    "inspected_ranges": [
+      [
+        1,
+        330
+      ]
+    ],
+    "note": "Child coroutine ownership, typed cancel, complete view installation, committed-proposal requirement."
+  },
+  {
+    "id": "R12",
+    "title": "Release WASM build owner",
+    "path": "scripts/build-wasm.ps1",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/scripts/build-wasm.ps1",
+    "inspected_ranges": [
+      [
+        1,
+        205
+      ]
+    ],
+    "note": "O3/LTO engine, O1/non-LTO finish TU, exception/floating flags, supported Diagnostics switch."
+  },
+  {
+    "id": "R13",
+    "title": "Actual Calculator qualification probe",
+    "path": "apps/web/test/calculator-delivery-probe.ts",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/apps/web/test/calculator-delivery-probe.ts",
+    "inspected_ranges": [
+      [
+        1,
+        270
+      ]
+    ],
+    "note": "Actual supported controls finish/cancel_setup/cancel_retention; fixture mapping and non-rendered scope."
+  },
+  {
+    "id": "R14",
+    "title": "Actual native fixture selectors",
+    "path": "engine/tests/test_main.cpp",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/tests/test_main.cpp",
+    "inspected_ranges": [
+      [
+        1,
+        230
+      ]
+    ],
+    "note": "Compiler/metadata/setup/Finish/fallback selectors; requirements for artifact argument; no invented flags."
+  },
+  {
+    "id": "R15",
+    "title": "Canonical interruption and staged-prefix mathematics",
+    "path": "docs/solver/mathematics/search-and-resumption.md",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/docs/solver/mathematics/search-and-resumption.md",
+    "inspected_ranges": null,
+    "note": "Relevant sections inspected through staged setup; existing conditional safety, ownership and progress distinctions."
+  },
+  {
+    "id": "R16",
+    "title": "Canonical publication/compiler/evaluator contract",
+    "path": "docs/solver/publication.md",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/docs/solver/publication.md",
+    "inspected_ranges": null,
+    "note": "Complete artifact, native goal, paired defaults, original prices, numerical and exactness scope."
+  },
+  {
+    "id": "R17",
+    "title": "Source ownership and private headers",
+    "path": "docs/foundation/solver-internals.md",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/docs/foundation/solver-internals.md",
+    "inspected_ranges": null,
+    "note": "Compiler boundary, existing phase owners, single-TU constraints and claim correspondence."
+  },
+  {
+    "id": "R18",
+    "title": "Existing experiment/validation tooling",
+    "path": "docs/foundation/tooling.md",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/docs/foundation/tooling.md",
+    "inspected_ranges": null,
+    "note": "Corpus/Lab/preflight/supervision/wait owners and exact command examples."
+  },
+  {
+    "id": "R19",
+    "title": "WASM-only cold telemetry formatter exception",
+    "path": "engine/src/solver_solve_telemetry_json.cpp",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/src/solver_solve_telemetry_json.cpp",
+    "inspected_ranges": [
+      [
+        1,
+        210
+      ],
+      [
+        215,
+        265
+      ]
+    ],
+    "note": "Actual conditional optnone and evidence comment; no blanket optimization mandate."
+  },
+  {
+    "id": "R20",
+    "title": "Compiler contract and default modes",
+    "path": "engine/src/solver_compile_contracts.hpp",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/src/solver_compile_contracts.hpp",
+    "inspected_ranges": null,
+    "note": "Current synchronous compiler signature, default modes and first-return/dirty candidate ownership."
+  },
+  {
+    "id": "R21",
+    "title": "Compiler condition helpers",
+    "path": "engine/src/solver_compile_conditions.hpp",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/src/solver_compile_conditions.hpp",
+    "inspected_ranges": [
+      [
+        1,
+        245
+      ]
+    ],
+    "note": "Native vocabulary, cost presentation format and existing helper/linkage constraints."
+  },
+  {
+    "id": "R22",
+    "title": "Current shared operating rules",
+    "path": "AGENTS.md",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/AGENTS.md",
+    "inspected_ranges": null,
+    "note": "Read-only review; future execution constraints, no subagents, frozen authority, protected root 0, proportional tests."
+  },
+  {
+    "id": "P1",
+    "title": "V8 upstream: WebAssembly architecture",
+    "url": "https://chromium.googlesource.com/v8/v8/+/main/docs/wasm/architecture.md",
+    "kind": "primary_external",
+    "checked_date": "2026-09-21",
+    "note": "Inspected 21 September 2026. Current upstream documentation; installed Node/browser is a separately recorded version. Relevant to entry work, code shape and measurement effects, not a diagnosis of the remaining native call."
+  },
+  {
+    "id": "P2",
+    "title": "Clang attribute reference",
+    "url": "https://clang.llvm.org/docs/AttributeReference.html",
+    "kind": "primary_external",
+    "checked_date": "2026-09-21",
+    "note": "Inspected relevant optnone/noinline and coroutine-lifetime attribute documentation. Compiler controls have precise limits; no blanket suppression or completion-only destruction assumption is selected."
+  },
+  {
+    "id": "P3",
+    "title": "Emscripten: Optimizing Code",
+    "url": "https://emscripten.org/docs/optimizing/Optimizing-Code.html",
+    "kind": "primary_external",
+    "checked_date": "2026-09-21",
+    "note": "Official documentation inspected 21 September 2026. Compile/link optimization and runtime profiling require a controlled release build; no SDK upgrade is selected."
+  },
+  {
+    "id": "P4",
+    "title": "Emscripten: Debugging",
+    "url": "https://emscripten.org/docs/porting/Debugging.html",
+    "kind": "primary_external",
+    "checked_date": "2026-09-21",
+    "note": "Official documentation inspected 21 September 2026. Debug/profiling settings can affect executables; use existing installed tooling and distinguish diagnostic from normal release runs."
+  },
+  {
+    "id": "R23",
+    "title": "Completed current hosted runs and job log",
+    "kind": "connected_ci",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35618066993",
+    "job_id": 106393816191,
+    "knowledge_run_id": 35618067061,
+    "note": "Actual 3/17 CTest failure, 17 solve plus four API assertions, S8.3 interval exception; no solver artifacts. Full tuple unavailable."
+  },
+  {
+    "id": "R24",
+    "title": "Constructive certificate capability fixture",
+    "path": "engine/tests/test_solver_solve.cpp",
+    "inspected_ranges": [
+      [
+        6640,
+        6790
+      ]
+    ],
+    "note": "Cost/action equivalence versus intended pruning, two-state discovery and price-bound cache behavior.",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/tests/test_solver_solve.cpp"
+  },
+  {
+    "id": "R25",
+    "title": "Shared product Fracture comparison",
+    "path": "engine/tests/test_solver_solve.cpp",
+    "inspected_ranges": [
+      [
+        7560,
+        7735
+      ]
+    ],
+    "note": "Same shared result checked against published solve and separate lift; failing cost/consumption equality requires graph identity diagnosis.",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/tests/test_solver_solve.cpp"
+  },
+  {
+    "id": "R26",
+    "title": "One-step numerical-lower staging fixture",
+    "path": "engine/tests/test_solver_solve.cpp",
+    "inspected_ranges": [
+      [
+        9310,
+        9410
+      ]
+    ],
+    "note": "Manually installed Iterating state followed by step(1); setup completion is not explicitly established.",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/tests/test_solver_solve.cpp"
+  },
+  {
+    "id": "R27",
+    "title": "Public phase-owner assertions",
+    "path": "engine/tests/test_solver_api.cpp",
+    "inspected_ranges": [
+      [
+        2290,
+        2390
+      ]
+    ],
+    "note": "Owner range and phase implication assertions; update only with explicit permitted relation and preserved liveness/safety.",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/tests/test_solver_api.cpp"
+  },
+  {
+    "id": "R28",
+    "title": "Bounded incumbent bracket source",
+    "path": "engine/src/solver_solve_finish.cpp",
+    "inspected_ranges": [
+      [
+        1760,
+        2030
+      ],
+      [
+        5290,
+        5510
+      ]
+    ],
+    "note": "Actual L/J/U assignments and fail-closed check; later unclosed-strict normalization. No cause inferred from ordering alone.",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/src/solver_solve_finish.cpp"
+  },
+  {
+    "id": "R29",
+    "title": "S8.3 synthetic fixture context",
+    "path": "engine/tests/test_solver_s8_3.cpp",
+    "inspected_ranges": [
+      [
+        1,
+        255
+      ]
+    ],
+    "note": "Synthetic automatic action session. Exact throwing subcase unknown from hosted log; must isolate natively.",
+    "ref": "a48f055ccc07751807c334386f1fd25c6b4717de",
+    "url": "https://github.com/OliverOrton/poecraft2/blob/a48f055ccc07751807c334386f1fd25c6b4717de/engine/tests/test_solver_s8_3.cpp"
+  }
+]

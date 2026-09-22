@@ -10,6 +10,18 @@ Publication chooses a compatible verified incumbent, compiles the candidate into
 
 The retained `PublicationPipeline` carries cooperative work through direct assertion, strict repair when selected by its contract, classification, and packaging. `IncumbentPortfolio` compares independently evaluated candidates; estimates and unverified numerical candidates remain separate.
 
+Restoring a bounded incumbent still checks `L <= J_pi <= U` before publication,
+using the unchanged scale-dependent tolerance. A failure throws with a bounded
+tuple of entry/scope/generation identities, float bits and component provenance;
+later normalization cannot repair an invalid lower. The diagnostic does not
+promote a provisional incumbent into an independently evaluated graph.
+
+A separate strict lift may reoptimize the selected controller. Its evaluated
+cost and resource consumption need not equal the retained product artifact's.
+Compiler equivalence controls must compare the same selected decisions and
+entry/default semantics; a cheaper separately lifted controller supplies a
+quality comparison, not a same-controller equality.
+
 Pool admission also permits compatible materialized-but-unverified candidates.
 Retention alone supplies no executable upper. The native provenance and complete
 certificate/context/evaluation checks still decide eligibility. Passive views

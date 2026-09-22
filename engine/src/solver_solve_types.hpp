@@ -1898,6 +1898,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
      * uses this as an optimistic escape while evaluating the productive
      * currency actions against their exact blocker identities. */
     bool price_bound_state_pruning = false;
+    // One completed row waits for its original proof dependency before the
+    // expansion owner may try another action. Indices refer to retained rows.
+    std::optional<std::pair<std::uint32_t, std::uint64_t>> pending_constructive_certificate;
     std::vector<double> certified_state_upper;
     std::vector<std::uint64_t> certified_state_row;
     struct CarrierBoundAttributionWork {
@@ -1924,8 +1927,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             EaterIdentity = 1u << 6,
             FracturedJunk = 1u << 7,
             FracturedCraftedJunk = 1u << 8,
+            UnresolvedVeil = 1u << 9,
         };
-        static constexpr std::size_t kCleanCoverRejectionCount = 9;
+        static constexpr std::size_t kCleanCoverRejectionCount = 10;
 
         struct CarrierShapeHistogram {
             std::uint64_t total = 0;
@@ -2657,6 +2661,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         const OutcomeDistribution& kernel);
 
     double certified_global_lower_bound() const;
+
+    std::string bounded_interval_failure(const BoundedPolicyIncumbent& incumbent) const;
+    void validate_bounded_interval(const BoundedPolicyIncumbent& incumbent) const;
 
     SolveGapTarget satisfied_gap_target() const;
 

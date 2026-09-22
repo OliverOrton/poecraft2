@@ -142,6 +142,15 @@ There are three safe ways to account for an unbuilt action:
 
 In the scalar case, impose \(x(s)\le\ell(s,a)\). It may be very weak, but the action has not vanished. A residual-family floor must hold for **every** member of the unresolved family. A sample, count, or finite generated prefix does not prove that universal property. [CLM-0008](../claims.md#clm-0008).
 
+For a clean-domain action that acquires an unresolved veil, paying its original
+nonnegative primitive cost and granting immediate completion is such a scalar
+first-exit relaxation. Every real continuation pays at least that acquisition
+cost. The outside veiled state must not then query the clean occupancy table;
+the zero-cost Unveil decision belongs outside this domain. Adding a goal bit
+while leaving incompatible affix counts unchanged does not establish a valid
+relaxation. This is the existing outside-exit argument, not a new Veiled
+probability model or an executable shortcut.
+
 Complete canonical sets or a proved disjoint family partition establish coverage. Two duplicate action constraints cannot replace a missing different action just because the counts match. The current lower-only quotient and repaired coverage mechanisms are documented as checking that distinction. [Lower and Pruning Authority](../lower-pruning.md).
 
 When a cheap placeholder is replaced by a complete row, keep the native action represented once in the model's intended relaxation. Leaving an old, cheaper fictitious escape alongside the refined row is safe as a lower but may permanently hide the benefit. Deleting a still-required unresolved action is unsafe. Those are opposite mistakes.

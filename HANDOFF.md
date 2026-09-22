@@ -1,5 +1,12 @@
 # Handoff
 
+Active selected successor: [First-policy service and integrity gate](docs/active/2026-09-21-first-policy-service/README.md).
+T0 repairs the reproduced Windows failures; all three affected native families
+and C5/Regalia graph/value controls pass locally. T1 must attribute the remaining
+first-policy stall against this separate baseline. The living record owns
+evidence and the native first-incumbent timing regression. Earlier S0–S4 evidence
+below remains historical; hosted qualification is not claimed.
+
 Completed selected S0–S4: [Frozen runtime identity and cooperative setup](docs/active/2026-09-20-cooperative-setup/README.md).
 The record owns source/build identities, failed history, commands and
 [final controls](docs/active/2026-09-20-cooperative-setup/S4-r2-qualification.json).
@@ -15,7 +22,7 @@ That is the recommended separate successor, not selected work. The native
 Conquest-five graph/cost/count/lower are unchanged; Regalia remains exact.
 Conquest-four browser discovery remains a separate open gap.
 
-Stop at S4. Preserve completed M0–M3, historical policies and high-water evidence.
+Preserve completed M0–M3, historical policies and high-water evidence.
 No automatic restart, inherited deadline, public action, push or subagents.
 Protected root `0` remains untouched; economy and browser defaults stay frozen.
 Non-Windows is waived, hosted CI unrun, rendered review Oliver's. No Simulator

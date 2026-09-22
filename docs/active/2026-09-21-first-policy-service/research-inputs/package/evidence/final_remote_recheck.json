@@ -1,0 +1,19 @@
+{
+  "checked_date": "2026-09-21",
+  "branch": "main",
+  "head": "a48f055ccc07751807c334386f1fd25c6b4717de",
+  "tree": "8ceec3fd137dc563c719d1497782d13f8f620b67",
+  "parent": "5a923d1fa57c37319a82bd838c95412ed93738df",
+  "unchanged_since_initial_review": true,
+  "windows": {
+    "run_id": 35618066993,
+    "status": "completed",
+    "conclusion": "failure"
+  },
+  "knowledge": {
+    "run_id": 35618067061,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "source": "Fresh connected GitHub read before package sealing; no mutation or workflow invocation"
+}

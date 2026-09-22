@@ -8,6 +8,10 @@
 #include "poecraft/item_state.h"
 
 #include <cmath>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
 #include <algorithm>
 #include <limits>
 #include <map>
@@ -354,7 +358,7 @@ std::shared_ptr<SessionImpl> make_automatic_veiled_session() {
     return session;
 }
 
-void run_automatic_veiled_program() {
+void run_automatic_veiled_program(bool sample = true) {
     auto session = make_automatic_veiled_session();
     ActionRegistry registry = build_action_registry(*session);
     GoalSpec goal = automatic_goal(true, false);
@@ -536,9 +540,73 @@ void run_automatic_veiled_program() {
     SolveOptions high_impact_options = options;
     high_impact_options.goal_progress_gated_reforges = true;
     high_impact_options.high_impact_executable_uppers = true;
+    if (const char* directory = std::getenv("POECRAFT_TEST_EVIDENCE_DIR")) {
+        // A complete already-solved controller, independently evaluated in
+        // the exact high-impact session/prices before its failing search.
+        const std::string graph = compile_policy_strategy_json(
+            solve_calc, solved, "automatic Veiled integrity witness");
+        auto strategy = compile_strategy_json(
+            high_impact_session, graph.data(), graph.size());
+        auto economy = std::make_shared<EconomyImpl>();
+        economy->prices = high_impact_prices;
+        StrategyEvalOptions evaluation_options;
+        evaluation_options.economy = economy;
+        const auto evaluation = evaluate_strategy(*strategy, evaluation_options);
+        PC_CHECK(evaluation.converged && evaluation.cost_complete);
+        PC_CHECK(std::abs(evaluation.success_probability - 1.0) < 1e-12);
+        PC_CHECK(std::abs(evaluation.no_matching_edge_probability) < 1e-12);
+        const auto base = std::filesystem::path(directory);
+        std::filesystem::create_directories(base);
+        std::ofstream(base / "veiled-witness.strategy.json") << graph;
+        std::ofstream report(base / "veiled-witness-evaluation.json");
+        report << std::setprecision(17) << "{\"cost\":" << evaluation.total_expected_cost
+            << ",\"success\":" << evaluation.success_probability
+            << ",\"failure\":" << evaluation.failure_probability
+            << ",\"action_not_applied\":" << evaluation.action_not_applied_probability
+            << ",\"no_matching_edge\":" << evaluation.no_matching_edge_probability
+            << ",\"prices\":{";
+        bool first = true;
+        for (const auto& [key, value] : high_impact_prices) {
+            if (!first) report << ',';
+            first = false;
+            report << '"' << key << "\":" << value;
+        }
+        report << "}}\n";
+    }
     const SolveResult high_impact_solved = solve(
         high_impact_calc, start, high_impact_prices,
         high_impact_options);
+    PC_CHECK(high_impact_solved.policy_available);
+    const auto high_impact_graph = compile_policy_strategy_json(
+        high_impact_calc, high_impact_solved, "Veiled interval regression");
+    const auto high_impact_strategy = compile_strategy_json(
+        high_impact_session, high_impact_graph.data(), high_impact_graph.size());
+    auto high_impact_economy = std::make_shared<EconomyImpl>();
+    high_impact_economy->prices = high_impact_prices;
+    StrategyEvalOptions high_impact_eval_options;
+    high_impact_eval_options.economy = high_impact_economy;
+    const auto high_impact_evaluation = evaluate_strategy(
+        *high_impact_strategy, high_impact_eval_options);
+    PC_CHECK(high_impact_evaluation.converged && high_impact_evaluation.cost_complete);
+    PC_CHECK(std::abs(high_impact_evaluation.success_probability - 1.0) < 1e-12);
+    PC_CHECK(high_impact_evaluation.failure_probability == 0);
+    PC_CHECK(high_impact_evaluation.action_not_applied_probability == 0);
+    PC_CHECK(high_impact_evaluation.no_matching_edge_probability == 0);
+    PC_CHECK(high_impact_solved.lower_bound > 0);
+    PC_CHECK(high_impact_solved.lower_bound <= high_impact_evaluation.total_expected_cost + 1e-8);
+    PC_CHECK(std::abs(high_impact_solved.upper_bound -
+        high_impact_evaluation.total_expected_cost) < 1e-8);
+
+    // An unresolved veil cannot reuse either occupancy-table authority.
+    CalcContext veil_domain(high_impact_session, goal, high_impact_registry,
+        {high_impact_alchemy, high_impact_restart, harvest_index}, false, true, true);
+    SolveWorkTestAccess::Impl veil_work(veil_domain, start, high_impact_prices, high_impact_options);
+    pc_item_state unresolved = start;
+    add_mod(unresolved, *high_impact_session, high_impact_session->veiled_prefix_mod_id,
+            PC_MOD_SLOT_VEILED);
+    const auto unresolved_state = veil_domain.intern_item(unresolved);
+    PC_CHECK(!veil_work.clean_goal_cover_eligible(unresolved_state));
+    PC_CHECK(!veil_work.identity_clean_goal_progress_eligible(unresolved_state));
     std::printf(
         "solver automatic Veiled high-impact: converged=%d policy=%d "
         "status=%u termination=%u closed=%d carriers=%llu candidates=%llu "
@@ -703,6 +771,7 @@ void run_automatic_veiled_program() {
     PC_CHECK(std::fabs(
                  exact.total_expected_cost -
                  solved.evaluated_policy_cost) < 1e-7);
+    if (sample) {
     const SimulationSummaryInternal summary = run_compiled(
         session, strategy, prices, 10000, 8315);
     PC_CHECK(summary.success_count == summary.completed_runs);
@@ -712,6 +781,7 @@ void run_automatic_veiled_program() {
         solved.evaluated_policy_cost, exact.total_expected_cost,
         static_cast<unsigned long long>(summary.success_count),
         static_cast<unsigned long long>(summary.completed_runs));
+    }
 }
 
 void run_temporary_blocker_price_flip() {
@@ -3022,17 +3092,26 @@ void run_solver_protected_setup_tests() {
     run_temporary_capacity_finish();
 }
 
-void run_solver_s8_3_tests() {
-    run_automatic_veiled_program();
-    run_temporary_blocker_price_flip();
-    run_cannot_roll_price_flip();
-    run_multimod_finish_price_flip();
-    run_solver_protected_setup_tests();
-    run_protected_price_flip();
-    run_protected_producibility_filter();
-    run_fracture_price_flip();
-    run_incomplete_dependency_refusals();
-    run_carrier_relative_renewal_templates();
-    run_fixed_option_product_parent_refinement_trigger();
-    run_planner_operator_import_authority();
+void run_solver_s8_3_tests(const char* case_name) {
+    bool matched = false;
+    const auto run = [&](const char* name, auto test) {
+        if (case_name && std::string(case_name) != name) return;
+        matched = true;
+        std::printf("S8.3 subcase: %s\n", name);
+        std::fflush(stdout);
+        test();
+    };
+    run("run_automatic_veiled_program", [&] { run_automatic_veiled_program(case_name == nullptr); });
+    run("run_temporary_blocker_price_flip", run_temporary_blocker_price_flip);
+    run("run_cannot_roll_price_flip", run_cannot_roll_price_flip);
+    run("run_multimod_finish_price_flip", run_multimod_finish_price_flip);
+    run("run_solver_protected_setup_tests", run_solver_protected_setup_tests);
+    run("run_protected_price_flip", run_protected_price_flip);
+    run("run_protected_producibility_filter", run_protected_producibility_filter);
+    run("run_fracture_price_flip", run_fracture_price_flip);
+    run("run_incomplete_dependency_refusals", run_incomplete_dependency_refusals);
+    run("run_carrier_relative_renewal_templates", run_carrier_relative_renewal_templates);
+    run("run_fixed_option_product_parent_refinement_trigger", run_fixed_option_product_parent_refinement_trigger);
+    run("run_planner_operator_import_authority", run_planner_operator_import_authority);
+    if (!matched) throw std::invalid_argument("unknown S8.3 subcase");
 }

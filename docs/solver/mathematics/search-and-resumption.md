@@ -18,6 +18,15 @@ The current mechanisms remain described by [Scheduling and Bellman Search](https
 
 A heuristic can rank work badly and still publish only sound results. A fair schedule can be impractically slow. A capped run with no answer is not a counterexample to a theorem whose premise is unlimited fair execution. Conversely, a sound bound does not establish that the scheduler will ever finish its proof.
 
+A pending producer adds a service obligation even when its numerical read has a
+safe fallback. If a one-shot certificate sees zero while a nonnegative lower is
+pending, zero is admissible but does not mean the completed certificate failed.
+Retain the compatible source/row obligation until a complete generation is ready,
+refused, cancelled, capped or legitimately superseded. Service before the next
+dependent expansion restores the original decision without making queries
+blocking. This is a progress condition; the original lower/upper and strict
+dominance premises still decide whether any action may be retired.
+
 The documented carrier ordering uses progress, side capacity, blockers, and other observations as priorities, while proof values have separate owners. This is the correct conceptual separation. It does not prove the current scheduling implementation fair. [Scheduling and Bellman Search](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/scheduling-bellman.md).
 
 ### First-policy debt and later continuation cost

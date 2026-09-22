@@ -1919,6 +1919,12 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
             1, std::min(max_work_items, kMaxCooperativeUnitsPerStep));
         while (remaining > 0 && phase != SolvePhase::Done) {
             if (!advance_setup()) break;
+            if (pending_constructive_certificate) {
+                const auto [state, row] = *pending_constructive_certificate;
+                pending_constructive_certificate.reset();
+                if (!result.diagnostics.resource_cap_hit && !result.diagnostics.state_cap_hit)
+                    (void)try_constructive_state_certificate(state, row);
+            }
             if (publication_pipeline.initial_candidate_task.has_value()) {
                 if (advance_initial_candidate_publication()) break;
                 // Finish discarded only the in-flight verification scratch;
@@ -2368,6 +2374,7 @@ void SolveWork::Impl::prepare_requested_bounded_finish() {
         expansion_active = false;
         expansion_prepared = false;
         expansion_is_incremental_alternative = false;
+        pending_constructive_certificate.reset();
         expansion_operator_indices.clear();
         expansion_operator_cursor = 0;
         focus_optimizing = false;

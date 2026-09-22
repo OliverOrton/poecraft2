@@ -613,6 +613,7 @@ std::pair<std::uint64_t, std::uint64_t> SolveWork::release_pending_work() {
     impl_->retention_setup_pending = false;
     impl_->retention_setup_task.reset();
     impl_->goal_cover_task.reset();
+    impl_->pending_constructive_certificate.reset();
     const auto tasks_released = std::chrono::steady_clock::now();
     impl_->calc.cancel_state_local_automatic_candidates();
     impl_->calc.cancel_outcomes();

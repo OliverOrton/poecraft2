@@ -1,0 +1,237 @@
+{
+  "shared": {
+    "base_state": {
+      "base_key": "synthetic/base",
+      "item_level": 1,
+      "rarity": "rare",
+      "item_flags": 0,
+      "generic_influence_bits": 0,
+      "searing_exarch_tier": 0,
+      "eater_of_worlds_tier": 0,
+      "prefixes": [],
+      "suffixes": []
+    },
+    "start_node": "start",
+    "scope": "no_economic_restart_policy_restriction",
+    "operation_types": [
+      "alchemy",
+      "chaos",
+      "fracture",
+      "restart"
+    ],
+    "goal_condition": {
+      "type": "all",
+      "conditions": [
+        {
+          "type": "rarity_is",
+          "rarity": "rare"
+        },
+        {
+          "type": "all",
+          "conditions": [
+            {
+              "type": "all",
+              "conditions": [
+                {
+                  "type": "has_mod_family",
+                  "family_mod_key": "mod0",
+                  "min_tier": 1
+                },
+                {
+                  "type": "has_mod_family",
+                  "family_mod_key": "mod3",
+                  "min_tier": 1
+                },
+                {
+                  "type": "has_mod_family",
+                  "family_mod_key": "mod5",
+                  "min_tier": 1
+                },
+                {
+                  "type": "has_mod_family",
+                  "family_mod_key": "mod6",
+                  "min_tier": 1
+                }
+              ]
+            },
+            {
+              "type": "any",
+              "conditions": [
+                {
+                  "type": "all",
+                  "conditions": [
+                    {
+                      "type": "prefix_count_range",
+                      "min": 1,
+                      "max": 1
+                    },
+                    {
+                      "type": "suffix_count_range",
+                      "min": 3,
+                      "max": 3
+                    }
+                  ]
+                },
+                {
+                  "type": "all",
+                  "conditions": [
+                    {
+                      "type": "prefix_count_range",
+                      "min": 2,
+                      "max": 2
+                    },
+                    {
+                      "type": "suffix_count_range",
+                      "min": 2,
+                      "max": 2
+                    }
+                  ]
+                },
+                {
+                  "type": "all",
+                  "conditions": [
+                    {
+                      "type": "prefix_count_range",
+                      "min": 3,
+                      "max": 3
+                    },
+                    {
+                      "type": "suffix_count_range",
+                      "min": 1,
+                      "max": 1
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "root_default": "offpolicy",
+    "nodes": 69,
+    "edges": 192
+  },
+  "lift": {
+    "base_state": {
+      "base_key": "synthetic/base",
+      "item_level": 1,
+      "rarity": "rare",
+      "item_flags": 0,
+      "generic_influence_bits": 0,
+      "searing_exarch_tier": 0,
+      "eater_of_worlds_tier": 0,
+      "prefixes": [],
+      "suffixes": []
+    },
+    "start_node": "start",
+    "scope": "no_economic_restart_policy_restriction",
+    "operation_types": [
+      "alchemy",
+      "chaos",
+      "fracture",
+      "restart"
+    ],
+    "goal_condition": {
+      "type": "all",
+      "conditions": [
+        {
+          "type": "rarity_is",
+          "rarity": "rare"
+        },
+        {
+          "type": "all",
+          "conditions": [
+            {
+              "type": "all",
+              "conditions": [
+                {
+                  "type": "has_mod_family",
+                  "family_mod_key": "mod0",
+                  "min_tier": 1
+                },
+                {
+                  "type": "has_mod_family",
+                  "family_mod_key": "mod3",
+                  "min_tier": 1
+                },
+                {
+                  "type": "has_mod_family",
+                  "family_mod_key": "mod5",
+                  "min_tier": 1
+                },
+                {
+                  "type": "has_mod_family",
+                  "family_mod_key": "mod6",
+                  "min_tier": 1
+                }
+              ]
+            },
+            {
+              "type": "any",
+              "conditions": [
+                {
+                  "type": "all",
+                  "conditions": [
+                    {
+                      "type": "prefix_count_range",
+                      "min": 1,
+                      "max": 1
+                    },
+                    {
+                      "type": "suffix_count_range",
+                      "min": 3,
+                      "max": 3
+                    }
+                  ]
+                },
+                {
+                  "type": "all",
+                  "conditions": [
+                    {
+                      "type": "prefix_count_range",
+                      "min": 2,
+                      "max": 2
+                    },
+                    {
+                      "type": "suffix_count_range",
+                      "min": 2,
+                      "max": 2
+                    }
+                  ]
+                },
+                {
+                  "type": "all",
+                  "conditions": [
+                    {
+                      "type": "prefix_count_range",
+                      "min": 3,
+                      "max": 3
+                    },
+                    {
+                      "type": "suffix_count_range",
+                      "min": 1,
+                      "max": 1
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "root_default": "offpolicy",
+    "nodes": 52,
+    "edges": 140
+  },
+  "same_base_and_scope": true,
+  "same_goal": true,
+  "same_literal_operation_types": true,
+  "both_root_defaults_fail_closed": true,
+  "graphs_equal": false,
+  "sha256": {
+    "fracture-lift.strategy.json": "ff04adbd448de17ed70c29619069f186de4c37b2794c03a98fa2464bd95bd04b",
+    "fracture-shared.strategy.json": "5b14b8ded78b507dad87c139c854da3af5738b07514d471c60e66414d3a20e22"
+  }
+}

@@ -1,0 +1,568 @@
+[
+  {
+    "case": "cb01-cross-base-product8-long240",
+    "status": "refused_unsupported_action",
+    "errors": [],
+    "policy": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 358209179.6640102,
+      "expanded_states": 3274,
+      "sweeps": 1,
+      "residual": 356.2864850669512,
+      "skipped_action_count": 1,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 187,
+        "candidate": 28,
+        "evaluator_supported": 28,
+        "supported_priced": 252,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 1
+      },
+      "lower_bound": 405.3694021063399,
+      "upper_bound": 85558.70618560436,
+      "evaluated_policy_cost": 85558.70618560436,
+      "absolute_optimality_gap": 85153.33678349802,
+      "relative_optimality_gap": 210.06355275221262,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "evaluation": {
+      "completed": true,
+      "converged": true,
+      "cost_complete": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "zero_off_policy_mass": true
+    },
+    "primitive_actions": 8407.202314771383,
+    "graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+    "baseline_graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+    "comparison": {
+      "baseline": "a48f055",
+      "candidate": "T0",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": 121.13730000000214,
+          "median": 121.13730000000214,
+          "p90": 121.13730000000214,
+          "p99": 121.13730000000214,
+          "max": 121.13730000000214
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": 14.93039999998291,
+          "median": 14.93039999998291,
+          "p90": 14.93039999998291,
+          "p99": 14.93039999998291,
+          "max": 14.93039999998291
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": 0.0002999999999999999,
+          "median": 0.0002999999999999999,
+          "p90": 0.0002999999999999999,
+          "p99": 0.0002999999999999999,
+          "max": 0.0002999999999999999
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": 0.009299999999999996,
+          "median": 0.009299999999999996,
+          "p90": 0.009299999999999996,
+          "p99": 0.009299999999999996,
+          "max": 0.009299999999999996
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": 31.695899999999995,
+          "median": 31.695899999999995,
+          "p90": 31.695899999999995,
+          "p99": 31.695899999999995,
+          "max": 31.695899999999995
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 24.0,
+          "median": 24.0,
+          "p90": 24.0,
+          "p99": 24.0,
+          "max": 24.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": 4257.051299999999,
+          "median": 4257.051299999999,
+          "p90": 4257.051299999999,
+          "p99": 4257.051299999999,
+          "max": 4257.051299999999
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": -249.0,
+          "median": -249.0,
+          "p90": -249.0,
+          "p99": -249.0,
+          "max": -249.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb01-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Conquest Lamellar",
+            "class": "Body Armour",
+            "base_class": "Body Armour / Conquest Lamellar",
+            "natural_t1_count": "5",
+            "side_mix": "unknown",
+            "pool_density": "unknown",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "requested_bounded_finish",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\candidate-r3\\poecraft_solver_benchmark.exe",
+              "sha256": "4753500e5363bb6045a66ba84ce88880887a633ae797dfa72adbb1fe2e780372"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-binaries\\poecraft_solver_benchmark.exe",
+              "sha256": "62d4fc6944a0d4abe4bbee514b07e27d52f704b3dcc020e175ac6f5abf9f9bb9"
+            }
+          },
+          "baseline_status": {
+            "actual": "refused_unsupported_action",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "refused_unsupported_action",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "wall_ms": 121.13730000000214,
+            "solve_ms": 14.93039999998291,
+            "solve_step_median_ms": 0.0002999999999999999,
+            "solve_step_p95_ms": 0.009299999999999996,
+            "solve_step_max_ms": 31.695899999999995,
+            "peak_memory_bytes": 24.0,
+            "time_to_incumbent_ms": 4257.051299999999,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": -249.0,
+            "transitions": 0.0,
+            "reforge_work": 0.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    }
+  },
+  {
+    "case": "cb12-cross-base-product8-long240",
+    "status": "converged",
+    "errors": [],
+    "policy": {
+      "converged": true,
+      "start_state": 0,
+      "start_value": 65.60036144971359,
+      "expanded_states": 1826,
+      "sweeps": 12,
+      "residual": 1.4210854715202004e-14,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "exact",
+      "termination": "exact_closed",
+      "stop_cause": "exact_closed",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 158,
+        "candidate": 21,
+        "evaluator_supported": 21,
+        "supported_priced": 74,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 65.60036144971359,
+      "upper_bound": 65.60036144971359,
+      "evaluated_policy_cost": 65.60036144971359,
+      "absolute_optimality_gap": 0,
+      "relative_optimality_gap": 0,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "evaluation": {
+      "completed": true,
+      "converged": true,
+      "cost_complete": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "zero_off_policy_mass": true
+    },
+    "primitive_actions": 127.11597414558129,
+    "graph_sha256": "5161ab859825a667f6c61dc3cc62ee5c854031f133f2434448bf535501ba9659",
+    "baseline_graph_sha256": "5161ab859825a667f6c61dc3cc62ee5c854031f133f2434448bf535501ba9659",
+    "comparison": {
+      "baseline": "a48f055",
+      "candidate": "T0",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": 917.9884999999995,
+          "median": 917.9884999999995,
+          "p90": 917.9884999999995,
+          "p99": 917.9884999999995,
+          "max": 917.9884999999995
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": 919.0590999999986,
+          "median": 919.0590999999986,
+          "p90": 919.0590999999986,
+          "p99": 919.0590999999986,
+          "max": 919.0590999999986
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": 0.0004999999999999987,
+          "median": 0.0004999999999999987,
+          "p90": 0.0004999999999999987,
+          "p99": 0.0004999999999999987,
+          "max": 0.0004999999999999987
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": 6.924499999999998,
+          "median": 6.924499999999998,
+          "p90": 6.924499999999998,
+          "p99": 6.924499999999998,
+          "max": 6.924499999999998
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 24.0,
+          "median": 24.0,
+          "p90": 24.0,
+          "p99": 24.0,
+          "max": 24.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": 923.538700000001,
+          "median": 923.538700000001,
+          "p90": 923.538700000001,
+          "p99": 923.538700000001,
+          "max": 923.538700000001
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "exact->exact": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb12-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Vaal Regalia",
+            "class": "Body Armour",
+            "base_class": "Body Armour / Vaal Regalia",
+            "natural_t1_count": "1",
+            "side_mix": "S",
+            "pool_density": "dense_ge_100",
+            "goal_probability": "moderate_le_0.02",
+            "incumbent": "other",
+            "policy_status": "exact",
+            "termination": "exact_closed",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\cooperative-setup\\candidate-r3\\poecraft_solver_benchmark.exe",
+              "sha256": "4753500e5363bb6045a66ba84ce88880887a633ae797dfa72adbb1fe2e780372"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-binaries\\poecraft_solver_benchmark.exe",
+              "sha256": "62d4fc6944a0d4abe4bbee514b07e27d52f704b3dcc020e175ac6f5abf9f9bb9"
+            }
+          },
+          "baseline_status": {
+            "actual": "converged",
+            "policy": "exact",
+            "termination": "exact_closed"
+          },
+          "candidate_status": {
+            "actual": "converged",
+            "policy": "exact",
+            "termination": "exact_closed"
+          },
+          "deltas": {
+            "wall_ms": 917.9884999999995,
+            "solve_ms": 919.0590999999986,
+            "solve_step_median_ms": 0.0,
+            "solve_step_p95_ms": 0.0004999999999999987,
+            "solve_step_max_ms": 6.924499999999998,
+            "peak_memory_bytes": 24.0,
+            "time_to_incumbent_ms": 923.538700000001,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 0.0,
+            "transitions": 0.0,
+            "reforge_work": 0.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    }
+  }
+]

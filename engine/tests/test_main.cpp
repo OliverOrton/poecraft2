@@ -8,6 +8,11 @@ int g_failures = 0;
 } // namespace pctest
 
 int main(int argc, char** argv) {
+    if (argc > 2 && std::string(argv[1]) == "--solver-integrity-only") {
+        run_solver_integrity_tests(argv[2]);
+        std::printf("solver integrity tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-setup-service-only") {
         run_solver_setup_service_tests();
         std::printf("solver setup service tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
@@ -72,7 +77,7 @@ int main(int argc, char** argv) {
         return pctest::g_failures == 0 ? 0 : 1;
     }
     if (argc > 1 && std::string(argv[1]) == "--solver-s8-3-only") {
-        run_solver_s8_3_tests();
+        run_solver_s8_3_tests(argc > 2 ? argv[2] : nullptr);
         std::printf("solver S8.3 tests: %d checks, %d failures\n",
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;

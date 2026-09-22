@@ -2343,9 +2343,25 @@ void run_public_solver_gate(const char* artifact_dir) {
         PC_CHECK(solve_progress.expanded_states > 0);
         PC_CHECK(solve_progress.start_value_bound >= 0.0);
         PC_CHECK(solve_progress.phase_owner >=
-                 PC_SOLVE_PHASE_OWNER_DEPENDENCY_PREPARATION);
+                 PC_SOLVE_PHASE_OWNER_SETUP);
         PC_CHECK(solve_progress.phase_owner <= PC_SOLVE_PHASE_OWNER_DONE);
-        if (solve_progress.phase == PC_SOLVE_PHASE_ITERATING) {
+        if (solve_progress.phase_owner == PC_SOLVE_PHASE_OWNER_SETUP) {
+            PC_CHECK(!solve_progress.done);
+            PC_CHECK(solve_progress.phase == PC_SOLVE_PHASE_EXPANDING ||
+                     solve_progress.phase == PC_SOLVE_PHASE_ITERATING ||
+                     solve_progress.phase == PC_SOLVE_PHASE_REFINING);
+            size_t setup_trace_size = 0;
+            PC_CHECK(pc_solver_progress_trace(solver, 0, nullptr, 0,
+                &setup_trace_size, &error) == PC_RESULT_OK);
+            std::string setup_trace(setup_trace_size + 256, '\0');
+            PC_CHECK(pc_solver_progress_trace(solver, 0, setup_trace.data(),
+                setup_trace.size(), &setup_trace_size, &error) == PC_RESULT_OK);
+            setup_trace.resize(setup_trace_size);
+            const auto parsed_setup = poecraft::json::Parser(
+                setup_trace.data(), setup_trace.size()).parse();
+            const auto& owner = parsed_setup.at("current").at("active_work_owner").string;
+            PC_CHECK(owner == "goal_cover_setup" || owner == "retention_setup");
+        } else if (solve_progress.phase == PC_SOLVE_PHASE_ITERATING) {
             PC_CHECK(solve_progress.phase_owner ==
                      PC_SOLVE_PHASE_OWNER_BELLMAN_OPTIMIZATION);
         } else if (solve_progress.phase == PC_SOLVE_PHASE_REFINING) {
@@ -2365,7 +2381,8 @@ void run_public_solver_gate(const char* artifact_dir) {
         saw_certifying |=
             solve_progress.phase == PC_SOLVE_PHASE_CERTIFYING;
         ++step_count;
-    } while (!solve_progress.done);
+    } while (!solve_progress.done && step_count < 100000);
+    PC_CHECK(solve_progress.done);
     PC_CHECK(step_count >= 2);
     PC_CHECK(solve_progress.phase == PC_SOLVE_PHASE_DONE);
     PC_CHECK(solve_progress.phase_owner == PC_SOLVE_PHASE_OWNER_DONE);

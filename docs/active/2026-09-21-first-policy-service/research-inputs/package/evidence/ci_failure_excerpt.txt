@@ -1,0 +1,40 @@
+Selected failure excerpt, transcribed from the connected GitHub job log.
+Not a byte-preserved copy of the complete log or a downloaded CI artifact.
+Repository OliverOrton/poecraft2, main a48f055ccc07751807c334386f1fd25c6b4717de
+Windows run 35618066993, job 106393816191, completed failure.
+
+Prerequisites/build: passed. Frozen source/database/runtime validation: passed.
+Python: 163 ingest passed, 5 optional skipped; 12 economy passed + 2 subtests;
+18 binding tests passed.
+
+CTest: 17 tests; 14 passed; 3 failed. Total real time 211.36 seconds.
+
+poecraft_solver_solve: 87407 checks, 17 failures; 71.37 seconds.
+engine/tests/test_solver_solve.cpp:
+  6742: constructive_state_certificates == 1
+  6743: constructive_state_operators_pruned == 2
+  6744: constructive_upper_bound near 3.0
+  6746: constructive_upper_first_expanded_state == 1
+  6748: constructive_state_witnesses nonempty
+  6749: discovered_states == 2
+  6754: telemetry accepted-certificate substring
+  6757: telemetry optimistic_goal_production_cover substring
+  6765: repeated solve does not reuse transition cache
+  6778: certificate-disabled oracle discovers more states
+  7700: shared product Fracture evaluated cost equals separate lift cost
+  7719: shared expected consumption equals separate lift consumption (four failures)
+  9384: one-step numerical_lower_work phase == Expanding
+  9385: incremental preparation/expansion flag is active
+
+poecraft_solver_api: 2920 checks, 4 failures; 10.56 seconds.
+engine/tests/test_solver_api.cpp:
+  2345: phase_owner >= DEPENDENCY_PREPARATION (twice)
+  2352: phase_owner == POLICY_ASSEMBLY when phase == Refining (twice)
+
+poecraft_solver_s8_3: exception after 0.91 seconds; 0xc0000409.
+std::logic_error: bounded incumbent evaluation violates L <= J_pi <= U
+The log does not supply the failing fixture or L/J_pi/U tuple.
+
+Upload: frozen-runtime-identity-failure, build/validation/runtime-identity-*.json
+No files matched; no artifacts were uploaded. Solver failure payloads are absent.
+The later hosted web/typecheck lane was not reached.
