@@ -1,0 +1,53 @@
+{
+  "basis": "Whole graph, native mechanics/evaluator, original entry, full goal/action/price scope and controls unchanged. Native publication selection changed; evaluator did not. Reuse complete independent original-root evaluation and unchanged-controller sampling evidence. No new Simulator campaign.",
+  "comparisons": [
+    {
+      "stage": "C3-wasm",
+      "prior_report": "out\\ordinary-capability\\C0-wasm\\report.json",
+      "prior_sha256": "0927901a2a3bf477616ebcc1935c94b8a517f5eaf95134277983f5d5b262da12",
+      "equal": {
+        "base_path": true,
+        "item_level": true,
+        "goal_envelope": true,
+        "solve_options": true,
+        "bounded_finish_after_ms": true,
+        "economy": true,
+        "resolved": true,
+        "graph": true
+      },
+      "expected_primitive_actions_from_compatible_prior_evaluation": 14152.339714597101
+    },
+    {
+      "stage": "C3-wasm-five",
+      "prior_report": "out\\first-policy-service\\T3-r3-p1-candidate\\report.json",
+      "prior_sha256": "504e303ad640013ea6913770f4abadaff631e8bc9d35d631bb18d05e85313d49",
+      "equal": {
+        "base_path": true,
+        "item_level": true,
+        "goal_envelope": true,
+        "solve_options": true,
+        "bounded_finish_after_ms": true,
+        "economy": true,
+        "resolved": true,
+        "graph": true
+      },
+      "expected_primitive_actions_from_compatible_prior_evaluation": 8407.202314771383
+    },
+    {
+      "stage": "C3-wasm-regalia",
+      "prior_report": "out\\ordinary-capability\\final-probe-regalia\\report.json",
+      "prior_sha256": "7cfa835236e8d7c57671260620acab4f3b42d53c2b0e62c1725504d9e173a2a9",
+      "equal": {
+        "base_path": true,
+        "item_level": true,
+        "goal_envelope": true,
+        "solve_options": true,
+        "bounded_finish_after_ms": true,
+        "economy": true,
+        "resolved": true,
+        "graph": true
+      },
+      "expected_primitive_actions_from_compatible_prior_evaluation": 127.11597414558129
+    }
+  ]
+}

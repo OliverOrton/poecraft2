@@ -1,29 +1,23 @@
 # Handoff
 
-The [ordinary capability programme](docs/active/2026-09-22-ordinary-capability/README.md)
-stopped at its two-failed-variant gate. Fresh unchanged Conquest-four controls:
-native C3746.1319409485764/N8608.881793656798; actual unattended Calculator
-C5218.040949685988/N14152.339714597101 at the normal four-minute Finish. Both are
-bounded with L198.8334996747695. The 20% browser improvement/full-recovery target
-is **unmet**. Two proof-handoff diagnostics found no cheaper candidate. Two
-captured-row/root seed variants regressed native output to C5218.04 and are removed;
-negative patches and compact matched evidence remain in the programme record.
+The resumed [ordinary capability programme](docs/active/2026-09-22-ordinary-capability/README.md#resumed-work--product-fracture-publication)
+retains a narrow product Fracture publication repair: close the selected native
+hit/paid-replacement programme, rather than raw intermediate misses. Native
+prefix/suffix policies independently check at C58; a missing replacement tail
+still refuses. The original captured-row proposal was reassessed on the repaired
+boundary, completed at C6147.83, and was removed again after regressing delivery.
 
-Retained changes are test-only `default_finish`, one final diagnostic read after
-delivery, and canonical mathematical/measurement integration. The native source
-is unchanged from reviewed `343b615`; restored build/joint tests pass. The final
-actual Regalia probe remains exact at C65.60036144971359 without manual intent.
-Existing [first-policy/integrity](docs/active/2026-09-21-first-policy-service/README.md)
-and [cooperative setup](docs/active/2026-09-20-cooperative-setup/README.md) work is
-preserved. C4 baseline ordinary max is 981.78 ms; historical C5 is 300–308 ms,
-both over 250 ms. Do not claim a response or new quality pass.
+Rebuilt native/WASM, scoped tests and actual Calculator controls pass preservation.
+Conquest-four remains native C3746.13 versus WASM C5218.04, both bounded. The browser
+quality target is **unmet**. C5 first-policy delivery, exact Regalia and matched
+Ring-two graphs are preserved; Ring-two remains memory-capped. Ordinary latency
+still fails (C4 899 ms, C5 326 ms). Full evidence and validation limits live in the
+programme record; there is no new generalization or exactness claim.
 
-Remaining capability work needs a complete useful native continuation at its
-actual entry; captured coarse choices alone did not satisfy selected fixed-option
-closure/frontier obligations. No successor, broad retry, partition staging,
-public Ring activation or capacity increase is selected automatically.
-
-Work stays local: no push, hosted dispatch, automatic restart, inherited deadline
-or subagents. Protected root `0`, frozen economy and browser defaults are preserved.
-Non-Windows remains waived; rendered review belongs to Oliver. No changed-controller
-simulation campaign or treatment WASM/wide qualification was justified after rejection.
+Further capability work needs a useful complete controller and a bounded service
+premise; this completed expensive candidate does not justify wider retries or an
+exceptional check. No automatic successor, partition rewrite, capacity increase,
+public Ring activation, restart or push is selected. Work stays sequential and
+local, without subagents or inherited deadlines. Preserve protected root `0`,
+unrelated work, frozen economy, browser defaults and historical wide-policy evidence.
+Non-Windows remains waived; rendered review belongs to Oliver.

@@ -2198,6 +2198,124 @@ void run_first_proper_candidate_retention_tests() {
     }
 }
 
+void run_joint_product_fracture_publication_tests() {
+    // The product row is Fracture plus paid replacement on a miss, not the
+    // raw primitive's junk-fractured exit. Exercise both affix sides without
+    // using a captured source-policy preference or historical graph.
+    for (const std::uint32_t goal_mod : {0u, 5u}) {
+        auto session = make_solve_session();
+        auto& data = const_cast<DataImpl&>(*session->data);
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+            if (mod == 0 || mod == 3 || mod == 5 || mod == 6) continue;
+            pc_bitset_clear(session->normal_random_roll_mask.data(), mod);
+            pc_bitset_clear(session->positive_spawn_weight_mask.data(), mod);
+            pc_bitset_clear(session->positive_base_weight_mask.data(), mod);
+            session->base_spawn_weight[mod] = 0;
+            session->base_roll_weight[mod] = 0;
+            data.spawn_weights[mod] = 0;
+        }
+        auto registry = build_action_registry(*session);
+        const auto fracture = registry.index_by_id.at("fracture");
+        const auto annul = registry.index_by_id.at("annul");
+        const auto alchemy = registry.index_by_id.at("alchemy");
+        const auto restart = registry.index_by_id.at("restart");
+        GoalSpec goal;
+        goal.rarity = PC_RARITY_RARE;
+        goal.automatic_candidates = true;
+        GoalSlot slot;
+        slot.family_id = session->family_id[goal_mod];
+        slot.min_tier = 1;
+        goal.slots.push_back(slot);
+        CalcContext calc(session, goal, registry, {alchemy, annul, fracture, restart},
+            false, true, false, std::nullopt, {}, true);
+        PC_CHECK(calc.operators()[fracture].automatic_kind ==
+            AutomaticCandidateKind::Fracture);
+        pc_item_state start;
+        pc_item_clear(&start);
+        start.rarity = PC_RARITY_RARE;
+        for (const auto mod : {0u, 3u, 5u, 6u}) {
+            PC_CHECK(pc_item_add_mod(&start,
+                mod < 5 ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX,
+                mod, session->primary_group[mod], 0, nullptr) == PC_RESULT_OK);
+        }
+        SolveOptions options;
+        options.allow_economic_restart = false;
+        options.state_certificate_control = false;
+        options.high_impact_executable_uppers = true;
+        SolveWorkTestAccess::Impl work(calc, start,
+            {{"fracture", 10}, {"annul", 1}, {"alchemy", 2}, {"base", 3}}, options);
+        work.transition_cache = std::make_shared<SolveTransitionCache>();
+        work.priced_rows.clear();
+        const auto root = work.result.start_state;
+        const auto local = work.product_fracture_kernel(root, 1);
+        PC_CHECK(local.eligible);
+        PC_CHECK(near(local.miss_probability, .75, 1e-12));
+        const auto append = [&](std::uint32_t state, std::uint32_t op,
+                                double cost, const auto& exits) {
+            solve_detail::SparsePolicyRowInput row;
+            row.owner_state = state;
+            row.operator_index = op;
+            row.cost = cost;
+            for (const auto& exit : exits)
+                row.transitions.push_back({exit.state, exit.probability});
+            return solve_detail::append_sparse_policy_row(
+                *work.transition_cache, work.priced_rows, row);
+        };
+        const auto fracture_row = append(root, fracture,
+            10 + 3 * local.miss_probability, local.exits);
+        for (std::uint32_t state = 0; state < calc.state_count(); ++state) {
+            PC_CHECK(state < 64);
+            if (state == root || calc.is_goal_state(calc.state(state))) continue;
+            const auto action = calc.state(state).rarity == PC_RARITY_NORMAL
+                ? alchemy : annul;
+            const auto& native = calc.outcomes(state, action);
+            if (!native.supported || !native.applicable)
+                std::printf("fracture fixture unavailable state=%u rarity=%u action=%u\n",
+                    state, calc.state(state).rarity, action);
+            PC_CHECK(native.supported && native.applicable);
+            append(state, action, action == alchemy ? 2 : 1, native.entries);
+        }
+        const auto n = calc.state_count();
+        work.transition_cache->state_rows.resize(n);
+        work.result.values.assign(n, 0);
+        work.result.goal_states.assign(n, 0);
+        work.result.expanded.assign(n, 1);
+        work.expanded = work.result.expanded;
+        work.expanded_count = n;
+        for (std::uint32_t state = 0; state < n; ++state)
+            work.result.goal_states[state] = calc.is_goal_state(calc.state(state));
+        const bool installed = work.try_install_reachable_incumbent(false);
+        if (!installed) std::printf("fracture fixture refusal: %s\n",
+            work.incremental_anytime_policy_last_failure.c_str());
+        PC_CHECK(installed);
+        PC_CHECK(calc.state_count() == n);
+        PC_CHECK(work.output_incumbent.has_value());
+        if (work.output_incumbent) {
+            PC_CHECK(work.output_incumbent->policy_rows[root] == fracture_row);
+            PC_CHECK(near(work.output_incumbent->certified_upper_bound, 58, 1e-10));
+            PC_CHECK(!work.output_incumbent->independently_evaluated);
+            work.publication_pipeline.initial_candidate_task.emplace(
+                work.certify_initial_candidate());
+            for (unsigned unit = 0; unit < 10000; ++unit) {
+                if (!work.advance_initial_candidate_publication()) break;
+                if (work.output_incumbent->independently_evaluated) break;
+            }
+            PC_CHECK(work.output_incumbent->independently_evaluated);
+            PC_CHECK(near(work.output_incumbent->evaluated_policy_cost, 58, 1e-10));
+            const auto identity = work.output_incumbent->portfolio_identity;
+            // Missing paid reacquisition remains an unfinished candidate even
+            // when its predecessor has a complete original-root certificate.
+            for (auto& row : work.transition_cache->rows)
+                if (row.owner_state == local.restart_state) row.admitted = false;
+            PC_CHECK(!work.try_install_reachable_incumbent(false));
+            PC_CHECK(std::find(work.incremental_anytime_missing_frontier_states.begin(),
+                work.incremental_anytime_missing_frontier_states.end(), local.restart_state) !=
+                work.incremental_anytime_missing_frontier_states.end());
+            PC_CHECK(work.output_incumbent->portfolio_identity == identity);
+        }
+    }
+}
+
 void run_native_mutual_retry_seed_tests() {
     // Research v1.2 mutual retry, using real native seed, repair and SCC owners.
     auto session = make_solve_session();
@@ -14300,6 +14418,7 @@ void run_solver_joint_policy_continuation_tests() {
     run_incremental_automatic_epoch_yield_tests();
     run_initial_terminal_debt_continuation_tests();
     run_first_proper_candidate_retention_tests();
+    run_joint_product_fracture_publication_tests();
     run_native_mutual_retry_seed_tests();
     run_resumable_joint_policy_continuation_fixture_tests();
 }
@@ -14453,6 +14572,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_incremental_automatic_epoch_yield_tests();
     run_initial_terminal_debt_continuation_tests();
     run_first_proper_candidate_retention_tests();
+    run_joint_product_fracture_publication_tests();
     run_native_mutual_retry_seed_tests();
     run_resumable_joint_policy_continuation_fixture_tests();
     run_carrier_ladder_row_service_witness_classification_tests();

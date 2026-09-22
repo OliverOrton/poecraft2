@@ -1,0 +1,181 @@
+{
+  "identity": {
+    "corpus": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "sha256": "4f8d6ec386e7b65a8a1975bf762e9da020a3a3593c0dbc6d861de7372264c9fe",
+      "corpus_id": "cross-base-capability-recovery-core-v1",
+      "schema_version": "solver_benchmark_corpus_v1",
+      "generator_config_sha256": null
+    },
+    "artifact": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+      "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+      "declared_files_verified": true,
+      "files": [
+        {
+          "path": "game-data.json",
+          "size_bytes": 16439442,
+          "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+        },
+        {
+          "path": "strings.json",
+          "size_bytes": 6534428,
+          "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      ],
+      "identity": {
+        "artifact_schema_version": 4,
+        "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+        "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+        "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+      }
+    },
+    "executable": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+      "sha256": "6f740f596495e2bcf638c270a8df7ffe7f9d433c8b424ade5a8cf698e54a9407"
+    },
+    "machine": {
+      "system": "Windows",
+      "release": "11",
+      "machine": "AMD64",
+      "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "logical_cpu_count": 24,
+      "python": "3.14.2"
+    },
+    "source": {
+      "commit": "d6a60de3bc6171214fe2db0a25f373d830320e9b",
+      "dirty": true,
+      "dirty_paths": [
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-22-ordinary-capability/evidence/C3-closure-diagnosis-projection.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-22-ordinary-capability/evidence/C3-closure-diagnosis.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-22-ordinary-capability/evidence/C3-fracture-native.json"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/mathematics/policies.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/upper-authority.md"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_solve_constructive.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_solver_solve.cpp"
+        },
+        {
+          "status": "M ",
+          "path": "ocs/active/2026-09-22-ordinary-capability/README.md"
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "resolved": {
+        "case_id": "cb02-cross-base-product8-long240",
+        "command": {
+          "argv": [
+            "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+            "--artifact",
+            "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+            "--corpus",
+            "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+            "--output",
+            "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\C3-supported-seed-native\\cases\\cb02-cross-base-product8-long240.json",
+            "--partial-output",
+            "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\C3-supported-seed-native\\partials\\cb02-cross-base-product8-long240.preflight.json",
+            "--strategy-output",
+            "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\C3-supported-seed-native\\strategies",
+            "--case",
+            "cb02-cross-base-product8-long240",
+            "--skip-verification",
+            "--exact-strategy-evaluation",
+            "--native-retention-diagnostic",
+            "reuse"
+          ],
+          "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+        },
+        "paths": {
+          "attempt_id": "preflight",
+          "attempt_directory": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\C3-supported-seed-native",
+          "report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\C3-supported-seed-native\\cases\\cb02-cross-base-product8-long240.json",
+          "partial_report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\C3-supported-seed-native\\partials\\cb02-cross-base-product8-long240.preflight.json",
+          "strategy_output_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\C3-supported-seed-native\\strategies",
+          "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\C3-supported-seed-native\\logs\\cb02-cross-base-product8-long240.log"
+        },
+        "watchdog_seconds": 315.0,
+        "reservation": {
+          "solver_owned_cap_bytes": 1073741824,
+          "worker_headroom_bytes": 6442450944,
+          "policy_version": "solver_lab_host_reservation_v2"
+        }
+      },
+      "admission": {
+        "physical": 37475291136,
+        "commit": 18744287232,
+        "outside": 13681888461,
+        "reserved": 7516192768
+      },
+      "result": {
+        "status": "bounded_feasible",
+        "errors": [],
+        "policy": {
+          "converged": false,
+          "start_state": 0,
+          "start_value": 5322.492987625119,
+          "expanded_states": 1207,
+          "sweeps": 0,
+          "residual": 1.8189894035458565e-12,
+          "skipped_action_count": 0,
+          "policy_available": true,
+          "policy_status": "bounded_feasible",
+          "termination": "requested_bounded_finish",
+          "stop_cause": "requested_bounded_finish",
+          "cap_hit_mask": 0,
+          "action_counts": {
+            "registry": 180,
+            "candidate": 21,
+            "evaluator_supported": 21,
+            "supported_priced": 302,
+            "skipped_missing_price": 0,
+            "skipped_unsupported": 0
+          },
+          "lower_bound": 198.8334996747695,
+          "upper_bound": 5218.040949685988,
+          "evaluated_policy_cost": 5218.040949685988,
+          "absolute_optimality_gap": 5019.2074500112185,
+          "relative_optimality_gap": 25.243268655538927,
+          "requested_absolute_optimality_gap": 0,
+          "requested_relative_optimality_gap": 0,
+          "target_met": false,
+          "target_fired": "none"
+        },
+        "evaluation": {
+          "completed": true,
+          "converged": true,
+          "cost_complete": true,
+          "cost_reconciled": true,
+          "success_probability": 1,
+          "zero_off_policy_mass": true,
+          "total_expected_cost": 5218.040949685988
+        },
+        "primitive_actions": 14152.339714597114,
+        "graph_sha256": "e506b8a14c642281eeca221472ce46a01a6ab4533210da60fd6427ffc73a20c6"
+      }
+    }
+  ]
+}

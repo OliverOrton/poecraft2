@@ -1,0 +1,74 @@
+{
+  "raw_report": "out\\ordinary-capability\\C3-closure-diagnosis\\report.json",
+  "sha256": "afef30276a59372f67658bfb7253b4d9f8560fb081da929fd184b3511e85f058",
+  "diagnostic_only": true,
+  "reproduced_variant": "rejected-v1",
+  "new_premise": "Product Fracture publication walks raw primitive outcomes instead of the selected product kernel with paid replacement.",
+  "joint": {
+    "attempts": 2,
+    "successes": 0,
+    "last_completed_rows": 13798,
+    "best_upper": null,
+    "last_failure": "publication_successor_outside_snapshot:state=73:operator=178:successor=5483:snapshot_states=5482:live_states=5484:frontier_uses=0:renewal_boundaries=0/0"
+  },
+  "operator_identity": [
+    {
+      "state": 0,
+      "operator_index": 178,
+      "action_id": "fracture",
+      "lifecycle": "exact_inapplicability_proved",
+      "lane": "restricted_anchor",
+      "proof_authority": "exact_registry_legality",
+      "stop_owner": "none",
+      "row_index": null,
+      "revision": 44,
+      "detail": null,
+      "evidence": {
+        "carrier_facts": true,
+        "carrier_effect_summary": true,
+        "carrier_successor_envelope": true,
+        "action_refinement_contract": true,
+        "exact_registry_legality": true,
+        "exact_option_kernel": true
+      }
+    }
+  ],
+  "phase_wall_ms": {
+    "registry_layout": 35.7045,
+    "solve": 240287.7066,
+    "compile": 2.4137,
+    "verification": null,
+    "total": 240717.0704
+  },
+  "policy": {
+    "converged": false,
+    "start_state": 0,
+    "start_value": 5322.492987625119,
+    "expanded_states": 1207,
+    "sweeps": 0,
+    "residual": 1.8189894035458565e-12,
+    "skipped_action_count": 0,
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "termination": "requested_bounded_finish",
+    "stop_cause": "requested_bounded_finish",
+    "cap_hit_mask": 0,
+    "action_counts": {
+      "registry": 180,
+      "candidate": 21,
+      "evaluator_supported": 21,
+      "supported_priced": 296,
+      "skipped_missing_price": 0,
+      "skipped_unsupported": 0
+    },
+    "lower_bound": 198.8334996747695,
+    "upper_bound": 5218.040949685988,
+    "evaluated_policy_cost": 5218.040949685988,
+    "absolute_optimality_gap": 5019.2074500112185,
+    "relative_optimality_gap": 25.243268655538927,
+    "requested_absolute_optimality_gap": 0,
+    "requested_relative_optimality_gap": 0,
+    "target_met": false,
+    "target_fired": "none"
+  }
+}

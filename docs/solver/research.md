@@ -131,11 +131,14 @@ measures the current ordinary gap with matched base/goal/action/pricing scope:
 native Conquest-four C3746.1319409485764 versus actual unattended Calculator
 C5218.040949685988. Two current-run proof handoffs find no cheaper candidate;
 two captured-row/root seed variants regress the native policy and are removed.
-Only the unattended probe and mathematical/measurement clarification are retained.
-Full recovery and the 20% browser improvement target remain unmet. The exact
-Regalia probe control passes; no treatment WASM or generalization win is claimed.
-The programme stops at its two-variant gate, preserving existing native and
-browser defaults and the failed ordinary-response measurements.
+After that stop, explicit resumption isolated a product Fracture publication
+mismatch: raw failed items were requested as parent continuations despite the
+selected row's paid replacement programme. The narrow native repair preserves
+the C3746.13 controller. Reassessing the captured-row proposal on that repaired
+boundary completes a C6147.83 controller, loses to the C5218.04 fallback and is
+removed again. The retained repair and its qualification are in the same record.
+Full recovery and the 20% browser improvement target remain unmet; existing
+defaults and the failed ordinary-response measurements are preserved.
 
 The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
 applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)

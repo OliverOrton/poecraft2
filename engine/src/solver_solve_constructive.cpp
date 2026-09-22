@@ -5615,6 +5615,13 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                 if (successor == kNoId) successor = state;
                                 if (successor >= state_count) {
                                     publication_complete = false;
+                                    attempt_failure =
+                                        "publication_successor_outside_snapshot:state=" +
+                                        std::to_string(state) + ":operator=" +
+                                        std::to_string(operator_index) + ":successor=" +
+                                        std::to_string(successor) + ":snapshot_states=" +
+                                        std::to_string(state_count) + ":live_states=" +
+                                        std::to_string(calc.state_count());
                                     return;
                                 }
                                 if (!result
@@ -5625,6 +5632,10 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                             .behavioral_representative_by_state
                                             .size()) {
                                         publication_complete = false;
+                                        attempt_failure =
+                                            "publication_successor_outside_representatives:state=" +
+                                            std::to_string(state) + ":successor=" +
+                                            std::to_string(successor);
                                         return;
                                     }
                                     successor =
@@ -5635,6 +5646,10 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                 if (successor == kNoId ||
                                     successor >= state_count) {
                                     publication_complete = false;
+                                    attempt_failure =
+                                        "publication_invalid_representative:state=" +
+                                        std::to_string(state) + ":successor=" +
+                                        std::to_string(successor);
                                     return;
                                 }
                                 if (!prior_reachable[successor]) {
@@ -5648,6 +5663,31 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                 calc.registry().actions.size()) {
                                 publication_complete = false;
                                 break;
+                            }
+                            if (calc.product_solver_parent() &&
+                                planner.automatic_kind ==
+                                    AutomaticCandidateKind::Fracture) {
+                                // The selected product row and compiler own
+                                // Fracture plus paid replacement on a miss.
+                                // Raw primitive misses are internal to that
+                                // programme, not new parent continuation states.
+                                const auto kernel = product_fracture_kernel(
+                                    state, planner.relevant_goal_mask);
+                                if (!kernel.eligible || !action_legal(
+                                        session, calc.registry().actions.at(
+                                            planner.primitive_action),
+                                        calc.state(state))) {
+                                    publication_complete = false;
+                                    attempt_failure =
+                                        "publication_product_fracture_kernel_invalid:state=" +
+                                        std::to_string(state);
+                                    break;
+                                }
+                                for (const auto& exit : kernel.exits) {
+                                    if (exit.probability > 0.0)
+                                        retain_successor(exit.state);
+                                }
+                                continue;
                             }
                             const OutcomeDistribution& distribution =
                                 calc.outcomes(

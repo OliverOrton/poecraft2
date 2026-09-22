@@ -93,6 +93,17 @@ returns to assembly. Completed rows, certified frontiers, control memory,
 properness and compiled evaluation keep their existing authority boundaries.
 Finalization stops at the first missing entry; it does not launch another batch.
 
+Joint publication closes the selected programme's exit law. In a product parent,
+automatic Fracture includes native goal hits and paid replacement on a miss;
+its raw failed-fracture items are internal to that recovery programme. The walk
+uses the same `product_fracture_kernel` as row construction, preserving every
+positive hit and replacement continuation. Walking the raw primitive instead
+invented parent states absent from the captured policy and falsely refused a
+complete candidate. The compiler still emits the actual Fracture/replacement
+operations, and independent whole-root evaluation checks their costs and routing.
+The [scoped repair](../active/2026-09-22-ordinary-capability/README.md#resumed-work--product-fracture-publication)
+does not grant raw Fracture this recovery or permit an unknown replacement tail.
+
 The first no-incumbent joint candidate now reaches the existing cooperative
 compiled-graph assertion before cost improvement. Successful independent
 evaluation stores its actual graph and cost in the same bounded portfolio used

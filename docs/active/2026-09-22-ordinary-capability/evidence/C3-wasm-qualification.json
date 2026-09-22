@@ -1,0 +1,264 @@
+[
+  {
+    "stage": "C3-wasm",
+    "case": "cb02-cross-base-product8-long240",
+    "control": "default_finish",
+    "raw_report": "out\\ordinary-capability\\C3-wasm\\report.json",
+    "sha256": "d25d4941adee0c0e7794a084d7be09263954b335cc9570b968bbf38b94b51e20",
+    "policy": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 5322.492987625119,
+      "expanded_states": 6837,
+      "sweeps": 0,
+      "residual": 1.2732925824820995e-11,
+      "skipped_actions": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "lower_bound": 198.8334996747695,
+      "upper_bound": 5218.040949685988,
+      "evaluated_policy_cost": 5218.040949685988,
+      "absolute_optimality_gap": 5019.2074500112185,
+      "relative_optimality_gap": 25.243268655538927,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "registry_actions": 180,
+      "candidate_actions": 21,
+      "evaluator_supported_actions": 21,
+      "supported_priced_actions": 302,
+      "skipped_missing_price_actions": 0,
+      "skipped_unsupported_actions": 0,
+      "cancelled": false
+    },
+    "graph_sha256": "ecc46abe985d4d4f0f0370150948014fff0ada014409fd85c5fb1228cf11db44",
+    "manual_intent": false,
+    "begin_ms": 2.5331999999998516,
+    "setup_max_ms": 26.982299999999896,
+    "ordinary_max_ms": 899.280700000003,
+    "first_verified_observed_ms": 243456.8456,
+    "ui_usable_from_worker_request_ms": 243993.39059999998,
+    "manual_finish_to_usable_ms": null,
+    "automatic_finish_to_terminal_ms": 3792.4340000000084,
+    "automatic_finish_to_usable_request_aligned_ms": 3985.693099999975,
+    "request_alignment_note": "Automatic finish-to-usable subtraction includes initial request transport; same-worker-clock terminal latency is separate.",
+    "observations_omitted": 1530,
+    "worker_observations_omitted": 1530,
+    "worker_milestones": [
+      {
+        "stage": "native_begin_requested",
+        "worker_elapsed_ms": 0.038200000000188084
+      },
+      {
+        "stage": "native_begin_completed",
+        "worker_elapsed_ms": 2.5714000000000397
+      },
+      {
+        "stage": "finish_requested",
+        "worker_elapsed_ms": 240007.6975
+      },
+      {
+        "stage": "finish_acknowledged",
+        "worker_elapsed_ms": 240007.8394
+      },
+      {
+        "stage": "native_done_observed",
+        "worker_elapsed_ms": 243738.8029
+      },
+      {
+        "stage": "result_export_start",
+        "worker_elapsed_ms": 243738.80490000002
+      },
+      {
+        "stage": "result_export_completed",
+        "worker_elapsed_ms": 243800.0621
+      },
+      {
+        "stage": "terminal_response_committed",
+        "worker_elapsed_ms": 243800.13150000002
+      }
+    ],
+    "peak_observed_owned_bytes": 498579218,
+    "post_delivery_telemetry_ms": 0.8086999999941327,
+    "baseline_identity": {
+      "base_path": true,
+      "item_level": true,
+      "goal_envelope": true,
+      "solve_options": true,
+      "bounded_finish_after_ms": true,
+      "economy": true,
+      "resolved_start_and_goal": true
+    },
+    "graph_equal_to_C0": true,
+    "joint": null,
+    "joint_availability": "Unavailable in the unchanged compact telemetry level; not zero attempts."
+  },
+  {
+    "stage": "C3-wasm-five",
+    "case": "cb01-cross-base-product8-long240",
+    "control": "finish",
+    "raw_report": "out\\ordinary-capability\\C3-wasm-five\\report.json",
+    "sha256": "ae4cb45530390015882ff57581f4d5c2499b0b78d17597bc3699388692241b72",
+    "policy": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 358209179.6640102,
+      "expanded_states": 2634,
+      "sweeps": 0,
+      "residual": 1000000000000,
+      "skipped_actions": 1,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "lower_bound": 405.3694021063399,
+      "upper_bound": 85558.70618560436,
+      "evaluated_policy_cost": 85558.70618560436,
+      "absolute_optimality_gap": 85153.33678349802,
+      "relative_optimality_gap": 210.06355275221262,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "registry_actions": 187,
+      "candidate_actions": 28,
+      "evaluator_supported_actions": 28,
+      "supported_priced_actions": 252,
+      "skipped_missing_price_actions": 0,
+      "skipped_unsupported_actions": 1,
+      "cancelled": false
+    },
+    "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+    "manual_intent": true,
+    "begin_ms": 2.6568999999999505,
+    "setup_max_ms": 30.510700000000043,
+    "ordinary_max_ms": 326.4349000000002,
+    "first_verified_observed_ms": 42793.1153,
+    "ui_usable_from_worker_request_ms": 43234.8205,
+    "manual_finish_to_usable_ms": 435.3038000000015,
+    "automatic_finish_to_terminal_ms": null,
+    "automatic_finish_to_usable_request_aligned_ms": null,
+    "request_alignment_note": "Automatic finish-to-usable subtraction includes initial request transport; same-worker-clock terminal latency is separate.",
+    "observations_omitted": 0,
+    "worker_observations_omitted": 0,
+    "worker_milestones": [
+      {
+        "stage": "native_begin_requested",
+        "worker_elapsed_ms": 0.03829999999993561
+      },
+      {
+        "stage": "native_begin_completed",
+        "worker_elapsed_ms": 2.695199999999886
+      },
+      {
+        "stage": "manual_finish_intent_observed",
+        "worker_elapsed_ms": 42796.1223
+      },
+      {
+        "stage": "finish_acknowledged",
+        "worker_elapsed_ms": 42796.7964
+      },
+      {
+        "stage": "native_done_observed",
+        "worker_elapsed_ms": 43095.7454
+      },
+      {
+        "stage": "result_export_start",
+        "worker_elapsed_ms": 43095.748
+      },
+      {
+        "stage": "result_export_completed",
+        "worker_elapsed_ms": 43114.6029
+      },
+      {
+        "stage": "terminal_response_committed",
+        "worker_elapsed_ms": 43114.6696
+      }
+    ],
+    "peak_observed_owned_bytes": 242570661,
+    "post_delivery_telemetry_ms": 0.8110999999989872
+  },
+  {
+    "stage": "C3-wasm-regalia",
+    "case": "cb12-cross-base-product8-long240",
+    "control": "default_finish",
+    "raw_report": "out\\ordinary-capability\\C3-wasm-regalia\\report.json",
+    "sha256": "d7970f4844556eaf80419ebd7a1827dda60913bc967278ad8578fc253118e31a",
+    "policy": {
+      "converged": true,
+      "start_state": 0,
+      "start_value": 65.60036144971359,
+      "expanded_states": 1826,
+      "sweeps": 12,
+      "residual": 1.4210854715202004e-14,
+      "skipped_actions": 0,
+      "policy_available": true,
+      "policy_status": "exact",
+      "termination": "exact_closed",
+      "lower_bound": 65.60036144971359,
+      "upper_bound": 65.60036144971359,
+      "evaluated_policy_cost": 65.60036144971359,
+      "absolute_optimality_gap": 0,
+      "relative_optimality_gap": 0,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none",
+      "stop_cause": "exact_closed",
+      "cap_hit_mask": 0,
+      "registry_actions": 158,
+      "candidate_actions": 21,
+      "evaluator_supported_actions": 21,
+      "supported_priced_actions": 74,
+      "skipped_missing_price_actions": 0,
+      "skipped_unsupported_actions": 0,
+      "cancelled": false
+    },
+    "graph_sha256": "4c14b346ecfd9d536db4d9825a5e80eb7f21cf50dbe0fb4157a1feffd50c6f6c",
+    "manual_intent": false,
+    "begin_ms": 2.415399999999863,
+    "setup_max_ms": 24.484500000000025,
+    "ordinary_max_ms": 52.5625,
+    "first_verified_observed_ms": 39294.4286,
+    "ui_usable_from_worker_request_ms": 39731.160800000005,
+    "manual_finish_to_usable_ms": null,
+    "automatic_finish_to_terminal_ms": null,
+    "automatic_finish_to_usable_request_aligned_ms": null,
+    "request_alignment_note": "Automatic finish-to-usable subtraction includes initial request transport; same-worker-clock terminal latency is separate.",
+    "observations_omitted": 0,
+    "worker_observations_omitted": 0,
+    "worker_milestones": [
+      {
+        "stage": "native_begin_requested",
+        "worker_elapsed_ms": 0.04030000000011569
+      },
+      {
+        "stage": "native_begin_completed",
+        "worker_elapsed_ms": 2.455699999999979
+      },
+      {
+        "stage": "native_done_observed",
+        "worker_elapsed_ms": 39671.6171
+      },
+      {
+        "stage": "result_export_start",
+        "worker_elapsed_ms": 39671.6194
+      },
+      {
+        "stage": "result_export_completed",
+        "worker_elapsed_ms": 39675.2673
+      },
+      {
+        "stage": "terminal_response_committed",
+        "worker_elapsed_ms": 39675.3318
+      }
+    ],
+    "peak_observed_owned_bytes": 47099260,
+    "post_delivery_telemetry_ms": 0.8554999999978463
+  }
+]

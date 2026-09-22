@@ -20,6 +20,13 @@ return the more expensive C5218.04 native policy and are removed. Their failures
 name fixed-option closure and an unexpanded selected frontier. A captured coarse
 setup and additional completed rows do not by themselves supply complete native
 continuations. No exceptional-check slot or new scheduler treatment is retained.
+On explicit resumption, a precise diagnostic separates one publication defect:
+product Fracture was closed using raw primitive misses instead of the selected
+paid-replacement programme. The [upper owner](upper-authority.md) now uses its
+existing product kernel. Reassessing captured-row guidance then completes a
+C6147.83 candidate but still loses to the C5218.04 fallback and regresses the
+native control; that proposal remains removed. Kernel correspondence and useful
+bounded proposal scheduling are separate obligations.
 First verification timing does not replace the
 [unattended final-quality contract](benchmarking.md).
 

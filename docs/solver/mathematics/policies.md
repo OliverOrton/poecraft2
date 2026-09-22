@@ -29,6 +29,16 @@ The series explanation is useful: \(Q^nr\) is the expected cost paid at the \(n\
 
 The same inverse gives expected visits and resource uses. If \(e_s\) selects the start, the row vector \(e_s^\top(I-Q)^{-1}\) records expected visits to nonterminal states. Multiplying by per-visit resource expectations yields totals whose price-weighted sum should reconcile with monetary cost. That is a consistency check, not an optimality proof.
 
+The transition law must belong to the selected executable programme throughout
+construction and publication. A primitive followed by mandatory paid recovery
+has the programme's exits, including the recovery endpoint, rather than the raw
+primitive's intermediate failed items. Recovery costs and primitive executions
+remain in its rewards and compiled operations. Mixing the programme's priced row
+with the raw primitive's exits describes a different controller. The native
+[product Fracture publication repair](../upper-authority.md) applies this
+correspondence at its existing hit/replacement boundary; it supplies neither
+missing continuation values nor a new properness theorem.
+
 <a id="policy-difference"></a>
 ### Cost attribution and a changed controller
 

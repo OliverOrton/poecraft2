@@ -1,5 +1,94 @@
 # Ordinary post-incumbent capability
 
+## Resumed work — product Fracture publication
+
+Oliver explicitly resumed this task with “keep working” after local `d6a60de`.
+The failed proposal variants remain rejected. The third and final standalone
+diagnostic reproduced v1 solely to identify its generic publication refusal;
+the captured-row preference was then removed again.
+
+The [diagnostic projection](evidence/C3-closure-diagnosis-projection.json) records
+state 73, operator 178 (`fracture`): publication requested a raw primitive kernel
+and interned failed-fracture states beyond the captured 5482-state snapshot.
+The selected product row instead owns goal hits plus paid replacement on a miss.
+`expand_one_unit` and the compiler already agree on that programme. This is a
+new concrete correspondence defect, not another proposal-weight hypothesis.
+
+The repair is confined to the joint publication walk: for product-parent
+automatic Fracture, use the existing native product kernel and retain every
+positive hit/replacement exit. Keep its legality, missing-continuation, resource,
+properness and independent graph checks. Ordinary raw Fracture stays unchanged.
+Refusal diagnostics distinguish snapshot bounds from representative bounds.
+No captured-row seed, source-value reuse or capacity change is selected.
+
+Focused prefix/suffix examples construct the native paid retry policy: four
+expected Fractures at 10, three replacement bases at 3, three Alchemies at 2,
+and three Annuls at 1 give C58. Raw primitive publication incorrectly introduced
+two unowned miss states. Both repaired examples also pass independent compiled
+evaluation at C58. Removing the paid replacement continuation refuses the next
+candidate and preserves the already verified artifact; a root certificate is
+not substituted for that missing tail.
+
+The repair alone preserves native C3746.1319409485764/N8608.881793656798 and the
+same `a7a4a54b…` graph, with L198.8334996747695 and no cap hit. On this newly
+repaired boundary, one reassessment of the original captured-row preference
+completes a joint policy: source C6240.977360352559 independently checks at
+C6147.834010344707, proper/complete/zero off-policy. It is more expensive than
+the separately verified C5218.040949685988 fallback, which wins that run, and
+both exceed the preserved native control. There are 283 joint attempts and one
+success. This is a completed economic negative, not a candidate-screen false
+negative. The preference is removed again, with no WASM treatment claim.
+See [native diagnosis](evidence/C3-native-diagnosis.json) and the original
+[unchanged preference patch](evidence/rejected-v1.patch), applied only for that
+reassessment on top of the repair.
+
+Final native and WASM builds contain only the publication repair and precise
+refusal reasons. Focused joint-policy (377 checks), Fracture-integrity (619) and
+compiled-assertion (382) tests pass. The rebuilt actual Calculator batch preserves:
+
+| Case/control | Original-price Chaos | Expected primitive actions | Result |
+|---|---:|---:|---|
+| Conquest-four, native ordinary | 3746.1319409485764 | 8608.881793656798 | Same graph; bounded Finish |
+| Conquest-four, actual default Finish | 5218.040949685988 | 14152.339714597101 | Same graph; bounded Finish |
+| Conquest-five, first verified Finish | 85558.70618560436 | 8407.202314771383 | Same graph; usable at 43.235 s |
+| Regalia, actual default Finish | 65.60036144971359 | 127.11597414558129 | Same graph; exact, usable at 39.731 s |
+| Ring-two CB06, matched native control/repair | 149977.25092497544 | 26175.422499995733 | Same graph; both memory-cap bounded |
+
+The [worker qualification](evidence/C3-wasm-qualification.json) records C4 usable
+at 243.993 s with no manual intent; automatic Finish-to-worker-terminal is 3.792 s.
+C5 manual Finish-to-usable is 0.435 s; first observed verification is 42.793 s.
+All measured begin/setup calls are under 250 ms. Ordinary maxima remain failed:
+C4 899.281 ms and C5 326.435 ms. No new latency improvement is claimed. C4 omits
+1530 early observations, so its first observed verification is not backdated.
+The unchanged compact post-delivery telemetry omits the joint-attempt section;
+that absence is not a zero count.
+
+All three actual worker graphs, exact starts/goals, action scope, solve options
+and original economies equal their prior controls. Their independent original-root
+evaluations are [reused by that complete identity](evidence/C3-evaluation-reuse.json).
+The Ring [control](evidence/C3-ring-control.json) and
+[repair](evidence/C3-ring-repair.json) each receive fresh independent evaluation;
+both stop at the same 1-GiB memory allowance with L10.169847833384168 and the same
+`585a3a04…` graph. This is preservation, not a second-base capability gain.
+Timed cases ran serially with fresh physical/commit admission and existing
+supervision. Bulk evidence stays under `out/ordinary-capability`.
+Explicit 60000-ms outer yields and 60-second terminal waits completed full
+60-second windows here. The earlier 30-second observations below used the
+default outer yield; they do not establish a client-enforced maximum. No solver
+state was polled between those waits and no process was relaunched after a yield.
+
+Scoped web tests, TypeScript and knowledge lint pass; see
+[final validation](evidence/C3-final-validation.json). No fresh Simulator campaign
+is needed for the unchanged delivered graphs. Full unfiltered acceptance,
+non-Windows, rendered review, another cancellation campaign and wide dirty-policy
+reruns are not claimed. Existing wide Bow/Ring/Amulet evidence and defaults remain
+untouched. Full C4 recovery and the 20% browser-quality target remain **unmet**.
+The completed C6147.83 candidate supplies no evidence for another exceptional
+checker slot or broader proposal retry. The programme retains the narrow
+correspondence fix, without silently replacing a cheaper verified policy.
+
+## Programme source and initial work
+
 Selected C0–C4 programme from the supplied [prompt](research-inputs/package/CODEX_PROMPT.md).
 Starting HEAD is `343b6155fa1594ced4914858f1b25aca1e048e48`; the working tree had
 no changes outside excluded protected root `0`. Existing ignored artwork stays
@@ -156,7 +245,7 @@ receipts. The native source diff against reviewed main is empty and the restored
 build passes the original joint suite (313 checks). No treatment is activated in
 WASM or public defaults. This is the specified two-failed-variant stop.
 
-## C3/C4 — final scope and disposition
+## C3/C4 — initial-stop scope and disposition
 
 **No ordinary policy-quality improvement is delivered.** Full C3746.13 recovery
 and the >=20% browser improvement target are unmet. The retained final product
@@ -202,7 +291,7 @@ source/documentation work between yields. No solver was relaunched after a yield
 Bulk reports, binaries and logs remain under `out/ordinary-capability`; checked
 compact receipts and negative patches are here. No automatic restart or push.
 
-Final validation: [receipt](evidence/final-validation.json). Restored native build
+Initial-stop validation: [receipt](evidence/final-validation.json). Restored native build
 and joint suite pass (313 checks); each removed variant passed its 321 focused
 checks before the adverse whole-policy result. `npm test` passes with the existing
 WASM smoke selector set to the Calculator picker/fossil-scope case and all remaining
@@ -216,5 +305,6 @@ The actual final Regalia probe separately exercises
 normal completion and post-delivery telemetry. Rendered review and non-Windows
 remain unrun. No production native, binding or web-source diff remains.
 
-These retained changes are delivered as one local main commit. No push or hosted
-workflow is performed; the only hosted results read were the reviewed-head passes.
+Those initial changes were delivered in local main commit `d6a60de`; the resumed
+repair and qualification are recorded above. No push or hosted workflow was
+performed; the only hosted results read were the reviewed-head passes.
