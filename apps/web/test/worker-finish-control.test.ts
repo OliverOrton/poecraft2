@@ -26,6 +26,13 @@ for (const mode of ["manual", "manual_sparse", "missing", "automatic", "exact", 
     };
     scope = {
         performance: {now: () => clock}, setTimeout, clearTimeout, TextDecoder, TextEncoder,
+        // Model a MessageChannel queue that can outrun an inbound timer-based
+        // control. Explicit yieldEveryStep must still service that control,
+        // including cancellation queued by the last native work unit.
+        MessageChannel: mode === "manual_sparse" ? undefined : class {
+            port1: {onmessage?: () => void} = {};
+            port2 = {postMessage: () => queueMicrotask(() => this.port1.onmessage?.())};
+        },
         fixtureBindings: {
             abiVersion: () => 2,
             beginSolverSolve: () => {},

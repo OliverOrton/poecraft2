@@ -1,0 +1,99 @@
+{
+  "command": [
+    "C:/Program Files/nodejs/node.exe",
+    "--import",
+    "tsx",
+    "test/calculator-delivery-probe.ts",
+    "cb01-cross-base-product8-long240",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-p1-candidate\\report.json",
+    "finish",
+    "2"
+  ],
+  "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web",
+  "watchdog_seconds": 315,
+  "admission": {
+    "physical": 38726619136,
+    "commit": 18900570112,
+    "reserve": 8589934592,
+    "outside": 13681888461,
+    "admitted": true
+  },
+  "head": "097bc12b6b84db10d3fa6be56f20b1b464187adf",
+  "wasm_sha256": "9d981d47d536a5677f48a34fce6905c96ebcc1c98c2be751b48869ec95cb81a4",
+  "probe_sha256": "b2a5e87af2275cd694ec230514c72fab4e6e8e7de459f0790b4b07bf4b32cb0e",
+  "profiling": false,
+  "arm": "T2-release",
+  "source_patch_sha256": "f6f029909e0663abc3e8bfdf45542dec74790636d6094b2e172dfca13516e759",
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 71124,
+    "process_identity_token": "71124:134345281252281673",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 90647.69120002165
+  },
+  "summaries": [
+    {
+      "report": "out\\first-policy-service\\T3-p1-candidate\\report.json",
+      "sha256": "cc363741358f23b0d89cf88fdae8e89e8f2d8a7aec6c00118a0793a80225799f",
+      "runtime_warm": false,
+      "control": "finish",
+      "begin_ms": 2.467399999999998,
+      "setup_ms": 25.90890000000013,
+      "ordinary_ms": 352.2494999999981,
+      "context": {
+        "input_owner": "exact_evaluation",
+        "output_owner": "ladder_scheduling",
+        "input_cursor": 297,
+        "output_cursor": 301,
+        "quantum": 8,
+        "duration_ms": 352.2494999999981
+      },
+      "first_verified_worker_ms": 43198.7904,
+      "omitted": 0,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_reference_graph": true,
+      "finish_ms": 406.9455999999991,
+      "delivery_ms": 43612.387200000005,
+      "max_progress_read_ms": 3.5631000000000768,
+      "peak_owned_bytes": 242570661,
+      "final_live_owned_bytes": 148491547,
+      "boundary": null,
+      "release_telemetry": null,
+      "timing_pass": false
+    },
+    {
+      "report": "out\\first-policy-service\\T3-p1-candidate\\report.warm.json",
+      "sha256": "9a3d3c9f3c5c07e1279eb3cd97f66623ced51afbc23438236ca3b39b21cc1b30",
+      "runtime_warm": true,
+      "control": "finish",
+      "begin_ms": 0.2776999999987311,
+      "setup_ms": 25.1536000000051,
+      "ordinary_ms": 299.59120000000985,
+      "context": {
+        "input_owner": "exact_evaluation",
+        "output_owner": "exact_evaluation",
+        "input_cursor": 297,
+        "output_cursor": 297,
+        "quantum": 1,
+        "duration_ms": 299.59120000000985
+      },
+      "first_verified_worker_ms": 42274.715800000005,
+      "omitted": 0,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_reference_graph": true,
+      "finish_ms": 274.6027000000031,
+      "delivery_ms": 42554.8749,
+      "max_progress_read_ms": 0.6328999999968801,
+      "peak_owned_bytes": 242570661,
+      "final_live_owned_bytes": 148491547,
+      "boundary": null,
+      "release_telemetry": null,
+      "timing_pass": false
+    }
+  ]
+}

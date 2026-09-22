@@ -1,0 +1,85 @@
+{
+  "command": [
+    "C:/Program Files/nodejs/node.exe",
+    "--import",
+    "tsx",
+    "test/calculator-delivery-probe.ts",
+    "cb01-cross-base-product8-long240",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T1-normal\\report.json",
+    "finish",
+    "2"
+  ],
+  "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web",
+  "watchdog_seconds": 315,
+  "admission": {
+    "physical": 39108706304,
+    "commit": 18974228480,
+    "reserve": 8589934592,
+    "outside": 13681888461,
+    "admitted": true
+  },
+  "head": "097bc12b6b84db10d3fa6be56f20b1b464187adf",
+  "wasm_sha256": "7cb4d7f43306d804f976ba4973d8b8d43b2924a77dad8dc973770b26e206f033",
+  "probe_sha256": "23137ef7c5627891925b7e90ac7afa771c243b64b78e943a36b2776e58279896",
+  "profiling": false,
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 8892,
+    "process_identity_token": "8892:134345267277937565",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 97488.17739996593
+  },
+  "summaries": [
+    {
+      "report": "out\\first-policy-service\\T1-normal\\report.json",
+      "sha256": "f721d8029c5fea1c8eb288d0b7d7393efe594027984673614bfbc0ba710ebf12",
+      "runtime_warm": false,
+      "control": "finish",
+      "begin_ms": 2.59479999999985,
+      "setup_ms": 28.64020000000005,
+      "ordinary_ms": 393.4654999999984,
+      "context": {
+        "input_owner": "ladder_scheduling",
+        "output_owner": "compilation",
+        "input_cursor": 293,
+        "output_cursor": 295,
+        "quantum": 8,
+        "duration_ms": 393.4654999999984
+      },
+      "first_verified_worker_ms": 46701.0017,
+      "omitted": 0,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_reference_graph": true,
+      "finish_ms": 483.59010000000126,
+      "delivery_ms": 47192.09940000001
+    },
+    {
+      "report": "out\\first-policy-service\\T1-normal\\report.warm.json",
+      "sha256": "88cb88e08bc8ae111dd26be5692e704fdf71df1dc7a5efd821bd95d2e5fbef89",
+      "runtime_warm": true,
+      "control": "finish",
+      "begin_ms": 0.2966999999989639,
+      "setup_ms": 24.971900000004098,
+      "ordinary_ms": 356.4054000000033,
+      "context": {
+        "input_owner": "ladder_scheduling",
+        "output_owner": "compilation",
+        "input_cursor": 293,
+        "output_cursor": 295,
+        "quantum": 8,
+        "duration_ms": 356.4054000000033
+      },
+      "first_verified_worker_ms": 45411.80039999999,
+      "omitted": 0,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_reference_graph": true,
+      "finish_ms": 312.1713000000018,
+      "delivery_ms": 45730.3297
+    }
+  ]
+}

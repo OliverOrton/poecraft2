@@ -1,0 +1,69 @@
+{
+  "command": [
+    "C:/Program Files/nodejs/node.exe",
+    "--import",
+    "tsx",
+    "test/calculator-delivery-probe.ts",
+    "cb01-cross-base-product8-long240",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-r3-p1-base\\report.json",
+    "finish",
+    "1"
+  ],
+  "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web",
+  "watchdog_seconds": 315,
+  "admission": {
+    "physical": 38426501120,
+    "commit": 18769080320,
+    "reserve": 8589934592,
+    "outside": 13681888461,
+    "admitted": true
+  },
+  "head": "097bc12b6b84db10d3fa6be56f20b1b464187adf",
+  "wasm_sha256": "7cb4d7f43306d804f976ba4973d8b8d43b2924a77dad8dc973770b26e206f033",
+  "probe_sha256": "b2a5e87af2275cd694ec230514c72fab4e6e8e7de459f0790b4b07bf4b32cb0e",
+  "profiling": false,
+  "arm": "baseline-097bc12",
+  "source_patch_sha256": "0e6a0da694782566cb03707cf0fb56a21f7a650fb851a95d6f357b376b5bd500",
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 9076,
+    "process_identity_token": "9076:134345303150510213",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 45043.14500000328
+  },
+  "summaries": [
+    {
+      "report": "out\\first-policy-service\\T3-r3-p1-base\\report.json",
+      "sha256": "3f703acd1309187118a2e1cb9732b56c87ecc1b137ab0a2bc8ba0418d4742f50",
+      "runtime_warm": false,
+      "control": "finish",
+      "begin_ms": 2.2017000000000735,
+      "setup_ms": 27.667799999999943,
+      "ordinary_ms": 366.2505000000019,
+      "context": {
+        "input_owner": "exact_evaluation",
+        "output_owner": "ladder_scheduling",
+        "input_cursor": 297,
+        "output_cursor": 301,
+        "quantum": 8,
+        "duration_ms": 366.2505000000019
+      },
+      "first_verified_worker_ms": 42686.2402,
+      "omitted": 0,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_reference_graph": true,
+      "finish_ms": 422.1342000000004,
+      "delivery_ms": 43114.9702,
+      "max_progress_read_ms": 4.550499999999829,
+      "peak_owned_bytes": 243509991,
+      "final_live_owned_bytes": 148491547,
+      "boundary": null,
+      "release_telemetry": null
+    }
+  ]
+}

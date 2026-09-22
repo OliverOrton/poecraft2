@@ -1,0 +1,53 @@
+{
+  "command": [
+    "C:/Program Files/nodejs/node.exe",
+    "--import",
+    "tsx",
+    "test/calculator-delivery-probe.ts",
+    "cb01-cross-base-product8-long240",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T1-cancel-setup\\report.json",
+    "cancel_setup",
+    "1"
+  ],
+  "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web",
+  "watchdog_seconds": 315,
+  "admission": {
+    "physical": 39089954816,
+    "commit": 18964213760,
+    "reserve": 8589934592,
+    "outside": 13681888461,
+    "admitted": true
+  },
+  "head": "097bc12b6b84db10d3fa6be56f20b1b464187adf",
+  "wasm_sha256": "7cb4d7f43306d804f976ba4973d8b8d43b2924a77dad8dc973770b26e206f033",
+  "probe_sha256": "23137ef7c5627891925b7e90ac7afa771c243b64b78e943a36b2776e58279896",
+  "profiling": false,
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 33216,
+    "process_identity_token": "33216:134345267129161373",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 3307.3670000303537
+  },
+  "summaries": [
+    {
+      "report": "out\\first-policy-service\\T1-cancel-setup\\report.json",
+      "sha256": "203709946d3e82e320dc5c46ee213ee5e9eb9c185dfe51fa4532e3fa6b578912",
+      "runtime_warm": false,
+      "control": "cancel_setup",
+      "begin_ms": 2.4511999999999716,
+      "setup_ms": 28.266099999999824,
+      "ordinary_ms": 0,
+      "context": null,
+      "first_verified_worker_ms": null,
+      "omitted": 0,
+      "graph_sha256": null,
+      "cancel_ms": 77.10959999999977
+    }
+  ]
+}

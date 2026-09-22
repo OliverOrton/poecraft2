@@ -1,0 +1,289 @@
+{
+  "diagnostic_only": true,
+  "profile_sha256": "3061e62fa1f63d27fe6af1c8a925618fdaf702bea9bd16466f2ad6a279ff356b",
+  "normal_anchor": "T1-normal-process.json",
+  "symbol_mapping": {
+    "method": "Installed wasm-dis WAT bodies, unique body shapes followed by consistent call-reference renaming; selected complete bodies and call targets match. Eight imported functions precede numbered WAT definitions. No binary parser.",
+    "whole_binaries_identical": false,
+    "total_defined_functions": 3407,
+    "fully_matched_bodies": 3328,
+    "raw_map_path": "out\\first-policy-service\\T1-function-mapping.json",
+    "raw_map_sha256": "f0a4d171ce0626a6730c64efa94f0d87cb17398a457f320ae32d5d3fb47e36ab",
+    "selected": [
+      {
+        "baseline_index": 2910,
+        "symbols_index": 3305,
+        "name": "poecraft::solver::SolveWork::Impl::certify_initial_candidate() (.resume)",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 704,
+        "symbols_index": 701,
+        "name": "poecraft::solver::refinement::CompiledPolicyAssertionWork::step(unsigned int)",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 722,
+        "symbols_index": 708,
+        "name": "poecraft::solver::compile_policy_strategy_json(poecraft::solver::CalcContext&, poecraft::solver::SolveResult const&, std::__2::basic_string<char, std::__2::char_traits<char>, std::__2::allocator<char>> const&, poecraft::solver::PolicyCompilationTelemetry*, unsigned long long, poecraft::solver::refinement::RefinedPolicyCompileRouting const*, unsigned long long, poecraft::solver::PolicyRouteDefaultMode, bool)",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 844,
+        "symbols_index": 941,
+        "name": "poecraft::compile_strategy_json(std::__2::shared_ptr<poecraft::SessionImpl const>, char const*, unsigned long)",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 911,
+        "symbols_index": 912,
+        "name": "poecraft::solver::StrategyEvalWork::Impl::Impl(std::__2::shared_ptr<poecraft::StrategyImpl const>, poecraft::solver::StrategyEvalOptions const&)",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 910,
+        "symbols_index": 909,
+        "name": "poecraft::solver::StrategyEvalWork::step(unsigned int)",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 1273,
+        "symbols_index": 1331,
+        "name": "poecraft::solver::compile_policy_strategy_json(poecraft::solver::CalcContext&, poecraft::solver::SolveResult const&, std::__2::basic_string<char, std::__2::char_traits<char>, std::__2::allocator<char>> const&, poecraft::solver::PolicyCompilationTelemetry*, unsigned long long, poecraft::solver::refinement::RefinedPolicyCompileRouting const*, unsigned long long, poecraft::solver::PolicyRouteDefaultMode, bool)::$_41::operator()(std::__2::basic_string<char, std::__2::char_traits<char>, std::__2::allocator<char>> const*) const",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 3184,
+        "symbols_index": 3266,
+        "name": "poecraft::solver::StrategyEvalWork::Impl::expand_pair(unsigned int)",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 3274,
+        "symbols_index": 3195,
+        "name": "poecraft::solver::refinement::propagate_policy_observations_cooperatively(std::__2::vector<poecraft::solver::refinement::PolicyObservationNode, std::__2::allocator<poecraft::solver::refinement::PolicyObservationNode>>, unsigned int) (.resume)",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 2250,
+        "symbols_index": 2372,
+        "name": "poecraft::solver::refinement::(anonymous namespace)::policy_graphs_differ_only_at_bounded_defaults(std::__2::basic_string<char, std::__2::char_traits<char>, std::__2::allocator<char>> const&, poecraft::solver::PolicyCompilationTelemetry const&, std::__2::basic_string<char, std::__2::char_traits<char>, std::__2::allocator<char>> const&, poecraft::solver::PolicyCompilationTelemetry const&)",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 2248,
+        "symbols_index": 2371,
+        "name": "poecraft::solver::refinement::(anonymous namespace)::policy_graphs_differ_only_at_bounded_defaults(std::__2::basic_string<char, std::__2::char_traits<char>, std::__2::allocator<char>> const&, poecraft::solver::PolicyCompilationTelemetry const&, std::__2::basic_string<char, std::__2::char_traits<char>, std::__2::allocator<char>> const&, poecraft::solver::PolicyCompilationTelemetry const&)::$_0::operator()(std::__2::basic_string<char, std::__2::char_traits<char>, std::__2::allocator<char>> const&) const",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 3182,
+        "symbols_index": 3271,
+        "name": "poecraft::solver::StrategyEvalWork::Impl::build_components() (.resume)",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 3177,
+        "symbols_index": 3259,
+        "name": "poecraft::solver::StrategyEvalWork::Impl::refine_pair_graph() (.resume)",
+        "body_and_calls_match": true
+      },
+      {
+        "baseline_index": 1313,
+        "symbols_index": 1287,
+        "name": "poecraft::solver::refinement::refine_closed_probabilistic_partition_replay(unsigned int, std::__2::function<poecraft::solver::refinement::ClosedPartitionNode (unsigned int)> const&, std::__2::vector<unsigned int, std::__2::allocator<unsigned int>> const&, bool, poecraft::solver::refinement::ClosedPartitionLimits, bool, std::__2::vector<std::__2::optional<unsigned int>, std::__2::allocator<std::__2::optional<unsigned int>>> const*, bool, bool, bool)",
+        "body_and_calls_match": true
+      }
+    ]
+  },
+  "native_clock": {
+    "service_start_to_compile_start_ms": 28.5531,
+    "compile_start_to_next_loop_event_ms": 432.9612,
+    "interpretation": "The latter includes evaluator work; not a compiler timer."
+  },
+  "profile_clock_sample_windows_ms": {
+    "preparation": [
+      48520,
+      48744
+    ],
+    "first_evaluation_batch": [
+      48744,
+      48954
+    ]
+  },
+  "preparation_sampled_ms": {
+    "compiler_inclusive": 76.56,
+    "audit_subset_of_compiler": 8.111,
+    "strategy_parser": 7.138,
+    "evaluator_constructor_inclusive": 118.551,
+    "constructor_observation_fixed_point_subset": 111.429,
+    "other_and_unassigned": 20.477
+  },
+  "first_batch_sampled_evaluation_ms": 206.482,
+  "later_sampled_ms": {
+    "all_evaluator_services_inclusive": 2483.114,
+    "paired_product_compiler_inclusive": 57.838,
+    "audit_subset_of_product_compiler": 5.059,
+    "other_assertion_bookkeeping_pair_validation_and_release_unseparated": 249.793,
+    "paired_default_validation_inclusive": 241.675,
+    "paired_default_normalizer_subset": 229.51,
+    "normalizer_self_subset": 174.621,
+    "evaluator_destruction_subset": 6.081
+  },
+  "compiler_census": {
+    "nodes": 469,
+    "edges": 1117,
+    "full_audits_per_successful_emission_from_source_and_complete_edge_count": 1120,
+    "sizes_walked": "Full existing capacities for vocabulary/state membership/conditions, quotient members, feature arrays/caches, operation-region maps, route nodes and their edges, literal-count map and option kernels; growing JSON. Per-container runtime capacity census was not added.",
+    "audit_capacity_semantics_changed": false
+  },
+  "generated_code": [
+    {
+      "index": 722,
+      "tier": "TurboFan",
+      "ms": 226,
+      "body_bytes": 155507,
+      "code_bytes": 588164
+    },
+    {
+      "index": 911,
+      "tier": "TurboFan",
+      "ms": 71,
+      "body_bytes": 32698,
+      "code_bytes": 112796
+    },
+    {
+      "index": 844,
+      "tier": "TurboFan",
+      "ms": 50,
+      "body_bytes": 31487,
+      "code_bytes": 110120
+    },
+    {
+      "index": 3274,
+      "tier": "TurboFan",
+      "ms": 27,
+      "body_bytes": 17510,
+      "code_bytes": 67612
+    },
+    {
+      "index": 704,
+      "tier": "TurboFan",
+      "ms": 16,
+      "body_bytes": 13812,
+      "code_bytes": 42164
+    },
+    {
+      "index": 722,
+      "tier": "Liftoff",
+      "ms": 10,
+      "body_bytes": 155507,
+      "code_bytes": 487976
+    },
+    {
+      "index": 3184,
+      "tier": "TurboFan",
+      "ms": 9,
+      "body_bytes": 10316,
+      "code_bytes": 32988
+    },
+    {
+      "index": 910,
+      "tier": "TurboFan",
+      "ms": 7,
+      "body_bytes": 7150,
+      "code_bytes": 24792
+    },
+    {
+      "index": 1273,
+      "tier": "TurboFan",
+      "ms": 4,
+      "body_bytes": 3996,
+      "code_bytes": 14992
+    },
+    {
+      "index": 2910,
+      "tier": "TurboFan",
+      "ms": 3,
+      "body_bytes": 4658,
+      "code_bytes": 12924
+    },
+    {
+      "index": 911,
+      "tier": "Liftoff",
+      "ms": 1,
+      "body_bytes": 32698,
+      "code_bytes": 103516
+    },
+    {
+      "index": 1273,
+      "tier": "Liftoff",
+      "ms": 0,
+      "body_bytes": 3996,
+      "code_bytes": 12524
+    },
+    {
+      "index": 2910,
+      "tier": "Liftoff",
+      "ms": 0,
+      "body_bytes": 4658,
+      "code_bytes": 14136
+    },
+    {
+      "index": 704,
+      "tier": "Liftoff",
+      "ms": 0,
+      "body_bytes": 13812,
+      "code_bytes": 45412
+    },
+    {
+      "index": 844,
+      "tier": "Liftoff",
+      "ms": 0,
+      "body_bytes": 31487,
+      "code_bytes": 97336
+    },
+    {
+      "index": 3274,
+      "tier": "Liftoff",
+      "ms": 0,
+      "body_bytes": 17510,
+      "code_bytes": 54460
+    },
+    {
+      "index": 910,
+      "tier": "Liftoff",
+      "ms": 0,
+      "body_bytes": 7150,
+      "code_bytes": 21748
+    },
+    {
+      "index": 3184,
+      "tier": "Liftoff",
+      "ms": 0,
+      "body_bytes": 10316,
+      "code_bytes": 33948
+    }
+  ],
+  "entry_limitations": "No cross-clock timestamp subtraction or precise callee pre-entry timer. CPU samples bracket entry at roughly 1 ms resolution and do not prove that every gap is JIT. TurboFan compile durations may be background work. Warm fresh-solver external calls remain 356 ms.",
+  "decision": "Separate completed compilation/admission from evaluator service at the existing assertion step return. Also return when recovery requests another compilation. Preserve all audit checks, paired emission, parser and evaluator; no code-shape or accounting treatment.",
+  "followup": "T3 first comparison exposed later stalls. The original saved profile attributes the tail to unbounded suffix searches in paired-default validation. Restrict searches to the current edge while preserving accepted positions/full graph comparison; return after each existing evaluator unit instead of fusing 32. No new profile run was required.",
+  "residual": {
+    "normal_release_evidence": "T3-r2-p1-candidate-process.json",
+    "ordinary_cold_ms": 291.3801,
+    "ordinary_warm_ms": 284.9319,
+    "one_evaluator_unit_per_assertion_return": true,
+    "same_saved_profile_contiguous_samples": {
+      "profile_clock_window_ms": [
+        50285.502,
+        50686.266
+      ],
+      "build_components_and_refine_pair_graph_ms": 400.764,
+      "synchronous_replay_partition_subset_ms": 341.54
+    },
+    "source_call": "engine/src/solver_eval.cpp:4096",
+    "callee": "engine/src/solver_refinement_partition.cpp:500",
+    "interpretation": "Inferred residual owner from the unchanged evaluator path, original mapped profile and persistence after caller batching/paired-scan repairs. The checkpoint follows the complete synchronous replay partition; no claim of a newly instrumented per-call T2 body timer.",
+    "scope_disposition": "Staging replay partition crosses into the shared partition proof owner and its replay/cap/identity/lifetime obligations. Not implemented in this first-policy assertion programme."
+  }
+}

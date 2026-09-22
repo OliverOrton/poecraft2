@@ -65,6 +65,15 @@ owns profiles and observations.
 
 Solve work, automatic admission, broad exact reforge rows, strict refinement, compilation assertion, and evaluation retain explicit continuation state. A public step advances bounded logical work, but cancellation is observed only when the relevant cooperative boundary returns control.
 
+The assertion owner returns after compilation/parser/evaluator admission before
+its next evaluation batch, including for large caller ceilings. It also returns
+before a requested recovery compilation. The same parser, economy,
+evaluator and frozen proof lifetimes already required by quantum one apply;
+their existing aggregate charges and compiler audit fences are unchanged. No
+scratch is exported or credited as an upper at this return. Successful paired
+product emission remains an indivisible measured call. See the
+[publication contract](publication.md#evaluation-contract) and its service record.
+
 An unfinished exact row owns scratch and cannot install a normal cached distribution. A yielded candidate can retain its bounded preference; a terminally refused candidate must release its active payload and stop suppressing ordinary joint-policy work. Small diagnostic tombstones are not active continuation ownership.
 
 Cancellation abandons unpublished work. Previously verified evidence survives only where the owning publication contract permits it. A successful cancellation of a process or cursor is not a successful solve.

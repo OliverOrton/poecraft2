@@ -271,6 +271,26 @@ bounded progress and export/cleanup milestones. Numerical generation, current
 workspace role and live/finalized work source prevent sampled counters from
 being mistaken for lifetime work or verified policy cost.
 
+The existing `apps/web/test/calculator-delivery-probe.ts` accepts an optional
+fourth argument `2` for a fresh-solver warm repeat in the same worker/module;
+it writes `.warm.json` alongside the cold report and records runtime versions.
+`cancel_compile` synchronizes cancellation on the observed initial-candidate
+compilation return, retaining that native identity/sequence and full release
+telemetry. It does not inject a message into executing WASM. Existing setup and
+retention controls remain separate. Use the original UI/worker clock origins,
+include post-release reads in cancellation time, and preserve observation omissions.
+The [first-policy service record](../active/2026-09-21-first-policy-service/README.md)
+owns measured limits and the remaining synchronous evaluator boundary.
+
+For an isolated WASM smoke failure, `POECRAFT_SMOKE_TEST` selects one exact test
+name while retaining the shared ABI/data/session prerequisites. Unknown names
+refuse. Inspect the selected case for embedded simulation before running it;
+this selector does not redefine qualification policy or replace the full suite.
+The existing explicit `yieldEveryStep` control mode now uses timer turns between
+units and before terminal commitment, so a fast MessageChannel chain cannot
+starve its queued control. Ordinary Calculator scheduling is unchanged. This is
+an instrumentation/control mode; its times are not ordinary product timings.
+
 ## Current sources
 
 Current code: `solver_benchmark.cpp`, `solver_corpus_runner.py`,

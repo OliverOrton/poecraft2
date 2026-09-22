@@ -34,7 +34,10 @@ not reappear on return. Failed replacement preserves the previous valid witness.
 This boundary grants no statewise authority to a private root-only assertion and
 does not move final normalization, classification or sealing out of publication.
 
-Primary owners are `solver_solve_finish.cpp`, `solver_compile.cpp`, `solver_compile_conditions.hpp`, `solver_compile_serialization.hpp`, `solver_policy_assertion.cpp`, `solver_eval.cpp`, `solver_eval_resolve.cpp`, and `solver_eval_report.cpp`.
+Primary owners are `solver_solve_finish.cpp`, `solver_policy_assertion_work.cpp`,
+`solver_compile.cpp`, `solver_compile_conditions.hpp`,
+`solver_compile_serialization.hpp`, `solver_policy_assertion.cpp`,
+`solver_eval.cpp`, `solver_eval_resolve.cpp`, and `solver_eval_report.cpp`.
 
 ## Compiler Contract
 
@@ -55,6 +58,25 @@ Finite selected actions, representative identity, terminal consistency, and phys
 The direct graph can establish a bounded executable upper before strict lift. If its independently evaluated cost differs from the coarse estimate, that mismatch remains visible and blocks using the coarse result as reconciled exact closure. Do not generalize the narrow bounded-publication allowance to other refusal paths.
 
 ## Evaluation Contract
+
+The stepped assertion returns after complete compilation, parsing and evaluator
+admission before servicing evaluation, even if the caller requests a larger work
+batch. A request for recovery compilation also returns before that phase.
+Evaluation otherwise retains its existing batch ceiling; a single replay-backed
+partition operation can still exceed a wall-time service target. The publication
+coroutine exposes the existing parent checkpoint; the
+synchronous assertion API still drains the same owner. This reuses a lifetime
+already exercised by quantum one, with no new scratch or accounting domain.
+Compilation/admission is still private, unverified work, and result access refuses
+until the complete assertion finishes. Paired product emission and designated
+default checks remain required. Pair validation searches each edge's fields for
+its designated router prefix and still compares the complete normalized graphs;
+only the existing bounded-default targets may differ. Any late assertion failure
+clears executable/finite-cost authority, including flags from a previously
+successful certification evaluation. That evaluation remains diagnostic only.
+The [first-policy service record](../active/2026-09-21-first-policy-service/README.md)
+owns attribution and measured response gates; individual phases are not promised
+to meet a universal wall-time bound.
 
 Exact evaluation constructs the reachable product of strategy operation, item state, and relevant choice/checkpoint state. It checks properness, solves success and expected resource/cost equations, and reports off-policy mass and price completeness.
 

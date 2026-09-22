@@ -533,6 +533,7 @@ async function solveSolver(
                 worker.yield_count = yieldCount;
                 unyieldedStepMs = 0;
                 const timerYieldDue =
+                    params.yieldEveryStep === true ||
                     lastTimerYieldAt === -Infinity ||
                     performance.now() - lastTimerYieldAt >= 100;
                 if (timerYieldDue) {
@@ -546,7 +547,10 @@ async function solveSolver(
 
         // A queued cancel wins until terminal commitment, including natural
         // exact completion and a Finish that completed in the last work unit.
-        await yieldToEventLoop();
+        // Explicit control probes need a timer turn: a chain of MessageChannel
+        // tasks can outrun their inbound control messages in a warmed worker.
+        await (params.yieldEveryStep === true
+            ? yieldToTimerTask() : yieldToEventLoop());
         if (cancelled.has(id)) {
             return acknowledgeCancellation();
         }

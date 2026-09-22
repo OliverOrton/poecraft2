@@ -185,6 +185,18 @@ before transport and keep it immutable thereafter. Invocation-scoped intent,
 acknowledgement, sealing, terminal commitment and usable delivery are distinct.
 Cancellation precedence belongs to the control owner.
 
+An assertion may return at the existing prefix after complete graph construction
+and evaluator admission but before evaluation service. Its private graph adds no
+element to E_n: only the subsequent complete ordinary assertion can do that.
+Forcing this already valid quantum-one boundary for larger caller ceilings thus
+preserves the feasible-witness invariant, provided the frozen proof and owned
+evaluator outlive suspension and cancellation destroys children before inputs.
+The existing publication coroutine supplies that checkpoint and ownership. A
+recovery compilation remains another unverified proposal requiring its original
+checks. This changes grouping of native work, not its mathematical authority;
+the [service measurements](../../active/2026-09-21-first-policy-service/README.md)
+are separate from the induction argument.
+
 This is safety. Bounded response also requires bounds on dispatch, noninterruptible
 work, transfer, release and packaging. Existing numerical reconciliation does not
 become a rigorously rounded endpoint through Finish.

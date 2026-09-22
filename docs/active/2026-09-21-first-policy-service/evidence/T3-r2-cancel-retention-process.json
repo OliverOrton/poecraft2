@@ -1,0 +1,97 @@
+{
+  "command": [
+    "C:/Program Files/nodejs/node.exe",
+    "--import",
+    "tsx",
+    "test/calculator-delivery-probe.ts",
+    "cb01-cross-base-product8-long240",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-r2-cancel-retention\\report.json",
+    "cancel_retention",
+    "2"
+  ],
+  "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web",
+  "watchdog_seconds": 315,
+  "admission": {
+    "physical": 38503559168,
+    "commit": 18851471360,
+    "reserve": 8589934592,
+    "outside": 13681888461,
+    "admitted": true
+  },
+  "head": "097bc12b6b84db10d3fa6be56f20b1b464187adf",
+  "wasm_sha256": "41209ae0921f2d739f764b72dffbe31e99ac85d1c6fd59b5ca7e283355cde055",
+  "probe_sha256": "b2a5e87af2275cd694ec230514c72fab4e6e8e7de459f0790b4b07bf4b32cb0e",
+  "profiling": false,
+  "arm": "T2-r2-release",
+  "source_patch_sha256": "0add98c08838da4d505d3effa9f2aaaf7d78f1f48016a5a071d6e9f9e89fe78f",
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 62308,
+    "process_identity_token": "62308:134345292140416836",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 22368.590700090863
+  },
+  "summaries": [
+    {
+      "report": "out\\first-policy-service\\T3-r2-cancel-retention\\report.json",
+      "sha256": "66f6ecb7499ff29b5564a5b42f599679b59b77c4723d869714d41205c2dee41f",
+      "runtime_warm": false,
+      "control": "cancel_retention",
+      "begin_ms": 2.404299999999921,
+      "setup_ms": 30.503200000000106,
+      "ordinary_ms": 0,
+      "context": null,
+      "first_verified_worker_ms": null,
+      "omitted": 0,
+      "graph_sha256": null,
+      "cancel_ms": 36.534200000000055,
+      "max_progress_read_ms": 2.569500000000062,
+      "peak_owned_bytes": 59374114,
+      "final_live_owned_bytes": 47591739,
+      "boundary": null,
+      "release_telemetry": {
+        "version": 1,
+        "snapshot_and_peak_audit_ns": 10961300,
+        "serialization_ns": 7086600,
+        "calculator_rollback_ns": 1200,
+        "task_storage_release_ns": 2343200,
+        "remaining_storage_release_ns": 266400,
+        "native_release_ns": 20660900
+      },
+      "timing_pass": true
+    },
+    {
+      "report": "out\\first-policy-service\\T3-r2-cancel-retention\\report.warm.json",
+      "sha256": "7f633c3df8a82026e5c1583b9752f6bb0533a2b2f39755d7d7171bf124eb68a1",
+      "runtime_warm": true,
+      "control": "cancel_retention",
+      "begin_ms": 0.48889999999846623,
+      "setup_ms": 24.36409999999887,
+      "ordinary_ms": 0,
+      "context": null,
+      "first_verified_worker_ms": null,
+      "omitted": 0,
+      "graph_sha256": null,
+      "cancel_ms": 82.56560000000172,
+      "max_progress_read_ms": 0.274199999999837,
+      "peak_owned_bytes": 59374114,
+      "final_live_owned_bytes": 47591739,
+      "boundary": null,
+      "release_telemetry": {
+        "version": 1,
+        "snapshot_and_peak_audit_ns": 129100,
+        "serialization_ns": 156800,
+        "calculator_rollback_ns": 1100,
+        "task_storage_release_ns": 1017200,
+        "remaining_storage_release_ns": 35300,
+        "native_release_ns": 1340100
+      },
+      "timing_pass": true
+    }
+  ]
+}

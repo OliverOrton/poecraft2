@@ -5948,19 +5948,97 @@ void run_policy_guided_primitive_choice_reoptimization_tests() {
      * authored/global value snapshot says zero. The certificate must retain
      * that compiled-policy cost rather than reoptimizing the offer. */
     refinement::CompiledPolicyAssertion fixed_choice_assertion;
-    {
+    for (const std::uint32_t quantum : {1u, 7u, 4096u}) {
         refinement::CompiledPolicyAssertionWork work(
             calc, authored, prices, options,
             "focused fixed observed-choice continuation",
             nullptr, nullptr, nullptr, true, true);
-        while (!work.progress().done) work.step(4096);
-        fixed_choice_assertion = work.take_result();
+        work.step(quantum);
+        const auto prepared = work.progress();
+        PC_CHECK(!prepared.done);
+        PC_CHECK(prepared.phase ==
+            refinement::CompiledPolicyAssertionPhase::Certifying);
+        PC_CHECK(prepared.evaluation.stored_transitions == 0);
+        bool refused_partial = false;
+        try { (void)work.take_result(); }
+        catch (const std::logic_error&) { refused_partial = true; }
+        PC_CHECK(refused_partial);
+        const auto retained = work.retained_bytes();
+        for (unsigned read = 0; read < 3; ++read) {
+            PC_CHECK(work.progress().evaluation.stored_transitions == 0);
+            PC_CHECK(work.retained_bytes() == retained);
+        }
+        // The admitted evaluator remains owned across the real return/move.
+        auto resumed = std::move(work);
+        unsigned calls = 0;
+        while (!resumed.progress().done && calls++ < 100000)
+            resumed.step(quantum);
+        PC_CHECK(resumed.progress().done);
+        if (!resumed.progress().done) return;
+        auto asserted = resumed.take_result();
+        if (quantum != 1) {
+            PC_CHECK(asserted.strategy_json == fixed_choice_assertion.strategy_json);
+            PC_CHECK(asserted.certification_strategy_json ==
+                fixed_choice_assertion.certification_strategy_json);
+            PC_CHECK(asserted.exact_cost == fixed_choice_assertion.exact_cost);
+            PC_CHECK(asserted.evaluation.expected_actions ==
+                fixed_choice_assertion.evaluation.expected_actions);
+            PC_CHECK(asserted.paired_default_only ==
+                fixed_choice_assertion.paired_default_only);
+        }
+        fixed_choice_assertion = std::move(asserted);
     }
     PC_CHECK(fixed_choice_assertion.executable);
     PC_CHECK(fixed_choice_assertion.proper);
     PC_CHECK(fixed_choice_assertion.zero_off_policy);
     PC_CHECK(std::isfinite(fixed_choice_assertion.exact_cost));
     PC_CHECK(fixed_choice_assertion.exact_cost > 0.0);
+    // Exercise the real pairing checker through supplied certification input.
+    // Priority on the single start edge does not alter evaluation, but it is
+    // not a designated default-target difference and must still be rejected.
+    for (const bool change_priority : {false, true}) {
+        auto graph = fixed_choice_assertion.certification_strategy_json;
+        if (change_priority) {
+            const auto priority = graph.find("\"priority\":0");
+            PC_CHECK(priority != std::string::npos);
+            if (priority == std::string::npos) return;
+            graph[priority + std::string_view{"\"priority\":"}.size()] = '1';
+        }
+        refinement::CompiledPolicyAssertionWork supplied(
+            calc, authored, prices, options,
+            "focused fixed observed-choice continuation", nullptr, &graph,
+            &fixed_choice_assertion.certification_compilation, true, true);
+        unsigned calls = 0;
+        while (!supplied.progress().done && calls++ < 100000)
+            supplied.step(4096);
+        PC_CHECK(supplied.progress().done);
+        if (!supplied.progress().done) return;
+        const auto checked = supplied.take_result();
+        if (change_priority) {
+            PC_CHECK(checked.status ==
+                refinement::CompiledPolicyAssertionStatus::CompilationFailure);
+            PC_CHECK(!checked.executable);
+            PC_CHECK(!checked.proper && !checked.zero_off_policy);
+            PC_CHECK(!checked.cost_reconciled && !checked.paired_default_only);
+            PC_CHECK(!std::isfinite(checked.exact_cost));
+            PC_CHECK(checked.evaluation.success_probability > 0.999999);
+            PC_CHECK(checked.failure_reason.find("outside compiler-designated") !=
+                std::string::npos);
+        } else {
+            PC_CHECK(checked.paired_default_only);
+            PC_CHECK(checked.strategy_json == fixed_choice_assertion.strategy_json);
+            PC_CHECK(checked.exact_cost == fixed_choice_assertion.exact_cost);
+        }
+        auto capped_options = options;
+        capped_options.max_strategy_json_bytes = graph.size() - 1;
+        refinement::CompiledPolicyAssertionWork capped(
+            calc, authored, prices, capped_options, "supplied graph cap",
+            nullptr, &graph, &fixed_choice_assertion.certification_compilation);
+        capped.step(4096);
+        PC_CHECK(capped.progress().done);
+        PC_CHECK(capped.take_result().status ==
+            refinement::CompiledPolicyAssertionStatus::ResourceCap);
+    }
     const auto fixed_root = std::find_if(
         fixed_choice_assertion.evaluation.continuation_upper.states.begin(),
         fixed_choice_assertion.evaluation.continuation_upper.states.end(),
@@ -14261,6 +14339,14 @@ void run_solver_selected_fallback_tests() {
     run_retained_pool_ownership_tests();
     run_selected_fallback_successor_tests();
     run_frontier_incumbent_epoch_skew_tests();
+}
+
+void run_solver_assertion_service_tests() {
+    run_direct_certification_contract_tests();
+    run_policy_guided_primitive_choice_reoptimization_tests();
+    run_future_observed_choice_finalization_tests();
+    run_policy_guided_fixed_choice_reoptimization_tests();
+    run_policy_guided_improper_cycle_repair_tests();
 }
 
 void run_solver_bounded_finish_tests() {

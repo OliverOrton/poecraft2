@@ -13,8 +13,11 @@ import { loadSolverBenchmarkCorpus, materializeSolverBenchmarkEconomy,
 import { getPrices, setPrice, setFallbackPrice } from "../src/app/workspace/prices";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
-const [caseId, output, control = "finish"] = process.argv.slice(2);
-assert.ok(caseId && output && ["finish", "cancel_setup", "cancel_retention"].includes(control));
+const [caseId, output, control = "finish", repeatText = "1"] = process.argv.slice(2);
+assert.ok(caseId && output && ["finish", "cancel_setup", "cancel_retention", "cancel_compile"].includes(control));
+const repetitions = Number(repeatText);
+assert.ok(repetitions === 1 || repetitions === 2);
+assert.ok(repetitions === 1 || output.endsWith(".json"));
 const corpus = loadSolverBenchmarkCorpus(resolve(root,
     "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json"));
 const spec = corpus.cases.find(c => c.id === caseId)!;
@@ -30,11 +33,15 @@ const client = new EngineClient({
     onError: h => { worker.on("error", h); },
     terminate: () => { void worker.terminate(); },
 });
+try {
+for (let repetition = 0; repetition < repetitions; ++repetition) {
 let data = 0, session = 0, item = 0, solver = 0;
 let nativeGraph: unknown = null;
 let releaseTelemetry: unknown = null;
 let releaseTelemetryReadMs = 0;
+let controlBoundary: unknown = null;
 const solve = client.solverSolve.bind(client);
+const compile = client.solverCompileStrategy.bind(client);
 client.solverSolve = async (...args) => {
     const result = await solve(...args);
     if (result.cancelled) {
@@ -77,7 +84,6 @@ try {
         slots: spec.goal.slots.map(s => ({
             ...("family_mod_key" in s ? {familyModKey: s.family_mod_key} : {group: s.group}), minTier: s.min_tier ?? 1})),
         solveAllowEconomicRestart: false, solveConsiderImprintPrograms: false});
-    const compile = client.solverCompileStrategy.bind(client);
     client.solverCompileStrategy = async (...args) => { nativeGraph = await compile(...args); return nativeGraph as Awaited<ReturnType<typeof compile>>; };
     let intent = false;
     const render = fields.renderSolvePanel.bind(calculator);
@@ -98,6 +104,18 @@ try {
             intent = true;
             fields.solveUiMilestones.push({stage: "cancel_intent", ui_elapsed_ms: performance.now()-fields.solveUiStartedAt});
             calculator.querySelector<HTMLButtonElement>('[data-solve-cmd="cancel"]')!.click();
+        } else if (control === "cancel_compile" &&
+                fields.solveProgress?.phase_owner === "compilation" &&
+                !fields.solveProgress.trace?.current?.verified_artifact_available &&
+                fields.solveProgress.trace?.events?.some((event: any) =>
+                    event.kind === "compile_start" && event.reason === "initial_candidate")) {
+            // Synchronize on the native candidate boundary; no sleep guesses
+            // where a long executing WASM call might be. The new assertion
+            // return exposes admitted private scratch before evaluation.
+            intent = true;
+            controlBoundary = fields.solveProgress;
+            fields.solveUiMilestones.push({stage: "cancel_intent", ui_elapsed_ms: performance.now()-fields.solveUiStartedAt});
+            calculator.querySelector<HTMLButtonElement>('[data-solve-cmd="cancel"]')!.click();
         }
     };
     let probeError: string | null = null;
@@ -108,22 +126,32 @@ try {
     }
     const trace = fields.solveProgressExport;
     const graphText = nativeGraph === null ? null : typeof nativeGraph === "string" ? nativeGraph : JSON.stringify(nativeGraph);
-    const report = {case_id: caseId, control, environment: "linkedom actual Calculator + node-worker_threads WASM",
+    const report = {case_id: caseId, control, repetition, runtime_warm: repetition > 0,
+        runtime_versions: process.versions,
+        cache_context: "same runtime; fresh native data, session, item and solver handles on each repetition",
+        environment: "linkedom actual Calculator + node-worker_threads WASM",
         visual_review: "not performed", request: trace?.request, resolved: trace?.resolved,
         trace, solve_summary: fields.solveSummary, error: fields.solveError,
         usable_strategy: !!fields.solvedStrategy, graph_sha256: graphText === null ? null : createHash("sha256").update(graphText).digest("hex"),
         graph: nativeGraph, probe_error: probeError, release_telemetry: releaseTelemetry,
-        release_telemetry_read_ms: releaseTelemetryReadMs};
-    writeFileSync(output, JSON.stringify(report, null, 2)+"\n");
+        release_telemetry_read_ms: releaseTelemetryReadMs, control_boundary: controlBoundary};
+    writeFileSync(repetition === 0 ? output : output.replace(/\.json$/, ".warm.json"),
+        JSON.stringify(report, null, 2)+"\n");
     console.log(JSON.stringify({case_id: caseId, control, status: trace?.status, usable: report.usable_strategy,
         error: report.error, probe_error: probeError, ui_milestones: trace?.ui_milestones}));
     assert.equal(probeError, null);
     assert.equal(trace?.status, control === "finish" ? "completed" : "cancelled");
     assert.equal(report.usable_strategy, control === "finish");
+    if (control === "cancel_compile") assert.ok(controlBoundary);
 } finally {
     if (solver) await client.closeSolver(solver);
     if (item) await client.closeItem(item);
     if (session) await client.closeSession(session);
     if (data) await client.closeData(data);
+    client.solverSolve = solve;
+    client.solverCompileStrategy = compile;
+}
+}
+} finally {
     await worker.terminate();
 }

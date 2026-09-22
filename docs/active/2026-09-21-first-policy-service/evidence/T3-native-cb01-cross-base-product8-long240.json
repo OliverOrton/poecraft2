@@ -1,0 +1,496 @@
+{
+  "case": {
+    "case_id": "cb01-cross-base-product8-long240",
+    "command": {
+      "argv": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-native-binaries\\poecraft_solver_benchmark.exe",
+        "--artifact",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "--corpus",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+        "--output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-native-cb01-cross-base-product8-long240\\cases\\cb01-cross-base-product8-long240.json",
+        "--partial-output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-native-cb01-cross-base-product8-long240\\partials\\cb01-cross-base-product8-long240.preflight.json",
+        "--strategy-output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-native-cb01-cross-base-product8-long240\\strategies",
+        "--case",
+        "cb01-cross-base-product8-long240",
+        "--skip-verification",
+        "--exact-strategy-evaluation",
+        "--native-retention-diagnostic",
+        "reuse"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+    },
+    "paths": {
+      "attempt_id": "preflight",
+      "attempt_directory": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-native-cb01-cross-base-product8-long240",
+      "report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-native-cb01-cross-base-product8-long240\\cases\\cb01-cross-base-product8-long240.json",
+      "partial_report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-native-cb01-cross-base-product8-long240\\partials\\cb01-cross-base-product8-long240.preflight.json",
+      "strategy_output_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-native-cb01-cross-base-product8-long240\\strategies",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-native-cb01-cross-base-product8-long240\\logs\\cb01-cross-base-product8-long240.log"
+    },
+    "watchdog_seconds": 315.0,
+    "reservation": {
+      "solver_owned_cap_bytes": 1073741824,
+      "worker_headroom_bytes": 6442450944,
+      "policy_version": "solver_lab_host_reservation_v2"
+    }
+  },
+  "identity": {
+    "corpus": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-09-cross-base-capability-recovery\\core\\manifest.json",
+      "sha256": "4f8d6ec386e7b65a8a1975bf762e9da020a3a3593c0dbc6d861de7372264c9fe",
+      "corpus_id": "cross-base-capability-recovery-core-v1",
+      "schema_version": "solver_benchmark_corpus_v1",
+      "generator_config_sha256": null
+    },
+    "artifact": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+      "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+      "declared_files_verified": true,
+      "files": [
+        {
+          "path": "game-data.json",
+          "size_bytes": 16439442,
+          "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+        },
+        {
+          "path": "strings.json",
+          "size_bytes": 6534428,
+          "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+        }
+      ],
+      "identity": {
+        "artifact_schema_version": 4,
+        "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+        "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+        "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+      }
+    },
+    "executable": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-native-binaries\\poecraft_solver_benchmark.exe",
+      "sha256": "3752c6dfebc8bf9a2546a7b4ff8b381a21d99fdb3fb172638560980013b52145"
+    },
+    "machine": {
+      "system": "Windows",
+      "release": "11",
+      "machine": "AMD64",
+      "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+      "logical_cpu_count": 24,
+      "python": "3.14.2"
+    },
+    "source": {
+      "commit": "097bc12b6b84db10d3fa6be56f20b1b464187adf",
+      "dirty": true,
+      "dirty_paths": [
+        {
+          "status": " M",
+          "path": "apps/web/test/engine-smoke.test.ts"
+        },
+        {
+          "status": " M",
+          "path": "bindings/wasm/dist/poecraft_engine.wasm"
+        },
+        {
+          "status": " M",
+          "path": "docs/active/2026-09-21-first-policy-service/README.md"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T1-attribution.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T1-cancel-retention-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T1-cancel-setup-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T1-normal-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T1-profile-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T3-p1-base-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T3-p1-candidate-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T3-r2-cancel-compile-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T3-r2-cancel-retention-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T3-r2-cancel-setup-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T3-r2-p1-base-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T3-r2-p1-candidate-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T3-r2-p2-base-process.json"
+        },
+        {
+          "status": "??",
+          "path": "docs/active/2026-09-21-first-policy-service/evidence/T3-r2-p2-candidate-process.json"
+        },
+        {
+          "status": " M",
+          "path": "docs/foundation/solver-internals.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/benchmarking.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/claims.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/mathematics/search-and-resumption.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/publication.md"
+        },
+        {
+          "status": " M",
+          "path": "docs/solver/resources-resume-replay.md"
+        },
+        {
+          "status": " M",
+          "path": "engine/src/solver_policy_assertion_work.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_main.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/test_solver_solve.cpp"
+        },
+        {
+          "status": " M",
+          "path": "engine/tests/tests.hpp"
+        },
+        {
+          "status": "M ",
+          "path": "pps/web/test/calculator-delivery-probe.ts"
+        }
+      ]
+    }
+  },
+  "patch_sha256": "4fdb2ee6325d4e831a2f936991cc57df063de0120a917fdc79dfe9b81a084907",
+  "admission": {
+    "physical": 38386790400,
+    "commit": 18797129728,
+    "reserved": 7516192768,
+    "outside": 13681888461,
+    "admitted": true
+  },
+  "result": {
+    "case": "cb01-cross-base-product8-long240",
+    "status": "refused_unsupported_action",
+    "errors": [],
+    "policy": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 358209179.6640102,
+      "expanded_states": 3274,
+      "sweeps": 0,
+      "residual": null,
+      "skipped_action_count": 1,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 187,
+        "candidate": 28,
+        "evaluator_supported": 28,
+        "supported_priced": 252,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 1
+      },
+      "lower_bound": 405.3694021063399,
+      "upper_bound": 85558.70618560436,
+      "evaluated_policy_cost": 85558.70618560436,
+      "absolute_optimality_gap": 85153.33678349802,
+      "relative_optimality_gap": 210.06355275221262,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "evaluation": {
+      "completed": true,
+      "converged": true,
+      "cost_complete": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "zero_off_policy_mass": true
+    },
+    "primitive_actions": 8407.202314771383,
+    "graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+    "baseline_graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+    "comparison": {
+      "baseline": "T0",
+      "candidate": "T2",
+      "shared_case_ids": 1,
+      "paired_cases": 1,
+      "missing_from_baseline": [],
+      "missing_from_candidate": [],
+      "excluded": [],
+      "delta_distributions": {
+        "wall_ms": {
+          "count": 1,
+          "min": -476.02170000001206,
+          "median": -476.02170000001206,
+          "p90": -476.02170000001206,
+          "p99": -476.02170000001206,
+          "max": -476.02170000001206
+        },
+        "solve_ms": {
+          "count": 1,
+          "min": -269.45629999999073,
+          "median": -269.45629999999073,
+          "p90": -269.45629999999073,
+          "p99": -269.45629999999073,
+          "max": -269.45629999999073
+        },
+        "solve_step_median_ms": {
+          "count": 1,
+          "min": -0.0002999999999999999,
+          "median": -0.0002999999999999999,
+          "p90": -0.0002999999999999999,
+          "p99": -0.0002999999999999999,
+          "max": -0.0002999999999999999
+        },
+        "solve_step_p95_ms": {
+          "count": 1,
+          "min": -0.008399999999999998,
+          "median": -0.008399999999999998,
+          "p90": -0.008399999999999998,
+          "p99": -0.008399999999999998,
+          "max": -0.008399999999999998
+        },
+        "solve_step_max_ms": {
+          "count": 1,
+          "min": -30.38869999999997,
+          "median": -30.38869999999997,
+          "p90": -30.38869999999997,
+          "p99": -30.38869999999997,
+          "max": -30.38869999999997
+        },
+        "peak_memory_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "time_to_incumbent_ms": {
+          "count": 1,
+          "min": -1335.2583999999988,
+          "median": -1335.2583999999988,
+          "p90": -1335.2583999999988,
+          "p99": -1335.2583999999988,
+          "max": -1335.2583999999988
+        },
+        "time_to_target_ms": {
+          "count": 0,
+          "min": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "max": null
+        },
+        "final_lower_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_upper_bound": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_absolute_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "final_relative_gap": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "expanded_states": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "rows": {
+          "count": 1,
+          "min": 79.0,
+          "median": 79.0,
+          "p90": 79.0,
+          "p99": 79.0,
+          "max": 79.0
+        },
+        "transitions": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "reforge_work": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_nodes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "compiled_edges": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        },
+        "strategy_json_bytes": {
+          "count": 1,
+          "min": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "p99": 0.0,
+          "max": 0.0
+        }
+      },
+      "status_transitions": {
+        "bounded_feasible->bounded_feasible": 1
+      },
+      "regressions": [],
+      "pairs": [
+        {
+          "id": "cb01-cross-base-product8-long240",
+          "dimensions": {
+            "base": "Conquest Lamellar",
+            "class": "Body Armour",
+            "base_class": "Body Armour / Conquest Lamellar",
+            "natural_t1_count": "5",
+            "side_mix": "unknown",
+            "pool_density": "unknown",
+            "goal_probability": "unknown",
+            "incumbent": "other",
+            "policy_status": "bounded_feasible",
+            "termination": "requested_bounded_finish",
+            "evaluation_role": "unassigned",
+            "observation_status": "completed"
+          },
+          "treatments": {
+            "baseline_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T0-native-binaries\\poecraft_solver_benchmark.exe",
+              "sha256": "62d4fc6944a0d4abe4bbee514b07e27d52f704b3dcc020e175ac6f5abf9f9bb9"
+            },
+            "candidate_executable": {
+              "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-native-binaries\\poecraft_solver_benchmark.exe",
+              "sha256": "3752c6dfebc8bf9a2546a7b4ff8b381a21d99fdb3fb172638560980013b52145"
+            }
+          },
+          "baseline_status": {
+            "actual": "refused_unsupported_action",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "candidate_status": {
+            "actual": "refused_unsupported_action",
+            "policy": "bounded_feasible",
+            "termination": "requested_bounded_finish"
+          },
+          "deltas": {
+            "wall_ms": -476.02170000001206,
+            "solve_ms": -269.45629999999073,
+            "solve_step_median_ms": -0.0002999999999999999,
+            "solve_step_p95_ms": -0.008399999999999998,
+            "solve_step_max_ms": -30.38869999999997,
+            "peak_memory_bytes": 0.0,
+            "time_to_incumbent_ms": -1335.2583999999988,
+            "time_to_target_ms": null,
+            "final_lower_bound": 0.0,
+            "final_upper_bound": 0.0,
+            "final_absolute_gap": 0.0,
+            "final_relative_gap": 0.0,
+            "states": 0.0,
+            "expanded_states": 0.0,
+            "rows": 79.0,
+            "transitions": 0.0,
+            "reforge_work": 0.0,
+            "compiled_nodes": 0.0,
+            "compiled_edges": 0.0,
+            "strategy_json_bytes": 0.0
+          }
+        }
+      ]
+    }
+  }
+}

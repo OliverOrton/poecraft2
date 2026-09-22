@@ -40,6 +40,7 @@ void run_solver_calc_tests(const char* artifact_dir);
 void run_solver_calc_gated_equivalence_tests();
 void run_solver_solve_tests(const char* artifact_dir);
 void run_solver_integrity_tests(const char* case_name);
+void run_solver_assertion_service_tests();
 void run_solver_joint_policy_continuation_tests();
 void run_solver_carrier_bound_tests();
 void run_solver_proof_pattern_tests();

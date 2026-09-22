@@ -1,0 +1,99 @@
+{
+  "command": [
+    "C:/Program Files/nodejs/node.exe",
+    "--import",
+    "tsx",
+    "test/calculator-delivery-probe.ts",
+    "cb01-cross-base-product8-long240",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\first-policy-service\\T3-r2-p1-candidate\\report.json",
+    "finish",
+    "2"
+  ],
+  "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web",
+  "watchdog_seconds": 315,
+  "admission": {
+    "physical": 38408581120,
+    "commit": 18786738176,
+    "reserve": 8589934592,
+    "outside": 13681888461,
+    "admitted": true
+  },
+  "head": "097bc12b6b84db10d3fa6be56f20b1b464187adf",
+  "wasm_sha256": "41209ae0921f2d739f764b72dffbe31e99ac85d1c6fd59b5ca7e283355cde055",
+  "probe_sha256": "b2a5e87af2275cd694ec230514c72fab4e6e8e7de459f0790b4b07bf4b32cb0e",
+  "profiling": false,
+  "arm": "T2-r2-release",
+  "source_patch_sha256": "0add98c08838da4d505d3effa9f2aaaf7d78f1f48016a5a071d6e9f9e89fe78f",
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 14864,
+    "process_identity_token": "14864:134345288512742107",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 96954.93880007416
+  },
+  "summaries": [
+    {
+      "report": "out\\first-policy-service\\T3-r2-p1-candidate\\report.json",
+      "sha256": "1fccde2d9fb4ffd0b9382f2a4d74b381614d40047df39e67df945a4767568860",
+      "runtime_warm": false,
+      "control": "finish",
+      "begin_ms": 2.1790000000000873,
+      "setup_ms": 27.042799999999943,
+      "ordinary_ms": 291.38010000000213,
+      "context": {
+        "input_owner": "exact_evaluation",
+        "output_owner": "exact_evaluation",
+        "input_cursor": 297,
+        "output_cursor": 297,
+        "quantum": 8,
+        "duration_ms": 291.38010000000213
+      },
+      "first_verified_worker_ms": 46039.7018,
+      "omitted": 0,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_reference_graph": true,
+      "finish_ms": 429.84189999999944,
+      "delivery_ms": 46476.072400000005,
+      "max_progress_read_ms": 2.3079999999999927,
+      "peak_owned_bytes": 241722503,
+      "final_live_owned_bytes": 148491547,
+      "boundary": null,
+      "release_telemetry": null,
+      "timing_pass": false
+    },
+    {
+      "report": "out\\first-policy-service\\T3-r2-p1-candidate\\report.warm.json",
+      "sha256": "23b5bccf7cafa2e7b2b7fa9c004e304d4ea88464bffcf6902b07634011397b61",
+      "runtime_warm": true,
+      "control": "finish",
+      "begin_ms": 0.22740000000339933,
+      "setup_ms": 25.143700000000536,
+      "ordinary_ms": 284.9319000000105,
+      "context": {
+        "input_owner": "exact_evaluation",
+        "output_owner": "exact_evaluation",
+        "input_cursor": 297,
+        "output_cursor": 297,
+        "quantum": 8,
+        "duration_ms": 284.9319000000105
+      },
+      "first_verified_worker_ms": 45877.997299999995,
+      "omitted": 0,
+      "graph_sha256": "460950663328caa63619162b1f4cd7bce6d942fc314ab2b6c2118604b3e9d640",
+      "same_reference_graph": true,
+      "finish_ms": 274.17050000000745,
+      "delivery_ms": 46157.5062,
+      "max_progress_read_ms": 0.5504999999975553,
+      "peak_owned_bytes": 241723190,
+      "final_live_owned_bytes": 148491547,
+      "boundary": null,
+      "release_telemetry": null,
+      "timing_pass": false
+    }
+  ]
+}

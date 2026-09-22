@@ -1626,6 +1626,11 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
         economy,
         undefined,
         {
+            // Make the cancellation prefix observable even after earlier
+            // smoke cases have warmed this worker. Adaptive batching may
+            // otherwise finish this small proof before the reply arrives.
+            chunkSize: 1,
+            yieldEveryStep: true,
             signal: finalizationController.signal,
             onProgress: (progress) => {
                 finalizationProgress.push(progress);
@@ -1639,7 +1644,10 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
             },
         },
     );
-    assert.equal(finalizationCancelled.cancelled, true);
+    assert.equal(finalizationCancelled.cancelled, true, JSON.stringify({
+        phases: finalizationProgress.map(p => [p.phase, p.phase_owner]),
+        milestones: finalizationCancelled.worker.milestones,
+    }));
     assert.ok(
         ["refining", "compiling", "certifying"].includes(
             finalizationProgress.at(-1)?.phase ?? "",
@@ -2317,12 +2325,16 @@ await client.whenReady();
 {
     let passed = 0;
     try {
-        for (const { name, fn } of tests) {
+        const filter = process.env.POECRAFT_SMOKE_TEST;
+        assert.ok(!filter || tests.some(test => test.name === filter), `unknown smoke test: ${filter}`);
+        // The first three tests establish the shared ABI/data/session fixture.
+        const selected = filter ? tests.filter((test, index) => index < 3 || test.name === filter) : tests;
+        for (const { name, fn } of selected) {
             await fn();
             console.log(`  ok - ${name}`);
             passed += 1;
         }
-        console.log(`\n${passed}/${tests.length} passed`);
+        console.log(`\n${passed}/${selected.length} passed`);
     } catch (error) {
         console.error(`\nFAILED: ${error instanceof Error ? error.stack : error}`);
         process.exitCode = 1;

@@ -8,6 +8,11 @@ int g_failures = 0;
 } // namespace pctest
 
 int main(int argc, char** argv) {
+    if (argc > 1 && std::string(argv[1]) == "--solver-assertion-service-only") {
+        run_solver_assertion_service_tests();
+        std::printf("solver assertion service tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 2 && std::string(argv[1]) == "--solver-integrity-only") {
         run_solver_integrity_tests(argv[2]);
         std::printf("solver integrity tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

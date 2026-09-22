@@ -53,16 +53,22 @@ bool policy_graphs_differ_only_at_bounded_defaults(
         while ((offset = value.find(default_suffix, offset)) !=
                std::string::npos) {
             const std::size_t edge = value.rfind(edge_prefix, offset);
+            if (edge == std::string::npos) {
+                offset += default_suffix.size();
+                continue;
+            }
+            // Only this edge may designate a bounded default. Searching to
+            // the end of the graph for an absent router prefix made this
+            // check quadratic in the emitted graph (T1/T3 service receipt).
+            const std::string_view edge_fields{value.data() + edge, offset - edge};
             const std::size_t policy_from =
-                value.find(policy_from_prefix, edge);
+                edge_fields.find(policy_from_prefix);
             const std::size_t refined_from =
-                value.find(refined_from_prefix, edge);
+                edge_fields.find(refined_from_prefix);
             const std::size_t from = std::min(
-                policy_from < offset ? policy_from : std::string::npos,
-                refined_from < offset ? refined_from : std::string::npos);
-            if (edge != std::string::npos &&
-                from != std::string::npos && from < offset) {
-                const std::size_t to = value.find(to_prefix, from);
+                policy_from, refined_from);
+            if (from != std::string::npos) {
+                const std::size_t to = value.find(to_prefix, edge + from);
                 if (to != std::string::npos && to < offset) {
                     const std::size_t target = to + to_prefix.size();
                     const std::size_t target_end = value.find('\"', target);
@@ -250,6 +256,15 @@ struct CompiledPolicyAssertionWork::Impl {
         result.status = status;
         result.failure_reason = std::move(reason);
         result.resource_cap = std::move(cap);
+        // A late pairing/admission failure invalidates the returned artifact,
+        // even if the earlier certification graph evaluated successfully.
+        // Keep that evaluation as diagnostic evidence, not product authority.
+        result.executable = false;
+        result.proper = false;
+        result.zero_off_policy = false;
+        result.cost_reconciled = false;
+        result.paired_default_only = false;
+        result.exact_cost = std::numeric_limits<double>::infinity();
         result.failure_classification =
             compiled_policy_failure_classification(result);
         stage = Stage::Done;
@@ -779,14 +794,23 @@ struct CompiledPolicyAssertionWork::Impl {
         while (remaining != 0 && stage != Stage::Done) {
             if (stage == Stage::Compiling) {
                 compile_and_prepare();
-                --remaining;
-                continue;
+                /* Do not fuse completed compilation/admission with the
+                 * first evaluator batch in one external service call.
+                 * Return to PublicationPipeline's actual checkpoint even
+                 * when the caller supplies a large logical work ceiling.
+                 * See the first-policy-service T1/T2 receipt (2026-09-21).
+                 * The complete graph remains private and unverified here. */
+                return;
             }
             /* Preserve the evaluator's logical boundary even for callers
              * requesting large outer batches. This keeps broad kernels and
              * SCC iterations observable to the native solve scheduler. */
             advance_evaluation(1);
             --remaining;
+            // Recovery compilation gets its own service call. Keep the
+            // evaluator's existing batch otherwise: one unit per external
+            // call added 69k calls without splitting replay partition work.
+            if (stage == Stage::Compiling) return;
         }
     }
 
