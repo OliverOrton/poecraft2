@@ -108,3 +108,36 @@ the [resource contract](../../solver/resources-resume-replay.md), and the
 [scheduling contract](../../solver/scheduling-bellman.md) hold the short
 canonical consequence. No new theorem ID or implementation contract is added.
 Raw runner ledgers and complete reports remain under `out/capacity-capability/`.
+
+## Follow-up — terminal frontier and comparison lifetime
+
+After the P0–P4 disposition, Oliver asked to continue. A failure-only scratch
+inventory found that the first Chaos refusal projected 656,156,160 bytes for
+the active frontiers and 134,217,728 bytes for the outcome table, plus 45,369
+stationary bytes. A later protected-repeat Harvest baseline refused during
+outcome-table growth at depth 6 of 6, with zero probability of another depth.
+The native reforge owner had reserved and charged a next frontier at that
+terminal depth. Omitting that unused reservation cleared the comparison's
+internal refusal, but the parent automatic-admission check then saw
+942,250,395 selected parent bytes together with 280,487,797 transient local
+bytes. The completed comparison context still retained its interned states.
+
+A bounded storage-lifetime trial omitted the terminal next frontier and
+released the completed comparison context after recording its comparison
+result. A separate frontier-ordering change proved unnecessary and was removed
+from the final trial. Under the unchanged 1 GiB/240-second CB06 request, the
+trial reached the requested time Finish with 186 expanded states and 2,497
+rows, admitted one alternative, and reported no memory-cap hit. The original
+control stopped after 58 states and 447 rows. The trial's independently exact
+evaluated graph still cost C149977.25092497544 and had the same byte hash as
+the control. The selected live/peak figures in the final report are after
+bounded-finish release; they do not measure the earlier simultaneous peak.
+The [trial evidence](evidence/P3-C-storage-lifetime-trial.json) binds the
+source patch, executable, reports, refusal reasons, identities and result.
+
+This is a measured memory-only improvement, not the requested policy-quality
+gain or a proof of exact closure. The trial source was restored. No WASM,
+Calculator, C4, C5, Regalia or Simulator qualification is claimed for an
+unretained treatment. Branch D remains the economic disposition: a new
+decision would need a policy-producing mechanism or a deliberate choice to
+retain memory-only work after its full downstream qualification.

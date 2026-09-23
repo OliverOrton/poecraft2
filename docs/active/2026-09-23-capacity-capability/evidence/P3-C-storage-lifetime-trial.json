@@ -1,0 +1,112 @@
+{
+  "schema": "capacity_storage_lifetime_trial_v1",
+  "measurement": "temporary native storage/lifetime treatment; source reverted after unchanged policy result",
+  "identity": {
+    "source_commit": "4ef8844d83c54006f09e92c82917b9205aedcfeb",
+    "temporary_source_patch": "out/capacity-capability/P3/C-temporary-source.patch",
+    "temporary_source_patch_sha256": "88572962b3cd621f8e99ade62874c7d45d1fb818f29b34055d98bbd1d6d29a6a",
+    "simplified_executable_sha256": "ea18f715eefec105acadd1d37b89690dd95e8064b1423ef2a700c21f30650643",
+    "corpus_sha256": "4f8d6ec386e7b65a8a1975bf762e9da020a3a3593c0dbc6d861de7372264c9fe",
+    "artifact_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb"
+  },
+  "witness": {
+    "first_scratch_bytes": {
+      "context_owned": 456473632,
+      "projected_total_scratch": 790419257,
+      "active_frontier": 656156160,
+      "outcome_projected": 134217728,
+      "stationary": 45369
+    },
+    "terminal_depth": "harvest_reforge:elemental outcome growth at depth 6 of 6, deeper probability 0; next frontier preflight was unnecessary",
+    "outer_overlap": "after terminal pruning, parent admission check counted 942250395 parent bytes plus 280487797 transient local bytes; completed comparison context remained retained"
+  },
+  "treatment": "Omit next-frontier reservation/preflight at terminal depths and release completed protected baseline comparison context after copying its scalar result. The frontier-ordering variant was unnecessary and removed. Same frozen CB06 request and caps.",
+  "trials": {
+    "frontier_release": {
+      "report": "out/capacity-capability/P3/C-frontier-release-diagnostic/cases/cb06-cross-base-product8-long240.json",
+      "report_sha256": "466bed345b440c729eea5e4305579fccdd475c8a6a983d4220f331a0e4814014",
+      "termination": "refused_resource_cap",
+      "stop_cause": "memory_cap",
+      "evaluated_policy_cost": 149977.25092497544,
+      "expanded_states": 58,
+      "state_action_rows": 447,
+      "transition_entries": 3582,
+      "admitted_alternatives": 0,
+      "selected_peak_bytes": 1014188701,
+      "selected_live_after_bytes": 598009945,
+      "first_cap_reason": "deferred:price_independent_kernel_generation_max_owned_bytes:carrier_state=2522:candidate=option:protected_repeat:prefix:harvest_reforge:elemental:until:1:1:comparison_owned=583857956:parent_with_comparison=834653797:parent_without_comparison=250795841:transient_local_owned=263062664:outer_other_at_admission=4026271::automatic:state_local_generation",
+      "graph_sha256": "585a3a04f53e9d6d88fbe1245d33fbcd0b20f6544630502f1dfa2758664fd454",
+      "exact_evaluation_status": "matched",
+      "solve_wall_ms": 20044.1743
+    },
+    "ordered_release": {
+      "report": "out/capacity-capability/P3/C-frontier-ordered-depth/cases/cb06-cross-base-product8-long240.json",
+      "report_sha256": "afd625abe16b7a8210cee2ecc9965c7b1fb88e66bb56ec1158854ae2cb75f76c",
+      "termination": "refused_resource_cap",
+      "stop_cause": "memory_cap",
+      "evaluated_policy_cost": 149977.25092497544,
+      "expanded_states": 58,
+      "state_action_rows": 447,
+      "transition_entries": 3582,
+      "admitted_alternatives": 0,
+      "selected_peak_bytes": 1014191160,
+      "selected_live_after_bytes": 598011915,
+      "first_cap_reason": "deferred:price_independent_kernel_generation_max_owned_bytes:carrier_state=2522:candidate=option:protected_repeat:prefix:harvest_reforge:elemental:until:1:1:comparison_owned=583857956:parent_with_comparison=834653797:parent_without_comparison=250795841:transient_local_owned=263062664:outer_other_at_admission=4026271:outcome_growth:state=0:action=harvest_reforge:elemental:context_owned=583857300:projected_scratch=522694457:stationary=45369:active_frontier=388431360:availability=0:terminal_attribution=0:factored_terminal=0:outcome_projected=134217728:outcome_prior_projection=67108864:outcome_entries_prior=1048576:outcome_entries_next=2097152:outcome_actual_size=1048576:outcome_actual_buckets=1056323:depth=6:max_target=6:deeper=0.000000:automatic:state_local_generation",
+      "graph_sha256": "585a3a04f53e9d6d88fbe1245d33fbcd0b20f6544630502f1dfa2758664fd454",
+      "exact_evaluation_status": "matched",
+      "solve_wall_ms": 18033.5822
+    },
+    "terminal_prune": {
+      "report": "out/capacity-capability/P3/C-terminal-outer-witness/cases/cb06-cross-base-product8-long240.json",
+      "report_sha256": "22190f3016ec3dbccc21d4cad4a7af35650fd3df5905b26877b3dc24cf1ad775",
+      "termination": "refused_resource_cap",
+      "stop_cause": "memory_cap",
+      "evaluated_policy_cost": 149977.25092497544,
+      "expanded_states": 58,
+      "state_action_rows": 447,
+      "transition_entries": 3582,
+      "admitted_alternatives": 0,
+      "selected_peak_bytes": 1064520862,
+      "selected_live_after_bytes": 648342236,
+      "first_cap_reason": "deferred:price_independent_kernel_generation_max_solver_owned_bytes:local_check:parent=942250395:local=280487797:transient=1:automatic:state_local_generation",
+      "graph_sha256": "585a3a04f53e9d6d88fbe1245d33fbcd0b20f6544630502f1dfa2758664fd454",
+      "exact_evaluation_status": "matched",
+      "solve_wall_ms": 21022.995
+    },
+    "combined": {
+      "report": "out/capacity-capability/P3/C-release-comparison/cases/cb06-cross-base-product8-long240.json",
+      "report_sha256": "f46316a570ca34df40cefb419909c4ddae1cf3a6b9b7f36f818b450c7c8efe8d",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "evaluated_policy_cost": 149977.25092497544,
+      "expanded_states": 186,
+      "state_action_rows": 2497,
+      "transition_entries": 61703,
+      "admitted_alternatives": 1,
+      "selected_peak_bytes": 253704864,
+      "selected_live_after_bytes": 157321318,
+      "first_cap_reason": null,
+      "graph_sha256": "585a3a04f53e9d6d88fbe1245d33fbcd0b20f6544630502f1dfa2758664fd454",
+      "exact_evaluation_status": "matched",
+      "solve_wall_ms": 240250.5104
+    },
+    "simplified": {
+      "report": "out/capacity-capability/P3/C-terminal-only-comparison-release/cases/cb06-cross-base-product8-long240.json",
+      "report_sha256": "76ace5390a7688953e8c1432ac9d8f448eb6238dd799a9179253a329c0cbe8f9",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "evaluated_policy_cost": 149977.25092497544,
+      "expanded_states": 186,
+      "state_action_rows": 2497,
+      "transition_entries": 61703,
+      "admitted_alternatives": 1,
+      "selected_peak_bytes": 253704864,
+      "selected_live_after_bytes": 157321318,
+      "first_cap_reason": null,
+      "graph_sha256": "585a3a04f53e9d6d88fbe1245d33fbcd0b20f6544630502f1dfa2758664fd454",
+      "exact_evaluation_status": "matched",
+      "solve_wall_ms": 240917.9193
+    }
+  },
+  "disposition": "Memory refusal avoided and 186 states reached at the original 240-second Finish, but the only admitted alternative did not change the independently evaluated C149977.25092497544 graph. No solver source retained; no WASM/C4/C5/Regalia rerun required for an unretained treatment."
+}

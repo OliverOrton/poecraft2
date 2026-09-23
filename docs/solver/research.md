@@ -162,9 +162,13 @@ baseline Chaos comparison: 456,473,632 selected context bytes plus
 Carrier-level memory deferral serviced substantially more work but returned
 the same C149977.25 graph at the 240-second Finish; releasing the comparison
 context between carriers reached the identical refusal. Both treatments were
-removed. The scratch-component/concurrent-owner inventory and a complete
-smaller construction remain open. The wider Ring controller is not an
-ordinary-cap result, and no new lower or exact closure follows.
+removed. A later failure-only inventory isolated the active frontier and
+terminal-depth next-frontier charge; a temporary lifetime treatment then
+avoided the first memory cap and reached 186 expanded states by the ordinary
+240-second Finish, but returned the identical evaluated graph and cost.
+It too was removed. A policy-producing bounded construction remains open.
+The wider Ring controller is not an ordinary-cap result, and no new lower or
+exact closure follows.
 
 The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
 applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)

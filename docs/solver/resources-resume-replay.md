@@ -17,9 +17,18 @@ scratch at an outcome-table growth point, not the additional allocation or an
 observed process peak. The 456,473,632 context bytes plus that projection
 already exceed its 1 GiB cap; the source report does not split scratch
 components or record all parent overlap. Releasing cross-carrier comparison
-storage did not change the refusal. An accounting relaxation or storage fix
-therefore requires the missing simultaneous inventory and old/new growth
-overlap, not a post-unwind live byte count.
+storage did not change the refusal. Any retained storage fix still needs
+simultaneous old/new growth accounting and downstream qualification, rather
+than relying on a post-unwind live byte count.
+
+The subsequent [storage-lifetime follow-up](../active/2026-09-23-capacity-capability/README.md#follow-up--terminal-frontier-and-comparison-lifetime)
+split the first scratch projection: 656,156,160 bytes were active frontiers and
+134,217,728 bytes the outcome table. It also identified a terminal-depth
+next-frontier reservation and a completed comparison context held alongside a
+transient local context. Removing those allocations in a temporary native
+trial avoided the first memory cap, but the 240-second run returned the same
+evaluated policy cost. The source was restored; this is evidence about memory
+lifetime, not a qualified runtime contract.
 
 Primary owners include `solver_solve_contracts.hpp`, `solver_calc_types.hpp`, `solver_solve_telemetry.cpp`, `solver_policy_refinement.cpp`, `solver_eval.cpp`, and the option parsing in `solver_api.cpp`.
 
