@@ -1,0 +1,13 @@
+{
+  "schema": "review_execution_limits_v1",
+  "source_review": "GitHub connector, pin a04ccac571573e4aca2403113d2a47c903da8af8",
+  "historical_sources": "User-supplied audit text and prior committed records retained as dated context, not current measurements",
+  "new_native_runs": 0,
+  "new_wasm_runs": 0,
+  "new_simulator_runs": 0,
+  "repository_writes": 0,
+  "native_tier_weight_fingerprints_available": false,
+  "planned_native_data": "CODEX_DATA_REQUEST.md",
+  "abstract_tests": "checks/results.json",
+  "network_container_source_download": "An attempted requests download failed DNS resolution; no local source download is claimed."
+}

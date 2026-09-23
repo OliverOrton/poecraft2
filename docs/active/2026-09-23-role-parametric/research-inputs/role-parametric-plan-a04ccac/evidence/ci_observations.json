@@ -1,0 +1,20 @@
+{
+  "schema": "read_only_hosted_ci_observation_v1",
+  "head": "a04ccac571573e4aca2403113d2a47c903da8af8",
+  "Windows": {
+    "run_id": 35913017410,
+    "job_id": 107357380689,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35913017410"
+  },
+  "Solver knowledge": {
+    "run_id": 35913018361,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35913018361"
+  },
+  "scope": "Read existing hosted run metadata/job steps only. No dispatch, rerun, repository write, native test, or custom benchmark initiated in this review."
+}

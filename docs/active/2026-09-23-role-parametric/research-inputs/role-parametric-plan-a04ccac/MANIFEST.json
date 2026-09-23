@@ -1,0 +1,91 @@
+{
+  "schema": "research_package_manifest_v1",
+  "reviewed_main": "a04ccac571573e4aca2403113d2a47c903da8af8",
+  "payloads": [
+    {
+      "path": "01_MAIN_REVIEW.md",
+      "size_bytes": 7161,
+      "sha256": "2813b8ae891bffe78594df6734035401b6c3011178d21458f42f2601d6b5d188"
+    },
+    {
+      "path": "02_RESEARCH_AND_MATHEMATICS.md",
+      "size_bytes": 16604,
+      "sha256": "560f62ba3c4d3cf2a3a31a53a057c1ab122add43cc134943e3b54db3d827d322"
+    },
+    {
+      "path": "03_DESIGN_AND_MILESTONES.md",
+      "size_bytes": 11784,
+      "sha256": "3252ddbcab094563fce7ed0421589ea9bfd256b4055e51384b4b2ad08c211247"
+    },
+    {
+      "path": "04_CASES_AND_VALIDATION.md",
+      "size_bytes": 10403,
+      "sha256": "ca99ad86eaa918094007151d3ee4c774658cd12ffc32274a3af2b03d9d83289d"
+    },
+    {
+      "path": "05_CANONICAL_DOC_MAINTENANCE.md",
+      "size_bytes": 5340,
+      "sha256": "3b338ac2f4fbdd93989d6adc41c93dfb178322b251733e04ed6c763f924187c1"
+    },
+    {
+      "path": "CODEX_DATA_REQUEST.md",
+      "size_bytes": 3154,
+      "sha256": "a62cba7460544bfed9ca539765bcecf0f92fac8f3c592f58500ab2ef8b1de304"
+    },
+    {
+      "path": "CODEX_PROMPT.md",
+      "size_bytes": 18776,
+      "sha256": "f8bf26725697b5c5de96d54a8a1a08dcd709a70e8aca7ea06c5b9af9b16e9926"
+    },
+    {
+      "path": "PACKAGE_VALIDATION.json",
+      "size_bytes": 710,
+      "sha256": "8c6ed52de4f3a5bcd813bb84f7a7ff59064b307bf248ae2aed494b93bf92cd7f"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 2797,
+      "sha256": "7c53ae1accfa3616acb5fe025460b238370d5dfe842341434fd469491a9db92d"
+    },
+    {
+      "path": "SOURCES.md",
+      "size_bytes": 10312,
+      "sha256": "e46d00ae87dda061c3546f62dda54bf06a5a9a5e3c8f71345895536e4b56d94d"
+    },
+    {
+      "path": "checks/check_role_models.py",
+      "size_bytes": 13409,
+      "sha256": "1a447887ef61dd1177733448a362ba3c5af5a5b82d75c38d280804313be317f7"
+    },
+    {
+      "path": "checks/results.json",
+      "size_bytes": 487,
+      "sha256": "26c0c36c0106f802964d01eaef5de84f60e25cfe6df136916e74f69741408e59"
+    },
+    {
+      "path": "evidence/baseline.json",
+      "size_bytes": 2200,
+      "sha256": "2075bd9c008b84c4133eb57ad9f0e2a6be522431f4ea23e11c1b18cdfd882e4a"
+    },
+    {
+      "path": "evidence/ci_observations.json",
+      "size_bytes": 711,
+      "sha256": "4004fb73b96cee7a63ad783d7c36835208942749990c279e9e970cddae4aa110"
+    },
+    {
+      "path": "evidence/cohort_intents.json",
+      "size_bytes": 8614,
+      "sha256": "9aa582f28d1a02172442e96e1d532be60983d9287d73c04d582525570437a41b"
+    },
+    {
+      "path": "evidence/review_limits.json",
+      "size_bytes": 641,
+      "sha256": "80319ee437006e9c993e3206783af527a285e45d929cecabd6b75b833167672e"
+    },
+    {
+      "path": "evidence/source_index.json",
+      "size_bytes": 10054,
+      "sha256": "a59c4c94a3e663254cbd2eade21898675fde9a1215a5a4e00f9200b107403536"
+    }
+  ]
+}

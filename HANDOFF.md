@@ -1,5 +1,14 @@
 # Handoff
 
+Oliver's selected [role-parametric continuation chunk](docs/active/2026-09-23-role-parametric/README.md)
+is complete under its two-variant stop rule. Six native-feasible clean-root cases
+and exact tier/member evidence are retained. Multi-role protected-repeat stops
+added no selected A4 kernel or root-cost gain; a scoped physical-attempt memo
+saved 0.98% of protected attempt time, below its 25% gate. Both source pilots
+were removed. The original C3746.13 controller and graph are unchanged; no
+solver, WASM or browser change remains. No implementation boundary is active.
+Oliver selects any next substantive direction.
+
 Oliver selected and completed the [Ring-two capacity P0–P4 investigation](docs/active/2026-09-23-capacity-capability/README.md)
 at reviewed HEAD `1596e23`. The first 1 GiB refusal is a protected-repeat
 baseline Chaos comparison reforge: 456,473,632 context bytes plus 790,419,257

@@ -1,0 +1,66 @@
+{
+  "schema": "role_parametric_baseline_v1",
+  "reviewed_main": "a04ccac571573e4aca2403113d2a47c903da8af8",
+  "previous_runtime": "1596e23a69b5ec1ce6bfd5372af9217228f2602b",
+  "memory_programme": {
+    "retained_runtime_change": false,
+    "ordinary_ring2_cost": 149977.25092497544,
+    "ordinary_ring2_count": 26175.422499995733,
+    "lower": 10.169847833384168,
+    "control_expanded": 58,
+    "control_rows": 447,
+    "followup_expanded": 186,
+    "followup_rows": 2497,
+    "followup_transitions": 61703,
+    "followup_admitted_alternatives": 1,
+    "followup_cost": 149977.25092497544,
+    "followup_cap_hit": false,
+    "followup_finish_seconds": 240,
+    "followup_source_reverted": true,
+    "final_selected_bytes_are_post_release_not_simultaneous_peak": true,
+    "first_refusal": {
+      "context_owned": 456473632,
+      "projected_total_scratch": 790419257,
+      "cap": 1073741824,
+      "projected_excess": 173151065
+    },
+    "graph_sha256": "585a3a04f53e9d6d88fbe1245d33fbcd0b20f6544630502f1dfa2758664fd454"
+  },
+  "preserved_references": [
+    {
+      "label": "ordinary compact Conquest4",
+      "cost": 3746.1319409485764,
+      "expected_actions": 8608.881793656798,
+      "scope": "retained release, actual product profile; not optimality proof"
+    },
+    {
+      "label": "Conquest5 first-policy",
+      "cost": 85558.70618560436,
+      "expected_actions": 8407.202314771383,
+      "scope": "early Finish control; unattended current new goal campaign not measured"
+    },
+    {
+      "label": "old different-target Bow4",
+      "cost": 12770.827062219498,
+      "expected_actions": 66914.72854184538,
+      "scope": "wide native profile and non-elemental target; not new B3/B4/B5 baseline"
+    },
+    {
+      "label": "Regalia",
+      "cost": 65.60036144971359,
+      "scope": "exact control"
+    },
+    {
+      "label": "historical elemental Bow3",
+      "cost": 79273.3250308337,
+      "scope": "old explicit economic Restart /60-second scope; not an ordinary new-case control"
+    }
+  ],
+  "review_execution": {
+    "native_build": false,
+    "wasm_build": false,
+    "solver_benchmark": false,
+    "simulator": false,
+    "abstract_checks": "../checks/results.json"
+  }
+}

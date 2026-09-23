@@ -170,6 +170,18 @@ It too was removed. A policy-producing bounded construction remains open.
 The wider Ring controller is not an ordinary-cap result, and no new lower or
 exact closure follows.
 
+The [role-parametric investigation](../active/2026-09-23-role-parametric/README.md)
+bound six clean roots to native tier/member laws, including the ragged 8/6/8
+armour prefix triple. A protected-repeat pair-stop pilot added 828 eligible A4
+root candidates, all collapsed by complete-kernel equality; the selected
+C3746.13 controller and its exact compiled graph were unchanged. A separate
+carrier-local physical-attempt memo with unchanged singleton coverage reduced
+measured protected attempt time by only 0.98%, below its 25% construction gate.
+Both pilots were removed. This is a negative on those two proposals under the
+declared 240-second Finish, not a claim that heterogeneous role continuations
+or stronger policies are impossible. Lower and exact-closure authorities are
+unchanged.
+
 The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
 applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)
 to explicit Finish and frozen request export, and attributes setup latency. Its activation

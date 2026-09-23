@@ -1,0 +1,72 @@
+{
+  "schema": "role_parametric_pilot_comparison_v1",
+  "case": "A4 / cb02-cross-base-product8-long240",
+  "profile": "calculator_goal_relevant_exact_terminal_imprint_off_restart_off_product8; native retention reuse; 240-second bounded Finish; 1 GiB; 315-second host cleanup",
+  "metric_authority": "Existing solver_corpus_runner case reports and independently evaluated compiled strategies",
+  "controls": {
+    "baseline": "out/ordinary-capability/C3-fracture-native/cases/cb02-cross-base-product8-long240.json",
+    "pair_stop": "out/role-parametric/R2/a4-pairs-full/cases/cb02-cross-base-product8-long240.json",
+    "physical_attempt_memo": "out/role-parametric/R3/a4-reuse-full/cases/cb02-cross-base-product8-long240.json"
+  },
+  "baseline": {
+    "status": "bounded_feasible",
+    "independent_exact_cost": 3746.1319409485764,
+    "certified_global_lower": 198.8334996747695,
+    "strategy_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+    "nodes": 811,
+    "edges": 2200,
+    "automatic_considered": 96491,
+    "automatic_eligible": 43301,
+    "automatic_collapsed": 960,
+    "automatic_selected": 591,
+    "protected_repeat_evaluations": 21678,
+    "protected_attempt_ns": 3071372700,
+    "protected_normalization_ns": 13953603400,
+    "solve_wall_ms": 240872.7181,
+    "total_wall_ms": 243781.3038,
+    "native_peak_owned_bytes": 925009530
+  },
+  "pair_stop": {
+    "status": "bounded_feasible",
+    "independent_exact_cost": 3746.1319409485764,
+    "certified_global_lower": 198.8334996747695,
+    "strategy_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+    "automatic_considered": 105059,
+    "automatic_eligible": 44129,
+    "automatic_collapsed": 1788,
+    "automatic_selected": 591,
+    "protected_repeat_evaluations": 30246,
+    "protected_attempt_ns": 3121273400,
+    "protected_normalization_ns": 14453559200,
+    "solve_wall_ms": 240557.143,
+    "total_wall_ms": 243495.2466,
+    "native_peak_owned_bytes": 925009530,
+    "interpretation": "8,568 extra considered, 828 extra eligible and 828 extra collapsed; no new selected complete kernel or root-policy gain"
+  },
+  "physical_attempt_memo": {
+    "status": "bounded_feasible",
+    "candidate_set": "unchanged ordinary singleton set",
+    "independent_exact_cost": 3746.1319409485764,
+    "certified_global_lower": 198.8334996747695,
+    "strategy_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+    "automatic_considered": 96491,
+    "automatic_eligible": 43301,
+    "automatic_collapsed": 960,
+    "automatic_selected": 591,
+    "protected_repeat_evaluations": 21678,
+    "protected_attempt_ns": 3041297400,
+    "protected_normalization_ns": 13840034100,
+    "solve_wall_ms": 240590.6822,
+    "total_wall_ms": 243412.7692,
+    "native_peak_owned_bytes": 925009530,
+    "interpretation": "Protected physical-attempt time fell 0.98%, below the predeclared 25% native construction-work target; total time difference is within Finish-run noise"
+  },
+  "all_three": {
+    "exact_strategy_evaluation": "matched",
+    "success_probability": 1.0,
+    "off_policy_mass": 0.0,
+    "cost_complete": true,
+    "graph_identity": "identical strategy bytes",
+    "final_source_change": "none; both pilots removed"
+  }
+}

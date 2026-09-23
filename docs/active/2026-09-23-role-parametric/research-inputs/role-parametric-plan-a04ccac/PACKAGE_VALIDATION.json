@@ -1,0 +1,18 @@
+{
+  "schema": "research_package_validation_v1",
+  "reviewed_main": "a04ccac571573e4aca2403113d2a47c903da8af8",
+  "abstract_tests": {
+    "count": 31,
+    "passed": true,
+    "scope": "finite invented exact-rational models; not native qualification"
+  },
+  "json_payloads_parsed_before_manifest": 6,
+  "python_files_syntax_checked": 1,
+  "local_markdown_links_checked": 29,
+  "broken_links": [],
+  "repository_modified": false,
+  "native_build_or_benchmark_run": false,
+  "wasm_benchmark_run": false,
+  "source_refs": "SOURCES.md; native case intents await the explicit native preflight",
+  "manifest_rule": "MANIFEST.json lists every other payload, including this validation; manifest does not hash itself."
+}

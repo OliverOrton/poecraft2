@@ -1,0 +1,16 @@
+{
+  "schema": "role_parametric_case_derivations_v1",
+  "source_checkpoint": "a04ccac571573e4aca2403113d2a47c903da8af8",
+  "source_corpus": "docs/active/2026-09-09-cross-base-capability-recovery/core",
+  "method": "Copied the existing case document, replaced the declared goal slots and synchronized the product action envelope with poecraft_ingest.solver_lab_cases.synchronize_product_action_envelope; validated with validate_case_document_shape. The two retained armour targets are byte-identical copies of core cases.",
+  "cases": {
+    "B3": {"file": "cases/rp-b3-product8-long240.json", "derived_from": "cases/cb04-cross-base-product8-long240.json", "goal_slots": 3},
+    "B4": {"file": "cases/rp-b4-product8-long240.json", "derived_from": "cases/cb04-cross-base-product8-long240.json", "goal_slots": 4},
+    "B5": {"file": "cases/rp-b5-product8-long240.json", "derived_from": "cases/cb04-cross-base-product8-long240.json", "goal_slots": 5},
+    "A3": {"file": "cases/rp-a3-product8-long240.json", "derived_from": "cases/cb01-cross-base-product8-long240.json", "goal_slots": 3},
+    "A4": {"file": "cases/cb02-cross-base-product8-long240.json", "copied_from": "cases/cb02-cross-base-product8-long240.json", "sha256": "a3b2a59eb945fe458cb40dfc10b102b0c94d35fe116a748b494da1c918dd004b"},
+    "A5": {"file": "cases/cb01-cross-base-product8-long240.json", "copied_from": "cases/cb01-cross-base-product8-long240.json", "sha256": "4f6a901ff7a56f7319c5e19663d778106c0436af16573ff2786b30df5b4fd90b"}
+  },
+  "native_binding_evidence": "../evidence/native-goal-data.json",
+  "note": "The packet lists A4 as deriving from CB01 but also permits reuse of CB02 when the full target identity agrees. The runnable A4 is the exact CB02 case."
+}

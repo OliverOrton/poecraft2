@@ -1,0 +1,169 @@
+{
+  "reviewed_main": "a04ccac571573e4aca2403113d2a47c903da8af8",
+  "repository": [
+    {
+      "id": "R1",
+      "title": "Current main and scope",
+      "url": "https://github.com/OliverOrton/poecraft2/commit/a04ccac571573e4aca2403113d2a47c903da8af8",
+      "inspection": "Main reviewed at a04ccac; two documentation/evidence commits after 1596e23. No memory treatment retained."
+    },
+    {
+      "id": "R2",
+      "title": "Memory programme",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/docs/active/2026-09-23-capacity-capability/README.md",
+      "inspection": "Read complete P0-P4 and terminal-frontier follow-up. More work and no cap do not imply a cheaper controller."
+    },
+    {
+      "id": "R3",
+      "title": "Memory trial receipt",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/docs/active/2026-09-23-capacity-capability/evidence/P3-C-storage-lifetime-trial.json",
+      "inspection": "Read complete receipt, source restoration, same graph and post-release byte caveat."
+    },
+    {
+      "id": "R4",
+      "title": "Shared native working rules",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/AGENTS.md",
+      "inspection": "Current rules read, including local-only edits/push boundary and protected root 0."
+    },
+    {
+      "id": "R5",
+      "title": "Current handoff",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/HANDOFF.md",
+      "inspection": "Memory trials complete; no automatic continuation; earlier compact runtime retained."
+    },
+    {
+      "id": "R6",
+      "title": "Existing fixed-option model",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/engine/src/solver_model.hpp#L90-L355",
+      "inspection": "Goal-slot masks, multi-slot exit predicates, fixed-program fields and current terminal contract. Fields are not a new generalized planner."
+    },
+    {
+      "id": "R7",
+      "title": "Existing automatic synthesis",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/engine/src/solver_options_helpers.hpp#L350-L670",
+      "inspection": "Native goal/side binding, Veiled choice timing, Eldritch intents and exact setup."
+    },
+    {
+      "id": "R8",
+      "title": "Existing blocker grouping",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/engine/src/solver_options_helpers.hpp#L680-L995",
+      "inspection": "Exact eligible-pool grouping, priced blocker dominance, clean final-capacity family."
+    },
+    {
+      "id": "R9",
+      "title": "Single-target automatic repeat synthesis",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/engine/src/solver_options_helpers.hpp#L1020-L1225",
+      "inspection": "ProtectedRepeat loops missing goals with singleton exit sets; existing fixed vocabulary supports broader sets. This is a local source finding, not global absence of equivalent controllers."
+    },
+    {
+      "id": "R10",
+      "title": "Attempt execution",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/engine/src/solver_options_helpers.hpp#L1450-L1720",
+      "inspection": "Complete native positive support, resources, choices, equality helpers and terminal-kernel special case."
+    },
+    {
+      "id": "R11",
+      "title": "Existing complete-kernel memoization",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/engine/src/solver_options.cpp#L1-L225",
+      "inspection": "Sharing happens after complete construction with matching planner/resources/complete kernel; do not weaken this equality to structural likeness."
+    },
+    {
+      "id": "R12",
+      "title": "Automatic task owner",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/engine/src/solver_options_automatic.cpp#L1-L240",
+      "inspection": "Existing transactional and cooperative carrier admission; no second scheduler needed."
+    },
+    {
+      "id": "R13",
+      "title": "Representation mathematics",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/docs/solver/mathematics/representations.md#L180-L245",
+      "inspection": "Restricted action-set uppers, fresh namespaces, prior Amulet measurement, removed descriptor-only carrier planner."
+    },
+    {
+      "id": "R14",
+      "title": "Existing armour five-goal fixture",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb01-cross-base-product8-long240.json",
+      "inspection": "Exact target family IDs and ordered suffixes; numerical heterogeneity still requires a native fingerprint."
+    },
+    {
+      "id": "R15",
+      "title": "Existing non-elemental bow fixture",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb04-cross-base-product8-long240.json",
+      "inspection": "Spine Bow base/start/caps parent; its old target differs from proposed tri-elemental goals."
+    },
+    {
+      "id": "R16",
+      "title": "Historical tri-elemental target",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/docs/archive/2026-08-24-carrier-aware-control-authority/evidence/gate-a-result.md",
+      "inspection": "Keys verified; C79273.325 historical scope included economic Restart and 60-second finish. Not a new default baseline."
+    },
+    {
+      "id": "R17",
+      "title": "Bow attack-speed family fixture",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/fixtures/solver-natural-t1/v1/cases/natural-t1-full-one-e08eb001f4d4.json",
+      "inspection": "Search-backed candidate suffix identity; validate actual current native side, tiers, availability and prices before deriving case."
+    },
+    {
+      "id": "R18",
+      "title": "Bow critical-strike family fixture",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/fixtures/solver-natural-t1/v1/cases/natural-t1-full-two-9d61d3d88eae.json",
+      "inspection": "Search-backed candidate suffix identity; same native-validation requirement."
+    },
+    {
+      "id": "R19",
+      "title": "Existing tooling owner",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/docs/foundation/tooling.md",
+      "inspection": "Use current runner/Lab/request derivation; actual Calculator probe is the product test path, not a separate engine."
+    },
+    {
+      "id": "R20",
+      "title": "Existing policy mathematics",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/docs/solver/mathematics/policies.md",
+      "inspection": "Complete rooted evaluation, first-exit rewards, changed-controller occupancy and choice timing remain authority contracts."
+    },
+    {
+      "id": "R21",
+      "title": "Calculator probe",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/apps/web/test/calculator-delivery-probe.ts",
+      "inspection": "Existing probe loads a fixed core manifest. New cohort may need a small explicit manifest argument using the same validator, not an alternate runner."
+    },
+    {
+      "id": "R22",
+      "title": "Native ownership accounting",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/engine/src/solver_calc.cpp#L700-L820",
+      "inspection": "Active/inactive child contexts and template payloads have explicit ownership; no uncharged shape cache."
+    },
+    {
+      "id": "R23",
+      "title": "Existing armour four-goal fixture",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/a04ccac571573e4aca2403113d2a47c903da8af8/docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb02-cross-base-product8-long240.json",
+      "inspection": "Read target, side-family intents and full ordered goal/envelope prefixes through line95. Proposed A4 matches this target definition; whole comparison identity still matters."
+    }
+  ],
+  "primary_research": [
+    {
+      "id": "P1",
+      "title": "Ravindran and Barto, Relativized Options: Choosing the Right Transformation (ICML 2003)",
+      "url": "https://www.cse.iitm.ac.in/~ravi/papers/ICML03.pdf",
+      "use": "Shared relative option representation and state-dependent action maps; exact homomorphism conditions versus heuristic approximate transformation. Its discounted learning experiment is not native SSP qualification."
+    },
+    {
+      "id": "P2",
+      "title": "Junges et al., Parameter Synthesis for Markov Models: Covering the Parameter Space",
+      "url": "https://arxiv.org/abs/1903.07993",
+      "use": "Parameterized transition models distinguish structure from numerical valuation. No general symbolic parameter-synthesis engine is selected."
+    },
+    {
+      "id": "P3",
+      "title": "Bonet and Geffner, General Policies, Serializations, and Planning Width",
+      "url": "https://arxiv.org/abs/2012.08033",
+      "use": "Generalized subgoal sketches as search guidance. Classical termination/width conclusions do not establish stochastic properness or economic optimality here."
+    },
+    {
+      "id": "P4",
+      "title": "Yang et al., PG3: Policy-Guided Planning for Generalized Policy Generation (IJCAI 2022)",
+      "url": "https://www.ijcai.org/proceedings/2022/650",
+      "use": "Distinguish a policy used to guide planning from one used as an unverified executable answer. No training or learned planner in this implementation."
+    }
+  ]
+}

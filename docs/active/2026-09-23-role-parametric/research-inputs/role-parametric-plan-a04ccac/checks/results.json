@@ -1,0 +1,17 @@
+{
+  "schema": "role_parametric_abstract_checks_v1",
+  "scope": "Invented finite rational models and interface examples; not native PoE tests, speedups, or production proofs.",
+  "tests_run": 31,
+  "failures": 0,
+  "errors": 0,
+  "passed": true,
+  "examples": {
+    "opportunistic_joint": "47/5",
+    "single_A": "15",
+    "single_B": "21/2",
+    "acquire_A_then_B": "22",
+    "acquire_B_then_A": "30",
+    "preserve_B_then_A": "12",
+    "heterogeneous_data_native_verified": false
+  }
+}

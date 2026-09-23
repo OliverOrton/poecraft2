@@ -1,0 +1,208 @@
+{
+  "schema": "role_cohort_intents_v1",
+  "not_for_direct_runner_execution": true,
+  "reviewed_main": "a04ccac571573e4aca2403113d2a47c903da8af8",
+  "selection": "user chose prefix3 plus one/two suffixes and heterogeneous armour; suffix identities are explicit proposed test choices subject to native validation",
+  "cases": [
+    {
+      "intent_id": "B3",
+      "status": "intent_only_not_a_runnable_frozen_case",
+      "derive_from": "cb04-cross-base-product8-long240",
+      "base_metadata_path": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+      "item_level": 86,
+      "start": {
+        "rarity": "rare",
+        "mods": [],
+        "with_implicits": false
+      },
+      "goal_families": [
+        "LocalAddedFireDamageTwoHand10",
+        "LocalAddedColdDamageTwoHand10",
+        "LocalAddedLightningDamageTwoHand10"
+      ],
+      "min_tier": 1,
+      "min_satisfied_slots": 3,
+      "requested_prefix_count": 3,
+      "requested_suffix_count": 0,
+      "scope": "current native exact terminal predicate, goal-relevant product envelope; no ordinary economic Restart or Imprint; automatic paid replacement retained where native programme owns it",
+      "must_preflight": [
+        "native family and tier membership",
+        "goal side and joint satisfiability",
+        "literal tier/weight vectors and differing lengths",
+        "complete action/dependency pricing and filtering",
+        "original modifier universe and conflicts",
+        "goal and envelope_goal updated together",
+        "actual resolved solver/checker capacities",
+        "all current native terminal cleanup requirements"
+      ]
+    },
+    {
+      "intent_id": "B4",
+      "status": "intent_only_not_a_runnable_frozen_case",
+      "derive_from": "cb04-cross-base-product8-long240",
+      "base_metadata_path": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+      "item_level": 86,
+      "start": {
+        "rarity": "rare",
+        "mods": [],
+        "with_implicits": false
+      },
+      "goal_families": [
+        "LocalAddedFireDamageTwoHand10",
+        "LocalAddedColdDamageTwoHand10",
+        "LocalAddedLightningDamageTwoHand10",
+        "LocalIncreasedAttackSpeed5"
+      ],
+      "min_tier": 1,
+      "min_satisfied_slots": 4,
+      "requested_prefix_count": 3,
+      "requested_suffix_count": 1,
+      "scope": "current native exact terminal predicate, goal-relevant product envelope; no ordinary economic Restart or Imprint; automatic paid replacement retained where native programme owns it",
+      "must_preflight": [
+        "native family and tier membership",
+        "goal side and joint satisfiability",
+        "literal tier/weight vectors and differing lengths",
+        "complete action/dependency pricing and filtering",
+        "original modifier universe and conflicts",
+        "goal and envelope_goal updated together",
+        "actual resolved solver/checker capacities",
+        "all current native terminal cleanup requirements"
+      ]
+    },
+    {
+      "intent_id": "B5",
+      "status": "intent_only_not_a_runnable_frozen_case",
+      "derive_from": "cb04-cross-base-product8-long240",
+      "base_metadata_path": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+      "item_level": 86,
+      "start": {
+        "rarity": "rare",
+        "mods": [],
+        "with_implicits": false
+      },
+      "goal_families": [
+        "LocalAddedFireDamageTwoHand10",
+        "LocalAddedColdDamageTwoHand10",
+        "LocalAddedLightningDamageTwoHand10",
+        "LocalIncreasedAttackSpeed5",
+        "LocalCriticalStrikeChance6"
+      ],
+      "min_tier": 1,
+      "min_satisfied_slots": 5,
+      "requested_prefix_count": 3,
+      "requested_suffix_count": 2,
+      "scope": "current native exact terminal predicate, goal-relevant product envelope; no ordinary economic Restart or Imprint; automatic paid replacement retained where native programme owns it",
+      "must_preflight": [
+        "native family and tier membership",
+        "goal side and joint satisfiability",
+        "literal tier/weight vectors and differing lengths",
+        "complete action/dependency pricing and filtering",
+        "original modifier universe and conflicts",
+        "goal and envelope_goal updated together",
+        "actual resolved solver/checker capacities",
+        "all current native terminal cleanup requirements"
+      ]
+    },
+    {
+      "intent_id": "A3",
+      "status": "intent_only_not_a_runnable_frozen_case",
+      "derive_from": "cb01-cross-base-product8-long240",
+      "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+      "item_level": 86,
+      "start": {
+        "rarity": "rare",
+        "mods": [],
+        "with_implicits": false
+      },
+      "goal_families": [
+        "LocalIncreasedArmourAndEvasion8",
+        "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+        "LocalBaseArmourAndEvasionRating8"
+      ],
+      "min_tier": 1,
+      "min_satisfied_slots": 3,
+      "requested_prefix_count": 3,
+      "requested_suffix_count": 0,
+      "scope": "current native exact terminal predicate, goal-relevant product envelope; no ordinary economic Restart or Imprint; automatic paid replacement retained where native programme owns it",
+      "must_preflight": [
+        "native family and tier membership",
+        "goal side and joint satisfiability",
+        "literal tier/weight vectors and differing lengths",
+        "complete action/dependency pricing and filtering",
+        "original modifier universe and conflicts",
+        "goal and envelope_goal updated together",
+        "actual resolved solver/checker capacities",
+        "all current native terminal cleanup requirements"
+      ]
+    },
+    {
+      "intent_id": "A4",
+      "status": "intent_only_not_a_runnable_frozen_case",
+      "derive_from": "cb01-cross-base-product8-long240",
+      "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+      "item_level": 86,
+      "start": {
+        "rarity": "rare",
+        "mods": [],
+        "with_implicits": false
+      },
+      "goal_families": [
+        "LocalIncreasedArmourAndEvasion8",
+        "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+        "LocalBaseArmourAndEvasionRating8",
+        "ChanceToSuppressSpellsHigh5___"
+      ],
+      "min_tier": 1,
+      "min_satisfied_slots": 4,
+      "requested_prefix_count": 3,
+      "requested_suffix_count": 1,
+      "scope": "current native exact terminal predicate, goal-relevant product envelope; no ordinary economic Restart or Imprint; automatic paid replacement retained where native programme owns it",
+      "must_preflight": [
+        "native family and tier membership",
+        "goal side and joint satisfiability",
+        "literal tier/weight vectors and differing lengths",
+        "complete action/dependency pricing and filtering",
+        "original modifier universe and conflicts",
+        "goal and envelope_goal updated together",
+        "actual resolved solver/checker capacities",
+        "all current native terminal cleanup requirements"
+      ],
+      "reuse_if_complete_identity_matches": "cb02-cross-base-product8-long240"
+    },
+    {
+      "intent_id": "A5",
+      "status": "intent_only_not_a_runnable_frozen_case",
+      "derive_from": "cb01-cross-base-product8-long240",
+      "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+      "item_level": 86,
+      "start": {
+        "rarity": "rare",
+        "mods": [],
+        "with_implicits": false
+      },
+      "goal_families": [
+        "LocalIncreasedArmourAndEvasion8",
+        "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+        "LocalBaseArmourAndEvasionRating8",
+        "ChanceToSuppressSpellsHigh5___",
+        "AdditionalPhysicalDamageReduction5_"
+      ],
+      "min_tier": 1,
+      "min_satisfied_slots": 5,
+      "requested_prefix_count": 3,
+      "requested_suffix_count": 2,
+      "scope": "current native exact terminal predicate, goal-relevant product envelope; no ordinary economic Restart or Imprint; automatic paid replacement retained where native programme owns it",
+      "must_preflight": [
+        "native family and tier membership",
+        "goal side and joint satisfiability",
+        "literal tier/weight vectors and differing lengths",
+        "complete action/dependency pricing and filtering",
+        "original modifier universe and conflicts",
+        "goal and envelope_goal updated together",
+        "actual resolved solver/checker capacities",
+        "all current native terminal cleanup requirements"
+      ],
+      "reuse_if_complete_identity_matches": "cb01-cross-base-product8-long240"
+    }
+  ]
+}

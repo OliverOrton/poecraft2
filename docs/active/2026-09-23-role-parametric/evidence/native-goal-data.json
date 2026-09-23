@@ -1,0 +1,2891 @@
+{
+  "schema": "role_native_goal_data_v1",
+  "cases": {
+    "A3": {
+      "id": "rp-a3-product8-long240",
+      "case_path": "docs/active/2026-09-23-role-parametric/corpus/cases/rp-a3-product8-long240.json",
+      "feasibility": {
+        "status": "feasible",
+        "reason": "natural_reforge_witness",
+        "goal_slot_count": 3,
+        "required_slot_count": 3,
+        "eligible_slot_count": 3,
+        "natural_pool_mod_count": 124,
+        "natural_prefix_mod_count": 47,
+        "natural_suffix_mod_count": 77,
+        "natural_pool_weight": 100700,
+        "natural_prefix_weight": 42500,
+        "natural_suffix_weight": 58200,
+        "witness_action_index": 5,
+        "witness_action_id": "chaos",
+        "witness_mod_ids": [
+          132,
+          138,
+          114
+        ],
+        "slot_natural_mod_counts": [
+          1,
+          1,
+          1
+        ],
+        "slot_natural_weights": [
+          1000,
+          1000,
+          1000
+        ],
+        "slot_single_draw_probabilities": [
+          0.009930486593843098,
+          0.009930486593843098,
+          0.009930486593843098
+        ]
+      },
+      "families": [
+        {
+          "slot": 0,
+          "target_key": "LocalIncreasedArmourAndEvasion8",
+          "family_id": 33,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 8,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 132,
+                  "key": "LocalIncreasedArmourAndEvasion8",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 131,
+                  "key": "LocalIncreasedArmourAndEvasion7",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 130,
+                  "key": "LocalIncreasedArmourAndEvasion6",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 129,
+                  "key": "LocalIncreasedArmourAndEvasion5",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 128,
+                  "key": "LocalIncreasedArmourAndEvasion4",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 127,
+                  "key": "LocalIncreasedArmourAndEvasion3",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 126,
+                  "key": "LocalIncreasedArmourAndEvasion2",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 125,
+                  "key": "LocalIncreasedArmourAndEvasion1",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            }
+          ],
+          "natural_satisfying_weight": 1000,
+          "native_feasibility_weight": 1000,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 1,
+          "target_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+          "family_id": 34,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 6,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 138,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 137,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery5",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 136,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery4",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 135,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery3",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 134,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery2",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 133,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery1",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            }
+          ],
+          "natural_satisfying_weight": 1000,
+          "native_feasibility_weight": 1000,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 2,
+          "target_key": "LocalBaseArmourAndEvasionRating8",
+          "family_id": 28,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 8,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 114,
+                  "key": "LocalBaseArmourAndEvasionRating8",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 113,
+                  "key": "LocalBaseArmourAndEvasionRating7",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 112,
+                  "key": "LocalBaseArmourAndEvasionRating6_",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 111,
+                  "key": "LocalBaseArmourAndEvasionRating5",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 110,
+                  "key": "LocalBaseArmourAndEvasionRating4",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 109,
+                  "key": "LocalBaseArmourAndEvasionRating3",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 108,
+                  "key": "LocalBaseArmourAndEvasionRating2",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 107,
+                  "key": "LocalBaseArmourAndEvasionRating1",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            }
+          ],
+          "natural_satisfying_weight": 1000,
+          "native_feasibility_weight": 1000,
+          "native_feasibility_mod_count": 1
+        }
+      ]
+    },
+    "A4": {
+      "id": "cb02-cross-base-product8-long240",
+      "case_path": "docs/active/2026-09-23-role-parametric/corpus/cases/cb02-cross-base-product8-long240.json",
+      "feasibility": {
+        "status": "feasible",
+        "reason": "natural_reforge_witness",
+        "goal_slot_count": 4,
+        "required_slot_count": 4,
+        "eligible_slot_count": 4,
+        "natural_pool_mod_count": 124,
+        "natural_prefix_mod_count": 47,
+        "natural_suffix_mod_count": 77,
+        "natural_pool_weight": 100700,
+        "natural_prefix_weight": 42500,
+        "natural_suffix_weight": 58200,
+        "witness_action_index": 5,
+        "witness_action_id": "chaos",
+        "witness_mod_ids": [
+          132,
+          138,
+          114,
+          28
+        ],
+        "slot_natural_mod_counts": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "slot_natural_weights": [
+          1000,
+          1000,
+          1000,
+          500
+        ],
+        "slot_single_draw_probabilities": [
+          0.009930486593843098,
+          0.009930486593843098,
+          0.009930486593843098,
+          0.004965243296921549
+        ]
+      },
+      "families": [
+        {
+          "slot": 0,
+          "target_key": "LocalIncreasedArmourAndEvasion8",
+          "family_id": 33,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 8,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 132,
+                  "key": "LocalIncreasedArmourAndEvasion8",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 131,
+                  "key": "LocalIncreasedArmourAndEvasion7",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 130,
+                  "key": "LocalIncreasedArmourAndEvasion6",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 129,
+                  "key": "LocalIncreasedArmourAndEvasion5",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 128,
+                  "key": "LocalIncreasedArmourAndEvasion4",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 127,
+                  "key": "LocalIncreasedArmourAndEvasion3",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 126,
+                  "key": "LocalIncreasedArmourAndEvasion2",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 125,
+                  "key": "LocalIncreasedArmourAndEvasion1",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            }
+          ],
+          "natural_satisfying_weight": 1000,
+          "native_feasibility_weight": 1000,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 1,
+          "target_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+          "family_id": 34,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 6,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 138,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 137,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery5",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 136,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery4",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 135,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery3",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 134,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery2",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 133,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery1",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            }
+          ],
+          "natural_satisfying_weight": 1000,
+          "native_feasibility_weight": 1000,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 2,
+          "target_key": "LocalBaseArmourAndEvasionRating8",
+          "family_id": 28,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 8,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 114,
+                  "key": "LocalBaseArmourAndEvasionRating8",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 113,
+                  "key": "LocalBaseArmourAndEvasionRating7",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 112,
+                  "key": "LocalBaseArmourAndEvasionRating6_",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 111,
+                  "key": "LocalBaseArmourAndEvasionRating5",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 110,
+                  "key": "LocalBaseArmourAndEvasionRating4",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 109,
+                  "key": "LocalBaseArmourAndEvasionRating3",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 108,
+                  "key": "LocalBaseArmourAndEvasionRating2",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 107,
+                  "key": "LocalBaseArmourAndEvasionRating1",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            }
+          ],
+          "natural_satisfying_weight": 1000,
+          "native_feasibility_weight": 1000,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 3,
+          "target_key": "ChanceToSuppressSpellsHigh5___",
+          "family_id": 10,
+          "side": "suffix",
+          "target_tier_index": 1,
+          "all_family_member_count": 5,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 28,
+                  "key": "ChanceToSuppressSpellsHigh5___",
+                  "weight": 500,
+                  "group": 1102
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 27,
+                  "key": "ChanceToSuppressSpellsHigh4_",
+                  "weight": 500,
+                  "group": 1102
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 26,
+                  "key": "ChanceToSuppressSpellsHigh3",
+                  "weight": 500,
+                  "group": 1102
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 25,
+                  "key": "ChanceToSuppressSpellsHigh2__",
+                  "weight": 500,
+                  "group": 1102
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 24,
+                  "key": "ChanceToSuppressSpellsHigh1__",
+                  "weight": 500,
+                  "group": 1102
+                }
+              ],
+              "total_weight": 500
+            }
+          ],
+          "natural_satisfying_weight": 500,
+          "native_feasibility_weight": 500,
+          "native_feasibility_mod_count": 1
+        }
+      ]
+    },
+    "A5": {
+      "id": "cb01-cross-base-product8-long240",
+      "case_path": "docs/active/2026-09-23-role-parametric/corpus/cases/cb01-cross-base-product8-long240.json",
+      "feasibility": {
+        "status": "feasible",
+        "reason": "natural_reforge_witness",
+        "goal_slot_count": 5,
+        "required_slot_count": 5,
+        "eligible_slot_count": 5,
+        "natural_pool_mod_count": 124,
+        "natural_prefix_mod_count": 47,
+        "natural_suffix_mod_count": 77,
+        "natural_pool_weight": 100700,
+        "natural_prefix_weight": 42500,
+        "natural_suffix_weight": 58200,
+        "witness_action_index": 5,
+        "witness_action_id": "chaos",
+        "witness_mod_ids": [
+          132,
+          138,
+          114,
+          28,
+          14
+        ],
+        "slot_natural_mod_counts": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "slot_natural_weights": [
+          1000,
+          1000,
+          1000,
+          500,
+          500
+        ],
+        "slot_single_draw_probabilities": [
+          0.009930486593843098,
+          0.009930486593843098,
+          0.009930486593843098,
+          0.004965243296921549,
+          0.004965243296921549
+        ]
+      },
+      "families": [
+        {
+          "slot": 0,
+          "target_key": "LocalIncreasedArmourAndEvasion8",
+          "family_id": 33,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 8,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 132,
+                  "key": "LocalIncreasedArmourAndEvasion8",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 131,
+                  "key": "LocalIncreasedArmourAndEvasion7",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 130,
+                  "key": "LocalIncreasedArmourAndEvasion6",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 129,
+                  "key": "LocalIncreasedArmourAndEvasion5",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 128,
+                  "key": "LocalIncreasedArmourAndEvasion4",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 127,
+                  "key": "LocalIncreasedArmourAndEvasion3",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 126,
+                  "key": "LocalIncreasedArmourAndEvasion2",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 125,
+                  "key": "LocalIncreasedArmourAndEvasion1",
+                  "weight": 1000,
+                  "group": 1670
+                }
+              ],
+              "total_weight": 1000
+            }
+          ],
+          "natural_satisfying_weight": 1000,
+          "native_feasibility_weight": 1000,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 1,
+          "target_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+          "family_id": 34,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 6,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 138,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 137,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery5",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 136,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery4",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 135,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery3",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 134,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery2",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 133,
+                  "key": "LocalIncreasedArmourAndEvasionAndStunRecovery1",
+                  "weight": 1000,
+                  "group": 1671
+                }
+              ],
+              "total_weight": 1000
+            }
+          ],
+          "natural_satisfying_weight": 1000,
+          "native_feasibility_weight": 1000,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 2,
+          "target_key": "LocalBaseArmourAndEvasionRating8",
+          "family_id": 28,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 8,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 114,
+                  "key": "LocalBaseArmourAndEvasionRating8",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 113,
+                  "key": "LocalBaseArmourAndEvasionRating7",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 112,
+                  "key": "LocalBaseArmourAndEvasionRating6_",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 111,
+                  "key": "LocalBaseArmourAndEvasionRating5",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 110,
+                  "key": "LocalBaseArmourAndEvasionRating4",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 109,
+                  "key": "LocalBaseArmourAndEvasionRating3",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 108,
+                  "key": "LocalBaseArmourAndEvasionRating2",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 107,
+                  "key": "LocalBaseArmourAndEvasionRating1",
+                  "weight": 1000,
+                  "group": 826
+                }
+              ],
+              "total_weight": 1000
+            }
+          ],
+          "natural_satisfying_weight": 1000,
+          "native_feasibility_weight": 1000,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 3,
+          "target_key": "ChanceToSuppressSpellsHigh5___",
+          "family_id": 10,
+          "side": "suffix",
+          "target_tier_index": 1,
+          "all_family_member_count": 5,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 28,
+                  "key": "ChanceToSuppressSpellsHigh5___",
+                  "weight": 500,
+                  "group": 1102
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 27,
+                  "key": "ChanceToSuppressSpellsHigh4_",
+                  "weight": 500,
+                  "group": 1102
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 26,
+                  "key": "ChanceToSuppressSpellsHigh3",
+                  "weight": 500,
+                  "group": 1102
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 25,
+                  "key": "ChanceToSuppressSpellsHigh2__",
+                  "weight": 500,
+                  "group": 1102
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 24,
+                  "key": "ChanceToSuppressSpellsHigh1__",
+                  "weight": 500,
+                  "group": 1102
+                }
+              ],
+              "total_weight": 500
+            }
+          ],
+          "natural_satisfying_weight": 500,
+          "native_feasibility_weight": 500,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 4,
+          "target_key": "AdditionalPhysicalDamageReduction5_",
+          "family_id": 6,
+          "side": "suffix",
+          "target_tier_index": 1,
+          "all_family_member_count": 5,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 14,
+                  "key": "AdditionalPhysicalDamageReduction5_",
+                  "weight": 500,
+                  "group": 5627
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 13,
+                  "key": "AdditionalPhysicalDamageReduction4",
+                  "weight": 500,
+                  "group": 5627
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 12,
+                  "key": "AdditionalPhysicalDamageReduction3",
+                  "weight": 500,
+                  "group": 5627
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 11,
+                  "key": "AdditionalPhysicalDamageReduction2",
+                  "weight": 500,
+                  "group": 5627
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 10,
+                  "key": "AdditionalPhysicalDamageReduction1",
+                  "weight": 500,
+                  "group": 5627
+                }
+              ],
+              "total_weight": 500
+            }
+          ],
+          "natural_satisfying_weight": 500,
+          "native_feasibility_weight": 500,
+          "native_feasibility_mod_count": 1
+        }
+      ]
+    },
+    "B3": {
+      "id": "rp-b3-product8-long240",
+      "case_path": "docs/active/2026-09-23-role-parametric/corpus/cases/rp-b3-product8-long240.json",
+      "feasibility": {
+        "status": "feasible",
+        "reason": "natural_reforge_witness",
+        "goal_slot_count": 3,
+        "required_slot_count": 3,
+        "eligible_slot_count": 3,
+        "natural_pool_mod_count": 142,
+        "natural_prefix_mod_count": 65,
+        "natural_suffix_mod_count": 77,
+        "natural_pool_weight": 114758,
+        "natural_prefix_weight": 54658,
+        "natural_suffix_weight": 60100,
+        "witness_action_index": 5,
+        "witness_action_id": "chaos",
+        "witness_mod_ids": [
+          108,
+          93,
+          122
+        ],
+        "slot_natural_mod_counts": [
+          1,
+          1,
+          1
+        ],
+        "slot_natural_weights": [
+          126,
+          126,
+          126
+        ],
+        "slot_single_draw_probabilities": [
+          0.001097962669269245,
+          0.001097962669269245,
+          0.001097962669269245
+        ]
+      },
+      "families": [
+        {
+          "slot": 0,
+          "target_key": "LocalAddedFireDamageTwoHand10",
+          "family_id": 37,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 10,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 108,
+                  "key": "LocalAddedFireDamageTwoHand10",
+                  "weight": 126,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 126
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 116,
+                  "key": "LocalAddedFireDamageTwoHand9",
+                  "weight": 490,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 490
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 115,
+                  "key": "LocalAddedFireDamageTwoHand8_",
+                  "weight": 1120,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1120
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 114,
+                  "key": "LocalAddedFireDamageTwoHand7",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 113,
+                  "key": "LocalAddedFireDamageTwoHand6",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 112,
+                  "key": "LocalAddedFireDamageTwoHand5",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 111,
+                  "key": "LocalAddedFireDamageTwoHand4",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 110,
+                  "key": "LocalAddedFireDamageTwoHand3",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 9,
+              "members": [
+                {
+                  "mod_id": 109,
+                  "key": "LocalAddedFireDamageTwoHand2",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 10,
+              "members": [
+                {
+                  "mod_id": 107,
+                  "key": "LocalAddedFireDamageTwoHand1",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            }
+          ],
+          "natural_satisfying_weight": 126,
+          "native_feasibility_weight": 126,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 1,
+          "target_key": "LocalAddedColdDamageTwoHand10",
+          "family_id": 35,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 10,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 93,
+                  "key": "LocalAddedColdDamageTwoHand10",
+                  "weight": 126,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 126
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 101,
+                  "key": "LocalAddedColdDamageTwoHand9",
+                  "weight": 490,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 490
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 100,
+                  "key": "LocalAddedColdDamageTwoHand8",
+                  "weight": 1120,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1120
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 99,
+                  "key": "LocalAddedColdDamageTwoHand7",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 98,
+                  "key": "LocalAddedColdDamageTwoHand6",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 97,
+                  "key": "LocalAddedColdDamageTwoHand5",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 96,
+                  "key": "LocalAddedColdDamageTwoHand4",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 95,
+                  "key": "LocalAddedColdDamageTwoHand3",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 9,
+              "members": [
+                {
+                  "mod_id": 94,
+                  "key": "LocalAddedColdDamageTwoHand2",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 10,
+              "members": [
+                {
+                  "mod_id": 92,
+                  "key": "LocalAddedColdDamageTwoHand1",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            }
+          ],
+          "natural_satisfying_weight": 126,
+          "native_feasibility_weight": 126,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 2,
+          "target_key": "LocalAddedLightningDamageTwoHand10",
+          "family_id": 39,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 10,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 122,
+                  "key": "LocalAddedLightningDamageTwoHand10",
+                  "weight": 126,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 126
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 131,
+                  "key": "LocalAddedLightningDamageTwoHand9",
+                  "weight": 490,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 490
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 130,
+                  "key": "LocalAddedLightningDamageTwoHand8",
+                  "weight": 1120,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1120
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 129,
+                  "key": "LocalAddedLightningDamageTwoHand7",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 128,
+                  "key": "LocalAddedLightningDamageTwoHand6",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 127,
+                  "key": "LocalAddedLightningDamageTwoHand5",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 126,
+                  "key": "LocalAddedLightningDamageTwoHand4",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 125,
+                  "key": "LocalAddedLightningDamageTwoHand3",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 9,
+              "members": [
+                {
+                  "mod_id": 124,
+                  "key": "LocalAddedLightningDamageTwoHand2",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 10,
+              "members": [
+                {
+                  "mod_id": 123,
+                  "key": "LocalAddedLightningDamageTwoHand1_",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            }
+          ],
+          "natural_satisfying_weight": 126,
+          "native_feasibility_weight": 126,
+          "native_feasibility_mod_count": 1
+        }
+      ]
+    },
+    "B4": {
+      "id": "rp-b4-product8-long240",
+      "case_path": "docs/active/2026-09-23-role-parametric/corpus/cases/rp-b4-product8-long240.json",
+      "feasibility": {
+        "status": "feasible",
+        "reason": "natural_reforge_witness",
+        "goal_slot_count": 4,
+        "required_slot_count": 4,
+        "eligible_slot_count": 4,
+        "natural_pool_mod_count": 142,
+        "natural_prefix_mod_count": 65,
+        "natural_suffix_mod_count": 77,
+        "natural_pool_weight": 114758,
+        "natural_prefix_weight": 54658,
+        "natural_suffix_weight": 60100,
+        "witness_action_index": 5,
+        "witness_action_id": "chaos",
+        "witness_mod_ids": [
+          108,
+          93,
+          122,
+          173
+        ],
+        "slot_natural_mod_counts": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "slot_natural_weights": [
+          126,
+          126,
+          126,
+          500
+        ],
+        "slot_single_draw_probabilities": [
+          0.001097962669269245,
+          0.001097962669269245,
+          0.001097962669269245,
+          0.004356994719322401
+        ]
+      },
+      "families": [
+        {
+          "slot": 0,
+          "target_key": "LocalAddedFireDamageTwoHand10",
+          "family_id": 37,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 10,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 108,
+                  "key": "LocalAddedFireDamageTwoHand10",
+                  "weight": 126,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 126
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 116,
+                  "key": "LocalAddedFireDamageTwoHand9",
+                  "weight": 490,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 490
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 115,
+                  "key": "LocalAddedFireDamageTwoHand8_",
+                  "weight": 1120,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1120
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 114,
+                  "key": "LocalAddedFireDamageTwoHand7",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 113,
+                  "key": "LocalAddedFireDamageTwoHand6",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 112,
+                  "key": "LocalAddedFireDamageTwoHand5",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 111,
+                  "key": "LocalAddedFireDamageTwoHand4",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 110,
+                  "key": "LocalAddedFireDamageTwoHand3",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 9,
+              "members": [
+                {
+                  "mod_id": 109,
+                  "key": "LocalAddedFireDamageTwoHand2",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 10,
+              "members": [
+                {
+                  "mod_id": 107,
+                  "key": "LocalAddedFireDamageTwoHand1",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            }
+          ],
+          "natural_satisfying_weight": 126,
+          "native_feasibility_weight": 126,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 1,
+          "target_key": "LocalAddedColdDamageTwoHand10",
+          "family_id": 35,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 10,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 93,
+                  "key": "LocalAddedColdDamageTwoHand10",
+                  "weight": 126,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 126
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 101,
+                  "key": "LocalAddedColdDamageTwoHand9",
+                  "weight": 490,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 490
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 100,
+                  "key": "LocalAddedColdDamageTwoHand8",
+                  "weight": 1120,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1120
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 99,
+                  "key": "LocalAddedColdDamageTwoHand7",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 98,
+                  "key": "LocalAddedColdDamageTwoHand6",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 97,
+                  "key": "LocalAddedColdDamageTwoHand5",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 96,
+                  "key": "LocalAddedColdDamageTwoHand4",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 95,
+                  "key": "LocalAddedColdDamageTwoHand3",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 9,
+              "members": [
+                {
+                  "mod_id": 94,
+                  "key": "LocalAddedColdDamageTwoHand2",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 10,
+              "members": [
+                {
+                  "mod_id": 92,
+                  "key": "LocalAddedColdDamageTwoHand1",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            }
+          ],
+          "natural_satisfying_weight": 126,
+          "native_feasibility_weight": 126,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 2,
+          "target_key": "LocalAddedLightningDamageTwoHand10",
+          "family_id": 39,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 10,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 122,
+                  "key": "LocalAddedLightningDamageTwoHand10",
+                  "weight": 126,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 126
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 131,
+                  "key": "LocalAddedLightningDamageTwoHand9",
+                  "weight": 490,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 490
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 130,
+                  "key": "LocalAddedLightningDamageTwoHand8",
+                  "weight": 1120,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1120
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 129,
+                  "key": "LocalAddedLightningDamageTwoHand7",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 128,
+                  "key": "LocalAddedLightningDamageTwoHand6",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 127,
+                  "key": "LocalAddedLightningDamageTwoHand5",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 126,
+                  "key": "LocalAddedLightningDamageTwoHand4",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 125,
+                  "key": "LocalAddedLightningDamageTwoHand3",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 9,
+              "members": [
+                {
+                  "mod_id": 124,
+                  "key": "LocalAddedLightningDamageTwoHand2",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 10,
+              "members": [
+                {
+                  "mod_id": 123,
+                  "key": "LocalAddedLightningDamageTwoHand1_",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            }
+          ],
+          "natural_satisfying_weight": 126,
+          "native_feasibility_weight": 126,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 3,
+          "target_key": "LocalIncreasedAttackSpeed5",
+          "family_id": 48,
+          "side": "suffix",
+          "target_tier_index": 1,
+          "all_family_member_count": 6,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 173,
+                  "key": "LocalIncreasedAttackSpeed5",
+                  "weight": 500,
+                  "group": 2795
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 172,
+                  "key": "LocalIncreasedAttackSpeed4",
+                  "weight": 500,
+                  "group": 2795
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 171,
+                  "key": "LocalIncreasedAttackSpeed3",
+                  "weight": 1000,
+                  "group": 2795
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 169,
+                  "key": "LocalIncreasedAttackSpeed2",
+                  "weight": 1000,
+                  "group": 2795
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 170,
+                  "key": "LocalIncreasedAttackSpeed2Royale____",
+                  "weight": 1000,
+                  "group": 2795
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 168,
+                  "key": "LocalIncreasedAttackSpeed1",
+                  "weight": 1000,
+                  "group": 2795
+                }
+              ],
+              "total_weight": 1000
+            }
+          ],
+          "natural_satisfying_weight": 500,
+          "native_feasibility_weight": 500,
+          "native_feasibility_mod_count": 1
+        }
+      ]
+    },
+    "B5": {
+      "id": "rp-b5-product8-long240",
+      "case_path": "docs/active/2026-09-23-role-parametric/corpus/cases/rp-b5-product8-long240.json",
+      "feasibility": {
+        "status": "feasible",
+        "reason": "natural_reforge_witness",
+        "goal_slot_count": 5,
+        "required_slot_count": 5,
+        "eligible_slot_count": 5,
+        "natural_pool_mod_count": 142,
+        "natural_prefix_mod_count": 65,
+        "natural_suffix_mod_count": 77,
+        "natural_pool_weight": 114758,
+        "natural_prefix_weight": 54658,
+        "natural_suffix_weight": 60100,
+        "witness_action_index": 5,
+        "witness_action_id": "chaos",
+        "witness_mod_ids": [
+          108,
+          93,
+          122,
+          173,
+          158
+        ],
+        "slot_natural_mod_counts": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "slot_natural_weights": [
+          126,
+          126,
+          126,
+          500,
+          1000
+        ],
+        "slot_single_draw_probabilities": [
+          0.001097962669269245,
+          0.001097962669269245,
+          0.001097962669269245,
+          0.004356994719322401,
+          0.008713989438644801
+        ]
+      },
+      "families": [
+        {
+          "slot": 0,
+          "target_key": "LocalAddedFireDamageTwoHand10",
+          "family_id": 37,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 10,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 108,
+                  "key": "LocalAddedFireDamageTwoHand10",
+                  "weight": 126,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 126
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 116,
+                  "key": "LocalAddedFireDamageTwoHand9",
+                  "weight": 490,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 490
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 115,
+                  "key": "LocalAddedFireDamageTwoHand8_",
+                  "weight": 1120,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1120
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 114,
+                  "key": "LocalAddedFireDamageTwoHand7",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 113,
+                  "key": "LocalAddedFireDamageTwoHand6",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 112,
+                  "key": "LocalAddedFireDamageTwoHand5",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 111,
+                  "key": "LocalAddedFireDamageTwoHand4",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 110,
+                  "key": "LocalAddedFireDamageTwoHand3",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 9,
+              "members": [
+                {
+                  "mod_id": 109,
+                  "key": "LocalAddedFireDamageTwoHand2",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 10,
+              "members": [
+                {
+                  "mod_id": 107,
+                  "key": "LocalAddedFireDamageTwoHand1",
+                  "weight": 1400,
+                  "group": 2109
+                }
+              ],
+              "total_weight": 1400
+            }
+          ],
+          "natural_satisfying_weight": 126,
+          "native_feasibility_weight": 126,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 1,
+          "target_key": "LocalAddedColdDamageTwoHand10",
+          "family_id": 35,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 10,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 93,
+                  "key": "LocalAddedColdDamageTwoHand10",
+                  "weight": 126,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 126
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 101,
+                  "key": "LocalAddedColdDamageTwoHand9",
+                  "weight": 490,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 490
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 100,
+                  "key": "LocalAddedColdDamageTwoHand8",
+                  "weight": 1120,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1120
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 99,
+                  "key": "LocalAddedColdDamageTwoHand7",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 98,
+                  "key": "LocalAddedColdDamageTwoHand6",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 97,
+                  "key": "LocalAddedColdDamageTwoHand5",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 96,
+                  "key": "LocalAddedColdDamageTwoHand4",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 95,
+                  "key": "LocalAddedColdDamageTwoHand3",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 9,
+              "members": [
+                {
+                  "mod_id": 94,
+                  "key": "LocalAddedColdDamageTwoHand2",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 10,
+              "members": [
+                {
+                  "mod_id": 92,
+                  "key": "LocalAddedColdDamageTwoHand1",
+                  "weight": 1400,
+                  "group": 1372
+                }
+              ],
+              "total_weight": 1400
+            }
+          ],
+          "natural_satisfying_weight": 126,
+          "native_feasibility_weight": 126,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 2,
+          "target_key": "LocalAddedLightningDamageTwoHand10",
+          "family_id": 39,
+          "side": "prefix",
+          "target_tier_index": 1,
+          "all_family_member_count": 10,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 122,
+                  "key": "LocalAddedLightningDamageTwoHand10",
+                  "weight": 126,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 126
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 131,
+                  "key": "LocalAddedLightningDamageTwoHand9",
+                  "weight": 490,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 490
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 130,
+                  "key": "LocalAddedLightningDamageTwoHand8",
+                  "weight": 1120,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1120
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 129,
+                  "key": "LocalAddedLightningDamageTwoHand7",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 128,
+                  "key": "LocalAddedLightningDamageTwoHand6",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 127,
+                  "key": "LocalAddedLightningDamageTwoHand5",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 7,
+              "members": [
+                {
+                  "mod_id": 126,
+                  "key": "LocalAddedLightningDamageTwoHand4",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 8,
+              "members": [
+                {
+                  "mod_id": 125,
+                  "key": "LocalAddedLightningDamageTwoHand3",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 9,
+              "members": [
+                {
+                  "mod_id": 124,
+                  "key": "LocalAddedLightningDamageTwoHand2",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            },
+            {
+              "tier_index": 10,
+              "members": [
+                {
+                  "mod_id": 123,
+                  "key": "LocalAddedLightningDamageTwoHand1_",
+                  "weight": 1400,
+                  "group": 3148
+                }
+              ],
+              "total_weight": 1400
+            }
+          ],
+          "natural_satisfying_weight": 126,
+          "native_feasibility_weight": 126,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 3,
+          "target_key": "LocalIncreasedAttackSpeed5",
+          "family_id": 48,
+          "side": "suffix",
+          "target_tier_index": 1,
+          "all_family_member_count": 6,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 173,
+                  "key": "LocalIncreasedAttackSpeed5",
+                  "weight": 500,
+                  "group": 2795
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 172,
+                  "key": "LocalIncreasedAttackSpeed4",
+                  "weight": 500,
+                  "group": 2795
+                }
+              ],
+              "total_weight": 500
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 171,
+                  "key": "LocalIncreasedAttackSpeed3",
+                  "weight": 1000,
+                  "group": 2795
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 169,
+                  "key": "LocalIncreasedAttackSpeed2",
+                  "weight": 1000,
+                  "group": 2795
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 170,
+                  "key": "LocalIncreasedAttackSpeed2Royale____",
+                  "weight": 1000,
+                  "group": 2795
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 168,
+                  "key": "LocalIncreasedAttackSpeed1",
+                  "weight": 1000,
+                  "group": 2795
+                }
+              ],
+              "total_weight": 1000
+            }
+          ],
+          "natural_satisfying_weight": 500,
+          "native_feasibility_weight": 500,
+          "native_feasibility_mod_count": 1
+        },
+        {
+          "slot": 4,
+          "target_key": "LocalCriticalStrikeChance6",
+          "family_id": 44,
+          "side": "suffix",
+          "target_tier_index": 1,
+          "all_family_member_count": 6,
+          "positive_natural_tiers": [
+            {
+              "tier_index": 1,
+              "members": [
+                {
+                  "mod_id": 158,
+                  "key": "LocalCriticalStrikeChance6",
+                  "weight": 1000,
+                  "group": 1469
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 2,
+              "members": [
+                {
+                  "mod_id": 157,
+                  "key": "LocalCriticalStrikeChance5",
+                  "weight": 1000,
+                  "group": 1469
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 3,
+              "members": [
+                {
+                  "mod_id": 156,
+                  "key": "LocalCriticalStrikeChance4",
+                  "weight": 1000,
+                  "group": 1469
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 4,
+              "members": [
+                {
+                  "mod_id": 155,
+                  "key": "LocalCriticalStrikeChance3",
+                  "weight": 1000,
+                  "group": 1469
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 5,
+              "members": [
+                {
+                  "mod_id": 154,
+                  "key": "LocalCriticalStrikeChance2",
+                  "weight": 1000,
+                  "group": 1469
+                }
+              ],
+              "total_weight": 1000
+            },
+            {
+              "tier_index": 6,
+              "members": [
+                {
+                  "mod_id": 153,
+                  "key": "LocalCriticalStrikeChance1",
+                  "weight": 1000,
+                  "group": 1469
+                }
+              ],
+              "total_weight": 1000
+            }
+          ],
+          "natural_satisfying_weight": 1000,
+          "native_feasibility_weight": 1000,
+          "native_feasibility_mod_count": 1
+        }
+      ]
+    }
+  },
+  "bases": {
+    "armour": {
+      "base": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+      "session_mod_count": 1363,
+      "pool_summary": {
+        "tag_signature_id": 0,
+        "cache_hit": true,
+        "candidate_count": 124,
+        "prefix_total_weight": 42500,
+        "suffix_total_weight": 58200,
+        "combined_total_weight": 100700,
+        "cache_hits": 1,
+        "cache_misses": 1
+      },
+      "accepted_count": 124,
+      "full_pool_path": "out/role-parametric/R0/armour-full-natural-pool.json",
+      "full_pool_sha256": "782324c8689ae3f3a05532dce14a1e36bf98838119f12aedd05961d5af83a170"
+    },
+    "bow": {
+      "base": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+      "session_mod_count": 570,
+      "pool_summary": {
+        "tag_signature_id": 0,
+        "cache_hit": true,
+        "candidate_count": 142,
+        "prefix_total_weight": 54658,
+        "suffix_total_weight": 60100,
+        "combined_total_weight": 114758,
+        "cache_hits": 1,
+        "cache_misses": 1
+      },
+      "accepted_count": 142,
+      "full_pool_path": "out/role-parametric/R0/bow-full-natural-pool.json",
+      "full_pool_sha256": "e0fccc1beff3371df04427ff87f27cab7fc63bf3c5302e1cb04aae26f403c679"
+    }
+  }
+}
