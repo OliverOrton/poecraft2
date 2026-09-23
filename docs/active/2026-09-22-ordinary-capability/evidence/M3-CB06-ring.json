@@ -1,0 +1,126 @@
+{
+  "command": [
+    "C:/Program Files/nodejs/node.exe",
+    "--import",
+    "tsx",
+    "test/calculator-delivery-probe.ts",
+    "cb06-cross-base-product8-long240",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\M3-CB06-ring\\report.json",
+    "default_finish",
+    "1",
+    "adaptive",
+    "compact"
+  ],
+  "admission": {
+    "physical": 36602343424,
+    "commit": 16954667008,
+    "reserved": 8589934592,
+    "outside": 13681888461
+  },
+  "wasm_sha256": "8adfa4f2cd58f4e17da77b9723f2ec93684b110be2c7a3fb791ac4d289ddb5c5",
+  "probe_sha256": "fd273913b2e56876ec32a9745468d6cad064559ce3155597b9f824af559dfdd5",
+  "worker_sha256": "35a8d5078f8020ba0ad045903fccca70760e0fd29f326d8613519608a133c6ab",
+  "work_policy": "adaptive",
+  "transport_policy": "compact",
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 51560,
+    "process_identity_token": "51560:134346078314014151",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 13152.356400038116
+  },
+  "result": {
+    "report": "out\\ordinary-capability\\M3-CB06-ring\\report.json",
+    "report_sha256": "92bed34b68e2ae5433d4fac21b7c067fbde9c3e23f71e64faaed854f7b6f10bd",
+    "status": "completed",
+    "policy": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 149977.25092497544,
+      "expanded_states": 58,
+      "sweeps": 0,
+      "residual": 24.917142857215367,
+      "skipped_actions": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "refused_resource_cap",
+      "lower_bound": 10.169847833384168,
+      "upper_bound": 149977.25092497544,
+      "evaluated_policy_cost": 149977.25092497544,
+      "absolute_optimality_gap": 149967.08107714207,
+      "relative_optimality_gap": 14746.246309099226,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none",
+      "stop_cause": "memory_cap",
+      "cap_hit_mask": 4,
+      "registry_actions": 169,
+      "candidate_actions": 27,
+      "evaluator_supported_actions": 27,
+      "supported_priced_actions": 27,
+      "skipped_missing_price_actions": 0,
+      "skipped_unsupported_actions": 0,
+      "cancelled": false
+    },
+    "graph_sha256": "bacb0a1d2fbab6b92aec91d68e04ffd108fc52431e3555f6c8dccc93c720212c",
+    "manual_intent": false,
+    "final_telemetry_keys": [
+      "version",
+      "level",
+      "availability",
+      "execution",
+      "actions",
+      "policy_compatibility",
+      "policy_refinement",
+      "action_control",
+      "planner",
+      "abstraction",
+      "exact_state_scaling",
+      "states",
+      "carrier_bound_attribution",
+      "incumbent_portfolio",
+      "focused_expansion",
+      "work",
+      "cache",
+      "incremental_action_envelope",
+      "action_analysis",
+      "optimization",
+      "policy_result",
+      "timings_ns",
+      "diagnostic_cost",
+      "memory",
+      "compilation",
+      "value",
+      "verification"
+    ],
+    "final_telemetry_read_ms": 0.7800999999999476,
+    "ui_milestones": [
+      {
+        "stage": "worker_solve_requested",
+        "ui_elapsed_ms": 49.31230000000005
+      },
+      {
+        "stage": "worker_result_received",
+        "ui_elapsed_ms": 11170.2975
+      },
+      {
+        "stage": "strategy_export",
+        "ui_elapsed_ms": 11317.892800000001
+      },
+      {
+        "stage": "handle_cleanup",
+        "ui_elapsed_ms": 11325.2782
+      },
+      {
+        "stage": "ui_delivery_completed",
+        "ui_elapsed_ms": 11401.803800000002
+      }
+    ]
+  }
+}

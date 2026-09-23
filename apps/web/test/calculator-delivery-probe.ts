@@ -14,8 +14,13 @@ import { getPrices, setPrice, setFallbackPrice } from "../src/app/workspace/pric
 import { finishVerifiedCalculatorProbe } from "./calculator-delivery-probe-control";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
-const [caseId, output, control = "finish", repeatText = "1"] = process.argv.slice(2);
+const [caseId, output, control = "finish", repeatText = "1", workPolicy = "adaptive",
+    transportPolicy = "compact", tracePolicy = "trace"] = process.argv.slice(2);
 assert.ok(caseId && output && ["finish", "default_finish", "cancel_setup", "cancel_retention", "cancel_compile"].includes(control));
+assert.ok(workPolicy === "adaptive" || workPolicy === "fixed_eight");
+assert.ok(transportPolicy === "compact" || transportPolicy === "legacy_json");
+assert.ok(tracePolicy === "trace" || tracePolicy === "normal");
+assert.ok(workPolicy === "adaptive" || control === "default_finish");
 const expectsDelivery = control === "finish" || control === "default_finish";
 const repetitions = Number(repeatText);
 assert.ok(repetitions === 1 || repetitions === 2);
@@ -30,7 +35,15 @@ Object.assign(globalThis, {window: dom.window, document: dom.document,
 const { PcCalculator } = await import("../src/app/components/pc-calculator");
 const worker = new Worker(new URL("./worker-bootstrap.mjs", import.meta.url));
 const client = new EngineClient({
-    postMessage: (m, transfer) => worker.postMessage(m, (transfer ?? []) as TransferListItem[]),
+    postMessage: (m, transfer) => {
+        const dispatched = m.kind === "request" && m.method === "solverSolve"
+            ? {...m, params: {...m.params,
+                ...(tracePolicy === "trace" ? {diagnosticTrace: true} : {}),
+                ...(workPolicy === "fixed_eight" ? {diagnosticWorkPolicy: "fixed_eight"} : {}),
+                ...(transportPolicy === "legacy_json" ? {diagnosticStepTransport: "legacy_json"} : {})}}
+            : m;
+        worker.postMessage(dispatched, (transfer ?? []) as TransferListItem[]);
+    },
     onMessage: h => { worker.on("message", h); },
     onError: h => { worker.on("error", h); },
     terminate: () => { void worker.terminate(); },
@@ -133,7 +146,9 @@ try {
         ? await client.solverTelemetry(solver) : null;
     const finalTelemetryReadMs = performance.now() - diagnosticsStarted;
     const graphText = nativeGraph === null ? null : typeof nativeGraph === "string" ? nativeGraph : JSON.stringify(nativeGraph);
-    const report = {case_id: caseId, control, probe_control_intent: intent, repetition, runtime_warm: repetition > 0,
+    const report: Record<string, unknown> = {case_id: caseId, control, work_policy: workPolicy,
+        transport_policy: transportPolicy, trace_policy: tracePolicy,
+        probe_control_intent: intent, repetition, runtime_warm: repetition > 0,
         runtime_versions: process.versions,
         cache_context: "same runtime; fresh native data, session, item and solver handles on each repetition",
         environment: "linkedom actual Calculator + node-worker_threads WASM",
@@ -154,6 +169,8 @@ try {
         assert.equal(intent, false);
         assert.equal(trace.request.bounded_finish_after_ms, 240000);
         assert.ok(!trace.ui_milestones.some((entry: {stage: string}) => entry.stage === "finish_intent"));
+        assert.equal(trace.worker?.work_policy, workPolicy);
+        assert.equal(trace.worker?.step_transport, transportPolicy === "compact" ? "compact" : "json");
     }
     if (control === "cancel_compile") assert.ok(controlBoundary);
 } finally {

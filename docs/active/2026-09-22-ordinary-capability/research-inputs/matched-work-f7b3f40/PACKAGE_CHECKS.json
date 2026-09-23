@@ -1,0 +1,17 @@
+{
+  "schema": "package_validation_v1",
+  "payload_files_in_manifest": 16,
+  "manifest_excludes": [
+    "MANIFEST.sha256",
+    "PACKAGE_CHECKS.json"
+  ],
+  "json_payloads_parsed": 6,
+  "python_payloads_syntax_checked": 1,
+  "local_markdown_links_checked": 18,
+  "link_errors": [],
+  "abstract_tests_run": 20,
+  "abstract_tests_passed": 20,
+  "not_native_qualification": true,
+  "zip_integrity": "verified by external build script after archive creation",
+  "archive_payload_byte_equality": "verified by external build script after archive creation"
+}

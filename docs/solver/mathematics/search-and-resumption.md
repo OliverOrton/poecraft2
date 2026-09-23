@@ -224,6 +224,21 @@ checks. This changes grouping of native work, not its mathematical authority;
 the [service measurements](../../active/2026-09-21-first-policy-service/README.md)
 are separate from the induction argument.
 
+Grouping is trace-neutral only under a stronger premise. Let a deterministic
+logical transition act on the complete work state, including selection,
+partial cursors, evidence and cumulative debit. If each public call merely
+applies some positive number of those same transitions (up to its requested
+ceiling), and no return boundary changes the next transition, concatenating
+calls produces the same state after the same actual logical prefix by induction.
+An owner decision made at a return, an observation side effect, a numerical
+restart or a different work order defeats that premise while each returned
+state may still be safe. A requested quantum is only a ceiling; equal completed
+rows or candidate hashes do not prove equal logical work. Pending preparation
+remains a positive service obligation until complete committed support,
+refusal, cap, cancellation or compatible supersession. The matched-work
+[investigation](../../active/2026-09-22-ordinary-capability/README.md#matched-work-recovery--current-selected-work)
+tests efficiency separately from this conditional safety argument.
+
 This is safety. Bounded response also requires bounds on dispatch, noninterruptible
 work, transfer, release and packaging. Existing numerical reconciliation does not
 become a rigorously rounded endpoint through Finish.

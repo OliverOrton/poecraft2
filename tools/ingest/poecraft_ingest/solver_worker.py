@@ -490,6 +490,33 @@ def process_identity_token(pid: int) -> str | None:
         return None
 
 
+def _windows_process_signaled(pid: int) -> bool | None:
+    """A reaped child can retain its PID while a Windows handle remains open."""
+
+    import ctypes
+    from ctypes import wintypes
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+    kernel32.OpenProcess.restype = wintypes.HANDLE
+    kernel32.WaitForSingleObject.argtypes = (wintypes.HANDLE, wintypes.DWORD)
+    kernel32.WaitForSingleObject.restype = wintypes.DWORD
+    kernel32.CloseHandle.argtypes = (wintypes.HANDLE,)
+    kernel32.CloseHandle.restype = wintypes.BOOL
+    handle = kernel32.OpenProcess(0x00100000, False, pid)  # SYNCHRONIZE
+    if not handle:
+        return None
+    try:
+        state = kernel32.WaitForSingleObject(handle, 0)
+        if state == 0:  # WAIT_OBJECT_0: process has exited.
+            return True
+        if state == 258:  # WAIT_TIMEOUT: process is still running.
+            return False
+        return None
+    finally:
+        kernel32.CloseHandle(handle)
+
+
 def observe_process_identity(pid: int | None, token: str | None) -> str:
     """Conservatively classify the original process without using age alone."""
 
@@ -497,6 +524,12 @@ def observe_process_identity(pid: int | None, token: str | None) -> str:
         return "unknown"
     current = process_identity_token(pid)
     if current == token:
+        if os.name == "nt":
+            signaled = _windows_process_signaled(pid)
+            if signaled is True:
+                return "proved_absent"
+            if signaled is None:
+                return "unknown"
         return "verified_live"
     if current is not None:
         return "proved_absent"

@@ -1,0 +1,71 @@
+{
+  "command": [
+    "C:/Program Files/nodejs/node.exe",
+    "--import",
+    "tsx",
+    "test/calculator-delivery-probe.ts",
+    "cb02-cross-base-product8-long240",
+    "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\ordinary-capability\\M3-CB02-cancel-retention\\report.json",
+    "cancel_retention",
+    "1",
+    "adaptive",
+    "compact",
+    "normal"
+  ],
+  "admission": {
+    "physical": 36418666496,
+    "commit": 16505987072,
+    "reserved": 8589934592,
+    "outside": 13681888461
+  },
+  "wasm_sha256": "98d68cc487c2be95f477642642db401eed87c0b93cb0a09732f479a991ed33da",
+  "probe_sha256": "d558c3943d06819e6e606fecc8bb435a04d6140b8b41a0b0a23e2f93e08afabb",
+  "worker_sha256": "35a8d5078f8020ba0ad045903fccca70760e0fd29f326d8613519608a133c6ab",
+  "work_policy": "adaptive",
+  "transport_policy": "compact",
+  "trace_policy": "normal",
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 37572,
+    "process_identity_token": "37572:134346089012541811",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 5926.507199998014
+  },
+  "result": {
+    "report": "out\\ordinary-capability\\M3-CB02-cancel-retention\\report.json",
+    "report_sha256": "6f2b425aa4880f44c8d3d0b6502a72d124fbae5e671e7baa9fd2aaf487e1c17f",
+    "status": "cancelled",
+    "policy": {},
+    "graph_sha256": null,
+    "manual_intent": true,
+    "final_telemetry_keys": [],
+    "final_telemetry_read_ms": 0.0013000000008105417,
+    "ui_milestones": [
+      {
+        "stage": "worker_solve_requested",
+        "ui_elapsed_ms": 49.02520000000004
+      },
+      {
+        "stage": "cancel_intent",
+        "ui_elapsed_ms": 3531.6218999999996
+      },
+      {
+        "stage": "worker_result_received",
+        "ui_elapsed_ms": 3671.3528
+      },
+      {
+        "stage": "handle_cleanup",
+        "ui_elapsed_ms": 3676.4613000000004
+      },
+      {
+        "stage": "ui_delivery_completed",
+        "ui_elapsed_ms": 3681.9959000000003
+      }
+    ]
+  }
+}

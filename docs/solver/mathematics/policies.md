@@ -84,6 +84,25 @@ pruning; full competitor coverage still owns optimality. This elementary
 derivation is imported from the [post-incumbent review](../../active/2026-09-11-post-incumbent-cost/imported/review_and_knowledge.md),
 without a new theorem ID or native correspondence claim from its synthetic tests.
 
+There is also a first-disagreement form when two complete proper controllers
+share a truly aligned native prefix, including item and controller memory.
+Stop that common process at the goal or the first legitimate decision
+disagreement \(D\). If \(\mu(d)\) is the first-entry subprobability of a
+disagreement boundary, conditioning on that first exit cancels the common
+prefix cost:
+
+\[
+J_A(\mathrm{root})-J_B(\mathrm{root})=
+\sum_d\mu(d)\bigl(V_A(d)-V_B(d)\bigr).
+\]
+
+For a cyclic common prefix, the existing proper finite stopped-chain equations
+give its first-exit law. This is not old-controller occupancy times a tail
+difference; mass reaching the goal first contributes zero. Mandatory programme
+interiors and misaligned observation memory cannot be treated as free decision
+boundaries. This conditional attribution neither constructs a new native policy
+nor establishes common search traces from equal row counts.
+
 Because \(\pi\) is one allowed proper policy,
 
 \[

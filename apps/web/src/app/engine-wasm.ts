@@ -57,6 +57,9 @@ interface OkEnvelope {
 
 export class EngineBindings {
     private readonly module: EngineModule;
+    private diagnosticStepTiming = false;
+    private diagnosticStepCcallMs = 0;
+    private diagnosticStepParseMs = 0;
 
     constructor(module: EngineModule) {
         this.module = module;
@@ -66,11 +69,31 @@ export class EngineBindings {
         return this.module.ccall("pcw_abi_version", "number", [], []) as number;
     }
 
+    enableDiagnosticStepTiming(): void {
+        this.diagnosticStepTiming = true;
+        this.diagnosticStepCcallMs = 0;
+        this.diagnosticStepParseMs = 0;
+    }
+
+    solverStepTiming(): {ccall_ms: number; parse_ms: number} {
+        return {ccall_ms: this.diagnosticStepCcallMs,
+            parse_ms: this.diagnosticStepParseMs};
+    }
+
     private callJson(
         name: string,
         argTypes: string[],
         args: unknown[],
     ): OkEnvelope {
+        if (this.diagnosticStepTiming && name === "pcw_solver_solve_step") {
+            const started = performance.now();
+            const json = this.module.ccall(name, "string", argTypes, args) as string;
+            const parsedAt = performance.now();
+            const parsed = this.parseEnvelope(json);
+            this.diagnosticStepCcallMs += parsedAt - started;
+            this.diagnosticStepParseMs += performance.now() - parsedAt;
+            return parsed;
+        }
         const json = this.module.ccall(name, "string", argTypes, args) as string;
         return this.parseEnvelope(json);
     }
@@ -548,6 +571,29 @@ export class EngineBindings {
             "pcw_solver_solve_step",
             ["number", "number"],
             [solver, maxWorkItems],
+        ).progress as unknown as SolveProgress;
+    }
+
+    /** One unchanged native step with only phase/owner/done returned. Full
+     * progress is read from the exact cached step at an observation boundary. */
+    stepSolverSolveCompact(solver: number, maxWorkItems: number): number {
+        const status = this.module.ccall(
+            "pcw_solver_solve_step_compact", "number",
+            ["number", "number"], [solver, maxWorkItems],
+        ) as number;
+        if (status === 0) {
+            const json = this.module.ccall(
+                "pcw_response_data", "string", [], [],
+            ) as string;
+            this.parseEnvelope(json);
+            throw new EngineError(-1, "compact solver step failed");
+        }
+        return status - 1;
+    }
+
+    solverCachedProgress(solver: number): SolveProgress {
+        return this.callJson(
+            "pcw_solver_solve_cached_progress", ["number"], [solver],
         ).progress as unknown as SolveProgress;
     }
 

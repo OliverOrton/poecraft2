@@ -34,6 +34,15 @@ import {
 } from "./influence-presentation";
 
 const DEFAULT_CHUNK_SIZE = 1000;
+const compactSolvePhases: Array<SolveProgress["phase"] | undefined> = [
+    undefined, "expanding", "iterating", "done", "refining", "compiling", "certifying",
+];
+const compactSolveOwners: Array<SolveProgress["phase_owner"] | undefined> = [
+    undefined, "setup", "planner_construction", "temporary_effect_precompile",
+    "dependency_preparation", "primitive_rows", "state_local_automatic_synthesis",
+    "ladder_scheduling", "bellman_optimization", "policy_assembly",
+    "compilation", "exact_evaluation", "done",
+];
 
 let bindings: EngineBindings;
 let post: (message: WorkerMessage, transfer?: ArrayBuffer[]) => void = () => {};
@@ -301,7 +310,12 @@ async function solveSolver(
     const qualificationWorkItems = qualificationRequest
         ? maxWorkItems
         : null;
-    let workItems = qualificationWorkItems ?? Math.min(4, maxWorkItems);
+    // The explicit diagnostic is supplied only by the supervised probe. It is
+    // scoped to this invocation and does not alter Calculator's normal request.
+    const fixedEightDiagnostic = params.diagnosticWorkPolicy === "fixed_eight" &&
+        requestedWorkItems === 8;
+    let workItems = fixedEightDiagnostic ? 8 :
+        qualificationWorkItems ?? Math.min(4, maxWorkItems);
     let observedPhase: SolveProgress["phase"] = "expanding";
     let emittedProgress = false;
     let observedOwner = "setup";
@@ -311,6 +325,10 @@ async function solveSolver(
     let yieldCount = 0;
     let lastTimerYieldAt = -Infinity;
     let unyieldedStepMs = 0;
+    const diagnosticThresholds = [0, 12735, 14378, 24844, 42681, 83570, 117634, 135519];
+    let nextDiagnosticThreshold = 0;
+    const ownerThresholds = [24844, 42681];
+    let nextOwnerThreshold = 0;
     const boundedFinishAfterMs =
         typeof params.boundedFinishAfterMs === "number" &&
         Number.isFinite(params.boundedFinishAfterMs) &&
@@ -325,6 +343,13 @@ async function solveSolver(
     const solveStartedAt = performance.now();
     solveClocks.set(id, solveStartedAt);
     const worker: SolverWorkerMetrics = {
+        work_policy: fixedEightDiagnostic ? "fixed_eight" : "adaptive",
+        step_transport: "json",
+        requested_quantum_histogram: {},
+        ...(params.diagnosticTrace === true ? {
+            diagnostic_events: [], diagnostic_events_omitted: 0,
+            diagnostic_row_checkpoints: [], diagnostic_owner_checkpoints: [],
+        } : {}),
         step_count: 0,
         yield_count: 0,
         max_step_ms: 0,
@@ -336,11 +361,14 @@ async function solveSolver(
         progress_observations_omitted: 0,
         milestones: [],
     };
+    if (params.diagnosticTrace === true) bindings.enableDiagnosticStepTiming();
     const milestone = (stage: string): void => {
         worker.milestones!.push({stage, worker_elapsed_ms: performance.now()-solveStartedAt});
     };
     const captureProgress = (stage = "native_work"): void => {
         const readStarted = performance.now();
+        if (compactStep && worker.step_count > 0)
+            progress = bindings.solverCachedProgress(solver);
         // Diagnostic failure cannot refuse a valid solve, including an older
         // loaded module. Preserve the error and avoid repeated failed reads.
         let trace: SolveProgress["trace"];
@@ -359,7 +387,57 @@ async function solveSolver(
             observations.shift(); worker.progress_observations_omitted! += 1;
         }
         observations.push(progress);
-        worker.max_progress_read_ms = Math.max(worker.max_progress_read_ms ?? 0, performance.now()-readStarted);
+        const readMs = performance.now()-readStarted;
+        worker.max_progress_read_ms = Math.max(worker.max_progress_read_ms ?? 0, readMs);
+        worker.total_progress_read_ms = (worker.total_progress_read_ms ?? 0) + readMs;
+        if (params.diagnosticTrace === true) {
+            worker.diagnostic_dropped_before_cursor = Math.max(
+                worker.diagnostic_dropped_before_cursor ?? 0, trace?.dropped_before_cursor ?? 0);
+            for (const event of trace?.events ?? []) {
+                if (worker.diagnostic_events!.length < 1024) worker.diagnostic_events!.push(event);
+                else worker.diagnostic_events_omitted! += 1;
+            }
+            while (nextDiagnosticThreshold < diagnosticThresholds.length &&
+                progress.state_action_rows >= diagnosticThresholds[nextDiagnosticThreshold]) {
+                worker.diagnostic_row_checkpoints!.push({
+                    threshold_rows: diagnosticThresholds[nextDiagnosticThreshold],
+                    observed_rows: progress.state_action_rows,
+                    worker_observed_ms: progress.worker_observed_ms!,
+                    native_call_wall_ms: worker.total_step_ms,
+                    progress_read_wall_ms: worker.total_progress_read_ms,
+                    step_count: worker.step_count, phase: progress.phase,
+                    phase_owner: progress.phase_owner,
+                    lifecycle_sequence: progress.lifecycle_sequence,
+                    trace_current: trace?.current ?? null,
+                });
+                nextDiagnosticThreshold += 1;
+            }
+            if (nextOwnerThreshold < ownerThresholds.length &&
+                progress.state_action_rows >= ownerThresholds[nextOwnerThreshold]) {
+                const readStarted = performance.now();
+                try {
+                    const telemetry = bindings.solverTelemetry(solver);
+                    worker.diagnostic_owner_checkpoints!.push({
+                        threshold_rows: ownerThresholds[nextOwnerThreshold],
+                        observed_rows: progress.state_action_rows,
+                        worker_observed_ms: progress.worker_observed_ms!,
+                        read_wall_ms: performance.now() - readStarted,
+                        timings_ns: telemetry.timings_ns, work: telemetry.work,
+                        binding_step_ccall_ms: bindings.solverStepTiming().ccall_ms,
+                        binding_step_parse_ms: bindings.solverStepTiming().parse_ms,
+                    });
+                } catch (error) {
+                    worker.diagnostic_owner_checkpoints!.push({
+                        threshold_rows: ownerThresholds[nextOwnerThreshold],
+                        observed_rows: progress.state_action_rows,
+                        worker_observed_ms: progress.worker_observed_ms!,
+                        read_wall_ms: performance.now() - readStarted,
+                        error: error instanceof Error ? error.message : String(error),
+                    });
+                }
+                nextOwnerThreshold += 1;
+            }
+        }
     };
     const acknowledgeCancellation = (): SolverSolveResult => {
         milestone("cancel_acknowledged");
@@ -383,6 +461,9 @@ async function solveSolver(
      * phase-change, completion, and 100 ms progress cadence below. */
     const reportEveryChunk = params.yieldEveryStep === true ||
         (params.reportProgress === true && requestedWorkItems === 1);
+    const compactStep = params.diagnosticStepTransport !== "legacy_json" &&
+        qualificationWorkItems === null && !reportEveryChunk;
+    worker.step_transport = compactStep ? "compact" : "json";
     let progress: SolveProgress = {
         phase: "expanding",
         phase_owner: "setup",
@@ -455,15 +536,30 @@ async function solveSolver(
              * only between whole-table sweeps. */
             const stepWorkItems = workItems;
             const inputOwner = progress.phase_owner;
-            const inputCursor = progress.lifecycle_sequence;
+            const inputCursor = compactStep ? undefined : progress.lifecycle_sequence;
             const started = performance.now();
-            progress = bindings.stepSolverSolve(solver, stepWorkItems);
+            if (compactStep) {
+                const status = bindings.stepSolverSolveCompact(solver, stepWorkItems);
+                const phase = compactSolvePhases[status & 7];
+                const phaseOwner = compactSolveOwners[(status >> 3) & 15];
+                if (!phase || !phaseOwner || (status & ~255) !== 0)
+                    throw new EngineError(-1, "invalid compact solver step status");
+                progress.phase = phase;
+                progress.phase_owner = phaseOwner;
+                progress.done = (status & 128) !== 0;
+            } else {
+                progress = bindings.stepSolverSolve(solver, stepWorkItems);
+            }
             const measuredMs = Math.max(0, performance.now() - started);
             const elapsedMs = Math.max(0.1, measuredMs);
             worker.step_count += 1;
+            const quantumKey = String(stepWorkItems);
+            worker.requested_quantum_histogram[quantumKey] =
+                (worker.requested_quantum_histogram[quantumKey] ?? 0) + 1;
             const stepContext = {
                 input_owner: inputOwner, output_owner: progress.phase_owner,
-                input_cursor: inputCursor, output_cursor: progress.lifecycle_sequence,
+                input_cursor: inputCursor,
+                output_cursor: compactStep ? undefined : progress.lifecycle_sequence,
                 quantum: stepWorkItems, duration_ms: measuredMs,
             };
             if (measuredMs > worker.max_step_ms) worker.max_step_context = stepContext;
@@ -478,7 +574,9 @@ async function solveSolver(
             worker.total_step_ms += measuredMs;
             unyieldedStepMs += measuredMs;
             const phaseChanged = progress.phase !== observedPhase;
-            if (qualificationWorkItems !== null) {
+            if (fixedEightDiagnostic) {
+                workItems = 8;
+            } else if (qualificationWorkItems !== null) {
                 workItems = qualificationWorkItems;
             } else if (phaseChanged) {
                 workItems = 1;
@@ -555,6 +653,8 @@ async function solveSolver(
             return acknowledgeCancellation();
         }
         captureProgress("native_done");
+        if (params.diagnosticTrace === true)
+            worker.diagnostic_binding_step_timing = bindings.solverStepTiming();
         milestone("native_done_observed");
         const finalizationStarted = performance.now();
         milestone("result_export_start");

@@ -282,6 +282,22 @@ changes production scheduling, action scope or caps. Compare treatments within
 one runtime on matched requests; native/worker comparisons additionally disclose
 actual activation, stepping and checker headroom. External saved-graph evaluation
 is a separate compatibility witness and does not establish product discovery.
+The optional fifth argument `fixed_eight` is a supervised probe-only work-policy
+diagnostic with `default_finish`; it requests eight work items at every native
+call while retaining the ordinary event-loop and progress cadence. The default
+remains timing-adaptive with eight as a ceiling. Both modes report the effective
+policy, requested quantum histogram, total native-call wall and bounded early
+row/trace checkpoints. A request is only a ceiling: these fields do not prove
+identical actual logical work, and missing observations remain unknown.
+The optional sixth argument `legacy_json` keeps the prior full-JSON response
+on every native step for a same-module comparison; ordinary calls use the
+compact phase/owner/done response and read the cached full native progress at
+the existing report/control boundaries. The optional seventh argument `normal`
+disables probe-only diagnostic trace capture for a release-like run. Both
+arguments are invocation-bound test controls, not public Calculator options.
+`step_transport` records the effective path. Native-call wall includes WASM
+entry and response conversion; it is not a pure C++ timer. The M1 temporary
+diagnostic separated these parts before its high-frequency timers were removed.
 The probe reads the existing bounded final telemetry once after actual delivery;
 its separately reported read time is outside the solve and Finish-to-usable
 intervals. This is not another solve-time observation loop.

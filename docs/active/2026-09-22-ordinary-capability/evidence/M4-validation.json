@@ -1,0 +1,13 @@
+{
+  "starting_head": "f7b3f40d0fc1dce4f6ddc7128029f60e0caf9b83",
+  "final_wasm_sha256": "98d68cc487c2be95f477642642db401eed87c0b93cb0a09732f479a991ed33da",
+  "wasm_build": {"command": "powershell -File scripts/build-wasm.ps1", "exit_code": 0, "warnings": "three pre-existing Clang tautological-constant warnings"},
+  "web_tests": {"command": "npm test", "smoke_filter": "calculator picker: full-registry solver, filtered actions, fossil combos", "other_web_test_scripts": "all enabled", "exit_code": 0},
+  "typescript": {"command": "npx tsc --noEmit", "exit_code": 0},
+  "python_lab": {"command": "py -3 -m pytest -q tools/ingest/tests/test_solver_lab_unattended_hardening.py tools/ingest/tests/test_solver_lab_supervisor.py", "passed": 41, "failed": 0},
+  "knowledge_lint": {"base": "f7b3f40d0fc1dce4f6ddc7128029f60e0caf9b83", "errors": 0, "existing_open_claim_warnings": 18},
+  "edited_document_local_links": {"checked": 174, "missing": 0},
+  "diff_whitespace": {"command": "git diff --check", "exit_code": 0},
+  "not_run": ["native full acceptance: no retained native production source edit", "unchanged-strategy Simulator campaign", "unfiltered simulator-heavy web smoke", "rendered UI review", "non-Windows", "hosted workflows"],
+  "owner_disposition": "Oliver accepted the repeatable C4 maximum ordinary call of 2.643 s compact versus 0.921 s same-module JSON in favor of the 28.208% lower policy cost; the 250 ms response gate remains failed."
+}

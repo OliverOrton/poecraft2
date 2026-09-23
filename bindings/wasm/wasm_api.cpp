@@ -95,6 +95,10 @@ std::unordered_map<std::uint32_t, pc_strategy_handle> g_strategies;
 std::unordered_map<std::uint32_t, pc_economy_handle> g_economies;
 std::unordered_map<std::uint32_t, pc_simulator_handle> g_simulators;
 std::unordered_map<std::uint32_t, pc_solver_handle> g_solvers;
+/* Last complete native progress for each live solver. Compact ordinary steps
+ * update this once; a reporting boundary serializes it without doing more
+ * solver work. It is observational WASM-host storage, not solver authority. */
+std::unordered_map<std::uint32_t, pc_solve_progress> g_solve_progress;
 std::unordered_map<std::uint32_t, pc_strategy_eval_work_handle> g_evaluations;
 std::uint32_t g_next_id = 1;
 
@@ -2122,6 +2126,7 @@ const char* pcw_memory_stats() {
     registry_owned += registry_bytes(g_economies);
     registry_owned += registry_bytes(g_simulators);
     registry_owned += registry_bytes(g_solvers);
+    registry_owned += registry_bytes(g_solve_progress);
     registry_owned += registry_bytes(g_evaluations);
 
     std::uint64_t live = registry_owned;
@@ -2557,6 +2562,7 @@ const char* pcw_solver_open(uint32_t session_id, const char* goal_json) {
 
 EMSCRIPTEN_KEEPALIVE
 void pcw_solver_close(uint32_t solver_id) {
+    g_solve_progress.erase(solver_id);
     pc_solver_handle* solver = find(g_solvers, solver_id);
     if (solver != nullptr) {
         pc_solver_destroy(*solver);
@@ -2731,6 +2737,7 @@ const char* pcw_solver_solve_begin(uint32_t solver_id, uint32_t item_id,
         return fail(PC_RESULT_INVALID_ARGUMENT, parse_error.c_str());
     }
     pc_error_info error = make_error();
+    g_solve_progress.erase(solver_id);
     const pc_result rc = pc_solver_solve_begin(
         *solver, item, *economy, &options, &error);
     if (rc != PC_RESULT_OK) return fail(error);
@@ -2747,8 +2754,47 @@ const char* pcw_solver_solve_step(uint32_t solver_id,
     const pc_result rc = pc_solver_solve_step(
         *solver, max_work_items, &progress, &error);
     if (rc != PC_RESULT_OK) return fail(error);
+    g_solve_progress[solver_id] = progress;
     std::string out = "{\"ok\":true,\"progress\":";
     append_solve_progress(out, progress, pc_solver_progress_sequence(*solver));
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+uint32_t pcw_solver_solve_step_compact(uint32_t solver_id,
+                                       uint32_t max_work_items) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) {
+        fail(PC_RESULT_NOT_FOUND, "unknown solver");
+        return 0;
+    }
+    pc_solve_progress progress{};
+    pc_error_info error = make_error();
+    const pc_result rc = pc_solver_solve_step(
+        *solver, max_work_items, &progress, &error);
+    if (rc != PC_RESULT_OK) {
+        fail(error);
+        return 0;
+    }
+    g_solve_progress[solver_id] = progress;
+    /* Zero is reserved for the error envelope in g_response. The returned
+     * bits are only the worker's per-call control fields; full counters are
+     * read from this exact cached snapshot at existing report boundaries. */
+    return 1u + static_cast<uint32_t>(progress.phase) +
+        (static_cast<uint32_t>(progress.phase_owner) << 3) +
+        (static_cast<uint32_t>(progress.done != 0) << 7);
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_solve_cached_progress(uint32_t solver_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    const pc_solve_progress* progress = find(g_solve_progress, solver_id);
+    if (solver == nullptr || progress == nullptr) {
+        return fail(PC_RESULT_NOT_FOUND, "no stepped solve progress");
+    }
+    std::string out = "{\"ok\":true,\"progress\":";
+    append_solve_progress(out, *progress, pc_solver_progress_sequence(*solver));
     out.push_back('}');
     return respond(std::move(out));
 }
@@ -2797,6 +2843,7 @@ const char* pcw_solver_solve_finish(uint32_t solver_id) {
 
 EMSCRIPTEN_KEEPALIVE
 void pcw_solver_solve_abandon(uint32_t solver_id) {
+    g_solve_progress.erase(solver_id);
     pc_solver_handle* solver = find(g_solvers, solver_id);
     if (solver != nullptr) pc_solver_solve_abandon(*solver);
 }

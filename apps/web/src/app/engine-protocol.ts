@@ -849,6 +849,9 @@ export interface SolverTelemetry {
 
 /** Worker-owned measurements around bounded pc_solver_solve_step calls. */
 export interface SolverWorkerMetrics {
+    work_policy: "adaptive" | "fixed_eight";
+    step_transport: "json" | "compact";
+    requested_quantum_histogram: Record<string, number>;
     step_count: number;
     yield_count: number;
     max_step_ms: number;
@@ -857,6 +860,23 @@ export interface SolverWorkerMetrics {
     max_setup_step_context?: SolverWorkerMetrics["max_step_context"];
     max_ordinary_step_context?: SolverWorkerMetrics["max_step_context"];
     total_step_ms: number;
+    total_progress_read_ms?: number;
+    diagnostic_events?: unknown[];
+    diagnostic_events_omitted?: number;
+    diagnostic_dropped_before_cursor?: number;
+    diagnostic_owner_checkpoints?: Array<{
+        threshold_rows: number; observed_rows: number; worker_observed_ms: number;
+        read_wall_ms: number; timings_ns?: unknown; work?: unknown;
+        binding_step_ccall_ms?: number; binding_step_parse_ms?: number;
+        error?: string;
+    }>;
+    diagnostic_binding_step_timing?: {ccall_ms: number; parse_ms: number};
+    diagnostic_row_checkpoints?: Array<{
+        threshold_rows: number; observed_rows: number; worker_observed_ms: number;
+        native_call_wall_ms: number; progress_read_wall_ms: number;
+        step_count: number; phase: string; phase_owner: string | undefined;
+        lifecycle_sequence: number | undefined; trace_current: unknown;
+    }>;
     /** Packaging-only public-result transfer after native bounded stepping. */
     finalization_ms: number;
     max_step_context?: { input_owner: string; output_owner: string; input_cursor: number | undefined;

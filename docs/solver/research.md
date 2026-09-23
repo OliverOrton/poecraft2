@@ -137,8 +137,23 @@ selected row's paid replacement programme. The narrow native repair preserves
 the C3746.13 controller. Reassessing the captured-row proposal on that repaired
 boundary completes a C6147.83 controller, loses to the C5218.04 fallback and is
 removed again. The retained repair and its qualification are in the same record.
-Full recovery and the 20% browser improvement target remain unmet; existing
-defaults and the failed ordinary-response measurements are preserved.
+At that programme's close, full recovery and the 20% browser improvement
+target remained unmet; the failed ordinary-response measurements were preserved.
+
+The subsequent [matched-work recovery](../active/2026-09-22-ordinary-capability/README.md#matched-work-recovery--current-selected-work)
+separates native work from per-step WASM bridge/JSON cost. Diagnostic fixed-eight
+requests did not change the C5218.04 output. Retaining the same native step and
+worker control cadence while returning a compact status and reading full progress
+at existing observation boundaries instead delivers the native C3746.13 policy
+in two actual Calculator runs. The final ordinary run independently evaluates
+from the original root at C3746.13 with complete prices and success probability
+one; its 811/2200 controller is equal to native after only Calculator layout and
+economy annotations are removed. C5 first-policy, exact Regalia, Ring-two and
+retention cancellation preserve their stated controls. The C4 larger-controller
+path has a measured 2.643-second maximum ordinary call, so the 250 ms response
+gate remains failed. Oliver accepted this per-call latency trade-off in favor of
+policy-quality progress. This is executable-upper quality recovery, not exact
+closure or a new lower authority.
 
 The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
 applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)

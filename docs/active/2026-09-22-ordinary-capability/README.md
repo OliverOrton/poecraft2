@@ -1,5 +1,140 @@
 # Ordinary post-incumbent capability
 
+## Matched-work recovery — current selected work
+
+Oliver supplied the [matched-work packet](research-inputs/matched-work-f7b3f40/README.md)
+for a bounded M0–M4 investigation. Its 16 payload hashes match the supplied
+manifest; the received ZIP SHA-256 is
+`7286e66edd1178bb75d284e295ad02bb707a42d6a89b5b781f5efcb72a9e3037`.
+The starting HEAD is the packet's reviewed `f7b3f40d0fc1dce4f6ddc7128029f60e0caf9b83`.
+There were no relevant local changes before editing. The retained WASM hash is
+`0728803172476b5aeffd7421b6f2f7ce87ec933dddb203397cf4909f90dabaec`,
+matching the prior C3 qualification. The packet's recorded experiments are
+historical context, not new native measurements.
+
+M0 isolated the Windows watchdog-test boundary. The original 0.15-second
+requested child deadline was asserted against a 1.5-second ceiling for the
+whole `SolverLabSupervisor.run_once()` call, including dispatch and persistence.
+The fixture also assigned `watchdog_expired` without checking the raw child
+result. A local focused reproduction passed, so it did not reproduce the hosted
+1.891-second total. The test now checks deterministic forwarding and reservation
+separately from a real sleeping child. The real test checks `timed_out`, exit,
+reaping, PID identity and measured child wall time without treating full
+supervisor time as the requested child deadline. It exposed a Windows identity
+bug: a reaped process can retain a queryable PID while a handle remains open.
+The identity observer now checks whether the process object is signaled before
+calling it live. Focused watchdog tests (2) and affected Lab supervisor tests
+(41 total) pass. No native or WASM build was needed for M0.
+
+M1 adds a probe-only, invocation-bound `fixed_eight` request mode. Normal
+Calculator calls remain adaptive up to eight, and the diagnostic keeps the
+same event-loop yields, progress cadence and 240-second automatic Finish. The
+worker reports its effective mode and requested quantum histogram. The probe
+retains a bounded set of early row checkpoints and native trace events so its
+final rolling observation suffix does not silently stand for the whole run.
+The focused worker Finish/Cancel fixture and TypeScript check pass. Actual
+WA/W8 diagnostic receipts are [adaptive](evidence/M1-WA.json) and
+[fixed-eight](evidence/M1-W8.json), with raw reports under
+`out/ordinary-capability/M1-WA` and `out/ordinary-capability/M1-W8`.
+The full frozen requests differ only in run ID and submission time; resolved
+start/goal/economy and the WASM module are equal. Both return the same
+C5218.040949685988 graph (`ecc46abe...`) and L198.8334996747695. Fixed
+eight is therefore a rejected product call-policy treatment, not a recovered
+ordinary policy. The worker event projections agree with each other and with
+the preserved repaired native C3 trace through sequence 202, except that
+native events 10–11 were dropped before the worker read. Their first recorded
+semantic difference is deadline-near service versus Finish at sequence 203.
+Equal events and row/work counters are strong localization evidence, not a
+proof of every internal logical transition.
+
+| C4 milestone | Repaired native C3 | Adaptive WA | Fixed-eight W8 |
+|---|---:|---:|---:|
+| 24844 rows | 23.466 s | 38.224 s | 38.260 s |
+| 42681 rows | 46.061 s | 125.976 s | 124.404 s |
+| Interval | 22.595 s | 87.752 s | 86.144 s |
+
+At both endpoints, all three have the same recorded rows, transitions,
+reforge work, candidate identity and numerical generation. WA/W8 native-call
+wall during that interval is approximately 79.9/78.2 seconds, but this clock
+includes the WASM call bridge and JSON response. Coarse owner attribution
+therefore did not identify native computation. The temporary instrumented
+[branch diagnosis](evidence/M1-WA-branches.json) resolves the adaptive interval:
+87.600 seconds worker wall, 59.636 seconds in WASM `ccall` including 22.408
+seconds in the C++ step body, and 18.895 seconds parsing its JSON response.
+The native matched interval was 22.595 seconds. The bridge/serialization and
+parsing account for about 56 seconds beyond C++ work; the focused-lower and
+post-upper subbranches account for 7.701 and 8.095 seconds inside that C++
+body. The previous coarse named-continuation attribution was a transport-inclusive
+sample, not a native hotspot. Temporary native timers were removed after this
+diagnosis and are absent from the final build. The M1 verdict is comparable
+recorded work with expensive per-step transport (branch C); fixed eight is not
+the repair.
+
+M2 replaces the ordinary worker's full JSON response on every bounded native
+step with a numeric phase/owner/done status. The WASM facade caches the exact
+native progress returned by that step and serializes it only at the existing
+progress, Finish, cancellation and completion boundaries. Native work items,
+adaptive quantum, event-loop yields, useful progress cadence and solver
+authority remain unchanged. `legacy_json` is a probe-only comparison mode;
+neither diagnostic is a public Calculator option. The focused worker control
+test exercises both transports and their quanta. The final release WASM SHA-256
+is `98d68cc487c2be95f477642642db401eed87c0b93cb0a09732f479a991ed33da`.
+
+M3 used two serial, same-module C4 pairs. The first pair retained bounded
+diagnostic events; [JSON](evidence/M2-CB02-json.json) returned C5218.040949685988
+and [compact](evidence/M2-CB02-compact.json) returned C3746.1319409485764.
+The second pair reversed order on the final release build, with diagnostic
+tracing off: [compact](evidence/M3-CB02-compact-normal.json) again returned
+C3746.1319409485764, then [JSON](evidence/M3-CB02-json-normal.json) returned
+C5218.040949685988. Within each pair the full frozen request differs only in
+run ID/time; resolved target, original prices, scope, caps and module are equal.
+The final pair's full request identity also agrees with the first pair. This is
+a repeatable 28.208% original-price improvement and meets the predeclared full
+C4 cost target without a saved-controller seed or capacity increase.
+
+The final compact controller has 811 nodes/2200 edges and equals the repaired
+native controller after removing only Calculator node positions and its economy
+annotation; every other graph field and every edge agree. The fresh
+[independent original-root evaluation](evidence/M3-CB02-compact-normal-independent.json)
+converges with complete prices, C3746.13194094857, 8608.88179365679 expected
+primitive actions, success probability one and zero off-policy mass. It does
+not establish exact optimality: the lower remains C198.8334996747695.
+In the final run the C3746 controller was retained at native 220.693 seconds,
+first observed by the worker at 220.696 seconds, before automatic Finish at
+240.013 seconds. Usable UI delivery was at 240.480 seconds from request. The
+JSON control first retained C5218 at 243.389 seconds after Finish, and delivered
+at 244.143 seconds. These are observations/events on their stated clocks, not
+backdated claims from final evaluation; the final observation ring omitted
+1128 early compact and 1621 early JSON samples.
+
+Final-build actual controls preserve [C5 first-policy Finish](evidence/M3-final-CB01.json)
+at C85558.70618560436 with 40.502-second usable delivery and 0.466-second
+Finish-to-usable, [exact Regalia](evidence/M3-final-CB12.json) at
+C65.60036144971359, and [Ring-two](evidence/M3-final-CB06.json) at
+C149977.25092497544 with the same 1 GiB memory-cap stop and lower.
+[Retention cancellation](evidence/M3-CB02-cancel-retention.json) reached complete
+release about 0.150 seconds after intent, without a strategy. Maximum setup
+step was 27.763 ms on final C4, below 250 ms. The C4 larger-controller
+compilation/evaluation path still has a failed ordinary-call response gate:
+maximum 2.643 seconds on compact versus 0.921 seconds on the final same-module
+JSON baseline. This is a repeatable C4 per-call latency deterioration alongside
+the policy gain; no universal 250 ms responsiveness claim or rendered UI review
+is made. C5's ordinary maximum was 0.315 seconds, close to its existing failed
+0.326-second control. The 10-second Finish and 65-second C5 delivery gates pass.
+
+Final [changed-layer checks](evidence/M4-validation.json): the WASM build completed from the source-matched
+facade; `npm test` passed with the existing Calculator picker/fossil smoke
+selector and all remaining web test scripts, `npx tsc --noEmit` passed,
+the two affected Python Lab test files passed 41/41, knowledge lint against
+`f7b3f40` reported zero errors with 18 existing open-claim warnings, and
+174 edited-document local links resolved. No native production source remains
+changed, so the earlier native build/control evidence is retained rather than
+rerunning full native acceptance. The Simulator was not rerun for unchanged
+controller semantics; full unfiltered simulator-heavy web smoke, rendered UI
+review, non-Windows, and hosted workflows were not run. Oliver accepted the
+material C4 single-call latency trade-off and chose policy-quality progress over
+the 250 ms response gate. The compact path remains the ordinary default. No push.
+
 ## Resumed work — product Fracture publication
 
 Oliver explicitly resumed this task with “keep working” after local `d6a60de`.

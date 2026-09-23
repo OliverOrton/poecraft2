@@ -1,23 +1,24 @@
 # Handoff
 
-The resumed [ordinary capability programme](docs/active/2026-09-22-ordinary-capability/README.md#resumed-work--product-fracture-publication)
-retains a narrow product Fracture publication repair: close the selected native
-hit/paid-replacement programme, rather than raw intermediate misses. Native
-prefix/suffix policies independently check at C58; a missing replacement tail
-still refuses. The original captured-row proposal was reassessed on the repaired
-boundary, completed at C6147.83, and was removed again after regressing delivery.
+The selected [matched-work recovery](docs/active/2026-09-22-ordinary-capability/README.md#matched-work-recovery--current-selected-work)
+resolved the Windows Lab watchdog test boundary and localized ordinary C4's
+native/worker gap to per-step WASM response transport. Diagnostic fixed-eight
+requests did not change the C5218.04 policy. The compact ordinary step response
+preserves native work, Finish/Cancel turns and progress reporting, and returned
+the native C3746.1319409485764 controller in two actual Calculator runs. Both
+same-module JSON controls returned C5218.040949685988. The final compact graph
+matches native after UI position/economy projection; fresh independent native
+evaluation gives complete prices, success probability one and 8608.88179
+expected primitive actions. Exact Regalia, C5 first-policy, Ring-two and
+retention-cancellation controls are preserved. Source-matched WASM, focused
+Python tests (41), web tests and TypeScript pass; knowledge lint has zero errors.
 
-Rebuilt native/WASM, scoped tests and actual Calculator controls pass preservation.
-Conquest-four remains native C3746.13 versus WASM C5218.04, both bounded. The browser
-quality target is **unmet**. C5 first-policy delivery, exact Regalia and matched
-Ring-two graphs are preserved; Ring-two remains memory-capped. Ordinary latency
-still fails (C4 899 ms, C5 326 ms). Full evidence and validation limits live in the
-programme record; there is no new generalization or exactness claim.
-
-Further capability work needs a useful complete controller and a bounded service
-premise; this completed expensive candidate does not justify wider retries or an
-exceptional check. No automatic successor, partition rewrite, capacity increase,
-public Ring activation, restart or push is selected. Work stays sequential and
-local, without subagents or inherited deadlines. Preserve protected root `0`,
-unrelated work, frozen economy, browser defaults and historical wide-policy evidence.
-Non-Windows remains waived; rendered review belongs to Oliver.
+Oliver accepted the measured C4 trade-off: maximum single ordinary worker call
+2.643 seconds for the larger recovered controller versus 0.921 seconds for the
+final same-module JSON control. The 250 ms responsiveness gate remains failed;
+policy quality takes priority here. No rendered UI review or non-Windows run is
+claimed. No push was performed.
+The received research is imported once; earlier rejected seed variants and the
+product-Fracture publication fix remain preserved. There is no automatic
+successor, broader solver programme, capacity increase or replay-partition edit.
+Preserve protected root `0` and unrelated work.

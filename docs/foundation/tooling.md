@@ -34,6 +34,15 @@ IDs or paths. Common Lab options such as `--root .`, `--executable EXE`,
 | Use a native-only diagnostic | The benchmark's existing flags or shared worker adapter; preserve exact activation when Lab normalization would change the request |
 | Measure actual Calculator final quality | `apps/web/test/calculator-delivery-probe.ts CASE OUTPUT default_finish` through the existing isolated-process supervisor; `finish` remains the early verified-policy control |
 
+For a matched call-policy diagnosis, the same probe accepts
+`CASE OUTPUT default_finish 1 fixed_eight`. This is an invocation-bound test
+control; omit the fifth argument for ordinary adaptive Calculator calls. Keep
+the same case, module, deadlines, host admission and serial isolated-process
+supervision across both arms.
+For matched step-transport qualification, use the sixth argument `compact` or
+`legacy_json`, and optionally the seventh `normal` to omit diagnostic tracing.
+The ordinary worker uses compact transport; both probe switches are test-only.
+
 Inspect operation `--help` for less common flags. Detailed contracts remain in
 [benchmarking](../solver/benchmarking.md), [Lab operations](solver-lab.md) and
 [research handoffs](../solver/research.md#handoff). The Lab's default profile

@@ -1,0 +1,41 @@
+{
+  "schema": "sampled_checkpoint_projection_v1",
+  "stored_at_commit": "f7b3f40d0fc1dce4f6ddc7128029f60e0caf9b83",
+  "recorded_source": "343b6155fa1594ced4914858f1b25aca1e048e48, programme C0 before final publication repair",
+  "native_source": "https://github.com/OliverOrton/poecraft2/blob/f7b3f40d0fc1dce4f6ddc7128029f60e0caf9b83/docs/active/2026-09-22-ordinary-capability/evidence/C0-native-trajectory.json",
+  "worker_source": "https://github.com/OliverOrton/poecraft2/blob/f7b3f40d0fc1dce4f6ddc7128029f60e0caf9b83/docs/active/2026-09-22-ordinary-capability/evidence/C0-wasm-trajectory.json",
+  "checkpoints": [
+    {
+      "rows": 12735,
+      "native_s": "13.5564494",
+      "worker_s": "16.7161062"
+    },
+    {
+      "rows": 14378,
+      "native_s": "14.7395980",
+      "worker_s": "18.7000561"
+    },
+    {
+      "rows": 24844,
+      "native_s": "24.4984957",
+      "worker_s": "36.5321690"
+    },
+    {
+      "rows": 42681,
+      "native_s": "48.8887032",
+      "worker_s": "116.9577677"
+    },
+    {
+      "rows": 83570,
+      "native_s": "86.2691353",
+      "worker_s": "163.0686986"
+    }
+  ],
+  "limitations": [
+    "Samples, not exact milestone-crossing timestamps",
+    "Own-clock within-arm differences only",
+    "Row count does not establish native work identity",
+    "C3 unchanged costs do not prove C0 timing unchanged",
+    "Missing early observations prevent unqualified earliest-event claims"
+  ]
+}

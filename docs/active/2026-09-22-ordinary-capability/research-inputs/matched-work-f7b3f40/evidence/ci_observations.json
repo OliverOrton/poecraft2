@@ -1,0 +1,42 @@
+{
+  "schema": "hosted_review_projection_v1",
+  "head_sha": "f7b3f40d0fc1dce4f6ddc7128029f60e0caf9b83",
+  "windows": {
+    "run_id": 35801112208,
+    "job_id": 106991425011,
+    "status": "completed",
+    "conclusion": "failure",
+    "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35801112208",
+    "build": "passed",
+    "frozen_runtime_preparation": "passed",
+    "pytest_first_family": {
+      "passed": 162,
+      "skipped": 5,
+      "failed": 1,
+      "elapsed_s": 113.69
+    },
+    "failed_test": "tools/ingest/tests/test_solver_lab_unattended_hardening.py::test_requested_watchdog_is_enforced_by_timed_child_and_resources_are_split",
+    "failed_line": 814,
+    "assertion": "requested <= elapsed < 1.5",
+    "requested_watchdog_s": 0.15,
+    "observed_supervisor_elapsed_s": 1.8909999999999627,
+    "forwarded_timeout_check": "passed: case 120.0, received requested 0.15",
+    "unreached_by_this_workflow": [
+      "Native CTest after initial Python stage",
+      "Later web tests"
+    ],
+    "not_established": [
+      "Timed child actual deadline miss",
+      "Which supervisor component consumed the excess",
+      "Actual survivor outcome from this log",
+      "Passing later resource assertions"
+    ],
+    "raw_log_handling": "Read via GitHub job-log connector; this is a compact manual projection, not a raw-log hash claim"
+  },
+  "knowledge": {
+    "run_id": 35801112115,
+    "conclusion": "success",
+    "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35801112115"
+  },
+  "local_reproduction_by_review": false
+}

@@ -1,0 +1,37 @@
+{
+  "scope": "offline exact-rational arithmetic and abstract specification; no native code, PoE mechanics, actual watchdog or solver runtime executed",
+  "tests_run": 20,
+  "failures": 0,
+  "errors": 0,
+  "successful": true,
+  "test_names": [
+    "test_01_sampled_middle_interval",
+    "test_02_next_interval_is_not_constant_factor",
+    "test_03_cost_targets",
+    "test_04_complete_candidate_economic_negative",
+    "test_05_full_paid_renewal_bill",
+    "test_06_unpaid_replacement_changes_value",
+    "test_07_grouping_only_trace_invariance",
+    "test_08_requested_is_not_actual_work",
+    "test_09_boundary_decisions_break_grouping_premise",
+    "test_10_equal_counts_do_not_mean_same_work",
+    "test_11_fixed_controller_tail_difference",
+    "test_12_first_hit_is_subprobability",
+    "test_13_common_prefix_with_no_disagreement",
+    "test_14_closed_trap_is_not_proper_value",
+    "test_15_upper_estimate_is_not_rejection_lower",
+    "test_16_forced_status_does_not_prove_timeout",
+    "test_17_timeout_clock_decomposition",
+    "test_18_unknown_observation_not_zero",
+    "test_19_recurrence_requires_new_occupancy",
+    "test_20_witness_pair_is_not_historical_scalar"
+  ],
+  "derived_recorded_interval": {
+    "native_s": "9756083/400000",
+    "worker_s": "804255987/10000000",
+    "extra_s": "70044239/1250000",
+    "ratio": 3.297454468150794
+  },
+  "native_benchmark_run": false,
+  "hosted_test_reproduced": false
+}

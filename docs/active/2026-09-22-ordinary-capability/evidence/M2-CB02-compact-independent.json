@@ -1,0 +1,42 @@
+{
+  "admission": {
+    "available_physical": 36723130368,
+    "available_commit": 17086476288,
+    "reserved": 7516192768,
+    "outside": 13681888461
+  },
+  "process": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 72012,
+    "process_identity_token": "72012:134346077439446061",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 5481.734900036827
+  },
+  "evaluation_file": "out\\ordinary-capability\\M2-CB02-compact\\independent-evaluation.json",
+  "evaluation_sha256": "2775d675d5e3ae254c825309d96d84dcd18f2dfd8eca4b9b05bfd26378b4a13e",
+  "wall_ms": 4950.7815999677405,
+  "result_keys": [
+    "version",
+    "converged",
+    "sweeps",
+    "residual_mass",
+    "terminals",
+    "unresolved_by_node",
+    "observation_propagation",
+    "operation_row_census",
+    "failures_by_node",
+    "expected_actions",
+    "expected_consumption",
+    "accounting",
+    "memory",
+    "reforge_resource_accounting",
+    "targets",
+    "nodes",
+    "edges"
+  ]
+}

@@ -204,6 +204,24 @@ The Lab adds process-level watchdog, cancellation, host reservation, and supervi
 
 Pausing a queue stops new dispatch; it is not pausing and checkpointing a live solver. A terminated worker's valid partial report remains partial. PID identity, no-survivor checks, and lease release belong to the supervisor rather than to a numerical proof owner.
 
+The Lab's requested watchdog bounds the isolated child wait; a full
+`run_once()` clock also includes dispatch, process creation, kill/reap and
+persistence. Its tests therefore check timeout forwarding separately from a
+real child's `timed_out`, exit, survivor and identity evidence. On Windows a
+reaped process object can remain queryable while its handle is open. The
+identity observer checks whether that object is signaled before classifying
+the matching PID/creation token as live. Unknown identity still quarantines
+rather than releasing a possibly live worker.
+
+The ordinary WASM worker now receives phase, owner and done as a compact status
+from the same native `pc_solver_solve_step`. The facade retains that call's full
+progress snapshot and reads it at the existing progress, Finish, cancellation
+and completion boundaries. A compact response does not defer a native step,
+change its work debit, or confer policy authority; the verified graph/root/cost
+still comes from the native solve and checker. The worker retains its 100 ms
+progress cadence and event-loop cancellation turns. A full JSON response on
+every step remains a test-only comparison path.
+
 ## Reading interrupted evidence
 
 Use the first named cap/stop owner, current phase, retained incumbent status, open action/frontier obligations, and partial-report identity. Read [benchmarking](benchmarking.md#durable-partial-reports) before treating watchdog output as a censored trajectory. Missing observations are not zero work, and resource failure is not exact inapplicability.

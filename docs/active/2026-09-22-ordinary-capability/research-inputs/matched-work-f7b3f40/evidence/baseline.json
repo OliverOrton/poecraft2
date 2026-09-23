@@ -1,0 +1,56 @@
+{
+  "schema": "review_projection_v1",
+  "reviewed_main": "f7b3f40d0fc1dce4f6ddc7128029f60e0caf9b83",
+  "evidence_grade": "recorded, not rerun",
+  "programme": "docs/active/2026-09-22-ordinary-capability/README.md",
+  "controls": {
+    "native_c4": {
+      "cost": 3746.1319409485764,
+      "expected_actions": 8608.881793656798,
+      "lower": 198.8334996747695,
+      "graph_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02"
+    },
+    "calculator_c4": {
+      "cost": 5218.040949685988,
+      "expected_actions": 14152.339714597101,
+      "lower": 198.8334996747695,
+      "usable_worker_s": 243.993,
+      "automatic_finish_to_worker_terminal_s": 3.792,
+      "ordinary_max_ms": 899.281,
+      "omitted_observations": 1530
+    },
+    "calculator_c5": {
+      "cost": 85558.70618560436,
+      "expected_actions": 8407.202314771383,
+      "usable_worker_s": 43.235,
+      "finish_to_usable_s": 0.435,
+      "ordinary_max_ms": 326.435
+    },
+    "regalia": {
+      "cost": 65.60036144971359,
+      "expected_actions": 127.11597414558129,
+      "exact": true,
+      "usable_worker_s": 39.731
+    },
+    "ring_two_cb06": {
+      "cost": 149977.25092497544,
+      "expected_actions": 26175.422499995733,
+      "lower": 10.169847833384168,
+      "stop": "both memory-cap bounded at 1 GiB",
+      "scope": "not wide Ring-four"
+    }
+  },
+  "rejected_reassessment": {
+    "source_estimate": 6240.977360352559,
+    "evaluated_cost": 6147.834010344707,
+    "joint_attempts": 283,
+    "successes": 1,
+    "disposition": "proper complete but more expensive; preference removed"
+  },
+  "native_experiments_run_by_review": false,
+  "unknowns": [
+    "Cause of differing useful-work progress",
+    "Whether current fixed-eight worker recovers the native reference",
+    "Raw timed-child breakdown of hosted watchdog failure"
+  ]
+}

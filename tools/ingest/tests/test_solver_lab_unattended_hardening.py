@@ -21,7 +21,11 @@ from poecraft_ingest.solver_lab_service import (
 from poecraft_ingest.solver_lab_supervisor import SolverLabSupervisor
 from poecraft_ingest.solver_lab_unattended_qualification import run_soak
 import poecraft_ingest.solver_lab_supervisor as supervisor_module
-from poecraft_ingest.solver_worker import run_isolated_process
+from poecraft_ingest.solver_worker import (
+    classify_process_result,
+    observe_process_identity,
+    run_isolated_process,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -763,7 +767,7 @@ def test_local_revision_disk_change_refuses_dispatch_before_attempt(
     supervisor.stop()
 
 
-def test_requested_watchdog_is_enforced_by_timed_child_and_resources_are_split(
+def test_requested_watchdog_is_forwarded_and_resources_are_split(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     service = _service(
@@ -779,17 +783,15 @@ def test_requested_watchdog_is_enforced_by_timed_child_and_resources_are_split(
         observed["received_watchdog"] = kwargs["watchdog_seconds"]
         paths = kwargs["attempt_paths"]
         paths.prepare()
-        result = run_isolated_process(
-            [sys.executable, "-c", "import time; time.sleep(5)"],
-            watchdog_seconds=kwargs["watchdog_seconds"],
-            cwd=tmp_path,
-        )
-        paths.log_path.write_text(result.pop("output"), encoding="utf-8")
+        result = {"exit_code": 1, "timed_out": True, "survivor": False}
+        paths.log_path.write_text("fixture timeout\n", encoding="utf-8")
         return {
             **result,
             "case_id": task.case_id,
             "attempt_id": paths.attempt_id,
-            "status": "watchdog_expired",
+            "status": classify_process_result(
+                result, final_report_exists=False
+            ).status,
             "partial_observation_available": False,
             "watchdog_seconds": kwargs["watchdog_seconds"],
         }
@@ -805,22 +807,45 @@ def test_requested_watchdog_is_enforced_by_timed_child_and_resources_are_split(
         memory_budget_bytes=4 * 1024**3,
         available_memory_provider=lambda: 8 * 1024**3,
     )
+    try:
+        assert supervisor.run_once() is True
+        attempt = service.catalog.latest_attempt(job["job_id"])
+        assert attempt is not None
+        assert observed == {"case_watchdog": 120.0, "received_watchdog": requested}
+        assert attempt["host_watchdog_seconds"] == requested
+        assert attempt["command"]["host_watchdog_seconds"] == requested
+        assert attempt["result"]["watchdog_seconds"] == requested
+        assert attempt["result"]["timed_out"] is True
+        assert attempt["result"]["survivor"] is False
+        assert attempt["result"]["status"] == "watchdog_expired"
+        cap = job["solver_owned_cap_bytes"]
+        assert job["worker_headroom_bytes"] == 64 * MIB
+        assert job["reserved_memory_bytes"] == cap + 64 * MIB
+        assert job["global_safety_reserve_bytes"] == 96 * MIB
+        assert job["request"]["scheduler"]["reservation_bytes"] == cap + 64 * MIB
+    finally:
+        supervisor.stop()
+
+
+def test_requested_watchdog_terminates_and_reaps_real_child(tmp_path: Path) -> None:
+    requested = 0.15
     started = time.monotonic()
-    assert supervisor.run_once() is True
-    elapsed = time.monotonic() - started
-    attempt = service.catalog.latest_attempt(job["job_id"])
-    assert attempt is not None
-    assert observed == {"case_watchdog": 120.0, "received_watchdog": requested}
-    assert requested <= elapsed < 1.5
-    assert attempt["host_watchdog_seconds"] == requested
-    assert attempt["command"]["host_watchdog_seconds"] == requested
-    assert attempt["result"]["watchdog_seconds"] == requested
-    cap = job["solver_owned_cap_bytes"]
-    assert job["worker_headroom_bytes"] == 64 * MIB
-    assert job["reserved_memory_bytes"] == cap + 64 * MIB
-    assert job["global_safety_reserve_bytes"] == 96 * MIB
-    assert job["request"]["scheduler"]["reservation_bytes"] == cap + 64 * MIB
-    supervisor.stop()
+    result = run_isolated_process(
+        [sys.executable, "-c", "import time; time.sleep(5)"],
+        watchdog_seconds=requested,
+        cwd=tmp_path,
+    )
+    total_elapsed = time.monotonic() - started
+    assert result["timed_out"] is True
+    assert result["survivor"] is False
+    assert result["exit_code"] is not None
+    assert result["process_id"] > 0
+    assert result["process_identity_token"]
+    assert observe_process_identity(
+        result["process_id"], result["process_identity_token"]
+    ) == "proved_absent"
+    assert result["wall_ms"] >= requested * 1000
+    assert total_elapsed >= result["wall_ms"] / 1000
 
 
 def _claim_for_recovery(

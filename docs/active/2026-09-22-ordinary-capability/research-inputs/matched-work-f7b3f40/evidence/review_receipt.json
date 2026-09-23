@@ -1,0 +1,23 @@
+{
+  "schema": "review_completion_v1",
+  "reviewed_main": "f7b3f40d0fc1dce4f6ddc7128029f60e0caf9b83",
+  "main_rechecked_before_packaging": true,
+  "selected_milestones": [
+    "M0",
+    "M1",
+    "M2",
+    "M3",
+    "M4"
+  ],
+  "current_windows_run": 35801112208,
+  "current_windows_conclusion": "failure",
+  "current_knowledge_run": 35801112115,
+  "current_knowledge_conclusion": "success",
+  "repository_modified": false,
+  "native_build_run": false,
+  "native_solver_run": false,
+  "wasm_benchmark_run": false,
+  "game_simulation_run": false,
+  "hosted_workflow_dispatched": false,
+  "scope": "Targeted connector-based source, receipt and CI-log review; primary literature; independent offline arithmetic/specification checks. Not an exhaustive audit."
+}
