@@ -1,0 +1,9 @@
+{
+  "json_parse": "passed",
+  "python_ast_parse": "passed",
+  "local_markdown_links_checked": 20,
+  "local_markdown_links": "passed",
+  "native_tests": "not run",
+  "solver_benchmarks": "not run",
+  "scope": "packet validation, not solver qualification"
+}

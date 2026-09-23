@@ -1,0 +1,56 @@
+{
+  "schema": "capacity_first_refusal_v1",
+  "measurement": "failure-only native instrumented run; temporary source edit removed after capture",
+  "identity": {
+    "report": "out/capacity-capability/P0/native-first-refusal/cases/cb06-cross-base-product8-long240.json",
+    "report_sha256": "3ce9839d9983ee72bb7a1efe94a633b5aee90bcaad374670a6445af16c712f7c",
+    "executable_sha256": "951ad3746a350e0cddb935a8344cc2df470a16b013ab4a3fea4962280d84247e",
+    "source_commit": "1596e23a69b5ec1ce6bfd5372af9217228f2602b",
+    "corpus_sha256": "4f8d6ec386e7b65a8a1975bf762e9da020a3a3593c0dbc6d861de7372264c9fe",
+    "artifact_identity": {
+      "artifact_schema_version": 4,
+      "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+      "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+      "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+    }
+  },
+  "request": {
+    "case_id": "cb06-cross-base-product8-long240",
+    "requested_finish_seconds": 240,
+    "native_watchdog_seconds": 300,
+    "max_solver_owned_bytes": 1073741824
+  },
+  "first_refusal": {
+    "owner": "CalcContext::require_reforge_scratch_bytes",
+    "call": "protected-repeat baseline comparison context; accumulate_outcome rehash preflight in evaluate_reforge_cooperatively",
+    "instrumented_line": 958,
+    "restored_source_line": 950,
+    "carrier_state": 2522,
+    "candidate": "option:protected_repeat:prefix:chaos:until:1:1",
+    "local_reforge_state": 0,
+    "primitive_action": "chaos",
+    "local_context_owned_selected_bytes": 456473632,
+    "projected_total_scratch_selected_bytes": 790419257,
+    "local_cap_bytes": 1073741824,
+    "projected_local_total_bytes": 1246892889,
+    "projected_local_overage_bytes": 173151065,
+    "allocation_refused_before_growth": true,
+    "parent_overlap_selected_bytes": "not recorded; local projection alone exceeds cap",
+    "scratch_component_split": "not recorded; source projection includes stationary, active frontier, availability, terminal attribution, factored terminal and outcome table",
+    "raw_reason": "deferred:price_independent_kernel_generation_max_owned_bytes:carrier_state=2522:candidate=option:protected_repeat:prefix:chaos:until:1:1:reforge_scratch:state=0:action=chaos:line=958:owned=456473632:scratch=790419257:cap=1073741824:automatic:state_local_generation",
+    "context": "persistent comparison context at call; B trial resetting it per carrier did not change refusal, so current comparison row construction dominates"
+  },
+  "result": {
+    "status": "refused_resource_cap",
+    "stop": "memory_cap",
+    "cost": 149977.25092497544,
+    "lower": 10.169847833384168,
+    "peak_selected_bytes": 886804380,
+    "live_after_rollback_selected_bytes": 470625775,
+    "rows_interrupted": 1,
+    "nested_child_logical_work_observational": 125128650,
+    "exact_evaluation_status": "matched",
+    "exact_evaluation_complete_prices": true,
+    "first_incumbent_ms": 530.3424
+  }
+}

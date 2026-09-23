@@ -155,6 +155,17 @@ gate remains failed. Oliver accepted this per-call latency trade-off in favor of
 policy-quality progress. This is executable-upper quality recovery, not exact
 closure or a new lower authority.
 
+The subsequent [Ring-two capacity investigation](../active/2026-09-23-capacity-capability/README.md)
+identified the first ordinary 1 GiB refusal inside the protected-repeat
+baseline Chaos comparison: 456,473,632 selected context bytes plus
+790,419,257 projected total scratch exceeded the cap by 173,151,065 bytes.
+Carrier-level memory deferral serviced substantially more work but returned
+the same C149977.25 graph at the 240-second Finish; releasing the comparison
+context between carriers reached the identical refusal. Both treatments were
+removed. The scratch-component/concurrent-owner inventory and a complete
+smaller construction remain open. The wider Ring controller is not an
+ordinary-cap result, and no new lower or exact closure follows.
+
 The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
 applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)
 to explicit Finish and frozen request export, and attributes setup latency. Its activation

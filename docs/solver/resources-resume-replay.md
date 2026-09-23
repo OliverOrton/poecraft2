@@ -10,6 +10,17 @@ States, expanded states, rows, transitions, V1-equivalent reforge work, strict k
 
 A larger allowance in one dimension may expose a different first stop owner. A cap is computational evidence, not a finite-horizon reformulation of the native goal. Never treat unvisited probability or ungenerated actions as absent because a cap fired.
 
+The [Ring-two first-refusal witness](../active/2026-09-23-capacity-capability/README.md#p0--first-refusal)
+is a prospective reforge scratch check inside a protected-repeat comparison
+context. Its 790,419,257-byte figure is the projected **total** simultaneous
+scratch at an outcome-table growth point, not the additional allocation or an
+observed process peak. The 456,473,632 context bytes plus that projection
+already exceed its 1 GiB cap; the source report does not split scratch
+components or record all parent overlap. Releasing cross-carrier comparison
+storage did not change the refusal. An accounting relaxation or storage fix
+therefore requires the missing simultaneous inventory and old/new growth
+overlap, not a post-unwind live byte count.
+
 Primary owners include `solver_solve_contracts.hpp`, `solver_calc_types.hpp`, `solver_solve_telemetry.cpp`, `solver_policy_refinement.cpp`, `solver_eval.cpp`, and the option parsing in `solver_api.cpp`.
 
 ## Candidate checker and native headroom

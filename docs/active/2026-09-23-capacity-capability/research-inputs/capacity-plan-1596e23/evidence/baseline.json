@@ -1,0 +1,65 @@
+{
+  "source_pin": "1596e23a69b5ec1ce6bfd5372af9217228f2602b",
+  "kind": "recorded_inputs_not_new_native_measurements",
+  "current_wasm_sha256": "98d68cc487c2be95f477642642db401eed87c0b93cb0a09732f479a991ed33da",
+  "c4": {
+    "compact_cost": "3746.1319409485764",
+    "legacy_json_cost": "5218.040949685988",
+    "expected_primitive_actions": "8608.881793656798",
+    "lower": "198.8334996747695",
+    "nodes": 811,
+    "edges": 2200,
+    "status": "bounded_feasible",
+    "ordinary_max_call_s_reported": "2.643",
+    "latency_tradeoff": "accepted by Oliver in current programme; 250ms gate remains failed",
+    "reported_usable_s": "240.480",
+    "timing_basis": "programme receipt; do not infer missing clock alignment from this compact projection"
+  },
+  "ring_two_current": {
+    "case": "cb06-cross-base-product8-long240",
+    "cost": "149977.25092497544",
+    "count_from_compatible_native_evaluation": "26175.422499995733",
+    "lower": "10.169847833384168",
+    "expanded_states": 58,
+    "discovered_states": "unavailable_in_compact_receipt",
+    "first_cap_owner": "unavailable_in_compact_receipt",
+    "stop": "memory_cap",
+    "aggregate_cap_bytes": 1073741824,
+    "raw_path": "out/ordinary-capability/M3-final-CB06/report.json",
+    "raw_sha256": "11fe39c44809784e52e449b8306ce2ea6c5309678f6e33baf4a522dab1b39267",
+    "ui_worker_request_ms": "50.5176",
+    "ui_delivery_ms": "12408.747",
+    "final_memory_warning": "post-delivery snapshot is not necessarily first-refusal live/peak"
+  },
+  "ring_two_historical_wide": {
+    "reviewed_source": "0ca76eb4a9f35a90299ecceeab740e5535804fd9",
+    "cost": "1620.317363896656",
+    "expected_actions": "9766.307838126462",
+    "peak_selected_bytes": 1736778351,
+    "aggregate_cap_bytes": 8589934592,
+    "checker_cap_bytes": 4294967296,
+    "logical_work_cap": 200000000,
+    "solve_ms": "303060.2142",
+    "independent_final_evaluation_ms": "832.1407",
+    "run_directory": "out/dirty-state-continuation/control-ring",
+    "comparison_warning": "different source, work, time and evaluator limits; not a current same-profile result"
+  },
+  "c5_early_finish": {
+    "cost": "85558.70618560436",
+    "count": "8407.202314771383",
+    "lower": "405.3694021063399",
+    "raw_path": "out/ordinary-capability/M3-final-CB01/report.json",
+    "raw_sha256": "1c52f66a3e44b4e534b91b5f996975d0e7dfcc1764ff045d22587a0d01e9bfb5",
+    "ui_worker_request_ms": "53.9308",
+    "ui_finish_intent_ms": "40035.7609",
+    "ui_delivery_ms": "40501.863",
+    "unattended_current_run": "not established by this receipt"
+  },
+  "regalia": {
+    "cost": "65.60036144971359",
+    "expected_actions": "127.11597414558129",
+    "status": "exact"
+  },
+  "selected_programme": "P0-P4; first-cap data then exactly one supported repair branch",
+  "action_limit_semantics": "unchanged expected original Chaos; no action-horizon or count penalty selected"
+}

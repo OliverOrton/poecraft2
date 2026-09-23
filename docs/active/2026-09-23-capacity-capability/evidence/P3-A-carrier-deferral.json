@@ -1,0 +1,44 @@
+{
+  "schema": "capacity_carrier_deferral_trial_v1",
+  "measurement": "temporary native implementation trial; reverted after negative result",
+  "identity": {
+    "report": "out/capacity-capability/P3/A-carrier-deferral/cases/cb06-cross-base-product8-long240.json",
+    "report_sha256": "9a09e3746d6586017b75c9d84c694fca567d6508eae90c9efd823a618ef132ed",
+    "executable_sha256": "752c06da92bff4e0ffbee6d5ad7be025b6b83bc77ab76e1f2e5a92c660d3e558",
+    "source_commit": "1596e23a69b5ec1ce6bfd5372af9217228f2602b",
+    "corpus_sha256": "4f8d6ec386e7b65a8a1975bf762e9da020a3a3593c0dbc6d861de7372264c9fe",
+    "artifact_identity": {
+      "artifact_schema_version": 4,
+      "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+      "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+      "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+    }
+  },
+  "treatment": "On automatic carrier memory refusal, retain named unresolved obligation and advance frozen carrier service after existing transaction rollback. No cap, action or pricing change.",
+  "result": {
+    "status": "bounded_feasible",
+    "stop": "requested_bounded_finish",
+    "cost": 149977.25092497544,
+    "lower": 10.169847833384168,
+    "target_max_cost": 112482.93819373158,
+    "target_met": false,
+    "total_wall_ms": 241754.7029,
+    "first_incumbent_ms": 540.7355,
+    "graph_nodes": 10,
+    "graph_edges": 19,
+    "graph_sha256": "585a3a04f53e9d6d88fbe1245d33fbcd0b20f6544630502f1dfa2758664fd454",
+    "exact_evaluation_status": "matched",
+    "exact_evaluation_complete_prices": true,
+    "expected_actions": 26175.422499995733,
+    "expanded_states": 186,
+    "state_action_rows": 2133,
+    "peak_selected_bytes": 568020953,
+    "live_selected_bytes": 472534174,
+    "automatic_carrier_rollbacks": 68,
+    "reforge_rows_interrupted": 69,
+    "nested_child_logical_work_observational": 3564869378,
+    "unresolved_actions": 683,
+    "cap_hits": []
+  },
+  "disposition": "rejected: processed more rows but no new checked policy; full 240-second service and 68 refused automatic carriers"
+}

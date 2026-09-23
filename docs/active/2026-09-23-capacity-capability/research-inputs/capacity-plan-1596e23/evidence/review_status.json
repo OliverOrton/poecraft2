@@ -1,0 +1,31 @@
+{
+  "reviewed_main": "1596e23a69b5ec1ce6bfd5372af9217228f2602b",
+  "ci": [
+    {
+      "name": "Windows",
+      "run_id": 35817718590,
+      "job_id": 107042732606,
+      "status": "completed",
+      "conclusion": "success",
+      "reported_updated_at": "2026-09-23T04:30:02Z",
+      "build_and_test_steps": "success"
+    },
+    {
+      "name": "Solver knowledge",
+      "run_id": 35817718577,
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "repository_modified": false,
+  "public_actions": false,
+  "native_solver_executed": false,
+  "wasm_benchmark_executed": false,
+  "simulator_executed": false,
+  "local_codex_out_reports_read": false,
+  "cap_cause": "not established; exact saved projection/failure-only native observation requested",
+  "synthetic_execution": "checks/check_contracts.py; see check_results.json",
+  "containers": "source download failed DNS; GitHub connector used for source",
+  "scope": "targeted source, recorded experiment and primary-literature review; not whole-engine certification",
+  "final_main_recheck": "1596e23a69b5ec1ce6bfd5372af9217228f2602b"
+}

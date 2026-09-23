@@ -1,0 +1,22 @@
+{
+  "kind": "abstract_specification_checks_not_native_qualification",
+  "tests_run": 11,
+  "failures": [],
+  "errors": [],
+  "successful": true,
+  "recorded_value_arithmetic_only": {
+    "ring_material_target_decimal": "112482.938193731577",
+    "ring_wide_different_profile_reduction_percent": "98.919624574",
+    "c4_transport_recovery_percent": "28.208076995",
+    "historical_peak_excess_bytes": "663036527",
+    "historical_peak_reduction_to_one_gib_percent": "38.176231677",
+    "ring_request_to_ui_ms": "61791147/5000",
+    "c5_request_to_ui_ms": "202239661/5000",
+    "c5_manual_finish_to_ui_ms": "4661021/10000"
+  },
+  "limits": [
+    "No native engine or mechanics invoked",
+    "Toy ledger is not native accounting",
+    "Finite rational fixtures are not a general correctness proof"
+  ]
+}

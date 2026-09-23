@@ -1,0 +1,37 @@
+{
+  "schema": "capacity_comparison_lifetime_trial_v1",
+  "measurement": "temporary native lifetime trial; reverted after negative result",
+  "identity": {
+    "report": "out/capacity-capability/P3/B-comparison-lifetime/cases/cb06-cross-base-product8-long240.json",
+    "report_sha256": "79ebece31037d8ee7b18b468a2e903ee759d5a7c6f0129a60250bc7d0941441e",
+    "executable_sha256": "758f6b2f35befedd956e494d0718fca7ad25476bede64f128e60e549ee35dbf2",
+    "source_commit": "1596e23a69b5ec1ce6bfd5372af9217228f2602b",
+    "corpus_sha256": "4f8d6ec386e7b65a8a1975bf762e9da020a3a3593c0dbc6d861de7372264c9fe",
+    "artifact_identity": {
+      "artifact_schema_version": 4,
+      "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+      "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+      "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+    }
+  },
+  "treatment": "Drop reconstructible protected-repeat baseline comparison CalcContext at the start of each uncached carrier admission; rebuild within the carrier. Same frozen request and caps.",
+  "result": {
+    "status": "refused_resource_cap",
+    "stop": "memory_cap",
+    "cost": 149977.25092497544,
+    "lower": 10.169847833384168,
+    "expanded_states": 58,
+    "state_action_rows": 447,
+    "selected_peak_bytes": 886803851,
+    "selected_live_after_rollback_bytes": 470625433,
+    "reforge_rows_interrupted": 1,
+    "first_incumbent_ms": 559.5848,
+    "total_wall_ms": 12280.8082,
+    "graph_sha256": "585a3a04f53e9d6d88fbe1245d33fbcd0b20f6544630502f1dfa2758664fd454",
+    "exact_evaluation_status": "matched",
+    "cap_hits": [
+      "max_owned_bytes"
+    ]
+  },
+  "disposition": "rejected: identical refusal, rows, selected peak and evaluated graph show cross-carrier comparison retention was not the cause"
+}

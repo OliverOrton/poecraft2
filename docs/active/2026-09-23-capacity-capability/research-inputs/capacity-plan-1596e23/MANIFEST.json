@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "reviewed_main": "1596e23a69b5ec1ce6bfd5372af9217228f2602b",
+  "manifest_self_excluded": true,
+  "files": [
+    {
+      "path": "01_MAIN_REVIEW.md",
+      "bytes": 9459,
+      "sha256": "9a59512f61675fed0e132cd35110228d692ddf2143f9dfe2092811de63940b0c"
+    },
+    {
+      "path": "02_MILESTONES.md",
+      "bytes": 11633,
+      "sha256": "9da93d1fc55007fe064d8e946d5bbe20157085f910a3c7ac4ec40e794e1a3f40"
+    },
+    {
+      "path": "03_DESIGN_AND_MATHEMATICS.md",
+      "bytes": 10697,
+      "sha256": "cf100b4cd7d96d4791840e10e974a613a198fb6f9a2caa446d6926182a5267a4"
+    },
+    {
+      "path": "04_VALIDATION_AND_DOCS.md",
+      "bytes": 9231,
+      "sha256": "3254aa97960571964865f3f0c43978e94ec89f3f1ba405f13c00cdeb4041b13a"
+    },
+    {
+      "path": "05_RESEARCH_AND_QUEUE.md",
+      "bytes": 8483,
+      "sha256": "dcb68ab252f61f73ff58d50e61773aaf1a75168c0145c3a86139b0b55fc53cdd"
+    },
+    {
+      "path": "CODEX_DATA_REQUEST.md",
+      "bytes": 5493,
+      "sha256": "1439791379df55a843e841715ab4415fff749a2658356cbb543cda8b1b73dc4b"
+    },
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 15438,
+      "sha256": "2477e6ca89672ae5040a796c06cdfa8053c3afefae0c0a4c21f69bc53b428a71"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3340,
+      "sha256": "bbe38b1a8832dc368e9abd33126dc7052417fb3a2ff2bbcae906312a82b680b3"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 9347,
+      "sha256": "2a8d3b1d0ea905a0b00d893164a9c5108f169a17fccfaaf326853412d09cc2af"
+    },
+    {
+      "path": "checks/check_contracts.py",
+      "bytes": 8262,
+      "sha256": "bb73f53979f5792dd6518e0fbf75a9e38fbe62b6a00273e5300a9032f549c656"
+    },
+    {
+      "path": "evidence/baseline.json",
+      "bytes": 2882,
+      "sha256": "c5a45a4d39ff18762105322d309b777ee28ad03d727876784dbe01acd201fe1e"
+    },
+    {
+      "path": "evidence/check_results.json",
+      "bytes": 801,
+      "sha256": "b877bcf28c2b2bab98766e487a8a649c35cb009c0fd4703c37e7940d50d7fc75"
+    },
+    {
+      "path": "evidence/package_validation.json",
+      "bytes": 256,
+      "sha256": "2fb6d8082d6b1687089c53a8469bb9b199e6cff54cb7ec9ecb39160af9139a4a"
+    },
+    {
+      "path": "evidence/review_status.json",
+      "bytes": 1106,
+      "sha256": "8ae3d8f9992b63a6dd4992f6c697ec9c1f7c3b7fd620594344eaaa46ddb72845"
+    }
+  ]
+}

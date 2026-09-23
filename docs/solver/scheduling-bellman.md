@@ -30,6 +30,15 @@ bounded proposal scheduling are separate obligations.
 First verification timing does not replace the
 [unattended final-quality contract](benchmarking.md).
 
+The [Ring-two capacity trial](../active/2026-09-23-capacity-capability/README.md#p1p3--two-bounded-treatments)
+used the existing automatic transaction rollback to defer memory-refused
+carriers and preserve their named unresolved obligations. It processed more
+rows under the same cap but returned the same original-cost controller at
+Finish, so the trial was removed. This does not make a deferred automatic
+family absent, prove optimality, or establish a useful resource scheduling
+rule. An action-level deferral would need its own partial-publication/cache
+and retry contract before it could replace whole-carrier rollback.
+
 Primary owners are `solver_solve.cpp`, `solver_solve_expand.cpp`, `solver_solve_incremental.cpp`, `solver_solve_focused.cpp`, `solver_solve_priority.cpp`, `solver_solve_bellman.cpp`, `solver_sparse_policy.cpp`, and the joint-policy continuation owner.
 
 ## Ordering Versus Proof
