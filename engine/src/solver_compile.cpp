@@ -14,6 +14,101 @@
 namespace poecraft {
 namespace solver {
 
+std::string compile_finder_goal_condition(const CalcContext& calc) {
+    std::vector<SlotVocabulary> vocabulary;
+    vocabulary.reserve(calc.layout().slots.size());
+    for (std::size_t i = 0; i < calc.layout().slots.size(); ++i) {
+        vocabulary.push_back(slot_vocabulary(
+            calc.session(), calc.layout().slots[i], i));
+    }
+    return exact_goal_condition(calc, vocabulary);
+}
+
+std::string compile_finder_candidate_json(
+    const CalcContext& calc,
+    const pc_item_state& start_item,
+    const std::vector<std::uint32_t>& primitive_sequence,
+    const SolveOptions& limits) {
+    if (primitive_sequence.empty() || primitive_sequence.size() > 2) {
+        throw std::invalid_argument("finder supports one or two native stages");
+    }
+    const SessionImpl& session = calc.session();
+    const DataImpl& data = *session.data;
+    const std::string goal = compile_finder_goal_condition(calc);
+    const std::string base_key = data.string_at(
+        data.base_metadata_path_sid[session.base_index]);
+    std::string json =
+        "{\"version\":\"v1\",\"name\":\"strategy finder candidate\","
+        "\"base_state\":{\"base_key\":\"" + json_escape(base_key) +
+        "\",\"item_level\":" + std::to_string(session.item_level) +
+        ",\"rarity\":\"" + rarity_name(start_item.rarity) +
+        "\",\"with_implicits\":" +
+        (start_item.implicit_count == 0 ? "false" : "true") +
+        ",\"quality\":" + std::to_string(start_item.quality) +
+        ",\"item_flags\":" + std::to_string(start_item.item_flags) +
+        ",\"generic_influence_bits\":" +
+        std::to_string(start_item.generic_influence_bits) +
+        ",\"searing_exarch_tier\":" +
+        std::to_string(start_item.searing_exarch_tier) +
+        ",\"eater_of_worlds_tier\":" +
+        std::to_string(start_item.eater_of_worlds_tier);
+    const auto append_mods = [&](const char* field,
+                                 const pc_mod_slot* slots,
+                                 const std::uint8_t count) {
+        json += ",\"" + std::string(field) + "\":[";
+        for (std::uint8_t i = 0; i < count; ++i) {
+            if (i != 0) json += ',';
+            json += "{\"mod_key\":\"" +
+                json_escape(mod_key_of(session, slots[i].mod_id)) + "\"";
+            if ((slots[i].flags & PC_MOD_SLOT_FRACTURED) != 0)
+                json += ",\"fractured\":true";
+            if ((slots[i].flags & PC_MOD_SLOT_CRAFTED) != 0)
+                json += ",\"crafted\":true";
+            if ((slots[i].flags & PC_MOD_SLOT_VEILED) != 0)
+                json += ",\"veiled\":true";
+            json += '}';
+        }
+        json += ']';
+    };
+    append_mods("prefixes", start_item.prefixes, start_item.prefix_count);
+    append_mods("suffixes", start_item.suffixes, start_item.suffix_count);
+    json += "},\"start_node_id\":\"start\",\"nodes\":["
+            "{\"id\":\"start\",\"kind\":\"start\"},"
+            "{\"id\":\"goal\",\"kind\":\"terminal\","
+            "\"terminal\":\"success\"}";
+    for (std::size_t i = 0; i < primitive_sequence.size(); ++i) {
+        const std::uint32_t action = primitive_sequence[i];
+        if (action >= calc.registry().actions.size()) {
+            throw std::invalid_argument("finder primitive index is out of range");
+        }
+        json += ",{\"id\":\"stage" + std::to_string(i) +
+            "\",\"kind\":\"operation\",\"operation\":" +
+            operation_json(session, calc.registry().actions[action]) + "}";
+    }
+    json += "],\"edges\":["
+            "{\"id\":\"begin\",\"from\":\"start\","
+            "\"to\":\"stage0\",\"priority\":0,\"is_default\":true}";
+    for (std::size_t i = 0; i < primitive_sequence.size(); ++i) {
+        const std::string suffix = std::to_string(i);
+        json += ",{\"id\":\"success" + suffix +
+            "\",\"from\":\"stage" + suffix +
+            "\",\"to\":\"goal\",\"priority\":0,"
+            "\"condition\":" + goal + "}";
+        json += ",{\"id\":\"advance" + suffix +
+            "\",\"from\":\"stage" + suffix +
+            "\",\"to\":\"stage" +
+            std::to_string((i + 1) % primitive_sequence.size()) +
+            "\",\"priority\":1,\"is_default\":true}";
+    }
+    json += "]}";
+    if (json.size() > limits.max_strategy_json_bytes ||
+        2 + primitive_sequence.size() > limits.max_compiled_nodes ||
+        1 + 2 * primitive_sequence.size() > limits.max_compiled_edges) {
+        throw std::length_error("finder candidate exceeds compiled-output cap");
+    }
+    return json;
+}
+
 std::string compile_policy_strategy_json(
     CalcContext& calc,
     const SolveResult& result,

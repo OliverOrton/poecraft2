@@ -6,6 +6,7 @@
 #include "../src/solver_policy_route.hpp"
 #include "../src/solver_solve_types.hpp"
 #include "../src/solver_compile_contracts.hpp"
+#include "../src/solver_finder.hpp"
 #include "../src/solver_dirty_guidance.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
@@ -27,6 +28,8 @@ using namespace poecraft;
 using namespace poecraft::solver;
 
 namespace {
+
+std::shared_ptr<SessionImpl> make_compile_session();
 
 void run_condition_expr_tests() {
     const ConditionExpr a = ConditionExpr::opaque(
@@ -118,6 +121,118 @@ void run_policy_route_coalescing_tests() {
             partition_edge("other", b, 9, 0, false),
             partition_edge("same", c, 7, 0, false)});
     PC_CHECK(interleaved_overlap.size() == 3);
+}
+
+void run_finder_request_binding_tests() {
+    auto session = make_compile_session();
+    ActionRegistry registry = build_action_registry(*session);
+    const auto chaos = registry.index_by_id.at("chaos");
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot wanted;
+    wanted.family_id = session->family_id.at(5);
+    wanted.min_tier = 1;
+    goal.slots.push_back(wanted);
+    CalcContext calc(session, goal, registry, {chaos});
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    const SolveOptions limits;
+    const std::string graph = compile_finder_candidate_json(
+        calc, start, {chaos}, limits);
+    auto prepared = prepare_finder_candidate(calc, session, start, graph);
+    PC_CHECK(prepared.ready());
+
+    pc_item_state changed_start = start;
+    changed_start.searing_exarch_tier = 1;
+    PC_CHECK(!prepare_finder_candidate(
+        calc, session, changed_start, graph).ready());
+
+    std::string fake_goal = graph;
+    const std::string exact = compile_finder_goal_condition(calc);
+    const auto goal_at = fake_goal.find(exact);
+    PC_CHECK(goal_at != std::string::npos);
+    fake_goal.replace(goal_at, exact.size(), "{\"type\":\"always\"}");
+    PC_CHECK(!prepare_finder_candidate(
+        calc, session, start, fake_goal).ready());
+
+    std::string expanded_scope = graph;
+    const auto action_at = expanded_scope.find("\"type\":\"chaos\"");
+    PC_CHECK(action_at != std::string::npos);
+    expanded_scope.replace(action_at, 14, "\"type\":\"exalt\"");
+    PC_CHECK(!prepare_finder_candidate(
+        calc, session, start, expanded_scope).ready());
+
+    std::string one_attempt = graph;
+    const auto nodes_end = one_attempt.find("],\"edges\":[");
+    PC_CHECK(nodes_end != std::string::npos);
+    one_attempt.insert(nodes_end,
+        ",{\"id\":\"bad\",\"kind\":\"terminal\","
+        "\"terminal\":\"failure\"}");
+    const std::string retry_target =
+        "\"id\":\"advance0\",\"from\":\"stage0\",\"to\":\"stage0\"";
+    const auto retry_at = one_attempt.find(retry_target);
+    PC_CHECK(retry_at != std::string::npos);
+    one_attempt.replace(retry_at, retry_target.size(),
+        "\"id\":\"advance0\",\"from\":\"stage0\",\"to\":\"bad\"");
+    auto finite = prepare_finder_candidate(
+        calc, session, start, one_attempt);
+    PC_CHECK(finite.ready());
+    StrategyEvalOptions priced_options;
+    auto prices = std::make_shared<EconomyImpl>();
+    prices->prices = {{"chaos", 1.0}};
+    priced_options.economy = prices;
+    const auto priced = evaluate_strategy(
+        *finite.strategy, priced_options);
+    PC_CHECK(priced.cost_complete);
+    prices->prices.clear();
+    const auto unpriced = evaluate_strategy(
+        *finite.strategy, priced_options);
+    PC_CHECK(!unpriced.cost_complete);
+    PC_CHECK(!finder_evaluation_accepted(unpriced));
+
+    GoalSpec finished_goal;
+    finished_goal.rarity = PC_RARITY_RARE;
+    pc_item_state finished;
+    pc_item_clear(&finished);
+    finished.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t mod : {3u, 4u, 5u, 6u}) {
+        GoalSlot slot;
+        slot.family_id = session->family_id[mod];
+        slot.min_tier = 1;
+        finished_goal.slots.push_back(slot);
+        PC_CHECK(pc_item_add_mod(
+            &finished, session->gen_type[mod], mod,
+            static_cast<std::uint16_t>(session->primary_group[mod]),
+            0, nullptr) == PC_RESULT_OK);
+    }
+    CalcContext complete(session, finished_goal, registry, {chaos});
+    const std::string terminal_graph =
+        "{\"version\":\"v1\",\"name\":\"finder valid root\","
+        "\"base_state\":{\"base_key\":\"synthetic/base\","
+        "\"item_level\":1,\"rarity\":\"rare\","
+        "\"with_implicits\":false,\"prefixes\":[\"mod3\",\"mod4\"],"
+        "\"suffixes\":[\"mod5\",\"mod6\"]},"
+        "\"start_node_id\":\"start\",\"nodes\":["
+        "{\"id\":\"start\",\"kind\":\"start\"},"
+        "{\"id\":\"goal\",\"kind\":\"terminal\","
+        "\"terminal\":\"success\"},"
+        "{\"id\":\"bad\",\"kind\":\"terminal\","
+        "\"terminal\":\"failure\"}],\"edges\":["
+        "{\"id\":\"hit\",\"from\":\"start\",\"to\":\"goal\","
+        "\"priority\":0,\"condition\":" +
+        compile_finder_goal_condition(complete) +
+        "},{\"id\":\"miss\",\"from\":\"start\",\"to\":\"bad\","
+        "\"priority\":1,\"is_default\":true}]}";
+    auto trusted = prepare_finder_candidate(
+        complete, session, finished, terminal_graph);
+    PC_CHECK(trusted.ready());
+    StrategyEvalOptions checked_options;
+    checked_options.economy = std::make_shared<EconomyImpl>();
+    const auto evaluation = evaluate_strategy(
+        *trusted.strategy, checked_options);
+    PC_CHECK(finder_evaluation_accepted(evaluation));
+    PC_CHECK(evaluation.total_expected_cost == 0.0);
 }
 
 void report_compile_solve_issue(
@@ -2888,6 +3003,7 @@ void run_imprint_gate(const char* artifact_dir) {
 
 void run_solver_compile_tests(const char* artifact_dir) {
     run_policy_description_test();
+    run_finder_request_binding_tests();
     run_solver_return_bridge_tests();
     run_condition_expr_tests();
     run_policy_route_coalescing_tests();

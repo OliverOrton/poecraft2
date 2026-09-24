@@ -12,6 +12,19 @@ enum class PolicyRouteDefaultMode : std::uint8_t {
     CertificationFailClosed,
 };
 
+/* Finder-only proposal emission. The sequence is a finite native primitive
+ * controller stage: after each paid operation the exact request goal is tested;
+ * after the last stage, control returns to the first. This emits no solve or
+ * proof fields. Acceptance must still bind the original item and scope and
+ * independently evaluate the complete graph. */
+std::string compile_finder_candidate_json(
+    const CalcContext& calc,
+    const pc_item_state& start_item,
+    const std::vector<std::uint32_t>& primitive_sequence,
+    const SolveOptions& limits);
+
+std::string compile_finder_goal_condition(const CalcContext& calc);
+
 /*
  * Compile a solved policy into ordinary strategy JSON (the same format the
  * editor and simulator consume): a master router whose prioritized edges

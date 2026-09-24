@@ -1,5 +1,11 @@
 # Handoff
 
+Oliver selected the [F0–F4 experimental strategy finder](docs/active/2026-09-24-strategy-finder/README.md) from the manifest-verified packet at `28a9550`. F0 now has a narrow native one/two-stage graph emitter and a request-bound candidate preparation gate in `solver_compile.cpp` and `solver_finder.cpp`: exact original item, native goal on every success ingress, and requested primitive scope. Focused compile tests passed (1,388 checks, zero failures), including fake success, changed Eldritch root, out-of-scope action, external pricing and a valid already-complete root. No peer runtime, product mode or new nontrivial accepted strategy exists yet. Next: F1 peer finder work, cooperative original-root evaluation, retained best graph and full begin/step/Finish/abandon/getter dispatch. F2–F4 remain selected work, not completed results.
+
+The current working source and imported packet are in the linked living record. Native benchmark build and focused compile tests pass. Current public ABI, WASM, browser and legacy default are unchanged. No push. Preserve root `0` and unrelated work.
+
+## Earlier programme
+
 Oliver selected the [N0–N4 native boundary repair](docs/active/2026-09-24-native-boundary-repair/README.md) from the verified packet at `eab5c41`. A temporary first-verified A5 native query covered all 55 compiler decisions and 53,851 reached physical entries. One exact Eldritch decision source yielded a complete recurrent original-root graph at C85520.72841064134 versus the retained C85558.70618560436 baseline, a 0.0444% gain; a complete Annul→Exalt alternative cost C94699.18161992717. The received packet, compact hashed evidence and positive checked graph are in that living record. The old L0 zero clean-entry result remains valid for its narrower guard.
 
 The positive candidate required about 45 seconds of speculative native service. N3's conditional economics gate stopped before a retained production service, source-matched adaptive Calculator/WASM qualification or default activation. All temporary C++ source was restored to HEAD and the clean native build passed. Lower and exact authorities, public behavior, ABI and browser remain unchanged. No push. The authored solver mathematics, publication, resources, telemetry, research and CLM-0004 history state the scoped result; full-scope exact closure remains open.

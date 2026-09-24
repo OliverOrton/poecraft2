@@ -1,0 +1,136 @@
+{
+  "schema": "strategy_finder_packet_checks_v1",
+  "scope": "Document and illustrative toy validation only; no native implementation qualification.",
+  "reviewed_sha": "28a955056a41699d1fa9996ee345b70678937f21",
+  "original_handoff_verbatim": true,
+  "original_handoff_sha256": "b0177b4ad6ab13e47e299ade4407db511f3eea8abccbb350310c9d49892ef240",
+  "markdown_files_checked": 16,
+  "relative_links_checked": 26,
+  "relative_links_valid": true,
+  "authored_fences_balanced": true,
+  "authored_placeholder_scan_passed": true,
+  "json_files_parsed": [
+    "checks/results.json",
+    "evidence/review.json"
+  ],
+  "python_files_ast_parsed": [
+    "checks/toy_contracts.py"
+  ],
+  "toy_tests": {
+    "tests_run": 12,
+    "failures": 0,
+    "errors": 0,
+    "scope": "Exact-rational toy interface/model contracts; NOT native solver or performance qualification."
+  },
+  "native_builds": 0,
+  "native_solver_runs": 0,
+  "native_simulations": 0,
+  "training_runs": 0,
+  "repository_modified": false,
+  "links": [
+    {
+      "file": "ARCHITECTURE.md",
+      "target": "CANDIDATE_INTERFACE.md"
+    },
+    {
+      "file": "ARCHITECTURE.md",
+      "target": "VALIDATION.md"
+    },
+    {
+      "file": "IMPLEMENTATION_PLAN.md",
+      "target": "SEARCH_DESIGN.md"
+    },
+    {
+      "file": "IMPLEMENTATION_PLAN.md",
+      "target": "VALIDATION.md"
+    },
+    {
+      "file": "IMPLEMENTATION_PLAN.md",
+      "target": "DATA_AND_LEARNING.md"
+    },
+    {
+      "file": "MAIN_REVIEW.md",
+      "target": "evidence/review.json"
+    },
+    {
+      "file": "MATHEMATICS.md",
+      "target": "checks/toy_contracts.py"
+    },
+    {
+      "file": "MATHEMATICS.md",
+      "target": "VALIDATION.md"
+    },
+    {
+      "file": "PRODUCT_AND_ROADMAP.md",
+      "target": "DATA_AND_LEARNING.md"
+    },
+    {
+      "file": "README.md",
+      "target": "IMPLEMENTATION_PLAN.md"
+    },
+    {
+      "file": "README.md",
+      "target": "CODEX_PROMPT.md"
+    },
+    {
+      "file": "README.md",
+      "target": "IMPLEMENTATION_PLAN.md"
+    },
+    {
+      "file": "README.md",
+      "target": "ARCHITECTURE.md"
+    },
+    {
+      "file": "README.md",
+      "target": "SEARCH_DESIGN.md"
+    },
+    {
+      "file": "README.md",
+      "target": "VALIDATION.md"
+    },
+    {
+      "file": "README.md",
+      "target": "CANDIDATE_INTERFACE.md"
+    },
+    {
+      "file": "README.md",
+      "target": "MAIN_REVIEW.md"
+    },
+    {
+      "file": "README.md",
+      "target": "DATA_AND_LEARNING.md"
+    },
+    {
+      "file": "README.md",
+      "target": "MATHEMATICS.md"
+    },
+    {
+      "file": "README.md",
+      "target": "PRODUCT_AND_ROADMAP.md"
+    },
+    {
+      "file": "README.md",
+      "target": "DATA_REQUEST.md"
+    },
+    {
+      "file": "README.md",
+      "target": "DOC_MAINTENANCE.md"
+    },
+    {
+      "file": "README.md",
+      "target": "SOURCES.md"
+    },
+    {
+      "file": "README.md",
+      "target": "inputs/user_direction.original.md"
+    },
+    {
+      "file": "README.md",
+      "target": "DECISIONS_AND_RISKS.md"
+    },
+    {
+      "file": "SOURCES.md",
+      "target": "inputs/user_direction.original.md"
+    }
+  ]
+}

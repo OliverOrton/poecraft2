@@ -1,0 +1,108 @@
+{
+  "schema": "packet_manifest_v1",
+  "packet": "poecraft2_strategy_finder_plan_28a9550",
+  "reviewed_sha": "28a955056a41699d1fa9996ee345b70678937f21",
+  "manifest_self_excluded": true,
+  "files": [
+    {
+      "path": "ARCHITECTURE.md",
+      "bytes": 11655,
+      "sha256": "9dbb4647af8248fbb78063360c06ace10c573423630b6c32172aafa35ce4a9a5"
+    },
+    {
+      "path": "CANDIDATE_INTERFACE.md",
+      "bytes": 5171,
+      "sha256": "0de1f042007287f5de38ac1f9acc4d68e27dbb17e8f234a0fe38c8610a94fd16"
+    },
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 13676,
+      "sha256": "0ed5817154d997017cf9b79c2b9b3704d5d772129bc3e2784322df4bf862a5e4"
+    },
+    {
+      "path": "DATA_AND_LEARNING.md",
+      "bytes": 9586,
+      "sha256": "b47791bc6cd5c68fbbfeba492defb075aff228674d69d677cbd3835c00e3db6f"
+    },
+    {
+      "path": "DATA_REQUEST.md",
+      "bytes": 3418,
+      "sha256": "80fdf1de63d3238db5361aaf1687cf2457079e940100f4efec0c6e7fba75a4c2"
+    },
+    {
+      "path": "DECISIONS_AND_RISKS.md",
+      "bytes": 4822,
+      "sha256": "4704c1bf3e67d689e4d033f438eb18c17a1d502f30149771de6b8acbb02cc3b5"
+    },
+    {
+      "path": "DOC_MAINTENANCE.md",
+      "bytes": 3143,
+      "sha256": "8d885ece99f50f59947a93bdb10a4e0bc79553a49677c65aa41b9434aef9b6b0"
+    },
+    {
+      "path": "IMPLEMENTATION_PLAN.md",
+      "bytes": 10724,
+      "sha256": "574bdd107c465d9dd43267ddb699e1f2026f0d8ccb9e645acd5a372c538ded1b"
+    },
+    {
+      "path": "MAIN_REVIEW.md",
+      "bytes": 7091,
+      "sha256": "37bc77d2863e514fcd73df8fbf50232e44d13065aa04ed080ed8f4bfcf06b098"
+    },
+    {
+      "path": "MATHEMATICS.md",
+      "bytes": 7418,
+      "sha256": "c64d9cb6906bfa9018e2383babd4564273085bf6d3e5d8849df416bbd498f09d"
+    },
+    {
+      "path": "PRODUCT_AND_ROADMAP.md",
+      "bytes": 6250,
+      "sha256": "5ffccd171b56b57e49e23d2587e3793a85e187c51b2f10602b66f9ac576ef15f"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3932,
+      "sha256": "9ff0b42fc11e90bbd4fb3333e71af639338bc8ee87d6d34841f3727c98bbb66e"
+    },
+    {
+      "path": "SEARCH_DESIGN.md",
+      "bytes": 13460,
+      "sha256": "9a790b4e9a5f207323a743f63dc25ecffe29b7868589bafd155df00bb33cdc20"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 10655,
+      "sha256": "3e5c75466942e1b75edcf9ff1bd7999be260586cfb17237b4fb98afd1ece984e"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 8141,
+      "sha256": "78087acafdc671376ff6f787577d8196071161398777fe785b3704d00caf70e2"
+    },
+    {
+      "path": "checks/results.json",
+      "bytes": 2102,
+      "sha256": "08e6ddaa4de91ef52f497b0eaee07cbcd81c01ca02217e9de14bf255860dc589"
+    },
+    {
+      "path": "checks/toy_contracts.py",
+      "bytes": 10673,
+      "sha256": "95f945fa42d2d91208e8b7eef8c43eece8b673fb85540b5723c8d6e753268728"
+    },
+    {
+      "path": "evidence/package-validation.json",
+      "bytes": 3109,
+      "sha256": "bf01a5b51d22c5490d3b69c421292dbfff44349a5f413f65d1f55c2a6100e99d"
+    },
+    {
+      "path": "evidence/review.json",
+      "bytes": 2428,
+      "sha256": "b1c7aa782c9f03436d7c9e7925a569508499d3b1d3e150ed9054b1a48a482bae"
+    },
+    {
+      "path": "inputs/user_direction.original.md",
+      "bytes": 11762,
+      "sha256": "b0177b4ad6ab13e47e299ade4407db511f3eea8abccbb350310c9d49892ef240"
+    }
+  ]
+}

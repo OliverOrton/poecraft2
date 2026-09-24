@@ -604,3 +604,11 @@ One small optional development-only independent reference method is permitted. I
 **Context:** The reviewed shared policy uses 1,000 trials only when fresh compiled-strategy qualification is genuinely required and skips an identical already-qualified artifact. This records the current owner policy; it does not relabel historical 10,000-run evidence or change the browser's implemented verification button.
 
 **Consequences:** The older verification-count clause is superseded as current engineering policy. Proportional focused checks remain appropriate when they resolve uncertainty or validate retained changes. Documentation and proof-only work acquire no automatic Simulator requirement. Skipped, incomplete, failed, and unrun checks remain distinct.
+
+## 2026-09-24 — Separate Experimental Strategy Finder
+
+**Decision:** Build a peer native heuristic controller finder whose candidate graphs must pass request-bound original-root checking. Its first output authority is a complete independently evaluated ordinary strategy, with no lower, exactness or proof handoff. Keep the current certified-search solver as the default. Learning, GPU execution and concurrent checkers are later decisions.
+
+**Status:** Oliver selected the [F0–F4 programme](active/2026-09-24-strategy-finder/README.md). F0's narrow compiler and candidate-preparation boundary is implemented and tested; the peer runtime, search, product mode and qualification remain in progress.
+
+**Consequences:** Exact source context, allowed native operations and the external clean-terminal goal bind every accepted candidate. Heuristic role features only order proposals. A cost or success annotation supplied by the proposer has no authority. The new lane's activation and resource limits are separate run identity; default behavior and existing proof owners remain unchanged.

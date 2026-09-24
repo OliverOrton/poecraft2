@@ -1,0 +1,65 @@
+{
+  "schema": "strategy_finder_architecture_review_v1",
+  "repository": "OliverOrton/poecraft2",
+  "reviewed_sha": "28a955056a41699d1fa9996ee345b70678937f21",
+  "parent_sha": "eab5c4121f9de81a54adef9694e82ea22f2efa2f",
+  "commit_title": "Record native boundary repair economic witness",
+  "main_recheck": "matched reviewed SHA before final packaging",
+  "ci": [
+    {
+      "name": "Windows",
+      "run_id": 36066680514,
+      "status": "completed",
+      "conclusion": "success",
+      "updated_at_utc": "2026-09-24T22:33:20Z"
+    },
+    {
+      "name": "Solver knowledge",
+      "run_id": 36066680501,
+      "status": "completed",
+      "conclusion": "success",
+      "source": "individual current-head workflow-run recheck",
+      "updated_at_utc": "2026-09-24T22:19:12Z"
+    }
+  ],
+  "recorded_experiment": {
+    "source": "docs/active/2026-09-24-native-boundary-repair/evidence/n0-n2-native.json",
+    "base_cost": "85558.70618560436",
+    "positive_cost": "85520.72841064134",
+    "negative_candidate_cost": "94699.18161992717",
+    "positive_service_seconds": 45.415663,
+    "negative_service_seconds": 44.0103262,
+    "service_timer_scope": "inclusive speculative candidate service, not exclusive checking",
+    "diagnostic_finish_seconds": [
+      90,
+      120
+    ],
+    "ordinary_product_finish_seconds": 240,
+    "runtime": "native fixed-eight diagnostic, not adaptive worker qualification",
+    "retained_runtime_source": false,
+    "positive_graph_sha256": "50cd857e74029447324d5e4d98839201bbb03fa51f18a2a554b8d8e639c68a33"
+  },
+  "derived_not_new_measurement": {
+    "cost_reduction": "37.97777496302",
+    "percent_reduction": "0.04438797248830994211868545220195759625847",
+    "negative_percent_increase": "10.68327916798341722612197238154415325292"
+  },
+  "selected": "F0-F4 independent heuristic finder, no training/GPU/parallel/proof handoff initially",
+  "review_execution": {
+    "repo_modified": false,
+    "native_builds": 0,
+    "new_solver_runs": 0,
+    "new_simulations": 0,
+    "training_runs": 0,
+    "raw_out_reports_accessed": false,
+    "source_inspection": "GitHub connector, pinned relevant owners",
+    "toy_checks": "checks/results.json"
+  },
+  "uncertainties": [
+    "native generation throughput",
+    "best initial native sketch grammar",
+    "full-request target binding adapter detail",
+    "net policy-quality benefit",
+    "selected-policy checker bottleneck after new search"
+  ]
+}
