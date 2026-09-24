@@ -738,3 +738,21 @@ unchanged. This sufficient relation explains how extra named stops can leave a
 kernel unchanged. The prior A4 aggregate of 828 additional collapses does not
 identify each candidate's cause. The [received argument](../../active/2026-09-23-cross-binding/research-inputs/cross-binding-plan-8ac4c72/MATHEMATICS.md)
 keeps that observation distinct from parameterized transition reuse.
+
+<a id="bound-role-ports"></a>
+### External values in a bound role region
+
+For a fixed selected local controller with internal states \(I\) and explicit
+outside ports \(Z\), the binding-specific equation is
+\((I-Q_b)v_b=c_b+H_bu_b\). The familiar first-exit response applies only when
+the internal block is transient and each value in \(u_b\) belongs to a
+compatible actual continuation. A port with no established continuation stays
+unknown; an old root scalar or another binding's value cannot fill it.
+
+If an outside controller can return to the local region, independently solving
+the pieces with fixed terminal tails can misprice a recurring controller. The
+whole composed policy must use mutually consistent values and pass the native
+properness and independent evaluation checks. Local exit with probability one
+does not ensure global goal reachability: two regions can exit to each other
+forever. A shared structural region therefore remains a computation input until
+its complete bound policy and output graph pass the existing upper authority.

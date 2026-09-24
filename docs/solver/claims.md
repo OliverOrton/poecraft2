@@ -115,6 +115,7 @@ improves the verified upper while keeping the lower fixed. This application does
 not promote the general claim's open status or assert native optimality.
 - 2026-09-15 — `open` — Codex, conditional elaboration: [boundary response](mathematics/policies.md#boundary-response) eliminates a transient interior but still requires global boundary properness, complete terminal/reward categories and native semantic matching. Sparse response reuse and duration generating functions are research, not new implemented summaries or issuers. Original statement and broad correspondence status are preserved.
 - 2026-09-23 — `open` — Codex, conditional cross-binding note: [binding-dependent decisions](mathematics/policies.md#binding-dependent-policy) require actual coefficients and whole-controller properness even when a structural graph is shared. The G0 native discovery retained no template or controller; general program correspondence remains open.
+- 2026-09-23 — `open` — Codex, downstream role application: a finite local controller with [external value ports](mathematics/policies.md#bound-role-ports) must bind actual continuation values and pass composed properness. The [A4 D1 census](../active/2026-09-23-downstream-role/README.md#d1-native-gate) found descriptive recurrence but no guarded shared controller; it neither validates native program correspondence nor changes this claim.
 
 
 <a id="clm-0005"></a>
@@ -143,6 +144,14 @@ fixed-instance quotient assertion. The [A4 native discovery](../active/2026-09-2
 matches two postconstruction bucket conflict graphs while native weights differ;
 it neither satisfies the action-wise equality premise of this claim nor closes
 GAP-02. Claim status and prior counterexample are unchanged.
+
+**Downstream role application (2026-09-23):** The
+[served A4 role census](../active/2026-09-23-downstream-role/README.md#d1-native-gate)
+groups distinct prefix permutations but omits literal members, junk vectors,
+observations and full action support. Those groups are not candidate behavioral
+quotients under this claim. The [guarded computation argument](mathematics/representations.md#downstream-role-signatures)
+would share an operation only after its own H1/H2 correspondence; no native
+H2 witness was retained. Status and GAP-02 remain open.
 
 <a id="clm-0006"></a>
 ## CLM-0006 — Uniform lower and upper aggregation require complete member coverage

@@ -10,6 +10,16 @@ This page describes how the current work owners cooperate. [Search and resumptio
 
 The ordinary ladder remains the planner. Candidate-local continuation is retained state from one ordinary joint-policy attempt, not a second planner or a permanent fragment library.
 
+The current outer expansion enqueues non-self successor obligations only when
+its nonfocused fringe guard permits it; a shared transition kernel suppresses
+repeated fringe routing. Focused mode instead walks selected policy rows and
+queues unexpanded policy successors, with kernel routing suppressed when already
+seen in that walk. Its scheduling signature keeps goal progress, capacity,
+blockers, context, four junk-count vectors and member tokens to diversify
+service. Those scheduling classes do not merge states or prove equivalent
+values. [Work-weighted recurrence](mathematics/search-and-resumption.md#work-weighted-role-opportunity)
+uses actual completed work rather than the size of represented successor support.
+
 The [September 22 ordinary capability comparison](../active/2026-09-22-ordinary-capability/README.md)
 finds current native Conquest-four C3746.13 versus actual unattended Calculator
 C5218.04 at the unchanged four-minute boundary. Early proof handoffs check the

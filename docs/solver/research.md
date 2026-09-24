@@ -197,6 +197,17 @@ cross-binding reuse, root-cost improvement, new lower or exact closure is
 claimed. The conditional [parameter-bearing argument](mathematics/representations.md#role-parametric-computation)
 remains available for a future measured consumer.
 
+The [downstream role D0–D4 investigation](../active/2026-09-23-downstream-role/README.md)
+then sampled actual served work through A4's full 240-second Finish. Coarse
+prefix-role patterns recur across different states, but the largest screened
+protected-kernel families, final sparse selection and strict selected-row
+builds do not furnish a material guarded reuse candidate after existing native
+caches. Strict carrier discovery is a large late phase; most of its time was
+not attributed to an operation that a role template could bypass. D1 stopped
+before implementation or cross-root qualification. The C3746.13 original-root
+controller and all lower/exact authorities are unchanged. A measured expensive
+operation plus pre-work guard remains the premise for another reuse treatment.
+
 The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
 applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)
 to explicit Finish and frozen request export, and attributes setup latency. Its activation

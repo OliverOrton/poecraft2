@@ -1,0 +1,170 @@
+{
+  "schema": "downstream_role_d1_compact_v1",
+  "reviewed_commit": "9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7",
+  "profile": "A4 cb02-cross-base-product8-long240; original goal/economy/scope, requested Finish 240s, native watchdog 300s, host cleanup 315s, 1GiB aggregate cap; temporary instrumentation, no treatment",
+  "run_a": {
+    "report": "out/downstream-role/D1/a4-native-census/cases/cb02-cross-base-product8-long240.json",
+    "sha256": "89f741805bd98cd1cf7ac238b7535e48dfc21e14dcc9cb57f5b0498384fb7d5d",
+    "solve_wall_ms": 240861.9315,
+    "evaluated_cost": 3746.1319409485764,
+    "expanded_states": 7213,
+    "rows": 135519,
+    "graph_nodes": 811,
+    "graph_edges": 2200,
+    "automatic_admission_ns": 44878140300,
+    "extraction_ns": 79047688300,
+    "finalization_stages_ns": {
+      "incumbent_restore": 0,
+      "extraction_materialization": 106428900,
+      "direct_certification": 7333025100,
+      "strict_lift_total": 70623935800,
+      "strict_carrier_discovery": 65872805700,
+      "strict_partition_refinement": 429722900,
+      "strict_policy_evaluation": 140862700,
+      "strict_local_reoptimization": 0,
+      "strategy_compilation": 1783726000,
+      "exact_graph_evaluation": 3461249500
+    },
+    "strict_exact_states": 16863,
+    "strict_payload_reuses": 8278,
+    "strict_exact_kernel_cache_hits": 178,
+    "peak_solver_owned_bytes": 924995117
+  },
+  "run_b": {
+    "report": "out/downstream-role/D1/a4b-native-census/cases/cb02-cross-base-product8-long240.json",
+    "sha256": "e29bc338cf636afb5ec35cdfc5859413fefe66b3784e18ef86b6f3ef4f722095",
+    "solve_wall_ms": 240493.9918,
+    "evaluated_cost": 3746.1319409485764,
+    "expanded_states": 7213,
+    "rows": 135519,
+    "graph_nodes": 811,
+    "graph_edges": 2200,
+    "automatic_admission_ns": 41032411100,
+    "extraction_ns": 87268155100,
+    "finalization_stages_ns": {
+      "incumbent_restore": 0,
+      "extraction_materialization": 105926800,
+      "direct_certification": 7358805700,
+      "strict_lift_total": 79136853700,
+      "strict_carrier_discovery": 66655273000,
+      "strict_partition_refinement": 416498400,
+      "strict_policy_evaluation": 142511900,
+      "strict_local_reoptimization": 0,
+      "strategy_compilation": 1745562000,
+      "exact_graph_evaluation": 3484368300
+    },
+    "strict_exact_states": 16863,
+    "strict_payload_reuses": 8278,
+    "strict_exact_kernel_cache_hits": 178,
+    "peak_solver_owned_bytes": 924995685
+  },
+  "csv": {
+    "a4-admission.csv": {
+      "path": "out/downstream-role/D1/a4-admission.csv",
+      "sha256": "4c40cae466112e83cd84a093918019516e02de2ef654f21884540cba463701cb"
+    },
+    "a4-extraction.csv": {
+      "path": "out/downstream-role/D1/a4-extraction.csv",
+      "sha256": "c74d4e808b5f1038f51587730a5fe885fa039731bf803354fd791e8f4383e09b"
+    },
+    "a4b-strict.csv": {
+      "path": "out/downstream-role/D1/a4b-strict.csv",
+      "sha256": "6b9593c3dd90c918a593c66cebd817f3a39516b291db4569c209d1c7e40f9a34"
+    }
+  },
+  "automatic_admission": {
+    "completed_batches": 7204,
+    "coarse_keys": 656,
+    "multi_permutation_keys": 490,
+    "cached_batches": 151,
+    "protected_kernel_ns": 18502217500,
+    "local_context_ns": 6069726700,
+    "top_three_by_kernel": [
+      {
+        "key": "p2s1:prefix(0, 1, 2):suffix2:flags8208:fractured1:crafted0",
+        "completed": 60,
+        "prefix_permutations": 6,
+        "distinct_state_or_coarse_ids": 60,
+        "measured_ns": 1525895100
+      },
+      {
+        "key": "p2s1:prefix(0, 1, 2):suffix2:flags8192:fractured0:crafted0",
+        "completed": 30,
+        "prefix_permutations": 6,
+        "distinct_state_or_coarse_ids": 30,
+        "measured_ns": 1290187100
+      },
+      {
+        "key": "p1s0:prefix(0, 0, 2):suffix0:flags8208:fractured1:crafted0",
+        "completed": 31,
+        "prefix_permutations": 3,
+        "distinct_state_or_coarse_ids": 30,
+        "measured_ns": 1065441000
+      }
+    ]
+  },
+  "extraction_selection": {
+    "expanded_non_goal_states": 7212,
+    "evaluated_rows": 135519,
+    "transition_work_visits": 9315595,
+    "new_large_value_cache_entries": 0,
+    "selection_ns_from_summary_record": 20088900
+  },
+  "strict_carriers": {
+    "completed_locators": 8453,
+    "distinct_coarse_ids": 893,
+    "exact_kernel_hits": 178,
+    "coarse_keys": 175,
+    "multi_permutation_keys": 121,
+    "pre_row_identity_ns": 567260100,
+    "cold_selected_row_build_ns": 466159200,
+    "whole_loop_ns_inclusive": 16004394700,
+    "top_three_by_build": [
+      {
+        "key": "p3s3:prefix(0, 2, 2):suffix2:flags8208:fractured1:crafted0",
+        "completed": 1215,
+        "prefix_permutations": 3,
+        "distinct_state_or_coarse_ids": 9,
+        "measured_ns": 73726300
+      },
+      {
+        "key": "p3s3:prefix(1, 2, 2):suffix2:flags8208:fractured1:crafted0",
+        "completed": 405,
+        "prefix_permutations": 3,
+        "distinct_state_or_coarse_ids": 9,
+        "measured_ns": 24360300
+      },
+      {
+        "key": "p1s3:prefix(0, 0, 0):suffix2:flags8192:fractured0:crafted0",
+        "completed": 405,
+        "prefix_permutations": 1,
+        "distinct_state_or_coarse_ids": 3,
+        "measured_ns": 23568000
+      }
+    ],
+    "top_three_by_loop": [
+      {
+        "key": "p3s3:prefix(0, 2, 2):suffix2:flags8208:fractured1:crafted0",
+        "completed": 1215,
+        "prefix_permutations": 3,
+        "distinct_state_or_coarse_ids": 9,
+        "measured_ns": 2569142200
+      },
+      {
+        "key": "p2s3:prefix(0, 2, 2):suffix2:flags8208:fractured1:crafted0",
+        "completed": 405,
+        "prefix_permutations": 3,
+        "distinct_state_or_coarse_ids": 9,
+        "measured_ns": 917517300
+      },
+      {
+        "key": "p1s3:prefix(0, 0, 2):suffix2:flags8208:fractured1:crafted0",
+        "completed": 405,
+        "prefix_permutations": 3,
+        "distinct_state_or_coarse_ids": 9,
+        "measured_ns": 880866900
+      }
+    ]
+  },
+  "interpretation": "Descriptive role key omits junk vectors, literal members, observations and full operator dependencies; no H1/H2. Inclusive owner timers do not add. Strict discovery remainder is unattributed, not a reuse saving."
+}

@@ -1,0 +1,134 @@
+{
+  "kind": "exact-rational and abstract contract examples, not native tests",
+  "checks": 18,
+  "failures": 0,
+  "results": [
+    {
+      "name": "common_pattern_unequal_answers",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "Sharing adjacency does not authorize sharing values."
+    },
+    {
+      "name": "specialization_first",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "Each binding satisfies its own full equations, including its boundary."
+    },
+    {
+      "name": "specialization_second",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "Each binding satisfies its own full equations, including its boundary."
+    },
+    {
+      "name": "full_graph_and_bound_region_agree",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "The outside state costs seven then terminates; the stopped interface uses seven."
+    },
+    {
+      "name": "dropping_boundary_is_not_equivalent",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "An unaccounted continuation cannot be replaced by zero."
+    },
+    {
+      "name": "boundary_changes_best_action",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "A fixed menu is not a fixed best decision."
+    },
+    {
+      "name": "mutual_port_cycle_requires_global_check",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "Each one-state fragment exits locally, but the composed cycle never terminates."
+    },
+    {
+      "name": "histogram_collision_is_only_diagnostic",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "Descriptive recurrence does not prove corresponding action menus."
+    },
+    {
+      "name": "equal_mass_ragged_members_not_equal_tail",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "An aggregated total must not erase observed member-to-continuation correlation."
+    },
+    {
+      "name": "generation_bound_cache",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "Numerical evidence is binding and relevant-generation dependent, unlike a static shape."
+    },
+    {
+      "name": "independent_leaves_need_actual_reads",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "A common dot-product loop cannot skip a changed nonzero-probability value leaf."
+    },
+    {
+      "name": "ordinary_fringe_is_conditional",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "Ordinary nonfocused enqueue, duplicate suppression, and focused suppression are distinct."
+    },
+    {
+      "name": "deferred_service_does_not_drop_support",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "Selecting one work item is not renormalizing the stochastic action."
+    },
+    {
+      "name": "high_recurrence_can_lose_time",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "One hundred equal shapes still lose if matching costs the entire one-unit structural saving."
+    },
+    {
+      "name": "finite_amortization_includes_first_build",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "Savings require enough actual repeated structural work; build and every binding are charged."
+    },
+    {
+      "name": "nested_timers_not_additive",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "If the child is inside the parent, their sum is not wall time."
+    },
+    {
+      "name": "sampled_work_is_not_full_domain_proof",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "Two matching complete samples do not certify an unseen binding."
+    },
+    {
+      "name": "g0_scoped_fraction",
+      "passed": true,
+      "scope": "abstract finite example",
+      "detail": "Only the measured two-row bucket/exclusion slice is below one percent of its frontier time."
+    }
+  ],
+  "derived": {
+    "binding_1_values": [
+      "96/17",
+      "101/17"
+    ],
+    "binding_2_values": [
+      "395/41",
+      "312/41"
+    ],
+    "g0_two_row_setup_fraction_of_frontier": 0.008623032639043312,
+    "g0_setup_ns": 34900,
+    "g0_frontier_ns": 4047300
+  },
+  "limitations": [
+    "No PoE mechanics implementation",
+    "No native build/solver/WASM run",
+    "No performance measurements",
+    "No universal proof from finite examples"
+  ]
+}

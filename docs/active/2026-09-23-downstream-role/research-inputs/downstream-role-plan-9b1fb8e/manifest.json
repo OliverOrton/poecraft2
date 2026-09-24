@@ -1,0 +1,77 @@
+{
+  "schema": "artifact_package_manifest_v1",
+  "reviewed_main": "9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7",
+  "self_excluded": true,
+  "payloads": [
+    {
+      "path": "ADVISORY_INPUT.md",
+      "bytes": 1881,
+      "sha256": "3cde35a4bad3e5f7c079a4fbd21b505e66cd4d7b3cc5a452b8c07b4cf58849d0"
+    },
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 20105,
+      "sha256": "a42c27eadb1830425ee0de07ee592832014a701193ec510dbe8d5e8b8182be23"
+    },
+    {
+      "path": "DATA_REQUEST.md",
+      "bytes": 4593,
+      "sha256": "0e94ad74afb26184a62052801b79885fd46ccf65575cf41a7403a845cdbab0bd"
+    },
+    {
+      "path": "DIAGNOSTIC_AND_DESIGN.md",
+      "bytes": 13322,
+      "sha256": "e0cfff866f621050df66077d55738fe710e997544fdb183a0a1c39884e43dcbc"
+    },
+    {
+      "path": "DOC_INTEGRATION.md",
+      "bytes": 4414,
+      "sha256": "051bbdb5b4dc540037bacf1d4920bec3c37ff005769277c733ca511fb3010e1d"
+    },
+    {
+      "path": "MATHEMATICS.md",
+      "bytes": 13847,
+      "sha256": "1efc3a3572ea8afb57395d4a41cf942c5efe3922b5b1b56194acf122e28cfb6b"
+    },
+    {
+      "path": "MILESTONES.md",
+      "bytes": 8989,
+      "sha256": "aab53803c77129494bb55b15827a4392afaa8148c2b017e2775d5a57a0bd2ad8"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3009,
+      "sha256": "5656efb26c1afdc476420c05afd6689085420675fdd0bd72669f278782ee67dd"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 14442,
+      "sha256": "51c3f032a4ae8a2e5ca1bcd5de64f6a30134e9af3ce940f6126251f81ccaefd2"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 5528,
+      "sha256": "33f2552ea490c867962c668fd3ca261afa95856fab68989fbe43100c71224d81"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 6884,
+      "sha256": "aaec00649bd58c587e9d8b25df4995c090e7953c811e2396eeafeefca0850edf"
+    },
+    {
+      "path": "checks/check_contracts.py",
+      "bytes": 8199,
+      "sha256": "93feb2da313cf762790d38273d8224e392fd85174de0155cd54bed2c40f9f631"
+    },
+    {
+      "path": "checks/results.json",
+      "bytes": 4511,
+      "sha256": "7ef53cb0b7f06696588f3316489eea5bf28dc3e7894bebf59de1093914b37afe"
+    },
+    {
+      "path": "evidence/baseline.json",
+      "bytes": 8984,
+      "sha256": "32d769aed99f2cbdef7176c43005b726f52ad9c0f52850a0e9ca805578ac9757"
+    }
+  ]
+}

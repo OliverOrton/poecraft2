@@ -369,3 +369,25 @@ proper policies; goal count, extra rows and a finite estimate alone did not.
 The first verified candidate is retained before improvement so a newly cheaper
 but incomplete route cannot erase executable evidence. This is a scoped native
 progress result, not a general proof of the finiteness/fairness premises above.
+
+<a id="work-weighted-role-opportunity"></a>
+### Complete support and work-weighted recurrence
+
+A complete native action row can represent every positive-probability outcome
+while the scheduler services only some successor states next. Represented
+support, interned state identity, queued obligations, started expansion,
+completed state/action rows and verified policy reachability are different
+populations. Counting repeated role signatures among outcomes does not measure
+repeated *served* computation, and an expansion-start flag does not certify that
+every applicable action row finished.
+
+For actually served bindings, separate reusable structural work \(S_b\),
+binding-specific numeric work \(N_b\), and output/checking work \(O_b\). A
+shared structure costs its first build, matching and guard work before any
+saving. The optimistic saving on a finite observed workload is at most the
+later \(S_b\) that a source-backed guard can actually bypass; it cannot include
+unserved states, existing exact-cache hits or independent weighted value reads.
+Parent and child timers may be inclusive. State counts, expected crafting visits,
+timed solver invocations and completed native work items have different units.
+The [downstream role investigation](../../active/2026-09-23-downstream-role/README.md)
+records a bounded source census separately from its mathematical contract.

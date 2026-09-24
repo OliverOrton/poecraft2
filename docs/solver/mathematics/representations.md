@@ -283,3 +283,33 @@ found unequal A4 fractured-role coefficients and matching bucket conflict graphs
 for two cache misses. It did not establish a preconstruction guard, a reusable
 template, equal completed laws or material amortization. The prior pair-stop and
 same-entry memo negatives remain scoped to their own implementations.
+
+<a id="downstream-role-signatures"></a>
+### Descriptive roles and a guarded continuation computation
+
+A role-status signature (H0) records a pattern such as two attained prefixes and
+one missing prefix. It groups observations for measurement; it does not equate
+states, actions or values. An operation-specific signature (H1) must additionally
+retain the native legal menu, side capacities, exclusions, member and control
+observations, setup order and every external exit port needed by that operation.
+Even an H1 match is descriptive until a pre-work native guard (H2) establishes
+the same dependency structure and an actual binding map for every leaf, action
+and output port. This is a conditional application of the
+[guarded-specialization argument](#guarded-specialization), not a new quotient.
+
+For a finite local decision region, a bound computation may use different
+coefficients \(c_b,Q_b,H_b\) and external values \(u_b\) for each binding:
+\[
+(T_b(v;u))_i=\min_{a\in A_b(i)}
+  \left(c_b(i,a)+\sum_j Q_b(i,a,j)v_j+
+                 \sum_z H_b(i,a,z)u_z\right).
+\]
+The structural map must preserve the decision and observation point, active
+support, goal classification and inverse native output map. Unknown external
+continuations remain typed unknowns. For a cyclic fixed controller, equality of
+the bound equations plus transience gives a unique local response; sharing its
+sparsity pattern does not share a numeric factorization. Identical source loop
+text also saves no work by itself: independent coefficient and successor-value
+leaves still need binding-specific evaluation unless another justified relation
+compresses them. The [policy boundary contract](policies.md#bound-role-ports)
+keeps global properness separate.

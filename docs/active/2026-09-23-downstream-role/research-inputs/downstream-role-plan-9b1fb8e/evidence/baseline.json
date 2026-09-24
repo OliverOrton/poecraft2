@@ -1,0 +1,177 @@
+{
+  "reviewed_main": "9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7",
+  "parent": "8ac4c72de5b35a4d7080ebbdd8b69983af7e6772",
+  "runtime_change_in_G0": false,
+  "G0": {
+    "source_kind": "recorded diagnostic, not remeasured",
+    "requested_finish_s": 35,
+    "native_watchdog_s": 45,
+    "host_watchdog_s": 55,
+    "solve_wall_ms": 37448.6933,
+    "policy_cost": 5218.040949685988,
+    "independent_evaluation": "matched",
+    "reforge_requests": 460571,
+    "reforge_hits": 406167,
+    "reforge_misses": 54404,
+    "reforge_retained_entries": 445,
+    "reforge_build_ns": 5024102400,
+    "pair_bucket_exclusion_ns": 34900,
+    "pair_frontier_ns": 4047300,
+    "pair_pool_totals": [
+      92700,
+      94700
+    ],
+    "family_status": "postconstruction candidate; no preconstruction guard or useful amortization established"
+  },
+  "g0_provenance": {
+    "report": "out/cross-binding/G0/root-run-timing/cases/g0-a4-original-root.json",
+    "report_sha256": "fc34b3d365367c2af3fb6a3afc1f8c1fdbbb7d2ddc245540a6ccc65ac31ae3ea",
+    "trace": "out/cross-binding/G0/root-fracture.jsonl",
+    "trace_sha256": "91473bd049fd4ff740a5a60dd2957360b6f38712e1b832a980f821c523efe783"
+  },
+  "ordinary_references_not_new_runs": {
+    "C4_cost": 3746.1319409485764,
+    "C5_first_policy_cost": 85558.70618560436,
+    "Regalia_exact": 65.60036144971359,
+    "Ring_two_bounded_cost": 149977.25092497544,
+    "accepted_historical_C4_max_call_s": 2.643
+  },
+  "CI": {
+    "Windows": {
+      "run_id": 35950304576,
+      "job_id": 107477205260,
+      "last_observed_status": "completed",
+      "last_observed_test_stage": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35950304576"
+    },
+    "Solver_knowledge": {
+      "run_id": 35950304605,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/35950304605"
+    }
+  },
+  "sources": {
+    "R1": {
+      "title": "Current branch, reviewed pin",
+      "url": "https://github.com/OliverOrton/poecraft2/commit/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7",
+      "inspection": "Branch metadata read; source time is not a review-time claim."
+    },
+    "R2": {
+      "title": "Working rules",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/AGENTS.md",
+      "inspection": "Whole file read."
+    },
+    "R3": {
+      "title": "Current handoff",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/HANDOFF.md",
+      "inspection": "Whole file read; no retained G0 runtime changes."
+    },
+    "R4": {
+      "title": "G0 record",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/docs/active/2026-09-23-cross-binding/README.md",
+      "inspection": "Whole record read; scoped timing and negative result."
+    },
+    "R5": {
+      "title": "G0 native evidence",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/docs/active/2026-09-23-cross-binding/evidence/g0-native-discovery.json",
+      "inspection": "Read root identity/totals and relevant discovery excerpts; full JSON display truncated."
+    },
+    "R6": {
+      "title": "Ordinary successor queue",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/engine/src/solver_solve_expand.cpp#L2710-L2893",
+      "inspection": "Read variant pricing, conditional fringe and shared-kernel suppression."
+    },
+    "R7": {
+      "title": "Expansion and admission",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/engine/src/solver_solve_expand.cpp#L3100-L3800",
+      "inspection": "Read source pop/expanded timing, row generation and append; source excerpts, not a whole-file audit."
+    },
+    "R8": {
+      "title": "Preparation and delayed automatic candidates",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/engine/src/solver_solve_expand.cpp#L520-L735",
+      "inspection": "Read native gates, incremental deferral and statewise bound inputs."
+    },
+    "R9": {
+      "title": "Focused policy fringe",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/engine/src/solver_solve_focused.cpp#L247-L384",
+      "inspection": "Read policy-dependent walk and heuristic priority."
+    },
+    "R10": {
+      "title": "Focused grouping and quotas",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/engine/src/solver_solve_focused.cpp#L1050-L1190",
+      "inspection": "Read per-class/quota work selection; no state/value equivalence."
+    },
+    "R11": {
+      "title": "Actual scheduling signature",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/engine/src/solver_solve_quotient.cpp#L466-L510",
+      "inspection": "Read literal masks, capacity, context, four junk vectors and goal-member tokens."
+    },
+    "R12": {
+      "title": "Sparse Bellman cache",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/engine/src/solver_solve_bellman.cpp#L389-L497",
+      "inspection": "Read identical-payload expectation cache, updates and >=1024 transition condition."
+    },
+    "R13": {
+      "title": "Existing exact payload sharing",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/engine/src/solver_solve_expand.cpp#L2510-L2730",
+      "inspection": "Read stored-kernel/effect reuse with separate row ownership."
+    },
+    "R14": {
+      "title": "Canonical representation mathematics",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/docs/solver/mathematics/representations.md#role-parametric-computation",
+      "inspection": "Read existing equivariance, parameter-binding and guarded-specialization argument."
+    },
+    "R15": {
+      "title": "Transitions and reforge contract",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/docs/solver/transitions-reforge.md",
+      "inspection": "Whole file read; completion, logical work, cache and G0 scope."
+    },
+    "R16": {
+      "title": "Scheduler contract",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/docs/solver/scheduling-bellman.md",
+      "inspection": "Whole file read; historical paragraphs remain historical. Current runtime supersedes old comparative status."
+    },
+    "R17": {
+      "title": "Experiment/tooling map",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/docs/foundation/tooling.md",
+      "inspection": "Read ordinary runner, typed identity, worker probe, trace and wait contracts."
+    },
+    "R18": {
+      "title": "Existing six-case corpus",
+      "url": "https://github.com/OliverOrton/poecraft2/blob/9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7/docs/active/2026-09-23-role-parametric/corpus/manifest.json",
+      "inspection": "Whole manifest read; native-retention reuse, 240 profile, restart/imprint off."
+    },
+    "P1": {
+      "title": "SPUDD: Stochastic Planning using Decision Diagrams (Hoey et al., UAI 1999)",
+      "url": "https://www.cs.toronto.edu/~cebly/Papers/spudd.pdf",
+      "inspection": "Primary paper; text on ADD subgraph sharing and discounted-MDP model read. No benchmark speedup transferred to poecraft2."
+    },
+    "P2": {
+      "title": "Parameter Synthesis in Markov Models: A Gentle Survey (Jansen, Junges, Katoen, 2022)",
+      "url": "https://arxiv.org/html/2207.06801v1",
+      "inspection": "Primary survey; parametric instantiation and graph-preserving versus topology-changing conditions read."
+    },
+    "P3": {
+      "title": "Relativized Options: Choosing the Right Transformation (Ravindran and Barto, 2003)",
+      "url": "https://www.cse.iitm.ac.in/~ravi/papers/ICML03.pdf",
+      "inspection": "Primary paper; relative representations and distinction from approximate equivalence read."
+    },
+    "P4": {
+      "title": "Bounded Real-Time Dynamic Programming (McMahan, Likhachev, Gordon, 2005)",
+      "url": "https://www.cs.cmu.edu/~ggordon/mcmahan-likhachev-gordon.brtdp.pdf",
+      "inspection": "Primary SSP paper; statewise bounds, focused work, and explicit policy fallback conditions read. No new BRTDP implementation selected."
+    }
+  },
+  "review_execution": {
+    "native_builds": 0,
+    "native_solves": 0,
+    "wasm_runs": 0,
+    "simulations": 0,
+    "repository_edits": 0,
+    "external_container_source_download": "one attempted batch failed DNS; analysis used connector source instead",
+    "abstract_checks": "checks/results.json"
+  },
+  "final_main_recheck": "9b1fb8ee36a41eab84ea9c6501d5e0266d209ab7"
+}
