@@ -219,6 +219,19 @@ programme's materiality gate, and part of locator service remains unattributed.
 No runtime treatment, capability or stronger root policy was retained. Exact
 closure and broader heterogeneous preparation remain open.
 
+The [cost-only continuation L0 investigation](../active/2026-09-24-cost-only-continuation/README.md)
+then tested an economic proposal boundary instead of another preparation
+cache. A fresh unattended A5 Calculator control returned the same
+C85558.70618560436 graph as its earlier first-policy Finish. Source-matched
+native queries ran before Finish on that A5 controller and on the known
+C3746.1319409485764 A4 controller. Among their actual compiler-authored
+Exalt/Annul/Scour decision entries, the current clean one-goal-missing guard
+admitted zero in both cases. An initial A4 zero came from an uncalled query
+and was excluded. No local option or complete replacement graph was built;
+L1–L3 stopped at the entry gate. This is a scoped missing premise for the
+selected clean-entry family, not evidence that all cost-only continuations or
+role-relative proposals are unhelpful.
+
 The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
 applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)
 to explicit Finish and frozen request export, and attributes setup latency. Its activation

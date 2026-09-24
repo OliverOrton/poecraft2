@@ -1,0 +1,24 @@
+{
+  "schema": "ci_snapshot_v1",
+  "head": "5cab52218dabdd22458b59881e01f038bdb4b5a3",
+  "observed_date": "2026-09-24",
+  "runs": [
+    {
+      "id": 36024875603,
+      "workflow": "Windows",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/36024875603"
+    },
+    {
+      "id": 36024875553,
+      "workflow": "Solver knowledge",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/36024875553"
+    }
+  ],
+  "qualification_scope": "Repository hosted checks for this head; not a new economic experiment or universal native proof."
+}

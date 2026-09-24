@@ -1,0 +1,48 @@
+{
+  "schema": "abstract_contract_check_results_v1",
+  "scope": "Exact-rational finite-policy equations and simplified lifecycle examples; NOT native mechanics, solver performance, formal verification or a runtime feature test.",
+  "tests_run": 26,
+  "failures": 0,
+  "errors": 0,
+  "passed": true,
+  "test_names": [
+    "__main__.ContractTests.test_01_one_use_differs_from_recurring_replacement",
+    "__main__.ContractTests.test_02_old_occupancy_is_not_exact_replacement_saving",
+    "__main__.ContractTests.test_03_matrix_performance_difference",
+    "__main__.ContractTests.test_04_paid_prefix_is_not_free_entry",
+    "__main__.ContractTests.test_05_heterogeneous_binding_can_change_best_action",
+    "__main__.ContractTests.test_06_same_decision_can_still_have_different_native_value",
+    "__main__.ContractTests.test_07_missing_positive_tail_refuses",
+    "__main__.ContractTests.test_08_zero_support_does_not_require_imaginary_tail",
+    "__main__.ContractTests.test_09_missing_mass_cannot_be_normalized_away",
+    "__main__.ContractTests.test_10_joint_outcome_cannot_be_double_counted",
+    "__main__.ContractTests.test_11_local_terminating_regions_can_cycle_globally",
+    "__main__.ContractTests.test_12_zero_escape_changes_properness",
+    "__main__.ContractTests.test_13_exposure_is_not_additive_spend",
+    "__main__.ContractTests.test_14_upper_estimate_cannot_prove_candidate_non_improving",
+    "__main__.ContractTests.test_15_complete_cheaper_artifact_is_adopted_as_a_bundle",
+    "__main__.ContractTests.test_16_unverified_candidate_cannot_replace_fallback",
+    "__main__.ContractTests.test_17_success_flags_do_not_hide_failed_mass",
+    "__main__.ContractTests.test_18_changed_context_refuses",
+    "__main__.ContractTests.test_19_less_expensive_than_donor_is_not_better_than_current_winner",
+    "__main__.ContractTests.test_20_expensive_candidate_does_not_degrade_base",
+    "__main__.ContractTests.test_21_aggregate_memory_is_not_per_child_limit",
+    "__main__.ContractTests.test_22_releasing_scratch_does_not_refund_work",
+    "__main__.ContractTests.test_23_unchanged_wakeup_does_not_rearm_one_wave",
+    "__main__.ContractTests.test_24_early_finish_does_not_measure_later_quality",
+    "__main__.ContractTests.test_25_complete_law_price_depends_on_actual_resources",
+    "__main__.ContractTests.test_26_no_graph_means_no_executable_witness"
+  ],
+  "illustrative_values": {
+    "base_retry": "10",
+    "one_use_then_base": "7",
+    "recurring_replacement": "4",
+    "actual_difference": "-6",
+    "incorrect_old_occupancy_difference": "-30"
+  },
+  "recorded_arithmetic_not_performance": {
+    "selected_scan_seconds": "3.174",
+    "all_partition_seconds": "6.661",
+    "sum_seconds": "1967/200"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "schema": "sha256_package_manifest_v1",
+  "root": "poecraft2_cost_only_continuation_plan_5cab522",
+  "reviewed_main": "5cab52218dabdd22458b59881e01f038bdb4b5a3",
+  "files": [
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 18354,
+      "sha256": "7d50af8ce8d524656de6a005956246e0dc4246b7a9d770675ddb8f75b7e1f153"
+    },
+    {
+      "path": "DATA_REQUEST.md",
+      "bytes": 3438,
+      "sha256": "07b40dd29d3883a04892b790988d40c9acb2f1993702cdbab49b737d524e52eb"
+    },
+    {
+      "path": "DOCS_AND_RESEARCH.md",
+      "bytes": 3208,
+      "sha256": "a741c1931822ca394b06e4ceecbe918b996ecf48a4cf3f68f82cb19915242f97"
+    },
+    {
+      "path": "MATHEMATICS.md",
+      "bytes": 9254,
+      "sha256": "50aa39b8400e7b4829c01ab6426382e448848d1293c9b3afe9562440b4e761cf"
+    },
+    {
+      "path": "MILESTONES.md",
+      "bytes": 6901,
+      "sha256": "6d4c85b44666b640a5659926e589382161224bc0ab66d35ae87d2ea5d75d4ffa"
+    },
+    {
+      "path": "NATIVE_DESIGN.md",
+      "bytes": 8122,
+      "sha256": "c1916070c18175accbf94dba9b0fde24a3ab57dd5cf18a7e7345029e1da26030"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3542,
+      "sha256": "f827755830d07738013f66e0fa7ad0b146b63f32ff9dafec2ed5771286c2efbc"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 7727,
+      "sha256": "f2a9fd28e3bba4e86ca55992dbeb237b315ef67b32187d6971c14171df9282e4"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 8172,
+      "sha256": "75b21430f51629c4dea70aba3b7660f591d3515667e6dc283dedc09dcbbbf94a"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 7681,
+      "sha256": "21ed1f92a91881b39ede38c239074e7d25654c5ab64bef543e64570a5d006e19"
+    },
+    {
+      "path": "checks/check_contracts.py",
+      "bytes": 9991,
+      "sha256": "da06f093e778852fd84bf5d611ade232c15bf412c119c38fa90b673f0fa640a0"
+    },
+    {
+      "path": "checks/results.json",
+      "bytes": 2726,
+      "sha256": "4249972adcbf86ffe052b1d99efb5cb40183869d0dfe49f7938d2ea427f3d879"
+    },
+    {
+      "path": "evidence/baseline.json",
+      "bytes": 2667,
+      "sha256": "e304a480db55b08c4477d44893650057e25e9613950c816f363fc8c6ba71b402"
+    },
+    {
+      "path": "evidence/ci.json",
+      "bytes": 732,
+      "sha256": "288d5d96b812e7ae817e4f76804772d374412079a6970ed6c9d2ef40dcb87cee"
+    }
+  ]
+}

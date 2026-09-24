@@ -59,6 +59,20 @@ an unfinished pass may leave this field at zero despite strict work before
 Finish. The [S0 evidence](../active/2026-09-24-strict-preparation/README.md)
 keeps those domains and the unresolved remainder distinct.
 
+<a id="cost-only-entry-query-scope"></a>
+### Entry-query populations
+
+The existing `ordinary_entry_query` counters describe compiler-authored
+decision requests and physical entries visited by a completed native query.
+`unsupported_operation` is a declaration count; `visited`, hidden-context,
+unavailable-tail and combined clean-guard refusals are entry populations. A
+dirty nonempty selection sample is not a clean one-goal-missing shortlist.
+`queries: 0` means the query was not called, not that it proved zero eligible
+entries. The [L0 investigation](../active/2026-09-24-cost-only-continuation/README.md)
+discarded an A4 zero from the wrong hook and used completed pre-Finish queries
+for both scoped eligibility findings. Those diagnostic source hooks were
+removed; ordinary telemetry remains passive under the default activation.
+
 Fewer rows before a common timeout can reflect preparation consuming the budget. Claim avoided work only against a shared target or an otherwise suitable matched comparison. A larger local lower may leave the complete model unchanged when another action/family remains limiting.
 
 ## Context-efficient use

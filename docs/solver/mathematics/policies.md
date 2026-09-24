@@ -759,3 +759,23 @@ its complete bound policy and output graph pass the existing upper authority.
 Sharing a required-field preparation step under the separate
 [dependency contract](representations.md#strict-preparation-sharing) does not
 transfer any selected action, value or executable upper between bindings.
+
+<a id="cost-only-entry-service"></a>
+### A cost-only proposal at an actual verified entry
+
+A verified proper controller is a feasible root-cost witness while a proposed
+replacement is not. At an actual reached item/control entry, an almost-surely
+exiting local program with full paid cost \(g\) and exit law \(H\) has one-use
+then-old value \(g+HV_\pi\) only for compatible old continuations. Replacing
+the decision on every return changes the recurrence: a cost-one base attempt
+with self-return probability 0.9 costs 10, while a cost-two attempt with
+self-return probability 0.5 costs 7 for one use then the base but 4 when
+repeated. Old visits times local advantage does not evaluate that new policy.
+
+The emitted paid program, old router and every positive-mass exit must form a
+complete recurring original-root controller. Its independent native evaluation
+decides properness, cost and adoption; an upper estimate or an omitted proposal
+does not prove non-improvement. The [L0 cost-only query](../../active/2026-09-24-cost-only-continuation/README.md)
+found no eligible clean entry in its A5/A4 controllers, so no new composed
+policy or native correspondence was tested there. This is a conditional
+selection argument, not an additional upper or exactness claim.

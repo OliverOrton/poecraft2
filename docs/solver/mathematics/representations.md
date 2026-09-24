@@ -334,3 +334,17 @@ probabilities. Reusing the complete key, value, row or certificate by the
 requirement identity alone would violate their separate authorities. The
 [S0 strict-preparation measurement](../../active/2026-09-24-strict-preparation/README.md)
 did not retain such a sharing implementation; this is a conditional contract.
+
+<a id="cost-only-role-proposals"></a>
+### Role-relative proposals without value transfer
+
+A completion constructor may identify the missing requested goal at a real
+physical decision and bind that role to native options for the actual item.
+Its tier/member pool, blockers, suffix context, fractures, resource prices and
+control state remain binding-specific. A shared construction intention supplies
+neither equal transition laws nor equal values, a state quotient or a checked
+policy. Each emitted controller still needs its own complete original-root
+evaluation. The [cost-only L0 application](../../active/2026-09-24-cost-only-continuation/README.md)
+reached the native entry query but found no eligible clean entry in A5 or its
+one A4 contrast; it did not exercise a role-relative constructor. This leaves
+the earlier cross-binding and strict-preparation gates at their original scope.

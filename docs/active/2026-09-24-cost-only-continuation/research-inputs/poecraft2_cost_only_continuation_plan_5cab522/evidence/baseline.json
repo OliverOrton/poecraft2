@@ -1,0 +1,62 @@
+{
+  "schema": "poecraft2_cost_only_continuation_review_v1",
+  "reviewed_main": "5cab52218dabdd22458b59881e01f038bdb4b5a3",
+  "parent": "9032fee114aea3481482c57cdd30248cdc29a5bc",
+  "current_change": "documentation/evidence/conditional mathematics; no retained runtime pilot",
+  "current_record": "docs/active/2026-09-24-strict-preparation/README.md",
+  "recorded_s0": {
+    "scope": "three A4 original-profile diagnostics, not treatment comparisons",
+    "cost_chaos": "3746.1319409485764",
+    "expanded_states": 7213,
+    "rows": 135519,
+    "graph_nodes": 811,
+    "graph_edges": 2200,
+    "observation_input_ms": "7.238",
+    "observation_scan_ms": "5.774",
+    "fixed_point_active_ms": "70.796",
+    "selected_closure_scans_seconds": "3.174",
+    "partition_node_preparation_seconds": "6.661",
+    "sum_of_these_two_seconds": "9.835",
+    "progress_peak_bytes": 913534861,
+    "aggregate_limit_bytes": 1073741824,
+    "source_workload_optimized_here": false
+  },
+  "recorded_a5_early_policy": {
+    "receipt": "docs/active/2026-09-22-ordinary-capability/evidence/M3-final-CB01.json",
+    "probe_mode": "finish",
+    "manual_intent": true,
+    "unattended_240_second_result": false,
+    "cost_chaos": "85558.70618560436",
+    "expected_primitive_actions": "8407.202314771383",
+    "lower": "405.3694021063399",
+    "source_value": "358209179.6640102",
+    "report": "out/ordinary-capability/M3-final-CB01/report.json",
+    "sha256": "1c52f66a3e44b4e534b91b5f996975d0e7dfcc1764ff045d22587a0d01e9bfb5"
+  },
+  "source_confirmed": {
+    "ordinary_mode_has_this_dirty_wave": false,
+    "public_dirty_mode": "DirtyGuidedStatic",
+    "current_clean_entry_gate": [
+      "DirtyExecutionCost",
+      "DirtyExecutionCount"
+    ],
+    "graph_local_wave_prerequisite": "post-service boundary of protected Essence attempt plus compatible root-only winner and other guards",
+    "current_max_clean_shortlist": 3,
+    "selected_family": "TemporaryBenchRepeat / AutomaticCandidateKind::CannotRoll with native complete source observation",
+    "whole_root_check_required": true
+  },
+  "selected_hypothesis": "A bounded cost-only late-entry wave can improve a real ordinary incumbent within unchanged profile; unimplemented and unproven.",
+  "missing_data": [
+    "current unattended A5 final result",
+    "actual eligible affordable clean native entries",
+    "a cheaper complete recurring root candidate",
+    "live service affordability and source-matched product outcome"
+  ],
+  "review_execution": {
+    "repository_modified": false,
+    "native_build_or_solve_run": false,
+    "wasm_run": false,
+    "simulator_run": false,
+    "abstract_checks": "checks/results.json"
+  }
+}

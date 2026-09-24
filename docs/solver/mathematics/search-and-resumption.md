@@ -412,3 +412,22 @@ A persistent session's elapsed prefix includes intervening work and gaps, so
 successive prefix snapshots cannot be added as independent phases. The
 [S0 attribution](../../active/2026-09-24-strict-preparation/README.md)
 records the measured scope without assigning its remainder to reusable work.
+
+<a id="cost-only-service-readiness"></a>
+### Verified-base readiness and a bounded proposed service
+
+A post-incumbent candidate starts from an actually retained compatible graph,
+certificate, physical entry and current resource allowance. A mode setting or
+earlier proposal attempt is not a substitute for those premises. During a
+bounded private wave, only a complete independently checked graph/root/value
+bundle can replace the current verified winner; refusal, cancellation and
+Finish leave that owned witness available through normal publication. The
+finite wave bound limits speculative work but proves neither useful final
+quality nor search-order fairness. Those remain measured properties of an
+implemented schedule.
+
+The [L0 native queries](../../active/2026-09-24-cost-only-continuation/README.md)
+used two actual pre-Finish verified controllers. Both had zero eligible clean
+entries under the selected guard, so no service wave was installed. A zero
+counter from an uncalled query would not establish that result; the first A4
+contrast made that distinction explicit before the corrected query ran.
