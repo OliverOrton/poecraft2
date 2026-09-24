@@ -114,6 +114,7 @@ properness/compiler/evaluator checks. The [C3 empty-five result](../active/2026-
 improves the verified upper while keeping the lower fixed. This application does
 not promote the general claim's open status or assert native optimality.
 - 2026-09-15 — `open` — Codex, conditional elaboration: [boundary response](mathematics/policies.md#boundary-response) eliminates a transient interior but still requires global boundary properness, complete terminal/reward categories and native semantic matching. Sparse response reuse and duration generating functions are research, not new implemented summaries or issuers. Original statement and broad correspondence status are preserved.
+- 2026-09-23 — `open` — Codex, conditional cross-binding note: [binding-dependent decisions](mathematics/policies.md#binding-dependent-policy) require actual coefficients and whole-controller properness even when a structural graph is shared. The G0 native discovery retained no template or controller; general program correspondence remains open.
 
 
 <a id="clm-0005"></a>
@@ -135,6 +136,13 @@ not promote the general claim's open status or assert native optimality.
 
 **History:**
 - 2026-09-06 — `open` — Drafted by ChatGPT as source-linked research input. Explicit argument/counterexample supplied; local correspondence and repository acceptance remain to be reviewed. No independent reviewer or native rerun is claimed.
+
+**Cross-binding disposition (2026-09-23):** The [parameter-bearing computation
+argument](mathematics/representations.md#role-parametric-computation) is not a
+fixed-instance quotient assertion. The [A4 native discovery](../active/2026-09-23-cross-binding/README.md#g0-native-discovery)
+matches two postconstruction bucket conflict graphs while native weights differ;
+it neither satisfies the action-wise equality premise of this claim nor closes
+GAP-02. Claim status and prior counterexample are unchanged.
 
 <a id="clm-0006"></a>
 ## CLM-0006 — Uniform lower and upper aggregation require complete member coverage

@@ -182,6 +182,21 @@ declared 240-second Finish, not a claim that heterogeneous role continuations
 or stronger policies are impossible. Lower and exact-closure authorities are
 unchanged.
 
+The [cross-binding G0 investigation](../active/2026-09-23-cross-binding/README.md)
+then looked directly at distinct completed native reforge-cache misses. The
+ordinary A4 search reached two fractured-prefix bindings with matching 16-bucket
+conflict graphs after swapping role labels, but different native pool totals
+(92,700 and 94,700). This is a concrete structural correspondence candidate,
+not equality of their numeric laws. In a 35-second original-root diagnostic,
+the first two rows spent 16.2/17.2 microseconds on bucket construction,
+0.8/0.7 on exclusion construction, and 1.906/2.142 milliseconds in their
+weighted frontiers. The observed local structure work is below one percent of
+those frontier times; a safe preconstruction guard and useful frontier template
+were not established. G0 stopped before G1 implementation, so no qualified
+cross-binding reuse, root-cost improvement, new lower or exact closure is
+claimed. The conditional [parameter-bearing argument](mathematics/representations.md#role-parametric-computation)
+remains available for a future measured consumer.
+
 The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
 applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)
 to explicit Finish and frozen request export, and attributes setup latency. Its activation

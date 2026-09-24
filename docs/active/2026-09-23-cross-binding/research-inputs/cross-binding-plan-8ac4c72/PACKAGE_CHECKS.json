@@ -1,0 +1,22 @@
+{
+  "scope": "Package validation, not native repository qualification",
+  "reviewed_main": "8ac4c72de5b35a4d7080ebbdd8b69983af7e6772",
+  "payload_files_before_manifest_and_checks": 13,
+  "json_parse_pass": [
+    "checks/results.json",
+    "evidence/baseline.json"
+  ],
+  "python_ast_parse_pass": [
+    "checks/check_concepts.py"
+  ],
+  "local_document_links_checked": 13,
+  "missing_local_links": [],
+  "abstract_tests": {
+    "run": 28,
+    "failures": 0,
+    "errors": 0
+  },
+  "native_build_solve_or_wasm_run": false,
+  "repository_modified": false,
+  "main_rechecked_unchanged": true
+}

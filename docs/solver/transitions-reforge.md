@@ -48,6 +48,16 @@ Inapplicable, unsupported, resource-interrupted, canceled, and invalid are diffe
 
 Cache reuse requires the complete relevant observation identity. A shared action name or source hash without collision-checked semantic equality is insufficient. Selected reforge evaluator controls and versions must also remain visible in comparisons.
 
+The current reforge cache checks the complete preserved-base observation after
+locating `(action_index, preserved_base_hash, goal_progress_gated)`. Wiped-only
+entry differences therefore already share one completed kernel. The
+[cross-binding G0 discovery](../active/2026-09-23-cross-binding/README.md#g0-native-discovery)
+found different preserved fractured roles among ordinary A4 misses. Their
+coarse Chaos rows use `v1_raw`; equal bucket conflict graphs observed after
+construction did not provide a preconstruction guard or a reusable weighted
+frontier. No cross-binding template or new cache is retained. The existing
+logical work cap and row completion authority are unchanged.
+
 ## Source basis
 
 This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/transitions-reforge.md) and [benchmarking.md](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/benchmarking.md), [2026-09-05-native-applied-reforge-preparation-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md). Claim IDs are registered in [the ledger](claims.md); each history states its acceptance basis. The [backbone integration](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) is complete. Remaining native correspondence is scoped in [research](research.md#open-obligations); an argument link does not confer runtime authority.

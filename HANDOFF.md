@@ -1,5 +1,13 @@
 # Handoff
 
+Oliver selected the [G0–G4 cross-binding investigation](docs/active/2026-09-23-cross-binding/README.md).
+G0 found different A4 fractured-role cache misses with matching postconstruction
+bucket graphs but no measured high-impact preconstruction reuse; the bounded
+gate stopped before a template or search change. The diagnostic source was
+removed. Conditional mathematics and compact evidence are retained; solver,
+WASM, browser, ordinary caps and exact/lower authority are unchanged. No active
+implementation boundary remains. Oliver selects any further direction.
+
 Oliver's selected [role-parametric continuation chunk](docs/active/2026-09-23-role-parametric/README.md)
 is complete under its two-variant stop rule. Six native-feasible clean-root cases
 and exact tier/member evidence are retained. Multi-role protected-repeat stops

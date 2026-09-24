@@ -1,0 +1,76 @@
+{
+  "schema": "research_package_manifest_v1",
+  "reviewed_main": "8ac4c72de5b35a4d7080ebbdd8b69983af7e6772",
+  "files": [
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 18319,
+      "sha256": "7de91abab85e8cfb6f5b64fd1aaef9d5ffd189c2827ae2fbc8c4f8e1d63766bb"
+    },
+    {
+      "path": "DATA_REQUEST.md",
+      "bytes": 2716,
+      "sha256": "14ff3492dd69df302b8f940a076299822e7cd2141fa7f24356a1a45cb077e912"
+    },
+    {
+      "path": "DOC_MAINTENANCE.md",
+      "bytes": 3182,
+      "sha256": "4fc6dbe1f7ac5226e6ab33f155196852386dad2435de085aa12d686e39c61445"
+    },
+    {
+      "path": "MATHEMATICS.md",
+      "bytes": 10679,
+      "sha256": "09ca3d79589f82da1de5aca747dbf1f11507fe118cff1c26ccb182a792426a1c"
+    },
+    {
+      "path": "MILESTONES.md",
+      "bytes": 7267,
+      "sha256": "ac8b514b2a8361b557bf83f3a38eb5fb9ed9541a3135be79f4772fd9a269a7cd"
+    },
+    {
+      "path": "NATIVE_DESIGN.md",
+      "bytes": 8874,
+      "sha256": "9de11b6f07cd9bdac5c84c06faccc48d4bf16ecaf79e03744863eb8bf34fdb90"
+    },
+    {
+      "path": "PACKAGE_CHECKS.json",
+      "bytes": 590,
+      "sha256": "250b3fbdb02c0b2a2ed7ce6c3b7753ab37cd72f8d1db85cf966893826ae2575b"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2641,
+      "sha256": "f3f1780fac61f8ba394e34911138794063f07d95d47e51e54f53641f823a63e8"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 9605,
+      "sha256": "4631259d564626e927b5de2a1bf6efcdc22ea00320a59b59327230227ab513ac"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 6124,
+      "sha256": "00e12d45c8b164995a28bd3c87a90b8e1c01e70eadf61bcdbbe5d7d35eddee8e"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 6588,
+      "sha256": "8f4e6a1efe95998abd2f15e316084baa45e2a50112d07914c4986582c27b167d"
+    },
+    {
+      "path": "checks/check_concepts.py",
+      "bytes": 12292,
+      "sha256": "ab02e83f9050d1f6dd8a13bd44aec218b8791fcfabc39709f830c179f9f2635a"
+    },
+    {
+      "path": "checks/results.json",
+      "bytes": 2877,
+      "sha256": "0f49a5c38b42bca5ea24634299856208f4e3557786684f758cd1f338c2d34550"
+    },
+    {
+      "path": "evidence/baseline.json",
+      "bytes": 2719,
+      "sha256": "0d0af1050da81105bf380ad5754a3ada788957c99e8d6efc00fa93782cf29dab"
+    }
+  ]
+}

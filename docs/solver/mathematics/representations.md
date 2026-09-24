@@ -228,3 +228,58 @@ The [old header](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064
 and [old fixture](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/engine/tests/test_solver_solve.cpp)
 remain reproducible from that Git revision; no native equality theorem followed
 from the descriptors. The separately used fragment verifier was retained.
+
+<a id="role-parametric-computation"></a>
+## 9. Cross-binding computation retains the binding
+
+Fixed-instance symmetry, equivariance across relabeled instances, and a shared
+parameterized computation make different claims. A fixed-instance automorphism
+must preserve the actual goal, observations, legal actions, rewards and transition
+law. Relabeling the *whole* instance, including its coefficients, can instead
+give \(V_{g\theta}(gs)=V_\theta(s)\). It does not give
+\(V_\theta(gs)=V_\theta(s)\) when \(\theta\) is asymmetric. A common computation
+\(C(\theta)\) shares operations while retaining different numerical outputs.
+Neither relation makes states with different native bindings one scalar class.
+
+For a fixed proper finite controller, \(V_\theta=c_\theta+Q_\theta V_\theta\).
+Its sparse equation pattern can stay fixed while coefficients, values and best
+actions change. For example, two draws without replacement from three distinct
+choices of weights \(a,b,j>0\) give probability
+\[
+\frac{a}{a+b+j}\frac{b}{b+j}
++\frac{b}{a+b+j}\frac{a}{a+j}
+\]
+of drawing both first choices. The arithmetic pattern is common, while weights
+\((3,2,1)\) and \((1,2,3)\) give \(7/12\) and \(3/20\). This toy is not the
+native reforge recurrence. The [received derivation](../../active/2026-09-23-cross-binding/research-inputs/cross-binding-plan-8ac4c72/MATHEMATICS.md)
+states its finite-model premises and limits.
+
+Ragged tier vectors are legitimate binding inputs. Summing member weights for a
+chosen outcome class is valid only if every aggregated member has the same
+relevant exclusions, effects, observation and continuation meaning for that
+computation. Equal totals alone lose future distinctions: with future costs
+\((0,100)\), weight mixtures \((1,9)\) and \((9,1)\) both total ten but have
+expectations 90 and 10. Required level, literal identity, persistent flags and
+support zeros can force separate structure or refusal. The [selected-controller
+requirements](#selected-controller-requirements) and [restricted action-scope
+upper](#mapping) still apply.
+
+<a id="guarded-specialization"></a>
+### Guarded specialization argument
+
+Let a finite acyclic template contain the native recurrence's operations,
+support guards and output ports. For each admitted binding, require actual native
+leaf coefficients, the same recurrence step at each internal node, every active
+support and branch guard, and an inverse output map to the correct physical
+successors, rewards and control observations. Topological induction then makes
+each specialized output equal to the corresponding native recurrence output in
+the mathematical model. For cyclic continuation, the bound equations and a
+proper transient solution are additional premises. A matching graph observed
+after two cold builds does not prove the guard for future inputs. Stored-double
+rounding and publication remain under [numerical closure](numerical-closure.md).
+
+The [G0 native discovery](../../active/2026-09-23-cross-binding/README.md#g0-native-discovery)
+found unequal A4 fractured-role coefficients and matching bucket conflict graphs
+for two cache misses. It did not establish a preconstruction guard, a reusable
+template, equal completed laws or material amortization. The prior pair-stop and
+same-entry memo negatives remain scoped to their own implementations.

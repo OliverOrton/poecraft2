@@ -718,3 +718,23 @@ qualification remain in the programme's living record.
 The candidate-continuation lifecycle can retain partial construction work without granting it upper authority. The archive of released-candidate reclamation records a case where a refused candidate retained memory and suppressed ordinary work; fixing that lifecycle restored useful policy discovery. That is a progress/performance finding, not a different upper theorem. [Reclamation evidence](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md).
 
 [CLM-0002](../claims.md#clm-0002), [CLM-0003](../claims.md#clm-0003), and [CLM-0004](../claims.md#clm-0004) hold the reusable statements. [GAP-03](../research.md#gap-03) and [GAP-05](../research.md#gap-05) retain the general native correspondence and numerical reconciliation obligations. The linked native applications establish only their recorded request and controller scopes; they do not close those general obligations.
+
+<a id="binding-dependent-policy"></a>
+### Binding-dependent decisions and stopped attempts
+
+A common decision graph does not carry one policy choice across unequal
+bindings. An attempt costing one with identical-state retry probability
+\(1-p\) costs \(1/p\) to finish when \(p>0\). Against a guaranteed cost-20
+finish, \(p=1/5\) favors retry and \(p=1/100\) favors the guaranteed action.
+Each actual binding needs its own probabilities, rewards, action choice and
+properness check. Expected primitive count is a separate reward from priced
+cost; changing weights need not change both in the same way.
+
+For one complete physical attempt and retry-equivalence set \(R\), let a stop
+set \(T\) map an outcome \(x\) to retry exactly when \(x\in R\setminus T\).
+If \(R\cap T_1=R\cap T_2\), both stop sets produce the same normalized
+outcome map, provided entry, reward, terminal and admission rules are otherwise
+unchanged. This sufficient relation explains how extra named stops can leave a
+kernel unchanged. The prior A4 aggregate of 828 additional collapses does not
+identify each candidate's cause. The [received argument](../../active/2026-09-23-cross-binding/research-inputs/cross-binding-plan-8ac4c72/MATHEMATICS.md)
+keeps that observation distinct from parameterized transition reuse.

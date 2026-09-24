@@ -1,0 +1,90 @@
+{
+  "schema": "cross_binding_review_projection_v1",
+  "reviewed_main": "8ac4c72de5b35a4d7080ebbdd8b69983af7e6772",
+  "commit_title": "Document role-parametric native pilot and negative result",
+  "parent": "a04ccac571573e4aca2403113d2a47c903da8af8",
+  "retained_runtime_change": false,
+  "source": "docs/active/2026-09-23-role-parametric/evidence/pilot-comparison.json",
+  "status": "recorded_native_evidence_not_remeasured",
+  "a4": {
+    "cost": 3746.1319409485764,
+    "lower": 198.8334996747695,
+    "nodes": 811,
+    "edges": 2200,
+    "graph_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+    "baseline": {
+      "considered": 96491,
+      "eligible": 43301,
+      "collapsed": 960,
+      "selected": 591,
+      "protected_attempt_ns": 3071372700,
+      "protected_normalization_ns": 13953603400,
+      "solve_wall_ms": 240872.7181,
+      "total_wall_ms": 243781.3038,
+      "peak_bytes": 925009530
+    },
+    "pair_stop": {
+      "considered": 105059,
+      "eligible": 44129,
+      "collapsed": 1788,
+      "selected": 591,
+      "protected_attempt_ns": 3121273400,
+      "protected_normalization_ns": 14453559200,
+      "peak_bytes": 925009530
+    },
+    "same_attempt_memo": {
+      "considered": 96491,
+      "eligible": 43301,
+      "collapsed": 960,
+      "selected": 591,
+      "protected_attempt_ns": 3041297400,
+      "protected_normalization_ns": 13840034100,
+      "peak_bytes": 925009530
+    }
+  },
+  "native_family_summary": {
+    "armour_prefix_positive_tier_counts": [
+      8,
+      6,
+      8
+    ],
+    "armour_prefix_t1_weights": [
+      1000,
+      1000,
+      1000
+    ],
+    "bow_prefix_positive_tier_counts": [
+      10,
+      10,
+      10
+    ],
+    "bow_each_prefix_weights": [
+      126,
+      490,
+      1120,
+      1400,
+      1400,
+      1400,
+      1400,
+      1400,
+      1400,
+      1400
+    ]
+  },
+  "missing_native_evidence": [
+    "guarded common computation across distinct unequal native bindings",
+    "naturally repeated cold structural cost after existing caches",
+    "actual cross-binding speed/memory comparison",
+    "new full-root A3/B3/B4/B5 economic comparison"
+  ],
+  "earlier_memory_trials": "source restored; no economic improvement; do not silently reapply",
+  "ci": {
+    "windows_run_id": 35940758065,
+    "knowledge_run_id": 35940758066,
+    "windows_status": "completed_success",
+    "knowledge_status": "completed_success",
+    "final_recheck": "Windows full job succeeded; test step executed. Knowledge success at current-head run listing.",
+    "windows_url": "https://github.com/OliverOrton/poecraft2/actions/runs/35940758065",
+    "knowledge_url": "https://github.com/OliverOrton/poecraft2/actions/runs/35940758066"
+  }
+}
