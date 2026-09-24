@@ -348,3 +348,12 @@ evaluation. The [cost-only L0 application](../../active/2026-09-24-cost-only-con
 reached the native entry query but found no eligible clean entry in A5 or its
 one A4 contrast; it did not exercise a role-relative constructor. This leaves
 the earlier cross-binding and strict-preparation gates at their original scope.
+
+The [A5 Eldritch repair](../../active/2026-09-24-native-boundary-repair/README.md)
+used the exact native physical source item and control state. A private abstract
+representative differed from that item and was refused as candidate initiation;
+matching its projected role was insufficient. The Exarch tier, occupied sides,
+below-tier requested modifier and dirty intermediate outcomes remain distinct
+from the clean terminal predicate. An Eldritch-side intention proposes a native
+option only for this binding and actual action envelope; it supplies no shared
+probability law, value, state quotient or authorization for another binding.

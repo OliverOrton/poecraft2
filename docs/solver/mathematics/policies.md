@@ -779,3 +779,15 @@ does not prove non-improvement. The [L0 cost-only query](../../active/2026-09-24
 found no eligible clean entry in its A5/A4 controllers, so no new composed
 policy or native correspondence was tested there. This is a conditional
 selection argument, not an additional upper or exactness claim.
+
+The [N0–N2 native boundary repair](../../active/2026-09-24-native-boundary-repair/README.md)
+separates a safe, actually reached compiler decision from the old clean-entry
+recipe. A candidate still needs the actual source item/control, an admitted
+complete native option law and compatible continuations at every positive-mass
+exit. A whole option includes setup, mandatory repetitions and cleanup; a
+primitive first action is not its complete cost or exit law. A finite prefix
+followed permanently by the old policy requires a real stage control wherever
+the same physical state can recur. The emitted Eldritch candidate instead
+replaces one decision on every return, so only whole-root recurring evaluation
+can price it. Its C37.9778 A5 improvement is a scoped executable upper witness,
+not a lower bound, action retirement, or an exactness result.

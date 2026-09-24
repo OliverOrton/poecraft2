@@ -431,3 +431,14 @@ used two actual pre-Finish verified controllers. Both had zero eligible clean
 entries under the selected guard, so no service wave was installed. A zero
 counter from an uncalled query would not establish that result; the first A4
 contrast made that distinction explicit before the corrected query ran.
+
+The [N0–N2 diagnostic](../../active/2026-09-24-native-boundary-repair/README.md)
+froze one current-run verified A5 donor and its compiler entry before constructing
+one native option family. A temporary post-verification hook completed a single
+bounded wave under the original work/memory limits, checked the complete root
+graph and kept the cheaper donor when the second candidate lost. Refused setup
+and uncovered tails were pending or incompatible proposals, not failed economic
+certificates. A production service would additionally need invocation-scoped
+activation, simultaneous resource admission, cancellation/Finish ownership and
+comparison to the current verified winner. The diagnostic source was removed
+after its gain-versus-latency gate; no live service schedule is retained.

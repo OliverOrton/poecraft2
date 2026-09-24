@@ -1,0 +1,66 @@
+{
+  "schema": "native_boundary_repair_review_v1",
+  "source_commit": "eab5c4121f9de81a54adef9694e82ea22f2efa2f",
+  "evidence_source": "docs/active/2026-09-24-cost-only-continuation/evidence/l0-cost-only-native.json",
+  "provenance": "Recorded results transcribed from pinned repository; no new native measurement",
+  "last_programme": {
+    "candidate_graphs_built": 0,
+    "runtime_changes_retained": false,
+    "scope": "clean one-goal-missing Exalt/Annul/Scour family"
+  },
+  "a5": {
+    "cost": 85558.70618560436,
+    "expected_primitive_actions": 8407.202314771383,
+    "unattended_equals_early_graph": true,
+    "worker_first_observed_verified_ms": 41259.867,
+    "native_first_verified_ms": 33962.2246,
+    "native_query_complete_observed_ms": 37332.0933,
+    "worker_observations_omitted": 108,
+    "worker_max_ordinary_step_ms": 337.1756000000023,
+    "native_actual_status": "refused_unsupported_action",
+    "policy_status": "bounded_feasible",
+    "native_peak_solver_owned_bytes": 254125330,
+    "graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+    "query": {
+      "declarations_inspected": 55,
+      "selector_excluded": 53,
+      "requested": 2,
+      "entries": 3238,
+      "hidden": 0,
+      "unavailable_tail": 0,
+      "combined_context_shape_rejected": 3238,
+      "eligible": 0,
+      "refused": 0,
+      "capped": 0
+    }
+  },
+  "a4": {
+    "cost": 3746.1319409485764,
+    "expected_primitive_actions": 8608.881793656798,
+    "native_first_verified_ms": 163991.5843,
+    "native_query_complete_observed_ms": 170038.0312,
+    "native_peak_solver_owned_bytes": 924994854,
+    "graph_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+    "query": {
+      "declarations_inspected": 52,
+      "selector_excluded": 46,
+      "requested": 6,
+      "entries": 13678,
+      "hidden": 0,
+      "unavailable_tail": 28,
+      "combined_context_shape_rejected": 13650,
+      "eligible": 0,
+      "refused": 0,
+      "capped": 0
+    },
+    "excluded_missing_hook": true
+  },
+  "unknown": [
+    "A5 native unsupported overall status cause",
+    "decomposed entry-rejection frequencies",
+    "economic spend of excluded genuine programme decisions",
+    "actual useful new local family",
+    "live headroom at eventual new service point",
+    "new-controller cost"
+  ]
+}

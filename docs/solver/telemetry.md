@@ -73,6 +73,18 @@ discarded an A4 zero from the wrong hook and used completed pre-Finish queries
 for both scoped eligibility findings. Those diagnostic source hooks were
 removed; ordinary telemetry remains passive under the default activation.
 
+The later [N0 native boundary query](../active/2026-09-24-native-boundary-repair/README.md)
+included all 55 compiler-authored A5 decisions and 53,851 certified reached
+physical entries, beyond the old two-declaration selector. Its persistent
+context, debt, extra-affix and below-tier flags overlap; below-tier is counted
+as slots, while the other cited flags count entries. No retained ordered
+first-failure census or immediate macro-spend attribution follows from them.
+The case-level `refused_unsupported_action` reports a separate Chaos renewal
+compatibility refusal; the selected policy remains `bounded_feasible`, and the
+entry query and candidate root evaluations completed. Report each of these
+statuses at its own owner rather than combining them into an unsupported-entry
+or economic-failure count. The temporary query and candidate hooks were removed.
+
 Fewer rows before a common timeout can reflect preparation consuming the budget. Claim avoided work only against a shared target or an otherwise suitable matched comparison. A larger local lower may leave the complete model unchanged when another action/family remains limiting.
 
 ## Context-efficient use

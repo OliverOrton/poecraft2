@@ -162,6 +162,17 @@ A nonfinite residual can serialize as null. Presentation treats it as unavailabl
 that diagnostic alone cannot discard an otherwise usable returned strategy or
 change its native policy classification.
 
+The [native boundary repair](../active/2026-09-24-native-boundary-repair/README.md)
+used existing whole-option rows and private graph composition at one actual A5
+decision, with checked old continuations for every positive-mass exit. The
+positive recurring graph was compiled and independently evaluated from the
+original root with success probability one, zero off-policy mass and reconciled
+cost C85520.72841064134. The more expensive complete graph was not selected;
+the verified old graph remained available. This is native diagnostic
+correspondence for the named graph, not general program-grammar correspondence
+or a retained publication mode. An abstract representative or a differently
+scoped input cannot inherit that certificate.
+
 ## Sampled validation is separate
 
 Simulator executes the ordinary strategy through native sampled actions. It can expose behavioral defects but does not replace the graph evaluator or prove optimality. The owner-approved engineering validation cadence lives in `AGENTS.md`; this page does not duplicate a mandatory sample count.

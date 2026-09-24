@@ -232,6 +232,19 @@ L1–L3 stopped at the entry gate. This is a scoped missing premise for the
 selected clean-entry family, not evidence that all cost-only continuations or
 role-relative proposals are unhelpful.
 
+The selected [native boundary repair N0–N4](../active/2026-09-24-native-boundary-repair/README.md)
+then queried all 55 compiler declarations on the verified A5 graph and found
+53,851 certified reached physical entries. This supersedes the selector scope
+of L0, not its zero clean-entry finding. A frozen Eldritch Chaos decision source
+with persistent Exarch context supported a complete recurrent direct Eldritch
+Exalt alternative. Existing native whole-option construction, checked old tails,
+composition and independent original-root evaluation yielded C85520.72841064134
+versus the retained C85558.70618560436 baseline. A complete Annul→Exalt variant
+cost C94699.18161992717. The 0.0444% gain required about 45 seconds of
+speculative service, so no production mode or product claim was retained. This
+is a scoped feasible upper witness; whether a materially cheaper, broadly
+qualified controller exists, and full exact closure, remain open.
+
 The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
 applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)
 to explicit Finish and frozen request export, and attributes setup latency. Its activation

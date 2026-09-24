@@ -255,6 +255,15 @@ binding or off-path upper is synthesized. A changed selected row requires the
 usual compile/properness/evaluation route. Context changes discard the vector;
 there is no persistent library or disk-resume claim.
 
+The [A5 boundary diagnostic](../active/2026-09-24-native-boundary-repair/README.md)
+ran its private option, return-tail and root checks after donor verification
+within the original 50-million work and 1 GiB solver-owned caps, without a
+reported cap or watchdog hit. The approximately 45-second candidate service
+times and selected native owned-byte estimates describe those temporary runs.
+They do not establish a production simultaneous parent/donor/child/graph/checker
+margin, host reservation or a latency bound for the adaptive Calculator worker.
+No production admission or resume mechanism was retained.
+
 ## Source basis
 
 This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/resources-resume-replay.md) and [2026-08-30-carrier-ladder-released-candidate-reclamation-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-carrier-ladder-released-candidate-reclamation-v1/README.md), [2026-09-05-native-applied-reforge-preparation-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-09-05-native-applied-reforge-preparation-v1/README.md), [solver-lab.md](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/foundation/solver-lab.md). Claim IDs are registered in [the ledger](claims.md); each history states its acceptance basis. The [backbone integration](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) is complete. Remaining native correspondence is scoped in [research](research.md#open-obligations); an argument link does not confer runtime authority.

@@ -1,0 +1,49 @@
+{
+  "schema": "native_boundary_review_status_v1",
+  "review_date": "2026-09-24",
+  "branch": "main",
+  "reviewed_head": "eab5c4121f9de81a54adef9694e82ea22f2efa2f",
+  "rechecked_head": "eab5c4121f9de81a54adef9694e82ea22f2efa2f",
+  "commit_message": "Record cost-only L0 entry-gate outcome",
+  "parent": "5cab52218dabdd22458b59881e01f038bdb4b5a3",
+  "ci": [
+    {
+      "name": "Windows",
+      "run_id": 36057526160,
+      "head_sha": "eab5c4121f9de81a54adef9694e82ea22f2efa2f",
+      "status": "completed",
+      "conclusion": "success",
+      "completed_at": "2026-09-24T21:04:14Z"
+    },
+    {
+      "name": "Solver knowledge",
+      "run_id": 36057526158,
+      "head_sha": "eab5c4121f9de81a54adef9694e82ea22f2efa2f",
+      "status": "completed",
+      "conclusion": "success",
+      "completed_at": "2026-09-24T20:50:44Z"
+    }
+  ],
+  "executed_here": [
+    "source/record review through connector",
+    "previous attached prompt read through Files",
+    "25 independent exact-rational/abstract checks",
+    "package validation"
+  ],
+  "not_executed_here": [
+    "repository modifications",
+    "new native solver run",
+    "new WASM build or worker run",
+    "native tests",
+    "Simulator",
+    "raw local output inspection",
+    "rendered UI test"
+  ],
+  "limitations": [
+    "single-line strategy response truncated; no full graph census",
+    "raw local reports not mounted here; paths from pinned receipts",
+    "raw source download failed DNS; connector used instead",
+    "proposed broader context repair not implemented/qualified"
+  ],
+  "authority": "CI results are hosted observations for the reviewed head; recorded L0 runs retain their earlier diagnostic build identities."
+}

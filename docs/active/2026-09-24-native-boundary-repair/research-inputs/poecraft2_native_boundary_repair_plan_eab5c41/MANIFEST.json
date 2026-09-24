@@ -1,0 +1,72 @@
+{
+  "schema": "sha256_packet_manifest_v1",
+  "reviewed_commit": "eab5c4121f9de81a54adef9694e82ea22f2efa2f",
+  "manifest_excludes_itself": true,
+  "files": [
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 17054,
+      "sha256": "dd52cc07e2671338e271e7b64594cb6d7d442bd2cc6cf497033b34c5bc29d64a"
+    },
+    {
+      "path": "DATA_REQUEST.md",
+      "bytes": 4308,
+      "sha256": "d776a52cc2ee7f608a46782c2570a8800ee1927b5f3260dbc20f4c74524cab58"
+    },
+    {
+      "path": "DESIGN_AND_MATHEMATICS.md",
+      "bytes": 10305,
+      "sha256": "e794dd8b32d7f836a335f38df67fe6578aea3f2e7eda639aaf94e7b1d2b896c0"
+    },
+    {
+      "path": "DOCS_AND_RESEARCH.md",
+      "bytes": 4926,
+      "sha256": "d9dca697aa8654ed0061da59e54f433c1449028ea0e1e409c3afb9bcbc7ed614"
+    },
+    {
+      "path": "PLAN.md",
+      "bytes": 8764,
+      "sha256": "a1b3cb74cd9a415d61f6e7d58561f79f546fac0d406216e2c61271b72f0fd800"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3192,
+      "sha256": "9b5a189dbc24c163fec71b587944b65f6553526db96bd72e49274e7a4eb10038"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 8409,
+      "sha256": "007038719a4c2b8026dff27d0fd924a8caa61807bb07db07e2145784927729ae"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 7760,
+      "sha256": "c2b8685a4fc459ec53880b695a0a310af138836dcf4a918583118cd694201255"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 6302,
+      "sha256": "586c229a200fe72f80cc6f54be781a5f0bd72791da0f743139c1cbdea9448116"
+    },
+    {
+      "path": "checks/abstract_checks.py",
+      "bytes": 9855,
+      "sha256": "6ba6ab52c3f21291dc6b175b8b10bb98005dea65873a365a877322be8995f98f"
+    },
+    {
+      "path": "evidence/abstract_results.json",
+      "bytes": 1458,
+      "sha256": "30df9a7f71c7a723b68869b9192b5f13fe023f3eb0a6a8ed9b304477714506b4"
+    },
+    {
+      "path": "evidence/baseline.json",
+      "bytes": 2340,
+      "sha256": "eefa5b4e07b436dc0a835029f31751b29836a31b81331f7e55909d9a325d0e81"
+    },
+    {
+      "path": "evidence/review_status.json",
+      "bytes": 1693,
+      "sha256": "8f691755ce507e08a45b3ad54118582a774f1f971eca21fe14d375b9aec9fbd2"
+    }
+  ]
+}

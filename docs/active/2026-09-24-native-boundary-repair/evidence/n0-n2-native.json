@@ -1,0 +1,92 @@
+{
+  "schema": "native_boundary_repair_evidence_v1",
+  "base_commit": "eab5c4121f9de81a54adef9694e82ea22f2efa2f",
+  "packet_zip_sha256": "4a99154385d2eccedbf9c35524cc703135f1dc92e569461f89cb418c4d8af743",
+  "scope": "A5 original root with same typed input except shorter diagnostic Finish; native fixed-eight diagnostic, not actual adaptive compact worker",
+  "base_cost": 85558.70618560436,
+  "base_expected_actions": 8407.202314771383,
+  "runs": {
+    "n0": {
+      "report_path": "out/native-boundary-repair/n0/run/cases/cb01-native-boundary-query90.json",
+      "report_sha256": "2efeb92674e16f8e63ff3b26c74f375168287c7d39cd3febbc3e1b3ab32950a2",
+      "diagnostic_executable_path": "out/native-boundary-repair/n0/builds/poecraft_solver_benchmark.exe",
+      "diagnostic_executable_sha256": "199d23c6c201c0f89d58febd40956bf84d338ac83dbfc0f6550723727ddef657",
+      "finish_seconds": 90,
+      "actual_status": "refused_unsupported_action",
+      "policy_status": "bounded_feasible",
+      "root_evaluation_cost": 85558.70618560436,
+      "root_evaluation_success_probability": 1,
+      "root_evaluation_off_policy_mass": 0,
+      "completed_candidate": {
+        "kind": "anytime_reachable_proper_policy",
+        "cost": 85558.70618560436,
+        "native_old_tail_entries": null,
+        "wall_seconds": null,
+        "disposition": "selected_for_publication"
+      },
+      "watchdog_expired": false,
+      "cap_checks_all_passed": true,
+      "boundary_query_path": "docs/active/2026-09-24-native-boundary-repair/evidence/n0-native-boundaries.json",
+      "boundary_query_sha256": "501b4f50bfb74b083d4f118fa24266bdbabcb42c5053c423bf5534a532dc22a0"
+    },
+    "one_decision_eldritch_exalt": {
+      "report_path": "out/native-boundary-repair/n1c/run/cases/cb01-native-context-candidate120.json",
+      "report_sha256": "135a1a7aa4e4dd2aa909bcd23972f8540e48faca0ea5f8b672fa823aa3c38a26",
+      "diagnostic_executable_path": "out/native-boundary-repair/n1c/builds/poecraft_solver_benchmark.exe",
+      "diagnostic_executable_sha256": "2110a8b3332256d505d1f3a5c41eea619b0ffd45a25deb8567e07c449342994e",
+      "finish_seconds": 120,
+      "actual_status": "refused_unsupported_action",
+      "policy_status": "bounded_feasible",
+      "root_evaluation_cost": 85520.72841064134,
+      "root_evaluation_success_probability": 1,
+      "root_evaluation_off_policy_mass": 0,
+      "completed_candidate": {
+        "kind": "dirty_continuation_candidate",
+        "cost": 85520.72841064134,
+        "native_old_tail_entries": 5,
+        "wall_seconds": 45.415663,
+        "disposition": "retained"
+      },
+      "watchdog_expired": false,
+      "cap_checks_all_passed": true
+    },
+    "two_decision_eldritch_annul_exalt": {
+      "report_path": "out/native-boundary-repair/n2b/run/cases/cb01-native-context-candidate120.json",
+      "report_sha256": "7adb1acece080d49fdec3a5368531a8f6e3e3c95e31c834d7fc682b93cb548bd",
+      "diagnostic_executable_path": "out/native-boundary-repair/n2b/builds/poecraft_solver_benchmark.exe",
+      "diagnostic_executable_sha256": "6070a97a90e4462ed3afd80f5cf59a7f959eab9e70da938676a97882a968b5ce",
+      "finish_seconds": 120,
+      "actual_status": "refused_unsupported_action",
+      "policy_status": "bounded_feasible",
+      "root_evaluation_cost": 85558.70618560436,
+      "root_evaluation_success_probability": 1,
+      "root_evaluation_off_policy_mass": 0,
+      "completed_candidate": {
+        "kind": "dirty_continuation_candidate",
+        "cost": 94699.18161992717,
+        "native_old_tail_entries": 10,
+        "wall_seconds": 44.0103262,
+        "disposition": "independently_evaluated"
+      },
+      "watchdog_expired": false,
+      "cap_checks_all_passed": true
+    }
+  },
+  "positive_graph": {
+    "path": "docs/active/2026-09-24-native-boundary-repair/strategies/a5-eldritch-exalt-repair.strategy.json",
+    "sha256": "50cd857e74029447324d5e4d98839201bbb03fa51f18a2a554b8d8e639c68a33",
+    "bytes": 506096
+  },
+  "temporary_source_patch": {
+    "path": "out/native-boundary-repair/n0-n2-temporary-source.patch",
+    "sha256": "79b12b0270c3da5e27c570814492d30d1d7c6b66e3bfbc186912d60b1776230c",
+    "bytes": 36360
+  },
+  "abstract_checks": {
+    "path": "out/native-boundary-repair/abstract-results.json",
+    "sha256": "fbf80a6a9852ff777e01e6320a514cf40de1543f3df5d4fdde45b4b9b53be7db",
+    "role": "illustrative only"
+  },
+  "retained_runtime_source_change": false,
+  "native_restored_build": "passed"
+}
