@@ -27,6 +27,22 @@ Inputs are the coarse solve result, concrete start, prices, declared action/prog
 
 Primary owners are `solver_policy_refinement.cpp`, `solver_policy_oracle_*.inc`, `solver_refinement_*.cpp`, `solver_quotient_partition.cpp`, `solver_quotient_bellman.cpp`, and `solver_quotient_proof.cpp`.
 
+<a id="strict-preparation-attribution"></a>
+### Preparation attribution boundary
+
+The current production oracle copies selected actions and successor lists into
+coarse observation input, then runs synchronous backward propagation. The
+selected closure later serves exact locators, and the partition builder
+materializes state-specific observation and exact nodes. The
+[A4 S0 investigation](../active/2026-09-24-strict-preparation/README.md)
+measured those owners without retaining a producer or cache change. It found
+small coarse observation input/fixed-point cost, 3.174 seconds of repeated
+selected-closure inventory scans and 6.661 seconds of partition preparation
+across completed strict passes. Locator activity has further unallocated work;
+the session-elapsed carrier-discovery field is not an exclusive locator timer.
+No native correspondence, complete requirement key or capacity improvement
+was established for a shared preparation object.
+
 ## Persistent Session
 
 One `PersistentQuotientSession` retains the strict calculator, selected closure, split-only partition, Bellman graph, ProofStore, published rows, alternative obligations, reverse dependencies, and verified incumbent. Newly discovered carriers extend this owner instead of rebuilding an unrelated proof store.

@@ -1,0 +1,19 @@
+{
+  "schema": "review_ci_v1",
+  "head_sha": "9032fee114aea3481482c57cdd30248cdc29a5bc",
+  "observed_date": "2026-09-24",
+  "windows": {
+    "run_id": 36014849328,
+    "job_id": 107684606312,
+    "status": "completed",
+    "conclusion": "success",
+    "updated_at": "2026-09-24T14:57:58Z"
+  },
+  "knowledge": {
+    "run_id": 36014849727,
+    "status": "completed",
+    "conclusion": "success",
+    "updated_at": "2026-09-24T14:44:14Z"
+  },
+  "note": "Current-head completed push workflow metadata read through GitHub. Not a fresh local build or exhaustive log review; no workflow was rerun by this review."
+}

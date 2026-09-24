@@ -153,6 +153,13 @@ quotients under this claim. The [guarded computation argument](mathematics/repre
 would share an operation only after its own H1/H2 correspondence; no native
 H2 witness was retained. Status and GAP-02 remain open.
 
+**Strict-preparation application (2026-09-24):** Sharing a complete
+required-field computation would be weaker than this claim's action-wise
+behavioral quotient. The [S0 native attribution](../active/2026-09-24-strict-preparation/README.md)
+stopped before such a shared producer was implemented, so it establishes
+neither native quotient correspondence nor a new policy result. This claim
+and GAP-02 remain open.
+
 <a id="clm-0006"></a>
 ## CLM-0006 — Uniform lower and upper aggregation require complete member coverage
 

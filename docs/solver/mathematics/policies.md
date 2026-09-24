@@ -756,3 +756,6 @@ properness and independent evaluation checks. Local exit with probability one
 does not ensure global goal reachability: two regions can exit to each other
 forever. A shared structural region therefore remains a computation input until
 its complete bound policy and output graph pass the existing upper authority.
+Sharing a required-field preparation step under the separate
+[dependency contract](representations.md#strict-preparation-sharing) does not
+transfer any selected action, value or executable upper between bindings.

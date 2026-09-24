@@ -46,6 +46,19 @@ Null or absent timing means uninstrumented or unavailable. It is not zero durati
 
 A lookup count is a call population, not distinct-state coverage. Cache hits and repeated maximum selections do not by themselves show newly covered semantic states.
 
+<a id="strict-preparation-timer-scope"></a>
+### Strict preparation timer scope
+
+The current `strict_carrier_discovery` finalization field is assigned from a
+persistent session's elapsed clock after selected-locator discovery and
+partition-node preparation. On later passes it is another cumulative prefix,
+not a fresh active-duration increment. Do not add those snapshots or subtract
+one from a separately instrumented child timer as though they shared exclusive
+scope. Direct-call and child-resume timing need their own owner and coverage;
+an unfinished pass may leave this field at zero despite strict work before
+Finish. The [S0 evidence](../active/2026-09-24-strict-preparation/README.md)
+keeps those domains and the unresolved remainder distinct.
+
 Fewer rows before a common timeout can reflect preparation consuming the budget. Claim avoided work only against a shared target or an otherwise suitable matched comparison. A larger local lower may leave the complete model unchanged when another action/family remains limiting.
 
 ## Context-efficient use

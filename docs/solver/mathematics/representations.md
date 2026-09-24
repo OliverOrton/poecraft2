@@ -313,3 +313,24 @@ text also saves no work by itself: independent coefficient and successor-value
 leaves still need binding-specific evaluation unless another justified relation
 compresses them. The [policy boundary contract](policies.md#bound-role-ports)
 keeps global properness separate.
+
+<a id="strict-preparation-sharing"></a>
+### Sharing preparation while preserving physical answers
+
+Suppose a finite native preparation has the form
+\(F(d,x)=\operatorname{Apply}(\operatorname{Prepare}(d),x)\). A shared
+\(\operatorname{Prepare}(d)\) is valid only when its key covers every immutable
+dependency it reads, including selected runtime and observation contracts,
+successor dependencies and the relevant generation. The application still
+uses each actual state's features, coarse parent and current continuation.
+If feature values are read during preparation, those values belong in the key
+or the computation cannot be split at that boundary.
+
+A required-field set is weaker than an observed value. With canonical
+requirement \(C(d)\), an observation key has the form
+\(K(x,p,d)=\operatorname{Encode}(p,C(d),\operatorname{Observe}(x,C(d)))\).
+Two states can share \(C(d)\) yet have different observed features and native
+probabilities. Reusing the complete key, value, row or certificate by the
+requirement identity alone would violate their separate authorities. The
+[S0 strict-preparation measurement](../../active/2026-09-24-strict-preparation/README.md)
+did not retain such a sharing implementation; this is a conditional contract.

@@ -1,0 +1,77 @@
+{
+  "schema": "research_package_manifest_v1",
+  "reviewed_commit": "9032fee114aea3481482c57cdd30248cdc29a5bc",
+  "description": "Read-only review and selected future implementation plan; no native runtime treatment implemented here.",
+  "payloads": [
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 17652,
+      "sha256": "af7a81aa3468b1a8d2a93a03b24fc9544f2754af94d4dec0c0ea5aeafb6e10a9"
+    },
+    {
+      "path": "DATA_REQUEST.md",
+      "bytes": 2918,
+      "sha256": "0e525e1b4b818b71b0faf18dc87a0a99cf3d2d05f44a27a802afdc599beb71c4"
+    },
+    {
+      "path": "DOCS_AND_RESEARCH.md",
+      "bytes": 4731,
+      "sha256": "4c4bf81eae9241d039c364808bca8ce8a9e6a3e0f0d1ef981caf96cbf7533e1e"
+    },
+    {
+      "path": "MATHEMATICS.md",
+      "bytes": 8508,
+      "sha256": "c4644a279a364edaa28fb03c7f5c9b4610f1ceeb1e3e9e3c9ce726334a671cb2"
+    },
+    {
+      "path": "MILESTONES.md",
+      "bytes": 7361,
+      "sha256": "3b5129d7c06110cfc5ac404f14c409984d7aa3999fc7e9c8e9efd2b6cf6b629f"
+    },
+    {
+      "path": "NATIVE_DESIGN.md",
+      "bytes": 7986,
+      "sha256": "1f8aa5db10cc3183c1bbd0bf3ae1134ce030dbc4221d392d857504ccf3777c98"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2983,
+      "sha256": "6440e3f06bc437d3ddcb0cb535b9e9dcd05ffc43587a461c571db11a20cd91c4"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 10464,
+      "sha256": "b197dc67626c060a2b589b630b788d5210655c6385e3514716498847862b33be"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 7525,
+      "sha256": "250630cd62b09bca70ca254541e6cdb6910d6c93ff408c8cb8ec334fc4e6b08a"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 5287,
+      "sha256": "e923763a30efbe877a4019d91c0d475d6a9316cbb29f6863199c85178c3b2301"
+    },
+    {
+      "path": "checks/check_contracts.py",
+      "bytes": 14998,
+      "sha256": "f847b55cfe3fd87f7b3f2b0c14b143ac90889e3b03b5096c554afe6dc356a017"
+    },
+    {
+      "path": "checks/results.json",
+      "bytes": 1665,
+      "sha256": "0d0e4f48bc587135323611c35d590753773ff0599aaffee1fa800b496c92aa1e"
+    },
+    {
+      "path": "evidence/baseline.json",
+      "bytes": 2548,
+      "sha256": "9f8830d840a74199e7886a13b8d01c2e5501e00bc0e97699014137fb4ff370c6"
+    },
+    {
+      "path": "evidence/ci.json",
+      "bytes": 608,
+      "sha256": "39dc4520883cdf5f32c1716aed017541904da243a609a4fa8171fc454a380547"
+    }
+  ]
+}

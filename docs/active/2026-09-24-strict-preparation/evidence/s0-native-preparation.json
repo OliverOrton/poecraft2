@@ -1,0 +1,209 @@
+{
+  "schema": "strict_preparation_s0_native_v1",
+  "reviewed_commit": "9032fee114aea3481482c57cdd30248cdc29a5bc",
+  "zip_sha256": "88c49e61f58fac02dd7c3f3b65135fe0360b9f06ccce38f60a55dcd63bdcbbf0",
+  "profile": "A4 cb02-cross-base-product8-long240 original corpus input and caps; opt-in timing source; no optimization treatment",
+  "runs": {
+    "initial_complete": {
+      "path": "out/strict-preparation/S0/a4-instrumented/cases/cb02-cross-base-product8-long240.json",
+      "sha256": "808007a6fc105e55bfc5885a5504d2cc33d30590d4c2c03ec538019edb47677f",
+      "solve_wall_ms": 240710.4759,
+      "status": "bounded_feasible",
+      "evaluated_cost": 3746.1319409485764,
+      "expanded_states": 7213,
+      "rows": 135519,
+      "compiled_nodes": 811,
+      "compiled_edges": 2200,
+      "strict_lift_ns": 51181043100,
+      "cumulative_strict_discovery_ns": 33806964100,
+      "peak_solver_owned_bytes": 845708701
+    },
+    "finish_during_strict": {
+      "path": "out/strict-preparation/S0/a4-baseline/cases/cb02-cross-base-product8-long240.json",
+      "sha256": "ebc9083fa3c7429f88eda10e3221ba383fd39a44d8d51a5750db4634f8866b67",
+      "solve_wall_ms": 240931.7385,
+      "status": "bounded_feasible",
+      "evaluated_cost": 3746.1319409485764,
+      "expanded_states": 7213,
+      "rows": 135519,
+      "compiled_nodes": 811,
+      "compiled_edges": 2200,
+      "strict_lift_ns": 29421514400,
+      "cumulative_strict_discovery_ns": 0,
+      "peak_solver_owned_bytes": 830092556
+    },
+    "bounded_progress": {
+      "path": "out/strict-preparation/S0/a4-baseline-progress/cases/cb02-cross-base-product8-long240.json",
+      "sha256": "62ea95e2a9790ed55c75158855b327b7f769332792aaab04e09a09c5eb1f555c",
+      "solve_wall_ms": 241000.6413,
+      "status": "bounded_feasible",
+      "evaluated_cost": 3746.1319409485764,
+      "expanded_states": 7213,
+      "rows": 135519,
+      "compiled_nodes": 811,
+      "compiled_edges": 2200,
+      "strict_lift_ns": 53985517500,
+      "cumulative_strict_discovery_ns": 52940737600,
+      "peak_solver_owned_bytes": 913534861
+    }
+  },
+  "diagnostics": {
+    "initial_complete": {
+      "path": "out/strict-preparation/S0/a4-prep.csv",
+      "sha256": "098c1e2fa71895d80701c10cf049bf6770ffbe184c242c77af4762f0fa7b0509",
+      "records": [
+        [
+          "O",
+          "815",
+          "18",
+          "815",
+          "40",
+          "7238400",
+          "5774000",
+          "332520",
+          "70795700",
+          "1746300",
+          "982600",
+          "854100",
+          "431700"
+        ],
+        [
+          "P",
+          "0",
+          "33806964100",
+          "128648100",
+          "18424466600",
+          "3532406100",
+          "8155"
+        ]
+      ]
+    },
+    "finish_during_strict": {
+      "path": "out/strict-preparation/S0/a4-baseline-prep.csv",
+      "sha256": "71312f5eafc0181dc17d3bc0671911f03c59c4474b2f9fc2f5ac4f61f4ed8d2f",
+      "records": [
+        [
+          "O",
+          "815",
+          "18",
+          "815",
+          "40",
+          "7650700",
+          "6181200",
+          "332520",
+          "71498200",
+          "1745600",
+          "971300",
+          "1281800",
+          "618600"
+        ]
+      ]
+    },
+    "bounded_progress": {
+      "path": "out/strict-preparation/S0/a4-baseline-progress.csv",
+      "sha256": "e51ad70df2dbe16070b2ad036e143bf9ee56417696530e1dad0057530a3814e1",
+      "records": [
+        [
+          "O",
+          "815",
+          "18",
+          "815",
+          "40",
+          "7094000",
+          "5915400",
+          "332520",
+          "81466400",
+          "1730500",
+          "980200",
+          "846700",
+          "421400"
+        ],
+        [
+          "L",
+          "1024",
+          "1556638900",
+          "20933300"
+        ],
+        [
+          "L",
+          "2048",
+          "3164888000",
+          "87529400"
+        ],
+        [
+          "L",
+          "3072",
+          "5105798400",
+          "268171300"
+        ],
+        [
+          "L",
+          "4096",
+          "7247761200",
+          "534863900"
+        ],
+        [
+          "L",
+          "5120",
+          "9565201500",
+          "957822500"
+        ],
+        [
+          "L",
+          "6144",
+          "12239892200",
+          "1548581800"
+        ],
+        [
+          "L",
+          "7168",
+          "15001121300",
+          "2224089800"
+        ],
+        [
+          "P",
+          "0",
+          "32869067900",
+          "139289800",
+          "18027972500",
+          "3584228200",
+          "8155",
+          "3037663000"
+        ],
+        [
+          "L",
+          "8192",
+          "174686700",
+          "34448600"
+        ],
+        [
+          "P",
+          "1",
+          "52940737600",
+          "0",
+          "655532000",
+          "3076886000",
+          "8304",
+          "136147500"
+        ]
+      ]
+    }
+  },
+  "progress_binary": {
+    "poecraft_solver_benchmark.exe": {
+      "path": "out/strict-preparation/builds/baseline-progress/poecraft_solver_benchmark.exe",
+      "sha256": "7cf0fca2fe2fb7b061d635a1ea22058f65aefe70610886ab039f4ed000c0c24f"
+    },
+    "poecraft_engine.dll": {
+      "path": "out/strict-preparation/builds/baseline-progress/poecraft_engine.dll",
+      "sha256": "7fadea7ec4b6735aa1d0968b720bb4ffaadab11e22a24c58d59388a02e1c5901"
+    }
+  },
+  "interpretation": {
+    "progress_scan_ns": 3173810500,
+    "progress_partition_prep_ns": 6661114200,
+    "strict_discovery_timer": "cumulative elapsed since session origin; later pass value is not an additive phase",
+    "finish_during_strict": "no P record; stage unfinished at requested Finish",
+    "gate": "no measured branch has credible >=10s earlier verified original-root controller or original-cap unlock; no runtime pilot"
+  }
+}

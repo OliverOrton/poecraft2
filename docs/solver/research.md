@@ -208,6 +208,17 @@ before implementation or cross-root qualification. The C3746.13 original-root
 controller and all lower/exact authorities are unchanged. A measured expensive
 operation plus pre-work guard remains the premise for another reuse treatment.
 
+The [strict-preparation S0 investigation](../active/2026-09-24-strict-preparation/README.md)
+measured the previously unseparated A4 path. The coarse observation input and
+fixed point were small; complete selected-closure inventory scans took 3.174
+seconds and partition-node preparation 6.661 seconds across completed strict
+passes. The later `carrier_discovery` value is a cumulative session elapsed
+prefix, not additional active work. A separate strict pass reached Finish
+before that value was assigned. No measured guarded operation passed the
+programme's materiality gate, and part of locator service remains unattributed.
+No runtime treatment, capability or stronger root policy was retained. Exact
+closure and broader heterogeneous preparation remain open.
+
 The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
 applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)
 to explicit Finish and frozen request export, and attributes setup latency. Its activation

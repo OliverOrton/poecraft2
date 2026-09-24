@@ -391,3 +391,24 @@ Parent and child timers may be inclusive. State counts, expected crafting visits
 timed solver invocations and completed native work items have different units.
 The [downstream role investigation](../../active/2026-09-23-downstream-role/README.md)
 records a bounded source census separately from its mathematical contract.
+
+<a id="strict-preparation-prefix"></a>
+### Synchronous preparation and bounded prefixes
+
+For a deterministic backward requirement transfer, equal complete initial,
+selected-program and successor inputs give equal outputs at every synchronous
+round by induction. A pure transfer can also be reused for equal complete
+transfer/requirement inputs. Matching a role mask or one eventual fixed point
+does not establish those premises. In-place updates or a changed worklist may
+reach the same final fixed point after a different number of capped rounds;
+the current round order and confirmation step remain part of the bounded
+runtime contract.
+
+A prepared result stays staged until its old owner commits a complete
+assignment or row. Suspension and cancellation preserve earlier verified
+evidence; neither turns pending work into a failed obligation. For timing,
+sum direct calls or active child-resume spans at one declared owner boundary.
+A persistent session's elapsed prefix includes intervening work and gaps, so
+successive prefix snapshots cannot be added as independent phases. The
+[S0 attribution](../../active/2026-09-24-strict-preparation/README.md)
+records the measured scope without assigning its remainder to reusable work.
