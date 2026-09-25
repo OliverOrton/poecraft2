@@ -18,8 +18,16 @@ Two small native original-root fixtures produce checked ordinary one-action grap
 
 The two-stage emitter routes each miss from setup to renewal and each miss from renewal back to renewal. It has no invented reset. F2 must add bounded controller search and a heterogeneous checked case. F3 must propagate mode through WASM and the web UI. F4 comparisons remain unrun.
 
+## F2 boundary — Chaos/Annul recovery
+
+The first heterogeneous controller attempt used the same synthetic ten-mod session as the compile tests. Its original root was an empty Rare item; the native goal required clean Rare prefixes with families from mods 2, 3 and 4; requested and priced actions were Chaos and Annul at one unit each. The proposed ordinary graph performed Chaos, then Annul until the explicit count fell to three or below, routing misses back to Chaos. This was generated from the original request, not imported from a saved policy.
+
+Native strategy checking did **not** return a checked cost or policy. It threw `strategy evaluation shared-row exact attribution disaggregation residual exceeded epsilon: row=1, residual=1, tolerance=2e-12, reconstructed=2, solved=1, start_pair=0, start_row=0`. Temporary row-level diagnostics showed incoming mass from row 0 and a row-1 self transition; disabling exact exchangeable-family compression did not change the failure. The candidate was never accepted or published. The special recovery emitter and its failing test were removed; the runtime's unqualified Chaos→Annul proposal was also removed. The remaining one/two-stage setup-and-renewal grammar has passing focused tests.
+
+This is an unresolved checker/grammar boundary, not evidence that the recovery graph is proper, that the evaluator's result is wrong, or that the finder improves A3/B3. Per the selected plan's stop rule, F2 search expansion and F3/F4 qualification stop here pending a native reconciliation of this reached-flow case. The next investigation should establish whether the graph is improper or shared-row attribution is wrong, with an exact row/pair flow argument and a bounded test before restoring any recovery template.
+
 ## Authority and implementation notes
 
 The three identities remain separate: request/session/goal/scope/prices; finder run configuration and budget; and checked executable graph plus its evaluation receipt. An approximate feature or heuristic score may order proposals but cannot set policy availability or enter lower/exact authority. The emitted one/two-stage grammar is recurrent. A two-stage candidate preserves stage control in distinct operation nodes; every native outcome still routes through the ordinary evaluator. The initial root serializer is checked by exact parsed item identity and refuses any root fields the ordinary strategy format cannot represent.
 
-The first checkpoint was committed at `cdcfcd8`. The current uncommitted checkpoint changes the native C ABI, finder peer, two-stage emitter, and focused compile/API tests. Web and WASM behavior is still unchanged.
+F0 was committed at `cdcfcd8` and F1 at `b067018`. The C ABI accepts a finder selector; WASM and web do not yet expose it. No F2 recovery template remains in the runtime.

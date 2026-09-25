@@ -214,32 +214,6 @@ PolicyFinderWork::PolicyFinderWork(
                  setup.price + renewal.price});
         }
     }
-    const auto annul_it = problem_.registry().index_by_id.find("annul");
-    if (annul_it != problem_.registry().index_by_id.end() &&
-        std::find(problem_.candidates().begin(),
-                  problem_.candidates().end(), annul_it->second) !=
-            problem_.candidates().end()) {
-        const ActionDescriptor& cleanup =
-            problem_.registry().actions[annul_it->second];
-        bool priced = true;
-        double cleanup_price = 0.0;
-        for (const std::string& key : cleanup.cost_keys) {
-            const auto it = economy_->prices.find(key);
-            if (it == economy_->prices.end() || !std::isfinite(it->second) ||
-                it->second < 0.0) { priced = false; break; }
-            cleanup_price += it->second;
-        }
-        if (priced) {
-            for (const RankedAction& action : ranked) {
-                if (action.id == "chaos") {
-                    frontier_.push_back(
-                        {{action.index, annul_it->second},
-                         action.price + cleanup_price});
-                    break;
-                }
-            }
-        }
-    }
     if (frontier_.size() > 8) frontier_.resize(8);
     update_peak();
 }

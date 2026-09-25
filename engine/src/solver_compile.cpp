@@ -32,6 +32,9 @@ std::string compile_finder_candidate_json(
     if (primitive_sequence.empty() || primitive_sequence.size() > 2) {
         throw std::invalid_argument("finder supports one or two native stages");
     }
+    for (const std::uint32_t action : primitive_sequence)
+        if (action >= calc.registry().actions.size())
+            throw std::invalid_argument("finder primitive index is out of range");
     const SessionImpl& session = calc.session();
     const DataImpl& data = *session.data;
     const std::string goal = compile_finder_goal_condition(calc);
