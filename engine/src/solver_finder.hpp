@@ -74,6 +74,7 @@ class PolicyFinderWork {
     struct Sketch {
         std::vector<std::uint32_t> actions;
         double score = 0.0;
+        bool return_to_first = false;
     };
     CalcContext& problem_;
     std::shared_ptr<const SessionImpl> session_;

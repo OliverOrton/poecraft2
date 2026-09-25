@@ -311,6 +311,48 @@ void run_finder_request_binding_tests() {
         capacity_refused = true;
     }
     PC_CHECK(capacity_refused);
+    GoalSpec clean_three;
+    clean_three.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t mod : {2u, 3u, 4u}) {
+        GoalSlot slot;
+        slot.family_id = session->family_id.at(mod);
+        slot.min_tier = 1;
+        clean_three.slots.push_back(slot);
+    }
+    const auto annul = registry.index_by_id.at("annul");
+    CalcContext cleanup_calc(
+        session, clean_three, registry, {chaos, annul});
+    const std::string cleanup_graph = compile_finder_candidate_json(
+        cleanup_calc, start, {chaos, annul}, limits, true);
+    auto cleanup_prepared = prepare_finder_candidate(
+        cleanup_calc, session, start, cleanup_graph);
+    PC_CHECK(cleanup_prepared.ready());
+    auto cleanup_prices = std::make_shared<EconomyImpl>();
+    cleanup_prices->prices = {{"chaos", 1.0}, {"annul", 1.0}};
+    StrategyEvalOptions cleanup_options;
+    cleanup_options.economy = cleanup_prices;
+    const std::string impossible_single = compile_finder_candidate_json(
+        cleanup_calc, start, {chaos}, limits);
+    auto single_prepared = prepare_finder_candidate(
+        cleanup_calc, session, start, impossible_single);
+    PC_CHECK(single_prepared.ready());
+    const auto single_eval = evaluate_strategy(
+        *single_prepared.strategy, cleanup_options);
+    PC_CHECK(!finder_evaluation_accepted(single_eval));
+    PC_CHECK(!single_eval.converged);
+    PC_CHECK(single_eval.unresolved_probability > 0.0);
+    const auto cleanup_eval = evaluate_strategy(
+        *cleanup_prepared.strategy, cleanup_options);
+    PC_CHECK(finder_evaluation_accepted(cleanup_eval));
+    PolicyFinderWork cleanup_finder(cleanup_calc, session, start,
+        {{"chaos", 1.0}, {"annul", 1.0}}, limits);
+    for (int i = 0; i < 10000 && !cleanup_finder.progress().done; ++i)
+        cleanup_finder.step(1024);
+    PC_CHECK(cleanup_finder.progress().done);
+    PC_CHECK(cleanup_finder.best().has_value());
+    if (cleanup_finder.best().has_value())
+        PC_CHECK(std::fabs(cleanup_finder.best()->expected_cost -
+            cleanup_eval.total_expected_cost) < 1e-8);
 }
 
 void report_compile_solve_issue(

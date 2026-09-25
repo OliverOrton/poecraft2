@@ -188,6 +188,20 @@ PolicyFinderWork::PolicyFinderWork(
         if (frontier_.size() >= 4) break;
         if (action.root_legal) add_single(action);
     }
+    for (const RankedAction& first : ranked) {
+        if (!first.root_legal ||
+            problem_.registry().actions[first.index].params.type !=
+                ActionType::Chaos) continue;
+        for (const RankedAction& second : ranked) {
+            if (problem_.registry().actions[second.index].params.type ==
+                    ActionType::Annul) {
+                frontier_.push_back({{first.index, second.index},
+                    first.price + second.price, true});
+                break;
+            }
+        }
+        break;
+    }
     /* One paid rarity setup followed by a native renewal is a genuine
      * two-decision controller, and the second action need not be legal on
      * the original root. The checker decides whether its reached states are
@@ -258,7 +272,8 @@ void PolicyFinderWork::start_next_candidate() {
     ++counters_.considered;
     try {
         checking_graph_ = compile_finder_candidate_json(
-            problem_, original_start_, sketch.actions, limits_);
+            problem_, original_start_, sketch.actions, limits_,
+            sketch.return_to_first);
         FinderCandidatePreparation prepared = prepare_finder_candidate(
             problem_, session_, original_start_, checking_graph_);
         if (!prepared.ready()) {

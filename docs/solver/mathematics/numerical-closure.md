@@ -142,6 +142,14 @@ A reachable closed component is different. If positive mass \(m\) enters a
 closed component \(C\), summing its flow equations would give
 \(\sum_{i\in C}d_i=m+\sum_{i\in C}d_i\), impossible for finite occupancies.
 A finite entry snapshot for that component cannot discharge unresolved mass.
+For a shared-row reconstruction, a closed component's stored entry snapshot
+contains only incoming mass from outside the component. Replaying its internal
+edges into that snapshot would double-count the entry and fail the row-flow
+identity. The reconstruction therefore omits outgoing edges from those rows;
+it checks that the resulting raw entry masses sum to the row snapshots but
+does not run the complete quotient-flow check. The recurrent flag retains the
+preliminary unresolved mass, so this diagnostic snapshot cannot qualify a
+proper policy or a complete flow-backed cost.
 
 The native application requires completed raw/shared occupancy, disaggregation
 and quotient-flow checks, and no positive-input closed component. Its existing

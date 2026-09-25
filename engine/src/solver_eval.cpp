@@ -5670,6 +5670,8 @@ struct StrategyEvalWork::Impl {
         const std::size_t row_count = attribution_rows.size();
         std::vector<solve_detail::WideFloat> row_visits(
             row_count, solve_detail::WideFloat{0.0});
+        std::vector<std::uint8_t> recurrent_entry_snapshot(
+            row_count, 0);
         {
             std::vector<std::uint32_t> incoming_counts(row_count, 0);
             std::vector<PolicyRow> forward_rows(row_count);
@@ -5717,9 +5719,9 @@ struct StrategyEvalWork::Impl {
                             capped_product(
                                 forward_edges.capacity(),
                                 sizeof(PolicyEdge)),
-                            capped_product(
-                                row_has_absorption.capacity(),
-                                sizeof(std::uint8_t)))));
+                    capped_product(
+                        row_has_absorption.capacity(),
+                        sizeof(std::uint8_t) * 2))));
             };
             memory_probe_stage = aggregate_target_rows
                 ? "exact_attribution_compact_row_transpose"
@@ -5932,6 +5934,7 @@ struct StrategyEvalWork::Impl {
                     add_vector(forward_rows);
                     add_vector(forward_edges);
                     add_vector(row_has_absorption);
+                    add_vector(recurrent_entry_snapshot);
                     add_vector(transpose_rows);
                     add_vector(transpose_edges);
                     add_vector(cursors);
@@ -6007,6 +6010,7 @@ struct StrategyEvalWork::Impl {
                          local < members.size(); ++local) {
                         row_visits[members[local]] +=
                             solve_detail::WideFloat{rhs[local]};
+                        recurrent_entry_snapshot[members[local]] = 1;
                     }
                     continue;
                 }
@@ -6184,10 +6188,13 @@ struct StrategyEvalWork::Impl {
             capped_product(
                 row_visits.capacity(),
                 sizeof(solve_detail::WideFloat)),
-            capped_product(
-                count,
-                sizeof(double) +
-                    2 * sizeof(solve_detail::WideFloat))));
+            capped_add(
+                recurrent_entry_snapshot.capacity() *
+                    sizeof(std::uint8_t),
+                capped_product(
+                    count,
+                    sizeof(double) +
+                        2 * sizeof(solve_detail::WideFloat)))));
         std::vector<double> exact_visits(count, 0.0);
         std::vector<solve_detail::WideFloat> reconstructed(
             count, solve_detail::WideFloat{0.0});
@@ -6200,6 +6207,10 @@ struct StrategyEvalWork::Impl {
                     "strategy evaluation shared-row exact attribution "
                     "produced an invalid row occupancy");
             }
+            /* A positive-input closed component has no finite occupancy.
+             * Its row_visits are entry snapshots only; replaying internal
+             * edges would count that same entering mass again. */
+            if (recurrent_entry_snapshot[row_id]) continue;
             visit_eval_row(
                 attribution_rows[row_id], attribution_pairs,
                 [&](const EvalTransition& transition) {
@@ -6213,9 +6224,12 @@ struct StrategyEvalWork::Impl {
                 [](const EvalAbsorption&) {});
             if ((row_id & 255u) == 255u) {
                 co_await solve_detail::CooperativeCheckpoint{
-                    capped_product(
-                        row_visits.capacity() + reconstructed.capacity(),
-                        sizeof(solve_detail::WideFloat))};
+                    capped_add(
+                        capped_product(
+                            row_visits.capacity() +
+                                reconstructed.capacity(),
+                            sizeof(solve_detail::WideFloat)),
+                        recurrent_entry_snapshot.capacity())};
             }
         }
         for (std::uint32_t state = 0; state < count; ++state) {
@@ -6265,6 +6279,8 @@ struct StrategyEvalWork::Impl {
         std::uint64_t retained_scratch = capped_product(
             row_visits.capacity(), sizeof(solve_detail::WideFloat));
         retained_scratch = capped_add(
+            retained_scratch, recurrent_entry_snapshot.capacity());
+        retained_scratch = capped_add(
             retained_scratch,
             capped_product(exact_visits.capacity(), sizeof(double)));
         retained_scratch = capped_add(
@@ -6277,8 +6293,9 @@ struct StrategyEvalWork::Impl {
             capped_product(
                 reconstructed.capacity(),
                 sizeof(solve_detail::WideFloat)));
-        validate_exact_attribution_quotient(
-            exact_visits, retained_scratch);
+        if (!exact_attribution_has_recurrent_input)
+            validate_exact_attribution_quotient(
+                exact_visits, retained_scratch);
         attribution_exact_row_visits = std::move(row_visits);
         co_return exact_visits;
     }
@@ -6736,7 +6753,8 @@ struct StrategyEvalWork::Impl {
                 quotient_expected.capacity(),
                 sizeof(solve_detail::WideFloat))));
         for (std::size_t class_id = 0;
-             class_id < visits_by_class.size(); ++class_id) {
+             !exact_attribution_has_recurrent_input &&
+                 class_id < visits_by_class.size(); ++class_id) {
             const double expected = quotient_expected[class_id].value();
             const double residual = std::fabs(
                 (solve_detail::WideFloat{visits_by_class[class_id]} -

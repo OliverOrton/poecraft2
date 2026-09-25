@@ -28,7 +28,8 @@ std::string compile_finder_candidate_json(
     const CalcContext& calc,
     const pc_item_state& start_item,
     const std::vector<std::uint32_t>& primitive_sequence,
-    const SolveOptions& limits) {
+    const SolveOptions& limits,
+    const bool return_to_first) {
     if (primitive_sequence.empty() || primitive_sequence.size() > 2) {
         throw std::invalid_argument("finder supports one or two native stages");
     }
@@ -100,7 +101,9 @@ std::string compile_finder_candidate_json(
         json += ",{\"id\":\"advance" + suffix +
             "\",\"from\":\"stage" + suffix +
             "\",\"to\":\"stage" +
-            std::to_string(std::min(i + 1, primitive_sequence.size() - 1)) +
+            std::to_string(i + 1 == primitive_sequence.size() &&
+                return_to_first ? 0 :
+                std::min(i + 1, primitive_sequence.size() - 1)) +
             "\",\"priority\":1,\"is_default\":true}";
     }
     json += "]}";

@@ -14,14 +14,16 @@ enum class PolicyRouteDefaultMode : std::uint8_t {
 
 /* Finder-only proposal emission. The sequence is a finite native primitive
  * controller stage: after each paid operation the exact request goal is tested;
- * after the last stage, control returns to the first. This emits no solve or
+ * the final miss either repeats the final stage or returns to the first.
+ * This emits no solve or
  * proof fields. Acceptance must still bind the original item and scope and
  * independently evaluate the complete graph. */
 std::string compile_finder_candidate_json(
     const CalcContext& calc,
     const pc_item_state& start_item,
     const std::vector<std::uint32_t>& primitive_sequence,
-    const SolveOptions& limits);
+    const SolveOptions& limits,
+    bool return_to_first = false);
 
 std::string compile_finder_goal_condition(const CalcContext& calc);
 
