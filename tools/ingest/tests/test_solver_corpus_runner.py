@@ -404,8 +404,10 @@ def test_finder_mode_is_an_explicit_resumable_treatment(tmp_path: Path) -> None:
         corpus=tmp_path / "manifest.json", case_id="case-a", paths=paths,
         root=tmp_path, exact_evaluation=True, run_verification=False,
         goal_progress_gated_reforges=False, solver_mode="strategy_finder",
+        finder_ranking="uninformed",
     )
-    assert command.as_list()[-2:] == ["--solver-mode", "strategy_finder"]
+    assert command.as_list()[-4:] == ["--solver-mode", "strategy_finder",
+                                     "--finder-ranking", "uninformed"]
     manifest = tmp_path / "manifest.json"
     _write_json(manifest, {"cases": []})
     args = dict(root=Path.cwd(), executable=Path(sys.executable), artifact=tmp_path,
@@ -415,6 +417,9 @@ def test_finder_mode_is_an_explicit_resumable_treatment(tmp_path: Path) -> None:
     assert finder["treatment"]["solver_mode"] == "strategy_finder"
     with pytest.raises(ValueError, match="provenance/configuration differs"):
         run_corpus(**args, output_directory=output, solver_mode="current")
+    with pytest.raises(ValueError, match="provenance/configuration differs"):
+        run_corpus(**args, output_directory=output, solver_mode="strategy_finder",
+                   finder_ranking="uninformed")
 
 
 def test_native_controls_reach_worker_and_reject_changed_resume(

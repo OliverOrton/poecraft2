@@ -66,6 +66,7 @@ struct Arguments {
     std::string case_id;
     std::string native_dirty_guidance;
     std::string solver_mode = "current";
+    std::string finder_ranking = "heuristic";
     double native_execution_action_price = 0;
     std::string native_retention_diagnostic;
     double native_retention_target_lower = 0;
@@ -1664,7 +1665,16 @@ std::string query_telemetry(
     json.resize(length);
     try {
         const Value parsed = Parser(json.data(), json.size()).parse();
-        if (required_string(parsed, "version") != "solver_telemetry_v1") {
+        const Value* version = parsed.find("version");
+        const Value* lane = parsed.find("lane");
+        const bool current_schema = version != nullptr &&
+            version->type == Type::String &&
+            version->string == "solver_telemetry_v1";
+        const bool finder_schema = version != nullptr &&
+            version->type == Type::Number && version->number == 1 &&
+            lane != nullptr && lane->type == Type::String &&
+            lane->string == "strategy_finder";
+        if (!current_schema && !finder_schema) {
             errors.push_back("solver telemetry returned an unexpected version");
             return {};
         }
@@ -3536,6 +3546,7 @@ CaseResult run_case(
     const std::string& native_retention_diagnostic,
     const std::string& native_dirty_guidance,
     const std::string& solver_mode,
+    const std::string& finder_ranking,
     const double native_execution_action_price,
     const double native_retention_target_lower,
     const double proof_handoff_seconds,
@@ -3561,7 +3572,8 @@ CaseResult run_case(
     report.max_discovered_states_override =
         max_discovered_states_override;
     initialize_forced_winner_contract(specification, report);
-    initialize_bounded_best_policy_contract(specification, report);
+    if (solver_mode != "strategy_finder")
+        initialize_bounded_best_policy_contract(specification, report);
     initialize_compiled_operation_contract(specification, report);
     initialize_material_ratio_contract(specification, report);
     initialize_market_price_override_contracts(specification, report);
@@ -3789,6 +3801,17 @@ CaseResult run_case(
         pc_error_info_init(&error);
         solve_options.solver_mode = solver_mode == "strategy_finder"
             ? PC_SOLVER_MODE_STRATEGY_FINDER : PC_SOLVER_MODE_CURRENT;
+        if (solver_mode == "strategy_finder" &&
+            finder_ranking == "uninformed") {
+            const auto configured =
+                poecraft::solver::configure_solver_finder_ranking(
+                    handles.solver,
+                    poecraft::solver::FinderRankingMode::Uninformed,
+                    &error);
+            if (configured != PC_RESULT_OK)
+                throw std::runtime_error(api_error(
+                    "configure finder ranking", configured, error));
+        }
         if (const Value* candidate = optional(caps, "candidate_evaluation", Type::Object)) {
             if (candidate->object.size() != 4)
                 throw std::runtime_error("candidate_evaluation requires exactly four typed limits");
@@ -4276,6 +4299,15 @@ CaseResult run_case(
                 if (result == PC_RESULT_OK) {
                     strategy_json.resize(strategy_length);
                     report.strategy_json_bytes = strategy_length;
+                    if (solver_mode == "strategy_finder") {
+                        const Value graph = Parser(
+                            strategy_json.data(), strategy_json.size()).parse();
+                        report.compiled_nodes = required(
+                            graph, "nodes", Type::Array).array.size();
+                        report.compiled_edges = required(
+                            graph, "edges", Type::Array).array.size();
+                        report.has_compiled_graph = true;
+                    }
                     report.compile_ms = milliseconds(
                         compile_begin, Clock::now());
                     enforce_required_compiled_operation(
@@ -4839,7 +4871,8 @@ CaseResult run_case(
         }
     }
     finalize_material_ratio_contract(report, skip_verification);
-    enforce_bounded_best_policy_contract(specification, report);
+    if (solver_mode != "strategy_finder")
+        enforce_bounded_best_policy_contract(specification, report);
     finalize_mechanic_family_control(report);
     evaluate_cap_checks(specification, report);
     report.expectation_met = evaluate_expectation(
@@ -4960,6 +4993,7 @@ const char* phase_owner_name(const int32_t owner) {
     case PC_SOLVE_PHASE_OWNER_COMPILATION: return "compilation";
     case PC_SOLVE_PHASE_OWNER_EXACT_EVALUATION: return "exact_evaluation";
     case PC_SOLVE_PHASE_OWNER_DONE: return "done";
+    case PC_SOLVE_PHASE_OWNER_STRATEGY_FINDER: return "strategy_finder";
     default: return "unknown";
     }
 }
@@ -6110,6 +6144,7 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--native-execution-action-price") args.native_execution_action_price=std::stod(value("--native-execution-action-price"));
         else if (argument == "--native-dirty-guidance") args.native_dirty_guidance=value("--native-dirty-guidance");
         else if (argument == "--solver-mode") args.solver_mode=value("--solver-mode");
+        else if (argument == "--finder-ranking") args.finder_ranking=value("--finder-ranking");
         else if (argument == "--native-retention-target-lower") args.native_retention_target_lower=std::stod(value("--native-retention-target-lower"));
         else if (argument == "--proof-handoff-seconds") {
             args.proof_handoff_seconds = std::stod(value("--proof-handoff-seconds"));
@@ -6205,6 +6240,12 @@ Arguments parse_arguments(int argc, char** argv) {
         throw std::runtime_error("native dirty guidance must be legacy, static, adaptive, protected-first, selective, selective-options, execution-cost or execution-count");
     if (args.solver_mode != "current" && args.solver_mode != "strategy_finder")
         throw std::runtime_error("solver mode must be current or strategy_finder");
+    if (args.finder_ranking != "heuristic" &&
+        args.finder_ranking != "uninformed")
+        throw std::runtime_error("finder ranking must be heuristic or uninformed");
+    if (args.solver_mode != "strategy_finder" &&
+        args.finder_ranking != "heuristic")
+        throw std::runtime_error("finder ranking requires strategy_finder mode");
     if (args.solver_mode == "strategy_finder" &&
         (!args.native_dirty_guidance.empty() || !args.native_retention_diagnostic.empty() ||
          args.proof_handoff_seconds > 0 || !args.development_checkpoint_load.empty() ||
@@ -6546,6 +6587,7 @@ int main(int argc, char** argv) {
                     args.strategy_output, args.native_retention_diagnostic,
                     args.native_dirty_guidance,
                     args.solver_mode,
+                    args.finder_ranking,
                     args.native_execution_action_price,
                     args.native_retention_target_lower, args.proof_handoff_seconds,
                     args.emit_progress,

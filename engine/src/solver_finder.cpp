@@ -166,10 +166,12 @@ PolicyFinderWork::PolicyFinderWork(
     std::shared_ptr<const SessionImpl> session,
     const pc_item_state& original_start,
     std::unordered_map<std::string, double> prices,
-    const SolveOptions& limits)
+    const SolveOptions& limits,
+    const FinderRankingMode ranking)
     : problem_(problem), session_(std::move(session)),
       original_start_(original_start),
-      economy_(std::make_shared<EconomyImpl>()), limits_(limits) {
+      economy_(std::make_shared<EconomyImpl>()), limits_(limits),
+      ranking_(ranking) {
     if (session_ == nullptr) {
         throw std::invalid_argument("finder requires a session");
     }
@@ -200,7 +202,8 @@ PolicyFinderWork::PolicyFinderWork(
     }
     std::stable_sort(ranked_.begin(), ranked_.end(),
         [&](const RankedAction& left, const RankedAction& right) {
-            if (left.price != right.price) return left.price < right.price;
+            if (ranking_ == FinderRankingMode::Heuristic &&
+                left.price != right.price) return left.price < right.price;
             return problem_.registry().actions[left.index].id <
                 problem_.registry().actions[right.index].id;
         });
@@ -305,8 +308,9 @@ void PolicyFinderWork::expand_next_partial() {
             static_cast<std::uint32_t>(problem_.goal().slots.size()),
             !recovery, recovery});
     }
-    const std::vector<double> scores =
-        score_finder_sketch_batch(features);
+    const std::vector<double> scores = ranking_ == FinderRankingMode::Heuristic
+        ? score_finder_sketch_batch(features)
+        : std::vector<double>(features.size(), 0.0);
     std::uint64_t scratch =
         children.capacity() * sizeof(Sketch) +
         features.capacity() * sizeof(FinderScoreFeatures) +
@@ -564,8 +568,11 @@ const std::optional<FinderCheckedPolicy>& PolicyFinderWork::best() const {
 
 std::string PolicyFinderWork::telemetry_json() const {
     const FinderProgress state = progress();
-    const std::string result = "{\"version\":1,\"lane\":\"strategy_finder\","
-        "\"considered\":" + std::to_string(state.considered) +
+    const std::string result = std::string(
+        "{\"version\":1,\"lane\":\"strategy_finder\","
+        "\"ranking\":\"") +
+        (ranking_ == FinderRankingMode::Heuristic ? "heuristic" : "uninformed") +
+        "\",\"considered\":" + std::to_string(state.considered) +
         ",\"checked\":" + std::to_string(state.checked) +
         ",\"generated\":" + std::to_string(state.generated) +
         ",\"duplicates\":" + std::to_string(state.duplicates) +

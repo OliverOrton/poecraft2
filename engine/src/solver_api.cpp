@@ -602,6 +602,8 @@ struct pc_solver {
     solver::NativeContinuationSearchMode native_continuation_search =
         solver::NativeContinuationSearchMode::Ordinary;
     double native_execution_action_price = 0.0;
+    solver::FinderRankingMode finder_ranking =
+        solver::FinderRankingMode::Heuristic;
 };
 
 namespace poecraft::solver {
@@ -1273,6 +1275,22 @@ pc_result solver::configure_solver_native_retention_diagnostic(
     return PC_RESULT_OK;
 }
 
+pc_result solver::configure_solver_finder_ranking(
+        pc_solver_handle handle, FinderRankingMode mode,
+        pc_error_info* out_error) {
+    if (!handle || handle->solve_work || handle->solved.has_value() ||
+        handle->finder_work || handle->finder_finished ||
+        (mode != FinderRankingMode::Heuristic &&
+         mode != FinderRankingMode::Uninformed)) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+            "finder ranking requires an idle unsolved handle and known mode");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    handle->finder_ranking = mode;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
 pc_result solver::configure_solver_native_continuation_search(
         pc_solver_handle handle, NativeContinuationSearchMode mode,
         pc_error_info* out_error, const double execution_action_price) {
@@ -1918,7 +1936,8 @@ pc_result pc_solver_solve_begin(
         if (mode == PC_SOLVER_MODE_STRATEGY_FINDER) {
             solver->finder_work = std::make_unique<solver::PolicyFinderWork>(
                 *solver->calc, solver->session, *start_item,
-                economy_prices(economy), solve_options(*solver, options));
+                economy_prices(economy), solve_options(*solver, options),
+                solver->finder_ranking);
         } else {
             auto work = std::make_unique<solver::SolveWork>(
                 *solver->calc, *start_item, economy_prices(economy),

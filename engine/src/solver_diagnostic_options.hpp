@@ -6,6 +6,7 @@
 #include "poecraft/solver.h"
 #include "solver_model.hpp"
 #include "solver_solve_contracts.hpp"
+#include "solver_finder.hpp"
 
 namespace poecraft {
 namespace solver {
@@ -46,6 +47,11 @@ enum class NativeRetentionDiagnosticMode { Off, Cold, Reuse, CheckedTarget, Reus
 // Same ordinary consumer, native benchmark only. No public ABI/profile flag.
 pc_result configure_solver_native_retention_diagnostic(pc_solver_handle handle,
     NativeRetentionDiagnosticMode mode, pc_error_info* out_error, double checked_target = 0);
+
+/* Benchmark-only ordering ablation. Candidate grammar and native checker
+ * remain identical; the public finder always uses heuristic ranking. */
+pc_result configure_solver_finder_ranking(pc_solver_handle handle,
+    FinderRankingMode mode, pc_error_info* out_error);
 
 /* Comparison arms only. The retained fresh-layout method is available through
  * the public PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH request flag. */

@@ -369,6 +369,7 @@ def _run_case(
     native_dirty_guidance: str | None = None,
     native_execution_action_price: float | None = None,
     solver_mode: str | None = None,
+    finder_ranking: str | None = None,
 ) -> dict[str, Any]:
     immutable_lab_attempt = bool(
         attempt_paths is not None
@@ -396,6 +397,7 @@ def _run_case(
         native_dirty_guidance=native_dirty_guidance,
         native_execution_action_price=native_execution_action_price,
         solver_mode=solver_mode,
+        finder_ranking=finder_ranking,
     )
     result = run_isolated_process(
         resolved.command.as_list(),
@@ -597,6 +599,7 @@ def run_corpus(
     native_dirty_guidance: str | None = None,
     native_execution_action_price: float | None = None,
     solver_mode: str | None = None,
+    finder_ranking: str | None = None,
     host_watchdog_seconds: float | None = None,
     worker_headroom_bytes: int = 0,
 ) -> dict[str, Any]:
@@ -611,6 +614,9 @@ def run_corpus(
         raise ValueError("unsupported native dirty guidance treatment")
     if solver_mode not in (None, "current", "strategy_finder"):
         raise ValueError("unsupported solver mode")
+    if finder_ranking not in (None, "heuristic", "uninformed") or (
+            finder_ranking is not None and solver_mode != "strategy_finder"):
+        raise ValueError("finder ranking requires strategy_finder mode")
     if native_execution_action_price is not None and (
             native_dirty_guidance != "execution-count" or
             not math.isfinite(native_execution_action_price) or native_execution_action_price <= 0):
@@ -671,6 +677,8 @@ def run_corpus(
     treatment = {"native_dirty_guidance": native_dirty_guidance}
     if solver_mode is not None:
         treatment["solver_mode"] = solver_mode
+    if finder_ranking is not None:
+        treatment["finder_ranking"] = finder_ranking
     if native_execution_action_price is not None:
         treatment["native_execution_action_price"] = float(native_execution_action_price)
     current_resume_identity = provenance.resume_identity(configuration)
@@ -759,6 +767,7 @@ def run_corpus(
                     native_dirty_guidance=native_dirty_guidance,
                     native_execution_action_price=native_execution_action_price,
                     solver_mode=solver_mode,
+                    finder_ranking=finder_ranking,
                     watchdog_seconds=host_watchdog_seconds,
                     worker_headroom_bytes=worker_headroom_bytes,
                 )
@@ -823,6 +832,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Native algorithm treatment, separately recorded from unchanged request and capacity identity.")
     parser.add_argument("--solver-mode", choices=("current", "strategy_finder"),
         help="Solver lane treatment, separately recorded from request and capacity identity.")
+    parser.add_argument("--finder-ranking", choices=("heuristic", "uninformed"),
+        help="Native finder ranking ablation with unchanged candidate grammar and checker.")
     parser.add_argument(
         "--native-retention-diagnostic",
         choices=NATIVE_RETENTION_DIAGNOSTIC_MODES,
@@ -873,6 +884,7 @@ def main(argv: list[str] | None = None) -> int:
         native_dirty_guidance=args.native_dirty_guidance,
         native_execution_action_price=args.native_execution_action_price,
         solver_mode=args.solver_mode,
+        finder_ranking=args.finder_ranking,
         host_watchdog_seconds=args.host_watchdog_seconds,
         worker_headroom_bytes=args.worker_headroom_bytes,
     )

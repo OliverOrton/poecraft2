@@ -245,6 +245,18 @@ speculative service, so no production mode or product claim was retained. This
 is a scoped feasible upper witness; whether a materially cheaper, broadly
 qualified controller exists, and full exact closure, remain open.
 
+The [independent strategy-finder programme](../active/2026-09-24-strategy-finder/README.md#f4--predeclared-matched-qualification)
+adds a request-bound experimental proposer with native complete-controller
+checking, separate from Current's proof search. Matched A3/B3/A4/A5 source,
+request and capacity runs find no economic gain: the finder has no B3 policy,
+and its A3/A4/A5 checked costs are orders of magnitude above Current's final
+policies. A4 gains early availability only at much higher cost. Uninformed
+candidate order improves A4/A5 relative to the first heuristic but remains far
+costlier than Current. The finder stays experimental; neither its checked cost
+nor its ordering score supplies lower or exactness authority. The measured
+barrier is narrow controller coverage plus complete-check expense, and the
+exposed four-case result is not a generalization claim.
+
 The [verified-delivery programme](../active/2026-09-15-verified-delivery/README.md)
 applies the [owned-witness interruption argument](mathematics/search-and-resumption.md#interruptible-verified-results)
 to explicit Finish and frozen request export, and attributes setup latency. Its activation

@@ -69,6 +69,8 @@ struct FinderScoreFeatures {
 std::vector<double> score_finder_sketch_batch(
     const std::vector<FinderScoreFeatures>& features);
 
+enum class FinderRankingMode : std::uint8_t { Heuristic, Uninformed };
+
 /* Peer heuristic policy search. It never creates SolveWork or supplies a
  * lower/exact certificate. One native evaluator is live at most. */
 class PolicyFinderWork {
@@ -78,7 +80,8 @@ class PolicyFinderWork {
         std::shared_ptr<const SessionImpl> session,
         const pc_item_state& original_start,
         std::unordered_map<std::string, double> prices,
-        const SolveOptions& limits);
+        const SolveOptions& limits,
+        FinderRankingMode ranking = FinderRankingMode::Heuristic);
     ~PolicyFinderWork();
     PolicyFinderWork(const PolicyFinderWork&) = delete;
     PolicyFinderWork& operator=(const PolicyFinderWork&) = delete;
@@ -111,6 +114,7 @@ class PolicyFinderWork {
     pc_item_state original_start_{};
     std::shared_ptr<EconomyImpl> economy_;
     SolveOptions limits_;
+    FinderRankingMode ranking_;
     std::vector<RankedAction> ranked_;
     std::vector<Sketch> frontier_;
     std::vector<PartialSketch> pending_;
