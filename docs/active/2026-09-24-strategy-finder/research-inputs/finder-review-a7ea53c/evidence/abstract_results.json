@@ -1,0 +1,8 @@
+{
+  "scope": "abstract specifications; no native execution",
+  "tests_run": 9,
+  "failures": 0,
+  "errors": 0,
+  "passed": true,
+  "default_edge_test": "passing test reproduces an abstract bypass counterexample, not a native fix"
+}

@@ -981,6 +981,14 @@ std::vector<PlannerOperator> build_planner_operators(
     const ActionRegistry& registry,
     const std::vector<std::uint32_t>& admitted_primitives);
 
+/* Resolve one complete native fixed program for finder proposals. Both
+ * primitives must be inside the caller's admitted request scope. */
+std::vector<std::uint32_t> finder_scour_alchemy_program(
+    const SessionImpl& session,
+    const GoalSpec& goal,
+    const ActionRegistry& registry,
+    const std::vector<std::uint32_t>& admitted_primitives);
+
 // --- goal resolution and abstract layout --------------------------------------
 
 enum class GoalSlotStatus : std::uint8_t {

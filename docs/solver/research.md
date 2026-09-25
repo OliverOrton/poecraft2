@@ -614,6 +614,16 @@ sections, changes, disagreements, actual validation, local commit and real push
 status. No separate receipt file is required. Research recommendations remain
 candidate evidence; repetition in multiple plans is not independent corroboration.
 
+The September 24 [finder review and H0–H4 continuation](../active/2026-09-24-strategy-finder/README.md#h0h4--reviewed-finder-continuation)
+closed the executable-default-success bypass and retained a native finite
+control/search increment. Its Scour→Alchemy program is narrower than the
+review's preferred progress-retaining protected family, and dependency-only
+program scope remains open. Matched A3/A4/A5 conditional graphs check but lose
+to Current by large cost factors; B3 has no accepted graph. The proposed
+ranker/model training and default promotion are stopped on this evidence.
+The F4 Current A3 unnamed cap and A4 cross-build cost difference remain
+identified limitations, not repaired or attributed facts.
+
 <a id="knowledge"></a>
 ## 5. Knowledge outlives machinery
 

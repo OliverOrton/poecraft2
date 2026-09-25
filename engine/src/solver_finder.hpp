@@ -3,10 +3,13 @@
 #include "solver_compile_contracts.hpp"
 #include "solver_eval_types.hpp"
 
+#include <chrono>
 #include <memory>
+#include <deque>
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace poecraft::solver {
@@ -70,6 +73,7 @@ std::vector<double> score_finder_sketch_batch(
     const std::vector<FinderScoreFeatures>& features);
 
 enum class FinderRankingMode : std::uint8_t { Heuristic, Uninformed };
+enum class FinderGrammarMode : std::uint8_t { PrimitiveOnly, Conditional };
 
 /* Peer heuristic policy search. It never creates SolveWork or supplies a
  * lower/exact certificate. One native evaluator is live at most. */
@@ -81,7 +85,8 @@ class PolicyFinderWork {
         const pc_item_state& original_start,
         std::unordered_map<std::string, double> prices,
         const SolveOptions& limits,
-        FinderRankingMode ranking = FinderRankingMode::Heuristic);
+        FinderRankingMode ranking = FinderRankingMode::Heuristic,
+        FinderGrammarMode grammar = FinderGrammarMode::Conditional);
     ~PolicyFinderWork();
     PolicyFinderWork(const PolicyFinderWork&) = delete;
     PolicyFinderWork& operator=(const PolicyFinderWork&) = delete;
@@ -102,12 +107,36 @@ class PolicyFinderWork {
         std::vector<std::uint32_t> actions;
         double score = 0.0;
         bool return_to_first = false;
+        std::optional<FinderControlGraph> control;
+        bool feedback_parent = false;
+        std::string parent_identity;
     };
-    enum class HoleKind : std::uint8_t { Renewal, Recovery };
+    enum class HoleKind : std::uint8_t {
+        Renewal, Recovery, Progress, ProgressProgram
+    };
     struct PartialSketch {
         std::uint32_t first = kNoId;
         double first_price = 0.0;
         HoleKind hole = HoleKind::Renewal;
+        std::string parent_identity;
+    };
+    struct CandidateRecord {
+        std::string identity;
+        std::string parent_identity;
+        std::string status = "queued";
+        std::string refusal;
+        std::string graph_hash;
+        std::vector<std::uint32_t> actions;
+        std::uint64_t generated_ns = 0;
+        std::uint64_t started_ns = 0;
+        std::uint64_t finished_ns = 0;
+        std::uint64_t work = 0;
+        std::uint64_t peak_owned_bytes = 0;
+        double checked_cost = 0.0;
+        double score = 0.0;
+        bool has_checked_cost = false;
+        bool conditional = false;
+        bool native_program = false;
     };
     CalcContext& problem_;
     std::shared_ptr<const SessionImpl> session_;
@@ -115,14 +144,21 @@ class PolicyFinderWork {
     std::shared_ptr<EconomyImpl> economy_;
     SolveOptions limits_;
     FinderRankingMode ranking_;
+    FinderGrammarMode grammar_;
     std::vector<RankedAction> ranked_;
-    std::vector<Sketch> frontier_;
+    std::deque<Sketch> frontier_;
+    std::unordered_set<std::string> seen_;
+    std::vector<CandidateRecord> candidate_records_;
     std::vector<PartialSketch> pending_;
     std::size_t pending_cursor_ = 0;
-    std::size_t cursor_ = 0;
     std::shared_ptr<StrategyImpl> checking_strategy_;
     std::unique_ptr<StrategyEvalWork> checker_;
     std::string checking_graph_;
+    std::optional<Sketch> active_sketch_;
+    std::optional<std::size_t> active_record_;
+    std::string problem_identity_;
+    std::chrono::steady_clock::time_point born_ =
+        std::chrono::steady_clock::now();
     std::optional<FinderCheckedPolicy> best_;
     FinderProgress counters_;
     std::string last_refusal_;
@@ -135,6 +171,10 @@ class PolicyFinderWork {
     bool exhausted() const;
     void complete_active_candidate();
     void charge_active_work();
+    std::string sketch_identity(const Sketch& sketch) const;
+    void record_generated(const Sketch& sketch);
+    void schedule_feedback_program();
+    std::uint64_t elapsed_ns() const;
     std::uint64_t retained_owned_bytes() const;
     void update_peak();
 };

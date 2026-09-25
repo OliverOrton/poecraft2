@@ -27,6 +27,30 @@ std::string compile_finder_candidate_json(
 
 std::string compile_finder_goal_condition(const CalcContext& calc);
 
+/* A finite, native-bound finder proposal. Indices name nodes in this vector;
+ * Hole is search-only and cannot be compiled. Goal ingress is assembled from
+ * the original request, never supplied as an arbitrary proposer predicate. */
+enum class FinderControlKind : std::uint8_t {
+    TestGoal, TestSlot, TestAffixCountAtLeast4,
+    RunPrimitive, RunScourAlchemy, GoalTerminal, FailureTerminal, Hole
+};
+struct FinderControlNode {
+    FinderControlKind kind = FinderControlKind::Hole;
+    std::uint32_t binding = kNoId;
+    std::uint32_t on_true = kNoId;
+    std::uint32_t on_false = kNoId;
+    std::uint32_t next = kNoId;
+};
+struct FinderControlGraph {
+    std::vector<FinderControlNode> nodes;
+    std::uint32_t entry = kNoId;
+};
+std::string compile_finder_control_json(
+    const CalcContext& calc,
+    const pc_item_state& start_item,
+    const FinderControlGraph& control,
+    const SolveOptions& limits);
+
 /*
  * Compile a solved policy into ordinary strategy JSON (the same format the
  * editor and simulator consume): a master router whose prioritized edges

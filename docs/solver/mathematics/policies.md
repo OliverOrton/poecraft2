@@ -5,6 +5,14 @@
 
 A policy upper is a witness of what can actually be executed. It is not a promise that the action sequence is optimal, and it is not the value of a convenient projection unless that projection has been connected to native execution.
 
+A generated finite controller is still just a candidate. Its predicates must
+use observable native item facts, its success route must test the original goal
+with executable edge semantics, and every positive-mass operation outcome must
+have a complete continuation. A default edge with a decorative goal predicate
+does not test that goal. Only independent evaluation of the complete paid graph
+from the original root supplies its executable upper; a search score or
+successful local program check does not.
+
 <a id="fixed-policy"></a>
 ## 1. Fixed-policy evaluation
 

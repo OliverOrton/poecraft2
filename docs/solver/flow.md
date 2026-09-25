@@ -54,6 +54,13 @@ Native profiles resolve product defaults. Goal-progress gating, automatic Imprin
 
 ## Cooperative Native Solve
 
+The experimental Strategy finder is a separate peer work owner selected by the
+request mode. It proposes finite ordinary control graphs, then checks them with
+the native strategy evaluator. Its checked root cost is an executable-policy
+upper only; it supplies no lower, gap or optimality claim. Current remains the
+default. The [finder living record](../active/2026-09-24-strategy-finder/README.md#h0h4--reviewed-finder-continuation)
+owns the tested grammar and comparison.
+
 The stepped interface is:
 
 ```text
@@ -82,6 +89,12 @@ An incremental delayed envelope can improve a restricted policy before all alter
 The worker adapts native work and yields to its event loop. Cancellation is cooperative: a queued cancel message is observed after native work returns. Unfinished work is abandoned through the existing handle lifecycle rather than promoted.
 
 ## Policy To Editable Strategy
+
+A finder success route is guarded by the original native goal. In ordinary
+strategy JSON, a default edge executes as fallback even if raw JSON also gives
+it a condition, so raw decoration cannot establish this guard. Finder graph
+preparation rejects default success ingress; the independent evaluator then
+checks the exact emitted graph from the original root.
 
 When `policy_available` holds, the compile interface returns the already asserted ordinary strategy. Fixed-program choice routes preserve their exact observation carrier. The strategy retains its concrete start and the documented presentation/accounting annotations.
 

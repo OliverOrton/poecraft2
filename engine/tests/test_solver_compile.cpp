@@ -7,6 +7,7 @@
 #include "../src/solver_solve_types.hpp"
 #include "../src/solver_compile_contracts.hpp"
 #include "../src/solver_finder.hpp"
+#include "../src/json.hpp"
 #include "../src/solver_dirty_guidance.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
@@ -272,6 +273,22 @@ void run_finder_request_binding_tests() {
             magic_calc, session, magic_start,
             finder.best()->strategy_json).ready());
     }
+    PolicyFinderWork finish_with_winner(
+        magic_calc, session, magic_start, {{"alteration", 1.0}}, limits);
+    for (int i = 0; i < 10000 &&
+         !finish_with_winner.best().has_value() &&
+         !finish_with_winner.progress().done; ++i)
+        finish_with_winner.step(1024);
+    PC_CHECK(finish_with_winner.best().has_value());
+    if (finish_with_winner.best().has_value()) {
+        const std::string retained =
+            finish_with_winner.best()->strategy_json;
+        finish_with_winner.request_bounded_finish();
+        finish_with_winner.step(1);
+        PC_CHECK(finish_with_winner.progress().done);
+        PC_CHECK(finish_with_winner.best().has_value());
+        PC_CHECK(finish_with_winner.best()->strategy_json == retained);
+    }
     GoalSpec suffix_goal;
     suffix_goal.rarity = PC_RARITY_MAGIC;
     GoalSlot suffix_wanted;
@@ -357,6 +374,107 @@ void run_finder_request_binding_tests() {
     const auto cleanup_eval = evaluate_strategy(
         *cleanup_prepared.strategy, cleanup_options);
     PC_CHECK(finder_evaluation_accepted(cleanup_eval));
+    FinderControlGraph conditional;
+    conditional.entry = 0;
+    conditional.nodes = {
+        {FinderControlKind::TestGoal, kNoId, 5, 1},
+        {FinderControlKind::TestSlot, 0, 2, 4},
+        {FinderControlKind::TestAffixCountAtLeast4, kNoId, 3, 4},
+        {FinderControlKind::RunPrimitive, annul, kNoId, kNoId, 0},
+        {FinderControlKind::RunPrimitive, chaos, kNoId, kNoId, 0},
+        {FinderControlKind::GoalTerminal},
+    };
+    const std::string conditional_graph = compile_finder_control_json(
+        cleanup_calc, start, conditional, limits);
+    auto conditional_prepared = prepare_finder_candidate(
+        cleanup_calc, session, start, conditional_graph);
+    PC_CHECK(conditional_prepared.ready());
+    if (conditional_prepared.ready()) {
+        const auto conditional_eval = evaluate_strategy(
+            *conditional_prepared.strategy, cleanup_options);
+        PC_CHECK(finder_evaluation_accepted(conditional_eval));
+    }
+    conditional.nodes[1].kind = FinderControlKind::Hole;
+    bool hole_refused = false;
+    try {
+        (void)compile_finder_control_json(cleanup_calc, start, conditional, limits);
+    } catch (const std::invalid_argument&) { hole_refused = true; }
+    PC_CHECK(hole_refused);
+    const auto scour = registry.index_by_id.at("scour");
+    const auto alchemy = registry.index_by_id.at("alchemy");
+    CalcContext program_calc(
+        session, clean_three, registry, {chaos, annul, scour, alchemy});
+    FinderControlGraph staged_control;
+    staged_control.entry = 0;
+    staged_control.nodes = {
+        {FinderControlKind::TestGoal, kNoId, 7, 1},
+        {FinderControlKind::TestSlot, 0, 2, 5},
+        {FinderControlKind::TestAffixCountAtLeast4, kNoId, 3, 4},
+        {FinderControlKind::RunPrimitive, annul, kNoId, kNoId, 0},
+        {FinderControlKind::RunPrimitive, chaos, kNoId, kNoId, 0},
+        {FinderControlKind::TestSlot, 1, 6, 4},
+        {FinderControlKind::RunScourAlchemy, kNoId, kNoId, kNoId, 0},
+        {FinderControlKind::GoalTerminal},
+    };
+    const std::string staged_graph = compile_finder_control_json(
+        program_calc, start, staged_control, limits);
+    PC_CHECK(staged_graph.find("_o1") != std::string::npos);
+    auto staged_prepared = prepare_finder_candidate(
+        program_calc, session, start, staged_graph);
+    PC_CHECK(staged_prepared.ready());
+    auto staged_prices = std::make_shared<EconomyImpl>();
+    staged_prices->prices = {{"chaos", 1.0}, {"annul", 1.0},
+        {"scour", 1.0}, {"alchemy", 1.0}};
+    StrategyEvalOptions staged_options;
+    staged_options.economy = staged_prices;
+    if (staged_prepared.ready()) {
+        const auto staged_eval = evaluate_strategy(
+            *staged_prepared.strategy, staged_options);
+        PC_CHECK(finder_evaluation_accepted(staged_eval));
+    }
+    PolicyFinderWork program_finder(program_calc, session, start,
+        staged_prices->prices, limits);
+    for (int i = 0; i < 10000 && !program_finder.progress().done; ++i)
+        program_finder.step(1024);
+    PC_CHECK(program_finder.progress().done);
+    PC_CHECK(program_finder.best().has_value());
+    PC_CHECK(program_finder.progress().checked >= 4);
+    const std::string candidate_telemetry = program_finder.telemetry_json();
+    const auto candidate_report = json::Parser(
+        candidate_telemetry.data(), candidate_telemetry.size()).parse();
+    bool checked_native_program = false;
+    for (const auto& record : candidate_report.at("candidates").as_array()) {
+        if (record.at("native_program").boolean &&
+            record.at("status").string != "queued" &&
+            !record.at("parent").string.empty())
+            checked_native_program = true;
+    }
+    PC_CHECK(checked_native_program);
+    GoalSpec other_three;
+    other_three.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t mod : {3u, 4u, 5u}) {
+        GoalSlot slot;
+        slot.family_id = session->family_id.at(mod);
+        slot.min_tier = 1;
+        other_three.slots.push_back(slot);
+    }
+    CalcContext other_program_calc(session, other_three, registry,
+        {chaos, annul, scour, alchemy});
+    const std::string other_graph = compile_finder_control_json(
+        other_program_calc, start, staged_control, limits);
+    PC_CHECK(other_graph != staged_graph);
+    auto other_prepared = prepare_finder_candidate(
+        other_program_calc, session, start, other_graph);
+    PC_CHECK(other_prepared.ready());
+    if (other_prepared.ready()) {
+        const auto other_eval = evaluate_strategy(
+            *other_prepared.strategy, staged_options);
+        PC_CHECK(finder_evaluation_accepted(other_eval));
+    }
+    CalcContext no_program_scope(session, clean_three, registry,
+        {chaos, annul});
+    PC_CHECK(!prepare_finder_candidate(
+        no_program_scope, session, start, staged_graph).ready());
     const auto scores = score_finder_sketch_batch({
         {1.0, 1.0, 3, false, true},
         {1.0, 1.0, 3, true, false},
@@ -373,11 +491,11 @@ void run_finder_request_binding_tests() {
     PC_CHECK(cleanup_finder.progress().done);
     PC_CHECK(cleanup_finder.best().has_value());
     PC_CHECK(cleanup_finder.progress().pending_holes == 0);
-    PC_CHECK(cleanup_finder.progress().checked == 2);
+    PC_CHECK(cleanup_finder.progress().checked >= 3);
     PC_CHECK(cleanup_finder.progress().refused == 1);
     if (cleanup_finder.best().has_value())
-        PC_CHECK(std::fabs(cleanup_finder.best()->expected_cost -
-            cleanup_eval.total_expected_cost) < 1e-8);
+        PC_CHECK(cleanup_finder.best()->expected_cost <=
+            cleanup_eval.total_expected_cost + 1e-8);
 }
 
 void run_finder_default_success_regression() {

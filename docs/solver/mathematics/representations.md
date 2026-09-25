@@ -22,6 +22,13 @@ physical item + required control/observation memory
 
 Each arrow needs a relation. None means that the identifiers on either side are interchangeable.
 
+The experimental finder stores distinct finite control nodes for different
+partial-goal observations before compiling an ordinary strategy. Sharing a
+role feature or action index does not equate the corresponding operation–item
+states or their values. A bound native program contributes its mandatory
+steps and control phase; the current Scour→Alchemy finder branch emits those
+steps explicitly rather than treating a macro label as a primitive transition.
+
 A coarse cell can represent several physical items. One physical item can occur at several strategy nodes with different remaining programs. A strict-state identifier belongs to a particular graph generation. A compiled router selects an operation using conditions that must be sufficient for the policy being executed. The evaluator's product graph is needed precisely because an operation node alone does not determine its transition law. [Publication and Evaluation](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/publication.md).
 
 The same warning applies to a lower-table coordinate such as rarity × goal mask × side occupancy. It is a question asked of many possible items, not a complete description of any one of them.

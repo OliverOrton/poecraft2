@@ -41,6 +41,20 @@ Primary owners are `solver_solve_finish.cpp`, `solver_policy_assertion_work.cpp`
 
 ## Compiler Contract
 
+The experimental finder has an internal finite control graph; its assembler
+emits the same ordinary strategy format used by independent evaluation. Goal
+terminal ingress uses the original native goal and cannot be a default edge,
+whose compiled meaning is unconditional fallback. Search holes and open ports
+are refused before checking. A Scour→Alchemy run emits both native operations
+and their paid continuation; the current finder admits it only when both
+primitives are declared in scope. This does not grant dependency-only primitive
+scope through program provenance.
+
+After a candidate passes native properness, mass and pricing checks, finder
+ownership moves the emitted graph buffer into the winning bundle. A later
+failed or capped candidate leaves that verified bundle intact. The finder does
+not feed its estimate into the Current publication pipeline.
+
 Routers express observable distinctions between exact carriers whose continuations differ. Operation nodes invoke native actions; infrastructure nodes own start, success, off-policy failure, and any explicitly scoped recovery default.
 
 Equivalent route signatures and identical operation regions may be shared. Compaction cannot merge semantically different conditions, change defaults, erase required checkpoint or observation state, or substitute an action label for its literal operation/resource payload.

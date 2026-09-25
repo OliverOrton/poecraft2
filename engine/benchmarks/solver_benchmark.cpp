@@ -67,6 +67,7 @@ struct Arguments {
     std::string native_dirty_guidance;
     std::string solver_mode = "current";
     std::string finder_ranking = "heuristic";
+    std::string finder_grammar = "conditional";
     double native_execution_action_price = 0;
     std::string native_retention_diagnostic;
     double native_retention_target_lower = 0;
@@ -3547,6 +3548,7 @@ CaseResult run_case(
     const std::string& native_dirty_guidance,
     const std::string& solver_mode,
     const std::string& finder_ranking,
+    const std::string& finder_grammar,
     const double native_execution_action_price,
     const double native_retention_target_lower,
     const double proof_handoff_seconds,
@@ -3811,6 +3813,17 @@ CaseResult run_case(
             if (configured != PC_RESULT_OK)
                 throw std::runtime_error(api_error(
                     "configure finder ranking", configured, error));
+        }
+        if (solver_mode == "strategy_finder" &&
+            finder_grammar == "primitive") {
+            const auto configured =
+                poecraft::solver::configure_solver_finder_grammar(
+                    handles.solver,
+                    poecraft::solver::FinderGrammarMode::PrimitiveOnly,
+                    &error);
+            if (configured != PC_RESULT_OK)
+                throw std::runtime_error(api_error(
+                    "configure finder grammar", configured, error));
         }
         if (const Value* candidate = optional(caps, "candidate_evaluation", Type::Object)) {
             if (candidate->object.size() != 4)
@@ -6145,6 +6158,7 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--native-dirty-guidance") args.native_dirty_guidance=value("--native-dirty-guidance");
         else if (argument == "--solver-mode") args.solver_mode=value("--solver-mode");
         else if (argument == "--finder-ranking") args.finder_ranking=value("--finder-ranking");
+        else if (argument == "--finder-grammar") args.finder_grammar=value("--finder-grammar");
         else if (argument == "--native-retention-target-lower") args.native_retention_target_lower=std::stod(value("--native-retention-target-lower"));
         else if (argument == "--proof-handoff-seconds") {
             args.proof_handoff_seconds = std::stod(value("--proof-handoff-seconds"));
@@ -6243,9 +6257,13 @@ Arguments parse_arguments(int argc, char** argv) {
     if (args.finder_ranking != "heuristic" &&
         args.finder_ranking != "uninformed")
         throw std::runtime_error("finder ranking must be heuristic or uninformed");
+    if (args.finder_grammar != "conditional" &&
+        args.finder_grammar != "primitive")
+        throw std::runtime_error("finder grammar must be conditional or primitive");
     if (args.solver_mode != "strategy_finder" &&
-        args.finder_ranking != "heuristic")
-        throw std::runtime_error("finder ranking requires strategy_finder mode");
+        (args.finder_ranking != "heuristic" ||
+         args.finder_grammar != "conditional"))
+        throw std::runtime_error("finder diagnostics require strategy_finder mode");
     if (args.solver_mode == "strategy_finder" &&
         (!args.native_dirty_guidance.empty() || !args.native_retention_diagnostic.empty() ||
          args.proof_handoff_seconds > 0 || !args.development_checkpoint_load.empty() ||
@@ -6588,6 +6606,7 @@ int main(int argc, char** argv) {
                     args.native_dirty_guidance,
                     args.solver_mode,
                     args.finder_ranking,
+                    args.finder_grammar,
                     args.native_execution_action_price,
                     args.native_retention_target_lower, args.proof_handoff_seconds,
                     args.emit_progress,

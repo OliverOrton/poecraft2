@@ -18,6 +18,13 @@ The current mechanisms remain described by [Scheduling and Bellman Search](https
 
 A heuristic can rank work badly and still publish only sound results. A fair schedule can be impractically slow. A capped run with no answer is not a counterexample to a theorem whose premise is unlimited fair execution. Conversely, a sound bound does not establish that the scheduler will ever finish its proof.
 
+The experimental finder expands finite control holes in a bounded live
+frontier. A completed or capped native check may schedule a deeper child, but
+the child receives no authority from its parent; it must compile and pass its
+own full evaluation. Parent and graph identities are retained for experiment
+audit. Beam width, deduplication and attempt ceilings limit the search and
+provide no fairness or optimality guarantee.
+
 A pending producer adds a service obligation even when its numerical read has a
 safe fallback. If a one-shot certificate sees zero while a nonnegative lower is
 pending, zero is admissible but does not mean the completed certificate failed.

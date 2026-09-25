@@ -338,12 +338,16 @@ def build_solver_case_command(
     native_execution_action_price: float | None = None,
     solver_mode: str | None = None,
     finder_ranking: str | None = None,
+    finder_grammar: str | None = None,
 ) -> SolverCaseCommand:
     if solver_mode not in (None, "current", "strategy_finder"):
         raise ValueError("unsupported solver mode")
     if finder_ranking not in (None, "heuristic", "uninformed") or (
             finder_ranking is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder ranking requires strategy_finder mode")
+    if finder_grammar not in (None, "primitive", "conditional") or (
+            finder_grammar is not None and solver_mode != "strategy_finder"):
+        raise ValueError("finder grammar requires strategy_finder mode")
     if native_dirty_guidance not in (None, "legacy", "static", "adaptive", "protected-first", "selective", "selective-options", "execution-cost", "execution-count"):
         raise ValueError("unsupported native dirty guidance treatment")
     if native_execution_action_price is not None and (
@@ -386,6 +390,8 @@ def build_solver_case_command(
         argv.extend(("--solver-mode", solver_mode))
     if finder_ranking is not None:
         argv.extend(("--finder-ranking", finder_ranking))
+    if finder_grammar is not None:
+        argv.extend(("--finder-grammar", finder_grammar))
     return SolverCaseCommand(tuple(argv), root)
 
 
@@ -407,6 +413,7 @@ def resolve_case_execution(
     native_execution_action_price: float | None = None,
     solver_mode: str | None = None,
     finder_ranking: str | None = None,
+    finder_grammar: str | None = None,
 ) -> ResolvedCaseExecution:
     paths.prepare()
     command = build_solver_case_command(
@@ -424,6 +431,7 @@ def resolve_case_execution(
         native_execution_action_price=native_execution_action_price,
         solver_mode=solver_mode,
         finder_ranking=finder_ranking,
+        finder_grammar=finder_grammar,
     )
     return ResolvedCaseExecution(
         case_id=task.case_id,

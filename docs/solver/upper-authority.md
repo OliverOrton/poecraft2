@@ -14,6 +14,13 @@ Primary current owners are `solver_solve_constructive.cpp`, `solver_solve_finish
 
 ## Candidate Sources
 
+The peer Strategy finder can return a separate checked executable graph from
+the original request root. Its candidate score only orders proposals; the
+complete native strategy evaluation decides policy availability and cost.
+Finder output has no independent lower or exactness authority and does not
+enter the Current incumbent portfolio. An already-complete root still passes
+through a goal-guarded zero-operation graph and independent checking.
+
 Ordinary candidates can come from a complete coarse policy, constructive or renewal witness, carrier-ladder/joint-policy work, a retained strict incumbent, or strict improvement. The portfolio distinguishes estimates from verified executable candidates and retains the cheapest compatible verified artifact.
 
 A candidate binds the goal, economy, action vocabulary and caller scope, data/artifact identity, graph/row evidence, and the relevant generations. Different internal state namespaces or a changed price table cannot be reconciled by comparing one scalar cost.

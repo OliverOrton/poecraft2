@@ -1,0 +1,71 @@
+{
+  "schema": "review_packet_manifest_v1",
+  "base_commit": "a7ea53c3ea4ea230c4eb099bb8800a9d5c86e0ec",
+  "files": [
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 13554,
+      "sha256": "87406bd2e61ef57f465a8c117d436deb896453771ea2daad03e68fbb46a3cb04"
+    },
+    {
+      "path": "DESIGN_AND_MATHEMATICS.md",
+      "bytes": 10102,
+      "sha256": "37798c4acd3f0e96aaf5516ae5b5d6a5548f3ce98cc572852b0f9a9d1f9a6d9d"
+    },
+    {
+      "path": "DOC_MAINTENANCE.md",
+      "bytes": 3537,
+      "sha256": "5f621697170393c0169c1176a5039db9de8e070a8b31096025d972e0efd8469a"
+    },
+    {
+      "path": "NEXT_PLAN.md",
+      "bytes": 8665,
+      "sha256": "52c92d89102f8e08ce505838a6e310b569e0bb599ef305c37eec13ddec3f51f3"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2685,
+      "sha256": "8816ed61520bd3a4a0ef6e9c2f9b0ea77b6c3ac27ccb7e6bbbf1a8ec72429c5b"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 11331,
+      "sha256": "31ce9a5ae5b31d1faf8a1a343ff318a839077fbff08945757501dfa75d151f7c"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 6053,
+      "sha256": "034bc6361efdb40baa958e5afb8abd1f848d64ed24a34d1733c4aaf4a73adde8"
+    },
+    {
+      "path": "VALIDATION_AND_DATA.md",
+      "bytes": 7552,
+      "sha256": "2385aa044775ebfc2cc94eb0cdabb3d8122bca4406d36a8f187ae5c124113ac8"
+    },
+    {
+      "path": "evidence/abstract_results.json",
+      "bytes": 232,
+      "sha256": "b26388817b16fbe3770fbe7db0093f6ba8e4584c8e0eb3a60aa5e7e4ebdaadca"
+    },
+    {
+      "path": "evidence/baseline.json",
+      "bytes": 2352,
+      "sha256": "f17398368be18e153a793cdcea74df721f740d4944830081d349ab9b17020be4"
+    },
+    {
+      "path": "evidence/ci.json",
+      "bytes": 540,
+      "sha256": "592b64a2bfc1e8ab6f20aa7a4e830c3fb9da97e71c4b2697d103337fb349c876"
+    },
+    {
+      "path": "tests/check_contracts.py",
+      "bytes": 3875,
+      "sha256": "686702a9417524b9cf283909e49d536606a065f769399f5c8aa017b1a89ede15"
+    },
+    {
+      "path": "tests/finder_default_success_regression.inc",
+      "bytes": 2200,
+      "sha256": "00d9db5b42e8dff90b1344b2c8228cec0c431f588a6100a92d328e2484469d2b"
+    }
+  ]
+}

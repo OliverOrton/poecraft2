@@ -370,6 +370,7 @@ def _run_case(
     native_execution_action_price: float | None = None,
     solver_mode: str | None = None,
     finder_ranking: str | None = None,
+    finder_grammar: str | None = None,
 ) -> dict[str, Any]:
     immutable_lab_attempt = bool(
         attempt_paths is not None
@@ -398,6 +399,7 @@ def _run_case(
         native_execution_action_price=native_execution_action_price,
         solver_mode=solver_mode,
         finder_ranking=finder_ranking,
+        finder_grammar=finder_grammar,
     )
     result = run_isolated_process(
         resolved.command.as_list(),
@@ -600,6 +602,7 @@ def run_corpus(
     native_execution_action_price: float | None = None,
     solver_mode: str | None = None,
     finder_ranking: str | None = None,
+    finder_grammar: str | None = None,
     host_watchdog_seconds: float | None = None,
     worker_headroom_bytes: int = 0,
 ) -> dict[str, Any]:
@@ -617,6 +620,9 @@ def run_corpus(
     if finder_ranking not in (None, "heuristic", "uninformed") or (
             finder_ranking is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder ranking requires strategy_finder mode")
+    if finder_grammar not in (None, "primitive", "conditional") or (
+            finder_grammar is not None and solver_mode != "strategy_finder"):
+        raise ValueError("finder grammar requires strategy_finder mode")
     if native_execution_action_price is not None and (
             native_dirty_guidance != "execution-count" or
             not math.isfinite(native_execution_action_price) or native_execution_action_price <= 0):
@@ -679,6 +685,8 @@ def run_corpus(
         treatment["solver_mode"] = solver_mode
     if finder_ranking is not None:
         treatment["finder_ranking"] = finder_ranking
+    if finder_grammar is not None:
+        treatment["finder_grammar"] = finder_grammar
     if native_execution_action_price is not None:
         treatment["native_execution_action_price"] = float(native_execution_action_price)
     current_resume_identity = provenance.resume_identity(configuration)
@@ -768,6 +776,7 @@ def run_corpus(
                     native_execution_action_price=native_execution_action_price,
                     solver_mode=solver_mode,
                     finder_ranking=finder_ranking,
+                    finder_grammar=finder_grammar,
                     watchdog_seconds=host_watchdog_seconds,
                     worker_headroom_bytes=worker_headroom_bytes,
                 )
@@ -834,6 +843,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Solver lane treatment, separately recorded from request and capacity identity.")
     parser.add_argument("--finder-ranking", choices=("heuristic", "uninformed"),
         help="Native finder ranking ablation with unchanged candidate grammar and checker.")
+    parser.add_argument("--finder-grammar", choices=("primitive", "conditional"),
+        help="Native finder grammar comparison with unchanged ranking and checker.")
     parser.add_argument(
         "--native-retention-diagnostic",
         choices=NATIVE_RETENTION_DIAGNOSTIC_MODES,
@@ -885,6 +896,7 @@ def main(argv: list[str] | None = None) -> int:
         native_execution_action_price=args.native_execution_action_price,
         solver_mode=args.solver_mode,
         finder_ranking=args.finder_ranking,
+        finder_grammar=args.finder_grammar,
         host_watchdog_seconds=args.host_watchdog_seconds,
         worker_headroom_bytes=args.worker_headroom_bytes,
     )

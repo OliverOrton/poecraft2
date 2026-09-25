@@ -34,6 +34,15 @@ Primary owners include `solver_solve_contracts.hpp`, `solver_calc_types.hpp`, `s
 
 ## Candidate checker and native headroom
 
+The experimental finder keeps a bounded live proposal deque, a separate
+deduplication set, completed check receipts and one best checked graph. Its
+16-proposal width is a live retention limit, not a lifetime generation limit;
+the eight-attempt ceiling also counts compile refusals and censored checks.
+Logical work, aggregate memory and host wall limits are
+separate. One native evaluator runs at a time. It charges the current parsed
+graph and checker alongside the old verified winner before admitting another
+candidate; winning graph transfer does not copy that buffer at adoption.
+
 The additive public `pc_solve_options.candidate_max_states`,
 `candidate_max_pairs`, `candidate_max_transitions` and
 `candidate_max_owned_bytes` fields control the actual candidate evaluator.

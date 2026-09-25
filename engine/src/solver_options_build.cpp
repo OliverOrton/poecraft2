@@ -5,6 +5,15 @@ namespace solver {
 
 namespace {
 
+std::vector<std::uint32_t> scour_alchemy_program(
+    const ActionRegistry& registry) {
+    std::uint32_t scour = kNoId;
+    std::uint32_t alchemy = kNoId;
+    require_action(registry, "scour", scour);
+    require_action(registry, "alchemy", alchemy);
+    return {scour, alchemy};
+}
+
 bool named_action_disabled(
     const GoalSpec& goal,
     const ActionRegistry& registry,
@@ -196,13 +205,9 @@ std::vector<PlannerOperator> build_planner_operators(
 
         switch (spec.kind) {
         case FixedOptionKind::ScourAlchemy: {
-            std::uint32_t scour = kNoId;
-            std::uint32_t alchemy = kNoId;
-            require_action(registry, "scour", scour);
-            require_action(registry, "alchemy", alchemy);
             option.id = "option:scour_alchemy";
             option.display_name = "Scour then Alchemy";
-            option.primitive_program = {scour, alchemy};
+            option.primitive_program = scour_alchemy_program(registry);
             break;
         }
         case FixedOptionKind::EldritchSideIntent: {
@@ -603,6 +608,35 @@ std::vector<PlannerOperator> build_planner_operators(
             planner, registry);
     }
     return operators;
+}
+
+std::vector<std::uint32_t> finder_scour_alchemy_program(
+    const SessionImpl& session,
+    const GoalSpec& goal,
+    const ActionRegistry& registry,
+    const std::vector<std::uint32_t>& admitted_primitives) {
+    FixedOptionSpec spec;
+    spec.kind = FixedOptionKind::ScourAlchemy;
+    if (fixed_option_disabled(goal, registry, spec))
+        throw std::invalid_argument("Scour/Alchemy program is disabled");
+    std::vector<std::uint32_t> program = scour_alchemy_program(registry);
+    for (const std::uint32_t action : program) {
+        if (std::find(admitted_primitives.begin(), admitted_primitives.end(),
+                      action) == admitted_primitives.end() ||
+            !calc_supports(registry.actions.at(action)))
+            throw std::invalid_argument(
+                "Scour/Alchemy program is outside the native request scope");
+    }
+    PlannerOperator option;
+    option.id = "option:scour_alchemy";
+    option.kind = PlannerOperatorKind::FixedOption;
+    option.option_kind = FixedOptionKind::ScourAlchemy;
+    option.primitive_program = program;
+    option.resource_quantities = aggregate_resources(registry, program);
+    bind_planner_primitive_action_ids(registry, option);
+    bind_planner_bestiary_action_ids(session, option);
+    (void)planner_operator_runtime_semantics(option, registry);
+    return program;
 }
 
 

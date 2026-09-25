@@ -1,0 +1,19 @@
+{
+  "head": "a7ea53c3ea4ea230c4eb099bb8800a9d5c86e0ec",
+  "scope": "latest observed GitHub Actions status; recheck before implementation",
+  "windows": {
+    "run_id": 36082503280,
+    "job_id": 107907291065,
+    "status": "completed",
+    "conclusion": "success",
+    "observed_build": "success",
+    "observed_test": "success",
+    "completed_at_recorded": "2026-09-25T01:47:07Z"
+  },
+  "knowledge": {
+    "run_id": 36082503279,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "not_a_native_benchmark_qualification": true
+}

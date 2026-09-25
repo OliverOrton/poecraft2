@@ -24,21 +24,10 @@ std::string compile_finder_goal_condition(const CalcContext& calc) {
     return exact_goal_condition(calc, vocabulary);
 }
 
-std::string compile_finder_candidate_json(
-    const CalcContext& calc,
-    const pc_item_state& start_item,
-    const std::vector<std::uint32_t>& primitive_sequence,
-    const SolveOptions& limits,
-    const bool return_to_first) {
-    if (primitive_sequence.size() > 2) {
-        throw std::invalid_argument("finder supports at most two native stages");
-    }
-    for (const std::uint32_t action : primitive_sequence)
-        if (action >= calc.registry().actions.size())
-            throw std::invalid_argument("finder primitive index is out of range");
+static std::string finder_base_json(
+    const CalcContext& calc, const pc_item_state& start_item) {
     const SessionImpl& session = calc.session();
     const DataImpl& data = *session.data;
-    const std::string goal = compile_finder_goal_condition(calc);
     const std::string base_key = data.string_at(
         data.base_metadata_path_sid[session.base_index]);
     std::string json =
@@ -76,7 +65,25 @@ std::string compile_finder_candidate_json(
     };
     append_mods("prefixes", start_item.prefixes, start_item.prefix_count);
     append_mods("suffixes", start_item.suffixes, start_item.suffix_count);
-    json += "},\"start_node_id\":\"start\",\"nodes\":["
+    return json + '}';
+}
+
+std::string compile_finder_candidate_json(
+    const CalcContext& calc,
+    const pc_item_state& start_item,
+    const std::vector<std::uint32_t>& primitive_sequence,
+    const SolveOptions& limits,
+    const bool return_to_first) {
+    if (primitive_sequence.size() > 2) {
+        throw std::invalid_argument("finder supports at most two native stages");
+    }
+    for (const std::uint32_t action : primitive_sequence)
+        if (action >= calc.registry().actions.size())
+            throw std::invalid_argument("finder primitive index is out of range");
+    const SessionImpl& session = calc.session();
+    const std::string goal = compile_finder_goal_condition(calc);
+    std::string json = finder_base_json(calc, start_item);
+    json += ",\"start_node_id\":\"start\",\"nodes\":["
             "{\"id\":\"start\",\"kind\":\"start\"},"
             "{\"id\":\"goal\",\"kind\":\"terminal\","
             "\"terminal\":\"success\"}";
@@ -124,6 +131,142 @@ std::string compile_finder_candidate_json(
         1 + 2 * primitive_sequence.size() > limits.max_compiled_edges) {
         throw std::length_error("finder candidate exceeds compiled-output cap");
     }
+    return json;
+}
+
+std::string compile_finder_control_json(
+    const CalcContext& calc,
+    const pc_item_state& start_item,
+    const FinderControlGraph& control,
+    const SolveOptions& limits) {
+    if (control.nodes.empty() || control.entry >= control.nodes.size())
+        throw std::invalid_argument("finder control has no entry");
+    const bool has_scour_alchemy = std::any_of(
+        control.nodes.begin(), control.nodes.end(),
+        [](const FinderControlNode& node) {
+            return node.kind == FinderControlKind::RunScourAlchemy;
+        });
+    const std::vector<std::uint32_t> scour_alchemy = has_scour_alchemy
+        ? finder_scour_alchemy_program(
+            calc.session(), calc.goal(), calc.registry(), calc.candidates())
+        : std::vector<std::uint32_t>{};
+    const std::size_t node_count = control.nodes.size() + 1 +
+        std::count_if(control.nodes.begin(), control.nodes.end(),
+            [](const FinderControlNode& node) {
+                return node.kind == FinderControlKind::RunScourAlchemy;
+            });
+    if (node_count > limits.max_compiled_nodes)
+        throw std::length_error("finder control exceeds node cap");
+    const std::string goal = compile_finder_goal_condition(calc);
+    std::vector<SlotVocabulary> vocabulary;
+    vocabulary.reserve(calc.layout().slots.size());
+    for (std::size_t i = 0; i < calc.layout().slots.size(); ++i)
+        vocabulary.push_back(slot_vocabulary(
+            calc.session(), calc.layout().slots[i], i));
+    const auto target = [&](const std::uint32_t index) {
+        if (index >= control.nodes.size())
+            throw std::invalid_argument("finder control has an open port");
+        return "c" + std::to_string(index);
+    };
+    std::string json = finder_base_json(calc, start_item) +
+        ",\"start_node_id\":\"start\",\"nodes\":["
+        "{\"id\":\"start\",\"kind\":\"start\"}";
+    for (std::size_t i = 0; i < control.nodes.size(); ++i) {
+        const FinderControlNode& node = control.nodes[i];
+        const std::string id = target(static_cast<std::uint32_t>(i));
+        json += ",{\"id\":\"" + id + "\",\"kind\":\"";
+        switch (node.kind) {
+        case FinderControlKind::TestGoal:
+        case FinderControlKind::TestSlot:
+        case FinderControlKind::TestAffixCountAtLeast4:
+            json += "router\"}";
+            break;
+        case FinderControlKind::RunPrimitive:
+            if (node.binding >= calc.registry().actions.size())
+                throw std::invalid_argument("finder control action is invalid");
+            json += "operation\",\"operation\":" +
+                operation_json(calc.session(),
+                    calc.registry().actions[node.binding]) + "}";
+            break;
+        case FinderControlKind::RunScourAlchemy:
+            json += "operation\",\"operation\":" +
+                operation_json(calc.session(),
+                    calc.registry().actions[scour_alchemy[0]]) + "}";
+            json += ",{\"id\":\"" + id +
+                "_o1\",\"kind\":\"operation\",\"operation\":" +
+                operation_json(calc.session(),
+                    calc.registry().actions[scour_alchemy[1]]) + "}";
+            break;
+        case FinderControlKind::GoalTerminal:
+            json += "terminal\",\"terminal\":\"success\"}";
+            break;
+        case FinderControlKind::FailureTerminal:
+            json += "terminal\",\"terminal\":\"failure\"}";
+            break;
+        case FinderControlKind::Hole:
+            throw std::invalid_argument("finder control has an unresolved hole");
+        }
+    }
+    json += "],\"edges\":[{\"id\":\"begin\",\"from\":\"start\","
+            "\"to\":\"" + target(control.entry) +
+            "\",\"priority\":0,\"is_default\":true}";
+    std::uint64_t edges = 1;
+    for (std::size_t i = 0; i < control.nodes.size(); ++i) {
+        const FinderControlNode& node = control.nodes[i];
+        const std::string id = target(static_cast<std::uint32_t>(i));
+        if (node.kind == FinderControlKind::RunPrimitive) {
+            json += ",{\"id\":\"next" + std::to_string(i) +
+                "\",\"from\":\"" + id + "\",\"to\":\"" +
+                target(node.next) +
+                "\",\"priority\":0,\"is_default\":true}";
+            ++edges;
+            continue;
+        }
+        if (node.kind == FinderControlKind::RunScourAlchemy) {
+            json += ",{\"id\":\"program" + std::to_string(i) +
+                "_setup\",\"from\":\"" + id + "\",\"to\":\"" +
+                id + "_o1\",\"priority\":0,\"is_default\":true}";
+            json += ",{\"id\":\"program" + std::to_string(i) +
+                "_continue\",\"from\":\"" + id +
+                "_o1\",\"to\":\"" + target(node.next) +
+                "\",\"priority\":0,\"is_default\":true}";
+            edges += 2;
+            continue;
+        }
+        if (node.kind != FinderControlKind::TestGoal &&
+            node.kind != FinderControlKind::TestSlot &&
+            node.kind != FinderControlKind::TestAffixCountAtLeast4)
+            continue;
+        std::string condition;
+        if (node.kind == FinderControlKind::TestGoal) {
+            if (control.nodes.at(node.on_true).kind !=
+                    FinderControlKind::GoalTerminal)
+                throw std::invalid_argument("finder goal test must enter goal terminal");
+            condition = goal;
+        } else if (node.kind == FinderControlKind::TestSlot) {
+            if (node.binding >= vocabulary.size())
+                throw std::invalid_argument("finder goal slot is invalid");
+            condition = vocabulary[node.binding].satisfied;
+        } else {
+            condition = any_of({
+                total_explicit_affix_count_condition(4),
+                total_explicit_affix_count_condition(5),
+                total_explicit_affix_count_condition(6)});
+        }
+        json += ",{\"id\":\"yes" + std::to_string(i) +
+            "\",\"from\":\"" + id + "\",\"to\":\"" +
+            target(node.on_true) +
+            "\",\"priority\":0,\"condition\":" + condition + "}";
+        json += ",{\"id\":\"no" + std::to_string(i) +
+            "\",\"from\":\"" + id + "\",\"to\":\"" +
+            target(node.on_false) +
+            "\",\"priority\":1,\"is_default\":true}";
+        edges += 2;
+    }
+    json += "]}";
+    if (edges > limits.max_compiled_edges ||
+        json.size() > limits.max_strategy_json_bytes)
+        throw std::length_error("finder control exceeds compiled-output cap");
     return json;
 }
 

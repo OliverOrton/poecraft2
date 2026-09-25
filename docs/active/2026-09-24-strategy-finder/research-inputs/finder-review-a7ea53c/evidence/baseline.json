@@ -1,0 +1,76 @@
+{
+  "repository": "OliverOrton/poecraft2",
+  "reviewed_head": "a7ea53c3ea4ea230c4eb099bb8800a9d5c86e0ec",
+  "previous_plan_base": "28a955056a41699d1fa9996ee345b70678937f21",
+  "scope": "manually transcribed recorded figures from pinned living record; not new native measurements",
+  "rounded_report_values": true,
+  "primary_executable_sha256": "820622ee44f1b1b9f3ba4620a34ded88ee317e17767fedb05a051cbb8d26c82e",
+  "ablation_executable_sha256": "8a902eeccc65024e5a9a885b0781e54d71bce9fb7310baecc4fcc841f8690f62",
+  "wasm_sha256": "e069ff0f2c6bdd00546b7a22749aef9600d5145178fd7ee2f0bebbf14ca1801b",
+  "primary": [
+    {
+      "case": "A3",
+      "current_cost": 2085.015,
+      "finder_cost": 5387327.209,
+      "current_first_checked_s": 5.93,
+      "finder_first_checked_s": 2.92,
+      "current_qualification_error": "unnamed other_resource_cap in bounded proof contract"
+    },
+    {
+      "case": "B3",
+      "current_cost": 79273.77,
+      "finder_cost": null,
+      "current_first_checked_s": 13.16,
+      "finder_first_checked_s": null,
+      "finder_refused": 4,
+      "finder_censored": 1
+    },
+    {
+      "case": "A4",
+      "current_cost": 5218.041,
+      "finder_cost": 13111122.495,
+      "current_first_checked_s": 244.83,
+      "finder_first_checked_s": 0.023,
+      "stronger_historical_reference": 3746.1319409485764,
+      "reference_compatibility": "requires raw identity comparison"
+    },
+    {
+      "case": "A5",
+      "current_cost": 85558.706,
+      "finder_cost": 455464336.951,
+      "current_first_checked_s": 46.31,
+      "finder_first_checked_s": 0.045
+    }
+  ],
+  "uninformed_finder": {
+    "A3": 5387327.209,
+    "B3": null,
+    "A4": 1516093.48,
+    "A5": 28555986.962
+  },
+  "finder_footprint": {
+    "generated_each": 5,
+    "checked_range": [
+      4,
+      5
+    ],
+    "wall_seconds_range": [
+      1.0,
+      4.9
+    ],
+    "peak_MiB_range": [
+      2,
+      87
+    ]
+  },
+  "comparison_caveats": [
+    "native fixed-eight, not four-case Calculator comparison",
+    "Current-only retention reuse diagnostic recorded",
+    "ranking may change selected candidate identities",
+    "raw local reports unavailable in review",
+    "first/final values rounded as in living record"
+  ],
+  "no_repository_changes": true,
+  "native_tests_executed_by_reviewer": false,
+  "native_benchmarks_executed_by_reviewer": false
+}

@@ -52,6 +52,8 @@ pc_result configure_solver_native_retention_diagnostic(pc_solver_handle handle,
  * remain identical; the public finder always uses heuristic ranking. */
 pc_result configure_solver_finder_ranking(pc_solver_handle handle,
     FinderRankingMode mode, pc_error_info* out_error);
+pc_result configure_solver_finder_grammar(pc_solver_handle handle,
+    FinderGrammarMode mode, pc_error_info* out_error);
 
 /* Comparison arms only. The retained fresh-layout method is available through
  * the public PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH request flag. */
