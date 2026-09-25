@@ -233,6 +233,84 @@ void run_finder_request_binding_tests() {
         *trusted.strategy, checked_options);
     PC_CHECK(finder_evaluation_accepted(evaluation));
     PC_CHECK(evaluation.total_expected_cost == 0.0);
+
+    /* First genuinely generated from-root policy: alteration renews a magic
+     * item until the native exact one-affix goal is reached. */
+    const auto alteration = registry.index_by_id.at("alteration");
+    GoalSpec magic_goal;
+    magic_goal.rarity = PC_RARITY_MAGIC;
+    GoalSlot prefix_wanted;
+    prefix_wanted.family_id = session->family_id.at(3);
+    prefix_wanted.min_tier = 1;
+    magic_goal.slots.push_back(prefix_wanted);
+    CalcContext magic_calc(session, magic_goal, registry, {alteration});
+    pc_item_state magic_start;
+    pc_item_clear(&magic_start);
+    magic_start.rarity = PC_RARITY_MAGIC;
+    PolicyFinderWork finder(
+        magic_calc, session, magic_start, {{"alteration", 1.0}}, limits);
+    for (int i = 0; i < 10000 && !finder.progress().done; ++i)
+        finder.step(1024);
+    PC_CHECK(finder.progress().done);
+    PC_CHECK(finder.best().has_value());
+    if (finder.best().has_value()) {
+        PC_CHECK(finder.best()->expected_cost > 0.0);
+        PC_CHECK(prepare_finder_candidate(
+            magic_calc, session, magic_start,
+            finder.best()->strategy_json).ready());
+    }
+    GoalSpec suffix_goal;
+    suffix_goal.rarity = PC_RARITY_MAGIC;
+    GoalSlot suffix_wanted;
+    suffix_wanted.family_id = session->family_id.at(5);
+    suffix_wanted.min_tier = 1;
+    suffix_goal.slots.push_back(suffix_wanted);
+    CalcContext suffix_calc(session, suffix_goal, registry, {alteration});
+    PolicyFinderWork suffix_finder(
+        suffix_calc, session, magic_start, {{"alteration", 2.0}}, limits);
+    for (int i = 0; i < 10000 && !suffix_finder.progress().done; ++i)
+        suffix_finder.step(1024);
+    PC_CHECK(suffix_finder.progress().done);
+    PC_CHECK(suffix_finder.best().has_value());
+    if (suffix_finder.best().has_value())
+        PC_CHECK(suffix_finder.best()->expected_cost > 0.0);
+    const auto transmute = registry.index_by_id.at("transmute");
+    CalcContext staged_calc(
+        session, magic_goal, registry, {transmute, alteration});
+    pc_item_state normal_start;
+    pc_item_clear(&normal_start);
+    normal_start.rarity = PC_RARITY_NORMAL;
+    PolicyFinderWork staged_finder(staged_calc, session, normal_start,
+        {{"transmute", 1.0}, {"alteration", 1.0}}, limits);
+    for (int i = 0; i < 10000 && !staged_finder.progress().done; ++i)
+        staged_finder.step(1024);
+    PC_CHECK(staged_finder.progress().done);
+    PC_CHECK(staged_finder.best().has_value());
+    if (staged_finder.best().has_value())
+        PC_CHECK(staged_finder.best()->strategy_json.find("stage1") !=
+                 std::string::npos);
+    PolicyFinderWork unpriced_finder(
+        magic_calc, session, magic_start, {}, limits);
+    unpriced_finder.step(1);
+    PC_CHECK(unpriced_finder.progress().done);
+    PC_CHECK(!unpriced_finder.best().has_value());
+    PolicyFinderWork cancelled_finder(
+        magic_calc, session, magic_start, {{"alteration", 1.0}}, limits);
+    cancelled_finder.request_bounded_finish();
+    cancelled_finder.step(1);
+    PC_CHECK(cancelled_finder.progress().done);
+    PC_CHECK(!cancelled_finder.best().has_value());
+    SolveOptions tiny_memory = limits;
+    tiny_memory.max_solver_owned_bytes = 1;
+    bool capacity_refused = false;
+    try {
+        PolicyFinderWork too_small(
+            magic_calc, session, magic_start,
+            {{"alteration", 1.0}}, tiny_memory);
+    } catch (const std::length_error&) {
+        capacity_refused = true;
+    }
+    PC_CHECK(capacity_refused);
 }
 
 void report_compile_solve_issue(

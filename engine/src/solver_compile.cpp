@@ -97,7 +97,7 @@ std::string compile_finder_candidate_json(
         json += ",{\"id\":\"advance" + suffix +
             "\",\"from\":\"stage" + suffix +
             "\",\"to\":\"stage" +
-            std::to_string((i + 1) % primitive_sequence.size()) +
+            std::to_string(std::min(i + 1, primitive_sequence.size() - 1)) +
             "\",\"priority\":1,\"is_default\":true}";
     }
     json += "]}";

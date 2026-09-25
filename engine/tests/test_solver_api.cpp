@@ -3149,6 +3149,65 @@ void run_solver_native_continuation_api_tests(const char* artifact_dir) {
         pc_solver_solve_abandon(solver);
         pc_solver_destroy(solver);
     }
+    {
+        pc_solver_handle finder = nullptr;
+        PC_CHECK(pc_solver_create(
+            session, goal.c_str(), goal.size(), &finder, &error) ==
+            PC_RESULT_OK);
+        if (finder) {
+            pc_solve_options options{};
+            options.struct_size = sizeof(options);
+            options.abi_version = PC_ABI_VERSION;
+            options.solver_mode = PC_SOLVER_MODE_STRATEGY_FINDER;
+            options.max_solver_owned_bytes = 64ull << 20;
+            options.candidate_max_states = 100;
+            options.candidate_max_pairs = 100;
+            options.candidate_max_transitions = 1000;
+            options.solver_mode = 2;
+            PC_CHECK(pc_solver_solve_begin(
+                finder, &start, economy, &options, &error) ==
+                PC_RESULT_INVALID_ARGUMENT);
+            options.solver_mode = PC_SOLVER_MODE_STRATEGY_FINDER;
+            PC_CHECK(pc_solver_solve_begin(
+                finder, &start, economy, &options, &error) ==
+                PC_RESULT_OK);
+            PC_CHECK(pc_solver_state_value(
+                finder, 0, nullptr, nullptr, &error) ==
+                PC_RESULT_INVALID_ARGUMENT);
+            double value = 0.0;
+            PC_CHECK(pc_solver_state_value(
+                finder, 0, &value, nullptr, &error) ==
+                PC_RESULT_UNSUPPORTED_FEATURE);
+            PC_CHECK(pc_solver_solve_request_bounded_finish(
+                finder, &error) == PC_RESULT_OK);
+            pc_solve_progress progress{};
+            PC_CHECK(pc_solver_solve_step(
+                finder, 1, &progress, &error) == PC_RESULT_OK);
+            PC_CHECK(progress.done == 1);
+            PC_CHECK(std::isnan(progress.lower_bound));
+            pc_solve_summary summary{};
+            PC_CHECK(pc_solver_solve_finish(
+                finder, &summary, &error) == PC_RESULT_OK);
+            PC_CHECK(summary.policy_available == 0);
+            PC_CHECK(summary.policy_status == PC_SOLVE_POLICY_NONE);
+            PC_CHECK(summary.termination ==
+                PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH);
+            PC_CHECK(std::isnan(summary.lower_bound));
+            PC_CHECK(solver_telemetry_json(finder, &error).find(
+                "strategy_finder") != std::string::npos);
+            std::size_t length = 0;
+            PC_CHECK(pc_solver_compile_strategy(
+                finder, nullptr, 0, &length, &error) ==
+                PC_RESULT_NOT_FOUND);
+            PC_CHECK(pc_solver_solve_begin(
+                finder, &start, economy, &options, &error) ==
+                PC_RESULT_OK);
+            pc_solver_solve_abandon(finder);
+            PC_CHECK(solver_telemetry_json(finder, &error).find(
+                "strategy_finder") != std::string::npos);
+            pc_solver_destroy(finder);
+        }
+    }
     pc_economy_destroy(economy);
     pc_session_destroy(session);
     pc_data_destroy(data);

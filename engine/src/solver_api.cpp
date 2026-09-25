@@ -20,6 +20,7 @@
 #include "solver_action_family_contract.hpp"
 #include "solver_internal.hpp"
 #include "solver_diagnostic_options.hpp"
+#include "solver_finder.hpp"
 
 /*
  * C ABI for the solver/calculation engine. Thin translation layer: goal
@@ -582,6 +583,10 @@ struct pc_solver {
     std::unique_ptr<solver::CalcContext> exact_calc;
     std::unique_ptr<solver::SolveWork> solve_work;
     std::optional<solver::SolveResult> solved;
+    std::unique_ptr<solver::PolicyFinderWork> finder_work;
+    std::optional<solver::FinderCheckedPolicy> finder_result;
+    bool finder_finished = false;
+    std::string finder_telemetry;
     std::optional<std::uint64_t> registry_generation_ns;
     std::optional<solver::PolicyCompilationTelemetry> compilation;
     std::string compiled_strategy; /* scratch for the buffer queries */
@@ -601,7 +606,8 @@ struct pc_solver {
 
 namespace poecraft::solver {
 CalcContext& solver_lower_diagnostic_calculator(pc_solver_handle handle) {
-    if (handle == nullptr || !handle->calc || handle->solve_work || handle->solved)
+    if (handle == nullptr || !handle->calc || handle->solve_work || handle->solved ||
+        handle->finder_work || handle->finder_finished)
         throw std::invalid_argument("lower diagnostic requires an idle calculator handle");
     return *handle->calc;
 }
@@ -839,6 +845,18 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.candidate_evaluation_limits.max_owned_bytes = options->candidate_max_owned_bytes;
     return value;
 #undef PC_SOLVE_OPTION_HAS
+}
+
+pc_solver_mode requested_solver_mode(const pc_solve_options* options) {
+    if (options == nullptr ||
+        options->struct_size <
+            offsetof(pc_solve_options, solver_mode) + sizeof(options->solver_mode))
+        return PC_SOLVER_MODE_CURRENT;
+    if (options->abi_version != PC_ABI_VERSION)
+        throw std::invalid_argument("invalid solve options ABI");
+    if (options->solver_mode > PC_SOLVER_MODE_STRATEGY_FINDER)
+        throw std::invalid_argument("unknown solver mode");
+    return static_cast<pc_solver_mode>(options->solver_mode);
 }
 
 solver::SolveOptions solve_options(
@@ -1092,6 +1110,65 @@ void copy_solve_progress(
         source.certification_solved_sccs;
     target.certification_total_sccs =
         source.certification_total_sccs;
+}
+
+void copy_finder_progress(
+    const solver::FinderProgress& source,
+    const std::optional<solver::FinderCheckedPolicy>& best,
+    pc_solve_progress& target) {
+    target = {};
+    target.struct_size = sizeof(target);
+    target.abi_version = PC_ABI_VERSION;
+    target.phase = source.done ? PC_SOLVE_PHASE_DONE : PC_SOLVE_PHASE_ITERATING;
+    target.phase_owner = source.done ? PC_SOLVE_PHASE_OWNER_DONE
+                                     : PC_SOLVE_PHASE_OWNER_STRATEGY_FINDER;
+    target.done = source.done ? 1 : 0;
+    target.lower_bound = std::numeric_limits<double>::quiet_NaN();
+    target.start_value_bound = std::numeric_limits<double>::quiet_NaN();
+    target.upper_bound = best.has_value()
+        ? best->expected_cost : std::numeric_limits<double>::infinity();
+    target.absolute_optimality_gap = std::numeric_limits<double>::quiet_NaN();
+    target.relative_optimality_gap = std::numeric_limits<double>::quiet_NaN();
+    target.residual = std::numeric_limits<double>::quiet_NaN();
+    target.incumbent_kind = best.has_value()
+        ? PC_SOLVE_INCUMBENT_OTHER : PC_SOLVE_INCUMBENT_NONE;
+    target.reforge_work = source.logical_reforge_work;
+    target.live_owned_bytes = source.live_owned_bytes;
+    target.peak_owned_bytes = source.peak_owned_bytes;
+    target.finalization_work_items = source.checked;
+}
+
+void copy_finder_summary(
+    const solver::PolicyFinderWork& finder,
+    pc_solve_summary* target) {
+    if (target == nullptr) return;
+    const solver::FinderProgress state = finder.progress();
+    const auto& best = finder.best();
+    *target = {};
+    target->struct_size = sizeof(*target);
+    target->abi_version = PC_ABI_VERSION;
+    target->start_value = std::numeric_limits<double>::quiet_NaN();
+    target->lower_bound = std::numeric_limits<double>::quiet_NaN();
+    target->upper_bound = best.has_value()
+        ? best->expected_cost : std::numeric_limits<double>::infinity();
+    target->evaluated_policy_cost = target->upper_bound;
+    target->residual = std::numeric_limits<double>::quiet_NaN();
+    target->absolute_optimality_gap = std::numeric_limits<double>::quiet_NaN();
+    target->relative_optimality_gap = std::numeric_limits<double>::quiet_NaN();
+    target->policy_available = best.has_value() ? 1 : 0;
+    target->policy_status = best.has_value()
+        ? PC_SOLVE_POLICY_BOUNDED_FEASIBLE : PC_SOLVE_POLICY_NONE;
+    target->termination = state.finish_requested
+        ? PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH
+        : best.has_value() ? PC_SOLVE_TERMINATION_FINDER_COMPLETE
+        : state.censored > 0 ? PC_SOLVE_TERMINATION_REFUSED_RESOURCE_CAP
+                             : PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY;
+    target->stop_cause = state.finish_requested
+        ? PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH
+        : best.has_value() ? PC_SOLVE_STOP_FINDER_COMPLETE
+        : state.censored > 0 ? PC_SOLVE_STOP_OTHER_RESOURCE_CAP
+                             : PC_SOLVE_STOP_NO_EXECUTABLE_POLICY;
+    target->cap_hit_mask = state.censored > 0 ? PC_SOLVE_CAP_OTHER : 0;
 }
 
 void copy_solve_summary(
@@ -1760,7 +1837,27 @@ pc_result pc_solver_solve(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     try {
+        if (requested_solver_mode(options) == PC_SOLVER_MODE_STRATEGY_FINDER) {
+            pc_result rc = pc_solver_solve_begin(
+                solver, start_item, economy, options, out_error);
+            if (rc != PC_RESULT_OK) return rc;
+            pc_solve_progress progress{};
+            do {
+                rc = pc_solver_solve_step(solver, 4096, &progress, out_error);
+                if (rc != PC_RESULT_OK) return rc;
+            } while (!progress.done);
+            return pc_solver_solve_finish(solver, out_summary, out_error);
+        }
+    } catch (const std::invalid_argument& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
         solver->solve_work.reset();
+        solver->finder_work.reset();
+        solver->finder_result.reset();
+        solver->finder_finished = false;
+        solver->finder_telemetry.clear();
         /*
          * A replacement solve starts a new handle-owned memory budget.
          * Release the previous retained policy (including an exact refined
@@ -1803,6 +1900,7 @@ pc_result pc_solver_solve_begin(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     try {
+        const pc_solver_mode mode = requested_solver_mode(options);
         /*
          * Beginning stepped replacement invalidates the previous solve.
          * Release its retained strategy and any ordinary compiled cache
@@ -1810,19 +1908,32 @@ pc_result pc_solver_solve_begin(
          * sit outside the new solve's declared byte cap.
          */
         solver->solve_work.reset();
+        solver->finder_work.reset();
         solver->solved.reset();
+        solver->finder_result.reset();
+        solver->finder_finished = false;
+        solver->finder_telemetry.clear();
         solver->compilation.reset();
         std::string{}.swap(solver->compiled_strategy);
-        auto work = std::make_unique<solver::SolveWork>(
-            *solver->calc, *start_item, economy_prices(economy),
-            solve_options(*solver, options));
-        solver->solve_work = std::move(work);
+        if (mode == PC_SOLVER_MODE_STRATEGY_FINDER) {
+            solver->finder_work = std::make_unique<solver::PolicyFinderWork>(
+                *solver->calc, solver->session, *start_item,
+                economy_prices(economy), solve_options(*solver, options));
+        } else {
+            auto work = std::make_unique<solver::SolveWork>(
+                *solver->calc, *start_item, economy_prices(economy),
+                solve_options(*solver, options));
+            solver->solve_work = std::move(work);
+        }
         solver->solve_log.clear();
         solver->abandoned_telemetry.clear();
         solver->abandoned_telemetry_capped = false;
         solver->abandoned_telemetry_limit = 0;
         clear_error(out_error);
         return PC_RESULT_OK;
+    } catch (const std::invalid_argument& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
     } catch (const std::exception& ex) {
         set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
         return PC_RESULT_INTERNAL_ERROR;
@@ -1838,12 +1949,19 @@ pc_result pc_solver_solve_step(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    if (!solver->solve_work) {
+    if (!solver->solve_work && !solver->finder_work) {
         set_error(out_error, PC_RESULT_NOT_FOUND,
                   "no stepped solve is in progress");
         return PC_RESULT_NOT_FOUND;
     }
     try {
+        if (solver->finder_work) {
+            solver->finder_work->step(max_work_items);
+            copy_finder_progress(solver->finder_work->progress(),
+                solver->finder_work->best(), *out_progress);
+            clear_error(out_error);
+            return PC_RESULT_OK;
+        }
         solver->solve_work->step(max_work_items);
         copy_solve_progress(solver->solve_work->progress(), *out_progress);
         clear_error(out_error);
@@ -1861,12 +1979,17 @@ pc_result pc_solver_solve_request_bounded_finish(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    if (!solver->solve_work) {
+    if (!solver->solve_work && !solver->finder_work) {
         set_error(out_error, PC_RESULT_NOT_FOUND,
                   "no stepped solve is in progress");
         return PC_RESULT_NOT_FOUND;
     }
     try {
+        if (solver->finder_work) {
+            solver->finder_work->request_bounded_finish();
+            clear_error(out_error);
+            return PC_RESULT_OK;
+        }
         solver->solve_work->request_bounded_finish();
         clear_error(out_error);
         return PC_RESULT_OK;
@@ -1896,10 +2019,32 @@ pc_result pc_solver_solve_finish(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    if (!solver->solve_work) {
+    if (!solver->solve_work && !solver->finder_work) {
         set_error(out_error, PC_RESULT_NOT_FOUND,
                   "no stepped solve is in progress");
         return PC_RESULT_NOT_FOUND;
+    }
+    if (solver->finder_work) {
+        if (!solver->finder_work->progress().done) {
+            set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                "stepped finder is not finished");
+            return PC_RESULT_INVALID_ARGUMENT;
+        }
+        try {
+            copy_finder_summary(*solver->finder_work, out_summary);
+            solver->finder_result = solver->finder_work->best();
+            solver->finder_telemetry = solver->finder_work->telemetry_json();
+            solver->peak_owned_bytes = std::max(solver->peak_owned_bytes,
+                sizeof(*solver) +
+                    solver->finder_work->progress().peak_owned_bytes);
+            solver->finder_work.reset();
+            solver->finder_finished = true;
+            clear_error(out_error);
+            return PC_RESULT_OK;
+        } catch (const std::exception& ex) {
+            set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+            return PC_RESULT_INTERNAL_ERROR;
+        }
     }
     if (!solver->solve_work->progress().done) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
@@ -1922,7 +2067,21 @@ pc_result pc_solver_solve_finish(
 }
 
 void pc_solver_solve_abandon(pc_solver_handle solver) {
-    if (solver == nullptr || !solver->solve_work) return;
+    if (solver == nullptr) return;
+    if (solver->finder_work) {
+        try {
+            solver->peak_owned_bytes = std::max(solver->peak_owned_bytes,
+                sizeof(*solver) +
+                    solver->finder_work->progress().peak_owned_bytes);
+            solver->abandoned_telemetry =
+                solver->finder_work->telemetry_json();
+        } catch (const std::exception&) {
+            solver->abandoned_telemetry.clear();
+        }
+        solver->finder_work.reset();
+        return;
+    }
+    if (!solver->solve_work) return;
     const auto began = std::chrono::steady_clock::now();
     auto snapshot_completed = began;
     solver->abandoned_telemetry_capped = false;
@@ -1981,6 +2140,11 @@ pc_result pc_solver_state_value(
     if (solver == nullptr || out_value == nullptr) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (solver->finder_finished || solver->finder_work) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
+            "strategy finder has no per-state proof values");
+        return PC_RESULT_UNSUPPORTED_FEATURE;
     }
     if (!solver->solved.has_value()) {
         set_error(out_error, PC_RESULT_NOT_FOUND, "no solve has run yet");
@@ -2156,6 +2320,15 @@ pc_result pc_solver_compile_strategy(
     if (solver == nullptr) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (solver->finder_finished) {
+        if (!solver->finder_result.has_value()) {
+            set_error(out_error, PC_RESULT_NOT_FOUND,
+                "latest finder run has no checked policy");
+            return PC_RESULT_NOT_FOUND;
+        }
+        return copy_text(solver->finder_result->strategy_json,
+            buffer, capacity, out_length, out_error);
     }
     if (!solver->solved.has_value()) {
         set_error(out_error, PC_RESULT_NOT_FOUND, "no solve has run yet");
@@ -2343,6 +2516,12 @@ pc_result pc_solver_telemetry(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     try {
+        if (solver->finder_work)
+            return copy_text(solver->finder_work->telemetry_json(),
+                buffer, capacity, out_length, out_error);
+        if (solver->finder_finished)
+            return copy_text(solver->finder_telemetry,
+                buffer, capacity, out_length, out_error);
         if (!solver->solve_work && !solver->solved.has_value() &&
             solver->abandoned_telemetry_capped) {
             throw std::length_error(
@@ -2386,16 +2565,23 @@ pc_result pc_solver_memory_stats(
     }
     std::uint64_t serialized =
         solver->compiled_strategy.capacity() + solver->solve_log.capacity() +
-        solver->abandoned_telemetry.capacity();
+        solver->abandoned_telemetry.capacity() +
+        solver->finder_telemetry.capacity();
     std::uint64_t live = sizeof(*solver) + serialized;
     std::uint64_t peak = live;
-    if (solver->solve_work) {
+    if (solver->finder_work) {
+        const solver::FinderProgress progress = solver->finder_work->progress();
+        live += progress.live_owned_bytes;
+        peak += progress.peak_owned_bytes;
+    } else if (solver->solve_work) {
         live += solver->solve_work->live_owned_bytes();
         peak += solver->solve_work->peak_owned_bytes();
     } else {
         live += solver::estimated_retained_solver_bytes(
             *solver->calc,
             solver->solved.has_value() ? &*solver->solved : nullptr);
+        if (solver->finder_result.has_value())
+            live += solver->finder_result->strategy_json.capacity();
         peak = live;
         if (solver->solved.has_value()) {
             peak = std::max(

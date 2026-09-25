@@ -415,7 +415,15 @@ typedef struct pc_solve_options {
     uint32_t candidate_max_states;
     uint32_t candidate_max_pairs;
     uint32_t candidate_max_transitions;
+    /* Append-only experimental lane selector. Older smaller structs remain
+     * Current; 64-bit alignment avoids interpreting old trailing padding. */
+    uint64_t solver_mode;
 } pc_solve_options;
+
+typedef enum pc_solver_mode {
+    PC_SOLVER_MODE_CURRENT = 0,
+    PC_SOLVER_MODE_STRATEGY_FINDER = 1
+} pc_solver_mode;
 
 typedef enum pc_solve_profile {
     PC_SOLVE_PROFILE_DEFAULT = 0,
@@ -474,7 +482,8 @@ typedef enum pc_solve_termination {
     PC_SOLVE_TERMINATION_NUMERICAL_STABILITY = 5,
     /* The stepped host stopped open discovery and requested normal bounded
      * policy finalization. This is not a resource cap or exact closure. */
-    PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH = 6
+    PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH = 6,
+    PC_SOLVE_TERMINATION_FINDER_COMPLETE = 7
 } pc_solve_termination;
 
 /* Precise stopping cause is independent of policy availability. A capped
@@ -495,7 +504,8 @@ typedef enum pc_solve_stop_cause {
     PC_SOLVE_STOP_OTHER_RESOURCE_CAP = 10,
     PC_SOLVE_STOP_NO_EXECUTABLE_POLICY = 11,
     PC_SOLVE_STOP_NUMERICAL_STABILITY = 12,
-    PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH = 13
+    PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH = 13,
+    PC_SOLVE_STOP_FINDER_COMPLETE = 14
 } pc_solve_stop_cause;
 
 typedef enum pc_solve_cap_hit {
@@ -586,7 +596,8 @@ typedef enum pc_solve_phase_owner {
     PC_SOLVE_PHASE_OWNER_POLICY_ASSEMBLY = 9,
     PC_SOLVE_PHASE_OWNER_COMPILATION = 10,
     PC_SOLVE_PHASE_OWNER_EXACT_EVALUATION = 11,
-    PC_SOLVE_PHASE_OWNER_DONE = 12
+    PC_SOLVE_PHASE_OWNER_DONE = 12,
+    PC_SOLVE_PHASE_OWNER_STRATEGY_FINDER = 13
 } pc_solve_phase_owner;
 
 typedef struct pc_solve_progress {
