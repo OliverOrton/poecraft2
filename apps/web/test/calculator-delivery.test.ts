@@ -105,7 +105,9 @@ assert.equal(bounded.worker?.progress_observations_omitted, 7);
 // is pending, then verify the actual native request and retained error/cancel
 // export still describe the submission. Native mechanics are not mocked here
 // as qualification; this tests the UI's ownership and transport boundary.
-for (const fail of [false, true]) {
+for (const [fail, mode] of [
+    [false, "current"], [true, "current"], [false, "strategy_finder"],
+] as const) {
     const live = new PcCalculator();
     live.innerHTML = '<div class="pc-calc-solve-panel"></div>';
     const fields = live as unknown as {
@@ -116,6 +118,7 @@ for (const fail of [false, true]) {
         slots: Array<{ familyModKey: string; minTier: number }>;
         pickerActions: unknown[];
         solveAbsoluteGapTarget: number;
+        solveMode: "current" | "strategy_finder";
         solveProgressExport: CalculatorDeliveryTrace;
     };
     const actions = [{ id: "chaos", family: "basic", cost_keys: ["chaos"] }];
@@ -123,7 +126,8 @@ for (const fail of [false, true]) {
     const released: number[] = [];
     Object.assign(fields, { solver: 9, item: 7, session: 1, base: "submitted-base",
         itemLevel: 86, slots: [{ familyModKey: "original-goal", minTier: 1 }],
-        pickerActions: actions, solveAbsoluteGapTarget: 2 });
+        pickerActions: actions, solveAbsoluteGapTarget: 2,
+        solveMode: mode });
     setPrice("chaos", 100);
     fields.client = {
         getAbiVersion: () => 2,
@@ -133,6 +137,7 @@ for (const fail of [false, true]) {
             fields.item = 999;
             fields.slots[0].familyModKey = "later-goal";
             fields.solveAbsoluteGapTarget = 999;
+            fields.solveMode = mode === "current" ? "strategy_finder" : "current";
             setPrice("chaos", 700);
             return 17;
         },
@@ -150,7 +155,10 @@ for (const fail of [false, true]) {
         solverSolve: async (_solver: number, item: number, _economy: number, options: SolveOptions,
             execution: { boundedFinishAfterMs: number }) => {
             assert.equal(item, 17);
-            assert.equal(options.max_absolute_optimality_gap, 2);
+            assert.equal(options.solver_mode, mode === "strategy_finder"
+                ? "strategy_finder" : undefined);
+            assert.equal(options.max_absolute_optimality_gap,
+                mode === "current" ? 2 : undefined);
             assert.equal(execution.boundedFinishAfterMs, 240000,
                 "unattended Calculator requests retain the ordinary four-minute finish");
             if (fail) throw new Error("fixture worker failure");
@@ -163,6 +171,8 @@ for (const fail of [false, true]) {
     assert.deepEqual(goals[1].slots[0], { family_mod_key: "original-goal", min_tier: 1 });
     assert.deepEqual(goals[1].actions, ["chaos"]);
     assert.equal(fields.solveProgressExport.request.base_path, "submitted-base");
+    assert.equal(fields.solveProgressExport.request.solve_options.solver_mode,
+        mode === "strategy_finder" ? "strategy_finder" : undefined);
     assert.deepEqual(fields.solveProgressExport.resolved.start_item, { fixture: "submitted-item" });
     assert.equal(fields.solveProgressExport.status, fail ? "error" : "cancelled");
     assert.deepEqual(released, [17]);
