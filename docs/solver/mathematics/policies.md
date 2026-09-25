@@ -799,3 +799,17 @@ the same physical state can recur. The emitted Eldritch candidate instead
 replaces one decision on every return, so only whole-root recurring evaluation
 can price it. Its C37.9778 A5 improvement is a scoped executable upper witness,
 not a lower bound, action retirement, or an exactness result.
+
+The [K2–K4 finder application](../../active/2026-09-25-seed-retention/README.md#k2k3--retained-side-native-finder)
+uses this whole-controller principle for a held-side Eldritch programme. The
+native option must be admitted at its bound source; the emitted primitive steps
+retain their actual order, prices and possible loss/return routes. The finder
+restricts initiation to checked held-goal and tier contexts and verifies every
+positive-root-visit exact item after whole-root evaluation. Root Chaos
+acquisition and Chaos recovery remain paid. This is a recurring replacement,
+not the one-use then-old value, and its local preserved goals do not prove
+properness of the global loop. The independent exact evaluator supplies that
+separate conclusion. The packet's [paid acquisition example](../../active/2026-09-25-seed-retention/research-inputs/seed-retention-238a771/MATHEMATICS.md)
+illustrates the same cost accounting; its toy numbers do not confer native
+admission. The older fixed-donor first-hit comparison remains unmeasured at
+its required compiler boundary.

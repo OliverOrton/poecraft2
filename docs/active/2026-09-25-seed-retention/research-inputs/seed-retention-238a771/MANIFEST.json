@@ -1,0 +1,82 @@
+{
+  "schema": "research_packet_manifest_v1",
+  "reviewed_main": "238a77147864cf885b4c150c992870b80bb71b7d",
+  "manifest_excludes_itself": true,
+  "files": [
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 14804,
+      "sha256": "ee0af25bc6153949dfb21e5df1ed9931b08baf6e8de3a672c1e58ae621e5b184"
+    },
+    {
+      "path": "DATA_REQUEST.md",
+      "bytes": 4126,
+      "sha256": "eab500e61e7960b44147865cccfad5800b4ac2aea5963bbbeec3b3f25c7a33a6"
+    },
+    {
+      "path": "DOC_MAINTENANCE.md",
+      "bytes": 4142,
+      "sha256": "25241fd03ee427b96a5a084031535508988887332159a3fa0d3a6ebbba52485c"
+    },
+    {
+      "path": "MATHEMATICS.md",
+      "bytes": 9258,
+      "sha256": "16caf4380c456f457e289404026323b6eaf5772a7f02f4ea60f95f822b026256"
+    },
+    {
+      "path": "NATIVE_RETENTION_DESIGN.md",
+      "bytes": 10494,
+      "sha256": "3302c0ac83c4230c00a4a6f1b3fa5c1e7c445d10ccf32af88313627b42fd5cb1"
+    },
+    {
+      "path": "PLAN.md",
+      "bytes": 10975,
+      "sha256": "b7536e446bd3dc88e68474ce77e7cf88df67a4f96bacdba1a76c559ac5e568f3"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3304,
+      "sha256": "53f4949247811e599c695ec1b12400f63aa5ef62bdb02dc92b20f47c0ffb56c6"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 8710,
+      "sha256": "85c110e91b14ca64855e40eaf540c9ec86d5fcc22339aede6407e3dc5c2dca30"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 7529,
+      "sha256": "81c1bcb89384ed1231cad0107d63cb7c5d4127691013adb6209fe20a49faacfe"
+    },
+    {
+      "path": "S_DIAGNOSTIC.md",
+      "bytes": 7645,
+      "sha256": "db771f4c55840d9d65a1c5b1560ce39f509c4cab92446eec341cb9fd7f1882ee"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 8814,
+      "sha256": "520f20b979b30b778b7e82f86a78c2c1c04090e0d28426f2f4e3c5022a43da32"
+    },
+    {
+      "path": "checks/abstract_checks.py",
+      "bytes": 10431,
+      "sha256": "032458bce9ce2ee73f27e521dad7578aff2905ca854c4f6f93a6f645ceb2485a"
+    },
+    {
+      "path": "checks/results.json",
+      "bytes": 288,
+      "sha256": "66a733ddf425cf559e9a0cb4b170e51e15c17154747698f918a48c49debd6b2e"
+    },
+    {
+      "path": "evidence/baseline.json",
+      "bytes": 3279,
+      "sha256": "4c2e385d76f4137d1f5917d3a601037e48279e983b77e2dec05eeb7e2583beb0"
+    },
+    {
+      "path": "research-inputs/supplied-audit.md",
+      "bytes": 6627,
+      "sha256": "7eb408f794cfcf7a2114b82545db922fd209ff9bfa1e2cae82709ab30ebb3999"
+    }
+  ]
+}

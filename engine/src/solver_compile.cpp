@@ -1,6 +1,7 @@
 #include "solver_compile_serialization.hpp"
 #include "solver_policy_route.hpp"
 #include "solver_solve_types.hpp"
+#include "solver_options_helpers.hpp"
 #include "json.hpp"
 
 /*
@@ -150,11 +151,46 @@ std::string compile_finder_control_json(
         ? finder_scour_alchemy_program(
             calc.session(), calc.goal(), calc.registry(), calc.candidates())
         : std::vector<std::uint32_t>{};
+    const auto program_for = [&](const FinderControlNode& node)
+        -> const PlannerOperator& {
+        if (node.binding >= control.programs.size())
+            throw std::invalid_argument("finder program binding is invalid");
+        const FinderProgramBinding& binding = control.programs[node.binding];
+        if (binding.operator_index >= calc.operators().size() ||
+            !calc.is_candidate_operator_admitted_for_state(
+                binding.admitted_state, binding.operator_index))
+            throw std::invalid_argument("finder program is not admitted at its native source");
+        const PlannerOperator& option = calc.operators()[binding.operator_index];
+        if (option.kind != PlannerOperatorKind::FixedOption ||
+            option.option_kind != FixedOptionKind::EldritchSideIntent ||
+            option.automatic_kind != AutomaticCandidateKind::EldritchSide ||
+            option.primitive_program.empty())
+            throw std::invalid_argument("finder program is not a native Eldritch side intent");
+        const std::uint32_t valid_mask =
+            (1u << calc.goal().slots.size()) - 1u;
+        if (binding.held_goal_mask == 0 ||
+            (binding.held_goal_mask & ~valid_mask) != 0 ||
+            (satisfied_goal_mask(calc.state(binding.admitted_state)) &
+                binding.held_goal_mask) != binding.held_goal_mask)
+            throw std::invalid_argument("finder program has no held native goal obligation");
+        for (std::uint32_t slot = 0; slot < calc.goal().slots.size(); ++slot)
+            if ((binding.held_goal_mask & (1u << slot)) != 0 &&
+                goal_slot_side(calc.session(), calc.goal().slots[slot]) !=
+                    (option.intended_side == PC_SIDE_PREFIX
+                        ? PC_SIDE_SUFFIX : PC_SIDE_PREFIX))
+                throw std::invalid_argument(
+                    "finder held goal is not on the preserved side");
+        return option;
+    };
+    std::size_t extra_program_nodes = 0;
+    for (const FinderControlNode& node : control.nodes)
+        if (node.kind == FinderControlKind::RunNativeProgram)
+            extra_program_nodes += program_for(node).primitive_program.size() - 1;
     const std::size_t node_count = control.nodes.size() + 1 +
         std::count_if(control.nodes.begin(), control.nodes.end(),
             [](const FinderControlNode& node) {
                 return node.kind == FinderControlKind::RunScourAlchemy;
-            });
+            }) + extra_program_nodes;
     if (node_count > limits.max_compiled_nodes)
         throw std::length_error("finder control exceeds node cap");
     const std::string goal = compile_finder_goal_condition(calc);
@@ -179,6 +215,8 @@ std::string compile_finder_control_json(
         case FinderControlKind::TestGoal:
         case FinderControlKind::TestSlot:
         case FinderControlKind::TestAffixCountAtLeast4:
+        case FinderControlKind::TestEldritchTiers:
+        case FinderControlKind::TestSideCountAtLeast:
             json += "router\"}";
             break;
         case FinderControlKind::RunPrimitive:
@@ -197,6 +235,21 @@ std::string compile_finder_control_json(
                 operation_json(calc.session(),
                     calc.registry().actions[scour_alchemy[1]]) + "}";
             break;
+        case FinderControlKind::RunNativeProgram: {
+            const PlannerOperator& program = program_for(node);
+            json += "operation\",\"operation\":" +
+                operation_json(calc.session(),
+                    calc.registry().actions[program.primitive_program.front()]) + "}";
+            for (std::size_t step = 1;
+                 step < program.primitive_program.size(); ++step) {
+                json += ",{\"id\":\"" + id + "_o" +
+                    std::to_string(step) +
+                    "\",\"kind\":\"operation\",\"operation\":" +
+                    operation_json(calc.session(),
+                        calc.registry().actions[program.primitive_program[step]]) + "}";
+            }
+            break;
+        }
         case FinderControlKind::GoalTerminal:
             json += "terminal\",\"terminal\":\"success\"}";
             break;
@@ -233,9 +286,29 @@ std::string compile_finder_control_json(
             edges += 2;
             continue;
         }
+        if (node.kind == FinderControlKind::RunNativeProgram) {
+            const PlannerOperator& program = program_for(node);
+            for (std::size_t step = 0;
+                 step < program.primitive_program.size(); ++step) {
+                const std::string from = step == 0 ? id :
+                    id + "_o" + std::to_string(step);
+                const std::string to = step + 1 ==
+                        program.primitive_program.size()
+                    ? target(node.next)
+                    : id + "_o" + std::to_string(step + 1);
+                json += ",{\"id\":\"program" + std::to_string(i) +
+                    "_step" + std::to_string(step) +
+                    "\",\"from\":\"" + from + "\",\"to\":\"" + to +
+                    "\",\"priority\":0,\"is_default\":true}";
+                ++edges;
+            }
+            continue;
+        }
         if (node.kind != FinderControlKind::TestGoal &&
             node.kind != FinderControlKind::TestSlot &&
-            node.kind != FinderControlKind::TestAffixCountAtLeast4)
+            node.kind != FinderControlKind::TestAffixCountAtLeast4 &&
+            node.kind != FinderControlKind::TestEldritchTiers &&
+            node.kind != FinderControlKind::TestSideCountAtLeast)
             continue;
         std::string condition;
         if (node.kind == FinderControlKind::TestGoal) {
@@ -247,11 +320,32 @@ std::string compile_finder_control_json(
             if (node.binding >= vocabulary.size())
                 throw std::invalid_argument("finder goal slot is invalid");
             condition = vocabulary[node.binding].satisfied;
-        } else {
+        } else if (node.kind == FinderControlKind::TestAffixCountAtLeast4) {
             condition = any_of({
                 total_explicit_affix_count_condition(4),
                 total_explicit_affix_count_condition(5),
                 total_explicit_affix_count_condition(6)});
+        } else if (node.kind == FinderControlKind::TestEldritchTiers) {
+            const std::uint32_t searing = node.binding & 0xffu;
+            const std::uint32_t eater = (node.binding >> 8u) & 0xffu;
+            if ((node.binding >> 16u) != 0 || searing > 4 || eater > 4)
+                throw std::invalid_argument("finder Eldritch tier test is invalid");
+            condition = all_of({
+                eldritch_tier_condition("searing", searing),
+                eldritch_tier_condition("eater", eater)});
+        } else {
+            const std::uint32_t side = node.binding >> 8u;
+            const std::uint32_t minimum = node.binding & 0xffu;
+            const std::uint32_t cap = rarity_affix_cap(
+                calc.session(), calc.goal().rarity);
+            if (side > PC_SIDE_SUFFIX || minimum == 0 || minimum > cap)
+                throw std::invalid_argument("finder side count test is invalid");
+            std::vector<std::string> counts;
+            for (std::uint32_t count = minimum; count <= cap; ++count)
+                counts.push_back(count_condition(
+                    side == PC_SIDE_PREFIX ? "prefix_count_range" :
+                        "suffix_count_range", count));
+            condition = any_of(counts);
         }
         json += ",{\"id\":\"yes" + std::to_string(i) +
             "\",\"from\":\"" + id + "\",\"to\":\"" +

@@ -630,10 +630,26 @@ Neutralizing raw unrelated occupancy within incremental goal-mask ties changed
 service order, yet the source-matched 240-second pair emitted byte-identical
 controllers with independently matched C85,558.70618560436 costs. The
 default-off native diagnostic remains available; no default ordering change is
-promoted. First-policy debt selection and fixed-donor first-hit economics remain
-unmeasured at their required native boundaries, so the wider dirty-progress
-hypothesis is open. The A3/A4 control anomalies and finder retention-programme
-gap retain their earlier status; no model or theorem status changes.
+promoted. At that point first-policy debt selection and fixed-donor first-hit
+economics were unmeasured at their required native boundaries. The A3/A4
+control anomalies remained separate; no model or theorem status changed.
+
+The selected [seed and retention programme](../active/2026-09-25-seed-retention/README.md)
+subsequently observed the live S selector passively. Its complete A5 run made
+19,667 calls, all with the proposed comparison gate inactive because an output
+incumbent object already existed. This resolves historical missingness as
+`measured_gate_inactive`, without an active-gate economic result or S behavior
+change. The old fixed-donor first-hit comparison remains unmeasured. A narrow
+native Eldritch held-side programme is now consumed by the experimental finder
+and has exact original-root A3/A5 graphs with all reached programme entries
+validated. It improves old finder costs to C14,034.203 and C524,079.699, but
+Current's checked A3/A5 costs remain about 6.73 and 6.13 times cheaper. A3's
+Current bounded-stop classification anomaly remains; A5's Current comparator
+is qualified. The mechanism is incorporated experimentally, its economic
+competitiveness fails on these two requests, product promotion is deferred,
+and the broader dirty-state hypothesis remains open. This applies existing
+programme and upper-authority arguments; it creates no new theorem or exact
+closure claim.
 
 <a id="knowledge"></a>
 ## 5. Knowledge outlives machinery

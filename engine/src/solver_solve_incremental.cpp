@@ -179,6 +179,7 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
                 solve_detail::build_carrier_priority_buckets(
                     carrier_candidates, automatic_ordering_mode);
             if (carrier_bound_attribution &&
+                !options.seed_progress_observation_diagnostic &&
                 (automatic_ordering_mode == CarrierOrderingMode::
                     IncrementalLegacy ||
                  automatic_ordering_mode == CarrierOrderingMode::

@@ -824,6 +824,9 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.neutral_extra_ordering_diagnostic =
             (options->solver_flags &
              solver::kNeutralExtraOrderingDiagnosticFlag) != 0;
+        value.seed_progress_observation_diagnostic =
+            (options->solver_flags &
+             solver::kSeedProgressObservationDiagnosticFlag) != 0;
     }
     if (PC_SOLVE_OPTION_HAS(max_absolute_optimality_gap) &&
         options->max_absolute_optimality_gap > 0.0) {
@@ -1302,7 +1305,8 @@ pc_result solver::configure_solver_finder_grammar(
     if (!handle || handle->solve_work || handle->solved.has_value() ||
         handle->finder_work || handle->finder_finished ||
         (mode != FinderGrammarMode::PrimitiveOnly &&
-         mode != FinderGrammarMode::Conditional)) {
+         mode != FinderGrammarMode::Conditional &&
+         mode != FinderGrammarMode::ConditionalRetention)) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
             "finder grammar requires an idle unsolved handle and known mode");
         return PC_RESULT_INVALID_ARGUMENT;

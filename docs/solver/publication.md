@@ -46,9 +46,19 @@ emits the same ordinary strategy format used by independent evaluation. Goal
 terminal ingress uses the original native goal and cannot be a default edge,
 whose compiled meaning is unconditional fallback. Search holes and open ports
 are refused before checking. A Scour→Alchemy run emits both native operations
-and their paid continuation; the current finder admits it only when both
-primitives are declared in scope. This does not grant dependency-only primitive
-scope through program provenance.
+and their paid continuation; the `conditional` finder admits it only when both
+primitives are declared in scope. The experimental `conditional-retention`
+finder additionally binds one `EldritchSideIntent` option at a native admitted
+source and emits its ordered primitive programme into ordinary strategy JSON.
+The internal control object and exact graph bytes are paired at candidate
+preparation; raw JSON cannot declare a trusted occurrence. Dependency-only
+steps are allowed only at their emitted programme nodes. An exact,
+positive-root-visit census then checks every reached programme entry against
+full state-local native admission, semantic operator identity, complete legal
+kernel, resource vector and held-goal preservation on every exit. The
+independent evaluator still owns properness, probability, full original-root
+cost and acceptance. This narrow permission creates no general dependency
+closure or product mode.
 
 After a candidate passes native properness, mass and pricing checks, finder
 ownership moves the emitted graph buffer into the winning bundle. A later

@@ -46,6 +46,21 @@ The treatment flag is a separate input identity. First finite proposal,
 first independently verified policy and final original-root cost must be read
 separately. [A5 diagnostic and pair](../active/2026-09-25-dirty-progress/README.md#j1--bounded-causal-observation).
 
+The private `native-seed-progress-observation` records actual
+`select_joint_policy_seed_row` calls and its complete first-policy gate:
+high-impact uppers, incremental generation and absence of an output incumbent
+object. Gate-on comparisons use the same completed priced rows and preserve
+pending-route precedence; bounded witness samples have their own omission
+count. Gate-off reason counts can overlap and are not exclusive strata. The
+observer's computation is part of the instrumented run's wall time; it cannot
+be read as uninstrumented Current performance. The aggregate
+call/gate/eligible-row counters are the denominator, not
+the sample. `measured_gate_inactive` means no gate-on comparison was possible;
+it does not mean an active gate produced zero reversals. On the complete A5
+observation, 19,667 calls were gate-off, all with an output incumbent object;
+11,291 had no eligible row. The observer returned the original selection, and
+its instrumented run identity and cost belong to the [K1 record](../active/2026-09-25-seed-retention/README.md#k1--s-selector-observation).
+
 ## Reading Rules
 
 Compare logical work, evaluator-specific effort, wall time, and owned memory separately. Raw V3 effort is not the V1-equivalent cap and is not a hardware-independent runtime estimate.

@@ -2338,6 +2338,68 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
                 kDirtyOrderSamplesPerStratum>, kDirtyOrderStrata> samples{};
         } dirty_order;
 
+        // Passive comparison at the actual completed-row selector. Exact
+        // semantic keys are retained only for bounded witnesses; all calls
+        // contribute to the counters independently of witness capacity.
+        static constexpr std::size_t kSeedProgressWitnessLimit = 32;
+        struct SeedRowSnapshot {
+            std::uint64_t row = std::numeric_limits<std::uint64_t>::max();
+            std::uint32_t operator_index = kNoId;
+            std::uint64_t pending_routes = 0;
+            double cost = 0.0;
+            double goal_probability = 0.0;
+            double old_progress = 0.0;
+            double new_progress = 0.0;
+            std::array<std::uint64_t, 6> old_key{};
+            std::array<std::uint64_t, 6> new_key{};
+            solve_detail::JointPolicySemanticKey semantic_key;
+        };
+        struct SeedProgressWitness {
+            std::uint64_t call = 0;
+            std::uint32_t state = kNoId;
+            std::uint32_t goal_mask = 0;
+            std::uint32_t blocked_mask = 0;
+            std::uint32_t prefix_count = 0;
+            std::uint32_t suffix_count = 0;
+            std::uint32_t required_goals = 0;
+            bool has_output_object = false;
+            bool has_verified_graph = false;
+            bool changed_winner = false;
+            solve_detail::JointPolicySemanticKey source_key;
+            SeedRowSnapshot old_winner;
+            SeedRowSnapshot alternate_winner;
+        };
+        struct SeedProgressDiagnostic {
+            std::uint64_t calls = 0;
+            std::uint64_t calls_outside_state_rows = 0;
+            std::uint64_t calls_gate_true = 0;
+            std::uint64_t calls_gate_false_output = 0;
+            std::uint64_t calls_gate_false_high_impact = 0;
+            std::uint64_t calls_gate_false_incremental = 0;
+            std::uint64_t calls_no_eligible = 0;
+            std::uint64_t complete_priced_row_comparisons = 0;
+            std::uint64_t calls_different_progress_mass = 0;
+            std::uint64_t calls_different_minimum = 0;
+            std::uint64_t witnesses_omitted = 0;
+            std::size_t witnesses_retained = 0;
+            std::array<SeedProgressWitness,
+                kSeedProgressWitnessLimit> witnesses{};
+        } seed_progress;
+
+        std::uint64_t seed_progress_nested_bytes() const {
+            std::uint64_t bytes = 0;
+            for (std::size_t i = 0;
+                 i < seed_progress.witnesses_retained; ++i) {
+                const auto& sample = seed_progress.witnesses[i];
+                bytes += sample.source_key.capacity() * sizeof(std::uint64_t);
+                bytes += sample.old_winner.semantic_key.capacity() *
+                    sizeof(std::uint64_t);
+                bytes += sample.alternate_winner.semantic_key.capacity() *
+                    sizeof(std::uint64_t);
+            }
+            return bytes;
+        }
+
         std::chrono::steady_clock::time_point started_at =
             std::chrono::steady_clock::now();
         std::array<CarrierShapeHistogram, kScheduleStageCount> schedules{};

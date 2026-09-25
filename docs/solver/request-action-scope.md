@@ -33,6 +33,15 @@ Keep these separate:
 | Completed row | Entire supported transition/choice result has been built and installed |
 | Proof-retired obligation | An authorized proof closes the obligation without creating an executable row |
 
+The experimental retained-side finder permits dependency-only primitive
+operations only inside a trusted compiler-emitted `EldritchSideIntent`
+occurrence. The binding refers to an actually admitted source/operator pair;
+its emitted graph must match the in-memory control bytes, and every reached
+exact initiation item is checked again against full native admission and the
+same resource law. This does not admit arbitrary dependency closure or let a
+raw graph declare its own permission. The [K2–K4 record](../active/2026-09-25-seed-retention/README.md#k2k3--retained-side-native-finder)
+specifies the narrow benchmark grammar and measured scope.
+
 An explicit product candidate list and the generated-program grammar together require complete accounting. Counting descriptions is not equivalent to identifying every semantic action. [Lower coverage](lower-pruning.md#coverage-and-lower-only-queries) handles explicit and residual-family proof constraints.
 
 ## Product and diagnostic scope

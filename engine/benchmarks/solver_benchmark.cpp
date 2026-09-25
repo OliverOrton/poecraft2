@@ -69,6 +69,7 @@ struct Arguments {
     std::string finder_ranking = "heuristic";
     std::string finder_grammar = "conditional";
     bool neutral_extra_ordering = false;
+    bool seed_progress_observation = false;
     double native_execution_action_price = 0;
     std::string native_retention_diagnostic;
     double native_retention_target_lower = 0;
@@ -115,6 +116,7 @@ struct NativeHandles {
 
 struct CaseResult {
     bool neutral_extra_ordering = false;
+    bool seed_progress_observation = false;
     std::string native_retention_diagnostic;
     double native_retention_target_lower = 0;
     double proof_handoff_seconds = 0;
@@ -3552,6 +3554,7 @@ CaseResult run_case(
     const std::string& finder_ranking,
     const std::string& finder_grammar,
     const bool neutral_extra_ordering,
+    const bool seed_progress_observation,
     const double native_execution_action_price,
     const double native_retention_target_lower,
     const double proof_handoff_seconds,
@@ -3571,6 +3574,7 @@ CaseResult run_case(
     const std::function<void(const CaseResult&)>& checkpoint) {
     CaseResult report;
     report.neutral_extra_ordering = neutral_extra_ordering;
+    report.seed_progress_observation = seed_progress_observation;
     report.native_retention_diagnostic=native_retention_diagnostic;
     report.native_retention_target_lower=native_retention_target_lower;
     report.proof_handoff_seconds = proof_handoff_seconds;
@@ -3797,6 +3801,10 @@ CaseResult run_case(
             solve_options.solver_flags |= poecraft::solver::
                 kNeutralExtraOrderingDiagnosticFlag;
         }
+        if (seed_progress_observation) {
+            solve_options.solver_flags |= poecraft::solver::
+                kSeedProgressObservationDiagnosticFlag;
+        }
         const std::string development_checkpoint_identity =
             development_checkpoint_identity_prefix +
             "\ncase=" + json_of(specification) +
@@ -3823,11 +3831,13 @@ CaseResult run_case(
                     "configure finder ranking", configured, error));
         }
         if (solver_mode == "strategy_finder" &&
-            finder_grammar == "primitive") {
+            finder_grammar != "conditional") {
             const auto configured =
                 poecraft::solver::configure_solver_finder_grammar(
                     handles.solver,
-                    poecraft::solver::FinderGrammarMode::PrimitiveOnly,
+                    finder_grammar == "primitive"
+                        ? poecraft::solver::FinderGrammarMode::PrimitiveOnly
+                        : poecraft::solver::FinderGrammarMode::ConditionalRetention,
                     &error);
             if (configured != PC_RESULT_OK)
                 throw std::runtime_error(api_error(
@@ -5057,6 +5067,8 @@ void append_case_report(
     out << "  \"native_retention_diagnostic\":" << escape_json(result.native_retention_diagnostic) << ",\n";
     if (result.neutral_extra_ordering)
         out << "  \"native_neutral_extra_ordering\":true,\n";
+    if (result.seed_progress_observation)
+        out << "  \"native_seed_progress_observation\":true,\n";
     if (result.proof_handoff_seconds > 0.0) {
         out << "  \"proof_handoff_diagnostic\":{\"requested_seconds\":"
             << result.proof_handoff_seconds
@@ -6171,6 +6183,8 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--finder-grammar") args.finder_grammar=value("--finder-grammar");
         else if (argument == "--native-neutral-extra-ordering")
             args.neutral_extra_ordering = true;
+        else if (argument == "--native-seed-progress-observation")
+            args.seed_progress_observation = true;
         else if (argument == "--native-retention-target-lower") args.native_retention_target_lower=std::stod(value("--native-retention-target-lower"));
         else if (argument == "--proof-handoff-seconds") {
             args.proof_handoff_seconds = std::stod(value("--proof-handoff-seconds"));
@@ -6269,12 +6283,16 @@ Arguments parse_arguments(int argc, char** argv) {
     if (args.neutral_extra_ordering && args.solver_mode != "current")
         throw std::runtime_error(
             "neutral-extra ordering requires current mode");
+    if (args.seed_progress_observation && args.solver_mode != "current")
+        throw std::runtime_error(
+            "seed-progress observation requires current mode");
     if (args.finder_ranking != "heuristic" &&
         args.finder_ranking != "uninformed")
         throw std::runtime_error("finder ranking must be heuristic or uninformed");
     if (args.finder_grammar != "conditional" &&
-        args.finder_grammar != "primitive")
-        throw std::runtime_error("finder grammar must be conditional or primitive");
+        args.finder_grammar != "primitive" &&
+        args.finder_grammar != "conditional-retention")
+        throw std::runtime_error("finder grammar must be conditional, conditional-retention or primitive");
     if (args.solver_mode != "strategy_finder" &&
         (args.finder_ranking != "heuristic" ||
          args.finder_grammar != "conditional"))
@@ -6623,6 +6641,7 @@ int main(int argc, char** argv) {
                     args.finder_ranking,
                     args.finder_grammar,
                     args.neutral_extra_ordering,
+                    args.seed_progress_observation,
                     args.native_execution_action_price,
                     args.native_retention_target_lower, args.proof_handoff_seconds,
                     args.emit_progress,

@@ -26,8 +26,13 @@ The experimental finder stores distinct finite control nodes for different
 partial-goal observations before compiling an ordinary strategy. Sharing a
 role feature or action index does not equate the corresponding operation–item
 states or their values. A bound native program contributes its mandatory
-steps and control phase; the current Scour→Alchemy finder branch emits those
+steps and control phase; the Scour→Alchemy finder branch emits those
 steps explicitly rather than treating a macro label as a primitive transition.
+The experimental retained-side branch likewise keeps the actual source
+binding and emits an admitted Eldritch-side programme's steps. Its held-goal
+and tier guards restrict initiation; every reached exact item is rechecked
+after evaluation. Sharing these role predicates does not identify states,
+kernels or values, and the branch is not a state quotient.
 
 A coarse cell can represent several physical items. One physical item can occur at several strategy nodes with different remaining programs. A strict-state identifier belongs to a particular graph generation. A compiled router selects an operation using conditions that must be sufficient for the policy being executed. The evaluator's product graph is needed precisely because an operation node alone does not determine its transition law. [Publication and Evaluation](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/publication.md).
 

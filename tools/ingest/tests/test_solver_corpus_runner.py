@@ -408,6 +408,15 @@ def test_finder_mode_is_an_explicit_resumable_treatment(tmp_path: Path) -> None:
     )
     assert command.as_list()[-4:] == ["--solver-mode", "strategy_finder",
                                      "--finder-ranking", "uninformed"]
+    retention_command = build_solver_case_command(
+        executable=tmp_path / "solver.exe", artifact=tmp_path / "artifact",
+        corpus=tmp_path / "manifest.json", case_id="case-a", paths=paths,
+        root=tmp_path, exact_evaluation=True, run_verification=False,
+        goal_progress_gated_reforges=False, solver_mode="strategy_finder",
+        finder_grammar="conditional-retention",
+    )
+    assert retention_command.as_list()[-2:] == [
+        "--finder-grammar", "conditional-retention"]
     manifest = tmp_path / "manifest.json"
     _write_json(manifest, {"cases": []})
     args = dict(root=Path.cwd(), executable=Path(sys.executable), artifact=tmp_path,
@@ -420,6 +429,17 @@ def test_finder_mode_is_an_explicit_resumable_treatment(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="provenance/configuration differs"):
         run_corpus(**args, output_directory=output, solver_mode="strategy_finder",
                    finder_ranking="uninformed")
+    with pytest.raises(ValueError, match="provenance/configuration differs"):
+        run_corpus(**args, output_directory=output, solver_mode="strategy_finder",
+                   finder_grammar="conditional-retention")
+    with pytest.raises(ValueError, match="requires strategy_finder mode"):
+        build_solver_case_command(
+            executable=tmp_path / "solver.exe", artifact=tmp_path / "artifact",
+            corpus=tmp_path / "manifest.json", case_id="case-a", paths=paths,
+            root=tmp_path, exact_evaluation=True, run_verification=False,
+            goal_progress_gated_reforges=False, solver_mode="current",
+            finder_grammar="conditional-retention",
+        )
 
 
 def test_neutral_extra_ordering_is_current_only_treatment(tmp_path: Path) -> None:
@@ -445,6 +465,36 @@ def test_neutral_extra_ordering_is_current_only_treatment(tmp_path: Path) -> Non
     result = run_corpus(**args, output_directory=output,
                         neutral_extra_ordering=True)
     assert result["treatment"]["neutral_extra_ordering"] is True
+    with pytest.raises(ValueError, match="provenance/configuration differs"):
+        run_corpus(**args, output_directory=output)
+
+
+def test_seed_progress_observation_is_resumable_current_diagnostic(
+    tmp_path: Path,
+) -> None:
+    paths = AttemptPaths.legacy(tmp_path / "run", "case-a", "attempt-1")
+    kwargs = dict(
+        executable=tmp_path / "solver.exe", artifact=tmp_path / "artifact",
+        corpus=tmp_path / "manifest.json", case_id="case-a", paths=paths,
+        root=tmp_path, exact_evaluation=True, run_verification=False,
+        goal_progress_gated_reforges=False, solver_mode="current",
+    )
+    command = build_solver_case_command(
+        **kwargs, seed_progress_observation=True)
+    assert command.as_list()[-1] == "--native-seed-progress-observation"
+    with pytest.raises(ValueError, match="requires current mode"):
+        build_solver_case_command(
+            **(kwargs | {"solver_mode": "strategy_finder"}),
+            seed_progress_observation=True,
+        )
+    manifest = tmp_path / "manifest.json"
+    _write_json(manifest, {"cases": []})
+    args = dict(root=Path.cwd(), executable=Path(sys.executable), artifact=tmp_path,
+                corpus=manifest, tasks=[], solver_mode="current")
+    output = tmp_path / "seed"
+    result = run_corpus(**args, output_directory=output,
+                        seed_progress_observation=True)
+    assert result["treatment"]["seed_progress_observation"] is True
     with pytest.raises(ValueError, match="provenance/configuration differs"):
         run_corpus(**args, output_directory=output)
 

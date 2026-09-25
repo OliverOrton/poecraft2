@@ -32,7 +32,15 @@ std::string compile_finder_goal_condition(const CalcContext& calc);
  * the original request, never supplied as an arbitrary proposer predicate. */
 enum class FinderControlKind : std::uint8_t {
     TestGoal, TestSlot, TestAffixCountAtLeast4,
-    RunPrimitive, RunScourAlchemy, GoalTerminal, FailureTerminal, Hole
+    RunPrimitive, RunScourAlchemy, GoalTerminal, FailureTerminal, Hole,
+    TestEldritchTiers, TestSideCountAtLeast, RunNativeProgram
+};
+struct FinderProgramBinding {
+    // Both handles are local to the original CalcContext. The finder creates
+    // them through complete state-local automatic admission, never JSON.
+    std::uint32_t operator_index = kNoId;
+    std::uint32_t admitted_state = kNoId;
+    std::uint32_t held_goal_mask = 0;
 };
 struct FinderControlNode {
     FinderControlKind kind = FinderControlKind::Hole;
@@ -44,6 +52,7 @@ struct FinderControlNode {
 struct FinderControlGraph {
     std::vector<FinderControlNode> nodes;
     std::uint32_t entry = kNoId;
+    std::vector<FinderProgramBinding> programs;
 };
 std::string compile_finder_control_json(
     const CalcContext& calc,

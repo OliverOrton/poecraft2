@@ -19,7 +19,15 @@ the original request root. Its candidate score only orders proposals; the
 complete native strategy evaluation decides policy availability and cost.
 Finder output has no independent lower or exactness authority and does not
 enter the Current incumbent portfolio. An already-complete root still passes
-through a goal-guarded zero-operation graph and independent checking.
+  through a goal-guarded zero-operation graph and independent checking.
+
+  The benchmark-only retained-side grammar supplies one such original-root
+  controller, with paid acquisition, native Eldritch programme and recovery.
+  Its trusted occurrence check grants only the programme's emitted dependency
+  steps; exact graph evaluation and per-reached-entry native admission still
+  decide availability. Its A3/A5 graphs improve the older finder but remain
+  costlier than Current, so no product upper or lower is transferred between
+  modes. [Scoped result](../active/2026-09-25-seed-retention/README.md#k4--matched-original-root-qualification).
 
 Ordinary candidates can come from a complete coarse policy, constructive or renewal witness, carrier-ladder/joint-policy work, a retained strict incumbent, or strict improvement. The portfolio distinguishes estimates from verified executable candidates and retains the cheapest compatible verified artifact.
 

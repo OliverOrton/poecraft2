@@ -1,0 +1,97 @@
+{
+  "schema": "seed_retention_review_projection_v1",
+  "evidence_grade": "projection_of_recorded_native_results_and_reviewed_source_not_a_new_run",
+  "reviewed_main": "238a77147864cf885b4c150c992870b80bb71b7d",
+  "parent": "b4ea87d18e746dcfa753d753c83a93f8672e5789",
+  "title": "Investigate dirty carrier ordering on matched A5",
+  "ci": {
+    "windows": {
+      "run_id": 36159266284,
+      "job_id": 108151466085,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "solver_knowledge": {
+      "run_id": 36159266060,
+      "status": "completed",
+      "conclusion": "success"
+    }
+  },
+  "j3": {
+    "case": "cb01-cross-base-product8-long240",
+    "executable_sha256": "ef5fb95d7bee6674e346e408fa040b270d76df2213be81802b562bf3b184a661",
+    "corpus_sha256": "404c0ee632b199b85a5fce76a62f9d75ca59839849b2b9efd1bcf4c174125b20",
+    "artifact_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+    "strategy_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+    "baseline": {
+      "expected_chaos": 85558.70618560436,
+      "first_finite_proposal_s": 9.769,
+      "first_verified_s": 30.299,
+      "rows": 39310,
+      "transitions": 202077,
+      "peak_owned_bytes": 254148646
+    },
+    "neutral_extra": {
+      "expected_chaos": 85558.70618560436,
+      "first_finite_proposal_s": 9.755,
+      "first_verified_s": 29.647,
+      "rows": 39311,
+      "transitions": 201325,
+      "peak_owned_bytes": 223244266
+    },
+    "graph_nodes": 469,
+    "graph_edges": 1117,
+    "same_graph_bytes": true,
+    "interpretation": "one matched O economic negative; timing/memory gain not qualified",
+    "limits": {
+      "finish_seconds": 240,
+      "native_watchdog_seconds": 300,
+      "host_watchdog_seconds": 315,
+      "solver_owned_bytes": 1073741824,
+      "discovered_states": 200000,
+      "expanded_states": 200000,
+      "state_action_rows": 1215000,
+      "transitions": 10000000,
+      "logical_reforge_work": 50000000
+    },
+    "root": "empty Rare Conquest Lamellar level 86",
+    "mode": "current",
+    "native_retention": "reuse",
+    "work_items_per_step": 8
+  },
+  "j1_order_observation": {
+    "epochs": 51,
+    "eligible_positions": 6843,
+    "changed_positions": 2612,
+    "moved_earlier": 1412,
+    "exclusive_first_match_strata": {
+      "full_coverage_extras": 0,
+      "capacity_or_blocked": 2534,
+      "high_progress_dirty_after_obstruction_excluded": 50,
+      "cleaner": 16,
+      "other": 12
+    },
+    "cautions": [
+      "positions may repeat a state across epochs",
+      "the 50 is not total high-progress dirty prevalence",
+      "zero full-coverage-extra changes is not a zero discovered-population result",
+      "early J1 sample deduplication was incomplete; J3 corrected it"
+    ]
+  },
+  "s_status_at_review": "counterfactual_not_established_not_measured_zero",
+  "g_status_at_review": "requested_native_preservation_programme_not_implemented",
+  "old_donor_first_hit": "unavailable_trusted_complete_decision_boundary_provenance",
+  "local_validation_recorded": {
+    "solver_solve_checks": 87635,
+    "corpus_runner_tests": 29,
+    "knowledge_lint_errors": 0
+  },
+  "fresh_review_native_runs": 0,
+  "sources": [
+    "R2",
+    "R4",
+    "R6",
+    "R7",
+    "R18"
+  ]
+}

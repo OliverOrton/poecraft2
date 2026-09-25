@@ -28,12 +28,15 @@ FinderCandidatePreparation prepare_finder_candidate(
     const CalcContext& problem,
     std::shared_ptr<const SessionImpl> session,
     const pc_item_state& original_start,
-    const std::string& strategy_json);
+    const std::string& strategy_json,
+    const FinderControlGraph* native_control = nullptr);
 
 bool finder_evaluation_accepted(const StrategyEvalResult& result);
 
 struct FinderCheckedPolicy {
     std::string strategy_json;
+    // Native-only receipt retained with the checked graph for its lifetime.
+    std::optional<FinderControlGraph> native_control;
     double expected_cost = 0.0;
     double expected_actions = 0.0;
     double success_probability = 0.0;
@@ -73,7 +76,9 @@ std::vector<double> score_finder_sketch_batch(
     const std::vector<FinderScoreFeatures>& features);
 
 enum class FinderRankingMode : std::uint8_t { Heuristic, Uninformed };
-enum class FinderGrammarMode : std::uint8_t { PrimitiveOnly, Conditional };
+enum class FinderGrammarMode : std::uint8_t {
+    PrimitiveOnly, Conditional, ConditionalRetention
+};
 
 /* Peer heuristic policy search. It never creates SolveWork or supplies a
  * lower/exact certificate. One native evaluator is live at most. */
@@ -137,6 +142,9 @@ class PolicyFinderWork {
         bool has_checked_cost = false;
         bool conditional = false;
         bool native_program = false;
+        std::uint32_t programme_entries = 0;
+        std::uint32_t positive_programme_entries = 0;
+        std::uint32_t validated_programme_entries = 0;
     };
     CalcContext& problem_;
     std::shared_ptr<const SessionImpl> session_;
@@ -153,6 +161,11 @@ class PolicyFinderWork {
     std::size_t pending_cursor_ = 0;
     std::shared_ptr<StrategyImpl> checking_strategy_;
     std::unique_ptr<StrategyEvalWork> checker_;
+    std::unique_ptr<CalcContext> validation_calc_;
+    AutomaticAdmissionLimits validation_limits_;
+    std::size_t validation_cursor_ = 0;
+    std::uint32_t validation_state_ = kNoId;
+    std::uint64_t validation_reforge_accounted_ = 0;
     std::string checking_graph_;
     std::optional<Sketch> active_sketch_;
     std::optional<std::size_t> active_record_;
@@ -163,6 +176,8 @@ class PolicyFinderWork {
     FinderProgress counters_;
     std::string last_refusal_;
     std::string last_refusal_kind_ = "none";
+    std::string retention_status_ = "not_requested";
+    bool retention_pending_ = false;
     bool finish_requested_ = false;
     bool done_ = false;
 
@@ -174,6 +189,9 @@ class PolicyFinderWork {
     std::string sketch_identity(const Sketch& sketch) const;
     void record_generated(const Sketch& sketch);
     void schedule_feedback_program();
+    void generate_retention_candidate();
+    bool validate_active_programme(std::uint32_t max_work_items);
+    void release_validation();
     std::uint64_t elapsed_ns() const;
     std::uint64_t retained_owned_bytes() const;
     void update_peak();

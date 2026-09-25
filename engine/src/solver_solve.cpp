@@ -43,6 +43,7 @@ SolveWork::Impl::Impl(
                 "carriers");
         }
         if (options.full_evidence ||
+            options.seed_progress_observation_diagnostic ||
             options.verified_policy_alternative_shadow_diagnostic) {
             carrier_bound_attribution =
                 std::make_unique<CarrierBoundAttributionWork>();

@@ -94,6 +94,15 @@ removed. No new runtime activation or upper issuer follows from that work.
 
 The lower-only quotient is a different consumer of shared numerical machinery: it checks a declared complete optimistic model and cannot issue executable policy authority. See [lower/pruning](lower-pruning.md).
 
+The native first-policy seed selector's debt key is active only when high-impact
+uppers and incremental generation are enabled and no output incumbent object
+exists. A passive selector diagnostic observes the actual call, row set, gate
+and two keys without changing its winner. On the complete instrumented A5 run,
+all 19,667 calls were gate-off, so there is no observed active-gate reversal or
+economic continuation. The older A5 report had no such call-site evidence.
+The fixture reversal establishes diagnostic sensitivity, not live prevalence.
+See the [K1 record](../active/2026-09-25-seed-retention/README.md#k1--s-selector-observation).
+
 ## Candidate-local continuation
 
 The optional dirty expansion retains the original proposals first, then orders

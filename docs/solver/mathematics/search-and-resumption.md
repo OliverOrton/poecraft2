@@ -56,10 +56,18 @@ In the current native constructor, this debt key is used only for completed
 seed rows while high-impact uppers and incremental action generation are active
 and no *output incumbent object* exists. The later key instead prefers a true
 goal or a higher satisfied-goal count. An independently verified graph and an
-output incumbent object are distinct conditions. The September 25 A5
-investigation did not record a gate-active row-selection reversal, so the debt
-example remains a conditional search concern, not an observed cause of that
-run's cost. The active carrier ordering uses a different within-goal-mask
+output incumbent object are distinct conditions. The passive September 25 A5
+selector observation counted 19,667 calls, all gate-off because an output
+incumbent object existed, and zero gate-on comparisons. Its status is
+`measured_gate_inactive`: the synthetic gate-on reversal proves observer
+sensitivity, but the actual run cannot establish whether union acquisition
+credit would improve a live gate-on choice. The counterfactual key credits the
+union of requested goals already present or obtainable in a completed priced
+row, while retaining the existing pending-route precedence and exact-key
+comparison. It orders proposals; it supplies no lower, properness or action
+retirement authority. Absence from a search-filtered candidate set is not a
+verified non-improvement. [S measurement](../../active/2026-09-25-seed-retention/README.md#k1--s-selector-observation).
+The active carrier ordering uses a different within-goal-mask
 occupancy comparison. Its neutralization changed service order but returned the
 same checked original-root controller and cost; search effort and crafting
 economics are separate observations. [Native disposition](../../active/2026-09-25-dirty-progress/README.md#j3--matched-original-root-result).

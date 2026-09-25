@@ -41,7 +41,16 @@ the eight-attempt ceiling also counts compile refusals and censored checks.
 Logical work, aggregate memory and host wall limits are
 separate. One native evaluator runs at a time. It charges the current parsed
 graph and checker alongside the old verified winner before admitting another
-candidate; winning graph transfer does not copy that buffer at adoption.
+  candidate; winning graph transfer does not copy that buffer at adoption.
+
+  The retained-side treatment consumes one of the same eight attempts. Its
+  graph-local exact entry census and resumable state-local admission validator
+  retain memory alongside the checker and old winner and debit logical reforge
+  work. Every positive-root-visit programme entry must validate; an incomplete
+  or capped validation is a refusal/censoring event, not an accepted checked
+  policy. Finish releases active validation while retaining the previous best
+  complete graph. The [K4 matched record](../active/2026-09-25-seed-retention/README.md#k4--matched-original-root-qualification)
+  reports the measured aggregate peaks and work.
 
 The additive public `pc_solve_options.candidate_max_states`,
 `candidate_max_pairs`, `candidate_max_transitions` and

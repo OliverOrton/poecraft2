@@ -47,6 +47,7 @@ Paths in this table are under `engine/src/` unless indicated otherwise.
 | Exact refinement/partition | `solver_refinement*.cpp`, `solver_refinement_graph_core.hpp`, `solver_refinement_graph_discovery.hpp`, `solver_quotient_partition.cpp`, `solver_quotient_proof.cpp` | Carrier-wide rows and strict alternatives; CLM-0005, CLM-0020 |
 | Production policy oracle | `solver_policy_refinement.cpp`, `solver_policy_oracle_*.inc`, `solver_policy_assertion.cpp`, `solver_policy_assertion_work.cpp` | Exact observations, choice/entry scope, stepped assertion and publication premises |
 | Compilation | `solver_compile.cpp`, `solver_compile_conditions.hpp`, `solver_compile_serialization.hpp` | Executable route and literal operation preservation; CLM-0002, CLM-0004 |
+| Experimental finder control and native programme binding | `solver_finder.cpp`, `solver_finder.hpp`, `solver_compile.cpp`, `solver_compile_contracts.hpp` | Original-root candidate, trusted occurrence, complete entry admission and independent evaluation; no lower or default product authority |
 | Independent graph evaluation | `solver_eval.cpp`, `solver_eval_resolve.cpp`, `solver_eval_report.cpp`, supporting type/helper headers | Properness, full mass, resources, numerical endpoints; CLM-0002, CLM-0023 |
 | Result, telemetry, and replay | `solver_api.cpp`, `solver_solve_telemetry.cpp`, `solver_solve_telemetry_json.cpp`, `solver_development_checkpoint.cpp` | Provenance, semantic dependencies, final classification; CLM-0021, CLM-0024 |
 

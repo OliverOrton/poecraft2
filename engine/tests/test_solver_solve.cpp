@@ -1973,6 +1973,7 @@ void run_dirty_terminal_debt_counterexample_tests() {
         start.rarity = PC_RARITY_RARE;
         SolveOptions options;
         options.high_impact_executable_uppers = true;
+        options.seed_progress_observation_diagnostic = true;
         options.allow_economic_restart = false;
         options.state_certificate_control = false;
         SolveWorkTestAccess::Impl work(calc, start, {{"exalt", 1}, {"annul", 1}}, options);
@@ -1999,6 +2000,10 @@ void run_dirty_terminal_debt_counterexample_tests() {
         PC_CHECK(work.joint_policy_terminal_debt(terminal) == 0);
         work.transition_cache = std::make_shared<SolveTransitionCache>();
         work.priced_rows.clear();
+        work.transition_cache->state_rows.resize(calc.state_count());
+        work.incremental_action_generation = true;
+        PC_CHECK(work.select_joint_policy_seed_row(root, work.result.values) ==
+            std::numeric_limits<std::uint64_t>::max());
         const auto add = [&](std::uint32_t owner, std::uint32_t op, double cost,
                              std::vector<solve_detail::SparsePolicyTransitionInput> law) {
             solve_detail::SparsePolicyRowInput row;
@@ -2019,8 +2024,20 @@ void run_dirty_terminal_debt_counterexample_tests() {
         work.result.goal_states.assign(n,0); work.result.goal_states[terminal]=1;
         work.expanded.assign(n,1); work.result.expanded=work.expanded;
         work.expanded_count=n; work.transition_cache->expanded=work.expanded;
-        work.incremental_action_generation=true;
         PC_CHECK(work.select_joint_policy_seed_row(root,work.result.values)==clean);
+        const auto& seed = work.carrier_bound_attribution->seed_progress;
+        PC_CHECK(seed.calls == 2);
+        PC_CHECK(seed.calls_gate_true == 2);
+        PC_CHECK(seed.calls_no_eligible == 1);
+        PC_CHECK(seed.complete_priced_row_comparisons == 2);
+        PC_CHECK(seed.calls_different_progress_mass == 1);
+        PC_CHECK(seed.calls_different_minimum == 1);
+        PC_CHECK(seed.witnesses_retained == 1);
+        PC_CHECK(seed.witnesses[0].old_winner.row == clean);
+        PC_CHECK(seed.witnesses[0].alternate_winner.row == acquire);
+        PC_CHECK(!seed.witnesses[0].source_key.empty());
+        PC_CHECK(!seed.witnesses[0].old_winner.semantic_key.empty());
+        PC_CHECK(!seed.witnesses[0].alternate_winner.semantic_key.empty());
         work.policy_rows.assign(n,std::numeric_limits<std::uint64_t>::max());
         work.policy_rows[root]=acquire; work.policy_rows[dirty]=drow;
         work.policy_rows[e]=erow; work.policy_rows[f]=frow; work.policy_rows[h]=hrow;
@@ -2035,6 +2052,54 @@ void run_dirty_terminal_debt_counterexample_tests() {
         PC_CHECK(near(work.result.values[dirty],14,1e-10));
         PC_CHECK(near(work.result.values[root],15,1e-10));
         PC_CHECK(work.result.values[root] < work.priced_rows[clean].cost);
+        // A cheap but pending row cannot outrank completed routes under
+        // either full key. Calls are counted separately even when repeated.
+        const auto pending_state = item({0, 3, 4, 5});
+        const auto pending_row = add(root, exalt, 0.01,
+            {{pending_state, 1.0}});
+        work.transition_cache->state_rows.resize(calc.state_count());
+        work.result.goal_states.resize(calc.state_count(), 0);
+        PC_CHECK(work.select_joint_policy_seed_row(root,
+            work.result.values) == clean);
+        PC_CHECK(work.carrier_bound_attribution->seed_progress
+            .calls_different_minimum == 2);
+        PC_CHECK(work.carrier_bound_attribution->seed_progress
+            .complete_priced_row_comparisons == 5);
+        PC_CHECK(pending_row != clean);
+        // An observed choice credits a group once when any option advances.
+        solve_detail::SparsePolicyRowInput choice_row;
+        choice_row.owner_state = root;
+        choice_row.operator_index = exalt;
+        choice_row.cost = 1000;
+        choice_row.choices.push_back({1.0, false, {dirty, root}});
+        (void)solve_detail::append_sparse_policy_row(
+            *work.transition_cache, work.priced_rows, choice_row);
+        PC_CHECK(work.select_joint_policy_seed_row(root,
+            work.result.values) == clean);
+        PC_CHECK(work.carrier_bound_attribution->seed_progress
+            .calls_different_minimum == 3);
+        PC_CHECK(work.carrier_bound_attribution->seed_progress
+            .calls_different_progress_mass == 3);
+        // With the other acquisition row made expensive, the pending cheap
+        // route still cannot beat the completed clean route under the new
+        // key. This call has different mass but no changed minimum.
+        work.priced_rows[acquire].cost = 1000;
+        PC_CHECK(work.select_joint_policy_seed_row(root,
+            work.result.values) == clean);
+        PC_CHECK(work.carrier_bound_attribution->seed_progress
+            .calls_different_minimum == 3);
+        work.priced_rows[acquire].cost = 1;
+        // An incumbent object closes the production gate. The same rows do
+        // not add a counterfactual comparison.
+        const auto compared = work.carrier_bound_attribution->seed_progress
+            .complete_priced_row_comparisons;
+        work.output_incumbent.emplace();
+        (void)work.select_joint_policy_seed_row(root,
+            work.result.values);
+        PC_CHECK(work.carrier_bound_attribution->seed_progress
+            .calls_gate_false_output == 1);
+        PC_CHECK(work.carrier_bound_attribution->seed_progress
+            .complete_priced_row_comparisons == compared);
     }
 }
 

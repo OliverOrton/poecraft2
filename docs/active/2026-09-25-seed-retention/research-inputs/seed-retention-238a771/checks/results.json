@@ -1,0 +1,10 @@
+{
+  "schema": "seed_retention_abstract_checks_v1",
+  "scope": "exact-rational toys and proposed diagnostic specifications; not native PoE qualification",
+  "tests_run": 18,
+  "failures": 0,
+  "errors": 0,
+  "success": true,
+  "generated_two_state_bindings": 24,
+  "native_tests_run": 0
+}

@@ -174,6 +174,8 @@ struct SolveOptions {
     // Native benchmark treatment; only the frozen incremental automatic
     // carrier epoch may use the neutral-extra within-mask tie.
     bool neutral_extra_ordering_diagnostic = false;
+    // Native-private observation of the live first-policy seed-row selector.
+    bool seed_progress_observation_diagnostic = false;
     bool projected_reforge_frontier_diagnostic = false;
     bool factored_terminal_reforge_diagnostic = false;
     bool reforge_resource_accounting = true;

@@ -1874,6 +1874,111 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
         }
         json += "]}";
     }
+    json += "]},\"seed_progress_observation\":{\"schema\":1,";
+    const auto& seed = carrier_bound_attribution->seed_progress;
+    const bool seed_enabled = options.seed_progress_observation_diagnostic;
+    const char* seed_status = !seed_enabled ? "not_instrumented" :
+        seed.calls == 0 ? "measured_no_selector_calls" :
+        seed.calls_gate_true == 0 ? "measured_gate_inactive" :
+        seed.complete_priced_row_comparisons == 0
+            ? "measured_no_eligible_rows" :
+        seed.calls_different_minimum == 0
+            ? "measured_no_selection_reversal" :
+              "measured_reversal_tail_unknown";
+    json += "\"instrumentation_enabled\":" +
+        std::string(seed_enabled ? "true" : "false");
+    json += ",\"observation_status\":";
+    append_json_string(json, seed_status);
+    json += ",\"coverage\":\"finalized_run_prefix\"";
+    json += ",\"begin_logical_cursor\":" +
+        std::to_string(seed.calls == 0 ? 0 : 1);
+    json += ",\"end_logical_cursor\":" +
+        std::to_string(seed.calls);
+    const auto seed_count = [&](const char* key, const std::uint64_t value) {
+        json += ",\"" + std::string(key) + "\":" + std::to_string(value);
+    };
+    seed_count("selector_calls_total", seed.calls);
+    seed_count("calls_outside_state_rows", seed.calls_outside_state_rows);
+    seed_count("calls_gate_true", seed.calls_gate_true);
+    seed_count("calls_gate_false_with_output_object",
+        seed.calls_gate_false_output);
+    seed_count("calls_gate_false_high_impact_disabled",
+        seed.calls_gate_false_high_impact);
+    seed_count("calls_gate_false_incremental_disabled",
+        seed.calls_gate_false_incremental);
+    seed_count("calls_with_no_eligible_complete_priced_row",
+        seed.calls_no_eligible);
+    seed_count("complete_priced_row_comparisons",
+        seed.complete_priced_row_comparisons);
+    seed_count("calls_with_different_progress_mass",
+        seed.calls_different_progress_mass);
+    seed_count("calls_with_different_full_key_minimum",
+        seed.calls_different_minimum);
+    seed_count("witnesses_retained", seed.witnesses_retained);
+    seed_count("witnesses_omitted", seed.witnesses_omitted);
+    const auto append_words = [&](const auto& words) {
+        json += '[';
+        for (std::size_t index = 0; index < words.size(); ++index) {
+            if (index != 0) json += ',';
+            json += std::to_string(words[index]);
+        }
+        json += ']';
+    };
+    const auto append_seed_row = [&](const Work::SeedRowSnapshot& row,
+            const bool alternate) {
+        json += "{\"row\":" + std::to_string(row.row);
+        json += ",\"operator_index\":" +
+            std::to_string(row.operator_index);
+        json += ",\"pending_routes\":" +
+            std::to_string(row.pending_routes);
+        json += ",\"cost_bits\":" +
+            std::to_string(std::bit_cast<std::uint64_t>(row.cost));
+        json += ",\"goal_probability_bits\":" +
+            std::to_string(std::bit_cast<std::uint64_t>(
+                row.goal_probability));
+        json += ",\"old_progress_bits\":" +
+            std::to_string(std::bit_cast<std::uint64_t>(
+                row.old_progress));
+        json += ",\"new_progress_bits\":" +
+            std::to_string(std::bit_cast<std::uint64_t>(
+                row.new_progress));
+        json += ",\"full_key_bits\":";
+        append_words(alternate ? row.new_key : row.old_key);
+        json += ",\"semantic_key\":";
+        append_words(row.semantic_key);
+        json += '}';
+    };
+    json += ",\"witnesses\":[";
+    for (std::size_t index = 0;
+         index < seed.witnesses_retained; ++index) {
+        if (index != 0) json += ',';
+        const auto& sample = seed.witnesses[index];
+        json += "{\"call\":" + std::to_string(sample.call);
+        json += ",\"state\":" + std::to_string(sample.state);
+        json += ",\"goal_mask\":" +
+            std::to_string(sample.goal_mask);
+        json += ",\"blocked_mask\":" +
+            std::to_string(sample.blocked_mask);
+        json += ",\"prefix_count\":" +
+            std::to_string(sample.prefix_count);
+        json += ",\"suffix_count\":" +
+            std::to_string(sample.suffix_count);
+        json += ",\"required_goals\":" +
+            std::to_string(sample.required_goals);
+        json += ",\"has_output_object\":" + std::string(
+            sample.has_output_object ? "true" : "false");
+        json += ",\"has_verified_graph\":" + std::string(
+            sample.has_verified_graph ? "true" : "false");
+        json += ",\"changed_winner\":" + std::string(
+            sample.changed_winner ? "true" : "false");
+        json += ",\"source_semantic_key\":";
+        append_words(sample.source_key);
+        json += ",\"old_winner\":";
+        append_seed_row(sample.old_winner, false);
+        json += ",\"alternate_winner\":";
+        append_seed_row(sample.alternate_winner, true);
+        json += '}';
+    }
     json += "]},\"upper_milestones\":{\"first_finite\":";
     append_milestone(
         json, carrier_bound_attribution->first_finite_upper);
@@ -2927,6 +3032,7 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                  sizeof(std::uint32_t);
         if (carrier_bound_attribution) {
             bytes += sizeof(CarrierBoundAttributionWork);
+            bytes += carrier_bound_attribution->seed_progress_nested_bytes();
             const auto& shadow = carrier_bound_attribution
                 ->verified_policy_alternative_shadow;
             bytes += shadow.status.capacity() + 1;
@@ -3203,6 +3309,7 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
                  sizeof(std::uint32_t);
         if (carrier_bound_attribution) {
             bytes += sizeof(CarrierBoundAttributionWork);
+            bytes += carrier_bound_attribution->seed_progress_nested_bytes();
             const auto& shadow = carrier_bound_attribution
                 ->verified_policy_alternative_shadow;
             bytes += shadow.status.capacity() + 1;

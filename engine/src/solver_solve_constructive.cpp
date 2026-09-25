@@ -4115,9 +4115,25 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
         const std::vector<double>& selection_values) const {
     const std::uint64_t no_row =
         std::numeric_limits<std::uint64_t>::max();
-    if (state >= transition_cache->state_rows.size()) return no_row;
     const bool first_policy = options.high_impact_executable_uppers &&
         incremental_action_generation && !output_incumbent.has_value();
+    auto* observation =
+        options.seed_progress_observation_diagnostic &&
+                carrier_bound_attribution
+            ? &carrier_bound_attribution->seed_progress : nullptr;
+    if (observation) {
+        ++observation->calls;
+        observation->calls_gate_true += first_policy;
+        observation->calls_gate_false_output += output_incumbent.has_value();
+        observation->calls_gate_false_high_impact +=
+            !options.high_impact_executable_uppers;
+        observation->calls_gate_false_incremental +=
+            !incremental_action_generation;
+    }
+    if (state >= transition_cache->state_rows.size()) {
+        if (observation) ++observation->calls_outside_state_rows;
+        return no_row;
+    }
     const auto goal_probability = [&](const std::uint64_t row_index) {
         const SparseRow& row = transition_cache->rows.at(row_index);
         WideFloat probability{0.0};
@@ -4152,38 +4168,59 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
         const std::uint32_t owner_progress = std::popcount(
             satisfied_goal_mask_for_state(state));
         const auto advances = [&](const std::uint32_t successor) {
-            return successor < result.goal_states.size() &&
-                (first_policy ? joint_policy_terminal_debt(successor) < joint_policy_terminal_debt(state) :
-                 result.goal_states[successor] ||
-                 std::popcount(satisfied_goal_mask_for_state(successor)) >
-                     owner_progress);
+            if (successor >= result.goal_states.size())
+                return std::pair{false, false};
+            const bool acquisition = (!first_policy || observation) &&
+                std::popcount(satisfied_goal_mask_for_state(successor)) >
+                    owner_progress;
+            const bool old_advance = first_policy
+                ? joint_policy_terminal_debt(successor) <
+                    joint_policy_terminal_debt(state)
+                : result.goal_states[successor] || acquisition;
+            return std::pair{old_advance,
+                old_advance || (observation && first_policy && acquisition)};
         };
-        WideFloat probability{0.0};
+        WideFloat probability{0.0}, alternate{0.0};
         for (std::uint32_t i = 0; i < row.transition_count; ++i) {
             const std::uint64_t offset = row.transition_offset + i;
-            if (advances(transition_cache->successors.at(offset))) {
+            const auto [old_advance, new_advance] =
+                advances(transition_cache->successors.at(offset));
+            if (old_advance) {
                 probability += WideFloat{
                     transition_cache->probabilities.at(offset)};
             }
+            if (observation && first_policy && new_advance)
+                alternate += WideFloat{
+                transition_cache->probabilities.at(offset)};
         }
         for (std::uint32_t i = 0; i < row.choice_count; ++i) {
             const SparseChoiceGroup& group = transition_cache->choices.at(
                 row.choice_offset + i);
-            bool advances_choice = false;
+            bool advances_choice = false, alternate_choice = false;
             for (std::uint32_t option = 0;
                  option < group.successor_count; ++option) {
-                advances_choice |= advances(
+                const auto [old_advance, new_advance] = advances(
                     transition_cache->choice_successors.at(
                         group.successor_offset + option));
+                advances_choice |= old_advance;
+                alternate_choice |= new_advance;
             }
             if (advances_choice) probability += WideFloat{group.probability};
+            if (observation && first_policy && alternate_choice)
+                alternate += WideFloat{group.probability};
         }
-        return probability.value();
+        return std::pair{probability.value(), alternate.value()};
     };
     std::uint64_t best = no_row;
     std::tuple<int, std::uint64_t, double, double, double, std::uint64_t> best_key{
         std::numeric_limits<int>::max(), no_row, kInfinity, kInfinity,
         kInfinity, no_row};
+    auto alternate_key = best_key;
+    std::uint64_t alternate_best = no_row;
+    CarrierBoundAttributionWork::SeedRowSnapshot old_snapshot;
+    CarrierBoundAttributionWork::SeedRowSnapshot alternate_snapshot;
+    bool different_mass = false;
+    std::uint64_t eligible = 0;
     for (const std::uint64_t row_index :
          state_row_indices(*transition_cache, state)) {
         if (!joint_policy_row_completed(row_index)) continue;
@@ -4193,7 +4230,13 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
             continue;
         }
         const double goal = goal_probability(row_index);
-        const double progress = progress_probability(row_index);
+        const auto [progress, alternate_progress] =
+            progress_probability(row_index);
+        ++eligible;
+        if (observation && first_policy) {
+            ++observation->complete_priced_row_comparisons;
+            different_mass |= progress != alternate_progress;
+        }
         const bool restart = priced.operator_index == restart_operator_index;
         const int class_rank = progress > 0.0 ? 0 : restart ? 1 : 2;
         const double attempt_cost = progress > 0.0
@@ -4222,9 +4265,86 @@ std::uint64_t SolveWork::Impl::select_joint_policy_seed_row(
         }
         const auto key = std::tuple{
             class_rank, pending_routes, attempt_cost, -goal, -progress, row_index};
+        const auto make_snapshot = [&]() {
+            CarrierBoundAttributionWork::SeedRowSnapshot snapshot;
+            snapshot.row = row_index;
+            snapshot.operator_index = priced.operator_index;
+            snapshot.pending_routes = pending_routes;
+            snapshot.cost = priced.cost;
+            snapshot.goal_probability = goal;
+            snapshot.old_progress = progress;
+            snapshot.new_progress = alternate_progress;
+            return snapshot;
+        };
         if (key < best_key) {
             best_key = key;
             best = row_index;
+            if (observation && first_policy)
+                old_snapshot = make_snapshot();
+        }
+        if (observation && first_policy) {
+            const int alternative_class = alternate_progress > 0.0
+                ? 0 : restart ? 1 : 2;
+            const double alternative_attempt = alternate_progress > 0.0
+                ? priced.cost / alternate_progress : priced.cost;
+            const auto candidate_key = std::tuple{
+                alternative_class, pending_routes, alternative_attempt,
+                -goal, -alternate_progress, row_index};
+            if (candidate_key < alternate_key) {
+                alternate_key = candidate_key;
+                alternate_best = row_index;
+                alternate_snapshot = make_snapshot();
+            }
+        }
+    }
+    if (observation) {
+        observation->calls_no_eligible += eligible == 0;
+        if (first_policy && eligible != 0) {
+            observation->calls_different_progress_mass += different_mass;
+            const bool changed = alternate_best != best;
+            observation->calls_different_minimum += changed;
+            if (changed || observation->witnesses_retained == 0) {
+                if (observation->witnesses_retained >=
+                    CarrierBoundAttributionWork::kSeedProgressWitnessLimit) {
+                    ++observation->witnesses_omitted;
+                } else {
+                    auto& sample = observation->witnesses
+                        [observation->witnesses_retained++];
+                    const auto& source = calc.state(state);
+                    sample.call = observation->calls;
+                    sample.state = state;
+                    sample.goal_mask = satisfied_goal_mask_for_state(state);
+                    sample.blocked_mask = source.blocked_mask;
+                    sample.prefix_count = source.prefix_count;
+                    sample.suffix_count = source.suffix_count;
+                    sample.required_goals =
+                        calc.goal().required_satisfied_slots();
+                    sample.has_output_object = output_incumbent.has_value();
+                    sample.has_verified_graph = std::isfinite(
+                        incumbent_portfolio.verified_executable_upper());
+                    sample.changed_winner = changed;
+                    sample.source_key = exact_abstract_state_key(source, 0);
+                    sample.old_winner = std::move(old_snapshot);
+                    sample.alternate_winner = std::move(alternate_snapshot);
+                    sample.old_winner.semantic_key =
+                        joint_policy_row_semantic_key(
+                            state, best, selection_values);
+                    sample.alternate_winner.semantic_key =
+                        joint_policy_row_semantic_key(
+                            state, alternate_best, selection_values);
+                    const auto pack = [](const auto& key) {
+                        return std::array<std::uint64_t, 6>{
+                            static_cast<std::uint64_t>(std::get<0>(key)),
+                            std::get<1>(key),
+                            std::bit_cast<std::uint64_t>(std::get<2>(key)),
+                            std::bit_cast<std::uint64_t>(std::get<3>(key)),
+                            std::bit_cast<std::uint64_t>(std::get<4>(key)),
+                            std::get<5>(key)};
+                    };
+                    sample.old_winner.old_key = pack(best_key);
+                    sample.alternate_winner.new_key = pack(alternate_key);
+                }
+            }
         }
     }
     (void)selection_values;

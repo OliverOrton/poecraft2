@@ -475,6 +475,124 @@ void run_finder_request_binding_tests() {
         {chaos, annul});
     PC_CHECK(!prepare_finder_candidate(
         no_program_scope, session, start, staged_graph).ready());
+    // Dependency-only Eldritch steps are accepted only with the exact
+    // compiler-owned occurrence from an admitted native programme.
+    GoalSpec retention_goal;
+    retention_goal.rarity = PC_RARITY_RARE;
+    retention_goal.automatic_candidates = true;
+    GoalSlot retention_prefix;
+    retention_prefix.family_id = session->family_id[3];
+    retention_prefix.min_tier = 1;
+    retention_goal.slots.push_back(retention_prefix);
+    GoalSlot retention_suffix;
+    retention_suffix.family_id = session->family_id[5];
+    retention_suffix.min_tier = 1;
+    retention_goal.slots.push_back(retention_suffix);
+    CalcContext retention_calc(session, retention_goal, registry, {chaos});
+    pc_item_state held = start;
+    PC_CHECK(pc_item_add_mod(&held, PC_SIDE_PREFIX, 3,
+        session->primary_group[3], 0, nullptr) == PC_RESULT_OK);
+    PC_CHECK(pc_item_add_mod(&held, PC_SIDE_SUFFIX, 6,
+        session->primary_group[6], 0, nullptr) == PC_RESULT_OK);
+    const auto held_state = retention_calc.intern_item(held);
+    std::unordered_map<std::string, double> retention_prices{
+        {"chaos", 10.0}, {"eldritch_annul", 2.0},
+        {"eldritch_chaos", 3.0}, {"eldritch_ichor:1", 1.0}};
+    AutomaticAdmissionLimits retention_limits;
+    retention_limits.max_state_action_rows = 10000;
+    retention_limits.max_transitions = 100000;
+    retention_limits.max_solver_owned_bytes = 256ull * 1024ull * 1024ull;
+    retention_limits.max_imprint_program_depth = 3;
+    retention_limits.max_imprint_program_work = 256;
+    retention_limits.prices = &retention_prices;
+    const auto admitted = retention_calc.admit_state_local_automatic_candidates(
+        held_state, retention_limits);
+    std::uint32_t retained_option = kNoId;
+    for (const auto index : admitted.admitted_operators) {
+        const auto& option = retention_calc.operators().at(index);
+        if (option.option_kind == FixedOptionKind::EldritchSideIntent &&
+            option.intended_side == PC_SIDE_SUFFIX &&
+            option.primitive_program.size() == 2 &&
+            registry.actions.at(option.primitive_program.back()).params.type ==
+                ActionType::EldritchAnnul) {
+            retained_option = index;
+            break;
+        }
+    }
+    PC_CHECK(retained_option != kNoId);
+    if (retained_option != kNoId) {
+        FinderControlGraph retention_control;
+        retention_control.entry = 0;
+        retention_control.programs.push_back({
+            retained_option, held_state, 1u});
+        retention_control.nodes = {
+            {FinderControlKind::TestGoal, kNoId, 4, 1},
+            {FinderControlKind::TestSlot, 0, 2, 3},
+            {FinderControlKind::RunNativeProgram, 0, kNoId, kNoId, 0},
+            {FinderControlKind::RunPrimitive, chaos, kNoId, kNoId, 0},
+            {FinderControlKind::GoalTerminal},
+        };
+        const std::string retention_graph = compile_finder_control_json(
+            retention_calc, start, retention_control, limits);
+        PC_CHECK(retention_graph.find("_o1") != std::string::npos);
+        PC_CHECK(!prepare_finder_candidate(
+            retention_calc, session, start, retention_graph).ready());
+        PC_CHECK(prepare_finder_candidate(
+            retention_calc, session, start, retention_graph,
+            &retention_control).ready());
+        std::string reordered = retention_graph;
+        const auto step_at = reordered.find(
+            "\"from\":\"c2\",\"to\":\"c2_o1\"");
+        PC_CHECK(step_at != std::string::npos);
+        if (step_at != std::string::npos)
+            reordered.replace(step_at,
+                std::string("\"from\":\"c2\",\"to\":\"c2_o1\"").size(),
+                "\"from\":\"c2\",\"to\":\"c3\"");
+        PC_CHECK(!prepare_finder_candidate(
+            retention_calc, session, start, reordered,
+            &retention_control).ready());
+        FinderControlGraph false_source = retention_control;
+        false_source.programs[0].admitted_state =
+            retention_calc.intern_item(start);
+        bool false_source_refused = false;
+        try {
+            (void)compile_finder_control_json(
+                retention_calc, start, false_source, limits);
+        } catch (const std::invalid_argument&) {
+            false_source_refused = true;
+        }
+        PC_CHECK(false_source_refused);
+    }
+    GoalSpec acquired_prefixes;
+    acquired_prefixes.rarity = PC_RARITY_RARE;
+    acquired_prefixes.automatic_candidates = true;
+    for (const std::uint32_t mod : {2u, 3u, 4u}) {
+        GoalSlot slot;
+        slot.family_id = session->family_id[mod];
+        slot.min_tier = 1;
+        acquired_prefixes.slots.push_back(slot);
+    }
+    CalcContext from_root(session, acquired_prefixes, registry, {chaos});
+    PolicyFinderWork retention_finder(from_root, session, start,
+        retention_prices, limits, FinderRankingMode::Heuristic,
+        FinderGrammarMode::ConditionalRetention);
+    for (int step = 0; step < 10000 &&
+         !retention_finder.progress().done; ++step)
+        retention_finder.step(1024);
+    PC_CHECK(retention_finder.progress().done);
+    PC_CHECK(retention_finder.best().has_value());
+    if (retention_finder.best().has_value()) {
+        const auto& winner = *retention_finder.best();
+        PC_CHECK(winner.expected_cost > 0.0);
+        PC_CHECK(winner.native_control.has_value());
+        PC_CHECK(winner.strategy_json.find("eldritch_annul") !=
+            std::string::npos);
+        PC_CHECK(!prepare_finder_candidate(
+            from_root, session, start, winner.strategy_json).ready());
+        PC_CHECK(prepare_finder_candidate(
+            from_root, session, start, winner.strategy_json,
+            &*winner.native_control).ready());
+    }
     const auto scores = score_finder_sketch_batch({
         {1.0, 1.0, 3, false, true},
         {1.0, 1.0, 3, true, false},

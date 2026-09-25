@@ -32,6 +32,8 @@ inline constexpr std::uint32_t
     kVerifiedPolicyAlternativeShadowDiagnosticFlag = 1u << 26;
 inline constexpr std::uint32_t kNeutralExtraOrderingDiagnosticFlag =
     1u << 25;
+inline constexpr std::uint32_t kSeedProgressObservationDiagnosticFlag =
+    1u << 24;
 
 struct CarrierLadderExactBoundaryDiagnosticConfig {
     CarrierLadderExactBoundaryMode mode =
