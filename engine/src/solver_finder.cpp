@@ -4,6 +4,7 @@
 #include "solver_policy_refinement_helpers.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -39,6 +40,25 @@ std::string text_member(const json::Value& value, const char* key) {
     const json::Value* member = value.find(key);
     return member != nullptr && member->type == json::Type::String
         ? member->string : std::string{};
+}
+
+std::string json_string(const std::string& value) {
+    constexpr char hex[] = "0123456789abcdef";
+    std::string out = "\"";
+    for (const unsigned char c : value) {
+        if (c == '"' || c == '\\') {
+            out += '\\';
+            out += static_cast<char>(c);
+        } else if (c < 0x20) {
+            out += "\\u00";
+            out += hex[c >> 4];
+            out += hex[c & 15];
+        } else {
+            out += static_cast<char>(c);
+        }
+    }
+    out += '"';
+    return out;
 }
 
 } // namespace
@@ -126,6 +146,21 @@ bool finder_evaluation_accepted(const StrategyEvalResult& result) {
            result.unresolved_probability <= tolerance;
 }
 
+std::vector<double> score_finder_sketch_batch(
+    const std::vector<FinderScoreFeatures>& features) {
+    std::vector<double> scores;
+    scores.reserve(features.size());
+    for (const FinderScoreFeatures& feature : features) {
+        double score = feature.first_price + feature.second_price +
+            0.01 * feature.goal_slots;
+        if (feature.recovery && feature.goal_slots >= 3) score -= 0.5;
+        if (feature.renewal) score -= 0.1;
+        scores.push_back(std::isfinite(score)
+            ? score : std::numeric_limits<double>::max());
+    }
+    return scores;
+}
+
 PolicyFinderWork::PolicyFinderWork(
     CalcContext& problem,
     std::shared_ptr<const SessionImpl> session,
@@ -141,13 +176,7 @@ PolicyFinderWork::PolicyFinderWork(
     economy_->id = "finder-request";
     economy_->prices = std::move(prices);
 
-    struct RankedAction {
-        std::uint32_t index = kNoId;
-        double price = 0.0;
-        std::string id;
-        bool root_legal = false;
-    };
-    std::vector<RankedAction> ranked;
+    const auto search_started = std::chrono::steady_clock::now();
     const std::uint32_t start_state = problem_.intern_item(original_start_);
     for (const std::uint32_t index : problem_.candidates()) {
         if (index >= problem_.registry().actions.size()) continue;
@@ -167,46 +196,43 @@ PolicyFinderWork::PolicyFinderWork(
             cost += it->second;
         }
         if (priced && std::isfinite(cost))
-            ranked.push_back({index, cost, action.id, root_legal});
+            ranked_.push_back({index, cost, root_legal});
     }
-    std::stable_sort(ranked.begin(), ranked.end(),
-        [](const RankedAction& left, const RankedAction& right) {
+    std::stable_sort(ranked_.begin(), ranked_.end(),
+        [&](const RankedAction& left, const RankedAction& right) {
             if (left.price != right.price) return left.price < right.price;
-            return left.id < right.id;
+            return problem_.registry().actions[left.index].id <
+                problem_.registry().actions[right.index].id;
         });
     std::unordered_set<std::uint32_t> selected;
     const auto add_single = [&](const RankedAction& action) {
-        if (selected.insert(action.index).second)
+        if (selected.insert(action.index).second) {
             frontier_.push_back({{action.index}, action.price});
+            ++counters_.generated;
+        }
     };
     /* A renewal seed is useful even when a cheaper one-shot descriptor is
      * ranked first. Selection is by native descriptor identity, not a saved
      * strategy or a case name. */
-    for (const RankedAction& action : ranked)
-        if (action.root_legal && action.id == "chaos") add_single(action);
-    for (const RankedAction& action : ranked) {
+    for (const RankedAction& action : ranked_)
+        if (action.root_legal &&
+            problem_.registry().actions[action.index].params.type ==
+                ActionType::Chaos) add_single(action);
+    for (const RankedAction& action : ranked_) {
         if (frontier_.size() >= 4) break;
         if (action.root_legal) add_single(action);
     }
-    for (const RankedAction& first : ranked) {
+    for (const RankedAction& first : ranked_) {
         if (!first.root_legal ||
             problem_.registry().actions[first.index].params.type !=
                 ActionType::Chaos) continue;
-        for (const RankedAction& second : ranked) {
-            if (problem_.registry().actions[second.index].params.type ==
-                    ActionType::Annul) {
-                frontier_.push_back({{first.index, second.index},
-                    first.price + second.price, true});
-                break;
-            }
-        }
+        pending_.push_back({first.index, first.price, HoleKind::Recovery});
         break;
     }
-    /* One paid rarity setup followed by a native renewal is a genuine
-     * two-decision controller, and the second action need not be legal on
-     * the original root. The checker decides whether its reached states are
-     * legal and whether the loop is proper. */
-    for (const RankedAction& setup : ranked) {
+    /* These are unresolved second-stage holes, not checkable graphs. The
+     * finite beam expands them only after servicing complete root seeds. */
+    for (const RankedAction& setup : ranked_) {
+        if (pending_.size() >= 16) break;
         if (!setup.root_legal) continue;
         const ActionType type =
             problem_.registry().actions[setup.index].params.type;
@@ -216,19 +242,11 @@ PolicyFinderWork::PolicyFinderWork(
                 ? PC_RARITY_RARE : PC_RARITY_NORMAL;
         if (reached_rarity != problem_.goal().rarity ||
             reached_rarity == PC_RARITY_NORMAL) continue;
-        for (const RankedAction& renewal : ranked) {
-            if (frontier_.size() >= 8) break;
-            const ActionDescriptor& follow =
-                problem_.registry().actions[renewal.index];
-            if (!action_transition_facts(follow.params.type).renewal ||
-                (follow.legality.rarity_mask &
-                 (1u << reached_rarity)) == 0) continue;
-            frontier_.push_back(
-                {{setup.index, renewal.index},
-                 setup.price + renewal.price});
-        }
+        pending_.push_back({setup.index, setup.price, HoleKind::Renewal});
     }
-    if (frontier_.size() > 8) frontier_.resize(8);
+    counters_.search_ns = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - search_started).count());
     update_peak();
 }
 
@@ -238,14 +256,95 @@ std::uint64_t PolicyFinderWork::retained_owned_bytes() const {
     std::uint64_t bytes = sizeof(*this) + 4096 +
         problem_.estimated_owned_bytes() +
         refinement::economy_owned_bytes(economy_->prices, economy_->id.capacity()) +
+        ranked_.capacity() * sizeof(RankedAction) +
         frontier_.capacity() * sizeof(Sketch) +
-        checking_graph_.capacity();
+        pending_.capacity() * sizeof(PartialSketch) +
+        checking_graph_.capacity() + last_refusal_.capacity() +
+        last_refusal_kind_.capacity();
     for (const Sketch& sketch : frontier_)
         bytes += sketch.actions.capacity() * sizeof(std::uint32_t);
     if (checking_strategy_ != nullptr)
         bytes += refinement::strategy_impl_owned_bytes(*checking_strategy_);
     if (best_.has_value()) bytes += best_->strategy_json.capacity();
     return bytes;
+}
+
+bool PolicyFinderWork::exhausted() const {
+    return cursor_ >= frontier_.size() &&
+        (pending_cursor_ >= pending_.size() || frontier_.size() >= 16);
+}
+
+void PolicyFinderWork::expand_next_partial() {
+    if (pending_cursor_ >= pending_.size()) return;
+    const auto started = std::chrono::steady_clock::now();
+    const PartialSketch partial = pending_[pending_cursor_++];
+    const ActionType first_type =
+        problem_.registry().actions[partial.first].params.type;
+    const pc_rarity reached_rarity = first_type == ActionType::Transmute
+        ? PC_RARITY_MAGIC
+        : first_type == ActionType::Alchemy ||
+              first_type == ActionType::Regal
+            ? PC_RARITY_RARE : PC_RARITY_NORMAL;
+    std::vector<Sketch> children;
+    std::vector<FinderScoreFeatures> features;
+    for (const RankedAction& second : ranked_) {
+        if (children.size() >= 16) break;
+        const ActionDescriptor& action =
+            problem_.registry().actions[second.index];
+        if (partial.hole == HoleKind::Recovery) {
+            if (action.params.type != ActionType::Annul) continue;
+        } else if (!action_transition_facts(action.params.type).renewal ||
+                   (action.legality.rarity_mask &
+                    (1u << reached_rarity)) == 0) {
+            continue;
+        }
+        const bool recovery = partial.hole == HoleKind::Recovery;
+        children.push_back({{partial.first, second.index},
+            0.0, recovery});
+        features.push_back({partial.first_price, second.price,
+            static_cast<std::uint32_t>(problem_.goal().slots.size()),
+            !recovery, recovery});
+    }
+    const std::vector<double> scores =
+        score_finder_sketch_batch(features);
+    std::uint64_t scratch =
+        children.capacity() * sizeof(Sketch) +
+        features.capacity() * sizeof(FinderScoreFeatures) +
+        scores.capacity() * sizeof(double);
+    for (const Sketch& child : children)
+        scratch += child.actions.capacity() * sizeof(std::uint32_t);
+    const std::uint64_t transient = retained_owned_bytes() + scratch;
+    counters_.peak_owned_bytes = std::max(
+        counters_.peak_owned_bytes, transient);
+    if (transient > limits_.max_solver_owned_bytes)
+        throw std::length_error("finder search batch exceeded memory cap");
+    for (std::size_t i = 0; i < children.size(); ++i)
+        children[i].score = scores[i];
+    std::stable_sort(children.begin(), children.end(),
+        [&](const Sketch& left, const Sketch& right) {
+            if (left.score != right.score) return left.score < right.score;
+            const auto& registry = problem_.registry().actions;
+            return registry[left.actions.back()].id <
+                registry[right.actions.back()].id;
+        });
+    for (Sketch& child : children) {
+        const bool duplicate = std::any_of(frontier_.begin(),
+            frontier_.end(), [&](const Sketch& previous) {
+                return previous.return_to_first == child.return_to_first &&
+                    previous.actions == child.actions;
+            });
+        if (duplicate) {
+            ++counters_.duplicates;
+            continue;
+        }
+        if (frontier_.size() >= 16) break;
+        frontier_.push_back(std::move(child));
+        ++counters_.generated;
+    }
+    counters_.search_ns += static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - started).count());
+    update_peak();
 }
 
 void PolicyFinderWork::update_peak() {
@@ -263,13 +362,18 @@ void PolicyFinderWork::update_peak() {
 }
 
 void PolicyFinderWork::start_next_candidate() {
-    if (cursor_ >= frontier_.size() || counters_.checked >= 8 ||
+    while (cursor_ >= frontier_.size() &&
+           pending_cursor_ < pending_.size() &&
+           frontier_.size() < 16)
+        expand_next_partial();
+    if (exhausted() || counters_.checked >= 8 ||
         counters_.logical_reforge_work >= limits_.max_reforge_work) {
         done_ = true;
         return;
     }
     const Sketch& sketch = frontier_[cursor_++];
     ++counters_.considered;
+    const auto compile_started = std::chrono::steady_clock::now();
     try {
         checking_graph_ = compile_finder_candidate_json(
             problem_, original_start_, sketch.actions, limits_,
@@ -315,17 +419,28 @@ void PolicyFinderWork::start_next_candidate() {
         options.max_output_json_bytes = limits_.max_strategy_json_bytes;
         checker_ = std::make_unique<StrategyEvalWork>(
             checking_strategy_, options);
+        counters_.compile_ns += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - compile_started).count());
         update_peak();
     } catch (const StrategyEvalUnsupported& ex) {
         last_refusal_ = ex.what();
+        last_refusal_kind_ = "unsupported";
         ++counters_.refused;
+        counters_.compile_ns += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - compile_started).count());
         charge_active_work();
         checker_.reset();
         checking_strategy_.reset();
         checking_graph_.clear();
     } catch (const std::length_error& ex) {
         last_refusal_ = ex.what();
+        last_refusal_kind_ = "capacity";
         ++counters_.censored;
+        counters_.compile_ns += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - compile_started).count());
         charge_active_work();
         checker_.reset();
         checking_strategy_.reset();
@@ -362,6 +477,7 @@ void PolicyFinderWork::complete_active_candidate() {
         }
     } else {
         ++counters_.refused;
+        last_refusal_kind_ = "failed_check";
         last_refusal_ = "candidate failed native properness, mass or price check";
     }
     checker_.reset();
@@ -385,25 +501,37 @@ void PolicyFinderWork::step(const std::uint32_t max_work_items) {
     if (checker_ == nullptr) {
         start_next_candidate();
         if (checker_ == nullptr) {
-            if (cursor_ >= frontier_.size() || counters_.checked >= 8)
+            if (exhausted() || counters_.checked >= 8)
                 done_ = true;
             update_peak();
             return;
         }
     }
+    const auto check_started = std::chrono::steady_clock::now();
     try {
         checker_->step(std::max<std::uint32_t>(1, max_work_items));
+        counters_.check_ns += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - check_started).count());
         update_peak();
         if (checker_->progress().done) complete_active_candidate();
     } catch (const StrategyEvalUnsupported& ex) {
+        counters_.check_ns += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - check_started).count());
         last_refusal_ = ex.what();
+        last_refusal_kind_ = "unsupported";
         ++counters_.refused;
         charge_active_work();
         checker_.reset();
         checking_strategy_.reset();
         std::string{}.swap(checking_graph_);
     } catch (const std::length_error& ex) {
+        counters_.check_ns += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - check_started).count());
         last_refusal_ = ex.what();
+        last_refusal_kind_ = "capacity";
         ++counters_.censored;
         charge_active_work();
         checker_.reset();
@@ -411,7 +539,7 @@ void PolicyFinderWork::step(const std::uint32_t max_work_items) {
         std::string{}.swap(checking_graph_);
     }
     if (checker_ == nullptr &&
-        (cursor_ >= frontier_.size() || counters_.checked >= 8)) done_ = true;
+        (exhausted() || counters_.checked >= 8)) done_ = true;
     update_peak();
 }
 
@@ -425,6 +553,8 @@ FinderProgress PolicyFinderWork::progress() const {
     result.finish_requested = finish_requested_;
     result.live_owned_bytes = retained_owned_bytes() +
         (checker_ == nullptr ? 0 : checker_->live_owned_bytes());
+    result.pending_holes = static_cast<std::uint32_t>(
+        pending_.size() - pending_cursor_);
     return result;
 }
 
@@ -434,14 +564,22 @@ const std::optional<FinderCheckedPolicy>& PolicyFinderWork::best() const {
 
 std::string PolicyFinderWork::telemetry_json() const {
     const FinderProgress state = progress();
-    return "{\"version\":1,\"lane\":\"strategy_finder\","
+    const std::string result = "{\"version\":1,\"lane\":\"strategy_finder\","
         "\"considered\":" + std::to_string(state.considered) +
         ",\"checked\":" + std::to_string(state.checked) +
+        ",\"generated\":" + std::to_string(state.generated) +
+        ",\"duplicates\":" + std::to_string(state.duplicates) +
+        ",\"pending_holes\":" + std::to_string(state.pending_holes) +
         ",\"accepted\":" + std::to_string(state.accepted) +
         ",\"refused\":" + std::to_string(state.refused) +
         ",\"censored\":" + std::to_string(state.censored) +
         ",\"logical_reforge_work\":" +
         std::to_string(state.logical_reforge_work) +
+        ",\"search_ns\":" + std::to_string(state.search_ns) +
+        ",\"compile_ns\":" + std::to_string(state.compile_ns) +
+        ",\"check_ns\":" + std::to_string(state.check_ns) +
+        ",\"last_refusal_kind\":" + json_string(last_refusal_kind_) +
+        ",\"last_refusal\":" + json_string(last_refusal_) +
         ",\"live_owned_bytes\":" +
         std::to_string(state.live_owned_bytes) +
         ",\"peak_owned_bytes\":" +
@@ -449,6 +587,10 @@ std::string PolicyFinderWork::telemetry_json() const {
         ",\"best_checked_cost\":" +
         (best_.has_value() ? std::to_string(best_->expected_cost) : "null") +
         ",\"done\":" + (state.done ? "true" : "false") + "}";
+    if (result.size() > limits_.max_telemetry_json_bytes)
+        throw std::length_error(
+            "finder telemetry exceeded max_telemetry_json_bytes");
+    return result;
 }
 
 } // namespace poecraft::solver

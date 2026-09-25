@@ -344,12 +344,24 @@ void run_finder_request_binding_tests() {
     const auto cleanup_eval = evaluate_strategy(
         *cleanup_prepared.strategy, cleanup_options);
     PC_CHECK(finder_evaluation_accepted(cleanup_eval));
+    const auto scores = score_finder_sketch_batch({
+        {1.0, 1.0, 3, false, true},
+        {1.0, 1.0, 3, true, false},
+        {std::numeric_limits<double>::quiet_NaN(), 1.0, 3,
+            true, false}});
+    PC_CHECK(scores.size() == 3);
+    PC_CHECK(scores[0] < scores[1]);
+    PC_CHECK(std::isfinite(scores[2]));
     PolicyFinderWork cleanup_finder(cleanup_calc, session, start,
         {{"chaos", 1.0}, {"annul", 1.0}}, limits);
+    PC_CHECK(cleanup_finder.progress().pending_holes > 0);
     for (int i = 0; i < 10000 && !cleanup_finder.progress().done; ++i)
         cleanup_finder.step(1024);
     PC_CHECK(cleanup_finder.progress().done);
     PC_CHECK(cleanup_finder.best().has_value());
+    PC_CHECK(cleanup_finder.progress().pending_holes == 0);
+    PC_CHECK(cleanup_finder.progress().checked == 2);
+    PC_CHECK(cleanup_finder.progress().refused == 1);
     if (cleanup_finder.best().has_value())
         PC_CHECK(std::fabs(cleanup_finder.best()->expected_cost -
             cleanup_eval.total_expected_cost) < 1e-8);
