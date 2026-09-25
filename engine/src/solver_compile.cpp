@@ -30,8 +30,8 @@ std::string compile_finder_candidate_json(
     const std::vector<std::uint32_t>& primitive_sequence,
     const SolveOptions& limits,
     const bool return_to_first) {
-    if (primitive_sequence.empty() || primitive_sequence.size() > 2) {
-        throw std::invalid_argument("finder supports one or two native stages");
+    if (primitive_sequence.size() > 2) {
+        throw std::invalid_argument("finder supports at most two native stages");
     }
     for (const std::uint32_t action : primitive_sequence)
         if (action >= calc.registry().actions.size())
@@ -80,6 +80,18 @@ std::string compile_finder_candidate_json(
             "{\"id\":\"start\",\"kind\":\"start\"},"
             "{\"id\":\"goal\",\"kind\":\"terminal\","
             "\"terminal\":\"success\"}";
+    if (primitive_sequence.empty()) {
+        json += ", {\"id\":\"miss\",\"kind\":\"terminal\","
+                "\"terminal\":\"failure\"}],\"edges\":["
+                "{\"id\":\"root_goal\",\"from\":\"start\","
+                "\"to\":\"goal\",\"priority\":0,\"condition\":" + goal +
+                "},{\"id\":\"root_miss\",\"from\":\"start\","
+                "\"to\":\"miss\",\"priority\":1,\"is_default\":true}]}";
+        if (json.size() > limits.max_strategy_json_bytes ||
+            3 > limits.max_compiled_nodes || 2 > limits.max_compiled_edges)
+            throw std::length_error("finder candidate exceeds compiled-output cap");
+        return json;
+    }
     for (std::size_t i = 0; i < primitive_sequence.size(); ++i) {
         const std::uint32_t action = primitive_sequence[i];
         if (action >= calc.registry().actions.size()) {

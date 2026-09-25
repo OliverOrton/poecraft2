@@ -97,8 +97,13 @@ FinderCandidatePreparation prepare_finder_candidate(
         std::size_t guarded_ingress = 0;
         for (const json::Value& edge : graph.at("edges").as_array()) {
             if (!successes.contains(text_member(edge, "to"))) continue;
+            const json::Value* is_default = edge.find("is_default");
             const json::Value* condition = edge.find("condition");
-            if (condition == nullptr ||
+            // The ordinary compiler replaces a default edge's authored
+            // condition with Always. Raw goal decoration is not an executable
+            // guard, even if it is byte-for-byte the requested predicate.
+            if ((is_default != nullptr && is_default->type == json::Type::Bool &&
+                 is_default->boolean) || condition == nullptr ||
                 !same_json(*condition, trusted_goal)) {
                 prepared.refusal =
                     "finder success ingress is not the original native goal";
@@ -180,6 +185,17 @@ PolicyFinderWork::PolicyFinderWork(
 
     const auto search_started = std::chrono::steady_clock::now();
     const std::uint32_t start_state = problem_.intern_item(original_start_);
+    if (problem_.is_goal_state(problem_.state(start_state))) {
+        // A completed request still needs an ordinary guarded, independently
+        // checked artifact. It needs no priced operation or legacy solve.
+        frontier_.push_back({{}, 0.0});
+        ++counters_.generated;
+        counters_.search_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - search_started).count());
+        update_peak();
+        return;
+    }
     for (const std::uint32_t index : problem_.candidates()) {
         if (index >= problem_.registry().actions.size()) continue;
         const ActionDescriptor& action = problem_.registry().actions[index];
@@ -471,7 +487,10 @@ void PolicyFinderWork::complete_active_candidate() {
         if (!best_.has_value() ||
             result.total_expected_cost < best_->expected_cost) {
             FinderCheckedPolicy accepted;
-            accepted.strategy_json = checking_graph_;
+            // Move the already charged graph buffer into the winning bundle.
+            // A copy here would coexist with the checker, parsed graph and
+            // previous winner before the next memory audit.
+            accepted.strategy_json = std::move(checking_graph_);
             accepted.expected_cost = result.total_expected_cost;
             accepted.expected_actions = result.expected_actions;
             accepted.success_probability = result.success_probability;

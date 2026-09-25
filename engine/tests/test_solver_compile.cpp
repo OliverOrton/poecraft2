@@ -233,6 +233,19 @@ void run_finder_request_binding_tests() {
         *trusted.strategy, checked_options);
     PC_CHECK(finder_evaluation_accepted(evaluation));
     PC_CHECK(evaluation.total_expected_cost == 0.0);
+    CalcContext complete_without_actions(session, finished_goal, registry, {});
+    PolicyFinderWork completed_finder(
+        complete_without_actions, session, finished, {}, limits);
+    for (int i = 0; i < 10000 && !completed_finder.progress().done; ++i)
+        completed_finder.step(1024);
+    PC_CHECK(completed_finder.progress().done);
+    PC_CHECK(completed_finder.best().has_value());
+    if (completed_finder.best().has_value()) {
+        PC_CHECK(completed_finder.best()->expected_cost == 0.0);
+        PC_CHECK(prepare_finder_candidate(
+            complete_without_actions, session, finished,
+            completed_finder.best()->strategy_json).ready());
+    }
 
     /* First genuinely generated from-root policy: alteration renews a magic
      * item until the native exact one-affix goal is reached. */
@@ -365,6 +378,42 @@ void run_finder_request_binding_tests() {
     if (cleanup_finder.best().has_value())
         PC_CHECK(std::fabs(cleanup_finder.best()->expected_cost -
             cleanup_eval.total_expected_cost) < 1e-8);
+}
+
+void run_finder_default_success_regression() {
+    auto session = make_compile_session();
+    ActionRegistry registry = build_action_registry(*session);
+    const auto chaos = registry.index_by_id.at("chaos");
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot wanted;
+    wanted.family_id = session->family_id.at(5);
+    wanted.min_tier = 1;
+    goal.slots.push_back(wanted);
+    CalcContext calc(session, goal, registry, {chaos});
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    PC_CHECK(!calc.is_goal_state(calc.state(calc.intern_item(start))));
+
+    const std::string graph =
+        "{\"version\":\"v1\",\"name\":\"default goal decoration\","
+        "\"base_state\":{\"base_key\":\"synthetic/base\","
+        "\"item_level\":1,\"rarity\":\"rare\",\"with_implicits\":false,"
+        "\"prefixes\":[],\"suffixes\":[]},"
+        "\"start_node_id\":\"start\",\"nodes\":["
+        "{\"id\":\"start\",\"kind\":\"start\"},"
+        "{\"id\":\"goal\",\"kind\":\"terminal\",\"terminal\":\"success\"}],"
+        "\"edges\":[{\"id\":\"decorated_default\",\"from\":\"start\","
+        "\"to\":\"goal\",\"priority\":0,\"is_default\":true,"
+        "\"condition\":" + compile_finder_goal_condition(calc) + "}]}";
+    const auto compiled = compile_strategy_json(
+        session, graph.data(), graph.size());
+    PC_CHECK(compiled->nodes.at(compiled->start_node).edges.size() == 1);
+    const auto& edge = compiled->nodes.at(compiled->start_node).edges.front();
+    PC_CHECK(edge.is_default);
+    PC_CHECK(edge.condition.kind == ConditionKind::Always);
+    PC_CHECK(!prepare_finder_candidate(calc, session, start, graph).ready());
 }
 
 void report_compile_solve_issue(
@@ -3136,6 +3185,7 @@ void run_imprint_gate(const char* artifact_dir) {
 void run_solver_compile_tests(const char* artifact_dir) {
     run_policy_description_test();
     run_finder_request_binding_tests();
+    run_finder_default_success_regression();
     run_solver_return_bridge_tests();
     run_condition_expr_tests();
     run_policy_route_coalescing_tests();
