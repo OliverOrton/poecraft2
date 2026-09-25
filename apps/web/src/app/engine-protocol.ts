@@ -665,7 +665,8 @@ export interface SolveSummary {
         | "other_resource_cap"
         | "no_executable_policy"
         | "numerical_stability"
-        | "requested_bounded_finish";
+        | "requested_bounded_finish"
+        | "finder_complete";
     cap_hit_mask: number;
     registry_actions: number;
     candidate_actions: number;
@@ -686,7 +687,8 @@ export interface SolveSummary {
         | "exact_closed"
         | "no_executable_policy"
         | "numerical_stability"
-        | "requested_bounded_finish";
+        | "requested_bounded_finish"
+        | "finder_complete";
     lower_bound: number | null;
     upper_bound: number | null;
     evaluated_policy_cost: number | null;
@@ -702,6 +704,7 @@ export interface SolveSummary {
 export interface SolveOptions {
     /** Versioned native-owned defaults used by normal Calculator solves. */
     solve_profile?: "calculator_product_v1";
+    solver_mode?: "current" | "strategy_finder";
     epsilon?: number;
     max_states?: number;
     max_sweeps?: number;
@@ -711,6 +714,10 @@ export interface SolveOptions {
     max_transitions?: number;
     /** Stable V1-equivalent logical reforge search envelope. */
     max_reforge_work?: number;
+    candidate_max_owned_bytes?: number;
+    candidate_max_states?: number;
+    candidate_max_pairs?: number;
+    candidate_max_transitions?: number;
     max_solver_owned_bytes?: number;
     max_compiled_nodes?: number;
     max_compiled_edges?: number;
@@ -796,6 +803,7 @@ export interface SolveProgress {
         | "policy_assembly"
         | "compilation"
         | "exact_evaluation"
+        | "strategy_finder"
         | "done";
     done: boolean;
     expanded_states: number;

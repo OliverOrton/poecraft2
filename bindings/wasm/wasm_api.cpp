@@ -582,6 +582,19 @@ bool parse_solve_options(
         return false;
     }
     const Value* solve_profile = spec.find("solve_profile");
+    const Value* solver_mode = spec.find("solver_mode");
+    if (solver_mode != nullptr) {
+        if (solver_mode->type != Type::String) {
+            error = "solver_mode must be a string";
+            return false;
+        }
+        if (solver_mode->string == "strategy_finder") {
+            options.solver_mode = PC_SOLVER_MODE_STRATEGY_FINDER;
+        } else if (solver_mode->string != "current") {
+            error = "unknown solver_mode";
+            return false;
+        }
+    }
     if (solve_profile != nullptr) {
         if (solve_profile->type != Type::String) {
             error = "solve_profile must be a string";
@@ -618,6 +631,12 @@ bool parse_solve_options(
         spec, "max_relative_optimality_gap");
     options.max_policy_refinement_states = obj_u32(
         spec, "max_policy_refinement_states");
+    options.candidate_max_owned_bytes = obj_u64(
+        spec, "candidate_max_owned_bytes");
+    options.candidate_max_states = obj_u32(spec, "candidate_max_states");
+    options.candidate_max_pairs = obj_u32(spec, "candidate_max_pairs");
+    options.candidate_max_transitions = obj_u32(
+        spec, "candidate_max_transitions");
     if (spec.find("max_policy_refinement_states") != nullptr) {
         options.solve_profile_override_mask |=
             PC_SOLVE_PROFILE_OVERRIDE_POLICY_REFINEMENT_STATES;
@@ -763,6 +782,8 @@ const char* solve_termination_name(const int32_t termination) {
         return "numerical_stability";
     case PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH:
         return "requested_bounded_finish";
+    case PC_SOLVE_TERMINATION_FINDER_COMPLETE:
+        return "finder_complete";
     default: return "none";
     }
 }
@@ -788,6 +809,7 @@ const char* solve_stop_cause_name(const int32_t cause) {
         return "numerical_stability";
     case PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH:
         return "requested_bounded_finish";
+    case PC_SOLVE_STOP_FINDER_COMPLETE: return "finder_complete";
     default: return "none";
     }
 }
@@ -842,6 +864,7 @@ const char* solve_phase_owner_name(const int32_t owner) {
     case PC_SOLVE_PHASE_OWNER_COMPILATION: return "compilation";
     case PC_SOLVE_PHASE_OWNER_EXACT_EVALUATION: return "exact_evaluation";
     case PC_SOLVE_PHASE_OWNER_DONE: return "done";
+    case PC_SOLVE_PHASE_OWNER_STRATEGY_FINDER: return "strategy_finder";
     default: return "setup";
     }
 }

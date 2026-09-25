@@ -3,6 +3,7 @@ import type {
     SolverActionInfo,
     SolverGoal,
     SolveOptions,
+    SolveSummary,
     SolveProgress,
     SolverWorkerMetrics,
 } from "./engine-protocol";
@@ -62,6 +63,12 @@ export interface CalculatorDeliveryTrace {
     ui_milestones: Array<{ stage: string; ui_elapsed_ms: number }>;
     status: "preparing" | "running" | "completed" | "cancelled" | "error";
     error: string | null;
+    /** Result and native checking record retained with the frozen request. */
+    outcome?: {
+        summary: SolveSummary;
+        telemetry: unknown;
+        compiled_strategy: StrategyDocument | null;
+    };
 }
 
 export function createCalculatorDeliveryTrace(

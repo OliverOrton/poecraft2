@@ -397,6 +397,26 @@ def test_factored_command_matches_legacy_argument_contract(tmp_path: Path) -> No
     assert len(command.canonical_document()["identity_sha256"]) == 64
 
 
+def test_finder_mode_is_an_explicit_resumable_treatment(tmp_path: Path) -> None:
+    paths = AttemptPaths.legacy(tmp_path / "run", "case-a", "attempt-1")
+    command = build_solver_case_command(
+        executable=tmp_path / "solver.exe", artifact=tmp_path / "artifact",
+        corpus=tmp_path / "manifest.json", case_id="case-a", paths=paths,
+        root=tmp_path, exact_evaluation=True, run_verification=False,
+        goal_progress_gated_reforges=False, solver_mode="strategy_finder",
+    )
+    assert command.as_list()[-2:] == ["--solver-mode", "strategy_finder"]
+    manifest = tmp_path / "manifest.json"
+    _write_json(manifest, {"cases": []})
+    args = dict(root=Path.cwd(), executable=Path(sys.executable), artifact=tmp_path,
+                corpus=manifest, tasks=[])
+    output = tmp_path / "finder"
+    finder = run_corpus(**args, output_directory=output, solver_mode="strategy_finder")
+    assert finder["treatment"]["solver_mode"] == "strategy_finder"
+    with pytest.raises(ValueError, match="provenance/configuration differs"):
+        run_corpus(**args, output_directory=output, solver_mode="current")
+
+
 def test_native_controls_reach_worker_and_reject_changed_resume(
     tmp_path: Path, monkeypatch,
 ) -> None:

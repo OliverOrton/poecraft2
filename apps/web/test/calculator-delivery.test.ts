@@ -171,6 +171,16 @@ for (const fail of [false, true]) {
 }
 console.log("  ok - Calculator DOM export, frozen request, partial states and bounded history");
 
+const finderRequest = {
+    ...request,
+    solve_options: {solver_mode: "strategy_finder" as const},
+};
+const finderTrace = createCalculatorDeliveryTrace(finderRequest);
+finderRequest.solve_options.solver_mode = "current" as "strategy_finder";
+assert.equal(finderTrace.request.solve_options.solver_mode, "strategy_finder");
+assert.equal(JSON.parse(JSON.stringify(finderTrace)).request.solve_options.solver_mode,
+    "strategy_finder");
+
 const controls = calculator as unknown as {
     solveRunning: boolean; solveFinish: () => void; solveFinishRequested: boolean;
     solveAbort: AbortController; solveProgress: SolveProgress;
@@ -206,3 +216,13 @@ assert.match(calculator.querySelector('[data-solve-cmd="finish"]')!.textContent!
 assert.equal(controls.solveAbort.signal.aborted, false);
 calculator.querySelector<HTMLButtonElement>('[data-solve-cmd="cancel"]')!.click();
 assert.equal(controls.solveAbort.signal.aborted, true);
+controls.solveRunning = false;
+access.renderSolvePanel();
+const modeSelect = calculator.querySelector<HTMLSelectElement>('[data-solve-mode]')!;
+modeSelect.querySelector('option[value="current"]')!.removeAttribute("selected");
+modeSelect.querySelector('option[value="strategy_finder"]')!.setAttribute("selected", "");
+modeSelect.dispatchEvent(new dom.window.Event("change"));
+assert.equal(calculator.querySelector<HTMLSelectElement>('[data-solve-mode]')!.value,
+    "strategy_finder");
+assert.equal(calculator.querySelector<HTMLInputElement>('[data-solve-target="absolute"]')!.disabled,
+    true);

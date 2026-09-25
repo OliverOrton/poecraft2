@@ -65,6 +65,7 @@ struct Arguments {
     fs::path development_checkpoint_load;
     std::string case_id;
     std::string native_dirty_guidance;
+    std::string solver_mode = "current";
     double native_execution_action_price = 0;
     std::string native_retention_diagnostic;
     double native_retention_target_lower = 0;
@@ -3534,6 +3535,7 @@ CaseResult run_case(
     const bool skip_verification, const fs::path& strategy_output,
     const std::string& native_retention_diagnostic,
     const std::string& native_dirty_guidance,
+    const std::string& solver_mode,
     const double native_execution_action_price,
     const double native_retention_target_lower,
     const double proof_handoff_seconds,
@@ -3785,6 +3787,8 @@ CaseResult run_case(
             optional_u32(caps, "solve_step_work_items", 1);
         pc_error_info error;
         pc_error_info_init(&error);
+        solve_options.solver_mode = solver_mode == "strategy_finder"
+            ? PC_SOLVER_MODE_STRATEGY_FINDER : PC_SOLVER_MODE_CURRENT;
         if (const Value* candidate = optional(caps, "candidate_evaluation", Type::Object)) {
             if (candidate->object.size() != 4)
                 throw std::runtime_error("candidate_evaluation requires exactly four typed limits");
@@ -3935,17 +3939,19 @@ CaseResult run_case(
             entry.refinement_transitions = progress.refinement_transitions;
             entry.certification_pairs = progress.certification_discovered_pairs;
             entry.certification_pending = progress.certification_pending_pairs;
-            size_t trace_length = 0;
-            auto trace_rc = pc_solver_progress_trace(handles.solver, last_trace_sequence,
-                nullptr, 0, &trace_length, &error);
-            if (trace_rc != PC_RESULT_OK) throw std::runtime_error("progress trace size failed");
-            entry.lifecycle.resize(trace_length + 256);
-            trace_rc = pc_solver_progress_trace(handles.solver, last_trace_sequence,
-                entry.lifecycle.data(), entry.lifecycle.size(), &trace_length, &error);
-            if (trace_rc != PC_RESULT_OK) throw std::runtime_error("progress trace read failed");
-            entry.lifecycle.resize(trace_length);
-            if (!entry.lifecycle.empty() && entry.lifecycle.back() == '\0') entry.lifecycle.pop_back();
-            last_trace_sequence = pc_solver_progress_sequence(handles.solver);
+            if (solver_mode != "strategy_finder") {
+                size_t trace_length = 0;
+                auto trace_rc = pc_solver_progress_trace(handles.solver, last_trace_sequence,
+                    nullptr, 0, &trace_length, &error);
+                if (trace_rc != PC_RESULT_OK) throw std::runtime_error("progress trace size failed");
+                entry.lifecycle.resize(trace_length + 256);
+                trace_rc = pc_solver_progress_trace(handles.solver, last_trace_sequence,
+                    entry.lifecycle.data(), entry.lifecycle.size(), &trace_length, &error);
+                if (trace_rc != PC_RESULT_OK) throw std::runtime_error("progress trace read failed");
+                entry.lifecycle.resize(trace_length);
+                if (!entry.lifecycle.empty() && entry.lifecycle.back() == '\0') entry.lifecycle.pop_back();
+                last_trace_sequence = pc_solver_progress_sequence(handles.solver);
+            }
             last_trace_owner = progress.phase_owner;
             entry.phase = progress.phase;
             entry.phase_owner = progress.phase_owner;
@@ -4871,6 +4877,8 @@ const char* termination_name(const int32_t termination) {
         return "numerical_stability";
     case PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH:
         return "requested_bounded_finish";
+    case PC_SOLVE_TERMINATION_FINDER_COMPLETE:
+        return "finder_complete";
     default: return "none";
     }
 }
@@ -4896,6 +4904,8 @@ const char* stop_cause_name(const int32_t cause) {
         return "numerical_stability";
     case PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH:
         return "requested_bounded_finish";
+    case PC_SOLVE_STOP_FINDER_COMPLETE:
+        return "finder_complete";
     default: return "none";
     }
 }
@@ -6099,6 +6109,7 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--native-retention-diagnostic") args.native_retention_diagnostic=value("--native-retention-diagnostic");
         else if (argument == "--native-execution-action-price") args.native_execution_action_price=std::stod(value("--native-execution-action-price"));
         else if (argument == "--native-dirty-guidance") args.native_dirty_guidance=value("--native-dirty-guidance");
+        else if (argument == "--solver-mode") args.solver_mode=value("--solver-mode");
         else if (argument == "--native-retention-target-lower") args.native_retention_target_lower=std::stod(value("--native-retention-target-lower"));
         else if (argument == "--proof-handoff-seconds") {
             args.proof_handoff_seconds = std::stod(value("--proof-handoff-seconds"));
@@ -6192,6 +6203,13 @@ Arguments parse_arguments(int argc, char** argv) {
         args.native_dirty_guidance!="selective-options" && args.native_dirty_guidance!="execution-cost" &&
         args.native_dirty_guidance!="execution-count")
         throw std::runtime_error("native dirty guidance must be legacy, static, adaptive, protected-first, selective, selective-options, execution-cost or execution-count");
+    if (args.solver_mode != "current" && args.solver_mode != "strategy_finder")
+        throw std::runtime_error("solver mode must be current or strategy_finder");
+    if (args.solver_mode == "strategy_finder" &&
+        (!args.native_dirty_guidance.empty() || !args.native_retention_diagnostic.empty() ||
+         args.proof_handoff_seconds > 0 || !args.development_checkpoint_load.empty() ||
+         !args.development_checkpoint_save.empty()))
+        throw std::runtime_error("strategy finder cannot use current-solver diagnostics or proof handoff");
     if (!std::isfinite(args.native_execution_action_price) || args.native_execution_action_price<0 ||
         ((args.native_dirty_guidance=="execution-count") != (args.native_execution_action_price>0)))
         throw std::runtime_error("execution-count requires a finite positive native execution action price; other modes require zero");
@@ -6527,6 +6545,7 @@ int main(int argc, char** argv) {
                     data, specification, args.skip_verification,
                     args.strategy_output, args.native_retention_diagnostic,
                     args.native_dirty_guidance,
+                    args.solver_mode,
                     args.native_execution_action_price,
                     args.native_retention_target_lower, args.proof_handoff_seconds,
                     args.emit_progress,

@@ -38,6 +38,7 @@ interface CliOptions {
     watchdogSeconds?: number;
     solveOnly: boolean;
     finishAtFirstVerified?: boolean;
+    solverMode: "current" | "strategy_finder";
 }
 
 type CompletedSolverSolveResult = Extract<
@@ -132,6 +133,7 @@ function parseArgs(args: string[]): CliOptions {
     let skipVerification = false;
     let verificationRuns: number | undefined;
     let solveOnly = false;
+    let solverMode: CliOptions["solverMode"] = "current";
     for (let index = 0; index < args.length; index += 1) {
         const value = args[index + 1];
         if (args[index] === "--corpus" && value) {
@@ -180,6 +182,12 @@ function parseArgs(args: string[]): CliOptions {
             index += 1;
         } else if (args[index] === "--solve-only") {
             solveOnly = true;
+        } else if (args[index] === "--solver-mode" && value) {
+            if (value !== "current" && value !== "strategy_finder") {
+                throw new Error("--solver-mode must be current or strategy_finder");
+            }
+            solverMode = value;
+            index += 1;
         } else if (args[index] === "--finish-at-first-verified") {
             parsedOptions.finishAtFirstVerified = true;
         } else {
@@ -193,6 +201,7 @@ function parseArgs(args: string[]): CliOptions {
         skipVerification,
         verificationRuns,
         solveOnly,
+        solverMode,
     });
     return parsedOptions as CliOptions;
 }
@@ -1075,6 +1084,7 @@ async function runCase(
     progressOutputPath?: string,
     solveOnly = false,
     finishAtFirstVerified = false,
+    solverMode: CliOptions["solverMode"] = "current",
 ): Promise<CaseReport> {
     const totalStarted = performance.now();
     const errors: string[] = [];
@@ -1229,7 +1239,9 @@ async function runCase(
         const solveStarted = performance.now();
         const recordSolveProgress = (progress: SolveProgress): void => {
             if (finishAtFirstVerified && finishIntentMs === null &&
-                progress.trace?.current.verified_artifact_available === true && finishControl) {
+                (solverMode === "strategy_finder"
+                    ? progress.upper_bound !== null && Number.isFinite(progress.upper_bound)
+                    : progress.trace?.current.verified_artifact_available === true) && finishControl) {
                 finishIntentMs = performance.now() - solveStarted;
                 finishControl();
             }
@@ -1247,6 +1259,7 @@ async function runCase(
                     item,
                     economy,
                     {
+                        ...(solverMode === "strategy_finder" ? {solver_mode: solverMode} : {}),
                         solve_profile: spec.caps.solve_profile,
                         max_states: spec.caps.max_states,
                         max_sweeps: spec.caps.max_sweeps,
@@ -1303,6 +1316,7 @@ async function runCase(
                     item,
                     economy,
                     {
+                        ...(solverMode === "strategy_finder" ? {solver_mode: solverMode} : {}),
                         solve_profile: spec.caps.solve_profile,
                         max_states: spec.caps.max_states,
                         max_sweeps: spec.caps.max_sweeps,
@@ -1693,6 +1707,7 @@ async function runCase(
         input: {
             comparison_profile:
                 spec.comparison_profile ?? "native-wasm-solver-v1",
+            solver_mode: solverMode,
             watchdog_seconds: spec.watchdog_seconds ?? null,
             requested_bounded_finish_seconds:
                 spec.requested_bounded_finish_seconds ?? null,
@@ -1948,6 +1963,7 @@ try {
                 options.output ? `${options.output}.progress.json` : undefined,
                 options.solveOnly,
                 options.finishAtFirstVerified,
+                options.solverMode,
             ));
         }
     }
@@ -1984,6 +2000,7 @@ try {
             watchdog_seconds: options.watchdogSeconds ?? null,
             solve_only: options.solveOnly,
             finish_at_first_verified: options.finishAtFirstVerified ?? false,
+            solver_mode: options.solverMode,
         },
         cases: reports,
     };

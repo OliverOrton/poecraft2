@@ -2314,6 +2314,63 @@ test("automatic S8.3 bench selects and executes through WASM", async () => {
     await client.closeItem(item);
 });
 
+test("experimental finder runs through the WASM worker and exports a checked graph", async () => {
+    const item = await client.createItem(sessionId, {
+        rarity: "magic", withImplicits: false,
+    });
+    const pool = await client.debugPool(contextId, item, {
+        action: {type: "alteration"}, side: "prefix",
+    });
+    assert.ok(pool.entries.length > 0);
+    const goalMod = await client.modInfo(sessionId, pool.entries[0].session_mod_id);
+    const solver = await client.openSolver(sessionId, {
+        version: "v1", rarity: "magic",
+        slots: [{family_mod_key: goalMod.key, min_tier: 0}],
+        actions: ["alteration"],
+    });
+    const economySpec = {version: "v1", prices: {alteration: 1}};
+    const economy = await client.loadEconomy(economySpec);
+    try {
+        await assert.rejects(
+            client.solverSolve(solver, item, economy, {
+                solver_mode: "unsupported" as "strategy_finder",
+            }),
+            /unknown solver_mode/,
+        );
+        const progress: SolveProgress[] = [];
+        const result = await client.solverSolve(solver, item, economy, {
+            solver_mode: "strategy_finder",
+            solve_profile: "calculator_product_v1",
+            candidate_max_states: 10000,
+            candidate_max_pairs: 20000,
+            candidate_max_transitions: 100000,
+        }, {onProgress: (sample) => progress.push(sample)});
+        assert.equal(result.cancelled, false);
+        if (result.cancelled) assert.fail("finder was cancelled");
+        assert.equal(result.policy_available, true, JSON.stringify(result));
+        assert.equal(result.policy_status, "bounded_feasible");
+        assert.equal(result.termination, "finder_complete");
+        assert.equal(result.stop_cause, "finder_complete");
+        assert.equal(result.lower_bound, null);
+        assert.equal(result.absolute_optimality_gap, null);
+        assert.ok(result.evaluated_policy_cost !== null && result.evaluated_policy_cost > 0);
+        assert.ok(progress.some((sample) => sample.phase_owner === "strategy_finder"));
+        assert.ok(progress.every((sample) => !sample.trace_error));
+        const graph = prepareSolverStrategy(await client.solverCompileStrategy(solver));
+        assert.deepEqual(validateStrategy(graph).filter((issue) => issue.severity === "error"), []);
+        const checked = await client.strategyEvaluate(sessionId, graph, undefined, {economy: economySpec});
+        assert.equal(checked.converged, true);
+        assert.ok(checked.terminals.success > 1 - 1e-9);
+        const checkedCost = checked.accounting.totals.per_invocation.total_expected_cost;
+        assert.ok(checkedCost !== null &&
+            Math.abs(checkedCost - result.evaluated_policy_cost) < 1e-6);
+    } finally {
+        await client.closeEconomy(economy);
+        await client.closeSolver(solver);
+        await client.closeItem(item);
+    }
+});
+
 // Wire the shared client into the runner before executing.
 {
     const spawned = spawnClient();

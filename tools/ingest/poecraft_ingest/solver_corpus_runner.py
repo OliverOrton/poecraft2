@@ -368,6 +368,7 @@ def _run_case(
     native_retention_diagnostic: str | None = None,
     native_dirty_guidance: str | None = None,
     native_execution_action_price: float | None = None,
+    solver_mode: str | None = None,
 ) -> dict[str, Any]:
     immutable_lab_attempt = bool(
         attempt_paths is not None
@@ -394,6 +395,7 @@ def _run_case(
         native_retention_diagnostic=native_retention_diagnostic,
         native_dirty_guidance=native_dirty_guidance,
         native_execution_action_price=native_execution_action_price,
+        solver_mode=solver_mode,
     )
     result = run_isolated_process(
         resolved.command.as_list(),
@@ -594,6 +596,7 @@ def run_corpus(
     native_retention_diagnostic: str | None = None,
     native_dirty_guidance: str | None = None,
     native_execution_action_price: float | None = None,
+    solver_mode: str | None = None,
     host_watchdog_seconds: float | None = None,
     worker_headroom_bytes: int = 0,
 ) -> dict[str, Any]:
@@ -606,6 +609,8 @@ def run_corpus(
         raise ValueError("max_workers must be positive")
     if native_dirty_guidance not in (None, "legacy", "static", "adaptive", "protected-first", "selective", "selective-options", "execution-cost", "execution-count"):
         raise ValueError("unsupported native dirty guidance treatment")
+    if solver_mode not in (None, "current", "strategy_finder"):
+        raise ValueError("unsupported solver mode")
     if native_execution_action_price is not None and (
             native_dirty_guidance != "execution-count" or
             not math.isfinite(native_execution_action_price) or native_execution_action_price <= 0):
@@ -664,10 +669,12 @@ def run_corpus(
     if worker_headroom_bytes:
         configuration["worker_headroom_bytes"] = worker_headroom_bytes
     treatment = {"native_dirty_guidance": native_dirty_guidance}
+    if solver_mode is not None:
+        treatment["solver_mode"] = solver_mode
     if native_execution_action_price is not None:
         treatment["native_execution_action_price"] = float(native_execution_action_price)
     current_resume_identity = provenance.resume_identity(configuration)
-    if native_dirty_guidance is not None:
+    if native_dirty_guidance is not None or solver_mode is not None:
         # Algorithm treatment is separate from request/capacity identity,
         # like executable identity, but still binds immutable resume.
         current_resume_identity["treatment"] = treatment
@@ -693,7 +700,7 @@ def run_corpus(
         "configuration": configuration,
         "cases": dict(previous_cases),
     }
-    if native_dirty_guidance is not None:
+    if native_dirty_guidance is not None or solver_mode is not None:
         ledger["treatment"] = treatment
     pending: list[CaseTask] = []
     for task in tasks:
@@ -751,6 +758,7 @@ def run_corpus(
                     native_retention_diagnostic=native_retention_diagnostic,
                     native_dirty_guidance=native_dirty_guidance,
                     native_execution_action_price=native_execution_action_price,
+                    solver_mode=solver_mode,
                     watchdog_seconds=host_watchdog_seconds,
                     worker_headroom_bytes=worker_headroom_bytes,
                 )
@@ -813,6 +821,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--native-execution-action-price", type=float, help="Frozen Chaos per primitive action; proposal-only execution-count treatment")
     parser.add_argument("--native-dirty-guidance", choices=("legacy", "static", "adaptive", "protected-first", "selective", "selective-options", "execution-cost", "execution-count"),
         help="Native algorithm treatment, separately recorded from unchanged request and capacity identity.")
+    parser.add_argument("--solver-mode", choices=("current", "strategy_finder"),
+        help="Solver lane treatment, separately recorded from request and capacity identity.")
     parser.add_argument(
         "--native-retention-diagnostic",
         choices=NATIVE_RETENTION_DIAGNOSTIC_MODES,
@@ -862,6 +872,7 @@ def main(argv: list[str] | None = None) -> int:
         native_retention_diagnostic=args.native_retention_diagnostic,
         native_dirty_guidance=args.native_dirty_guidance,
         native_execution_action_price=args.native_execution_action_price,
+        solver_mode=args.solver_mode,
         host_watchdog_seconds=args.host_watchdog_seconds,
         worker_headroom_bytes=args.worker_headroom_bytes,
     )

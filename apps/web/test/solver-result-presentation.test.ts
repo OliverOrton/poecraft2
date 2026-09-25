@@ -536,6 +536,41 @@ import {
     console.log("  ok - numerical stability stops remain explicitly bounded");
 }
 
+{
+    const finderOptions = calculatorSolveOptions(10, 5, false, false, "strategy_finder");
+    assert.equal(finderOptions.solver_mode, "strategy_finder");
+    assert.equal(finderOptions.max_absolute_optimality_gap, undefined);
+    assert.equal(finderOptions.max_relative_optimality_gap, undefined);
+    const summary = solveSummary({
+        policy_available: true,
+        policy_status: "bounded_feasible",
+        termination: "finder_complete",
+        stop_cause: "finder_complete",
+        evaluated_policy_cost: 42,
+        upper_bound: 42,
+        lower_bound: null,
+        absolute_optimality_gap: null,
+        relative_optimality_gap: null,
+    });
+    const markup = solveResultMarkup({
+        summary, solverMode: "strategy_finder",
+        admittedActionIds: ["alteration"], excludedActions: 0,
+        missingPriceKeys: [], economyLabel: "Pinned economy",
+        terminationDetail: solveTerminationDetail(summary, null),
+        productActionScope: "goal_relevant",
+        goalProgressGatedReforges: true, hasCompiledStrategy: true,
+        compiledOperationTypes: ["alteration"], busy: false,
+        verification: null,
+    });
+    assert.match(markup, /Checked strategy expected cost/);
+    assert.match(markup, /42/);
+    assert.match(markup, /No lower bound, optimality gap, or exactness claim/);
+    assert.doesNotMatch(markup, /Optimal-cost lower bound/);
+    assert.doesNotMatch(markup, /Certified multiplicative factor/);
+    assert.match(markup, /Open in Strategy Board/);
+    console.log("  ok - finder mode presents checked cost without proof authority");
+}
+
 function solveSummary(overrides: Partial<SolveSummary>): SolveSummary {
     return {
         converged: false,

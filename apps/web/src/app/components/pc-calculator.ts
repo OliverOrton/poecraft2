@@ -259,6 +259,7 @@ export class PcCalculator extends HTMLElement {
     private solveTelemetry: unknown = null;
     private solveAbsoluteGapTarget = 0;
     private solveRelativeGapPercentTarget = 0;
+    private solveMode: "current" | "strategy_finder" = "current";
     private solveAllowEconomicRestart = false;
     private solveConsiderImprintPrograms = false;
     private solveDisabledActionFamilies = new Set<SolverActionFamily>();
@@ -795,6 +796,7 @@ export class PcCalculator extends HTMLElement {
                 this.solveRelativeGapPercentTarget,
                 this.solveAllowEconomicRestart,
                 this.solveConsiderImprintPrograms,
+                this.solveMode,
             ),
             bounded_finish_after_ms: 4 * 60 * 1000,
             economy: pinned,
@@ -913,7 +915,9 @@ export class PcCalculator extends HTMLElement {
                         this.solveDeliveryStage = progress.delivery_stage ?? "native_work";
                         refreshSolveElapsed();
                         const phase =
-                            progress.phase === "expanding"
+                            trace.request.solve_options.solver_mode === "strategy_finder"
+                                ? `${progress.finalization_work_items.toLocaleString()} candidates checked`
+                                : progress.phase === "expanding"
                                 ? `${progress.expanded_states.toLocaleString()} expanded, ${progress.discovered_states.toLocaleString()} discovered`
                                 : progress.phase === "iterating"
                                   ? `${progress.sweeps.toLocaleString()} sweeps`
@@ -939,6 +943,13 @@ export class PcCalculator extends HTMLElement {
             }
             result.economy = pinned.identity;
             this.solveSummary = result;
+            const {worker: _worker, progress: _progress,
+                cancelled: _cancelled, ...resultSummary} = result;
+            trace.outcome = {
+                summary: structuredClone(resultSummary),
+                telemetry: null,
+                compiled_strategy: null,
+            };
             let telemetry: unknown = null;
             try {
                 telemetry = await this.client.solverTelemetry(
@@ -949,6 +960,7 @@ export class PcCalculator extends HTMLElement {
                 // itself fails.
             }
             this.solveTelemetry = telemetry;
+            trace.outcome.telemetry = structuredClone(telemetry);
             this.solveStopDetail = solveTerminationDetail(result, telemetry);
             if (!shouldCompileSolvePolicy(result)) {
                 this.solveError = {
@@ -964,6 +976,7 @@ export class PcCalculator extends HTMLElement {
                 );
                 this.solvedStrategy = prepareSolverStrategy(compiled);
                 this.solvedStrategy.economy = pinned.identity;
+                trace.outcome.compiled_strategy = structuredClone(this.solvedStrategy);
             } catch (error) {
                 const detail = engineErrorDetail(error);
                 this.solveError =
@@ -1997,6 +2010,12 @@ export class PcCalculator extends HTMLElement {
             Boolean(this.solver && this.item && this.slots.length) &&
             !this.busy;
         const progress = this.solveProgress;
+        const activeSolveMode = this.solveRunning || this.solveSummary
+            ? this.solveProgressExport?.request.solve_options.solver_mode ?? "current"
+            : this.solveMode;
+        const finderMode = activeSolveMode === "strategy_finder";
+        const finderHasCheckedPolicy = progress?.upper_bound !== null &&
+            progress?.upper_bound !== undefined && Number.isFinite(progress.upper_bound);
         const disabledFamilyMarkup = DIAGNOSTIC_SOLVER_FAMILIES.map(
             ({ family, label }) => `<label>
                 <input type="checkbox" data-solve-disabled-family="${family}"
@@ -2022,7 +2041,16 @@ export class PcCalculator extends HTMLElement {
             : "Unavailable";
         const progressMarkup =
             this.solveRunning && progress
-                ? `<section class="pc-calc-solve-progress" aria-live="polite">
+                ? finderMode
+                  ? `<section class="pc-calc-solve-progress" aria-live="polite">
+                    <strong>Searching checked strategies</strong>
+                    <span class="pc-calc-solve-elapsed">Elapsed <b>${solveElapsedLabel(this.solveElapsedMs)}</b></span>
+                    <span>Candidates checked <b>${progress.finalization_work_items.toLocaleString()}</b></span>
+                    <span>Best checked cost <b>${progressUpper}</b></span>
+                    <span>Solver-owned memory <b>${solveMemoryLabel(progress.live_owned_bytes)}</b></span>
+                    <span>Optimality proof unavailable</span>
+                </section>`
+                  : `<section class="pc-calc-solve-progress" aria-live="polite">
                     <strong>${progress.phase === "expanding" ? "Expanding reachable states" : progress.phase === "iterating" ? "Optimizing policy" : progress.phase === "refining" ? "Refining exact policy" : progress.phase === "compiling" ? "Compiling selected policy" : progress.phase === "certifying" ? "Certifying compiled policy" : "Publishing result"}</strong>
                     <span class="pc-calc-solve-elapsed">Elapsed <b>${solveElapsedLabel(this.solveElapsedMs)}</b></span>
                     <span>Expanded <b>${progress.expanded_states.toLocaleString()}</b></span>
@@ -2048,6 +2076,7 @@ export class PcCalculator extends HTMLElement {
         const resultMarkup = summary
             ? solveResultMarkup({
                   summary,
+                  solverMode: activeSolveMode,
                   admittedActionIds: this.solveAdmittedActionIds,
                   excludedActions: this.solveExcludedActions,
                   missingPriceKeys: this.solveMissingPriceKeys,
@@ -2103,7 +2132,7 @@ export class PcCalculator extends HTMLElement {
                 ${
                     this.solveRunning
                         ? `<button data-solve-cmd="finish" ${this.solveFinish && !this.solveFinishRequested &&
-                            progress?.trace?.current.verified_artifact_available === true ? "" : "disabled"}>${this.solveFinishRequested ? "Finishing…" : "Finish with best verified strategy"}</button>
+                            (finderMode ? finderHasCheckedPolicy : progress?.trace?.current.verified_artifact_available === true) ? "" : "disabled"}>${this.solveFinishRequested ? "Finishing…" : "Finish with best verified strategy"}</button>
                            <button class="pc-calc-solve-cancel" data-solve-cmd="cancel">Cancel</button>`
                         : `<span>
                             <button data-solve-cmd="copy-lab" ${canExport ? "" : "disabled"}>Copy Lab case</button>
@@ -2113,14 +2142,21 @@ export class PcCalculator extends HTMLElement {
             </header>
             <div class="pc-calc-solve-targets">
                 <label>
+                    <span>Solver mode</span>
+                    <select data-solve-mode ${this.solveRunning ? "disabled" : ""}>
+                        <option value="current" ${this.solveMode === "current" ? "selected" : ""}>Current solver</option>
+                        <option value="strategy_finder" ${this.solveMode === "strategy_finder" ? "selected" : ""}>Strategy finder (experimental)</option>
+                    </select>
+                </label>
+                <label>
                     <span>Absolute gap target <small>chaos</small></span>
                     <input type="number" min="0" step="any" data-solve-target="absolute"
-                        value="${this.solveAbsoluteGapTarget || ""}" placeholder="Disabled">
+                        value="${this.solveAbsoluteGapTarget || ""}" placeholder="Disabled" ${this.solveMode === "strategy_finder" ? "disabled" : ""}>
                 </label>
                 <label>
                     <span>Relative gap target <small>%</small></span>
                     <input type="number" min="0" step="any" data-solve-target="relative"
-                        value="${this.solveRelativeGapPercentTarget || ""}" placeholder="Disabled">
+                        value="${this.solveRelativeGapPercentTarget || ""}" placeholder="Disabled" ${this.solveMode === "strategy_finder" ? "disabled" : ""}>
                 </label>
                 <label class="pc-calc-solve-restart-option">
                     <input type="checkbox" data-solve-economic-restart
@@ -2137,7 +2173,9 @@ export class PcCalculator extends HTMLElement {
                     <div>${disabledFamilyMarkup}</div>
                     <p>Checked families are excluded by the native engine. The result is exact only within that restricted action envelope.</p>
                 </details>
-                <p>Either positive target may stop the solve after a complete lower/upper round. Targets do not change Bellman comparisons or exact results.</p>
+                <p>${this.solveMode === "strategy_finder"
+                    ? "The finder checks executable candidates within a bounded search. It reports checked cost without an optimality certificate."
+                    : "Either positive target may stop the solve after a complete lower/upper round. Targets do not change Bellman comparisons or exact results."}</p>
             </div>
             ${
                 readiness.missingFractureBasePrice
@@ -2219,6 +2257,13 @@ export class PcCalculator extends HTMLElement {
                 });
             },
         );
+        host.querySelector<HTMLSelectElement>("[data-solve-mode]")
+            ?.addEventListener("change", (event) => {
+                const value = (event.currentTarget as HTMLSelectElement).value;
+                this.solveMode = value === "strategy_finder" ? "strategy_finder" : "current";
+                this.clearSolveResult();
+                this.renderSolvePanel();
+            });
         host.querySelector<HTMLInputElement>("[data-solve-economic-restart]")
             ?.addEventListener("change", (event) => {
                 this.solveAllowEconomicRestart =
@@ -2254,7 +2299,8 @@ export class PcCalculator extends HTMLElement {
                     }
                     if (command === "finish") {
                         if (!this.solveRunning || !this.solveFinish || this.solveFinishRequested ||
-                            this.solveProgress?.trace?.current.verified_artifact_available !== true) return;
+                            (finderMode ? !finderHasCheckedPolicy
+                                : this.solveProgress?.trace?.current.verified_artifact_available !== true)) return;
                         this.solveFinishRequested = true;
                         this.solveUiMilestones.push({stage: "finish_intent", ui_elapsed_ms: performance.now()-this.solveUiStartedAt});
                         this.solveFinish();

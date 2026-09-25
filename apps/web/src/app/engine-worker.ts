@@ -41,7 +41,7 @@ const compactSolveOwners: Array<SolveProgress["phase_owner"] | undefined> = [
     undefined, "setup", "planner_construction", "temporary_effect_precompile",
     "dependency_preparation", "primitive_rows", "state_local_automatic_synthesis",
     "ladder_scheduling", "bellman_optimization", "policy_assembly",
-    "compilation", "exact_evaluation", "done",
+    "compilation", "exact_evaluation", "done", "strategy_finder",
 ];
 
 let bindings: EngineBindings;
@@ -336,6 +336,7 @@ async function solveSolver(
             ? params.boundedFinishAfterMs
             : null;
     let boundedFinishRequested = false;
+    const finderMode = (params.options as SolveOptions | undefined)?.solver_mode === "strategy_finder";
     /* Match the native benchmark contract: the bounded wall window owns
      * synchronous solve-model setup as well as stepped search. Starting this
      * after beginSolverSolve silently granted release WASM an additional full
@@ -372,7 +373,7 @@ async function solveSolver(
         // Diagnostic failure cannot refuse a valid solve, including an older
         // loaded module. Preserve the error and avoid repeated failed reads.
         let trace: SolveProgress["trace"];
-        if (!traceError) {
+        if (!traceError && !finderMode) {
             try {
                 trace = bindings.solverProgressTrace(solver, traceSequence);
                 traceSequence = trace.sequence;
@@ -524,7 +525,9 @@ async function solveSolver(
                 // the retained owner at this control boundary, never infer
                 // availability from the presence of a throttled JS snapshot.
                 captureProgress("manual_finish_intent");
-                if (progress.trace?.current.verified_artifact_available === true) {
+                if (finderMode
+                    ? progress.upper_bound !== null && Number.isFinite(progress.upper_bound)
+                    : progress.trace?.current.verified_artifact_available === true) {
                     bindings.requestSolverSolveBoundedFinish(solver);
                     boundedFinishRequested = true;
                     milestone("finish_acknowledged");

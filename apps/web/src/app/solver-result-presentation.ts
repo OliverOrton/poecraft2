@@ -9,6 +9,7 @@ export interface SolveVerificationPresentation {
 
 export interface SolveResultMarkupOptions {
     summary: SolveSummary;
+    solverMode?: "current" | "strategy_finder";
     admittedActionIds: readonly string[];
     excludedActions: number;
     missingPriceKeys: readonly string[];
@@ -270,20 +271,22 @@ export function calculatorSolveOptions(
     relativeGapPercent: number,
     allowEconomicRestart = false,
     considerImprintPrograms = false,
+    solverMode: "current" | "strategy_finder" = "current",
 ): SolveOptions {
     const options: SolveOptions = {
         solve_profile: "calculator_product_v1",
     };
+    if (solverMode === "strategy_finder") options.solver_mode = solverMode;
     if (allowEconomicRestart) {
         options.allow_economic_restart = true;
     }
     if (considerImprintPrograms) {
         options.consider_imprint_programs = true;
     }
-    if (Number.isFinite(absoluteGap) && absoluteGap > 0) {
+    if (solverMode === "current" && Number.isFinite(absoluteGap) && absoluteGap > 0) {
         options.max_absolute_optimality_gap = absoluteGap;
     }
-    if (Number.isFinite(relativeGapPercent) && relativeGapPercent > 0) {
+    if (solverMode === "current" && Number.isFinite(relativeGapPercent) && relativeGapPercent > 0) {
         options.max_relative_optimality_gap = relativeGapPercent / 100;
     }
     return options;
@@ -294,6 +297,9 @@ export function solveTerminationDetail(
     summary: SolveSummary,
     telemetry: unknown,
 ): string {
+    if (summary.termination === "finder_complete") {
+        return "The finder finished its bounded candidate search. The returned strategy was evaluated by the native engine; no optimality bound is available.";
+    }
     const root = objectRecord(telemetry);
     const optimization = objectRecord(root?.optimization);
     const capHits = Array.isArray(optimization?.cap_hits)
@@ -655,6 +661,34 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
         verification,
         telemetry,
     } = options;
+    if (options.solverMode === "strategy_finder") {
+        const cost = summary.policy_available
+            ? finiteCost(summary.evaluated_policy_cost, "Unavailable")
+            : "No checked strategy";
+        const operations = [...new Set(compiledOperationTypes)]
+            .sort((left, right) => left.localeCompare(right))
+            .map(compiledOperationLabel).join(" / ");
+        const canOpen = summary.policy_available && hasCompiledStrategy;
+        return `<section class="pc-calc-solve-result" data-solver-mode="strategy_finder" data-policy-available="${summary.policy_available}" data-termination="${summary.termination}">
+            <div class="pc-calc-solve-headline"><span>Checked strategy expected cost</span>
+                <strong data-solve-result="evaluated-policy-cost">${cost}</strong></div>
+            <div class="pc-calc-solve-state ${canOpen ? "is-success" : "is-warning"}">
+                <strong data-solve-result="policy-quality">Experimental strategy finder</strong>
+            </div>
+            <p class="pc-calc-solve-certificate" data-solve-result="certificate">Native checked executable strategy. No lower bound, optimality gap, or exactness claim is available.</p>
+            <p class="pc-calc-solve-termination-detail">${escapeHtml(terminationDetail)}</p>
+            <p>Economy: ${economyLabel ? escapeHtml(economyLabel) : "No economy selected"}.
+                ${operations ? `Compiled operations: ${escapeHtml(operations)}.` : ""}
+                ${excludedActions.toLocaleString()} unpriced actions excluded before search.</p>
+            ${canOpen ? `<div class="pc-calc-solve-actions">
+                <button data-solve-cmd="open" ${busy ? "disabled" : ""}>Open in Strategy Board</button>
+                <button data-solve-cmd="verify" ${busy ? "disabled" : ""}>Verify 10,000 runs</button>
+            </div>` : ""}
+            ${summary.policy_available && verification
+                ? `<p>${verification.completedRuns.toLocaleString()} verification runs; empirical cost ${formatChaosValue(verification.empiricalCost)} chaos.</p>`
+                : ""}
+        </section>`;
+    }
     const obligations = actionObligationPresentation(telemetry);
     const automatic = automaticFamilyPresentation(telemetry);
     const disabledFamilyScope = disabledActionFamilyText(telemetry);
