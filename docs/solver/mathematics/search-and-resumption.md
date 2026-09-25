@@ -52,6 +52,18 @@ from an immediate debt tie to economic uselessness; it is not native crafting
 evidence. The [imported derivation](../../active/2026-09-11-dirty-state-continuation/research-inputs/review_and_mathematics.md)
 preserves its premises and equations.
 
+In the current native constructor, this debt key is used only for completed
+seed rows while high-impact uppers and incremental action generation are active
+and no *output incumbent object* exists. The later key instead prefers a true
+goal or a higher satisfied-goal count. An independently verified graph and an
+output incumbent object are distinct conditions. The September 25 A5
+investigation did not record a gate-active row-selection reversal, so the debt
+example remains a conditional search concern, not an observed cause of that
+run's cost. The active carrier ordering uses a different within-goal-mask
+occupancy comparison. Its neutralization changed service order but returned the
+same checked original-root controller and cost; search effort and crafting
+economics are separate observations. [Native disposition](../../active/2026-09-25-dirty-progress/README.md#j3--matched-original-root-result).
+
 The native dirty proposal begins after a current-run independently verified
 graph is retained. It completes acquisition and paid cleanup rows at nonempty
 entries and reuses sparse policy evaluation/selection for full continuation

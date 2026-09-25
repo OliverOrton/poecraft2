@@ -1,0 +1,54 @@
+{
+  "schema": "dirty_progress_local_source_map_v1",
+  "selected_profile": "cb01-cross-base-product8-long240/current/native-retention-reuse",
+  "entries": [
+    {
+      "file": "engine/src/solver_solve_incremental.cpp",
+      "symbol": "SolveWork::Impl::schedule_next_incremental_alternative",
+      "caller": "Current incremental automatic carrier epoch",
+      "activation": "active on A5; neutral order only with native diagnostic option",
+      "input_domain": "one frozen eligible carrier set with full goal masks",
+      "output_domain": "service order of the same carrier state IDs",
+      "existing_test": "engine/tests/test_solver_solve.cpp:run_neutral_extra_frozen_order_tests",
+      "changed_invariant": "only the within-mask unrelated-occupancy comparison is neutralized; mask order, round robin, fracture and protection priority and stable state tie are preserved",
+      "change_class": "order",
+      "authority": "proposal-only"
+    },
+    {
+      "file": "engine/src/solver_solve_priority.cpp",
+      "symbol": "build_carrier_priority_buckets",
+      "caller": "SolveWork::Impl::schedule_next_incremental_alternative",
+      "activation": "IncrementalNeutralExtra diagnostic flag in Current mode; exercised on A5",
+      "input_domain": "CarrierOrderingScore values from the existing native score producer",
+      "output_domain": "goal-subset buckets and sorted state IDs",
+      "existing_test": "engine/tests/test_solver_solve.cpp:run_neutral_extra_frozen_order_tests",
+      "changed_invariant": "IncrementalLegacy and FocusedLegacy semantics remain fixed; the treatment keeps the legacy cross-mask comparison",
+      "change_class": "order",
+      "authority": "proposal-only"
+    },
+    {
+      "file": "engine/src/solver_solve_constructive.cpp",
+      "symbol": "select_joint_policy_seed_row/joint_policy_terminal_debt",
+      "caller": "Current joint policy proposal construction",
+      "activation": "first-policy debt key only when high-impact and incremental generation and no output incumbent object",
+      "input_domain": "completed priced native rows",
+      "output_domain": "selected proposal seed row",
+      "existing_test": "engine/tests/test_solver_solve.cpp joint-policy seed-row tests",
+      "changed_invariant": "none in J0-J4; S gate and counterfactual selection were not established",
+      "change_class": "none",
+      "authority": "proposal-only"
+    },
+    {
+      "file": "engine/src/solver_calc.cpp",
+      "symbol": "CalcContext::is_goal_state",
+      "caller": "solver construction, compiler, verifier and telemetry",
+      "activation": "strict native goal throughout A5",
+      "input_domain": "native abstract item state and frozen GoalSpec",
+      "output_domain": "true terminal predicate",
+      "existing_test": "engine/tests/test_solver_calc.cpp strict goal tests",
+      "changed_invariant": "none; diagnostic dirty coverage never becomes terminal",
+      "change_class": "none",
+      "authority": "model semantics"
+    }
+  ]
+}

@@ -335,6 +335,23 @@ void SolveWork::Impl::record_carrier_schedule_attribution(
     ++histogram.protection[protection];
     ++histogram.fracture[fracture_shape];
     ++histogram.unrelated_occupancy[unrelated];
+    if (stage == Work::ScheduleStage::IncrementalCarrierAdmission) {
+        for (std::size_t stratum = 0;
+             stratum < Work::kDirtyOrderStrata; ++stratum) {
+            for (std::size_t index = 0;
+                 index < carrier_bound_attribution->dirty_order
+                             .retained_by_stratum[stratum]; ++index) {
+                auto& sample = carrier_bound_attribution->dirty_order
+                                   .samples[stratum][index];
+                if (sample.state != state || sample.admitted) continue;
+                sample.admitted = true;
+                sample.admission_wall_ns = static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        carrier_bound_attribution->started_at).count());
+            }
+        }
+    }
     if (stage == Work::ScheduleStage::CarrierActionAdmission &&
         operator_index != kNoId) {
         ++carrier_bound_attribution
@@ -1787,7 +1804,77 @@ SolveWork::Impl::finalize_carrier_bound_attribution() {
         append_shape_histogram(
             json, carrier_bound_attribution->schedules[stage]);
     }
-    json += "},\"upper_milestones\":{\"first_finite\":";
+    json += "},\"dirty_order_counterfactual\":{";
+    json += "\"authority\":\"observation_only\","
+            "\"namespace\":\"incremental_abstract_state_run_local\","
+            "\"treatment\":\"same_mask_neutral_unrelated_occupancy\"";
+    json += ",\"active_treatment\":" + std::string(
+        options.neutral_extra_ordering_diagnostic ? "true" : "false");
+    const auto& dirty = carrier_bound_attribution->dirty_order;
+    json += ",\"epochs\":" + std::to_string(dirty.epochs);
+    json += ",\"candidates\":" + std::to_string(dirty.candidates);
+    json += ",\"changed_positions\":" +
+        std::to_string(dirty.changed_positions);
+    json += ",\"moved_earlier\":" +
+        std::to_string(dirty.moved_earlier);
+    static constexpr std::array<const char*, Work::kDirtyOrderStrata>
+        kDirtyStrata{{"coverage_with_extras", "side_obstructed",
+            "high_progress_dirty", "cleaner_control", "other"}};
+    json += ",\"strata\":[";
+    for (std::size_t stratum = 0;
+         stratum < Work::kDirtyOrderStrata; ++stratum) {
+        if (stratum != 0) json += ',';
+        json += "{\"name\":";
+        append_json_string(json, kDirtyStrata[stratum]);
+        json += ",\"changed\":" +
+            std::to_string(dirty.changed_by_stratum[stratum]);
+        json += ",\"omitted\":" +
+            std::to_string(dirty.omitted_by_stratum[stratum]);
+        json += ",\"repeated\":" +
+            std::to_string(dirty.repeated_by_stratum[stratum]);
+        json += ",\"samples\":[";
+        for (std::size_t index = 0;
+             index < dirty.retained_by_stratum[stratum]; ++index) {
+            if (index != 0) json += ',';
+            const auto& sample = dirty.samples[stratum][index];
+            std::uint64_t completed_rows = 0;
+            if (transition_cache &&
+                sample.state < transition_cache->state_rows.size()) {
+                for (const std::uint64_t row :
+                     state_row_indices(*transition_cache, sample.state))
+                    completed_rows += joint_policy_row_completed(row);
+            }
+            json += "{\"state\":" + std::to_string(sample.state);
+            json += ",\"displaced_state\":" +
+                std::to_string(sample.displaced_state);
+            json += ",\"state_hash\":" +
+                std::to_string(sample.state_hash);
+            json += ",\"epoch\":" + std::to_string(sample.epoch);
+            json += ",\"goal_subset\":" +
+                std::to_string(sample.goal_subset);
+            json += ",\"old_rank\":" +
+                std::to_string(sample.old_rank);
+            json += ",\"neutral_rank\":" +
+                std::to_string(sample.neutral_rank);
+            json += ",\"satisfied_goals\":" +
+                std::to_string(sample.satisfied_goals);
+            json += ",\"unrelated_occupancy\":" +
+                std::to_string(sample.unrelated_occupancy);
+            json += ",\"capacity_obstructions\":" +
+                std::to_string(sample.capacity_obstructions);
+            json += ",\"blocked_missing_goals\":" +
+                std::to_string(sample.blocked_missing_goals);
+            json += ",\"admitted\":" +
+                std::string(sample.admitted ? "true" : "false");
+            json += ",\"admission_wall_ns\":" +
+                (sample.admitted
+                    ? std::to_string(sample.admission_wall_ns) : "null");
+            json += ",\"completed_rows_at_finish\":" +
+                std::to_string(completed_rows) + '}';
+        }
+        json += "]}";
+    }
+    json += "]},\"upper_milestones\":{\"first_finite\":";
     append_milestone(
         json, carrier_bound_attribution->first_finite_upper);
     json += ",\"first_independently_verified\":";

@@ -30,6 +30,8 @@ inline constexpr std::uint32_t kRawStrictReforgeOracleDiagnosticFlag =
     1u << 27;
 inline constexpr std::uint32_t
     kVerifiedPolicyAlternativeShadowDiagnosticFlag = 1u << 26;
+inline constexpr std::uint32_t kNeutralExtraOrderingDiagnosticFlag =
+    1u << 25;
 
 struct CarrierLadderExactBoundaryDiagnosticConfig {
     CarrierLadderExactBoundaryMode mode =

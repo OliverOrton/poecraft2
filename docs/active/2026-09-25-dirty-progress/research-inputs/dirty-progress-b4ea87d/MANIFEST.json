@@ -1,0 +1,82 @@
+{
+  "schema": "planning_packet_manifest_v1",
+  "reviewed_main": "b4ea87d18e746dcfa753d753c83a93f8672e5789",
+  "payloads": [
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 16225,
+      "sha256": "97647c8aa759c3b464df0b7606c3897a2877be41aabbe9a27dd2ec8ae5b96292"
+    },
+    {
+      "path": "DATA_REQUEST.md",
+      "bytes": 2675,
+      "sha256": "8cb4fae597de58c439c4848979df0b28eda352f60a6e12708a605b9eb8ba07a8"
+    },
+    {
+      "path": "DOC_MAINTENANCE.md",
+      "bytes": 3421,
+      "sha256": "b7b3accf273bb14cb804d92b07f47aba6f912b992f208b0bb8cedc0dd9ae71cd"
+    },
+    {
+      "path": "MATHEMATICS.md",
+      "bytes": 8719,
+      "sha256": "054295a8c6ac98b417360c1df905c040a58666e537717dad9bf75b781186ffdd"
+    },
+    {
+      "path": "NATIVE_DESIGN.md",
+      "bytes": 11843,
+      "sha256": "eb580b610373cda355b38c9305c2751b6477339c36ded3e0e8c1f792c1a7a4f2"
+    },
+    {
+      "path": "PLAN.md",
+      "bytes": 11375,
+      "sha256": "19bca1c29ec2fcdf327308c8752aa1db0593930cdf6b426f665115abc8b0173d"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2807,
+      "sha256": "ff376743699222096315cd5a515de733b3978362cae90a7ce1f1911081394756"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 7581,
+      "sha256": "5712b84b6b033139df5edb9b31d8f6e5404db25399878658db596d5ec8c67218"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 8148,
+      "sha256": "809df252e87b83cb8da4e14ba69269ff413716b798fa408986f63a0b2e2be05c"
+    },
+    {
+      "path": "SOURCE_MAP.md",
+      "bytes": 4493,
+      "sha256": "d8dfac27800d07b8e7171752db579cfa18db9675c99f0d2759aded6963130e6c"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 7386,
+      "sha256": "074b747436ea566e45f1d36df7d3372651635c34d5e686c2fa2dae9dc2759c29"
+    },
+    {
+      "path": "evidence/review.json",
+      "bytes": 2432,
+      "sha256": "c82c65b7e7956f12b8e9808fb49ddf332c344725d3a89f673c0ef0d8b3bbdc9d"
+    },
+    {
+      "path": "research-inputs/intermediate-junk-handoff.txt",
+      "bytes": 17529,
+      "sha256": "9619877afe75202467b062914801f393099e689ef5012f78f15ae47536fb6a66"
+    },
+    {
+      "path": "tests/check_contracts.py",
+      "bytes": 10788,
+      "sha256": "2885f48871070e5fee6f23d69834075cffa61fad6ea4a16a917078ec51f719b2"
+    },
+    {
+      "path": "tests/results.json",
+      "bytes": 258,
+      "sha256": "b298ee26ddee61a37ada5b6f81d7f4356ac60316a821d1907de94b90a53871a2"
+    }
+  ],
+  "scope": "Read-only source review and proposed J0-J4 programme; no native runs performed here."
+}

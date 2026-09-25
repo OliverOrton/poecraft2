@@ -624,6 +624,17 @@ ranker/model training and default promotion are stopped on this evidence.
 The F4 Current A3 unnamed cap and A4 cross-build cost difference remain
 identified limitations, not repaired or attributed facts.
 
+The [September 25 dirty-progress investigation](../active/2026-09-25-dirty-progress/README.md)
+tested one active Current A5 ordering mechanism under its original strict goal.
+Neutralizing raw unrelated occupancy within incremental goal-mask ties changed
+service order, yet the source-matched 240-second pair emitted byte-identical
+controllers with independently matched C85,558.70618560436 costs. The
+default-off native diagnostic remains available; no default ordering change is
+promoted. First-policy debt selection and fixed-donor first-hit economics remain
+unmeasured at their required native boundaries, so the wider dirty-progress
+hypothesis is open. The A3/A4 control anomalies and finder retention-programme
+gap retain their earlier status; no model or theorem status changes.
+
 <a id="knowledge"></a>
 ## 5. Knowledge outlives machinery
 

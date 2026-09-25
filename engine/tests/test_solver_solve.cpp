@@ -43,6 +43,49 @@ struct SolveWorkTestAccess {
 
 namespace {
 
+void run_neutral_extra_frozen_order_tests() {
+    using solve_detail::CarrierOrderingMode;
+    using solve_detail::CarrierOrderingScore;
+    using solve_detail::build_carrier_priority_buckets;
+    const auto score = [](const std::uint32_t state,
+                          const std::uint32_t mask,
+                          const std::uint32_t extra,
+                          const std::uint32_t fractured = 0) {
+        CarrierOrderingScore out;
+        out.state = state;
+        out.goal_subset = mask;
+        out.satisfied_goals = std::popcount(mask);
+        out.fractured_goals = fractured;
+        out.unrelated_occupancy = extra;
+        out.focused_priority = mask == 2 ? 100.0 : 0.0;
+        return out;
+    };
+    const std::vector<CarrierOrderingScore> frozen{
+        score(20, 1, 0), score(5, 1, 2), score(2, 1, 3, 1),
+        score(30, 3, 1), score(11, 2, 0), score(40, 0, 0)};
+    const auto legacy = build_carrier_priority_buckets(
+        frozen, CarrierOrderingMode::IncrementalLegacy);
+    const auto neutral = build_carrier_priority_buckets(
+        frozen, CarrierOrderingMode::IncrementalNeutralExtra);
+    const auto focused = build_carrier_priority_buckets(
+        frozen, CarrierOrderingMode::FocusedLegacy);
+    PC_CHECK(legacy.subset_order == neutral.subset_order);
+    PC_CHECK(legacy.subset_order == std::vector<std::uint32_t>({3, 1, 2, 0}));
+    PC_CHECK(legacy.by_goal_subset.at(1) ==
+        std::vector<std::uint32_t>({2, 20, 5}));
+    PC_CHECK(neutral.by_goal_subset.at(1) ==
+        std::vector<std::uint32_t>({2, 5, 20}));
+    PC_CHECK(focused.by_goal_subset.at(1) ==
+        std::vector<std::uint32_t>({20, 5, 2}));
+    for (const auto& [mask, carriers] : legacy.by_goal_subset) {
+        auto left = carriers;
+        auto right = neutral.by_goal_subset.at(mask);
+        std::sort(left.begin(), left.end());
+        std::sort(right.begin(), right.end());
+        PC_CHECK(left == right);
+    }
+}
+
 std::shared_ptr<SessionImpl> make_solve_session(
     const std::vector<std::string>& essence_keys = {});
 
@@ -14566,6 +14609,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     PC_CHECK(
         default_options.max_solver_owned_bytes ==
         1024ull * 1024ull * 1024ull);
+    run_neutral_extra_frozen_order_tests();
     run_anytime_scheduler_tests();
     run_proof_pattern_manager_tests();
     run_incumbent_portfolio_monotonicity_tests();

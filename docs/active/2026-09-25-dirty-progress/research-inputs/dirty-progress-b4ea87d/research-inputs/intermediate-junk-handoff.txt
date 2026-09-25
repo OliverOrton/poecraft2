@@ -1,0 +1,367 @@
+Here is the handoff I’d give the next Pro planning session. I would treat this as potentially important enough to **reconsider the immediate next finder-grammar plan**, but not as proven until current-main instrumentation supports it.
+
+> ## Handoff: intermediate-junk valuation may be a major solver/search bottleneck
+>
+> Before planning, **re-pin and inspect current `main`**. At the time of this handoff, clean HEAD is `a7ea53c3ea4ea230c4eb099bb8800a9d5c86e0ec`. Also review the just-completed strategy-finder F0–F4 result: the independent finder architecture worked, but its tiny controller grammar had no economic win, so controller/search expressiveness is currently the exposed finder bottleneck.
+>
+> There is a new potentially larger hypothesis that should be audited **before automatically continuing into richer finder grammar or ML**:
+>
+> > **The solver may be correctly representing dirty intermediate states, but systematically undervaluing or under-servicing them because final junk-free terminal semantics have leaked into search-progress heuristics, ordering, and construction.**
+>
+> This is different from simply proposing that users be allowed to finish with junk. The most interesting question is whether we can materially improve **the exact same clean four-/five-mod items we solve today** by treating intermediate junk more intelligently.
+>
+> ### Concrete source evidence
+>
+> Current native terminal success in `engine/src/solver_calc.cpp::CalcContext::is_goal_state` requires:
+>
+> ```text
+> requested rarity
+> AND enough requested goal slots satisfied
+> AND explicit_affix_count == satisfied_goal_count
+> ```
+>
+> Therefore every occupied explicit affix in a terminal item must be a satisfied requested goal. Empty slots are allowed, but unrelated affixes are not.
+>
+> That explains the Calculator behaviour we just observed. A Harvest Reforge Speed showed about **5.6769% marginal probability of getting the requested T1 Attack Speed**, yet combined exact success was `0%`, because all goal-hitting outcomes also contained unrelated Rare affixes. That Calculator result is correct under the present terminal contract; it exposed how strong the clean-item requirement actually is.
+>
+> More concerning for search is the canonical first-policy terminal-debt model documented in `docs/solver/mathematics/search-and-resumption.md`:
+>
+> \[
+> D(s)=\max(1,m+k-2g),
+> \]
+>
+> where \(m\) is required goal count, \(g\) is satisfied goal count, and \(k\) is occupied explicit-affix count.
+>
+> This gives some surprising equivalences.
+>
+> For a **four-goal** clean target:
+>
+> ```text
+> empty Rare:
+> m=4, g=0, k=0
+> D=4
+>
+> six-affix Rare containing THREE of the four goals:
+> m=4, g=3, k=6
+> D=max(1,4+6-6)=4
+> ```
+>
+> So under this progress measure, **3/4 desired mods plus three junk mods can have the same debt as the completely empty Rare**.
+>
+> Similarly for a five-goal target:
+>
+> ```text
+> empty Rare:
+> D=5
+>
+> six-affix Rare containing THREE of five goals:
+> D=max(1,5+6-6)=5
+> ```
+>
+> Again, substantial acquisition progress can be cancelled numerically by unrelated occupancy.
+>
+> Current search machinery contains another explicit cleanliness preference. `engine/src/solver_solve_priority.cpp::make_carrier_ordering_score` computes:
+>
+> ```text
+> unrelated_occupancy =
+>     explicit_affixes > satisfied
+>         ? explicit_affixes - satisfied
+>         : 0
+> ```
+>
+> and `build_carrier_priority_buckets` prefers smaller `unrelated_occupancy` within comparable goal subsets before its final deterministic tie-break.
+>
+> So this is **not merely a philosophical concern about the final predicate**. At least some current work ordering explicitly interprets unrelated occupancy as negative progress.
+>
+> At the same time, the solver absolutely does represent dirty states. Current source/docs explicitly retain junk classes and say that junk and temporary crafts are valid intermediate state. Therefore the suspected failure mode is not:
+>
+> ```text
+> junk → state deleted
+> ```
+>
+> It is subtler:
+>
+> ```text
+> economically excellent dirty carrier
+>          ↓
+> represented correctly
+>          ↓
+> cleanliness-oriented heuristic considers it unattractive
+>          ↓
+> useful continuations are serviced late / poorly
+>          ↓
+> strong controller arrives very late or never within the bounded solve
+> ```
+>
+> This distinction matters. Do not “fix” the problem by weakening exact state representation or silently declaring dirty items terminal.
+>
+> ### Domain insight that motivates the hypothesis
+>
+> Intermediate junk in real PoE crafting is **not uniformly bad**.
+>
+> There are at least three strategically different categories:
+>
+> 1. **Hard obstruction.** Junk occupies the side/capacity needed by a missing goal, blocks the missing goal’s generation group, prevents the intended next action, or otherwise must be dealt with immediately.
+> 2. **Cheap/deferred cleanup debt.** Junk does not prevent acquisition and can later be removed through an existing qualified native programme — e.g. protecting the valuable side and cleaning the other side, or appropriate Eldritch-side operations on armour.
+> 3. **Currently irrelevant occupancy.** Junk on the opposite side may have essentially no strategic importance until much later.
+>
+> Raw `extra_affix_count` does not distinguish these.
+>
+> The economically correct question is closer to:
+>
+> > **What does this junk prevent me from doing, and what is the cheapest executable continuation that eventually removes it if the final goal requires removal?**
+>
+> A state like:
+>
+> ```text
+> 3/4 goals + 3 junk
+> ```
+>
+> may be vastly more valuable than an empty Rare if the three goals are expensive to reacquire and the junk is on an easily cleaned side. Restarting because the carrier is “dirty” can be economically disastrous.
+>
+> This connects closely to previous project evidence: many difficult cases have turned into progress-retention, paid recovery, dirty continuation, capacity, and late cleanup problems. The Bow improvement demonstrated how expensive repeated reacquisition can be. This new hypothesis is that some of that difficulty may be partly **search-induced**: the solver might possess useful dirty carriers but not prioritize their economically appropriate continuations soon enough.
+>
+> ### Keep two questions rigorously separate
+>
+> **A. Intermediate-search semantics — primary research question**
+>
+> Keep the **current exact final item unchanged** and ask whether better treatment of dirty intermediate states improves policy discovery.
+>
+> For example, if the existing A4 target is effectively three required prefixes + one required suffix with the other two suffix slots empty, retain exactly that final target. We are not making the requested item easier.
+>
+> The search should nevertheless be free to value:
+>
+> ```text
+> 3 goal prefixes
+> + target suffix
+> + temporary junk suffixes
+> ```
+>
+> as an extremely advanced carrier if there is a cheap executable cleanup route.
+>
+> **B. More expressive user goal language — separate product/model improvement**
+>
+> I also like changing the general goal language so that extra affixes are allowed by default and users can explicitly request occupancy/open-slot conditions:
+>
+> ```text
+> required mods
+> + required rarity
+> + optional prefix/suffix count ranges
+> + optional minimum open prefix/suffix slots
+> + optional zero-unmatched-affix constraint
+> ```
+>
+> That makes the solver more versatile and fixes Calculator expectations for ordinary “I just want this modifier” requests.
+>
+> But do **not** use that easier terminal set to claim that this intermediate-search hypothesis improved our existing clean A4/A5 targets. Test those separately.
+>
+> ### What the next planning session should audit first
+>
+> Please map every place where final cleanliness affects **nonterminal search behaviour**, not just terminal recognition. Classify each occurrence as:
+>
+> ```text
+> exact semantic authority
+> certified proof/lower machinery
+> candidate eligibility
+> heuristic ordering
+> first-policy construction
+> continuation service
+> incumbent publication
+> compiler/evaluator condition
+> diagnostic only
+> ```
+>
+> At minimum inspect:
+>
+> - `CalcContext::is_goal_state`;
+> - `joint_policy_terminal_debt`;
+> - carrier ordering / `unrelated_occupancy`;
+> - incremental/focused scheduling;
+> - first-policy row advancement;
+> - goal-progress-gated broad-reforge handling;
+> - clean-goal-cover and identity-carrier constructions;
+> - dirty return/continuation selection;
+> - current upper-policy construction;
+> - strict/proof preparation;
+> - finder candidate features/grammar;
+> - compiled final-goal conditions.
+>
+> **Do not mechanically remove every use of cleanliness.** Some are mathematically necessary because the requested terminal really is clean. The question is where cleanliness is being used as a proxy for *intermediate economic progress* when it should not be.
+>
+> ### Cheap falsification-first diagnostic
+>
+> Before changing search order, instrument the existing A4/A5/Bow/Ring cases under the **same current clean final goals**.
+>
+> For every reached/relevant carrier, record something like:
+>
+> ```text
+> satisfied goal mask/count
+> prefix/suffix occupancy
+> ordinary junk count/classes
+> blocked missing goals
+> missing-goal side capacity
+> fractures/protection/context
+> current terminal-debt score
+> current ordering score
+> first discovery time/work
+> first service time/work
+> policy visitation / expected visits where available
+> selected continuation/action
+> whether a complete cleanup programme is available
+> approximate or exact cleanup cost where already owned
+> ```
+>
+> Pay particular attention to:
+>
+> ```text
+> one goal missing + substantial junk
+> all goals acquired + junk
+> goals held on one side + junk on the other
+> capacity-blocked states
+> dirty states actually visited by verified incumbents
+> ```
+>
+> Also compute two **diagnostic-only counterfactuals**:
+>
+> 1. `acquisition_complete(s)` = requested mods/tiers/rarity are satisfied, ignoring unrelated affixes.
+> 2. Under the current verified policy, how much expected cost/work remains **after first reaching acquisition-complete state** before strict clean terminal success?
+>
+> This does not change authority. It tells us whether cleanup/reacquisition after acquiring the requested mods is a material share of the current policy economics.
+>
+> A potentially very revealing measure is:
+>
+> \[
+> E[\text{remaining cost after first acquisition of all requested goals}].
+> \]
+>
+> If a large fraction of A4/A5 cost occurs after loose acquisition success, the strict cleanup tail is economically important. If high-progress dirty states are also serviced unusually late, that supports the search-bias hypothesis.
+>
+> ### Most important controlled experiment
+>
+> Keep **everything exact and unchanged**:
+>
+> - same original item;
+> - same clean final predicate;
+> - same economy;
+> - same action envelope;
+> - same resource caps;
+> - same lower/proof authority;
+> - same native mechanics.
+>
+> Change **only nonauthoritative work ordering / proposal priority**.
+>
+> Compare current cleanliness-oriented guidance against one or more deliberately simple alternatives, such as:
+>
+> ```text
+> Variant 0 — current
+> current terminal debt / unrelated occupancy behaviour
+>
+> Variant 1 — acquisition first
+> prefer more satisfied goals regardless of harmless junk
+>
+> Variant 2 — obstruction aware
+> prefer goal progress, but strongly penalize only junk that
+> blocks a missing goal or consumes needed side capacity
+>
+> Variant 3 — cleanup aware
+> additionally discount junk when an existing complete native cleanup
+> programme makes it cheap to remove later
+> ```
+>
+> These are conceptual experiment arms, not prescribed formulas. Use source inspection to design the smallest valid treatment.
+>
+> Primary measurements:
+>
+> ```text
+> time/work to first independently checked policy
+> best independently checked root cost under matched budget
+> service latency for high-progress dirty carriers
+> number of useful dirty continuations actually constructed
+> incumbent policy visitation of dirty carriers
+> state/row/reforge-work/memory changes
+> ```
+>
+> The result we care about is **cheaper verified policies for the unchanged clean target**, not prettier heuristic scores.
+>
+> ### Important design principle if this is real
+>
+> Do not replace one scalar junk heuristic with another arbitrary scalar.
+>
+> A better conceptual state assessment separates:
+>
+> ```text
+> ACQUISITION PROGRESS
+> Which expensive requested properties are already safely held?
+>
+> OBSTRUCTION
+> What currently prevents acquisition of the remaining goals?
+>
+> PROTECTION / RETENTION
+> How likely are held goals to survive the useful next programmes?
+>
+> CLEANUP DEBT
+> What must eventually be removed to satisfy the final item,
+> and what executable programmes can perform that cleanup?
+> ```
+>
+> These dimensions should remain distinct unless an actual economic calculation justifies combining them.
+>
+> A six-affix state with three expensive goals and three harmless junk affixes should not be treated like an empty Rare merely because `missing goals + extra affixes` happens to tie numerically.
+>
+> Conversely, three junk affixes filling the exact side required for the missing goal can legitimately make a carrier much worse. **The native action consequences should determine the distinction.**
+>
+> Where possible, derive obstruction/cleanup properties from existing action descriptors, refinement contracts, macros/options and exact local transitions. Avoid base-specific hardcoding such as “armour junk is cheap because Eldritch”; the engine should discover that a valid Eldritch/metamod programme exists for that actual carrier.
+>
+> ### Relationship to the new strategy finder
+>
+> This may be highly relevant to the new finder, but don't immediately solve it by training a model.
+>
+> The F0–F4 finder run showed that its present primitive one/two-stage grammar is too weak. The next packet proposed richer conditional controller search. Before finalizing that design, make sure its state features and candidate priorities do **not inherit the same raw cleanliness bias**.
+>
+> A future finder should be particularly good at exploiting:
+>
+> ```text
+> acquire valuable partial configuration
+> → tolerate harmless junk
+> → preserve it
+> → finish remaining goals
+> → perform cheap cleanup only when necessary
+> ```
+>
+> This is exactly the kind of coordinated policy structure that an approximate policy finder could discover better than a proof-oriented search.
+>
+> But if the existing exact solver already contains these states and simply schedules them badly, a small search-policy correction could produce a major gain before ML is needed.
+>
+> ### Why this may be a major inflection point
+>
+> We have spent a long time assuming much of the 4–5 goal difficulty is inherent state-space/proof difficulty. That may still be true.
+>
+> But current source provides a concrete alternative hypothesis:
+>
+> > **the solver's notion of “progress” may be partially aligned with final cleanliness rather than the economics of valuable intermediate holdings.**
+>
+> For four goals, the fact that:
+>
+> \[
+> \boxed{
+> 3/4\text{ goals + 3 junk}
+> \quad\text{can receive the same first-policy debt as}\quad
+> 0/4\text{ goals + empty}
+> }
+> \]
+>
+> is important enough to investigate rigorously.
+>
+> If such states frequently contain expensive acquired progress and have cheap cleanup continuations, this could explain why the solver has repeatedly needed special dirty-continuation/recovery work and why good late strategies can be difficult to discover.
+>
+> Please **do not assume this hypothesis is correct**. Falsify it against current-main telemetry. It may turn out that the existing incumbent/search already services these carriers adequately, or that cleanup really is the dominant unavoidable cost.
+>
+> But if matched same-goal experiments show that obstruction-aware / cleanup-aware treatment finds much cheaper executable policies earlier, I would consider that a major solver-direction result and potentially higher priority than immediately continuing the current finder H1/H2 programme.
+>
+> The key question for the next plan is:
+>
+> > **Are we paying an unnecessary search penalty because “junk-free at the end” has become “cleaner looks better throughout the search,” even though PoE crafting economics often reward holding valuable dirty intermediate states and cleaning only the junk that actually obstructs the plan?**
+>
+> Answer that first with current-source audit and bounded matched experiments. Then decide whether the next programme should be an exact-solver search-progress correction, richer finder grammar, a generalized goal/occupancy model, or some combination in a staged order.
+
+I think this is the right framing because it makes the potentially big claim very specific: **we are not proposing to make A4/A5 easier by changing what item counts as success; we're asking whether the solver has been searching the existing hard problem with a misleading notion of intermediate progress.**

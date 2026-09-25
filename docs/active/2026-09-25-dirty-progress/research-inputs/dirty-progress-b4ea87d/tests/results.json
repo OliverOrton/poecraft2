@@ -1,0 +1,11 @@
+{
+  "kind": "exact_rational_abstract_contract_tests_not_native",
+  "tests_run": 24,
+  "failures": 0,
+  "errors": 0,
+  "passed": true,
+  "generated_models": 64,
+  "identities_per_generated_model": 4,
+  "native_tests_run": false,
+  "performance_claim": null
+}

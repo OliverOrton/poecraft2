@@ -171,6 +171,9 @@ struct SolveOptions {
      * solves opt in; native callers retain the stable default unless they use
      * the historical diagnostic-bit bridge. */
     bool high_impact_executable_uppers = false;
+    // Native benchmark treatment; only the frozen incremental automatic
+    // carrier epoch may use the neutral-extra within-mask tie.
+    bool neutral_extra_ordering_diagnostic = false;
     bool projected_reforge_frontier_diagnostic = false;
     bool factored_terminal_reforge_diagnostic = false;
     bool reforge_resource_accounting = true;

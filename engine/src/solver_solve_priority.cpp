@@ -114,10 +114,12 @@ CarrierPriorityBuckets build_carrier_priority_buckets(
                         a.useful_protection != b.useful_protection) {
                         return a.useful_protection > b.useful_protection;
                     }
-                    if (a.unrelated_occupancy != b.unrelated_occupancy) {
+                    if (mode != CarrierOrderingMode::IncrementalNeutralExtra &&
+                        a.unrelated_occupancy != b.unrelated_occupancy) {
                         return a.unrelated_occupancy < b.unrelated_occupancy;
                     }
-                    if (mode == CarrierOrderingMode::IncrementalLegacy) {
+                    if (mode == CarrierOrderingMode::IncrementalLegacy ||
+                        mode == CarrierOrderingMode::IncrementalNeutralExtra) {
                         return a.state < b.state;
                     }
                     return a.stable_state_hash != b.stable_state_hash
@@ -136,6 +138,7 @@ CarrierPriorityBuckets build_carrier_priority_buckets(
                 return a.satisfied_goals > b.satisfied_goals;
             }
             if (mode != CarrierOrderingMode::IncrementalLegacy &&
+                mode != CarrierOrderingMode::IncrementalNeutralExtra &&
                 a.focused_priority != b.focused_priority) {
                 return a.focused_priority > b.focused_priority;
             }

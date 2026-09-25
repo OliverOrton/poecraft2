@@ -36,6 +36,16 @@ Generated-operator lineage joins registry roles, fixed and automatic programs, p
 
 Capture-time and terminal-time observations answer different questions. A state without rows at capture may receive ordinary service later. A two-stage witness can establish that fact without implying the first snapshot was corrupted.
 
+The native `carrier_bound_attribution.dirty_order_counterfactual` field compares
+legacy and neutral-extra order on the same frozen incremental eligible set.
+Its five bounded sample strata carry run-local state identity, old/new rank,
+admission time and rows observed at finalization, with repeated and omitted
+position counts. Rank reversal establishes an ordering effect; final row counts
+alone do not attribute a useful continuation or root-cost gain to that reversal.
+The treatment flag is a separate input identity. First finite proposal,
+first independently verified policy and final original-root cost must be read
+separately. [A5 diagnostic and pair](../active/2026-09-25-dirty-progress/README.md#j1--bounded-causal-observation).
+
 ## Reading Rules
 
 Compare logical work, evaluator-specific effort, wall time, and owned memory separately. Raw V3 effort is not the V1-equivalent cap and is not a hardware-independent runtime estimate.

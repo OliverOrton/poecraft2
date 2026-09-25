@@ -1,0 +1,70 @@
+{
+  "schema": "dirty_progress_planning_evidence_v1",
+  "review_date": "2026-09-25",
+  "reviewed_commit": "b4ea87d18e746dcfa753d753c83a93f8672e5789",
+  "title": "Extend experimental finder with conditional control",
+  "parent": "679f4c0c9d3d4dcbe3fdfdce0fed1e74dbdbf45e",
+  "ci": {
+    "windows": {
+      "run_id": 36149251573,
+      "job_id": 108118108206,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "solver_knowledge": {
+      "run_id": 36149251627,
+      "status": "completed",
+      "conclusion": "success"
+    }
+  },
+  "recorded_H3": {
+    "executable_sha256": "2a2982f25de3fdc518f1dd0060e2c70ed1d959c4c93628e1162ea529e03a7977",
+    "corpus_sha256": "404c0ee632b199b85a5fce76a62f9d75ca59839849b2b9efd1bcf4c174125b20",
+    "wasm_sha256": "7ae0fa318614a33d823c2dfcf0fa05e83429828d9b58bc4c82bf36cdb9ea22ef",
+    "A3": {
+      "primitive_cost": 5387327.209,
+      "conditional_cost": 335995.68284382095
+    },
+    "B3": {
+      "primitive_cost": null,
+      "conditional_cost": null,
+      "unresolved_state_cap": 200000
+    },
+    "A4": {
+      "primitive_cost": 13111122.495,
+      "conditional_cost": 9636485.241311843
+    },
+    "A5": {
+      "primitive_cost": 455464336.951,
+      "conditional_cost": 320800932.13201106
+    }
+  },
+  "recorded_controls": {
+    "A3_cost_approx": 2085.015,
+    "A3_named_stop_error": true,
+    "A4_historical_stronger_cost": 3746.1319409485764,
+    "A4_F4_cost": 5218.040949685988,
+    "A4_cause_unresolved": true,
+    "A5_cost": 85558.70618560436,
+    "Regalia_exact_cost": 65.60036144971359
+  },
+  "observations": {
+    "debt_first_policy_gate": "high_impact_executable_uppers && incremental_action_generation && !output_incumbent.has_value()",
+    "active_incremental_order": "IncrementalLegacy",
+    "focused_legacy_sorts_unrelated_occupancy": false,
+    "cooperative_high_progress_enabled": false,
+    "finder_uses_joint_terminal_debt": false
+  },
+  "scope": {
+    "native_builds_run_in_review": false,
+    "native_solver_runs_in_review": false,
+    "native_evaluator_runs_in_review": false,
+    "wasm_runs_in_review": false,
+    "simulator_trials_in_review": 0,
+    "repository_modified": false,
+    "raw_ignored_reports_inspected": false,
+    "user_Harvest_percentage_reproduced": false
+  },
+  "selected_programme": "J0-J4; one O/S/G treatment after causal gate",
+  "source_note": "Source facts and recorded measurements are not new performance measurements."
+}

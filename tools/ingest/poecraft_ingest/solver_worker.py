@@ -339,6 +339,7 @@ def build_solver_case_command(
     solver_mode: str | None = None,
     finder_ranking: str | None = None,
     finder_grammar: str | None = None,
+    neutral_extra_ordering: bool = False,
 ) -> SolverCaseCommand:
     if solver_mode not in (None, "current", "strategy_finder"):
         raise ValueError("unsupported solver mode")
@@ -348,6 +349,8 @@ def build_solver_case_command(
     if finder_grammar not in (None, "primitive", "conditional") or (
             finder_grammar is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder grammar requires strategy_finder mode")
+    if neutral_extra_ordering and solver_mode != "current":
+        raise ValueError("neutral-extra ordering requires current mode")
     if native_dirty_guidance not in (None, "legacy", "static", "adaptive", "protected-first", "selective", "selective-options", "execution-cost", "execution-count"):
         raise ValueError("unsupported native dirty guidance treatment")
     if native_execution_action_price is not None and (
@@ -392,6 +395,8 @@ def build_solver_case_command(
         argv.extend(("--finder-ranking", finder_ranking))
     if finder_grammar is not None:
         argv.extend(("--finder-grammar", finder_grammar))
+    if neutral_extra_ordering:
+        argv.append("--native-neutral-extra-ordering")
     return SolverCaseCommand(tuple(argv), root)
 
 
@@ -414,6 +419,7 @@ def resolve_case_execution(
     solver_mode: str | None = None,
     finder_ranking: str | None = None,
     finder_grammar: str | None = None,
+    neutral_extra_ordering: bool = False,
 ) -> ResolvedCaseExecution:
     paths.prepare()
     command = build_solver_case_command(
@@ -432,6 +438,7 @@ def resolve_case_execution(
         solver_mode=solver_mode,
         finder_ranking=finder_ranking,
         finder_grammar=finder_grammar,
+        neutral_extra_ordering=neutral_extra_ordering,
     )
     return ResolvedCaseExecution(
         case_id=task.case_id,

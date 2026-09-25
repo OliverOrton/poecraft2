@@ -422,6 +422,33 @@ def test_finder_mode_is_an_explicit_resumable_treatment(tmp_path: Path) -> None:
                    finder_ranking="uninformed")
 
 
+def test_neutral_extra_ordering_is_current_only_treatment(tmp_path: Path) -> None:
+    paths = AttemptPaths.legacy(tmp_path / "run", "case-a", "attempt-1")
+    kwargs = dict(
+        executable=tmp_path / "solver.exe", artifact=tmp_path / "artifact",
+        corpus=tmp_path / "manifest.json", case_id="case-a", paths=paths,
+        root=tmp_path, exact_evaluation=True, run_verification=False,
+        goal_progress_gated_reforges=False, solver_mode="current",
+    )
+    command = build_solver_case_command(**kwargs, neutral_extra_ordering=True)
+    assert command.as_list()[-1] == "--native-neutral-extra-ordering"
+    with pytest.raises(ValueError, match="requires current mode"):
+        build_solver_case_command(
+            **(kwargs | {"solver_mode": "strategy_finder"}),
+            neutral_extra_ordering=True,
+        )
+    manifest = tmp_path / "manifest.json"
+    _write_json(manifest, {"cases": []})
+    args = dict(root=Path.cwd(), executable=Path(sys.executable), artifact=tmp_path,
+                corpus=manifest, tasks=[], solver_mode="current")
+    output = tmp_path / "neutral"
+    result = run_corpus(**args, output_directory=output,
+                        neutral_extra_ordering=True)
+    assert result["treatment"]["neutral_extra_ordering"] is True
+    with pytest.raises(ValueError, match="provenance/configuration differs"):
+        run_corpus(**args, output_directory=output)
+
+
 def test_native_controls_reach_worker_and_reject_changed_resume(
     tmp_path: Path, monkeypatch,
 ) -> None:

@@ -55,6 +55,17 @@ Primary owners are `solver_solve.cpp`, `solver_solve_expand.cpp`, `solver_solve_
 
 Goal-subset bucket service retains carrier diversity. Within the relevant work order, progress, protection/fracture, capacity, blockers, or unrelated occupancy may guide preference. Those scores do not become admissible values or retirement evidence.
 
+For Current A5's incremental automatic epochs, `IncrementalLegacy` sorts inside
+each full satisfied-goal mask by fracture, active protection, raw unrelated
+occupancy and stable state ID, then round-robins masks. Its mask order is
+separate. `FocusedLegacy` skips this within-mask sort, and the cooperative
+high-progress profile remains disabled. The native-private neutral-extra flag
+changes only that occupancy comparison in the active incremental consumer.
+On a same-executable 240-second A5 pair it caused rank reversals and changed
+completed work, but both arms emitted the same independently checked strategy
+at C85,558.70618560436. This diagnostic is default-off; it supplies no
+evidence for promoting a new scheduler. [Measurement and scope](../active/2026-09-25-dirty-progress/README.md#j3--matched-original-root-result).
+
 Keep four decisions distinct:
 
 | Decision | Required owner |

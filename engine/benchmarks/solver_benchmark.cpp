@@ -68,6 +68,7 @@ struct Arguments {
     std::string solver_mode = "current";
     std::string finder_ranking = "heuristic";
     std::string finder_grammar = "conditional";
+    bool neutral_extra_ordering = false;
     double native_execution_action_price = 0;
     std::string native_retention_diagnostic;
     double native_retention_target_lower = 0;
@@ -113,6 +114,7 @@ struct NativeHandles {
 };
 
 struct CaseResult {
+    bool neutral_extra_ordering = false;
     std::string native_retention_diagnostic;
     double native_retention_target_lower = 0;
     double proof_handoff_seconds = 0;
@@ -3549,6 +3551,7 @@ CaseResult run_case(
     const std::string& solver_mode,
     const std::string& finder_ranking,
     const std::string& finder_grammar,
+    const bool neutral_extra_ordering,
     const double native_execution_action_price,
     const double native_retention_target_lower,
     const double proof_handoff_seconds,
@@ -3567,6 +3570,7 @@ CaseResult run_case(
     const std::string& development_checkpoint_identity_prefix,
     const std::function<void(const CaseResult&)>& checkpoint) {
     CaseResult report;
+    report.neutral_extra_ordering = neutral_extra_ordering;
     report.native_retention_diagnostic=native_retention_diagnostic;
     report.native_retention_target_lower=native_retention_target_lower;
     report.proof_handoff_seconds = proof_handoff_seconds;
@@ -3788,6 +3792,10 @@ CaseResult run_case(
             solve_options.solver_flags |=
                 poecraft::solver::
                     kVerifiedPolicyAlternativeShadowDiagnosticFlag;
+        }
+        if (neutral_extra_ordering) {
+            solve_options.solver_flags |= poecraft::solver::
+                kNeutralExtraOrderingDiagnosticFlag;
         }
         const std::string development_checkpoint_identity =
             development_checkpoint_identity_prefix +
@@ -5047,6 +5055,8 @@ void append_case_report(
     bool first_input = true;
     if (!result.native_retention_diagnostic.empty())
     out << "  \"native_retention_diagnostic\":" << escape_json(result.native_retention_diagnostic) << ",\n";
+    if (result.neutral_extra_ordering)
+        out << "  \"native_neutral_extra_ordering\":true,\n";
     if (result.proof_handoff_seconds > 0.0) {
         out << "  \"proof_handoff_diagnostic\":{\"requested_seconds\":"
             << result.proof_handoff_seconds
@@ -6159,6 +6169,8 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--solver-mode") args.solver_mode=value("--solver-mode");
         else if (argument == "--finder-ranking") args.finder_ranking=value("--finder-ranking");
         else if (argument == "--finder-grammar") args.finder_grammar=value("--finder-grammar");
+        else if (argument == "--native-neutral-extra-ordering")
+            args.neutral_extra_ordering = true;
         else if (argument == "--native-retention-target-lower") args.native_retention_target_lower=std::stod(value("--native-retention-target-lower"));
         else if (argument == "--proof-handoff-seconds") {
             args.proof_handoff_seconds = std::stod(value("--proof-handoff-seconds"));
@@ -6254,6 +6266,9 @@ Arguments parse_arguments(int argc, char** argv) {
         throw std::runtime_error("native dirty guidance must be legacy, static, adaptive, protected-first, selective, selective-options, execution-cost or execution-count");
     if (args.solver_mode != "current" && args.solver_mode != "strategy_finder")
         throw std::runtime_error("solver mode must be current or strategy_finder");
+    if (args.neutral_extra_ordering && args.solver_mode != "current")
+        throw std::runtime_error(
+            "neutral-extra ordering requires current mode");
     if (args.finder_ranking != "heuristic" &&
         args.finder_ranking != "uninformed")
         throw std::runtime_error("finder ranking must be heuristic or uninformed");
@@ -6607,6 +6622,7 @@ int main(int argc, char** argv) {
                     args.solver_mode,
                     args.finder_ranking,
                     args.finder_grammar,
+                    args.neutral_extra_ordering,
                     args.native_execution_action_price,
                     args.native_retention_target_lower, args.proof_handoff_seconds,
                     args.emit_progress,

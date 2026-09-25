@@ -684,6 +684,7 @@ bool certified_fallback_fits_memory(
 enum class CarrierOrderingMode : std::uint8_t {
     FocusedLegacy,
     IncrementalLegacy,
+    IncrementalNeutralExtra,
     CooperativeHighProgress,
 };
 
@@ -2304,6 +2305,38 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         };
         static constexpr std::size_t kScheduleStageCount =
             static_cast<std::size_t>(ScheduleStage::Count);
+
+        // Observation only: compare the actual frozen IncrementalLegacy
+        // candidate set with the same order after neutralising one tie term.
+        static constexpr std::size_t kDirtyOrderStrata = 5;
+        static constexpr std::size_t kDirtyOrderSamplesPerStratum = 25;
+        struct DirtyOrderSample {
+            std::uint32_t state = kNoId;
+            std::uint32_t displaced_state = kNoId;
+            std::uint64_t state_hash = 0;
+            std::uint32_t epoch = 0;
+            std::uint32_t goal_subset = 0;
+            std::uint32_t old_rank = 0;
+            std::uint32_t neutral_rank = 0;
+            std::uint32_t satisfied_goals = 0;
+            std::uint32_t unrelated_occupancy = 0;
+            std::uint32_t capacity_obstructions = 0;
+            std::uint32_t blocked_missing_goals = 0;
+            bool admitted = false;
+            std::uint64_t admission_wall_ns = 0;
+        };
+        struct DirtyOrderDiagnostic {
+            std::uint64_t epochs = 0;
+            std::uint64_t candidates = 0;
+            std::uint64_t changed_positions = 0;
+            std::uint64_t moved_earlier = 0;
+            std::array<std::uint64_t, kDirtyOrderStrata> changed_by_stratum{};
+            std::array<std::uint64_t, kDirtyOrderStrata> omitted_by_stratum{};
+            std::array<std::uint64_t, kDirtyOrderStrata> repeated_by_stratum{};
+            std::array<std::size_t, kDirtyOrderStrata> retained_by_stratum{};
+            std::array<std::array<DirtyOrderSample,
+                kDirtyOrderSamplesPerStratum>, kDirtyOrderStrata> samples{};
+        } dirty_order;
 
         std::chrono::steady_clock::time_point started_at =
             std::chrono::steady_clock::now();

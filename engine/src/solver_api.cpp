@@ -821,6 +821,9 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.verified_policy_alternative_shadow_diagnostic =
             (options->solver_flags &
              solver::kVerifiedPolicyAlternativeShadowDiagnosticFlag) != 0;
+        value.neutral_extra_ordering_diagnostic =
+            (options->solver_flags &
+             solver::kNeutralExtraOrderingDiagnosticFlag) != 0;
     }
     if (PC_SOLVE_OPTION_HAS(max_absolute_optimality_gap) &&
         options->max_absolute_optimality_gap > 0.0) {

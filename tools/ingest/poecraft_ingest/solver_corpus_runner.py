@@ -371,6 +371,7 @@ def _run_case(
     solver_mode: str | None = None,
     finder_ranking: str | None = None,
     finder_grammar: str | None = None,
+    neutral_extra_ordering: bool = False,
 ) -> dict[str, Any]:
     immutable_lab_attempt = bool(
         attempt_paths is not None
@@ -400,6 +401,7 @@ def _run_case(
         solver_mode=solver_mode,
         finder_ranking=finder_ranking,
         finder_grammar=finder_grammar,
+        neutral_extra_ordering=neutral_extra_ordering,
     )
     result = run_isolated_process(
         resolved.command.as_list(),
@@ -603,6 +605,7 @@ def run_corpus(
     solver_mode: str | None = None,
     finder_ranking: str | None = None,
     finder_grammar: str | None = None,
+    neutral_extra_ordering: bool = False,
     host_watchdog_seconds: float | None = None,
     worker_headroom_bytes: int = 0,
 ) -> dict[str, Any]:
@@ -623,6 +626,8 @@ def run_corpus(
     if finder_grammar not in (None, "primitive", "conditional") or (
             finder_grammar is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder grammar requires strategy_finder mode")
+    if neutral_extra_ordering and solver_mode != "current":
+        raise ValueError("neutral-extra ordering requires current mode")
     if native_execution_action_price is not None and (
             native_dirty_guidance != "execution-count" or
             not math.isfinite(native_execution_action_price) or native_execution_action_price <= 0):
@@ -687,10 +692,12 @@ def run_corpus(
         treatment["finder_ranking"] = finder_ranking
     if finder_grammar is not None:
         treatment["finder_grammar"] = finder_grammar
+    if neutral_extra_ordering:
+        treatment["neutral_extra_ordering"] = True
     if native_execution_action_price is not None:
         treatment["native_execution_action_price"] = float(native_execution_action_price)
     current_resume_identity = provenance.resume_identity(configuration)
-    if native_dirty_guidance is not None or solver_mode is not None:
+    if native_dirty_guidance is not None or solver_mode is not None or neutral_extra_ordering:
         # Algorithm treatment is separate from request/capacity identity,
         # like executable identity, but still binds immutable resume.
         current_resume_identity["treatment"] = treatment
@@ -777,6 +784,7 @@ def run_corpus(
                     solver_mode=solver_mode,
                     finder_ranking=finder_ranking,
                     finder_grammar=finder_grammar,
+                    neutral_extra_ordering=neutral_extra_ordering,
                     watchdog_seconds=host_watchdog_seconds,
                     worker_headroom_bytes=worker_headroom_bytes,
                 )
@@ -845,6 +853,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Native finder ranking ablation with unchanged candidate grammar and checker.")
     parser.add_argument("--finder-grammar", choices=("primitive", "conditional"),
         help="Native finder grammar comparison with unchanged ranking and checker.")
+    parser.add_argument("--native-neutral-extra-ordering", action="store_true",
+        help="Native Current within-mask ordering treatment; no goal or budget change.")
     parser.add_argument(
         "--native-retention-diagnostic",
         choices=NATIVE_RETENTION_DIAGNOSTIC_MODES,
@@ -897,6 +907,7 @@ def main(argv: list[str] | None = None) -> int:
         solver_mode=args.solver_mode,
         finder_ranking=args.finder_ranking,
         finder_grammar=args.finder_grammar,
+        neutral_extra_ordering=args.native_neutral_extra_ordering,
         host_watchdog_seconds=args.host_watchdog_seconds,
         worker_headroom_bytes=args.worker_headroom_bytes,
     )

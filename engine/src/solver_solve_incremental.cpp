@@ -172,10 +172,104 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
             const CarrierOrderingMode automatic_ordering_mode =
                 cooperative_high_progress_ordering_enabled()
                     ? CarrierOrderingMode::CooperativeHighProgress
-                    : CarrierOrderingMode::IncrementalLegacy;
+                    : options.neutral_extra_ordering_diagnostic
+                        ? CarrierOrderingMode::IncrementalNeutralExtra
+                        : CarrierOrderingMode::IncrementalLegacy;
             solve_detail::CarrierPriorityBuckets carrier_buckets =
                 solve_detail::build_carrier_priority_buckets(
                     carrier_candidates, automatic_ordering_mode);
+            if (carrier_bound_attribution &&
+                (automatic_ordering_mode == CarrierOrderingMode::
+                    IncrementalLegacy ||
+                 automatic_ordering_mode == CarrierOrderingMode::
+                    IncrementalNeutralExtra)) {
+                // Counterfactual on precisely this frozen eligible set. Only
+                // the within-mask unrelated-occupancy tie is neutralised;
+                // neither ordering is serviced by this observation.
+                auto& diagnostic = carrier_bound_attribution->dirty_order;
+                ++diagnostic.epochs;
+                diagnostic.candidates += carrier_candidates.size();
+                const CarrierPriorityBuckets original_buckets =
+                    automatic_ordering_mode == CarrierOrderingMode::
+                        IncrementalLegacy
+                    ? carrier_buckets : build_carrier_priority_buckets(
+                        carrier_candidates,
+                        CarrierOrderingMode::IncrementalLegacy);
+                const CarrierPriorityBuckets neutral_buckets =
+                    automatic_ordering_mode == CarrierOrderingMode::
+                        IncrementalNeutralExtra
+                    ? carrier_buckets : build_carrier_priority_buckets(
+                        carrier_candidates,
+                        CarrierOrderingMode::IncrementalNeutralExtra);
+                for (const auto& [mask, old_order] :
+                     original_buckets.by_goal_subset) {
+                    const auto& new_order =
+                        neutral_buckets.by_goal_subset.at(mask);
+                    std::unordered_map<std::uint32_t, std::size_t> old_rank;
+                    old_rank.reserve(old_order.size());
+                    for (std::size_t rank = 0; rank < old_order.size(); ++rank)
+                        old_rank.emplace(old_order[rank], rank);
+                    for (std::size_t rank = 0; rank < new_order.size(); ++rank) {
+                        const std::uint32_t state = new_order[rank];
+                        const std::size_t prior = old_rank.at(state);
+                        if (prior == rank) continue;
+                        ++diagnostic.changed_positions;
+                        diagnostic.moved_earlier += prior > rank;
+                        const auto found = std::find_if(
+                            carrier_candidates.begin(), carrier_candidates.end(),
+                            [&](const CarrierOrderingScore& score) {
+                                return score.state == state;
+                            });
+                        if (found == carrier_candidates.end())
+                            throw std::logic_error(
+                                "dirty-order diagnostic lost frozen carrier");
+                        const std::uint32_t required =
+                            calc.goal().required_satisfied_slots();
+                        const std::size_t stratum =
+                            found->satisfied_goals >= required &&
+                                found->unrelated_occupancy != 0 ? 0 :
+                            found->capacity_obstructions != 0 ||
+                                found->blocked_missing_goals != 0 ? 1 :
+                            found->satisfied_goals >= 2 &&
+                                found->unrelated_occupancy != 0 ? 2 :
+                            found->unrelated_occupancy == 0 ? 3 : 4;
+                        ++diagnostic.changed_by_stratum[stratum];
+                        auto& retained =
+                            diagnostic.retained_by_stratum[stratum];
+                        bool already_sampled = false;
+                        for (std::size_t sample_index = 0;
+                             sample_index < retained; ++sample_index) {
+                            already_sampled |= diagnostic.samples[stratum]
+                                [sample_index].state == state;
+                        }
+                        if (already_sampled) {
+                            ++diagnostic.repeated_by_stratum[stratum];
+                            continue;
+                        }
+                        if (retained >= CarrierBoundAttributionWork::
+                                kDirtyOrderSamplesPerStratum) {
+                            ++diagnostic.omitted_by_stratum[stratum];
+                            continue;
+                        }
+                        auto& sample = diagnostic.samples[stratum][retained++];
+                        sample.state = state;
+                        sample.displaced_state = old_order[rank];
+                        sample.state_hash = found->stable_state_hash;
+                        sample.epoch = static_cast<std::uint32_t>(
+                            incremental_carrier_ladder_epochs + 1);
+                        sample.goal_subset = mask;
+                        sample.old_rank = static_cast<std::uint32_t>(prior);
+                        sample.neutral_rank = static_cast<std::uint32_t>(rank);
+                        sample.satisfied_goals = found->satisfied_goals;
+                        sample.unrelated_occupancy =
+                            found->unrelated_occupancy;
+                        sample.capacity_obstructions =
+                            found->capacity_obstructions;
+                        sample.blocked_missing_goals =
+                            found->blocked_missing_goals;
+                    }
+                }
+            }
             std::map<std::uint32_t, std::size_t> cursors;
             std::vector<std::uint32_t> ordered;
             ordered.reserve(end - begin);
