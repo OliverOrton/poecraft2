@@ -21,6 +21,7 @@
 #include "solver_internal.hpp"
 #include "solver_diagnostic_options.hpp"
 #include "solver_finder.hpp"
+#include "solver_options_helpers.hpp"
 
 /*
  * C ABI for the solver/calculation engine. Thin translation layer: goal
@@ -624,6 +625,7 @@ pc_result create_solver(
     const char* goal_json,
     const size_t goal_json_size,
     const std::optional<std::uint32_t> automatic_candidate_kind_mask,
+    const solver::GoalTerminalDiagnosticMode terminal_mode,
     pc_solver_handle* out_solver,
     pc_error_info* out_error) {
     if (session == nullptr || goal_json == nullptr || out_solver == nullptr) {
@@ -636,6 +638,13 @@ pc_result create_solver(
         set_error(
             out_error, PC_RESULT_INVALID_ARGUMENT,
             "automatic candidate diagnostic mask contains an unknown kind");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (terminal_mode != solver::GoalTerminalDiagnosticMode::LegacyClean &&
+        terminal_mode != solver::GoalTerminalDiagnosticMode::ExplicitClean &&
+        terminal_mode != solver::GoalTerminalDiagnosticMode::CoverageOnly) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+            "unknown private goal terminal mode");
         return PC_RESULT_INVALID_ARGUMENT;
     }
     *out_solver = nullptr;
@@ -656,6 +665,45 @@ pc_result create_solver(
         solver::GoalSpec goal = parse_goal(
             *holder->session, goal_json, goal_json_size, candidates,
             registry);
+        if (terminal_mode ==
+                solver::GoalTerminalDiagnosticMode::ExplicitClean) {
+            if (goal.required_satisfied_slots() != goal.slots.size())
+                throw std::invalid_argument(
+                    "explicit-clean equivalence needs every goal slot");
+            std::uint32_t prefixes = 0, suffixes = 0;
+            for (const auto& slot : goal.slots) {
+                const std::int8_t side = solver::goal_slot_side(
+                    *holder->session, slot);
+                if (side == PC_SIDE_PREFIX) ++prefixes;
+                else if (side == PC_SIDE_SUFFIX) ++suffixes;
+                else throw std::invalid_argument(
+                    "explicit-clean equivalence needs a fixed side per slot");
+            }
+            for (std::uint32_t mod = 0;
+                 mod < holder->session->mod_count; ++mod) {
+                std::uint32_t matches = 0;
+                for (const auto& slot : goal.slots)
+                    matches += solver::mod_satisfies_goal_slot(
+                        *holder->session, mod, slot);
+                if (matches > 1)
+                    throw std::invalid_argument(
+                        "explicit-clean equivalence needs disjoint goal slots");
+            }
+            const auto side_cap = solver::rarity_affix_cap(
+                *holder->session, goal.rarity);
+            if (prefixes > PC_MAX_PREFIXES ||
+                suffixes > PC_MAX_SUFFIXES ||
+                prefixes > side_cap || suffixes > side_cap)
+                throw std::invalid_argument(
+                    "explicit-clean occupancy exceeds native capacity");
+            // For all-required disjoint slots, coverage gives at least these
+            // counts. Exact side counts admit no unmatched explicit affix,
+            // so E and L have the same terminal on every valid item.
+            // Retain that semantic normal form for all proof/graph identities.
+        } else if (terminal_mode ==
+                solver::GoalTerminalDiagnosticMode::CoverageOnly) {
+            goal.terminal.extras = solver::ExtraExplicitPolicy::Allow;
+        }
         if (automatic_candidate_kind_mask.has_value()) {
             goal.automatic_candidate_kind_mask =
                 *automatic_candidate_kind_mask;
@@ -1252,7 +1300,8 @@ pc_result pc_solver_create(
     pc_solver_handle* out_solver,
     pc_error_info* out_error) {
     return create_solver(
-        session, goal_json, goal_json_size, std::nullopt, out_solver,
+        session, goal_json, goal_json_size, std::nullopt,
+        solver::GoalTerminalDiagnosticMode::LegacyClean, out_solver,
         out_error);
 }
 
@@ -1265,7 +1314,20 @@ pc_result solver::create_solver_with_automatic_candidate_diagnostic(
     pc_error_info* out_error) {
     return create_solver(
         session, goal_json, goal_json_size,
-        automatic_candidate_kind_mask, out_solver, out_error);
+        automatic_candidate_kind_mask,
+        GoalTerminalDiagnosticMode::LegacyClean, out_solver, out_error);
+}
+
+pc_result solver::create_solver_with_goal_terminal_diagnostic(
+    pc_session_handle session,
+    const char* goal_json,
+    const std::size_t goal_json_size,
+    const GoalTerminalDiagnosticMode mode,
+    const std::optional<std::uint32_t> automatic_candidate_kind_mask,
+    pc_solver_handle* out_solver,
+    pc_error_info* out_error) {
+    return create_solver(session, goal_json, goal_json_size,
+        automatic_candidate_kind_mask, mode, out_solver, out_error);
 }
 
 pc_result solver::configure_solver_native_retention_diagnostic(
@@ -1879,6 +1941,13 @@ pc_result pc_solver_solve(
                   "solver, start item, and economy are required");
         return PC_RESULT_INVALID_ARGUMENT;
     }
+    if (solver->calc->goal().terminal.extras ==
+        solver::ExtraExplicitPolicy::Allow) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+            "coverage-only solve is unavailable: clean-target lower proofs "
+            "and original-target graph evaluation are not qualified");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
     try {
         if (requested_solver_mode(options) == PC_SOLVER_MODE_STRATEGY_FINDER) {
             pc_result rc = pc_solver_solve_begin(
@@ -1940,6 +2009,13 @@ pc_result pc_solver_solve_begin(
     if (solver == nullptr || start_item == nullptr || economy == nullptr) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
                   "solver, start item, and economy are required");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (solver->calc->goal().terminal.extras ==
+        solver::ExtraExplicitPolicy::Allow) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+            "coverage-only solve is unavailable: clean-target lower proofs "
+            "and original-target graph evaluation are not qualified");
         return PC_RESULT_INVALID_ARGUMENT;
     }
     try {

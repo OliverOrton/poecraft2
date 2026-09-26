@@ -5,6 +5,8 @@
 
 The central question is not whether two states look similar. It is what statement remains true after we treat them alike. Exact execution, a uniform lower, and a uniform executable continuation have different quantifiers.
 
+The private `explicit-clean` formulation checks all-required, disjoint, fixed-side goal slots and native rarity capacity before normalizing to the legacy clean predicate. In that domain, coverage supplies at least the required side counts, and exact side occupancy leaves no room for an unmatched explicit affix. A threshold any-k request, overlapping slots or variable-side slot does not inherit this equivalence. Normalization changes neither the state representation nor the search algorithm by itself. [Current-goal audit](../../active/2026-09-25-current-goal-audit/README.md).
+
 The target notation is in [the model](../mathematical-model.md). Native state fields and namespaces remain described by [States and Carriers](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/states-carriers.md).
 
 <a id="namespaces"></a>

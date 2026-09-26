@@ -651,6 +651,22 @@ and the broader dirty-state hypothesis remains open. This applies existing
 programme and upper-authority arguments; it creates no new theorem or exact
 closure claim.
 
+The selected [Current-goal audit](../active/2026-09-25-current-goal-audit/README.md)
+confirms that the August boundary changed native success from rarity plus
+requested coverage to a clean explicit-affix terminal. Older coverage-target
+exact labels are therefore not current clean-target certificates, and the
+multi-change commit does not isolate a runtime cause. A private assessment and
+fresh target binding distinguish clean L, provably equivalent explicit-count E
+on disjoint all-required fixed-side A4/A5, and coverage-only R. A complete
+one-action native distribution shows positive coverage with zero clean success.
+Fresh Current A4/A5 L runs reproduce the independently checked clean costs but
+remain bounded. R full solving is blocked by unqualified clean-dependent
+proof/pruning and the graph evaluator's reconstructed clean target. No default
+migration, R economic result, same-clean Current repair or new exact closure
+is inferred. The E4 entry trace identifies missing candidate materialization
+at one sampled partial-goal dirty state but lacks the complete row and checked
+root competitor needed to choose a repair.
+
 <a id="knowledge"></a>
 ## 5. Knowledge outlives machinery
 

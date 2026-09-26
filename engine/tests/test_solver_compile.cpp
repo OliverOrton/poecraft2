@@ -144,6 +144,21 @@ void run_finder_request_binding_tests() {
     auto prepared = prepare_finder_candidate(calc, session, start, graph);
     PC_CHECK(prepared.ready());
 
+    GoalSpec coverage_goal = goal;
+    coverage_goal.terminal.extras = ExtraExplicitPolicy::Allow;
+    CalcContext coverage_calc(
+        session, coverage_goal, registry, {chaos});
+    const std::string coverage_graph = compile_finder_candidate_json(
+        coverage_calc, start, {chaos}, limits);
+    PC_CHECK(compile_finder_goal_condition(coverage_calc) !=
+        compile_finder_goal_condition(calc));
+    PC_CHECK(prepare_finder_candidate(
+        coverage_calc, session, start, coverage_graph).ready());
+    PC_CHECK(!prepare_finder_candidate(
+        coverage_calc, session, start, graph).ready());
+    PC_CHECK(!prepare_finder_candidate(
+        calc, session, start, coverage_graph).ready());
+
     pc_item_state changed_start = start;
     changed_start.searing_exarch_tier = 1;
     PC_CHECK(!prepare_finder_candidate(

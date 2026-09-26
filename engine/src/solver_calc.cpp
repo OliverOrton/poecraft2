@@ -1313,24 +1313,41 @@ RefinementOutcomeObservation calc_outcome_observation(
     }
 }
 
-bool CalcContext::is_goal_state(const AbstractState& state) const {
-    if (state.rarity != goal_.rarity) return false;
-    std::size_t satisfied = 0;
+GoalAssessment CalcContext::assess_goal_state(
+        const AbstractState& state) const {
+    GoalAssessment assessment;
+    assessment.rarity_matches = state.rarity == goal_.rarity;
+    assessment.prefix_count = state.prefix_count;
+    assessment.suffix_count = state.suffix_count;
     for (std::size_t i = 0; i < layout_.slots.size(); ++i) {
         if (state.slot_status[i] ==
             static_cast<std::uint8_t>(GoalSlotStatus::Satisfied)) {
-            ++satisfied;
+            assessment.satisfied_mask |= 1u << i;
+            ++assessment.satisfied_count;
         }
     }
-    /* Success is an exact explicit-affix target. Empty slots are fine, but
-     * every occupied prefix/suffix must be one of the satisfied requested
-     * slots. This deliberately says nothing about implicits and does not
-     * constrain intermediate carriers: junk and temporary crafts remain
-     * ordinary nonterminal state until a policy removes or replaces them. */
-    const std::size_t explicit_affixes =
-        static_cast<std::size_t>(state.prefix_count) + state.suffix_count;
-    return satisfied >= goal_.required_satisfied_slots() &&
-           explicit_affixes == satisfied;
+    assessment.requested_coverage = assessment.rarity_matches &&
+        assessment.satisfied_count >= goal_.required_satisfied_slots();
+    assessment.legacy_clean_occupancy =
+        static_cast<std::size_t>(state.prefix_count) + state.suffix_count ==
+        assessment.satisfied_count;
+    const auto inside = [](const std::uint8_t count,
+            const std::optional<GoalCountRange>& range) {
+        return !range ||
+            (count >= range->minimum && count <= range->maximum);
+    };
+    assessment.explicit_occupancy =
+        inside(state.prefix_count, goal_.terminal.prefixes) &&
+        inside(state.suffix_count, goal_.terminal.suffixes);
+    assessment.final_success = assessment.requested_coverage &&
+        assessment.explicit_occupancy &&
+        (goal_.terminal.extras == ExtraExplicitPolicy::Allow ||
+         assessment.legacy_clean_occupancy);
+    return assessment;
+}
+
+bool CalcContext::is_goal_state(const AbstractState& state) const {
+    return assess_goal_state(state).final_success;
 }
 
 std::uint32_t CalcContext::intern_state(const AbstractState& state) {

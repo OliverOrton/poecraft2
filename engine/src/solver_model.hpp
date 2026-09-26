@@ -330,6 +330,34 @@ struct FixedOptionSpec {
     std::uint32_t relevant_goal_mask = 0;
 };
 
+enum class ExtraExplicitPolicy : std::uint8_t {
+    ForbidUnmatched,
+    Allow
+};
+
+struct GoalCountRange {
+    std::uint8_t minimum = 0;
+    std::uint8_t maximum = 0;
+};
+
+struct GoalTerminalConstraints {
+    ExtraExplicitPolicy extras = ExtraExplicitPolicy::ForbidUnmatched;
+    std::optional<GoalCountRange> prefixes;
+    std::optional<GoalCountRange> suffixes;
+};
+
+struct GoalAssessment {
+    bool rarity_matches = false;
+    std::uint32_t satisfied_mask = 0;
+    std::uint8_t satisfied_count = 0;
+    std::uint8_t prefix_count = 0;
+    std::uint8_t suffix_count = 0;
+    bool requested_coverage = false;
+    bool legacy_clean_occupancy = false;
+    bool explicit_occupancy = false;
+    bool final_success = false;
+};
+
 struct GoalSpec {
     std::vector<GoalSlot> slots; /* 1..kMaxGoalSlots */
     std::uint8_t rarity = PC_RARITY_RARE; /* required finished rarity */
@@ -340,6 +368,9 @@ struct GoalSpec {
      * must be one of the satisfied requested slots. Empty slots, implicits,
      * and unrestricted intermediate carriers remain allowed. */
     std::uint32_t min_satisfied_slots = 0;
+    /* Public v1 remains clean. Private diagnostic callers may bind a
+     * different final target before constructing any calculator. */
+    GoalTerminalConstraints terminal;
     bool primitive_actions_explicit = false;
     /* Product goal-relevant solves enable native S8.3 candidate synthesis.
      * Explicit historical/manual goal documents remain unchanged. */

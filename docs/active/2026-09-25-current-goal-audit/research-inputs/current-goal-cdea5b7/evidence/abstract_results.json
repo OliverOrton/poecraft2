@@ -1,0 +1,17 @@
+{
+  "scope": "exact-rational and abstract contract checks; not native PoE qualification",
+  "tests_run": 23,
+  "failures": 0,
+  "errors": 0,
+  "passed": true,
+  "metrics": {
+    "valid_signature_comparisons": 5678,
+    "renewal_model_comparisons": 162
+  },
+  "derived_recorded_k": {
+    "a5_finder_reduction_percent": 99.83663398508064,
+    "a5_finder_multiple_of_current": 6.125381296805958,
+    "a3_finder_reduction_percent": 95.8231001827909
+  },
+  "log": "test_all_required_equivalence_exhaustive (__main__.GoalContractTests.test_all_required_equivalence_exhaustive) ... ok\ntest_below_tier_is_not_satisfying (__main__.GoalContractTests.test_below_tier_is_not_satisfying) ... ok\ntest_clean_potential_invalid_for_loose (__main__.GoalContractTests.test_clean_potential_invalid_for_loose) ... ok\ntest_cleanup_model_formula_grid (__main__.GoalContractTests.test_cleanup_model_formula_grid) ... ok\ntest_coverage_includes_clean (__main__.GoalContractTests.test_coverage_includes_clean) ... ok\ntest_ever_covered_is_not_current_coverage (__main__.GoalContractTests.test_ever_covered_is_not_current_coverage) ... ok\ntest_historical_sandwich_sufficient (__main__.GoalContractTests.test_historical_sandwich_sufficient) ... ok\ntest_historical_upper_alone_does_not_transfer_optimality (__main__.GoalContractTests.test_historical_upper_alone_does_not_transfer_optimality) ... ok\ntest_joint_coverage_is_not_marginal_product (__main__.GoalContractTests.test_joint_coverage_is_not_marginal_product) ... ok\ntest_k_recorded_ratio_is_not_current_improvement (__main__.GoalContractTests.test_k_recorded_ratio_is_not_current_improvement) ... ok\ntest_local_exit_does_not_imply_global_success (__main__.GoalContractTests.test_local_exit_does_not_imply_global_success) ... ok\ntest_loose_lower_safe_for_clean (__main__.GoalContractTests.test_loose_lower_safe_for_clean) ... ok\ntest_nontermination_guard (__main__.GoalContractTests.test_nontermination_guard) ... ok\ntest_open_slots_uses_actual_cap (__main__.GoalContractTests.test_open_slots_uses_actual_cap) ... ok\ntest_optimal_acquisition_does_not_minimise_clean_cost (__main__.GoalContractTests.test_optimal_acquisition_does_not_minimise_clean_cost) ... ok\ntest_optimal_value_difference_not_fixed_policy_tail (__main__.GoalContractTests.test_optimal_value_difference_not_fixed_policy_tail) ... ok\ntest_paid_cleanup_reacquisition_example (__main__.GoalContractTests.test_paid_cleanup_reacquisition_example) ... ok\ntest_positive_coverage_zero_clean_probability (__main__.GoalContractTests.test_positive_coverage_zero_clean_probability) ... ok\ntest_rarity_remains_required (__main__.GoalContractTests.test_rarity_remains_required) ... ok\ntest_requested_coverage_with_junk (__main__.GoalContractTests.test_requested_coverage_with_junk) ... ok\ntest_terminal_identity_separates_models (__main__.GoalContractTests.test_terminal_identity_separates_models) ... ok\ntest_threshold_exact_k_counterexample (__main__.GoalContractTests.test_threshold_exact_k_counterexample) ... ok\ntest_zero_new_target_alone_is_insufficient (__main__.GoalContractTests.test_zero_new_target_alone_is_insufficient) ... ok\n\n----------------------------------------------------------------------\nRan 23 tests in 0.167s\n\nOK\n"
+}

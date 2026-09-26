@@ -499,6 +499,38 @@ def test_seed_progress_observation_is_resumable_current_diagnostic(
         run_corpus(**args, output_directory=output)
 
 
+def test_native_goal_terminal_is_resumable_current_treatment(
+    tmp_path: Path,
+) -> None:
+    paths = AttemptPaths.legacy(tmp_path / "run", "case-a", "attempt-1")
+    kwargs = dict(
+        executable=tmp_path / "solver.exe", artifact=tmp_path / "artifact",
+        corpus=tmp_path / "manifest.json", case_id="case-a", paths=paths,
+        root=tmp_path, exact_evaluation=True, run_verification=False,
+        goal_progress_gated_reforges=False, solver_mode="current",
+    )
+    command = build_solver_case_command(
+        **kwargs, native_goal_terminal="explicit-clean")
+    assert command.as_list()[-2:] == [
+        "--native-goal-terminal", "explicit-clean"]
+    with pytest.raises(ValueError, match="native goal terminal"):
+        build_solver_case_command(
+            **(kwargs | {"solver_mode": "strategy_finder"}),
+            native_goal_terminal="coverage-only")
+    manifest = tmp_path / "manifest.json"
+    _write_json(manifest, {"cases": []})
+    args = dict(root=Path.cwd(), executable=Path(sys.executable),
+                artifact=tmp_path, corpus=manifest, tasks=[],
+                solver_mode="current")
+    output = tmp_path / "terminal"
+    result = run_corpus(**args, output_directory=output,
+                        native_goal_terminal="coverage-only")
+    assert result["treatment"]["native_goal_terminal"] == "coverage-only"
+    with pytest.raises(ValueError, match="provenance/configuration differs"):
+        run_corpus(**args, output_directory=output,
+                   native_goal_terminal="explicit-clean")
+
+
 def test_native_controls_reach_worker_and_reject_changed_resume(
     tmp_path: Path, monkeypatch,
 ) -> None:

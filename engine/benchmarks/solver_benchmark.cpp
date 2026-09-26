@@ -68,6 +68,7 @@ struct Arguments {
     std::string solver_mode = "current";
     std::string finder_ranking = "heuristic";
     std::string finder_grammar = "conditional";
+    std::string native_goal_terminal = "legacy-clean";
     bool neutral_extra_ordering = false;
     bool seed_progress_observation = false;
     double native_execution_action_price = 0;
@@ -115,6 +116,7 @@ struct NativeHandles {
 };
 
 struct CaseResult {
+    std::string native_goal_terminal = "legacy-clean";
     bool neutral_extra_ordering = false;
     bool seed_progress_observation = false;
     std::string native_retention_diagnostic;
@@ -3034,7 +3036,8 @@ void create_case_objects(
     pc_data_handle data, const Value& specification, NativeHandles& handles,
     pc_item_state& start_item,
     std::vector<std::string>* product_action_ids = nullptr,
-    const std::function<void(std::int32_t)>& phase_checkpoint = {}) {
+    const std::function<void(std::int32_t)>& phase_checkpoint = {},
+    const std::string& native_goal_terminal = "legacy-clean") {
     if (phase_checkpoint) phase_checkpoint(PC_SOLVE_PHASE_OWNER_SETUP);
     const Value& session_spec = required(specification, "session", Type::Object);
     const std::string base = required_string(session_spec, "base_metadata_path");
@@ -3086,13 +3089,22 @@ void create_case_objects(
     if (phase_checkpoint) {
         phase_checkpoint(PC_SOLVE_PHASE_OWNER_PLANNER_CONSTRUCTION);
     }
-    result = automatic_mask.has_value()
-        ? poecraft::solver::create_solver_with_automatic_candidate_diagnostic(
-              handles.session, goal.data(), goal.size(), *automatic_mask,
-              &handles.solver, &error)
-        : pc_solver_create(
-              handles.session, goal.data(), goal.size(), &handles.solver,
-              &error);
+    if (native_goal_terminal != "legacy-clean") {
+        result = poecraft::solver::create_solver_with_goal_terminal_diagnostic(
+            handles.session, goal.data(), goal.size(),
+            native_goal_terminal == "explicit-clean"
+                ? poecraft::solver::GoalTerminalDiagnosticMode::ExplicitClean
+                : poecraft::solver::GoalTerminalDiagnosticMode::CoverageOnly,
+            automatic_mask, &handles.solver, &error);
+    } else {
+        result = automatic_mask.has_value()
+            ? poecraft::solver::create_solver_with_automatic_candidate_diagnostic(
+                  handles.session, goal.data(), goal.size(), *automatic_mask,
+                  &handles.solver, &error)
+            : pc_solver_create(
+                  handles.session, goal.data(), goal.size(), &handles.solver,
+                  &error);
+    }
     if (result != PC_RESULT_OK) {
         throw std::runtime_error(api_error("pc_solver_create", result, error));
     }
@@ -3553,6 +3565,7 @@ CaseResult run_case(
     const std::string& solver_mode,
     const std::string& finder_ranking,
     const std::string& finder_grammar,
+    const std::string& native_goal_terminal,
     const bool neutral_extra_ordering,
     const bool seed_progress_observation,
     const double native_execution_action_price,
@@ -3573,6 +3586,7 @@ CaseResult run_case(
     const std::string& development_checkpoint_identity_prefix,
     const std::function<void(const CaseResult&)>& checkpoint) {
     CaseResult report;
+    report.native_goal_terminal = native_goal_terminal;
     report.neutral_extra_ordering = neutral_extra_ordering;
     report.seed_progress_observation = seed_progress_observation;
     report.native_retention_diagnostic=native_retention_diagnostic;
@@ -3582,7 +3596,8 @@ CaseResult run_case(
     report.max_discovered_states_override =
         max_discovered_states_override;
     initialize_forced_winner_contract(specification, report);
-    if (solver_mode != "strategy_finder")
+    if (solver_mode != "strategy_finder" &&
+        native_goal_terminal != "coverage-only")
         initialize_bounded_best_policy_contract(specification, report);
     initialize_compiled_operation_contract(specification, report);
     initialize_material_ratio_contract(specification, report);
@@ -3633,7 +3648,8 @@ CaseResult run_case(
         };
         create_case_objects(
             data, specification, handles, start_item,
-            &report.product_action_ids, publish_setup_phase);
+            &report.product_action_ids, publish_setup_phase,
+            native_goal_terminal);
         if (report.has_mechanic_family_control) {
             /* Validation pins every declared control action into goal.actions.
              * Successful solver construction proves that the exact registry
@@ -4876,7 +4892,13 @@ CaseResult run_case(
         }
         if (report.actual_status == "not_run" ||
             report.actual_status == "running") {
-            report.actual_status = "harness_error";
+            report.actual_status =
+                native_goal_terminal == "coverage-only" &&
+                std::string_view(ex.what()).find(
+                    "coverage-only solve is unavailable") !=
+                    std::string_view::npos
+                    ? "refused_unqualified_goal_terminal"
+                    : "harness_error";
         }
     }
 
@@ -5065,6 +5087,8 @@ void append_case_report(
     bool first_input = true;
     if (!result.native_retention_diagnostic.empty())
     out << "  \"native_retention_diagnostic\":" << escape_json(result.native_retention_diagnostic) << ",\n";
+    out << "  \"native_goal_terminal\":" <<
+        escape_json(result.native_goal_terminal) << ",\n";
     if (result.neutral_extra_ordering)
         out << "  \"native_neutral_extra_ordering\":true,\n";
     if (result.seed_progress_observation)
@@ -6181,6 +6205,8 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--solver-mode") args.solver_mode=value("--solver-mode");
         else if (argument == "--finder-ranking") args.finder_ranking=value("--finder-ranking");
         else if (argument == "--finder-grammar") args.finder_grammar=value("--finder-grammar");
+        else if (argument == "--native-goal-terminal")
+            args.native_goal_terminal = value("--native-goal-terminal");
         else if (argument == "--native-neutral-extra-ordering")
             args.neutral_extra_ordering = true;
         else if (argument == "--native-seed-progress-observation")
@@ -6293,6 +6319,13 @@ Arguments parse_arguments(int argc, char** argv) {
         args.finder_grammar != "primitive" &&
         args.finder_grammar != "conditional-retention")
         throw std::runtime_error("finder grammar must be conditional, conditional-retention or primitive");
+    if (args.native_goal_terminal != "legacy-clean" &&
+        args.native_goal_terminal != "explicit-clean" &&
+        args.native_goal_terminal != "coverage-only")
+        throw std::runtime_error("native goal terminal must be legacy-clean, explicit-clean or coverage-only");
+    if (args.native_goal_terminal != "legacy-clean" &&
+        args.solver_mode != "current")
+        throw std::runtime_error("native goal terminal treatment requires current mode");
     if (args.solver_mode != "strategy_finder" &&
         (args.finder_ranking != "heuristic" ||
          args.finder_grammar != "conditional"))
@@ -6640,6 +6673,7 @@ int main(int argc, char** argv) {
                     args.solver_mode,
                     args.finder_ranking,
                     args.finder_grammar,
+                    args.native_goal_terminal,
                     args.neutral_extra_ordering,
                     args.seed_progress_observation,
                     args.native_execution_action_price,

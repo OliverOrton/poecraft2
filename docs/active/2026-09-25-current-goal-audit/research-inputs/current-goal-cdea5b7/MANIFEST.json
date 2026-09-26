@@ -1,0 +1,101 @@
+{
+  "schema": "research_packet_manifest_v1",
+  "reviewed_main": "cdea5b7f9556ae30c43f9a74249d64b3dcf0f029",
+  "files": [
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 14195,
+      "sha256": "4b15887e73e15251836d3579f2c4cdde523dade74b7b0236611875195723ab44"
+    },
+    {
+      "path": "CONSUMER_MAP.md",
+      "bytes": 6878,
+      "sha256": "5540a131ccdc88b0cc858f82630df1be27c8b98cc34cc62f992276f895040831"
+    },
+    {
+      "path": "DATA_REQUEST.md",
+      "bytes": 3383,
+      "sha256": "0ea85fbe1dab1266faa836b329ffd10e0e42c9e78aa3b5d5a942f5a50b07b706"
+    },
+    {
+      "path": "DOC_MAINTENANCE.md",
+      "bytes": 3400,
+      "sha256": "ff09bd2d79fb6238d1f19eef3167a4a60455412d5e070befa75bfa8b1adade56"
+    },
+    {
+      "path": "EXPERIMENTS.md",
+      "bytes": 7148,
+      "sha256": "be0618175f55638c48699f4f37f83f754ae899b7195fdca480a9c4391a0ad034"
+    },
+    {
+      "path": "GOAL_CONTRACT.md",
+      "bytes": 8268,
+      "sha256": "52776268c5e21dbdbdd558572d58610fbc09fb5838f0088188cd95b8f8492adc"
+    },
+    {
+      "path": "HISTORY.md",
+      "bytes": 6572,
+      "sha256": "570dedac1a864dc45b20952121932ce39017449c4d590e10fad0aaba555eeb4e"
+    },
+    {
+      "path": "MATHEMATICS.md",
+      "bytes": 9196,
+      "sha256": "fab9d5886769e9c2d360733e3ccee0fc526684b42844902d385a05179dbda3ec"
+    },
+    {
+      "path": "PLAN.md",
+      "bytes": 9374,
+      "sha256": "045cf338d53832a25acef75c0df465e5dcc62d0928a61c31967a7ce1b78d176a"
+    },
+    {
+      "path": "PRODUCT_DECISION.md",
+      "bytes": 3281,
+      "sha256": "7071133c433b2f323d7c7db3dd99c7bae03c2e4adbd2894b80727560017127ac"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3250,
+      "sha256": "93402a8442bcf2fba832e22b09ce7af3f0e26f4bd698797ca7a5b1e37c9ced6d"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 7512,
+      "sha256": "55824e8f30645ae047854b1c6311b8f6df792a9f650a519cc1cfeeff21961576"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 7065,
+      "sha256": "3faf242691f91ce263495f074085590f2484fd0345e101accbb7fcb5b0743584"
+    },
+    {
+      "path": "USER_NOTE.md",
+      "bytes": 4575,
+      "sha256": "d478f382a43ad57ffe8425d7f7cccda6954ea0162029825e0278349b99864c32"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 4481,
+      "sha256": "3b46b766a183b6fd4fe1631cd891fd5bdfd0c5bd7b7cc5523735cd5f5d4a9d3c"
+    },
+    {
+      "path": "evidence/abstract_results.json",
+      "bytes": 3249,
+      "sha256": "b66382d8f16a34c1bda0d47074d3daddf6cc52b24513f230f98d0315fbb73cec"
+    },
+    {
+      "path": "evidence/package_checks.json",
+      "bytes": 484,
+      "sha256": "3bbb8558ff71645e8fecb769b6267d2af27cd153efa1829588e47c5ad38d2dbf"
+    },
+    {
+      "path": "evidence/review.json",
+      "bytes": 1702,
+      "sha256": "136ce90ee8ddb345fffc52d559bafcc84d414aab1683ed38efe6c64611268350"
+    },
+    {
+      "path": "tests/goal_contract_checks.py",
+      "bytes": 11284,
+      "sha256": "a96c37c73dc438791c928848aa0a6bb6da10076f2e357f09447d37af80f27643"
+    }
+  ]
+}

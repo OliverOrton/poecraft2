@@ -839,7 +839,9 @@ class CalcContext {
     bool is_state_local_automatic_operator(std::uint32_t index) const {
         return state_local_automatic_operator_indices_.contains(index);
     }
-    /* The configured slot threshold satisfied at the required rarity. */
+    /* Passive current coverage and occupancy assessment; no phase memory. */
+    GoalAssessment assess_goal_state(const AbstractState& state) const;
+    /* Final success under the immutable native goal terminal contract. */
     bool is_goal_state(const AbstractState& state) const;
 
     /* Opt-in lower proof seams: existing family constructors and complete

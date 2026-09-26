@@ -2107,6 +2107,72 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(pc_economy_load_json(economy_json, std::strlen(economy_json),
                                   &economy, &error) == PC_RESULT_OK);
 
+    /* Private terminal treatments must be bound before construction and
+     * remain isolated across handles. Coverage-only is a calculator
+     * diagnostic until its proof and original-root checker are retargeted. */
+    pc_solver_handle explicit_clean_solver = nullptr;
+    PC_CHECK(poecraft::solver::create_solver_with_goal_terminal_diagnostic(
+                 session, goal_json.c_str(), goal_json.size(),
+                 poecraft::solver::GoalTerminalDiagnosticMode::ExplicitClean,
+                 std::nullopt, &explicit_clean_solver, &error) ==
+             PC_RESULT_OK);
+    pc_solver_handle coverage_solver = nullptr;
+    PC_CHECK(poecraft::solver::create_solver_with_goal_terminal_diagnostic(
+                 session, goal_json.c_str(), goal_json.size(),
+                 poecraft::solver::GoalTerminalDiagnosticMode::CoverageOnly,
+                 std::nullopt, &coverage_solver, &error) ==
+             PC_RESULT_OK);
+    if (explicit_clean_solver != nullptr && coverage_solver != nullptr) {
+        auto& legacy_calc =
+            poecraft::solver::solver_lower_diagnostic_calculator(solver);
+        auto& explicit_calc =
+            poecraft::solver::solver_lower_diagnostic_calculator(
+                explicit_clean_solver);
+        auto& coverage_calc =
+            poecraft::solver::solver_lower_diagnostic_calculator(
+                coverage_solver);
+        PC_CHECK(legacy_calc.goal().rarity == explicit_calc.goal().rarity);
+        PC_CHECK(legacy_calc.goal().required_satisfied_slots() ==
+            explicit_calc.goal().required_satisfied_slots());
+        PC_CHECK(legacy_calc.goal().slots.size() ==
+            explicit_calc.goal().slots.size());
+        PC_CHECK(legacy_calc.goal().terminal.extras ==
+            explicit_calc.goal().terminal.extras);
+        PC_CHECK(legacy_calc.candidates() == explicit_calc.candidates());
+        PC_CHECK(legacy_calc.operators().size() ==
+            explicit_calc.operators().size());
+        poecraft::solver::AbstractState covered_dirty{};
+        covered_dirty.rarity = PC_RARITY_RARE;
+        covered_dirty.prefix_count = 2;
+        covered_dirty.slot_status[0] = static_cast<std::uint8_t>(
+            poecraft::solver::GoalSlotStatus::Satisfied);
+        PC_CHECK(!legacy_calc.is_goal_state(covered_dirty));
+        PC_CHECK(!explicit_calc.is_goal_state(covered_dirty));
+        PC_CHECK(coverage_calc.is_goal_state(covered_dirty));
+        PC_CHECK(legacy_calc.goal().terminal.extras ==
+            poecraft::solver::ExtraExplicitPolicy::ForbidUnmatched);
+        PC_CHECK(coverage_calc.goal().terminal.extras ==
+            poecraft::solver::ExtraExplicitPolicy::Allow);
+        PC_CHECK(pc_solver_solve_begin(
+            coverage_solver, &item, economy, nullptr, &error) ==
+            PC_RESULT_INVALID_ARGUMENT);
+        PC_CHECK(std::strstr(error.message,
+            "coverage-only solve is unavailable") != nullptr);
+        pc_solve_summary unsupported_summary{};
+        PC_CHECK(pc_solver_solve(
+            coverage_solver, &item, economy, nullptr,
+            &unsupported_summary, &error) == PC_RESULT_INVALID_ARGUMENT);
+    }
+    pc_solver_destroy(coverage_solver);
+    pc_solver_destroy(explicit_clean_solver);
+    pc_solver_handle impossible_explicit = nullptr;
+    PC_CHECK(poecraft::solver::create_solver_with_goal_terminal_diagnostic(
+                 session, invalid_goal_json.c_str(), invalid_goal_json.size(),
+                 poecraft::solver::GoalTerminalDiagnosticMode::ExplicitClean,
+                 std::nullopt, &impossible_explicit, &error) ==
+             PC_RESULT_INVALID_ARGUMENT);
+    PC_CHECK(impossible_explicit == nullptr);
+
     /* A discovery cap can also fire after one row exists. Exercise both
      * evidence modes through the stepped C ABI used by the benchmark worker
      * and require the same truthful named no-policy result. */

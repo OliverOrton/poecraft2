@@ -373,6 +373,7 @@ def _run_case(
     finder_grammar: str | None = None,
     neutral_extra_ordering: bool = False,
     seed_progress_observation: bool = False,
+    native_goal_terminal: str | None = None,
 ) -> dict[str, Any]:
     immutable_lab_attempt = bool(
         attempt_paths is not None
@@ -404,6 +405,7 @@ def _run_case(
         finder_grammar=finder_grammar,
         neutral_extra_ordering=neutral_extra_ordering,
         seed_progress_observation=seed_progress_observation,
+        native_goal_terminal=native_goal_terminal,
     )
     result = run_isolated_process(
         resolved.command.as_list(),
@@ -609,6 +611,7 @@ def run_corpus(
     finder_grammar: str | None = None,
     neutral_extra_ordering: bool = False,
     seed_progress_observation: bool = False,
+    native_goal_terminal: str | None = None,
     host_watchdog_seconds: float | None = None,
     worker_headroom_bytes: int = 0,
 ) -> dict[str, Any]:
@@ -633,6 +636,9 @@ def run_corpus(
         raise ValueError("neutral-extra ordering requires current mode")
     if seed_progress_observation and solver_mode != "current":
         raise ValueError("seed-progress observation requires current mode")
+    if native_goal_terminal not in (None, "legacy-clean", "explicit-clean", "coverage-only") or (
+            native_goal_terminal is not None and solver_mode != "current"):
+        raise ValueError("native goal terminal requires current mode and a known value")
     if native_execution_action_price is not None and (
             native_dirty_guidance != "execution-count" or
             not math.isfinite(native_execution_action_price) or native_execution_action_price <= 0):
@@ -701,11 +707,14 @@ def run_corpus(
         treatment["neutral_extra_ordering"] = True
     if seed_progress_observation:
         treatment["seed_progress_observation"] = True
+    if native_goal_terminal is not None:
+        treatment["native_goal_terminal"] = native_goal_terminal
     if native_execution_action_price is not None:
         treatment["native_execution_action_price"] = float(native_execution_action_price)
     current_resume_identity = provenance.resume_identity(configuration)
     if (native_dirty_guidance is not None or solver_mode is not None or
-            neutral_extra_ordering or seed_progress_observation):
+            neutral_extra_ordering or seed_progress_observation or
+            native_goal_terminal is not None):
         # Algorithm treatment is separate from request/capacity identity,
         # like executable identity, but still binds immutable resume.
         current_resume_identity["treatment"] = treatment
@@ -794,6 +803,7 @@ def run_corpus(
                     finder_grammar=finder_grammar,
                     neutral_extra_ordering=neutral_extra_ordering,
                     seed_progress_observation=seed_progress_observation,
+                    native_goal_terminal=native_goal_terminal,
                     watchdog_seconds=host_watchdog_seconds,
                     worker_headroom_bytes=worker_headroom_bytes,
                 )
@@ -866,6 +876,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="Native Current within-mask ordering treatment; no goal or budget change.")
     parser.add_argument("--native-seed-progress-observation", action="store_true",
         help="Passive Current first-policy seed-row counterfactual at the live selector.")
+    parser.add_argument("--native-goal-terminal",
+        choices=("legacy-clean", "explicit-clean", "coverage-only"),
+        help="Private Current goal-terminal semantics diagnostic; default v1 is unchanged.")
     parser.add_argument(
         "--native-retention-diagnostic",
         choices=NATIVE_RETENTION_DIAGNOSTIC_MODES,
@@ -920,6 +933,7 @@ def main(argv: list[str] | None = None) -> int:
         finder_grammar=args.finder_grammar,
         neutral_extra_ordering=args.native_neutral_extra_ordering,
         seed_progress_observation=args.native_seed_progress_observation,
+        native_goal_terminal=args.native_goal_terminal,
         host_watchdog_seconds=args.host_watchdog_seconds,
         worker_headroom_bytes=args.worker_headroom_bytes,
     )

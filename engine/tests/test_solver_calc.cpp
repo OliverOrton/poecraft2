@@ -1880,6 +1880,15 @@ void run_goal_threshold_tests() {
     PC_CHECK(calc.is_goal_state(state));
     state.prefix_count = 1;
     PC_CHECK(!calc.is_goal_state(state));
+    const GoalAssessment dirty = calc.assess_goal_state(state);
+    PC_CHECK(dirty.requested_coverage);
+    PC_CHECK(!dirty.legacy_clean_occupancy);
+    PC_CHECK(!dirty.final_success);
+    goal.terminal.extras = ExtraExplicitPolicy::Allow;
+    CalcContext coverage_calc(session, goal, registry, basic_indices(registry));
+    PC_CHECK(coverage_calc.is_goal_state(state));
+    PC_CHECK(coverage_calc.assess_goal_state(state).final_success);
+    goal.terminal.extras = ExtraExplicitPolicy::ForbidUnmatched;
     state.prefix_count = 0;
     state.rarity = PC_RARITY_MAGIC;
     PC_CHECK(!calc.is_goal_state(state));
@@ -1923,6 +1932,45 @@ void run_goal_threshold_tests() {
         static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
     state.prefix_count = 1;
     PC_CHECK(all_calc.is_goal_state(state));
+
+    /* All-required, disjoint fixed-side goals with exact side counts have
+     * the same terminal set as the legacy clean rule. The threshold-one
+     * request above is deliberately excluded: two clean goals may satisfy it. */
+    GoalSpec occupancy_goal = goal;
+    occupancy_goal.terminal.extras = ExtraExplicitPolicy::Allow;
+    occupancy_goal.terminal.prefixes = GoalCountRange{1, 1};
+    occupancy_goal.terminal.suffixes = GoalCountRange{1, 1};
+    CalcContext occupancy_calc(
+        session, occupancy_goal, registry, basic_indices(registry));
+    for (std::uint32_t mask = 0; mask < 4; ++mask) {
+        for (std::uint8_t prefixes = 0; prefixes <= 3; ++prefixes) {
+            for (std::uint8_t suffixes = 0; suffixes <= 3; ++suffixes) {
+                if (prefixes < ((mask & 1u) != 0) ||
+                    suffixes < ((mask & 2u) != 0)) continue;
+                AbstractState member;
+                member.rarity = PC_RARITY_RARE;
+                member.prefix_count = prefixes;
+                member.suffix_count = suffixes;
+                for (std::uint32_t slot = 0; slot < 2; ++slot)
+                    if ((mask & (1u << slot)) != 0)
+                        member.slot_status[slot] = static_cast<std::uint8_t>(
+                            GoalSlotStatus::Satisfied);
+                PC_CHECK(all_calc.is_goal_state(member) ==
+                    occupancy_calc.is_goal_state(member));
+            }
+        }
+    }
+    occupancy_goal.min_satisfied_slots = 1;
+    occupancy_goal.terminal.suffixes = GoalCountRange{0, 0};
+    CalcContext threshold_occupancy(
+        session, occupancy_goal, registry, basic_indices(registry));
+    AbstractState both;
+    both.rarity = PC_RARITY_RARE;
+    both.slot_status[0] = both.slot_status[1] =
+        static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
+    both.prefix_count = both.suffix_count = 1;
+    PC_CHECK(calc.is_goal_state(both));
+    PC_CHECK(!threshold_occupancy.is_goal_state(both));
 }
 
 void run_exact_distribution_tests() {
@@ -1952,6 +2000,26 @@ void run_exact_distribution_tests() {
         PC_CHECK(dist.entries.size() == 2);
         PC_CHECK(sums_to_one(dist));
         PC_CHECK(near(dist.slot_satisfied_probability[0], 1.0));
+        double joint_coverage = 0.0;
+        double clean_success = 0.0;
+        double covered_dirty = 0.0;
+        for (const OutcomeEntry& entry : dist.entries) {
+            const AbstractState& successor = calc.state(entry.state);
+            const GoalAssessment assessment =
+                calc.assess_goal_state(successor);
+            if (assessment.requested_coverage)
+                joint_coverage += entry.probability;
+            if (assessment.final_success)
+                clean_success += entry.probability;
+            if (assessment.requested_coverage &&
+                !assessment.final_success)
+                covered_dirty += entry.probability;
+        }
+        PC_CHECK(near(joint_coverage, 1.0));
+        PC_CHECK(near(clean_success, 0.0));
+        PC_CHECK(near(covered_dirty, 1.0));
+        PC_CHECK(near(
+            dist.slot_satisfied_probability[0], joint_coverage));
         pc_item_state with_prefix_junk = item;
         place(&with_prefix_junk, PC_SIDE_PREFIX, 3, 12);
         pc_item_state with_suffix_junk = item;

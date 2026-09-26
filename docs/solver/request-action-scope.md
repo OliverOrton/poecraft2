@@ -8,6 +8,8 @@ This page owns the mapping from a native request to the action envelope used by 
 
 Inputs are the concrete start item, requested goal slots and tiers, terminal rarity and minimum satisfaction count, solve profile, explicit action IDs or product-envelope construction, disabled families, prices, and computational limits.
 
+Target identity also includes whether unrelated explicit affixes are permitted at success and any exact prefix/suffix occupancy constraint. The private audit modes are `legacy-clean` (public v1 normal form), `explicit-clean` (accepted only when all required slots are disjoint and fixed-side, then normalized to the same native goal), and `coverage-only` (native calculator diagnostic). The latter has a distinct target identity and cannot start a Current solve while clean-target proof and graph-evaluation dependencies remain. No public request field selects these modes. [Audit record](../active/2026-09-25-current-goal-audit/README.md).
+
 Native registry and option construction produce a deterministic action vocabulary and an action-envelope ledger. The ledger records what has happened to each source/operator obligation; the existence of a ledger entry is not proof that its row is complete.
 
 Primary owners are `solver_api.cpp`, `solver_registry.cpp`, `solver_action_family_contract.hpp`, `solver_options_build.cpp`, `solver_options_automatic.cpp`, `solver_options_temporary.cpp`, and `solver_action_envelope_ledger.hpp`.

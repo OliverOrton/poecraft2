@@ -1,0 +1,12 @@
+{
+  "scope": "Container package validation; no repository or native solver execution",
+  "payload_json_files_checked_before_qa": 2,
+  "python_files_parsed_and_compiled": 1,
+  "markdown_local_links_checked": 29,
+  "markdown_fence_balance_passed": true,
+  "abstract_tests_run": 23,
+  "abstract_test_failures": 0,
+  "abstract_test_errors": 0,
+  "native_builds_runs_simulations_performed": false,
+  "note": "Manifest hashes and archive equality were checked after writing this record."
+}

@@ -175,6 +175,23 @@ std::uint64_t SolveWork::Impl::goal_identity() const {
                 identity_mix(hash, word);
             }
         }
+        const auto& terminal = calc.goal().terminal;
+        if (terminal.extras != ExtraExplicitPolicy::ForbidUnmatched ||
+            terminal.prefixes || terminal.suffixes) {
+            // Keep the legacy-clean fingerprint stable. A distinct resolved
+            // terminal must never reuse its incumbent or proof identity.
+            identity_mix(hash, 3);
+            identity_mix(hash, static_cast<std::uint8_t>(terminal.extras));
+            const auto mix_range = [&](const std::optional<GoalCountRange>& range) {
+                identity_mix(hash, range.has_value());
+                if (range) {
+                    identity_mix(hash, range->minimum);
+                    identity_mix(hash, range->maximum);
+                }
+            };
+            mix_range(terminal.prefixes);
+            mix_range(terminal.suffixes);
+        }
         return hash;
     }
 

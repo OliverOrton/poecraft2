@@ -58,6 +58,8 @@ No broad completeness theorem in these documents assumes the entire implicit pro
 
 At the reviewed revision, the documented terminal contract combines required rarity, requested slot/tier coverage, and equality between occupied explicit-affix count and the native satisfied-goal count. Empty explicit slots are allowed; unrelated affixes, temporary blockers, metamods, and below-tier members are not terminal success. [States and Carriers](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/states-carriers.md).
 
+The September 25 Current-goal audit distinguishes requested coverage \(C\) from this clean terminal \(T\). Its private native diagnostic can assess a coverage-only terminal \(R=C\), so \(T\subseteq R\) for the same rarity and resolved slots. This is a different SSP target. Public v1 construction and Calculator still use \(T\); coverage-only solving is refused until its proof and original-root checking paths are qualified. [Audit record](../active/2026-09-25-current-goal-audit/README.md).
+
 For a request with disjoint requirements, an intuitive description is “enough requested affixes of acceptable tiers, and no occupied affix outside that accepted set.” This description is not a replacement for the native goal resolver when goal groups overlap, requirements allow alternatives, or crafted/natural membership differs. In those cases, retain the resolver's counting and assignment semantics. A proof using one bit per distinct affix must establish that premise for its own domain.
 
 We may make \(G_\theta\) absorbing with zero subsequent cost for analysis. That is an analysis convention after native success, not permission to turn a non-goal frontier into success.

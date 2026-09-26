@@ -25,6 +25,8 @@ Primary owners are `solver_model.hpp`, `solver_abstract.cpp`, `solver_calc_types
 
 The implemented goal test requires the requested rarity and slot/tier threshold, and requires occupied explicit-affix count to equal satisfied goal count. Empty explicit slots are permitted. Junk, temporary metamods, below-tier goal members, and blockers may occur during planning but are not terminal success.
 
+`CalcContext::assess_goal_state` now reports requested coverage, current occupancy and final truth separately. It is a passive read of the present carrier, so an item may gain, lose and regain requested coverage through later actions. A covered-but-dirty state is an ordinary nonterminal continuation state, not a committed cleanup phase. The private coverage-only diagnostic changes the terminal test on a fresh context; public v1 retains the clean default. [Current-goal audit](../active/2026-09-25-current-goal-audit/README.md).
+
 Use the native resolver and terminal predicate. Do not replace them with `mask == full`, assume every requested bit must always correspond to a distinct physical affix, or reinterpret overlapping slots in documentation. The mathematical model keeps native slot/overlap semantics explicit; distinct-goal assumptions belong to a particular proof's preconditions.
 
 Compiler terminal recognition must express the same predicate. A projection satisfying a relaxed terminal is not thereby a native successful item.

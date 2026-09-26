@@ -1,0 +1,22 @@
+# Received current-turn note (preserved as input, not authority)
+
+**Important exact-solver follow-up:** the recent dirty-progress/retention work did **not** fix the non-experimental Current/exact solver. The large K result was confined to the experimental Strategy Finder: its new `conditional-retention` grammar learned to preserve a valuable goal side and run a native Eldritch programme, improving A5 from ~320.8M to ~524k. Current remained at its existing ~85.6k policy and did not receive that new controller-generation mechanism.
+
+More importantly, the exact solver still uses the global **junk-free terminal predicate** introduced by `2b8d5ac` (“Complete exact-goal carrier ladder”, Aug. 23). Before that commit, `CalcContext::is_goal_state` was essentially `rarity && enough requested goal slots`; afterward it became `rarity && enough requested goals && explicit_affix_count == satisfied_goal_count`. Thus every extra explicit affix became nonterminal. That same rule is still present on current main. This is why Calculator examples such as Chaos hitting the requested mod with ~0.35% coverage can nevertheless report exact success `0%`: target-mod-plus-junk does not count as success.
+
+I am specifically interested in the **impact of this on the exact solver**, not just the experimental finder. The historical timing is concerning because we remember earlier cases solving much more easily/exactly, and the exact-clean semantic change substantially changes the SSP: states that formerly absorbed at “all requested mods acquired” now require cleanup, preservation, possible goal loss, reacquisition, and recurrent continuation. A lot of the later carrier/recovery/proof machinery may be compensating for that harder formulation.
+
+Please investigate whether this explains any meaningful part of the exact solver’s later difficulty. Do not simply relax today’s A4/A5 goals and call that an improvement. Separate these questions:
+
+1. **Model/product semantics:** should ordinary goals default to requested mods with junk allowed, with explicit occupancy/open-slot constraints such as “3 prefixes, 1 suffix, 2 open suffixes” when cleanliness actually matters?
+2. **Exact-solver search difficulty:** for the *same final clean target we use today*, is the exact solver harmed because acquisition progress and cleanup debt are too tightly coupled, or because it lacks effective composition of preserving programmes from dirty carriers?
+3. **Historical regression/model audit:** which older “exact” results were actually under the pre-Aug-23 junk-tolerant terminal, and which are genuinely comparable to current clean-goal solves?
+4. **Controlled diagnostic:** on current A4/A5, compare the current strict terminal with a diagnostic junk-tolerant terminal using identical root/actions/prices/caps, measuring state count, rows, reforge work, incumbent discovery, lower/upper gap and closure. Separately test whether an explicit occupancy-goal formulation can preserve the exact same clean target while giving the solver a cleaner distinction between “requested mods acquired” and “cleanup still owed.”
+
+The key point is that **the exact solver has not yet received a general “junk is acceptable intermediate progress / cleanup is a separate obligation” fix**. The O experiment only ruled down raw same-mask `unrelated_occupancy` ordering as the A5 cause, and S was inactive in the measured A5 lifecycle. The K finder result instead showed that giving a search system one real progress-preserving programme can change strategy quality by orders of magnitude. That makes it worth auditing whether Current technically owns many such native programmes but still fails to compose/value them effectively under the strict-clean problem formulation.
+
+I would treat the Aug. 23 terminal-semantics change as a potentially important historical boundary and audit it before assuming the exact solver’s remaining difficulty requires another unrelated sophisticated algorithm.
+
+---
+
+Review disposition: the native/compiler predicate boundary and K lane restriction are confirmed. The example's exact ~0.35% request is not supplied and is not numerically reproduced. Current has longstanding preserving/dirty-continuation machinery; absence of a *general fix* is not evidence it lacks all such capabilities. Historical model causality remains to be measured. “Learned” above is colloquial: K used native generated rules, not neural training. The detailed qualifications and counterevidence are in [REVIEW.md](REVIEW.md) and [HISTORY.md](HISTORY.md).

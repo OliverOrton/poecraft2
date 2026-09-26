@@ -1,0 +1,50 @@
+{
+  "reviewed_head": "cdea5b7f9556ae30c43f9a74249d64b3dcf0f029",
+  "head_message": "Add native retained-side finder and seed observation",
+  "review_scope": "read-only source/reported-evidence review; abstract tests only",
+  "ci": {
+    "windows": {
+      "run_id": 36197568022,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "solver_knowledge": {
+      "run_id": 36197568120,
+      "status": "completed",
+      "conclusion": "success"
+    }
+  },
+  "k": {
+    "selector_calls": 19667,
+    "gate_on_calls": 0,
+    "disposition": "measured_gate_inactive",
+    "current_a5_cost": 85558.70618560436,
+    "finder_a3_old": 335995.68284382095,
+    "finder_a3_new": 14034.203062534049,
+    "finder_a5_old": 320800932.13201106,
+    "finder_a5_new": 524079.6986482172,
+    "finder_product_qualified": false,
+    "finder_default": false
+  },
+  "boundary": {
+    "commit": "2b8d5acd8b7cd3598dca1756f7b5d53ab914c692",
+    "parent": "82224d0b5075d32cb920fa889c6536a7121ffc70",
+    "timestamp_utc": "2026-08-23T09:13:32Z",
+    "old_native_and_compiler_target": "requested rarity and enough native requested slots",
+    "new_target": "old target and occupied explicit count equals satisfied requested slots",
+    "other_changes_in_same_commit": true,
+    "clean_c5_upper": 87361.1690420501,
+    "clean_c5_lower": 36.4286171890906,
+    "requested_finish_seconds": 60,
+    "solve_seconds": 71.8803405,
+    "imprint_enabled": true,
+    "optimality": "bounded"
+  },
+  "not_measured_here": [
+    "native performance",
+    "same-build current clean-versus-loose comparison",
+    "supplied 0.35 percent example",
+    "new exact closure",
+    "historical policies re-evaluated under current data"
+  ]
+}

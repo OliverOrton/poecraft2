@@ -5,6 +5,8 @@
 
 A lower is a statement about every allowed proper solution, not just the current policy or the current sparse graph. Its value is useful only after the native scope and the relation supplying the inequality have been established.
 
+For the same physical transition laws, allowed policies and nonnegative costs, enlarging a terminal set from clean \(T\) to coverage \(R\supseteq T\) can only lower the optimal first-hit cost: \(V_R^*\le V_T^*\). Thus a valid coverage lower also bounds the clean optimum, but a positive clean lower is not automatically valid for coverage; every newly terminal state needs a zero boundary. Target-dependent native programs or admission rules must also be matched before using this set-inclusion comparison for a measured solve. The private coverage diagnostic currently refuses solving rather than consuming clean MDP, strict, retention or envelope values. [Audit capability decision](../../active/2026-09-25-current-goal-audit/README.md).
+
 This chapter gives explicit sufficient arguments. It does not claim that every native producer already proves every premise. The corresponding current mechanisms are in [Lower and Pruning Authority](../lower-pruning.md).
 
 <a id="heuristic"></a>

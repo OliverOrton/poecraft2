@@ -371,6 +371,28 @@ std::string exact_goal_condition(
     for (const SlotVocabulary& slot : vocabulary) {
         satisfied.push_back(slot.satisfied);
     }
+    const GoalTerminalConstraints& terminal = calc.goal().terminal;
+    if (terminal.extras == ExtraExplicitPolicy::Allow) {
+        std::vector<std::string> parts{
+            rarity_condition(calc.goal().rarity),
+            at_least(calc.goal().required_satisfied_slots(), satisfied)};
+        const auto add_count = [&](const char* field,
+                const std::optional<GoalCountRange>& range) {
+            if (!range) return;
+            if (range->minimum > range->maximum ||
+                range->maximum > PC_MAX_PREFIXES)
+                throw std::invalid_argument(
+                    "goal has invalid explicit occupancy range");
+            std::vector<std::string> choices;
+            for (std::uint32_t count = range->minimum;
+                 count <= range->maximum; ++count)
+                choices.push_back(count_condition(field, count));
+            parts.push_back(any_of(choices));
+        };
+        add_count("prefix_count_range", terminal.prefixes);
+        add_count("suffix_count_range", terminal.suffixes);
+        return all_of(parts);
+    }
     std::vector<std::string> accepted_counts;
     const std::size_t maximum = std::min<std::size_t>(
         satisfied.size(), kMaxExplicitAffixes);
@@ -383,9 +405,27 @@ std::string exact_goal_condition(
             total_explicit_affix_count_condition(
                 static_cast<std::uint8_t>(count))}));
     }
-    return all_of({
+    std::string clean = all_of({
         rarity_condition(calc.goal().rarity),
         any_of(accepted_counts)});
+    if (!terminal.prefixes && !terminal.suffixes) return clean;
+    std::vector<std::string> constraints{std::move(clean)};
+    const auto add_count = [&](const char* field,
+            const std::optional<GoalCountRange>& range) {
+        if (!range) return;
+        if (range->minimum > range->maximum ||
+            range->maximum > PC_MAX_PREFIXES)
+            throw std::invalid_argument(
+                "goal has invalid explicit occupancy range");
+        std::vector<std::string> choices;
+        for (std::uint32_t count = range->minimum;
+             count <= range->maximum; ++count)
+            choices.push_back(count_condition(field, count));
+        constraints.push_back(any_of(choices));
+    };
+    add_count("prefix_count_range", terminal.prefixes);
+    add_count("suffix_count_range", terminal.suffixes);
+    return all_of(constraints);
 }
 
 std::string abstract_state_condition(

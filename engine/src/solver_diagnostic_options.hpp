@@ -47,6 +47,24 @@ struct CarrierLadderExactBoundaryDiagnosticConfig {
  * action_legal before asking for any kernel. */
 CalcContext& solver_lower_diagnostic_calculator(pc_solver_handle handle);
 
+enum class GoalTerminalDiagnosticMode : std::uint8_t {
+    LegacyClean,
+    ExplicitClean,
+    CoverageOnly
+};
+
+/* Private goal treatment is resolved before the calculator is constructed.
+ * ExplicitClean is accepted only for all-required, disjoint, fixed-side
+ * slots and canonicalises to the legacy clean terminal. */
+pc_result create_solver_with_goal_terminal_diagnostic(
+    pc_session_handle session,
+    const char* goal_json,
+    std::size_t goal_json_size,
+    GoalTerminalDiagnosticMode mode,
+    std::optional<std::uint32_t> automatic_candidate_kind_mask,
+    pc_solver_handle* out_solver,
+    pc_error_info* out_error);
+
 enum class NativeRetentionDiagnosticMode { Off, Cold, Reuse, CheckedTarget, ReuseUnconsumed };
 // Same ordinary consumer, native benchmark only. No public ABI/profile flag.
 pc_result configure_solver_native_retention_diagnostic(pc_solver_handle handle,

@@ -64,7 +64,9 @@ The engine result owns:
 - supported/legal state;
 - sparse abstract successor probabilities;
 - per-slot satisfied probability; and
-- combined success probability for finished rarity plus the slot threshold.
+- combined success probability for finished rarity, the requested slot
+  threshold, and no unmatched explicit prefix or suffix affixes. A covered
+  item with an extra explicit affix is not a current clean-goal success.
 
 The Odds inspector presents that result, groups returned classes by goal
 coverage, exposes overlapping miss signals, and retains a capped raw technical
