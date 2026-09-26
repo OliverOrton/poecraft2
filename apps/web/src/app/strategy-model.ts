@@ -20,6 +20,9 @@ export interface StrategyStartMod {
     mod_key: string;
     fractured?: boolean;
     crafted?: boolean;
+    veiled?: boolean;
+    eldritch?: boolean;
+    synth?: boolean;
 }
 
 export interface StrategyBaseState {
@@ -34,6 +37,8 @@ export interface StrategyBaseState {
     eater_of_worlds_tier?: number;
     prefixes?: StrategyStartMod[];
     suffixes?: StrategyStartMod[];
+    /** Exact native implicit list when a compiled policy starts after an Eldritch change. */
+    implicits?: StrategyStartMod[];
 }
 
 export interface StrategyOperation {

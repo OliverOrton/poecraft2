@@ -227,6 +227,8 @@ struct CompiledPolicyAssertion {
     std::string certification_strategy_json;
     PolicyCompilationTelemetry certification_compilation;
     bool paired_default_only = false;
+    // Full original request, data, programme and price identity for reuse.
+    std::vector<std::uint64_t> request_identity;
     StrategyEvalResult evaluation;
     double solver_cost = std::numeric_limits<double>::infinity();
     double exact_cost = std::numeric_limits<double>::infinity();

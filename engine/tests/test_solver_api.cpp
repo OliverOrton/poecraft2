@@ -2107,9 +2107,8 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(pc_economy_load_json(economy_json, std::strlen(economy_json),
                                   &economy, &error) == PC_RESULT_OK);
 
-    /* Private terminal treatments must be bound before construction and
-     * remain isolated across handles. Coverage-only is a calculator
-     * diagnostic until its proof and original-root checker are retargeted. */
+    /* Private terminal treatments remain isolated across handles. Finder
+     * may check coverage policies; Current still needs a separate proof. */
     pc_solver_handle explicit_clean_solver = nullptr;
     PC_CHECK(poecraft::solver::create_solver_with_goal_terminal_diagnostic(
                  session, goal_json.c_str(), goal_json.size(),
@@ -2157,11 +2156,51 @@ void run_public_solver_gate(const char* artifact_dir) {
             coverage_solver, &item, economy, nullptr, &error) ==
             PC_RESULT_INVALID_ARGUMENT);
         PC_CHECK(std::strstr(error.message,
-            "coverage-only solve is unavailable") != nullptr);
+            "coverage-only Current solve is unavailable") != nullptr);
         pc_solve_summary unsupported_summary{};
         PC_CHECK(pc_solver_solve(
             coverage_solver, &item, economy, nullptr,
             &unsupported_summary, &error) == PC_RESULT_INVALID_ARGUMENT);
+
+        pc_item_state covered_item = item;
+        PC_CHECK(pc_item_add_mod(&covered_item, pool[0].generation_type,
+            pool[0].session_mod_id,
+            static_cast<std::uint16_t>(pool[0].primary_group_id),
+            0, nullptr) == PC_RESULT_OK);
+        bool added_extra = false;
+        for (std::uint32_t i = 1; i < pool_count && !added_extra; ++i) {
+            if (pool[i].primary_group_id == pool[0].primary_group_id)
+                continue;
+            added_extra = pc_item_add_mod(&covered_item,
+                pool[i].generation_type, pool[i].session_mod_id,
+                static_cast<std::uint16_t>(pool[i].primary_group_id),
+                0, nullptr) == PC_RESULT_OK;
+        }
+        PC_CHECK(added_extra);
+        if (added_extra) {
+            pc_solve_options finder_options{};
+            finder_options.struct_size = sizeof(finder_options);
+            finder_options.abi_version = PC_ABI_VERSION;
+            finder_options.solver_mode = PC_SOLVER_MODE_STRATEGY_FINDER;
+            finder_options.max_solver_owned_bytes = 64ull << 20;
+            pc_solve_summary found{};
+            PC_CHECK(pc_solver_solve(coverage_solver, &covered_item,
+                economy, &finder_options, &found, &error) == PC_RESULT_OK);
+            PC_CHECK(found.policy_available == 1);
+            PC_CHECK(found.upper_bound == 0.0);
+            PC_CHECK(pc_solver_solve_begin(coverage_solver, &covered_item,
+                economy, &finder_options, &error) == PC_RESULT_OK);
+            pc_solve_progress progress{};
+            for (int i = 0; i < 1000 && !progress.done; ++i)
+                PC_CHECK(pc_solver_solve_step(coverage_solver, 1024,
+                    &progress, &error) == PC_RESULT_OK);
+            PC_CHECK(progress.done == 1);
+            pc_solve_summary stepped{};
+            PC_CHECK(pc_solver_solve_finish(coverage_solver,
+                &stepped, &error) == PC_RESULT_OK);
+            PC_CHECK(stepped.policy_available == 1);
+            PC_CHECK(stepped.upper_bound == 0.0);
+        }
     }
     pc_solver_destroy(coverage_solver);
     pc_solver_destroy(explicit_clean_solver);

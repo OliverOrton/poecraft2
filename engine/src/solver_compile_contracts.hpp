@@ -27,6 +27,13 @@ std::string compile_finder_candidate_json(
 
 std::string compile_finder_goal_condition(const CalcContext& calc);
 
+/* Conservative compiler-owned entailment for solver-produced graphs. Every
+ * effective edge into success must test the exact original native request;
+ * graph conditions used only for routing remain evaluator observations. */
+bool compiled_success_ingress_matches_request(
+    const CalcContext& calc, const std::string& strategy_json,
+    std::string* refusal = nullptr);
+
 /* A finite, native-bound finder proposal. Indices name nodes in this vector;
  * Hole is search-only and cannot be compiled. Goal ingress is assembled from
  * the original request, never supplied as an arbitrary proposer predicate. */

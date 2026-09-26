@@ -1,0 +1,11 @@
+{
+  "kind": "exact_rational_and_abstract_specification_tests_not_native",
+  "tests_run": 18,
+  "failures": 0,
+  "errors": 0,
+  "successful": true,
+  "generated_retry_models_in_one_test": 32,
+  "native_tests_run": 0,
+  "native_benchmarks_run": 0,
+  "notes": "No native C++ imported; tests check stated toy arguments, not implementation premises."
+}

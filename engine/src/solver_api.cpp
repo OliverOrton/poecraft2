@@ -1941,15 +1941,17 @@ pc_result pc_solver_solve(
                   "solver, start item, and economy are required");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    if (solver->calc->goal().terminal.extras ==
-        solver::ExtraExplicitPolicy::Allow) {
-        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
-            "coverage-only solve is unavailable: clean-target lower proofs "
-            "and original-target graph evaluation are not qualified");
-        return PC_RESULT_INVALID_ARGUMENT;
-    }
     try {
-        if (requested_solver_mode(options) == PC_SOLVER_MODE_STRATEGY_FINDER) {
+        const pc_solver_mode mode = requested_solver_mode(options);
+        if (solver->calc->goal().terminal.extras ==
+                solver::ExtraExplicitPolicy::Allow &&
+            mode != PC_SOLVER_MODE_STRATEGY_FINDER) {
+            set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                "coverage-only Current solve is unavailable: "
+                "clean-target lower proofs are not qualified");
+            return PC_RESULT_INVALID_ARGUMENT;
+        }
+        if (mode == PC_SOLVER_MODE_STRATEGY_FINDER) {
             pc_result rc = pc_solver_solve_begin(
                 solver, start_item, economy, options, out_error);
             if (rc != PC_RESULT_OK) return rc;
@@ -2011,15 +2013,16 @@ pc_result pc_solver_solve_begin(
                   "solver, start item, and economy are required");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    if (solver->calc->goal().terminal.extras ==
-        solver::ExtraExplicitPolicy::Allow) {
-        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
-            "coverage-only solve is unavailable: clean-target lower proofs "
-            "and original-target graph evaluation are not qualified");
-        return PC_RESULT_INVALID_ARGUMENT;
-    }
     try {
         const pc_solver_mode mode = requested_solver_mode(options);
+        if (solver->calc->goal().terminal.extras ==
+                solver::ExtraExplicitPolicy::Allow &&
+            mode != PC_SOLVER_MODE_STRATEGY_FINDER) {
+            set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                "coverage-only Current solve is unavailable: "
+                "clean-target lower proofs are not qualified");
+            return PC_RESULT_INVALID_ARGUMENT;
+        }
         /*
          * Beginning stepped replacement invalidates the previous solve.
          * Release its retained strategy and any ordinary compiled cache

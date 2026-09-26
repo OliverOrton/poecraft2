@@ -35,6 +35,10 @@ SolveWork::Impl::Impl(
         : calc(context), session(context.session()),
           exact_start_item(start_item), options(solve_options), prices(prices),
           reported_unsupported(context.operators().size(), false) {
+        if (calc.goal().terminal.extras == ExtraExplicitPolicy::Allow)
+            throw std::invalid_argument(
+                "coverage-only Current solve requires a qualified "
+                "target-neutral proof profile");
         const auto setup_started = std::chrono::steady_clock::now();
         if ((start_item.item_flags &
              (PC_ITEM_MIRRORED | PC_ITEM_SYNTHESISED)) != 0) {

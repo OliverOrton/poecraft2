@@ -3,6 +3,7 @@
 #include "solver_solve_types.hpp"
 #include "solver_options_helpers.hpp"
 #include "json.hpp"
+#include <unordered_set>
 
 /*
  * Compile an exact solver policy into the ordinary strategy graph format.
@@ -23,6 +24,104 @@ std::string compile_finder_goal_condition(const CalcContext& calc) {
             calc.session(), calc.layout().slots[i], i));
     }
     return exact_goal_condition(calc, vocabulary);
+}
+
+namespace {
+bool same_condition_json(const json::Value& left, const json::Value& right) {
+    if (left.type != right.type) return false;
+    switch (left.type) {
+    case json::Type::Null: return true;
+    case json::Type::Bool: return left.boolean == right.boolean;
+    case json::Type::Number: return left.number == right.number;
+    case json::Type::String: return left.string == right.string;
+    case json::Type::Array:
+        if (left.array.size() != right.array.size()) return false;
+        for (std::size_t i = 0; i < left.array.size(); ++i)
+            if (!same_condition_json(left.array[i], right.array[i])) return false;
+        return true;
+    case json::Type::Object:
+        if (left.object.size() != right.object.size()) return false;
+        for (std::size_t i = 0; i < left.object.size(); ++i)
+            if (left.object[i].first != right.object[i].first ||
+                !same_condition_json(left.object[i].second, right.object[i].second))
+                return false;
+        return true;
+    }
+    return false;
+}
+
+std::string condition_text_member(const json::Value& value, const char* key) {
+    const json::Value* member = value.find(key);
+    return member != nullptr && member->type == json::Type::String
+        ? member->string : std::string{};
+}
+} // namespace
+
+bool compiled_success_ingress_matches_request(
+    const CalcContext& calc, const std::string& strategy_json,
+    std::string* refusal) {
+    const auto refuse = [&](const char* reason) {
+        if (refusal != nullptr) *refusal = reason;
+        return false;
+    };
+    try {
+        const json::Value graph = json::Parser(
+            strategy_json.data(), strategy_json.size()).parse();
+        const std::string goal_text = compile_finder_goal_condition(calc);
+        const json::Value goal = json::Parser(
+            goal_text.data(), goal_text.size()).parse();
+        std::unordered_set<std::string> successes;
+        for (const json::Value& node : graph.at("nodes").as_array())
+            if (condition_text_member(node, "kind") == "terminal" &&
+                condition_text_member(node, "terminal") == "success")
+                successes.insert(condition_text_member(node, "id"));
+        std::size_t guarded = 0;
+        for (const json::Value& edge : graph.at("edges").as_array()) {
+            if (!successes.contains(condition_text_member(edge, "to")))
+                continue;
+            const json::Value* is_default = edge.find("is_default");
+            const json::Value* condition = edge.find("condition");
+            // A default edge executes as Always, regardless of its authored
+            // condition. It cannot establish request membership.
+            if ((is_default != nullptr &&
+                 is_default->type == json::Type::Bool &&
+                 is_default->boolean) || condition == nullptr ||
+                !same_condition_json(*condition, goal))
+                return refuse("success ingress is not the original native goal");
+            ++guarded;
+        }
+        if (guarded == 0)
+            return refuse("graph has no guarded success ingress");
+        if (refusal != nullptr) refusal->clear();
+        return true;
+    } catch (const std::exception& ex) {
+        if (refusal != nullptr) *refusal = ex.what();
+        return false;
+    }
+}
+
+static void append_start_implicits_json(
+    std::string& json, const SessionImpl& session,
+    const pc_item_state& start_item) {
+    json += ",\"implicits\":[";
+    for (std::uint8_t i = 0; i < start_item.implicit_count; ++i) {
+        if (i != 0) json += ',';
+        const pc_mod_slot& slot = start_item.implicits[i];
+        json += "{\"mod_key\":\"" +
+            json_escape(mod_key_of(session, slot.mod_id)) + "\"";
+        if ((slot.flags & PC_MOD_SLOT_FRACTURED) != 0)
+            json += ",\"fractured\":true";
+        if ((slot.flags & PC_MOD_SLOT_CRAFTED) != 0)
+            json += ",\"crafted\":true";
+        if ((slot.flags & PC_MOD_SLOT_VEILED) != 0)
+            json += ",\"veiled\":true";
+        if ((slot.flags & PC_MOD_SLOT_ELDRITCH) != 0)
+            json += ",\"eldritch\":true";
+        if ((slot.flags & PC_MOD_SLOT_SYNTH) != 0)
+            json += ",\"synth\":true";
+        json += '}';
+    }
+    json += ']';
 }
 
 static std::string finder_base_json(
@@ -66,6 +165,7 @@ static std::string finder_base_json(
     };
     append_mods("prefixes", start_item.prefixes, start_item.prefix_count);
     append_mods("suffixes", start_item.suffixes, start_item.suffix_count);
+    append_start_implicits_json(json, session, start_item);
     return json + '}';
 }
 
@@ -914,6 +1014,7 @@ std::string compile_policy_strategy_json(
         append_start_mods(
             "suffixes", start_item.suffixes,
             start_item.suffix_count);
+        append_start_implicits_json(json, session, start_item);
         json +=
             "},\"start_node_id\":\"start\",\"nodes\":["
             "{\"id\":\"start\",\"kind\":\"start\"},"
@@ -3264,6 +3365,7 @@ std::string compile_policy_strategy_json(
     };
     start_mods("prefixes", start_item.prefixes, start_item.prefix_count);
     start_mods("suffixes", start_item.suffixes, start_item.suffix_count);
+    append_start_implicits_json(json, session, start_item);
     json += "},\"start_node_id\":\"start\",\"nodes\":[";
     json += "{\"id\":\"start\",\"kind\":\"start\"},";
     const std::string root_router_id = "policy_route_root";

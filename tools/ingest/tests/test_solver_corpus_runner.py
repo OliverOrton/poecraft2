@@ -513,10 +513,12 @@ def test_native_goal_terminal_is_resumable_current_treatment(
         **kwargs, native_goal_terminal="explicit-clean")
     assert command.as_list()[-2:] == [
         "--native-goal-terminal", "explicit-clean"]
-    with pytest.raises(ValueError, match="native goal terminal"):
-        build_solver_case_command(
-            **(kwargs | {"solver_mode": "strategy_finder"}),
-            native_goal_terminal="coverage-only")
+    finder_command = build_solver_case_command(
+        **(kwargs | {"solver_mode": "strategy_finder"}),
+        native_goal_terminal="coverage-only")
+    assert finder_command.as_list()[-4:] == [
+        "--solver-mode", "strategy_finder",
+        "--native-goal-terminal", "coverage-only"]
     manifest = tmp_path / "manifest.json"
     _write_json(manifest, {"cases": []})
     args = dict(root=Path.cwd(), executable=Path(sys.executable),

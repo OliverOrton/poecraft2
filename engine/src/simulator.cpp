@@ -190,15 +190,14 @@ std::uint8_t side_cap(const SessionImpl& session, const pc_item_state& item) {
     return 0;
 }
 
-void add_start_mod(
-    const SessionImpl& session,
-    pc_item_state& item,
-    const Value& value,
-    int side) {
+std::pair<std::uint32_t, std::uint8_t> resolve_start_mod(
+    const SessionImpl& session, const Value& value) {
     std::string key;
     bool fractured = false;
     bool crafted = false;
     bool veiled = false;
+    bool eldritch = false;
+    bool synth = false;
     if (value.type == Type::String) {
         key = value.string;
     } else if (value.type == Type::Object) {
@@ -207,6 +206,8 @@ void add_start_mod(
         fractured = bool_member(value, "fractured", false);
         crafted = bool_member(value, "crafted", false);
         veiled = bool_member(value, "veiled", false);
+        eldritch = bool_member(value, "eldritch", false);
+        synth = bool_member(value, "synth", false);
     } else {
         invalid("base_state explicit mods must be strings or objects");
     }
@@ -223,13 +224,24 @@ void add_start_mod(
         invalid("base_state mod is not in the session: " + key);
     }
     const std::uint32_t mod_id = session_it->second;
-    if (session.gen_type[mod_id] != side) {
-        invalid("base_state mod is on the wrong affix side: " + key);
-    }
     std::uint8_t flags = 0;
     if (fractured) flags |= PC_MOD_SLOT_FRACTURED;
     if (crafted) flags |= PC_MOD_SLOT_CRAFTED;
     if (veiled) flags |= PC_MOD_SLOT_VEILED;
+    if (eldritch) flags |= PC_MOD_SLOT_ELDRITCH;
+    if (synth) flags |= PC_MOD_SLOT_SYNTH;
+    return {mod_id, flags};
+}
+
+void add_start_mod(
+    const SessionImpl& session,
+    pc_item_state& item,
+    const Value& value,
+    int side) {
+    const auto [mod_id, flags] = resolve_start_mod(session, value);
+    if (session.gen_type[mod_id] != side) {
+        invalid("base_state mod is on the wrong affix side");
+    }
     if (pc_item_add_mod(
             &item,
             side,
@@ -262,7 +274,21 @@ pc_item_state parse_start_item(
     item.rarity = static_cast<std::uint8_t>(
         rarity_from_name(string_member(base_state, "rarity", "normal")));
 
-    if (bool_member(base_state, "with_implicits", true)) {
+    const Value* explicit_implicits = base_state.find("implicits");
+    if (explicit_implicits != nullptr) {
+        const auto& entries = require_object_member(
+            base_state, "implicits", Type::Array).array;
+        if (entries.size() > PC_MAX_IMPLICITS)
+            invalid("base implicit count exceeds item capacity");
+        for (const Value& spec : entries) {
+            const auto [mod_id, flags] = resolve_start_mod(session, spec);
+            pc_mod_slot& slot = item.implicits[item.implicit_count++];
+            slot.mod_id = mod_id;
+            slot.group_id = static_cast<std::uint16_t>(
+                session.primary_group[mod_id]);
+            slot.flags = flags;
+        }
+    } else if (bool_member(base_state, "with_implicits", true)) {
         if (session.base_implicit_mod_ids.size() > PC_MAX_IMPLICITS) {
             invalid("base implicit count exceeds item capacity");
         }

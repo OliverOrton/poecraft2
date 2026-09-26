@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "reviewed_head": "adb521064cd2d7b8d1dc67b6aebb258bdb2283f6",
+  "purpose": "self-contained implementation/research packet; not native qualification",
+  "payloads": [
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 9083,
+      "sha256": "112315ee59382b0c8f8a030c0631aa0ff76af09b7b9061d3affa0f32c28767af"
+    },
+    {
+      "path": "CURRENT_PROFILE.md",
+      "bytes": 7993,
+      "sha256": "40e348611b0a73744518cd81a8294042e7eb55375fecd6dac0b22f3cc7d63108"
+    },
+    {
+      "path": "DATA_REQUEST.md",
+      "bytes": 3514,
+      "sha256": "fe90e6e3e7dd18a8128184bc720b776774468b9e597d8367b36efdfc5de4c822"
+    },
+    {
+      "path": "DOCS_AND_ROADMAP.md",
+      "bytes": 5414,
+      "sha256": "92031e8202e201148601fee7d7307ed0fd9f51b367fb10016d27be397344922c"
+    },
+    {
+      "path": "FINDER_INTEGRATION.md",
+      "bytes": 4864,
+      "sha256": "1b429afd137fd9f688b6b108fff7916a34769b276ac6e24b83af4a517ed451c6"
+    },
+    {
+      "path": "MATHEMATICS.md",
+      "bytes": 9852,
+      "sha256": "f07c7e212e70e885904f4187a843b00990708ec7a124877c4ee3921111f5ebd6"
+    },
+    {
+      "path": "PLAN.md",
+      "bytes": 9419,
+      "sha256": "d3e0efaa92b9d588fb8de66e1fbba918ec0fb9644273783d22d4c2cc22bd93a4"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3815,
+      "sha256": "9b50d5fb38e2ff9ecc0d8779c21cc2a5978e8e29babfcb5e1edb78730aab841e"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 7756,
+      "sha256": "80d0d81edd059853a232da95bdaa8a0633b18f7c7e36de3d94d6b9b4c413f9fa"
+    },
+    {
+      "path": "SHARED_CHECKING.md",
+      "bytes": 7780,
+      "sha256": "e5f0df9f72417ccb70b8b69c42a1c0242675085cd92b350646975326833fea86"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 10425,
+      "sha256": "95aa9ab67226bd4373478d51d90e889766ceab0796e47bbba187c4a04a37a005"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 8368,
+      "sha256": "6194c32ebfedf9d2e8a20e625d9823f064323c8554701dd67dc3042c69ade202"
+    },
+    {
+      "path": "checks/results.json",
+      "bytes": 348,
+      "sha256": "82be9762bd2d8756f6ec8d17634f064dda280a5b210cb1aeb36d27cd81fa971d"
+    },
+    {
+      "path": "checks/test_contracts.py",
+      "bytes": 9284,
+      "sha256": "bc7650e7bfb896ea7cdae4dd4813e57c2423e3b2dd26a3caad9a98935aa66b1c"
+    },
+    {
+      "path": "evidence/baseline.json",
+      "bytes": 2450,
+      "sha256": "66d58e2adc6b55c3c4e52532488be6d7b42ac7b6e98ba386d9fac5b6d90cee46"
+    },
+    {
+      "path": "evidence/ci.json",
+      "bytes": 644,
+      "sha256": "caab2f2607df429272b619481fe0551e6271f52d929b17066a184eb50c26426b"
+    }
+  ]
+}

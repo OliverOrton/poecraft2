@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "projection_of_checked_in_records_not_new_measurement",
+  "reviewed_head": "adb521064cd2d7b8d1dc67b6aebb258bdb2283f6",
+  "parent": "cdea5b7f9556ae30c43f9a74249d64b3dcf0f029",
+  "head_message": "Audit Current goal semantics and guard loose solves",
+  "public_default": "legacy_clean_v1_unchanged",
+  "implemented_shared": [
+    "GoalTerminalConstraints",
+    "GoalAssessment",
+    "assess_goal_state",
+    "terminal-aware compiled goal predicate",
+    "nondefault terminal identity"
+  ],
+  "coverage_solve_current_status": "refused_before_mode_dispatch",
+  "current": {
+    "A4": {
+      "cost": 3746.1319409485764,
+      "lower": 198.8334996747695,
+      "expanded": 7213,
+      "rows": 135519,
+      "transitions": 214017,
+      "logical_reforge_work": 7167860,
+      "closure": "bounded",
+      "graph_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02"
+    },
+    "A5": {
+      "cost": 85558.70618560436,
+      "lower": 405.3694021063399,
+      "expanded": 3274,
+      "rows": 38963,
+      "transitions": 202077,
+      "closure": "bounded",
+      "reliability_classification": "refused_unsupported_action",
+      "checked_graph_status": "complete_success_one_zero_off_policy",
+      "graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02"
+    }
+  },
+  "finder_K": {
+    "grammar": "conditional-retention",
+    "product_qualified": false,
+    "A3_cost": 14034.203062534049,
+    "A5_cost": 524079.6986482172,
+    "A5_expected_primitive_actions": 28629.568,
+    "A5_peak_owned_bytes": 812027169
+  },
+  "recorded_identity": {
+    "E_executable_sha256": "eb7fd35bd03dc595fa2bd5ac4457fd7f63649873cd201b60cbeefd6a300cb68b",
+    "corpus_manifest_sha256": "404c0ee632b199b85a5fce76a62f9d75ca59839849b2b9efd1bcf4c174125b20",
+    "artifact_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+    "E_release_wasm_sha256": "417bc40df0ca2841e31dd631859b202e77ea238864d527a32c4e7bb1df5bc77e"
+  },
+  "limitations": [
+    "E measurements used a development-dirty build; late changes affected private E validation/R reporting according to the record",
+    "No R full solve was run successfully",
+    "No E timed comparison because normalized engine problem identical",
+    "A3 bounded-stop classification anomaly remains",
+    "K Finder was not product activated",
+    "Ignored raw local reports were not read during this review"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "head": "adb521064cd2d7b8d1dc67b6aebb258bdb2283f6",
+  "source": "GitHub Actions GET; recorded during review, not rerun",
+  "runs": [
+    {
+      "id": 36216220418,
+      "name": "Windows",
+      "status": "completed",
+      "conclusion": "success",
+      "job_id": 108332587320,
+      "build_and_test_steps": "success"
+    },
+    {
+      "id": 36216220550,
+      "name": "Solver knowledge",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "initial_windows_observation": "in_progress; subsequently completed successfully",
+  "review_native_builds_run": 0,
+  "review_native_benchmarks_run": 0
+}

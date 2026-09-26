@@ -637,8 +637,9 @@ def run_corpus(
     if seed_progress_observation and solver_mode != "current":
         raise ValueError("seed-progress observation requires current mode")
     if native_goal_terminal not in (None, "legacy-clean", "explicit-clean", "coverage-only") or (
-            native_goal_terminal is not None and solver_mode != "current"):
-        raise ValueError("native goal terminal requires current mode and a known value")
+            native_goal_terminal is not None and solver_mode not in
+            ("current", "strategy_finder")):
+        raise ValueError("native goal terminal requires a solver mode and a known value")
     if native_execution_action_price is not None and (
             native_dirty_guidance != "execution-count" or
             not math.isfinite(native_execution_action_price) or native_execution_action_price <= 0):

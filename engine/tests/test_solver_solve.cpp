@@ -1141,12 +1141,14 @@ void run_direct_certification_contract_tests() {
     prepared.retained_solver_bytes = 17;
     prepared.evaluator_memory_budget = 23;
     prepared.compilation_ns = 29;
+    prepared.request_identity = {1, 2, 3};
     std::optional<refinement::CompiledPolicyAssertion> cached =
         evaluated(11.0, 10.0, 1.0, 0.0);
     cached->strategy_json = "{\"graph\":\"product\"}";
     cached->certification_strategy_json =
         "{\"graph\":\"same\"}";
     cached->paired_default_only = true;
+    cached->request_identity = prepared.request_identity;
     PC_CHECK(refinement::reuse_compiled_policy_assertion_evaluation(
         prepared, cached));
     PC_CHECK(!cached.has_value());
@@ -1164,6 +1166,14 @@ void run_direct_certification_contract_tests() {
     PC_CHECK(prepared.evaluator_memory_budget == 23);
     PC_CHECK(prepared.compilation_ns == 29);
     PC_CHECK(prepared.exact_evaluation_ns == 0);
+
+    refinement::CompiledPolicyAssertion stale_context;
+    stale_context.strategy_json = "{\"graph\":\"same\"}";
+    stale_context.request_identity = {1, 2, 4};
+    cached = prepared;
+    PC_CHECK(!refinement::reuse_compiled_policy_assertion_evaluation(
+        stale_context, cached));
+    PC_CHECK(cached.has_value());
 
     refinement::CompiledPolicyAssertion different;
     different.solver_cost = 10.0;
@@ -7460,7 +7470,23 @@ void run_primitive_destructive_renewal_upper_tests(bool sample = true) {
     CalcContext dead_calc(
         session, dead_goal, registry, {alchemy, chaos, restart});
     pc_item_state dead_carrier = start;
-    place(&dead_carrier, PC_SIDE_PREFIX, 2, 10);
+    // The old fixture supplied mod2's pre-mutation group 10 after this
+    // session changed its canonical group to 11. A graph serialized by mod
+    // key would execute from group 11, so reject that different root.
+    pc_item_state stale_group_carrier = start;
+    place(&stale_group_carrier, PC_SIDE_PREFIX, 2, 10);
+    stale_group_carrier.prefixes[0].flags |= PC_MOD_SLOT_FRACTURED;
+    CalcContext stale_group_calc(
+        session, dead_goal, registry, {alchemy, chaos, restart});
+    const SolveResult stale_group_result = solve(
+        stale_group_calc, stale_group_carrier,
+        {{"alchemy", 0.5}, {"chaos", 1.0}, {"base", 1.0}});
+    PC_CHECK(!stale_group_result.policy_available);
+    PC_CHECK(stale_group_result.diagnostics.policy_publication_failure_reason.find(
+        "compiled policy changes the original start item") !=
+        std::string::npos);
+    place(&dead_carrier, PC_SIDE_PREFIX, 2,
+        static_cast<std::uint16_t>(session->primary_group[2]));
     dead_carrier.prefixes[0].flags |= PC_MOD_SLOT_FRACTURED;
     const SolveResult dead_result = solve(
         dead_calc, dead_carrier,

@@ -61,6 +61,11 @@ upper only; it supplies no lower, gap or optimality claim. Current remains the
 default. The [finder living record](../active/2026-09-24-strategy-finder/README.md#h0h4--reviewed-finder-continuation)
 owns the tested grammar and comparison.
 
+The native-private coverage-only terminal is admitted for Finder's fixed-policy
+search and checking in both synchronous and stepped entry. Current still refuses
+that terminal because its clean-dependent lower and closure consumers have not
+been isolated. Public v1 continues to use the clean target.
+
 The stepped interface is:
 
 ```text
@@ -90,11 +95,13 @@ The worker adapts native work and yields to its event loop. Cancellation is coop
 
 ## Policy To Editable Strategy
 
-A finder success route is guarded by the original native goal. In ordinary
+A solver-produced success route is guarded by the original native goal. In ordinary
 strategy JSON, a default edge executes as fallback even if raw JSON also gives
-it a condition, so raw decoration cannot establish this guard. Finder graph
-preparation rejects default success ingress; the independent evaluator then
-checks the exact emitted graph from the original root.
+it a condition, so raw decoration cannot establish this guard. Finder preparation
+and Current's compiled-policy assertion both reject unguarded success ingress;
+their owners also bind the original root and scope. The independent evaluator
+then checks the exact emitted graph. Other graph conditions remain routing
+observations and do not enlarge the requested success target.
 
 When `policy_available` holds, the compile interface returns the already asserted ordinary strategy. Fixed-program choice routes preserve their exact observation carrier. The strategy retains its concrete start and the documented presentation/accounting annotations.
 

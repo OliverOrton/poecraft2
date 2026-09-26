@@ -356,8 +356,9 @@ def build_solver_case_command(
     if seed_progress_observation and solver_mode != "current":
         raise ValueError("seed-progress observation requires current mode")
     if native_goal_terminal not in (None, "legacy-clean", "explicit-clean", "coverage-only") or (
-            native_goal_terminal is not None and solver_mode != "current"):
-        raise ValueError("native goal terminal requires current mode and a known value")
+            native_goal_terminal is not None and solver_mode not in
+            ("current", "strategy_finder")):
+        raise ValueError("native goal terminal requires a solver mode and a known value")
     if native_dirty_guidance not in (None, "legacy", "static", "adaptive", "protected-first", "selective", "selective-options", "execution-cost", "execution-count"):
         raise ValueError("unsupported native dirty guidance treatment")
     if native_execution_action_price is not None and (

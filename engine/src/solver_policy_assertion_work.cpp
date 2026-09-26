@@ -2,6 +2,7 @@
 #include "solver_compile_contracts.hpp"
 
 #include <chrono>
+#include <bit>
 #include <string_view>
 
 namespace poecraft {
@@ -9,6 +10,62 @@ namespace solver {
 namespace refinement {
 
 namespace {
+
+std::vector<std::uint64_t> compiled_assertion_request_identity(
+        const CalcContext& calc, const SolveResult& solved,
+        const std::unordered_map<std::string, double>& prices,
+        const SolveOptions& options) {
+    std::vector<std::uint64_t> key{1};
+    const auto append_text = [&](const std::string_view value) {
+        key.push_back(value.size());
+        for (std::size_t offset = 0; offset < value.size(); offset += 8) {
+            std::uint64_t word = 0;
+            for (std::size_t byte = 0;
+                 byte < 8 && offset + byte < value.size(); ++byte)
+                word |= static_cast<std::uint64_t>(
+                    static_cast<unsigned char>(value[offset + byte])) <<
+                    (byte * 8);
+            key.push_back(word);
+        }
+    };
+    append_text(compile_finder_goal_condition(calc));
+    key.push_back(solved.has_exact_start_item);
+    if (solved.has_exact_start_item) {
+        const auto root = exact_item_state_key(solved.exact_start_item);
+        key.push_back(root.size());
+        key.insert(key.end(), root.begin(), root.end());
+    }
+    const DataImpl& data = *calc.session().data;
+    key.push_back(data.artifact_schema_version);
+    append_text(data.artifact_data_hash);
+    append_text(data.artifact_source_hash);
+    append_text(data.artifact_game_data_hash);
+    append_text(data.artifact_strings_hash);
+    key.push_back(calc.session().base_index);
+    key.push_back(calc.session().item_level);
+    key.push_back(calc.action_control().explicit_envelope);
+    key.push_back(options.goal_progress_gated_reforges);
+    key.push_back(options.allow_economic_restart);
+    key.push_back(options.consider_imprint_programs);
+    key.push_back(static_cast<std::uint64_t>(options.solve_profile));
+    key.push_back(calc.candidates().size());
+    key.insert(key.end(), calc.candidates().begin(), calc.candidates().end());
+    key.push_back(calc.operators().size());
+    for (const PlannerOperator& option : calc.operators()) {
+        const auto semantic = planner_operator_semantic_key(option);
+        key.push_back(semantic.size());
+        key.insert(key.end(), semantic.begin(), semantic.end());
+    }
+    std::vector<std::pair<std::string, double>> sorted_prices(
+        prices.begin(), prices.end());
+    std::sort(sorted_prices.begin(), sorted_prices.end());
+    key.push_back(sorted_prices.size());
+    for (const auto& [name, price] : sorted_prices) {
+        append_text(name);
+        key.push_back(std::bit_cast<std::uint64_t>(price));
+    }
+    return key;
+}
 
 bool policy_graphs_differ_only_at_bounded_defaults(
         const std::string& product,
@@ -102,6 +159,8 @@ bool policy_graphs_differ_only_at_bounded_defaults(
 std::uint64_t compiled_policy_assertion_retained_bytes(
         const CompiledPolicyAssertion& assertion) {
     std::uint64_t bytes = sizeof(assertion);
+    saturating_add(bytes, assertion.request_identity.capacity() *
+        sizeof(std::uint64_t));
     saturating_add(bytes, assertion.failure_reason.capacity() + 1);
     saturating_add(bytes, assertion.failure_classification.capacity() + 1);
     saturating_add(bytes, assertion.resource_cap.capacity() + 1);
@@ -163,6 +222,8 @@ bool reuse_compiled_policy_assertion_evaluation(
         !std::isfinite(candidate.exact_cost) ||
         candidate.exact_cost < 0.0 ||
         !candidate.paired_default_only ||
+        candidate.request_identity.empty() ||
+        candidate.request_identity != current.request_identity ||
         candidate.certification_strategy_json !=
             current.strategy_json) {
         return false;
@@ -247,6 +308,8 @@ struct CompiledPolicyAssertionWork::Impl {
           request_policy_decision_entries(request_policy_entries),
           request_policy_dependency_kernels(request_dependency_kernels) {
         result.solver_cost = solved.evaluated_policy_cost;
+        result.request_identity = compiled_assertion_request_identity(
+            coarse, solved, prices, options);
     }
 
     void finish_failure(
@@ -316,6 +379,8 @@ struct CompiledPolicyAssertionWork::Impl {
         }
         result.retained_solver_bytes =
             estimated_retained_solver_bytes(coarse, &solved);
+        saturating_add(result.retained_solver_bytes,
+            result.request_identity.capacity() * sizeof(std::uint64_t));
         std::uint64_t paired_certification_bytes = 0;
         if (evaluating_product_restart_recovery) {
             paired_certification_bytes =
@@ -484,6 +549,20 @@ struct CompiledPolicyAssertionWork::Impl {
             result.paired_default_only = true;
         }
 
+        std::string target_refusal;
+        if (!compiled_success_ingress_matches_request(
+                coarse, result.strategy_json, &target_refusal) ||
+            (evaluating_product_restart_recovery &&
+             !compiled_success_ingress_matches_request(
+                 coarse, result.certification_strategy_json,
+                 &target_refusal))) {
+            finish_failure(
+                CompiledPolicyAssertionStatus::CompilationFailure,
+                "compiled policy does not prove original request success: " +
+                    target_refusal);
+            return;
+        }
+
         evaluation_started = std::chrono::steady_clock::now();
         try {
             const std::uint64_t strategy_json_bytes =
@@ -522,6 +601,25 @@ struct CompiledPolicyAssertionWork::Impl {
                 session,
                 result.strategy_json.data(),
                 result.strategy_json.size());
+            if (!solved.has_exact_start_item ||
+                exact_item_state_key(parsed_strategy->start_item) !=
+                    exact_item_state_key(solved.exact_start_item)) {
+                const auto parsed_key = exact_item_state_key(
+                    parsed_strategy->start_item);
+                const auto original_key = exact_item_state_key(
+                    solved.exact_start_item);
+                std::size_t first_difference = 0;
+                while (first_difference < parsed_key.size() &&
+                       first_difference < original_key.size() &&
+                       parsed_key[first_difference] == original_key[first_difference])
+                    ++first_difference;
+                finish_failure(
+                    CompiledPolicyAssertionStatus::CompilationFailure,
+                    "compiled policy changes the original start item at key " +
+                        std::to_string(first_difference));
+                record_evaluation_time();
+                return;
+            }
             result.parsed_strategy_bytes =
                 strategy_impl_owned_bytes(*parsed_strategy);
             {
@@ -830,6 +928,8 @@ struct CompiledPolicyAssertionWork::Impl {
 
     std::uint64_t retained_bytes() const {
         std::uint64_t bytes = sizeof(*this);
+        saturating_add(bytes, result.request_identity.capacity() *
+            sizeof(std::uint64_t));
         saturating_add(bytes, result.strategy_json.capacity() + 1);
         saturating_add(
             bytes, result.certification_strategy_json.capacity() + 1);
@@ -869,6 +969,14 @@ struct CompiledPolicyAssertionWork::Impl {
 
     bool try_reuse_completed_evaluation(
             std::optional<CompiledPolicyAssertion>& cached) {
+        // A cached evaluation is authority only under this request. Recheck
+        // both graph roles before the existing paired-graph reuse contract.
+        if (cached.has_value() &&
+            (!compiled_success_ingress_matches_request(
+                coarse, result.strategy_json) ||
+             !compiled_success_ingress_matches_request(
+                coarse, cached->certification_strategy_json)))
+            return false;
         if (stage != Stage::Evaluating ||
             !reuse_compiled_policy_assertion_evaluation(
                 result, cached)) {

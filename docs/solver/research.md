@@ -667,6 +667,18 @@ is inferred. The E4 entry trace identifies missing candidate materialization
 at one sampled partial-goal dirty state but lacks the complete row and checked
 root competitor needed to choose a repair.
 
+The subsequent [dual-lane target record](../active/2026-09-26-dual-lane-target-support/README.md)
+corrects one explanation in that audit: the evaluator derives an observation
+universe from graph conditions, while executed graph terminals determine its
+success mass. A separate native request check now binds success ingress for
+solver-produced graphs. Finder runs private L and R through that check; Current
+uses it for clean publication but still refuses R because its positive proof,
+action classification and exact-closure consumers have not been isolated.
+Fresh clean Current A4/A5 controls retain the prior byte-identical checked
+graphs. Finder A5 returned checked L and R policies at different target costs;
+that semantic contrast is not a same-clean policy improvement. No public goal
+migration or Current R exactness is established.
+
 <a id="knowledge"></a>
 ## 5. Knowledge outlives machinery
 

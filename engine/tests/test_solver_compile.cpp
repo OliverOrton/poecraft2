@@ -249,6 +249,134 @@ void run_finder_request_binding_tests() {
         *trusted.strategy, checked_options);
     PC_CHECK(finder_evaluation_accepted(evaluation));
     PC_CHECK(evaluation.total_expected_cost == 0.0);
+    // The evaluator follows the graph's success terminal even on a dirty
+    // item. Only request-bound preparation may give that mass solver authority.
+    GoalSpec dirty_request = finished_goal;
+    dirty_request.slots.pop_back();
+    dirty_request.terminal.extras = ExtraExplicitPolicy::Allow;
+    CalcContext dirty_calc(session, dirty_request, registry, {chaos});
+    GoalSpec clean_request = dirty_request;
+    clean_request.terminal.extras = ExtraExplicitPolicy::ForbidUnmatched;
+    CalcContext clean_calc(session, clean_request, registry, {chaos});
+    std::string dirty_graph = terminal_graph;
+    const std::string finished_condition =
+        compile_finder_goal_condition(complete);
+    const auto condition_at = dirty_graph.find(finished_condition);
+    PC_CHECK(condition_at != std::string::npos);
+    if (condition_at != std::string::npos)
+        dirty_graph.replace(condition_at, finished_condition.size(),
+            compile_finder_goal_condition(dirty_calc));
+    PC_CHECK(compiled_success_ingress_matches_request(
+        dirty_calc, dirty_graph));
+    PC_CHECK(!compiled_success_ingress_matches_request(
+        clean_calc, dirty_graph));
+    auto dirty_prepared = prepare_finder_candidate(
+        dirty_calc, session, finished, dirty_graph);
+    PC_CHECK(dirty_prepared.ready());
+    PC_CHECK(!prepare_finder_candidate(
+        clean_calc, session, finished, dirty_graph).ready());
+    if (dirty_prepared.ready()) {
+        const auto dirty_eval = evaluate_strategy(
+            *dirty_prepared.strategy, checked_options);
+        PC_CHECK(finder_evaluation_accepted(dirty_eval));
+        PC_CHECK(dirty_eval.success_probability == 1.0);
+        PC_CHECK(dirty_eval.total_expected_cost == 0.0);
+    }
+    pc_item_state explicit_implicit_start = finished;
+    explicit_implicit_start.implicit_count = 1;
+    explicit_implicit_start.implicits[0].mod_id = 2;
+    explicit_implicit_start.implicits[0].group_id =
+        static_cast<std::uint16_t>(session->primary_group[2]);
+    explicit_implicit_start.implicits[0].flags = PC_MOD_SLOT_ELDRITCH;
+    const std::string explicit_implicit_graph = compile_finder_candidate_json(
+        dirty_calc, explicit_implicit_start, {}, limits);
+    PC_CHECK(explicit_implicit_graph.find("\"implicits\":[") !=
+        std::string::npos);
+    const std::string no_implicit_graph = compile_finder_candidate_json(
+        dirty_calc, finished, {}, limits);
+    PC_CHECK(no_implicit_graph.find("\"implicits\":[]") !=
+        std::string::npos);
+    PC_CHECK(prepare_finder_candidate(
+        dirty_calc, session, explicit_implicit_start,
+        explicit_implicit_graph).ready());
+    PolicyFinderWork dirty_root_finder(
+        dirty_calc, session, finished, {}, limits);
+    for (int i = 0; i < 10000 && !dirty_root_finder.progress().done; ++i)
+        dirty_root_finder.step(1024);
+    PC_CHECK(dirty_root_finder.progress().done);
+    PC_CHECK(dirty_root_finder.best().has_value());
+    if (dirty_root_finder.best().has_value())
+        PC_CHECK(dirty_root_finder.best()->expected_cost == 0.0);
+    PC_CHECK(!clean_calc.is_goal_state(
+        clean_calc.state(clean_calc.intern_item(finished))));
+
+    GoalSpec any_two = dirty_request;
+    any_two.slots.push_back(finished_goal.slots.back());
+    any_two.min_satisfied_slots = 2;
+    CalcContext any_two_calc(session, any_two, registry, {chaos});
+    PC_CHECK(compile_finder_goal_condition(any_two_calc) !=
+        compile_finder_goal_condition(dirty_calc));
+    PC_CHECK(!compiled_success_ingress_matches_request(
+        any_two_calc, dirty_graph));
+    GoalSpec observed_b;
+    observed_b.rarity = PC_RARITY_RARE;
+    observed_b.slots.push_back(finished_goal.slots.back());
+    observed_b.terminal.extras = ExtraExplicitPolicy::Allow;
+    CalcContext b_calc(session, observed_b, registry, {chaos});
+    const auto base_end = dirty_graph.find(",\"start_node_id\"");
+    PC_CHECK(base_end != std::string::npos);
+    if (base_end != std::string::npos) {
+        const std::string graph_base = dirty_graph.substr(0, base_end);
+        const auto observed_graph = [&](const CalcContext& request) {
+            return graph_base +
+                ",\"start_node_id\":\"start\",\"nodes\":["
+                "{\"id\":\"start\",\"kind\":\"start\"},"
+                "{\"id\":\"observe\",\"kind\":\"router\"},"
+                "{\"id\":\"gate\",\"kind\":\"router\"},"
+                "{\"id\":\"goal\",\"kind\":\"terminal\","
+                "\"terminal\":\"success\"},"
+                "{\"id\":\"bad\",\"kind\":\"terminal\","
+                "\"terminal\":\"failure\"}],\"edges\":["
+                "{\"id\":\"enter\",\"from\":\"start\","
+                "\"to\":\"observe\",\"priority\":0,\"is_default\":true},"
+                "{\"id\":\"observe_b\",\"from\":\"observe\","
+                "\"to\":\"gate\",\"priority\":0,\"condition\":" +
+                compile_finder_goal_condition(b_calc) + "},"
+                "{\"id\":\"observe_other\",\"from\":\"observe\","
+                "\"to\":\"gate\",\"priority\":1,\"is_default\":true},"
+                "{\"id\":\"hit\",\"from\":\"gate\","
+                "\"to\":\"goal\",\"priority\":0,\"condition\":" +
+                compile_finder_goal_condition(request) + "},"
+                "{\"id\":\"miss\",\"from\":\"gate\","
+                "\"to\":\"bad\",\"priority\":1,\"is_default\":true}]}";
+        };
+        const std::string observed_dirty = observed_graph(dirty_calc);
+        PC_CHECK(compiled_success_ingress_matches_request(
+            dirty_calc, observed_dirty));
+        auto observed_prepared = prepare_finder_candidate(
+            dirty_calc, session, finished, observed_dirty);
+        PC_CHECK(observed_prepared.ready());
+        if (observed_prepared.ready()) {
+            const auto observed_eval = evaluate_strategy(
+                *observed_prepared.strategy, checked_options);
+            PC_CHECK(finder_evaluation_accepted(observed_eval));
+            PC_CHECK(observed_eval.success_probability == 1.0);
+        }
+        const std::string observed_any_two = observed_graph(any_two_calc);
+        PC_CHECK(compiled_success_ingress_matches_request(
+            any_two_calc, observed_any_two));
+        PC_CHECK(!compiled_success_ingress_matches_request(
+            dirty_calc, observed_any_two));
+        auto any_two_prepared = prepare_finder_candidate(
+            any_two_calc, session, finished, observed_any_two);
+        PC_CHECK(any_two_prepared.ready());
+        if (any_two_prepared.ready()) {
+            const auto any_two_eval = evaluate_strategy(
+                *any_two_prepared.strategy, checked_options);
+            PC_CHECK(finder_evaluation_accepted(any_two_eval));
+            PC_CHECK(any_two_eval.success_probability == 1.0);
+        }
+    }
     CalcContext complete_without_actions(session, finished_goal, registry, {});
     PolicyFinderWork completed_finder(
         complete_without_actions, session, finished, {}, limits);
@@ -287,6 +415,28 @@ void run_finder_request_binding_tests() {
         PC_CHECK(prepare_finder_candidate(
             magic_calc, session, magic_start,
             finder.best()->strategy_json).ready());
+    }
+    GoalSpec magic_coverage = magic_goal;
+    magic_coverage.terminal.extras = ExtraExplicitPolicy::Allow;
+    CalcContext coverage_magic_calc(
+        session, magic_coverage, registry, {alteration});
+    PolicyFinderWork coverage_magic_finder(
+        coverage_magic_calc, session, magic_start,
+        {{"alteration", 1.0}}, limits);
+    for (int i = 0; i < 10000 &&
+         !coverage_magic_finder.progress().done; ++i)
+        coverage_magic_finder.step(1024);
+    PC_CHECK(coverage_magic_finder.progress().done);
+    PC_CHECK(coverage_magic_finder.best().has_value());
+    if (coverage_magic_finder.best().has_value()) {
+        const auto& winner = *coverage_magic_finder.best();
+        PC_CHECK(winner.expected_cost > 0.0);
+        PC_CHECK(prepare_finder_candidate(
+            coverage_magic_calc, session, magic_start,
+            winner.strategy_json).ready());
+        PC_CHECK(!prepare_finder_candidate(
+            magic_calc, session, magic_start,
+            winner.strategy_json).ready());
     }
     PolicyFinderWork finish_with_winner(
         magic_calc, session, magic_start, {{"alteration", 1.0}}, limits);

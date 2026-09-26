@@ -7,6 +7,15 @@ The central question is not whether two states look similar. It is what statemen
 
 The private `explicit-clean` formulation checks all-required, disjoint, fixed-side goal slots and native rarity capacity before normalizing to the legacy clean predicate. In that domain, coverage supplies at least the required side counts, and exact side occupancy leaves no room for an unmatched explicit affix. A threshold any-k request, overlapping slots or variable-side slot does not inherit this equivalence. Normalization changes neither the state representation nor the search algorithm by itself. [Current-goal audit](../../active/2026-09-25-current-goal-audit/README.md).
 
+For graph evaluation, distinguish the requested native target from the set of
+conditions observed by the graph. A nonterminal test for family B adds B to the
+evaluator's observation basis even when the original goal requires only A. An
+any-two-of-three request remains a threshold of two; observing all three does
+not turn it into an all-three objective. Solver-produced success authority
+requires the effective success route to imply the original native target.
+The current conservative compiler check uses exact native-goal guards on all
+success ingress edges. [Dual-lane record](../../active/2026-09-26-dual-lane-target-support/README.md).
+
 The target notation is in [the model](../mathematical-model.md). Native state fields and namespaces remain described by [States and Carriers](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/states-carriers.md).
 
 <a id="namespaces"></a>

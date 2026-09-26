@@ -4895,7 +4895,7 @@ CaseResult run_case(
             report.actual_status =
                 native_goal_terminal == "coverage-only" &&
                 std::string_view(ex.what()).find(
-                    "coverage-only solve is unavailable") !=
+                    "coverage-only Current solve is unavailable") !=
                     std::string_view::npos
                     ? "refused_unqualified_goal_terminal"
                     : "harness_error";
@@ -6324,8 +6324,9 @@ Arguments parse_arguments(int argc, char** argv) {
         args.native_goal_terminal != "coverage-only")
         throw std::runtime_error("native goal terminal must be legacy-clean, explicit-clean or coverage-only");
     if (args.native_goal_terminal != "legacy-clean" &&
-        args.solver_mode != "current")
-        throw std::runtime_error("native goal terminal treatment requires current mode");
+        args.solver_mode != "current" &&
+        args.solver_mode != "strategy_finder")
+        throw std::runtime_error("native goal terminal treatment requires a solver mode");
     if (args.solver_mode != "strategy_finder" &&
         (args.finder_ranking != "heuristic" ||
          args.finder_grammar != "conditional"))

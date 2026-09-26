@@ -17,35 +17,6 @@
 namespace poecraft::solver {
 namespace {
 
-bool same_json(const json::Value& left, const json::Value& right) {
-    if (left.type != right.type) return false;
-    switch (left.type) {
-    case json::Type::Null: return true;
-    case json::Type::Bool: return left.boolean == right.boolean;
-    case json::Type::Number: return left.number == right.number;
-    case json::Type::String: return left.string == right.string;
-    case json::Type::Array:
-        if (left.array.size() != right.array.size()) return false;
-        for (std::size_t i = 0; i < left.array.size(); ++i)
-            if (!same_json(left.array[i], right.array[i])) return false;
-        return true;
-    case json::Type::Object:
-        if (left.object.size() != right.object.size()) return false;
-        for (std::size_t i = 0; i < left.object.size(); ++i)
-            if (left.object[i].first != right.object[i].first ||
-                !same_json(left.object[i].second, right.object[i].second))
-                return false;
-        return true;
-    }
-    return false;
-}
-
-std::string text_member(const json::Value& value, const char* key) {
-    const json::Value* member = value.find(key);
-    return member != nullptr && member->type == json::Type::String
-        ? member->string : std::string{};
-}
-
 std::string json_string(const std::string& value) {
     constexpr char hex[] = "0123456789abcdef";
     std::string out = "\"";
@@ -124,38 +95,8 @@ FinderCandidatePreparation prepare_finder_candidate(
                 }
             }
         }
-        const json::Value graph = json::Parser(
-            strategy_json.data(), strategy_json.size()).parse();
-        const std::string goal_text = compile_finder_goal_condition(problem);
-        const json::Value trusted_goal = json::Parser(
-            goal_text.data(), goal_text.size()).parse();
-        std::unordered_set<std::string> successes;
-        for (const json::Value& node : graph.at("nodes").as_array()) {
-            if (text_member(node, "kind") == "terminal" &&
-                text_member(node, "terminal") == "success") {
-                successes.insert(text_member(node, "id"));
-            }
-        }
-        std::size_t guarded_ingress = 0;
-        for (const json::Value& edge : graph.at("edges").as_array()) {
-            if (!successes.contains(text_member(edge, "to"))) continue;
-            const json::Value* is_default = edge.find("is_default");
-            const json::Value* condition = edge.find("condition");
-            // The ordinary compiler replaces a default edge's authored
-            // condition with Always. Raw goal decoration is not an executable
-            // guard, even if it is byte-for-byte the requested predicate.
-            if ((is_default != nullptr && is_default->type == json::Type::Bool &&
-                 is_default->boolean) || condition == nullptr ||
-                !same_json(*condition, trusted_goal)) {
-                prepared.refusal =
-                    "finder success ingress is not the original native goal";
-                prepared.strategy.reset();
-                return prepared;
-            }
-            ++guarded_ingress;
-        }
-        if (guarded_ingress == 0) {
-            prepared.refusal = "finder candidate has no guarded success ingress";
+        if (!compiled_success_ingress_matches_request(
+                problem, strategy_json, &prepared.refusal)) {
             prepared.strategy.reset();
             return prepared;
         }

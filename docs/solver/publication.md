@@ -60,6 +60,16 @@ independent evaluator still owns properness, probability, full original-root
 cost and acceptance. This narrow permission creates no general dependency
 closure or product mode.
 
+The compiler-owned request check also runs in Current's actual compiled-policy
+assertion, including paired graphs and evaluation reuse. It conservatively
+requires every effective success ingress to use the exact native request guard.
+Current verifies the parsed graph's exact starting item and binds cached
+evaluations to goal, root, native data, programme scope and price identity.
+The strategy base state may carry an explicit implicit-modifier list so an
+Eldritch starting item is reconstructed exactly. If another starting item field
+cannot round-trip, publication refuses that graph rather than evaluating a
+different root.
+
 After a candidate passes native properness, mass and pricing checks, finder
 ownership moves the emitted graph buffer into the winning bundle. A later
 failed or capped candidate leaves that verified bundle intact. The finder does
@@ -102,7 +112,7 @@ The [first-policy service record](../active/2026-09-21-first-policy-service/READ
 owns attribution and measured response gates; individual phases are not promised
 to meet a universal wall-time bound.
 
-Exact evaluation constructs the reachable product of strategy operation, item state, and relevant choice/checkpoint state. It checks properness, solves success and expected resource/cost equations, and reports off-policy mass and price completeness.
+Exact evaluation constructs the reachable product of strategy operation, item state, and relevant choice/checkpoint state. It checks properness, solves success and expected resource/cost equations, and reports off-policy mass and price completeness. Its derived target slots collect conditions that the graph may observe; success mass follows executed graph terminals. A generic authored graph can therefore be evaluated on its own terms without claiming to solve a separate Calculator request.
 
 “Exact evaluation” means graph-based native evaluation rather than Monte Carlo estimation. Its arithmetic and reconciliation contract still matters. The phrase alone does not assert rational coefficients or zero numerical error.
 

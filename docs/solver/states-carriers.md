@@ -27,6 +27,13 @@ The implemented goal test requires the requested rarity and slot/tier threshold,
 
 `CalcContext::assess_goal_state` now reports requested coverage, current occupancy and final truth separately. It is a passive read of the present carrier, so an item may gain, lose and regain requested coverage through later actions. A covered-but-dirty state is an ordinary nonterminal continuation state, not a committed cleanup phase. The private coverage-only diagnostic changes the terminal test on a fresh context; public v1 retains the clean default. [Current-goal audit](../active/2026-09-25-current-goal-audit/README.md).
 
+The exact evaluator derives an observation universe from graph conditions,
+including nonterminal branches. Those observed families are not automatically
+the original requested goal. Solver-produced graphs separately check their
+effective success ingress against the native request. The private coverage
+target currently has a checked Finder consumer; Current's clean-dependent proof
+paths remain refused for it. [Dual-lane record](../active/2026-09-26-dual-lane-target-support/README.md).
+
 Use the native resolver and terminal predicate. Do not replace them with `mask == full`, assume every requested bit must always correspond to a distinct physical affix, or reinterpret overlapping slots in documentation. The mathematical model keeps native slot/overlap semantics explicit; distinct-goal assumptions belong to a particular proof's preconditions.
 
 Compiler terminal recognition must express the same predicate. A projection satisfying a relaxed terminal is not thereby a native successful item.
