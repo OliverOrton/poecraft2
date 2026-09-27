@@ -339,19 +339,24 @@ def build_solver_case_command(
     solver_mode: str | None = None,
     finder_ranking: str | None = None,
     finder_grammar: str | None = None,
+    finder_attempt_limit: int | None = None,
     neutral_extra_ordering: bool = False,
     seed_progress_observation: bool = False,
     native_goal_terminal: str | None = None,
     native_goal_proof: str | None = None,
+    native_selective_completion_service: bool = False,
 ) -> SolverCaseCommand:
     if solver_mode not in (None, "current", "strategy_finder"):
         raise ValueError("unsupported solver mode")
     if finder_ranking not in (None, "heuristic", "uninformed") or (
             finder_ranking is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder ranking requires strategy_finder mode")
-    if finder_grammar not in (None, "primitive", "conditional", "conditional-retention") or (
+    if finder_grammar not in (None, "primitive", "conditional", "conditional-retention", "selective-retention") or (
             finder_grammar is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder grammar requires strategy_finder mode")
+    if finder_attempt_limit not in (None, 8, 24) or (
+            finder_attempt_limit is not None and solver_mode != "strategy_finder"):
+        raise ValueError("finder attempt limit requires strategy_finder mode and 8 or 24")
     if neutral_extra_ordering and solver_mode != "current":
         raise ValueError("neutral-extra ordering requires current mode")
     if seed_progress_observation and solver_mode != "current":
@@ -363,6 +368,8 @@ def build_solver_case_command(
     if native_goal_proof not in (None, "ordinary-clean", "target-neutral-zero") or (
             native_goal_proof == "target-neutral-zero" and solver_mode != "current"):
         raise ValueError("target-neutral goal proof requires current mode")
+    if native_selective_completion_service and solver_mode != "current":
+        raise ValueError("selective completion service requires current mode")
     if native_dirty_guidance not in (None, "legacy", "static", "adaptive", "protected-first", "selective", "selective-options", "execution-cost", "execution-count"):
         raise ValueError("unsupported native dirty guidance treatment")
     if native_execution_action_price is not None and (
@@ -407,6 +414,8 @@ def build_solver_case_command(
         argv.extend(("--finder-ranking", finder_ranking))
     if finder_grammar is not None:
         argv.extend(("--finder-grammar", finder_grammar))
+    if finder_attempt_limit is not None:
+        argv.extend(("--finder-attempt-limit", str(finder_attempt_limit)))
     if neutral_extra_ordering:
         argv.append("--native-neutral-extra-ordering")
     if seed_progress_observation:
@@ -415,6 +424,8 @@ def build_solver_case_command(
         argv.extend(("--native-goal-terminal", native_goal_terminal))
     if native_goal_proof is not None:
         argv.extend(("--native-goal-proof", native_goal_proof))
+    if native_selective_completion_service:
+        argv.append("--native-selective-completion-service")
     return SolverCaseCommand(tuple(argv), root)
 
 
@@ -437,10 +448,12 @@ def resolve_case_execution(
     solver_mode: str | None = None,
     finder_ranking: str | None = None,
     finder_grammar: str | None = None,
+    finder_attempt_limit: int | None = None,
     neutral_extra_ordering: bool = False,
     seed_progress_observation: bool = False,
     native_goal_terminal: str | None = None,
     native_goal_proof: str | None = None,
+    native_selective_completion_service: bool = False,
 ) -> ResolvedCaseExecution:
     paths.prepare()
     command = build_solver_case_command(
@@ -459,10 +472,12 @@ def resolve_case_execution(
         solver_mode=solver_mode,
         finder_ranking=finder_ranking,
         finder_grammar=finder_grammar,
+        finder_attempt_limit=finder_attempt_limit,
         neutral_extra_ordering=neutral_extra_ordering,
         seed_progress_observation=seed_progress_observation,
         native_goal_terminal=native_goal_terminal,
         native_goal_proof=native_goal_proof,
+        native_selective_completion_service=native_selective_completion_service,
     )
     return ResolvedCaseExecution(
         case_id=task.case_id,

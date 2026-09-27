@@ -99,6 +99,9 @@ SolveWork::Impl::Impl(
             options.solve_profile_override_mask;
         result.diagnostics.goal_proof_profile_id =
             goal_proof_profile_name(options.goal_proof_profile);
+        if (options.selective_completion_service)
+            result.diagnostics.selective_completion_service_status =
+                "queued_awaiting_checked_incumbent";
         result.closure_unavailable_by_profile =
             !goal_proof_capabilities(options.goal_proof_profile)
                 .global_exact_closure;

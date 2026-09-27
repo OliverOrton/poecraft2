@@ -2,6 +2,7 @@
 
 #include "solver_action_family_contract.hpp"
 #include "solver_quotient_proof.hpp"
+#include "solver_policy_refinement_helpers.hpp"
 #include <sstream>
 #include <iomanip>
 
@@ -2108,6 +2109,7 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            diagnostics.policy_compatibility_action.capacity() + 1 +
            diagnostics.policy_compatibility_reason.capacity() + 1 +
            diagnostics.policy_publication_failure_reason.capacity() + 1 +
+           diagnostics.selective_completion_service_status.capacity() + 1 +
            diagnostics.incumbent_kind.capacity() + 1 +
            diagnostics.destructive_renewal_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +
@@ -3013,6 +3015,36 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
             kUpperPolicyProvenanceAccountingOffset -
             kIncumbentPortfolioAliasAccountingOffset +
             calc_bytes;
+        if (selective_service_calc)
+            bytes += selective_service_calc->fast_estimated_owned_bytes();
+        if (selective_service_producer)
+            bytes += selective_service_producer->estimated_owned_bytes();
+        if (selective_service_candidate) {
+            bytes += selective_service_candidate->control.nodes.capacity() *
+                sizeof(FinderControlNode);
+            bytes += selective_service_candidate->control.programs.capacity() *
+                sizeof(FinderProgramBinding);
+        }
+        bytes += selective_service_graph.capacity() + 1;
+        if (selective_service_strategy)
+            bytes += refinement::strategy_impl_owned_bytes(
+                *selective_service_strategy);
+        if (selective_service_economy) {
+            bytes += sizeof(EconomyImpl) +
+                selective_service_economy->id.capacity() + 1;
+            bytes += selective_service_economy->prices.bucket_count() *
+                sizeof(void*);
+            for (const auto& [key, price] :
+                 selective_service_economy->prices) {
+                (void)price;
+                bytes += sizeof(std::pair<const std::string, double>) +
+                    2 * sizeof(void*) + key.capacity() + 1;
+            }
+        }
+        if (selective_service_checker)
+            bytes += selective_service_checker->live_owned_bytes();
+        if (selective_service_validator)
+            bytes += selective_service_validator->estimated_owned_bytes();
         bytes += setup_storage.live + setup_storage.reserved;
         if (retention_setup_task) bytes += retention_setup_task->frame_bytes() + sizeof(CooperativeTask<bool>::promise_type::AllocationHeader);
         if (goal_cover_task) bytes += goal_cover_task->frame_bytes() + sizeof(CooperativeTask<bool>::promise_type::AllocationHeader);

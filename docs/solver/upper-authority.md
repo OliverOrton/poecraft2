@@ -29,6 +29,25 @@ enter the Current incumbent portfolio. An already-complete root still passes
   costlier than Current, so no product upper or lower is transferred between
   modes. [Scoped result](../active/2026-09-25-seed-retention/README.md#k4--matched-original-root-qualification).
 
+The private selective-retention grammar shares the native
+`SelectiveCompletionProducer` with an opt-in Current proposal service. Finder
+checks the complete original-root graph, then validates every positive-mass
+reached native programme entry with `SelectiveProgrammeEntryValidator` before
+ranking its exact cost. A reroll/repair follow-through improved the A5 clean
+Finder control from C524,079.70 to C379,815.68 in the recorded eight-attempt
+comparison, but remained above Current's C85,558.71 checked upper. Two Exalt
+fill proposals failed reached-entry semantic admission and are absent from the
+final grammar. [Sustained programme](../active/2026-09-26-sustained-dual-solver/README.md).
+
+Current's default-off service is an upper-only whole-root candidate path. It
+requires an existing independently checked incumbent before Finish, keeps its
+generation calculator separate from the suspended Current graph, and retains
+only a cheaper checked artifact through the ordinary portfolio. It does not
+import Finder's output, statewise values or proof authority. The measured A4/A5
+240-second runs produced their first checked incumbents after Finish; no service
+candidate was checked there. The post-run gate repair and service retention path
+are not qualified by those economics, so activation remains private.
+
 Ordinary candidates can come from a complete coarse policy, constructive or renewal witness, carrier-ladder/joint-policy work, a retained strict incumbent, or strict improvement. The portfolio distinguishes estimates from verified executable candidates and retains the cheapest compatible verified artifact.
 
 A candidate binds the goal, economy, action vocabulary and caller scope, data/artifact identity, graph/row evidence, and the relevant generations. Different internal state namespaces or a changed price table cannot be reconciled by comparing one scalar cost.

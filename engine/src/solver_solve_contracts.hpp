@@ -206,6 +206,7 @@ struct SolveOptions {
     bool neutral_extra_ordering_diagnostic = false;
     // Native-private observation of the live first-policy seed-row selector.
     bool seed_progress_observation_diagnostic = false;
+    bool selective_completion_service = false;
     bool projected_reforge_frontier_diagnostic = false;
     bool factored_terminal_reforge_diagnostic = false;
     bool reforge_resource_accounting = true;
@@ -796,6 +797,10 @@ struct SolveDiagnostics {
     std::string policy_compatibility_action;
     std::string policy_compatibility_reason;
     std::string policy_publication_failure_reason;
+    std::string selective_completion_service_status = "not_requested";
+    std::uint32_t selective_completion_service_checks = 0;
+    double selective_completion_service_checked_cost =
+        std::numeric_limits<double>::infinity();
     PolicyRefinementTelemetry policy_refinement;
     std::uint32_t expanded_states = 0;
     std::uint32_t sweeps = 0;

@@ -371,10 +371,12 @@ def _run_case(
     solver_mode: str | None = None,
     finder_ranking: str | None = None,
     finder_grammar: str | None = None,
+    finder_attempt_limit: int | None = None,
     neutral_extra_ordering: bool = False,
     seed_progress_observation: bool = False,
     native_goal_terminal: str | None = None,
     native_goal_proof: str | None = None,
+    native_selective_completion_service: bool = False,
 ) -> dict[str, Any]:
     immutable_lab_attempt = bool(
         attempt_paths is not None
@@ -404,10 +406,12 @@ def _run_case(
         solver_mode=solver_mode,
         finder_ranking=finder_ranking,
         finder_grammar=finder_grammar,
+        finder_attempt_limit=finder_attempt_limit,
         neutral_extra_ordering=neutral_extra_ordering,
         seed_progress_observation=seed_progress_observation,
         native_goal_terminal=native_goal_terminal,
         native_goal_proof=native_goal_proof,
+        native_selective_completion_service=native_selective_completion_service,
     )
     result = run_isolated_process(
         resolved.command.as_list(),
@@ -611,10 +615,12 @@ def run_corpus(
     solver_mode: str | None = None,
     finder_ranking: str | None = None,
     finder_grammar: str | None = None,
+    finder_attempt_limit: int | None = None,
     neutral_extra_ordering: bool = False,
     seed_progress_observation: bool = False,
     native_goal_terminal: str | None = None,
     native_goal_proof: str | None = None,
+    native_selective_completion_service: bool = False,
     host_watchdog_seconds: float | None = None,
     worker_headroom_bytes: int = 0,
 ) -> dict[str, Any]:
@@ -632,9 +638,12 @@ def run_corpus(
     if finder_ranking not in (None, "heuristic", "uninformed") or (
             finder_ranking is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder ranking requires strategy_finder mode")
-    if finder_grammar not in (None, "primitive", "conditional", "conditional-retention") or (
+    if finder_grammar not in (None, "primitive", "conditional", "conditional-retention", "selective-retention") or (
             finder_grammar is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder grammar requires strategy_finder mode")
+    if finder_attempt_limit not in (None, 8, 24) or (
+            finder_attempt_limit is not None and solver_mode != "strategy_finder"):
+        raise ValueError("finder attempt limit requires strategy_finder mode and 8 or 24")
     if neutral_extra_ordering and solver_mode != "current":
         raise ValueError("neutral-extra ordering requires current mode")
     if seed_progress_observation and solver_mode != "current":
@@ -646,6 +655,8 @@ def run_corpus(
     if native_goal_proof not in (None, "ordinary-clean", "target-neutral-zero") or (
             native_goal_proof == "target-neutral-zero" and solver_mode != "current"):
         raise ValueError("target-neutral goal proof requires current mode")
+    if native_selective_completion_service and solver_mode != "current":
+        raise ValueError("selective completion service requires current mode")
     if native_execution_action_price is not None and (
             native_dirty_guidance != "execution-count" or
             not math.isfinite(native_execution_action_price) or native_execution_action_price <= 0):
@@ -710,6 +721,8 @@ def run_corpus(
         treatment["finder_ranking"] = finder_ranking
     if finder_grammar is not None:
         treatment["finder_grammar"] = finder_grammar
+    if finder_attempt_limit is not None:
+        treatment["finder_attempt_limit"] = finder_attempt_limit
     if neutral_extra_ordering:
         treatment["neutral_extra_ordering"] = True
     if seed_progress_observation:
@@ -718,13 +731,16 @@ def run_corpus(
         treatment["native_goal_terminal"] = native_goal_terminal
     if native_goal_proof is not None:
         treatment["native_goal_proof"] = native_goal_proof
+    if native_selective_completion_service:
+        treatment["native_selective_completion_service"] = True
     if native_execution_action_price is not None:
         treatment["native_execution_action_price"] = float(native_execution_action_price)
     current_resume_identity = provenance.resume_identity(configuration)
     if (native_dirty_guidance is not None or solver_mode is not None or
             neutral_extra_ordering or seed_progress_observation or
             native_goal_terminal is not None or
-            native_goal_proof is not None):
+            native_goal_proof is not None or
+            native_selective_completion_service):
         # Algorithm treatment is separate from request/capacity identity,
         # like executable identity, but still binds immutable resume.
         current_resume_identity["treatment"] = treatment
@@ -811,10 +827,12 @@ def run_corpus(
                     solver_mode=solver_mode,
                     finder_ranking=finder_ranking,
                     finder_grammar=finder_grammar,
+                    finder_attempt_limit=finder_attempt_limit,
                     neutral_extra_ordering=neutral_extra_ordering,
                     seed_progress_observation=seed_progress_observation,
                     native_goal_terminal=native_goal_terminal,
                     native_goal_proof=native_goal_proof,
+                    native_selective_completion_service=native_selective_completion_service,
                     watchdog_seconds=host_watchdog_seconds,
                     worker_headroom_bytes=worker_headroom_bytes,
                 )
@@ -881,8 +899,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="Solver lane treatment, separately recorded from request and capacity identity.")
     parser.add_argument("--finder-ranking", choices=("heuristic", "uninformed"),
         help="Native finder ranking ablation with unchanged candidate grammar and checker.")
-    parser.add_argument("--finder-grammar", choices=("primitive", "conditional", "conditional-retention"),
+    parser.add_argument("--finder-grammar", choices=("primitive", "conditional", "conditional-retention", "selective-retention"),
         help="Native finder grammar comparison with unchanged ranking and checker.")
+    parser.add_argument("--finder-attempt-limit", type=int, choices=(8, 24),
+        help="Native finder complete-candidate attempt ceiling; default is eight.")
     parser.add_argument("--native-neutral-extra-ordering", action="store_true",
         help="Native Current within-mask ordering treatment; no goal or budget change.")
     parser.add_argument("--native-seed-progress-observation", action="store_true",
@@ -893,6 +913,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--native-goal-proof",
         choices=("ordinary-clean", "target-neutral-zero"),
         help="Private Current proof-capability treatment; default is ordinary clean.")
+    parser.add_argument("--native-selective-completion-service",
+        action="store_true",
+        help="Private Current complete-root selective completion candidate service.")
     parser.add_argument(
         "--native-retention-diagnostic",
         choices=NATIVE_RETENTION_DIAGNOSTIC_MODES,
@@ -945,10 +968,13 @@ def main(argv: list[str] | None = None) -> int:
         solver_mode=args.solver_mode,
         finder_ranking=args.finder_ranking,
         finder_grammar=args.finder_grammar,
+        finder_attempt_limit=args.finder_attempt_limit,
         neutral_extra_ordering=args.native_neutral_extra_ordering,
         seed_progress_observation=args.native_seed_progress_observation,
         native_goal_terminal=args.native_goal_terminal,
         native_goal_proof=args.native_goal_proof,
+        native_selective_completion_service=
+            args.native_selective_completion_service,
         host_watchdog_seconds=args.host_watchdog_seconds,
         worker_headroom_bytes=args.worker_headroom_bytes,
     )

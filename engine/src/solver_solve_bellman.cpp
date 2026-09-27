@@ -1930,6 +1930,37 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                 // Finish discarded only the in-flight verification scratch;
                 // the materialized candidate still belongs to publication.
             }
+            if (options.selective_completion_service &&
+                selective_service_phase != SelectiveServicePhase::Done) {
+                if (requested_bounded_finish ||
+                    (phase != SolvePhase::Expanding &&
+                     phase != SolvePhase::Iterating) ||
+                    result.diagnostics.resource_cap_hit ||
+                    result.diagnostics.state_cap_hit) {
+                    if (selective_service_phase ==
+                        SelectiveServicePhase::NotStarted)
+                        abandon_selective_completion_service(
+                            "censored_no_pre_finish_incumbent");
+                    else
+                        abandon_selective_completion_service(
+                            "censored_finish_or_cap");
+                } else if (selective_service_phase !=
+                        SelectiveServicePhase::NotStarted ||
+                    (std::isfinite(
+                        incumbent_portfolio.verified_executable_upper()) &&
+                     !incumbent_portfolio.retained().empty() &&
+                     [&] {
+                        const auto* incumbent =
+                            prune_and_select_certified_fallback();
+                        return incumbent != nullptr &&
+                            certified_incumbent_invalid_reason(
+                                *incumbent) == nullptr;
+                    }())) {
+                    (void)advance_selective_completion_service();
+                    --remaining;
+                    break;
+                }
+            }
             if (requested_bounded_finish &&
                 incremental_upper_policy_pass) {
                 abort_incremental_upper_policy_pass_for_bounded_finish();

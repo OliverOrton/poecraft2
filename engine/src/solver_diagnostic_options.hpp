@@ -73,6 +73,8 @@ pc_result configure_solver_native_retention_diagnostic(pc_solver_handle handle,
 /* Private proof-capability treatment, copied into each new Current work item. */
 pc_result configure_solver_goal_proof_profile_diagnostic(
     pc_solver_handle handle, GoalProofProfile profile, pc_error_info* out_error);
+pc_result configure_solver_selective_completion_service_diagnostic(
+    pc_solver_handle handle, bool enabled, pc_error_info* out_error);
 
 /* Benchmark-only ordering ablation. Candidate grammar and native checker
  * remain identical; the public finder always uses heuristic ranking. */
@@ -80,6 +82,8 @@ pc_result configure_solver_finder_ranking(pc_solver_handle handle,
     FinderRankingMode mode, pc_error_info* out_error);
 pc_result configure_solver_finder_grammar(pc_solver_handle handle,
     FinderGrammarMode mode, pc_error_info* out_error);
+pc_result configure_solver_finder_attempt_limit(pc_solver_handle handle,
+    std::uint32_t limit, pc_error_info* out_error);
 
 /* Comparison arms only. The retained fresh-layout method is available through
  * the public PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH request flag. */

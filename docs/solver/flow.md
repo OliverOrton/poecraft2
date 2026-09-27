@@ -62,9 +62,11 @@ default. The [finder living record](../active/2026-09-24-strategy-finder/README.
 owns the tested grammar and comparison.
 
 The native-private coverage-only terminal is admitted for Finder's fixed-policy
-search and checking in both synchronous and stepped entry. Current still refuses
-that terminal because its clean-dependent lower and closure consumers have not
-been isolated. Public v1 continues to use the clean target.
+search and checking in both synchronous and stepped entry. Current admits it
+only with the private `target_neutral_zero` proof profile: its global lower is
+zero under finite nonnegative prices, and its positive clean lower, retirement
+and exact closure paths are unavailable. Ordinary-clean Current still refuses
+coverage-only. Public v1 continues to use the clean target.
 
 The stepped interface is:
 

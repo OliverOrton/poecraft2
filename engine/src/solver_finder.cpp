@@ -3,6 +3,7 @@
 #include "json.hpp"
 #include "solver_policy_refinement_helpers.hpp"
 #include "solver_options_helpers.hpp"
+#include "solver_selective_completion.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -160,14 +161,18 @@ PolicyFinderWork::PolicyFinderWork(
     std::unordered_map<std::string, double> prices,
     const SolveOptions& limits,
     const FinderRankingMode ranking,
-    const FinderGrammarMode grammar)
+    const FinderGrammarMode grammar,
+    const std::uint32_t attempt_limit)
     : problem_(problem), session_(std::move(session)),
       original_start_(original_start),
       economy_(std::make_shared<EconomyImpl>()), limits_(limits),
-      ranking_(ranking), grammar_(grammar) {
+      ranking_(ranking), grammar_(grammar),
+      attempt_limit_(attempt_limit) {
     if (session_ == nullptr) {
         throw std::invalid_argument("finder requires a session");
     }
+    if (attempt_limit_ != 8 && attempt_limit_ != 24)
+        throw std::invalid_argument("finder attempt limit must be 8 or 24");
     economy_->id = "finder-request";
     economy_->prices = std::move(prices);
     std::string request_key = compile_finder_goal_condition(problem_);
@@ -195,7 +200,8 @@ PolicyFinderWork::PolicyFinderWork(
         update_peak();
         return;
     }
-    retention_pending_ = grammar_ == FinderGrammarMode::ConditionalRetention;
+    retention_pending_ = grammar_ == FinderGrammarMode::ConditionalRetention ||
+        grammar_ == FinderGrammarMode::SelectiveRetention;
     if (retention_pending_) retention_status_ = "pending";
     for (const std::uint32_t index : problem_.candidates()) {
         if (index >= problem_.registry().actions.size()) continue;
@@ -287,8 +293,8 @@ PolicyFinderWork::~PolicyFinderWork() = default;
 std::uint64_t PolicyFinderWork::retained_owned_bytes() const {
     std::uint64_t bytes = sizeof(*this) + 4096 +
         problem_.estimated_owned_bytes() +
-        (validation_calc_ == nullptr ? 0 :
-            validation_calc_->estimated_owned_bytes()) +
+        (validation_work_ == nullptr ? 0 :
+            validation_work_->estimated_owned_bytes()) +
         refinement::economy_owned_bytes(economy_->prices, economy_->id.capacity()) +
         ranked_.capacity() * sizeof(RankedAction) +
         frontier_.size() * sizeof(Sketch) +
@@ -297,8 +303,11 @@ std::uint64_t PolicyFinderWork::retained_owned_bytes() const {
         seen_.bucket_count() * sizeof(void*) +
         problem_identity_.capacity() +
         retention_status_.capacity() +
+        selective_parent_identity_.capacity() +
         checking_graph_.capacity() + last_refusal_.capacity() +
         last_refusal_kind_.capacity();
+    if (retention_producer_ != nullptr)
+        bytes += retention_producer_->estimated_owned_bytes();
     for (const Sketch& sketch : frontier_) {
         bytes += sketch.actions.capacity() * sizeof(std::uint32_t);
         bytes += sketch.parent_identity.capacity();
@@ -341,20 +350,12 @@ std::uint64_t PolicyFinderWork::retained_owned_bytes() const {
 }
 
 void PolicyFinderWork::release_validation() {
-    if (validation_calc_ != nullptr) {
-        const std::uint64_t now =
-            validation_calc_->telemetry().reforge_logical_work_v1;
-        const std::uint64_t delta = now >= validation_reforge_accounted_
-            ? now - validation_reforge_accounted_ : 0;
-        counters_.logical_reforge_work += std::min(
-            delta, limits_.max_reforge_work -
-                counters_.logical_reforge_work);
+    if (validation_work_ != nullptr) {
+        const std::uint64_t amount = validation_work_->logical_work();
+        counters_.logical_reforge_work += std::min(amount,
+            limits_.max_reforge_work - counters_.logical_reforge_work);
     }
-    validation_calc_.reset();
-    validation_cursor_ = 0;
-    validation_state_ = kNoId;
-    validation_reforge_accounted_ = 0;
-    validation_limits_ = {};
+    validation_work_.reset();
 }
 
 bool PolicyFinderWork::validate_active_programme(
@@ -364,137 +365,35 @@ bool PolicyFinderWork::validate_active_programme(
         active_sketch_->control->programs.empty())
         return true;
     const FinderControlGraph& control = *active_sketch_->control;
-    const StrategyPolicyEntryCertificate& census =
-        checker_->result().policy_entries;
-    if (!census.requested || census.entries.empty() ||
-        census.reached_decisions == 0 || census.refused_entries != 0)
-        throw StrategyEvalUnsupported(
-            "finder programme has no complete reached entry census");
-    if (validation_calc_ == nullptr) {
-        CandidateRecord& record = candidate_records_.at(*active_record_);
-        record.programme_entries = static_cast<std::uint32_t>(
-            census.entries.size());
-        for (const auto& entry : census.entries)
-            record.positive_programme_entries +=
-                entry.root_expected_visits > 0.0;
-        // Modifier identity is retained in this private admission context.
-        // The ordinary finder projection may merge members, so its one
-        // materialized representative cannot authorize every reached item.
-        validation_calc_ = std::make_unique<CalcContext>(
-            session_, problem_.goal(), problem_.registry(),
-            problem_.candidates(), false, false, false,
-            std::nullopt, std::vector<CountObservation>{}, false,
-            std::vector<std::uint64_t>{}, true);
-        const std::uint64_t other = retained_owned_bytes() -
-            validation_calc_->estimated_owned_bytes() +
+    if (validation_work_ == nullptr) {
+        const StrategyPolicyEntryCertificate& census =
+            checker_->result().policy_entries;
+        const std::uint64_t other = retained_owned_bytes() +
             checker_->live_owned_bytes();
         if (other >= limits_.max_solver_owned_bytes)
             throw std::length_error(
                 "finder has no exact programme admission memory");
-        validation_limits_.max_solver_owned_bytes =
+        SolveOptions validation_limits = limits_;
+        validation_limits.max_solver_owned_bytes =
             limits_.max_solver_owned_bytes - other;
-        validation_limits_.max_state_action_rows =
-            limits_.max_state_action_rows;
-        validation_limits_.max_transitions = limits_.max_transitions;
-        validation_limits_.max_imprint_program_depth =
-            limits_.max_imprint_program_depth;
-        validation_limits_.max_imprint_program_work =
-            limits_.max_imprint_program_work;
-        validation_limits_.consider_imprint_programs =
-            limits_.consider_imprint_programs;
-        validation_limits_.prices = &economy_->prices;
+        validation_work_ =
+            std::make_unique<SelectiveProgrammeEntryValidator>(
+                problem_, session_, control, census, economy_->prices,
+                validation_limits);
+        CandidateRecord& record = candidate_records_.at(*active_record_);
+        record.programme_entries = static_cast<std::uint32_t>(
+            census.entries.size());
+        record.positive_programme_entries =
+            validation_work_->positive_entries();
         update_peak();
     }
-    const std::uint32_t budget = std::max<std::uint32_t>(
-        1, max_work_items);
-    for (std::uint32_t item = 0; item < budget &&
-         validation_cursor_ < census.entries.size(); ++item) {
-        const StrategyPolicyEntryResult& entry =
-            census.entries[validation_cursor_];
-        if (!entry.available() ||
-            !(entry.root_expected_visits > 0.0) ||
-            entry.checkpoint_active || entry.observed_offer_active)
-            throw StrategyEvalUnsupported(
-                "finder programme entry has incomplete exact root coverage");
-        const auto bound_node = std::find_if(control.nodes.begin(),
-            control.nodes.end(), [&](const FinderControlNode& node) {
-                const std::size_t index = &node - control.nodes.data();
-                return node.kind == FinderControlKind::RunNativeProgram &&
-                    entry.compiled_node_id ==
-                        "c" + std::to_string(index);
-            });
-        if (bound_node == control.nodes.end())
-            throw StrategyEvalUnsupported(
-                "finder programme entry has no trusted occurrence");
-        const FinderProgramBinding& binding =
-            control.programs.at(bound_node->binding);
-        const PlannerOperator& expected =
-            problem_.operators().at(binding.operator_index);
-        if (validation_state_ == kNoId) {
-            validation_state_ = validation_calc_->intern_item(entry.item);
-            pc_item_state reproduced;
-            if (!validation_calc_->materialize(
-                    validation_state_, reproduced) ||
-                exact_item_state_key(reproduced) !=
-                    exact_item_state_key(entry.item))
-                throw StrategyEvalUnsupported(
-                    "finder programme exact entry cannot be rematerialized");
-        }
-        StateLocalAutomaticBatch batch;
-        if (!validation_calc_->advance_state_local_automatic_candidates(
-                validation_state_, validation_limits_, batch, 1)) {
-            update_peak();
-            continue;
-        }
-        if (batch.status != StateLocalAutomaticBatchStatus::Complete)
-            throw std::length_error(
-                "finder programme admission resource deferred");
-        const auto expected_key = planner_operator_semantic_key(expected);
-        bool admitted = false;
-        bool preserves_held = false;
-        for (const std::uint32_t index : batch.admitted_operators) {
-            const PlannerOperator& candidate =
-                validation_calc_->operators().at(index);
-            if (planner_operator_semantic_key(candidate) != expected_key)
-                continue;
-            const OptionKernel& kernel = validation_calc_->option_kernel(
-                validation_state_, index);
-            admitted = kernel.supported && kernel.legal &&
-                kernel.terminates_almost_surely &&
-                kernel.automatic.eligible && !kernel.exits.empty() &&
-                kernel.expected_resources == expected.resource_quantities;
-            if (admitted) {
-                preserves_held = (satisfied_goal_mask(
-                    validation_calc_->state(validation_state_)) &
-                    binding.held_goal_mask) == binding.held_goal_mask &&
-                    std::all_of(kernel.exits.begin(), kernel.exits.end(),
-                        [&](const OutcomeEntry& exit) {
-                            return (satisfied_goal_mask(
-                                validation_calc_->state(exit.state)) &
-                                binding.held_goal_mask) ==
-                                binding.held_goal_mask;
-                        });
-            }
-            break;
-        }
-        if (!admitted || !preserves_held)
-            throw StrategyEvalUnsupported(
-                "finder programme is unadmitted or loses held goals at a reached exact item");
-        ++candidate_records_.at(*active_record_)
-            .validated_programme_entries;
-        ++validation_cursor_;
-        validation_state_ = kNoId;
-        const std::uint64_t now =
-            validation_calc_->telemetry().reforge_logical_work_v1;
-        const std::uint64_t delta = now >= validation_reforge_accounted_
-            ? now - validation_reforge_accounted_ : 0;
-        counters_.logical_reforge_work += std::min(
-            delta, limits_.max_reforge_work -
-                counters_.logical_reforge_work);
-        validation_reforge_accounted_ = now;
+    if (!validation_work_->advance(max_work_items)) {
         update_peak();
+        return false;
     }
-    if (validation_cursor_ < census.entries.size()) return false;
+    candidate_records_.at(*active_record_)
+        .validated_programme_entries =
+            validation_work_->validated_entries();
     release_validation();
     return true;
 }
@@ -507,16 +406,32 @@ bool PolicyFinderWork::exhausted() const {
 std::string PolicyFinderWork::sketch_identity(const Sketch& sketch) const {
     std::string key = sketch.return_to_first ? "return:1" : "return:0";
     for (const std::uint32_t action : sketch.actions)
-        key += ':' + std::to_string(action);
+        key += ":action:" + problem_.registry().actions.at(action).id;
     if (sketch.control.has_value()) {
         key += ":control:" + std::to_string(sketch.control->entry);
-        for (const FinderProgramBinding& binding : sketch.control->programs)
-            key += ":program:" + std::to_string(binding.operator_index) +
-                ':' + std::to_string(binding.admitted_state) +
-                ':' + std::to_string(binding.held_goal_mask);
+        for (const FinderProgramBinding& binding : sketch.control->programs) {
+            pc_item_state item;
+            if (!problem_.materialize(binding.admitted_state, item))
+                throw std::invalid_argument(
+                    "finder native programme has no semantic item identity");
+            std::ostringstream semantic;
+            semantic << std::hex;
+            for (const std::uint64_t part : planner_operator_semantic_key(
+                    problem_.operators().at(binding.operator_index)))
+                semantic << part << ',';
+            semantic << ":item:";
+            for (const auto part : exact_item_state_key(item))
+                semantic << part << ',';
+            key += ":program:" + semantic.str() + ":held:" +
+                std::to_string(binding.held_goal_mask);
+        }
         for (const FinderControlNode& node : sketch.control->nodes) {
+            const std::string binding = node.kind ==
+                    FinderControlKind::RunPrimitive
+                ? problem_.registry().actions.at(node.binding).id
+                : std::to_string(node.binding);
             key += ':' + std::to_string(static_cast<unsigned>(node.kind)) +
-                ',' + std::to_string(node.binding) +
+                ',' + binding +
                 ',' + std::to_string(node.on_true) +
                 ',' + std::to_string(node.on_false) +
                 ',' + std::to_string(node.next);
@@ -564,260 +479,91 @@ void PolicyFinderWork::schedule_feedback_program() {
 }
 
 void PolicyFinderWork::generate_retention_candidate() {
-    retention_pending_ = false;
     const auto started = std::chrono::steady_clock::now();
-    const std::uint64_t work_before =
+    const std::uint64_t before =
         problem_.telemetry().reforge_logical_work_v1;
-    const auto finish = [&] {
-        const std::uint64_t work_after =
+    const auto charge = [&] {
+        const std::uint64_t after =
             problem_.telemetry().reforge_logical_work_v1;
-        const std::uint64_t delta = work_after >= work_before
-            ? work_after - work_before : 0;
-        counters_.logical_reforge_work = std::min(
-            limits_.max_reforge_work,
-            counters_.logical_reforge_work + std::min(
-                delta, limits_.max_reforge_work -
-                    counters_.logical_reforge_work));
+        if (after >= before) {
+            counters_.logical_reforge_work += std::min(
+                after - before,
+                limits_.max_reforge_work - counters_.logical_reforge_work);
+        }
         counters_.search_ns += static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - started).count());
-        try {
-            update_peak();
-        } catch (const std::length_error& ex) {
-            retention_status_ = std::string("native_construction_capacity:") +
-                ex.what();
-            last_refusal_kind_ = "capacity";
-            last_refusal_ = ex.what();
-            ++counters_.censored;
-            done_ = true;
-        }
+        update_peak();
     };
+    const std::uint32_t family_size =
+        grammar_ == FinderGrammarMode::SelectiveRetention ? 2u : 1u;
+    if (retention_variant_cursor_ >= family_size) {
+        retention_pending_ = false;
+        return;
+    }
+    if (retention_variant_cursor_ == 1 &&
+        !selective_followthrough_ready_) {
+        retention_status_ = "followthrough_without_completed_parent";
+        retention_pending_ = false;
+        return;
+    }
     try {
-        if (!problem_.goal().automatic_candidates ||
-            !session_->eldritch_eligible ||
-            original_start_.rarity != PC_RARITY_RARE) {
-            retention_status_ = "native_family_not_requested_or_ineligible";
-            finish();
+        if (retention_producer_ == nullptr) {
+            const auto variant = static_cast<SelectiveCompletionVariant>(
+                retention_variant_cursor_);
+            retention_producer_ = std::make_unique<
+                SelectiveCompletionProducer>(
+                    problem_, original_start_, economy_->prices,
+                    limits_, variant);
+        }
+        if (!retention_producer_->advance(1)) {
+            retention_status_ = "native_generation_incomplete";
+            charge();
             return;
         }
-        std::array<std::vector<std::uint32_t>, 2> side_slots;
-        for (std::uint32_t slot = 0;
-             slot < problem_.goal().slots.size(); ++slot) {
-            const std::int8_t side = goal_slot_side(
-                *session_, problem_.goal().slots[slot]);
-            if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX) {
-                retention_status_ = "goal_side_not_pure";
-                finish();
-                return;
-            }
-            side_slots[side].push_back(slot);
-        }
-        const std::uint32_t held_side =
-            side_slots[PC_SIDE_PREFIX].size() >=
-                    side_slots[PC_SIDE_SUFFIX].size()
-                ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX;
-        const std::uint32_t target_side = held_side == PC_SIDE_PREFIX
-            ? PC_SIDE_SUFFIX : PC_SIDE_PREFIX;
-        if (side_slots[held_side].size() < 2) {
-            retention_status_ = "held_side_has_fewer_than_two_goals";
-            finish();
-            return;
-        }
-        const auto chaos = std::find_if(ranked_.begin(), ranked_.end(),
-            [&](const RankedAction& action) {
-                return action.root_legal &&
-                    problem_.registry().actions[action.index].params.type ==
-                        ActionType::Chaos;
-            });
-        if (chaos == ranked_.end()) {
-            retention_status_ = "no_priced_root_acquisition";
-            finish();
-            return;
-        }
-        std::uint32_t held_mask = 0;
-        for (const std::uint32_t slot : side_slots[held_side])
-            held_mask |= 1u << slot;
-        const std::uint32_t root = problem_.intern_item(original_start_);
-        const OutcomeDistribution& acquisition =
-            problem_.outcomes(root, chaos->index);
-        if (!acquisition.supported || !acquisition.applicable ||
-            !acquisition.choice_groups.empty()) {
-            retention_status_ = "root_acquisition_law_unavailable";
-            finish();
-            return;
-        }
-        std::uint32_t source = kNoId;
-        const std::uint32_t preferred_count =
-            std::max<std::uint32_t>(1, side_slots[target_side].size());
-        for (const OutcomeEntry& exit : acquisition.entries) {
-            if (!(exit.probability > 0.0)) continue;
-            const AbstractState& state = problem_.state(exit.state);
-            const std::uint32_t count = target_side == PC_SIDE_PREFIX
-                ? state.prefix_count : state.suffix_count;
-            if ((satisfied_goal_mask(state) & held_mask) != held_mask ||
-                count == 0 || problem_.is_goal_state(state))
-                continue;
-            pc_item_state exact;
-            if (!problem_.materialize(exit.state, exact)) continue;
-            if (source == kNoId || count == preferred_count) {
-                source = exit.state;
-                if (count == preferred_count) break;
+        retention_status_ = retention_producer_->status();
+        if (const auto& candidate = retention_producer_->candidate();
+            candidate.has_value()) {
+            Sketch sketch;
+            sketch.actions = {candidate->acquisition_action};
+            sketch.score = candidate->acquisition_price;
+            sketch.control = candidate->control;
+            sketch.parent_identity = retention_variant_cursor_ == 0
+                ? "native-held-side-acquisition"
+                : selective_parent_identity_;
+            if (retention_variant_cursor_ == 0)
+                selective_parent_identity_ = sketch_identity(sketch);
+            if (seen_.insert(sketch_identity(sketch)).second) {
+                record_generated(sketch);
+                frontier_.push_back(std::move(sketch));
+                ++counters_.generated;
+                retention_status_ = "generated_native_held_side:" +
+                    std::to_string(retention_variant_cursor_);
+            } else {
+                ++counters_.duplicates;
+                retention_status_ = "duplicate_native_held_side:" +
+                    std::to_string(retention_variant_cursor_);
             }
         }
-        if (source == kNoId) {
-            retention_status_ = "no_reached_materializable_held_context";
-            finish();
-            return;
-        }
-        AutomaticAdmissionLimits admission;
-        admission.max_state_action_rows = limits_.max_state_action_rows;
-        admission.max_transitions = limits_.max_transitions;
-        const std::uint64_t non_calc_owned = retained_owned_bytes() -
-            problem_.estimated_owned_bytes();
-        if (non_calc_owned >= limits_.max_solver_owned_bytes)
-            throw std::length_error(
-                "finder has no native programme construction memory");
-        admission.max_solver_owned_bytes =
-            limits_.max_solver_owned_bytes - non_calc_owned;
-        admission.max_imprint_program_depth =
-            limits_.max_imprint_program_depth;
-        admission.max_imprint_program_work =
-            limits_.max_imprint_program_work;
-        admission.consider_imprint_programs = limits_.consider_imprint_programs;
-        admission.prices = &economy_->prices;
-        const ActionType intended = side_slots[target_side].empty()
-            ? ActionType::EldritchAnnul : ActionType::EldritchChaos;
-        const auto admitted_program = [&](const std::uint32_t state,
-                const bool direct) -> std::uint32_t {
-            const StateLocalAutomaticBatch batch =
-                problem_.admit_state_local_automatic_candidates(
-                    state, admission);
-            if (batch.status != StateLocalAutomaticBatchStatus::Complete) {
-                retention_status_ = "native_admission_resource_deferred:" +
-                    batch.resource_cap;
-                return kNoId;
-            }
-            for (const std::uint32_t index : batch.admitted_operators) {
-                const PlannerOperator& option = problem_.operators().at(index);
-                if (option.kind != PlannerOperatorKind::FixedOption ||
-                    option.option_kind != FixedOptionKind::EldritchSideIntent ||
-                    option.automatic_kind != AutomaticCandidateKind::EldritchSide ||
-                    option.intended_side != target_side ||
-                    option.primitive_program.empty() ||
-                    (direct && option.primitive_program.size() != 1) ||
-                    problem_.registry().actions.at(
-                        option.primitive_program.back()).params.type != intended)
-                    continue;
-                const OptionKernel& kernel = problem_.option_kernel(state, index);
-                if (kernel.supported && kernel.legal &&
-                    kernel.automatic.eligible && !kernel.exits.empty())
-                    return index;
-            }
-            return kNoId;
-        };
-        const std::uint32_t initial = admitted_program(source, false);
-        if (initial == kNoId) {
-            if (retention_status_ == "pending")
-                retention_status_ = "no_admitted_held_side_program";
-            finish();
-            return;
-        }
-        std::uint32_t ready = source;
-        const std::vector<std::uint32_t> setup =
-            problem_.operators().at(initial).primitive_program;
-        for (std::size_t step = 0; step + 1 < setup.size(); ++step) {
-            const OutcomeDistribution& law =
-                problem_.outcomes(ready, setup[step]);
-            if (!law.supported || !law.applicable ||
-                !law.choice_groups.empty() || law.entries.size() != 1 ||
-                std::abs(law.entries.front().probability - 1.0) > 1e-12) {
-                retention_status_ = "setup_is_not_deterministic";
-                finish();
-                return;
-            }
-            ready = law.entries.front().state;
-        }
-        const std::uint32_t direct = setup.size() == 1
-            ? initial : admitted_program(ready, true);
-        if (direct == kNoId) {
-            if (retention_status_ == "pending")
-                retention_status_ = "no_admitted_direct_continuation";
-            finish();
-            return;
-        }
-        const AbstractState& source_state = problem_.state(source);
-        const AbstractState& ready_state = problem_.state(ready);
-        const auto tiers = [](const AbstractState& state) {
-            return static_cast<std::uint32_t>(state.searing_exarch_tier) |
-                (static_cast<std::uint32_t>(state.eater_of_worlds_tier) << 8u);
-        };
-        FinderControlGraph control;
-        control.entry = 0;
-        control.programs.push_back({initial, source, held_mask});
-        if (ready != source)
-            control.programs.push_back({direct, ready, held_mask});
-        const auto append = [&](const FinderControlKind kind,
-                const std::uint32_t binding = kNoId) {
-            const std::uint32_t index = static_cast<std::uint32_t>(
-                control.nodes.size());
-            control.nodes.push_back({kind, binding});
-            return index;
-        };
-        const std::uint32_t goal = append(FinderControlKind::TestGoal);
-        std::vector<std::uint32_t> held_tests;
-        for (const std::uint32_t slot : side_slots[held_side])
-            held_tests.push_back(append(FinderControlKind::TestSlot, slot));
-        const std::uint32_t count_test = append(
-            FinderControlKind::TestSideCountAtLeast,
-            (target_side << 8u) | preferred_count);
-        const std::uint32_t ready_test = append(
-            FinderControlKind::TestEldritchTiers, tiers(ready_state));
-        const std::uint32_t source_test = ready == source ? kNoId : append(
-            FinderControlKind::TestEldritchTiers, tiers(source_state));
-        const std::uint32_t initial_run = append(
-            FinderControlKind::RunNativeProgram, 0);
-        const std::uint32_t direct_run = ready == source ? initial_run : append(
-            FinderControlKind::RunNativeProgram, 1);
-        const std::uint32_t acquire = append(
-            FinderControlKind::RunPrimitive, chaos->index);
-        const std::uint32_t success = append(FinderControlKind::GoalTerminal);
-        control.nodes[goal].on_true = success;
-        control.nodes[goal].on_false = held_tests.front();
-        for (std::size_t i = 0; i < held_tests.size(); ++i) {
-            control.nodes[held_tests[i]].on_true =
-                i + 1 == held_tests.size() ? count_test : held_tests[i + 1];
-            control.nodes[held_tests[i]].on_false = acquire;
-        }
-        control.nodes[count_test].on_true = ready_test;
-        control.nodes[count_test].on_false = acquire;
-        control.nodes[ready_test].on_true = direct_run;
-        control.nodes[ready_test].on_false =
-            source_test == kNoId ? acquire : source_test;
-        if (source_test != kNoId) {
-            control.nodes[source_test].on_true = initial_run;
-            control.nodes[source_test].on_false = acquire;
-        }
-        control.nodes[initial_run].next = goal;
-        control.nodes[direct_run].next = goal;
-        control.nodes[acquire].next = goal;
-        Sketch sketch;
-        sketch.actions = {chaos->index};
-        sketch.score = chaos->price;
-        sketch.control = std::move(control);
-        sketch.parent_identity = "native-held-side-acquisition";
-        if (seen_.insert(sketch_identity(sketch)).second) {
-            record_generated(sketch);
-            frontier_.push_back(std::move(sketch));
-            ++counters_.generated;
-            retention_status_ = "generated_native_held_side";
-        } else {
-            ++counters_.duplicates;
-            retention_status_ = "duplicate_native_held_side";
-        }
-        finish();
+        retention_producer_.reset();
+        ++retention_variant_cursor_;
+        retention_pending_ = retention_variant_cursor_ < family_size;
+        charge();
+    } catch (const std::length_error& ex) {
+        retention_status_ = std::string("native_construction_capacity:") +
+            ex.what();
+        last_refusal_kind_ = "capacity";
+        last_refusal_ = ex.what();
+        ++counters_.censored;
+        retention_producer_.reset();
+        retention_pending_ = false;
+        done_ = true;
     } catch (const std::exception& ex) {
-        retention_status_ = std::string("native_construction_refused:") + ex.what();
-        finish();
+        retention_status_ = std::string("native_construction_refused:") +
+            ex.what();
+        retention_producer_.reset();
+        retention_pending_ = false;
+        charge();
     }
 }
 
@@ -992,7 +738,8 @@ void PolicyFinderWork::update_peak() {
 }
 
 void PolicyFinderWork::start_next_candidate() {
-    if (counters_.considered >= 8 || counters_.checked >= 8 ||
+    if (counters_.considered >= attempt_limit_ ||
+        counters_.checked >= attempt_limit_ ||
         counters_.logical_reforge_work >= limits_.max_reforge_work) {
         done_ = true;
         return;
@@ -1000,10 +747,11 @@ void PolicyFinderWork::start_next_candidate() {
     if (frontier_.empty() && retention_pending_)
         generate_retention_candidate();
     if (done_) return;
+    if (frontier_.empty() && retention_pending_) return;
     while (frontier_.empty() && pending_cursor_ < pending_.size())
         expand_next_partial();
-    if (exhausted() || counters_.considered >= 8 ||
-        counters_.checked >= 8 ||
+    if (exhausted() || counters_.considered >= attempt_limit_ ||
+        counters_.checked >= attempt_limit_ ||
         counters_.logical_reforge_work >= limits_.max_reforge_work) {
         done_ = true;
         return;
@@ -1157,6 +905,11 @@ void PolicyFinderWork::charge_active_work() {
 
 void PolicyFinderWork::complete_active_candidate() {
     const StrategyEvalResult& result = checker_->result();
+    if (active_sketch_.has_value() &&
+        active_sketch_->parent_identity ==
+            "native-held-side-acquisition" &&
+        finder_evaluation_accepted(result))
+        selective_followthrough_ready_ = true;
     CandidateRecord& record = candidate_records_.at(*active_record_);
     record.finished_ns = elapsed_ns();
     record.work = checker_->diagnostic_result().reforge_logical_work_v1;
@@ -1194,6 +947,10 @@ void PolicyFinderWork::complete_active_candidate() {
         last_refusal_kind_ = "failed_check";
         last_refusal_ = "candidate failed native properness, mass or price check";
         record.refusal = last_refusal_;
+    }
+    if (best_.has_value()) {
+        record.best_after_checked_cost = best_->expected_cost;
+        record.has_best_after_checked_cost = true;
     }
     // A completed native check creates the next structural expansion
     // opportunity. The deeper programme branch is not admitted solely from
@@ -1234,8 +991,9 @@ void PolicyFinderWork::step(const std::uint32_t max_work_items) {
     if (checker_ == nullptr) {
         start_next_candidate();
         if (checker_ == nullptr) {
-            if (exhausted() || counters_.considered >= 8 ||
-                counters_.checked >= 8)
+            if (exhausted() ||
+                counters_.considered >= attempt_limit_ ||
+                counters_.checked >= attempt_limit_)
                 done_ = true;
             update_peak();
             return;
@@ -1299,8 +1057,8 @@ void PolicyFinderWork::step(const std::uint32_t max_work_items) {
         active_record_.reset();
     }
     if (checker_ == nullptr &&
-        (exhausted() || counters_.considered >= 8 ||
-         counters_.checked >= 8)) done_ = true;
+        (exhausted() || counters_.considered >= attempt_limit_ ||
+         counters_.checked >= attempt_limit_)) done_ = true;
     update_peak();
 }
 
@@ -1330,11 +1088,14 @@ std::string PolicyFinderWork::telemetry_json() const {
         "\"ranking\":\"") +
         (ranking_ == FinderRankingMode::Heuristic ? "heuristic" : "uninformed") +
         "\",\"grammar\":\"" +
-        (grammar_ == FinderGrammarMode::ConditionalRetention
+        (grammar_ == FinderGrammarMode::SelectiveRetention
+            ? "selective-retention" :
+            grammar_ == FinderGrammarMode::ConditionalRetention
             ? "conditional-retention" :
             grammar_ == FinderGrammarMode::Conditional
                 ? "conditional" : "primitive") +
         "\",\"considered\":" + std::to_string(state.considered) +
+        ",\"attempt_limit\":" + std::to_string(attempt_limit_) +
         ",\"checked\":" + std::to_string(state.checked) +
         ",\"generated\":" + std::to_string(state.generated) +
         ",\"duplicates\":" + std::to_string(state.duplicates) +
@@ -1396,6 +1157,14 @@ std::string PolicyFinderWork::telemetry_json() const {
             numeric << std::setprecision(17) << record.checked_cost;
             result += ",\"checked_cost\":" + numeric.str();
         } else result += ",\"checked_cost\":null";
+        if (record.has_best_after_checked_cost) {
+            numeric.str("");
+            numeric.clear();
+            numeric << std::setprecision(17) <<
+                record.best_after_checked_cost;
+            result += ",\"best_after_checked_cost\":" +
+                numeric.str();
+        } else result += ",\"best_after_checked_cost\":null";
         result += ",\"actions\":[";
         for (std::size_t action = 0; action < record.actions.size(); ++action) {
             if (action != 0) result += ',';

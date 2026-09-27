@@ -369,6 +369,18 @@ std::string serialize_solver_telemetry(
     json += diagnostics == nullptr ? "null" :
         bool_json(diagnostics->closure_unavailable_by_profile);
     json += "}";
+    json += ",\"selective_completion_service\":{";
+    json += "\"status\":";
+    if (diagnostics == nullptr) json += "null";
+    else append_telemetry_json_string(json,
+        diagnostics->selective_completion_service_status);
+    json += ",\"checks\":" + (diagnostics == nullptr
+        ? std::string("null") : std::to_string(
+            diagnostics->selective_completion_service_checks));
+    json += ",\"checked_cost\":" + (diagnostics == nullptr
+        ? std::string("null") : telemetry_finite_json(
+            diagnostics->selective_completion_service_checked_cost));
+    json += "}";
     json += ",\"native_continuation_search\":";
     if (diagnostics == nullptr) json += "null";
     else append_telemetry_json_string(json, native_continuation_search_name(diagnostics->native_continuation_search));

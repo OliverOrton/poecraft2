@@ -77,8 +77,11 @@ std::vector<double> score_finder_sketch_batch(
 
 enum class FinderRankingMode : std::uint8_t { Heuristic, Uninformed };
 enum class FinderGrammarMode : std::uint8_t {
-    PrimitiveOnly, Conditional, ConditionalRetention
+    PrimitiveOnly, Conditional, ConditionalRetention, SelectiveRetention
 };
+
+class SelectiveCompletionProducer;
+class SelectiveProgrammeEntryValidator;
 
 /* Peer heuristic policy search. It never creates SolveWork or supplies a
  * lower/exact certificate. One native evaluator is live at most. */
@@ -91,7 +94,8 @@ class PolicyFinderWork {
         std::unordered_map<std::string, double> prices,
         const SolveOptions& limits,
         FinderRankingMode ranking = FinderRankingMode::Heuristic,
-        FinderGrammarMode grammar = FinderGrammarMode::Conditional);
+        FinderGrammarMode grammar = FinderGrammarMode::Conditional,
+        std::uint32_t attempt_limit = 8);
     ~PolicyFinderWork();
     PolicyFinderWork(const PolicyFinderWork&) = delete;
     PolicyFinderWork& operator=(const PolicyFinderWork&) = delete;
@@ -138,8 +142,10 @@ class PolicyFinderWork {
         std::uint64_t work = 0;
         std::uint64_t peak_owned_bytes = 0;
         double checked_cost = 0.0;
+        double best_after_checked_cost = 0.0;
         double score = 0.0;
         bool has_checked_cost = false;
+        bool has_best_after_checked_cost = false;
         bool conditional = false;
         bool native_program = false;
         std::uint32_t programme_entries = 0;
@@ -153,6 +159,7 @@ class PolicyFinderWork {
     SolveOptions limits_;
     FinderRankingMode ranking_;
     FinderGrammarMode grammar_;
+    std::uint32_t attempt_limit_ = 8;
     std::vector<RankedAction> ranked_;
     std::deque<Sketch> frontier_;
     std::unordered_set<std::string> seen_;
@@ -161,11 +168,7 @@ class PolicyFinderWork {
     std::size_t pending_cursor_ = 0;
     std::shared_ptr<StrategyImpl> checking_strategy_;
     std::unique_ptr<StrategyEvalWork> checker_;
-    std::unique_ptr<CalcContext> validation_calc_;
-    AutomaticAdmissionLimits validation_limits_;
-    std::size_t validation_cursor_ = 0;
-    std::uint32_t validation_state_ = kNoId;
-    std::uint64_t validation_reforge_accounted_ = 0;
+    std::unique_ptr<SelectiveProgrammeEntryValidator> validation_work_;
     std::string checking_graph_;
     std::optional<Sketch> active_sketch_;
     std::optional<std::size_t> active_record_;
@@ -178,6 +181,10 @@ class PolicyFinderWork {
     std::string last_refusal_kind_ = "none";
     std::string retention_status_ = "not_requested";
     bool retention_pending_ = false;
+    std::unique_ptr<SelectiveCompletionProducer> retention_producer_;
+    std::uint32_t retention_variant_cursor_ = 0;
+    bool selective_followthrough_ready_ = false;
+    std::string selective_parent_identity_;
     bool finish_requested_ = false;
     bool done_ = false;
 

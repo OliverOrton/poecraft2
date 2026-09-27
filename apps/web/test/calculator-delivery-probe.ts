@@ -15,11 +15,13 @@ import { finishVerifiedCalculatorProbe } from "./calculator-delivery-probe-contr
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [caseId, output, control = "finish", repeatText = "1", workPolicy = "adaptive",
-    transportPolicy = "compact", tracePolicy = "trace"] = process.argv.slice(2);
+    transportPolicy = "compact", tracePolicy = "trace",
+    solverMode = "current"] = process.argv.slice(2);
 assert.ok(caseId && output && ["finish", "default_finish", "cancel_setup", "cancel_retention", "cancel_compile"].includes(control));
 assert.ok(workPolicy === "adaptive" || workPolicy === "fixed_eight");
 assert.ok(transportPolicy === "compact" || transportPolicy === "legacy_json");
 assert.ok(tracePolicy === "trace" || tracePolicy === "normal");
+assert.ok(solverMode === "current" || solverMode === "strategy_finder");
 assert.ok(workPolicy === "adaptive" || control === "default_finish");
 const expectsDelivery = control === "finish" || control === "default_finish";
 const repetitions = Number(repeatText);
@@ -98,7 +100,8 @@ try {
         goalRarity: spec.goal.rarity, minSatisfiedSlots: spec.goal.min_satisfied_slots ?? spec.goal.slots.length,
         slots: spec.goal.slots.map(s => ({
             ...("family_mod_key" in s ? {familyModKey: s.family_mod_key} : {group: s.group}), minTier: s.min_tier ?? 1})),
-        solveAllowEconomicRestart: false, solveConsiderImprintPrograms: false});
+        solveAllowEconomicRestart: false, solveConsiderImprintPrograms: false,
+        solveMode: solverMode});
     client.solverCompileStrategy = async (...args) => { nativeGraph = await compile(...args); return nativeGraph as Awaited<ReturnType<typeof compile>>; };
     let intent = false;
     const render = fields.renderSolvePanel.bind(calculator);
@@ -146,7 +149,8 @@ try {
         ? await client.solverTelemetry(solver) : null;
     const finalTelemetryReadMs = performance.now() - diagnosticsStarted;
     const graphText = nativeGraph === null ? null : typeof nativeGraph === "string" ? nativeGraph : JSON.stringify(nativeGraph);
-    const report: Record<string, unknown> = {case_id: caseId, control, work_policy: workPolicy,
+    const report: Record<string, unknown> = {case_id: caseId, control,
+        solver_mode: solverMode, work_policy: workPolicy,
         transport_policy: transportPolicy, trace_policy: tracePolicy,
         probe_control_intent: intent, repetition, runtime_warm: repetition > 0,
         runtime_versions: process.versions,

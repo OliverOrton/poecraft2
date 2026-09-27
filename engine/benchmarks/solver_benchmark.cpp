@@ -68,8 +68,10 @@ struct Arguments {
     std::string solver_mode = "current";
     std::string finder_ranking = "heuristic";
     std::string finder_grammar = "conditional";
+    std::uint32_t finder_attempt_limit = 8;
     std::string native_goal_terminal = "legacy-clean";
     std::string native_goal_proof = "ordinary-clean";
+    bool native_selective_completion_service = false;
     bool neutral_extra_ordering = false;
     bool seed_progress_observation = false;
     double native_execution_action_price = 0;
@@ -119,6 +121,7 @@ struct NativeHandles {
 struct CaseResult {
     std::string native_goal_terminal = "legacy-clean";
     std::string native_goal_proof = "ordinary-clean";
+    bool native_selective_completion_service = false;
     bool neutral_extra_ordering = false;
     bool seed_progress_observation = false;
     std::string native_retention_diagnostic;
@@ -3632,8 +3635,10 @@ CaseResult run_case(
     const std::string& solver_mode,
     const std::string& finder_ranking,
     const std::string& finder_grammar,
+    const std::uint32_t finder_attempt_limit,
     const std::string& native_goal_terminal,
     const std::string& native_goal_proof,
+    const bool native_selective_completion_service,
     const bool neutral_extra_ordering,
     const bool seed_progress_observation,
     const double native_execution_action_price,
@@ -3656,6 +3661,8 @@ CaseResult run_case(
     CaseResult report;
     report.native_goal_terminal = native_goal_terminal;
     report.native_goal_proof = native_goal_proof;
+    report.native_selective_completion_service =
+        native_selective_completion_service;
     report.neutral_extra_ordering = neutral_extra_ordering;
     report.seed_progress_observation = seed_progress_observation;
     report.native_retention_diagnostic=native_retention_diagnostic;
@@ -3897,7 +3904,9 @@ CaseResult run_case(
             (goal_progress_gated_reforges ? "1" : "0") +
             "\nmax_discovered_states_override=" +
             std::to_string(max_discovered_states_override) +
-            "\ngoal_proof_profile=" + native_goal_proof;
+            "\ngoal_proof_profile=" + native_goal_proof +
+            "\nselective_completion_service=" +
+            (native_selective_completion_service ? "1" : "0");
         const std::uint32_t work_items =
             optional_u32(caps, "solve_step_work_items", 1);
         pc_error_info error;
@@ -3913,6 +3922,15 @@ CaseResult run_case(
             if (configured != PC_RESULT_OK)
                 throw std::runtime_error(api_error(
                     "configure goal proof profile", configured, error));
+        }
+        if (native_selective_completion_service) {
+            const auto configured = poecraft::solver::
+                configure_solver_selective_completion_service_diagnostic(
+                    handles.solver, true, &error);
+            if (configured != PC_RESULT_OK)
+                throw std::runtime_error(api_error(
+                    "configure selective completion service",
+                    configured, error));
         }
         if (solver_mode == "strategy_finder" &&
             finder_ranking == "uninformed") {
@@ -3932,11 +3950,22 @@ CaseResult run_case(
                     handles.solver,
                     finder_grammar == "primitive"
                         ? poecraft::solver::FinderGrammarMode::PrimitiveOnly
-                        : poecraft::solver::FinderGrammarMode::ConditionalRetention,
+                        : finder_grammar == "selective-retention"
+                            ? poecraft::solver::FinderGrammarMode::SelectiveRetention
+                            : poecraft::solver::FinderGrammarMode::ConditionalRetention,
                     &error);
             if (configured != PC_RESULT_OK)
                 throw std::runtime_error(api_error(
                     "configure finder grammar", configured, error));
+        }
+        if (solver_mode == "strategy_finder" &&
+            finder_attempt_limit != 8) {
+            const auto configured =
+                poecraft::solver::configure_solver_finder_attempt_limit(
+                    handles.solver, finder_attempt_limit, &error);
+            if (configured != PC_RESULT_OK)
+                throw std::runtime_error(api_error(
+                    "configure finder attempt limit", configured, error));
         }
         if (const Value* candidate = optional(caps, "candidate_evaluation", Type::Object)) {
             if (candidate->object.size() != 4)
@@ -5174,6 +5203,9 @@ void append_case_report(
         escape_json(result.native_goal_terminal) << ",\n";
     out << "  \"native_goal_proof\":" <<
         escape_json(result.native_goal_proof) << ",\n";
+    out << "  \"native_selective_completion_service\":" <<
+        (result.native_selective_completion_service ? "true" : "false")
+        << ",\n";
     if (result.neutral_extra_ordering)
         out << "  \"native_neutral_extra_ordering\":true,\n";
     if (result.seed_progress_observation)
@@ -6290,10 +6322,15 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--solver-mode") args.solver_mode=value("--solver-mode");
         else if (argument == "--finder-ranking") args.finder_ranking=value("--finder-ranking");
         else if (argument == "--finder-grammar") args.finder_grammar=value("--finder-grammar");
+        else if (argument == "--finder-attempt-limit")
+            args.finder_attempt_limit = static_cast<std::uint32_t>(
+                std::stoul(value("--finder-attempt-limit")));
         else if (argument == "--native-goal-terminal")
             args.native_goal_terminal = value("--native-goal-terminal");
         else if (argument == "--native-goal-proof")
             args.native_goal_proof = value("--native-goal-proof");
+        else if (argument == "--native-selective-completion-service")
+            args.native_selective_completion_service = true;
         else if (argument == "--native-neutral-extra-ordering")
             args.neutral_extra_ordering = true;
         else if (argument == "--native-seed-progress-observation")
@@ -6404,8 +6441,15 @@ Arguments parse_arguments(int argc, char** argv) {
         throw std::runtime_error("finder ranking must be heuristic or uninformed");
     if (args.finder_grammar != "conditional" &&
         args.finder_grammar != "primitive" &&
-        args.finder_grammar != "conditional-retention")
-        throw std::runtime_error("finder grammar must be conditional, conditional-retention or primitive");
+        args.finder_grammar != "conditional-retention" &&
+        args.finder_grammar != "selective-retention")
+        throw std::runtime_error("finder grammar must be conditional, conditional-retention, selective-retention or primitive");
+    if ((args.finder_attempt_limit != 8 &&
+         args.finder_attempt_limit != 24) ||
+        (args.finder_attempt_limit != 8 &&
+         args.solver_mode != "strategy_finder"))
+        throw std::runtime_error(
+            "finder attempt limit requires strategy_finder mode and 8 or 24");
     if (args.native_goal_terminal != "legacy-clean" &&
         args.native_goal_terminal != "explicit-clean" &&
         args.native_goal_terminal != "coverage-only")
@@ -6416,6 +6460,10 @@ Arguments parse_arguments(int argc, char** argv) {
     if (args.native_goal_proof != "ordinary-clean" &&
         args.solver_mode != "current")
         throw std::runtime_error("target-neutral goal proof requires current mode");
+    if (args.native_selective_completion_service &&
+        args.solver_mode != "current")
+        throw std::runtime_error(
+            "selective completion service requires current mode");
     if (args.native_goal_terminal != "legacy-clean" &&
         args.solver_mode != "current" &&
         args.solver_mode != "strategy_finder")
@@ -6767,8 +6815,10 @@ int main(int argc, char** argv) {
                     args.solver_mode,
                     args.finder_ranking,
                     args.finder_grammar,
+                    args.finder_attempt_limit,
                     args.native_goal_terminal,
                     args.native_goal_proof,
+                    args.native_selective_completion_service,
                     args.neutral_extra_ordering,
                     args.seed_progress_observation,
                     args.native_execution_action_price,

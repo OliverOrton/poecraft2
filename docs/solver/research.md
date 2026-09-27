@@ -679,6 +679,26 @@ graphs. Finder A5 returned checked L and R policies at different target costs;
 that semantic contrast is not a same-clean policy improvement. No public goal
 migration or Current R exactness is established.
 
+The [sustained dual-solver programme](../active/2026-09-26-sustained-dual-solver/README.md)
+then isolated Current's target-neutral proof profile. With finite nonnegative
+prices, it admits a zero global lower for private clean L and coverage R while
+withholding positive clean pruning and exact closure. A4/A5 R returned checked
+bounded policies; cross-target values are a semantic contrast, not a clean
+economic improvement. The same programme moved native selective completion
+into one proposal owner for Finder and a default-off Current service. On the
+same A5 clean request, Finder's checked reroll/repair controller reduced its
+retained-side baseline C524,079.70 to C379,815.68, while Current's checked
+ordinary C85,558.71 remained much cheaper. Two Exalt-fill controllers failed
+exact reached-entry semantic admission at a concrete occupied 3/1 state and
+were removed. This is evidence against those candidate control guards, not
+against the native Exalt mechanic or all fill policies. Current's service
+could not run before Finish on the measured A4/A5 cases because no usable
+checked incumbent was available at that boundary; one costly queued
+availability scan was removed afterward, without a post-fix timed replay.
+There is no Current service economic result or default activation claim. The
+24-run native allowance is exhausted. No new lower theorem or exact closure
+follows from these fixed-policy costs.
+
 <a id="knowledge"></a>
 ## 5. Knowledge outlives machinery
 

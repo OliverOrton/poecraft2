@@ -124,11 +124,124 @@ closure unavailability as an open obligation. That reporting path was corrected
 after the reports and built; the preserved reports retain their original exit.
 No replay is silently relabelled as a pass.
 
-## Active checkpoint
+## P4/P5 shared construction and Finder
 
-P0–P3 have implementation and bounded evidence. P4 shared selective completion
-and its Finder/Current consumers are next. Timed native programme invocations
-spent: 13 of the declared maximum 24. No processes are active. The proposed
-mathematics remains conditional: zero is a global lower only under nonnegative
-costs; a positive selected value can support a checked policy upper without
-being a global MDP lower. Packet examples do not establish native mechanics.
+`SelectiveCompletionProducer` is the native owner for a root Chaos acquisition,
+held-side selection, state-local automatic programme admission and a complete
+paid control graph. Both the original retained-side control and a reroll/repair
+follow-through are retained. The producer proposes controllers; the existing
+compiler, exact graph evaluator and `SelectiveProgrammeEntryValidator` admit
+them. The latter checks the positive-mass reached item/control entries against
+the exact native semantic option and complete proper kernel. Neither producer
+nor Finder grants a lower or closure proof.
+
+An Exalt fill and a fill-plus-repair proposal were tested on A5 L. Their root
+graphs could evaluate, but reached entry `c10` with prefix/suffix occupancy
+3/1 and goal mask 15 did not match the selected native programme. Two bounded
+guard attempts did not repair that obligation. The rejected fill branches were
+removed from the final grammar. Negative receipts remain under `out/sustained-
+dual-solver/P5/`; they are not accepted policy evidence. The surviving
+reroll/repair controller passed 691/691 reached-entry checks and exact original-
+root graph evaluation. Finder creates it as a checked follow-through of the
+accepted retained-side controller, with semantic candidate identity rather
+than calculator-local numeric IDs.
+
+Source-matched final eight-attempt A5 L reports are under `out/sustained-dual-
+solver/P7/finder-control-final-8-L/` and `finder-selective-final-8-L/`.
+Both returned expectation-met exit 0 and matched exact graph evaluation. The
+control checked upper is C524,079.6986482172 in 23.66 s host wall; the
+selective grammar checked C379,815.678156585 in 37.90 s. The latter is 27.53%
+cheaper than this Finder control, but 4.44 times the retained Current ordinary
+A5 L reference C85,558.7061856044. Each is one timed run, so no robust speed
+claim follows. An earlier eight-attempt trial queued two fill candidates and
+failed to reach the follow-through; its negative receipts are preserved at
+`out/sustained-dual-solver/P7/finder-selective-8-L/`.
+Both final Finder arms used executable SHA-256
+`aff3ac470fa701637dbe537627ef343c2a475713ae384ff7aa88cc161bd8df44`,
+corpus SHA-256 `eb450af001c2cd732293eafa5aa68e2ff92056a21fcd8dcb500647fd81fa0674`,
+and compiled manifest SHA-256
+`852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb`.
+The selected strategy files in those ledgers have SHA-256
+`88b3d669f1ff52ee3baba998edfb92b779ef0a00360db4b38774a673cf8912ca`
+(selective) and
+`99df169ae2a5032f692a89ba7e3f7df5d4748e31b64f5b3771ffde7d811ec224`
+(control).
+
+## P6 Current service boundary
+
+The private, default-off Current service is wired to the same producer and
+entry validator. It uses a separate native calculator, checks the original-root
+graph within remaining aggregate memory and cumulative reforge work, and can
+offer only a better independently checked root artifact to the existing
+incumbent portfolio. It starts only from a pre-Finish checked incumbent. The
+public/default Current path and proof capabilities are unchanged.
+
+The A5 and A4 240-second real treatments did **not** reach that entry boundary.
+For A5 the first finite incumbent trace sample appeared at 263.70 seconds,
+after Finish;
+its service telemetry was still `not_requested` because that report predates
+the explicit queued/censored status repair. Its ordinary checked C85,558.71
+policy and exact matched graph survived. For A4, the first finite incumbent
+trace sample appeared at 242.16 seconds; the repaired telemetry reports
+`censored_no_pre_finish_incumbent`, zero checks, and a bounded C9,832.96
+policy. The source-matched service-off A4 run returned C3,746.13 and first
+finite incumbent sample at 181.07 seconds. A per-step portfolio scan in the
+service gate was identified as unnecessary pre-incumbent overhead and replaced
+with a constant-time availability guard **after** these runs. No post-fix same-case timing or
+economic claim is made. No candidate reached Current's checker in the measured
+real runs, so the Current service is structurally implemented but not qualified
+for activation. P6B's conditional local placement was ineligible: its required
+inferior checked root proposal did not exist in Current's run.
+
+## P7 budget and remaining qualification
+
+All 24 authorized timed native case invocations have been used: P0–P3 13,
+P5 five, P6/P7 six. Historical and invalidated attempts remain counted. The
+24-attempt Finder comparison, source-matched post-gate-fix Current control, and
+real Current service economics are unmeasured. No further timed native run is
+implied. Native source build, solve suite (87,672 checks), API suite (3,015)
+and focused Python treatment tests (3) pass. The proposed mathematics remains
+conditional: zero is a global lower only under nonnegative costs; a positive
+selected value can support a checked policy upper without being a global MDP
+lower. Packet examples do not establish native mechanics.
+
+## P8 release runtime
+
+The release WASM bundle was rebuilt from the final native source with
+`scripts/build-wasm.ps1`; `npm test` and `npx tsc --noEmit` passed for the web
+layer. The actual Calculator probe uses the existing client, worker and
+release WASM through compact transport. Its additional test-only solver-mode
+argument selected the existing experimental Finder without changing product
+defaults. Supervised receipts and reports are under
+`out/sustained-dual-solver/P8/`:
+The rebuilt WASM SHA-256 is
+`2064beb626322350e07fcca72ad5bca2b231463c5edab530a107144c2e255319`.
+
+| Probe | Outcome | UI-to-usable | Largest native call |
+|---|---|---:|---:|
+| Current unattended 240-second Finish | checked C85,558.7062, bounded | 240.54 s | 306.74 ms |
+| Current early Finish | same checked cost, bounded | 37.70 s | 305.04 ms |
+| Finder unattended | checked C320,800,932.13, `finder_complete` | 6.73 s | 461.68 ms |
+| Finder early Finish | checked C470,485,195.56, bounded | 0.23 s | 44.21 ms |
+| Current setup cancellation | cancelled, no strategy | 0.24 s | 29.32 ms |
+
+The cancellation report records 18.03 ms native release and no surviving host
+process. An initial cancellation probe failed with a test-only variable-name
+error before the solve; its supervisor receipt is preserved separately, and
+the corrected probe passed. These product calls have adaptive work policy and
+the existing product Finder grammar; they are lifecycle checks, not native
+fixed-eight selective-grammar comparisons. The new private grammar and proof
+profile are not exposed in this Calculator transport, so no product
+qualification or promotion is claimed for them. Rendered visual review was
+not performed.
+
+## P9 disposition
+
+Target-neutral Current L/R support is implemented privately with zero global
+lower and no exact closure. Shared selective completion is admitted through
+Finder and yields a cheaper A5 Finder controller, still above Current's normal
+checked cost. Current's separate default-off service needs a case with a
+pre-Finish checked incumbent and a completed root proposal before its adoption
+path can be qualified. The next decision is whether to authorize a new matched
+run allowance and a reduced fixture for that boundary; this programme does
+not activate the service or promote the selective Finder grammar by default.

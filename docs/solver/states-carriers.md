@@ -31,8 +31,10 @@ The exact evaluator derives an observation universe from graph conditions,
 including nonterminal branches. Those observed families are not automatically
 the original requested goal. Solver-produced graphs separately check their
 effective success ingress against the native request. The private coverage
-target currently has a checked Finder consumer; Current's clean-dependent proof
-paths remain refused for it. [Dual-lane record](../active/2026-09-26-dual-lane-target-support/README.md).
+target has checked Finder and private target-neutral Current consumers. Current
+ordinary-clean proof still refuses coverage-only; the neutral profile keeps
+only a zero global lower and bounded checked policies.
+[Sustained record](../active/2026-09-26-sustained-dual-solver/README.md).
 
 Use the native resolver and terminal predicate. Do not replace them with `mask == full`, assume every requested bit must always correspond to a distinct physical affix, or reinterpret overlapping slots in documentation. The mathematical model keeps native slot/overlap semantics explicit; distinct-goal assumptions belong to a particular proof's preconditions.
 

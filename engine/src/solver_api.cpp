@@ -601,6 +601,7 @@ struct pc_solver {
     solver::NativeRetentionDiagnosticMode native_retention_diagnostic = solver::NativeRetentionDiagnosticMode::Off;
     solver::GoalProofProfile goal_proof_profile =
         solver::GoalProofProfile::OrdinaryClean;
+    bool selective_completion_service = false;
     double native_retention_checked_target = 0;
     solver::NativeContinuationSearchMode native_continuation_search =
         solver::NativeContinuationSearchMode::Ordinary;
@@ -609,6 +610,7 @@ struct pc_solver {
         solver::FinderRankingMode::Heuristic;
     solver::FinderGrammarMode finder_grammar =
         solver::FinderGrammarMode::Conditional;
+    std::uint32_t finder_attempt_limit = 8;
 };
 
 namespace poecraft::solver {
@@ -924,6 +926,8 @@ solver::SolveOptions solve_options(
         const pc_solve_options* options) {
     solver::SolveOptions value = solve_options(options);
     value.goal_proof_profile = holder.goal_proof_profile;
+    value.selective_completion_service =
+        holder.selective_completion_service;
     value.native_retention_lower = holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::Off;
     value.native_retention_numerical_reuse = holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::Reuse ||
         holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::CheckedTarget ||
@@ -1368,6 +1372,20 @@ pc_result solver::configure_solver_goal_proof_profile_diagnostic(
     return PC_RESULT_OK;
 }
 
+pc_result solver::configure_solver_selective_completion_service_diagnostic(
+        pc_solver_handle handle, const bool enabled,
+        pc_error_info* out_error) {
+    if (!handle || handle->solve_work || handle->solved.has_value() ||
+        handle->finder_work || handle->finder_finished) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+            "selective completion service requires an idle unsolved handle");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    handle->selective_completion_service = enabled;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
 pc_result solver::configure_solver_finder_ranking(
         pc_solver_handle handle, FinderRankingMode mode,
         pc_error_info* out_error) {
@@ -1391,12 +1409,28 @@ pc_result solver::configure_solver_finder_grammar(
         handle->finder_work || handle->finder_finished ||
         (mode != FinderGrammarMode::PrimitiveOnly &&
          mode != FinderGrammarMode::Conditional &&
-         mode != FinderGrammarMode::ConditionalRetention)) {
+         mode != FinderGrammarMode::ConditionalRetention &&
+         mode != FinderGrammarMode::SelectiveRetention)) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
             "finder grammar requires an idle unsolved handle and known mode");
         return PC_RESULT_INVALID_ARGUMENT;
     }
     handle->finder_grammar = mode;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result solver::configure_solver_finder_attempt_limit(
+        pc_solver_handle handle, const std::uint32_t limit,
+        pc_error_info* out_error) {
+    if (!handle || handle->solve_work || handle->solved.has_value() ||
+        handle->finder_work || handle->finder_finished ||
+        (limit != 8 && limit != 24)) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+            "finder attempt limit requires an idle handle and 8 or 24");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    handle->finder_attempt_limit = limit;
     clear_error(out_error);
     return PC_RESULT_OK;
 }
@@ -2068,7 +2102,8 @@ pc_result pc_solver_solve_begin(
             solver->finder_work = std::make_unique<solver::PolicyFinderWork>(
                 *solver->calc, solver->session, *start_item,
                 economy_prices(economy), solve_options(*solver, options),
-                solver->finder_ranking, solver->finder_grammar);
+                solver->finder_ranking, solver->finder_grammar,
+                solver->finder_attempt_limit);
         } else {
             auto work = std::make_unique<solver::SolveWork>(
                 *solver->calc, *start_item, economy_prices(economy),

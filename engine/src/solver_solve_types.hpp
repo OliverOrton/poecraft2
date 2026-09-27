@@ -6,6 +6,7 @@
 #include "solver_proof_pattern_manager.hpp"
 #include "solver_solve_contracts.hpp"
 #include "solver_setup_storage.hpp"
+#include "solver_selective_completion.hpp"
 
 #include "poecraft/bitset.h"
 
@@ -1842,6 +1843,26 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         resumable_joint_policy_candidate;
     std::optional<BoundedPolicyIncumbent>& output_incumbent =
         incumbent_portfolio.output;
+    enum class SelectiveServicePhase : std::uint8_t {
+        NotStarted, Generating, Checking, Validating, Done
+    };
+    SelectiveServicePhase selective_service_phase =
+        SelectiveServicePhase::NotStarted;
+    std::unique_ptr<CalcContext> selective_service_calc;
+    std::unique_ptr<SelectiveCompletionProducer> selective_service_producer;
+    std::optional<SelectiveCompletionCandidate> selective_service_candidate;
+    std::string selective_service_graph;
+    std::shared_ptr<StrategyImpl> selective_service_strategy;
+    std::shared_ptr<EconomyImpl> selective_service_economy;
+    std::unique_ptr<StrategyEvalWork> selective_service_checker;
+    std::unique_ptr<SelectiveProgrammeEntryValidator>
+        selective_service_validator;
+    std::uint64_t selective_service_checker_charged_work = 0;
+    std::uint64_t selective_service_checker_charged_active = 0;
+    std::uint64_t selective_service_validator_charged_work = 0;
+    std::uint64_t selective_service_validator_charged_active = 0;
+    std::uint64_t selective_service_calc_charged_work = 0;
+    std::uint64_t selective_service_calc_charged_active = 0;
     std::optional<UnverifiedSelectedPolicyCandidate>&
         unverified_selected_policy_candidate =
             incumbent_portfolio.pending_candidate;
@@ -1852,6 +1873,8 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     std::vector<JointAnytimeAttemptLineage>
         joint_anytime_attempt_lineage;
     std::uint64_t carrier_ladder_exact_boundary_private_wall_ns = 0;
+    bool advance_selective_completion_service();
+    void abandon_selective_completion_service(const char* status);
     bool target_gap_stop = false;
     SolveGapTarget target_gap_fired = SolveGapTarget::None;
     std::uint64_t focused_direct_upper_row =
