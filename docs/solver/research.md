@@ -10,6 +10,10 @@ arguments and counterexamples outlive individual algorithms. This page owns
 questions and the exchange workflow; HANDOFF alone owns active sequencing.
 A routine fix needs no new question, packet, claim or archive.
 
+Fresh substantive sessions use the [research standards](research-standards.md)
+and [current capability snapshot](current-status.md) alongside AGENTS and
+HANDOFF. The chronological findings below retain their original scope.
+
 <a id="questions"></a>
 ## 1. Durable questions
 
@@ -660,8 +664,9 @@ fresh target binding distinguish clean L, provably equivalent explicit-count E
 on disjoint all-required fixed-side A4/A5, and coverage-only R. A complete
 one-action native distribution shows positive coverage with zero clean success.
 Fresh Current A4/A5 L runs reproduce the independently checked clean costs but
-remain bounded. R full solving is blocked by unqualified clean-dependent
-proof/pruning and the graph evaluator's reconstructed clean target. No default
+remain bounded. At that audit's revision, R full solving was blocked by
+unqualified clean-dependent proof/pruning and the graph evaluator's reconstructed
+clean target. No default
 migration, R economic result, same-clean Current repair or new exact closure
 is inferred. The E4 entry trace identifies missing candidate materialization
 at one sampled partial-goal dirty state but lacks the complete row and checked
@@ -672,8 +677,9 @@ corrects one explanation in that audit: the evaluator derives an observation
 universe from graph conditions, while executed graph terminals determine its
 success mass. A separate native request check now binds success ingress for
 solver-produced graphs. Finder runs private L and R through that check; Current
-uses it for clean publication but still refuses R because its positive proof,
-action classification and exact-closure consumers have not been isolated.
+used it for clean publication but still refused R at that revision because its
+positive proof, action classification and exact-closure consumers had not been
+isolated. The subsequent sustained programme below supersedes that refusal.
 Fresh clean Current A4/A5 controls retain the prior byte-identical checked
 graphs. Finder A5 returned checked L and R policies at different target costs;
 that semantic contrast is not a same-clean policy improvement. No public goal
@@ -699,13 +705,26 @@ There is no Current service economic result or default activation claim. The
 24-run native allowance is exhausted. No new lower theorem or exact closure
 follows from these fixed-policy costs.
 
+The [fresh-session reconciliation](../active/2026-09-27-fresh-session-reconciliation/README.md#ordinary-lower-reconciliation)
+checked the original U/P reports and found a material activation difference:
+U4 ordinary A4/A5 enabled `native_retention_diagnostic=reuse` and published
+retention lowers 198.83350/405.36940; P3 ordinary reports omit that activation,
+have no retention contribution, and publish 21.77246/36.48853. Their targets,
+prices and caps match, but these are not matching lower-producer configurations.
+This comparison does not establish a source regression. P3's bare reports lack
+an executable hash and resolved launch command, so W does not independently
+reconstruct their source freezes or claim complete ordinary-profile preservation.
+The unqualified pre-Finish Current service remains a separate next candidate.
+
 <a id="knowledge"></a>
 ## 5. Knowledge outlives machinery
 
 Chapters own arguments, the ledger owns propositions/history, original archives
 own past evidence, and mechanism pages own current implementation behavior.
 Generated result views already exist and own their derived quantitative display.
-Do not replace this arrangement with another database, queue or status document.
+Do not add another database, queue or measurement ledger. [Current status](current-status.md)
+is the one compact, source-linked capability projection; it does not replace
+receipts, claims, generated views or HANDOFF's sequencing authority.
 
 Retire verified no-consumer machinery only after preserving its useful claim,
 counterexample and reproduction source. Default-off and absence from a winning

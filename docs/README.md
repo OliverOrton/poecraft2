@@ -4,6 +4,10 @@ Use this map to find the relevant owner. It is not a reading sequence.
 [AGENTS](../AGENTS.md) contains shared working rules; [HANDOFF](../HANDOFF.md)
 identifies active work when continuation needs clarification.
 
+For a fresh substantive solver session, read the [research standards](solver/research-standards.md),
+[current status](solver/current-status.md), and HANDOFF's selected programme
+alongside AGENTS, then the relevant source and premises. The maps remain optional.
+
 | Need | Start here |
 |---|---|
 | Product orientation and exact-closure objective | [Direction](direction.md) |
@@ -36,6 +40,8 @@ what was tried and measured; they do not select the next task.
 Keep one current sequencing owner in HANDOFF. Do not copy a milestone's result
 or next recommendation into every index. [Generated research views](solver/research-state.md) expose declared quantitative
 inputs and unavailable evidence through the existing reporter.
+The [current-status projection](solver/current-status.md) owns compact capability
+navigation; it does not replace original receipts or generated measurements.
 
 Links are available references, not recursive reading obligations. Preserve
 useful counterexamples when recommendations are disproved. Update the affected

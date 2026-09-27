@@ -1,6 +1,6 @@
 # Solver Internals And Source Ownership
 
-**Integrated reference.** Authored from the repository contracts at `f3e7c0fa7bd827064a41c48a53c4db372840cf0f`. Reconciled with local `215654f`; importing this mechanism reference supplies no new runtime authority.
+**Integrated reference.** Originally authored from contracts at `f3e7c0fa7bd827064a41c48a53c4db372840cf0f` and reconciled with `215654f`. Later sections are maintained with their source owners; the selective producer/service map below was checked at `ae24e0bb8797fb953cb8b9eb5c8ef040fbba203c`. This map supplies no new runtime authority.
 
 This is an implementation map. The [mathematical reference](../solver/mathematics/README.md) explains why the contracts compose; [solver mechanism pages](../solver/README.md) describe the individual boundaries. Read the row relevant to the task rather than treating this entire map as startup material.
 
@@ -48,6 +48,8 @@ Paths in this table are under `engine/src/` unless indicated otherwise.
 | Production policy oracle | `solver_policy_refinement.cpp`, `solver_policy_oracle_*.inc`, `solver_policy_assertion.cpp`, `solver_policy_assertion_work.cpp` | Exact observations, choice/entry scope, stepped assertion and publication premises |
 | Compilation | `solver_compile.cpp`, `solver_compile_conditions.hpp`, `solver_compile_serialization.hpp` | Executable route and literal operation preservation; CLM-0002, CLM-0004 |
 | Experimental finder control and native programme binding | `solver_finder.cpp`, `solver_finder.hpp`, `solver_compile.cpp`, `solver_compile_contracts.hpp` | Original-root candidate, trusted occurrence, complete entry admission and independent evaluation; no lower or default product authority |
+| Shared selective construction and reached-entry validation | `solver_selective_completion.cpp`, `solver_selective_completion.hpp` | Complete native original-root retained-side and reroll/repair proposals with positive-mass programme entry checks; no lower or closure authority |
+| Current selective upper service and admission | `solver_solve_selective_completion.cpp`, `solver_solve_bellman.cpp` | Default-off pre-Finish consumer, checked root artifact and portfolio adoption; source implementation does not establish real-run reachability or economic benefit |
 | Independent graph evaluation | `solver_eval.cpp`, `solver_eval_resolve.cpp`, `solver_eval_report.cpp`, supporting type/helper headers | Properness, full mass, resources, numerical endpoints; CLM-0002, CLM-0023 |
 | Result, telemetry, and replay | `solver_api.cpp`, `solver_solve_telemetry.cpp`, `solver_solve_telemetry_json.cpp`, `solver_development_checkpoint.cpp` | Provenance, semantic dependencies, final classification; CLM-0021, CLM-0024 |
 

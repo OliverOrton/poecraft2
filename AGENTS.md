@@ -6,6 +6,15 @@ engine. Solver development aims to extend certified exact closure.
 
 ## Start with the task
 
+For substantive solver research, normally use a fresh planning session followed
+by a fresh execution session. Read `docs/solver/research-standards.md`,
+`docs/solver/current-status.md`, and HANDOFF's selected programme before the
+relevant source and mathematical premises. Already supplied, verified-current
+text need not be fetched twice. Check the snapshot's reviewed code against the
+available revision; archived work is not automatically selected. Continuing a
+programme preserves its process handles, decisions and spent budgets. Small
+fixes still need no new research programme.
+
 Follow applicable instructions already supplied. Do not reread an identical
 file just to log compliance; read it when its contents or freshness are uncertain.
 Before editing, inspect relevant local changes and applicable directory rules.

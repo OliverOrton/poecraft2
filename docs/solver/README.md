@@ -8,6 +8,10 @@ Use the mathematical route for **why a transformation or result is valid** and
 the mechanism route for **how the current source implements it**. Neither is a
 mandatory whole-library read.
 
+For a fresh substantive session, use [research standards](research-standards.md)
+and [current status](current-status.md) with [AGENTS](../../AGENTS.md) and
+[HANDOFF](../../HANDOFF.md), then the selected question's source and premises.
+
 ## Mathematical route
 
 | Question | Reference |
