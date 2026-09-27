@@ -1035,6 +1035,16 @@ void run_certified_fallback_contract_tests() {
     PC_CHECK(std::string{
         solve_detail::publication_invariant_invalid_reason(publication)} ==
         "exact policy status has no closed certified bounds");
+    publication.closure_unavailable_by_profile = true;
+    PC_CHECK(std::string{
+        solve_detail::publication_invariant_invalid_reason(publication)} ==
+        "target-neutral proof profile published positive lower or exact closure");
+    solve_detail::normalize_publication_result(publication);
+    PC_CHECK(publication.lower_bound == 0.0);
+    PC_CHECK(!publication.converged);
+    PC_CHECK(publication.absolute_optimality_gap == 11.0);
+    PC_CHECK(solve_detail::publication_invariant_invalid_reason(publication) !=
+             nullptr);
 
     SolveResult tiny_inversion;
     tiny_inversion.policy_status = SolvePolicyStatus::Exact;
@@ -2432,6 +2442,48 @@ void run_joint_product_fracture_publication_tests() {
             PC_CHECK(work.output_incumbent->portfolio_identity == identity);
         }
     }
+}
+
+void run_target_neutral_proof_consumer_tests() {
+    auto session = make_solve_session();
+    auto registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 100;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    const auto transmute = registry.index_by_id.at("transmute");
+    CalcContext calc(session, goal, registry, {transmute});
+    pc_item_state start;
+    pc_item_clear(&start);
+    SolveOptions options;
+    options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+    options.allow_economic_restart = false;
+    options.state_certificate_control = false;
+    SolveWorkTestAccess::Impl work(calc, start, {{"transmute", 2.0}}, options);
+    const std::size_t states = calc.state_count();
+    PC_CHECK(states > 0);
+    work.result.values.assign(states, 123.0);
+    work.focused_lower_completion_proof_values.assign(states, 456.0);
+    work.focused_lower_completion_proof_snapshot_initialized = true;
+    work.focused_previous_upper_values.assign(states, 789.0);
+    work.incremental_envelope_closed = true;
+    const auto lower = work.certified_incremental_lower_values();
+    PC_CHECK(lower.size() == states);
+    PC_CHECK(std::all_of(lower.begin(), lower.end(),
+        [](double value) { return value == 0.0; }));
+    PC_CHECK(work.completion_proof_lower_value(work.result.start_state) == 0.0);
+    PC_CHECK(work.certified_global_lower_bound() == 0.0);
+    work.begin_focused_lower_solve();
+    PC_CHECK(work.focused_lower_previous_values.empty());
+    PC_CHECK(!work.focused_lower_completion_proof_snapshot_initialized);
+    PC_CHECK(!work.goal_cover_requested);
+    PC_CHECK(!work.advance_focused_lower_preparation());
+    PC_CHECK(work.result.values[work.result.start_state] == 0.0);
+    PC_CHECK(successful_refined_publication_termination(
+        SolveTermination::NoExecutablePolicy, false, false, true, false) ==
+        SolveTermination::BoundedDiscoveryComplete);
 }
 
 void run_native_mutual_retry_seed_tests() {
@@ -14553,6 +14605,7 @@ void run_solver_joint_policy_continuation_tests() {
     run_initial_terminal_debt_continuation_tests();
     run_first_proper_candidate_retention_tests();
     run_joint_product_fracture_publication_tests();
+    run_target_neutral_proof_consumer_tests();
     run_native_mutual_retry_seed_tests();
     run_resumable_joint_policy_continuation_fixture_tests();
 }

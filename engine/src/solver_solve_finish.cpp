@@ -73,7 +73,11 @@ SolveTermination successful_refined_publication_termination(
         const SolveTermination coarse_termination,
         const bool resource_cap_hit,
         const bool globally_exact,
-        const bool coarse_discovery_closed) {
+        const bool coarse_discovery_closed,
+        const bool exact_closure_available) {
+    if (globally_exact && !exact_closure_available) {
+        throw std::logic_error("unavailable goal proof published exact closure");
+    }
     if (globally_exact) {
         return SolveTermination::ExactClosed;
     }
@@ -109,7 +113,9 @@ SolveTermination successful_refined_publication_termination(
             "bounded refined publication has no coarse discovery closure "
             "or orthogonal stop cause");
     }
-    return SolveTermination::ExactClosed;
+    return exact_closure_available
+        ? SolveTermination::ExactClosed
+        : SolveTermination::BoundedDiscoveryComplete;
 }
 
 void record_live_policy_lift_telemetry(
@@ -269,6 +275,13 @@ void record_live_policy_lift_telemetry(
 
 const char* solve_detail::publication_invariant_invalid_reason(
         const SolveResult& result) {
+    if (result.closure_unavailable_by_profile &&
+        (result.converged ||
+         result.policy_status == SolvePolicyStatus::Exact ||
+         result.termination == SolveTermination::ExactClosed ||
+         result.lower_bound != 0.0)) {
+        return "target-neutral proof profile published positive lower or exact closure";
+    }
     const bool finite_upper = std::isfinite(result.upper_bound);
     const bool has_artifact =
         !result.refined_policy_artifact.strategy_json.empty();
@@ -308,6 +321,10 @@ const char* solve_detail::publication_invariant_invalid_reason(
 }
 
 void solve_detail::normalize_publication_result(SolveResult& result) {
+    if (result.closure_unavailable_by_profile) {
+        result.lower_bound = 0.0;
+        result.converged = false;
+    }
     if (!std::isfinite(result.upper_bound)) {
         result.absolute_optimality_gap = kInfinity;
         result.relative_optimality_gap = kInfinity;
@@ -391,9 +408,10 @@ solve_detail::CooperativeTask<SolveResult>
 SolveWork::Impl::run_publication_pipeline() {
         // An ordinary root-row cap must not activate optional heavy setup.
         // Other publication paths retain their explicit lower dependency.
-        if (goal_cover_requested ||
+        if (proof_capabilities().positive_global_lower &&
+            (goal_cover_requested ||
             !(result.diagnostics.resource_cap_hit || result.diagnostics.state_cap_hit) ||
-            expanded_count > 1) {
+            expanded_count > 1)) {
             goal_cover_requested = true;
             while (!advance_setup()) co_await CooperativeCheckpoint{};
         }
@@ -1379,7 +1397,8 @@ SolveWork::Impl::run_publication_pipeline() {
         result.diagnostics.focused_exact_gap_proof_tolerance =
             exact_gap_proof_tolerance();
         const bool final_optimization_converged = optimization_converged();
-        result.converged = focused_exact &&
+        result.converged = proof_capabilities().global_exact_closure &&
+                           focused_exact &&
                            (!incremental_action_generation ||
                             incremental_envelope_closed) &&
                            !result.diagnostics.state_cap_hit &&
@@ -1969,6 +1988,20 @@ SolveWork::Impl::run_publication_pipeline() {
             result.evaluated_policy_cost = exact_value;
             result.absolute_optimality_gap = 0.0;
             result.relative_optimality_gap = 0.0;
+        } else if (!proof_capabilities().global_exact_closure &&
+                   current_policy_can_still_be_exact &&
+                   reachable_policy_complete && !finalization_capped) {
+            /* The complete selected rows are a candidate controller, not a
+             * global lower proof. Direct compilation and independent graph
+             * evaluation below decide whether they supply an upper. */
+            result.policy_available = true;
+            result.policy_status = SolvePolicyStatus::BoundedFeasible;
+            result.termination = SolveTermination::BoundedDiscoveryComplete;
+            result.lower_bound = 0.0;
+            result.upper_bound = kInfinity;
+            result.evaluated_policy_cost = kInfinity;
+            result.absolute_optimality_gap = kInfinity;
+            result.relative_optimality_gap = kInfinity;
         } else if (restore_output_incumbent &&
                    reachable_policy_complete && !finalization_capped) {
             const BoundedPolicyIncumbent& incumbent = *output_incumbent;
@@ -2607,7 +2640,8 @@ SolveWork::Impl::run_publication_pipeline() {
                         coarse_solve_termination,
                         result.diagnostics.resource_cap_hit,
                         false,
-                        coarse_discovery_closed);
+                        coarse_discovery_closed,
+                        proof_capabilities().global_exact_closure);
                 result.diagnostics.focused_upper_bound =
                     result.upper_bound;
                 result.diagnostics
@@ -4242,7 +4276,8 @@ SolveWork::Impl::run_publication_pipeline() {
                                 core_solve_termination,
                                 result.diagnostics.resource_cap_hit,
                                 false,
-                                coarse_discovery_closed);
+                                coarse_discovery_closed,
+                                proof_capabilities().global_exact_closure);
                         classify_bounded_publication();
                         result.diagnostics.solution_scope =
                             "direct_certified_core_policy_bounded";
@@ -4267,6 +4302,10 @@ SolveWork::Impl::run_publication_pipeline() {
                                incumbent_owned_bytes(candidate) -
                                    sizeof(BoundedPolicyIncumbent))) {
                     telemetry.direct_candidate_retained = true;
+                    if (!proof_capabilities().global_exact_closure) {
+                        skip_strict_lift = publish_certified_fallback(
+                            core_solve_termination);
+                    }
                     /* A nonzero refinement allowance is the product's bounded
                      * optional-proof budget. While discovery remains open, a
                      * proper, zero-offpolicy, completely priced direct graph
@@ -4345,7 +4384,8 @@ SolveWork::Impl::run_publication_pipeline() {
                             core_solve_termination,
                             result.diagnostics.resource_cap_hit,
                             false,
-                            coarse_discovery_closed);
+                            coarse_discovery_closed,
+                            proof_capabilities().global_exact_closure);
                     classify_bounded_publication();
                     result.diagnostics.solution_scope =
                         "direct_certified_core_policy_bounded";
@@ -4504,6 +4544,11 @@ SolveWork::Impl::run_publication_pipeline() {
                 while (!lift_work.progress().done) {
                     const refinement::PolicyExactLiftProgress
                         lift_progress = lift_work.progress();
+                    if (!proof_capabilities().global_exact_closure &&
+                        lift_work.has_verified_artifact()) {
+                        lift_work.request_bounded_finish();
+                        break;
+                    }
                     if (requested_bounded_finish) {
                         lift_work.request_bounded_finish();
                         break;
@@ -5184,6 +5229,7 @@ SolveWork::Impl::run_publication_pipeline() {
                             ? "final graph cost reconciled"
                             : "executable cost mismatch blocks exactness");
                     const bool globally_exact =
+                        proof_capabilities().global_exact_closure &&
                         certificate.global_lower_bound_closed &&
                         certificate.compiled.cost_reconciled &&
                         std::isfinite(exact_policy_cost);
@@ -5314,7 +5360,8 @@ SolveWork::Impl::run_publication_pipeline() {
                             coarse_solve_termination,
                             result.diagnostics.resource_cap_hit,
                             globally_exact,
-                            coarse_discovery_closed);
+                            coarse_discovery_closed,
+                            proof_capabilities().global_exact_closure);
                     if (!globally_exact) {
                         classify_bounded_publication();
                     }
@@ -5424,6 +5471,16 @@ SolveWork::Impl::run_publication_pipeline() {
                     ? result.diagnostics
                           .independent_goal_cover_lower_bound
                     : 0.0;
+        }
+        if (!proof_capabilities().global_exact_closure &&
+            result.refined_policy_artifact.strategy_json.empty()) {
+            /* A candidate selected from coarse rows is never an executable
+             * publication until its owned exact graph has been checked. */
+            result.policy_available = false;
+            result.policy_status = SolvePolicyStatus::None;
+            result.termination = SolveTermination::NoExecutablePolicy;
+            result.upper_bound = kInfinity;
+            result.evaluated_policy_cost = kInfinity;
         }
         solve_detail::normalize_publication_result(result);
         if (result.policy_available) {
@@ -5787,17 +5844,24 @@ SolveWork::Impl::run_publication_pipeline() {
             upper_policy_provenance_retained_bytes;
         result.diagnostics.upper_cap_zero_progress_audit_json =
             std::move(upper_cap_zero_progress_audit_json);
-        const solve_detail::SolveLowerBoundAuthority lower_authority =
-            solve_detail::classify_public_lower_bound_authority(
-                result.lower_bound,
-                result.policy_status,
-                incremental_action_generation,
-                incremental_envelope_closed,
-                unclosed_strict_refinement,
-                result.diagnostics.independent_goal_cover_lower_bound);
-        result.global_lower_bound_certified =
-            lower_authority.globally_certified;
-        result.lower_bound_provenance = lower_authority.provenance;
+        if (proof_capabilities().positive_global_lower) {
+            const solve_detail::SolveLowerBoundAuthority lower_authority =
+                solve_detail::classify_public_lower_bound_authority(
+                    result.lower_bound,
+                    result.policy_status,
+                    incremental_action_generation,
+                    incremental_envelope_closed,
+                    unclosed_strict_refinement,
+                    result.diagnostics.independent_goal_cover_lower_bound);
+            result.global_lower_bound_certified =
+                lower_authority.globally_certified;
+            result.lower_bound_provenance = lower_authority.provenance;
+        } else {
+            result.lower_bound = 0.0;
+            result.global_lower_bound_certified = true;
+            result.lower_bound_provenance =
+                SolveLowerBoundProvenance::TargetNeutralUniversalZero;
+        }
         if (const char* invariant =
                 solve_detail::publication_invariant_invalid_reason(result)) {
             throw std::logic_error(invariant);

@@ -35,7 +35,28 @@ SolveWork::Impl::Impl(
         : calc(context), session(context.session()),
           exact_start_item(start_item), options(solve_options), prices(prices),
           reported_unsupported(context.operators().size(), false) {
-        if (calc.goal().terminal.extras == ExtraExplicitPolicy::Allow)
+        if (options.goal_proof_profile ==
+            GoalProofProfile::TargetNeutralZero) {
+            if (options.max_absolute_optimality_gap > 0.0 ||
+                options.max_relative_optimality_gap > 0.0)
+                throw std::invalid_argument(
+                    "target-neutral proof cannot satisfy a positive "
+                    "optimality-gap request");
+            if (calc.goal().terminal.prefixes.has_value() ||
+                calc.goal().terminal.suffixes.has_value())
+                throw std::invalid_argument(
+                    "target-neutral proof does not support count-range "
+                    "terminal constraints");
+            for (const auto& [key, price] : prices) {
+                (void)key;
+                if (!std::isfinite(price) || price < 0.0)
+                    throw std::invalid_argument(
+                        "target-neutral zero lower requires finite "
+                        "nonnegative prices");
+            }
+        }
+        if (calc.goal().terminal.extras == ExtraExplicitPolicy::Allow &&
+            options.goal_proof_profile != GoalProofProfile::TargetNeutralZero)
             throw std::invalid_argument(
                 "coverage-only Current solve requires a qualified "
                 "target-neutral proof profile");
@@ -76,6 +97,13 @@ SolveWork::Impl::Impl(
             solve_profile_name(options.solve_profile);
         result.diagnostics.solve_profile_override_mask =
             options.solve_profile_override_mask;
+        result.diagnostics.goal_proof_profile_id =
+            goal_proof_profile_name(options.goal_proof_profile);
+        result.closure_unavailable_by_profile =
+            !goal_proof_capabilities(options.goal_proof_profile)
+                .global_exact_closure;
+        result.diagnostics.closure_unavailable_by_profile =
+            result.closure_unavailable_by_profile;
         result.diagnostics.native_continuation_search = options.native_continuation_search;
         result.diagnostics.configured_candidate_evaluation_limits = options.candidate_evaluation_limits;
         result.diagnostics.full_evidence = options.full_evidence;
@@ -112,6 +140,20 @@ SolveWork::Impl::Impl(
             }
             retain_action_reason(
                 "excluded:automatic_imprint_programs:caller_action_scope");
+        }
+        if (!goal_proof_capabilities(options.goal_proof_profile)
+                 .global_exact_closure) {
+            result.diagnostics.solution_scope =
+                "bounded_target_neutral_zero_proof";
+            if (options.goal_progress_gated_reforges)
+                result.diagnostics.solution_scope +=
+                    "_within_zero_progress_reroll_restriction";
+            if (!options.allow_economic_restart)
+                result.diagnostics.solution_scope +=
+                    "_without_economic_restart";
+            if (!options.consider_imprint_programs)
+                result.diagnostics.solution_scope +=
+                    "_without_automatic_imprint_programs";
         }
         if (options.max_policy_refinement_states != 0) {
             retain_action_reason(
@@ -561,8 +603,13 @@ SolveWork::Impl::Impl(
             enqueue(result.start_state);
         }
         // Preserve the ordinary lazy proof dependency and early root caps.
-        goal_cover_requested = options.high_impact_executable_uppers || options.native_retention_lower;
-        retention_setup_pending = options.native_retention_lower;
+        goal_cover_requested = proof_capabilities().positive_global_lower &&
+            (options.high_impact_executable_uppers ||
+             options.native_retention_lower);
+        retention_setup_pending = proof_capabilities().positive_global_lower &&
+            options.native_retention_lower;
+        if (!proof_capabilities().positive_global_lower)
+            goal_cover_stage = SetupStage::Disabled;
         result.diagnostics.solve_setup_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - setup_started)

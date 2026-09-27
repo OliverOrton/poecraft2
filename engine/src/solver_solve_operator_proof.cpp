@@ -126,6 +126,7 @@ double SolveWork::Impl::operator_proof_lower_value(
         const std::int32_t position =
             priced_operator_position[operator_index];
         if (position < 0) return kInfinity;
+        if (!proof_capabilities().positive_global_lower) return 0.0;
         const PlannerOperator& planner =
             calc.operators().at(operator_index);
         double immediate =
@@ -217,6 +218,7 @@ double SolveWork::Impl::operator_proof_lower_value(
 double SolveWork::Impl::carrier_action_bellman_lower_value(
         const std::uint32_t state,
         const bool record_pattern_owners) const {
+        if (!proof_capabilities().positive_global_lower) return 0.0;
         /* Each component is an independently proved global completion lower.
          * Their maximum is therefore a lower bound on every concrete Q value
          * through V*(state) <= Q(action, state), not executable policy or
@@ -2278,6 +2280,7 @@ bool SolveWork::Impl::retire_unmaterialized_by_operator_proof(
 }
 
 void SolveWork::Impl::retire_certified_unmaterialized_obligations() {
+    if (!proof_capabilities().lower_retirement) return;
     struct Candidate {
         std::uint32_t state = kNoId;
         std::uint32_t operator_index = kNoId;

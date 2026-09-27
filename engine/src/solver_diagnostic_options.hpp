@@ -70,6 +70,10 @@ enum class NativeRetentionDiagnosticMode { Off, Cold, Reuse, CheckedTarget, Reus
 pc_result configure_solver_native_retention_diagnostic(pc_solver_handle handle,
     NativeRetentionDiagnosticMode mode, pc_error_info* out_error, double checked_target = 0);
 
+/* Private proof-capability treatment, copied into each new Current work item. */
+pc_result configure_solver_goal_proof_profile_diagnostic(
+    pc_solver_handle handle, GoalProofProfile profile, pc_error_info* out_error);
+
 /* Benchmark-only ordering ablation. Candidate grammar and native checker
  * remain identical; the public finder always uses heuristic ranking. */
 pc_result configure_solver_finder_ranking(pc_solver_handle handle,

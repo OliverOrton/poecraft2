@@ -41,6 +41,16 @@ The publication pipeline may compile a coarse candidate and evaluate its actual 
 
 An independently proper, completely priced graph can establish a bounded upper even when its source solver estimate does not reconcile. That mismatch still blocks a claim that the source estimate is an exact native optimum. Other candidate refusal conditions remain applicable; this is not permission to bypass the current classifier.
 
+Current's private `target_neutral_zero` profile can check and retain a selected
+graph or fallback against its original target while its public global lower
+stays zero. A completed selected graph is a candidate for direct assertion, not
+an exactness witness. If direct evaluation fails, selected-policy strict lift
+may still produce a bounded executable artifact; strict alternative proof is
+inactive under this profile. A missing or failed selected artifact must leave
+the public upper unavailable. The explicit
+`bounded_discovery_complete` stop describes a checked bounded result whose
+global closure is unavailable by profile.
+
 The early-closure archive demonstrates this distinction. Its numerical values are historical evidence under their pinned requests, not current constants or a default search seed. See [publication](publication.md#direct-assertion-and-closed-domain-routing).
 
 ## Entry-scoped and class-scoped evidence

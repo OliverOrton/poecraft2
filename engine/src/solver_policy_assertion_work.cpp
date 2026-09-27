@@ -48,6 +48,7 @@ std::vector<std::uint64_t> compiled_assertion_request_identity(
     key.push_back(options.allow_economic_restart);
     key.push_back(options.consider_imprint_programs);
     key.push_back(static_cast<std::uint64_t>(options.solve_profile));
+    key.push_back(static_cast<std::uint64_t>(options.goal_proof_profile));
     key.push_back(calc.candidates().size());
     key.insert(key.end(), calc.candidates().begin(), calc.candidates().end());
     key.push_back(calc.operators().size());

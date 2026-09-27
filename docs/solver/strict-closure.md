@@ -70,6 +70,13 @@ Destruction can remove source distinctions needed by downstream routing, permitt
 
 ## Closure Conditions
 
+The private `target_neutral_zero` proof profile cannot satisfy Current's global
+exact-closure premise. It retains selected-policy refinement and independent
+graph checking to obtain a bounded upper, but disables positive global lower
+and alternative-retirement authority. Equality of a restricted selected value
+and its checked graph cost is therefore insufficient for `ExactClosed`. The
+default ordinary clean profile keeps the existing closure route.
+
 The retained strict contract requires:
 
 - a proper selected policy for the requested start and relevant reachable domain;

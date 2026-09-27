@@ -274,6 +274,8 @@ std::string serialize_solver_telemetry(
             return "refused_resource_cap";
         case SolveTermination::TargetGap: return "target_gap";
         case SolveTermination::ExactClosed: return "exact_closed";
+        case SolveTermination::BoundedDiscoveryComplete:
+            return "bounded_discovery_complete";
         case SolveTermination::NoExecutablePolicy:
             return "no_executable_policy";
         case SolveTermination::NumericalStability:
@@ -357,6 +359,15 @@ std::string serialize_solver_telemetry(
                 ? "null"
                 : std::to_string(
                       diagnostics->solve_profile_override_mask);
+    json += "}";
+    json += ",\"goal_proof_profile\":{";
+    json += "\"id\":";
+    if (diagnostics == nullptr) json += "null";
+    else append_telemetry_json_string(
+        json, diagnostics->goal_proof_profile_id);
+    json += ",\"closure_unavailable_by_profile\":";
+    json += diagnostics == nullptr ? "null" :
+        bool_json(diagnostics->closure_unavailable_by_profile);
     json += "}";
     json += ",\"native_continuation_search\":";
     if (diagnostics == nullptr) json += "null";
@@ -2752,6 +2763,10 @@ std::string serialize_solver_telemetry(
             case SolveLowerBoundProvenance::None:
                 append_telemetry_json_string(json, "none");
                 break;
+            case SolveLowerBoundProvenance::TargetNeutralUniversalZero:
+                append_telemetry_json_string(
+                    json, "target_neutral_universal_zero");
+                break;
             case SolveLowerBoundProvenance::
                     OpenIncrementalEnvelopeUniversalZero:
                 append_telemetry_json_string(
@@ -2773,6 +2788,9 @@ std::string serialize_solver_telemetry(
                 break;
             case SolveLowerBoundProvenance::ExactPolicyClosure:
                 append_telemetry_json_string(json, "exact_policy_closure");
+                break;
+            default:
+                append_telemetry_json_string(json, "unknown");
                 break;
             }
         };
@@ -2856,7 +2874,8 @@ std::string serialize_solver_telemetry(
         diagnostics->incremental_action_generation &&
         !diagnostics->incremental_action_envelope_closed;
     const double focused_published_lower =
-        diagnostics == nullptr
+        diagnostics == nullptr ||
+                diagnostics->closure_unavailable_by_profile
             ? 0.0
             : globally_certified_action_envelope_lower_bound(
                   diagnostics->focused_lower_bound,
@@ -2906,9 +2925,11 @@ std::string serialize_solver_telemetry(
         json += ",\"restricted_action_envelope_lower_bound\":";
         append_bound(diagnostics->focused_lower_bound);
         json += ",\"lower_bound_scope\":\"";
-        json += focused_restricted_envelope_open
-                    ? "independent_global_floor"
-                    : "closed_action_envelope";
+        json += diagnostics->closure_unavailable_by_profile
+                    ? "target_neutral_search_estimate"
+                    : focused_restricted_envelope_open
+                          ? "independent_global_floor"
+                          : "closed_action_envelope";
         json += "\"";
         const bool exact_closure_proved =
             result != nullptr &&
@@ -2924,6 +2945,7 @@ std::string serialize_solver_telemetry(
         json += ",\"restricted_search\":{\"lower_bound\":";
         append_bound(diagnostics->focused_lower_bound);
         json += ",\"global\":" + std::string(bool_json(
+            !diagnostics->closure_unavailable_by_profile &&
             !focused_restricted_envelope_open)) + "}";
         /* Gate 4 left no production descriptor machinery. Keep its absence
          * explicit so a future lower-only experiment cannot be confused with
@@ -3935,10 +3957,16 @@ std::string serialize_solver_telemetry(
         json += ",\"global_lower_bound_certified\":" +
                 std::string(bool_json(
                     result->global_lower_bound_certified));
+        json += ",\"closure_unavailable_by_profile\":" +
+                std::string(bool_json(
+                    result->closure_unavailable_by_profile));
         json += ",\"lower_bound_provenance\":\"";
         switch (result->lower_bound_provenance) {
         case SolveLowerBoundProvenance::None:
             json += "none";
+            break;
+        case SolveLowerBoundProvenance::TargetNeutralUniversalZero:
+            json += "target_neutral_universal_zero";
             break;
         case SolveLowerBoundProvenance::
                 OpenIncrementalEnvelopeUniversalZero:

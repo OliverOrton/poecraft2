@@ -8,6 +8,7 @@ using namespace solve_detail;
 /* Read-only projection of already-prepared analytic action floors. This does
  * not refresh the envelope, generate rows or synthesize automatic operators. */
 double SolveWork::Impl::prepared_primitive_lower_floor(std::uint32_t action) const {
+    if (!proof_capabilities().positive_global_lower) return 0.0;
     const auto& start = calc.state(result.start_state);
     const auto mask = satisfied_goal_mask_for_state(result.start_state);
     const std::size_t actions = calc.registry().actions.size(), masks = goal_cover_cost.size();
@@ -39,6 +40,10 @@ double SolveWork::Impl::refresh_envelope_bellman_pattern() {
     pattern.solution_sweeps = 0;
     pattern.converged = false;
     envelope_bellman_lower = kInfinity;
+    if (!proof_capabilities().positive_global_lower) {
+        pattern.fallback_reason = "disabled_by_goal_proof_profile";
+        return envelope_bellman_lower;
+    }
     if (result.start_state >= calc.state_count()) {
         pattern.fallback_reason = "invalid_start_state";
         return envelope_bellman_lower;

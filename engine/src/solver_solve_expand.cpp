@@ -1295,7 +1295,8 @@ bool SolveWork::Impl::preservation_prunes(const std::uint64_t row_index) const {
          * completed legal row from an anytime proper-policy proof. The latter
          * is only trying to establish an executable upper bound after the
          * requested search was interrupted. */
-        if (anytime_policy_scratch_bytes != 0) return false;
+        if (!proof_capabilities().lower_retirement ||
+            anytime_policy_scratch_bytes != 0) return false;
         return preservation_decision(row_index).disposition ==
                PreservationDisposition::PrunedByRestartBound;
     }

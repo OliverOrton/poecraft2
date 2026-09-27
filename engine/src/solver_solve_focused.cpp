@@ -12,14 +12,19 @@ void SolveWork::Impl::begin_focused_lower_solve() {
             throw std::logic_error(
                 "focused lower preparation already active");
         }
-        goal_cover_requested = true;
+        goal_cover_requested = proof_capabilities().positive_global_lower;
         focused_mode = true;
         focus_optimizing = true;
         focused_lower_mode = true;
         result.diagnostics.focused_expansion = true;
         const std::uint32_t state_count = calc.state_count();
         transition_cache->state_rows.resize(state_count);
-        focused_lower_previous_values = std::move(result.values);
+        if (proof_capabilities().positive_global_lower) {
+            focused_lower_previous_values = std::move(result.values);
+        } else {
+            focused_lower_previous_values.clear();
+            focused_lower_completion_proof_snapshot_initialized = false;
+        }
         focused_lower_retained_minimum.clear();
         if (focused_lower_completion_proof_snapshot_initialized) {
             focused_lower_completion_proof_values.resize(
@@ -49,8 +54,9 @@ bool SolveWork::Impl::advance_focused_lower_preparation() {
                      * shared goal-cover model was prepared during measured
                      * solve setup, so this lookup cannot hide that one-time
                      * construction inside a state-local slice. */
-                    double proof =
-                        focused_lower_completion_proof_values[state];
+                    double proof = proof_capabilities().positive_global_lower
+                        ? focused_lower_completion_proof_values[state]
+                        : 0.0;
                     if (!std::isfinite(proof)) {
                         proof = completion_proof_lower(state).value;
                     }
@@ -1194,7 +1200,8 @@ void SolveWork::Impl::finish_focused_lower_solve(
                     result.diagnostics.focused_lower_bound);
             const double proof_tolerance = value_comparison_tolerance(
                 result.diagnostics.focused_upper_bound);
-            if (focused_direct_upper_row !=
+            if (proof_capabilities().global_exact_closure &&
+                focused_direct_upper_row !=
                     std::numeric_limits<std::uint64_t>::max() &&
                 std::abs(
                     result.diagnostics.focused_upper_bound -
@@ -1232,7 +1239,8 @@ void SolveWork::Impl::finish_focused_lower_solve(
             focused_previous_upper_policy_rows.size() == result.values.size()) {
             const double proof_tolerance = value_comparison_tolerance(
                 focused_partial_upper_bound);
-            if (std::abs(
+            if (proof_capabilities().global_exact_closure &&
+                std::abs(
                     focused_partial_upper_bound -
                     result.diagnostics.focused_lower_bound) <=
                 proof_tolerance) {
@@ -1265,7 +1273,8 @@ void SolveWork::Impl::finish_focused_lower_solve(
                 fringe_priority, schedule_telemetry);
             return;
         }
-        if (focused_closure_proved) {
+        if (focused_closure_proved &&
+            proof_capabilities().global_exact_closure) {
             /* The lower-selected policy reaches no optimistic frontier, so
              * it is itself a feasible policy with the same value as the
              * global lower bound. This is an exact bracket even when the

@@ -599,6 +599,8 @@ struct pc_solver {
     std::optional<solver::CarrierLadderExactBoundaryDiagnosticConfig>
         carrier_ladder_exact_boundary_diagnostic;
     solver::NativeRetentionDiagnosticMode native_retention_diagnostic = solver::NativeRetentionDiagnosticMode::Off;
+    solver::GoalProofProfile goal_proof_profile =
+        solver::GoalProofProfile::OrdinaryClean;
     double native_retention_checked_target = 0;
     solver::NativeContinuationSearchMode native_continuation_search =
         solver::NativeContinuationSearchMode::Ordinary;
@@ -921,6 +923,7 @@ solver::SolveOptions solve_options(
         const pc_solver& holder,
         const pc_solve_options* options) {
     solver::SolveOptions value = solve_options(options);
+    value.goal_proof_profile = holder.goal_proof_profile;
     value.native_retention_lower = holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::Off;
     value.native_retention_numerical_reuse = holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::Reuse ||
         holder.native_retention_diagnostic == solver::NativeRetentionDiagnosticMode::CheckedTarget ||
@@ -1017,6 +1020,8 @@ int32_t solve_termination(const solver::SolveTermination termination) {
         return PC_SOLVE_TERMINATION_NUMERICAL_STABILITY;
     case solver::SolveTermination::RequestedBoundedFinish:
         return PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH;
+    case solver::SolveTermination::BoundedDiscoveryComplete:
+        return PC_SOLVE_TERMINATION_BOUNDED_DISCOVERY_COMPLETE;
     }
     return PC_SOLVE_TERMINATION_NONE;
 }
@@ -1080,6 +1085,8 @@ int32_t solve_stop_cause(const solver::SolveResult& result) {
         return PC_SOLVE_STOP_NUMERICAL_STABILITY;
     case solver::SolveTermination::RequestedBoundedFinish:
         return PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH;
+    case solver::SolveTermination::BoundedDiscoveryComplete:
+        return PC_SOLVE_STOP_BOUNDED_DISCOVERY_COMPLETE;
     case solver::SolveTermination::RefusedResourceCap:
         return PC_SOLVE_STOP_OTHER_RESOURCE_CAP;
     case solver::SolveTermination::None:
@@ -1341,6 +1348,22 @@ pc_result solver::configure_solver_native_retention_diagnostic(
     }
     handle->native_retention_diagnostic=mode;
     handle->native_retention_checked_target=checked_target;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result solver::configure_solver_goal_proof_profile_diagnostic(
+        pc_solver_handle handle, GoalProofProfile profile,
+        pc_error_info* out_error) {
+    if (!handle || handle->solve_work || handle->solved.has_value() ||
+        handle->finder_work || handle->finder_finished ||
+        (profile != GoalProofProfile::OrdinaryClean &&
+         profile != GoalProofProfile::TargetNeutralZero)) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+            "goal proof profile requires an idle unsolved handle and known profile");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    handle->goal_proof_profile = profile;
     clear_error(out_error);
     return PC_RESULT_OK;
 }
@@ -1945,7 +1968,9 @@ pc_result pc_solver_solve(
         const pc_solver_mode mode = requested_solver_mode(options);
         if (solver->calc->goal().terminal.extras ==
                 solver::ExtraExplicitPolicy::Allow &&
-            mode != PC_SOLVER_MODE_STRATEGY_FINDER) {
+            mode != PC_SOLVER_MODE_STRATEGY_FINDER &&
+            solver->goal_proof_profile !=
+                solver::GoalProofProfile::TargetNeutralZero) {
             set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
                 "coverage-only Current solve is unavailable: "
                 "clean-target lower proofs are not qualified");
@@ -2017,7 +2042,9 @@ pc_result pc_solver_solve_begin(
         const pc_solver_mode mode = requested_solver_mode(options);
         if (solver->calc->goal().terminal.extras ==
                 solver::ExtraExplicitPolicy::Allow &&
-            mode != PC_SOLVER_MODE_STRATEGY_FINDER) {
+            mode != PC_SOLVER_MODE_STRATEGY_FINDER &&
+            solver->goal_proof_profile !=
+                solver::GoalProofProfile::TargetNeutralZero) {
             set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
                 "coverage-only Current solve is unavailable: "
                 "clean-target lower proofs are not qualified");

@@ -2688,8 +2688,9 @@ void SolveWork::Impl::refresh_incumbent_portfolio_diagnostics(
                   OpenIncrementalEnvelopeUniversalZero;
     snapshot.restricted_search_lower = diagnostics.focused_lower_bound;
     snapshot.restricted_search_envelope_global =
-        !diagnostics.incremental_action_generation ||
-        diagnostics.incremental_action_envelope_closed;
+        !diagnostics.closure_unavailable_by_profile &&
+        (!diagnostics.incremental_action_generation ||
+         diagnostics.incremental_action_envelope_closed);
     if (published != nullptr) {
         snapshot.independent_global_lower = published->lower_bound;
         snapshot.independent_global_lower_certified =

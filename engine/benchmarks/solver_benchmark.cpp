@@ -69,6 +69,7 @@ struct Arguments {
     std::string finder_ranking = "heuristic";
     std::string finder_grammar = "conditional";
     std::string native_goal_terminal = "legacy-clean";
+    std::string native_goal_proof = "ordinary-clean";
     bool neutral_extra_ordering = false;
     bool seed_progress_observation = false;
     double native_execution_action_price = 0;
@@ -117,6 +118,7 @@ struct NativeHandles {
 
 struct CaseResult {
     std::string native_goal_terminal = "legacy-clean";
+    std::string native_goal_proof = "ordinary-clean";
     bool neutral_extra_ordering = false;
     bool seed_progress_observation = false;
     std::string native_retention_diagnostic;
@@ -1308,7 +1310,11 @@ void enforce_bounded_best_policy_contract(
             (report.solve_summary.termination ==
                  PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH &&
              report.solve_summary.stop_cause ==
-                 PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH);
+                 PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH) ||
+            (report.solve_summary.termination ==
+                 PC_SOLVE_TERMINATION_BOUNDED_DISCOVERY_COMPLETE &&
+             report.solve_summary.stop_cause ==
+                 PC_SOLVE_STOP_BOUNDED_DISCOVERY_COMPLETE);
         report.bounded_best_policy_strict_gap =
             std::isfinite(report.solve_summary.lower_bound) &&
             std::isfinite(report.solve_summary.upper_bound) &&
@@ -1324,6 +1330,15 @@ void enforce_bounded_best_policy_contract(
             const Value telemetry = Parser(
                 report.telemetry_json.data(),
                 report.telemetry_json.size()).parse();
+            const Value* policy_result = optional(
+                telemetry, "policy_result", Type::Object);
+            const Value* closure_unavailable = policy_result == nullptr
+                ? nullptr
+                : optional(*policy_result,
+                    "closure_unavailable_by_profile", Type::Bool);
+            if (closure_unavailable != nullptr &&
+                closure_unavailable->boolean)
+                report.bounded_best_policy_open_obligations = true;
             const Value* envelope = optional(
                 telemetry, "incremental_action_envelope", Type::Object);
             if (envelope != nullptr) {
@@ -3618,6 +3633,7 @@ CaseResult run_case(
     const std::string& finder_ranking,
     const std::string& finder_grammar,
     const std::string& native_goal_terminal,
+    const std::string& native_goal_proof,
     const bool neutral_extra_ordering,
     const bool seed_progress_observation,
     const double native_execution_action_price,
@@ -3639,6 +3655,7 @@ CaseResult run_case(
     const std::function<void(const CaseResult&)>& checkpoint) {
     CaseResult report;
     report.native_goal_terminal = native_goal_terminal;
+    report.native_goal_proof = native_goal_proof;
     report.neutral_extra_ordering = neutral_extra_ordering;
     report.seed_progress_observation = seed_progress_observation;
     report.native_retention_diagnostic=native_retention_diagnostic;
@@ -3648,8 +3665,7 @@ CaseResult run_case(
     report.max_discovered_states_override =
         max_discovered_states_override;
     initialize_forced_winner_contract(specification, report);
-    if (solver_mode != "strategy_finder" &&
-        native_goal_terminal != "coverage-only")
+    if (solver_mode != "strategy_finder")
         initialize_bounded_best_policy_contract(specification, report);
     initialize_compiled_operation_contract(specification, report);
     initialize_material_ratio_contract(specification, report);
@@ -3880,13 +3896,24 @@ CaseResult run_case(
             "\ngoal_progress_gated_reforges_override=" +
             (goal_progress_gated_reforges ? "1" : "0") +
             "\nmax_discovered_states_override=" +
-            std::to_string(max_discovered_states_override);
+            std::to_string(max_discovered_states_override) +
+            "\ngoal_proof_profile=" + native_goal_proof;
         const std::uint32_t work_items =
             optional_u32(caps, "solve_step_work_items", 1);
         pc_error_info error;
         pc_error_info_init(&error);
         solve_options.solver_mode = solver_mode == "strategy_finder"
             ? PC_SOLVER_MODE_STRATEGY_FINDER : PC_SOLVER_MODE_CURRENT;
+        if (native_goal_proof == "target-neutral-zero") {
+            const auto configured =
+                poecraft::solver::configure_solver_goal_proof_profile_diagnostic(
+                    handles.solver,
+                    poecraft::solver::GoalProofProfile::TargetNeutralZero,
+                    &error);
+            if (configured != PC_RESULT_OK)
+                throw std::runtime_error(api_error(
+                    "configure goal proof profile", configured, error));
+        }
         if (solver_mode == "strategy_finder" &&
             finder_ranking == "uninformed") {
             const auto configured =
@@ -5009,6 +5036,8 @@ const char* termination_name(const int32_t termination) {
         return "refused_resource_cap";
     case PC_SOLVE_TERMINATION_TARGET_GAP: return "target_gap";
     case PC_SOLVE_TERMINATION_EXACT_CLOSED: return "exact_closed";
+    case PC_SOLVE_TERMINATION_BOUNDED_DISCOVERY_COMPLETE:
+        return "bounded_discovery_complete";
     case PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY:
         return "no_executable_policy";
     case PC_SOLVE_TERMINATION_NUMERICAL_STABILITY:
@@ -5024,6 +5053,8 @@ const char* termination_name(const int32_t termination) {
 const char* stop_cause_name(const int32_t cause) {
     switch (cause) {
     case PC_SOLVE_STOP_EXACT_CLOSED: return "exact_closed";
+    case PC_SOLVE_STOP_BOUNDED_DISCOVERY_COMPLETE:
+        return "bounded_discovery_complete";
     case PC_SOLVE_STOP_TARGET_GAP: return "target_gap";
     case PC_SOLVE_STOP_STATE_CAP: return "state_cap";
     case PC_SOLVE_STOP_TRANSITION_CAP: return "transition_cap";
@@ -5141,6 +5172,8 @@ void append_case_report(
     out << "  \"native_retention_diagnostic\":" << escape_json(result.native_retention_diagnostic) << ",\n";
     out << "  \"native_goal_terminal\":" <<
         escape_json(result.native_goal_terminal) << ",\n";
+    out << "  \"native_goal_proof\":" <<
+        escape_json(result.native_goal_proof) << ",\n";
     if (result.neutral_extra_ordering)
         out << "  \"native_neutral_extra_ordering\":true,\n";
     if (result.seed_progress_observation)
@@ -6259,6 +6292,8 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--finder-grammar") args.finder_grammar=value("--finder-grammar");
         else if (argument == "--native-goal-terminal")
             args.native_goal_terminal = value("--native-goal-terminal");
+        else if (argument == "--native-goal-proof")
+            args.native_goal_proof = value("--native-goal-proof");
         else if (argument == "--native-neutral-extra-ordering")
             args.neutral_extra_ordering = true;
         else if (argument == "--native-seed-progress-observation")
@@ -6375,6 +6410,12 @@ Arguments parse_arguments(int argc, char** argv) {
         args.native_goal_terminal != "explicit-clean" &&
         args.native_goal_terminal != "coverage-only")
         throw std::runtime_error("native goal terminal must be legacy-clean, explicit-clean or coverage-only");
+    if (args.native_goal_proof != "ordinary-clean" &&
+        args.native_goal_proof != "target-neutral-zero")
+        throw std::runtime_error("native goal proof must be ordinary-clean or target-neutral-zero");
+    if (args.native_goal_proof != "ordinary-clean" &&
+        args.solver_mode != "current")
+        throw std::runtime_error("target-neutral goal proof requires current mode");
     if (args.native_goal_terminal != "legacy-clean" &&
         args.solver_mode != "current" &&
         args.solver_mode != "strategy_finder")
@@ -6727,6 +6768,7 @@ int main(int argc, char** argv) {
                     args.finder_ranking,
                     args.finder_grammar,
                     args.native_goal_terminal,
+                    args.native_goal_proof,
                     args.neutral_extra_ordering,
                     args.seed_progress_observation,
                     args.native_execution_action_price,

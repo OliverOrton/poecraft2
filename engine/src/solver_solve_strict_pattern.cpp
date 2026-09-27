@@ -8,6 +8,18 @@ using namespace solve_detail;
 void SolveWork::Impl::prepare_strict_clean_goal_cover() {
         ProofPatternContract& strict_contract = contract(
             ProofPatternKind::StrictClean);
+        if (!proof_capabilities().positive_global_lower) {
+            strict_contract.minimizing_action.clear();
+            strict_contract.fallback_reason =
+                "disabled_by_goal_proof_profile";
+            strict_contract.start_contribution = 0.0;
+            strict_contract.residual = 0.0;
+            strict_contract.converged = false;
+            strict_clean_goal_cover_cost.clear();
+            strict_clean_goal_cover_state_count = 0;
+            strict_clean_goal_cover_refresh_needed = false;
+            return;
+        }
         strict_contract.minimizing_action.clear();
         strict_contract.fallback_reason = "preparing";
         strict_contract.start_contribution = kInfinity;

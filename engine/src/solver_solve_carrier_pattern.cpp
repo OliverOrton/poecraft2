@@ -222,6 +222,7 @@ double SolveWork::Impl::carrier_terminal_debt_lower_value(
 
 double SolveWork::Impl::completion_proof_lower_value(
         const std::uint32_t state) {
+        if (!proof_capabilities().positive_global_lower) return 0.0;
         // Passive pending reads cannot prepare proof rows or populate lookup
         // caches. On refusal, independently committed components remain usable.
         if (!goal_cover_cost_ready && goal_cover_stage != SetupStage::Refused) return 0.0;

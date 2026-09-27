@@ -8,6 +8,17 @@ This page owns current lower producers, their eligibility, and the consumers all
 
 A contribution may raise a public lower, justify retirement, or support a gap only when its optimistic relation covers the actual requested action scope and source domain. An ordering value, restricted-envelope optimum, or numerically checked relation with no native bridge remains a different object.
 
+Current's private goal-proof profile makes that authority explicit. The default
+`ordinary_clean` profile retains the existing positive lower, lower-based
+retirement, and global closure capabilities for its qualified clean target.
+`target_neutral_zero` permits only the global zero lower when action costs are
+finite and nonnegative. It disables all positive clean-pattern, envelope,
+operator, strict and incremental lower consumers, including direct promotions
+from restricted `values`. It cannot retire alternatives or publish exactness
+from those values. The profile is immutable for a solve and is recorded in
+diagnostics and development-run identity. A checked selected policy can still
+provide a positive executable upper under either profile.
+
 The implemented proof manager composes compatible independently valid patterns by maximum. Addition requires a separate cost/decomposition argument. [CLM-0010](claims.md#clm-0010) explains the distinction.
 
 Primary owners are `solver_proof_pattern_manager.hpp`, `solver_solve_bounds.cpp`, `solver_solve_carrier_pattern.cpp`, `solver_solve_operator_proof.cpp`, `solver_solve_envelope_proof.cpp`, `solver_solve_heuristics.cpp`, and the publication classifier.

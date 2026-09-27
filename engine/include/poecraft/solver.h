@@ -483,7 +483,8 @@ typedef enum pc_solve_termination {
     /* The stepped host stopped open discovery and requested normal bounded
      * policy finalization. This is not a resource cap or exact closure. */
     PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH = 6,
-    PC_SOLVE_TERMINATION_FINDER_COMPLETE = 7
+    PC_SOLVE_TERMINATION_FINDER_COMPLETE = 7,
+    PC_SOLVE_TERMINATION_BOUNDED_DISCOVERY_COMPLETE = 8
 } pc_solve_termination;
 
 /* Precise stopping cause is independent of policy availability. A capped
@@ -505,7 +506,8 @@ typedef enum pc_solve_stop_cause {
     PC_SOLVE_STOP_NO_EXECUTABLE_POLICY = 11,
     PC_SOLVE_STOP_NUMERICAL_STABILITY = 12,
     PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH = 13,
-    PC_SOLVE_STOP_FINDER_COMPLETE = 14
+    PC_SOLVE_STOP_FINDER_COMPLETE = 14,
+    PC_SOLVE_STOP_BOUNDED_DISCOVERY_COMPLETE = 15
 } pc_solve_stop_cause;
 
 typedef enum pc_solve_cap_hit {

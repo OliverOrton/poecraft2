@@ -7,6 +7,7 @@ namespace solver {
 using namespace solve_detail;
 
 void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagnostic* diagnostic) {
+    if (!proof_capabilities().positive_global_lower) return;
     prepare_goal_cover_cost();
     if (native_retention_attempted) return;
     {
@@ -19,6 +20,7 @@ void SolveWork::Impl::prepare_native_retention_lower(const PhaseLowerQueryDiagno
 }
 
 CooperativeTask<bool> SolveWork::Impl::run_retention_setup(const PhaseLowerQueryDiagnostic* diagnostic) {
+    if (!proof_capabilities().positive_global_lower) co_return true;
     if (!options.native_retention_lower || native_retention_attempted) co_return true;
     native_retention_attempted = true;
     try {
@@ -624,6 +626,12 @@ void SolveWork::Impl::admit_setup_bytes(std::uint64_t additional) {
 
 bool SolveWork::Impl::advance_setup() {
     try {
+    if (!proof_capabilities().positive_global_lower) {
+        goal_cover_requested = false;
+        retention_setup_pending = false;
+        goal_cover_stage = SetupStage::Disabled;
+        return true;
+    }
     if (!goal_cover_requested) return true;
     if (goal_cover_stage == SetupStage::NotStarted) {
         setup_storage.owner = this;
@@ -706,6 +714,7 @@ bool SolveWork::Impl::advance_setup() {
 }
 
 void SolveWork::Impl::prepare_goal_cover_cost() {
+    if (!proof_capabilities().positive_global_lower) return;
     // Explicit blocking diagnostics only. Passive lower reads cannot call it.
     goal_cover_requested = true;
     while (goal_cover_stage == SetupStage::NotStarted || goal_cover_stage == SetupStage::Preparing)

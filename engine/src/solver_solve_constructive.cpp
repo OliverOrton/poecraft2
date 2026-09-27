@@ -6336,6 +6336,7 @@ solve_detail::classify_public_lower_bound_authority(
     }
 
 double SolveWork::Impl::certified_global_lower_bound() const {
+        if (!proof_capabilities().positive_global_lower) return 0.0;
         return globally_certified_action_envelope_lower_bound(
             result.diagnostics.focused_lower_bound,
             incremental_action_generation,
@@ -6447,7 +6448,8 @@ std::optional<double> SolveWork::Impl::constructive_row_upper(
 bool SolveWork::Impl::try_constructive_state_certificate(
         const std::uint32_t state,
         const std::uint64_t row_index) {
-        if (!options.state_certificate_control || focused_mode ||
+        if (!proof_capabilities().lower_retirement ||
+            !options.state_certificate_control || focused_mode ||
             cache_pending) {
             return false;
         }

@@ -2606,7 +2606,9 @@ void run_public_solver_gate(const char* artifact_dir) {
                      "\"status\":\"exact\"") !=
                  std::string::npos);
         PC_CHECK(solved_telemetry.find(
-                     "\"global_lower_bound_certified\":true,"
+                     "\"global_lower_bound_certified\":true") !=
+                 std::string::npos);
+        PC_CHECK(solved_telemetry.find(
                      "\"lower_bound_provenance\":"
                      "\"exact_policy_closure\"") !=
                  std::string::npos);
@@ -3253,6 +3255,75 @@ void run_solver_native_continuation_api_tests(const char* artifact_dir) {
         PC_CHECK(!current.at("protected_essence_attempt_finished").as_bool());
         pc_solver_solve_abandon(solver);
         pc_solver_destroy(solver);
+    }
+    {
+        pc_solver_handle coverage = nullptr;
+        pc_solver_handle clean = nullptr;
+        PC_CHECK(create_solver_with_goal_terminal_diagnostic(
+            session, goal.c_str(), goal.size(),
+            GoalTerminalDiagnosticMode::CoverageOnly, std::nullopt,
+            &coverage, &error) == PC_RESULT_OK);
+        PC_CHECK(pc_solver_create(
+            session, goal.c_str(), goal.size(), &clean, &error) ==
+            PC_RESULT_OK);
+        if (coverage && clean) {
+            pc_solve_options options{};
+            options.struct_size = sizeof(options);
+            options.abi_version = PC_ABI_VERSION;
+            options.max_states = options.max_discovered_states = 50;
+            options.max_expanded_states = 50;
+            options.max_sweeps = 100;
+            options.max_solver_owned_bytes = 64ull << 20;
+            PC_CHECK(pc_solver_solve_begin(
+                coverage, &start, economy, &options, &error) ==
+                PC_RESULT_INVALID_ARGUMENT);
+            PC_CHECK(configure_solver_goal_proof_profile_diagnostic(
+                coverage, GoalProofProfile::TargetNeutralZero, &error) ==
+                PC_RESULT_OK);
+            PC_CHECK(pc_solver_solve_begin(
+                coverage, &start, economy, &options, &error) ==
+                PC_RESULT_OK);
+            PC_CHECK(pc_solver_solve_begin(
+                clean, &start, economy, &options, &error) ==
+                PC_RESULT_OK);
+            PC_CHECK(solver_telemetry_json(coverage, &error).find(
+                "target_neutral_zero") != std::string::npos);
+            PC_CHECK(solver_telemetry_json(clean, &error).find(
+                "ordinary_clean") != std::string::npos);
+            PC_CHECK(pc_solver_solve_request_bounded_finish(
+                coverage, &error) == PC_RESULT_OK);
+            pc_solve_progress progress{};
+            for (int step = 0; step < 10000; ++step) {
+                PC_CHECK(pc_solver_solve_step(
+                    coverage, 64, &progress, &error) == PC_RESULT_OK);
+                if (progress.done) break;
+            }
+            PC_CHECK(progress.done);
+            pc_solve_summary summary{};
+            PC_CHECK(pc_solver_solve_finish(
+                coverage, &summary, &error) == PC_RESULT_OK);
+            PC_CHECK(summary.lower_bound == 0.0);
+            PC_CHECK(summary.converged == 0);
+            PC_CHECK(summary.policy_status != PC_SOLVE_POLICY_EXACT);
+            PC_CHECK(summary.termination != PC_SOLVE_TERMINATION_EXACT_CLOSED);
+            pc_solver_solve_abandon(clean);
+            pc_solver_destroy(coverage);
+            coverage = nullptr;
+            PC_CHECK(create_solver_with_goal_terminal_diagnostic(
+                session, goal.c_str(), goal.size(),
+                GoalTerminalDiagnosticMode::CoverageOnly, std::nullopt,
+                &coverage, &error) == PC_RESULT_OK);
+            PC_CHECK(configure_solver_goal_proof_profile_diagnostic(
+                coverage, GoalProofProfile::TargetNeutralZero, &error) ==
+                PC_RESULT_OK);
+            PC_CHECK(pc_solver_solve(
+                coverage, &start, economy, &options, &summary, &error) ==
+                PC_RESULT_OK);
+            PC_CHECK(summary.lower_bound == 0.0);
+            PC_CHECK(summary.policy_status != PC_SOLVE_POLICY_EXACT);
+        }
+        pc_solver_destroy(coverage);
+        pc_solver_destroy(clean);
     }
     {
         pc_solver_handle finder = nullptr;

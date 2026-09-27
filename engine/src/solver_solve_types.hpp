@@ -768,9 +768,12 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
      * refinement. The coarse parent state is not an exact substitute. */
     pc_item_state exact_start_item{};
     SolveOptions options;
+    GoalProofCapabilities proof_capabilities() const {
+        return goal_proof_capabilities(options.goal_proof_profile);
+    }
     std::unordered_map<std::string, double> prices;
     SolveResult result;
-    enum class SetupStage { NotStarted, Preparing, Committed, Refused };
+    enum class SetupStage { NotStarted, Preparing, Committed, Refused, Disabled };
     SetupStage goal_cover_stage = SetupStage::NotStarted;
     bool goal_cover_requested = false;
     bool retention_setup_pending = false;

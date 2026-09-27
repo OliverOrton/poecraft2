@@ -1184,6 +1184,7 @@ bool SolveWork::Impl::maybe_install_incremental_anytime_incumbent() {
 std::vector<double>
 SolveWork::Impl::certified_incremental_lower_values() {
     std::vector<double> lower(calc.state_count(), 0.0);
+    if (!proof_capabilities().positive_global_lower) return lower;
     const bool has_focused_proof_snapshot =
         focused_lower_completion_proof_values.size() == lower.size();
     const bool full_action_envelope =
@@ -2260,7 +2261,8 @@ bool SolveWork::Impl::advance_incremental_classification() {
             incremental_classification_admitted = true;
             return false;
         }
-        if (std::isfinite(current_upper) &&
+        if (proof_capabilities().lower_retirement &&
+            std::isfinite(current_upper) &&
             current_upper < kValueCeiling &&
             candidate.lower_q >= current_upper) {
             candidate.status =

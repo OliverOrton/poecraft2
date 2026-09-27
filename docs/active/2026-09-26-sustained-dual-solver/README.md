@@ -73,16 +73,62 @@ At the first read, the hosted Windows run for `184b934` was still
 result. The GitHub run is
 [36282378378](https://github.com/OliverOrton/poecraft2/actions/runs/36282378378).
 
+## P1/P2 target-neutral Current
+
+The internal immutable `GoalProofProfile` has default `ordinary_clean` and
+private `target_neutral_zero` capabilities. The latter permits the global
+zero lower only under checked finite nonnegative prices; positive clean
+patterns, retirement and global exact closure are unavailable. The admission
+rule is enforced by synchronous and stepped C API paths and direct `SolveWork`.
+The benchmark, isolated worker and corpus runner carry a typed diagnostic flag
+with resume identity. Publication requires an independently checked artifact;
+selected-policy strict lift remains available for an upper. Neutral results
+report `closure_unavailable_by_profile`, lower zero, bounded status and no
+exactness. Default ordinary clean remains the original path.
+
+Focused native solve tests poison old positive evidence at the incremental,
+focused and final-publication consumers and verify that neutral output remains
+zero and non-exact. A simultaneous-handle API test verifies ordinary R refusal
+and neutral R synchronous/stepped admission. Native solve suite passed 87,672
+checks after the selected-lift change; API suite passed 3,015 checks before that
+last internal change. Python proof-flag/resume test passed. The final selected
+graph can be improper under exact mechanics: an A4 neutral L coarse direct
+check had success probability 0.028958 and off-policy mass 0.971042. Its strict
+selected lift failed `invalid_policy_transition`, so a checked fallback was
+retained. This is an upper-quality boundary, not a proof promotion.
+
+## P3 semantic contrast
+
+The original A4/A5 roots, prices, action scope, 240-second Finish and 1-GiB
+cap were preserved. Exact graph evaluation matched every listed checked upper.
+Original reports are under `out/sustained-dual-solver/P3/`. This is a semantic
+contrast across L/R, not a same-problem treatment comparison for those targets.
+
+| Case/profile | Checked upper (Chaos) | Lower | Result |
+|---|---:|---:|---|
+| A5 ordinary L | 85,558.7062 | 36.4885 | bounded, requested Finish |
+| A5 neutral L | 85,558.7062 | 0 | bounded, requested Finish |
+| A5 neutral R | 33,109.8416 | 0 | bounded, requested Finish |
+| A4 ordinary L | 3,746.1319 | 21.7725 | bounded, requested Finish |
+| A4 neutral L | 15,772,148.6906 | 0 | bounded, discovery complete after checked fallback |
+| A4 neutral R | 588,884.9957 | 0 | bounded, requested Finish after checked fallback |
+
+The A5 three-arm runs used one executable freeze. A4 neutral L/R were repaired
+after the initial A4 arm; their source identity differs from A4 ordinary L and
+the A5 freeze. They are capability evidence, not clean source-matched timing
+effects. The original A4 neutral attempts without selected lift returned no
+policy; those reports remain under P3. The repaired A4 reports returned checked
+graphs but their outer expectation exited 1 because the benchmark had skipped
+initializing the coverage bounded-result contract and had not treated declared
+closure unavailability as an open obligation. That reporting path was corrected
+after the reports and built; the preserved reports retain their original exit.
+No replay is silently relabelled as a pass.
+
 ## Active checkpoint
 
-P0 expectation contract and evidence resolution are complete. P1: implement and test
-Current's immutable target-neutral proof capability in its actual lower,
-retirement and publication consumers. P2/P3, shared completion and both
-consumers remain unimplemented. Timed native programme invocations spent: 1
-of the declared maximum 24. No processes are active.
-
-The proposed mathematics is conditional. In particular, zero is a global
-lower only under nonnegative costs, while a positive complete selected-row
-value can be a policy upper without being a global MDP lower. Current's old
-positive clean-target proof must never retire R alternatives or promote R
-exactness. The plan's abstract examples do not establish native mechanics.
+P0–P3 have implementation and bounded evidence. P4 shared selective completion
+and its Finder/Current consumers are next. Timed native programme invocations
+spent: 13 of the declared maximum 24. No processes are active. The proposed
+mathematics remains conditional: zero is a global lower only under nonnegative
+costs; a positive selected value can support a checked policy upper without
+being a global MDP lower. Packet examples do not establish native mechanics.

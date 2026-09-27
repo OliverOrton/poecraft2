@@ -776,6 +776,8 @@ const char* solve_termination_name(const int32_t termination) {
         return "refused_resource_cap";
     case PC_SOLVE_TERMINATION_TARGET_GAP: return "target_gap";
     case PC_SOLVE_TERMINATION_EXACT_CLOSED: return "exact_closed";
+    case PC_SOLVE_TERMINATION_BOUNDED_DISCOVERY_COMPLETE:
+        return "bounded_discovery_complete";
     case PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY:
         return "no_executable_policy";
     case PC_SOLVE_TERMINATION_NUMERICAL_STABILITY:
@@ -791,6 +793,8 @@ const char* solve_termination_name(const int32_t termination) {
 const char* solve_stop_cause_name(const int32_t cause) {
     switch (cause) {
     case PC_SOLVE_STOP_EXACT_CLOSED: return "exact_closed";
+    case PC_SOLVE_STOP_BOUNDED_DISCOVERY_COMPLETE:
+        return "bounded_discovery_complete";
     case PC_SOLVE_STOP_TARGET_GAP: return "target_gap";
     case PC_SOLVE_STOP_STATE_CAP: return "state_cap";
     case PC_SOLVE_STOP_TRANSITION_CAP: return "transition_cap";

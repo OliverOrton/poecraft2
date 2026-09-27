@@ -12,6 +12,36 @@ enum class SolveProfile : std::uint32_t {
     CalculatorProductV1 = 1,
 };
 
+/* Proof capability is independent of the search preset and the goal's
+ * terminal semantics. A neutral solve may still construct and check a
+ * positive-cost selected policy; it may not consume clean-target proof. */
+enum class GoalProofProfile : std::uint8_t {
+    OrdinaryClean,
+    TargetNeutralZero,
+};
+
+struct GoalProofCapabilities {
+    bool positive_global_lower;
+    bool lower_retirement;
+    bool global_exact_closure;
+};
+
+inline constexpr GoalProofCapabilities goal_proof_capabilities(
+        const GoalProofProfile profile) {
+    return profile == GoalProofProfile::OrdinaryClean
+        ? GoalProofCapabilities{true, true, true}
+        : GoalProofCapabilities{false, false, false};
+}
+
+inline constexpr const char* goal_proof_profile_name(
+        const GoalProofProfile profile) {
+    switch (profile) {
+    case GoalProofProfile::OrdinaryClean: return "ordinary_clean";
+    case GoalProofProfile::TargetNeutralZero: return "target_neutral_zero";
+    }
+    return "unknown";
+}
+
 enum class CarrierLadderExactBoundaryMode : std::uint8_t {
     Off = 0,
     Record,
@@ -193,6 +223,7 @@ struct SolveOptions {
     double max_relative_optimality_gap = 0.0;
     SolveProfile solve_profile = SolveProfile::Default;
     std::uint32_t solve_profile_override_mask = 0;
+    GoalProofProfile goal_proof_profile = GoalProofProfile::OrdinaryClean;
 };
 
 inline CandidateEvaluationLimits resolved_candidate_evaluation_limits(
@@ -240,6 +271,7 @@ enum class SolveTermination : std::uint8_t {
     NoExecutablePolicy,
     NumericalStability,
     RequestedBoundedFinish,
+    BoundedDiscoveryComplete,
 };
 
 inline bool advance_unreconciled_stable_policy_latch(
@@ -306,7 +338,8 @@ SolveTermination successful_refined_publication_termination(
     SolveTermination coarse_termination,
     bool resource_cap_hit,
     bool globally_exact = false,
-    bool coarse_discovery_closed = false);
+    bool coarse_discovery_closed = false,
+    bool exact_closure_available = true);
 
 enum class SolveGapTarget : std::uint8_t {
     None,
@@ -317,6 +350,7 @@ enum class SolveGapTarget : std::uint8_t {
 
 enum class SolveLowerBoundProvenance : std::uint8_t {
     None,
+    TargetNeutralUniversalZero,
     OpenIncrementalEnvelopeUniversalZero,
     UnclosedStrictRefinementUniversalZero,
     ClosedIncrementalActionEnvelope,
@@ -858,6 +892,8 @@ struct SolveDiagnostics {
     std::string solution_scope = "globally_optimal_unrestricted";
     std::string solve_profile_id = "default";
     std::uint32_t solve_profile_override_mask = 0;
+    std::string goal_proof_profile_id = "ordinary_clean";
+    bool closure_unavailable_by_profile = false;
     NativeContinuationSearchMode native_continuation_search = NativeContinuationSearchMode::Ordinary;
     CandidateEvaluationLimits configured_candidate_evaluation_limits;
     /* Compact is the stable default aggregate document. Full evidence adds
@@ -1365,6 +1401,7 @@ struct SolveResult {
     SolveTermination termination = SolveTermination::None;
     SolveGapTarget target_fired = SolveGapTarget::None;
     bool target_met = false;
+    bool closure_unavailable_by_profile = false;
     double lower_bound = 0.0;
     bool global_lower_bound_certified = false;
     SolveLowerBoundProvenance lower_bound_provenance =
