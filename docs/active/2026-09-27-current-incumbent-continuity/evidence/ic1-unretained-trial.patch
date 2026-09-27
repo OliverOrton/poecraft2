@@ -1,0 +1,396 @@
+diff --git a/engine/src/solver_solve_bellman.cpp b/engine/src/solver_solve_bellman.cpp
+index e3016b2..8be52b3 100644
+--- a/engine/src/solver_solve_bellman.cpp
++++ b/engine/src/solver_solve_bellman.cpp
+@@ -1925,6 +1925,16 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
+                 if (!result.diagnostics.resource_cap_hit && !result.diagnostics.state_cap_hit)
+                     (void)try_constructive_state_certificate(state, row);
+             }
++            // A completed root renewal is already a complete controller. Its
++            // first check must not depend on a later open-envelope boundary:
++            // small/closed envelopes may never visit that continuation. Pause
++            // only between complete rows, and resume the same discovery cursor.
++            if (!expansion_active &&
++                (phase == SolvePhase::Expanding || phase == SolvePhase::Iterating) &&
++                output_incumbent && output_incumbent->primitive_renewal_witness.valid &&
++                !std::isfinite(incumbent_portfolio.verified_executable_upper())) {
++                (void)try_begin_renewal_candidate_publication(true);
++            }
+             if (publication_pipeline.initial_candidate_task.has_value()) {
+                 if (advance_initial_candidate_publication()) break;
+                 // Finish discarded only the in-flight verification scratch;
+diff --git a/engine/src/solver_solve_finish.cpp b/engine/src/solver_solve_finish.cpp
+index 6ea59d8..3ce4134 100644
+--- a/engine/src/solver_solve_finish.cpp
++++ b/engine/src/solver_solve_finish.cpp
+@@ -6135,6 +6135,7 @@ bool SolveWork::Impl::advance_initial_candidate_publication() {
+     if (requested_bounded_finish) {
+         task.reset();
+         publication_pipeline.initial_candidate_proof_bytes = 0;
++        publication_pipeline.initial_candidate_resume_phase.reset();
+         phase = SolvePhase::Expanding;
+         return false;
+     }
+@@ -6145,16 +6146,23 @@ bool SolveWork::Impl::advance_initial_candidate_publication() {
+     } catch (...) {
+         task.reset();
+         publication_pipeline.initial_candidate_proof_bytes = 0;
++        publication_pipeline.initial_candidate_resume_phase.reset();
+         throw;
+     }
+     task.reset();
+     publication_pipeline.initial_candidate_proof_bytes = 0;
+     phase = SolvePhase::Expanding;
+     if (result.diagnostics.resource_cap_hit) {
++        publication_pipeline.initial_candidate_resume_phase.reset();
+         phase = SolvePhase::Done;
+         begin_publication_pipeline();
+         return true;
+     }
++    if (publication_pipeline.initial_candidate_resume_phase) {
++        phase = *publication_pipeline.initial_candidate_resume_phase;
++        publication_pipeline.initial_candidate_resume_phase.reset();
++        return true;
++    }
+     if (begin_incremental_upper_policy_pass() || continue_open_incremental_envelope())
+         return true;
+     phase = SolvePhase::Done;
+diff --git a/engine/src/solver_solve_incremental.cpp b/engine/src/solver_solve_incremental.cpp
+index 089c752..c9f248d 100644
+--- a/engine/src/solver_solve_incremental.cpp
++++ b/engine/src/solver_solve_incremental.cpp
+@@ -1552,7 +1552,7 @@ bool SolveWork::Impl::try_begin_candidate_proof_handoff() {
+     return true;
+ }
+ 
+-bool SolveWork::Impl::try_begin_renewal_candidate_publication() {
++bool SolveWork::Impl::try_begin_renewal_candidate_publication(bool resume_discovery) {
+     if (options.high_impact_executable_uppers && !requested_bounded_finish &&
+         !result.diagnostics.resource_cap_hit && !expansion_active &&
+         !publication_pipeline.initial_candidate_task &&
+@@ -1587,7 +1587,8 @@ bool SolveWork::Impl::try_begin_renewal_candidate_publication() {
+         phase=SolvePhase::Expanding;
+         return true;
+     }
+-    if (!dirty_continuation_search_enabled(options.native_continuation_search) ||
++    if ((!dirty_continuation_search_enabled(options.native_continuation_search) &&
++         std::isfinite(incumbent_portfolio.verified_executable_upper())) ||
+         !options.high_impact_executable_uppers || requested_bounded_finish ||
+         result.diagnostics.resource_cap_hit || expansion_active ||
+         publication_pipeline.initial_candidate_task || !output_incumbent ||
+@@ -1596,13 +1597,22 @@ bool SolveWork::Impl::try_begin_renewal_candidate_publication() {
+         output_incumbent->portfolio_identity ==
+             publication_pipeline.renewal_candidate_attempted_identity) return false;
+     // The completed native renewal already owns a complete fixed controller.
++    // Its first check is ordinary candidate work, independent of whether a
++    // private improvement consumer is requested. Once a checked incumbent is
++    // available, repeated renewal improvement retains its private activation.
+     // Certify it through the same cooperative first-policy owner before an
+     // open-envelope upper pass postpones it until final publication. A failed
+     // attempt is reconsidered only for a different captured candidate identity.
+     publication_pipeline.renewal_candidate_attempted_identity =
+         output_incumbent->portfolio_identity;
+-    focus_optimizing = false;
+-    focused_lower_mode = false;
++    record_progress_event("service_queued", "complete_native_renewal",
++        output_incumbent->portfolio_identity);
++    if (resume_discovery) {
++        publication_pipeline.initial_candidate_resume_phase = phase;
++    } else {
++        focus_optimizing = false;
++        focused_lower_mode = false;
++    }
+     publication_pipeline.initial_candidate_task.emplace(certify_initial_candidate());
+     phase = SolvePhase::Expanding;
+     return true;
+diff --git a/engine/src/solver_solve_selective_completion.cpp b/engine/src/solver_solve_selective_completion.cpp
+index 0639c9a..ea2368a 100644
+--- a/engine/src/solver_solve_selective_completion.cpp
++++ b/engine/src/solver_solve_selective_completion.cpp
+@@ -240,6 +240,18 @@ bool SolveWork::Impl::advance_selective_completion_service() {
+                 return false;
+             if (!finder_evaluation_accepted(
+                     selective_service_checker->result())) {
++                const auto& evaluation = selective_service_checker->result();
++                record_progress_event("selective_check_mass",
++                    "success=" + std::to_string(evaluation.success_probability) +
++                    ";failure=" + std::to_string(evaluation.failure_probability) +
++                    ";unresolved=" + std::to_string(evaluation.unresolved_probability) +
++                    ";residual=" + std::to_string(evaluation.residual_mass));
++                record_progress_event("selective_check_refused",
++                    !evaluation.converged ? "not_converged" :
++                    !evaluation.cost_complete ? "incomplete_cost" :
++                    evaluation.first_failure ? evaluation.first_failure->node_id + ":" +
++                        evaluation.first_failure->action_id + ":" + evaluation.first_failure->reason :
++                    "non_unit_goal_absorption");
+                 ++result.diagnostics
+                     .selective_completion_service_checks;
+                 abandon_selective_completion_service(
+diff --git a/engine/src/solver_solve_types.hpp b/engine/src/solver_solve_types.hpp
+index 0c4132b..920080e 100644
+--- a/engine/src/solver_solve_types.hpp
++++ b/engine/src/solver_solve_types.hpp
+@@ -2496,6 +2496,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
+         std::optional<solve_detail::CooperativeTask<bool>> initial_candidate_task;
+         std::uint64_t initial_candidate_proof_bytes = 0;
+         std::uint64_t renewal_candidate_attempted_identity = 0;
++        std::optional<SolvePhase> initial_candidate_resume_phase;
+         // One complete non-renewal candidate before the first verified policy.
+         // Row growth cannot re-arm this bounded service slot.
+         std::uint64_t complete_candidate_attempted_identity = 0;
+@@ -3081,7 +3082,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
+ 
+     bool continue_open_incremental_envelope();
+     bool continue_initial_candidate();
+-    bool try_begin_renewal_candidate_publication();
++    bool try_begin_renewal_candidate_publication(bool resume_discovery = false);
+     solve_detail::CooperativeTask<bool> certify_initial_candidate();
+     bool advance_initial_candidate_publication();
+     RetainedCompiledPolicyArtifact retained_artifact_from_assertion(
+diff --git a/engine/tests/test_solver_solve.cpp b/engine/tests/test_solver_solve.cpp
+index 90aab82..43bfaed 100644
+--- a/engine/tests/test_solver_solve.cpp
++++ b/engine/tests/test_solver_solve.cpp
+@@ -37,6 +37,7 @@ namespace poecraft::solver {
+ 
+ struct SolveWorkTestAccess {
+     using Impl = SolveWork::Impl;
++    static Impl& get(SolveWork& work) { return *work.impl_; }
+ };
+ 
+ } // namespace poecraft::solver
+@@ -2214,6 +2215,215 @@ void run_initial_terminal_debt_continuation_tests() {
+     PC_CHECK(work.select_joint_policy_seed_row(root, work.result.values) == reset);
+ }
+ 
++void run_current_incumbent_continuity_tests() {
++    using Impl = SolveWorkTestAccess::Impl;
++    // IC0: all rows, candidates and certificates must come from ordinary step.
++    // No retained graph, scalar value or certification flag is injected.
++    // 0: no early candidate; 1: ineligible service; 2/3: native checker
++    // refusal at low/high programme prices. 4/5: Finish, 6/7: byte cap,
++    // 8/9: cancellation, each at generation/checking. These negative controls
++    // do not qualify reached-entry validation or cheaper-candidate adoption.
++    for (const unsigned fixture : {0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u}) {
++        const unsigned goal_count = fixture == 0 ? 1u : 4u;
++        auto session = make_solve_session();
++        if (fixture >= 2) {
++            session->eldritch_eligible = true;
++            session->eldritch_searing_tier_mod_ids.resize(5);
++            session->eldritch_eater_tier_mod_ids.resize(5);
++            for (unsigned tier = 1; tier <= 4; ++tier) {
++                session->eldritch_searing_tier_mod_ids[tier] = {0};
++                session->eldritch_eater_tier_mod_ids[tier] = {5};
++            }
++        }
++        auto registry = build_action_registry(*session);
++        GoalSpec goal;
++        goal.rarity = PC_RARITY_RARE;
++        goal.automatic_candidates = goal_count == 4;
++        for (const auto family : {100u, 102u, 103u, 104u}) {
++            if (goal.slots.size() == goal_count) break;
++            GoalSlot slot; slot.family_id = family; slot.min_tier = 1;
++            goal.slots.push_back(slot);
++        }
++        std::vector<std::uint32_t> actions;
++        for (const auto* id : {"chaos", "annul", "exalt"})
++            actions.push_back(registry.index_by_id.at(id));
++        CalcContext off_calc(session, goal, registry, actions);
++        CalcContext on_calc(session, goal, registry, actions);
++        pc_item_state start; pc_item_clear(&start);
++        start.rarity = PC_RARITY_RARE;
++        SolveOptions options;
++        options.goal_progress_gated_reforges = true;
++        options.high_impact_executable_uppers = true;
++        options.allow_economic_restart = false;
++        options.state_certificate_control = false;
++        std::unordered_map<std::string, double> prices{
++            {"chaos", 100}, {"annul", 5}, {"exalt", 2}};
++        if (fixture >= 2) {
++            const double price = fixture == 3 ? 10000 : 0.01;
++            prices["eldritch_chaos"] = price;
++            prices["eldritch_annul"] = price;
++            for (unsigned tier = 1; tier <= 4; ++tier) {
++                prices["eldritch_ember:" + std::to_string(tier)] = price;
++                prices["eldritch_ichor:" + std::to_string(tier)] = price;
++            }
++        }
++        Impl off(off_calc, start, prices, options);
++        options.selective_completion_service = true;
++        auto on_owner = std::make_unique<SolveWork>(on_calc, start, prices, options);
++        Impl& on = SolveWorkTestAccess::get(*on_owner);
++        std::uint64_t last_event = 0;
++        unsigned steps = 0;
++        bool saw_candidate = false, saw_checked = false;
++        bool saw_admission = false;
++        bool saw_checking = false, saw_validating = false;
++        bool wrote_proposal = false;
++        bool interrupted = false, cancelled = false;
++        std::string disposition;
++        std::string admission_graph;
++        std::uint64_t admission_identity = 0;
++        double admission_cost = kInfinity;
++        for (; steps < 20000 && !on.progress().done; ++steps) {
++            off.step(1);
++            on.step(1);
++            const bool admitted = on.selective_service_phase !=
++                Impl::SelectiveServicePhase::NotStarted &&
++                on.selective_service_phase != Impl::SelectiveServicePhase::Done;
++            if (admitted && !saw_admission) {
++                const auto* owned = on.best_current_certified_fallback();
++                PC_CHECK(owned != nullptr);
++                if (owned) {
++                    admission_cost = owned->evaluated_policy_cost;
++                    admission_identity = owned->portfolio_identity;
++                    admission_graph = owned->compiled_artifact.strategy_json;
++                    PC_CHECK(on.certified_incumbent_invalid_reason(*owned) == nullptr);
++                    PC_CHECK(!admission_graph.empty());
++                }
++            }
++            if (!admitted && !saw_admission) {
++                PC_CHECK(off.phase == on.phase);
++                PC_CHECK(off.result.values == on.result.values);
++                PC_CHECK(off.policy_rows == on.policy_rows);
++                PC_CHECK(off.graph_identity() == on.graph_identity());
++                PC_CHECK(off.transition_cache->successors == on.transition_cache->successors);
++                PC_CHECK(off.transition_cache->probabilities == on.transition_cache->probabilities);
++                PC_CHECK(off.queue == on.queue);
++                PC_CHECK(off.expansion_operator_cursor == on.expansion_operator_cursor);
++                PC_CHECK(off.certified_global_lower_bound() == on.certified_global_lower_bound());
++                PC_CHECK(off.incumbent_portfolio.best_verified_identity ==
++                    on.incumbent_portfolio.best_verified_identity);
++                PC_CHECK(off.calc.telemetry().reforge_logical_work_v1 ==
++                    on.calc.telemetry().reforge_logical_work_v1);
++                PC_CHECK(!on.selective_service_calc);
++                PC_CHECK(!on.selective_service_checker);
++                PC_CHECK(!on.selective_service_validator);
++            }
++            saw_admission |= admitted;
++            if (admitted) {
++                const auto* owned = on.best_current_certified_fallback();
++                PC_CHECK(owned != nullptr);
++                if (owned) {
++                    PC_CHECK(owned->portfolio_identity == admission_identity);
++                    PC_CHECK(owned->compiled_artifact.strategy_json == admission_graph);
++                    PC_CHECK(owned->evaluated_policy_cost == admission_cost);
++                }
++            }
++            saw_checking |= on.selective_service_phase == Impl::SelectiveServicePhase::Checking;
++            saw_validating |= on.selective_service_phase == Impl::SelectiveServicePhase::Validating;
++            if (saw_checking && !wrote_proposal && fixture <= 3) {
++                std::printf("IC2 proposal fixture=%u graph=%s\n", fixture,
++                    on.selective_service_graph.c_str());
++                wrote_proposal = true;
++            }
++            const auto interrupt_phase = fixture % 2 == 0
++                ? Impl::SelectiveServicePhase::Generating
++                : Impl::SelectiveServicePhase::Checking;
++            if (fixture >= 4 && !interrupted && on.selective_service_phase == interrupt_phase) {
++                interrupted = true;
++                if (fixture <= 5) {
++                    on_owner->request_bounded_finish();
++                } else if (fixture <= 7) {
++                    // Exercise the aggregate cap including the already-live
++                    // service scratch; release must not refund charged work.
++                    on.options.max_solver_owned_bytes = on.fast_estimated_owned_bytes() - 1;
++                } else {
++                    const auto spent = on_calc.telemetry().reforge_logical_work_v1;
++                    (void)on_owner->release_pending_work();
++                    PC_CHECK(!on.finalized_result);
++                    on_owner.reset();
++                    PC_CHECK(on_calc.telemetry().reforge_logical_work_v1 == spent);
++                    cancelled = true;
++                    break;
++                }
++            }
++            if (saw_admission && on.selective_service_phase == Impl::SelectiveServicePhase::Done &&
++                disposition.empty()) {
++                disposition = on.result.diagnostics.selective_completion_service_status;
++                PC_CHECK(!on.selective_service_producer && !on.selective_service_checker &&
++                    !on.selective_service_validator && !on.selective_service_calc);
++                on_owner->request_bounded_finish();
++            }
++            saw_candidate |= on.output_incumbent.has_value();
++            saw_checked |= on.output_incumbent &&
++                on.output_incumbent->independently_evaluated;
++            if (on.progress_event_sequence != last_event && fixture <= 3) {
++                std::printf("IC0 fixture=%u goals=%u step=%u work=%llu phase=%u output=%d retained=%zu trace=%s\n",
++                    fixture, goal_count, steps,
++                    static_cast<unsigned long long>(on_calc.telemetry().reforge_logical_work_v1),
++                    static_cast<unsigned>(on.phase),
++                    on.output_incumbent.has_value(),
++                    on.incumbent_portfolio.retained().size(),
++                    on.progress_trace_json(last_event).c_str());
++                last_event = on.progress_event_sequence;
++            }
++            const auto identity = on.graph_identity();
++            const auto work = on.calc.telemetry().reforge_logical_work_v1;
++            const auto events = on.progress_event_sequence;
++            for (unsigned read = 0; read < 3; ++read) {
++                (void)on.progress();
++                (void)on.progress_trace_json(events);
++            }
++            PC_CHECK(on.graph_identity() == identity);
++            PC_CHECK(on.calc.telemetry().reforge_logical_work_v1 == work);
++            PC_CHECK(on.progress_event_sequence == events);
++        }
++        if (cancelled) {
++            std::printf("IC2 fixture=%u cancelled phase=%s without publication\n",
++                fixture, fixture % 2 == 0 ? "generating" : "checking");
++            continue;
++        }
++        std::printf("IC0 fixture=%u goals=%u steps=%u done=%d candidate=%d checked=%d admitted=%d checking=%d validating=%d entry_cost=%.17g status=%s\n",
++            fixture, goal_count, steps, on.progress().done, saw_candidate, saw_checked,
++            saw_admission, saw_checking, saw_validating, admission_cost, disposition.c_str());
++        PC_CHECK(on.progress().done);
++        if (goal_count == 4) {
++            PC_CHECK(saw_candidate);
++            PC_CHECK(saw_checked);
++            PC_CHECK(saw_admission);
++        }
++        if (fixture == 2 || fixture == 3) {
++            PC_CHECK(saw_checking);
++            PC_CHECK(!saw_validating);
++            PC_CHECK(disposition == "refused_exact_graph_check");
++            PC_CHECK(on.progress_trace_json(0).find("not_converged") != std::string::npos);
++        }
++        if (fixture >= 4) PC_CHECK(interrupted);
++        if (fixture == 4 || fixture == 5)
++            PC_CHECK(disposition == "censored_finish_or_cap");
++        if (fixture == 6 || fixture == 7)
++            PC_CHECK(disposition.find("censored_") == 0);
++        if (on.progress().done) {
++            const auto published = on.finish();
++            PC_CHECK(published.policy_available);
++            PC_CHECK(std::isfinite(published.evaluated_policy_cost));
++            PC_CHECK(published.upper_bound == published.evaluated_policy_cost);
++            if (saw_admission) {
++                PC_CHECK(published.evaluated_policy_cost <= admission_cost);
++                PC_CHECK(published.diagnostics.selective_completion_service_status == disposition);
++            }
++        }
++    }
++}
++
+ void run_first_proper_candidate_retention_tests() {
+     auto session = make_solve_session({"candidate_retention"});
+     session->essence_guaranteed_mod_ids = {0};
+@@ -14343,7 +14553,9 @@ void run_solver_dirty_continuation_tests() {
+         if (priced != renewal.operators.end())
+             renewal.try_install_gated_root_renewal_incumbent(renewal.result.start_state,row_id,*priced,native);
+         PC_CHECK(renewal.output_incumbent.has_value());
+-        PC_CHECK(!renewal.try_begin_renewal_candidate_publication()); // Default unchanged.
++        // Ordinary first-renewal checking has its natural IC lifecycle witness;
++        // this fixture separately retains the private continuation coverage.
++        PC_CHECK(!renewal.publication_pipeline.initial_candidate_task);
+         renewal.options.native_continuation_search = NativeContinuationSearchMode::DirtyRestrictedFreshLayout;
+         renewal.requested_bounded_finish = true;
+         PC_CHECK(!renewal.try_begin_renewal_candidate_publication());
+@@ -14742,6 +14954,7 @@ void run_solver_integrity_tests(const char* case_name) {
+         run_constructive_state_certificate_tests();
+         run_certified_fallback_contract_tests();
+     }
++    else if (name == "continuity") run_current_incumbent_continuity_tests();
+     else if (name == "incremental") run_incremental_action_generation_tests();
+     else if (name == "fracture") run_primitive_destructive_renewal_upper_tests(false);
+     else throw std::invalid_argument("unknown solver integrity subcase");

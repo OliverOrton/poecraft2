@@ -68,6 +68,14 @@ The costly availability scan was removed afterward; no post-fix matched replay
 exists. Source-level repair is not measured recovery. P6B local placement was
 ineligible, not an economic negative.
 
+The [IC native witness](../active/2026-09-27-current-incumbent-continuity/README.md)
+found an early complete renewal whose ordinary check is deferred. An unretained
+checkpoint trial exposed a checked fallback pre-Finish, but its selective graph
+did not converge in independent evaluation; a dynamic-cap control also failed
+publication. IC2 is not qualified, all trial engine changes were reversed, and
+zero new timed cases ran. This is a scoped scheduling finding and native-check
+counterexample, not a measured A4/A5 repair or a cheaper-controller result.
+
 **Programme domain:** Exalt-fill variants failed reached-entry semantic admission
 at c10, occupancy 3/1, goal mask 15, and were removed. Reroll/repair survived.
 That does not reject the Exalt mechanic or qualify the original fill milestone.

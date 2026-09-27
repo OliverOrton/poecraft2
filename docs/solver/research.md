@@ -714,7 +714,15 @@ prices and caps match, but these are not matching lower-producer configurations.
 This comparison does not establish a source regression. P3's bare reports lack
 an executable hash and resolved launch command, so W does not independently
 reconstruct their source freezes or claim complete ordinary-profile preservation.
-The unqualified pre-Finish Current service remains a separate next candidate.
+The [IC continuity execution](../active/2026-09-27-current-incumbent-continuity/README.md)
+then located a deferred ordinary renewal check with a native fixture. Its trial
+handoff exposed a checked incumbent pre-Finish, but the generated selective
+controller failed independent evaluation before reached-entry validation, and
+a dynamic-cap control failed publication. The patch was reversed; the original
+plan, trial patch and counterexamples are retained. Disposition: scoped native
+negative at IC2, no integrated repair, timed allowance, economic improvement or
+new mathematical claim. The recorded non-convergence does not by itself diagnose
+a mechanics or programme-domain error.
 
 <a id="knowledge"></a>
 ## 5. Knowledge outlives machinery

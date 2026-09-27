@@ -44,9 +44,17 @@ requires an existing independently checked incumbent before Finish, keeps its
 generation calculator separate from the suspended Current graph, and retains
 only a cheaper checked artifact through the ordinary portfolio. It does not
 import Finder's output, statewise values or proof authority. The measured A4/A5
-240-second runs produced their first checked incumbents after Finish; no service
-candidate was checked there. The post-run gate repair and service retention path
+240-second traces did not establish pre-Finish checked-artifact availability;
+no service candidate was checked there. The post-run gate repair and service retention path
 are not qualified by those economics, so activation remains private.
+
+The [IC lifecycle witness](../active/2026-09-27-current-incumbent-continuity/README.md)
+distinguishes an early native renewal capture from its deferred ordinary check.
+A trial ordinary checkpoint made that particular controller available before
+Finish, but independent checking refused the generated selective graph as
+non-converged. The trial was reversed at the IC2 gate. Capture or finite verified
+history alone therefore remains insufficient evidence of pre-Finish selectable
+ownership; no new scheduling or service qualification is retained here.
 
 Ordinary candidates can come from a complete coarse policy, constructive or renewal witness, carrier-ladder/joint-policy work, a retained strict incumbent, or strict improvement. The portfolio distinguishes estimates from verified executable candidates and retains the cheapest compatible verified artifact.
 

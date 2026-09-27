@@ -1,0 +1,39 @@
+{
+  "schema": "ic_local_witness_v1",
+  "source_base": "3cb3ab7a6bcbf2a0a242523a95560ce76cdd286b",
+  "trial_integration": "not_retained",
+  "native_command": "build/engine/poecraft_engine_tests.exe --solver-integrity-only continuity",
+  "build_command": "powershell -File scripts/dev-engine.ps1 -Task Tests -Jobs 4",
+  "data": "synthetic make_solve_session; no compiled game data loaded",
+  "patch_sha256": "0231e13478bcff146219a6ccee0705335cc4bc9651d166a014b160ec4b03d4fc",
+  "executable_sha256": "564b5f3e95a8f18c4fe2863caa426eab1e4ecce416a551bc7530e0d141bc9cdd",
+  "frozen_executable": "out/current-incumbent-continuity/ic1-unretained-engine-tests.exe",
+  "source_files": {
+    "engine/src/solver_solve_bellman.cpp": "ddeafc9d293d5a4a4fb77640e3046098338406192fc2e1fbbf25a45a19c6ced6",
+    "engine/src/solver_solve_finish.cpp": "a6c440d578a5e64f8cab96d3a09996634c079921eb621b837c070255c1a0ad55",
+    "engine/src/solver_solve_incremental.cpp": "ef159fb77a257939c4bc3c34d302ea96955d67c516af3c0387002e6068e4c940",
+    "engine/src/solver_solve_selective_completion.cpp": "7ddc57b3706073ed3b386827727daa95dc48d93d8a16474e4f5fdca4510dcda0",
+    "engine/src/solver_solve_types.hpp": "716e5e9f03d2717f9d7092991fdffe9b39ebf4d8d66b22686718c72bf72877bc",
+    "engine/tests/test_solver_solve.cpp": "03287daef75e4ff270513c10a2d9fdd09c6d4bac811e681f7785ba6e16fa92ce"
+  },
+  "timed_case_invocations": 0,
+  "ic2_gate": "failed; no validation/adoption qualification; dynamic-cap publication counterexample",
+  "restoration": {
+    "source_diff": "empty for all six trial source/test files",
+    "baseline_executable_sha256": "a756acf331c7685da8b6a6bef7ad21da937b5fdc523ee5c368bd666abcb2730a",
+    "checks": [
+      {
+        "log": "out/current-incumbent-continuity/baseline-setup-service.log",
+        "sha256": "f4383035f3df2d6995ba67d97a2bae266b4bbfa8177f3407402517d8d5466e82",
+        "checks": 694,
+        "failures": 0
+      },
+      {
+        "log": "out/current-incumbent-continuity/baseline-bounded-finish.log",
+        "sha256": "478a8e290ce4988ca8ef4966d6939713886f8c7db8ba2d3ec47e5ac526785f21",
+        "checks": 202,
+        "failures": 0
+      }
+    ]
+  }
+}
