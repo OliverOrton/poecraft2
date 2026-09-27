@@ -2142,7 +2142,7 @@ void evaluate_cap_checks(const Value& specification, CaseResult& report) {
 
 bool evaluate_expectation(
     const Value& specification, const CaseResult& report,
-    const bool skip_verification) {
+    const bool skip_verification, const std::string_view solver_mode) {
     if (report.actual_status == "covered_by_native_unit_gate" ||
         report.actual_status == "not_run_approval_pending") {
         return true;
@@ -2210,6 +2210,53 @@ bool evaluate_expectation(
         if (!report.has_solve_summary ||
             !report.solve_summary.policy_available ||
             report.strategy_json_bytes == 0) {
+            return false;
+        }
+        for (const auto& [name, passed] : report.cap_checks) {
+            (void)name;
+            if (!passed) return false;
+        }
+        return true;
+    }
+    const std::string expected_mode = optional_string(
+        *expected_contract, "solver_mode", "current");
+    if (expected_mode != solver_mode) return false;
+    if (const Value* terminal = optional(
+            *expected_contract, "native_goal_terminal", Type::String);
+        terminal != nullptr &&
+        terminal->string != report.native_goal_terminal)
+        return false;
+    if (solver_mode == "strategy_finder") {
+        const std::string expected_status = required_string(
+            *expected_contract, "solve_status");
+        const bool classified = expected_status == "finder_classified" &&
+            (report.actual_status == "bounded_feasible" ||
+             report.actual_status == "no_executable_policy" ||
+             report.actual_status == "refused_resource_cap" ||
+             report.actual_status == "refused_state_cap");
+        if (!classified && expected_status != report.actual_status)
+            return false;
+        if (!report.has_solve_summary ||
+            report.solve_summary.policy_status == PC_SOLVE_POLICY_EXACT ||
+            report.solve_summary.termination == PC_SOLVE_TERMINATION_EXACT_CLOSED ||
+            required_string(*expected_contract, "optimality_status") !=
+                "bounded_only")
+            return false;
+        const Value telemetry = Parser(
+            report.telemetry_json.data(), report.telemetry_json.size()).parse();
+        const Value* lane = telemetry.find("lane");
+        const Value* done = telemetry.find("done");
+        if (lane == nullptr || lane->type != Type::String ||
+            lane->string != "strategy_finder" || done == nullptr ||
+            done->type != Type::Bool || !done->boolean)
+            return false;
+        if (report.solve_summary.policy_available) {
+            if (report.strategy_json_bytes == 0 ||
+                report.exact_evaluation_status != "matched" ||
+                report.solve_summary.policy_status !=
+                    PC_SOLVE_POLICY_BOUNDED_FEASIBLE)
+                return false;
+        } else if (report.strategy_json_bytes != 0) {
             return false;
         }
         for (const auto& [name, passed] : report.cap_checks) {
@@ -2435,6 +2482,11 @@ void validate_case_shape(
         if (expected->type != Type::Object) {
             throw std::runtime_error("case expected must be an object");
         }
+        const std::string mode = optional_string(
+            *expected, "solver_mode", "current");
+        if (mode != "current" && mode != "strategy_finder")
+            throw std::runtime_error(
+                "case expected solver_mode must be current or strategy_finder");
     }
     const Value* forced_winner = optional(
         specification, "forced_winner_contract", Type::Object);
@@ -4929,7 +4981,7 @@ CaseResult run_case(
     finalize_mechanic_family_control(report);
     evaluate_cap_checks(specification, report);
     report.expectation_met = evaluate_expectation(
-        specification, report, skip_verification);
+        specification, report, skip_verification, solver_mode);
     report.working_set_after = process_working_set();
     report.total_ms = milliseconds(total_begin, Clock::now());
     if (checkpoint) checkpoint(report);

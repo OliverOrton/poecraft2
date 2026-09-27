@@ -1,0 +1,12 @@
+{
+  "scope": "exact-rational abstract examples only; no native C++ or PoE qualification",
+  "tests_run": 24,
+  "failures": 0,
+  "errors": 0,
+  "successful": true,
+  "generated_comparisons": {
+    "generated_target_comparisons": 64,
+    "generated_policy_comparisons": 32
+  },
+  "failure_details": []
+}

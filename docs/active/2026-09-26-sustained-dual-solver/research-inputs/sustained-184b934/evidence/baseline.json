@@ -1,0 +1,71 @@
+{
+  "schema": "review_evidence_v1",
+  "repository": "OliverOrton/poecraft2",
+  "reviewed_ref": "184b934396e9aba7d009f8dcbad3f488ee71dbfd",
+  "parent_ref": "adb521064cd2d7b8d1dc67b6aebb258bdb2283f6",
+  "evidence_kind": "recorded_repository_results_not_rerun",
+  "source": "docs/active/2026-09-26-dual-lane-target-support/README.md",
+  "current_profile_status": {
+    "ordinary_clean": "implemented",
+    "neutral_clean": "unimplemented",
+    "neutral_coverage": "unimplemented_refused"
+  },
+  "public_v1_terminal": "clean",
+  "public_default_solver": "Current",
+  "current": {
+    "A4": {
+      "case": "cb02-cross-base-product8-long240",
+      "cost": 3746.13194094858,
+      "lower": 198.83349967477,
+      "scope": "ordinary_clean_bounded",
+      "graph_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02"
+    },
+    "A5": {
+      "case": "cb01-cross-base-product8-long240",
+      "cost": 85558.7061856044,
+      "lower": 405.36940210634,
+      "scope": "ordinary_clean_bounded",
+      "graph_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+      "separate_reliability_classification": "refused_unsupported_action"
+    }
+  },
+  "finder": {
+    "A5_L": {
+      "cost": 524079.6986482172,
+      "graph_sha256": "92e70dd2776d0ec038158e1a90ce221d96db58fee13e335f36a8eb0c63b8230d",
+      "checked": 8,
+      "accepted": 6,
+      "refused": 2,
+      "logical_reforge_work": 5310355,
+      "host_wall_seconds": 34.84,
+      "checker_wall_seconds": 27.46,
+      "peak_selected_owned_bytes": 812027241
+    },
+    "A5_R": {
+      "cost": 133226.02816593435,
+      "graph_sha256": "25557a358d6820794747f45cd3937edb137696d9b65806a0695669b971b8a15d",
+      "checked": 8,
+      "accepted": 6,
+      "refused": 2,
+      "logical_reforge_work": 5310355,
+      "host_wall_seconds": 33.46,
+      "checker_wall_seconds": 26.61,
+      "peak_selected_owned_bytes": 793085726
+    }
+  },
+  "finder_process_exit_note": "exit 2 due Current-oriented expectation; independently checked policies accepted. New reports must preserve distinction rather than ignore arbitrary exits.",
+  "measurement_identities": {
+    "executable_sha256": "99e03218c6274413374bdd9c21f79237cf88e27f3a2c17bbb26147218956a121",
+    "corpus_sha256": "404c0ee632b199b85a5fce76a62f9d75ca59839849b2b9efd1bcf4c174125b20",
+    "compiled_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb"
+  },
+  "missing_data": [
+    "Current neutral actual execution and L/R comparison",
+    "Actual cost of discarded intact held-side contexts",
+    "Selective-completion whole-root/native Current economics",
+    "Actual public/worker activation of new profiles/grammar"
+  ],
+  "native_runs_executed_by_this_review": 0,
+  "prior_packet_sha256": "8a9c86df53248e92df7622ccf8285bd2cc1eef5b008f12dfb44a305278171df8",
+  "prior_prompt_sha256": "112315ee59382b0c8f8a030c0631aa0ff76af09b7b9061d3affa0f32c28767af"
+}

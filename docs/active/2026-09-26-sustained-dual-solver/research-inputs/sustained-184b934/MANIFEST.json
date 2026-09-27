@@ -1,0 +1,116 @@
+{
+  "schema": "planning_packet_manifest_v1",
+  "reviewed_ref": "184b934396e9aba7d009f8dcbad3f488ee71dbfd",
+  "files": [
+    {
+      "path": "CODEX_PROMPT.md",
+      "size": 9101,
+      "sha256": "23ed82c3b28271ce6b6c9e8d1ff7f308cfa1199b7846335cb07095e673e606e4"
+    },
+    {
+      "path": "CURRENT_CANDIDATES.md",
+      "size": 6912,
+      "sha256": "f0f54a8b6fe377a3d6396605ca74577f33ab9989fe5189a56e5d9d144536f3b6"
+    },
+    {
+      "path": "CURRENT_PROFILE.md",
+      "size": 11295,
+      "sha256": "6a739e8d194d3e91baac5949c1551f5f244ad14ad0e6b155ef46fcc7bacf6ee2"
+    },
+    {
+      "path": "DATA_REQUEST.md",
+      "size": 3574,
+      "sha256": "d3c88bff13d8bb32379ba622ebce53b6d366fd492c917c76f2cbb09fc6f13bef"
+    },
+    {
+      "path": "DOC_MAINTENANCE.md",
+      "size": 4243,
+      "sha256": "dd65762c9fa74110c1700b1fe9cdfb012939e270dfabebc4980989bbbc3413f4"
+    },
+    {
+      "path": "EXECUTION_PROTOCOL.md",
+      "size": 6228,
+      "sha256": "c8f13d1ea9b7a9f9b1c551cc472896699de4dd65cf0309bf48a7fa7b5b120854"
+    },
+    {
+      "path": "EXPERIMENTS.md",
+      "size": 8548,
+      "sha256": "d7fa74c2feb54e1e9b5447675480ff9c3e28e306d11cfffa436b423e603e9162"
+    },
+    {
+      "path": "FINDER_SEARCH.md",
+      "size": 5363,
+      "sha256": "36dfbc9d04335b5008eaa04d2fcb00f8ee491ce80deb8553547f37629b534a8b"
+    },
+    {
+      "path": "IMPLEMENTATION_STATE.example.json",
+      "size": 962,
+      "sha256": "4a44a3a4584397598ebeb04cfe9ea999673fe7bc1af6e0ea6c5d444911c62ff8"
+    },
+    {
+      "path": "MASTER_PLAN.md",
+      "size": 16763,
+      "sha256": "0f80961a28885bd37be5808ab19f6e5dba82ce94c2f4709d01eb0d29ee0918df"
+    },
+    {
+      "path": "MATHEMATICS.md",
+      "size": 10957,
+      "sha256": "8c46dd6d6c445dbc79b26927b0ae2f9f94ee73ff0a247c4ae98f2c2131643a13"
+    },
+    {
+      "path": "NEXT_DECISIONS.md",
+      "size": 3520,
+      "sha256": "b70710c87551b53046484dcadbc01e2b75224b668a57cd479c8437c5bec49278"
+    },
+    {
+      "path": "README.md",
+      "size": 3955,
+      "sha256": "ffb6e0e91cd36772d4bcce1f2c6bca46dc1fb41c44190375b75bc8e0b39fc4d6"
+    },
+    {
+      "path": "REVIEW.md",
+      "size": 8591,
+      "sha256": "ea4c745d6d3ef845088cb10a614cc35d3a7fc72d45d5a8d16f6a449994cdad35"
+    },
+    {
+      "path": "SHARED_COMPLETION.md",
+      "size": 10145,
+      "sha256": "3c16012b3f2dc42e14e04499959fe8808585619c1b721618f594eb410cbadbca"
+    },
+    {
+      "path": "SOURCES.md",
+      "size": 9645,
+      "sha256": "abb979ca8e8f9388a1d9a5571d3578955112330b7c05dad4c98e4bc1a40b843f"
+    },
+    {
+      "path": "VALIDATION.md",
+      "size": 7480,
+      "sha256": "b0a86793811f30f9ecf46d94a801b8ce6e000d20a0618c236298914d2cf550c6"
+    },
+    {
+      "path": "evidence/abstract_test_results.json",
+      "size": 302,
+      "sha256": "d979aa3eb1ffe547f3254fcfcb6dd02d578ed368520cb61b0774c2896c1c09e5"
+    },
+    {
+      "path": "evidence/baseline.json",
+      "size": 2924,
+      "sha256": "31abc44eb1f269676499da224e743bcbc10fb659af28c1c8e57421043834caf4"
+    },
+    {
+      "path": "evidence/ci_observations.json",
+      "size": 778,
+      "sha256": "e337f8aace2e56f4833297f5c7007678523611ee2ba6191bdf720db82c265e3c"
+    },
+    {
+      "path": "tests/test_contracts.py",
+      "size": 9771,
+      "sha256": "959af50d1fbed6d89a6224f02c77695f03916345dceb4b645fcf815e37a47824"
+    },
+    {
+      "path": "verify_packet.py",
+      "size": 3329,
+      "sha256": "ddd652578ef0c8e5afddd16cda36614fab454d929ad16c4c8ee2c014d1bf93bd"
+    }
+  ]
+}

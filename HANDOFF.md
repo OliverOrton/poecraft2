@@ -1,23 +1,21 @@
 # Handoff
 
-Oliver selected the attached U0–U5 dual-lane original-goal programme. The
-verified packet, source findings, implementation, measured A4/A5 controls,
-capability matrix, validation and precise unfinished proof gate are in the
-[living record](docs/active/2026-09-26-dual-lane-target-support/README.md).
+Oliver selected the attached P0–P9 sustained dual-solver programme. Continue
+sequentially from the [living record](docs/active/2026-09-26-sustained-dual-solver/README.md),
+which owns the verified packet, baseline identities, current checkpoint and
+spent run budget. The previous [U record](docs/active/2026-09-26-dual-lane-target-support/README.md)
+remains the source for its original measurements.
 
-The shared native success-ingress check now binds solver-produced graphs to
-their requested goal. Finder runs private clean L and coverage R through it,
-including synchronous and stepped zero-cost dirty-root paths and a nontrivial
-R policy. Current applies the check and exact-root/cache binding to its clean
-compiled policies. Public v1 remains clean. The proposed Current
-target-neutral-zero profile was not admitted: producer, retirement and exact
-publication consumers still depend on clean-target positive proofs. Current R
-remains explicitly refused; the four Current neutral-profile timing arms were
-not run. The record names the source seams and test needed to finish that gate.
+P0 now has a lane-aware Finder expectation path and a separate corpus. Its
+source-matched A5 L check returned a matched graph, exit 0 and expectation met.
+The Current A5 unsupported-action reliability field and older A3 zero-cap-mask
+disagreement were traced separately without suppressing either. One of the
+programme's 24 timed-native-run allowance has been spent. No process is active.
 
-Ordinary Current A4/A5 clean policies were checked and byte-identical to the
-prior E audit. Finder A5 L/R policies were checked under different targets;
-their cost difference is a semantic contrast, not a same-clean improvement.
-Native Compile/API, Python runner and web checks pass; release WASM was rebuilt.
-No rendered UI review or fresh Simulator was selected. Preserve root `0`
-without inspecting, staging or changing it. No push was requested.
+Next: (1) implement Current's immutable target-neutral proof capability in
+actual lower, retirement and publication consumers with poison tests; (2)
+qualify real Current L/R original-root operation before the planned contrast.
+The profile, Current R, shared selective-completion producer and both new
+consumers remain unimplemented. Public clean defaults remain unchanged.
+Preserve root `0` without inspecting, staging or changing it; no push was
+requested.

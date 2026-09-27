@@ -1,0 +1,26 @@
+{
+  "schema": "example_only_not_runtime_scheduler",
+  "reviewed_ref": "184b934396e9aba7d009f8dcbad3f488ee71dbfd",
+  "active_milestone": "P0",
+  "status": "not_started",
+  "last_coherent_commit": null,
+  "active_processes": [],
+  "timed_native_runs_used": 0,
+  "timed_native_runs_ceiling": 24,
+  "completed_milestones": [],
+  "blocked_combinations": [],
+  "native_tests_run": [],
+  "pending_next_actions": [
+    "Inspect actual main/local changes and rules without touching protected root 0",
+    "Resolve existing U ledgers and new comparison expectations"
+  ],
+  "capabilities": {
+    "Current_ordinary_L": "preserve",
+    "Current_neutral_L": "to_implement",
+    "Current_neutral_R": "to_implement",
+    "Finder_selective_L": "to_implement",
+    "Finder_selective_R": "qualify_after_L",
+    "Current_shared_candidate_service": "to_implement"
+  },
+  "notes": "Use existing living metadata conventions; this example is not a new supervisor or proof artifact."
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "ci_observation_v1",
+  "reviewed_ref": "184b934396e9aba7d009f8dcbad3f488ee71dbfd",
+  "observation_scope": "latest repository fetch during this review; not future completion",
+  "windows": {
+    "run_id": 36282378378,
+    "job_id": 108516561099,
+    "status": "in_progress",
+    "conclusion": null,
+    "build": "success",
+    "test": "in_progress",
+    "url": "https://github.com/OliverOrton/poecraft2/actions/runs/36282378378"
+  },
+  "solver_knowledge": {
+    "run_id": 36282378416,
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/OliverOrton/poecraft2/actions/runs/36282378416"
+  },
+  "reviewer_started_or_modified_ci": false,
+  "requirement": "Recheck the same-head result at P0; no claim of Windows pass is made here."
+}
