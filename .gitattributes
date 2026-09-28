@@ -5,3 +5,5 @@
 /docs/archive/** -text whitespace=cr-at-eol
 /docs/active/** -text whitespace=cr-at-eol
 /apps/web/public/economy/snapshots/*.json -text whitespace=cr-at-eol
+/data/runtime-snapshots/** -text whitespace=cr-at-eol
+/apps/web/public/game-assets/catalog.json -text whitespace=cr-at-eol

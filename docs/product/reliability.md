@@ -1,5 +1,19 @@
 # Product Reliability Coverage
 
+The 2026-09-27 [UI continuity record](../active/2026-09-27-ui-continuity/README.md)
+owns migration validation. `test/ui-continuity-checks.mjs`, invoked by static
+hosting smoke for the new build format, exercises real packaged browser
+crafting, Calculator coverage goals, draft recovery, Restart/Imprint placement,
+node connection, nested condition logic and tier changes, tab disposal, Stash
+round-trip and dirty-close handling. It also checks local artwork loading and
+usable text controls when the catalogue is unavailable. No Simulator or timed
+Solve search is part of that workflow check. Rendered design acceptance remains
+Oliver's.
+
+Hosted packaging, diagnostics, static browser checks, owner activation and
+archive rollback are described in [Hosted tester](hosting.md). These checks do
+not promote solver qualification or replace Oliver's visual review.
+
 **Status: stable non-visual coverage reference.**
 
 Parent: [Product](README.md)

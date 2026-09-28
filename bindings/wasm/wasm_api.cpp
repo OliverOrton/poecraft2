@@ -2718,23 +2718,29 @@ const char* pcw_solver_calc(uint32_t solver_id, uint32_t item_id,
     out += ",\"legal\":";
     out += summary.legal ? "true" : "false";
     out += ",\"success_probability\":";
-    out += std::to_string(summary.success_probability);
+    append_precise_double(out, summary.success_probability);
     out += ",\"slot_satisfied\":[";
     for (uint32_t s = 0; s < PC_SOLVER_MAX_GOAL_SLOTS; ++s) {
         if (s != 0) out.push_back(',');
-        out += std::to_string(summary.slot_satisfied_probability[s]);
+        append_precise_double(out, summary.slot_satisfied_probability[s]);
     }
     out += "],\"outcomes\":[";
     for (uint32_t i = 0; i < count; ++i) {
         const pc_calc_outcome& entry = outcomes[i];
         if (i != 0) out.push_back(',');
         out += "{\"state\":" + std::to_string(entry.state_id);
-        out += ",\"probability\":" + std::to_string(entry.probability);
+        out += ",\"probability\":";
+        append_precise_double(out, entry.probability);
         out += ",\"rarity\":" + std::to_string(entry.rarity);
         out += ",\"prefixes\":" + std::to_string(entry.prefix_count);
         out += ",\"suffixes\":" + std::to_string(entry.suffix_count);
         out += ",\"flags\":" + std::to_string(entry.flags);
         out += ",\"blocked\":" + std::to_string(entry.blocked_mask);
+        int32_t is_goal = 0;
+        rc = pc_solver_state_is_goal(*solver, entry.state_id, &is_goal, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
+        out += ",\"is_goal\":";
+        out += is_goal ? "true" : "false";
         out += ",\"slots\":[";
         for (uint32_t s = 0; s < PC_SOLVER_MAX_GOAL_SLOTS; ++s) {
             if (s != 0) out.push_back(',');

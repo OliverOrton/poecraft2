@@ -1,3 +1,4 @@
+import { modTextLabel } from "./mod-text";
 /*
  * Session mods → display-family picker options, shared by the Strategy
  * Builder's condition editor and the Calculator's goal editor. The
@@ -124,7 +125,7 @@ export function buildModifierOptions(
     for (const tiers of groupFamilies(mods)) {
         const rep = tiers[0];
         const text =
-            rep.text_lines.join(" / ") ||
+            modTextLabel(rep.text_lines) ||
             catalog.groupNameById[rep.primary_group_id] ||
             rep.key;
         const side = rep.generation_type === 0 ? "P" : "S";
@@ -140,7 +141,7 @@ export function buildModifierOptions(
             ).sort(),
             tiers: tiers.map((tier) => ({
                 tier: tier.family_tier_index,
-                label: tier.text_lines.join(" / ") || tier.key,
+                label: modTextLabel(tier.text_lines) || tier.key,
                 requiredLevel: tier.required_level,
             })),
         });

@@ -1,0 +1,903 @@
+import { PcCraftControls, type CraftPanel } from "./pc-craft-controls";
+import { disposeReact, renderReact } from "../react-host";
+import { BaseSelectionShell, EmulatorShell } from "./document-shells";
+import { modTextLabel } from "../mod-text";
+/*
+ * pc-emulator — an emulator document. Owns one engine session, action context,
+ * and live item, and drives the craft bar, the item view, and the modifier-pool
+ * browser.
+ *
+ * Document lifecycle:
+ *   - identified by a docId (the dockview panel id);
+ *   - content auto-saved as an IndexedDB draft on every change (crash recovery);
+ *   - dirty until saved to the Stash; reports dirty/title to the workspace;
+ *   - can be saved, saved-as, or duplicated.
+ */
+
+import { getEngine } from "../engine-service";
+import { EngineClient } from "../engine-client";
+import {
+    BaseInfo,
+    BestiaryActionInfo,
+    Catalog,
+    CraftAction,
+    ModInfo,
+} from "../engine-protocol";
+import {
+    DraftRecord,
+    ItemStashRecord,
+    ItemSnapshot,
+    getDraft,
+    putDraft,
+} from "../workspace/persistence";
+import { workspace } from "../workspace/registry";
+import { openTextModal } from "../workspace/dirty-modal";
+import { influenceLabels } from "../item-display";
+import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
+import { PcModList, SlotMod } from "./pc-mod-list";
+import { PcModPool } from "./pc-mod-pool";
+import "./pc-base-picker";
+import "./pc-mod-list";
+import "./pc-mod-pool";
+
+
+
+
+
+const DEFAULT_BASE = "Metadata/Items/Armours/BodyArmours/BodyInt17";
+
+interface HistoryEntry {
+    action: string;
+    applied: boolean;
+    added: number;
+    removed: number;
+    detail?: string;
+}
+
+const REACH_KIND_CRAFTED = 2;
+
+export class PcEmulator extends HTMLElement {
+    private shellVersion = 0;
+    private client!: EngineClient;
+    private dataId = 0;
+    private bases: BaseInfo[] = [];
+    private catalog: Catalog | null = null;
+    private bestiaryActions: BestiaryActionInfo[] = [];
+    private checkpointPresent = false;
+
+    private docId = "";
+    private base = DEFAULT_BASE;
+    private itemLevel = 86;
+    private rarity = "normal";
+
+    private session = 0;
+    private context = 0;
+    private item = 0;
+    private history: HistoryEntry[] = [];
+    private modCache: ModInfo[] = [];
+    private veiledOptions: number[] = [];
+    private activeCraftPanel: CraftPanel = "basic";
+    private selectedFossils: string[] = [];
+    private mechanicValues = new Map<string, string>();
+    private busy = true;
+    private pickerOpen = false;
+    private hasBase = false;
+
+    private dirty = false;
+    private savedRef: string | null = null;
+    private savedName: string | null = null;
+    private savedCreatedAt = 0;
+    private initializing = true;
+    private disposed = false;
+    private connectedOnce = false;
+    private currentWork: Promise<void> | null = null;
+
+    async connectedCallback(): Promise<void> {
+        if (this.connectedOnce) {
+            return;
+        }
+        this.connectedOnce = true;
+        this.docId = this.getAttribute("doc-id") ?? `doc-${crypto.randomUUID()}`;
+        this.renderShell();
+        this.setBusy(true);
+        workspace().registerDocument(this.docId, {
+            save: () => this.save(),
+            dispose: () => this.disposeEngine(),
+        });
+        this.setStatus("Loading engine…");
+        const engine = await getEngine().catch(error => {
+            this.setStatus(error instanceof Error ? error.message : String(error));
+            this.setBusy(false);
+            throw error;
+        });
+        if (this.disposed) {
+            return;
+        }
+        this.client = engine.client;
+        this.dataId = engine.dataId;
+        this.catalog = await this.client.catalog(this.dataId);
+        this.bases = (await this.client.listBases(this.dataId)).filter(
+            (base) => base.support === 0,
+        );
+        this.bestiaryActions = (await this.client.bestiaryPresentation(
+            this.dataId,
+        )).actions.filter((action) => action.emulator_available);
+        if (this.disposed) {
+            return;
+        }
+
+        const draft = await getDraft(this.docId);
+        if (draft) {
+            this.base = draft.base;
+            this.itemLevel = draft.itemLevel;
+            this.rarity = draft.rarity;
+            this.history = draft.history;
+            this.savedRef = draft.savedRef;
+            this.savedName = draft.savedName;
+            this.dirty = draft.dirty;
+        }
+        if (!this.bases.some((b) => b.path === this.base)) {
+            this.base = this.bases[0]?.path ?? this.base;
+        }
+        this.hasBase = Boolean(draft?.state);
+
+        if (!this.hasBase) {
+            this.pickerOpen = true;
+            this.renderShell();
+            this.setBusy(false);
+            this.setStatus("");
+            workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
+            return;
+        }
+
+        await this.openSession();
+        if (this.disposed) {
+            return;
+        }
+        const item = draft?.state
+            ? await this.client.importItem(draft.state)
+            : await this.client.createItem(this.session, {
+                rarity: this.rarity,
+                withImplicits: true,
+            });
+        if (this.disposed) {
+            await this.client.closeItem(item);
+            return;
+        }
+        this.item = item;
+        this.initializing = false;
+        try {
+            await this.refresh();
+            if (this.disposed) {
+                return;
+            }
+            await this.persist();
+        } catch (error) {
+            if (this.disposed) {
+                return;
+            }
+            throw error;
+        }
+
+        workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
+        this.setBusy(false);
+        this.setStatus("");
+    }
+
+    disconnectedCallback(): void {
+        // Dockview also fires this during drag-between-groups; persistent state
+        // is in the draft already, so nothing to tear down here.
+    }
+
+    private get docTitle(): string {
+        return this.savedName ?? "Untitled";
+    }
+
+    // --- engine lifecycle ---------------------------------------------------
+
+    private async openSession(): Promise<void> {
+        if (this.disposed) {
+            return;
+        }
+        if (this.session) {
+            await this.client.closeContext(this.context);
+            await this.client.closeSession(this.session);
+            this.context = 0;
+            this.session = 0;
+        }
+        this.modCache = [];
+        const session = await this.client.createSession(
+            this.dataId,
+            this.base,
+            this.itemLevel,
+        );
+        if (this.disposed) {
+            await this.client.closeSession(session);
+            return;
+        }
+        const context = await this.client.createContext(session, 0);
+        if (this.disposed) {
+            await this.client.closeContext(context);
+            await this.client.closeSession(session);
+            return;
+        }
+        this.session = session;
+        this.context = context;
+        await this.cacheAllMods();
+    }
+
+    private async cacheAllMods(): Promise<void> {
+        const count = await this.client.modCount(this.session);
+        const cache: ModInfo[] = new Array(count);
+        // Resolve in parallel; the worker is single-threaded so the requests
+        // are serialised there, but this avoids a chain of awaits on the main
+        // thread and lets the worker dispatch them back-to-back.
+        await Promise.all(
+            Array.from({ length: count }, async (_, id) => {
+                cache[id] = await this.client.modInfo(this.session, id);
+            }),
+        );
+        if (this.disposed) {
+            return;
+        }
+        this.modCache = cache;
+    }
+
+    private async rebuildSession(): Promise<void> {
+        await this.openSession();
+        this.history = [];
+        if (this.item) {
+            await this.client.closeItem(this.item);
+        }
+        this.rarity = "normal";
+        this.item = await this.client.createItem(this.session, {
+            rarity: this.rarity,
+            withImplicits: true,
+        });
+        await this.markChanged();
+    }
+
+    private async createItem(): Promise<void> {
+        if (this.item) {
+            await this.client.closeItem(this.item);
+        }
+        this.rarity = "normal";
+        this.item = await this.client.createItem(this.session, {
+            rarity: this.rarity,
+            withImplicits: true,
+        });
+        this.history = [];
+        await this.markChanged();
+    }
+
+    private async applyAction(type: CraftAction["type"]): Promise<void> {
+        const outcome = await this.client.apply(this.context, this.item, { type });
+        this.history.push({
+            action: type,
+            applied: outcome.applied,
+            added: outcome.added,
+            removed: outcome.removed,
+        });
+        await this.markChanged();
+    }
+
+    private async applyConfiguredAction(action: CraftAction): Promise<void> {
+        const outcome = await this.client.apply(this.context, this.item, action);
+        this.history.push({
+            action: action.type,
+            applied: outcome.applied,
+            added: outcome.added,
+            removed: outcome.removed,
+        });
+        await this.markChanged();
+    }
+
+    private async applyBestiaryAction(
+        action: BestiaryActionInfo,
+    ): Promise<void> {
+        const outcome = await this.client.bestiaryApply(
+            this.dataId,
+            this.item,
+            action.id,
+        );
+        this.history.push({
+            action: action.display_name,
+            applied: outcome.applied,
+            added: 0,
+            removed: 0,
+            detail: outcome.applied
+                ? action.checkpoint_effect === "create"
+                    ? "checkpoint saved"
+                    : "checkpoint consumed"
+                : outcome.refusal_reason,
+        });
+        this.checkpointPresent = outcome.checkpoint_present;
+        await this.markChanged();
+    }
+
+    private async craftMod(
+        key: string,
+        side: "prefix" | "suffix",
+        fractured = false,
+    ): Promise<void> {
+        const info = this.modCache.find((mod) => mod.key === key);
+        let applied = true;
+        if (info?.reach_kind === REACH_KIND_CRAFTED && !fractured) {
+            const outcome = await this.client.apply(this.context, this.item, {
+                type: "bench",
+                mod_key: key,
+            });
+            applied = outcome.applied;
+        } else {
+            await this.client.addMod(this.item, this.session, {
+                key,
+                side,
+                fractured,
+            });
+        }
+        this.history.push({
+            action: `${fractured ? "fracture" : "add"} ${side} ${key}`,
+            applied,
+            added: applied ? 1 : 0,
+            removed: 0,
+        });
+        await this.markChanged();
+    }
+
+    private async fractureMod(
+        key: string,
+        modId: number,
+        side: "prefix" | "suffix",
+        onItem: boolean,
+    ): Promise<void> {
+        if (onItem) {
+            await this.client.setModFractured(this.item, { modId, side });
+            this.history.push({
+                action: `fracture ${side} ${key}`,
+                applied: true,
+                added: 0,
+                removed: 0,
+            });
+            await this.markChanged();
+            return;
+        }
+        await this.craftMod(key, side, true);
+    }
+
+    private async removeMod(
+        modId: number,
+        side: "prefix" | "suffix",
+    ): Promise<void> {
+        const info = this.modCache[modId];
+        await this.client.removeMod(this.item, { modId, side });
+        this.history.push({
+            action: `remove ${side} ${info?.key ?? modId}`,
+            applied: true,
+            added: 0,
+            removed: 1,
+        });
+        await this.markChanged();
+    }
+
+    private async markChanged(): Promise<void> {
+        if (!this.initializing) {
+            this.dirty = true;
+        }
+        await this.refresh();
+        await this.persist();
+        if (!this.initializing) {
+            workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
+        }
+    }
+
+    private async snapshot(): Promise<ItemSnapshot> {
+        const info = await this.client.itemInfo(this.item, this.session);
+        this.veiledOptions =
+            (info.veiled_option_mod_ids as number[] | undefined) ?? [];
+        return {
+            base: this.base,
+            itemLevel: this.itemLevel,
+            rarity: info.rarity as string,
+            state: await this.client.exportItem(this.item),
+        };
+    }
+
+    private async persist(): Promise<void> {
+        const draft: DraftRecord = {
+            docId: this.docId,
+            base: this.base,
+            itemLevel: this.itemLevel,
+            rarity: this.rarity,
+            state: this.item ? await this.client.exportItem(this.item) : null,
+            history: this.history,
+            savedRef: this.savedRef,
+            savedName: this.savedName,
+            dirty: this.dirty,
+            updatedAt: Date.now(),
+        };
+        await putDraft(draft);
+    }
+
+    // --- save / save-as / duplicate ----------------------------------------
+
+    private async save(): Promise<boolean> {
+        if (!this.savedRef) {
+            return this.saveAs();
+        }
+        const snapshot = await this.snapshot();
+        const record: ItemStashRecord = {
+            id: this.savedRef,
+            name: this.savedName ?? "Untitled",
+            ...snapshot,
+            createdAt: this.savedCreatedAt || Date.now(),
+        };
+        await workspace().saveToStash(record);
+        await this.markSaved(record);
+        return true;
+    }
+
+    private async saveAs(): Promise<boolean> {
+        const name = await openTextModal("Save item to Stash as:", this.savedName ?? "New item");
+        if (!name) {
+            return false;
+        }
+        const record: ItemStashRecord = {
+            id: `stash-${crypto.randomUUID()}`,
+            name,
+            ...(await this.snapshot()),
+            createdAt: Date.now(),
+        };
+        await workspace().saveToStash(record);
+        await this.markSaved(record);
+        return true;
+    }
+
+    private async markSaved(record: ItemStashRecord): Promise<void> {
+        this.savedRef = record.id;
+        this.savedName = record.name;
+        this.savedCreatedAt = record.createdAt;
+        this.dirty = false;
+        await this.persist();
+        workspace().notifyDirty(this.docId, false, this.docTitle);
+        this.renderSavedName();
+    }
+
+    private async duplicate(): Promise<void> {
+        await workspace().openEmulator(await this.snapshot(), "copy");
+    }
+
+    private async useInStrategy(): Promise<void> {
+        await workspace().openStrategy(await this.snapshot(), "copy");
+    }
+
+    private async openInCalculator(): Promise<void> {
+        await workspace().openCalculator(await this.snapshot());
+    }
+
+    private async disposeEngine(): Promise<void> {
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
+        workspace().unregisterDocument(this.docId);
+        if (this.currentWork) {
+            try {
+                await this.currentWork;
+            } catch {
+                // The operation's guard already surfaced the error. Continue
+                // releasing every native handle.
+            }
+        }
+        const item = this.item;
+        const context = this.context;
+        const session = this.session;
+        this.item = 0;
+        this.context = 0;
+        this.session = 0;
+        if (item && this.client) {
+            await this.client.closeItem(item);
+        }
+        if (context && this.client) {
+            await this.client.closeContext(context);
+        }
+        if (session && this.client) {
+            await this.client.closeSession(session);
+        }
+        disposeReact(this);
+    }
+
+    // --- refresh / render ---------------------------------------------------
+
+    private async refresh(): Promise<void> {
+        const info = await this.client.itemInfo(this.item, this.session);
+        this.checkpointPresent = Boolean(info.checkpoint_present);
+        this.rarity = info.rarity as string;
+        this.veiledOptions =
+            (info.veiled_option_mod_ids as number[] | undefined) ?? [];
+        const fracturedP = new Set(info.fractured_prefix_mod_ids as number[]);
+        const fracturedS = new Set(info.fractured_suffix_mod_ids as number[]);
+        const prefixIds = info.prefix_mod_ids as number[];
+        const suffixIds = info.suffix_mod_ids as number[];
+        const implicitIds = info.implicit_mod_ids as number[];
+
+        const prefixes = prefixIds.map((id) => this.toSlot(id, fracturedP));
+        const suffixes = suffixIds.map((id) => this.toSlot(id, fracturedS));
+        const implicits = implicitIds.map((id) => this.toSlot(id, new Set()));
+
+        this.modList.setModel({
+            kind: "concrete",
+            baseKey: this.base,
+            baseName: this.baseDisplayName(),
+            itemLevel: this.itemLevel,
+            rarity: info.rarity as string,
+            influences: influenceLabels(
+                Number(info.generic_influence_bits ?? 0),
+                Number(info.searing_exarch_tier ?? 0),
+                Number(info.eater_of_worlds_tier ?? 0),
+                this.catalog,
+            ),
+            prefixes,
+            suffixes,
+            implicits,
+            maxPrefix: (info.max_prefix as number) ?? prefixes.length,
+            maxSuffix: (info.max_suffix as number) ?? suffixes.length,
+        });
+
+        const tab = this.modPool.getActiveTab();
+        const poolAction: CraftAction["type"] =
+            tab === "implicit" ? "chaos" : tab === "prefix" ? "chaos" : "chaos";
+        const pool =
+            tab === "implicit"
+                ? null
+                : await this.client.debugPool(this.context, this.item, {
+                      action: { type: poolAction },
+                  });
+        const poolWeights = new Map<number, number>();
+        if (pool) {
+            for (const entry of pool.entries) {
+                if (!entry.accepted) continue;
+                poolWeights.set(entry.session_mod_id, entry.final_weight);
+            }
+        }
+        const prefixOnItem = new Set(prefixIds);
+        const suffixOnItem = new Set(suffixIds);
+        const implicitOnItem = new Set(implicitIds);
+        const groupOnItem = new Set<number>();
+        for (const id of [...prefixIds, ...suffixIds]) {
+            const cached = this.modCache[id];
+            if (cached) groupOnItem.add(cached.primary_group_id);
+        }
+
+        this.modPool.setModel({
+            mods: this.modCache,
+            item: {
+                rarity: info.rarity as string,
+                prefixOnItem,
+                suffixOnItem,
+                implicitOnItem,
+                fracturedPrefixOnItem: fracturedP,
+                fracturedSuffixOnItem: fracturedS,
+                groupOnItem,
+                maxPrefix: (info.max_prefix as number) ?? prefixes.length,
+                maxSuffix: (info.max_suffix as number) ?? suffixes.length,
+            },
+            pool,
+            poolWeights,
+        });
+        this.renderHistory();
+        this.renderMechanicControls();
+    }
+
+    private toSlot(id: number, fractured: Set<number>): SlotMod {
+        const info = this.modCache[id];
+        if (!info) {
+            return {
+                sessionModId: id,
+                key: String(id),
+                tierIndex: 0,
+                textLines: [],
+                classificationTags: [],
+                fractured: fractured.has(id),
+                crafted: false,
+            };
+        }
+        return {
+            sessionModId: id,
+            key: info.key,
+            tierIndex: info.family_tier_index,
+            textLines: info.text_lines,
+            classificationTags: info.classification_tags,
+            fractured: fractured.has(id),
+            crafted: info.reach_kind === REACH_KIND_CRAFTED,
+        };
+    }
+
+    private get modList(): PcModList {
+        return this.querySelector("pc-mod-list")!;
+    }
+
+    private get modPool(): PcModPool {
+        return this.querySelector("pc-mod-pool")!;
+    }
+
+    private baseDisplayName(): string {
+        return (
+            this.bases.find((base) => base.path === this.base)?.name ??
+            baseLabel(this.base)
+        );
+    }
+
+    private setStatus(text: string): void {
+        const el = this.querySelector(".pc-emu-status");
+        if (el) {
+            el.textContent = text;
+            (el as HTMLElement).hidden = text === "";
+        }
+    }
+
+    private setBusy(busy: boolean): void {
+        this.busy = busy;
+        this.querySelectorAll<HTMLElement>(".pc-advanced-crafts, pc-mod-pool, pc-mod-list").forEach(element => {
+            element.inert = busy;
+        });
+        this.querySelectorAll<HTMLButtonElement>(
+            "button[data-cmd], button[data-craft-panel], button[data-simple-action], button[data-config-action], button[data-bestiary-action], button[data-fossil-add], button[data-fossil-remove]",
+        ).forEach((button) => {
+            if (busy) {
+                button.dataset.disabledBeforeBusy ??= String(button.disabled);
+                button.disabled = true;
+            } else if (button.dataset.disabledBeforeBusy !== undefined) {
+                button.disabled = button.dataset.disabledBeforeBusy === "true";
+                delete button.dataset.disabledBeforeBusy;
+            }
+        });
+    }
+
+    private async guard(work: () => Promise<void>): Promise<void> {
+        if (this.busy || this.disposed) {
+            return;
+        }
+        this.setBusy(true);
+        const pending = work();
+        this.currentWork = pending;
+        try {
+            await pending;
+        } catch (error) {
+            this.setStatus(error instanceof Error ? error.message : String(error));
+        } finally {
+            if (this.currentWork === pending) {
+                this.currentWork = null;
+            }
+            this.setBusy(false);
+        }
+    }
+
+    private syncControls(): void {
+        this.renderSavedName();
+        const base = this.querySelector(".pc-emu-base");
+        if (base) base.textContent = `${this.baseDisplayName()} · iLvl ${this.itemLevel}`;
+    }
+
+    private renderSavedName(): void {
+        const el = this.querySelector(".pc-emu-name");
+        if (el) {
+            el.textContent = this.savedName ? `Saved: ${this.savedName}` : "Unsaved";
+        }
+    }
+
+    private renderHistory(): void {
+        const el = this.querySelector(".pc-emu-history");
+        if (!el) return;
+        if (this.history.length === 0) {
+            el.innerHTML = '<li class="pc-empty">No crafts yet.</li>';
+            return;
+        }
+        el.innerHTML = this.history
+            .map((entry, index) => ({ entry, number: index + 1 }))
+            .reverse()
+            .map(({ entry, number }) => {
+                const detail =
+                    entry.detail ??
+                    (entry.applied
+                        ? `+${entry.added} / -${entry.removed}`
+                        : "no-op");
+                return `<li class="${entry.applied ? "" : "pc-history-noop"}">
+                    <span class="pc-history-n">${number}</span>
+                    <span class="pc-history-action">${escapeHtml(entry.action)}</span>
+                    <span class="pc-history-detail">${escapeHtml(detail)}</span>
+                </li>`;
+            })
+            .join("");
+    }
+
+    private renderMechanicControls(capture = true): void {
+        const host = this.querySelector<PcCraftControls>(".pc-advanced-crafts");
+        if (!host || !this.catalog) return;
+        if (capture) host.querySelectorAll<HTMLSelectElement>("select[data-mechanic]").forEach(select => {
+            if (select.dataset.mechanic) this.mechanicValues.set(select.dataset.mechanic, select.value);
+        });
+        host.setModel({
+            mode: "emulator", catalog: this.catalog, panel: this.activeCraftPanel,
+            values: this.mechanicValues, fossils: this.selectedFossils, bestiary: this.bestiaryActions,
+            checkpoint: this.checkpointPresent,
+            unveils: this.veiledOptions.map(id => this.modCache[id]).filter((mod): mod is ModInfo => Boolean(mod))
+                .map(mod => ({key: mod.key, name: modTextLabel(mod.text_lines) || mod.key})),
+            onPanel: panel => { this.activeCraftPanel = panel; this.renderMechanicControls(); },
+            onValue: (name, value) => {
+                this.mechanicValues.set(name, value);
+                if (name === "essence-type") this.mechanicValues.delete("essence-key");
+                // The model holds current selections; do not reread stale tier DOM after a type change.
+                this.renderMechanicControls(false);
+            },
+            onSimple: id => { void this.guard(() => this.applyAction(id as CraftAction["type"])); },
+            onBestiary: id => {
+                const action = this.bestiaryActions.find(entry => entry.id === id);
+                if (action) void this.guard(() => this.applyBestiaryAction(action));
+            },
+            onConfigured: id => {
+                const type = id as CraftAction["type"];
+                const value = (name: string) => host.querySelector<HTMLSelectElement>(`[data-mechanic="${name}"]`)?.value ?? "";
+                let action: CraftAction = {type};
+                if (type === "essence") action = {type, essence: value("essence-key")};
+                else if (type === "fossil") action = {type, fossils: [...this.selectedFossils]};
+                else if (type === "harvest_reforge" || type === "harvest_augment") action = {type, target_tag: value(type === "harvest_reforge" ? "harvest-reforge-tag" : "harvest-augment-tag")};
+                else if (type === "harvest_resist") action = {type, source_tag: value("resist-from"), target_tag: value("resist-to")};
+                else if (type === "eldritch_ember" || type === "eldritch_ichor") action = {type, tier: Number(value("eldritch-tier"))};
+                else if (type === "influence_exalt") action = {type, influence: value("influence")};
+                else if (type === "unveil") action = {type, mod_key: value("unveil")};
+                void this.guard(() => this.applyConfiguredAction(action));
+            },
+            onAddFossil: () => {
+                const key = host.querySelector<HTMLSelectElement>('[data-mechanic="fossil"]')?.value ?? "";
+                if (key && this.selectedFossils.length < 4 && !this.selectedFossils.includes(key)) {
+                    this.selectedFossils = [...this.selectedFossils, key]; this.renderMechanicControls();
+                }
+            },
+            onRemoveFossil: index => {
+                this.selectedFossils = this.selectedFossils.filter((_, entryIndex) => entryIndex !== index);
+                this.renderMechanicControls();
+            },
+        });
+        this.setBusy(this.busy);
+    }
+
+
+    private renderShell(): void {
+        if (this.pickerOpen) {
+            renderReact(this, <BaseSelectionShell key={++this.shellVersion} kind="emulator" />);
+            const picker = this.querySelector<PcBasePicker>("pc-base-picker")!;
+            picker.setBases(this.bases);
+            picker.setSelection(this.base, this.itemLevel);
+            picker.addEventListener("confirm", (event) => {
+                const detail = (event as CustomEvent<BasePickerSelection>).detail;
+                void this.guard(() => this.applyPickerSelection(detail));
+            });
+            picker.addEventListener("cancel", () => {
+                if (this.hasBase) {
+                    this.pickerOpen = false;
+                    this.renderShell();
+                    this.afterPickerClose();
+                }
+            });
+            return;
+        }
+        renderReact(this, <EmulatorShell key={++this.shellVersion} baseName={this.baseDisplayName()} itemLevel={this.itemLevel} />);
+        this.syncControls();
+        this.renderMechanicControls();
+        this.setBusy(this.busy);
+
+        this.querySelectorAll<HTMLButtonElement>("button[data-cmd]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const cmd = button.dataset.cmd;
+                if (cmd === "change-base") {
+                    this.pickerOpen = true;
+                    this.renderShell();
+                    return;
+                }
+                void this.guard(async () => {
+                    if (cmd === "create") await this.createItem();
+                    else if (cmd === "save") await this.save();
+                    else if (cmd === "save-as") await this.saveAs();
+                    else if (cmd === "duplicate") await this.duplicate();
+                    else if (cmd === "strategy") await this.useInStrategy();
+                    else if (cmd === "calculator") await this.openInCalculator();
+                });
+            });
+        });
+        this.modPool.addEventListener("craft-mod", (event) => {
+            const detail = (
+                event as CustomEvent<{
+                    key: string;
+                    side: "prefix" | "suffix";
+                    fractured?: boolean;
+                }>
+            ).detail;
+            void this.guard(() =>
+                this.craftMod(
+                    detail.key,
+                    detail.side,
+                    Boolean(detail.fractured),
+                ),
+            );
+        });
+        this.modPool.addEventListener("fracture-mod", (event) => {
+            const detail = (
+                event as CustomEvent<{
+                    key: string;
+                    modId: number;
+                    side: "prefix" | "suffix";
+                    onItem: boolean;
+                }>
+            ).detail;
+            void this.guard(() =>
+                this.fractureMod(
+                    detail.key,
+                    detail.modId,
+                    detail.side,
+                    detail.onItem,
+                ),
+            );
+        });
+        this.modList.addEventListener("fracture-mod", (event) => {
+            const detail = (
+                event as CustomEvent<{
+                    key: string;
+                    modId: number;
+                    side: "prefix" | "suffix";
+                }>
+            ).detail;
+            void this.guard(() =>
+                this.fractureMod(
+                    detail.key,
+                    detail.modId,
+                    detail.side,
+                    true,
+                ),
+            );
+        });
+        this.modPool.addEventListener("remove-mod", (event) => {
+            const detail = (
+                event as CustomEvent<{
+                    modId: number;
+                    side: "prefix" | "suffix";
+                }>
+            ).detail;
+            void this.guard(() => this.removeMod(detail.modId, detail.side));
+        });
+        this.modPool.addEventListener("tab-change", () => {
+            void this.guard(() => this.refresh());
+        });
+    }
+
+    private async applyPickerSelection(sel: BasePickerSelection): Promise<void> {
+        this.base = sel.base;
+        this.itemLevel = sel.itemLevel;
+        const firstTime = !this.hasBase;
+        this.hasBase = true;
+        this.pickerOpen = false;
+        this.renderShell();
+        await this.rebuildSession();
+        if (firstTime) {
+            this.initializing = false;
+        }
+        this.afterPickerClose();
+    }
+
+    private afterPickerClose(): void {
+        // Re-attach mod-pool listeners are already set up in renderShell().
+    }
+}
+
+function baseLabel(path: string): string {
+    return path.split("/").pop() ?? path;
+}
+
+function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+customElements.define("pc-emulator", PcEmulator);

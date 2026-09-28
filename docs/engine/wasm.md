@@ -9,10 +9,18 @@ Parent: [Engine](README.md)
 Verified against code, rebuilt release module, and complete non-visual web
 acceptance: 2026-08-22 on `main`.
 
-Release-wrapper export map verified in the tracked
-`bindings/wasm/dist/poecraft_engine.mjs` generated at this boundary. The
-tracked `.wasm` SHA-256 is
+Release-wrapper export map verified in
+`bindings/wasm/dist/poecraft_engine.mjs` generated at that boundary. Its
+`.wasm` SHA-256 was
 `a20c607884642fe8871dbbb07999dce76ed49aead304fc95d8fafd1fa5b4406b`.
+
+The later [UI continuity rebuild](../active/2026-09-27-ui-continuity/README.md)
+adds native `allow_extra_modifiers` goal transport and `is_goal` on each
+Calculator outcome, and serializes those probabilities with full double
+precision. The additive C function `pc_solver_state_is_goal` keeps terminal
+evaluation native; the existing `pcw_solver_calc` JSON facade consumes it.
+No existing ABI structure changes; ABI version remains 2. The continuity
+record owns the new artifact identity and scoped checks.
 
 ## Architecture
 

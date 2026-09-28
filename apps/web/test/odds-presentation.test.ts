@@ -26,6 +26,9 @@ assert.equal(formatProbabilityExact(0.000018), "0.0018%");
 assert.equal(formatProbabilityExact(1e-12), "1e-10%");
 assert.equal(formatRawProbability(1e-12), "1e-12");
 assert.equal(formatProbabilityExact(1), "100%");
+assert.equal(formatProbabilityExact(1 + Number.EPSILON), "100%");
+assert.equal(formatProbabilityExact(-Number.EPSILON), "0%");
+assert.equal(formatProbabilityExact(1.01), "101%", "materially invalid native output stays visible");
 assert.equal(formatExpectedAttempts(0), "∞");
 assert.equal(formatChaosValue(Number.POSITIVE_INFINITY), "∞");
 

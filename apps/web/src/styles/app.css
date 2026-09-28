@@ -4393,3 +4393,6 @@ pc-run-trace {
         overflow-x: auto;
     }
 }
+/* The testing toolbar remains usable at narrower desktop widths. */
+.pc-titlebar { flex-wrap: wrap; }
+.pc-titlebar a { color: inherit; }

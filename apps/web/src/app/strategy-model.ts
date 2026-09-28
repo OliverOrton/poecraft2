@@ -545,6 +545,8 @@ export function operationLabel(
     const params = operation.params ?? {};
     const catalog = context.catalog;
     switch (operation.type) {
+        case "restart":
+            return "Restart · fresh base";
         case "bestiary:imprint":
             return "Create Imprint";
         case "bestiary:restore_imprint":

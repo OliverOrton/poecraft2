@@ -2204,6 +2204,52 @@ void run_public_solver_gate(const char* artifact_dir) {
     }
     pc_solver_destroy(coverage_solver);
     pc_solver_destroy(explicit_clean_solver);
+    // Product coverage keeps native terminal truth and the neutral proof
+    // capability together, without changing the default clean handle.
+    {
+        const std::string public_goal = goal_json.substr(0, goal_json.size() - 1) +
+            ",\"allow_extra_modifiers\":true}";
+        pc_solver_handle public_coverage = nullptr;
+        PC_CHECK(pc_solver_create(session, public_goal.c_str(), public_goal.size(),
+            &public_coverage, &error) == PC_RESULT_OK);
+        if (public_coverage) {
+            auto& calc = poecraft::solver::solver_lower_diagnostic_calculator(public_coverage);
+            poecraft::solver::AbstractState dirty{};
+            dirty.rarity = PC_RARITY_RARE;
+            dirty.prefix_count = 2;
+            dirty.slot_status[0] = static_cast<std::uint8_t>(poecraft::solver::GoalSlotStatus::Satisfied);
+            int32_t terminal = 0;
+            const auto state_id = calc.intern_state(dirty);
+            PC_CHECK(pc_solver_state_is_goal(public_coverage, state_id, &terminal, &error) == PC_RESULT_OK);
+            PC_CHECK(terminal == 1);
+            PC_CHECK(pc_solver_state_is_goal(public_coverage, UINT32_MAX, &terminal, &error) == PC_RESULT_NOT_FOUND);
+            dirty.rarity = PC_RARITY_MAGIC;
+            PC_CHECK(!calc.is_goal_state(dirty));
+            dirty.rarity = PC_RARITY_RARE;
+            dirty.slot_status[0] = 0;
+            PC_CHECK(!calc.is_goal_state(dirty));
+            uint32_t action = 0, count = 0;
+            PC_CHECK(pc_solver_find_action(public_coverage, "chaos", &action, &error) == PC_RESULT_OK);
+            pc_calc_summary summary{};
+            PC_CHECK(pc_calc_action_outcomes(public_coverage, &item, action, nullptr, 0, &count, &summary, &error) == PC_RESULT_OK);
+            PC_CHECK(summary.success_probability > 0.0);
+            pc_solve_options options{};
+            options.struct_size = sizeof(options);
+            options.abi_version = PC_ABI_VERSION;
+            options.max_states = options.max_discovered_states = 50;
+            options.max_expanded_states = 50;
+            options.max_sweeps = 1;
+            PC_CHECK(pc_solver_solve_begin(public_coverage, &item, economy, &options, &error) == PC_RESULT_OK);
+            PC_CHECK(solver_telemetry_json(public_coverage, &error).find("target_neutral_zero") != std::string::npos);
+            pc_solver_solve_abandon(public_coverage);
+        }
+        pc_solver_destroy(public_coverage);
+        const std::string malformed = goal_json.substr(0, goal_json.size() - 1) +
+            ",\"allow_extra_modifiers\":1}";
+        public_coverage = nullptr;
+        PC_CHECK(pc_solver_create(session, malformed.c_str(), malformed.size(), &public_coverage, &error) == PC_RESULT_INVALID_ARGUMENT);
+        PC_CHECK(public_coverage == nullptr);
+    }
     pc_solver_handle impossible_explicit = nullptr;
     PC_CHECK(poecraft::solver::create_solver_with_goal_terminal_diagnostic(
                  session, invalid_goal_json.c_str(), invalid_goal_json.size(),

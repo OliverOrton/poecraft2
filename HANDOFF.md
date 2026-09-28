@@ -1,5 +1,37 @@
 # Handoff
 
+Oliver accepted the UI pass for first hosting on 2026-09-28 and requested
+continued work directly on `main`. First GitHub Pages activation is in progress;
+commit/push and the existing manual deployment are authorized by that request.
+The [UI continuity record](docs/active/2026-09-27-ui-continuity/README.md#first-hosted-release)
+owns the release result. Use bundled prices; live R2 remains a separate task.
+
+Oliver selected the [UI continuity migration](docs/active/2026-09-27-ui-continuity/README.md)
+for autonomous overnight work. Preserve existing workflows while porting views
+to React, integrating data-driven assets and addressing his named UI issues.
+The first implementation pass is complete; Oliver accepted it for hosting.
+Shared views and document layouts use React/Vite, with the detailed report and
+graph controllers retained. Native coverage goals support the Calculator's
+Allow extra modifiers toggle without claiming clean-goal lower-bound authority.
+The living record owns the migration boundary, validation limits and artifact
+receipt. Chromium workflows pass at root and subpath; Firefox remains unverified.
+The local preview server remains at http://127.0.0.1:5187/; no test process is
+running. Its original local artifact receipt predates the first hosting request. The existing
+hosted-tester work below is retained; Oliver's explicit UI request superseded
+its former "next programme" gate.
+
+Oliver selected [Hosted Tester Baseline Isolation](docs/active/2026-09-27-hosted-tester/README.md).
+The repository implementation is complete; its original record predates activation.
+The record owns frozen hashes, clean-input build/static Chromium checks, exact
+local archives, rollback rehearsal and the local Firefox launch limitation.
+No push, account change, live R2 activation or timed solver research occurred.
+Follow [the hosting runbook](docs/product/hosting.md) for the owner's selected
+commit deployment. Its original artifacts remain a separate historical baseline
+from the completed UI pass and newly identified WASM above.
+
+The independent IC continuation handoff is preserved below; its approval gate
+and spent budgets are unchanged.
+
 Oliver selected continued [IC native work](docs/active/2026-09-27-current-incumbent-continuity/README.md#continued-native-repair).
 The native repair is complete: early renewal checking resumes ordinary discovery,
 the one-affix selective controller can escape its closed retry class, and service
@@ -12,11 +44,12 @@ full acceptance is not claimed. No solver/test process remains active.
 
 Real A4/A5 preflight and timed qualification remain unrun. Zero new timed cases
 were launched; the IC plan requires Oliver's separate approval for its proposed
-maximum four invocations. P stays 24/24 spent. No new public/WASM acceptance is
-claimed. Existing U/P identity limitations remain in the
+maximum four invocations. P stays 24/24 spent. That IC continuation claimed no
+new public/WASM acceptance; the UI pass's focused coverage-goal checks are
+recorded separately above. Existing U/P identity limitations remain in the
 [W record](docs/active/2026-09-27-fresh-session-reconciliation/README.md).
 
-The next decision is whether to authorize that bounded timed comparison after
+The next IC decision is whether to authorize that bounded timed comparison after
 freezing its real request and verifying the relevant native boundary is plausible.
 Do not repeat W, widen limits or assume the synthetic improvement transfers to A4/A5.
 Preserve root `0`; commits remain local unless Oliver requests a push.

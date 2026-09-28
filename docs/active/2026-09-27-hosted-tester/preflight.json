@@ -1,0 +1,34 @@
+{
+  "selected_cb06": {
+    "exit_code": 0,
+    "output": "Validated 1 solver benchmark specifications.\n"
+  },
+  "wrong_valid_artifact": {
+    "exit_code": 1,
+    "output": "solver benchmark: corpus source version/hash pin does not match the artifact\n"
+  },
+  "wrong_snapshot": {
+    "exit_code": 1,
+    "output": "solver benchmark: pinned economy snapshot id mismatch\n"
+  },
+  "out/dual-lane-target-support/U4/current-ordinary-L/ledger.json": {
+    "exists": true,
+    "sha256": "5d32de27479d5843cbdfb06b694d0f5b728293b0d991711c4a25bf6c359846a4"
+  },
+  "out/sustained-dual-solver/P0/finder-L-expectation/ledger.json": {
+    "exists": true,
+    "sha256": "87fa5186a7394693c2d3c02779abf98f8ba318a6355ecae59c9db914448ea24b"
+  },
+  "out/sustained-dual-solver/P3/a4-ordinary-L.json": {
+    "exists": true,
+    "sha256": "926607f5d00fb53236f225d495ca75f514689a0cfab421c832faccc7c0fc86d3"
+  },
+  "out/sustained-dual-solver/P3/a5-ordinary-L.json": {
+    "exists": true,
+    "sha256": "faa1fd9b0ff469ec32fe73857eda99695db3a881b01a9b5b7042f05b57d00555"
+  },
+  "validation_executable": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+    "sha256": "c38ea7d3030bb5ca2340f1d6d0361b653b02d073d16fedcd4904d33e79186679"
+  }
+}

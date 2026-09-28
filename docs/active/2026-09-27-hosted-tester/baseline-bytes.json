@@ -1,0 +1,222 @@
+{
+  "fixtures/repoe/production-source-manifest.json": {
+    "sha256": "a6beae2e35b988d93db44739f331bc1b2c41fc86019e8d4588ebd28f813d9bfc",
+    "bytes": 9336
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb01-cross-base-product8-long240.json": {
+    "sha256": "4f6a901ff7a56f7319c5e19663d778106c0436af16573ff2786b30df5b4fd90b",
+    "bytes": 4868
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb02-cross-base-product8-long240.json": {
+    "sha256": "a3b2a59eb945fe458cb40dfc10b102b0c94d35fe116a748b494da1c918dd004b",
+    "bytes": 4652
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb03-cross-base-product8-long240.json": {
+    "sha256": "66f9d8a75b1fedddec177c9a89792f9aa09dd1aaab927626957ccf6d09737c58",
+    "bytes": 5154
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb04-cross-base-product8-long240.json": {
+    "sha256": "f2f1e117093eb8bfc398aecfffd2c4a50b609183f0c5ccb3838d05b708467599",
+    "bytes": 4575
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb05-cross-base-product8-long240.json": {
+    "sha256": "21518c1634aa95d81baffbb5215866918a4a9f5ad443b174e38e18bc706d0e8d",
+    "bytes": 4753
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb06-cross-base-product8-long240.json": {
+    "sha256": "4ba88321b592d0dfb778a50ef54397122b0b8fb642b4a60621e145811f47b686",
+    "bytes": 4122
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb07-cross-base-product8-long240.json": {
+    "sha256": "b10d5f5a06aa9a47be782dc0ba671b2ead679e60e45689efab478513eaa1ab1b",
+    "bytes": 4473
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb08-cross-base-product8-long240.json": {
+    "sha256": "d7364d8077aa512fae195948af030161f474b11e6552474b8fc94e5f19f920cc",
+    "bytes": 7146
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb09-cross-base-product8-long240.json": {
+    "sha256": "b82d0d0a125687c376479c7e6e95574fd5a44d545ff24e9c8bd2d4bc6967e22e",
+    "bytes": 7222
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb10-cross-base-product8-long240.json": {
+    "sha256": "acca09eb75d4fb6c24b0b50950d6279093e41c4fee09d4a1f4ce3cc4c21de14e",
+    "bytes": 8162
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb11-cross-base-product8-long240.json": {
+    "sha256": "bae0a43a69dc5350a77b18ae91859c1dda8434d7cb71d738f4ad0caa48ab2277",
+    "bytes": 7094
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/cases/cb12-cross-base-product8-long240.json": {
+    "sha256": "1f7a1a56a78c7ba9280c3b883095b0559b3b596e18a8549eee109271be0a6306",
+    "bytes": 5681
+  },
+  "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json": {
+    "sha256": "4f8d6ec386e7b65a8a1975bf762e9da020a3a3593c0dbc6d861de7372264c9fe",
+    "bytes": 4241
+  },
+  "docs/active/2026-09-26-sustained-dual-solver/corpus/cases/cb01-cross-base-product8-long240-finder-L.json": {
+    "sha256": "e27997de1560b5e4ced9acac9d660b42d536b9ffd6c65a89ed6594ec24792dd4",
+    "bytes": 5107
+  },
+  "docs/active/2026-09-26-sustained-dual-solver/corpus/cases/cb01-cross-base-product8-long240-finder-R.json": {
+    "sha256": "4b7b19e4e772d2c650803618d5ea5629c4a113c48be0ab34a38e8209fc000bea",
+    "bytes": 5108
+  },
+  "docs/active/2026-09-26-sustained-dual-solver/corpus/cases/cb01-cross-base-product8-long240.json": {
+    "sha256": "4f6a901ff7a56f7319c5e19663d778106c0436af16573ff2786b30df5b4fd90b",
+    "bytes": 4868
+  },
+  "docs/active/2026-09-26-sustained-dual-solver/corpus/cases/cb02-cross-base-product8-long240.json": {
+    "sha256": "a3b2a59eb945fe458cb40dfc10b102b0c94d35fe116a748b494da1c918dd004b",
+    "bytes": 4652
+  },
+  "docs/active/2026-09-26-sustained-dual-solver/corpus/cases/rp-a3-product8-long240.json": {
+    "sha256": "f2db37860033eaa3f38247ca4f88827d39aa9bee55f3314bccf71e1cddf479bd",
+    "bytes": 4540
+  },
+  "docs/active/2026-09-26-sustained-dual-solver/corpus/cases/rp-b3-product8-long240.json": {
+    "sha256": "7e48b39f2053abbdd1dc8d1ffb01680da1def9493a2d1947bf48928e3637dadb",
+    "bytes": 4491
+  },
+  "docs/active/2026-09-26-sustained-dual-solver/corpus/cases/rp-b4-product8-long240.json": {
+    "sha256": "41befe6e2a37d7edfecce0bbad41ea2c3566abc1b83ad9a70507c2cb2d7f4547",
+    "bytes": 4697
+  },
+  "docs/active/2026-09-26-sustained-dual-solver/corpus/cases/rp-b5-product8-long240.json": {
+    "sha256": "0473f53ccd775e2c745015d1f4c18f4b439925cd5923fb00f98467bbaf33bbc4",
+    "bytes": 4903
+  },
+  "docs/active/2026-09-26-sustained-dual-solver/corpus/derivations.json": {
+    "sha256": "55ac851d5952f7167fda735f99befac9b6d16652f04edb3def18e701393c0fcb",
+    "bytes": 1732
+  },
+  "docs/active/2026-09-26-sustained-dual-solver/corpus/manifest.json": {
+    "sha256": "eb450af001c2cd732293eafa5aa68e2ff92056a21fcd8dcb500647fd81fa0674",
+    "bytes": 3612
+  },
+  "docs/active/2026-09-23-role-parametric/corpus/cases/cb01-cross-base-product8-long240.json": {
+    "sha256": "4f6a901ff7a56f7319c5e19663d778106c0436af16573ff2786b30df5b4fd90b",
+    "bytes": 4868
+  },
+  "docs/active/2026-09-23-role-parametric/corpus/cases/cb02-cross-base-product8-long240.json": {
+    "sha256": "a3b2a59eb945fe458cb40dfc10b102b0c94d35fe116a748b494da1c918dd004b",
+    "bytes": 4652
+  },
+  "docs/active/2026-09-23-role-parametric/corpus/cases/rp-a3-product8-long240.json": {
+    "sha256": "f2db37860033eaa3f38247ca4f88827d39aa9bee55f3314bccf71e1cddf479bd",
+    "bytes": 4540
+  },
+  "docs/active/2026-09-23-role-parametric/corpus/cases/rp-b3-product8-long240.json": {
+    "sha256": "7e48b39f2053abbdd1dc8d1ffb01680da1def9493a2d1947bf48928e3637dadb",
+    "bytes": 4491
+  },
+  "docs/active/2026-09-23-role-parametric/corpus/cases/rp-b4-product8-long240.json": {
+    "sha256": "41befe6e2a37d7edfecce0bbad41ea2c3566abc1b83ad9a70507c2cb2d7f4547",
+    "bytes": 4697
+  },
+  "docs/active/2026-09-23-role-parametric/corpus/cases/rp-b5-product8-long240.json": {
+    "sha256": "0473f53ccd775e2c745015d1f4c18f4b439925cd5923fb00f98467bbaf33bbc4",
+    "bytes": 4903
+  },
+  "docs/active/2026-09-23-role-parametric/corpus/derivations.json": {
+    "sha256": "55ac851d5952f7167fda735f99befac9b6d16652f04edb3def18e701393c0fcb",
+    "bytes": 1732
+  },
+  "docs/active/2026-09-23-role-parametric/corpus/manifest.json": {
+    "sha256": "404c0ee632b199b85a5fce76a62f9d75ca59839849b2b9efd1bcf4c174125b20",
+    "bytes": 3251
+  },
+  "data/compiled/current/game-data.json": {
+    "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "bytes": 16439442
+  },
+  "data/compiled/current/manifest.json": {
+    "sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+    "bytes": 5810
+  },
+  "data/compiled/current/strings.json": {
+    "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f",
+    "bytes": 6534428
+  },
+  "apps/web/public/economy/league-index.json": {
+    "sha256": "2d71a5a96a669ac835b6e5bc06750c12ef8e5af3d7d9966c43fec0c62e86a2cd",
+    "bytes": 6144
+  },
+  "apps/web/public/economy/snapshots/494a62ac05535e4a2671acdb190c74327e4e50b2f403a3aed1d18edad73e29c9.json": {
+    "sha256": "992b82f831976ffa6098a68f95e1c3a17ad1ab4f04dc7404f1a302c3599bd696",
+    "bytes": 99568
+  },
+  "apps/web/public/economy/snapshots/49d5d98e06d6271a6d799a7cee2b8c79f3b7d0319321ed9df90289033a6db615.json": {
+    "sha256": "3a6c5f53c7e7e2b05c70fa75471a9f11f63a2ec2981b8e483a9bcbd618ea3ba2",
+    "bytes": 99258
+  },
+  "apps/web/public/economy/snapshots/4c117949e086de69a41c76fe632d8c9ae95d0f8a62d80f6149ae518dd8bcc00d.json": {
+    "sha256": "10bc79bedaa12563f3a4893651ee9dbce747dd60a24f8407d47d68f7d6ffb0af",
+    "bytes": 84915
+  },
+  "apps/web/public/economy/snapshots/6b0ef5a757e4adc23bd753f9d9f69a2f96ace9c9f4eddf5fddac1424b0973e5f.json": {
+    "sha256": "51a7a77833a1d6ab629fe7b07bf8afd3f8952e8b2e931a1ea1f4be0ebcad2d2b",
+    "bytes": 104679
+  },
+  "apps/web/public/economy/snapshots/7da0b6fe6884582874c8e75bbcc19e2c9cf76388992a68d546f14c967a469702.json": {
+    "sha256": "ec93341dff8f7b1b69209ae6fb5589f09d39c686ab824aca46c1ce3176fd4a31",
+    "bytes": 146419
+  },
+  "apps/web/public/economy/snapshots/8feaa2c8e0ae609baace236430f00d9baef171e56ade19cfadaec83c5ad2527e.json": {
+    "sha256": "95774f68dcb610e5669cf866d2d128bce62a1d204b75bfbb39278e29c22891ff",
+    "bytes": 93673
+  },
+  "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json": {
+    "sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+    "bytes": 94189
+  },
+  "apps/web/public/economy/snapshots/94964eb5b0bcd8f3d7152dbd12d213dd3b83bc2579b27e1a05c5b73b7cd40f6a.json": {
+    "sha256": "f60df63f33655e7ad243a3ac87e60734de8b88a0ee357acc37e1729eba24e7de",
+    "bytes": 87190
+  },
+  "apps/web/public/economy/snapshots/9dece258da8894eb75cbb28115c89cca3149a03b885510e10ab6c22836dbc2fc.json": {
+    "sha256": "f6f5d0ade010423d20303af6714cbf6ff5bd0f8af1f7f03dba6f603ff31442b6",
+    "bytes": 141469
+  },
+  "apps/web/public/economy/snapshots/a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485.json": {
+    "sha256": "05cddc3b8440bed43049ae0e36bb5feba9d9ca28eb4277c101aa9764ed55c88d",
+    "bytes": 143727
+  },
+  "apps/web/public/economy/snapshots/b199684d293012331b8d4a57dea44a1f7241d5d4664ba6579de94848d82f0cff.json": {
+    "sha256": "70ccf9da8b3711853081713087fb9be010d2e2741449e0defdce7e14203e22cb",
+    "bytes": 142844
+  },
+  "apps/web/public/economy/snapshots/b9dffc0f61e35d25fc2174f9b6922587edd4981f5ebcc49c345e1ea1a1ed8556.json": {
+    "sha256": "aed49c066f9acbf723bca828388aa299802315d5252104e57ad1025e86e45621",
+    "bytes": 100525
+  },
+  "apps/web/public/economy/snapshots/c09d72d5fa7f330924f0e218a33f2954805c22b06331fcb07c5d14b0cece397e.json": {
+    "sha256": "9d145f4c39300638154c4c4971d3aa81378a1f309aa17d89cc28db0b1aed1aa9",
+    "bytes": 84135
+  },
+  "apps/web/public/economy/snapshots/d1e6d94836059ea643b91376890bdc2e9ffa52298d568f726aae4158746f1eb8.json": {
+    "sha256": "eefa7576625aac55ccfa26a49fa1031646dd317cd1d860fc45698c435058ea5c",
+    "bytes": 86915
+  },
+  "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json": {
+    "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+    "bytes": 141941
+  },
+  "apps/web/public/economy/snapshots/fea4d53e86df578a17c8b549ced2d7a7f85a53fb41b852667483364427d58bad.json": {
+    "sha256": "ee0efb7d27519909f4188fcbd09171506b6a1d7070f9ae3dc1b1d2284cdb0e00",
+    "bytes": 99312
+  },
+  "apps/web/public/economy/snapshots/ff59e7f60886430318976be46a4ea971fc20c8381274be2ef18c8a92193feb82.json": {
+    "sha256": "c4d2d610c7ca8f67185edd655b45a6235893e1ac31b70e051bf52e6025df779d",
+    "bytes": 151536
+  },
+  "bindings/wasm/dist/poecraft_engine.mjs": {
+    "sha256": "31ca2481cb822e1840498e9a7668006ba278a1d25c806cca66e58b6369ceb854",
+    "bytes": 20579
+  },
+  "bindings/wasm/dist/poecraft_engine.wasm": {
+    "sha256": "2064beb626322350e07fcca72ad5bca2b231463c5edab530a107144c2e255319",
+    "bytes": 7992592
+  }
+}

@@ -8,6 +8,13 @@ unimplemented analysis and from runtime proof authority.
 
 ## Observation contract
 
+Corpus-runner resume provenance binds the raw bytes of referenced case files
+and pinned economy snapshots as well as the corpus manifest. A changed manual
+override or snapshot serialization refuses resume before the ledger is written
+or work is launched. Legacy nonempty-corpus ledgers lacking those input hashes
+require a new output directory; preserve the original receipts rather than
+backfilling or weakening comparison identity.
+
 A run is an anytime trajectory, not only a final status. Observable samples after
 complete `pc_solver_solve_step` calls include time/phase, bounds and incumbent kind,
 states/frontier, rows/transitions/logical reforge work and owned memory. Round,

@@ -687,6 +687,43 @@ def test_watchdog_identity_is_canonical_before_work_and_typed_on_resume(tmp_path
     assert ledger_path.read_bytes() == before
 
 
+@pytest.mark.parametrize('mutation', ['override', 'snapshot'])
+def test_resume_refuses_changed_case_price_override_before_writing(tmp_path: Path, mutation: str) -> None:
+    manifest = tmp_path / 'manifest.json'
+    case = tmp_path / 'case.json'
+    _write_json(manifest, {'cases': ['case.json']})
+    snapshot = tmp_path / 'snapshot.json'
+    snapshot.write_bytes(b'{"prices":{"chaos":1}}\r\n')
+    original = {'id': 'frozen', 'economy': {'snapshot_path': str(snapshot), 'manual_overrides': {'base': 1.0}}}
+    _write_json(case, original)
+    arguments = dict(root=Path.cwd(), executable=Path(sys.executable), artifact=tmp_path,
+                     corpus=manifest, output_directory=tmp_path / 'run', tasks=[])
+    run_corpus(**arguments)
+    ledger = tmp_path / 'run/ledger.json'
+    before = ledger.read_bytes()
+    if mutation == 'override':
+        original['economy']['manual_overrides']['base'] = 2.0
+        _write_json(case, original)
+    else:
+        snapshot.write_bytes(b'{"prices":{"chaos":1}}\n')
+    with pytest.raises(ValueError, match='provenance/configuration differs'):
+        run_corpus(**arguments)
+    assert ledger.read_bytes() == before
+
+
+def test_artifact_provenance_refuses_tampered_payload(tmp_path: Path) -> None:
+    from poecraft_ingest.solver_worker import artifact_provenance
+    import hashlib
+    payload = tmp_path / 'game-data.json'
+    payload.write_bytes(b'{}')
+    _write_json(tmp_path / 'manifest.json', {'files': {'game-data.json': {
+        'sha256': hashlib.sha256(b'{}').hexdigest(), 'byte_size': 2}}})
+    assert artifact_provenance(tmp_path)['declared_files_verified'] is True
+    payload.write_bytes(b'[]')
+    with pytest.raises(ValueError, match='file identity mismatch'):
+        artifact_provenance(tmp_path)
+
+
 def test_guidance_treatment_binds_resume_without_changing_capacity(tmp_path: Path) -> None:
     manifest=tmp_path / "manifest.json"
     _write_json(manifest,{"cases": []})

@@ -26,6 +26,11 @@ function trimExponential(value: number, fractionDigits: number): string {
 /** Percentage with enough precision to preserve the current WASM result. */
 export function formatProbabilityExact(probability: number): string {
     if (!Number.isFinite(probability)) return "—";
+    // Full-precision native sums can stray just outside the interval by a few
+    // floating-point ulps. Suppress that display noise without erasing small
+    // positive probabilities or masking a materially invalid distribution.
+    if (probability < 0 && probability > -1e-12) probability = 0;
+    if (probability > 1 && probability < 1 + 1e-12) probability = 1;
     const percent = probability * 100;
     if (percent !== 0 && Math.abs(percent) < 0.000001) {
         return `${trimExponential(percent, 6)}%`;

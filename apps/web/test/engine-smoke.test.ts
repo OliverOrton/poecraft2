@@ -2371,6 +2371,45 @@ test("experimental finder runs through the WASM worker and exports a checked gra
     }
 });
 
+test("coverage goals use native terminal truth and neutral proof authority", async () => {
+    const item = await client.createItem(sessionId, {rarity: "rare", withImplicits: false});
+    const pool = await client.debugPool(contextId, item, {action: {type: "exalt"}, side: "prefix"});
+    const goalMod = await client.modInfo(sessionId, pool.entries[0].session_mod_id);
+    await client.addMod(item, sessionId, {key: goalMod.key, side: "prefix"});
+    const goal = {version: "v1" as const, rarity: "rare" as const,
+        slots: [{family_mod_key: goalMod.key, min_tier: 0}], actions: ["exalt"]};
+    const clean = await client.openSolver(sessionId, goal);
+    const coverage = await client.openSolver(sessionId, {...goal, allow_extra_modifiers: true});
+    const economy = await client.loadEconomy({version: "v1", id: "coverage-contract", prices: {exalt: 1}});
+    try {
+        const cleanOdds = await client.solverCalc(clean, item, "exalt");
+        const coverageOdds = await client.solverCalc(coverage, item, "exalt");
+        assert.equal(cleanOdds.success_probability, 0);
+        assert.ok(Math.abs(coverageOdds.success_probability - 1) < 1e-12);
+        assert.ok(cleanOdds.outcomes.every(outcome => outcome.is_goal === false));
+        assert.ok(coverageOdds.outcomes.every(outcome => outcome.is_goal === true));
+        assert.ok(Math.abs(coverageOdds.outcomes.reduce((sum, outcome) => sum + outcome.probability, 0) - 1) < 1e-12,
+            "WASM outcome serialization must preserve native probability mass");
+        const result = await client.solverSolve(coverage, item, economy, {max_states: 32, max_sweeps: 1});
+        assert.equal(result.cancelled, false);
+        if (result.cancelled) assert.fail("coverage solve cancelled");
+        assert.equal(result.lower_bound, 0);
+        assert.equal(result.policy_available, true);
+        assert.equal(result.upper_bound, 0);
+        assert.notEqual(result.policy_status, "exact");
+        assert.equal(result.converged, false);
+        const telemetry = JSON.stringify(await client.solverTelemetry(coverage));
+        assert.match(telemetry, /target_neutral_zero/);
+        const strategy = prepareSolverStrategy(await client.solverCompileStrategy(coverage));
+        const checked = await client.strategyEvaluate(sessionId, strategy, undefined, {economy: {version: "v1", id: "coverage-check", prices: {exalt: 1}}});
+        assert.equal(checked.converged, true);
+        assert.equal(checked.terminals.success, 1);
+    } finally {
+        await client.closeEconomy(economy);
+        await client.closeSolver(coverage); await client.closeSolver(clean); await client.closeItem(item);
+    }
+});
+
 // Wire the shared client into the runner before executing.
 {
     const spawned = spawnClient();

@@ -1,0 +1,33 @@
+{
+  "status": "implementation complete; Oliver visual review pending",
+  "packages": {
+    "root": {
+      "build_id": "5f2c34518f5a0ec9969041c69823feb180556a9a52006a1a0b8e6a3b67a56bc3",
+      "bundle_id": "83dd3c3c7573d317c0b7d0b13d8e118798aa1df87f00a237f03885099deb56b7",
+      "directory": "C:\\Users\\Oliver\\Documents\\poecraft2\\dist\\public-artifacts\\web\\83dd3c3c7573d317c0b7d0b13d8e118798aa1df87f00a237f03885099deb56b7",
+      "zip": "C:\\Users\\Oliver\\Documents\\poecraft2-tester-archives\\ui-continuity-root-83dd3c3c7573d317c0b7d0b13d8e118798aa1df87f00a237f03885099deb56b7.zip",
+      "zip_sha256": "fd35fc653f8d7f45e5c219b36303f7df2e9f22e552a914ca335d868dcb7501ca",
+      "component_count": 641
+    },
+    "subpath": {
+      "build_id": "a6f3e06dcd1a13602e032daf71620548804e778169059eff8705370c52e021ab",
+      "bundle_id": "d2c422e877bcac37886ae0bfa2c188d4647daa06d158004fd6c2720abfb6b191",
+      "directory": "C:\\Users\\Oliver\\Documents\\poecraft2\\dist\\public-artifacts\\web\\d2c422e877bcac37886ae0bfa2c188d4647daa06d158004fd6c2720abfb6b191",
+      "zip": "C:\\Users\\Oliver\\Documents\\poecraft2-tester-archives\\ui-continuity-subpath-d2c422e877bcac37886ae0bfa2c188d4647daa06d158004fd6c2720abfb6b191.zip",
+      "zip_sha256": "b731a8d5c3575236bd5a618c1f704b4d8fe293ccf37e362858b49311938f881e",
+      "component_count": 641
+    }
+  },
+  "engine": {
+    "abi_version": 2,
+    "wasm_sha256": "c67d6fb878e5e4aa97e22bbcc1d33a0f341d6698698cc152f4c11d0eae03a972",
+    "loader_sha256": "31ca2481cb822e1840498e9a7668006ba278a1d25c806cca66e58b6369ceb854"
+  },
+  "artwork": {
+    "catalog_sha256": "d2f89844f557f0e24488f3efd5fee469499d34873769fe7374bf6bbfbfa1f783",
+    "items": 1137,
+    "images": 613,
+    "bytes": 12760645,
+    "unavailable": 0
+  }
+}

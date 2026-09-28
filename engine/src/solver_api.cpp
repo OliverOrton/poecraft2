@@ -296,6 +296,15 @@ solver::GoalSpec parse_goal(
     }
 
     solver::GoalSpec goal;
+    const Value* allow_extra_modifiers = root.find("allow_extra_modifiers");
+    if (allow_extra_modifiers != nullptr) {
+        if (allow_extra_modifiers->type != Type::Bool) {
+            throw std::runtime_error("goal: allow_extra_modifiers must be a boolean");
+        }
+        if (allow_extra_modifiers->boolean) {
+            goal.terminal.extras = solver::ExtraExplicitPolicy::Allow;
+        }
+    }
     goal.disabled_action_families = disabled_action_families(root);
     const Value* automatic_candidates = root.find("automatic_candidates");
     if (automatic_candidates != nullptr &&
@@ -669,6 +678,15 @@ pc_result create_solver(
         solver::GoalSpec goal = parse_goal(
             *holder->session, goal_json, goal_json_size, candidates,
             registry);
+        // Public coverage requests use the already-qualified zero-lower
+        // capability. Goal shape never authorizes clean-target lower proofs.
+        // Private diagnostic terminal overrides below retain their own gate.
+        if (goal.terminal.extras == solver::ExtraExplicitPolicy::Allow) {
+            holder->goal_proof_profile = solver::GoalProofProfile::TargetNeutralZero;
+            if (terminal_mode == solver::GoalTerminalDiagnosticMode::ExplicitClean) {
+                throw std::invalid_argument("explicit-clean diagnostic conflicts with allow_extra_modifiers");
+            }
+        }
         if (terminal_mode ==
                 solver::GoalTerminalDiagnosticMode::ExplicitClean) {
             if (goal.required_satisfied_slots() != goal.slots.size())
@@ -2314,6 +2332,24 @@ void pc_solver_solve_abandon(pc_solver_handle solver) {
             solver->abandoned_telemetry_capped = true;
         }
     }
+}
+
+pc_result pc_solver_state_is_goal(
+    pc_solver_handle solver,
+    uint32_t state_id,
+    int32_t* out_is_goal,
+    pc_error_info* out_error) {
+    if (solver == nullptr || out_is_goal == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (state_id >= solver->calc->state_count()) {
+        set_error(out_error, PC_RESULT_NOT_FOUND, "unknown state id");
+        return PC_RESULT_NOT_FOUND;
+    }
+    *out_is_goal = solver->calc->is_goal_state(solver->calc->state(state_id)) ? 1 : 0;
+    clear_error(out_error);
+    return PC_RESULT_OK;
 }
 
 pc_result pc_solver_state_value(

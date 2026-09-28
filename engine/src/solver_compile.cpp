@@ -701,6 +701,28 @@ std::string compile_policy_strategy_json(
             slot_vocabulary(session, layout.slots[i], i));
     }
 
+    // A goal-satisfying input needs no working action state. Materialize the
+    // native goal guard and a fail-closed fallback so the ordinary exact
+    // artifact checker can certify the zero-action policy as usual.
+    if (result.has_exact_start_item &&
+        calc.is_goal_state(calc.state(result.start_state))) {
+        SolveOptions limits = result.options;
+        limits.max_strategy_json_bytes = strategy_json_limit;
+        std::string json = compile_finder_candidate_json(
+            calc, result.exact_start_item, {}, limits, false);
+        observe_compiler_owned(json.capacity() + 1);
+        if (telemetry != nullptr) {
+            telemetry->working_states = 0;
+            telemetry->behavioral_classes = 0;
+            telemetry->infrastructure_nodes = 3;
+            telemetry->policy_route_nodes = 1;
+            telemetry->nodes = 3;
+            telemetry->edges = 2;
+            telemetry->strategy_json_bytes = json.size();
+        }
+        return json;
+    }
+
     /*
      * A uniform fixed destructive-renewal policy has one action-local
      * behavior: apply the selected reforge, succeed on the goal, otherwise

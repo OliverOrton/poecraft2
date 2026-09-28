@@ -16,6 +16,12 @@ import { createDefaultStrategy } from "../src/app/strategy-model";
         minSatisfiedSlots: 1,
         slots: [{ family_mod_key: "goal-life", min_tier: 1 }],
     };
+    for (const purpose of ["odds", "product_envelope", "scoped_solve"] as const) {
+        const clean = buildCalculatorSolverGoal(fields, purpose, "exalt");
+        const coverage = buildCalculatorSolverGoal({...fields, allowExtraModifiers: true}, purpose, "exalt");
+        assert.equal(clean.allow_extra_modifiers, undefined, "old clean request identity remains stable");
+        assert.deepEqual(coverage, {...clean, allow_extra_modifiers: true}, "coverage survives every calculator handle purpose");
+    }
     const selectedFossil = "fossil:lucent";
     const automaticActions = [action("chaos", ["chaos"])];
     const requestedFossil = action(selectedFossil, [

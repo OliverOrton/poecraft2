@@ -32,6 +32,7 @@ const corpus = loadSolverBenchmarkCorpus(resolve(root,
 const spec = corpus.cases.find(c => c.id === caseId)!;
 assert.ok(spec?.session && spec.start && spec.goal && spec.product_action_envelope);
 const dom = parseHTML("<!doctype html><html><body></body></html>");
+Object.defineProperty(globalThis, "navigator", {value: {userAgent: "linkedom"}, configurable: true});
 Object.assign(globalThis, {window: dom.window, document: dom.document,
     HTMLElement: dom.HTMLElement, customElements: dom.customElements});
 const { PcCalculator } = await import("../src/app/components/pc-calculator");

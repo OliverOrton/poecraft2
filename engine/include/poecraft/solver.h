@@ -26,6 +26,7 @@ extern "C" {
  *   {
  *     "version": "v1",              // optional
  *     "rarity": "rare",             // required finished rarity
+ *     "allow_extra_modifiers": true, // optional; default false (clean goal)
  *     "slots": [                    // 1..8 required mods
  *       {"group": "<group key>", "min_tier": 0},
  *       {"family_mod_key": "<mod key>", "min_tier": 1}
@@ -64,6 +65,10 @@ extern "C" {
  * Imprint retry stages are not authored in `options`. Goal-relevant solves
  * discover bounded exact attempt/restore kernels automatically at reachable
  * magic carriers where native checkpoint creation is legal.
+ *
+ * Extra-modifier goals require the selected slots and rarity, while allowing
+ * other explicit modifiers. Current solves use target_neutral_zero: checked
+ * policy uppers are available, but no positive global lower or exact closure.
  *
  * Costs are currency-quantity vectors dotted with a pc_economy price table
  * at solve time (same key vocabulary as strategy operations, plus "base"
@@ -217,6 +222,14 @@ pc_result pc_solver_goal_feasibility(
     pc_error_info* out_error);
 
 /* --- calculation engine (Calculator backend) --------------------------------- */
+
+/* Native terminal assessment for an interned outcome state. Available before
+ * solving; callers must not reconstruct clean/coverage semantics from slots. */
+pc_result pc_solver_state_is_goal(
+    pc_solver_handle solver,
+    uint32_t state_id,
+    int32_t* out_is_goal,
+    pc_error_info* out_error);
 
 /* One abstract successor class. state_id is stable for this solver handle
  * and can be passed to pc_solver_state_value after a solve. */

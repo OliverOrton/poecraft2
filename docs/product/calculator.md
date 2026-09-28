@@ -19,6 +19,19 @@ performed; that review remains Oliver's.
 
 ## Contract
 
+The 2026-09-27 continuity migration adds **Allow extra modifiers** to Goal item.
+It defaults off, including recovered drafts that lack the optional field.
+When enabled, the native goal still requires its requested rarity, modifier
+tiers and satisfaction count, but unrelated final explicit modifiers are
+allowed. The setting persists and travels with odds, Solve and diagnostic
+goal requests as `allow_extra_modifiers: true`.
+
+Coverage goals select the native `target_neutral_zero` proof profile. Exact
+one-action odds and checked executable policies remain available; positive
+clean-target lower bounds, gap stopping and global optimality certification
+are not available. The UI disables gap controls and discloses this scope.
+This does not activate the private selective service or qualify new timings.
+
 For registered one-item actions, Calculator combines:
 
 ```text
@@ -47,9 +60,9 @@ engine-backed modifier and fracture gestures. Goal rows express tier-or-better
 requirements and show native marginal slot probability when available.
 
 Code authority:
-`apps/web/src/app/components/pc-calculator.ts`,
+`apps/web/src/app/components/pc-calculator.tsx`,
 `apps/web/src/app/calculator-goal-model.ts`,
-`apps/web/src/app/components/pc-mod-list.ts`, and
+`apps/web/src/app/components/pc-mod-list.tsx`, and
 `apps/web/src/app/workspace/persistence.ts`.
 
 ## Exact One-Action Result
@@ -65,14 +78,21 @@ The engine result owns:
 - sparse abstract successor probabilities;
 - per-slot satisfied probability; and
 - combined success probability for finished rarity, the requested slot
-  threshold, and no unmatched explicit prefix or suffix affixes. A covered
-  item with an extra explicit affix is not a current clean-goal success.
+  threshold and selected extra-modifier policy. With the default clean setting,
+  a covered item with an unmatched explicit affix is not success.
 
 The Odds inspector presents that result, groups returned classes by goal
 coverage, exposes overlapping miss signals, and retains a capped raw technical
 distribution. TypeScript does not recompute the success predicate. It does
 perform display-only arithmetic for failure probability, independent-repeat
 expected attempts, action cost, and `action cost / success probability`.
+
+Each current WASM outcome includes native `is_goal`; row highlighting uses it
+instead of guessing terminal success from coverage alone. Probabilities use
+full double precision across the WASM JSON facade. The display suppresses only
+tiny floating-point excursions outside [0,1]. Tier labels follow the actual
+selected threshold. An already-satisfied input can compile a zero-action
+goal-guarded strategy and still undergo ordinary native artifact checking.
 Those last two values are explicitly not a full strategy forecast: they omit
 reset, recovery, cleanup, and base spend unless the selected action itself
 contains those inputs.
@@ -85,7 +105,7 @@ the registry actions.
 Code authority:
 `engine/include/poecraft/solver.h`, `engine/src/solver_api.cpp`,
 `apps/web/src/app/odds-presentation.ts`, and
-`apps/web/src/app/components/pc-calculator.ts`.
+`apps/web/src/app/components/pc-calculator.tsx`.
 
 ## Solve To Strategy
 
@@ -259,7 +279,7 @@ deferred in the
 Code authority:
 `apps/web/src/app/solve-workspace.ts`,
 `apps/web/src/app/solver-lab-export.ts`,
-`apps/web/src/app/components/pc-calculator.ts`,
+`apps/web/src/app/components/pc-calculator.tsx`,
 `apps/web/src/app/engine-worker.ts`, and the [Solver](../solver/README.md).
 
 ## Current Verification Button

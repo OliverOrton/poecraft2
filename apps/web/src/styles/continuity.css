@@ -1,0 +1,65 @@
+/* Continuity pass: same palette and workflows, sharper and more compact. */
+button, input, select, textarea, .pc-base-picker, .pc-mod-list,
+.pc-cond-group, .pc-cond-leaf, .pc-cond-selected-modifier, .pc-condition-summary,
+.pc-combobox-list, .pc-modifier-picker-popover, .pc-strategy-node {
+    border-radius: 0;
+}
+button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 1px solid var(--pc-text-strong);
+    outline-offset: 2px;
+}
+.pc-titlebar { gap: 14px; padding: 6px 12px; }
+.pc-document-actions { display: flex; gap: 4px; }
+.pc-build-menu { position: relative; margin-left: auto; font-size: 11px; color: var(--pc-text-dim); }
+.pc-build-menu > summary { cursor: pointer; white-space: nowrap; }
+.pc-build-menu-content { position: absolute; z-index: 100; top: 24px; right: 0; min-width: 160px;
+    display: grid; gap: 5px; padding: 8px; background: var(--pc-bg-raised); border: 1px solid var(--pc-border); }
+.pc-build-menu-content a { padding: 4px 10px; }
+pc-economy-selector { margin-left: 0; }
+.pc-combobox-list li.is-active { background: var(--pc-bg-panel); outline: 1px solid var(--pc-border); }
+.pc-base-picker { padding: 20px; }
+.pc-base-picker-title { margin-bottom: 16px; }
+.pc-mod-slot-line { white-space: pre-line; }
+.pc-cond-group { padding: 0; background: var(--pc-bg); }
+.pc-cond-group-head { border-bottom: 1px solid var(--pc-border); padding: 7px 8px; }
+.pc-cond-group-title { text-transform: none; white-space: nowrap; }
+.pc-cond-children { padding: 8px; gap: 0; }
+.pc-cond-group:not(.is-root) > .pc-cond-children { margin-left: 8px; border-left: 2px solid var(--pc-border); }
+.pc-cond-branch { min-width: 0; }
+.pc-cond-join { display: block; margin: 4px 0 4px 10px; font: 10px var(--pc-mono); color: var(--pc-text-dim); }
+.pc-cond-leaf { border-left: 2px solid var(--pc-border); }
+.pc-cond-leaf-head { padding: 6px 8px; }
+.pc-cond-add { padding: 6px 8px; }
+.pc-cond-group.is-negated, .pc-cond-leaf.is-negated { border-left-color: var(--pc-accent); }
+.pc-cond-selected-modifier { grid-template-columns: 30px minmax(0, 1fr) auto; gap: 6px; padding: 8px; }
+.pc-cond-selected-modifier-copy { grid-column: 2 / -1; }
+.pc-cond-selected-modifier-copy strong { white-space: normal; line-height: 1.4; }
+.pc-cond-tier-badge { grid-column: 1; grid-row: 1; font: 12px var(--pc-mono); color: var(--pc-text-strong); padding-top: 2px; }
+.pc-cond-selected-modifier > label { grid-column: 2; flex-direction: row; align-items: center; }
+.pc-cond-selected-modifier > .pc-cond-fractured-toggle { grid-column: 2; }
+.pc-cond-selected-modifier > button { grid-column: 3; grid-row: 2; }
+.pc-cond-selected-modifier select { max-width: 145px; }
+.pc-cond-selected-modifier-copy span { margin-top: 3px; }
+.pc-condition-summary { padding: 8px; }
+pc-game-icon { display: inline-flex; flex: none; align-items: center; vertical-align: middle; }
+pc-game-icon:empty { display: none; }
+.pc-game-art { object-fit: contain; flex: none; vertical-align: middle; }
+.pc-game-art-control { width: 24px; height: 24px; margin-right: 6px; }
+.pc-game-art-item { width: 58px; height: 82px; }
+.pc-item-card-header > .pc-game-art-item { float: left; margin: 0 14px 0 0; }
+.pc-item-card-header::after { content: ""; display: block; clear: both; }
+.pc-item-card-header { min-height: 100px; }
+.pc-item-influence { display: inline-flex; align-items: center; }
+.pc-item-influence .pc-game-art-control { width: 16px; height: 16px; margin-right: 4px; }
+.pc-base-preview { display: flex; align-items: center; gap: 18px; margin-bottom: 16px; }
+.pc-craft-options button, .pc-palette-list button { display: flex; align-items: center; text-align: left; }
+.pc-craft-choice { display: inline-flex; align-items: center; min-width: 0; }
+.pc-craft-choice select { min-width: 0; }
+.pc-selected-fossils .pc-chip { display: inline-flex; align-items: center; }
+pc-craft-controls { display: block; }
+.pc-palette-list button { min-height: 34px; }
+.pc-emu-body { grid-template-columns: minmax(320px, .9fr) minmax(440px, 1.6fr);
+    grid-template-rows: auto minmax(110px, 1fr); grid-template-areas: "item pool" "history pool"; }
+.pc-emu-item { grid-area: item; padding: 10px 12px; }
+.pc-emu-pool { grid-area: pool; }
+.pc-emu-side { grid-area: history; align-self: stretch; padding: 10px 12px; overflow: auto; }

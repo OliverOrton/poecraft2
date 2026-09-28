@@ -1,0 +1,34 @@
+name: Tester bug
+description: Report a problem in the hosted testing build
+title: "[Tester] "
+body:
+  - type: input
+    id: feature
+    attributes:
+      label: Feature and build ID
+      description: Copy the short build ID from the beta toolbar.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and operating system
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Diagnostics, exports, and screenshots
+      description: Download a report from the toolbar and attach it here with the relevant item or strategy export and screenshot. Review files before sharing; reports include your recorded requests and prices. Nothing is uploaded automatically.

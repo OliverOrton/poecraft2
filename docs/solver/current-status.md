@@ -19,15 +19,19 @@ record for its actual executable, scope and measured revision.
 
 ## Goal, authority and lane map
 
-Public v1 retains a clean final explicit-affix target. Dirty intermediate items
-remain representable. Private coverage R allows extras; explicit-clean E is
+Public v1 defaults to a clean final explicit-affix target. The later
+[UI continuity delta](../active/2026-09-27-ui-continuity/README.md) exposes
+`allow_extra_modifiers: true` with the existing native target-neutral profile:
+coverage odds and selected-policy checking, zero lower only, no exact closure.
+This is transport/product exposure, not new A4/A5 performance qualification.
+Dirty intermediate items remain representable. Coverage R allows extras; explicit-clean E is
 normalized to L only where its equivalence conditions hold. Target shape and
 proof profile are separate. Checked fixed-policy value is not exact closure.
 
 | Lane or capability | Native status | Proof/result scope | Product/WASM status |
 |---|---|---|---|
 | Current ordinary clean L/E | Implemented; strong A4/A5 checked policies | Positive-lower/exact capability; bounded A4/A5 results, retention activation differs by receipt | Existing default clean path exercised |
-| Current target-neutral L/R | Privately implemented in P1/P2 | Zero global lower, selected-policy checking; `closure_unavailable_by_profile` | New private profile not exposed by cited Calculator probes |
+| Current target-neutral L/R | Implemented in P1/P2; public coverage flag added by UI continuity delta | Zero global lower, selected-policy checking; `closure_unavailable_by_profile` | Coverage toggle and focused native/WASM terminal/policy checks; historical Calculator probes did not expose it |
 | Finder existing clean grammar | Implemented and checked | Feasible policies only; no global lower/optimality | Existing experimental product mode exercised |
 | Finder conditional-retention L/R | Private native qualification | Original-request check and native programme-entry validation | Not established as the product grammar by the cited probes |
 | Finder selective-retention | Private A5 L reroll/repair qualification | 691 reached entries checked; no proof authority | Compiled shared sources do not imply transport activation |

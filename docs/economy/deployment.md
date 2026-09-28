@@ -21,17 +21,34 @@ from replacing the same index concurrently.
 
 The job:
 
-1. checks out the repository and builds the current canonical game-data DB;
+1. validates required R2 configuration before upstream work, then uses the
+   product lock's source lock with the existing locked fetch/ingest owner in
+   isolated `work/` paths; the resulting SQLite `data_manifest.data_hash` must
+   match the selected product runtime's `source.data_hash`;
 2. restores the latest private economy checkpoint and verifies byte size,
    SHA-256, and, for newly written manifests, the actual economy DB schema
-   version, or initializes a new DB when no pointer exists;
+   version; only a confirmed `NoSuchKey` plus the explicit manual `bootstrap`
+   input may initialize a new history;
 3. refreshes every provider-discovered league for the categories currently
    marked required;
 4. validates, publishes static output, applies retention, and writes a new
    checkpoint manifest;
 5. uploads raw evidence, reports, and the content-addressed SQLite checkpoint
    to the private bucket; and
-6. uploads immutable public snapshots before replacing `league-index.json`.
+6. creates or byte-verifies immutable public snapshots before replacing
+   `league-index.json`. Conditional object creation prevents overwrite races.
+
+Authentication, timeout, endpoint, bucket, missing referenced database and
+checksum failures never trigger bootstrap. Scheduled runs cannot bootstrap.
+The config check reports missing variable names without values; it does not
+claim credentials were exercised. R2 activation remains optional for the
+[bundled hosted tester](../product/hosting.md).
+
+Research snapshots and frozen runtime/source locks have durable Git/artifact
+owners independent of this database's retention. Product updates append new
+hash-named inputs; they never select or rewrite research requests, overrides,
+manifests, compiled baseline directories or evidence. Browser index caches are
+scoped to their configured URL, and work already started retains its pin.
 
 One required league/category fetch, parse, or mapped-key failure leaves that
 league's previous snapshot pointer in place and marks it stale while other

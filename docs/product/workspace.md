@@ -10,6 +10,25 @@ flow, and economy selector. No rendered or visual review was performed.
 
 ## Workspace Shell
 
+The 2026-09-27 continuity migration retains Vite, Dockview, saved document
+formats and the custom palette. React owns the application/document shells,
+shared item card, modifier pool/picker, searchable combobox, base picker,
+craft controls, condition composer, node cards, Stash, economy selector and
+Simulator controls. Small custom-element adapters retain existing controller
+APIs. The Emulator and Calculator now reuse one `pc-craft-controls` view.
+
+Dockview initialization waits until React's enclosing commit finishes.
+Document disposal waits for native work before unmounting its React shell;
+tab detachment does not close document handles. Leaf views retain controller
+models and stable modifier slots across detach/reconnect. Native work makes
+item/goal/craft editing temporarily inert so edits cannot race a pending action.
+
+The SVG board/edge routing, detailed Calculator/strategy reports, inspector
+controllers, dirty-close modal and persistence remain their existing owners.
+This is an incremental presentation migration, not a second crafting engine.
+Oliver's visual acceptance remains pending; implementation and functional
+checks are recorded in the [continuity record](../active/2026-09-27-ui-continuity/README.md).
+
 `pc-workspace` wraps `dockview-core` and creates four content types:
 
 ```text
@@ -62,7 +81,7 @@ storage are not implemented contracts; they are listed in
 Code authority:
 `apps/web/src/app/workspace/persistence.ts`,
 `apps/web/src/app/workspace/dirty-modal.ts`, and
-`apps/web/src/app/components/pc-stash.ts`.
+`apps/web/src/app/components/pc-stash.tsx`.
 
 ## Implemented Handoffs
 
@@ -82,7 +101,7 @@ influences, Eldritch tiers, and stable modifier keys with crafted/fractured
 flags. No handoff fabricates a goal item from a complex success route.
 
 Code authority:
-`pc-emulator.ts`, `pc-stash.ts`, `pc-calculator.ts`, and
+`pc-emulator.tsx`, `pc-stash.tsx`, `pc-calculator.tsx`, and
 `strategy-model.ts::createStrategyFromItemSnapshot`.
 
 ## Emulator State

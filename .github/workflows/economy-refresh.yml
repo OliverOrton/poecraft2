@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch:
+    inputs:
+      bootstrap:
+        description: Initialize history only after the server confirms NoSuchKey
+        type: boolean
+        default: false
 
 concurrency:
   group: poecraft-economy-refresh
@@ -26,6 +31,7 @@ jobs:
       ECONOMY_PUBLIC_BASE_URL: ${{ secrets.ECONOMY_PUBLIC_BASE_URL }}
       POECRAFT_ECONOMY_USER_AGENT: ${{ secrets.POECRAFT_ECONOMY_USER_AGENT }}
       PYTHONPATH: tools/ingest:tools/economy
+      BOOTSTRAP: ${{ github.event_name == 'workflow_dispatch' && inputs.bootstrap && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -33,16 +39,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install R2 client
-        run: python -m pip install --disable-pip-version-check awscli
+      - name: Validate configuration before any upstream work
+        run: python -m poecraft_economy.checkpoint validate-config
 
-      - name: Build current canonical game-data database
-        run: >-
-          python -m poecraft_ingest.cli refresh
-          --source data/raw/repoe
-          --database data/sqlite/poecraft.db
-          --schema schemas/sqlite/001_initial.sql
-          --report data/sqlite/validation-report.json
+      - name: Install R2 client
+        run: python -m pip install --disable-pip-version-check awscli boto3
+
+      - name: Build selected product game-data database through locked ingest
+        shell: bash
+        run: |
+          set -euo pipefail
+          lock="$(python -c 'import json; print(json.load(open("apps/web/runtime.lock.json"))["source_lock"])')"
+          python -m poecraft_ingest.cli fetch --locked-manifest "$lock" --output work/product-source
+          python -m poecraft_ingest.cli ingest --source work/product-source --database work/product-game.db --report work/product-validation.json
+          python -m poecraft_economy.checkpoint verify-product --database work/product-game.db --product-lock apps/web/runtime.lock.json
 
       - name: Restore last verified economy checkpoint
         shell: bash
@@ -50,14 +60,10 @@ jobs:
           set -euo pipefail
           endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           mkdir -p data/economy/raw work/economy
-          if aws s3 cp "s3://${R2_PRIVATE_BUCKET}/database/latest.json" work/economy/latest.json --endpoint-url "$endpoint" --only-show-errors; then
-            key="$(python -c 'import json; print(json.load(open("work/economy/latest.json"))["database_key"])')"
-            aws s3 cp "s3://${R2_PRIVATE_BUCKET}/${key}" data/economy/poecraft-economy.db --endpoint-url "$endpoint" --only-show-errors
-            python -m poecraft_economy.checkpoint verify --database data/economy/poecraft-economy.db --manifest work/economy/latest.json
-            aws s3 sync "s3://${R2_PRIVATE_BUCKET}/raw" data/economy/raw --endpoint-url "$endpoint" --only-show-errors
-          else
-            python -m poecraft_economy init --database data/economy/poecraft-economy.db --game-database data/sqlite/poecraft.db
-          fi
+          args=(restore --database data/economy/poecraft-economy.db --manifest work/economy/latest.json --game-database work/product-game.db)
+          if [[ "$BOOTSTRAP" == 'true' ]]; then args+=(--bootstrap); fi
+          python -m poecraft_economy.checkpoint "${args[@]}"
+          aws s3 sync "s3://${R2_PRIVATE_BUCKET}/raw" data/economy/raw --endpoint-url "$endpoint" --only-show-errors
 
       - name: Refresh every provider league
         shell: bash
@@ -67,7 +73,7 @@ jobs:
             refresh --all-leagues
             --database data/economy/poecraft-economy.db
             --raw-root data/economy/raw
-            --game-database data/sqlite/poecraft.db
+            --game-database work/product-game.db
             --report work/economy/refresh-report.json
           )
           if [[ -n "${POECRAFT_ECONOMY_USER_AGENT:-}" ]]; then
@@ -100,5 +106,5 @@ jobs:
         run: |
           set -euo pipefail
           endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-          aws s3 sync work/economy/public/snapshots "s3://${R2_PUBLIC_BUCKET}/snapshots" --endpoint-url "$endpoint" --cache-control "public,max-age=31536000,immutable" --only-show-errors
+          python -m poecraft_economy.checkpoint publish-snapshots --directory work/economy/public/snapshots
           aws s3 cp work/economy/public/league-index.json "s3://${R2_PUBLIC_BUCKET}/league-index.json" --endpoint-url "$endpoint" --cache-control "public,max-age=300,must-revalidate" --content-type "application/json" --only-show-errors

@@ -1,0 +1,229 @@
+{
+  "artifact_kind": "runtime_dataset",
+  "artifact_schema_version": 4,
+  "complete_dataset": true,
+  "engine_loadable": true,
+  "enums": {
+    "base_flags": {
+      "cluster": 1,
+      "ordinary_session": 2
+    },
+    "bestiary_checkpoint_effect": {
+      "consume": 1,
+      "create": 0
+    },
+    "bestiary_checkpoint_requirement": {
+      "absent": 0,
+      "present": 1
+    },
+    "bestiary_classification": {
+      "checkpoint/restore": 2,
+      "explicitly unsupported in B1": 4,
+      "multi-output or multi-item": 3,
+      "ordinary one-item deterministic": 0,
+      "ordinary one-item stochastic": 1
+    },
+    "bestiary_identity_requirement": {
+      "current_item": 0,
+      "same_item": 1
+    },
+    "bestiary_operation": {
+      "create": 0,
+      "restore": 1
+    },
+    "bestiary_support": {
+      "selected": 0,
+      "unsupported": 1
+    },
+    "bestiary_transition": {
+      "deterministic": 0
+    },
+    "domain": {
+      "abyss_jewel": 0,
+      "affliction_charm": 1,
+      "affliction_jewel": 2,
+      "area": 3,
+      "atlas": 4,
+      "brequel_graft": 5,
+      "chest": 6,
+      "crafted": 7,
+      "crucible_remnant": 8,
+      "delve": 9,
+      "delve_area": 10,
+      "dummy": 11,
+      "expedition_relic": 12,
+      "flask": 13,
+      "heist_area": 14,
+      "heist_npc": 15,
+      "heist_trinket": 16,
+      "item": 17,
+      "leaguestone": 18,
+      "map_device": 19,
+      "map_relic": 20,
+      "memory_lines": 21,
+      "misc": 22,
+      "monster": 23,
+      "necropolis_monster": 24,
+      "primordial_altar": 25,
+      "sanctum_relic": 26,
+      "sentinel": 27,
+      "synthesis_a": 28,
+      "synthesis_bonus": 29,
+      "synthesis_globals": 30,
+      "templar_relic": 31,
+      "tincture": 32,
+      "undefined": 33,
+      "unveiled": 34,
+      "veiled": 35,
+      "watchstone": 36
+    },
+    "flags": {
+      "corrupted_implicit": 64,
+      "crafted": 2,
+      "delve": 16,
+      "eldritch_implicit": 128,
+      "essence_only": 1,
+      "implicit": 32,
+      "influence": 8,
+      "metamod": 4,
+      "unveiled": 512,
+      "veiled_template": 256
+    },
+    "fossil_mod_kind": {
+      "added": 0,
+      "forced": 1,
+      "sell_price": 2
+    },
+    "fossil_tag_kind": {
+      "allowed": 0,
+      "forbidden": 1
+    },
+    "fossil_weight_kind": {
+      "negative": 0,
+      "positive": 1
+    },
+    "generation_type": {
+      "azmeri_empowered_monster": 0,
+      "bestiary": 1,
+      "blight": 2,
+      "blight_tower": 3,
+      "bloodlines": 4,
+      "corrupted": 5,
+      "crucible_tree": 6,
+      "crucible_unique_tree": 7,
+      "delve_area": 8,
+      "eater_of_worlds_implicit": 9,
+      "enchantment": 10,
+      "essence": 11,
+      "expedition_logbook": 12,
+      "flask_enchantment_enkindling": 13,
+      "flask_enchantment_instilling": 14,
+      "memory_altar": 15,
+      "monster_affliction": 16,
+      "necropolis_devoted_monster": 17,
+      "necropolis_monster": 18,
+      "nemesis": 19,
+      "prefix": 20,
+      "scourge_benefit": 21,
+      "scourge_detriment": 22,
+      "scourge_gimmick": 23,
+      "searing_exarch_implicit": 24,
+      "suffix": 25,
+      "synthesis_a": 26,
+      "synthesis_bonus": 27,
+      "synthesis_globals": 28,
+      "talisman": 29,
+      "tempest": 30,
+      "torment": 31,
+      "unique": 32
+    },
+    "influence": {
+      "adjudicator": 1,
+      "basilisk": 2,
+      "crusader": 3,
+      "elder": 4,
+      "eyrie": 5,
+      "none": 0,
+      "shaper": 6
+    },
+    "metamod_type": {
+      "multimod": 0,
+      "no_attack": 1,
+      "no_caster": 2,
+      "prefixes_locked": 3,
+      "suffixes_locked": 4
+    },
+    "session_support": {
+      "cluster_unsupported": 1,
+      "ordinary": 0,
+      "unsupported_domain": 2
+    },
+    "special_kind": {
+      "base_implicit": 0,
+      "corrupted_implicit": 1,
+      "delve": 2,
+      "eldritch_implicit": 3,
+      "unveiled": 4,
+      "veiled_template": 5
+    }
+  },
+  "files": {
+    "game-data.json": {
+      "byte_size": 16439442,
+      "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+    },
+    "strings.json": {
+      "byte_size": 6534428,
+      "sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+    }
+  },
+  "generated_at_utc": "2026-08-30T02:54:53Z",
+  "row_counts": {
+    "adds_tag_links": 5052,
+    "base_item_implicit_links": 760,
+    "base_item_tag_links": 17150,
+    "base_items": 4974,
+    "bench_cost_rows": 789,
+    "bench_item_class_links": 4975,
+    "bench_options": 774,
+    "bestiary_action_cost_rows": 4,
+    "bestiary_actions": 2,
+    "bestiary_beast_inputs": 2,
+    "bestiary_recipes": 3,
+    "bestiary_selected_recipes": 1,
+    "bestiary_unsupported_recipes": 2,
+    "classification_tag_links": 68322,
+    "cluster_jewels": 3,
+    "cluster_notables": 309,
+    "cluster_passives": 55,
+    "cluster_unsupported_bases": 3,
+    "essence_mod_links": 2310,
+    "essences": 106,
+    "fossil_mod_links": 24,
+    "fossil_tag_links": 18,
+    "fossil_weight_rows": 877,
+    "fossils": 445,
+    "generation_weight_rows": 4074,
+    "groups": 7169,
+    "item_classes": 99,
+    "mod_group_links": 39527,
+    "mods": 39292,
+    "ordinary_session_bases": 979,
+    "spawn_weight_rows": 70196,
+    "stat_rows": 59112,
+    "tags": 1355,
+    "unsupported_domain_bases": 3992
+  },
+  "scope": {
+    "base_items": "all released canonical bases",
+    "cluster_runtime_support": "unsupported",
+    "mods": "complete normalized global mod catalog",
+    "session_source": "ordinary sessions are derived from this artifact; SQLite is not required at runtime"
+  },
+  "source": {
+    "data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "database_schema_version": "2",
+    "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+    "source_version": "repoe-e4eaf06c20e1ddb4"
+  }
+}

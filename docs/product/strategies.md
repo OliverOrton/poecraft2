@@ -101,9 +101,20 @@ condition-tree model.
 Condition parsing/evaluation authority:
 `engine/src/simulator.cpp`. Web authoring authority:
 `apps/web/src/app/strategy-model.ts` and
-`apps/web/src/app/components/pc-condition-editor.ts`.
+`apps/web/src/app/components/pc-condition-editor.tsx`.
 
 ## Strategy Builder
+
+The React continuity pass keeps the existing board workflow and adds explicit
+Restart, Transmutation and previously missing supported mechanic palette
+entries. Namespaced actions such as `bestiary:imprint` retain their complete
+type when placed. Palette entries support both drag/drop and double-click.
+
+Nested conditions show group boundaries, ALL/ANY/N OF logic and connecting
+AND/OR labels. Modifier rows show the selected tier's text and “Tn or better”;
+Any tier remains a distinct zero threshold. The editor preserves advanced
+native JSON conditions. Runner-mode updates are scoped to their toolbar and
+cannot overwrite nested condition controls.
 
 Strategy Builder provides:
 
@@ -126,7 +137,7 @@ summary until the user explicitly requests rendering. Validation rows are
 capped for display while the underlying document remains intact.
 
 Code authority:
-`pc-strategy-editor.ts`, `pc-strategy-board.ts`, `pc-edge-layer.ts`,
+`pc-strategy-editor.tsx`, `pc-strategy-board.ts`, `pc-edge-layer.ts`,
 `strategy-layout.ts`, and `strategy-model.ts`.
 
 ## Simulator Mode
@@ -149,7 +160,7 @@ operation-node action counts rather than every node visit and edge traversal.
 Those are open/deferred product items, not stable Simulator promises.
 
 Code authority:
-`apps/web/src/app/components/pc-simulator.ts`, `pc-run-trace.ts`,
+`apps/web/src/app/components/pc-simulator.tsx`, `pc-run-trace.ts`,
 `engine-worker.ts`, and the native simulator ABI.
 
 ## Exact Calculator Mode
@@ -177,7 +188,7 @@ Code authority:
 `engine/src/solver_eval.cpp`,
 `apps/web/src/app/components/pc-strategy-odds.ts`,
 `strategy-eval-presentation.ts`, and
-`pc-strategy-editor.ts`.
+`pc-strategy-editor.tsx`.
 
 ## Persistence And Economy
 

@@ -13,6 +13,8 @@ import { pinEconomy, setPrice } from "../src/app/workspace/prices";
 import { finishVerifiedCalculatorProbe } from "./calculator-delivery-probe-control";
 
 const dom = parseHTML("<!doctype html><html><body></body></html>");
+// React's development renderer reads the browser identity during import.
+Object.defineProperty(globalThis, "navigator", {value: {userAgent: "linkedom"}, configurable: true});
 Object.assign(globalThis, {
     window: dom.window,
     document: dom.document,

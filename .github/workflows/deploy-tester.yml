@@ -1,0 +1,144 @@
+name: Deploy hosted tester
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Full approved commit SHA (build source, or verification tooling for rollback)
+        required: true
+        type: string
+      base:
+        description: Deployment path
+        type: choice
+        options: ['/poecraft2/', '/']
+        default: /poecraft2/
+      rollback_run:
+        description: Optional prior successful run ID; restores its exact tester-static archive
+        type: string
+        default: ''
+
+concurrency:
+  group: hosted-tester-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      bundle: ${{ steps.identity.outputs.bundle }}
+    env:
+      SELECTED_COMMIT: ${{ inputs.commit }}
+      TARGET_BASE: ${{ inputs.base }}
+      POECRAFT_WORKFLOW_REVISION: ${{ github.workflow_sha }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+      - name: Verify selected full revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SELECTED_COMMIT" =~ ^[a-f0-9]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$SELECTED_COMMIT"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22.16.0
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+        working-directory: apps/web
+      - run: npx playwright install --with-deps chromium firefox
+        working-directory: apps/web
+      - name: Verify product and contracts
+        if: inputs.rollback_run == ''
+        working-directory: apps/web
+        env:
+          POECRAFT_SELECTED_COMMIT: ${{ inputs.commit }}
+        run: |
+          npm run build:data
+          npm run test:hosting
+          npx tsc --noEmit
+      - name: Build and smoke root and project paths
+        if: inputs.rollback_run == ''
+        working-directory: apps/web
+        env:
+          POECRAFT_SELECTED_COMMIT: ${{ inputs.commit }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for base in / /poecraft2/; do
+            POECRAFT_BASE_PATH="$base" npm run build
+            npm run smoke:static
+            if [[ "$base" == "$TARGET_BASE" ]]; then
+              node ../../scripts/package-public-artifacts.mjs --web
+              mkdir -p ../../deploy
+              cp -a dist/. ../../deploy/
+              package=$(node -e 'const fs=require("fs");const b=JSON.parse(fs.readFileSync("dist/build-info.json"));const p="../../dist/public-artifacts/web";console.log(fs.readdirSync(p).find(n=>JSON.parse(fs.readFileSync(p+"/"+n+"/deployment-manifest.json")).build.build_id===b.build_id))')
+              cp "../../dist/public-artifacts/web/$package/deployment-manifest.json" ../../deploy/
+            fi
+          done
+      - name: Restore exact known-good archive
+        if: inputs.rollback_run != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tester-static
+          path: deploy
+          run-id: ${{ inputs.rollback_run }}
+          github-token: ${{ github.token }}
+      - name: Verify archive and selected deployment path
+        id: identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/package-public-artifacts.mjs --verify-web deploy
+          node --input-type=module -e 'import fs from "node:fs"; const m=JSON.parse(fs.readFileSync("deploy/deployment-manifest.json")); if(m.build.base!==process.env.TARGET_BASE)throw Error("Archive deployment base differs"); fs.appendFileSync(process.env.GITHUB_OUTPUT,`bundle=${m.bundle_id}\n`); fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,`Source: ${m.build.repository_commit}\nBuild: ${m.build.build_id}\nBundle: ${m.bundle_id}\nWorkflow: ${process.env.POECRAFT_WORKFLOW_REVISION}\n`);'
+      - name: Smoke exact rollback archive
+        if: inputs.rollback_run != ''
+        working-directory: apps/web
+        run: npm run smoke:static -- ../../deploy
+      - name: Preserve exact deployable output
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: tester-static
+          path: deploy/
+          retention-days: 90
+          if-no-files-found: error
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: deploy/
+
+  deploy:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+        id: deployment
+      - name: Verify published HTTPS identity
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          EXPECTED_BUNDLE: ${{ needs.prepare.outputs.bundle }}
+        run: |
+          python - <<'PY'
+          import os, json, urllib.request, datetime
+          url = os.environ['PAGE_URL']
+          if not url.startswith('https://'): raise SystemExit('HTTPS URL required')
+          with urllib.request.urlopen(url.rstrip('/') + '/deployment-manifest.json', timeout=30) as response:
+              manifest = json.load(response)
+          if manifest['bundle_id'] != os.environ['EXPECTED_BUNDLE']: raise SystemExit('Published identity mismatch')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write(f"Published {url} at {datetime.datetime.now(datetime.timezone.utc).isoformat()}\n")
+          PY

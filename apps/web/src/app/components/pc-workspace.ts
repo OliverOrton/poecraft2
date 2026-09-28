@@ -80,6 +80,17 @@ export class PcWorkspace extends HTMLElement implements WorkspaceApi {
     private readonly stashListeners = new Set<() => void>();
 
     connectedCallback(): void {
+        // React connects the workspace during its own commit. Restore Dockview
+        // afterward so document controllers can synchronously render and bind
+        // their shells without nesting flushSync inside that commit.
+        queueMicrotask(() => {
+            if (!this.isConnected) return;
+            if (this.api) { setWorkspace(this); return; }
+            this.mountWorkspace();
+        });
+    }
+
+    private mountWorkspace(): void {
         this.classList.add("dockview-theme-abyss");
         this.api = createDockview(this, {
             theme: themeAbyss,

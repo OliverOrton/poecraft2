@@ -50,6 +50,8 @@ __pycache__/
 
 # Generated web data bundle (rebuilt by apps/web predev/prebuild)
 /apps/web/public/poecraft-data.json
+/apps/web/public/poecraft-data.*.json
+/apps/web/src/generated/
 
 # Checked-in product economy publication served at /economy in dev
 

@@ -181,6 +181,32 @@ test("first startup selects current softcore and migrates legacy prices only to 
     assert.equal(service.getPrice("base"), 12);
 });
 
+test('advancing the product index preserves the research bytes and an in-flight request pin', async () => {
+    const frozenPath = new URL('../../../apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json', import.meta.url);
+    const before = readFileSync(frozenPath);
+    const old = makeSnapshot('standard', 'Standard', { chaos: 1, alteration: 2 });
+    const newer = makeSnapshot('standard', 'Standard', { chaos: 1, alteration: 9 });
+    let current = old;
+    const service = new EconomyService({ indexUrl: 'https://product.test/league-index.json', storage: new TestStorage(), cache: new MemoryEconomyCache(), broadcast: false,
+        fetch: async input => new Response(JSON.stringify(String(input).endsWith('league-index.json') ? {
+            schema_version: 1, generated_at_utc: '2026-09-27T00:00:00Z', leagues: [entry(current, { temporary: false })],
+        } : current), { headers: { 'content-type': 'application/json' } }),
+    });
+    await service.initialize();
+    service.setPrice('base', 3);
+    const runA = service.pin(['alteration', 'unquoted']);
+    current = newer;
+    await service.refresh();
+    service.setPrice('base', 11);
+    const runB = service.pin(['alteration', 'unquoted']);
+    assert.equal(runA.snapshot.prices.alteration, 2);
+    assert.equal(runA.snapshot.prices.base, 3);
+    assert.equal(runB.snapshot.prices.alteration, 9);
+    assert.equal(runB.snapshot.prices.base, 11);
+    assert.equal(runB.snapshot.prices.unquoted, undefined);
+    assert.deepEqual(readFileSync(frozenPath), before);
+});
+
 test("league overrides remain separate and pinned work keeps its original identity", async () => {
     const data = fixture();
     const service = new EconomyService({

@@ -13,6 +13,12 @@ review was performed.
 
 ## Product Shape
 
+The 2026-09-27 [continuity migration](../active/2026-09-27-ui-continuity/README.md)
+adds React presentation inside the existing Vite/Dockview workspace, derived
+game artwork and optional coverage goals. The earlier acceptance date above
+applies to its historical boundary; the migration record owns new checks and
+remaining visual review.
+
 poecraft2 is a desktop-oriented browser workspace with four document kinds:
 
 - Emulator: mutate one native item with engine actions;
@@ -47,10 +53,10 @@ price pinning are owned by [Economy](../economy/README.md).
 | --- | --- |
 | Workspace shell and documents | `apps/web/src/app/components/pc-workspace.ts` |
 | Draft/Stash persistence | `apps/web/src/app/workspace/persistence.ts` |
-| Emulator | `apps/web/src/app/components/pc-emulator.ts` |
-| Calculator | `apps/web/src/app/components/pc-calculator.ts` |
+| Emulator | `apps/web/src/app/components/pc-emulator.tsx` |
+| Calculator | `apps/web/src/app/components/pc-calculator.tsx` |
 | Strategy model/validation | `apps/web/src/app/strategy-model.ts` |
-| Strategy authoring and runners | `apps/web/src/app/components/pc-strategy-editor.ts` |
+| Strategy authoring and runners | `apps/web/src/app/components/pc-strategy-editor.tsx` |
 | Native worker bridge | `apps/web/src/app/engine-client.ts`, `engine-worker.ts` |
 | Shared economy | `apps/web/src/app/workspace/economy-service.ts` |
 

@@ -1,4 +1,6 @@
 import type { EconomyIdentity } from "../engine-protocol";
+import build from '../../generated/build-info.json';
+import { publicAsset } from '../public-assets';
 
 export type Prices = Record<string, number>;
 export type PublishedPriceSource =
@@ -128,7 +130,17 @@ function defaultIndexUrl(): string {
     const configured = (globalThis as typeof globalThis & {
         POECRAFT_ECONOMY_INDEX_URL?: string;
     }).POECRAFT_ECONOMY_INDEX_URL;
-    return configured || "/economy/league-index.json";
+    return configured || publicAsset(build.economy.index_url, build.base);
+}
+
+export function economyDeliveryMode(): 'bundled' | 'live' {
+    const configured = (globalThis as typeof globalThis & { POECRAFT_ECONOMY_INDEX_URL?: string }).POECRAFT_ECONOMY_INDEX_URL;
+    return configured || build.economy.mode === 'live' ? 'live' : 'bundled';
+}
+
+export function economyCompatibility(snapshot: EconomySnapshot): 'matched' | 'unqualified' | 'manual' {
+    const hash = snapshot.metadata.game_data_hash;
+    return hash === null ? 'manual' : hash === build.runtime.source.data_hash ? 'matched' : 'unqualified';
 }
 
 class MemoryStorage implements StorageLike {
@@ -407,7 +419,7 @@ export class EconomyService {
         this.readOverrides();
         this.readFallbacks();
         const storedSelection = this.storage.getItem(SELECTED_KEY);
-        const cachedIndex = await this.cache.get<LeagueIndex>(INDEX_CACHE_KEY);
+        const cachedIndex = await this.cache.get<LeagueIndex>(`${INDEX_CACHE_KEY}:${this.indexUrl}`);
         if (cachedIndex?.schema_version === 1) {
             this.state = { ...this.state, index: cachedIndex };
             const profile = storedSelection || this.defaultProfile(cachedIndex);
@@ -444,7 +456,7 @@ export class EconomyService {
         if (!response.ok) throw new Error(`economy index request failed (${response.status})`);
         const index = await readJson<LeagueIndex>(response, "economy index");
         this.validateIndex(index);
-        await this.cache.set(INDEX_CACHE_KEY, index);
+        await this.cache.set(`${INDEX_CACHE_KEY}:${this.indexUrl}`, index);
         const stored = this.storage.getItem(SELECTED_KEY);
         let target = stored || this.defaultProfile(index);
         if (
@@ -518,6 +530,7 @@ export class EconomyService {
         );
         if (!snapshot) return;
         try {
+            if (snapshot.id !== entry.latest_snapshot_id) throw new Error('cached economy snapshot identity mismatch');
             await verifyEconomySnapshot(snapshot, entry.content_sha256);
             this.activate(entry, snapshot, index, "offline");
         } catch {
@@ -564,6 +577,7 @@ export class EconomyService {
                 snapshotCacheKey(entry.latest_snapshot_id),
             );
             if (cached) {
+                if (cached.id !== entry.latest_snapshot_id) throw new Error('cached economy snapshot identity mismatch');
                 await verifyEconomySnapshot(cached, entry.content_sha256);
                 this.lastDownloadUsedCache = true;
                 return cached;

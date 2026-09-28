@@ -7,6 +7,7 @@ import type {
 import type { CalculatorGoalSlot } from "./workspace/persistence";
 
 export interface CalculatorTargetModelInput {
+    baseKey?: string;
     baseName: string;
     itemLevel: number;
     rarity: "normal" | "magic" | "rare";
@@ -74,6 +75,7 @@ export function buildCalculatorTargetModel(
 
     return {
         kind: "target",
+        ...(input.baseKey ? {baseKey: input.baseKey} : {}),
         baseName: input.baseName,
         itemLevel: input.itemLevel,
         rarity: input.rarity,

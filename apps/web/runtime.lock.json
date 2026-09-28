@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "runtime_directory": "data/runtime-snapshots/852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+  "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+  "source_lock": "fixtures/repoe/production-source-manifest.json",
+  "economy": {
+    "mode": "bundled",
+    "index": "economy/league-index.json"
+  }
+}

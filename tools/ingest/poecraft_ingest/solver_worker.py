@@ -75,10 +75,10 @@ def git_provenance(root: Path) -> dict[str, Any]:
         return {"commit": None, "dirty": None, "dirty_paths": []}
 
 
-def corpus_provenance(path: Path) -> dict[str, Any]:
+def corpus_provenance(path: Path, *, root: Path | None = None) -> dict[str, Any]:
     value = read_json_object(path)
     configuration = value.get("configuration")
-    return {
+    provenance = {
         "path": str(path),
         "sha256": sha256_file(path),
         "corpus_id": value.get("corpus_id"),
@@ -89,6 +89,23 @@ def corpus_provenance(path: Path) -> dict[str, Any]:
             else None
         ),
     }
+    # A manifest hash alone does not bind referenced requests or raw economy
+    # bytes. Extend the existing resume authority; never rewrite old receipts.
+    if value.get('cases'):
+        inputs = []
+        for relative in value['cases']:
+            if not isinstance(relative, str):
+                raise ValueError('corpus case paths must be strings')
+            case_path = path.parent / relative
+            case = read_json_object(case_path)
+            entry = {'path': relative, 'sha256': sha256_file(case_path)}
+            economy = case.get('economy')
+            if isinstance(economy, dict) and economy.get('snapshot_path'):
+                snapshot_path = (root or Path.cwd()) / str(economy['snapshot_path'])
+                entry['economy_snapshot_sha256'] = sha256_file(snapshot_path)
+            inputs.append(entry)
+        provenance['case_inputs'] = inputs
+    return provenance
 
 
 def artifact_provenance(path: Path) -> dict[str, Any]:
@@ -193,7 +210,7 @@ def capture_execution_provenance(
     corpus: Path,
 ) -> ExecutionProvenance:
     return ExecutionProvenance(
-        corpus=corpus_provenance(corpus),
+        corpus=corpus_provenance(corpus, root=root),
         artifact=artifact_provenance(artifact),
         executable={"path": str(executable), "sha256": sha256_file(executable)},
         machine=machine_provenance(),

@@ -503,6 +503,9 @@ export interface BaseInfo {
 export interface SolverGoal {
     version?: "v1";
     rarity?: "normal" | "magic" | "rare";
+    /** Require goal slots while allowing other explicit mods. Current uses
+     * zero global lower and checked policies, never exact closure. */
+    allow_extra_modifiers?: boolean;
     /** Minimum goal slots that must be satisfied together; defaults to all. */
     min_satisfied_slots?: number;
     slots: Array<
@@ -622,6 +625,8 @@ export type CarrierProperty =
 /** One abstract successor class from the calculation engine. */
 export interface CalcOutcome {
     state: number;
+    /** Native goal predicate, including rarity and clean/coverage semantics. */
+    is_goal?: boolean;
     probability: number;
     rarity: number;
     prefixes: number;

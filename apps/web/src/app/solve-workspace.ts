@@ -25,6 +25,7 @@ export interface SolvePriceReadiness {
 
 export interface CalculatorSolverGoalFields {
     rarity: NonNullable<SolverGoal["rarity"]>;
+    allowExtraModifiers?: boolean;
     minSatisfiedSlots: number;
     slots: SolverGoal["slots"];
 }
@@ -120,6 +121,7 @@ export function buildCalculatorSolverGoal(
     return {
         version: "v1",
         rarity: fields.rarity,
+        ...(fields.allowExtraModifiers ? { allow_extra_modifiers: true } : {}),
         ...(mode !== "odds" ? { action_mode: "goal_relevant" as const } : {}),
         min_satisfied_slots: fields.minSatisfiedSlots,
         slots: fields.slots,

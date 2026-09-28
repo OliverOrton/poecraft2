@@ -8,7 +8,9 @@ This page owns the mapping from a native request to the action envelope used by 
 
 Inputs are the concrete start item, requested goal slots and tiers, terminal rarity and minimum satisfaction count, solve profile, explicit action IDs or product-envelope construction, disabled families, prices, and computational limits.
 
-Target identity also includes whether unrelated explicit affixes are permitted at success and any exact prefix/suffix occupancy constraint. The private audit modes are `legacy-clean` (public v1 normal form), `explicit-clean` (accepted only when all required slots are disjoint and fixed-side, then normalized to the same native goal), and `coverage-only` (native calculator diagnostic). The latter has a distinct target identity and cannot start a Current solve while clean-target proof and graph-evaluation dependencies remain. No public request field selects these modes. [Audit record](../active/2026-09-25-current-goal-audit/README.md).
+Target identity also includes whether unrelated explicit affixes are permitted at success and any exact prefix/suffix occupancy constraint. Public v1 defaults to clean and now accepts the optional boolean `allow_extra_modifiers`. True selects coverage terminal semantics and the existing `target_neutral_zero` proof profile: native outcome checks and checked-policy upper authority, zero lower only, no clean-target proof retirement or exact closure. Invalid non-boolean values fail. Legacy requests that omit the flag retain their identity and behaviour.
+
+Private audit modes remain `legacy-clean`, `explicit-clean` (accepted only when all required slots are disjoint and fixed-side, then normalized to the same native goal), and `coverage-only`. They are not new public mode selectors. The [original audit](../active/2026-09-25-current-goal-audit/README.md) refusal of neutral Current was superseded by P1/P2; the [UI continuity delta](../active/2026-09-27-ui-continuity/README.md) exposes that existing profile without extending its proof authority.
 
 Native registry and option construction produce a deterministic action vocabulary and an action-envelope ledger. The ledger records what has happened to each source/operator obligation; the existence of a ledger entry is not proof that its row is complete.
 
@@ -48,7 +50,7 @@ An explicit product candidate list and the generated-program grammar together re
 
 ## Product and diagnostic scope
 
-At this snapshot, Calculator product defaults disable generated Imprint programs and voluntary economic Restart, enable goal-progress-gated reforges, and use junk-free terminal success. Mechanic-owned paid recovery remains distinct from voluntary abandonment. See [upper recovery](upper-authority.md#recovery-and-exact-terminal-success).
+Calculator product defaults disable generated Imprint programs and voluntary economic Restart, enable goal-progress-gated reforges, and use clean terminal success unless the coverage toggle is selected. Mechanic-owned paid recovery remains distinct from voluntary abandonment. See [upper recovery](upper-authority.md#recovery-and-exact-terminal-success).
 
 Goal-progress gating restricts zero-progress behavior; an exact result under that restriction is not an unrestricted result. Low-level engine compatibility defaults and explicit diagnostic callers can differ from product defaults. Read the resolved scope and override telemetry rather than inferring it from an option's name.
 

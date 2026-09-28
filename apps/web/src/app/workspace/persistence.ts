@@ -99,6 +99,8 @@ export interface CalculatorDraftRecord {
     /** Exported item state, or null before a base is chosen. */
     state: unknown | null;
     goalRarity: "normal" | "magic" | "rare";
+    /** Absent legacy drafts retain clean final-item semantics. */
+    allowExtraModifiers?: boolean;
     slots: CalculatorGoalSlot[];
     /** Minimum slots that define success; absent legacy drafts mean all. */
     minSatisfiedSlots?: number;

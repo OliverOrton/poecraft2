@@ -6,6 +6,9 @@
  */
 
 import { EngineClient } from "./engine-client";
+import build from '../generated/build-info.json';
+import { publicAsset, verifiedRuntime } from './public-assets';
+import { runtimeDiagnostics } from './tester-diagnostics';
 
 export interface Engine {
     client: EngineClient;
@@ -13,23 +16,28 @@ export interface Engine {
     summary: Record<string, unknown>;
 }
 
-const DATA_URL = "/poecraft-data.json";
+const DATA_URL = publicAsset(build.runtime.url, build.base);
 
 let enginePromise: Promise<Engine> | null = null;
 
 async function boot(): Promise<Engine> {
     const client = EngineClient.spawn();
-    await client.whenReady();
-    const response = await fetch(DATA_URL);
-    if (!response.ok) {
-        throw new Error(
-            `failed to fetch engine data (${response.status}); run "npm run build:data"`,
-        );
+    try {
+        await client.whenReady();
+        runtimeDiagnostics.abi_version = client.getAbiVersion();
+        if (client.getAbiVersion() !== build.engine.abi_version) throw new Error('Engine ABI differs from the selected build');
+        const response = await fetch(DATA_URL);
+        const bytes = await verifiedRuntime(response, build.runtime);
+        const dataId = await client.loadData(bytes);
+        const summary = await client.dataSummary(dataId);
+        runtimeDiagnostics.status = 'loaded';
+        return { client, dataId, summary };
+    } catch (error) {
+        client.dispose();
+        runtimeDiagnostics.status = 'error';
+        runtimeDiagnostics.error = error instanceof Error ? error.message : String(error);
+        throw new Error(`${runtimeDiagnostics.error}. Copy diagnostics to report this, then reload to retry the latest build. Saved drafts are kept.`);
     }
-    const bytes = new Uint8Array(await response.arrayBuffer());
-    const dataId = await client.loadData(bytes);
-    const summary = await client.dataSummary(dataId);
-    return { client, dataId, summary };
 }
 
 export function getEngine(): Promise<Engine> {
