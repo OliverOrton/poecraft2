@@ -1,46 +1,32 @@
 # Handoff
 
-Craft control follow-up (2026-09-28): local and unpublished on `main`. Shared
-item-card rows now have fixed heights with scrollable overflow. Essence,
-Fossil, Influence Exalt and Harvest use artwork choices with separate text-only
-apply buttons; Harvest resistance conversion is alongside the main choices.
-Essences select type then tier, and Fossils toggle up to four. Calculator stages
-choices without changing the evaluated action until Calculate is clicked.
-Python asset generation now carries canonical Fossil descriptions and Essence
-modifiers by item class for hover/focus tooltips, plus recipe-derived Harvest
-artwork aliases. SQLite, frozen runtime and WASM remain unchanged. Focused
-Python asset tests, web tests with the existing narrow WASM selection, and the
-TypeScript build pass. Chromium workflow checks cover stable row heights,
-native action parameters, tooltip text, selection limits and explicit apply.
-Calculator's selected Essence type/tier also survives reload. Logs:
-`out/ui-migration/choices-*`. Oliver retains visual acceptance. No publish yet.
+UI follow-up release (2026-09-28): Oliver requested publication of the current
+changes. They are committed on `main`, pushed and deployed to
+https://oliverorton.github.io/poecraft2/. The
+[release record](docs/active/2026-09-27-ui-continuity/README.md#ui-follow-up-release)
+owns the final source/build identity, browser evidence and verified durable archive.
+The existing first-release archive is retained for rollback.
 
-Undo and edge editing follow-up (2026-09-28): implemented locally on `main`,
-uncommitted and not deployed. Emulator has Undo/Redo and clickable native item
-snapshots, including Imprint state and reversible item/base resets. Strategy
-Builder has Undo/Redo for graph/condition/label/layout edits, one step per node
-drag, and draggable source/destination handles on selected edges. Reconnection
-preserves the complete edge; Escape/empty drops cancel. Both histories persist
-with drafts, capped at 100 snapshots / 8 MiB; new edits replace the redo branch.
-Product behavior and limits are in `docs/product/workspace.md` and
-`docs/product/strategies.md`. Web tests pass with the narrow existing WASM
-selection `emulator editing can add and remove an exact explicit mod`;
-TypeScript/production build and Chromium 145 root workflow smoke pass, including
-native Imprint restore, base changes, keyboard shortcuts, grouped edits, history
-reload, reconnection and saved-item dirty state. Logs: `out/ui-migration/history-*`.
-Firefox and the hosted project path await the manual release workflow when
-Oliver requests publication. No native/WASM/data changes or Simulator runs.
+This release includes fixed shared mod-slot heights; artwork choices for Essence,
+Fossil, Influence Exalt and Harvest; text-only apply buttons; Essence type/tier
+selection; and canonical effect tooltips. Calculator choices remain staged until
+Calculate. Emulator and Strategy have persistent Undo/Redo, clickable item
+history and draggable edge endpoints. Named armour variants including Archdemon
+Crown now appear in their correct defence filters. The 40 restored supported
+variants and all 458 classified bases match existing canonical armour tags.
+Product behavior and history limits remain in `docs/product/workspace.md` and
+`docs/product/strategies.md`.
 
-Archdemon Crown report (2026-09-28): reproduced on the live tester. The base is
-present under Helmet / All, but the path-based defence filter omitted Ritual
-and other named variants. A local, uncommitted fix on `main` updates the shared
-picker classifier and adds unit/browser regressions. It restores 40 supported
-armour variants to their filters; all 458 classified bases match their existing
-canonical armour tags. Web tests (narrow existing WASM smoke selection),
-TypeScript/production build and Chromium workflow smoke pass. Native code,
-WASM and frozen data are unchanged. This fix has not been pushed or deployed;
-the live workaround is Helmet / All. Publish through the manual release workflow
-when Oliver requests it. Audit/logs: `out/ui-migration/crown-*`.
+Focused Python/web tests, TypeScript/production build and the complete Linux
+Chromium/Firefox hosting workflow passed at both root and project paths. The
+release fixed a draft-wait race in the browser test and versioned artwork
+catalogue requests after the live check exposed an old cached catalogue.
+A normal refresh in that same browser loaded artwork and the correct Essence
+modifier tooltip. SQLite, frozen runtime and WASM are unchanged; no native or
+Simulator checks were rerun. Logs: `out/ui-migration/choices-*`, `history-*`,
+`crown-*` and `release-*`. Oliver retains visual acceptance. A nonblocking stale
+compact base label after draft reload is recorded for a later UI follow-up;
+the item card and crafting state identify the correct base.
 
 Oliver accepted the UI pass for first hosting on 2026-09-28 and requested
 continued work directly on `main`. GitHub Pages activation is complete:

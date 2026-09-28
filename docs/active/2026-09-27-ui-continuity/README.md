@@ -179,3 +179,47 @@ checks at both deployment paths. The local hosting tests also passed on Node
 warnings retained). No branch protection or required check was removed. Bundled
 prices are selected. Protected root `0` was excluded from staging and commit
 pathspecs; the final frozen-input audit still changes only the reviewed WASM.
+
+## UI follow-up release
+
+On 2026-09-28 Oliver requested publication of the current changes on `main`.
+The [successful release workflow](https://github.com/OliverOrton/poecraft2/actions/runs/36472417169)
+deployed source `65733e356ad3758847123cf3b174695b0b9525e5`. The
+[follow-up receipt](hosted-release-2026-09-28-followup.json) owns the full
+build/bundle identity, archive hashes and preceding release attempts. The live
+Beta build is `9e6918f9`; its manifest matches the saved CI archive byte-for-byte.
+
+The release includes stable shared mod slots, artwork material choices and
+effect tooltips, explicit text-only craft buttons, persistent Emulator/Strategy
+Undo and Redo, draggable edge endpoints, and the Archdemon Crown defence-filter
+fix. Calculator choices remain staged until Calculate. Native mechanics, WASM
+and frozen runtime inputs are unchanged.
+
+Linux Chromium 145.0.7632.6 and Firefox 146.0.1 passed the complete hosting
+workflow at both `/` and `/poecraft2/`, including history restoration, edge
+reconnection, material selection, tooltips and stable row heights. The first
+attempt stopped before deployment because the reload test could mistake an old
+draft for the completed write after Undo. Comparing the full persisted history
+fixed that race without weakening the test. The next deployment exposed a stale
+artwork catalogue in a returning browser. Catalogue requests now include their
+verified content hash, and the browser workflow checks that versioned request.
+
+Live checks confirmed Crown selection in its defence filter, native crafting
+and Undo/Redo before the cache-only follow-up. After a normal refresh onto the
+final release, that same browser restored the Crown and its history, loaded all
+36 image elements, and displayed the correct Helmet modifier in the Essence
+tooltip. No new console warnings or errors were reported. The temporary test
+draft was closed; the existing item draft was preserved.
+
+The exact 642-component deployment archive was downloaded, checked against the
+GitHub artifact digest, extracted safely and passed the existing archive
+verifier. The first release's run `36445325568` and durable ZIP are retained as
+the preceding known-good rollback target. No live rollback rehearsal or R2
+activation was performed. Commits use the previously documented `[skip ci]`
+release convention; the dedicated hosting gates all ran. Protected root `0`
+was excluded from every staging and commit pathspec.
+
+Nonblocking observation for a later UI pass: after draft reload, the compact
+Emulator toolbar can retain its initial `BodyInt17` label while the item card,
+native item and Essence item class correctly identify the restored Crown.
+Visual design acceptance remains Oliver's judgement.

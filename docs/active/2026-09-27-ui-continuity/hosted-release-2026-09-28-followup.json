@@ -1,0 +1,60 @@
+{
+  "status": "published and live functionally verified",
+  "verified_at_utc": "2026-09-28T19:35:20.779255+00:00",
+  "site_url": "https://oliverorton.github.io/poecraft2/",
+  "source_commit": "65733e356ad3758847123cf3b174695b0b9525e5",
+  "build_id": "9e6918f9b8c053834f52b009fe898272f438aaada84c803fd3231a5bb2fb0a96",
+  "bundle_id": "7b7421f11cc91587be46df33812794a99c5004b8cc7689cf55986a514e19b613",
+  "workflow_run_id": 36472417169,
+  "workflow_url": "https://github.com/OliverOrton/poecraft2/actions/runs/36472417169",
+  "workflow_result": "success",
+  "browsers": {
+    "chromium": "145.0.7632.6",
+    "firefox": "146.0.1",
+    "bases": [
+      "/",
+      "/poecraft2/"
+    ],
+    "result": "passed"
+  },
+  "live_checks": [
+    "HTTPS manifest matches the verified CI archive byte-for-byte",
+    "Executing Beta build 9e6918f9 matches the final manifest",
+    "Existing Archdemon Crown draft and its crafting history survive refresh",
+    "36 artwork images load after normal refresh in the browser affected by the previous catalogue cache",
+    "Essence type and tier controls appear with a text-only Apply essence button",
+    "Deafening Essence of Greed tooltip shows the Helmet modifier +91-105 to maximum Life",
+    "No new browser warnings or errors on the final build"
+  ],
+  "earlier_same_implementation_live_checks": {
+    "run_id": 36471485167,
+    "checks": [
+      "Archdemon Crown selectable under Helmet / Armour / Energy Shield",
+      "Alchemy crafts a rare Crown; Undo restores normal and Redo restores the rare item"
+    ]
+  },
+  "economy_mode": "bundled",
+  "artifact_id": 10991793288,
+  "archive_path": "C:\\Users\\Oliver\\Documents\\poecraft2-tester-archives\\hosted-tester-run-36472417169.zip",
+  "archive_sha256": "d7c7e1176f1dde4d8c8204099bfc00b9e7a9b71fbd7e6eceeede938c5cdc639f",
+  "manifest_sha256": "72111ee15d9139e2973cd70e2ccd518c99cbeac57ae579d1055ffd56202d69ab",
+  "verified_component_count": 642,
+  "previous_known_good_rollback_run": 36445325568,
+  "rollback_run": 36472417169,
+  "rollback_rehearsal": "not performed; prior verified release archive retained",
+  "release_corrections": [
+    {
+      "run_id": 36470842664,
+      "result": "failed before deployment",
+      "cause": "Reload smoke could accept the pre-deletion draft with matching graph and cursor but no Redo entry; the test now waits for the complete history."
+    },
+    {
+      "run_id": 36471485167,
+      "result": "deployed and superseded",
+      "cause": "A returning browser reused the old unversioned artwork catalogue. The final release includes the content hash in the request URL."
+    }
+  ],
+  "nonblocking_observations": [
+    "After draft reload, the compact Emulator toolbar can retain its initial BodyInt17 label even though the item card, native item and Essence item class correctly identify the restored Crown."
+  ]
+}

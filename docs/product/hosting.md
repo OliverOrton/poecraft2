@@ -1,7 +1,7 @@
 # Hosted tester
 
 The public tester is at <https://oliverorton.github.io/poecraft2/>. The
-[first hosted release](../active/2026-09-27-ui-continuity/README.md#first-hosted-release)
+[latest hosted release](../active/2026-09-27-ui-continuity/README.md#ui-follow-up-release)
 records its verified deployment and durable rollback archive. Oliver currently
 prefers development directly on `main`; publishing remains a manual release.
 
