@@ -1,16 +1,18 @@
 # Handoff
 
-Current local follow-up (2026-09-28): Oliver requested a Calculator layout closer
+Current release (2026-09-28): Oliver requested a Calculator layout closer
 to the familiar item editor, with crafting and modifiers always visible and only
 Odds/Strategy finder sharing the compact panel. Emulator now gives crafting and
 cost/history independent space, and the four missing special Essences are restored
 under his acquisition-only clarification. The
 [continuity record](docs/active/2026-09-27-ui-continuity/README.md#laptop-layout-and-special-essences)
-owns scope and validation. Input/Goal tabs are the provisional layout choice;
-Oliver has not answered the optional tabs-versus-both-cards question. This local
-revision is not pushed or deployed. The preceding hosted release remains live.
+owns scope, validation and the release receipt. Oliver requested deployment;
+source `faa2495` is pushed and live as Beta `9f4dde1e`. Chromium and Firefox passed
+both hosting paths; live functional checks and the saved 643-component archive
+are verified. Input/Goal use tabs. Rendered design acceptance remains Oliver's.
+The previous release archive is retained for rollback.
 
-Current release (2026-09-28): Oliver requested deployment of Calculator's
+Preceding release (2026-09-28): Oliver requested deployment of Calculator's
 Input/Goal comparison layout, complete Harvest material costs/artwork and Emulator
 spend tracking. Source `44d9384` is pushed and deployed; live Beta is `2091a375`.
 The complete Chromium/Firefox matrix and live functional checks passed. Its exact

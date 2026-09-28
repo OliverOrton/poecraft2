@@ -319,5 +319,20 @@ test matches that path and passes. The public-handle identity issue is deferred,
 with owners `pc_calc_action_outcomes` / `pc_solver_state_is_goal` in
 `engine/src/solver_api.cpp` and `pcw_solver_calc` in `bindings/wasm/wasm_api.cpp`.
 
-This follow-up remains local on `main`, without a push or deployment. The hosted
-Beta `2091a375` and its verified archive above remain the current release.
+Oliver then requested deployment. Source
+`faa2495a9165c699dbfd54a76b80472622a82c9d` is pushed and live as Beta `9f4dde1e`.
+The [successful workflow](https://github.com/OliverOrton/poecraft2/actions/runs/36481537616)
+passed Chromium 145.0.7632.6 and Firefox 146.0.1 at both `/` and `/poecraft2/`.
+The [release receipt](hosted-release-2026-09-28-layout-essences.json) owns the
+full source/build/bundle identity, live checks and durable archive hashes.
+
+A fresh live Chromium session verified the executing build, all four special
+Essences' selection/artwork/tooltips/native crafting/cost tracking, both layouts
+at the three laptop sizes, Harvest materials and native consumption, spend
+Undo/Redo and draft reload. It reported no browser errors and closed afterward.
+The live deployment manifest matches the saved archive byte-for-byte. The ZIP
+matches GitHub's artifact digest and the existing verifier checked all 643 files.
+The preceding release run `36477551100` and its durable archive remain available
+for rollback; no live rollback rehearsal or R2 activation was performed. Only
+release-record prose follows the deployed source on `main`. Deployment evidence
+uses `out/ui-migration/layout-essence-deploy-*`.
