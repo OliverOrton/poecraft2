@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { checkEmulatorHistory, checkStrategyHistory } from './edit-history-checks.mjs';
+import { checkCalculatorLayout } from './calculator-layout-checks.mjs';
 import { checkCraftChoices, checkCalculatorChoices } from './craft-choices-checks.mjs';
 
 /** Real browser interactions against the packaged UI; no Solver search or Simulator runs. */
@@ -19,9 +20,12 @@ export async function checkUiContinuity(page) {
     await checkEmulatorHistory(page);
     await checkCraftChoices(page);
     await page.locator('pc-emulator [data-cmd="calculator"]').click();
+    await checkCalculatorLayout(page);
     await checkCalculatorChoices(page);
+    await page.locator('pc-calculator [data-calc-tool="modifiers"]').click();
     await page.locator('pc-calculator .pc-mod-family-header').first().click();
     await page.locator('pc-calculator .pc-mod-tier-btn').first().click();
+    await page.locator('pc-calculator [data-calc-tool="craft"]').click();
     await page.locator('pc-calculator [data-select-action="chaos"]:not(:disabled)').click();
     await page.waitForFunction(() => document.querySelector('.pc-calc-answer-value')?.textContent === '0%');
     await page.waitForFunction(() => !document.querySelector('pc-calculator')?.busy);
@@ -31,16 +35,20 @@ export async function checkUiContinuity(page) {
         return result && result !== '0%';
     });
     await page.waitForFunction(() => !document.querySelector('pc-calculator')?.busy);
+    await page.locator('pc-calculator [data-calc-tool="solve"]').click();
     assert.equal(await page.locator('[data-solve-target="absolute"]').isDisabled(), true);
     assert.match(await page.locator('.pc-calc-goal-scope').innerText(), /optimal cost is not certified/);
+    await page.locator('pc-calculator [data-calc-tool="craft"]').click();
     const odds = await page.locator('.pc-calc-answer-value').innerText();
     // A completed odds update persists before reload. Wait for its native work, then the draft write.
     await page.waitForFunction(() => !document.querySelector('pc-calculator')?.busy);
     await page.reload();
     await page.waitForFunction(() => document.querySelector('.pc-calc-answer-value')?.textContent);
     assert.equal(await page.locator('[data-role="allow-extra-modifiers"]').isChecked(), true);
+    await page.locator('pc-calculator [data-calc-tool="craft"]').click();
     assert.equal(await page.locator('.pc-calc-answer-value').innerText(), odds);
     await page.waitForFunction(() => !document.querySelector('pc-calculator')?.busy);
+    await page.locator('pc-calculator [data-calc-tool="solve"]').click();
     assert.equal(await page.locator('[data-solve-target="absolute"]').isDisabled(), true);
     assert.equal(await page.locator('[data-solve-target="relative"]').isDisabled(), true);
     assert.match(await page.locator('.pc-calc-goal-scope').innerText(), /optimal cost is not certified/);
@@ -123,5 +131,5 @@ export async function checkUiContinuity(page) {
     return {crafts: true, handoffs: true, coverageGoal: true, draftRecovery: true, restart: true,
         namespacedAction: true, nestedConditions: true, tierAndAnyTier: true, tabLifecycle: true, artwork: true,
         stashRoundTrip: true, dirtyClose: true, emulatorHistory: true, strategyHistory: true, edgeReconnection: true,
-        craftChoices: true, craftTooltips: true, stableModSlots: true};
+        craftChoices: true, craftTooltips: true, stableModSlots: true, calculatorComparison: true, harvestMaterials: true, historySpend: true};
 }

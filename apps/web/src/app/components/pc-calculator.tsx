@@ -15,9 +15,9 @@ import { BaseSelectionShell, CalculatorShell } from "./document-shells";
  * craft-panel band, except the buttons select a registry action id instead
  * of applying a craft.
  *
- * Input and Goal share the same fixed-slot item frame in a compact context
- * rail. Goal rows carry engine-returned marginal probabilities inline; the
- * results column owns the combined result, costs, and outcome distribution.
+ * Input and Goal share a side-by-side comparison area. The separate tool pane
+ * owns modifier editing, craft odds and strategy search without displacing
+ * either item. Goal rows retain engine-returned marginal probabilities.
  *
  * Document lifecycle mirrors pc-emulator, minus Stash saves: a Calculator is
  * never a saved resource, so the IndexedDB draft exists purely for reload
@@ -197,6 +197,7 @@ export class PcCalculator extends HTMLElement {
     private itemMaxPrefix = 3;
     private itemMaxSuffix = 3;
     private activeContext: "input" | "goal" = "goal";
+    private activeTool: "modifiers" | "craft" | "solve" = "modifiers";
 
     private goalRarity: "normal" | "magic" | "rare" = "rare";
     private allowExtraModifiers = false;
@@ -667,6 +668,16 @@ export class PcCalculator extends HTMLElement {
                 if (state) state.textContent = active ? "Editing" : "Select";
             },
         );
+    }
+
+    private selectTool(tool: "modifiers" | "craft" | "solve"): void {
+        this.activeTool = tool;
+        this.querySelectorAll<HTMLElement>("[data-calc-pane]").forEach(pane => {
+            pane.hidden = pane.dataset.calcPane !== tool;
+        });
+        this.querySelectorAll<HTMLButtonElement>("[data-calc-tool]").forEach(button => {
+            button.setAttribute("aria-pressed", String(button.dataset.calcTool === tool));
+        });
     }
 
     /** "fossil:<a>+<b>" with sorted keys, matching solver_registry.cpp. */
@@ -2084,6 +2095,7 @@ export class PcCalculator extends HTMLElement {
         );
         return `<section class="pc-calc-section pc-calc-cost">
             <h4>Cost estimates</h4>
+            ${Array.from(counts.keys()).filter(key => key.startsWith("harvest_")).map(key => `<pc-harvest-materials cost-key="${escapeHtml(key)}"></pc-harvest-materials>`).join("")}
             ${priced.rowsHtml}
             <div class="pc-calc-cost-metrics">
                 <span>
@@ -2359,6 +2371,10 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         renderReact(this, <CalculatorShell key={++this.shellVersion} freshRarity={this.freshRarity} allowExtraModifiers={this.allowExtraModifiers} />);
+        this.querySelectorAll<HTMLButtonElement>("[data-calc-tool]").forEach(button => {
+            button.addEventListener("click", () => this.selectTool(button.dataset.calcTool as typeof this.activeTool));
+        });
+        this.selectTool(this.activeTool);
 
         this.querySelectorAll<HTMLButtonElement>("button[data-cmd]").forEach(
             (button) => {
@@ -2505,11 +2521,15 @@ export class PcCalculator extends HTMLElement {
         this.querySelectorAll<HTMLElement>("[data-context-card]").forEach(
             (card) => {
                 const context = card.dataset.contextCard as "input" | "goal";
-                card.addEventListener("click", () => this.selectContext(context));
+                card.addEventListener("click", event => {
+                    this.selectContext(context);
+                    if (!(event.target as Element).closest("button, input, select, label")) this.selectTool("modifiers");
+                });
                 card.addEventListener("keydown", (event) => {
-                    if (event.key === "Enter" || event.key === " ") {
+                    if (event.target === card && (event.key === "Enter" || event.key === " ")) {
                         event.preventDefault();
                         this.selectContext(context);
+                        this.selectTool("modifiers");
                     }
                 });
             },

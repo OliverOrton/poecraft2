@@ -2410,6 +2410,33 @@ test("coverage goals use native terminal truth and neutral proof authority", asy
     }
 });
 
+test("emulator native cost descriptors", async () => {
+    const { NativeCraftCosts } = await import("../src/app/craft-costs");
+    const costs = new NativeCraftCosts();
+    assert.deepEqual(await costs.forAction(client, sessionId, {type: "alchemy"}), ["alchemy"]);
+    assert.deepEqual(await costs.forAction(client, sessionId, {type: "remove_crafted_modifiers"}), ["scour"]);
+    assert.deepEqual(await costs.forAction(client, sessionId, {type: "harvest_reforge", target_tag: "minion"}), ["harvest_reforge:minion"]);
+    assert.deepEqual(await costs.forAction(client, sessionId, {type: "harvest_augment", target_tag: "life"}), ["harvest_augment:life"]);
+    assert.deepEqual(await costs.forAction(client, sessionId, {type: "harvest_resist", source_tag: "fire", target_tag: "cold"}), ["harvest_resist:cold"]);
+    assert.deepEqual(await costs.forAction(client, sessionId, {type: "eldritch_ember", tier: 3}), ["eldritch_ember:3"]);
+    assert.deepEqual(await costs.forAction(client, sessionId, {type: "influence_exalt", influence: "hunter"}), ["influence_exalt:hunter"]);
+    assert.deepEqual(await costs.forAction(client, sessionId, {type: "unveil"}), []);
+    const catalog = await client.catalog(dataId);
+    const fossils = catalog.fossils.slice(0, 2).map(entry => entry.key);
+    assert.deepEqual(await costs.forAction(client, sessionId, {type: "fossil", fossils: [...fossils, fossils[0]]}),
+        [...fossils.sort().map(key => `fossil:${key}`), "resonator:2"]);
+    const essence = catalog.essences.find(entry => entry.name === "Screaming Essence of Woe")!;
+    assert.deepEqual(await costs.forAction(client, sessionId, {type: "essence", essence: essence.key}), [`essence:${essence.key}`]);
+    const count = await client.modCount(sessionId);
+    for (let id = 0; id < count; id++) {
+        const mod = await client.modInfo(sessionId, id);
+        if (mod.reach_kind === 2) {
+            assert.deepEqual(await costs.forAction(client, sessionId, {type: "bench", mod_key: mod.key}), [`bench:${mod.key}`]);
+            break;
+        }
+    }
+});
+
 // Wire the shared client into the runner before executing.
 {
     const spawned = spawnClient();

@@ -32,6 +32,7 @@ try {
         const browser = await browserType.launch({ headless: true });
         try {
             const page = await browser.newPage();
+            page.setDefaultTimeout(30_000);
             const failures = [], responses = [];
             page.on('pageerror', e => failures.push(e.message));
             page.on('console', message => { if (message.type() === 'error') failures.push(message.text()); });
@@ -73,7 +74,10 @@ try {
             assert.equal(result.supported, true); assert.equal(result.legal, true);
             assert.ok(Math.abs(result.probability - 1) < 1e-9);
             assert.equal(result.exact.converged, true); assert.equal(result.cancelled, true);
-            const ui = build.game_assets ? await checkUiContinuity(page) : {skipped: 'archive predates React/asset migration'};
+            const ui = build.game_assets ? await checkUiContinuity(page).catch(async error => {
+                console.error(JSON.stringify({failures, status: await page.locator('.pc-emu-status, .pc-calc-status').allTextContents()}));
+                throw error;
+            }) : {skipped: 'archive predates React/asset migration'};
             assert.deepEqual(failures, []);
             for (const suffix of ['.wasm', build.runtime.url, 'league-index.json']) {
                 assert.ok(responses.some(r => r.url.endsWith(suffix) && r.status === 200), `missing successful ${suffix}`);

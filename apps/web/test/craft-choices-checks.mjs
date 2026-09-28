@@ -63,6 +63,18 @@ export async function checkCraftChoices(page) {
     assert.deepEqual(await rows(page), heights);
 
     await page.locator('pc-emulator [data-craft-panel="harvest"]').click();
+    await choice(page, 'pc-emulator', 'harvest-reforge-tag', 'Minion').click();
+    const materials = page.locator('pc-emulator [data-craft-cost="harvest_reforge:minion"]');
+    await materials.locator('[data-material-key="lifeforce:rancour"]').waitFor();
+    assert.match(await materials.innerText(), /3 × Crystallised Rancour/);
+    assert.match(await materials.innerText(), /200 × Primal Crystallised Lifeforce/);
+    await apply('harvest_reforge');
+    assert.deepEqual(await lastCall(), {type: 'harvest_reforge', target_tag: 'minion'});
+    assert.equal(await page.evaluate(() => document.querySelector('pc-emulator').undoHistory.at(document.querySelector('pc-emulator').undoHistory.cursor).entry.applied), false);
+    assert.equal(await page.evaluate(() => document.querySelector('pc-emulator').spend.counts['harvest_reforge:minion']), undefined, 'Native-refused crafts must not add spend');
+    await choice(page, 'pc-emulator', 'harvest-reforge-tag', 'Attribute').click();
+    await apply('harvest_reforge');
+    assert.equal(await page.evaluate(() => document.querySelector('pc-emulator').spend.counts['harvest_reforge:attribute']), 1);
     await choice(page, 'pc-emulator', 'harvest-reforge-tag', 'Fire').click();
     await apply('harvest_reforge');
     assert.deepEqual(await lastCall(), {type: 'harvest_reforge', target_tag: 'fire'});
@@ -91,6 +103,7 @@ export async function checkCraftChoices(page) {
 /** Without a goal there is no native solve; only explicit buttons change the chosen action. */
 export async function checkCalculatorChoices(page) {
     await page.waitForFunction(() => document.querySelector('pc-calculator')?.item && !document.querySelector('pc-calculator')?.busy);
+    await page.locator('pc-calculator [data-calc-tool="craft"]').click();
     await page.locator('pc-calculator [data-craft-panel="fossil"]').click();
     const before = await page.evaluate(() => document.querySelector('pc-calculator').actionId);
     await choice(page, 'pc-calculator', 'fossil', 'Pristine').click();
@@ -113,5 +126,6 @@ export async function checkCalculatorChoices(page) {
     await page.waitForFunction(() => document.querySelector('pc-calculator')?.item && !document.querySelector('pc-calculator')?.busy);
     assert.equal(await choice(page, 'pc-calculator', 'essence-type', 'Woe').getAttribute('aria-pressed'), 'true');
     assert.equal(await choice(page, 'pc-calculator', 'essence-key', 'Screaming').getAttribute('aria-pressed'), 'true');
+    await page.locator('pc-calculator [data-calc-tool="craft"]').click();
     await page.locator('pc-calculator [data-craft-panel="basic"]').click();
 }

@@ -59,6 +59,19 @@ families, tiers, legality, or probability. Direct input editing retains the
 engine-backed modifier and fracture gestures. Goal rows express tier-or-better
 requirements and show native marginal slot probability when available.
 
+Input and Goal sit side by side in a comparison area. Their settings and item
+rows align; both use 96-pixel modifier slots with Prefixes and Suffixes in
+adjacent columns. A separate pane switches between Modifiers, Craft & odds,
+and Strategy finder. Tool content scrolls without moving either item. Clicking
+an item selects its modifier-pool context; clicking a card background also
+opens the Modifiers pane. Tools remain mounted when switched.
+
+Harvest choices show the complete material recipe, including Crystallised
+Rancour or Sacred Lifeforce where required, and the selected economy's craft
+price and source. Recipes come from the existing versioned economy manifest;
+the UI does not derive new crafting rules or reprice a complete recipe from
+incomplete component quotes.
+
 Code authority:
 `apps/web/src/app/components/pc-calculator.tsx`,
 `apps/web/src/app/calculator-goal-model.ts`,

@@ -4,6 +4,7 @@ const ready = page => page.waitForFunction(() => {
     const emulator = document.querySelector('pc-emulator');
     return emulator?.item && !emulator.busy;
 });
+const spend = page => page.evaluate(() => structuredClone(document.querySelector('pc-emulator').spend));
 const itemState = page => page.evaluate(async () => {
     const emulator = document.querySelector('pc-emulator');
     return {base: emulator.base, level: emulator.itemLevel, state: await emulator.client.exportItem(emulator.item)};
@@ -22,21 +23,25 @@ async function craft(page, action) {
 export async function checkEmulatorHistory(page) {
     await ready(page);
     const rare = await itemState(page);
+    assert.deepEqual(await spend(page), {counts: {alchemy: 1}, untracked: false});
     await page.keyboard.press('Control+z');
     await ready(page);
     const normal = await itemState(page);
     assert.equal(normal.state.rarity, 0);
+    assert.deepEqual(await spend(page), {counts: {}, untracked: false});
     await page.reload();
     await ready(page);
     assert.deepEqual(await itemState(page), normal);
     await emulatorCommand(page, 'redo');
     assert.deepEqual(await itemState(page), rare);
+    assert.deepEqual(await spend(page), {counts: {alchemy: 1}, untracked: false});
     await page.locator('pc-emulator [data-history-index="0"]').click();
     await ready(page);
     assert.deepEqual(await itemState(page), normal);
     await page.locator('pc-emulator [data-history-index="1"]').click();
     await ready(page);
     assert.deepEqual(await itemState(page), rare);
+    assert.deepEqual(await spend(page), {counts: {alchemy: 1}, untracked: false});
 
     // A base change can also be undone; session-local modifier IDs must follow their base.
     await emulatorCommand(page, 'change-base');
@@ -49,6 +54,7 @@ export async function checkEmulatorHistory(page) {
     assert.match(crown.base, /HelmetStrIntRitual3$/);
     await emulatorCommand(page, 'undo');
     assert.deepEqual(await itemState(page), rare);
+    assert.deepEqual(await spend(page), {counts: {alchemy: 1}, untracked: false});
     await emulatorCommand(page, 'redo');
     assert.deepEqual(await itemState(page), crown);
     await emulatorCommand(page, 'undo');
@@ -56,18 +62,26 @@ export async function checkEmulatorHistory(page) {
     assert.equal(await page.locator('pc-emulator [data-cmd="redo"]').isDisabled(), true);
     await emulatorCommand(page, 'undo');
     assert.deepEqual(await itemState(page), rare);
+    assert.deepEqual(await spend(page), {counts: {alchemy: 1}, untracked: false});
     await emulatorCommand(page, 'redo');
     await craft(page, 'transmute');
     const magic = await itemState(page);
+    const magicSpend = await spend(page);
+    assert.deepEqual(magicSpend.counts, {alchemy: 1, transmute: 1});
     await page.locator('pc-emulator [data-craft-panel="bestiary"]').click();
     await page.locator('pc-emulator [data-bestiary-action="bestiary:imprint"]:not(:disabled)').click();
     await ready(page);
     const imprint = await itemState(page);
     assert.equal(imprint.state.bestiary.checkpoint_present, true);
+    const imprintSpend = await spend(page);
+    assert.equal(imprintSpend.counts['beast:rare'], 3);
+    assert.equal(imprintSpend.counts['beast:craicic-croaker'], 1);
     await emulatorCommand(page, 'undo');
     assert.deepEqual(await itemState(page), magic);
+    assert.deepEqual(await spend(page), magicSpend);
     await emulatorCommand(page, 'redo');
     assert.deepEqual(await itemState(page), imprint);
+    assert.deepEqual(await spend(page), imprintSpend);
     await craft(page, 'regal');
     await page.locator('pc-emulator [data-craft-panel="bestiary"]').click();
     await page.locator('pc-emulator [data-bestiary-action="bestiary:restore_imprint"]:not(:disabled)').click();
@@ -78,8 +92,53 @@ export async function checkEmulatorHistory(page) {
     await page.locator('pc-emulator [data-history-index="1"]').click();
     await ready(page);
     assert.deepEqual(await itemState(page), rare);
+    assert.deepEqual(await spend(page), {counts: {alchemy: 1}, untracked: false});
     await craft(page, 'chaos');
+    assert.deepEqual(await spend(page), {counts: {alchemy: 1, chaos: 1}, untracked: false});
+    await page.locator('pc-craft-spend summary').click();
+    await page.locator('[data-spend-key="alchemy"] input').fill('2');
+    await page.locator('[data-spend-key="chaos"] input').fill('3');
+    assert.equal(await page.locator('[data-spend-total]').innerText(), '5c');
+    await page.locator('.pc-economy-trigger').click();
+    const profile = await page.locator('[data-profile][aria-checked="true"]').getAttribute('data-profile');
+    await page.getByRole('menuitemradio').filter({hasText: 'Custom / manual'}).click();
+    await page.waitForFunction(() => document.querySelector('[data-spend-total]')?.textContent === '0c + unpriced');
+    assert.match(await page.locator('pc-craft-spend').innerText(), /2 material prices missing/);
+    await page.locator('[data-spend-key="alchemy"] input').fill('2');
+    await page.locator('[data-spend-key="chaos"] input').fill('3');
+    assert.equal(await page.locator('[data-spend-total]').innerText(), '5c');
+    await page.locator('.pc-economy-trigger').click();
+    await page.locator(`[data-profile="${profile}"]`).click();
+    await page.locator('.pc-economy-popover').waitFor({state: 'detached'});
+    assert.deepEqual(await spend(page), {counts: {alchemy: 1, chaos: 1}, untracked: false});
+    await page.locator('pc-craft-spend summary').click();
     assert.equal(await page.locator('pc-emulator [data-cmd="redo"]').isDisabled(), true);
+
+    // Recover an older on-disk draft without inventing costs or dropping Undo.
+    const current = await itemState(page);
+    const priorLength = await page.evaluate(async () => {
+        const emulator = document.querySelector('pc-emulator');
+        const request = indexedDB.open('poecraft');
+        const db = await new Promise(resolve => { request.onsuccess = () => resolve(request.result); });
+        const read = db.transaction('drafts').objectStore('drafts').get(emulator.docId);
+        const draft = await new Promise(resolve => {read.onsuccess = () => resolve(read.result);});
+        for (const frame of draft.undoHistory.entries) { delete frame.spend; delete frame.entry.costKeys; }
+        const transaction = db.transaction('drafts', 'readwrite');
+        transaction.objectStore('drafts').put(draft);
+        await new Promise((resolve, reject) => {transaction.oncomplete = resolve; transaction.onabort = reject;});
+        db.close();
+        return draft.undoHistory.entries.length;
+    });
+    await page.reload();
+    await ready(page);
+    assert.equal(await page.evaluate(() => document.querySelector('pc-emulator').undoHistory.length), priorLength);
+    assert.deepEqual(await spend(page), {counts: {}, untracked: true});
+    assert.match(await page.locator('pc-craft-spend').innerText(), /Some history steps have no cost data/);
+    await emulatorCommand(page, 'undo');
+    await emulatorCommand(page, 'redo');
+    assert.deepEqual(await itemState(page), current);
+    await craft(page, 'chaos');
+    assert.deepEqual(await spend(page), {counts: {chaos: 1}, untracked: true});
 }
 
 const graph = page => page.evaluate(() => JSON.parse(JSON.stringify(document.querySelector('pc-strategy-editor').strategy)));

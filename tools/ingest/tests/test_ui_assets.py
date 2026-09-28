@@ -36,7 +36,7 @@ class UiAssetTests(unittest.TestCase):
                                          "CREATE TABLE mod(mod_id INTEGER,text TEXT);")
                 connection.execute("INSERT INTO data_manifest VALUES('source-hash','fixture')")
                 for key, name in [("supported-base", "Test Base"), ("unsupported-base", "Other Base"), ("currency", "Chaos Orb"),
-                                  ("fossil", "Pristine Fossil"), ("essence", "Deafening Essence of Woe"), ("wild", "Wild Crystallised Lifeforce")]:
+                                  ("fossil", "Pristine Fossil"), ("essence", "Deafening Essence of Woe"), ("wild", "Wild Crystallised Lifeforce"), ("rancour", "Crystallised Rancour")]:
                     connection.execute("INSERT INTO base_item VALUES(?,?,?,?)", (key, name, json.dumps({"dds_file": "Art/2DItems/Fixture.dds"}), '{}'))
                 connection.execute("INSERT INTO fossil VALUES(?,?)", ('fossil', json.dumps({'MoreLife': 'More Life modifiers', 'NoDefences': 'No Defence modifiers'})))
                 connection.execute("INSERT INTO essence VALUES(1,'essence',0)")
@@ -68,11 +68,13 @@ class UiAssetTests(unittest.TestCase):
             with patch.object(assets, "ROOT", root), patch.object(assets.subprocess, "run") as network:
                 result = assets.build(db, lock, output, 1)
                 network.assert_not_called()
-                self.assertEqual(set(result["items"]), {"supported-base", "currency", "fossil", "essence", "wild"})
+                self.assertEqual(set(result["items"]), {"supported-base", "currency", "fossil", "essence", "wild", "rancour"})
                 self.assertEqual(result["actions"]["chaos"], "currency")
                 self.assertEqual(result["items"]["fossil"]["description"], 'More Life modifiers\nNo Defence modifiers')
                 self.assertEqual(result["items"]["essence"]["essence_mods"]["Body Armour"], '+(88-95) to maximum Energy Shield')
                 self.assertEqual(result["harvest"]["reforge:fire"], 'wild')
+                self.assertEqual(result["harvest"]["component:wild"], "wild")
+                self.assertEqual(result["harvest"]["component:rancour"], "rancour")
                 self.assertEqual(result["items"]["supported-base"]["image"], sha + ".png")
                 self.assertEqual(result["unavailable"], [])
                 first = (output / "catalog.json").read_bytes()

@@ -1,5 +1,11 @@
 # Handoff
 
+Current local follow-up (2026-09-28): Calculator Input/Goal comparison layout,
+complete Harvest material costs/artwork and Emulator spend tracking are implemented
+on `main`, not yet pushed or deployed. Oliver chose spend for the current history
+path, including Undo/Redo. The [continuity record](docs/active/2026-09-27-ui-continuity/README.md#calculator-comparison-and-craft-spend)
+owns scope and checks. The live release below is still the deployed version.
+
 UI follow-up release (2026-09-28): Oliver requested publication of the current
 changes. They are committed on `main`, pushed and deployed to
 https://oliverorton.github.io/poecraft2/. The

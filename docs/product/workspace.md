@@ -134,6 +134,22 @@ base changes are reversible too. Crafting after rewinding replaces the redo
 branch; this is a linear timeline, not a retained tree of alternate crafts.
 Restoring an item does not rewind the action context's random stream.
 
+Craft spend follows the current history path: Undo, Redo and selecting an
+earlier history entry restore its cumulative material counts. New crafts after
+Undo discard the abandoned branch's spend. Totals use current shared economy
+prices and per-material overrides, so price changes revalue existing counts.
+Missing prices and older steps without recorded consumption remain explicit.
+Native action descriptors supply consumption vectors; Bestiary results supply
+their actual consumed keys. Refused actions, item creation and manual item
+edits add no spend. Applied bench crafts do count. Base acquisition is excluded.
+
+Cumulative counts are stored in every history frame, so trimming old Undo
+steps retains their spend. Existing drafts retain their item timeline and mark
+unrecorded earlier spend; they do not invent historical material counts.
+Duplicate and Stash imports start a new tracker because Stash saves item state,
+not the crafting timeline. Harvest material quantities and artwork use the
+same recipe manifest and asset catalogue as the shared craft controls.
+
 Emulator and Strategy Builder keep up to 100 snapshots per document, bounded
 to 8 MiB of serialized UTF-16 history (a single larger current snapshot is
 still retained). The timeline and current position persist with the draft.

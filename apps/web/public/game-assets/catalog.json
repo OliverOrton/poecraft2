@@ -8178,6 +8178,14 @@
       "width": 78,
       "height": 78
     },
+    "Metadata/Items/Currency/HarvestSeedFaridun": {
+      "name": "Crystallised Rancour",
+      "visual_identity": "HarvestSeedFaridun",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/Harvest/FaridunLifeforce.png",
+      "image": "c514bd815ec3e3bd9008e7ec0e7afd3410dc8dd5a60582480a22d75e593befe1.png",
+      "width": 78,
+      "height": 78
+    },
     "Metadata/Items/Currency/HarvestSeedGreen": {
       "name": "Vivid Crystallised Lifeforce",
       "visual_identity": "HarvestSeedGreen",
@@ -11729,6 +11737,11 @@
     "eater of worlds": "Metadata/Items/Currency/CurrencyEldritchIchor1"
   },
   "harvest": {
+    "component:wild": "Metadata/Items/Currency/HarvestSeedRed",
+    "component:vivid": "Metadata/Items/Currency/HarvestSeedGreen",
+    "component:primal": "Metadata/Items/Currency/HarvestSeedBlue",
+    "component:sacred": "Metadata/Items/Currency/HarvestSeedBoss",
+    "component:rancour": "Metadata/Items/Currency/HarvestSeedFaridun",
     "reforge:fire": "Metadata/Items/Currency/HarvestSeedRed",
     "reforge:cold": "Metadata/Items/Currency/HarvestSeedGreen",
     "reforge:lightning": "Metadata/Items/Currency/HarvestSeedBlue",
@@ -14635,6 +14648,13 @@
       "file": "d2b4e237b8f452b05d10112fb3016c1458bb95bdc38e7353f55af3fdc2aa45d2.png",
       "sha256": "d2b4e237b8f452b05d10112fb3016c1458bb95bdc38e7353f55af3fdc2aa45d2",
       "bytes": 8762,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Currency/Harvest/FaridunLifeforce.png": {
+      "file": "c514bd815ec3e3bd9008e7ec0e7afd3410dc8dd5a60582480a22d75e593befe1.png",
+      "sha256": "c514bd815ec3e3bd9008e7ec0e7afd3410dc8dd5a60582480a22d75e593befe1",
+      "bytes": 10593,
       "width": 78,
       "height": 78
     },

@@ -44,6 +44,7 @@ INFLUENCE_NAMES = {
 LIFEFORCE_NAMES = {
     "wild": "Wild Crystallised Lifeforce", "vivid": "Vivid Crystallised Lifeforce",
     "primal": "Primal Crystallised Lifeforce", "sacred": "Sacred Crystallised Lifeforce",
+    "rancour": "Crystallised Rancour",
 }
 
 
@@ -124,7 +125,7 @@ def metadata(database: Path, lock_path: Path) -> tuple[dict, dict, dict, dict, d
     influences = {key: names[name] for key, name in INFLUENCE_NAMES.items() if name in names}
     recipes = json.loads((ROOT / "fixtures/economy/harvest-recipes-v1.json").read_text(encoding="utf-8"))
     # Primary lifeforce art follows the recipe owner; sacred/rancour are supplementary costs.
-    harvest = {}
+    harvest = {f"component:{key}": names[name] for key, name in LIFEFORCE_NAMES.items() if name in names}
     for kind in ("reforge", "augment", "resistance"):
         for tag, costs in recipes[kind].items():
             primary = next((component for component in costs if component in ("wild", "vivid", "primal")), None)

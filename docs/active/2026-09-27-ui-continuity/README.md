@@ -223,3 +223,39 @@ Nonblocking observation for a later UI pass: after draft reload, the compact
 Emulator toolbar can retain its initial `BodyInt17` label while the item card,
 native item and Essence item class correctly identify the restored Crown.
 Visual design acceptance remains Oliver's judgement.
+
+## Calculator comparison and craft spend
+
+Oliver requested a structural Calculator layout fix, complete Harvest costs
+including Crystallised Rancour, and an Emulator cost tracker. He selected costs
+for the current history path: Undo must undo tracked spend. The changes are local
+on `main`; the preceding follow-up remains the deployed release.
+
+Input and Goal now share an aligned comparison area, with a separate switching
+pane for Modifiers, Craft & odds, and Strategy finder. Shared item cards retain
+their existing controls and native behavior. Harvest controls and odds display
+expand the existing approved recipe manifest; its Rancour quantities and economy
+recipe prices were already correct. Python asset ingest adds Rancour and material
+aliases, producing 1,139 items and 615 images with no unavailable artwork.
+
+Emulator counts native consumption vectors and values them using current shared
+economy prices. Cumulative totals persist per history frame, survive history
+trimming, follow Undo/Redo and branching, and disclose missing prices or legacy
+steps without cost data. Price overrides remain shared across the workspace.
+The compact restored-base label is also refreshed correctly. Product contracts
+live in `docs/product/calculator.md` and `docs/product/workspace.md`.
+
+Validation: `npm test` passed with native smoke restricted to the new
+`emulator native cost descriptors` case plus its required fixtures; all remaining
+web component/contract tests ran. TypeScript and the production build passed.
+The two focused Python asset-ingest tests passed. Chromium 145 static-site
+interactions cover 1366×768 and 1920×1080 comparison geometry, independent tool
+scrolling, native crafts and Harvest material costs, pricing overrides/missing
+quotes, history restore/branching, old-draft recovery and the existing continuity
+workflow. Logs are under `out/ui-migration/calculator-spend-*`.
+
+The browser check caught and resolved missing spend-component registration in the
+production bundle before this work was finalized. SQLite, frozen runtime and
+WASM are unchanged; no native mechanics suite, Simulator qualification, Firefox
+run, deployment or rendered design review was performed. Oliver retains visual
+acceptance.

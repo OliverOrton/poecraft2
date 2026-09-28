@@ -5,6 +5,7 @@ import { HARVEST_AUGMENT, HARVEST_REFORGE, harvestTagsFor } from "../harvest-cra
 import { disconnectReact, renderReact } from "../react-host";
 import { GameIcon } from "./pc-game-icon";
 import { CraftChoice } from "./craft-choice";
+import { HarvestCost } from "./craft-cost";
 
 export type CraftPanel = "basic" | "essence" | "harvest" | "fossil" | "eldritch" | "influenced" | "veiled" | "bestiary";
 const PANELS: Array<[CraftPanel, string, string]> = [
@@ -83,18 +84,18 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
         case "harvest": panel = <div className="pc-harvest-layout"><div className="pc-harvest-main">
             <section><div className="pc-material-heading">Reforge</div>
                 {choices("harvest-reforge-tag", "Reforge modifier type", harvestTagsFor(m.catalog.harvestTags, HARVEST_REFORGE), entry => "harvest:reforge:" + entry.key)}
-                <div className="pc-material-footer">{action("harvest_reforge", calculator ? "Calculate reforge" : "Reforge", true)}</div>
+                <div className="pc-material-footer"><HarvestCost costKey={`harvest_reforge:${value("harvest-reforge-tag")}`} />{action("harvest_reforge", calculator ? "Calculate reforge" : "Reforge", true)}</div>
             </section>
             <section><div className="pc-material-heading">Augment</div>
                 {choices("harvest-augment-tag", "Augment modifier type", harvestTagsFor(m.catalog.harvestTags, HARVEST_AUGMENT), entry => "harvest:augment:" + entry.key)}
-                <div className="pc-material-footer">{action("harvest_augment", calculator ? "Calculate augment" : "Augment", true)}</div>
+                <div className="pc-material-footer"><HarvestCost costKey={`harvest_augment:${value("harvest-augment-tag")}`} />{action("harvest_augment", calculator ? "Calculate augment" : "Augment", true)}</div>
             </section>
         </div><section className="pc-harvest-resistance"><div className="pc-material-heading">Convert resistance</div>
             <div className="pc-material-heading">From</div>
             {choices("resist-from", "Resistance to replace", resistanceEntries(), entry => "harvest:resistance:" + entry.key)}
             <div className="pc-material-heading">To</div>
             {choices("resist-to", "New resistance", resistanceEntries(), entry => "harvest:resistance:" + entry.key)}
-            <div className="pc-material-footer">{action("harvest_resist", calculator ? "Calculate conversion" : "Convert resistance", true, value("resist-from") === value("resist-to"))}</div>
+            <div className="pc-material-footer"><HarvestCost costKey={`harvest_resist:${value("resist-to")}`} />{action("harvest_resist", calculator ? "Calculate conversion" : "Convert resistance", true, value("resist-from") === value("resist-to"))}</div>
         </section></div>; break;
         case "fossil": panel = <div className="pc-material-panel">
             <div className="pc-material-options" role="group" aria-label="Fossils">

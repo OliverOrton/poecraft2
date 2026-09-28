@@ -4,6 +4,9 @@ import { BaseSelectionShell, EmulatorShell } from "./document-shells";
 import { EditHistory, historyShortcut } from "../edit-history";
 import { resolveCraftValues } from "../craft-choices";
 import { modTextLabel } from "../mod-text";
+import { addCraftSpend, emptyCraftSpend, NativeCraftCosts } from "../craft-costs";
+import type { PcCraftSpend } from "./pc-craft-spend";
+import "./pc-craft-spend";
 /*
  * pc-emulator — an emulator document. Owns one engine session, action context,
  * and live item, and drives the craft bar, the item view, and the modifier-pool
@@ -72,6 +75,8 @@ export class PcEmulator extends HTMLElement {
     private history: CraftHistoryEntry[] = []; // Read-only logs from drafts predating snapshots.
     private undoHistory = new EditHistory<EmulatorHistoryState>();
     private pendingHistoryEntry: CraftHistoryEntry | null = null;
+    private spend = emptyCraftSpend();
+    private craftCosts = new NativeCraftCosts();
     private savedStateKey: string | null = null;
     private modCache: ModInfo[] = [];
     private veiledOptions: number[] = [];
@@ -176,7 +181,15 @@ export class PcEmulator extends HTMLElement {
         const entry = draft?.undoHistory?.entries[draft.undoHistory.cursor]?.entry ?? {
             action: "Opened item", applied: true, added: 0, removed: 0, detail: "starting state",
         };
-        this.undoHistory.restore(draft?.undoHistory, {snapshot, entry});
+        const recoveredHistory = draft?.undoHistory && {
+            ...draft.undoHistory,
+            entries: draft.undoHistory.entries.map(frame => ({...frame,
+                // Even the oldest retained frame may follow trimmed paid crafts.
+                spend: frame.spend ?? {counts: {}, untracked: true},
+            })),
+        };
+        this.spend = recoveredHistory?.entries[recoveredHistory.cursor]?.spend ?? {counts: {}, untracked: this.history.length > 0};
+        this.undoHistory.restore(recoveredHistory, {snapshot, entry, spend: this.spend});
         if (!this.dirty) this.savedStateKey = JSON.stringify(snapshot);
         this.initializing = false;
         try {
@@ -266,7 +279,7 @@ export class PcEmulator extends HTMLElement {
             rarity: this.rarity,
             withImplicits: true,
         });
-        this.pendingHistoryEntry = {action: "Create item", applied: true, added: 0, removed: 0, detail: this.baseDisplayName()};
+        this.pendingHistoryEntry = {action: "Create item", applied: true, added: 0, removed: 0, detail: this.baseDisplayName(), costKeys: []};
         await this.markChanged();
     }
 
@@ -279,28 +292,24 @@ export class PcEmulator extends HTMLElement {
             rarity: this.rarity,
             withImplicits: true,
         });
-        this.pendingHistoryEntry = {action: "Create item", applied: true, added: 0, removed: 0, detail: this.baseDisplayName()};
+        this.pendingHistoryEntry = {action: "Create item", applied: true, added: 0, removed: 0, detail: this.baseDisplayName(), costKeys: []};
         await this.markChanged();
     }
 
     private async applyAction(type: CraftAction["type"]): Promise<void> {
-        const outcome = await this.client.apply(this.context, this.item, { type });
-        this.pendingHistoryEntry = {
-            action: type,
-            applied: outcome.applied,
-            added: outcome.added,
-            removed: outcome.removed,
-        };
-        await this.markChanged();
+        await this.applyConfiguredAction({type});
     }
 
     private async applyConfiguredAction(action: CraftAction): Promise<void> {
+        // Pricing metadata must never prevent an otherwise supported craft.
+        const keys = await this.craftCosts.forAction(this.client, this.session, action).catch(() => undefined);
         const outcome = await this.client.apply(this.context, this.item, action);
         this.pendingHistoryEntry = {
             action: action.type,
             applied: outcome.applied,
             added: outcome.added,
             removed: outcome.removed,
+            costKeys: outcome.applied ? keys : [],
         };
         await this.markChanged();
     }
@@ -318,6 +327,7 @@ export class PcEmulator extends HTMLElement {
             applied: outcome.applied,
             added: 0,
             removed: 0,
+            costKeys: outcome.consumed_price_keys,
             detail: outcome.applied
                 ? action.checkpoint_effect === "create"
                     ? "checkpoint saved"
@@ -334,25 +344,17 @@ export class PcEmulator extends HTMLElement {
         fractured = false,
     ): Promise<void> {
         const info = this.modCache.find((mod) => mod.key === key);
-        let applied = true;
         if (info?.reach_kind === REACH_KIND_CRAFTED && !fractured) {
-            const outcome = await this.client.apply(this.context, this.item, {
-                type: "bench",
-                mod_key: key,
-            });
-            applied = outcome.applied;
-        } else {
-            await this.client.addMod(this.item, this.session, {
-                key,
-                side,
-                fractured,
-            });
+            await this.applyConfiguredAction({type: "bench", mod_key: key});
+            return;
         }
+        await this.client.addMod(this.item, this.session, {key, side, fractured});
         this.pendingHistoryEntry = {
             action: `${fractured ? "fracture" : "add"} ${side} ${key}`,
-            applied,
-            added: applied ? 1 : 0,
+            applied: true,
+            added: 1,
             removed: 0,
+            costKeys: [],
         };
         await this.markChanged();
     }
@@ -370,6 +372,7 @@ export class PcEmulator extends HTMLElement {
                 applied: true,
                 added: 0,
                 removed: 0,
+                costKeys: [],
             };
             await this.markChanged();
             return;
@@ -388,6 +391,7 @@ export class PcEmulator extends HTMLElement {
             applied: true,
             added: 0,
             removed: 1,
+            costKeys: [],
         };
         await this.markChanged();
     }
@@ -395,7 +399,8 @@ export class PcEmulator extends HTMLElement {
     private async markChanged(): Promise<void> {
         const snapshot = await this.snapshot();
         if (this.pendingHistoryEntry) {
-            this.undoHistory.record({snapshot, entry: this.pendingHistoryEntry});
+            this.spend = addCraftSpend(this.spend, this.pendingHistoryEntry.costKeys);
+            this.undoHistory.record({snapshot, entry: this.pendingHistoryEntry, spend: this.spend});
             this.pendingHistoryEntry = null;
         }
         this.dirty = this.savedStateKey !== JSON.stringify(snapshot);
@@ -437,6 +442,7 @@ export class PcEmulator extends HTMLElement {
             this.base = snapshot.base;
             this.itemLevel = snapshot.itemLevel;
             this.undoHistory.go(index);
+            this.spend = frame.spend ?? {counts: {}, untracked: index > 0};
             this.dirty = this.savedStateKey !== JSON.stringify(snapshot);
             await this.client.closeItem(previous.item);
             if (differentBase) {
@@ -652,6 +658,8 @@ export class PcEmulator extends HTMLElement {
             poolWeights,
         });
         this.renderHistory();
+        this.syncControls();
+        if (this.catalog) this.querySelector<PcCraftSpend>("pc-craft-spend")?.setModel({spend: this.spend, catalog: this.catalog});
         this.renderMechanicControls();
     }
 

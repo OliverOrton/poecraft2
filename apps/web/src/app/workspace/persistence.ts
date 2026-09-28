@@ -9,6 +9,7 @@
  */
 
 import type { HistoryData } from "../edit-history";
+import type { CraftSpend } from "../craft-costs";
 import type { StrategyDocument } from "../strategy-model";
 
 const DB_NAME = "poecraft";
@@ -79,11 +80,14 @@ export interface CraftHistoryEntry {
     added: number;
     removed: number;
     detail?: string;
+    /** Native consumption keys; absent when legacy/failed metadata leaves consumption unknown. */
+    costKeys?: string[];
 }
 
 export interface EmulatorHistoryState {
     snapshot: ItemSnapshot;
     entry: CraftHistoryEntry;
+    spend?: CraftSpend;
 }
 
 export interface StrategyHistoryState {
