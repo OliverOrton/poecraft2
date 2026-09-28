@@ -1,0 +1,42 @@
+{
+  "status": "published and live functionally verified",
+  "verified_at_utc": "2026-09-28T20:18:08.213Z",
+  "site_url": "https://oliverorton.github.io/poecraft2/",
+  "source_commit": "44d9384cb55cfea3709eeb978f2c0258f810c860",
+  "build_id": "2091a375019d1243cb365aeb3189489f012e633b27b0f340a124141f5ed4caf4",
+  "bundle_id": "c0b0dfc619ff63045d6cacb64f9be54a78df157a8cb46aa33f953b7a0e55d592",
+  "workflow_run_id": 36477551100,
+  "workflow_url": "https://github.com/OliverOrton/poecraft2/actions/runs/36477551100",
+  "workflow_result": "success",
+  "browsers": {
+    "chromium": "145.0.7632.6",
+    "firefox": "146.0.1",
+    "bases": [
+      "/",
+      "/poecraft2/"
+    ],
+    "result": "passed"
+  },
+  "live_checks": [
+    "HTTPS manifest matches the verified CI archive byte-for-byte",
+    "Executing build identity",
+    "Craft spend and Undo/Redo",
+    "Reload preserves item and spend",
+    "Restored base label",
+    "Harvest Rancour quantity and artwork",
+    "Native Harvest consumption",
+    "Calculator comparison at 1366x768 and 1920x1080",
+    "No browser errors"
+  ],
+  "economy_mode": "bundled",
+  "artifact_id": 10994720679,
+  "archive_path": "C:\\Users\\Oliver\\Documents\\poecraft2-tester-archives\\hosted-tester-run-36477551100.zip",
+  "archive_sha256": "3cd2f903f42c615ed7ad2b0589d0c29af2778f78cdf137657bb51b5095a4f46d",
+  "github_digest": "sha256:3cd2f903f42c615ed7ad2b0589d0c29af2778f78cdf137657bb51b5095a4f46d",
+  "manifest_sha256": "d24a443bcd4c0d3b23053d824792deb4e97a32b645948c070af993d365275187",
+  "verified_component_count": 643,
+  "previous_known_good_rollback_run": 36472417169,
+  "rollback_run": 36477551100,
+  "rollback_rehearsal": "not performed; preceding verified archive retained",
+  "visual_acceptance": "remains with Oliver; live checks were functional"
+}

@@ -228,8 +228,8 @@ Visual design acceptance remains Oliver's judgement.
 
 Oliver requested a structural Calculator layout fix, complete Harvest costs
 including Crystallised Rancour, and an Emulator cost tracker. He selected costs
-for the current history path: Undo must undo tracked spend. The changes are local
-on `main`; the preceding follow-up remains the deployed release.
+for the current history path: Undo must undo tracked spend. He then requested
+deployment; source `44d9384cb55cfea3709eeb978f2c0258f810c860` is now live.
 
 Input and Goal now share an aligned comparison area, with a separate switching
 pane for Modifiers, Craft & odds, and Strategy finder. Shared item cards retain
@@ -256,6 +256,21 @@ workflow. Logs are under `out/ui-migration/calculator-spend-*`.
 
 The browser check caught and resolved missing spend-component registration in the
 production bundle before this work was finalized. SQLite, frozen runtime and
-WASM are unchanged; no native mechanics suite, Simulator qualification, Firefox
-run, deployment or rendered design review was performed. Oliver retains visual
-acceptance.
+WASM are unchanged; no native mechanics suite or Simulator qualification was
+rerun. Oliver retains rendered design acceptance.
+
+The [successful release workflow](https://github.com/OliverOrton/poecraft2/actions/runs/36477551100)
+passed Chromium 145.0.7632.6 and Firefox 146.0.1 at both `/` and `/poecraft2/`.
+The [release receipt](hosted-release-2026-09-28-calculator-spend.json) owns the
+build/bundle identity and durable archive hashes. Live Beta `2091a375` matches the
+643-component CI archive byte-for-byte at the manifest level. The archive matches
+GitHub's artifact digest and passes the existing full component verifier.
+
+A fresh live Chromium session verified the executing build, native crafting,
+spend Undo/Redo and reload recovery, the corrected compact base label, Rancour
+quantity/artwork and consumption, and both Calculator comparison sizes without
+browser errors. The test used an isolated browser session and closed it afterward.
+The previous known-good run `36472417169` and its durable archive remain available
+for rollback. No live rollback rehearsal or R2 activation was performed. Main
+remains the development branch; only release-record prose follows the deployed
+source commit. Deployment logs use `out/ui-migration/calculator-spend-deploy-*`.
