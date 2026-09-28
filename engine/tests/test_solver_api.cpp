@@ -851,7 +851,7 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
                  "\"generated\":0,\"deferred\":12950") !=
              std::string::npos);
     PC_CHECK(create_telemetry.find(
-                 "\"filtered_corruption_only_essence\":4") !=
+                 "filtered_corruption_only_essence") ==
              std::string::npos);
 
     pc_item_state start = empty;
@@ -1507,7 +1507,7 @@ void run_public_product_reforge_family_gate(const char* artifact_dir) {
                      "\"fossil_loadouts\":{\"possible\":12950,"
                      "\"generated\":4,\"deferred\":12946") !=
                  std::string::npos);
-        PC_CHECK(telemetry.find("filtered_corruption_only_essence") !=
+        PC_CHECK(telemetry.find("filtered_corruption_only_essence") ==
                  std::string::npos);
         pc_solver_destroy(filter_solver);
     }

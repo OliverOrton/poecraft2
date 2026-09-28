@@ -39,7 +39,8 @@ class UiAssetTests(unittest.TestCase):
                                   ("fossil", "Pristine Fossil"), ("essence", "Deafening Essence of Woe"), ("wild", "Wild Crystallised Lifeforce"), ("rancour", "Crystallised Rancour")]:
                     connection.execute("INSERT INTO base_item VALUES(?,?,?,?)", (key, name, json.dumps({"dds_file": "Art/2DItems/Fixture.dds"}), '{}'))
                 connection.execute("INSERT INTO fossil VALUES(?,?)", ('fossil', json.dumps({'MoreLife': 'More Life modifiers', 'NoDefences': 'No Defence modifiers'})))
-                connection.execute("INSERT INTO essence VALUES(1,'essence',0)")
+                # Acquisition through corruption must not hide item-class tooltip data.
+                connection.execute("INSERT INTO essence VALUES(1,'essence',1)")
                 connection.execute("INSERT INTO essence_mod VALUES(1,'Body Armour',1)")
                 connection.execute("INSERT INTO mod VALUES(1,'+(88-95) to maximum Energy Shield')")
             recipes = root / "fixtures/economy/harvest-recipes-v1.json"

@@ -154,10 +154,9 @@ are not additional crafting rules.
 
 ## Known Cross-Surface Boundaries
 
-- The Emulator and Calculator filter corruption-only Essences from their
-  catalog, and the native data/registry path retains the compiled flag and
-  rejects those keys from ordinary Essence solving. Corruption-only Essence
-  behavior remains unimplemented.
+- Special Essences use the ordinary item reforge with their canonical
+  guaranteed modifier. Their corruption-only flag describes acquisition;
+  obtaining/upgrading Essences from trapped monsters is outside this model.
 - The visual Strategy Builder exposes fewer condition leaf types than the JSON
   compiler/simulator accepts.
 - The exact single-action calculator supports every primitive. Whole-graph

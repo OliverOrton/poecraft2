@@ -13,8 +13,8 @@ pickers.
 ## Scope
 
 This family owns the parameterized `essence` primitive and solver IDs of the
-form `essence:<metadata-key>`. It does not claim support for corruption-only
-Essence transformations.
+form `essence:<metadata-key>`, including Horror, Hysteria, Insanity and Delirium.
+Their `is_corruption_only` flag describes acquisition, not a different item craft.
 
 ## Implemented Behavior
 
@@ -41,6 +41,10 @@ has a resolvable guaranteed modifier.
 
 ## Dated Oliver Rulings
 
+- **2026-09-28:** For Horror, Hysteria, Insanity and Delirium, corruption-only
+  describes how the Essence is obtained. Using one on an item is the existing
+  Essence reforge with its item-class-specific guaranteed modifier. This
+  supersedes the former selector/registry exclusion based on that flag.
 - **2026-07-17:** Essence and Fossil renewals ignore every metamod side lock and
   Cannot Roll pool restriction. Fractured affixes survive independently; a
   fractured metamod may survive but has no effect on that roll. This correction
@@ -60,24 +64,24 @@ has a resolvable guaranteed modifier.
 - `engine/src/solver_reforge.cpp` and `engine/src/solver_calc.cpp` — exact
   reforge distribution.
 - `engine/src/solver_registry.cpp` — `essence:<metadata-key>` descriptors.
-- `apps/web/src/app/engine-worker.ts` — corruption-only catalog filtering.
+- `apps/web/src/app/engine-worker.ts` — named Essence catalogue presentation.
 
 ## Emulator Support
 
-The Essence panel presents non-corruption-only catalog entries, grouped by the
-web craft-choice helper, and sends the chosen `essence_key` to the native
-action. Entries marked `is_corruption_only` in the compiled bundle are omitted
-from this picker.
+The Essence panel groups named Essence entries by type and tier and sends the
+chosen `essence_key` to the native action. Horror, Hysteria, Insanity and Delirium
+appear with a Special tier. Their artwork and item-class tooltip text follow
+the same canonical joins as other Essences. Remnant of Corruption is not an item
+reforge and does not appear as an Essence type.
 
 ## Solver Support
 
-The solver registry and exact calculator support the ordinary guaranteed-mod
-reforge for each resolvable non-corruption Essence. Product goal filtering
-keeps only an ordinary Essence whose guaranteed modifier exactly matches a goal
+The solver registry and exact calculator support the guaranteed-mod
+reforge for each resolvable Essence. Product goal filtering
+keeps only an Essence whose guaranteed modifier exactly matches a goal
 family and records unrelated Essences under a stable filtered reason.
-Corruption-only rows are rejected while the native registry is built, before
-they can become ordinary Essence candidates, and product telemetry records
-`filtered_corruption_only_essence`.
+The acquisition flag does not affect admission. The former
+`filtered_corruption_only_essence` rejection reason is retired.
 
 Protected-side solver options deliberately do not admit Essence as the
 protected renewal, because the dated owner ruling says it ignores every
@@ -85,14 +89,12 @@ metamod.
 
 ## Calculator Support
 
-The Calculator’s Essence panel uses the same filtered web catalog as the
+The Calculator’s Essence panel uses the same web catalog as the
 Emulator and evaluates `essence:<metadata-key>` with the exact native reforge
 calculator.
 
 ## Explicitly Unsupported Behavior
 
-- Corruption-only Essence transformation behavior is not implemented.
-- The web product hides corruption-only rows, and the native ordinary-Essence
-  registry rejects those compiled keys as well. This is a support-boundary
-  rejection, not an implementation of corruption Essence mechanics.
+- Obtaining/upgrading Essences by corrupting trapped monsters is outside this
+  one-item crafting model.
 - Essence rolls do not preserve or obey any metamod effect.

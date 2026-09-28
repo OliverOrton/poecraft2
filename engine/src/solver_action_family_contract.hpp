@@ -741,14 +741,12 @@ struct ProductReasonContract {
     std::string_view reason;
 };
 
-inline constexpr std::array<ProductReasonContract, 26>
+inline constexpr std::array<ProductReasonContract, 25>
     kProductReasonContracts{{
         {ProductReasonGroup::Currency, ProductActionRole::Candidate,
          "candidate_general_currency"},
         {ProductReasonGroup::Essence, ProductActionRole::Candidate,
          "candidate_exact_essence_goal"},
-        {ProductReasonGroup::Essence, ProductActionRole::Filtered,
-         "filtered_corruption_only_essence"},
         {ProductReasonGroup::Essence, ProductActionRole::Filtered,
          "filtered_essence_without_exact_goal_mod"},
         {ProductReasonGroup::Fossil, ProductActionRole::Candidate,

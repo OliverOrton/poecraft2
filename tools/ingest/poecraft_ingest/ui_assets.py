@@ -57,7 +57,7 @@ def craft_details(connection: sqlite3.Connection) -> dict[str, dict]:
     for row in connection.execute("""
         SELECT e.key, em.item_class_key, m.text
         FROM essence e JOIN essence_mod em USING(essence_id) JOIN mod m USING(mod_id)
-        WHERE e.is_corruption_only = 0 ORDER BY e.key, em.item_class_key
+        ORDER BY e.key, em.item_class_key
     """):
         details.setdefault(row["key"], {}).setdefault("essence_mods", {})[row["item_class_key"]] = row["text"]
     return details

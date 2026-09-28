@@ -111,6 +111,11 @@ controls, a draft, and a displayed craft history. The action list comes from
 the engine's Emulator-available catalog; applying an action mutates only that
 document's native item.
 
+The Emulator gives the item and modifier pool full-height columns. Crafting
+and cost/history share a third column with separate scrolling regions, so
+long Essence or Harvest panels do not push the item and history below the
+window. Item rows retain their normal single-column layout.
+
 The shared item card reserves 72-pixel modifier rows (96 pixels for goal rows
 with tier controls), so empty, single-line and multiline mods do not resize the
 ledger. Exceptionally long content scrolls within its row; concrete modifiers
@@ -118,8 +123,8 @@ also expose their full text on hover.
 
 Emulator and Calculator share material-choice rows for Essences, Fossils,
 Influence Exalts and Harvest. Essences select a type, then a tier from that
-type; Fossils toggle up to four materials. Harvest resistance conversion sits
-beside Reforge/Augment. Selecting a material stages the choice; the separate
+type; Fossils toggle up to four materials. Harvest resistance conversion remains
+in the Harvest panel with Reforge/Augment. Selecting a material stages the choice; the separate
 text-only craft/Calculate button applies it. Calculator keeps staged Fossils
 separate from its currently evaluated loadout.
 

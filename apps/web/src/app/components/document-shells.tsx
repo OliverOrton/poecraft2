@@ -19,11 +19,13 @@ export function EmulatorShell({baseName, itemLevel}: {baseName: string; itemLeve
                 <button data-cmd="duplicate">Duplicate</button><button data-cmd="strategy">Use in Strategy</button><button data-cmd="calculator">Odds</button>
             </span><span className="pc-emu-status" hidden />
         </div>
-        <Element tag="pc-craft-controls" className="pc-advanced-crafts" />
         <div className="pc-emu-body">
             <section className="pc-emu-item"><h3>Item</h3><Element tag="pc-mod-list" /></section>
             <section className="pc-emu-pool"><Element tag="pc-mod-pool" allow-direct-craft="" /></section>
-            <section className="pc-emu-side"><Element tag="pc-craft-spend" /><h3>Craft history</h3><ul className="pc-emu-history" /></section>
+            <aside className="pc-emu-tools">
+                <Element tag="pc-craft-controls" className="pc-advanced-crafts" />
+                <section className="pc-emu-side"><Element tag="pc-craft-spend" /><h3>Craft history</h3><ul className="pc-emu-history" /></section>
+            </aside>
         </div>
     </div>;
 }
@@ -32,9 +34,13 @@ export function CalculatorShell({freshRarity, allowExtraModifiers}: {freshRarity
     return <div className="pc-calculator">
         <div className="pc-craft-bar pc-calc-toolbar"><span className="pc-calc-workbench-title">Calculator</span><span className="pc-calc-status" hidden /></div>
         <div className="pc-calc-body">
-            <aside className="pc-calc-contexts" role="tablist" aria-label="Modifier pool context">
-                <article className="pc-calc-context-card pc-calc-input-context" data-context-card="input" role="tab" tabIndex={0}>
-                    <header className="pc-calc-context-header"><h3>Input item</h3><span className="pc-calc-context-state">Select</span></header>
+            <aside className="pc-calc-contexts" aria-label="Item editor">
+                <nav className="pc-calc-context-tabs" aria-label="Item to edit">
+                    <button data-calc-context="input" aria-pressed="false">Input item</button>
+                    <button data-calc-context="goal" aria-pressed="true">Goal item</button>
+                </nav>
+                <article className="pc-calc-context-card pc-calc-input-context" data-context-card="input" hidden>
+                    <header className="pc-calc-context-header"><h3>Input item</h3></header>
                     <div className="pc-calc-item-settings pc-calc-input-actions"><button data-cmd="change-base">Change base…</button>
                         <span className="pc-calc-new-item"><select data-role="fresh-rarity" aria-label="New item rarity" defaultValue={freshRarity}>
                             <option value="normal">Normal</option><option value="magic">Magic</option><option value="rare">Rare</option>
@@ -42,8 +48,8 @@ export function CalculatorShell({freshRarity, allowExtraModifiers}: {freshRarity
                     </div>
                     <div className="pc-calc-item-scroll"><Element tag="pc-mod-list" data-role="input-item" /></div>
                 </article>
-                <article className="pc-calc-context-card pc-calc-goal" data-context-card="goal" role="tab" tabIndex={0}>
-                    <header className="pc-calc-context-header"><h3>Goal item</h3><span className="pc-calc-context-state">Select</span></header>
+                <article className="pc-calc-context-card pc-calc-goal" data-context-card="goal">
+                    <header className="pc-calc-context-header"><h3>Goal item</h3></header>
                     <div className="pc-calc-item-settings"><div className="pc-calc-goal-controls">
                         <label><span>Finished rarity</span><select data-role="goal-rarity">
                             <option value="normal">Normal</option><option value="magic">Magic</option><option value="rare">Rare</option>
@@ -56,17 +62,16 @@ export function CalculatorShell({freshRarity, allowExtraModifiers}: {freshRarity
                     <div className="pc-calc-item-scroll"><Element tag="pc-mod-list" data-role="goal-item" /></div>
                 </article>
             </aside>
+            <section className="pc-calc-editing">
+                <section className="pc-calc-crafting"><Element tag="pc-craft-controls" className="pc-advanced-crafts" /></section>
+                <section className="pc-calc-pool"><Element tag="pc-mod-pool" /></section>
+            </section>
             <aside className="pc-calc-tools">
-                <nav className="pc-calc-tool-tabs" aria-label="Calculator tools">
-                    <button data-calc-tool="modifiers" aria-pressed="true">Modifiers</button>
-                    <button data-calc-tool="craft" aria-pressed="false">Craft &amp; odds</button>
+                <nav className="pc-calc-tool-tabs" aria-label="Calculator results">
+                    <button data-calc-tool="odds" aria-pressed="true">Odds</button>
                     <button data-calc-tool="solve" aria-pressed="false">Strategy finder</button>
                 </nav>
-                <section className="pc-calc-pool" data-calc-pane="modifiers"><Element tag="pc-mod-pool" /></section>
-                <section className="pc-calc-crafting" data-calc-pane="craft" hidden>
-                    <Element tag="pc-craft-controls" className="pc-advanced-crafts" />
-                    <div className="pc-calc-results"><h3>Odds</h3><div className="pc-calc-output" /></div>
-                </section>
+                <section className="pc-calc-results" data-calc-pane="odds"><div className="pc-calc-output" /></section>
                 <section className="pc-calc-solve" data-calc-pane="solve" hidden><div className="pc-calc-solve-panel" /></section>
             </aside>
         </div>

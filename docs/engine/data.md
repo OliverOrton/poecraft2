@@ -141,9 +141,11 @@ offsets, enum mappings, and lookup relationships while building immutable
 weights, classification tags, stat keys, bench, Essence, Fossil, and Bestiary
 data. The compiled artifact preserves additional fields that a current runtime
 path may not consume, including added-tag links and numeric stat ranges.
-The native Essence arrays include and length-validate `is_corruption_only`;
-ordinary solver registry construction uses that flag to reject unsupported
-corruption Essence keys before candidate admission.
+The native Essence arrays include and length-validate `is_corruption_only`.
+Oliver clarified on 2026-09-28 that this is acquisition metadata: it does not
+exclude Horror, Hysteria, Insanity or Delirium from item crafting or registry
+admission. Guaranteed-mod resolution and the existing item-level restriction
+remain the native eligibility checks.
 
 The web worker also derives a compact UI catalog from the same bundled JSON.
 That catalog is TypeScript presentation data, not an alternate mechanic

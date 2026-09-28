@@ -58,11 +58,6 @@ pc-game-icon:empty { display: none; }
 .pc-selected-fossils .pc-chip { display: inline-flex; align-items: center; }
 pc-craft-controls { display: block; }
 .pc-palette-list button { min-height: 34px; }
-.pc-emu-body { grid-template-columns: minmax(320px, .9fr) minmax(440px, 1.6fr);
-    grid-template-rows: auto minmax(110px, 1fr); grid-template-areas: "item pool" "history pool"; }
-.pc-emu-item { grid-area: item; padding: 10px 12px; }
-.pc-emu-pool { grid-area: pool; }
-.pc-emu-side { grid-area: history; align-self: stretch; padding: 10px 12px; overflow: auto; }
 /* History uses the same compact rows and focus treatment as the item controls. */
 .pc-emu-history li { padding: 0; }
 .pc-emu-history [data-history-index] {
@@ -92,7 +87,6 @@ pc-craft-controls { display: block; }
 /* Reserve the two-line modifier footprint even for empty and single-line slots. */
 .pc-mod-slot, .pc-mod-slot.is-empty { height: 72px; min-height: 72px; max-height: 72px; flex: 0 0 72px; }
 .pc-mod-list-target .pc-mod-slot { height: 96px; min-height: 96px; max-height: 96px; flex-basis: 96px; }
-.pc-calc-contexts .pc-mod-slot { height: 96px; min-height: 96px; max-height: 96px; flex-basis: 96px; }
 .pc-mod-slot-content { min-height: 0; overflow-y: auto; justify-content: safe center; scrollbar-width: thin; }
 
 .pc-material-panel { display: grid; gap: 7px; }

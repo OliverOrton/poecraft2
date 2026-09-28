@@ -24,6 +24,15 @@ export async function checkCraftChoices(page) {
     };
     const lastCall = () => page.evaluate(() => window.craftChoiceCalls.at(-1));
     await page.locator('pc-emulator [data-craft-panel="essence"]').click();
+    for (const name of ['Horror', 'Hysteria', 'Insanity', 'Delirium']) {
+        await choice(page, 'pc-emulator', 'essence-type', name).click();
+        const special = choice(page, 'pc-emulator', 'essence-key', 'Special');
+        assert.equal(await special.getAttribute('aria-pressed'), 'true');
+        await special.hover();
+        await page.getByRole('tooltip').waitFor();
+        assert.match(await page.getByRole('tooltip').innerText(), /Body Armour/);
+        await page.keyboard.press('Escape');
+    }
     await choice(page, 'pc-emulator', 'essence-type', 'Woe').click();
     const screaming = choice(page, 'pc-emulator', 'essence-key', 'Screaming');
     await screaming.click();
@@ -103,7 +112,7 @@ export async function checkCraftChoices(page) {
 /** Without a goal there is no native solve; only explicit buttons change the chosen action. */
 export async function checkCalculatorChoices(page) {
     await page.waitForFunction(() => document.querySelector('pc-calculator')?.item && !document.querySelector('pc-calculator')?.busy);
-    await page.locator('pc-calculator [data-calc-tool="craft"]').click();
+    await page.locator('pc-calculator [data-calc-tool="odds"]').click();
     await page.locator('pc-calculator [data-craft-panel="fossil"]').click();
     const before = await page.evaluate(() => document.querySelector('pc-calculator').actionId);
     await choice(page, 'pc-calculator', 'fossil', 'Pristine').click();
@@ -126,6 +135,6 @@ export async function checkCalculatorChoices(page) {
     await page.waitForFunction(() => document.querySelector('pc-calculator')?.item && !document.querySelector('pc-calculator')?.busy);
     assert.equal(await choice(page, 'pc-calculator', 'essence-type', 'Woe').getAttribute('aria-pressed'), 'true');
     assert.equal(await choice(page, 'pc-calculator', 'essence-key', 'Screaming').getAttribute('aria-pressed'), 'true');
-    await page.locator('pc-calculator [data-calc-tool="craft"]').click();
+    await page.locator('pc-calculator [data-calc-tool="odds"]').click();
     await page.locator('pc-calculator [data-craft-panel="basic"]').click();
 }

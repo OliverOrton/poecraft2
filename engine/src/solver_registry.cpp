@@ -275,11 +275,6 @@ ProductAdmissionDecision classify_goal_relevant_action(
     switch (action.params.type) {
     case ActionType::Essence: {
         const std::uint32_t essence = action.params.essence_index;
-        if (essence < session.data->essence_is_corruption_only.size() &&
-            session.data->essence_is_corruption_only[essence] != 0) {
-            return {ProductActionRole::Filtered,
-                    "filtered_corruption_only_essence"};
-        }
         return essence < session.essence_guaranteed_mod_ids.size() &&
                        goal_contains_exact_mod(
                            options,
@@ -1811,26 +1806,7 @@ void add_essences(
     const ActionRegistryBuildOptions& options) {
     const DataImpl& data = *session.data;
     for (std::uint32_t i = 0; i < data.essence_count; ++i) {
-        if (i < data.essence_is_corruption_only.size() &&
-            data.essence_is_corruption_only[i] != 0) {
-            if (options.goal_relevant_actions) {
-                const std::string id = "essence:" +
-                    data.string_at(data.essence_key_sids[i]);
-                const std::size_t filtered = static_cast<std::size_t>(
-                    ProductActionRole::Filtered);
-                const std::size_t essence = static_cast<std::size_t>(
-                    PrimitiveTelemetryFamily::Essence);
-                ++registry.product_role_counts[filtered];
-                ++registry.product_role_family_counts[filtered][essence];
-                ++registry.product_reason_counts[
-                    "filtered_corruption_only_essence"];
-                registry.product_filtered_actions.push_back(
-                    {id, PrimitiveTelemetryFamily::Essence,
-                     ProductActionRole::Filtered,
-                     "filtered_corruption_only_essence"});
-            }
-            continue;
-        }
+        // Corruption-only describes acquisition, not item-crafting eligibility.
         if (i >= session.essence_guaranteed_mod_ids.size() ||
             session.essence_guaranteed_mod_ids[i] == kNoId) {
             continue;

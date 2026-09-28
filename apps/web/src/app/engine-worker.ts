@@ -98,7 +98,6 @@ function buildCatalog(bundle: Uint8Array): Catalog {
 
     const essences: CatalogEntry[] = [];
     for (let i = 0; i < g.essences.key_string_ids.length; i += 1) {
-        if (g.essences.is_corruption_only?.[i]) continue;
         const name = s(g.essences.name_string_ids[i]);
         if (!name) continue;
         essences.push({ key: s(g.essences.key_string_ids[i]), name });

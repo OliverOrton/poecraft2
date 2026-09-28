@@ -337,7 +337,9 @@ pc-economy-selector {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: minmax(280px, 1fr) minmax(360px, 1.4fr) minmax(220px, 1fr);
+    grid-template-columns: minmax(330px, 1fr) minmax(350px, 1.15fr) minmax(350px, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    overflow: hidden;
     gap: 1px;
     background: var(--pc-border);
 }
@@ -355,9 +357,30 @@ pc-economy-selector {
 }
 
 .pc-emu-side {
-    align-self: start;
-    overflow: hidden;
+    min-height: 0;
+    overflow: auto;
 }
+
+.pc-emu-tools {
+    display: grid;
+    grid-template-rows: minmax(210px, 1.7fr) minmax(160px, 1fr);
+    min-width: 0;
+    min-height: 0;
+    gap: 1px;
+}
+.pc-emu-item, .pc-emu-pool { min-height: 0; min-width: 0; }
+.pc-emu-tools > .pc-advanced-crafts, .pc-calc-crafting > .pc-advanced-crafts {
+    display: flex; flex-direction: column; height: 100%; min-height: 0;
+}
+.pc-emu-tools .pc-craft-panel-tabs, .pc-calc-crafting .pc-craft-panel-tabs { flex-wrap: wrap; flex: none; }
+.pc-emu-tools .pc-craft-panel-body, .pc-calc-crafting .pc-craft-panel-body { min-height: 0; overflow: auto; flex: 1; }
+.pc-emu-tools .pc-harvest-layout, .pc-calc-crafting .pc-harvest-layout { display: block; }
+.pc-emu-tools .pc-harvest-resistance, .pc-calc-crafting .pc-harvest-resistance { margin-top: 12px; padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--pc-border); }
+.pc-emu-tools .pc-material-footer, .pc-calc-crafting .pc-material-footer { flex-wrap: wrap; }
+.pc-emu-tools .pc-craft-panel-tabs button, .pc-calc-crafting .pc-craft-panel-tabs button { padding: 4px 6px; }
+.pc-emu-tools .pc-game-art-control, .pc-calc-crafting .pc-game-art-control { width: 20px; height: 20px; }
+.pc-emu-tools .pc-material-options, .pc-calc-crafting .pc-material-options { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); }
+.pc-emu-side .pc-emu-history { height: auto; overflow: visible; }
 
 .pc-emu-base {
     color: var(--pc-text-strong);
@@ -3358,7 +3381,7 @@ pc-run-trace {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: minmax(0, 2.2fr) minmax(350px, 1fr);
+    grid-template-columns: minmax(350px, 1fr) minmax(400px, 1.3fr) minmax(270px, .8fr);
     grid-template-rows: minmax(0, 1fr);
     gap: 1px;
     overflow: hidden;
@@ -3372,61 +3395,38 @@ pc-run-trace {
 }
 
 .pc-calc-contexts {
-    grid-column: 1;
-    grid-row: 1;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: auto auto minmax(0, 1fr);
+    display: flex;
+    flex-direction: column;
     min-width: 0;
     min-height: 0;
-    gap: 8px;
-    overflow: hidden;
     padding: 10px;
     background: var(--pc-bg);
 }
-
+.pc-calc-context-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.pc-calc-context-tabs button { flex: 1; }
+.pc-calc-context-tabs [aria-pressed="true"] { border-color: var(--pc-accent); color: var(--pc-text-strong); }
 .pc-calc-context-card {
-    display: grid;
-    grid-template-rows: subgrid;
-    grid-row: 1 / 4;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     min-width: 0;
     min-height: 0;
+    gap: 8px;
     padding: 9px;
     background: var(--pc-bg-raised);
     border: 1px solid var(--pc-border);
-    border-radius: 0;
-    cursor: pointer;
-    outline: none;
 }
-
-.pc-calc-input-context { grid-column: 1; }
-.pc-calc-goal { grid-column: 2; }
-.pc-calc-item-settings { min-width: 0; align-self: start; }
+.pc-calc-context-card[hidden] { display: none; }
+.pc-calc-item-settings { min-width: 0; flex: none; }
 .pc-calc-item-scroll { min-height: 0; overflow: auto; scrollbar-gutter: stable; }
-.pc-calc-contexts .pc-mod-explicit-ledger { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.pc-calc-contexts .pc-mod-group-other { grid-column: 1 / -1; }
+.pc-calc-editing { display: grid; grid-template-rows: minmax(210px, .9fr) minmax(230px, 1.1fr); min-width: 0; min-height: 0; }
+.pc-calc-crafting { min-height: 0; overflow: hidden; }
 .pc-calc-tools { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--pc-bg); }
 .pc-calc-tool-tabs { display: flex; flex: none; gap: 4px; padding: 8px; border-bottom: 1px solid var(--pc-border); }
 .pc-calc-tool-tabs button { flex: 1; padding: 6px 4px; }
 .pc-calc-tool-tabs [aria-pressed="true"] { border-color: var(--pc-accent); color: var(--pc-text-strong); }
 .pc-calc-tools > [data-calc-pane] { flex: 1; min-height: 0; overflow: auto; }
 .pc-calc-tools > [data-calc-pane][hidden] { display: none; }
-.pc-calc-tools > .pc-calc-pool { overflow: hidden; }
-.pc-calc-crafting .pc-advanced-crafts { max-height: none; }
-.pc-calc-crafting .pc-craft-panel-tabs { flex-wrap: wrap; }
-.pc-calc-crafting .pc-harvest-layout { display: block; }
-.pc-calc-crafting .pc-harvest-resistance { margin-top: 12px; padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--pc-border); }
-.pc-calc-crafting .pc-material-footer { flex-wrap: wrap; }
-
-.pc-calc-context-card:hover,
-.pc-calc-context-card:focus-visible {
-    border-color: color-mix(in srgb, var(--pc-accent) 65%, var(--pc-border));
-}
-
-.pc-calc-context-card.is-active {
-    border-color: var(--pc-accent);
-    box-shadow: inset 3px 0 color-mix(in srgb, var(--pc-accent) 80%, transparent);
-}
 
 .pc-calc-context-header {
     display: flex;
@@ -3438,21 +3438,6 @@ pc-run-trace {
 
 .pc-calc-context-header h3 {
     margin: 0;
-}
-
-.pc-calc-context-state {
-    padding: 1px 5px;
-    color: var(--pc-text-dim);
-    border: 1px solid var(--pc-border);
-    border-radius: 2px;
-    font-size: 8px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-.pc-calc-context-card.is-active .pc-calc-context-state {
-    color: var(--pc-accent);
-    border-color: var(--pc-accent);
 }
 
 .pc-calc-pool {
@@ -3478,6 +3463,7 @@ pc-run-trace {
 
 .pc-calc-solve-header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
@@ -3512,7 +3498,7 @@ pc-run-trace {
 
 .pc-calc-solve-targets {
     display: grid;
-    grid-template-columns: repeat(2, minmax(190px, 240px)) minmax(280px, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     align-items: end;
     gap: 10px 16px;
     padding: 8px 11px;
@@ -3521,12 +3507,16 @@ pc-run-trace {
 
 .pc-calc-solve-targets label {
     display: grid;
-    grid-template-columns: 1fr 96px;
+    grid-template-columns: minmax(0, 1fr) 96px;
     align-items: center;
     gap: 8px;
     color: var(--pc-text);
     font-size: 10px;
 }
+
+.pc-calc-solve-targets label:has([data-solve-mode]) { grid-template-columns: minmax(0, 1fr); }
+.pc-calc-solve-targets input, .pc-calc-solve-targets select { min-width: 0; width: 100%; }
+.pc-calc-solve-targets label span { min-width: 0; flex-wrap: wrap; }
 
 .pc-calc-solve-targets label span {
     display: flex;
@@ -3535,7 +3525,7 @@ pc-run-trace {
 }
 
 .pc-calc-solve-targets .pc-calc-solve-restart-option {
-    grid-column: 1 / 3;
+    grid-column: 1 / -1;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -3559,7 +3549,7 @@ pc-run-trace {
 
 .pc-calc-solve-progress {
     display: grid;
-    grid-template-columns: minmax(175px, 1.4fr) repeat(6, minmax(85px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
     align-items: center;
     gap: 8px 14px;
     padding: 8px 11px;
@@ -3570,6 +3560,7 @@ pc-run-trace {
 }
 
 .pc-calc-solve-progress > strong {
+    grid-column: 1 / -1;
     color: var(--pc-text-strong);
     font-family: var(--pc-sans);
     font-weight: 500;
@@ -3603,7 +3594,7 @@ pc-run-trace {
 
 .pc-calc-price-fallback {
     display: grid;
-    grid-template-columns: minmax(180px, 1fr) 110px minmax(260px, 2fr);
+    grid-template-columns: minmax(0, 1fr) 90px;
     align-items: center;
     gap: 10px;
     padding: 8px 11px;
@@ -3613,6 +3604,7 @@ pc-run-trace {
 }
 
 .pc-calc-price-fallback small {
+    grid-column: 1 / -1;
     color: var(--pc-text-dim);
     line-height: 1.35;
 }
@@ -3623,14 +3615,13 @@ pc-run-trace {
 
 .pc-calc-solve-result {
     display: grid;
-    grid-template-columns: minmax(190px, 0.8fr) minmax(280px, 1.5fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 5px 18px;
     padding: 10px 11px 11px;
     border-top: 1px solid var(--pc-border);
 }
 
 .pc-calc-solve-headline {
-    grid-row: 1 / 4;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -3683,7 +3674,7 @@ pc-run-trace {
 .pc-calc-solve-bounds {
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: repeat(4, minmax(170px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 1px;
     margin: 7px 0 2px;
     border: 1px solid var(--pc-border);
@@ -3755,6 +3746,7 @@ pc-run-trace {
 .pc-calc-solve-verification {
     grid-column: 1 / -1;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 7px;
 }
@@ -4404,11 +4396,11 @@ pc-run-trace {
 }
 
 @media (max-width: 1150px) {
-    .pc-calc-body {
-        min-width: 1120px;
+    .pc-calc-body, .pc-emu-body {
+        min-width: 1050px;
     }
 
-    .pc-calculator {
+    .pc-calculator, .pc-emulator {
         overflow-x: auto;
     }
 }

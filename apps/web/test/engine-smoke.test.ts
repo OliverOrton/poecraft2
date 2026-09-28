@@ -2410,6 +2410,53 @@ test("coverage goals use native terminal truth and neutral proof authority", asy
     }
 });
 
+test("special essence acquisition does not block crafting", async () => {
+    const { groupEssences } = await import("../src/app/craft-choices");
+    const catalog = await client.catalog(dataId);
+    const raw = JSON.parse(new TextDecoder().decode(buildBundle()));
+    const strings = raw.strings.strings;
+    const sid = (id: number) => strings[id - (raw.strings.string_id_base ?? 0)];
+    const essences = raw.game_data.essences;
+    const groups = groupEssences(catalog.essences);
+    for (const name of ["Delirium", "Horror", "Hysteria", "Insanity"]) {
+        const entry = catalog.essences.find(entry => entry.name === `Essence of ${name}`);
+        assert.ok(entry, `${name} must be selectable`);
+        assert.equal(groups.find(group => group.type === name)?.tiers[0].key, entry.key);
+        const index = essences.key_string_ids.findIndex((id: number) => sid(id) === entry.key);
+        assert.equal(essences.is_corruption_only[index], 1, "Acquisition metadata remains unchanged");
+        const links = Array.from({length: essences.mod_offsets[index + 1] - essences.mod_offsets[index]}, (_, i) => essences.mod_offsets[index] + i);
+        const link = links.find(i => sid(essences.item_class_key_string_ids[i]) === "Body Armour");
+        assert.notEqual(link, undefined);
+        const guaranteed = sid(essences.linked_mod_key_string_ids[link!]);
+        const item = await client.createItem(sessionId, {rarity: "normal", withImplicits: false});
+        const action = `essence:${entry.key}`;
+        const goal = {version: "v1" as const, rarity: "rare" as const, allow_extra_modifiers: true,
+            slots: [{family_mod_key: guaranteed, min_tier: 0}]};
+        const product = await client.openSolver(sessionId, {...goal, action_mode: "goal_relevant", fossil_mode: "goal_relevant"});
+        try {
+            const descriptor = (await client.solverActions(product)).find(entry => entry.id === action);
+            assert.deepEqual(descriptor?.cost_keys, [action], `${name} must be admitted for its guaranteed goal modifier`);
+        } finally { await client.closeSolver(product); }
+        // Match the Calculator: product admission and exact odds own separate handles.
+        const solver = await client.openSolver(sessionId, {...goal, actions: [action]});
+        try {
+            const descriptor = (await client.solverActions(solver)).find(entry => entry.id === action);
+            assert.deepEqual(descriptor?.cost_keys, [action]);
+            const odds = await client.solverCalc(solver, item, action).catch(error => {
+                throw new Error(`${name} exact odds: ${String(error)}`);
+            });
+            assert.equal(odds.supported, true);
+            assert.equal(odds.legal, true);
+            const success = odds.outcomes.filter(outcome => outcome.is_goal).reduce((sum, outcome) => sum + outcome.probability, 0);
+            assert.ok(Math.abs(success - 1) < 1e-9, `${name} exact odds must guarantee its modifier`);
+            assert.equal((await client.apply(contextId, item, {type: "essence", essence: entry.key})).applied, true);
+            const info = await client.itemInfo(item, sessionId);
+            const mods = await Promise.all([...(info.prefix_mod_ids as number[]), ...(info.suffix_mod_ids as number[])].map(id => client.modInfo(sessionId, id)));
+            assert.ok(mods.some(mod => mod.key === guaranteed), `${name} must apply its canonical guaranteed modifier`);
+        } finally { await client.closeSolver(solver); await client.closeItem(item); }
+    }
+});
+
 test("emulator native cost descriptors", async () => {
     const { NativeCraftCosts } = await import("../src/app/craft-costs");
     const costs = new NativeCraftCosts();

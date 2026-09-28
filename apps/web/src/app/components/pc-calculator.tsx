@@ -12,12 +12,12 @@ import { BaseSelectionShell, CalculatorShell } from "./document-shells";
  * The selection surfaces mirror the Emulator: goal mods are picked from the
  * same modifier-pool browser (pc-mod-pool in select-goal mode — clicking a
  * tier requires that tier or better) and the action comes from the same
- * craft-panel band, except the buttons select a registry action id instead
+ * craft controls, except the buttons select a registry action id instead
  * of applying a craft.
  *
- * Input and Goal share a side-by-side comparison area. The separate tool pane
- * owns modifier editing, craft odds and strategy search without displacing
- * either item. Goal rows retain engine-returned marginal probabilities.
+ * Input and Goal use the familiar full-width shared item ledger. Crafting
+ * and modifier editing stay visible beside it; odds and strategy search share
+ * the compact results pane. Goal rows retain native marginal probabilities.
  *
  * Document lifecycle mirrors pc-emulator, minus Stash saves: a Calculator is
  * never a saved resource, so the IndexedDB draft exists purely for reload
@@ -197,7 +197,7 @@ export class PcCalculator extends HTMLElement {
     private itemMaxPrefix = 3;
     private itemMaxSuffix = 3;
     private activeContext: "input" | "goal" = "goal";
-    private activeTool: "modifiers" | "craft" | "solve" = "modifiers";
+    private activeTool: "odds" | "solve" = "odds";
 
     private goalRarity: "normal" | "magic" | "rare" = "rare";
     private allowExtraModifiers = false;
@@ -657,20 +657,18 @@ export class PcCalculator extends HTMLElement {
     }
 
     private renderContextSelection(): void {
+        this.querySelectorAll<HTMLButtonElement>("[data-calc-context]").forEach(button => {
+            button.setAttribute("aria-pressed", String(button.dataset.calcContext === this.activeContext));
+        });
         this.querySelectorAll<HTMLElement>("[data-context-card]").forEach(
             (card) => {
                 const active = card.dataset.contextCard === this.activeContext;
-                card.classList.toggle("is-active", active);
-                card.setAttribute("aria-selected", String(active));
-                const state = card.querySelector<HTMLElement>(
-                    ".pc-calc-context-state",
-                );
-                if (state) state.textContent = active ? "Editing" : "Select";
+                card.hidden = !active;
             },
         );
     }
 
-    private selectTool(tool: "modifiers" | "craft" | "solve"): void {
+    private selectTool(tool: "odds" | "solve"): void {
         this.activeTool = tool;
         this.querySelectorAll<HTMLElement>("[data-calc-pane]").forEach(pane => {
             pane.hidden = pane.dataset.calcPane !== tool;
@@ -2375,6 +2373,9 @@ export class PcCalculator extends HTMLElement {
             button.addEventListener("click", () => this.selectTool(button.dataset.calcTool as typeof this.activeTool));
         });
         this.selectTool(this.activeTool);
+        this.querySelectorAll<HTMLButtonElement>("[data-calc-context]").forEach(button => {
+            button.addEventListener("click", () => this.selectContext(button.dataset.calcContext as "input" | "goal"));
+        });
 
         this.querySelectorAll<HTMLButtonElement>("button[data-cmd]").forEach(
             (button) => {
@@ -2518,22 +2519,6 @@ export class PcCalculator extends HTMLElement {
             this.syncModPoolSelections();
             void this.guard(() => this.goalChanged());
         });
-        this.querySelectorAll<HTMLElement>("[data-context-card]").forEach(
-            (card) => {
-                const context = card.dataset.contextCard as "input" | "goal";
-                card.addEventListener("click", event => {
-                    this.selectContext(context);
-                    if (!(event.target as Element).closest("button, input, select, label")) this.selectTool("modifiers");
-                });
-                card.addEventListener("keydown", (event) => {
-                    if (event.target === card && (event.key === "Enter" || event.key === " ")) {
-                        event.preventDefault();
-                        this.selectContext(context);
-                        this.selectTool("modifiers");
-                    }
-                });
-            },
-        );
         this.selectContext(this.activeContext);
         this.renderItem();
         this.renderGoal();

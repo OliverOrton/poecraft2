@@ -59,12 +59,13 @@ families, tiers, legality, or probability. Direct input editing retains the
 engine-backed modifier and fracture gestures. Goal rows express tier-or-better
 requirements and show native marginal slot probability when available.
 
-Input and Goal sit side by side in a comparison area. Their settings and item
-rows align; both use 96-pixel modifier slots with Prefixes and Suffixes in
-adjacent columns. A separate pane switches between Modifiers, Craft & odds,
-and Strategy finder. Tool content scrolls without moving either item. Clicking
-an item selects its modifier-pool context; clicking a card background also
-opens the Modifiers pane. Tools remain mounted when switched.
+Input and Goal use the normal shared item ledger, with Prefixes above Suffixes.
+Input/Goal buttons switch the active item column and modifier-pool context
+without scrolling between two stacked cards. Craft controls and the modifier
+pool remain visible in their own editing column. Only Odds and Strategy finder
+share the compact results pane. Craft choices, pool rows and reports scroll
+within their own areas without displacing the item. Views remain mounted when
+switched, preserving edits and results.
 
 Harvest choices show the complete material recipe, including Crystallised
 Rancour or Sacred Lifeforce where required, and the selected economy's craft

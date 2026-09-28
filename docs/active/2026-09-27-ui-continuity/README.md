@@ -274,3 +274,50 @@ The previous known-good run `36472417169` and its durable archive remain availab
 for rollback. No live rollback rehearsal or R2 activation was performed. Main
 remains the development branch; only release-record prose follows the deployed
 source commit. Deployment logs use `out/ui-migration/calculator-spend-deploy-*`.
+
+## Laptop layout and special essences
+
+Oliver rejected the preceding Calculator arrangement and clarified that craft
+controls and modifiers should remain visible; Odds and Strategy finder may share
+a compact area. His usual browser is Chrome on a 16-inch MacBook Pro. The local
+follow-up restores normal full-width shared modifier rows, with Prefixes above
+Suffixes. Input/Goal buttons switch the item column and pool context without
+scrolling between cards. This tabs choice is provisional pending his optional
+preference reply. Craft controls and the modifier pool occupy an editing column;
+only the two result views switch. Solver controls and reports adapt to the narrow
+results panel. Emulator gives the item and pool full-height columns, with crafting
+and cost/history in independently scrolling regions of the third column.
+
+Oliver confirmed that the corruption-only flag for Horror, Hysteria, Insanity
+and Delirium describes acquisition. The named Essences now appear with their
+Special tier, artwork and canonical item-class modifier tooltips. Native registry
+admission uses the existing guaranteed-modifier and item-level rules, without
+excluding acquisition metadata. Exact-goal filtering still applies. The dated
+ruling and remaining boundary live in `docs/mechanics/essences.md`. The obsolete
+filter reason is retired from the native contract and fixture expectations.
+
+The owning asset generator regenerated the catalogue from canonical SQLite:
+1,139 items, 615 images, zero unavailable images. Only the four missing modifier
+tooltip collections changed. SQLite and the compiled game data remain unchanged.
+The release WASM was rebuilt successfully from the updated native source.
+
+Validation: focused native WASM smoke checks all four Essence selections,
+goal-relevant admission, native cost keys, exact guaranteed-modifier probability
+and sampled application. The remaining web component/contract tests, TypeScript,
+production build and two asset-ingest tests passed. Chromium static-site checks
+exercise the layouts at 1366×768, 1536×864 and 1728×1000, switching tools and craft
+panels without moving the item/pool, plus the existing crafting, tooltip,
+history/spend, draft and strategy-editing workflow. Logs use
+`out/ui-migration/layout-essence-*`. No broad native suite, Simulator qualification
+or new Firefox run is claimed. Rendered design acceptance remains Oliver's.
+
+An initial focused test also exposed a separate existing API interop issue:
+exact odds requested through a product-goal solver handle can return state IDs
+owned by `exact_calc`, while `pc_solver_state_is_goal` checks the parent's `calc`.
+The Calculator uses separate product-admission and exact-odds handles; the final
+test matches that path and passes. The public-handle identity issue is deferred,
+with owners `pc_calc_action_outcomes` / `pc_solver_state_is_goal` in
+`engine/src/solver_api.cpp` and `pcw_solver_calc` in `bindings/wasm/wasm_api.cpp`.
+
+This follow-up remains local on `main`, without a push or deployment. The hosted
+Beta `2091a375` and its verified archive above remain the current release.
