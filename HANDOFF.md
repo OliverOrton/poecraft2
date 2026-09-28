@@ -1,10 +1,14 @@
 # Handoff
 
 Oliver accepted the UI pass for first hosting on 2026-09-28 and requested
-continued work directly on `main`. First GitHub Pages activation is in progress;
-commit/push and the existing manual deployment are authorized by that request.
+continued work directly on `main`. GitHub Pages activation is complete:
+https://oliverorton.github.io/poecraft2/ is live and functionally verified.
+The release workflow passed Chromium and Firefox at root and project paths;
+the exact hosted archive is saved and verified for rollback.
 The [UI continuity record](docs/active/2026-09-27-ui-continuity/README.md#first-hosted-release)
-owns the release result. Use bundled prices; live R2 remains a separate task.
+owns the release result and source/build identity. The hosted app uses bundled
+prices; live R2 remains a separate task. Routine improvements stay on `main`,
+with deployment through the existing manual workflow when Oliver asks to ship.
 
 Oliver selected the [UI continuity migration](docs/active/2026-09-27-ui-continuity/README.md)
 for autonomous overnight work. Preserve existing workflows while porting views
@@ -14,7 +18,8 @@ Shared views and document layouts use React/Vite, with the detailed report and
 graph controllers retained. Native coverage goals support the Calculator's
 Allow extra modifiers toggle without claiming clean-goal lower-bound authority.
 The living record owns the migration boundary, validation limits and artifact
-receipt. Chromium workflows pass at root and subpath; Firefox remains unverified.
+receipt. The earlier local Firefox launch limitation remains a Windows issue;
+Linux Firefox deployment checks now pass.
 The local preview server remains at http://127.0.0.1:5187/; no test process is
 running. Its original local artifact receipt predates the first hosting request. The existing
 hosted-tester work below is retained; Oliver's explicit UI request superseded
@@ -24,7 +29,8 @@ Oliver selected [Hosted Tester Baseline Isolation](docs/active/2026-09-27-hosted
 The repository implementation is complete; its original record predates activation.
 The record owns frozen hashes, clean-input build/static Chromium checks, exact
 local archives, rollback rehearsal and the local Firefox launch limitation.
-No push, account change, live R2 activation or timed solver research occurred.
+That original programme made no push or account change. The later first release
+above enabled Pages and pushed `main`; R2 and timed research remain untouched.
 Follow [the hosting runbook](docs/product/hosting.md) for the owner's selected
 commit deployment. Its original artifacts remain a separate historical baseline
 from the completed UI pass and newly identified WASM above.

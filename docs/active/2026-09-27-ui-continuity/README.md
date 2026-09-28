@@ -36,8 +36,8 @@ release identities and research input hashes.
 
 ## Completed implementation
 
-The first migration pass is complete. Changes remain local and uncommitted;
-Oliver's visual acceptance and deployment remain pending. The local Vite preview
+The first migration pass is complete. Oliver accepted it for hosting on
+2026-09-28; the first hosted release is recorded below. The local Vite preview
 is available at <http://127.0.0.1:5187/> while its server remains running.
 
 React 19.2.4 now owns the application toolbar, shared item card/modifier list,
@@ -147,14 +147,35 @@ decision are separate from this completed local implementation.
 ## First hosted release
 
 On 2026-09-28 Oliver accepted this UI pass for first hosting and selected working
-directly on `main`. Commit/push, Pages configuration and the existing manual
-release workflow are authorized. Deployment is in progress; no live URL is
-claimed until the workflow and HTTPS identity are verified. The original local
-receipt above remains historical; hosted identity will be recorded separately.
+directly on `main`. The app is live at <https://oliverorton.github.io/poecraft2/>.
+The [successful release workflow](https://github.com/OliverOrton/poecraft2/actions/runs/36445325568)
+deployed source commit `ceeceb956667f13106d87b190d3abb9ab0ce3b30`, following
+the main implementation commit and a follow-up removal of superseded `.ts`
+controllers. No force push or history rewriting was used. The
+[hosted receipt](hosted-release.json) owns the full build/bundle identity,
+archive location/hash and rollback run. The original local receipt remains
+historical and is not substituted for the committed hosted build.
 
-Reuse the completed native and local browser evidence. This release uses
+Linux Chromium 145.0.7632.6 and Firefox 146.0.1 passed the full static hosting
+workflow at `/` and `/poecraft2/`, resolving the previously unverified Firefox
+deployment gate. Pages is configured for GitHub Actions with public HTTPS.
+The live manifest matches the CI archive byte-for-byte; its build is clean and
+selects the reviewed WASM and artwork catalogue. Live browser checks confirmed
+the executing Beta build, engine/base picker, an Alchemy craft and loaded visible
+artwork, with no browser console errors. Visual design remains Oliver's judgement.
+
+The exact 641-component archive was downloaded to durable local storage,
+hash-checked, extracted safely and passed the existing archive verifier. This
+is the first hosted known-good release; a live rollback to an earlier hosted
+version could not be rehearsed. The archive and its workflow run are now available
+as a rollback target. No off-device backup or live R2 activation is claimed.
+
+The release reused completed native and local browser evidence. It used
 `[skip ci]` on the publishing commit to avoid repeating the broad push-triggered
 native/Simulator suite; the explicitly dispatched hosted-release workflow still
 runs its full hosting contracts, TypeScript and Chromium/Firefox production
-checks at both deployment paths. No branch protection or required check was
-removed. Bundled prices are selected; no R2 activation is included.
+checks at both deployment paths. The local hosting tests also passed on Node
+22.16.0, and solver knowledge lint reported no errors (existing open-claim
+warnings retained). No branch protection or required check was removed. Bundled
+prices are selected. Protected root `0` was excluded from staging and commit
+pathspecs; the final frozen-input audit still changes only the reviewed WASM.

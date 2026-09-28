@@ -1,5 +1,10 @@
 # Hosted tester
 
+The public tester is at <https://oliverorton.github.io/poecraft2/>. The
+[first hosted release](../active/2026-09-27-ui-continuity/README.md#first-hosted-release)
+records its verified deployment and durable rollback archive. Oliver currently
+prefers development directly on `main`; publishing remains a manual release.
+
 The static tester uses GitHub Pages and the existing Vite application. It does
 not run a native server, refresh game data, or require R2. Frontend V2, mechanics
 verification and solver qualification remain separate programmes.

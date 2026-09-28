@@ -1,0 +1,35 @@
+{
+  "status": "published and live functionally verified",
+  "verified_at_utc": "2026-09-28T15:44:51.749182+00:00",
+  "site_url": "https://oliverorton.github.io/poecraft2/",
+  "source_commit": "ceeceb956667f13106d87b190d3abb9ab0ce3b30",
+  "build_id": "15c24f92765c64b8da5db1bd4b2c74bf152b1f10e538dc4b6fd88fda7295487a",
+  "bundle_id": "5f34016e09c56a1bae53230c79efe7bbe995a58d914380b8077d1d73bf646cc8",
+  "workflow_run_id": 36445325568,
+  "workflow_url": "https://github.com/OliverOrton/poecraft2/actions/runs/36445325568",
+  "workflow_result": "success",
+  "browsers": {
+    "chromium": "145.0.7632.6",
+    "firefox": "146.0.1",
+    "bases": [
+      "/",
+      "/poecraft2/"
+    ],
+    "result": "passed"
+  },
+  "live_checks": [
+    "HTTPS manifest matches CI archive",
+    "executing Beta build matches manifest",
+    "engine/base picker loads",
+    "Alchemy crafts a rare item",
+    "visible game artwork loads"
+  ],
+  "economy_mode": "bundled",
+  "artifact_id": 10979777885,
+  "archive_path": "C:\\Users\\Oliver\\Documents\\poecraft2-tester-archives\\hosted-tester-run-36445325568.zip",
+  "archive_sha256": "a666c7af483f46707d56b9a6c0a9433efbb3656253305b06ee52df19d2e7e646",
+  "manifest_sha256": "95c727ee6f05ef1f0ef9c878561ba32db71b19dcdfe9d828271a70c4db62e5ab",
+  "verified_component_count": 641,
+  "rollback_run": 36445325568,
+  "rollback_rehearsal": "not performed on live site; this is the first hosted known-good release"
+}
