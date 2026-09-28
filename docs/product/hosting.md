@@ -96,6 +96,8 @@ item-class-specific Essence modifier text into this catalogue. Harvest artwork
 aliases follow the existing economy recipe manifest's primary lifeforce.
 Build and archive verification check the catalogue's selected-runtime identity,
 all image bytes and alias references. Artwork URLs follow the deployment base.
+The catalogue request includes its content hash so refreshed tabs do not reuse
+a cached catalogue from the previous deployment.
 Current static smoke includes React workflow checks; an old rollback archive
 without `game_assets` retains the original hosting smoke contract.
 

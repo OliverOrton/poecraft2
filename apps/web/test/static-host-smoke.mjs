@@ -82,8 +82,11 @@ try {
             assert.ok(responses.some(r => r.url.includes('/economy/snapshots/') && r.status === 200));
             assert.ok(responses.some(r => r.url.endsWith('.wasm') && r.type === 'application/wasm'));
             if (build.game_assets) {
+                assert.ok(responses.some(r => r.status === 200 &&
+                    r.url.endsWith(`/game-assets/catalog.json?sha256=${build.game_assets.catalog_sha256}`)),
+                    'artwork catalogue request must be scoped to its content hash');
                 const withoutArt = await browser.newPage();
-                await withoutArt.route('**/game-assets/catalog.json', route => route.fulfill({status: 404, body: 'missing'}));
+                await withoutArt.route('**/game-assets/catalog.json*', route => route.fulfill({status: 404, body: 'missing'}));
                 await withoutArt.goto(origin + build.base);
                 await withoutArt.locator('pc-emulator .pc-bp-confirm:not(:disabled)').waitFor();
                 assert.equal(await withoutArt.locator('.pc-game-art').count(), 0);

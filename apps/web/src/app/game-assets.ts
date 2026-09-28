@@ -22,7 +22,8 @@ const subscribers = new Set<() => void>();
 export function loadGameAssets(): Promise<void> {
     if (pending) return pending;
     pending = (async () => {
-        const response = await fetch(publicAsset("game-assets/catalog.json", build.base));
+        // A new deployment must not reuse a still-fresh catalogue from an older build.
+        const response = await fetch(publicAsset(`game-assets/catalog.json?sha256=${build.game_assets.catalog_sha256}`, build.base));
         if (!response.ok) throw new Error(`Artwork catalogue: HTTP ${response.status}`);
         const bytes = await response.arrayBuffer();
         const hash = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), b => b.toString(16).padStart(2, "0")).join("");
