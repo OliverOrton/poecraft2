@@ -715,14 +715,17 @@ This comparison does not establish a source regression. P3's bare reports lack
 an executable hash and resolved launch command, so W does not independently
 reconstruct their source freezes or claim complete ordinary-profile preservation.
 The [IC continuity execution](../active/2026-09-27-current-incumbent-continuity/README.md)
-then located a deferred ordinary renewal check with a native fixture. Its trial
-handoff exposed a checked incumbent pre-Finish, but the generated selective
-controller failed independent evaluation before reached-entry validation, and
-a dynamic-cap control failed publication. The patch was reversed; the original
-plan, trial patch and counterexamples are retained. Disposition: scoped native
-negative at IC2, no integrated repair, timed allowance, economic improvement or
-new mathematical claim. The recorded non-convergence does not by itself diagnose
-a mechanics or programme-domain error.
+located a deferred ordinary renewal check. Its first trial was reversed after
+a generated graph failed evaluation and a changed-limit publication control
+failed; the original evidence remains preserved. Oliver then selected the
+[native follow-up](../active/2026-09-27-current-incumbent-continuity/README.md#continued-native-repair).
+It identified a closed two/three-affix retry class for a clean one-affix target,
+corrected the cleanup guard, and restored early checking with native ownership,
+adoption and lifetime qualification. It also moved private-service work debits
+before execution so optional refusal cannot hide parent exhaustion. Disposition:
+retained native repair with synthetic evidence; real A4/A5 timing and economics
+remain unrun, the proposed four-case allowance remains unapproved, and no new
+mathematical claim or public activation is established.
 
 <a id="knowledge"></a>
 ## 5. Knowledge outlives machinery

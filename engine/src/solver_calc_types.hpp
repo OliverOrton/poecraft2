@@ -937,6 +937,15 @@ class CalcContext {
     void consume_reforge_work(
         std::uint64_t active_amount,
         std::uint64_t logical_v1_amount);
+    /* Optional private-service owner. Debit it before each native work unit,
+     * including automatic admission; it must outlive this context and its
+     * admission children. Ordinary contexts retain their separate ledgers. */
+    void set_reforge_work_budget_owner(CalcContext* owner) {
+        reforge_work_budget_owner_ = owner;
+    }
+    CalcContext* reforge_work_budget_owner() const {
+        return reforge_work_budget_owner_;
+    }
     ReforgeProvenanceCheckpoint begin_reforge_provenance(
         ReforgeRowOwner owner,
         std::optional<ReforgeRowFamily> family_override = std::nullopt);
@@ -1087,6 +1096,7 @@ class CalcContext {
     std::optional<std::uint32_t> state_cap_;
     std::optional<std::uint32_t> solve_discovered_state_cap_;
     std::optional<std::uint64_t> solve_reforge_work_cap_;
+    CalcContext* reforge_work_budget_owner_ = nullptr;
     std::optional<std::uint64_t> solve_owned_bytes_cap_;
     /* Synchronous parent-layout automatic kernels share this CalcContext but
      * not the retained graph's reforge allowance. While nonzero,

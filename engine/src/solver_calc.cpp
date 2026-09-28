@@ -1976,6 +1976,9 @@ void CalcContext::consume_reforge_work(
     const std::uint64_t active_amount,
     const std::uint64_t logical_v1_amount) {
     if (automatic_admission_reforge_scope_depth_ != 0) {
+        if (reforge_work_budget_owner_ != nullptr)
+            reforge_work_budget_owner_->consume_reforge_work(
+                active_amount, logical_v1_amount);
         telemetry_.automatic_admission_reforge_active_work =
             saturated_counter_add(
                 telemetry_.automatic_admission_reforge_active_work,
@@ -2001,6 +2004,9 @@ void CalcContext::consume_reforge_work(
         throw SolverResourceLimit(
             "max_reforge_work", *solve_reforge_work_cap_);
     }
+    if (reforge_work_budget_owner_ != nullptr)
+        reforge_work_budget_owner_->consume_reforge_work(
+            active_amount, logical_v1_amount);
     telemetry_.reforge_logical_work_v1 += logical_v1_amount;
     telemetry_.reforge_frontier_work += active_amount;
 }

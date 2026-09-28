@@ -257,10 +257,15 @@ void SelectiveCompletionProducer::build() {
     std::vector<std::uint32_t> held_tests;
     for (const std::uint32_t slot : side_slots_[held_side_])
         held_tests.push_back(append(FinderControlKind::TestSlot, slot));
-    const std::uint32_t full_test =
+    // Eldritch Chaos produces two or three target-side affixes. For a clean
+    // one-affix target, annulling only at three traps the held controller in
+    // the closed two/three-affix class. Continue repair at two as well; the
+    // original goal test still decides success after every paid operation.
+    const std::uint32_t repair_test =
         variant_ == SelectiveCompletionVariant::RetentionControl ? kNoId :
         append(FinderControlKind::TestSideCountAtLeast,
-            (target_side_ << 8u) | 3u);
+            (target_side_ << 8u) |
+                (side_slots_[target_side_].size() == 1 ? 2u : 3u));
     const std::uint32_t occupied_test = append(
         FinderControlKind::TestSideCountAtLeast,
         (target_side_ << 8u) |
@@ -275,12 +280,12 @@ void SelectiveCompletionProducer::build() {
     for (std::size_t i = 0; i < held_tests.size(); ++i) {
         graph.nodes[held_tests[i]].on_true = i + 1 < held_tests.size()
             ? held_tests[i + 1] :
-                (full_test == kNoId ? occupied_test : full_test);
+                (repair_test == kNoId ? occupied_test : repair_test);
         graph.nodes[held_tests[i]].on_false = acquire;
     }
     graph.nodes[acquire].next = goal;
-    if (full_test != kNoId)
-        graph.nodes[full_test].on_false = occupied_test;
+    if (repair_test != kNoId)
+        graph.nodes[repair_test].on_false = occupied_test;
     graph.nodes[occupied_test].on_false = acquire;
     const auto branch = [&](const Programme& programme,
             std::uint32_t binding) {
@@ -313,7 +318,7 @@ void SelectiveCompletionProducer::build() {
         graph.nodes[occupied_test].on_true = primary_branch;
     } else {
         graph.nodes[occupied_test].on_true = primary_branch;
-        graph.nodes[full_test].on_true =
+        graph.nodes[repair_test].on_true =
             branch(secondary_, secondary_binding);
     }
     candidate_ = SelectiveCompletionCandidate{
@@ -358,6 +363,10 @@ bool SelectiveCompletionProducer::advance(
         case Phase::Done:
             break;
         }
+    } catch (const SolverResourceLimit& ex) {
+        if (problem_.reforge_work_budget_owner() != nullptr &&
+            ex.cap_name() == "max_reforge_work") throw;
+        refuse(std::string("native_construction_capacity:") + ex.what());
     } catch (const std::length_error& ex) {
         refuse(std::string("native_construction_capacity:") + ex.what());
     } catch (const std::exception& ex) {
@@ -410,6 +419,8 @@ bool SelectiveProgrammeEntryValidator::advance(
             problem_.candidates(), false, false, false,
             std::nullopt, std::vector<CountObservation>{}, false,
             std::vector<std::uint64_t>{}, true);
+        calc_->set_reforge_work_budget_owner(
+            problem_.reforge_work_budget_owner());
         if (estimated_owned_bytes() >= limits_.max_solver_owned_bytes)
             throw std::length_error(
                 "native programme has no exact admission memory");

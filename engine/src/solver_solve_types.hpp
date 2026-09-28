@@ -1859,10 +1859,6 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         selective_service_validator;
     std::uint64_t selective_service_checker_charged_work = 0;
     std::uint64_t selective_service_checker_charged_active = 0;
-    std::uint64_t selective_service_validator_charged_work = 0;
-    std::uint64_t selective_service_validator_charged_active = 0;
-    std::uint64_t selective_service_calc_charged_work = 0;
-    std::uint64_t selective_service_calc_charged_active = 0;
     std::optional<UnverifiedSelectedPolicyCandidate>&
         unverified_selected_policy_candidate =
             incumbent_portfolio.pending_candidate;
@@ -2496,6 +2492,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::optional<solve_detail::CooperativeTask<bool>> initial_candidate_task;
         std::uint64_t initial_candidate_proof_bytes = 0;
         std::uint64_t renewal_candidate_attempted_identity = 0;
+        std::optional<SolvePhase> initial_candidate_resume_phase;
         // One complete non-renewal candidate before the first verified policy.
         // Row growth cannot re-arm this bounded service slot.
         std::uint64_t complete_candidate_attempted_identity = 0;
@@ -3081,7 +3078,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
 
     bool continue_open_incremental_envelope();
     bool continue_initial_candidate();
-    bool try_begin_renewal_candidate_publication();
+    bool try_begin_renewal_candidate_publication(bool resume_discovery = false);
     solve_detail::CooperativeTask<bool> certify_initial_candidate();
     bool advance_initial_candidate_publication();
     RetainedCompiledPolicyArtifact retained_artifact_from_assertion(

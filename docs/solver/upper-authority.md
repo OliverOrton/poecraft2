@@ -48,13 +48,15 @@ import Finder's output, statewise values or proof authority. The measured A4/A5
 no service candidate was checked there. The post-run gate repair and service retention path
 are not qualified by those economics, so activation remains private.
 
-The [IC lifecycle witness](../active/2026-09-27-current-incumbent-continuity/README.md)
-distinguishes an early native renewal capture from its deferred ordinary check.
-A trial ordinary checkpoint made that particular controller available before
-Finish, but independent checking refused the generated selective graph as
-non-converged. The trial was reversed at the IC2 gate. Capture or finite verified
-history alone therefore remains insufficient evidence of pre-Finish selectable
-ownership; no new scheduling or service qualification is retained here.
+The [IC native follow-up](../active/2026-09-27-current-incumbent-continuity/README.md#continued-native-repair)
+checks the first complete renewal between finished rows and resumes its ordinary
+discovery cursor. This is independent of the optional selective service; later
+renewal improvement keeps its private activation. The producer repairs a clean
+one-affix target at occupancy two as well as three, avoiding a closed retry
+class. Native fixtures establish selectable pre-Finish ownership and a cheaper
+checked replacement, including reached-entry validation. Capture or finite
+verified history alone still supplies no ownership authority. These fixtures
+do not establish real-request timing or qualify public service activation.
 
 Ordinary candidates can come from a complete coarse policy, constructive or renewal witness, carrier-ladder/joint-policy work, a retained strict incumbent, or strict improvement. The portfolio distinguishes estimates from verified executable candidates and retains the cheapest compatible verified artifact.
 

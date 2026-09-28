@@ -45,35 +45,6 @@ bool SolveWork::Impl::advance_selective_completion_service() {
             used.reforge_logical_work_v1;
         calc.consume_reforge_work(active_delta, work_delta);
     };
-    const auto charge_private_calc = [&] {
-        if (!selective_service_calc) return;
-        const auto& used = selective_service_calc->telemetry();
-        const auto active = used.reforge_frontier_work +
-            used.automatic_admission_reforge_active_work;
-        const auto logical = used.reforge_logical_work_v1 +
-            used.automatic_admission_reforge_logical_work_v1;
-        const auto active_delta = active -
-            selective_service_calc_charged_active;
-        const auto work_delta = logical -
-            selective_service_calc_charged_work;
-        selective_service_calc_charged_active = active;
-        selective_service_calc_charged_work = logical;
-        calc.consume_reforge_work(active_delta, work_delta);
-    };
-    const auto charge_validator = [&] {
-        if (!selective_service_validator) return;
-        const auto active =
-            selective_service_validator->active_work();
-        const auto logical =
-            selective_service_validator->logical_work();
-        const auto active_delta = active -
-            selective_service_validator_charged_active;
-        const auto work_delta = logical -
-            selective_service_validator_charged_work;
-        selective_service_validator_charged_active = active;
-        selective_service_validator_charged_work = logical;
-        calc.consume_reforge_work(active_delta, work_delta);
-    };
     try {
         if (selective_service_phase ==
                 SelectiveServicePhase::NotStarted) {
@@ -89,6 +60,11 @@ bool SolveWork::Impl::advance_selective_completion_service() {
                 calc.candidates(), false, false, false, std::nullopt,
                 std::vector<CountObservation>{}, false,
                 std::vector<std::uint64_t>{}, true);
+            // Generation and reached-entry validation debit the parent before
+            // executing native work, including transient admission contexts.
+            // Post-hoc transfer could perform an over-budget row, then lose
+            // its debit when optional-service refusal swallowed the cap.
+            selective_service_calc->set_reforge_work_budget_owner(&calc);
             check_memory();
             SolveOptions allowance = options;
             allowance.max_solver_owned_bytes =
@@ -109,11 +85,9 @@ bool SolveWork::Impl::advance_selective_completion_service() {
         if (selective_service_phase ==
                 SelectiveServicePhase::Generating) {
             if (!selective_service_producer->advance(1)) {
-                charge_private_calc();
                 check_memory();
                 return false;
             }
-            charge_private_calc();
             if (!selective_service_producer->candidate()) {
                 const std::string status =
                     selective_service_producer->status();
@@ -274,7 +248,6 @@ bool SolveWork::Impl::advance_selective_completion_service() {
                 SelectiveServicePhase::Validating) {
             const bool complete =
                 selective_service_validator->advance(1);
-            charge_validator();
             check_memory();
             if (!complete) return false;
             selective_service_validator.reset();
@@ -382,18 +355,24 @@ bool SolveWork::Impl::advance_selective_completion_service() {
             abandon_selective_completion_service("retained");
             return true;
         }
-    } catch (const std::length_error& error) {
-        charge_private_calc();
+    } catch (const SolverResourceLimit& error) {
         charge_checker();
-        charge_validator();
+        if (error.cap_name() == "max_reforge_work") {
+            abandon_selective_completion_service(
+                "censored_parent_cap:max_reforge_work");
+            throw;
+        }
+        abandon_selective_completion_service(
+            (std::string("censored_capacity:") + error.what()).c_str());
+        return true;
+    } catch (const std::length_error& error) {
+        charge_checker();
         abandon_selective_completion_service(
             (std::string("censored_capacity:") +
                 error.what()).c_str());
         return true;
     } catch (const std::exception& error) {
-        charge_private_calc();
         charge_checker();
-        charge_validator();
         abandon_selective_completion_service(
             (std::string("refused:") + error.what()).c_str());
         return true;

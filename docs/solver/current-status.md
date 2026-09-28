@@ -2,6 +2,10 @@
 
 **Reviewed capability snapshot — qualification remains scoped to its receipts.**
 Reviewed code: `ae24e0bb8797fb953cb8b9eb5c8ef040fbba203c`.
+The later [IC native follow-up](../active/2026-09-27-current-incumbent-continuity/README.md#continued-native-repair)
+changes initial renewal checking, one-affix selective cleanup and private-service
+work debiting. Its own receipts qualify that delta; historical A4/A5 and browser
+measurements below retain their original build identities.
 The [W reconciliation](../active/2026-09-27-fresh-session-reconciliation/README.md)
 checked source and existing local U/P receipts without rerunning them.
 This page is not a new proof, benchmark
@@ -27,7 +31,7 @@ proof profile are separate. Checked fixed-policy value is not exact closure.
 | Finder existing clean grammar | Implemented and checked | Feasible policies only; no global lower/optimality | Existing experimental product mode exercised |
 | Finder conditional-retention L/R | Private native qualification | Original-request check and native programme-entry validation | Not established as the product grammar by the cited probes |
 | Finder selective-retention | Private A5 L reroll/repair qualification | 691 reached entries checked; no proof authority | Compiled shared sources do not imply transport activation |
-| Current shared selective service | Default-off consumer implemented | Root-only candidate checking/adoption; no real measured pre-Finish candidate reached its checker | Not qualified for activation |
+| Current shared selective service | Default-off consumer; native synthetic pre-Finish handoff and cheaper adoption qualified in IC | Root-only checked upper; real A4/A5 timing and economics remain unqualified | Not qualified for activation |
 | End-to-end hybrid/portfolio mode | No qualified public mode established by these owners | Requires a separately qualified checked-artifact handoff | Do not equate shared producer reuse with hybrid support |
 
 Sources: [sustained record](../active/2026-09-26-sustained-dual-solver/README.md),
@@ -68,13 +72,14 @@ The costly availability scan was removed afterward; no post-fix matched replay
 exists. Source-level repair is not measured recovery. P6B local placement was
 ineligible, not an economic negative.
 
-The [IC native witness](../active/2026-09-27-current-incumbent-continuity/README.md)
-found an early complete renewal whose ordinary check is deferred. An unretained
-checkpoint trial exposed a checked fallback pre-Finish, but its selective graph
-did not converge in independent evaluation; a dynamic-cap control also failed
-publication. IC2 is not qualified, all trial engine changes were reversed, and
-zero new timed cases ran. This is a scoped scheduling finding and native-check
-counterexample, not a measured A4/A5 repair or a cheaper-controller result.
+The [IC native follow-up](../active/2026-09-27-current-incumbent-continuity/README.md#continued-native-repair)
+resolved the original unretained trial's graph failure: its two/three-affix retry
+class could not reach a clean one-affix target. A corrected cleanup guard and
+early ordinary renewal check now support native pre-Finish ownership, cheaper
+adoption and expensive rejection. A changed-limit memory refusal was traced to
+final-publication headroom. Private-service work now debits the parent before
+execution and propagates exhaustion. Qualification is native and synthetic;
+zero new timed cases ran, and no A4/A5 economic recovery is claimed.
 
 **Programme domain:** Exalt-fill variants failed reached-entry semantic admission
 at c10, occupancy 3/1, goal mask 15, and were removed. Reroll/repair survived.

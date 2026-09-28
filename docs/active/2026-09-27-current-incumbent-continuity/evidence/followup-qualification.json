@@ -1,0 +1,2071 @@
+{
+  "schema": "ic_native_followup_receipt_v1",
+  "scope": "Synthetic native continuity and component qualification; not A4/A5 economics or public activation",
+  "current_continuity": {
+    "path": "out/current-incumbent-continuity/IC-qualified-continuity.log",
+    "sha256": "c26daf18480bd640dfbdd27d4c2e1e8eaffb3556eefee0e5dbfd7cb57cbcb863",
+    "checks": 43673,
+    "failures": 0
+  },
+  "observations": [
+    "IC0 fixture=0 goals=1 steps=262 done=1 candidate=0 checked=0 admitted=0 checking=0 validating=0 entry_cost=inf status=",
+    "IC0 fixture=1 goals=4 steps=1029 done=1 candidate=1 checked=1 admitted=1 checking=0 validating=0 entry_cost=63969.230769229565 status=native_family_not_requested_or_ineligible",
+    "IC2 phase=checking work=3777",
+    "IC2 phase=validating work=4961",
+    "IC0 fixture=2 goals=4 steps=269 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=1 entry_cost=63969.230769229565 status=retained",
+    "IC0 fixture=3 goals=4 steps=370 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=1 entry_cost=63969.230769229565 status=checked_rejected_expensive",
+    "IC0 fixture=4 goals=4 steps=38 done=1 candidate=1 checked=1 admitted=1 checking=0 validating=0 entry_cost=63969.230769229565 status=censored_finish_or_cap",
+    "IC0 fixture=5 goals=4 steps=66 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=0 entry_cost=63969.230769229565 status=censored_finish_or_cap",
+    "IC0 fixture=6 goals=4 steps=39 done=1 candidate=1 checked=1 admitted=1 checking=0 validating=0 entry_cost=63969.230769229565 status=censored_capacity:selective completion has no aggregate memory headroom",
+    "IC0 fixture=7 goals=4 steps=67 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=0 entry_cost=63969.230769229565 status=censored_capacity:selective completion has no aggregate memory headroom",
+    "IC2 fixture=8 cancelled phase=generating without publication",
+    "IC2 fixture=9 cancelled phase=checking without publication",
+    "IC0 fixture=10 goals=4 steps=191 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=1 entry_cost=63969.230769229565 status=censored_finish_or_cap",
+    "IC2 fixture=11 cancelled phase=validating without publication",
+    "IC0 fixture=12 goals=4 steps=192 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=1 entry_cost=63969.230769229565 status=censored_capacity:selective completion has no aggregate memory headroom",
+    "IC0 fixture=13 goals=4 steps=262 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=1 entry_cost=63969.230769229565 status=retained",
+    "IC2 work-cap fixture=14 work=2492 cap=2500 hit=1 status=censored_parent_cap:max_reforge_work",
+    "IC0 fixture=14 goals=4 steps=39 done=1 candidate=1 checked=1 admitted=1 checking=0 validating=0 entry_cost=63969.230769229565 status=censored_parent_cap:max_reforge_work",
+    "IC2 work-cap fixture=15 work=3500 cap=3500 hit=1 status=censored_parent_cap:max_reforge_work",
+    "IC0 fixture=15 goals=4 steps=39 done=1 candidate=1 checked=1 admitted=1 checking=0 validating=0 entry_cost=63969.230769229565 status=censored_parent_cap:max_reforge_work",
+    "IC2 work-cap fixture=16 work=3993 cap=4000 hit=1 status=censored_parent_cap:max_reforge_work",
+    "IC0 fixture=16 goals=4 steps=68 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=0 entry_cost=63969.230769229565 status=censored_parent_cap:max_reforge_work",
+    "IC2 work-cap fixture=17 work=5000 cap=5000 hit=1 status=censored_parent_cap:max_reforge_work",
+    "IC0 fixture=17 goals=4 steps=194 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=1 entry_cost=63969.230769229565 status=censored_parent_cap:max_reforge_work",
+    "IC0 fixture=18 goals=4 steps=68 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=0 entry_cost=63969.230769229565 status=censored_capacity:solver exceeded max_discovered_states (1)"
+  ],
+  "native_proposals": [
+    {
+      "fixture": 2,
+      "path": "docs/active/2026-09-27-current-incumbent-continuity/evidence/followup-native-proposal-fixture-2.json",
+      "sha256": "5e7f04e98fd5edc1fb1ba06a102e3b9ee6f6aef047709187c77d9a07ff224531",
+      "native_graph_string_sha256": "3e15f540832051f21c95582d768bd197d84cfe4d28f99e1244fe179957aa375e"
+    },
+    {
+      "fixture": 3,
+      "path": "docs/active/2026-09-27-current-incumbent-continuity/evidence/followup-native-proposal-fixture-3.json",
+      "sha256": "5e7f04e98fd5edc1fb1ba06a102e3b9ee6f6aef047709187c77d9a07ff224531",
+      "native_graph_string_sha256": "3e15f540832051f21c95582d768bd197d84cfe4d28f99e1244fe179957aa375e"
+    }
+  ],
+  "caller_snapshot_limit": "Trace snapshots identify their caller step; current fields are not backdated to individual events. Logical reforge work is not all solver effort.",
+  "bounded_traces": [
+    {
+      "caller_snapshot": "IC0 fixture=0 goals=1 step=0 work=0 phase=0 output=0 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 0.4754,
+        "sequence": 1,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "goal_cover_setup",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "",
+          "candidate_source": "none",
+          "candidate_stage": "none",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 1,
+            "native_elapsed_ms": 0.2844,
+            "kind": "setup_goal_cover_start",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 0,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=0 goals=1 step=2 work=0 phase=0 output=0 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 0.5898,
+        "sequence": 2,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "",
+          "candidate_source": "none",
+          "candidate_stage": "none",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 2,
+            "native_elapsed_ms": 0.5871,
+            "kind": "setup_goal_cover_completed",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 0,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=0 goals=1 step=252 work=1125 phase=4 output=0 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 9.7265,
+        "sequence": 3,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "publication",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "",
+          "candidate_source": "none",
+          "candidate_stage": "none",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 3,
+            "native_elapsed_ms": 9.7205,
+            "kind": "compile_start",
+            "reason": "publication_pipeline",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 103,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=0 goals=1 step=254 work=2250 phase=5 output=0 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 16.4704,
+        "sequence": 5,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "publication",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "",
+          "candidate_source": "none",
+          "candidate_stage": "none",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 4,
+            "native_elapsed_ms": 15.1491,
+            "kind": "compile_completed",
+            "reason": "selected_core_policy",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 103,
+            "verified_upper": null
+          },
+          {
+            "sequence": 5,
+            "native_elapsed_ms": 15.1493,
+            "kind": "check_start",
+            "reason": "selected_core_policy",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 103,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=0 goals=1 step=255 work=2250 phase=5 output=0 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 16.5997,
+        "sequence": 6,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "publication",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "",
+          "candidate_source": "none",
+          "candidate_stage": "none",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 6,
+            "native_elapsed_ms": 16.5959,
+            "kind": "check_completed",
+            "reason": "selected_core_policy:",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 103,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=0 goals=1 step=261 work=2250 phase=2 output=0 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 16.9622,
+        "sequence": 8,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "finalized_result",
+          "numerical_generation": 0,
+          "reforge_source": "finalized_diagnostics",
+          "candidate_identity": "",
+          "candidate_source": "none",
+          "candidate_stage": "none",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 7,
+            "native_elapsed_ms": 16.9519,
+            "kind": "selection_sealed",
+            "reason": "owned_graph_root_certificate_and_cost",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 103,
+            "verified_upper": null
+          },
+          {
+            "sequence": 8,
+            "native_elapsed_ms": 16.9588,
+            "kind": "native_done",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 103,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=1 goals=4 step=0 work=0 phase=0 output=0 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 1.4766,
+        "sequence": 1,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "goal_cover_setup",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "",
+          "candidate_source": "none",
+          "candidate_stage": "none",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 1,
+            "native_elapsed_ms": 0.7882,
+            "kind": "setup_goal_cover_start",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 0,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=1 goals=4 step=1002 work=1125 phase=0 output=0 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 434.478,
+        "sequence": 2,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "",
+          "candidate_source": "none",
+          "candidate_stage": "none",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 2,
+            "native_elapsed_ms": 434.4737,
+            "kind": "setup_goal_cover_completed",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 0,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=1 goals=4 step=1006 work=1125 phase=0 output=1 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 435.5353,
+        "sequence": 3,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "row_construction",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "9327462198007834942",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "compiled",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 3,
+            "native_elapsed_ms": 435.5278,
+            "kind": "candidate_captured",
+            "reason": "gated_primitive_destructive_renewal",
+            "candidate_identity": "9327462198007834942",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 1,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=1 goals=4 step=1009 work=1125 phase=4 output=1 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 436.7122,
+        "sequence": 6,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "candidate_service",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "9327462198007834942",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "compiled",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 4,
+            "native_elapsed_ms": 436.1376,
+            "kind": "service_queued",
+            "reason": "complete_native_renewal",
+            "candidate_identity": "9327462198007834942",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": null
+          },
+          {
+            "sequence": 5,
+            "native_elapsed_ms": 436.1394,
+            "kind": "service_start",
+            "reason": "initial_candidate",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": null
+          },
+          {
+            "sequence": 6,
+            "native_elapsed_ms": 436.163,
+            "kind": "compile_start",
+            "reason": "initial_candidate",
+            "candidate_identity": "9327462198007834942",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=1 goals=4 step=1010 work=1125 phase=5 output=1 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 437.4605,
+        "sequence": 8,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "candidate_service",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "9327462198007834942",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "compiled",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 7,
+            "native_elapsed_ms": 437.1255,
+            "kind": "compile_completed",
+            "reason": "initial_candidate",
+            "candidate_identity": "9327462198007834942",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": null
+          },
+          {
+            "sequence": 8,
+            "native_elapsed_ms": 437.1256,
+            "kind": "check_start",
+            "reason": "initial_candidate",
+            "candidate_identity": "9327462198007834942",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=1 goals=4 step=1011 work=1125 phase=5 output=1 retained=1",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 439.4518,
+        "sequence": 12,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "candidate_service",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "15664960400849017277",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "15664960400849017277",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "15664960400849017277",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 9,
+            "native_elapsed_ms": 439.3859,
+            "kind": "check_completed",
+            "reason": "",
+            "candidate_identity": "9327462198007834942",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": null
+          },
+          {
+            "sequence": 10,
+            "native_elapsed_ms": 439.3964,
+            "kind": "incumbent_retained",
+            "reason": "gated_primitive_destructive_renewal",
+            "candidate_identity": "15664960400849017277",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": 63969.230769229565
+          },
+          {
+            "sequence": 11,
+            "native_elapsed_ms": 439.3996,
+            "kind": "entry_provenance",
+            "reason": "root_only=0;parent_bindings=0;fracture=0",
+            "candidate_identity": "15664960400849017277",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": 63969.230769229565
+          },
+          {
+            "sequence": 12,
+            "native_elapsed_ms": 439.3999,
+            "kind": "incumbent_retained",
+            "reason": "gated_primitive_destructive_renewal",
+            "candidate_identity": "15664960400849017277",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": 63969.230769229565
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=1 goals=4 step=1023 work=2277 phase=0 output=1 retained=1",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 442.8684,
+        "sequence": 13,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "15664960400849017277",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "15664960400849017277",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "15664960400849017277",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 13,
+            "native_elapsed_ms": 442.8644,
+            "kind": "selective_completion_started",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": 63969.230769229565
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=1 goals=4 step=1024 work=2277 phase=0 output=1 retained=1",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 442.9408,
+        "sequence": 14,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "15664960400849017277",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "15664960400849017277",
+          "verified_replacements": 0,
+          "finish_requested": true,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "15664960400849017277",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 14,
+            "native_elapsed_ms": 442.9386,
+            "kind": "finish_requested",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": 63969.230769229565
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=1 goals=4 step=1025 work=2277 phase=3 output=1 retained=1",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 443.021,
+        "sequence": 15,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "publication",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "15664960400849017277",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "15664960400849017277",
+          "verified_replacements": 0,
+          "finish_requested": true,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "15664960400849017277",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 15,
+            "native_elapsed_ms": 443.0123,
+            "kind": "finish_acknowledged",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": 63969.230769229565
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=1 goals=4 step=1028 work=2277 phase=2 output=1 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 444.0812,
+        "sequence": 17,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "finalized_result",
+          "numerical_generation": 0,
+          "reforge_source": "finalized_diagnostics",
+          "candidate_identity": "15664960400849017277",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "15664960400849017277",
+          "verified_replacements": 0,
+          "finish_requested": true,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "15664960400849017277",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 16,
+            "native_elapsed_ms": 444.0719,
+            "kind": "selection_sealed",
+            "reason": "owned_graph_root_certificate_and_cost",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": 63969.230769229565
+          },
+          {
+            "sequence": 17,
+            "native_elapsed_ms": 444.0791,
+            "kind": "native_done",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 2,
+            "verified_upper": 63969.230769229565
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=2 goals=4 step=0 work=0 phase=0 output=0 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 1.4653,
+        "sequence": 1,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "goal_cover_setup",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "",
+          "candidate_source": "none",
+          "candidate_stage": "none",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 1,
+            "native_elapsed_ms": 0.7938,
+            "kind": "setup_goal_cover_start",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 0,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=2 goals=4 step=6 work=1125 phase=0 output=0 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 4.5806,
+        "sequence": 2,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "",
+          "candidate_source": "none",
+          "candidate_stage": "none",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 2,
+            "native_elapsed_ms": 4.576,
+            "kind": "setup_goal_cover_completed",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 0,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=2 goals=4 step=14 work=1125 phase=0 output=1 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 6.6915,
+        "sequence": 3,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "row_construction",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "14486313308828755428",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "compiled",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 3,
+            "native_elapsed_ms": 6.6836,
+            "kind": "candidate_captured",
+            "reason": "gated_primitive_destructive_renewal",
+            "candidate_identity": "14486313308828755428",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 1,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=2 goals=4 step=19 work=1125 phase=4 output=1 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 7.8938,
+        "sequence": 6,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "candidate_service",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "14486313308828755428",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "compiled",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 4,
+            "native_elapsed_ms": 7.4037,
+            "kind": "service_queued",
+            "reason": "complete_native_renewal",
+            "candidate_identity": "14486313308828755428",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": null
+          },
+          {
+            "sequence": 5,
+            "native_elapsed_ms": 7.4049,
+            "kind": "service_start",
+            "reason": "initial_candidate",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": null
+          },
+          {
+            "sequence": 6,
+            "native_elapsed_ms": 7.4322,
+            "kind": "compile_start",
+            "reason": "initial_candidate",
+            "candidate_identity": "14486313308828755428",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=2 goals=4 step=20 work=1125 phase=5 output=1 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 8.6396,
+        "sequence": 8,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "candidate_service",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "14486313308828755428",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "compiled",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 7,
+            "native_elapsed_ms": 8.3427,
+            "kind": "compile_completed",
+            "reason": "initial_candidate",
+            "candidate_identity": "14486313308828755428",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": null
+          },
+          {
+            "sequence": 8,
+            "native_elapsed_ms": 8.3428,
+            "kind": "check_start",
+            "reason": "initial_candidate",
+            "candidate_identity": "14486313308828755428",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=2 goals=4 step=21 work=1125 phase=5 output=1 retained=1",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 10.5987,
+        "sequence": 12,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "candidate_service",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "9935465460063937559",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "9935465460063937559",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "9935465460063937559",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 9,
+            "native_elapsed_ms": 10.5398,
+            "kind": "check_completed",
+            "reason": "",
+            "candidate_identity": "14486313308828755428",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": null
+          },
+          {
+            "sequence": 10,
+            "native_elapsed_ms": 10.555,
+            "kind": "incumbent_retained",
+            "reason": "gated_primitive_destructive_renewal",
+            "candidate_identity": "9935465460063937559",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 63969.230769229565
+          },
+          {
+            "sequence": 11,
+            "native_elapsed_ms": 10.5588,
+            "kind": "entry_provenance",
+            "reason": "root_only=0;parent_bindings=0;fracture=0",
+            "candidate_identity": "9935465460063937559",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 63969.230769229565
+          },
+          {
+            "sequence": 12,
+            "native_elapsed_ms": 10.559,
+            "kind": "incumbent_retained",
+            "reason": "gated_primitive_destructive_renewal",
+            "candidate_identity": "9935465460063937559",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 63969.230769229565
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=2 goals=4 step=33 work=2277 phase=0 output=1 retained=1",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 14.1108,
+        "sequence": 13,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "9935465460063937559",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "9935465460063937559",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "9935465460063937559",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 13,
+            "native_elapsed_ms": 14.102,
+            "kind": "selective_completion_started",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 63969.230769229565
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=2 goals=4 step=264 work=5009 phase=0 output=1 retained=2",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 39.0823,
+        "sequence": 16,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "9935465460063937559",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "1000295614199549140",
+          "verified_replacements": 1,
+          "finish_requested": true,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "1000295614199549140",
+            "provenance": "shared_native_original_root_control_v1",
+            "root_only": true,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 14,
+            "native_elapsed_ms": 39.0279,
+            "kind": "incumbent_retained",
+            "reason": "selective_completion_root",
+            "candidate_identity": "1000295614199549140",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 542.0788386559492
+          },
+          {
+            "sequence": 15,
+            "native_elapsed_ms": 39.0367,
+            "kind": "entry_provenance",
+            "reason": "root_only=1;parent_bindings=0;fracture=0",
+            "candidate_identity": "1000295614199549140",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 542.0788386559492
+          },
+          {
+            "sequence": 16,
+            "native_elapsed_ms": 39.0783,
+            "kind": "finish_requested",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 542.0788386559492
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=2 goals=4 step=265 work=5009 phase=3 output=1 retained=2",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 39.2052,
+        "sequence": 17,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "publication",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "9935465460063937559",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "1000295614199549140",
+          "verified_replacements": 1,
+          "finish_requested": true,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "1000295614199549140",
+            "provenance": "shared_native_original_root_control_v1",
+            "root_only": true,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 17,
+            "native_elapsed_ms": 39.1986,
+            "kind": "finish_acknowledged",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 542.0788386559492
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=2 goals=4 step=268 work=5009 phase=2 output=1 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 40.7217,
+        "sequence": 19,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "finalized_result",
+          "numerical_generation": 0,
+          "reforge_source": "finalized_diagnostics",
+          "candidate_identity": "9935465460063937559",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "1000295614199549140",
+          "verified_replacements": 1,
+          "finish_requested": true,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "9935465460063937559",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 18,
+            "native_elapsed_ms": 40.7118,
+            "kind": "selection_sealed",
+            "reason": "owned_graph_root_certificate_and_cost",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 542.0788386559492
+          },
+          {
+            "sequence": 19,
+            "native_elapsed_ms": 40.7197,
+            "kind": "native_done",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 542.0788386559492
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=3 goals=4 step=0 work=0 phase=0 output=0 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 1.4771,
+        "sequence": 1,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "goal_cover_setup",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "",
+          "candidate_source": "none",
+          "candidate_stage": "none",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 1,
+            "native_elapsed_ms": 0.8026,
+            "kind": "setup_goal_cover_start",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 0,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=3 goals=4 step=107 work=1125 phase=0 output=0 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 42.9459,
+        "sequence": 2,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "",
+          "candidate_source": "none",
+          "candidate_stage": "none",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 2,
+            "native_elapsed_ms": 42.9422,
+            "kind": "setup_goal_cover_completed",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 0,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=3 goals=4 step=115 work=1125 phase=0 output=1 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 44.6638,
+        "sequence": 3,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "row_construction",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "16850857187823375812",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "compiled",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 3,
+            "native_elapsed_ms": 44.6544,
+            "kind": "candidate_captured",
+            "reason": "gated_primitive_destructive_renewal",
+            "candidate_identity": "16850857187823375812",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 1,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=3 goals=4 step=120 work=1125 phase=4 output=1 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 45.9533,
+        "sequence": 6,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "candidate_service",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "16850857187823375812",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "compiled",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 4,
+            "native_elapsed_ms": 45.3596,
+            "kind": "service_queued",
+            "reason": "complete_native_renewal",
+            "candidate_identity": "16850857187823375812",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": null
+          },
+          {
+            "sequence": 5,
+            "native_elapsed_ms": 45.3609,
+            "kind": "service_start",
+            "reason": "initial_candidate",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": null
+          },
+          {
+            "sequence": 6,
+            "native_elapsed_ms": 45.4311,
+            "kind": "compile_start",
+            "reason": "initial_candidate",
+            "candidate_identity": "16850857187823375812",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=3 goals=4 step=121 work=1125 phase=5 output=1 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 46.6338,
+        "sequence": 8,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "candidate_service",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "16850857187823375812",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "compiled",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "0",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": false,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000
+        },
+        "events": [
+          {
+            "sequence": 7,
+            "native_elapsed_ms": 46.3096,
+            "kind": "compile_completed",
+            "reason": "initial_candidate",
+            "candidate_identity": "16850857187823375812",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": null
+          },
+          {
+            "sequence": 8,
+            "native_elapsed_ms": 46.3097,
+            "kind": "check_start",
+            "reason": "initial_candidate",
+            "candidate_identity": "16850857187823375812",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": null
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=3 goals=4 step=122 work=1125 phase=5 output=1 retained=1",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 48.7754,
+        "sequence": 12,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "candidate_service",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "9653781440943793783",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "9653781440943793783",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "9653781440943793783",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 9,
+            "native_elapsed_ms": 48.716,
+            "kind": "check_completed",
+            "reason": "",
+            "candidate_identity": "16850857187823375812",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": null
+          },
+          {
+            "sequence": 10,
+            "native_elapsed_ms": 48.727,
+            "kind": "incumbent_retained",
+            "reason": "gated_primitive_destructive_renewal",
+            "candidate_identity": "9653781440943793783",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 63969.230769229565
+          },
+          {
+            "sequence": 11,
+            "native_elapsed_ms": 48.73,
+            "kind": "entry_provenance",
+            "reason": "root_only=0;parent_bindings=0;fracture=0",
+            "candidate_identity": "9653781440943793783",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 63969.230769229565
+          },
+          {
+            "sequence": 12,
+            "native_elapsed_ms": 48.7302,
+            "kind": "incumbent_retained",
+            "reason": "gated_primitive_destructive_renewal",
+            "candidate_identity": "9653781440943793783",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 63969.230769229565
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=3 goals=4 step=134 work=2277 phase=0 output=1 retained=1",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 52.9301,
+        "sequence": 13,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "9653781440943793783",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "9653781440943793783",
+          "verified_replacements": 0,
+          "finish_requested": false,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "9653781440943793783",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 13,
+            "native_elapsed_ms": 52.9207,
+            "kind": "selective_completion_started",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 63969.230769229565
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=3 goals=4 step=365 work=5009 phase=0 output=1 retained=1",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 76.1166,
+        "sequence": 14,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "9653781440943793783",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "9653781440943793783",
+          "verified_replacements": 0,
+          "finish_requested": true,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "9653781440943793783",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 14,
+            "native_elapsed_ms": 76.1122,
+            "kind": "finish_requested",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 63969.230769229565
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=3 goals=4 step=366 work=5009 phase=3 output=1 retained=1",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 76.1971,
+        "sequence": 15,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "publication",
+          "working_value_role": "search_workspace",
+          "numerical_generation": 0,
+          "reforge_source": "outer_calculator",
+          "candidate_identity": "9653781440943793783",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "9653781440943793783",
+          "verified_replacements": 0,
+          "finish_requested": true,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "9653781440943793783",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 15,
+            "native_elapsed_ms": 76.1906,
+            "kind": "finish_acknowledged",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 63969.230769229565
+          }
+        ]
+      }
+    },
+    {
+      "caller_snapshot": "IC0 fixture=3 goals=4 step=369 work=5009 phase=2 output=1 retained=0",
+      "trace": {
+        "schema_version": "solver_progress_trace_v1",
+        "clock": "native_solve_constructor_ms",
+        "native_elapsed_ms": 77.5252,
+        "sequence": 17,
+        "dropped_before_cursor": 0,
+        "current": {
+          "active_work_owner": "ordinary_search",
+          "working_value_role": "finalized_result",
+          "numerical_generation": 0,
+          "reforge_source": "finalized_diagnostics",
+          "candidate_identity": "9653781440943793783",
+          "candidate_source": "gated_primitive_destructive_renewal",
+          "candidate_stage": "verified",
+          "missing_continuations": 0,
+          "candidate_attempts": 0,
+          "verified_identity": "9653781440943793783",
+          "verified_replacements": 0,
+          "finish_requested": true,
+          "verified_artifact_available": true,
+          "solver_memory_cap": 1073741824,
+          "reforge_work_cap": 50000000,
+          "fallback": {
+            "identity": "9653781440943793783",
+            "provenance": "initial_compiled_policy_assertion_v1",
+            "root_only": false,
+            "parent_bindings": 0,
+            "graph_local_decisions": 0,
+            "has_fracture": false
+          }
+        },
+        "events": [
+          {
+            "sequence": 16,
+            "native_elapsed_ms": 77.5143,
+            "kind": "selection_sealed",
+            "reason": "owned_graph_root_certificate_and_cost",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 63969.230769229565
+          },
+          {
+            "sequence": 17,
+            "native_elapsed_ms": 77.5232,
+            "kind": "native_done",
+            "reason": "",
+            "candidate_identity": "0",
+            "state_namespace": "outer_calculator",
+            "state": null,
+            "numerical_generation": 0,
+            "completed_rows": 4,
+            "verified_upper": 63969.230769229565
+          }
+        ]
+      }
+    }
+  ],
+  "original_counterexamples": [
+    {
+      "path": "out/current-incumbent-continuity/IC-followup-before.log",
+      "sha256": "c9254920f67dc0e1eb0434bab9afe88ef30a785bd9241f6a015e81d292144e40",
+      "checks": 36,
+      "failures": 3,
+      "observations": [
+        "selective target=1 native reroll mass=1 one_suffix=0 goal=0",
+        "selective target=1 checking=1 validating=0 status=refused_exact_graph_check cost=inf",
+        "selective target=2 native reroll mass=1 one_suffix=0 goal=0.033333333333333333",
+        "selective target=2 checking=1 validating=1 status=retained cost=542.06967564631759",
+        "solver integrity tests: 36 checks, 3 failures"
+      ]
+    },
+    {
+      "path": "out/current-incumbent-continuity/IC-work-cap-before.log",
+      "sha256": "5bd518385cc09dd3b4815810725e1d36280b9520c610cf3f7371d685b0a3f8f3",
+      "checks": 39786,
+      "failures": 1,
+      "observations": [
+        "IC2 work-cap work=2277 cap=2500 hit=0 status=censored_capacity:solver exceeded max_reforge_work (2500)",
+        "solver integrity tests: 39786 checks, 1 failures"
+      ]
+    }
+  ],
+  "memory_cap_diagnosis": {
+    "path": "out/current-incumbent-continuity/IC-qualified-cap-diagnosis.log",
+    "sha256": "0ca87aae1ab0ee3ff2db8c880493979746365f3cdf9b6ec584eb267ab04dcadd",
+    "checks": 63,
+    "failures": 0,
+    "observations": [
+      "selective target=1 native reroll mass=1 one_suffix=0 goal=0",
+      "selective target=1 checking=1 validating=1 status=retained cost=542.0788386559492",
+      "selective cap fixture=0 after_service_live=12932399 limit=1073741824 compatible=1",
+      "selective cap fixture=0 published=1 peak=13620196 limit=1073741824 cost=542.0788386559492 reason=",
+      "selective cap fixture=1 live=12917506 incumbent_bytes=12430 cost=63969.230769229565",
+      "selective target=1 checking=0 validating=0 status=censored_capacity:selective completion has no aggregate memory headroom cost=inf",
+      "selective cap fixture=1 after_service_live=12875945 limit=12917505 compatible=1",
+      "selective cap fixture=1 published=0 peak=13620196 limit=12917505 cost=inf reason=retained solve result reached max_solver_owned_bytes",
+      "selective cap fixture=2 live=13541847 incumbent_bytes=12430 cost=63969.230769229565",
+      "selective target=1 native reroll mass=1 one_suffix=0 goal=0",
+      "selective target=1 checking=1 validating=0 status=censored_capacity:selective completion has no aggregate memory headroom cost=inf",
+      "selective cap fixture=2 after_service_live=12875945 limit=13541846 compatible=1",
+      "selective cap fixture=2 published=1 peak=13620196 limit=13541846 cost=63969.230769229565 reason=",
+      "solver integrity tests: 63 checks, 0 failures"
+    ]
+  },
+  "reused_corrected_controller_qualification": {
+    "path": "out/current-incumbent-continuity/IC-final-target-count.log",
+    "sha256": "6b6c4163394ab525384edb52a5c51216262937f4a7246dd969262b0d743935cd",
+    "checks": 50,
+    "failures": 0,
+    "observations": [
+      "selective target=1 native reroll mass=1 one_suffix=0 goal=0",
+      "selective target=1 checking=1 validating=1 status=retained cost=542.0788386559492",
+      "selective one-affix controller: 1000/1000 native executions succeeded",
+      "selective target=2 native reroll mass=1 one_suffix=0 goal=0.033333333333333333",
+      "selective target=2 checking=1 validating=1 status=retained cost=542.06967564631759",
+      "solver integrity tests: 50 checks, 0 failures"
+    ],
+    "scope": "Same corrected controller; before work-debit repair. Native component checks and 1000 Simulator trials reused; no new Simulator after accounting-only changes."
+  },
+  "excluded_broader_fixture": {
+    "production_base": "b56ebbd",
+    "exit_code": -1073741819,
+    "identical_failed_assertions": true,
+    "failed_assertions": [
+      "!result.converged",
+      "result.policy_status == SolvePolicyStatus::BoundedFeasible",
+      "result.termination == SolveTermination::RefusedResourceCap",
+      "result.lower_bound == 0.0",
+      "result.diagnostics.policy_refinement .direct_certification_proper",
+      "result.diagnostics.policy_refinement .direct_certification_zero_off_policy",
+      "result.diagnostics.policy_refinement .direct_certification_cost_reconciled",
+      "result.diagnostics.policy_refinement .bounded_publication_retained",
+      "result.diagnostics.policy_refinement .cheapest_independently_evaluated_selected",
+      "result.diagnostics.policy_reachable_states == 3",
+      "result.diagnostics.policy_reachable_states < result.diagnostics.expanded_states",
+      "std::find( scratch_cap_work.result.diagnostics.cap_hits.begin(), scratch_cap_work.result.diagnostics.cap_hits.end(), \"max_expanded_states\") != scratch_cap_work.result.diagnostics.cap_hits.end()",
+      "!scratch_cap_work.output_incumbent.has_value()",
+      "!scratch_cap_work.output_incumbent.has_value()",
+      "std::find( scratch_cap_work.result.diagnostics.cap_hits.begin(), scratch_cap_work.result.diagnostics.cap_hits.end(), \"max_expanded_states\") != scratch_cap_work.result.diagnostics.cap_hits.end()",
+      "!scratch_capped.policy_available",
+      "scratch_capped.policy_status == SolvePolicyStatus::None",
+      "scratch_capped.termination == SolveTermination::RefusedResourceCap",
+      "!std::isfinite(scratch_capped.upper_bound)",
+      "!std::isfinite(scratch_capped.evaluated_policy_cost)",
+      "std::find( scratch_capped.diagnostics.cap_hits.begin(), scratch_capped.diagnostics.cap_hits.end(), \"max_solver_owned_bytes\") != scratch_capped.diagnostics.cap_hits.end()",
+      "candidate_probe_work .try_install_reachable_incumbent(true)",
+      "candidate_construction_peak > probe_peak_before",
+      "!candidate_cap_work.output_incumbent.has_value()",
+      "std::find( candidate_cap_work.result.diagnostics.cap_hits.begin(), candidate_cap_work.result.diagnostics.cap_hits.end(), \"max_solver_owned_bytes\") != candidate_cap_work.result.diagnostics.cap_hits.end()",
+      "renewal_finish_batch.status == StateLocalAutomaticBatchStatus::Complete",
+      "renewal_finish_batch.phases .imprint_price_bound_complete_carriers == 1",
+      "renewal_finish_batch.phases.imprint_price_pruned_programs > 0",
+      "renewal_finish_batch.phases.imprint_programs_evaluated == 0",
+      "!focused_lower_terminal.first",
+      "focused_lower_terminal.second == \"max_imprint_program_depth\"",
+      "scheduled_work.transition_cache ->automatic_admission_phases .imprint_price_bound_complete_carriers > 0",
+      "scheduled.diagnostics.automatic_admission_phases .imprint_price_bound_complete_carriers > 0"
+    ],
+    "logs": [
+      {
+        "path": "out/current-incumbent-continuity/IC-qualified-automatic-admission-contract.log",
+        "sha256": "061ef3b4da06b83072a7fcedf420181990e8d05eca86f21e0d2c6ec437a42a86",
+        "checks": null,
+        "failures": null
+      },
+      {
+        "path": "out/current-incumbent-continuity/IC-baseline-automatic-admission-contract.log",
+        "sha256": "93523584a19d8422ca1720156eb3529b94609cf455dabce740eb4660043842e5",
+        "checks": null,
+        "failures": null
+      }
+    ],
+    "frozen_executable": {
+      "path": "out/current-incumbent-continuity/ic-baseline-contract-engine-tests.exe",
+      "sha256": "e90e34819e2c6e3a965ad4cec9c017bfda28209baf79ecf4ad83883ce882ac11",
+      "scope": "b56ebbd production source; development test selectors, not a release build"
+    }
+  }
+}

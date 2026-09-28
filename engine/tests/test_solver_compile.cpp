@@ -3598,6 +3598,11 @@ void run_solver_compile_tests(const char* artifact_dir) {
     run_imprint_gate(artifact_dir);
 }
 
+void run_solver_finder_binding_tests() {
+    run_finder_request_binding_tests();
+    run_finder_default_success_regression();
+}
+
 void run_solver_return_bridge_lifecycle_tests();
 
 void run_nonempty_dirty_composition_tests() {

@@ -1,28 +1,22 @@
 # Handoff
 
-Oliver's selected [IC execution](docs/active/2026-09-27-current-incumbent-continuity/README.md)
-stopped at the IC2 native-check gate. The early-check trial reached pre-Finish
-ownership/admission, but its selective graph did not converge; a dynamic-cap
-publication control also failed. All trial engine/test edits were reversed.
-The living record owns the exact patch, frozen executable identity, counterexamples
-and restoration checks. No timed allowance was approved; zero new cases launched.
+Oliver selected continued [IC native work](docs/active/2026-09-27-current-incumbent-continuity/README.md#continued-native-repair).
+The native repair is complete: early renewal checking resumes ordinary discovery,
+the one-affix selective controller can escape its closed retry class, and service
+work debits the parent before execution. The service remains default-off.
 
-W0–W5 is complete. The [W living record](docs/active/2026-09-27-fresh-session-reconciliation/README.md)
-owns the verified packet, completed register, original evidence limitations and
-validation. Fresh substantive work starts from [research standards](docs/solver/research-standards.md)
-and [current status](docs/solver/current-status.md), reviewed against
-`ae24e0bb8797fb953cb8b9eb5c8ef040fbba203c`.
+The living record owns source/executable hashes, 175,168 passing focused checks,
+reused 1,000-trial controller qualification, and exclusions. A broader legacy
+fixture has the same 33 assertions and access violation on untouched `b56ebbd`;
+full acceptance is not claimed. No solver/test process remains active.
 
-The [P programme](docs/active/2026-09-26-sustained-dual-solver/README.md) is closed
-with its recorded limitations and all 24 timed-native invocations spent. W has
-zero new-run allowance and used none. No native solver/test process was active
-at the final local check. No runtime change or public activation was retained.
+Real A4/A5 preflight and timed qualification remain unrun. Zero new timed cases
+were launched; the IC plan requires Oliver's separate approval for its proposed
+maximum four invocations. P stays 24/24 spent. No new public/WASM acceptance is
+claimed. Existing U/P identity limitations remain in the
+[W record](docs/active/2026-09-27-fresh-session-reconciliation/README.md).
 
-No follow-on programme is selected. The recommended next decision is a bounded
-diagnosis of IC's generated graph non-convergence, with a separate publication
-headroom check for its changed-limit cap control; neither is automatically authorized.
-U/P's lower difference has a retention-activation mismatch and does not establish
-a matched regression. P3 launch/build identity and post-fix service qualification
-remain limited as recorded. Any new timed runs need an explicit allowance.
-Preserve root `0`; commits remain
-local unless Oliver requests a push.
+The next decision is whether to authorize that bounded timed comparison after
+freezing its real request and verifying the relevant native boundary is plausible.
+Do not repeat W, widen limits or assume the synthetic improvement transfers to A4/A5.
+Preserve root `0`; commits remain local unless Oliver requests a push.

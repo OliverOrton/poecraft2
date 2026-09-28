@@ -6135,6 +6135,7 @@ bool SolveWork::Impl::advance_initial_candidate_publication() {
     if (requested_bounded_finish) {
         task.reset();
         publication_pipeline.initial_candidate_proof_bytes = 0;
+        publication_pipeline.initial_candidate_resume_phase.reset();
         phase = SolvePhase::Expanding;
         return false;
     }
@@ -6145,14 +6146,21 @@ bool SolveWork::Impl::advance_initial_candidate_publication() {
     } catch (...) {
         task.reset();
         publication_pipeline.initial_candidate_proof_bytes = 0;
+        publication_pipeline.initial_candidate_resume_phase.reset();
         throw;
     }
     task.reset();
     publication_pipeline.initial_candidate_proof_bytes = 0;
     phase = SolvePhase::Expanding;
     if (result.diagnostics.resource_cap_hit) {
+        publication_pipeline.initial_candidate_resume_phase.reset();
         phase = SolvePhase::Done;
         begin_publication_pipeline();
+        return true;
+    }
+    if (publication_pipeline.initial_candidate_resume_phase) {
+        phase = *publication_pipeline.initial_candidate_resume_phase;
+        publication_pipeline.initial_candidate_resume_phase.reset();
         return true;
     }
     if (begin_incremental_upper_policy_pass() || continue_open_incremental_envelope())

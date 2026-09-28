@@ -1,0 +1,187 @@
+{
+  "schema": "ic_native_followup_manifest_v1",
+  "source_base": "b56ebbd7c492d5fc54f294892c6c6e3d139ece21",
+  "build_command": [
+    "powershell",
+    "-File",
+    "scripts/dev-engine.ps1",
+    "-Task",
+    "Tests",
+    "-Jobs",
+    "4"
+  ],
+  "source_files": {
+    "engine/src/solver_calc.cpp": "3e6a1cdc55ac69b69ae4549a967aadf3dfb271d97ef722a0570e10d480efaf74",
+    "engine/src/solver_calc_types.hpp": "9d4502393507cd910b6e627280cf5719c5ac2116d6f108a6b5299905bc3e1e68",
+    "engine/src/solver_options_automatic.cpp": "bf296d30e004213c2c87c5dc753f7a33c6fc732e470f3d29b00defd87bdfa271",
+    "engine/src/solver_selective_completion.cpp": "35f3f6f66c520d7016d4cfd3d66be03de0ad9a2ed56e4c30f96349cd7b3fc04f",
+    "engine/src/solver_solve_bellman.cpp": "ddeafc9d293d5a4a4fb77640e3046098338406192fc2e1fbbf25a45a19c6ced6",
+    "engine/src/solver_solve_finish.cpp": "a6c440d578a5e64f8cab96d3a09996634c079921eb621b837c070255c1a0ad55",
+    "engine/src/solver_solve_incremental.cpp": "ef159fb77a257939c4bc3c34d302ea96955d67c516af3c0387002e6068e4c940",
+    "engine/src/solver_solve_selective_completion.cpp": "7407833a9ce341681f8add8f24bc758b4f8da8e2e154017395d4d42ced851b7d",
+    "engine/src/solver_solve_types.hpp": "d7fd5d6a6b4596449bff5d5eb0354fba976900a5957c378c55404c0392c9717b",
+    "engine/tests/test_solver_compile.cpp": "dfc839ba9b7c72be5abe798d0a0e49654542b860fede93ec0ea835efabdaaecf",
+    "engine/tests/test_solver_solve.cpp": "f187fd2cea86053d0b7e4b901acb57ffbd620b404d12b4678239ba788078c0e2",
+    "engine/tests/tests.hpp": "a115d5577af61851732fb7062d630dad16783a2d37b8c6732a725120969f7c4e"
+  },
+  "frozen_executable": "out/current-incumbent-continuity/ic-qualified-engine-tests.exe",
+  "executable_sha256": "61d11ba018b3215f89ccb4a1f75ead2bc445b63dd053b1234552a784714bf685",
+  "final_checks": [
+    {
+      "exit_code": 0,
+      "name": "continuity",
+      "path": "out/current-incumbent-continuity/IC-qualified-continuity.log",
+      "sha256": "c26daf18480bd640dfbdd27d4c2e1e8eaffb3556eefee0e5dbfd7cb57cbcb863",
+      "checks": 43673,
+      "failures": 0,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "continuity"
+      ]
+    },
+    {
+      "exit_code": 0,
+      "name": "automatic-ledger",
+      "path": "out/current-incumbent-continuity/IC-qualified-automatic-ledger.log",
+      "sha256": "c4c501e553b12873646c6ce96beca5831f6342caf50bba2a94ec2ba52131bb73",
+      "checks": 425,
+      "failures": 0,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "automatic-ledger"
+      ]
+    },
+    {
+      "exit_code": 0,
+      "name": "cap-diagnosis",
+      "path": "out/current-incumbent-continuity/IC-qualified-cap-diagnosis.log",
+      "sha256": "0ca87aae1ab0ee3ff2db8c880493979746365f3cdf9b6ec584eb267ab04dcadd",
+      "checks": 63,
+      "failures": 0,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "selective-cap-diagnosis"
+      ]
+    },
+    {
+      "exit_code": 0,
+      "name": "finder-bindings",
+      "path": "out/current-incumbent-continuity/IC-qualified-finder-bindings.log",
+      "sha256": "02f2716ed4eb5246ab8ffe3212c9f43d9c6ec6829d4bb3a063e3e756f3ad6680",
+      "checks": 129,
+      "failures": 0,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "finder-bindings"
+      ]
+    },
+    {
+      "exit_code": 0,
+      "name": "selected-fallback",
+      "path": "out/current-incumbent-continuity/IC-qualified-selected-fallback.log",
+      "sha256": "2bba95a2bd33ec6dcf93e778004de9c2be349656bfe4a5a1935b1a9f800944fc",
+      "checks": 2440,
+      "failures": 0,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-selected-fallback-only"
+      ]
+    },
+    {
+      "exit_code": 0,
+      "name": "bounded-finish",
+      "path": "out/current-incumbent-continuity/IC-qualified-bounded-finish.log",
+      "sha256": "478a8e290ce4988ca8ef4966d6939713886f8c7db8ba2d3ec47e5ac526785f21",
+      "checks": 202,
+      "failures": 0,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-bounded-finish-only"
+      ]
+    },
+    {
+      "exit_code": 0,
+      "name": "joint-continuation",
+      "path": "out/current-incumbent-continuity/IC-qualified-joint-continuation.log",
+      "sha256": "9dd3eede973ee28e62b8602ec7c5ab2adaf4f748fc3c80b1bab0d9704875f601",
+      "checks": 416,
+      "failures": 0,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-joint-policy-continuation-only"
+      ]
+    },
+    {
+      "exit_code": 0,
+      "name": "setup-service",
+      "path": "out/current-incumbent-continuity/IC-qualified-setup-service.log",
+      "sha256": "f4383035f3df2d6995ba67d97a2bae266b4bbfa8177f3407402517d8d5466e82",
+      "checks": 694,
+      "failures": 0,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-setup-service-only"
+      ]
+    },
+    {
+      "exit_code": 0,
+      "name": "native-continuation-api",
+      "path": "out/current-incumbent-continuity/IC-qualified-native-continuation-api.log",
+      "sha256": "f1a641a6f0315cc160962e50f88923c6ddcf95a777e0034832b0f6ea8c1affed",
+      "checks": 138,
+      "failures": 0,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-native-continuation-api-only",
+        "data/compiled/current"
+      ]
+    },
+    {
+      "exit_code": 0,
+      "name": "calc",
+      "path": "out/current-incumbent-continuity/IC-qualified-calc.log",
+      "sha256": "b3f726770dc6559f82d76e1ab4d377ac399e2a3fee90d0108ef845f6ab9a6afe",
+      "checks": 126604,
+      "failures": 0,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-calc-only"
+      ]
+    },
+    {
+      "exit_code": 0,
+      "name": "assertion-service",
+      "path": "out/current-incumbent-continuity/IC-qualified-assertion-service.log",
+      "sha256": "ac7649385adeebee429821fa2f378902a987abec5a36822f76e7629def2dffee",
+      "checks": 384,
+      "failures": 0,
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-assertion-service-only"
+      ]
+    }
+  ],
+  "total_final_checks": 175168,
+  "total_final_failures": 0,
+  "qualification_receipt": {
+    "path": "docs/active/2026-09-27-current-incumbent-continuity/evidence/followup-qualification.json",
+    "sha256": "0a0c9f11c82cd2720c6348153b9fe68dcc6c4e4d1311fda8de6569024b29516f"
+  },
+  "unchanged_original_input_sha256": "13cb1d913b1e4439677c07e25d9a97a16d525c6ca35b2260d556b3471324178a",
+  "unchanged_original_trial_patch_sha256": "0231e13478bcff146219a6ccee0705335cc4bc9651d166a014b160ec4b03d4fc",
+  "timed_case_invocations": 0,
+  "timed_allowance_approved": false,
+  "qualification": "Native portion of IC2; real-request preflight and timed boundary/economics remain outstanding.",
+  "not_claimed": [
+    "full acceptance suite",
+    "broader automatic-admission fixture acceptance (same 33 assertions and crash on baseline)",
+    "A4/A5 economic or timing improvement",
+    "release-WASM/browser parity",
+    "public service activation",
+    "new lower or exactness authority"
+  ]
+}

@@ -1552,7 +1552,7 @@ bool SolveWork::Impl::try_begin_candidate_proof_handoff() {
     return true;
 }
 
-bool SolveWork::Impl::try_begin_renewal_candidate_publication() {
+bool SolveWork::Impl::try_begin_renewal_candidate_publication(bool resume_discovery) {
     if (options.high_impact_executable_uppers && !requested_bounded_finish &&
         !result.diagnostics.resource_cap_hit && !expansion_active &&
         !publication_pipeline.initial_candidate_task &&
@@ -1587,7 +1587,8 @@ bool SolveWork::Impl::try_begin_renewal_candidate_publication() {
         phase=SolvePhase::Expanding;
         return true;
     }
-    if (!dirty_continuation_search_enabled(options.native_continuation_search) ||
+    if ((!dirty_continuation_search_enabled(options.native_continuation_search) &&
+         std::isfinite(incumbent_portfolio.verified_executable_upper())) ||
         !options.high_impact_executable_uppers || requested_bounded_finish ||
         result.diagnostics.resource_cap_hit || expansion_active ||
         publication_pipeline.initial_candidate_task || !output_incumbent ||
@@ -1596,13 +1597,22 @@ bool SolveWork::Impl::try_begin_renewal_candidate_publication() {
         output_incumbent->portfolio_identity ==
             publication_pipeline.renewal_candidate_attempted_identity) return false;
     // The completed native renewal already owns a complete fixed controller.
+    // Its first check is ordinary candidate work, independent of whether a
+    // private improvement consumer is requested. Once a checked incumbent is
+    // available, repeated renewal improvement retains its private activation.
     // Certify it through the same cooperative first-policy owner before an
     // open-envelope upper pass postpones it until final publication. A failed
     // attempt is reconsidered only for a different captured candidate identity.
     publication_pipeline.renewal_candidate_attempted_identity =
         output_incumbent->portfolio_identity;
-    focus_optimizing = false;
-    focused_lower_mode = false;
+    record_progress_event("service_queued", "complete_native_renewal",
+        output_incumbent->portfolio_identity);
+    if (resume_discovery) {
+        publication_pipeline.initial_candidate_resume_phase = phase;
+    } else {
+        focus_optimizing = false;
+        focused_lower_mode = false;
+    }
     publication_pipeline.initial_candidate_task.emplace(certify_initial_candidate());
     phase = SolvePhase::Expanding;
     return true;

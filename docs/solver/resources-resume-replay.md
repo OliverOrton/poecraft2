@@ -62,6 +62,16 @@ memory still fits the aggregate remaining solver bytes after parsed graph,
 economy, parent, child and compiler overlap. It is not an additional allocation.
 Logical reforge work is debited cumulatively, including interrupted evaluation.
 
+Current's optional selective service attaches its generation calculator and
+reached-entry validator to the parent work-budget owner. Native units debit
+that owner before execution, including nested automatic-admission contexts;
+spent work survives scratch release, and parent exhaustion leaves the optional
+service through the ordinary cap path. This private-service attachment does
+not change ordinary automatic admission's separately reported work ledger.
+The graph checker receives the genuine remaining allowance and transfers its
+consumed work once. [IC qualification](../active/2026-09-27-current-incumbent-continuity/README.md#continued-native-repair)
+owns the bounded witnesses and their limitations.
+
 `PC_SOLVER_FLAG_DIRTY_CONTINUATION_SEARCH` opts a native Calculator-profile
 request into fresh private search. It raises no limit itself. The selected large
 native profile uses 8 GiB aggregate solver memory, 4 GiB candidate/final checker

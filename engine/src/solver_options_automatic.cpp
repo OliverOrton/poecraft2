@@ -982,6 +982,7 @@ CalcContext::build_state_local_automatic_candidates(
         }
     }
     CalcContext& local = *local_pointer;
+    local.set_reforge_work_budget_owner(reforge_work_budget_owner_);
     const std::uint32_t local_states_before = local.state_count();
     local.set_defer_automatic_protected_baseline(true);
     local.set_reforge_resource_accounting(
@@ -1461,6 +1462,8 @@ CalcContext::build_state_local_automatic_candidates(
                 limit, "automatic:parent_eldritch_generation",
                 "parent_eldritch_kernel_generation_");
             finalize_batch_work();
+            if (reforge_work_budget_owner_ != nullptr &&
+                limit.cap_name() == "max_reforge_work") throw;
             parent_eldritch_resource_deferred = true;
         }
         if (parent_eldritch_resource_deferred) {
@@ -1989,6 +1992,8 @@ CalcContext::build_state_local_automatic_candidates(
                     }
                     CalcContext& comparison_context =
                         *automatic_comparison_context_;
+                    comparison_context.set_reforge_work_budget_owner(
+                        reforge_work_budget_owner_);
                     comparison_context.set_reforge_resource_accounting(
                         reforge_resource_accounting_);
                     comparison_context.set_reforge_provenance_context(
@@ -2598,6 +2603,8 @@ CalcContext::build_state_local_automatic_candidates(
         mark_resource_deferred(
             limit, "automatic:state_local_generation",
             "price_independent_kernel_generation_");
+        if (reforge_work_budget_owner_ != nullptr &&
+            limit.cap_name() == "max_reforge_work") throw;
     }
     std::sort(
         batch.admitted_operators.begin(), batch.admitted_operators.end());

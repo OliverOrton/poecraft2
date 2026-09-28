@@ -1,6 +1,16 @@
-# Current incumbent continuity (IC0–IC4)
+# Current incumbent continuity (IC0Ã¢â‚¬â€œIC4)
 
-**Disposition: stopped at IC2; trial repair not retained.** Oliver selected
+**Current disposition: native repair retained after Oliver selected continued
+work.** The [follow-up](#continued-native-repair) resolves the graph counterexample,
+restores the early ordinary checker and qualifies native ownership and resource
+handling. The service remains default-off; real A4/A5 timing, economics and
+browser acceptance are unrun. Zero new timed cases were launched.
+
+The following original closeout is historical evidence from `b56ebbd`. Its
+unretained patch and counterexamples are preserved unchanged; the follow-up
+below owns the current source and qualification.
+
+**Original disposition: stopped at IC2; trial repair not retained.** Oliver selected
 execution of the [original IC plan](research-inputs/poecraft2_current_incumbent_continuity_plan.md).
 A native witness located deferred checking; a trial checkpoint exposed a checked
 incumbent before Finish. The real selective candidate then failed its independent
@@ -70,7 +80,8 @@ initial-candidate task yields back to service admission.
 
 The trial is preserved as a [reviewable patch](evidence/ic1-unretained-trial.patch),
 with exact source-file and executable hashes in the [manifest](evidence/trial-manifest.json).
-It is **not applied** to the working engine or tests. The frozen local executable
+It was **not applied** at that closeout. The later follow-up reapplies its
+four scheduling files with additional corrections and native qualification. The frozen local executable
 is `out/current-incumbent-continuity/ic1-unretained-engine-tests.exe`; its SHA256 is
 `564b5f3e95a8f18c4fe2863caa426eab1e4ecce416a551bc7530e0d141bc9cdd`.
 Earlier development traces retain original-log hashes; this executable hash
@@ -173,3 +184,110 @@ No mathematical claim/history or generated research-state file was changed.
 The retained deliverable is this bounded negative, original input and
 reproducible trial evidence; no production or release artifact change is claimed.
 The closeout commit stays local; its identifier is reported in the completion reply.
+
+
+## Continued native repair
+
+Oliver selected continuation after the initial gate failure. The follow-up
+starts at `b56ebbd`; work remained sequential and local, with no new timed
+allowance, mechanics ruling, lower producer, canonical-data edit, public flag,
+strategy vocabulary or ABI change.
+
+### Closed retry class and controller correction
+
+The existing native Eldritch Chaos law returns two or three affixes on the
+changed side. The failed controller annulled at three but rerolled at two.
+Once the held side was complete, that two/three class could not reach the clean
+one-affix target. The evaluator correctly treated it as a closed unresolved
+class; raising iteration or tolerance limits was not the repair.
+
+The shared producer now repairs at occupancy two for a one-affix target, and
+keeps the original three-affix threshold for larger targets. The original goal
+test still decides success after every operation. A direct native component
+witness changed from refusal to checked/reached-entry-validated retention at
+**542.0788386559492**; the two-affix control remained **542.06967564631759**.
+The new one-affix controller completed **1,000/1,000** native Simulator trials
+without execution failures. This synthetic-session value is not A4/A5 economics.
+
+### Ordinary handoff and lifetime
+
+The first complete renewal now enters the existing cooperative checker between
+finished rows, independently of the optional service, then resumes its saved
+discovery phase. Later renewal improvement keeps the existing private activation.
+The native service-on/off fixtures agree on ordinary phase, values, policy rows,
+graph identity, successor/probability storage, queue, expansion cursor, certified
+lower, verified identity and logical work before admission. Passive progress
+reads change none of the observed graph, work or event sequence.
+
+The naturally issued incumbent remains compatible and selectable while the
+service generates, checks and validates its separate graph. Low programme
+prices retain a cheaper native graph; high prices reach validation and reject
+an expensive graph. Target-neutral zero remains zero with closure unavailable.
+Finish, cancellation and byte-cap interruptions exercise all three service
+phases. Separate native component controls verify an identical issued graph is
+deduplicated; the existing structural controls cover staged/detached ownership
+and incompatible-generation rejection without claiming native issuance.
+
+The changed-limit memory counterexample has a narrower meaning: after cleanup,
+the old checked graph remains selectable, but a limit lowered to just below
+live generation storage may not fit the final retained result. Final publication
+then reports `retained solve result reached max_solver_owned_bytes`. The unchanged
+1-GiB request and a later checking-phase cap preserve a bounded checked result.
+No byte limit or publication contract was widened.
+
+### Parent work-budget correction
+
+A new fixed-cap witness exposed an independent defect: at a 2,500-unit allowance,
+private generation ran before transferring its debit. The transfer refused,
+but optional-service cleanup swallowed the parent cap and left the logical
+ledger at 2,277. The failed witness and log hash are retained.
+
+Private generation and reached-entry validation now attach their calculators,
+including nested admission contexts, to the parent debit owner. Each native unit
+reserves against the parent before executing. Ordinary automatic-admission
+contexts keep their separate observational ledger. The graph checker receives
+the remaining allowance and transfers actual consumption once. Parent work-cap
+exhaustion propagates through the ordinary cap path after service cleanup;
+local optional-service capacity refusals retain their own scope.
+
+Fixed work-cap controls cover root generation, automatic generation, graph
+checking and reached-entry validation. Already consumed work remains charged,
+no logical ledger exceeds its cap, scratch is released, and the compatible
+checked incumbent is published. Limits are fixed at construction in these
+controls; they are distinct from the explicitly changed byte-cap diagnosis.
+
+### Qualification, artifacts and remaining scope
+
+The [follow-up manifest](evidence/followup-manifest.json) identifies source,
+executable, commands, log hashes, check counts and exclusions. The
+[qualification receipt](evidence/followup-qualification.json) preserves compact
+counterexamples, phase/cap observations and the bounded lifecycle trace. Bulk
+logs and the frozen native executable live under
+`out/current-incumbent-continuity/`. The original trial evidence above is unchanged.
+The final focused batch passes **175,168 checks with zero failures**. Knowledge
+lint against `b56ebbd` reports zero errors and 18 existing warnings; all six
+edited Markdown files pass local-link checks, and authored changes pass
+whitespace review. Source, executable, log and original-input hashes match.
+
+Qualification covers native fixtures and the affected calculator, automatic
+admission ledger, Finder bindings, initial assertion, fallback ownership, bounded
+Finish, continuation, setup and native API controls. A broader automatic-admission
+fixture was also attempted: it produced 33 failed assertions and exited with
+Windows access violation `-1073741819`. The same fixture against untouched
+`b56ebbd` production source produced the identical ordered 33 assertions and
+exit code. That broader fixture is excluded from acceptance, not reported as
+passing; the focused automatic-ledger selector isolates the changed accounting
+contract without those older resource-stop/imprint/carrier-bound prerequisites.
+The baseline comparison and frozen baseline executable are recorded separately.
+Existing component/Simulator
+evidence is reused for the unchanged corrected controller; accounting changes
+do not supply a new strategy. No full acceptance suite, release-WASM rebuild,
+rendered UI review or real-request timed comparison is claimed.
+
+The native portion of IC2 is qualified. Real-request preflight and measured
+boundary/economic qualification remain outstanding; this is not blanket IC2
+or public activation approval. The plan explicitly requires Oliver's separate
+approval before any of its proposed maximum four timed invocations. P remains
+24/24 spent, and this follow-up uses zero new timed cases. No new mathematical
+claim/history was needed: this repairs controller properness and native
+scheduling/resource ownership under the existing contracts.

@@ -7,6 +7,7 @@
 #include "../src/solver_sparse_policy.hpp"
 #include "../src/solver_solve_types.hpp"
 #include "../src/solver_dirty_guidance.hpp"
+#include "../src/solver_finder.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -37,6 +38,7 @@ namespace poecraft::solver {
 
 struct SolveWorkTestAccess {
     using Impl = SolveWork::Impl;
+    static Impl& get(SolveWork& work) { return *work.impl_; }
 };
 
 } // namespace poecraft::solver
@@ -2212,6 +2214,470 @@ void run_initial_terminal_debt_continuation_tests() {
     // Incumbent work retains the previous cost/progress seed ordering.
     work.output_incumbent.emplace();
     PC_CHECK(work.select_joint_policy_seed_row(root, work.result.values) == reset);
+}
+
+void run_current_incumbent_continuity_tests() {
+    using Impl = SolveWorkTestAccess::Impl;
+    // IC0: all rows, candidates and certificates must come from ordinary step.
+    // No retained graph, scalar value or certification flag is injected.
+    // 0: no early candidate; 1: ineligible service; 2/3: cheaper adoption
+    // and expensive rejection at low/high programme prices. 4/5: Finish, 6/7: byte cap,
+    // 8/9: cancellation, each at generation/checking. 10/11/12 exercise
+    // Finish/cancel/cap at validation. 13 keeps target-neutral zero authority;
+    // 14-17 use fixed parent work caps across the three service phases;
+    // 18 isolates a candidate-local state cap after initial issuance.
+    for (const unsigned fixture : {0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u,
+                                  9u, 10u, 11u, 12u, 13u, 14u, 15u, 16u, 17u, 18u}) {
+        const unsigned goal_count = fixture == 0 ? 1u : 4u;
+        auto session = make_solve_session();
+        if (fixture >= 2) {
+            session->eldritch_eligible = true;
+            session->eldritch_searing_tier_mod_ids.resize(5);
+            session->eldritch_eater_tier_mod_ids.resize(5);
+            for (unsigned tier = 1; tier <= 4; ++tier) {
+                session->eldritch_searing_tier_mod_ids[tier] = {0};
+                session->eldritch_eater_tier_mod_ids[tier] = {5};
+            }
+        }
+        auto registry = build_action_registry(*session);
+        GoalSpec goal;
+        goal.rarity = PC_RARITY_RARE;
+        goal.automatic_candidates = goal_count == 4;
+        for (const auto family : {100u, 102u, 103u, 104u}) {
+            if (goal.slots.size() == goal_count) break;
+            GoalSlot slot; slot.family_id = family; slot.min_tier = 1;
+            goal.slots.push_back(slot);
+        }
+        std::vector<std::uint32_t> actions;
+        for (const auto* id : {"chaos", "annul", "exalt"})
+            actions.push_back(registry.index_by_id.at(id));
+        CalcContext off_calc(session, goal, registry, actions);
+        CalcContext on_calc(session, goal, registry, actions);
+        pc_item_state start; pc_item_clear(&start);
+        start.rarity = PC_RARITY_RARE;
+        SolveOptions options;
+        options.goal_progress_gated_reforges = true;
+        options.high_impact_executable_uppers = true;
+        options.allow_economic_restart = false;
+        options.state_certificate_control = false;
+        if (fixture == 14) options.max_reforge_work = 2500;
+        if (fixture == 15) options.max_reforge_work = 3500;
+        if (fixture == 16) options.max_reforge_work = 4000;
+        if (fixture == 17) options.max_reforge_work = 5000;
+        if (fixture == 13) options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+        std::unordered_map<std::string, double> prices{
+            {"chaos", 100}, {"annul", 5}, {"exalt", 2}};
+        if (fixture >= 2) {
+            const double price = fixture == 3 ? 10000 : 0.01;
+            prices["eldritch_chaos"] = price;
+            prices["eldritch_annul"] = price;
+            for (unsigned tier = 1; tier <= 4; ++tier) {
+                prices["eldritch_ember:" + std::to_string(tier)] = price;
+                prices["eldritch_ichor:" + std::to_string(tier)] = price;
+            }
+        }
+        Impl off(off_calc, start, prices, options);
+        options.selective_completion_service = true;
+        auto on_owner = std::make_unique<SolveWork>(on_calc, start, prices, options);
+        Impl& on = SolveWorkTestAccess::get(*on_owner);
+        std::uint64_t last_event = 0;
+        unsigned steps = 0;
+        bool saw_candidate = false, saw_checked = false;
+        bool saw_admission = false;
+        bool saw_checking = false, saw_validating = false;
+        bool wrote_proposal = false;
+        bool interrupted = false, cancelled = false;
+        std::string disposition;
+        std::string admission_graph;
+        std::uint64_t admission_identity = 0;
+        double admission_cost = kInfinity;
+        for (; steps < 20000 && !on.progress().done; ++steps) {
+            off.step(1);
+            on.step(1);
+            const bool admitted = on.selective_service_phase !=
+                Impl::SelectiveServicePhase::NotStarted &&
+                on.selective_service_phase != Impl::SelectiveServicePhase::Done;
+            if (admitted && !saw_admission) {
+                if (fixture == 18)
+                    on.options.candidate_evaluation_limits.max_states = 1;
+                const auto* owned = on.best_current_certified_fallback();
+                PC_CHECK(owned != nullptr);
+                if (owned) {
+                    admission_cost = owned->evaluated_policy_cost;
+                    admission_identity = owned->portfolio_identity;
+                    admission_graph = owned->compiled_artifact.strategy_json;
+                    PC_CHECK(on.certified_incumbent_invalid_reason(*owned) == nullptr);
+                    PC_CHECK(!admission_graph.empty());
+                }
+            }
+            if (!admitted && !saw_admission) {
+                PC_CHECK(off.phase == on.phase);
+                PC_CHECK(off.result.values == on.result.values);
+                PC_CHECK(off.policy_rows == on.policy_rows);
+                PC_CHECK(off.graph_identity() == on.graph_identity());
+                PC_CHECK(off.transition_cache->successors == on.transition_cache->successors);
+                PC_CHECK(off.transition_cache->probabilities == on.transition_cache->probabilities);
+                PC_CHECK(off.queue == on.queue);
+                PC_CHECK(off.expansion_operator_cursor == on.expansion_operator_cursor);
+                PC_CHECK(off.certified_global_lower_bound() == on.certified_global_lower_bound());
+                PC_CHECK(off.incumbent_portfolio.best_verified_identity ==
+                    on.incumbent_portfolio.best_verified_identity);
+                PC_CHECK(off.calc.telemetry().reforge_logical_work_v1 ==
+                    on.calc.telemetry().reforge_logical_work_v1);
+                PC_CHECK(!on.selective_service_calc);
+                PC_CHECK(!on.selective_service_checker);
+                PC_CHECK(!on.selective_service_validator);
+            }
+            saw_admission |= admitted;
+            if (admitted) {
+                const auto* owned = on.best_current_certified_fallback();
+                PC_CHECK(owned != nullptr);
+                if (owned) {
+                    PC_CHECK(owned->portfolio_identity == admission_identity);
+                    PC_CHECK(owned->compiled_artifact.strategy_json == admission_graph);
+                    PC_CHECK(owned->evaluated_policy_cost == admission_cost);
+                }
+            }
+            if (fixture == 2 && ((!saw_checking &&
+                    on.selective_service_phase == Impl::SelectiveServicePhase::Checking) ||
+                (!saw_validating &&
+                    on.selective_service_phase == Impl::SelectiveServicePhase::Validating))) {
+                std::printf("IC2 phase=%s work=%llu\n",
+                    on.selective_service_phase == Impl::SelectiveServicePhase::Checking
+                        ? "checking" : "validating",
+                    static_cast<unsigned long long>(on.calc.telemetry().reforge_logical_work_v1));
+            }
+            saw_checking |= on.selective_service_phase == Impl::SelectiveServicePhase::Checking;
+            saw_validating |= on.selective_service_phase == Impl::SelectiveServicePhase::Validating;
+            if (saw_checking && !wrote_proposal && fixture <= 3) {
+                std::printf("IC2 proposal fixture=%u graph=%s\n", fixture,
+                    on.selective_service_graph.c_str());
+                wrote_proposal = true;
+            }
+            const auto interrupt_phase = fixture >= 10
+                ? Impl::SelectiveServicePhase::Validating : fixture % 2 == 0
+                ? Impl::SelectiveServicePhase::Generating
+                : Impl::SelectiveServicePhase::Checking;
+            if (fixture >= 4 && fixture <= 12 && !interrupted && on.selective_service_phase == interrupt_phase) {
+                interrupted = true;
+                if (fixture <= 5 || fixture == 10) {
+                    on_owner->request_bounded_finish();
+                } else if (fixture <= 7 || fixture == 12) {
+                    // Exercise the aggregate cap including the already-live
+                    // service scratch; release must not refund charged work.
+                    on.options.max_solver_owned_bytes = on.fast_estimated_owned_bytes() - 1;
+                } else {
+                    const auto spent = on_calc.telemetry().reforge_logical_work_v1;
+                    (void)on_owner->release_pending_work();
+                    PC_CHECK(!on.finalized_result);
+                    on_owner.reset();
+                    PC_CHECK(on_calc.telemetry().reforge_logical_work_v1 == spent);
+                    cancelled = true;
+                    break;
+                }
+            }
+            if (saw_admission && on.selective_service_phase == Impl::SelectiveServicePhase::Done &&
+                disposition.empty()) {
+                disposition = on.result.diagnostics.selective_completion_service_status;
+                if (fixture >= 14 && fixture <= 17) {
+                    std::printf("IC2 work-cap fixture=%u work=%llu cap=%llu hit=%d status=%s\n", fixture,
+                        static_cast<unsigned long long>(on.calc.telemetry().reforge_logical_work_v1),
+                        static_cast<unsigned long long>(on.options.max_reforge_work),
+                        on.result.diagnostics.resource_cap_hit, disposition.c_str());
+                    PC_CHECK(on.result.diagnostics.resource_cap_hit);
+                    PC_CHECK(on.calc.telemetry().reforge_logical_work_v1 <= options.max_reforge_work);
+                    PC_CHECK(disposition == "censored_parent_cap:max_reforge_work");
+                }
+                if (fixture == 18) {
+                    PC_CHECK(!on.result.diagnostics.resource_cap_hit);
+                    PC_CHECK(disposition.find("censored_capacity:") == 0);
+                }
+                PC_CHECK(!on.selective_service_producer && !on.selective_service_checker &&
+                    !on.selective_service_validator && !on.selective_service_calc);
+                on_owner->request_bounded_finish();
+            }
+            saw_candidate |= on.output_incumbent.has_value();
+            saw_checked |= on.output_incumbent &&
+                on.output_incumbent->independently_evaluated;
+            if (on.progress_event_sequence != last_event && fixture <= 3) {
+                std::printf("IC0 fixture=%u goals=%u step=%u work=%llu phase=%u output=%d retained=%zu trace=%s\n",
+                    fixture, goal_count, steps,
+                    static_cast<unsigned long long>(on_calc.telemetry().reforge_logical_work_v1),
+                    static_cast<unsigned>(on.phase),
+                    on.output_incumbent.has_value(),
+                    on.incumbent_portfolio.retained().size(),
+                    on.progress_trace_json(last_event).c_str());
+                last_event = on.progress_event_sequence;
+            }
+            const auto identity = on.graph_identity();
+            const auto work = on.calc.telemetry().reforge_logical_work_v1;
+            const auto events = on.progress_event_sequence;
+            for (unsigned read = 0; read < 3; ++read) {
+                (void)on.progress();
+                (void)on.progress_trace_json(events);
+            }
+            PC_CHECK(on.graph_identity() == identity);
+            PC_CHECK(on.calc.telemetry().reforge_logical_work_v1 == work);
+            PC_CHECK(on.progress_event_sequence == events);
+        }
+        if (cancelled) {
+            std::printf("IC2 fixture=%u cancelled phase=%s without publication\n",
+                fixture, fixture == 11 ? "validating" : fixture % 2 == 0 ? "generating" : "checking");
+            continue;
+        }
+        std::printf("IC0 fixture=%u goals=%u steps=%u done=%d candidate=%d checked=%d admitted=%d checking=%d validating=%d entry_cost=%.17g status=%s\n",
+            fixture, goal_count, steps, on.progress().done, saw_candidate, saw_checked,
+            saw_admission, saw_checking, saw_validating, admission_cost, disposition.c_str());
+        PC_CHECK(on.progress().done);
+        if (goal_count == 4) {
+            PC_CHECK(saw_candidate);
+            PC_CHECK(saw_checked);
+            PC_CHECK(saw_admission);
+        }
+        if (fixture == 2 || fixture == 3 || fixture == 13) {
+            PC_CHECK(saw_checking);
+            PC_CHECK(saw_validating);
+            PC_CHECK(disposition == (fixture == 3 ? "checked_rejected_expensive" : "retained"));
+        }
+        if (fixture >= 4 && fixture <= 12) PC_CHECK(interrupted);
+        if (fixture == 16) PC_CHECK(saw_checking);
+        if (fixture == 17) PC_CHECK(saw_validating);
+        if (fixture == 18) PC_CHECK(saw_checking);
+        if (fixture == 4 || fixture == 5 || fixture == 10)
+            PC_CHECK(disposition == "censored_finish_or_cap");
+        if (fixture == 6 || fixture == 7 || fixture == 12)
+            PC_CHECK(disposition.find("censored_") == 0);
+        if (on.progress().done) {
+            const auto published = on.finish();
+            // A reduced limit may no longer fit the final retained result.
+            // Refusal is valid only under that explicit cap, not silent loss
+            // of an available checked incumbent under the original request.
+            if (!published.policy_available) {
+                PC_CHECK(fixture == 6 || fixture == 7 || fixture == 12);
+                PC_CHECK(published.diagnostics.policy_publication_failure_reason ==
+                    "retained solve result reached max_solver_owned_bytes");
+                continue;
+            }
+            PC_CHECK(std::isfinite(published.evaluated_policy_cost));
+            if (fixture == 2 || fixture == 13)
+                PC_CHECK(published.evaluated_policy_cost < admission_cost);
+            if (fixture == 13) {
+                PC_CHECK(published.lower_bound == 0);
+                PC_CHECK(published.closure_unavailable_by_profile);
+            }
+            PC_CHECK(published.upper_bound == published.evaluated_policy_cost);
+            if (saw_admission) {
+                PC_CHECK(published.evaluated_policy_cost <= admission_cost);
+                PC_CHECK(published.diagnostics.selective_completion_service_status == disposition);
+            }
+        }
+    }
+}
+
+void run_selective_completion_target_count_tests(bool cap_diagnosis = false) {
+    using Impl = SolveWorkTestAccess::Impl;
+    // Component fixture: directly drive the real optional service to isolate
+    // its producer/checker/entry validator. This bypasses the Current admission
+    // gate and does not claim naturally available pre-Finish ownership.
+    for (unsigned fixture = 0; fixture < (cap_diagnosis ? 3u : 2u); ++fixture) {
+        const unsigned target_count = cap_diagnosis ? 1u : fixture + 1;
+        auto session = make_solve_session();
+        session->eldritch_eligible = true;
+        session->eldritch_searing_tier_mod_ids.resize(5);
+        session->eldritch_eater_tier_mod_ids.resize(5);
+        for (unsigned tier = 1; tier <= 4; ++tier) {
+            session->eldritch_searing_tier_mod_ids[tier] = {0};
+            session->eldritch_eater_tier_mod_ids[tier] = {5};
+        }
+        auto registry = build_action_registry(*session);
+        GoalSpec goal;
+        goal.rarity = PC_RARITY_RARE;
+        goal.automatic_candidates = true;
+        for (const auto family : {100u, 102u, 103u, 104u, 105u}) {
+            if (goal.slots.size() == 3 + target_count) break;
+            GoalSlot slot; slot.family_id = family; slot.min_tier = 1;
+            goal.slots.push_back(slot);
+        }
+        CalcContext calc(session, goal, registry, {registry.index_by_id.at("chaos"),
+            registry.index_by_id.at("annul"), registry.index_by_id.at("exalt")});
+        pc_item_state start; pc_item_clear(&start); start.rarity = PC_RARITY_RARE;
+        SolveOptions options;
+        options.goal_progress_gated_reforges = true;
+        options.high_impact_executable_uppers = true;
+        options.allow_economic_restart = false;
+        options.state_certificate_control = false;
+        std::unordered_map<std::string, double> prices{
+            {"chaos", 100}, {"annul", 5}, {"exalt", 2},
+            {"eldritch_chaos", 0.01}, {"eldritch_annul", 0.01}};
+        for (unsigned tier = 1; tier <= 4; ++tier) {
+            prices["eldritch_ember:" + std::to_string(tier)] = 0.01;
+            prices["eldritch_ichor:" + std::to_string(tier)] = 0.01;
+        }
+        Impl work(calc, start, prices, options);
+        double original_cost = kInfinity;
+        if (cap_diagnosis) {
+            // Explicitly schedule checking of a naturally constructed renewal.
+            // This isolates publication headroom from the ordinary scheduling
+            // qualification performed by the natural continuity fixtures.
+            for (unsigned step = 0; step < 20000; ++step) {
+                work.step(1);
+                if (work.output_incumbent && !work.expansion_active) break;
+                if (work.progress().done) break;
+            }
+            PC_CHECK(work.output_incumbent && !work.expansion_active);
+            if (!work.output_incumbent || work.expansion_active) continue;
+            const auto resume_phase = work.phase;
+            auto issuance = work.certify_initial_candidate();
+            bool issued = false;
+            for (unsigned step = 0; step < 10000; ++step) {
+                if (issuance.resume()) { issued = issuance.take_result(); break; }
+            }
+            issuance.reset();
+            work.publication_pipeline.initial_candidate_proof_bytes = 0;
+            work.phase = resume_phase;
+            PC_CHECK(issued);
+            const auto* incumbent = work.best_current_certified_fallback();
+            PC_CHECK(incumbent != nullptr);
+            if (!incumbent) continue;
+            original_cost = incumbent->evaluated_policy_cost;
+        }
+        bool saw_checking = false, saw_validation = false;
+        bool inspected_native_law = false;
+        bool tightened_cap = false;
+        for (unsigned step = 0; step < 20000 &&
+             work.selective_service_phase != Impl::SelectiveServicePhase::Done; ++step) {
+            (void)work.advance_selective_completion_service();
+            saw_checking |= work.selective_service_phase == Impl::SelectiveServicePhase::Checking;
+            saw_validation |= work.selective_service_phase == Impl::SelectiveServicePhase::Validating;
+            if (cap_diagnosis && fixture != 0 && !tightened_cap &&
+                work.selective_service_phase == (fixture == 1
+                    ? Impl::SelectiveServicePhase::Generating : Impl::SelectiveServicePhase::Checking)) {
+                const auto live = work.fast_estimated_owned_bytes();
+                const auto* incumbent = work.best_current_certified_fallback();
+                PC_CHECK(incumbent != nullptr);
+                std::printf("selective cap fixture=%u live=%llu incumbent_bytes=%llu cost=%.17g\n",
+                    fixture, static_cast<unsigned long long>(live),
+                    static_cast<unsigned long long>(incumbent ? work.incumbent_owned_bytes(*incumbent) : 0),
+                    original_cost);
+                work.options.max_solver_owned_bytes = live - 1;
+                tightened_cap = true;
+            }
+            if (work.selective_service_candidate && !inspected_native_law) {
+                inspected_native_law = true;
+                const auto& control = work.selective_service_candidate->control;
+                const auto& binding = control.programs.front();
+                const auto& law = work.selective_service_calc->option_kernel(
+                    binding.admitted_state, binding.operator_index);
+                PC_CHECK(law.supported && law.legal);
+                double mass = 0, one_suffix_mass = 0, goal_mass = 0;
+                for (const auto& exit : law.exits) {
+                    if (!(exit.probability > 0)) continue;
+                    const auto& state = work.selective_service_calc->state(exit.state);
+                    mass += exit.probability;
+                    if (state.suffix_count == 1) one_suffix_mass += exit.probability;
+                    if (work.selective_service_calc->is_goal_state(state)) goal_mass += exit.probability;
+                    PC_CHECK(state.prefix_count == 3);
+                    PC_CHECK(state.suffix_count == 2 || state.suffix_count == 3);
+                }
+                PC_CHECK(near(mass, 1));
+                PC_CHECK(one_suffix_mass == 0);
+                if (target_count == 1) PC_CHECK(goal_mass == 0);
+                std::printf("selective target=%u native reroll mass=%.17g one_suffix=%.17g goal=%.17g\n",
+                    target_count, mass, one_suffix_mass, goal_mass);
+            }
+        }
+        std::printf("selective target=%u checking=%d validating=%d status=%s cost=%.17g\n",
+            target_count, saw_checking, saw_validation,
+            work.result.diagnostics.selective_completion_service_status.c_str(),
+            work.result.diagnostics.selective_completion_service_checked_cost);
+        if (!cap_diagnosis || fixture == 0) {
+            PC_CHECK(inspected_native_law && saw_checking);
+            PC_CHECK(saw_validation);
+            PC_CHECK(work.result.diagnostics.selective_completion_service_status == "retained");
+            PC_CHECK(work.result.diagnostics.selective_completion_service_checks == 1);
+        } else {
+            PC_CHECK(tightened_cap);
+            PC_CHECK(work.result.diagnostics.selective_completion_service_status.find("censored_") == 0);
+        }
+        const auto* owned = work.best_current_certified_fallback();
+        PC_CHECK(owned != nullptr);
+        if (owned) {
+            PC_CHECK(work.certified_incumbent_invalid_reason(*owned) == nullptr);
+            if (!tightened_cap) {
+                PC_CHECK(owned->compiled_root_entry_only);
+                PC_CHECK(owned->evaluated_policy_cost ==
+                    work.result.diagnostics.selective_completion_service_checked_cost);
+            } else PC_CHECK(owned->evaluated_policy_cost == original_cost);
+        }
+        if (owned && !cap_diagnosis) {
+            // Reuse a genuinely issued complete bundle under the same request.
+            // This component control exercises deduplication, not first issuance.
+            Impl duplicate(calc, start, prices, options);
+            PC_CHECK(duplicate.retain_certified_incumbent(*owned));
+            bool duplicate_checked = false;
+            for (unsigned step = 0; step < 20000 &&
+                 duplicate.selective_service_phase != Impl::SelectiveServicePhase::Done; ++step) {
+                (void)duplicate.advance_selective_completion_service();
+                duplicate_checked |= duplicate.selective_service_checker != nullptr;
+            }
+            PC_CHECK(!duplicate_checked);
+            PC_CHECK(duplicate.result.diagnostics.selective_completion_service_status ==
+                "deduplicated_identical_checked_graph");
+            const auto* retained = duplicate.best_current_certified_fallback();
+            PC_CHECK(retained && retained->portfolio_identity == owned->portfolio_identity);
+            if (target_count == 1) {
+                // Fresh execution qualification for the corrected emitted
+                // controller, using the owner-approved 1,000 native trials.
+                const auto& graph = owned->compiled_artifact.strategy_json;
+                auto strategy = compile_strategy_json(session, graph.c_str(), graph.size());
+                auto economy = std::make_shared<EconomyImpl>();
+                economy->id = "selective-target-count";
+                economy->prices = prices;
+                SimulatorImpl simulator;
+                simulator.session = session;
+                simulator.strategy = strategy;
+                simulator.economy = economy;
+                simulator.action_counts.assign(strategy->nodes.size(), 0);
+                SimulationOptionsInternal simulation;
+                simulation.target_runs = 1000;
+                simulation.seed = 27092026;
+                simulation.max_actions_per_run = 100000;
+                run_simulator_chunk(simulator, simulation, 1000);
+                PC_CHECK(simulator.summary.completed_runs == 1000);
+                PC_CHECK(simulator.summary.success_count == 1000);
+                PC_CHECK(simulator.failure_summaries.empty());
+                std::printf("selective one-affix controller: %llu/1000 native executions succeeded\n",
+                    static_cast<unsigned long long>(simulator.summary.success_count));
+            }
+        }
+        if (cap_diagnosis) {
+            std::printf("selective cap fixture=%u after_service_live=%llu limit=%llu compatible=%d\n",
+                fixture, static_cast<unsigned long long>(work.fast_estimated_owned_bytes()),
+                static_cast<unsigned long long>(work.options.max_solver_owned_bytes), owned != nullptr);
+            work.requested_bounded_finish = true;
+            work.result.diagnostics.requested_bounded_finish = true;
+            for (unsigned step = 0; step < 10000 && !work.progress().done; ++step) work.step(1);
+            PC_CHECK(work.progress().done);
+            if (!work.progress().done) continue;
+            const auto published = work.finish();
+            std::printf("selective cap fixture=%u published=%d peak=%llu limit=%llu cost=%.17g reason=%s\n",
+                fixture, published.policy_available,
+                static_cast<unsigned long long>(published.diagnostics.solver_owned_bytes_estimate),
+                static_cast<unsigned long long>(work.options.max_solver_owned_bytes),
+                published.evaluated_policy_cost,
+                published.diagnostics.policy_publication_failure_reason.c_str());
+            if (published.policy_available) {
+                PC_CHECK(std::isfinite(published.evaluated_policy_cost));
+                PC_CHECK(published.evaluated_policy_cost <= original_cost);
+            } else {
+                PC_CHECK(tightened_cap && published.diagnostics.resource_cap_hit);
+                PC_CHECK(published.diagnostics.policy_publication_failure_reason ==
+                    "retained solve result reached max_solver_owned_bytes");
+                PC_CHECK(published.diagnostics.solver_owned_bytes_estimate >
+                    work.options.max_solver_owned_bytes);
+            }
+        }
+    }
 }
 
 void run_first_proper_candidate_retention_tests() {
@@ -11978,8 +12444,9 @@ void run_carrier_aware_completion_bound_tests() {
         carrier_progress, protected_lower);
 }
 
-void run_automatic_eldritch_side_tests() {
-    run_carrier_aware_completion_bound_tests();
+void run_automatic_eldritch_side_tests(
+        bool sample_strategy = true, bool include_carrier_bounds = true) {
+    if (include_carrier_bounds) run_carrier_aware_completion_bound_tests();
     auto session = make_solve_session();
     session->eldritch_eligible = true;
     session->eldritch_searing_tier_mod_ids.resize(5);
@@ -13376,33 +13843,35 @@ void run_automatic_eldritch_side_tests() {
             evaluation.total_expected_cost,
             prefix_solved.evaluated_policy_cost, 1e-8));
 
-        SimulatorImpl simulator;
-        simulator.session = session;
-        simulator.strategy = strategy;
-        simulator.economy = economy;
-        prepare_simulator_runtime(simulator);
-        SimulationOptionsInternal simulation_options;
-        simulation_options.target_runs = 1000;
-        simulation_options.seed = 0x454c445249544348ULL;
-        simulation_options.max_actions_per_run = 100000;
-        run_simulator_chunk(simulator, simulation_options, 1000);
-        PC_CHECK(simulator.summary.completed_runs == 1000);
-        PC_CHECK(simulator.summary.success_count == 1000);
-        PC_CHECK(simulator.summary.action_not_applied_count == 0);
-        PC_CHECK(simulator.summary.no_matching_edge_count == 0);
-        const double empirical_cost =
-            simulator.summary.known_total_cost / 1000.0;
-        PC_CHECK(
-            std::abs(
-                empirical_cost -
-                evaluation.total_expected_cost) <=
-            std::max(
-                0.5,
-                evaluation.total_expected_cost * 0.10));
-        std::printf(
-            "solver automatic Eldritch compiled policy: "
-            "exact=%.6f empirical=%.6f runs=1000\n",
-            evaluation.total_expected_cost, empirical_cost);
+        if (sample_strategy) {
+            SimulatorImpl simulator;
+            simulator.session = session;
+            simulator.strategy = strategy;
+            simulator.economy = economy;
+            prepare_simulator_runtime(simulator);
+            SimulationOptionsInternal simulation_options;
+            simulation_options.target_runs = 1000;
+            simulation_options.seed = 0x454c445249544348ULL;
+            simulation_options.max_actions_per_run = 100000;
+            run_simulator_chunk(simulator, simulation_options, 1000);
+            PC_CHECK(simulator.summary.completed_runs == 1000);
+            PC_CHECK(simulator.summary.success_count == 1000);
+            PC_CHECK(simulator.summary.action_not_applied_count == 0);
+            PC_CHECK(simulator.summary.no_matching_edge_count == 0);
+            const double empirical_cost =
+                simulator.summary.known_total_cost / 1000.0;
+            PC_CHECK(
+                std::abs(
+                    empirical_cost -
+                    evaluation.total_expected_cost) <=
+                std::max(
+                    0.5,
+                    evaluation.total_expected_cost * 0.10));
+            std::printf(
+                "solver automatic Eldritch compiled policy: "
+                "exact=%.6f empirical=%.6f runs=1000\n",
+                evaluation.total_expected_cost, empirical_cost);
+        }
     }
     CalcContext prefix_repeat_calc(
         session, goal, registry, candidates);
@@ -14343,7 +14812,7 @@ void run_solver_dirty_continuation_tests() {
         if (priced != renewal.operators.end())
             renewal.try_install_gated_root_renewal_incumbent(renewal.result.start_state,row_id,*priced,native);
         PC_CHECK(renewal.output_incumbent.has_value());
-        PC_CHECK(!renewal.try_begin_renewal_candidate_publication()); // Default unchanged.
+        PC_CHECK(!renewal.publication_pipeline.initial_candidate_task); // Separate private-continuation fixture.
         renewal.options.native_continuation_search = NativeContinuationSearchMode::DirtyRestrictedFreshLayout;
         renewal.requested_bounded_finish = true;
         PC_CHECK(!renewal.try_begin_renewal_candidate_publication());
@@ -14742,6 +15211,16 @@ void run_solver_integrity_tests(const char* case_name) {
         run_constructive_state_certificate_tests();
         run_certified_fallback_contract_tests();
     }
+    else if (name == "continuity") run_current_incumbent_continuity_tests();
+    else if (name == "selective-target-count") run_selective_completion_target_count_tests();
+    else if (name == "selective-cap-diagnosis") run_selective_completion_target_count_tests(true);
+    else if (name == "finder-bindings") run_solver_finder_binding_tests();
+    else if (name == "automatic-admission-contract") {
+        run_resource_stop_reachable_policy_tests();
+        run_automatic_imprint_cooperative_tests();
+        run_automatic_eldritch_side_tests(false);
+    }
+    else if (name == "automatic-ledger") run_automatic_eldritch_side_tests(false, false);
     else if (name == "incremental") run_incremental_action_generation_tests();
     else if (name == "fracture") run_primitive_destructive_renewal_upper_tests(false);
     else throw std::invalid_argument("unknown solver integrity subcase");
@@ -14754,6 +15233,8 @@ void run_solver_solve_tests(const char* artifact_dir) {
         default_options.max_solver_owned_bytes ==
         1024ull * 1024ull * 1024ull);
     run_neutral_extra_frozen_order_tests();
+    run_selective_completion_target_count_tests();
+    run_current_incumbent_continuity_tests();
     run_anytime_scheduler_tests();
     run_proof_pattern_manager_tests();
     run_incumbent_portfolio_monotonicity_tests();

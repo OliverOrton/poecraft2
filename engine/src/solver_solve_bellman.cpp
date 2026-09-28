@@ -1925,6 +1925,16 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                 if (!result.diagnostics.resource_cap_hit && !result.diagnostics.state_cap_hit)
                     (void)try_constructive_state_certificate(state, row);
             }
+            // A completed root renewal is already a complete controller. Its
+            // first check must not depend on a later open-envelope boundary:
+            // small/closed envelopes may never visit that continuation. Pause
+            // only between complete rows, and resume the same discovery cursor.
+            if (!expansion_active &&
+                (phase == SolvePhase::Expanding || phase == SolvePhase::Iterating) &&
+                output_incumbent && output_incumbent->primitive_renewal_witness.valid &&
+                !std::isfinite(incumbent_portfolio.verified_executable_upper())) {
+                (void)try_begin_renewal_candidate_publication(true);
+            }
             if (publication_pipeline.initial_candidate_task.has_value()) {
                 if (advance_initial_candidate_publication()) break;
                 // Finish discarded only the in-flight verification scratch;
