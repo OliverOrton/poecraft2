@@ -172,7 +172,8 @@ export async function checkStrategyHistory(page) {
     assert.equal((await graph(page)).edges.length, 0);
     await strategyCommand(page, 'undo');
     assert.deepEqual(await graph(page), beforeDelete);
-    // Wait for the draft transaction, not just an async predicate's Promise.
+    // Undo returns to the same cursor and graph as the pre-deletion draft. Wait
+    // for the complete history so that an older draft without Redo cannot pass.
     await page.evaluate(async () => {
         const request = indexedDB.open('poecraft');
         const db = await new Promise(resolve => { request.onsuccess = () => resolve(request.result); });
@@ -181,7 +182,8 @@ export async function checkStrategyHistory(page) {
             for (let attempt = 0; attempt < 100; attempt++) {
                 const read = db.transaction('drafts').objectStore('drafts').get(editor.docId);
                 const draft = await new Promise(resolve => { read.onsuccess = () => resolve(read.result); });
-                if (draft?.undoHistory?.cursor === editor.undoHistory.cursor && JSON.stringify(draft.strategy) === JSON.stringify(editor.strategy)) return;
+                if (JSON.stringify(draft?.undoHistory) === JSON.stringify(editor.undoHistory.export()) &&
+                    JSON.stringify(draft.strategy) === JSON.stringify(editor.strategy)) return;
                 await new Promise(resolve => setTimeout(resolve, 25));
             }
             throw new Error('Strategy draft did not persist');
