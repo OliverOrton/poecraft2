@@ -4,6 +4,7 @@ import { craftActionLabel, groupEssences, resistanceEntries } from "../craft-cho
 import { HARVEST_AUGMENT, HARVEST_REFORGE, harvestTagsFor } from "../harvest-crafts";
 import { disconnectReact, renderReact } from "../react-host";
 import { GameIcon } from "./pc-game-icon";
+import { CraftChoice } from "./craft-choice";
 
 export type CraftPanel = "basic" | "essence" | "harvest" | "fossil" | "eldritch" | "influenced" | "veiled" | "bestiary";
 const PANELS: Array<[CraftPanel, string, string]> = [
@@ -16,6 +17,7 @@ const BASIC = ["transmute", "augment", "alteration", "regal", "alchemy", "chaos"
 export interface CraftControlsModel {
     mode: "emulator" | "calculator";
     catalog: Catalog;
+    itemClass?: string;
     panel: CraftPanel;
     values: ReadonlyMap<string, string>;
     fossils: string[];
@@ -29,7 +31,7 @@ export interface CraftControlsModel {
     onSimple: (id: string) => void;
     onConfigured: (type: string) => void;
     onBestiary: (id: string) => void;
-    onAddFossil: () => void;
+    onAddFossil: (key: string) => void;
     onRemoveFossil: (index: number) => void;
 }
 
@@ -46,12 +48,18 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
                 {entries.map(entry => <option key={entry.key} value={entry.key}>{entry.name}</option>)}
             </select></span></label>;
     };
-    const action = (id: string, label = craftActionLabel(id), configured = false, assetKey = "action:" + id) => {
-        const selected = configured ? m.selectedAction?.startsWith(id + ":") : m.selectedAction === id;
+    const action = (id: string, label = craftActionLabel(id), configured = false, disabled = false) => {
+        const selected = !configured && m.selectedAction === id;
         const attribute = calculator ? (configured ? "data-derive-action" : "data-select-action") : (configured ? "data-config-action" : "data-simple-action");
-        return <button key={id} {...{[attribute]: id}} className={selected ? "is-selected" : ""}
-            onClick={() => configured ? m.onConfigured(id) : m.onSimple(id)}><GameIcon assetKey={assetKey} />{label}</button>;
+        return <button key={id} {...{[attribute]: id}} className={configured ? "pc-craft-apply" : selected ? "is-selected" : ""} disabled={disabled}
+            onClick={() => configured ? m.onConfigured(id) : m.onSimple(id)}>{!configured && <GameIcon assetKey={"action:" + id} />}{label}</button>;
     };
+    const choices = (name: string, label: string, entries: Array<{key: string; name: string}>, art: (entry: {key: string; name: string}) => string) =>
+        <div className="pc-material-options" role="group" aria-label={label}>
+            {entries.map(entry => <CraftChoice key={entry.key} name={name} value={entry.key} label={entry.name}
+                assetKey={art(entry)} selected={value(name) === entry.key} itemClass={m.itemClass}
+                onChoose={() => m.onValue(name, entry.key)} />)}
+        </div>;
     let panel: ReactNode;
     switch (m.panel) {
         case "basic": panel = <><div className="pc-craft-options">{BASIC.map(id => action(id))}{calculator && action("restart", "Restart (fresh base)")}</div>
@@ -61,34 +69,53 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
             const group = groups.find(group => group.type === value("essence-type")) ?? groups[0];
             const tiers = group?.tiers ?? [];
             const essence = tiers.find(tier => tier.key === value("essence-key")) ?? tiers[0];
-            const asset = "name:" + (m.catalog.essences.find(entry => entry.key === essence?.key)?.name ?? "");
-            panel = <div className="pc-mechanic-row">
-                {select("essence-type", groups.map(group => ({key: group.type, name: group.type})), group?.type, "Type")}
-                {select("essence-key", tiers.map(tier => ({key: tier.key, name: tier.tier})), essence?.key, "Tier")}
-                {action("essence", calculator ? "Use essence" : "Apply essence", true, asset)}
+            panel = <div className="pc-material-panel">
+                <div className="pc-material-heading">Type</div>
+                {choices("essence-type", "Essence type", groups.map(group => ({key: group.type, name: group.type})),
+                    entry => entry.key === group?.type ? essence?.key ?? "" : groups.find(group => group.type === entry.key)?.tiers[0]?.key ?? "")}
+                <div className="pc-material-heading">Tier</div>
+                {choices("essence-key", "Essence tier", tiers.map(tier => ({key: tier.key, name: tier.tier})), entry => entry.key)}
+                <div className="pc-material-footer"><span>{m.catalog.essences.find(entry => entry.key === essence?.key)?.name}</span>
+                    {action("essence", calculator ? "Calculate odds" : "Apply essence", true, !essence)}
+                </div>
             </div>; break;
         }
-        case "harvest": panel = <><div className="pc-mechanic-row">
-            {select("harvest-reforge-tag", harvestTagsFor(m.catalog.harvestTags, HARVEST_REFORGE), undefined, "Reforge")}{action("harvest_reforge", "Reforge", true)}
-            {select("harvest-augment-tag", harvestTagsFor(m.catalog.harvestTags, HARVEST_AUGMENT), undefined, "Augment")}{action("harvest_augment", "Augment", true)}
-        </div><div className="pc-mechanic-row">
-            {select("resist-from", resistanceEntries(), "fire", "From")}<span>→</span>{select("resist-to", resistanceEntries(), "cold", "To")}
-            {action("harvest_resist", "Convert resistance", true)}
-        </div></>; break;
-        case "fossil": panel = <><div className="pc-mechanic-row">
-            {select("fossil", m.catalog.fossils, undefined, "Fossil", true)}<button data-fossil-add disabled={m.fossils.length >= 4} onClick={m.onAddFossil}>Add fossil</button>
-            {!calculator && <button data-config-action="fossil" disabled={!m.fossils.length} onClick={() => m.onConfigured("fossil")}><GameIcon assetKey="action:fossil" />Craft</button>}
-        </div><div className="pc-selected-fossils">{m.fossils.map((key, index) => {
-            const name = m.catalog.fossils.find(entry => entry.key === key)?.name ?? key;
-            return <span className="pc-chip" key={key}><GameIcon assetKey={"name:" + name} />{name}<button data-fossil-remove={index} title="Remove" aria-label={"Remove " + name} onClick={() => m.onRemoveFossil(index)}>×</button></span>;
-        })}{!m.fossils.length && <span className="pc-help">Choose up to four fossils.</span>}</div></>; break;
+        case "harvest": panel = <div className="pc-harvest-layout"><div className="pc-harvest-main">
+            <section><div className="pc-material-heading">Reforge</div>
+                {choices("harvest-reforge-tag", "Reforge modifier type", harvestTagsFor(m.catalog.harvestTags, HARVEST_REFORGE), entry => "harvest:reforge:" + entry.key)}
+                <div className="pc-material-footer">{action("harvest_reforge", calculator ? "Calculate reforge" : "Reforge", true)}</div>
+            </section>
+            <section><div className="pc-material-heading">Augment</div>
+                {choices("harvest-augment-tag", "Augment modifier type", harvestTagsFor(m.catalog.harvestTags, HARVEST_AUGMENT), entry => "harvest:augment:" + entry.key)}
+                <div className="pc-material-footer">{action("harvest_augment", calculator ? "Calculate augment" : "Augment", true)}</div>
+            </section>
+        </div><section className="pc-harvest-resistance"><div className="pc-material-heading">Convert resistance</div>
+            <div className="pc-material-heading">From</div>
+            {choices("resist-from", "Resistance to replace", resistanceEntries(), entry => "harvest:resistance:" + entry.key)}
+            <div className="pc-material-heading">To</div>
+            {choices("resist-to", "New resistance", resistanceEntries(), entry => "harvest:resistance:" + entry.key)}
+            <div className="pc-material-footer">{action("harvest_resist", calculator ? "Calculate conversion" : "Convert resistance", true, value("resist-from") === value("resist-to"))}</div>
+        </section></div>; break;
+        case "fossil": panel = <div className="pc-material-panel">
+            <div className="pc-material-options" role="group" aria-label="Fossils">
+                {m.catalog.fossils.map(entry => {
+                    const index = m.fossils.indexOf(entry.key);
+                    return <CraftChoice key={entry.key} name="fossil" value={entry.key} label={entry.name.replace(/ Fossil$/, "")}
+                        assetKey={entry.key} selected={index >= 0} blocked={index < 0 && m.fossils.length >= 4}
+                        onChoose={() => index >= 0 ? m.onRemoveFossil(index) : m.onAddFossil(entry.key)} />;
+                })}
+            </div>
+            <div className="pc-material-footer"><span>{m.fossils.length}/4 fossils selected</span>
+                {action("fossil", calculator ? "Calculate odds" : "Craft", true, !m.fossils.length)}
+            </div>
+        </div>; break;
         case "eldritch": panel = <><div className="pc-mechanic-row">
             {select("eldritch-tier", [1,2,3,4].map(tier => ({key: String(tier), name: "Tier " + tier})), "1", "Tier")}
             {action("eldritch_ember", "Ember", true)}{action("eldritch_ichor", "Ichor", true)}
         </div><div className="pc-craft-options">{["eldritch_exalt", "eldritch_chaos", "eldritch_annul"].map(id => action(id))}</div></>; break;
-        case "influenced": panel = <div className="pc-mechanic-row">
-            {select("influence", m.catalog.influences, undefined, "Influence")}
-            {action("influence_exalt", "Influenced exalt", true, "influence:" + value("influence", m.catalog.influences[0]?.key))}
+        case "influenced": panel = <div className="pc-material-panel">
+            {choices("influence", "Influence", m.catalog.influences, entry => "influence:" + entry.key)}
+            <div className="pc-material-footer">{action("influence_exalt", calculator ? "Calculate odds" : "Influenced exalt", true)}</div>
         </div>; break;
         case "bestiary": panel = <><div className="pc-craft-options">{m.bestiary.map(entry => <button key={entry.id}
             {...{[calculator ? "data-select-action" : "data-bestiary-action"]: entry.id}} className={m.selectedAction === entry.id ? "is-selected" : ""}

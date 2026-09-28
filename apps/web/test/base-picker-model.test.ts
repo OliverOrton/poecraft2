@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 
 import {
+    basePickerAttributeCombo,
     compareBasePickerBases,
     supportedBasePickerBases,
 } from "../src/app/base-picker-model";
@@ -18,6 +19,28 @@ const base = (
     drop_level: dropLevel,
     support,
 });
+
+{
+    const cases = [
+        ["BodyArmours/BodyInt17", "Int"],
+        ["BodyArmours/BodyStrDexInt1", "StrDexInt"],
+        ["Helmets/HelmetStrIntRitual3", "StrInt"], // Archdemon Crown
+        ["Helmets/HelmetDexIntRitual3", "DexInt"], // Blizzard Crown
+        ["Helmets/HelmetStrDexRitual3", "StrDex"], // Penitent Mask
+        ["Gloves/GlovesIntRitual3", "Int"], // Nexus Gloves
+        ["Boots/BootsDexRitual3", "Dex"], // Stormrider Boots
+        ["Boots/BootsStrRitual3", "Str"], // Brimstone Treads
+        ["Shields/ShieldDexE3", "Dex"], // Cold-attuned Buckler
+        ["Gloves/GlovesAtlasStrInt", "StrInt"], // Apothecary's Gloves
+        ["Helmets/HelmetAtlas1", null], // No attribute encoded in this path
+    ] as const;
+    for (const [path, expected] of cases) {
+        assert.equal(basePickerAttributeCombo(`Metadata/Items/Armours/${path}`), expected, path);
+    }
+    assert.equal(basePickerAttributeCombo("Metadata/Items/Jewels/JewelInt"), null,
+        "attribute jewels must not acquire armour defence filters");
+    console.log("  ok - Ritual and variant armour bases retain their full defence category");
+}
 
 {
     const ordered = [

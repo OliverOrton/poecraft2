@@ -36,10 +36,11 @@ current Simulator UI.
 
 ### 2026-07-19 — #idea — Emulator history tree
 
-Status: open.
+Status: partially implemented (2026-09-28); retained alternate branches remain open.
 
-The current Emulator history is a linear append-only action list. Branching
-history with Undo/Redo remains an unimplemented product idea.
+Emulator now has snapshot Undo/Redo and clickable history with draft recovery.
+Crafting after rewinding discards the redo branch. A tree retaining multiple
+alternate craft branches is still an unimplemented product idea.
 
 ### 2026-07-19 — #idea — Workspace and Stash fluency
 

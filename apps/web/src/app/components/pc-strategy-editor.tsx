@@ -1,5 +1,6 @@
 import { disposeReact, renderReact } from "../react-host";
 import { StrategyShell } from "./document-shells";
+import { EditHistory, historyShortcut } from "../edit-history";
 import { modTextLabel } from "../mod-text";
 /*
  * Strategy Builder document. Owns graph authoring state, manual Stash saves,
@@ -51,6 +52,7 @@ import {
 } from "../strategy-model";
 import {
     StrategyDraftRecord,
+    StrategyHistoryState,
     StrategyStashRecord,
     getStrategyDraft,
     putStrategyDraft,
@@ -178,6 +180,10 @@ export class PcStrategyEditor extends HTMLElement {
     private modifierLoading = false;
     private docId = "";
     private strategy: StrategyDocument = createBlankStrategy();
+    private undoHistory = new EditHistory<StrategyHistoryState>();
+    private savedStateKey: string | null = null;
+    private editGroup = "";
+    private draggingNode = false;
     private issues: StrategyValidationIssue[] = [];
     private selection: Selection = null;
     private highlight: TraceHighlight = {
@@ -222,6 +228,14 @@ export class PcStrategyEditor extends HTMLElement {
             return;
         }
         this.connectedOnce = true;
+        this.tabIndex = -1;
+        this.addEventListener("keydown", event => {
+            const command = historyShortcut(event);
+            if (!command || this.draggingNode) return;
+            event.preventDefault();
+            this.restoreHistory(this.undoHistory.cursor + (command === "undo" ? -1 : 1));
+        });
+        this.addEventListener("focusout", () => { this.editGroup = ""; });
         this.docId =
             this.getAttribute("doc-id") ?? `strategy-${crypto.randomUUID()}`;
         this.renderShell();
@@ -270,6 +284,8 @@ export class PcStrategyEditor extends HTMLElement {
             );
             const draft = await getStrategyDraft(this.docId);
             await this.restore(draft);
+            this.undoHistory.restore(draft?.undoHistory, this.historyState());
+            this.savedStateKey = draft?.savedStateKey ?? (!this.dirty ? JSON.stringify(this.historyState()) : null);
             this.structuralSignature = strategyStructuralSignature(this.strategy);
             if (this.disposed) return;
             this.renderShell();
@@ -296,7 +312,7 @@ export class PcStrategyEditor extends HTMLElement {
         this.dirty = draft?.dirty ?? true;
         if (draft?.strategy && isStrategyDocument(draft.strategy)) {
             this.strategy = cloneStrategy(draft.strategy);
-            this.hasChosenBase = true;
+            this.hasChosenBase = draft.undoHistory?.entries[draft.undoHistory.cursor]?.hasChosenBase ?? true;
             return;
         }
         if (draft?.sourceItem) {
@@ -397,6 +413,7 @@ export class PcStrategyEditor extends HTMLElement {
                     ),
                 );
                 if (this.disposed) return;
+                if (`${this.strategy.base_state.base_key}|${this.strategy.base_state.item_level}` !== key) return;
                 this.modifierOptions = buildModifierOptions(mods, this.catalog);
                 this.modifierFamilyLabels = familyLabelsById(mods);
                 this.unveilOptions = mods
@@ -422,6 +439,9 @@ export class PcStrategyEditor extends HTMLElement {
             // can still author other condition types or use advanced JSON.
         } finally {
             this.modifierLoading = false;
+            if (!this.disposed && `${this.strategy.base_state.base_key}|${this.strategy.base_state.item_level}` !== key) {
+                void this.ensureModifiers();
+            }
         }
         if (this.disposed) return;
         this.querySelector<PcConditionEditor>(
@@ -455,7 +475,8 @@ export class PcStrategyEditor extends HTMLElement {
         this.querySelectorAll<HTMLButtonElement>("[data-cmd]").forEach((button) => {
             button.addEventListener("click", () => {
                 const cmd = button.dataset.cmd;
-                if (cmd === "save") void this.save();
+                if (cmd === "undo" || cmd === "redo") this.restoreHistory(this.undoHistory.cursor + (cmd === "undo" ? -1 : 1));
+                else if (cmd === "save") void this.save();
                 else if (cmd === "save-as") void this.saveAs();
                 else if (cmd === "duplicate")
                     void workspace().openStrategy(cloneStrategy(this.strategy));
@@ -487,6 +508,19 @@ export class PcStrategyEditor extends HTMLElement {
             ).detail;
             this.addNode(detail.paletteType, detail.position);
         });
+        this.board.addEventListener("strategy-node-drag-start", () => { this.draggingNode = true; });
+        this.board.addEventListener("strategy-node-drag-end", () => {
+            this.draggingNode = false;
+            this.markChanged(false);
+        });
+        this.board.addEventListener("strategy-edge-reconnect", event => {
+            const {id, endpoint, nodeId} = (event as CustomEvent<{id: string; endpoint: "from" | "to"; nodeId: string}>).detail;
+            const edge = this.strategy.edges.find(edge => edge.id === id);
+            if (!edge || edge[endpoint] === nodeId || !this.strategy.nodes.some(node => node.id === nodeId)) return;
+            edge[endpoint] = nodeId;
+            this.selection = {kind: "edge", id};
+            this.markChanged();
+        });
         this.board.addEventListener("strategy-node-move", (event) => {
             const detail = (
                 event as CustomEvent<{
@@ -497,7 +531,7 @@ export class PcStrategyEditor extends HTMLElement {
             const node = this.strategy.nodes.find((entry) => entry.id === detail.id);
             if (!node) return;
             node.position = detail.position;
-            this.markChanged();
+            this.markChanged(true, false);
         });
         this.board.addEventListener("strategy-edge-create", (event) => {
             const detail = (
@@ -513,7 +547,7 @@ export class PcStrategyEditor extends HTMLElement {
             this.strategy.ui.viewport = (
                 event as CustomEvent<StrategyViewport>
             ).detail;
-            this.markChanged(false);
+            this.schedulePersist();
         });
         this.simulator.addEventListener("strategy-run", (event) => {
             const detail = (
@@ -560,6 +594,7 @@ export class PcStrategyEditor extends HTMLElement {
 
     private updateView(): void {
         if (!this.isConnected) return;
+        this.syncHistoryButtons();
         this.issues = validateStrategy(this.strategy);
         this.board.setView(
             this.strategy,
@@ -746,16 +781,7 @@ export class PcStrategyEditor extends HTMLElement {
      * reset its state mid-edit.
      */
     private onConditionEdited(): void {
-        const structuralChanged = this.captureStructuralChange();
-        this.dirty = true;
-        this.issues = validateStrategy(this.strategy);
-        workspace().notifyDirty(this.docId, true, this.docTitle);
-        this.schedulePersist();
-        if (structuralChanged) {
-            this.evalInvalid = false;
-            this.evalStale = this.evalResult !== null;
-            if (this.mode === "calculator") this.requestEvaluation();
-        }
+        this.markChanged(false);
         this.board.setView(
             this.strategy,
             this.selection,
@@ -1336,7 +1362,7 @@ export class PcStrategyEditor extends HTMLElement {
                 (viewport.height - (maxY - minY) * zoom) / 2 - minY * zoom,
             ),
         };
-        this.markChanged(false);
+        this.schedulePersist();
         this.updateView();
     }
 
@@ -1546,11 +1572,63 @@ export class PcStrategyEditor extends HTMLElement {
         });
     }
 
-    private markChanged(render = true): void {
+    private historyState(): StrategyHistoryState {
+        return this.historyStateFor(this.strategy);
+    }
+
+    private historyStateFor(document: StrategyDocument): StrategyHistoryState {
+        const strategy = cloneStrategy(document);
+        strategy.ui ??= {};
+        delete strategy.ui.viewport; // Pan/zoom do not consume Undo or jump when restoring an edit.
+        return {strategy, hasChosenBase: this.hasChosenBase};
+    }
+
+    private restoreHistory(index: number): void {
+        if (this.disposed || this.draggingNode || index === this.undoHistory.cursor) return;
+        const restoreFocus = this.contains(document.activeElement);
+        const state = this.undoHistory.go(index);
+        if (!state) return;
+        this.board.cancelConnection();
+        const viewport = this.strategy.ui?.viewport;
+        const baseChanged = this.strategy.base_state.base_key !== state.strategy.base_state.base_key ||
+            this.strategy.base_state.item_level !== state.strategy.base_state.item_level;
+        this.strategy = state.strategy;
+        this.strategy.ui ??= {};
+        this.strategy.ui.viewport = viewport;
+        this.hasChosenBase = state.hasChosenBase;
+        if (this.selection && !(this.selection.kind === "edge" ? this.strategy.edges : this.strategy.nodes)
+            .some(entry => entry.id === this.selection!.id)) this.selection = null;
+        this.editGroup = "";
+        if (baseChanged) {
+            this.modifierBaseKey = "";
+            this.modifierOptions = [];
+            this.modifierFamilyLabels.clear();
+            this.unveilOptions = [];
+            this.sessionBenchOptions = [];
+        }
+        this.markChanged(true, false);
+        if (baseChanged) void this.ensureModifiers();
+        if (restoreFocus && document.activeElement === document.body) this.focus({preventScroll: true});
+    }
+
+    private syncHistoryButtons(): void {
+        for (const command of ["undo", "redo"] as const) {
+            const button = this.querySelector<HTMLButtonElement>(`[data-cmd="${command}"]`);
+            if (button) button.disabled = !this.engineReady || (command === "undo" ? !this.undoHistory.canUndo : !this.undoHistory.canRedo);
+        }
+    }
+
+    private markChanged(render = true, record = true, group = ""): void {
+        const state = this.historyState();
+        if (record) {
+            this.undoHistory.record(state, Boolean(group) && this.editGroup === group);
+            this.editGroup = group;
+        }
+        this.syncHistoryButtons();
         const structuralChanged = this.captureStructuralChange();
-        this.dirty = true;
+        this.dirty = JSON.stringify(state) !== this.savedStateKey;
         this.issues = validateStrategy(this.strategy);
-        workspace().notifyDirty(this.docId, true, this.docTitle);
+        workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
         this.schedulePersist();
         if (structuralChanged) {
             this.evalInvalid = false;
@@ -1562,7 +1640,7 @@ export class PcStrategyEditor extends HTMLElement {
 
     /** Update board labels while preserving focus in the authored-text input. */
     private onLabelEdited(): void {
-        this.markChanged(false);
+        this.markChanged(false, true, `label:${this.selection?.kind}:${this.selection?.id}`);
         this.board.setView(
             this.strategy,
             this.selection,
@@ -1605,6 +1683,8 @@ export class PcStrategyEditor extends HTMLElement {
             savedName: this.savedName,
             dirty: this.dirty,
             builderMode: this.mode,
+            undoHistory: this.undoHistory.export(),
+            savedStateKey: this.savedStateKey,
             updatedAt: Date.now(),
         });
     }
@@ -1631,6 +1711,7 @@ export class PcStrategyEditor extends HTMLElement {
         );
         if (!name) return false;
         this.strategy.name = name;
+        this.markChanged();
         const record: StrategyStashRecord = {
             id: `strategy-${crypto.randomUUID()}`,
             name,
@@ -1647,9 +1728,11 @@ export class PcStrategyEditor extends HTMLElement {
     private async markSaved(record: StrategyStashRecord): Promise<void> {
         this.savedRef = record.id;
         this.savedName = record.name;
-        this.dirty = false;
+        this.savedStateKey = JSON.stringify(this.historyStateFor(record.strategy as StrategyDocument));
+        this.dirty = this.savedStateKey !== JSON.stringify(this.historyState());
+        this.editGroup = "";
         await this.persist();
-        workspace().notifyDirty(this.docId, false, this.docTitle);
+        workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
         this.updateView();
     }
 

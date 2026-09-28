@@ -71,6 +71,7 @@ export class PcStrategyBoard extends HTMLElement {
           }
         | null = null;
     private connectingFrom: string | null = null;
+    private reconnecting: {id: string; endpoint: "from" | "to"; anchor: string} | null = null;
     private annotations: StrategyBoardAnnotations | null = null;
     private labelContext: StrategyLabelContext = {};
     private renderLargeBoard = false;
@@ -98,6 +99,11 @@ export class PcStrategyBoard extends HTMLElement {
             this.bind();
         }
         this.render();
+    }
+
+    disconnectedCallback(): void {
+        this.endNodeDrag();
+        this.cancelConnection();
     }
 
     setView(
@@ -243,6 +249,7 @@ export class PcStrategyBoard extends HTMLElement {
             };
             window.addEventListener("pointermove", this.onNodeDrag);
             window.addEventListener("pointerup", this.endNodeDrag, { once: true });
+            window.addEventListener("pointercancel", this.endNodeDrag, { once: true });
         });
         this.addEventListener("strategy-connect-start", (event) => {
             const detail = (
@@ -252,11 +259,21 @@ export class PcStrategyBoard extends HTMLElement {
                     clientY: number;
                 }>
             ).detail;
+            this.cancelConnection();
             this.connectingFrom = detail.id;
             const point = this.clientToGraph(detail.clientX, detail.clientY);
-            this.edgeLayer.setPreview({ from: detail.id, ...point });
-            window.addEventListener("pointermove", this.onConnectMove);
-            window.addEventListener("pointerup", this.endConnect, { once: true });
+            this.edgeLayer.setPreview({ anchor: detail.id, endpoint: "to", ...point });
+            this.bindConnection();
+        });
+        this.addEventListener("strategy-edge-reconnect-start", event => {
+            const detail = (event as CustomEvent<{id: string; endpoint: "from" | "to"; clientX: number; clientY: number}>).detail;
+            const edge = this.strategy?.edges.find(edge => edge.id === detail.id);
+            if (!edge) return;
+            this.cancelConnection();
+            const anchor = detail.endpoint === "from" ? edge.to : edge.from;
+            this.reconnecting = {id: edge.id, endpoint: detail.endpoint, anchor};
+            this.edgeLayer.setPreview({anchor, endpoint: detail.endpoint, ...this.clientToGraph(detail.clientX, detail.clientY)});
+            this.bindConnection();
         });
     }
 
@@ -278,35 +295,60 @@ export class PcStrategyBoard extends HTMLElement {
     };
 
     private readonly endNodeDrag = (): void => {
+        const dragged = this.drag !== null;
         this.drag = null;
         window.removeEventListener("pointermove", this.onNodeDrag);
+        window.removeEventListener("pointerup", this.endNodeDrag);
+        window.removeEventListener("pointercancel", this.endNodeDrag);
+        if (dragged) this.dispatchEvent(new CustomEvent("strategy-node-drag-end", {bubbles: true}));
+    };
+
+    private bindConnection(): void {
+        this.querySelector<HTMLElement>(".pc-board-viewport")?.focus({preventScroll: true});
+        window.addEventListener("pointermove", this.onConnectMove);
+        window.addEventListener("pointerup", this.endConnect, {once: true});
+        window.addEventListener("pointercancel", this.cancelConnection, {once: true});
+        window.addEventListener("keydown", this.onConnectionKey);
+    }
+
+    private readonly onConnectionKey = (event: KeyboardEvent): void => {
+        if (event.key === "Escape") {
+            event.preventDefault();
+            this.cancelConnection();
+        }
+    };
+
+    readonly cancelConnection = (): void => {
+        window.removeEventListener("pointermove", this.onConnectMove);
+        window.removeEventListener("pointerup", this.endConnect);
+        window.removeEventListener("pointercancel", this.cancelConnection);
+        window.removeEventListener("keydown", this.onConnectionKey);
+        this.connectingFrom = null;
+        this.reconnecting = null;
+        this.querySelector<PcEdgeLayer>("pc-edge-layer")?.setPreview(null);
     };
 
     private readonly onConnectMove = (event: PointerEvent): void => {
-        if (!this.connectingFrom) return;
-        this.edgeLayer.setPreview({
-            from: this.connectingFrom,
-            ...this.clientToGraph(event.clientX, event.clientY),
-        });
+        const connection = this.reconnecting ?? (this.connectingFrom ? {anchor: this.connectingFrom, endpoint: "to" as const} : null);
+        if (!connection) return;
+        this.edgeLayer.setPreview({...connection, ...this.clientToGraph(event.clientX, event.clientY)});
     };
 
     private readonly endConnect = (event: PointerEvent): void => {
-        window.removeEventListener("pointermove", this.onConnectMove);
+        const reconnecting = this.reconnecting;
         const from = this.connectingFrom;
-        this.connectingFrom = null;
-        this.edgeLayer.setPreview(null);
-        if (!from) return;
-        const target = document
-            .elementFromPoint(event.clientX, event.clientY)
-            ?.closest<PcStrategyNode>("pc-strategy-node");
-        const to = target?.dataset.nodeId;
-        if (to) {
-            this.dispatchEvent(
-                new CustomEvent("strategy-edge-create", {
-                    bubbles: true,
-                    detail: { from, to },
-                }),
-            );
+        this.cancelConnection();
+        const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<PcStrategyNode>("pc-strategy-node");
+        const nodeId = target?.dataset.nodeId;
+        if (!nodeId) return; // Empty drops leave the original edge intact.
+        if (reconnecting) {
+            // Terminals have no output port. Otherwise keep the same graph validation as new edges.
+            if (reconnecting.endpoint === "from" && this.strategy?.nodes.find(node => node.id === nodeId)?.kind === "terminal") return;
+            this.dispatchEvent(new CustomEvent("strategy-edge-reconnect", {
+                bubbles: true, detail: {id: reconnecting.id, endpoint: reconnecting.endpoint, nodeId},
+            }));
+        } else if (from) {
+            this.dispatchEvent(new CustomEvent("strategy-edge-create", {bubbles: true, detail: {from, to: nodeId}}));
         }
     };
 

@@ -8,6 +8,9 @@
  * Drafts power crash/reload recovery and never appear in the Stash.
  */
 
+import type { HistoryData } from "../edit-history";
+import type { StrategyDocument } from "../strategy-model";
+
 const DB_NAME = "poecraft";
 // Bump this whenever the schema changes (new/removed object stores). It must
 // never be lower than a version already created in a browser, or opening the
@@ -60,12 +63,32 @@ export interface DraftRecord {
     /** Exported item state, or null for an untouched document. */
     state: unknown | null;
     history: { action: string; applied: boolean; added: number; removed: number }[];
+    undoHistory?: HistoryData<EmulatorHistoryState>;
+    savedStateKey?: string | null;
     /** Stash id this draft was last saved as, if any. */
     savedRef: string | null;
     /** Stash name this draft was last saved as, if any. */
     savedName: string | null;
     dirty: boolean;
     updatedAt: number;
+}
+
+export interface CraftHistoryEntry {
+    action: string;
+    applied: boolean;
+    added: number;
+    removed: number;
+    detail?: string;
+}
+
+export interface EmulatorHistoryState {
+    snapshot: ItemSnapshot;
+    entry: CraftHistoryEntry;
+}
+
+export interface StrategyHistoryState {
+    strategy: StrategyDocument;
+    hasChosenBase: boolean;
 }
 
 export interface StrategyDraftRecord {
@@ -78,6 +101,8 @@ export interface StrategyDraftRecord {
     dirty: boolean;
     /** Strategy Builder runner surface; absent legacy drafts use Simulator. */
     builderMode?: "simulator" | "calculator";
+    undoHistory?: HistoryData<StrategyHistoryState>;
+    savedStateKey?: string | null;
     updatedAt: number;
 }
 

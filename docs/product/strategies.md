@@ -126,6 +126,18 @@ Strategy Builder provides:
 - manual Save/Save As/Duplicate; and
 - Simulator and Calculator runner modes over the same graph.
 
+Undo/Redo covers graph edits, conditions, labels, base changes and layout.
+A node drag is one edit; panning and zooming do not consume undo steps and
+the current viewport is preserved when restoring an edit. Continuous label
+typing is grouped until focus leaves the field. History survives draft reload,
+and a new edit after Undo discards the redo branch (see the shared
+[history limits](workspace.md#emulator-state)).
+
+Select an edge to reveal handles beside its source and destination ports.
+Drag either handle onto another node to reconnect it. The existing edge ID,
+condition, priority, default flag and label are retained. Escape or releasing
+on empty space cancels the gesture. Reconnection is a single undoable edit.
+
 Validation checks ids, one start, operation/terminal fields, edge endpoints,
 default-edge uniqueness, condition shape, and reachability to terminal and
 success outcomes. Validation is product feedback; native compilation remains

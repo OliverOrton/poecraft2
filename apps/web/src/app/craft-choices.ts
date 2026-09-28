@@ -1,3 +1,6 @@
+import type { Catalog } from "./engine-protocol";
+import { HARVEST_AUGMENT, HARVEST_REFORGE, harvestTagsFor } from "./harvest-crafts";
+
 /*
  * Shared craft-panel option helpers: the Emulator's craft bar and the
  * Calculator's action selector present the same essence/harvest/resistance
@@ -15,6 +18,41 @@ export function resistanceEntries(): Array<{ key: string; name: string }> {
         key,
         name: craftActionLabel(key),
     }));
+}
+
+/** Normalize presentation selections once; controllers never read a hidden/select DOM value. */
+export function resolveCraftValues(catalog: Catalog, input: ReadonlyMap<string, string>): Map<string, string> {
+    const values = new Map(input);
+    const choose = (name: string, keys: string[], fallback = keys[0] ?? "") => {
+        if (!keys.includes(values.get(name) ?? "")) values.set(name, fallback);
+    };
+    const groups = groupEssences(catalog.essences);
+    if (!values.has("essence-type")) {
+        const storedGroup = groups.find(group => group.tiers.some(tier => tier.key === values.get("essence-key")));
+        if (storedGroup) values.set("essence-type", storedGroup.type);
+    }
+    choose("essence-type", groups.map(group => group.type));
+    const group = groups.find(group => group.type === values.get("essence-type"));
+    choose("essence-key", group?.tiers.map(tier => tier.key) ?? []);
+    choose("influence", catalog.influences.map(entry => entry.key));
+    choose("harvest-reforge-tag", harvestTagsFor(catalog.harvestTags, HARVEST_REFORGE).map(entry => entry.key));
+    choose("harvest-augment-tag", harvestTagsFor(catalog.harvestTags, HARVEST_AUGMENT).map(entry => entry.key));
+    choose("resist-from", ["fire", "cold", "lightning"], "fire");
+    choose("resist-to", ["fire", "cold", "lightning"], "cold");
+    choose("eldritch-tier", ["1", "2", "3", "4"], "1");
+    return values;
+}
+
+/** Restore the selected material alongside a Calculator's persisted registry action. */
+export function craftValuesFromAction(catalog: Catalog, action: string): Map<string, string> {
+    const [kind, ...parameters] = action.split(":");
+    const fields: Record<string, string[]> = {
+        essence: ["essence-key"], influence_exalt: ["influence"],
+        harvest_reforge: ["harvest-reforge-tag"], harvest_augment: ["harvest-augment-tag"],
+        harvest_resist: ["resist-from", "resist-to"],
+        eldritch_ember: ["eldritch-tier"], eldritch_ichor: ["eldritch-tier"],
+    };
+    return resolveCraftValues(catalog, new Map((fields[kind] ?? []).map((field, index) => [field, parameters[index] ?? ""])));
 }
 
 export interface EssenceTierChoice {

@@ -78,7 +78,7 @@ import {
     titleCase,
     type ModifierFamilyOption,
 } from "../modifier-options";
-import { craftActionLabel } from "../craft-choices";
+import { craftActionLabel, craftValuesFromAction, resolveCraftValues } from "../craft-choices";
 import {
     buildCalculatorSolverGoal,
     createCalculatorDeliveryTrace,
@@ -204,6 +204,7 @@ export class PcCalculator extends HTMLElement {
     private minSatisfiedSlots = 1;
     private actionId = "";
     private fossilKeys: string[] = [];
+    private selectedFossils: string[] = [];
     private activeCraftPanel: CraftPanel = "basic";
     private mechanicValues = new Map<string, string>();
     private calc: CalcResult | null = null;
@@ -299,7 +300,9 @@ export class PcCalculator extends HTMLElement {
                 draft.minSatisfiedSlots ?? draft.slots.length;
             this.normalizeSuccessThreshold();
             this.actionId = draft.actionId;
+            this.mechanicValues = craftValuesFromAction(this.catalog, this.actionId);
             this.fossilKeys = draft.fossilKeys;
+            this.selectedFossils = [...draft.fossilKeys];
             this.activeCraftPanel = panelForAction(this.actionId);
         }
         if (!this.bases.some((b) => b.path === this.base)) {
@@ -640,9 +643,7 @@ export class PcCalculator extends HTMLElement {
     /** Select a registry action id from the craft panels. */
     private selectAction(id: string): void {
         this.actionId = id;
-        if (!id.startsWith("fossil:")) {
-            this.fossilKeys = [];
-        }
+        this.fossilKeys = id.startsWith("fossil:") ? id.slice("fossil:".length).split("+").filter(Boolean) : [];
         void this.guard(() => this.actionChanged());
     }
 
@@ -670,8 +671,8 @@ export class PcCalculator extends HTMLElement {
 
     /** "fossil:<a>+<b>" with sorted keys, matching solver_registry.cpp. */
     private fossilComboId(): string {
-        return this.fossilKeys.length
-            ? `fossil:${[...this.fossilKeys].sort().join("+")}`
+        return this.selectedFossils.length
+            ? `fossil:${[...this.selectedFossils].sort().join("+")}`
             : "";
     }
 
@@ -1481,53 +1482,45 @@ export class PcCalculator extends HTMLElement {
 
     // --- action panels (Emulator craft bar, selecting instead of applying) ---
 
-    private renderActionPanels(capture = true): void {
+    private renderActionPanels(): void {
         const host = this.querySelector<PcCraftControls>(".pc-advanced-crafts");
         if (!host || !this.catalog) return;
-        if (capture) host.querySelectorAll<HTMLSelectElement>("select[data-mechanic]").forEach(select => {
-            if (select.dataset.mechanic) this.mechanicValues.set(select.dataset.mechanic, select.value);
-        });
+        this.mechanicValues = resolveCraftValues(this.catalog, this.mechanicValues);
         host.setModel({
             mode: "calculator", catalog: this.catalog, panel: this.activeCraftPanel,
-            values: this.mechanicValues, fossils: this.fossilKeys, bestiary: this.bestiaryActions,
+            itemClass: this.bases.find(base => base.path === this.base)?.item_class_key,
+            values: this.mechanicValues, fossils: this.selectedFossils, bestiary: this.bestiaryActions,
             selectedAction: this.actionId, selectedLabel: this.actionLabel(this.actionId),
             onPanel: panel => { this.activeCraftPanel = panel; this.renderActionPanels(); },
             onValue: (name, value) => {
                 this.mechanicValues.set(name, value);
                 if (name === "essence-type") this.mechanicValues.delete("essence-key");
-                this.renderActionPanels(false);
-                const rederive = this.rederivedActionId(name);
-                if (rederive && rederive !== this.actionId) this.selectAction(rederive);
+                this.renderActionPanels();
             },
             onSimple: id => { this.selectAction(id); },
             onBestiary: id => { this.selectAction(id); },
             onConfigured: kind => { const id = this.derivedActionId(kind); if (id) this.selectAction(id); },
-            onAddFossil: () => {
-                const key = host.querySelector<HTMLSelectElement>('[data-mechanic="fossil"]')?.value ?? "";
-                if (key && this.fossilKeys.length < MAX_FOSSILS && !this.fossilKeys.includes(key)) {
-                    this.fossilKeys = [...this.fossilKeys, key]; this.selectAction(this.fossilComboId());
+            onAddFossil: key => {
+                if (key && this.selectedFossils.length < MAX_FOSSILS && !this.selectedFossils.includes(key)) {
+                    this.selectedFossils = [...this.selectedFossils, key];
+                    this.renderActionPanels();
                 }
             },
             onRemoveFossil: index => {
-                this.fossilKeys = this.fossilKeys.filter((_, entryIndex) => entryIndex !== index);
-                if (this.fossilKeys.length) this.selectAction(this.fossilComboId());
-                else if (this.actionId.startsWith("fossil:")) this.selectAction("");
-                else this.renderActionPanels();
+                this.selectedFossils = this.selectedFossils.filter((_, entryIndex) => entryIndex !== index);
+                this.renderActionPanels();
             },
         });
         this.setBusy(this.busy);
     }
 
 
-    /** Registry action id from the current mechanic selects. */
+    /** Registry action id from the staged mechanic choices. */
     private derivedActionId(kind: string): string {
-        const value = (name: string) =>
-            this.querySelector<HTMLSelectElement>(
-                `.pc-advanced-crafts [data-mechanic="${name}"]`,
-            )?.value ??
-            this.mechanicValues.get(name) ??
-            "";
+        const value = (name: string) => this.mechanicValues.get(name) ?? "";
         switch (kind) {
+            case "fossil":
+                return this.fossilComboId();
             case "essence":
                 return value("essence-key") ? `essence:${value("essence-key")}` : "";
             case "harvest_reforge":
@@ -1545,26 +1538,6 @@ export class PcCalculator extends HTMLElement {
             default:
                 return "";
         }
-    }
-
-    /** If the changed select feeds the currently selected action kind,
-     * return the updated id so the selection follows the controls. */
-    private rederivedActionId(mechanic: string): string {
-        const kindsByMechanic: Record<string, string[]> = {
-            "essence-key": ["essence"],
-            "harvest-reforge-tag": ["harvest_reforge"],
-            "harvest-augment-tag": ["harvest_augment"],
-            "resist-from": ["harvest_resist"],
-            "resist-to": ["harvest_resist"],
-            "eldritch-tier": ["eldritch_ember", "eldritch_ichor"],
-            influence: ["influence_exalt"],
-        };
-        for (const kind of kindsByMechanic[mechanic] ?? []) {
-            if (this.actionId.startsWith(`${kind}:`)) {
-                return this.derivedActionId(kind);
-            }
-        }
-        return "";
     }
 
     /** Human label for a registry action id, resolved through the catalog. */

@@ -111,10 +111,36 @@ controls, a draft, and a displayed craft history. The action list comes from
 the engine's Emulator-available catalog; applying an action mutates only that
 document's native item.
 
-At d5e38e3 craft history is a linear append-only list of action summaries. It
-is not a branchable state tree, and the current Emulator does not expose the
-previously specified Undo/Redo history model. That proposal is retained only
-as an open product note.
+The shared item card reserves 72-pixel modifier rows (96 pixels for goal rows
+with tier controls), so empty, single-line and multiline mods do not resize the
+ledger. Exceptionally long content scrolls within its row; concrete modifiers
+also expose their full text on hover.
+
+Emulator and Calculator share material-choice rows for Essences, Fossils,
+Influence Exalts and Harvest. Essences select a type, then a tier from that
+type; Fossils toggle up to four materials. Harvest resistance conversion sits
+beside Reforge/Augment. Selecting a material stages the choice; the separate
+text-only craft/Calculate button applies it. Calculator keeps staged Fossils
+separate from its currently evaluated loadout.
+
+Material artwork and hover/focus descriptions come from the Python-generated
+asset catalogue joined to the selected canonical data. Essence tooltips show
+the listed modifier for the current item class; Fossils show canonical game
+descriptions. These are presentation data, not a new mechanics authority.
+
+Undo/Redo and clickable history rows restore native exported item snapshots,
+including Imprint checkpoints and pending unveil choices. Item creation and
+base changes are reversible too. Crafting after rewinding replaces the redo
+branch; this is a linear timeline, not a retained tree of alternate crafts.
+Restoring an item does not rewind the action context's random stream.
+
+Emulator and Strategy Builder keep up to 100 snapshots per document, bounded
+to 8 MiB of serialized UTF-16 history (a single larger current snapshot is
+still retained). The timeline and current position persist with the draft.
+Older Emulator logs remain readable, but steps without saved states cannot
+be restored. Undo never changes a saved Stash resource; Save does that.
+Ctrl/Command+Z undoes, Ctrl/Command+Shift+Z or Ctrl+Y redoes. Focused text
+controls retain their native text undo.
 
 Mechanic tabs and item-state behavior are documented in the
 [mechanics library](../mechanics/README.md) and [Engine](../engine/README.md).
@@ -139,7 +165,7 @@ fallback, and pinning semantics.
   user-facing Recover/Discard journal browser.
 - Stash is local-only. Accounts, publishing, fork attribution, and guest merge
   policy are deferred designs.
-- Emulator history branching/undo, richer Stash organization, and broader
+- Retained Emulator history trees, richer Stash organization, and broader
   workspace fluency remain non-authoritative notes.
 
 See [Product Notes](NOTES.md).

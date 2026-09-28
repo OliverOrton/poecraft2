@@ -12,6 +12,8 @@ export function EmulatorShell({baseName, itemLevel}: {baseName: string; itemLeve
             <button data-cmd="change-base">Change base…</button>
             <span className="pc-emu-base">{baseName} · iLvl {itemLevel}</span>
             <button data-cmd="create">Create item</button>
+            <button data-cmd="undo" title="Undo (Ctrl/⌘ Z)" disabled>Undo</button>
+            <button data-cmd="redo" title="Redo (Ctrl/⌘ Shift Z)" disabled>Redo</button>
             <span className="pc-emu-save"><span className="pc-emu-name">Unsaved</span>
                 <button data-cmd="save">Save</button><button data-cmd="save-as">Save As</button>
                 <button data-cmd="duplicate">Duplicate</button><button data-cmd="strategy">Use in Strategy</button><button data-cmd="calculator">Odds</button>
@@ -70,6 +72,7 @@ export function StrategyShell({palette}: {palette: Array<[string, string]>}) {
             </div>
             <button data-cmd="save">Save</button><button data-cmd="save-as">Save As</button><button data-cmd="duplicate">Duplicate</button>
             <button data-cmd="change-base">Change base…</button><button data-cmd="delete">Delete selected</button>
+            <button data-cmd="undo" title="Undo (Ctrl/⌘ Z)" disabled>Undo</button><button data-cmd="redo" title="Redo (Ctrl/⌘ Shift Z)" disabled>Redo</button>
             <button data-cmd="auto-layout">Auto layout</button><button data-cmd="fit-view">Fit view</button><span className="pc-strategy-status" />
         </div>
         <div className="pc-strategy-main">

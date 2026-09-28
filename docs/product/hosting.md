@@ -91,6 +91,9 @@ https://github.com/repoe-fork/repoe-fork.github.io#credits .
 ## Rollback
 
 The static package includes `game-assets/catalog.json` and content-hash PNGs.
+The Python asset generator also joins canonical Fossil descriptions and
+item-class-specific Essence modifier text into this catalogue. Harvest artwork
+aliases follow the existing economy recipe manifest's primary lifeforce.
 Build and archive verification check the catalogue's selected-runtime identity,
 all image bytes and alias references. Artwork URLs follow the deployment base.
 Current static smoke includes React workflow checks; an old rollback archive

@@ -211,6 +211,8 @@ function edgeRanks(
     return ranks;
 }
 
+interface EdgePreview { anchor: string; endpoint: "from" | "to"; x: number; y: number }
+
 export class PcEdgeLayer extends HTMLElement {
     private view: EdgeLayerView = {
         nodes: [],
@@ -221,7 +223,7 @@ export class PcEdgeLayer extends HTMLElement {
         annotations: new Map(),
         annotationsStale: false,
     };
-    private preview: { from: string; x: number; y: number } | null = null;
+    private preview: EdgePreview | null = null;
     private delegated = false;
 
     setView(view: EdgeLayerView): void {
@@ -229,7 +231,7 @@ export class PcEdgeLayer extends HTMLElement {
         this.render();
     }
 
-    setPreview(preview: { from: string; x: number; y: number } | null): void {
+    setPreview(preview: EdgePreview | null): void {
         this.preview = preview;
         const svg = this.querySelector("svg");
         if (!svg) {
@@ -240,20 +242,14 @@ export class PcEdgeLayer extends HTMLElement {
         // connect-drag mousemove is far too slow on large graphs.
         svg.querySelector(".pc-edge-preview")?.remove();
         if (!preview) return;
-        const from = this.view.nodes.find((node) => node.id === preview.from);
-        if (!from) return;
+        const d = this.previewPath();
+        if (!d) return;
         const path = document.createElementNS(
             "http://www.w3.org/2000/svg",
             "path",
         );
         path.setAttribute("class", "pc-edge-preview");
-        path.setAttribute(
-            "d",
-            chainPath([
-                { x: from.position.x + NODE_WIDTH, y: from.position.y + PORT_Y },
-                { x: preview.x, y: preview.y },
-            ]),
-        );
+        path.setAttribute("d", d);
         svg.appendChild(path);
     }
 
@@ -269,6 +265,14 @@ export class PcEdgeLayer extends HTMLElement {
                 );
                 if (!group || !this.contains(group)) return;
                 event.stopPropagation();
+                const endpoint = (event.target as Element).closest("[data-edge-end]")?.getAttribute("data-edge-end");
+                if (endpoint === "from" || endpoint === "to") {
+                    event.preventDefault();
+                    this.dispatchEvent(new CustomEvent("strategy-edge-reconnect-start", {
+                        bubbles: true, detail: {id: (group as SVGGElement).dataset.edgeId, endpoint, clientX: event.clientX, clientY: event.clientY},
+                    }));
+                    return;
+                }
                 this.dispatchEvent(
                     new CustomEvent("strategy-select", {
                         bubbles: true,
@@ -283,26 +287,29 @@ export class PcEdgeLayer extends HTMLElement {
         this.render();
     }
 
+    private previewPath(): string | null {
+        const preview = this.preview;
+        const anchor = preview && this.view.nodes.find(node => node.id === preview.anchor);
+        if (!preview || !anchor) return null;
+        const moving = {x: preview.x, y: preview.y};
+        const fixed = {x: anchor.position.x + (preview.endpoint === "to" ? NODE_WIDTH : 0), y: anchor.position.y + PORT_Y};
+        return chainPath(preview.endpoint === "to" ? [fixed, moving] : [moving, fixed]);
+    }
+
     private render(): void {
         const canvas = this.view.canvas ?? { width: 3000, height: 2000 };
         const paths = this.view.simplified
             ? this.simplifiedPaths()
             : this.fullPaths();
-        if (this.preview) {
-            const from = this.view.nodes.find(
-                (node) => node.id === this.preview!.from,
-            );
-            if (from) {
-                const d = chainPath([
-                    {
-                        x: from.position.x + NODE_WIDTH,
-                        y: from.position.y + PORT_Y,
-                    },
-                    { x: this.preview.x, y: this.preview.y },
-                ]);
-                paths.push(`<path class="pc-edge-preview" d="${d}"></path>`);
-            }
-        }
+        const preview = this.previewPath();
+        if (preview) paths.push(`<path class="pc-edge-preview" d="${preview}"></path>`);
+        const edge = this.view.edges.find(edge => edge.id === this.view.selectedEdgeId);
+        const from = edge && this.view.nodes.find(node => node.id === edge.from);
+        const to = edge && this.view.nodes.find(node => node.id === edge.to);
+        if (edge && from && to) paths.push(`<g data-edge-id="${escapeAttribute(edge.id)}" class="pc-edge-handles">
+            <circle class="pc-edge-handle" data-edge-end="from" cx="${from.position.x + NODE_WIDTH + 18}" cy="${from.position.y + PORT_Y}" r="7"><title>Drag to change source</title></circle>
+            <circle class="pc-edge-handle" data-edge-end="to" cx="${to.position.x - 18}" cy="${to.position.y + PORT_Y}" r="7"><title>Drag to change destination</title></circle>
+        </g>`);
         const markerDefs = RANK_MARKERS.map(
             ([key, color]) => `<marker id="pc-edge-arrow-${key}" markerWidth="7" markerHeight="7"
                         refX="6" refY="3.5" orient="auto">

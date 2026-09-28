@@ -12,7 +12,7 @@ import { GameIcon } from "./pc-game-icon";
  */
 
 import { BaseInfo } from "../engine-protocol";
-import { supportedBasePickerBases } from "../base-picker-model";
+import { basePickerAttributeCombo, supportedBasePickerBases } from "../base-picker-model";
 
 export interface BasePickerSelection {
     base: string;
@@ -29,16 +29,6 @@ const ALL_SUB = "__all__";
 
 function classLabel(key: string): string {
     return key.replace(/([a-z])([A-Z])/g, "$1 $2").trim() || key;
-}
-
-/* Path stems for armour-class bases encode attribute combos:
- * BodyStr* / BodyDex* / BodyInt* / BodyStrDex* / BodyStrInt* / BodyDexInt* / BodyStrDexInt*
- * Used for the subcategory dropdown on classes that have multiple defence types.
- */
-function attributeCombo(metadataPath: string): string | null {
-    const stem = metadataPath.split("/").pop() ?? "";
-    const m = stem.match(/^[A-Za-z]+?(Str|Dex|Int|StrDex|StrInt|DexInt|StrDexInt)\d+/);
-    return m ? m[1] : null;
 }
 
 function comboLabel(combo: string): string {
@@ -102,7 +92,7 @@ export class PcBasePicker extends HTMLElement {
         if (!entry) return [];
         const combos = new Set<string>();
         for (const base of entry.bases) {
-            const combo = attributeCombo(base.path);
+            const combo = basePickerAttributeCombo(base.path);
             if (combo) combos.add(combo);
         }
         return Array.from(combos).sort();
@@ -112,7 +102,7 @@ export class PcBasePicker extends HTMLElement {
         const entry = this.classes.find((c) => c.key === this.selectedClass);
         if (!entry) return [];
         if (this.selectedSub === ALL_SUB) return entry.bases;
-        return entry.bases.filter((b) => attributeCombo(b.path) === this.selectedSub);
+        return entry.bases.filter((b) => basePickerAttributeCombo(b.path) === this.selectedSub);
     }
 
 

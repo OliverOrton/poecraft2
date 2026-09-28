@@ -171,7 +171,7 @@ function ConcreteSlot({ mod, side, index, onFracture }: {
     const tags = visibleModTags(mod.classificationTags).map(formatTag);
     return <li className={`pc-mod-slot pc-mod-${side} is-filled ${mod.crafted ? "is-crafted" : ""} ${mod.fractured ? "is-fractured" : ""}`}
         data-side={side === "implicit" ? undefined : side} data-mod-id={mod.sessionModId} data-mod-key={mod.key} data-fractured={mod.fractured}
-        title={side === "implicit" ? undefined : mod.fractured ? "Fractured modifier" : "Right-click to mark this modifier as fractured"}
+        title={[...mod.textLines.map(formatModText), side === "implicit" ? "" : mod.fractured ? "Fractured modifier" : "Right-click to mark this modifier as fractured"].filter(Boolean).join("\n")}
         onContextMenu={event => {
             if (side === "implicit") return;
             event.preventDefault();

@@ -1,5 +1,16 @@
 import type { BaseInfo } from "./engine-protocol";
 
+/** Attribute-coded armour paths can have variant suffixes (Ritual, E), or no
+ * numeric suffix (Atlas gloves). Keep the full hybrid token before the suffix.
+ * Paths without an attribute token remain available through the All filter.
+ */
+export function basePickerAttributeCombo(metadataPath: string): string | null {
+    if (!metadataPath.startsWith("Metadata/Items/Armours/")) return null;
+    const stem = metadataPath.split("/").pop() ?? "";
+    const match = stem.match(/^[A-Za-z]+?(StrDexInt|StrDex|StrInt|DexInt|Str|Dex|Int)(?=[A-Z0-9]|$)/);
+    return match ? match[1] : null;
+}
+
 function hasKnownDropLevel(base: BaseInfo): boolean {
     return Number.isFinite(base.drop_level) && base.drop_level >= 0;
 }

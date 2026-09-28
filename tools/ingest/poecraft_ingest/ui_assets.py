@@ -41,6 +41,25 @@ INFLUENCE_NAMES = {
     "redeemer": "Redeemer's Exalted Orb", "warlord": "Warlord's Exalted Orb",
     "searing exarch": "Lesser Eldritch Ember", "eater of worlds": "Lesser Eldritch Ichor",
 }
+LIFEFORCE_NAMES = {
+    "wild": "Wild Crystallised Lifeforce", "vivid": "Vivid Crystallised Lifeforce",
+    "primal": "Primal Crystallised Lifeforce", "sacred": "Sacred Crystallised Lifeforce",
+}
+
+
+def craft_details(connection: sqlite3.Connection) -> dict[str, dict]:
+    """Presentation text only, joined from the same canonical snapshot as the art."""
+    details: dict[str, dict] = {}
+    for row in connection.execute("SELECT key, descriptions_json FROM fossil ORDER BY key"):
+        descriptions = json.loads(row["descriptions_json"] or "{}")
+        details[row["key"]] = {"description": "\n".join(descriptions.values())}
+    for row in connection.execute("""
+        SELECT e.key, em.item_class_key, m.text
+        FROM essence e JOIN essence_mod em USING(essence_id) JOIN mod m USING(mod_id)
+        WHERE e.is_corruption_only = 0 ORDER BY e.key, em.item_class_key
+    """):
+        details.setdefault(row["key"], {}).setdefault("essence_mods", {})[row["item_class_key"]] = row["text"]
+    return details
 
 
 def digest(data: bytes) -> str:
@@ -63,8 +82,8 @@ def png_size(data: bytes) -> tuple[int, int]:
     return width, height
 
 
-def metadata(database: Path, lock_path: Path) -> tuple[dict, dict, dict, dict]:
-    lock = json.loads(lock_path.read_text())
+def metadata(database: Path, lock_path: Path) -> tuple[dict, dict, dict, dict, dict]:
+    lock = json.loads(lock_path.read_text(encoding="utf-8"))
     runtime = ROOT / lock["runtime_directory"]
     raw = (runtime / "manifest.json").read_bytes()
     if digest(raw) != lock["manifest_sha256"]:
@@ -85,8 +104,9 @@ def metadata(database: Path, lock_path: Path) -> tuple[dict, dict, dict, dict]:
         identity = dict(connection.execute("SELECT * FROM data_manifest").fetchone())
         if identity["data_hash"] != manifest["source"]["data_hash"]:
             raise ValueError("canonical database does not match selected product runtime")
-        rows = connection.execute("SELECT metadata_path,name,visual_identity_json FROM base_item ORDER BY metadata_path").fetchall()
-    wanted_names = set(ACTION_NAMES.values()) | set(INFLUENCE_NAMES.values())
+        rows = connection.execute("SELECT metadata_path,name,visual_identity_json,properties_json FROM base_item ORDER BY metadata_path").fetchall()
+        details = craft_details(connection)
+    wanted_names = set(ACTION_NAMES.values()) | set(INFLUENCE_NAMES.values()) | set(LIFEFORCE_NAMES.values())
     items, names = {}, {}
     for row in rows:
         name, key = row["name"], row["metadata_path"]
@@ -95,12 +115,25 @@ def metadata(database: Path, lock_path: Path) -> tuple[dict, dict, dict, dict]:
         visual = json.loads(row["visual_identity_json"] or "{}") or {}
         url = source_url(visual)
         items[key] = {"name": name, "visual_identity": visual.get("id"), "source_url": url}
+        description = (json.loads(row["properties_json"] or "{}") or {}).get("description")
+        if description:
+            items[key]["description"] = description
+        items[key].update(details.get(key, {}))
         names.setdefault(name, key)
     actions = {key: names[name] for key, name in ACTION_NAMES.items() if name in names}
     influences = {key: names[name] for key, name in INFLUENCE_NAMES.items() if name in names}
+    recipes = json.loads((ROOT / "fixtures/economy/harvest-recipes-v1.json").read_text(encoding="utf-8"))
+    # Primary lifeforce art follows the recipe owner; sacred/rancour are supplementary costs.
+    harvest = {}
+    for kind in ("reforge", "augment", "resistance"):
+        for tag, costs in recipes[kind].items():
+            primary = next((component for component in costs if component in ("wild", "vivid", "primal")), None)
+            name = LIFEFORCE_NAMES.get(primary)
+            if name in names:
+                harvest[f"{kind}:{tag}"] = names[name]
     source = {"runtime_manifest_sha256": lock["manifest_sha256"], "canonical_data_hash": identity["data_hash"],
               "source_version": identity["source_version"], "image_origin": CDN}
-    return source, items, actions, influences
+    return source, items, actions, influences, harvest
 
 
 def download(url: str, output: Path, cached: dict | None) -> dict:
@@ -132,10 +165,10 @@ def download(url: str, output: Path, cached: dict | None) -> dict:
 
 
 def build(database: Path, lock: Path, output: Path, workers: int) -> dict:
-    source, items, actions, influences = metadata(database, lock)
+    source, items, actions, influences, harvest = metadata(database, lock)
     output.mkdir(parents=True, exist_ok=True)
     existing = output / "catalog.json"
-    prior = json.loads(existing.read_text()) if existing.exists() else {}
+    prior = json.loads(existing.read_text(encoding="utf-8")) if existing.exists() else {}
     cache = prior.get("images", {})
     urls = sorted({item["source_url"] for item in items.values() if item["source_url"]})
     images, missing = {}, []
@@ -154,7 +187,7 @@ def build(database: Path, lock: Path, output: Path, workers: int) -> dict:
         if image:
             item["image"] = image["file"]
             item["width"], item["height"] = image["width"], image["height"]
-    result = {"schema_version": 1, "source": source, "items": items, "actions": actions, "influences": influences,
+    result = {"schema_version": 1, "source": source, "items": items, "actions": actions, "influences": influences, "harvest": harvest,
               "images": dict(sorted(images.items())), "unavailable": sorted(missing, key=lambda row: row["source_url"])}
     existing.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"items": len(items), "images": len(images), "unavailable": len(missing),

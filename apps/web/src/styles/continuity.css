@@ -63,3 +63,59 @@ pc-craft-controls { display: block; }
 .pc-emu-item { grid-area: item; padding: 10px 12px; }
 .pc-emu-pool { grid-area: pool; }
 .pc-emu-side { grid-area: history; align-self: stretch; padding: 10px 12px; overflow: auto; }
+/* History uses the same compact rows and focus treatment as the item controls. */
+.pc-emu-history li { padding: 0; }
+.pc-emu-history [data-history-index] {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    width: 100%;
+    padding: 5px 4px;
+    border: 0;
+    border-left: 2px solid transparent;
+    background: transparent;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+}
+.pc-emu-history [data-history-index]:hover { background: rgba(255, 255, 255, .04); }
+.pc-emu-history .is-current [data-history-index] { border-left-color: var(--pc-accent); opacity: 1; }
+.pc-emu-history .is-future { opacity: .5; }
+.pc-emu-history .pc-history-action { min-width: 0; overflow-wrap: anywhere; }
+.pc-emu-history .pc-history-detail { font-size: 10px; }
+.pc-emu-history .pc-history-legacy { padding: 5px 6px; opacity: .6; }
+.pc-edge-handle { fill: var(--pc-bg-panel); stroke: var(--pc-accent); stroke-width: 2; cursor: grab; pointer-events: all; }
+.pc-edge-handle:hover { fill: var(--pc-accent); }
+.pc-edge-handle:active { cursor: grabbing; }
+.pc-strategy-toolbar { flex-wrap: wrap; }
+
+/* Reserve the two-line modifier footprint even for empty and single-line slots. */
+.pc-mod-slot, .pc-mod-slot.is-empty { height: 72px; min-height: 72px; max-height: 72px; flex: 0 0 72px; }
+.pc-mod-list-target .pc-mod-slot { height: 96px; min-height: 96px; max-height: 96px; flex-basis: 96px; }
+.pc-mod-slot-content { min-height: 0; overflow-y: auto; justify-content: safe center; scrollbar-width: thin; }
+
+.pc-material-panel { display: grid; gap: 7px; }
+.pc-material-heading { color: var(--pc-text-dim); font-size: 11px; margin: 2px 0 5px; }
+.pc-material-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 4px; }
+.pc-material-choice { display: flex; align-items: center; gap: 7px; min-height: 34px; padding: 4px 8px;
+    border: 1px solid var(--pc-border); background: var(--pc-bg); color: var(--pc-text); text-align: left; cursor: pointer; }
+.pc-material-choice .pc-game-art { width: 24px; height: 24px; margin: 0; }
+.pc-material-choice:hover { background: var(--pc-bg-raised); border-color: var(--pc-text-dim); }
+.pc-material-choice[aria-pressed="true"] { border-color: var(--pc-accent); background: var(--pc-bg-raised); color: var(--pc-text-strong); box-shadow: inset 2px 0 var(--pc-accent); }
+.pc-material-choice[aria-disabled="true"] { opacity: .45; cursor: default; }
+.pc-material-footer { display: flex; align-items: center; gap: 10px; margin-top: 6px; min-height: 30px; }
+.pc-material-footer > span { color: var(--pc-text-dim); font-size: 11px; }
+.pc-material-footer .pc-craft-apply { margin-left: auto; min-width: 110px; padding: 6px 12px; }
+.pc-harvest-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; }
+.pc-harvest-main { display: grid; gap: 10px; }
+.pc-harvest-resistance { padding-left: 14px; border-left: 1px solid var(--pc-border); }
+.pc-harvest-resistance .pc-material-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pc-harvest-resistance .pc-material-choice { flex-direction: column; gap: 2px; padding: 5px 2px; }
+.pc-harvest-resistance .pc-material-heading:not(:first-child) { margin-top: 10px; }
+.pc-material-tooltip { position: fixed; z-index: 10000; max-width: min(360px, calc(100vw - 16px));
+    max-height: calc(100vh - 16px); overflow: auto; pointer-events: none; padding: 10px 12px;
+    color: var(--pc-text); background: var(--pc-bg); border: 1px solid var(--pc-text-dim); font-size: 12px; line-height: 1.5; white-space: pre-line; }
+.pc-material-tooltip > strong { display: block; color: var(--pc-text-strong); margin-bottom: 6px; }
+.pc-material-guarantee { border-top: 1px solid var(--pc-border); margin-top: 8px; padding-top: 6px; color: var(--pc-magic); }
+.pc-material-guarantee > span { display: block; color: var(--pc-text-dim); font-size: 10px; }
+@media (max-width: 1000px) { .pc-harvest-layout { grid-template-columns: minmax(0, 1fr) 230px; gap: 10px; } }

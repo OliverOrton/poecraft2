@@ -55,7 +55,7 @@ export function verifiedGameAssets(directory, runtimeHash, canonicalHash) {
             throw new Error('Artwork item refers to an unverified image');
         }
     }
-    for (const key of [...Object.values(catalog.actions), ...Object.values(catalog.influences)]) {
+    for (const key of [...Object.values(catalog.actions), ...Object.values(catalog.influences), ...Object.values(catalog.harvest ?? {})]) {
         if (!catalog.items[key]) throw new Error('Artwork alias refers to an unknown item');
     }
     return {bytes, catalog};

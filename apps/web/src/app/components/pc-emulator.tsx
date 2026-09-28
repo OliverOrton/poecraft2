@@ -1,6 +1,8 @@
 import { PcCraftControls, type CraftPanel } from "./pc-craft-controls";
 import { disposeReact, renderReact } from "../react-host";
 import { BaseSelectionShell, EmulatorShell } from "./document-shells";
+import { EditHistory, historyShortcut } from "../edit-history";
+import { resolveCraftValues } from "../craft-choices";
 import { modTextLabel } from "../mod-text";
 /*
  * pc-emulator — an emulator document. Owns one engine session, action context,
@@ -25,6 +27,8 @@ import {
 } from "../engine-protocol";
 import {
     DraftRecord,
+    CraftHistoryEntry,
+    EmulatorHistoryState,
     ItemStashRecord,
     ItemSnapshot,
     getDraft,
@@ -46,14 +50,6 @@ import "./pc-mod-pool";
 
 const DEFAULT_BASE = "Metadata/Items/Armours/BodyArmours/BodyInt17";
 
-interface HistoryEntry {
-    action: string;
-    applied: boolean;
-    added: number;
-    removed: number;
-    detail?: string;
-}
-
 const REACH_KIND_CRAFTED = 2;
 
 export class PcEmulator extends HTMLElement {
@@ -73,7 +69,10 @@ export class PcEmulator extends HTMLElement {
     private session = 0;
     private context = 0;
     private item = 0;
-    private history: HistoryEntry[] = [];
+    private history: CraftHistoryEntry[] = []; // Read-only logs from drafts predating snapshots.
+    private undoHistory = new EditHistory<EmulatorHistoryState>();
+    private pendingHistoryEntry: CraftHistoryEntry | null = null;
+    private savedStateKey: string | null = null;
     private modCache: ModInfo[] = [];
     private veiledOptions: number[] = [];
     private activeCraftPanel: CraftPanel = "basic";
@@ -97,6 +96,13 @@ export class PcEmulator extends HTMLElement {
             return;
         }
         this.connectedOnce = true;
+        this.tabIndex = -1;
+        this.addEventListener("keydown", event => {
+            const command = historyShortcut(event);
+            if (!command || this.pickerOpen || this.busy) return;
+            event.preventDefault();
+            void this.guard(() => this.restoreHistory(this.undoHistory.cursor + (command === "undo" ? -1 : 1)));
+        });
         this.docId = this.getAttribute("doc-id") ?? `doc-${crypto.randomUUID()}`;
         this.renderShell();
         this.setBusy(true);
@@ -135,6 +141,7 @@ export class PcEmulator extends HTMLElement {
             this.savedRef = draft.savedRef;
             this.savedName = draft.savedName;
             this.dirty = draft.dirty;
+            this.savedStateKey = draft.savedStateKey ?? null;
         }
         if (!this.bases.some((b) => b.path === this.base)) {
             this.base = this.bases[0]?.path ?? this.base;
@@ -165,6 +172,12 @@ export class PcEmulator extends HTMLElement {
             return;
         }
         this.item = item;
+        const snapshot = await this.snapshot();
+        const entry = draft?.undoHistory?.entries[draft.undoHistory.cursor]?.entry ?? {
+            action: "Opened item", applied: true, added: 0, removed: 0, detail: "starting state",
+        };
+        this.undoHistory.restore(draft?.undoHistory, {snapshot, entry});
+        if (!this.dirty) this.savedStateKey = JSON.stringify(snapshot);
         this.initializing = false;
         try {
             await this.refresh();
@@ -245,7 +258,6 @@ export class PcEmulator extends HTMLElement {
 
     private async rebuildSession(): Promise<void> {
         await this.openSession();
-        this.history = [];
         if (this.item) {
             await this.client.closeItem(this.item);
         }
@@ -254,6 +266,7 @@ export class PcEmulator extends HTMLElement {
             rarity: this.rarity,
             withImplicits: true,
         });
+        this.pendingHistoryEntry = {action: "Create item", applied: true, added: 0, removed: 0, detail: this.baseDisplayName()};
         await this.markChanged();
     }
 
@@ -266,29 +279,29 @@ export class PcEmulator extends HTMLElement {
             rarity: this.rarity,
             withImplicits: true,
         });
-        this.history = [];
+        this.pendingHistoryEntry = {action: "Create item", applied: true, added: 0, removed: 0, detail: this.baseDisplayName()};
         await this.markChanged();
     }
 
     private async applyAction(type: CraftAction["type"]): Promise<void> {
         const outcome = await this.client.apply(this.context, this.item, { type });
-        this.history.push({
+        this.pendingHistoryEntry = {
             action: type,
             applied: outcome.applied,
             added: outcome.added,
             removed: outcome.removed,
-        });
+        };
         await this.markChanged();
     }
 
     private async applyConfiguredAction(action: CraftAction): Promise<void> {
         const outcome = await this.client.apply(this.context, this.item, action);
-        this.history.push({
+        this.pendingHistoryEntry = {
             action: action.type,
             applied: outcome.applied,
             added: outcome.added,
             removed: outcome.removed,
-        });
+        };
         await this.markChanged();
     }
 
@@ -300,7 +313,7 @@ export class PcEmulator extends HTMLElement {
             this.item,
             action.id,
         );
-        this.history.push({
+        this.pendingHistoryEntry = {
             action: action.display_name,
             applied: outcome.applied,
             added: 0,
@@ -310,7 +323,7 @@ export class PcEmulator extends HTMLElement {
                     ? "checkpoint saved"
                     : "checkpoint consumed"
                 : outcome.refusal_reason,
-        });
+        };
         this.checkpointPresent = outcome.checkpoint_present;
         await this.markChanged();
     }
@@ -335,12 +348,12 @@ export class PcEmulator extends HTMLElement {
                 fractured,
             });
         }
-        this.history.push({
+        this.pendingHistoryEntry = {
             action: `${fractured ? "fracture" : "add"} ${side} ${key}`,
             applied,
             added: applied ? 1 : 0,
             removed: 0,
-        });
+        };
         await this.markChanged();
     }
 
@@ -352,12 +365,12 @@ export class PcEmulator extends HTMLElement {
     ): Promise<void> {
         if (onItem) {
             await this.client.setModFractured(this.item, { modId, side });
-            this.history.push({
+            this.pendingHistoryEntry = {
                 action: `fracture ${side} ${key}`,
                 applied: true,
                 added: 0,
                 removed: 0,
-            });
+            };
             await this.markChanged();
             return;
         }
@@ -370,23 +383,74 @@ export class PcEmulator extends HTMLElement {
     ): Promise<void> {
         const info = this.modCache[modId];
         await this.client.removeMod(this.item, { modId, side });
-        this.history.push({
+        this.pendingHistoryEntry = {
             action: `remove ${side} ${info?.key ?? modId}`,
             applied: true,
             added: 0,
             removed: 1,
-        });
+        };
         await this.markChanged();
     }
 
     private async markChanged(): Promise<void> {
-        if (!this.initializing) {
-            this.dirty = true;
+        const snapshot = await this.snapshot();
+        if (this.pendingHistoryEntry) {
+            this.undoHistory.record({snapshot, entry: this.pendingHistoryEntry});
+            this.pendingHistoryEntry = null;
         }
+        this.dirty = this.savedStateKey !== JSON.stringify(snapshot);
         await this.refresh();
         await this.persist();
-        if (!this.initializing) {
+        workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
+    }
+
+    private async restoreHistory(index: number): Promise<void> {
+        const frame = this.undoHistory.at(index);
+        if (!frame || index === this.undoHistory.cursor) return;
+        const snapshot = frame.snapshot;
+        // Prepare the replacement before releasing the live item. Import also
+        // restores native Imprint checkpoints and any pending unveil choices.
+        let item = 0;
+        let session = 0;
+        let context = 0;
+        let mods = this.modCache;
+        const differentBase = snapshot.base !== this.base || snapshot.itemLevel !== this.itemLevel;
+        try {
+            item = await this.client.importItem(snapshot.state);
+            if (differentBase) {
+                session = await this.client.createSession(this.dataId, snapshot.base, snapshot.itemLevel);
+                context = await this.client.createContext(session, 0);
+                const count = await this.client.modCount(session);
+                mods = await Promise.all(Array.from({length: count}, (_, id) => this.client.modInfo(session, id)));
+            }
+            await this.client.itemInfo(item, session || this.session);
+            if (this.disposed) return;
+            const previous = {item: this.item, session: this.session, context: this.context};
+            this.item = item;
+            item = 0;
+            if (differentBase) {
+                this.session = session;
+                this.context = context;
+                session = context = 0;
+                this.modCache = mods;
+            }
+            this.base = snapshot.base;
+            this.itemLevel = snapshot.itemLevel;
+            this.undoHistory.go(index);
+            this.dirty = this.savedStateKey !== JSON.stringify(snapshot);
+            await this.client.closeItem(previous.item);
+            if (differentBase) {
+                await this.client.closeContext(previous.context);
+                await this.client.closeSession(previous.session);
+            }
+            this.syncControls();
+            await this.refresh();
+            await this.persist();
             workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
+        } finally {
+            if (item) await this.client.closeItem(item);
+            if (context) await this.client.closeContext(context);
+            if (session) await this.client.closeSession(session);
         }
     }
 
@@ -410,6 +474,8 @@ export class PcEmulator extends HTMLElement {
             rarity: this.rarity,
             state: this.item ? await this.client.exportItem(this.item) : null,
             history: this.history,
+            undoHistory: this.undoHistory.export(),
+            savedStateKey: this.savedStateKey,
             savedRef: this.savedRef,
             savedName: this.savedName,
             dirty: this.dirty,
@@ -456,9 +522,10 @@ export class PcEmulator extends HTMLElement {
         this.savedRef = record.id;
         this.savedName = record.name;
         this.savedCreatedAt = record.createdAt;
-        this.dirty = false;
+        this.savedStateKey = JSON.stringify({base: record.base, itemLevel: record.itemLevel, rarity: record.rarity, state: record.state});
+        this.dirty = this.savedStateKey !== JSON.stringify(await this.snapshot());
         await this.persist();
-        workspace().notifyDirty(this.docId, false, this.docTitle);
+        workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
         this.renderSavedName();
     }
 
@@ -651,12 +718,24 @@ export class PcEmulator extends HTMLElement {
                 delete button.dataset.disabledBeforeBusy;
             }
         });
+        this.syncHistoryButtons();
+    }
+
+    private syncHistoryButtons(): void {
+        for (const command of ["undo", "redo"] as const) {
+            const button = this.querySelector<HTMLButtonElement>(`[data-cmd="${command}"]`);
+            if (button) button.disabled = this.busy || !(command === "undo" ? this.undoHistory.canUndo : this.undoHistory.canRedo);
+        }
+        this.querySelectorAll<HTMLButtonElement>("[data-history-index]").forEach(button => {
+            button.disabled = this.busy || Number(button.dataset.historyIndex) === this.undoHistory.cursor;
+        });
     }
 
     private async guard(work: () => Promise<void>): Promise<void> {
         if (this.busy || this.disposed) {
             return;
         }
+        const restoreFocus = this.contains(document.activeElement);
         this.setBusy(true);
         const pending = work();
         this.currentWork = pending;
@@ -669,6 +748,9 @@ export class PcEmulator extends HTMLElement {
                 this.currentWork = null;
             }
             this.setBusy(false);
+            if (restoreFocus && this.isConnected && document.activeElement === document.body) {
+                this.focus({preventScroll: true});
+            }
         }
     }
 
@@ -688,46 +770,44 @@ export class PcEmulator extends HTMLElement {
     private renderHistory(): void {
         const el = this.querySelector(".pc-emu-history");
         if (!el) return;
-        if (this.history.length === 0) {
-            el.innerHTML = '<li class="pc-empty">No crafts yet.</li>';
-            return;
-        }
-        el.innerHTML = this.history
-            .map((entry, index) => ({ entry, number: index + 1 }))
-            .reverse()
-            .map(({ entry, number }) => {
-                const detail =
-                    entry.detail ??
-                    (entry.applied
-                        ? `+${entry.added} / -${entry.removed}`
-                        : "no-op");
-                return `<li class="${entry.applied ? "" : "pc-history-noop"}">
-                    <span class="pc-history-n">${number}</span>
-                    <span class="pc-history-action">${escapeHtml(entry.action)}</span>
-                    <span class="pc-history-detail">${escapeHtml(detail)}</span>
-                </li>`;
-            })
-            .join("");
+        const entries = this.undoHistory.export().entries;
+        el.innerHTML = entries.map(({entry}, index) => {
+            const detail = entry.detail ?? (entry.applied ? `+${entry.added} / -${entry.removed}` : "no-op");
+            const current = index === this.undoHistory.cursor;
+            return `<li class="${entry.applied ? "" : "pc-history-noop"} ${current ? "is-current" : index > this.undoHistory.cursor ? "is-future" : ""}">
+                <button type="button" data-history-index="${index}" ${current ? 'aria-current="step"' : ""} title="Restore item after this step">
+                    <span class="pc-history-n">${index}</span><span class="pc-history-action">${escapeHtml(entry.action)}</span>
+                    <span class="pc-history-detail">${current ? "Current · " : ""}${escapeHtml(detail)}</span>
+                </button></li>`;
+        }).reverse().join("") + this.history.slice().reverse().map(entry =>
+            `<li class="pc-history-legacy"><span class="pc-history-action">${escapeHtml(entry.action)}</span><span class="pc-history-detail">Earlier log · no snapshot</span></li>`
+        ).join("");
+        el.querySelectorAll<HTMLButtonElement>("[data-history-index]").forEach(button => {
+            button.addEventListener("click", () => {
+                void this.guard(() => this.restoreHistory(Number(button.dataset.historyIndex)));
+            });
+        });
+        this.syncHistoryButtons();
     }
 
-    private renderMechanicControls(capture = true): void {
+    private renderMechanicControls(): void {
         const host = this.querySelector<PcCraftControls>(".pc-advanced-crafts");
         if (!host || !this.catalog) return;
-        if (capture) host.querySelectorAll<HTMLSelectElement>("select[data-mechanic]").forEach(select => {
-            if (select.dataset.mechanic) this.mechanicValues.set(select.dataset.mechanic, select.value);
-        });
+        this.mechanicValues = resolveCraftValues(this.catalog, this.mechanicValues);
+        const unveils = this.veiledOptions.map(id => this.modCache[id]).filter((mod): mod is ModInfo => Boolean(mod))
+            .map(mod => ({key: mod.key, name: modTextLabel(mod.text_lines) || mod.key}));
+        if (!unveils.some(mod => mod.key === this.mechanicValues.get("unveil"))) this.mechanicValues.set("unveil", unveils[0]?.key ?? "");
         host.setModel({
             mode: "emulator", catalog: this.catalog, panel: this.activeCraftPanel,
+            itemClass: this.bases.find(base => base.path === this.base)?.item_class_key,
             values: this.mechanicValues, fossils: this.selectedFossils, bestiary: this.bestiaryActions,
             checkpoint: this.checkpointPresent,
-            unveils: this.veiledOptions.map(id => this.modCache[id]).filter((mod): mod is ModInfo => Boolean(mod))
-                .map(mod => ({key: mod.key, name: modTextLabel(mod.text_lines) || mod.key})),
+            unveils,
             onPanel: panel => { this.activeCraftPanel = panel; this.renderMechanicControls(); },
             onValue: (name, value) => {
                 this.mechanicValues.set(name, value);
                 if (name === "essence-type") this.mechanicValues.delete("essence-key");
-                // The model holds current selections; do not reread stale tier DOM after a type change.
-                this.renderMechanicControls(false);
+                this.renderMechanicControls();
             },
             onSimple: id => { void this.guard(() => this.applyAction(id as CraftAction["type"])); },
             onBestiary: id => {
@@ -736,7 +816,7 @@ export class PcEmulator extends HTMLElement {
             },
             onConfigured: id => {
                 const type = id as CraftAction["type"];
-                const value = (name: string) => host.querySelector<HTMLSelectElement>(`[data-mechanic="${name}"]`)?.value ?? "";
+                const value = (name: string) => this.mechanicValues.get(name) ?? "";
                 let action: CraftAction = {type};
                 if (type === "essence") action = {type, essence: value("essence-key")};
                 else if (type === "fossil") action = {type, fossils: [...this.selectedFossils]};
@@ -747,8 +827,7 @@ export class PcEmulator extends HTMLElement {
                 else if (type === "unveil") action = {type, mod_key: value("unveil")};
                 void this.guard(() => this.applyConfiguredAction(action));
             },
-            onAddFossil: () => {
-                const key = host.querySelector<HTMLSelectElement>('[data-mechanic="fossil"]')?.value ?? "";
+            onAddFossil: key => {
                 if (key && this.selectedFossils.length < 4 && !this.selectedFossils.includes(key)) {
                     this.selectedFossils = [...this.selectedFossils, key]; this.renderMechanicControls();
                 }
@@ -776,7 +855,7 @@ export class PcEmulator extends HTMLElement {
                 if (this.hasBase) {
                     this.pickerOpen = false;
                     this.renderShell();
-                    this.afterPickerClose();
+                    void this.guard(() => this.refresh());
                 }
             });
             return;
@@ -795,7 +874,8 @@ export class PcEmulator extends HTMLElement {
                     return;
                 }
                 void this.guard(async () => {
-                    if (cmd === "create") await this.createItem();
+                    if (cmd === "undo" || cmd === "redo") await this.restoreHistory(this.undoHistory.cursor + (cmd === "undo" ? -1 : 1));
+                    else if (cmd === "create") await this.createItem();
                     else if (cmd === "save") await this.save();
                     else if (cmd === "save-as") await this.saveAs();
                     else if (cmd === "duplicate") await this.duplicate();

@@ -1,16 +1,25 @@
 import assert from 'node:assert/strict';
+import { checkEmulatorHistory, checkStrategyHistory } from './edit-history-checks.mjs';
+import { checkCraftChoices, checkCalculatorChoices } from './craft-choices-checks.mjs';
 
 /** Real browser interactions against the packaged UI; no Solver search or Simulator runs. */
 export async function checkUiContinuity(page) {
+    // Ritual crowns must be selectable in their defence filter, not only All.
+    await page.locator('pc-emulator .pc-bp-class').selectOption({label: 'Helmet'});
+    await page.locator('pc-emulator .pc-bp-sub').selectOption({label: 'Armour / Energy Shield'});
+    await page.locator('pc-emulator .pc-bp-base').selectOption({label: 'Archdemon Crown'});
+    assert.equal(await page.locator('pc-emulator .pc-bp-base').inputValue(), 'Metadata/Items/Armours/Helmets/HelmetStrIntRitual3');
+    assert.equal(await page.locator('pc-emulator .pc-bp-base option').filter({hasText: /^Blizzard Crown$/}).count(), 0);
+    await page.locator('pc-emulator .pc-bp-class').selectOption({label: 'Body Armour'});
+    await page.locator('pc-emulator .pc-bp-base').selectOption({label: 'Vaal Regalia'});
     await page.locator('pc-emulator .pc-bp-confirm:not(:disabled)').click();
     await page.locator('pc-emulator [data-simple-action="alchemy"]:not(:disabled)').click();
     await page.waitForFunction(() => document.querySelector('pc-emulator .pc-emu-history')?.textContent.toLowerCase().includes('alchemy'));
     assert.ok(await page.locator('pc-emulator .pc-mod-slot.is-filled').count() >= 4);
-    await page.locator('pc-emulator [data-craft-panel="essence"]').click();
-    await page.locator('[data-mechanic="essence-type"]').selectOption({label: 'Woe'});
-    await page.locator('[data-mechanic="essence-key"]').selectOption({label: 'Screaming'});
-    assert.equal(await page.locator('[data-mechanic="essence-key"] option:checked').innerText(), 'Screaming');
+    await checkEmulatorHistory(page);
+    await checkCraftChoices(page);
     await page.locator('pc-emulator [data-cmd="calculator"]').click();
+    await checkCalculatorChoices(page);
     await page.locator('pc-calculator .pc-mod-family-header').first().click();
     await page.locator('pc-calculator .pc-mod-tier-btn').first().click();
     await page.locator('pc-calculator [data-select-action="chaos"]:not(:disabled)').click();
@@ -73,12 +82,16 @@ export async function checkUiContinuity(page) {
     assert.equal(await page.locator('.pc-cond-tier-badge').innerText(), 'Any');
     condition = JSON.parse(await page.locator('[data-action="json"]').inputValue());
     assert.match(JSON.stringify(condition), /"min_tier":0/);
+    await checkStrategyHistory(page);
     await page.locator('.pc-tab-title').filter({hasText: /^Calculator/}).click();
+    await page.waitForFunction(() => document.querySelector('.pc-calc-answer-value')?.textContent);
+    await page.waitForFunction(() => !document.querySelector('pc-calculator')?.busy);
     assert.equal(await page.locator('[data-role="allow-extra-modifiers"]').isChecked(), true);
     const calculatorTab = page.locator('.pc-tab').filter({has: page.locator('.pc-tab-title').filter({hasText: /^Calculator/})});
     await calculatorTab.locator('.pc-tab-close').click();
     await page.locator('pc-calculator').waitFor({state: 'detached'});
     await page.locator('.pc-tab-title').filter({hasText: /^Untitled$/}).click();
+    await page.waitForFunction(() => document.querySelector('pc-emulator')?.item && !document.querySelector('pc-emulator')?.busy);
     assert.ok(await page.locator('pc-emulator .pc-mod-slot.is-filled').count() >= 4);
     await page.waitForFunction(() => {
         const images = Array.from(document.querySelectorAll('pc-emulator .pc-game-art'));
@@ -89,6 +102,12 @@ export async function checkUiContinuity(page) {
     await page.locator('.pc-text-modal input').fill('UI continuity item');
     await page.locator('.pc-text-modal [data-action="accept"]').click();
     await page.waitForFunction(() => document.querySelector('.pc-emu-name')?.textContent === 'Saved: UI continuity item');
+    await page.locator('pc-emulator [data-cmd="undo"]:not(:disabled)').click();
+    await page.waitForFunction(() => !document.querySelector('pc-emulator')?.busy);
+    assert.equal(await page.evaluate(() => document.querySelector('pc-emulator').dirty), true);
+    await page.locator('pc-emulator [data-cmd="redo"]:not(:disabled)').click();
+    await page.waitForFunction(() => !document.querySelector('pc-emulator')?.busy);
+    assert.equal(await page.evaluate(() => document.querySelector('pc-emulator').dirty), false);
     await page.getByRole('button', {name: 'Stash', exact: true}).click();
     const saved = page.locator('.pc-stash-item').filter({hasText: 'UI continuity item'});
     await saved.getByRole('button', {name: 'Import copy', exact: true}).click();
@@ -103,5 +122,6 @@ export async function checkUiContinuity(page) {
     await imported.waitFor({state: 'detached'});
     return {crafts: true, handoffs: true, coverageGoal: true, draftRecovery: true, restart: true,
         namespacedAction: true, nestedConditions: true, tierAndAnyTier: true, tabLifecycle: true, artwork: true,
-        stashRoundTrip: true, dirtyClose: true};
+        stashRoundTrip: true, dirtyClose: true, emulatorHistory: true, strategyHistory: true, edgeReconnection: true,
+        craftChoices: true, craftTooltips: true, stableModSlots: true};
 }

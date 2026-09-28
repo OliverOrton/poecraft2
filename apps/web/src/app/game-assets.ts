@@ -2,13 +2,18 @@ import { useEffect, useSyncExternalStore } from "react";
 import build from "../generated/build-info.json";
 import { publicAsset } from "./public-assets";
 
-export interface GameAsset { name: string; image?: string; width?: number; height?: number; }
+export interface GameAsset {
+    name: string; image?: string; width?: number; height?: number;
+    description?: string;
+    essence_mods?: Record<string, string>;
+}
 interface AssetCatalog {
     schema_version: number;
     source: {runtime_manifest_sha256: string};
     items: Record<string, GameAsset>;
     actions: Record<string, string>;
     influences: Record<string, string>;
+    harvest?: Record<string, string>;
 }
 let catalog: AssetCatalog | null = null;
 let pending: Promise<void> | null = null;
@@ -35,6 +40,7 @@ export function loadGameAssets(): Promise<void> {
 export function resolveGameAsset(key: string, value: AssetCatalog | null = catalog): GameAsset | undefined {
     if (!value || !key) return undefined;
     if (key.startsWith("action:")) return value.items[value.actions[key.slice(7)]];
+    if (key.startsWith("harvest:")) return value.items[value.harvest?.[key.slice(8)] ?? ""];
     if (key.startsWith("influence:")) {
         const name = key.slice(10).toLowerCase().replace(/ t\d+$/, "");
         return value.items[value.influences[name]];

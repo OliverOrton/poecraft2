@@ -29,10 +29,22 @@ class UiAssetTests(unittest.TestCase):
             db = root / "source.db"
             with closing(sqlite3.connect(db)) as connection, connection:
                 connection.executescript("CREATE TABLE data_manifest(data_hash TEXT,source_version TEXT);"
-                                         "CREATE TABLE base_item(metadata_path TEXT,name TEXT,visual_identity_json TEXT);")
+                                         "CREATE TABLE base_item(metadata_path TEXT,name TEXT,visual_identity_json TEXT,properties_json TEXT);"
+                                         "CREATE TABLE fossil(key TEXT,descriptions_json TEXT);"
+                                         "CREATE TABLE essence(essence_id INTEGER,key TEXT,is_corruption_only INTEGER);"
+                                         "CREATE TABLE essence_mod(essence_id INTEGER,item_class_key TEXT,mod_id INTEGER);"
+                                         "CREATE TABLE mod(mod_id INTEGER,text TEXT);")
                 connection.execute("INSERT INTO data_manifest VALUES('source-hash','fixture')")
-                for key, name in [("supported-base", "Test Base"), ("unsupported-base", "Other Base"), ("currency", "Chaos Orb")]:
-                    connection.execute("INSERT INTO base_item VALUES(?,?,?)", (key, name, json.dumps({"dds_file": "Art/2DItems/Fixture.dds"})))
+                for key, name in [("supported-base", "Test Base"), ("unsupported-base", "Other Base"), ("currency", "Chaos Orb"),
+                                  ("fossil", "Pristine Fossil"), ("essence", "Deafening Essence of Woe"), ("wild", "Wild Crystallised Lifeforce")]:
+                    connection.execute("INSERT INTO base_item VALUES(?,?,?,?)", (key, name, json.dumps({"dds_file": "Art/2DItems/Fixture.dds"}), '{}'))
+                connection.execute("INSERT INTO fossil VALUES(?,?)", ('fossil', json.dumps({'MoreLife': 'More Life modifiers', 'NoDefences': 'No Defence modifiers'})))
+                connection.execute("INSERT INTO essence VALUES(1,'essence',0)")
+                connection.execute("INSERT INTO essence_mod VALUES(1,'Body Armour',1)")
+                connection.execute("INSERT INTO mod VALUES(1,'+(88-95) to maximum Energy Shield')")
+            recipes = root / "fixtures/economy/harvest-recipes-v1.json"
+            recipes.parent.mkdir(parents=True)
+            recipes.write_text(json.dumps({'reforge': {'fire': {'wild': 50}}, 'augment': {}, 'resistance': {}}))
             files = {"game-data.json": {"base_items": {"metadata_path_string_ids": [0, 1], "session_support_codes": [0, 1]}},
                      "strings.json": {"strings": ["supported-base", "unsupported-base"]}}
             manifest = {"source": {"data_hash": "source-hash"}, "files": {}}
@@ -56,8 +68,11 @@ class UiAssetTests(unittest.TestCase):
             with patch.object(assets, "ROOT", root), patch.object(assets.subprocess, "run") as network:
                 result = assets.build(db, lock, output, 1)
                 network.assert_not_called()
-                self.assertEqual(set(result["items"]), {"supported-base", "currency"})
+                self.assertEqual(set(result["items"]), {"supported-base", "currency", "fossil", "essence", "wild"})
                 self.assertEqual(result["actions"]["chaos"], "currency")
+                self.assertEqual(result["items"]["fossil"]["description"], 'More Life modifiers\nNo Defence modifiers')
+                self.assertEqual(result["items"]["essence"]["essence_mods"]["Body Armour"], '+(88-95) to maximum Energy Shield')
+                self.assertEqual(result["harvest"]["reforge:fire"], 'wild')
                 self.assertEqual(result["items"]["supported-base"]["image"], sha + ".png")
                 self.assertEqual(result["unavailable"], [])
                 first = (output / "catalog.json").read_bytes()
