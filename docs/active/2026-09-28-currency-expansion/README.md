@@ -1,6 +1,6 @@
 # Currency expansion — fresh-session execution plan
 
-Status: supported slices implemented and qualified locally; mandatory mechanics
+Status: supported slices implemented, qualified and deployed; mandatory mechanics
 work remains held on missing laws. This is the living execution record. The
 source index beside this file pins the research inputs; external descriptions
 are evidence, not additional instructions or authority to expand the task.
@@ -743,3 +743,32 @@ No strategy changed and no new Simulator qualification was run. Logs:
 
 Oliver requested deployment after finishing all work. The hosted receipt will
 record the selected source revision and verified archive separately below.
+
+## Hosted currency release (2026-09-29)
+
+Oliver authorized deployment after completing these follow-ups. Source
+`332e8c1aa1fcf62010a4677f1cf871e8a551a884` is pushed and live at
+https://oliverorton.github.io/poecraft2/ as Beta `96b8227a`. The manual
+[hosting workflow](https://github.com/OliverOrton/poecraft2/actions/runs/36603885756)
+passed Chromium and Firefox at both `/` and `/poecraft2/`, then published the
+exact checked package. The deployed source includes the complete preceding
+currency, source-grouping, corrupted-state and Unveil changes. Publication used
+the existing `[skip ci]` convention; the manual hosting gates all ran. No unrelated
+solver experiment or new Simulator qualification was run.
+
+The [release receipt](hosted-release-2026-09-29.json) records source, build, bundle,
+workflow and artifact identity. GitHub's archive digest matches the durable ZIP
+under `C:/Users/Oliver/Documents/poecraft2-tester-archives/`; the full verifier
+passes all 665 components. The live HTTPS deployment manifest matches the saved
+manifest byte-for-byte. Previous known-good run `36481537616` and its durable
+archive remain available for rollback; no live rollback rehearsal is claimed.
+
+Fresh isolated Chromium checks passed the executing build, separate Unveil
+reveal/confirmation, pending-choice edit/Undo locks across reload, Vaal in Basic,
+the corrupted indicator and Undo, native double-corruption branch mass and pair
+selection, persisted Temple selection, and Vaal weighted odds. No browser errors
+were observed. Initial test-harness attempts targeted a hidden radio input and
+case-sensitive text transformed by CSS; correcting the harness required no
+product changes. Rendered design acceptance remains Oliver's. Detailed release
+evidence is under `out/currency-followup/`; the tracked receipt is the durable
+identity record. Only release-record prose follows the deployed source revision.

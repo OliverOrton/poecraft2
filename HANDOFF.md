@@ -6,8 +6,11 @@ Native odds and the Temple Calculator control now cover all four 25% branches,
 implicit marginals and unordered pairs, replacing existing implicits and excluding
 conflicting groups between draws. Brick/destruction cannot satisfy goals. Sampled
 influenced reforging remains unavailable. The currency execution record owns
-validation and the release receipt. Oliver requested live deployment after all
-this work is finished; the release is being prepared, not yet claimed live.
+validation and the [release receipt](docs/active/2026-09-28-currency-expansion/README.md#hosted-currency-release-2026-09-29).
+The complete release is live from source `332e8c1` as Beta `96b8227a`.
+Chromium/Firefox passed both hosting paths; live functional checks and the exact
+665-component archive are verified. The previous hosted archive remains available
+for rollback. Tempering/Tailoring and the explicitly held mechanics remain held.
 
 The [currency follow-up](docs/active/2026-09-28-currency-expansion/README.md#currency-follow-up-2026-09-29)
 owns the current local scope and validation. Dominance now has native/Emulator/
@@ -29,7 +32,7 @@ on main, preserving root `0`. Deployment is now authorized; no old experiment
 allowance was requested. The execution record distinguishes remaining holds from delivered work.
 Existing release and IC receipts below remain historical and unchanged.
 
-Current release (2026-09-28): Oliver requested a Calculator layout closer
+Previous release (2026-09-28): Oliver requested a Calculator layout closer
 to the familiar item editor, with crafting and modifiers always visible and only
 Odds/Strategy finder sharing the compact panel. Emulator now gives crafting and
 cost/history independent space, and the four missing special Essences are restored

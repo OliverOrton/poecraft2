@@ -1,0 +1,44 @@
+{
+  "status": "published and live functionally verified",
+  "verified_at_utc": "2026-09-29T17:25:15.470Z",
+  "site_url": "https://oliverorton.github.io/poecraft2/",
+  "source_commit": "332e8c1aa1fcf62010a4677f1cf871e8a551a884",
+  "build_id": "96b8227a580ec1b55a963df54d80203e1fa41fbf7b7a5ac66d9322549a8d3e0b",
+  "bundle_id": "bc2884e66b81edc28715c4ee915f5f1b8f06a5093696d245124a2476757450ed",
+  "workflow_run_id": 36603885756,
+  "workflow_url": "https://github.com/OliverOrton/poecraft2/actions/runs/36603885756",
+  "workflow_result": "success",
+  "browsers": {
+    "chromium": "passed",
+    "firefox": "passed",
+    "bases": [
+      "/",
+      "/poecraft2/"
+    ],
+    "live_chromium_version": "145.0.7632.6"
+  },
+  "live_checks": [
+    "HTTPS manifest matches the verified CI archive byte-for-byte",
+    "Executing build identity",
+    "Separate Unveil reveal and confirmation",
+    "Pending Unveil blocks edits and Undo, including after reload",
+    "Vaal in Basic currency and corrupted item indicator; Undo restores prior state",
+    "Temple double-corruption calculation, full branch mass and implicit pair picker",
+    "Double-corruption selection persists across reload",
+    "Vaal weighted implicit odds",
+    "No browser errors"
+  ],
+  "economy_mode": "bundled",
+  "github_digest": "sha256:450fa5b9cefa7f5b8619d945e554e0ad711c010fa405025d3b9e2c77733d42ce",
+  "artifact_id": 11049509603,
+  "archive_sha256": "450fa5b9cefa7f5b8619d945e554e0ad711c010fa405025d3b9e2c77733d42ce",
+  "archive_path": "C:\\Users\\Oliver\\Documents\\poecraft2-tester-archives\\hosted-tester-run-36603885756.zip",
+  "manifest_sha256": "049ff7f3a492cc5709168168492b03adc99f40f1c9b10c83c0476978365008e4",
+  "verified_component_count": 665,
+  "previous_known_good_rollback_run": 36481537616,
+  "rollback_run": 36603885756,
+  "rollback_rehearsal": "not performed; preceding verified archive retained",
+  "visual_acceptance": "remains with Oliver; live checks were functional",
+  "scope": "Double-corruption Calculator uses owner-approved terminal brick/destruction failures. Sampled influenced reforging remains unavailable.",
+  "live_check_harness_note": "Initial local checks targeted a hidden radio and case-sensitive display text; corrected to click the visible choice and allow CSS uppercase text. Final live checks passed without product changes."
+}
