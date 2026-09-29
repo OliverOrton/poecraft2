@@ -22,6 +22,11 @@ from urllib.parse import quote
 ROOT = Path(__file__).resolve().parents[3]
 CDN = "https://web.poecdn.com/image/"
 ACTION_NAMES = {
+    "awakener": "Awakener's Orb", "dominance": "Orb of Dominance",
+    "tempering": "Tempering Orb", "tailoring": "Tailoring Orb", "vaal": "Vaal Orb",
+    "remembrance": "Orb of Remembrance", "unravelling": "Orb of Unravelling",
+    "foulborn_augment": "Foulborn Orb of Augmentation",
+    "foulborn_regal": "Foulborn Regal Orb", "foulborn_exalt": "Foulborn Exalted Orb",
     "transmute": "Orb of Transmutation", "augment": "Orb of Augmentation",
     "alteration": "Orb of Alteration", "regal": "Regal Orb",
     "alchemy": "Orb of Alchemy", "chaos": "Chaos Orb", "exalt": "Exalted Orb",

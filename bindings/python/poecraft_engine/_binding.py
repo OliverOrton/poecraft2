@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 MAX_BESTIARY_COST_KEYS = 4
-ABI_VERSION = 2
+ABI_VERSION = 3
 RESULT_OK = 0
 RESULT_BUFFER_TOO_SMALL = 7
 MAX_FOSSILS = 4
@@ -43,6 +43,16 @@ _ACTION_TYPES = {
     "eldritch_chaos": 21,
     "eldritch_annul": 22,
     "influence_exalt": 23,
+    "foulborn_augment": 26,
+    "foulborn_regal": 27,
+    "foulborn_exalt": 28,
+    "remembrance": 29,
+    "unravelling": 30,
+    "dominance": 31,
+    "tempering": 32,
+    "tailoring": 33,
+    "vaal": 34,
+    "double_corruption": 35,
     "fracture": 24,
     "remove_crafted_modifiers": 25,
 }
@@ -104,6 +114,8 @@ class _ItemState(ct.Structure):
     _fields_ = [
         ("rarity", ct.c_uint8),
         ("quality", ct.c_uint8),
+        ("memory_strands", ct.c_uint8),
+        ("lifecycle", ct.c_uint8),
         ("item_flags", ct.c_uint8),
         ("prefix_count", ct.c_uint8),
         ("suffix_count", ct.c_uint8),
@@ -470,6 +482,7 @@ class _TraceEntry(ct.Structure):
         ("terminal_kind", ct.c_int32),
         ("failure_reason", ct.c_int32),
         ("item", _ItemState),
+        ("resources_json", ct.c_char_p),
     ]
 
 
@@ -533,6 +546,22 @@ class _MaterialSampleEntry(ct.Structure):
         ("price_key", ct.c_char_p),
         ("count", ct.c_uint64),
     ]
+
+
+class _CraftResource(ct.Structure):
+    _fields_ = [("identity", ct.c_char_p), ("role", ct.c_char_p),
+                ("session", ct.c_void_p), ("item", ct.POINTER(_ItemState))]
+
+
+class _ResourceChange(ct.Structure):
+    _fields_ = [("identity", ct.c_char_p), ("effect", ct.c_int32),
+                ("before", _ItemState), ("after", _ItemState)]
+
+
+class _MultiItemResult(ct.Structure):
+    _fields_ = [("struct_size", ct.c_uint32), ("abi_version", ct.c_uint32),
+                ("resource_count", ct.c_uint32), ("resources", _ResourceChange * 8),
+                ("consumed_price_key", ct.c_char_p)]
 
 
 class EngineError(RuntimeError):
@@ -1241,6 +1270,7 @@ class TraceEntry:
     terminal_kind: str | None
     failure_reason: int
     item: "Item"
+    resources: tuple[dict, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -1734,6 +1764,20 @@ class Item:
         self._state = state
 
     @property
+    def memory_strands(self) -> int:
+        return int(self._state.memory_strands)
+
+    @property
+    def lifecycle(self) -> int:
+        return int(self._state.lifecycle)
+
+    @memory_strands.setter
+    def memory_strands(self, value: int) -> None:
+        if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= 100:
+            raise ValueError("memory_strands must be an integer from 0 to 100")
+        self._state.memory_strands = value
+
+    @property
     def rarity(self) -> str:
         return ("normal", "magic", "rare")[self._state.rarity]
 
@@ -2143,6 +2187,7 @@ class Simulator(_OwnedHandle):
                             _TERMINAL_NAMES.get(row.terminal_kind),
                             row.failure_reason,
                             Item(self._session, _copy_item_state(row.item)),
+                            tuple(json.loads(_decode(row.resources_json) or "[]")),
                         )
                         for row in entries[: entry_count.value]
                     )
@@ -2375,6 +2420,29 @@ class ActionContext(_OwnedHandle):
     def _check_item(self, item: Item) -> None:
         if item._session is not self._session:
             raise ValueError("item belongs to a different session")
+
+    def apply_multi(self, action: str, resources: list[tuple[str, str, Item]]) -> dict:
+        """Apply one atomic craft to explicit (identity, role, item) resources.
+
+        The caller owns acquisition/accounting. Consumed items remain absent;
+        repeating the operation requires another available donor.
+        """
+        function = _lib.pc_multi_item_apply
+        function.argtypes = [_handle, ct.c_char_p, ct.POINTER(_CraftResource),
+                             ct.c_uint32, ct.POINTER(_MultiItemResult), ct.POINTER(_ErrorInfo)]
+        function.restype = ct.c_int32
+        native = (_CraftResource * len(resources))(*[
+            _CraftResource(identity.encode(), role.encode(), item._session._handle,
+                           ct.pointer(item._state)) for identity, role, item in resources])
+        result = _MultiItemResult()
+        error = _error()
+        _check(function(self._handle, action.encode(), native, len(resources),
+                        ct.byref(result), ct.byref(error)), error)
+        return {"cost_keys": [_decode(result.consumed_price_key)],
+                "resources": [{"identity": _decode(change.identity), "effect": change.effect,
+                               "before": Item(resources[i][2]._session, _copy_item_state(change.before)),
+                               "after": Item(resources[i][2]._session, _copy_item_state(change.after))}
+                              for i, change in enumerate(result.resources[:result.resource_count])]}
 
     def performance_stats(self, *, reset: bool = False) -> dict[str, int | float]:
         stats = _ActionPerfStats()

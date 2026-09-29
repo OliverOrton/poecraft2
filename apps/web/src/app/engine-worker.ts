@@ -904,9 +904,11 @@ async function dispatch(
                 (params.session as number) ?? 0,
             );
         case "exportItem":
-            return { state: bindings.exportItem(params.item as number) };
+            return { state: bindings.exportItem(params.item as number, params.session as number ?? 0) };
+        case "multiItemApply":
+            return bindings.multiItemApply(params.context as number, params.request);
         case "importItem":
-            return { item: bindings.importItem(params.state) };
+            return { item: bindings.importItem(params.state, params.session as number ?? 0) };
         case "addMod":
             bindings.addMod(params.item as number, params.session as number, {
                 key: params.key as string,

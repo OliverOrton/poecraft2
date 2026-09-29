@@ -118,6 +118,8 @@ assert.deepEqual(
         entry.code,
     ]),
     [
+        ["shaper", 16],
+        ["elder", 14],
         ["crusader", 13],
         ["warlord", 11],
         ["redeemer", 15],

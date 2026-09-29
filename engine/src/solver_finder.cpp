@@ -274,7 +274,7 @@ PolicyFinderWork::PolicyFinderWork(
             problem_.registry().actions[setup.index].params.type;
         const pc_rarity reached_rarity = type == ActionType::Transmute
             ? PC_RARITY_MAGIC
-            : type == ActionType::Alchemy || type == ActionType::Regal
+            : type == ActionType::Alchemy || ordinary_add_equivalent(type) == ActionType::Regal
                 ? PC_RARITY_RARE : PC_RARITY_NORMAL;
         if (reached_rarity != problem_.goal().rarity ||
             reached_rarity == PC_RARITY_NORMAL) continue;
@@ -661,7 +661,7 @@ void PolicyFinderWork::expand_next_partial() {
     const pc_rarity reached_rarity = first_type == ActionType::Transmute
         ? PC_RARITY_MAGIC
         : first_type == ActionType::Alchemy ||
-              first_type == ActionType::Regal
+              ordinary_add_equivalent(first_type) == ActionType::Regal
             ? PC_RARITY_RARE : PC_RARITY_NORMAL;
     std::vector<Sketch> children;
     std::vector<FinderScoreFeatures> features;

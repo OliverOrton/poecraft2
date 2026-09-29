@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "runtime_directory": "data/runtime-snapshots/852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
-  "manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+  "runtime_directory": "data/runtime-snapshots/ef06ad1171b10975fd56a43fb596e94f789e8c5bae5092b0617f5331a285db99",
+  "manifest_sha256": "ef06ad1171b10975fd56a43fb596e94f789e8c5bae5092b0617f5331a285db99",
   "source_lock": "fixtures/repoe/production-source-manifest.json",
   "economy": {
     "mode": "bundled",

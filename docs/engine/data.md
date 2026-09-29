@@ -254,3 +254,12 @@ shared browser formatter removes markup without inventing roll values.
   supported runtime rows.
 - A session is immutable after construction.
 - Data completeness does not imply mechanic support.
+
+## Currency expansion projection (2026-09-28)
+
+The compiler adds flat `item_classes.influence_tag_offsets` and
+`influence_tag_string_ids`, projected from canonical item-class `source_json`.
+Native and diagnostic selection use these actual tags. Older schema-v4 artifacts
+without the additive fields retain the historical fallback. The selected product
+runtime is pinned by `apps/web/runtime.lock.json`; this change did not modify
+canonical SQLite or overwrite the historical `data/compiled/current` artifact.

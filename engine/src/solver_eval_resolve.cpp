@@ -16,7 +16,7 @@ std::uint32_t resolve_registry_strategy_action(
     if (node.action_type != kStrategyRestartOperation &&
         (node.action_type < static_cast<int>(ActionType::Transmute) ||
          node.action_type >
-             static_cast<int>(ActionType::RemoveCraftedModifiers) ||
+             static_cast<int>(ActionType::FoulbornExalt) ||
          node.action_type != static_cast<int>(node.action.type))) {
         return kNoId;
     }

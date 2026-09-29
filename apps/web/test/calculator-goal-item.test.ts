@@ -205,3 +205,11 @@ assert.deepEqual(
 );
 
 console.log("  ok - Calculator v1 goals adapt to the shared target item model");
+
+const unveiledOptions = buildModifierOptions([
+    {...influenceMod(20, "veiled", 0), reach_kind: 6, reach_via: "veiled:template"},
+    {...influenceMod(21, "unveiled", 0), reach_kind: 7, reach_via: "veiled:unveil"},
+], influenceOptionCatalog);
+assert.deepEqual(unveiledOptions.map(o => [o.sourceKind, o.sourceLabel]), [
+    ["veiled", "Veiled"], ["unveiled", "Unveiled"],
+]);

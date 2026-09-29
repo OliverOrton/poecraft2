@@ -298,7 +298,7 @@ struct ActionFamilyContract {
 };
 
 inline constexpr std::size_t kActionTypeCount =
-    static_cast<std::size_t>(ActionType::RemoveCraftedModifiers) + 1;
+    static_cast<std::size_t>(ActionType::FoulbornExalt) + 1;
 
 inline constexpr std::array<ActionFamilyContract, kActionTypeCount>
     kActionFamilyContracts{{
@@ -410,6 +410,18 @@ inline constexpr std::array<ActionFamilyContract, kActionTypeCount>
          RegistryIdentityShape::Exact, ActionCostKeyShape::Scour,
          ExpectedPriceProvenance::Quote,
          ProductReasonGroup::Cleanup, kCleanupSupportPaths},
+        {ActionType::FoulbornAugment, PrimitiveTelemetryFamily::Currency,
+         "foulborn_augment", RegistryIdentityShape::Exact,
+         ActionCostKeyShape::Identity, ExpectedPriceProvenance::Quote,
+         ProductReasonGroup::Currency, kCurrencySupportPaths},
+        {ActionType::FoulbornRegal, PrimitiveTelemetryFamily::Currency,
+         "foulborn_regal", RegistryIdentityShape::Exact,
+         ActionCostKeyShape::Identity, ExpectedPriceProvenance::Quote,
+         ProductReasonGroup::Currency, kCurrencySupportPaths},
+        {ActionType::FoulbornExalt, PrimitiveTelemetryFamily::Currency,
+         "foulborn_exalt", RegistryIdentityShape::Exact,
+         ActionCostKeyShape::Identity, ExpectedPriceProvenance::Quote,
+         ProductReasonGroup::Currency, kCurrencySupportPaths},
     }};
 
 constexpr bool support_paths_are_complete(
@@ -522,6 +534,8 @@ inline constexpr std::array<std::string_view, kSolverActionFamilyCount>
         "metamod",
         "imprint",
         "restart",
+        "foulborn",
+        "memory",
     }};
 
 static_assert(
@@ -558,6 +572,7 @@ inline bool solver_action_family_disabled(
 
 inline SolverActionFamily solver_action_family_for_action(
     const ActionDescriptor& action) {
+    if (!action.synthetic && is_foulborn(action.params.type)) return SolverActionFamily::Foulborn;
     if (action.synthetic && action.id == "restart") {
         return SolverActionFamily::Restart;
     }

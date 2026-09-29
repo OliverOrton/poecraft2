@@ -191,7 +191,8 @@ std::vector<std::uint64_t> CalcContext::temporary_followup_eligible_mask(
 
     pc_item_state pool_carrier = carrier;
     PoolBuildRequest request;
-    switch (followup.params.type) {
+    if (is_foulborn(followup.params.type)) request.weight_kind = PoolWeightKind::Foulborn;
+    switch (ordinary_add_equivalent(followup.params.type)) {
     case ActionType::Augment:
         if (pool_carrier.rarity != PC_RARITY_MAGIC) return result;
         break;

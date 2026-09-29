@@ -23,6 +23,9 @@ export interface StrategyStartMod {
     veiled?: boolean;
     eldritch?: boolean;
     synth?: boolean;
+    rolls?: number[];
+    veiled_option_keys?: string[];
+    veiled_chosen_key?: string;
 }
 
 export interface StrategyBaseState {
@@ -31,6 +34,7 @@ export interface StrategyBaseState {
     rarity: "normal" | "magic" | "rare";
     with_implicits?: boolean;
     quality?: number;
+    memory_strands?: number;
     item_flags?: number;
     generic_influence_bits?: number;
     searing_exarch_tier?: number;
@@ -39,6 +43,9 @@ export interface StrategyBaseState {
     suffixes?: StrategyStartMod[];
     /** Exact native implicit list when a compiled policy starts after an Eldritch change. */
     implicits?: StrategyStartMod[];
+    enchantments?: StrategyStartMod[];
+    socket_colors?: number[];
+    link_mask?: number;
 }
 
 export interface StrategyOperation {
@@ -266,6 +273,8 @@ export interface StrategyDocument {
     description: string;
     start_node_id: string;
     base_state: StrategyBaseState;
+    /** Templates are unavailable until an explicit priced acquire_resource node. */
+    resources?: Array<{id: string; name?: string; base_state: StrategyBaseState; acquisition_price_key: string}>;
     nodes: StrategyNode[];
     edges: StrategyEdge[];
     solver_policy_scope?: SolverPolicyScope;
@@ -289,17 +298,27 @@ export interface StrategyValidationIssue {
 
 interface ExportedSlot {
     mod_id?: number;
+    mod_key?: string;
     flags?: number;
+    rolls?: number[];
+    veiled_option_keys?: string[];
+    veiled_chosen_key?: string;
 }
 
 interface ExportedItemState {
     quality?: number;
+    memory_strands?: number;
     item_flags?: number;
     generic_influence_bits?: number;
     searing_exarch_tier?: number;
     eater_of_worlds_tier?: number;
     prefixes?: ExportedSlot[];
     suffixes?: ExportedSlot[];
+    implicits?: ExportedSlot[];
+    enchantments?: ExportedSlot[];
+    socket_colors?: number[];
+    link_mask?: number;
+    lifecycle?: number;
 }
 
 export function cloneStrategy(strategy: StrategyDocument): StrategyDocument {
@@ -432,12 +451,13 @@ export function createStrategyFromItemSnapshot(
     modKeyForId: (modId: number) => string | undefined,
 ): StrategyDocument {
     const state = (snapshot.state ?? {}) as ExportedItemState;
+    if (state.lifecycle) throw new Error("A consumed or destroyed resource cannot become a strategy input.");
     const toMods = (slots: ExportedSlot[] | undefined): StrategyStartMod[] =>
         (slots ?? []).flatMap((slot) => {
-            const key =
-                typeof slot.mod_id === "number" ? modKeyForId(slot.mod_id) : undefined;
+            const key = slot.mod_key ??
+                (typeof slot.mod_id === "number" ? modKeyForId(slot.mod_id) : undefined);
             if (!key) {
-                return [];
+                throw new Error("The imported modifier could not be resolved in its session.");
             }
             const flags = slot.flags ?? 0;
             return [
@@ -445,6 +465,12 @@ export function createStrategyFromItemSnapshot(
                     mod_key: key,
                     fractured: (flags & 1) !== 0 || undefined,
                     crafted: (flags & 2) !== 0 || undefined,
+                    ...((flags & 4) ? {veiled: true} : {}),
+                    ...((flags & 8) ? {eldritch: true} : {}),
+                    ...((flags & 16) ? {synth: true} : {}),
+                    ...(slot.rolls ? {rolls: [...slot.rolls]} : {}),
+                    ...(slot.veiled_option_keys ? {veiled_option_keys: [...slot.veiled_option_keys]} : {}),
+                    ...(slot.veiled_chosen_key ? {veiled_chosen_key: slot.veiled_chosen_key} : {}),
                 },
             ];
         });
@@ -460,12 +486,17 @@ export function createStrategyFromItemSnapshot(
             rarity: itemSnapshotRarity(snapshot) as StrategyBaseState["rarity"],
             with_implicits: true,
             quality: state.quality ?? 0,
+            memory_strands: state.memory_strands ?? 0,
             item_flags: state.item_flags ?? 0,
             generic_influence_bits: state.generic_influence_bits ?? 0,
             searing_exarch_tier: state.searing_exarch_tier ?? 0,
             eater_of_worlds_tier: state.eater_of_worlds_tier ?? 0,
             prefixes: toMods(state.prefixes),
             suffixes: toMods(state.suffixes),
+            implicits: state.implicits ? toMods(state.implicits) : undefined,
+            enchantments: state.enchantments ? toMods(state.enchantments) : undefined,
+            socket_colors: state.socket_colors,
+            link_mask: state.link_mask,
         },
         nodes: [
             {

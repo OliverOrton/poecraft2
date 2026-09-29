@@ -1,4 +1,5 @@
 #include "engine_internal.hpp"
+#include "multi_item.hpp"
 #include "harvest_crafts.generated.hpp"
 #include "json.hpp"
 #include "poecraft/session.h"
@@ -233,6 +234,27 @@ std::pair<std::uint32_t, std::uint8_t> resolve_start_mod(
     return {mod_id, flags};
 }
 
+void parse_start_slot_payload(const SessionImpl& session, const Value& spec, pc_mod_slot& slot) {
+    if (spec.type != Type::Object) return;
+    if (const auto* rolls = spec.find("rolls")) {
+        if (rolls->type != Type::Array || rolls->array.size() > PC_MAX_ROLL_VALUES)
+            invalid("Modifier roll values exceed slot capacity");
+        for (const auto& value : rolls->array) {
+            if (value.type != Type::Number || !std::isfinite(value.number) ||
+                value.number < std::numeric_limits<int32_t>::min() || value.number > std::numeric_limits<int32_t>::max() ||
+                std::floor(value.number) != value.number) invalid("Modifier rolls must be signed integers");
+            slot.rolls[slot.roll_count++] = static_cast<int32_t>(value.number);
+        }
+    }
+    if (const auto* options = spec.find("veiled_option_keys")) {
+        if (options->type != Type::Array || options->array.size() > PC_MAX_VEILED_OPTIONS)
+            invalid("Veiled options exceed slot capacity");
+        for (const auto& key : options->array)
+            slot.veiled_option_mod_ids[slot.veiled_option_count++] = resolve_start_mod(session, key).first;
+    }
+    if (const auto* chosen = spec.find("veiled_chosen_key")) slot.veiled_chosen_mod_id = resolve_start_mod(session, *chosen).first;
+}
+
 void add_start_mod(
     const SessionImpl& session,
     pc_item_state& item,
@@ -242,15 +264,17 @@ void add_start_mod(
     if (session.gen_type[mod_id] != side) {
         invalid("base_state mod is on the wrong affix side");
     }
+    pc_mod_slot* slot = nullptr;
     if (pc_item_add_mod(
             &item,
             side,
             mod_id,
             static_cast<std::uint16_t>(session.primary_group[mod_id]),
             flags,
-            nullptr) != PC_RESULT_OK) {
+            &slot) != PC_RESULT_OK) {
         invalid("base_state has too many explicit mods");
     }
+    parse_start_slot_payload(session, value, *slot);
 }
 
 pc_item_state parse_start_item(
@@ -287,6 +311,7 @@ pc_item_state parse_start_item(
             slot.group_id = static_cast<std::uint16_t>(
                 session.primary_group[mod_id]);
             slot.flags = flags;
+            parse_start_slot_payload(session, spec, slot);
         }
     } else if (bool_member(base_state, "with_implicits", true)) {
         if (session.base_implicit_mod_ids.size() > PC_MAX_IMPLICITS) {
@@ -300,8 +325,39 @@ pc_item_state parse_start_item(
         }
     }
 
+    if (const auto* enchants = base_state.find("enchantments")) {
+        if (enchants->type != Type::Array || enchants->array.size() > PC_MAX_ENCHANTS)
+            invalid("Enchantments exceed item capacity");
+        for (const auto& spec : enchants->array) {
+            const auto [id, flags] = resolve_start_mod(session, spec);
+            auto& slot = item.enchantments[item.enchantment_count++];
+            slot.mod_id = id; slot.group_id = static_cast<uint16_t>(session.primary_group[id]); slot.flags = flags;
+            parse_start_slot_payload(session, spec, slot);
+        }
+    }
+    if (const auto* sockets = base_state.find("socket_colors")) {
+        if (sockets->type != Type::Array || sockets->array.size() > PC_MAX_SOCKETS)
+            invalid("Socket count exceeds item capacity");
+        for (const auto& colour : sockets->array) {
+            if (colour.type != Type::Number || colour.number < 0 || colour.number > 255 || std::floor(colour.number) != colour.number)
+                invalid("Invalid socket colour code");
+            item.socket_colors[item.socket_count++] = static_cast<uint8_t>(colour.number);
+        }
+    }
+    const auto links = uint_member(base_state, "link_mask", 0);
+    if (links > 255) invalid("Invalid socket link mask");
+    item.link_mask = static_cast<uint8_t>(links);
     item.quality =
         static_cast<std::uint8_t>(int_member(base_state, "quality", 0));
+    const auto strands = int_member(base_state, "memory_strands", 0);
+    const Value* strand_value = base_state.find("memory_strands");
+    if (strands < 0 || strands > 100 || (strand_value &&
+        (strand_value->type != Type::Number || strand_value->as_number() != strands)))
+        invalid("memory_strands must be an integer from 0 to 100");
+    item.memory_strands = static_cast<std::uint8_t>(strands);
+    const auto lifecycle = int_member(base_state, "lifecycle", 0);
+    if (lifecycle != PC_ITEM_LIVE || (base_state.find("lifecycle") && (base_state.find("lifecycle")->type != Type::Number || base_state.find("lifecycle")->number != 0)))
+        invalid("Strategy start item must be a live resource");
     item.item_flags =
         static_cast<std::uint8_t>(int_member(base_state, "item_flags", 0));
     if (bool_member(base_state, "corrupted", false)) {
@@ -1468,6 +1524,17 @@ bool action_type_from_name(const std::string& name, ActionType& out) {
         {"eldritch_chaos", ActionType::EldritchChaos},
         {"eldritch_annul", ActionType::EldritchAnnul},
         {"influence_exalt", ActionType::InfluenceExalt},
+        {"foulborn_augment", ActionType::FoulbornAugment},
+        {"foulborn_regal", ActionType::FoulbornRegal},
+        {"foulborn_exalt", ActionType::FoulbornExalt},
+        {"remembrance", ActionType::Remembrance},
+        {"unravelling", ActionType::Unravelling},
+        {"dominance", ActionType::Dominance},
+        {"tempering", ActionType::Tempering},
+        {"tailoring", ActionType::Tailoring},
+        {"vaal", ActionType::Vaal},
+        {"double_corruption", ActionType::DoubleCorruption},
+
         {"fracture", ActionType::Fracture},
         {"remove_crafted_modifiers", ActionType::RemoveCraftedModifiers},
     };
@@ -1485,6 +1552,23 @@ void compile_operation(
     const Value& operation,
     StrategyNode& node) {
     const std::string type = string_member(operation, "type");
+    if (type == "acquire_resource" || type == "awakener") {
+        const auto& params = require_object_member(operation, "params", Type::Object);
+        if (type == "awakener") {
+            const auto& roles = require_object_member(params, "roles", Type::Object);
+            if (string_member(roles, "receiver") != "current")
+                invalid("Awakener receiver role must refer to current");
+            node.resource_id = string_member(roles, "donor");
+            node.action_type = kStrategyMultiItemOperation;
+            node.price_keys = {"awakener"};
+        } else {
+            node.resource_id = string_member(params, "resource_id");
+            node.action_type = kStrategyAcquireResourceOperation;
+        }
+        if (node.resource_id.empty() || node.resource_id == "current")
+            invalid("Resource operations require an explicit non-current donor resource id");
+        return;
+    }
     if (type == "condition_check_only") {
         node.kind = StrategyNodeKind::Router;
         node.action_type = -1;
@@ -1514,6 +1598,10 @@ void compile_operation(
     if (!action_type_from_name(type, action_type)) {
         invalid("unknown operation type: " + type);
     }
+    if (action_type == ActionType::Remembrance || action_type == ActionType::Unravelling) {
+        invalid("Memory operation " + type + " is unavailable: its stochastic law is unresolved; solver integration is reserved for Pro");
+    }
+    if (const char* reason = unavailable_currency_reason(action_type)) invalid(reason);
     node.action.type = action_type;
     node.action_type = static_cast<int>(action_type);
     node.price_keys = {type};
@@ -2260,6 +2348,23 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
 
     RunResult result;
     result.item = strategy.start_item;
+    std::vector<CraftResource> inventory;
+    std::vector<std::uint64_t> acquisitions(strategy.resources.size(), 0);
+    for (const auto& definition : strategy.resources) {
+        auto item = definition.item;
+        item.lifecycle = PC_ITEM_CONSUMED; // A template is not a free available donor.
+        inventory.push_back({definition.id, "donor", definition.session, item});
+    }
+    const auto inventory_json = [&]() {
+        std::string out = "[";
+        for (std::size_t i = 0; i < inventory.size(); ++i) {
+            if (i) out += ',';
+            out += "{\"resource_id\":\"" + strategy.resources[i].id + "\",\"acquisitions\":" +
+                std::to_string(acquisitions[i]) + ",\"lifecycle\":" + std::to_string(inventory[i].item.lifecycle) +
+                ",\"memory_strands\":" + std::to_string(inventory[i].item.memory_strands) + "}";
+        }
+        return out + "]";
+    };
     (void)ensure_unveil_options(*simulator.context, &result.item);
     BestiaryCraftState bestiary_state;
     bestiary_state.item = result.item;
@@ -2288,6 +2393,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
             entry.terminal_kind = terminal_kind;
             entry.failure_reason = reason;
             entry.item = result.item;
+            entry.resources_json = inventory_json();
             append_trace(trace, options, std::move(entry), true);
         }
     };
@@ -2323,6 +2429,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
                 entry.terminal_kind = node.terminal_kind;
                 entry.failure_reason = result.failure_reason;
                 entry.item = result.item;
+            entry.resources_json = inventory_json();
                 append_trace(trace, options, std::move(entry), true);
             }
             break;
@@ -2359,7 +2466,31 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
             }
 
             ActionOutcome outcome;
-            if (node.action_type == kStrategyRestartOperation) {
+            if (node.action_type == kStrategyAcquireResourceOperation || node.action_type == kStrategyMultiItemOperation) {
+                const auto found = std::find_if(strategy.resources.begin(), strategy.resources.end(),
+                    [&](const auto& definition) { return definition.id == node.resource_id; });
+                const auto index = static_cast<std::size_t>(found - strategy.resources.begin());
+                auto& resource = inventory.at(index);
+                if (node.action_type == kStrategyAcquireResourceOperation) {
+                    if (resource.item.lifecycle != PC_ITEM_LIVE) {
+                        resource.item = found->item;
+                        resource.identity = found->id + "/" + std::to_string(++acquisitions[index]);
+                        outcome.applied = true;
+                    }
+                } else {
+                    try {
+                        std::vector<CraftResource> inputs{resource,
+                            {"current", "receiver", strategy.session, result.item}};
+                        auto transaction = prepare_multi_item_craft(*simulator.context, "awakener", inputs);
+                        commit_craft_transaction(inputs, transaction);
+                        resource = inputs[0]; result.item = inputs[1].item;
+                        outcome.applied = true;
+                    } catch (const std::exception& e) {
+                        finish_failure(PC_SIM_FAILURE_ACTION_NOT_APPLIED, node, e.what());
+                        break;
+                    }
+                }
+            } else if (node.action_type == kStrategyRestartOperation) {
                 const int removed =
                     result.item.prefix_count + result.item.suffix_count;
                 pc_item_clear(&result.item);
@@ -2440,6 +2571,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
             entry.known_cumulative_cost = result.known_cost;
             entry.cost_complete = result.cost_complete;
             entry.item = result.item;
+            entry.resources_json = inventory_json();
             append_trace(trace, options, std::move(entry));
         }
         if (edge == nullptr) {
@@ -2485,6 +2617,37 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
         *strategy->session,
         require_object_member(root, "base_state", Type::Object));
 
+    if (const auto* resources = root.find("resources")) {
+        if (resources->type != Type::Array || resources->array.size() > 7)
+            invalid("resources must be an array of at most seven donor definitions");
+        for (const auto& value : resources->array) {
+            StrategyResourceDefinition resource;
+            resource.id = string_member(value, "id");
+            if (resource.id.empty() || resource.id == "current" ||
+                resource.id.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-") != std::string::npos)
+                invalid("Resource ids must use letters, digits, underscores or hyphens and cannot be current");
+            for (const auto& existing : strategy->resources)
+                if (existing.id == resource.id) invalid("Duplicate resource id");
+            const auto& state = require_object_member(value, "base_state", Type::Object);
+            auto resource_session = std::make_shared<SessionImpl>();
+            resource_session->data = strategy->session->data;
+            const auto base = resource_session->data->base_by_path.find(string_member(state, "base_key"));
+            if (base == resource_session->data->base_by_path.end()) invalid("Unknown resource base");
+            if (resource_session->data->base_session_support.at(base->second) != PC_SESSION_SUPPORT_ORDINARY)
+                invalid("Resource base does not support ordinary crafting");
+            resource_session->base_index = base->second;
+            resource_session->item_level = uint_member(state, "item_level", 86);
+            if (!resource_session->item_level || resource_session->item_level > 100)
+                invalid("Resource item_level must be from 1 to 100");
+            build_session(*resource_session);
+            resource.session = resource_session;
+            resource.item = parse_start_item(*resource_session, state);
+            resource.acquisition_price_key = string_member(value, "acquisition_price_key");
+            if (resource.acquisition_price_key.empty()) resource.acquisition_price_key = "resource:" + resource.id;
+            strategy->resources.push_back(std::move(resource));
+        }
+    }
+
     const Value& nodes = require_object_member(root, "nodes", Type::Array);
     if (nodes.array.empty()) invalid("nodes must not be empty");
     if (nodes.array.size() > 10000) invalid("node count exceeds safety limit");
@@ -2526,6 +2689,12 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
             invalid("unknown node kind: " + kind);
         }
         node.accounting_roles = accounting_roles_member(node_value);
+        if (node.action_type == kStrategyAcquireResourceOperation || node.action_type == kStrategyMultiItemOperation) {
+            const auto resource = std::find_if(strategy->resources.begin(), strategy->resources.end(),
+                [&](const auto& definition) { return definition.id == node.resource_id; });
+            if (resource == strategy->resources.end()) invalid("Operation references an undeclared resource: " + node.resource_id);
+            if (node.action_type == kStrategyAcquireResourceOperation) node.price_keys = {resource->acquisition_price_key};
+        }
         strategy->node_by_id.emplace(
             node.id, static_cast<std::uint32_t>(strategy->nodes.size()));
         strategy->nodes.push_back(std::move(node));

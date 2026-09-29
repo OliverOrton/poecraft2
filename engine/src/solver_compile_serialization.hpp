@@ -282,6 +282,9 @@ std::string operation_json(const SessionImpl& session,
                "\"}";
     case ActionType::Transmute:
         return "{\"type\":\"transmute\"}";
+    case ActionType::FoulbornAugment: return "{\"type\":\"foulborn_augment\"}";
+    case ActionType::FoulbornRegal: return "{\"type\":\"foulborn_regal\"}";
+    case ActionType::FoulbornExalt: return "{\"type\":\"foulborn_exalt\"}";
     case ActionType::Augment:
         return "{\"type\":\"augment\"}";
     case ActionType::Alteration:

@@ -2642,7 +2642,7 @@ void run_artifact_gate(const char* artifact_dir) {
         "influence_exalt:crusader",
         "influence_exalt:hunter",
         "influence_exalt:redeemer",
-        "influence_exalt:warlord"};
+        "influence_exalt:warlord", "influence_exalt:shaper", "influence_exalt:elder"};
     std::set<std::string> actual_influence_exalts;
     for (const ActionDescriptor& action : registry.actions) {
         if (action.params.type == ActionType::InfluenceExalt) {

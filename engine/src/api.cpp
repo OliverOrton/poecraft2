@@ -115,14 +115,23 @@ pc_result parse_action_request(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     if (request.action_type < PC_ACTION_TRANSMUTE ||
-        request.action_type > PC_ACTION_REMOVE_CRAFTED_MODIFIERS) {
+        request.action_type > PC_ACTION_DOUBLE_CORRUPTION) {
         set_error(error, PC_RESULT_INVALID_ARGUMENT, "unknown action type");
         return PC_RESULT_INVALID_ARGUMENT;
     }
     out_action = {};
     out_action.type =
         static_cast<poecraft::ActionType>(request.action_type);
-    if (out_pool != nullptr) *out_pool = {};
+    if (out_pool && request.action_type >= PC_ACTION_REMEMBRANCE) {
+        set_error(error, PC_RESULT_UNSUPPORTED_FEATURE,
+                  "This operation has no single explicit-mod pool; use its native availability contract");
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
+    if (out_pool != nullptr) {
+        *out_pool = {};
+        if (poecraft::is_foulborn(out_action.type))
+            out_pool->weight_kind = poecraft::PoolWeightKind::Foulborn;
+    }
 
     const poecraft::DataImpl& d = *context.session->data;
     if (request.action_type == PC_ACTION_ESSENCE) {
@@ -1071,6 +1080,7 @@ pc_result pc_debug_pool_query(
     uint32_t* out_count,
     pc_pool_debug_summary* out_summary,
     pc_error_info* out_error) {
+    try {
     if (context == nullptr || request == nullptr || out_count == nullptr) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
@@ -1179,6 +1189,10 @@ pc_result pc_debug_pool_query(
     }
     clear_error(out_error);
     return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, ex.what());
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
 }
 
 pc_result pc_action_context_debug_last_trace(
@@ -1225,6 +1239,7 @@ pc_result pc_apply_action(
     const pc_action_request* request,
     pc_action_result* out_result,
     pc_error_info* out_error) {
+    try {
     if (context == nullptr || item == nullptr || request == nullptr ||
         out_result == nullptr) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
@@ -1250,6 +1265,10 @@ pc_result pc_apply_action(
     out_result->removed = outcome.removed;
     clear_error(out_error);
     return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, ex.what());
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
 }
 
 pc_result pc_apply_action_batch(
@@ -1260,6 +1279,7 @@ pc_result pc_apply_action_batch(
     pc_action_result* results,
     pc_batch_summary* out_summary,
     pc_error_info* out_error) {
+    try {
     if (context == nullptr || request == nullptr || out_summary == nullptr ||
         (item_count > 0 && items == nullptr)) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
@@ -1298,6 +1318,10 @@ pc_result pc_apply_action_batch(
     *out_summary = summary;
     clear_error(out_error);
     return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, ex.what());
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
 }
 
 pc_result pc_action_context_perf_stats_query(
@@ -1419,7 +1443,8 @@ pc_result pc_item_debug_format(
     out << "item: " << d.string_at(d.base_name_sid[i]) << " (ilvl "
         << s.item_level << ")\n";
     out << "  rarity: " << rarity << ", quality: "
-        << static_cast<unsigned>(item->quality) << "\n";
+        << static_cast<unsigned>(item->quality) << ", memory strands: "
+        << static_cast<unsigned>(item->memory_strands) << "\n";
     out << "  prefixes: " << static_cast<unsigned>(item->prefix_count) << "/"
         << cap << "\n";
     out << "  suffixes: " << static_cast<unsigned>(item->suffix_count) << "/"
@@ -1726,6 +1751,7 @@ pc_result pc_simulator_trace_query(
         dst.terminal_kind = src.terminal_kind;
         dst.failure_reason = src.failure_reason;
         dst.item = src.item;
+        dst.resources_json = src.resources_json.c_str();
     }
     clear_error(out_error);
     return PC_RESULT_OK;

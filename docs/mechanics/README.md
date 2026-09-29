@@ -177,3 +177,12 @@ Open mechanic questions are kept in the family files that own them. The
 current code-inspection audit found questions about double-side-lock Scour,
 raw normal-item Annulment, and whether the implemented partial fossil special
 effects are the intended permanent contract.
+
+## Currency expansion delta
+
+The historical 26-value audit above is superseded for appended IDs 26–35 by the
+[currency execution record](../active/2026-09-28-currency-expansion/README.md).
+Foulborn is documented in Ordinary currency; Shaper/Elder, Awakener and Dominance
+in Eldritch and influence; evidence-held operations and scoped Vaal sampling in
+[Memory, enchantments and corruption](memory-and-corruption.md). A recognized
+primitive ID is not a claim of exact or automatic support.

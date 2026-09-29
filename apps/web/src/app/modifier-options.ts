@@ -23,7 +23,7 @@ export interface ModifierFamilyOption {
     value: string;
     label: string;
     side: "prefix" | "suffix";
-    sourceKind: "base" | "influence" | "crafted" | "essence" | "fossil";
+    sourceKind: "base" | "influence" | "crafted" | "essence" | "fossil" | "veiled" | "unveiled";
     sourceLabel: string;
     tags: string[];
     tiers: ModifierTierOption[];
@@ -33,9 +33,13 @@ const REACH_INFLUENCE = 1;
 const REACH_CRAFTED = 2;
 const REACH_ESSENCE = 3;
 const REACH_FOSSIL = 5;
+const REACH_VEILED = 6;
+const REACH_UNVEILED = 7;
 
 function modSourceLabel(mod: ModInfo): string {
     switch (mod.reach_kind) {
+        case 10: return "Retained influence (above item level)";
+        case 11: return "Elevated (retained)";
         case REACH_INFLUENCE: {
             const parts = mod.reach_via.split(":");
             const key = (parts[parts.length - 1] || "influenced").toLowerCase();
@@ -47,6 +51,10 @@ function modSourceLabel(mod: ModInfo): string {
             return "Essence";
         case REACH_FOSSIL:
             return "Fossil";
+        case REACH_VEILED:
+            return "Veiled";
+        case REACH_UNVEILED:
+            return mod.reach_via.startsWith("veiled:member:") ? "Member-specific unveil" : "Unveiled";
         default:
             return "";
     }
@@ -56,6 +64,8 @@ function modSourceKind(
     mod: ModInfo,
 ): ModifierFamilyOption["sourceKind"] {
     switch (mod.reach_kind) {
+        case 10:
+        case 11:
         case REACH_INFLUENCE:
             return "influence";
         case REACH_CRAFTED:
@@ -64,6 +74,10 @@ function modSourceKind(
             return "essence";
         case REACH_FOSSIL:
             return "fossil";
+        case REACH_VEILED:
+            return "veiled";
+        case REACH_UNVEILED:
+            return "unveiled";
         default:
             return "base";
     }
@@ -156,7 +170,7 @@ export function buildModifierOptions(
 }
 
 function sourceOrder(option: ModifierFamilyOption): number {
-    return ["base", "influence", "crafted", "essence", "fossil"].indexOf(
+    return ["base", "influence", "crafted", "essence", "fossil", "veiled", "unveiled"].indexOf(
         option.sourceKind,
     );
 }

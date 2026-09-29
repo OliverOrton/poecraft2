@@ -49,6 +49,7 @@ const poecraft::BestiaryRecipeDescriptor* recipe_for(
 const char* refusal_key(poecraft::BestiaryRefusalReason reason) {
     switch (reason) {
     case poecraft::BestiaryRefusalReason::None: return "none";
+    case poecraft::BestiaryRefusalReason::ItemAbsent: return "item_absent";
     case poecraft::BestiaryRefusalReason::UnknownAction:
         return "unknown_action";
     case poecraft::BestiaryRefusalReason::RequiresMagicItem:
@@ -70,6 +71,7 @@ const char* refusal_key(poecraft::BestiaryRefusalReason reason) {
 const char* refusal_reason(poecraft::BestiaryRefusalReason reason) {
     switch (reason) {
     case poecraft::BestiaryRefusalReason::None: return "";
+    case poecraft::BestiaryRefusalReason::ItemAbsent: return "A consumed or destroyed item cannot be restored by Imprint.";
     case poecraft::BestiaryRefusalReason::UnknownAction:
         return "The Bestiary action is unknown.";
     case poecraft::BestiaryRefusalReason::RequiresMagicItem:

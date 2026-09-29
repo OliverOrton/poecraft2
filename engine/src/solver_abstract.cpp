@@ -184,7 +184,7 @@ void action_reachable_mask(const SessionImpl& session,
         mask_or_into(out, scratch);
     };
     if (action.synthetic) return;
-    switch (action.params.type) {
+    switch (ordinary_add_equivalent(action.params.type)) {
     case ActionType::Transmute:
     case ActionType::Augment:
     case ActionType::Alteration:
@@ -910,6 +910,12 @@ AbstractState project_item(
     const SessionImpl& session,
     const AbstractLayout& layout,
     const pc_item_state& item) {
+    if (item.lifecycle != PC_ITEM_LIVE)
+        throw std::invalid_argument("Consumed/destroyed resources require a resource-aware solver; an absent item cannot be projected as an empty item");
+    if (item.enchantment_count > 0)
+        throw std::invalid_argument("Enchantment effects are not represented by the solver; exact enchantment goals and continuations are reserved for Pro");
+    if (item.memory_strands > 0)
+        throw std::invalid_argument("Memory-strand solver integration is reserved for Pro; a nonzero strand count cannot be projected as zero");
     AbstractState state;
     state.prefix_count = item.prefix_count;
     state.suffix_count = item.suffix_count;

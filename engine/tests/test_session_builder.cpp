@@ -535,6 +535,12 @@ void run_session_builder_tests(const char* artifact_dir,
          current_economy.at("metadata").at("missing_keys").array) {
         explicit_missing_price_keys.insert(key.as_string());
     }
+    // The pinned historical quote snapshot predates new catalogue entries.
+    // Newly catalogued, unquoted currencies are missing prices, never zero.
+    const auto price_catalog = load_fixture(
+        (repo_root / "fixtures/economy/price-key-catalog-v1.json").string());
+    for (const auto& [key, unused] : price_catalog.at("direct").object)
+        if (!current_price_keys.count(key)) explicit_missing_price_keys.insert(key);
 
     uint32_t base_count = 0;
     pc_data_summary summary;

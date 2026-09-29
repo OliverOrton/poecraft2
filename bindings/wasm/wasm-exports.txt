@@ -25,6 +25,7 @@ _pcw_item_add_mod
 _pcw_item_remove_mod
 _pcw_item_set_mod_fractured
 _pcw_item_export
+_pcw_multi_item_apply
 _pcw_item_import
 _pcw_apply
 _pcw_run_batch

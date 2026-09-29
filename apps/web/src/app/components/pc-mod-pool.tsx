@@ -25,7 +25,7 @@ import {
 } from "../influence-presentation";
 
 type Tab = "prefix" | "suffix" | "implicit";
-type Section = "base" | "influenced" | "crafted" | "essence" | "fossil";
+type Section = "base" | "influenced" | "crafted" | "essence" | "fossil" | "veiled" | "unveiled";
 export type ModPoolMode = "inspect" | "direct" | "goal";
 
 interface PoolModel {
@@ -62,6 +62,8 @@ const REACH_KIND_INFLUENCE = 1;
 const REACH_KIND_ESSENCE = 3;
 const REACH_KIND_BASE_IMPLICIT = 4;
 const REACH_KIND_FOSSIL = 5;
+const REACH_KIND_VEILED = 6;
+const REACH_KIND_UNVEILED = 7;
 
 export class PcModPool extends HTMLElement {
     private model: PoolModel | null = null;
@@ -235,6 +237,8 @@ export class PcModPool extends HTMLElement {
             {this.renderSection("crafted", "Crafted Mods", inSection("crafted"))}
             {this.renderSection("essence", "Essence Mods", inSection("essence"))}
             {this.renderSection("fossil", "Fossil Mods", inSection("fossil"))}
+            {this.renderSection("veiled", "Veiled Mods", inSection("veiled"))}
+            {this.renderSection("unveiled", "Unveiled Mods", inSection("unveiled"))}
         </>;
     }
 
@@ -453,15 +457,20 @@ function influenceOrder(label: string): number {
 
 function categoryFor(reachKind: number): Section | null {
     if (reachKind === REACH_KIND_BASE) return "base";
+    if (reachKind === 10 || reachKind === 11) return "influenced";
     if (reachKind === REACH_KIND_INFLUENCE) return "influenced";
     if (reachKind === REACH_KIND_CRAFTED) return "crafted";
     if (reachKind === REACH_KIND_ESSENCE) return "essence";
     if (reachKind === REACH_KIND_FOSSIL) return "fossil";
+    if (reachKind === REACH_KIND_VEILED) return "veiled";
+    if (reachKind === REACH_KIND_UNVEILED) return "unveiled";
     return null;
 }
 
 function sourceLabel(info: ModInfo | undefined): string {
     if (!info) return "";
+    if (info.reach_kind === 10) return "Retained influence (above item level)";
+    if (info.reach_kind === 11) return "Elevated (retained)";
     if (info.reach_kind === REACH_KIND_INFLUENCE) {
         const parts = info.reach_via.split(":");
         return influenceLabel(parts[parts.length - 1] || "Influenced");
@@ -469,6 +478,8 @@ function sourceLabel(info: ModInfo | undefined): string {
     if (info.reach_kind === REACH_KIND_CRAFTED) return "Bench";
     if (info.reach_kind === REACH_KIND_ESSENCE) return "Essence";
     if (info.reach_kind === REACH_KIND_FOSSIL) return "Fossil";
+    if (info.reach_kind === REACH_KIND_VEILED) return "Veiled";
+    if (info.reach_kind === REACH_KIND_UNVEILED) return "Unveiled";
     return "";
 }
 

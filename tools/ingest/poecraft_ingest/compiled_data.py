@@ -187,7 +187,7 @@ def _build_full_payloads(
     item_classes = _query(
         connection,
         """
-        SELECT item_class_id, key, name, category, category_id, source_listed
+        SELECT item_class_id, key, name, category, category_id, source_listed, source_json
         FROM item_class ORDER BY item_class_id
         """,
     )
@@ -425,6 +425,8 @@ def _build_full_payloads(
         add_strings(row["name"])
     for row in item_classes:
         add_strings(row["key"], row["name"], row["category"], row["category_id"])
+        for tag in json.loads(row["source_json"]).get("influence_tags", []):
+            add_strings(tag)
     for row in bases:
         add_strings(
             row["metadata_path"],
@@ -676,6 +678,14 @@ def _build_full_payloads(
         },
     }
 
+    class_influence_offsets = [0]
+    class_influence_tags = []
+    for row in item_classes:
+        class_influence_tags.extend(
+            sid(tag) for tag in json.loads(row["source_json"]).get("influence_tags", [])
+        )
+        class_influence_offsets.append(len(class_influence_tags))
+
     game_data = {
         "artifact_schema_version": ARTIFACT_SCHEMA_VERSION,
         "layout": "complete_parallel_arrays_v3",
@@ -691,6 +701,8 @@ def _build_full_payloads(
                 int(row["item_class_id"]) for row in item_classes
             ],
             "key_string_ids": [sid(row["key"]) for row in item_classes],
+            "influence_tag_offsets": class_influence_offsets,
+            "influence_tag_string_ids": class_influence_tags,
             "name_string_ids": [sid(row["name"]) for row in item_classes],
             "category_string_ids": [
                 sid(row["category"]) for row in item_classes
@@ -1296,6 +1308,10 @@ def _validate_parallel_arrays(
     string_count = strings_payload.get("count")
     if not isinstance(strings, list) or len(strings) != string_count:
         errors.append("strings.json count does not match strings array")
+
+    if "influence_tag_string_ids" in game_data.get("item_classes", {}):
+        errors.extend(_validate_offsets(game_data, "item_classes",
+            game_data["item_classes"]["count"], "influence_tag_offsets", ("influence_tag_string_ids",)))
 
     counted_sections = {
         "tags": ("global_tag_ids", "name_string_ids", "source_listed"),

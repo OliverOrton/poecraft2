@@ -402,6 +402,11 @@ solver::GoalSpec parse_goal(
             }
             const auto it = registry.index_by_id.find(entry.string);
             if (it == registry.index_by_id.end()) {
+                if (entry.string == "remembrance" || entry.string == "unravelling")
+                    throw std::runtime_error("Memory operations are unavailable: probability laws are unresolved and solver integration is reserved for Pro");
+                if (entry.string == "awakener" || entry.string == "vaal" || entry.string == "double_corruption" ||
+                    entry.string == "dominance" || entry.string == "tempering" || entry.string == "tailoring")
+                    throw std::runtime_error("Requested currency has no exact solver contract; see native mechanic availability and the Pro handoff");
                 throw std::runtime_error(
                     "goal: unknown action: " + entry.string);
             }
@@ -678,6 +683,18 @@ pc_result create_solver(
         solver::GoalSpec goal = parse_goal(
             *holder->session, goal_json, goal_json_size, candidates,
             registry);
+        for (const auto action : candidates) {
+            if (!solver::solver_action_disabled(goal, registry.actions.at(action)) &&
+                poecraft::is_foulborn(registry.actions.at(action).params.type))
+                holder->goal_proof_profile = solver::GoalProofProfile::TargetNeutralZero;
+        }
+        for (const auto& id : registry_options.option_dependency_action_ids) {
+            const auto found = registry.index_by_id.find(id);
+            if (found != registry.index_by_id.end() &&
+                !solver::solver_action_disabled(goal, registry.actions.at(found->second)) &&
+                poecraft::is_foulborn(registry.actions.at(found->second).params.type))
+                holder->goal_proof_profile = solver::GoalProofProfile::TargetNeutralZero;
+        }
         // Public coverage requests use the already-qualified zero-lower
         // capability. Goal shape never authorizes clean-target lower proofs.
         // Private diagnostic terminal overrides below retain their own gate.
@@ -1934,6 +1951,17 @@ pc_result pc_calc_action_outcomes(
         set_error(out_error, PC_RESULT_NOT_FOUND, "action index out of range");
         return PC_RESULT_NOT_FOUND;
     }
+    if (solver::solver_action_disabled(solver->calc->goal(),
+            solver->calc->registry().actions[action_index])) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
+                  "Calculation action belongs to a disabled family");
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
+    if (item->memory_strands || item->lifecycle != PC_ITEM_LIVE || item->enchantment_count) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
+                  "Exact calculation of memory, absent resources or enchantment effects requires Pro integration");
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
     try {
         if (solver->calc->product_solver_parent() &&
             solver->exact_calc == nullptr) {
@@ -2016,6 +2044,11 @@ pc_result pc_solver_solve(
                   "solver, start item, and economy are required");
         return PC_RESULT_INVALID_ARGUMENT;
     }
+    if (start_item->memory_strands || start_item->lifecycle != PC_ITEM_LIVE || start_item->enchantment_count) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
+            "Memory strands, absent resources and enchantment effects require Pro solver integration; state cannot be dropped");
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
     try {
         const pc_solver_mode mode = requested_solver_mode(options);
         if (solver->calc->goal().terminal.extras ==
@@ -2089,6 +2122,11 @@ pc_result pc_solver_solve_begin(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
                   "solver, start item, and economy are required");
         return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (start_item->memory_strands || start_item->lifecycle != PC_ITEM_LIVE || start_item->enchantment_count) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
+            "Memory strands, absent resources and enchantment effects require Pro solver integration; state cannot be dropped");
+        return PC_RESULT_UNSUPPORTED_FEATURE;
     }
     try {
         const pc_solver_mode mode = requested_solver_mode(options);
@@ -2411,7 +2449,12 @@ pc_result pc_solver_project_item(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    *out_state_id = solver->calc->intern_item(*item);
+    try {
+        *out_state_id = solver->calc->intern_item(*item);
+    } catch (const std::exception& error) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, error.what());
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
     clear_error(out_error);
     return PC_RESULT_OK;
 }

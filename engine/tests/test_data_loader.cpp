@@ -70,8 +70,8 @@ void run_data_loader_tests(const char* artifact_dir) {
     PC_CHECK(influence_exalt_code("redeemer") ==
              influence_exalt_code("eyrie"));
     PC_CHECK(influence_exalt_code("crusader") > 0);
-    PC_CHECK(influence_exalt_code("elder") == -1);
-    PC_CHECK(influence_exalt_code("shaper") == -1);
+    PC_CHECK(influence_exalt_code("elder") > 0);
+    PC_CHECK(influence_exalt_code("shaper") > 0);
     PC_CHECK(native.influence_exalt_name_by_code.at(
                  static_cast<std::size_t>(
                      influence_exalt_code("adjudicator"))) ==

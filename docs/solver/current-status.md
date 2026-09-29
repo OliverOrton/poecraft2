@@ -17,6 +17,28 @@ relevant code/runtime change, review the delta and refresh affected rows; do not
 transfer old qualification to a new build by editing the heading. Follow each
 record for its actual executable, scope and measured revision.
 
+## Currency expansion delta (2026-09-28)
+
+The [currency receipt](../active/2026-09-28-currency-expansion/README.md#execution-receipt-and-remaining-holds)
+qualifies the later ABI-3 runtime separately from the historical snapshot above.
+Foulborn has exact single-action kernels and authored-policy evaluation in the
+existing structural carrier. Expanded Current scopes, including compound
+dependencies, use `TargetNeutralZero`; no old positive lower/closure certificate
+extends to these actions. A magic Augmentation goal produces compiled policies
+checked under the original root, goal, prices and scope in both Current and Finder.
+The [rare-root witness](../active/2026-09-28-currency-expansion/pro-witness.json)
+returns `no_executable_policy` in both lanes. Registry admission is not general
+search qualification. Shaper/Elder extend existing Influence Exalt contracts,
+without adding automatic standalone Influence Exalt grammar.
+
+Native Current/Finder and exact projection reject strand-bearing, absent and
+retained-enchantment carriers. Authored multi-item resource strategies run in
+Simulator with acquisition costs and consumed inventory, while exact evaluation
+refuses the inventory/control carrier. Memory, inventory, enchantment/socket and
+corruption optimization require Pro's separate representation/algorithm work.
+No A4/A5 performance, proof or browser-timing receipt below is promoted by this
+delta. Disabled-family and missing-price checks remain native authorities.
+
 ## Goal, authority and lane map
 
 Public v1 defaults to a clean final explicit-affix target. The later

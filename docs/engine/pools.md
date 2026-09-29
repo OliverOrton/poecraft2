@@ -174,3 +174,13 @@ and cache behavior. The WASM facade exposes the pool-debug result as JSON.
 Implementation entry points: `engine/src/session_builder.cpp`,
 `engine/src/engine_internal.hpp`, `engine/src/actions_basic.cpp`, and the pool
 debug functions in the public C ABI.
+
+## Additional catalogue reach (2026-09-28)
+
+Reach kinds 10, 11 and 12 mean retained above-level influence, retained elevated
+modifier and retained Heist enchantment. These are transport/retention entries,
+not members of the ordinary random pool. Elevated retention reads canonical names
+and class influence selector metadata, without inferring an upgrade relationship.
+Heist enchantment group membership preserves imported current and historical rows;
+zero absent weights never become a uniform action pool. Ordinary and generic-unveil
+pool boundaries are independently checked by the currency expansion witnesses.

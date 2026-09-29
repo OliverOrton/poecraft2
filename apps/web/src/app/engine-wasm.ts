@@ -262,13 +262,17 @@ export class EngineBindings {
         return rest;
     }
 
-    exportItem(item: number): unknown {
-        return this.callJson("pcw_item_export", ["number"], [item]).state;
+    exportItem(item: number, session = 0): unknown {
+        return this.callJson("pcw_item_export", ["number", "number"], [item, session]).state;
     }
 
-    importItem(state: unknown): number {
-        return this.callJson("pcw_item_import", ["string"], [
-            JSON.stringify(state),
+    multiItemApply(context: number, request: unknown): import("./engine-protocol").MultiItemResult {
+        return this.callJson("pcw_multi_item_apply", ["number", "string"], [context, JSON.stringify(request)]) as unknown as import("./engine-protocol").MultiItemResult;
+    }
+
+    importItem(state: unknown, session = 0): number {
+        return this.callJson("pcw_item_import", ["string", "number"], [
+            JSON.stringify(state), session,
         ]).item as number;
     }
 

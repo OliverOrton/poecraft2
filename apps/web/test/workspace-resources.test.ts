@@ -1,0 +1,48 @@
+import assert from "node:assert/strict";
+import { build } from "esbuild";
+import { chromium } from "playwright";
+
+const bundle = await build({entryPoints: ["src/app/workspace/persistence.ts"], bundle: true, write: false, format: "iife", globalName: "storage"});
+const browser = await chromium.launch({headless: true});
+try {
+    const page = await browser.newPage();
+    await page.route("https://workspace.test/", route => route.fulfill({contentType: "text/html", body: "<title>Storage contract test</title>"}));
+    await page.goto("https://workspace.test/");
+    await page.addScriptTag({content: bundle.outputFiles[0].text});
+    const result = await page.evaluate(async () => {
+        const p = (window as unknown as {storage: any}).storage;
+        const a = {id: "donor", name: "Donor", base: "a", itemLevel: 86, createdAt: 1, state: {lifecycle: 0, memory_strands: 20}};
+        const b = {id: "receiver", name: "Receiver", base: "b", itemLevel: 1, createdAt: 1, state: {lifecycle: 0}};
+        const consumed = {...a, state: {...a.state, lifecycle: 1}};
+        const changed = {...b, state: {lifecycle: 0, mods: ["retained"]}};
+        const beforeDraft = {docId: "work", state: b.state, spend: 0};
+        const afterDraft = {docId: "work", state: changed.state, spend: 7};
+        await p.putStash(a); await p.putStash(b); await p.putDraft(beforeDraft);
+        await p.commitWorkspaceResources([a,b], [consumed,changed], afterDraft);
+        const after = [await p.getStash("donor"), await p.getStash("receiver"), await p.getDraft("work")];
+        let staleSave = false;
+        try { await p.putStash(a); } catch { staleSave = true; }
+        await p.commitWorkspaceResources([consumed,changed], [a,b], beforeDraft);
+        const undo = [await p.getStash("donor"), await p.getStash("receiver"), await p.getDraft("work")];
+        await p.commitWorkspaceResources([a,b], [consumed,changed], afterDraft);
+        const redo = [await p.getStash("donor"), await p.getStash("receiver"), await p.getDraft("work")];
+        await p.putStash({...changed, name: "External edit"});
+        let staleUndo = false;
+        try { await p.commitWorkspaceResources([consumed,changed], [a,b], beforeDraft); } catch { staleUndo = true; }
+        const failed = [await p.getStash("donor"), await p.getStash("receiver"), await p.getDraft("work")];
+        let alias = false;
+        try { await p.commitWorkspaceResources([consumed,consumed], [a,a], beforeDraft); } catch { alias = true; }
+        return {a,b,after,undo,redo,failed,staleSave,staleUndo,alias};
+    });
+    assert.equal(result.after[0].state.lifecycle, 1);
+    assert.equal(result.after[0].state.memory_strands, 20);
+    assert.equal(result.after[2].spend, 7);
+    assert.deepEqual(result.undo.slice(0,2), [result.a, result.b]);
+    assert.equal(result.undo[2].spend, 0);
+    assert.deepEqual(result.after, result.redo);
+    assert.equal(result.failed[0].state.lifecycle, 1);
+    assert.equal(result.failed[1].name, "External edit");
+    assert.equal(result.failed[2].spend, 7);
+    assert.ok(result.staleSave && result.staleUndo && result.alias);
+    console.log("Workspace resources: atomic apply, Undo/Redo, memory, spend and stale/alias rejection passed");
+} finally { await browser.close(); }

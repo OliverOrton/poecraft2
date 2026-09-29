@@ -1,7 +1,9 @@
 #include "engine_internal.hpp"
+#include "multi_item.hpp"
 
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
+#include "poecraft/session.h"
 
 #include <algorithm>
 #include <chrono>
@@ -29,6 +31,7 @@ constexpr std::uint32_t kNoTag = std::numeric_limits<std::uint32_t>::max();
 
 bool item_craftable(const pc_item_state* item) {
     return item != nullptr &&
+           item->lifecycle == PC_ITEM_LIVE &&
            !(item->item_flags & (PC_ITEM_CORRUPTED | PC_ITEM_MIRRORED));
 }
 
@@ -621,9 +624,12 @@ int rare_count(ActionContextImpl& context) {
     return 4 + static_cast<int>(context.rng.next_below(3)); // 4, 5, or 6
 }
 
-ActionOutcome do_add_one(ActionContextImpl& context, pc_item_state* item) {
+ActionOutcome do_add_one(ActionContextImpl& context, pc_item_state* item,
+                         bool foulborn = false) {
     ActionOutcome out;
-    if (add_random_mod(context, PoolBuildRequest{}, item)) {
+    PoolBuildRequest request;
+    if (foulborn) request.weight_kind = PoolWeightKind::Foulborn;
+    if (add_random_mod(context, request, item)) {
         out.applied = true;
         out.added = 1;
     }
@@ -1191,6 +1197,52 @@ void apply_fossil_specials(
 
 } // namespace
 
+// The socketless subset has a complete structural branch law. Socket-capable
+// classes and jewels remain outside this sampler until their full laws exist.
+ActionOutcome vaal_socketless(ActionContextImpl& context, pc_item_state* item) {
+    const auto& session = *context.session;
+    const auto& d = *session.data;
+    const std::string& cls = d.string_at(d.item_class_key_sid.at(d.item_class_index_by_id.at(d.base_item_class_id[session.base_index])));
+    if ((cls != "Amulet" && cls != "Belt") || session.item_level < 86 || item->socket_count != 0 ||
+        item->searing_exarch_tier || item->eater_of_worlds_tier)
+        throw std::invalid_argument("Vaal sampling currently supports item-level 86+ socketless amulets and belts; lower-level six-affix, socket/link and jewel/unique outcome laws are unavailable");
+    for (const auto pair : {std::pair{item->prefixes, item->prefix_count},
+                            std::pair{item->suffixes, item->suffix_count}})
+        for (std::uint8_t i = 0; i < pair.second; ++i)
+            if (pair.first[i].roll_count)
+                throw std::invalid_argument("Vaal numerical rerolls are unavailable; only structural modifiers are supported");
+    const auto ids = ids_from_mask(session, session.corrupted_implicit_mask);
+    bool has_weight = false;
+    for (const auto id : ids) has_weight |= active_spawn_weight(session, id) > 0;
+    if (!has_weight) throw std::invalid_argument("Vaal corruption implicit pool is unavailable for this base");
+    const auto saved_rng = context.rng;
+    try {
+        pc_item_state next = *item;
+        ActionOutcome result{true, 0, 0};
+        switch (context.rng.next_below(4)) {
+        case 0: {
+            const auto chosen = pick_weighted_id(context, nullptr, ids);
+            if (next.implicit_count)
+                remove_implicit_at(&next, context.rng.next_below(next.implicit_count));
+            if (!add_implicit(session, &next, chosen))
+                throw std::invalid_argument("Vaal implicit result exceeds item capacity");
+            record_direct(context, &next, chosen, -1);
+            break;
+        }
+        case 1: break; // No sockets, so the white-to-non-white branch is a no-op.
+        case 2:
+            result = reforge(context, &next, PC_RARITY_RARE, 6, PoolBuildRequest{});
+            if (next.prefix_count + next.suffix_count != 6)
+                throw std::invalid_argument("Vaal six-affix reforge is unavailable for this constrained pool");
+            break;
+        case 3: break;
+        }
+        next.item_flags |= PC_ITEM_CORRUPTED;
+        *item = next;
+        return result;
+    } catch (...) { context.rng = saved_rng; throw; }
+}
+
 bool ensure_unveil_options(
     ActionContextImpl& context,
     pc_item_state* item) {
@@ -1223,11 +1275,33 @@ ActionOutcome apply_action(
     pc_item_state* item,
     const ActionParameters& action) {
     const SessionImpl& session = *context.session;
+    if (item->enchantment_count)
+        throw std::invalid_argument("Crafting on retained enchantments is unavailable until their effect and socket contracts are implemented");
+    if (item->memory_strands > 100 || item->lifecycle > PC_ITEM_DESTROYED)
+        throw std::invalid_argument("Invalid memory strand count or item lifecycle");
+    if (const char* reason = unavailable_currency_reason(action.type))
+        throw std::invalid_argument(reason);
+    if (item->memory_strands > 0 || action.type == ActionType::Remembrance ||
+        action.type == ActionType::Unravelling) {
+        pc_memory_interaction interaction{};
+        pc_action_memory_interaction(static_cast<int>(action.type), &interaction);
+        throw std::invalid_argument(interaction.unavailable_reason);
+    }
     if (context.capture_action_trace) {
         context.last_action_trace.clear();
     }
     if (!item_craftable(item)) return {};
     switch (action.type) {
+    case ActionType::Vaal:
+        return vaal_socketless(context, item);
+    case ActionType::Dominance:
+    case ActionType::Tempering:
+    case ActionType::Tailoring:
+    case ActionType::DoubleCorruption:
+        return {}; // Explicit evidence guard above rejects before sampling.
+    case ActionType::Remembrance:
+    case ActionType::Unravelling:
+        return {}; // Unknown-law guard above always rejects these actions.
     case ActionType::Transmute:
         if (item->rarity != PC_RARITY_NORMAL) {
             return {};
@@ -1235,22 +1309,26 @@ ActionOutcome apply_action(
         return reforge(context, item, PC_RARITY_MAGIC, magic_count(context),
                        PoolBuildRequest{});
     case ActionType::Augment:
+    case ActionType::FoulbornAugment:
         if (item->rarity != PC_RARITY_MAGIC) {
             return {};
         }
-        return do_add_one(context, item);
+        return do_add_one(context, item, is_foulborn(action.type));
     case ActionType::Alteration:
         if (item->rarity != PC_RARITY_MAGIC) {
             return {};
         }
         return reforge(context, item, PC_RARITY_MAGIC, magic_count(context),
                        PoolBuildRequest{});
-    case ActionType::Regal: {
+    case ActionType::Regal:
+    case ActionType::FoulbornRegal: {
         if (item->rarity != PC_RARITY_MAGIC) {
             return {};
         }
-        item->rarity = PC_RARITY_RARE;
-        ActionOutcome out = do_add_one(context, item);
+        pc_item_state upgraded = *item;
+        upgraded.rarity = PC_RARITY_RARE;
+        ActionOutcome out = do_add_one(context, &upgraded, is_foulborn(action.type));
+        *item = upgraded;
         out.applied = true; // the magic -> rare upgrade always applies
         return out;
     }
@@ -1267,10 +1345,11 @@ ActionOutcome apply_action(
         return reforge(context, item, PC_RARITY_RARE, rare_count(context),
                        PoolBuildRequest{});
     case ActionType::Exalt:
+    case ActionType::FoulbornExalt:
         if (item->rarity != PC_RARITY_RARE) {
             return {};
         }
-        return do_add_one(context, item);
+        return do_add_one(context, item, is_foulborn(action.type));
     case ActionType::Annul:
         return do_annul(session, context.rng, item);
     case ActionType::Scour:
@@ -1408,6 +1487,7 @@ ActionOutcome apply_action(
         return do_eldritch_annul(context, item);
     case ActionType::InfluenceExalt: {
         if (item->rarity != PC_RARITY_RARE ||
+            (item->item_flags & PC_ITEM_SYNTHESISED) ||
             action.influence_code <= 0 || action.influence_code > 8 ||
             item->generic_influence_bits || item->searing_exarch_tier ||
             item->eater_of_worlds_tier ||
@@ -1429,6 +1509,68 @@ ActionOutcome apply_action(
         return do_fracture(context, item);
     }
     return {};
+}
+
+pc_item_state awaken_item(ActionContextImpl& context,
+        const SessionImpl& donor_session, const pc_item_state& donor,
+        const pc_item_state& receiver) {
+    const auto& session = *context.session;
+    const auto eligible = [](const pc_item_state& item) {
+        const auto influence = item.generic_influence_bits;
+        return item_craftable(&item) && influence && !(influence & (influence - 1)) &&
+            !item.searing_exarch_tier && !item.eater_of_worlds_tier && !item.memory_strands &&
+            !(item.item_flags & PC_ITEM_SYNTHESISED) &&
+            pc_item_find_fractured(&item, nullptr, nullptr) != PC_RESULT_OK;
+    };
+    if (!eligible(donor) || !eligible(receiver) || donor.generic_influence_bits == receiver.generic_influence_bits)
+        throw std::invalid_argument("Awakener requires live, craftable items with distinct single influences, no fractures, synthesised state, Eldritch influence or memory strands");
+    auto candidates = [&](const SessionImpl& source, const pc_item_state& item) {
+        std::vector<std::uint32_t> result;
+        const auto visit = [&](const pc_mod_slot* slots, unsigned count) {
+            for (unsigned i = 0; i < count; ++i) {
+                const auto& slot = slots[i];
+                if (slot.mod_id >= source.mod_count) throw std::invalid_argument("Input modifier is outside its session");
+                if (slot.roll_count) throw std::invalid_argument("Awakener currently supports structural modifiers only; numerical reroll law is not implemented");
+                const auto influence = source.influence_code[slot.mod_id];
+                if (influence <= 0 || influence > 8 || !(item.generic_influence_bits & (1u << (influence - 1)))) continue;
+                if (slot.flags) throw std::invalid_argument("Awakener special influenced modifier retention is unresolved");
+                const auto source_global = source.global_index[slot.mod_id];
+                const auto& key = source.data->string_at(source.data->mod_key_sid[source_global]);
+                const auto target_global = session.data->mod_pos_by_key.find(key);
+                if (target_global == session.data->mod_pos_by_key.end()) throw std::invalid_argument("Transferred modifier key is unavailable in result data");
+                const auto target = session.session_id_by_global_id.find(session.data->mod_global_ids[target_global->second]);
+                if (target == session.session_id_by_global_id.end()) throw std::invalid_argument("Transferred tier cannot be retained on the receiver base");
+                result.push_back(target->second);
+            }
+        };
+        visit(item.prefixes, item.prefix_count); visit(item.suffixes, item.suffix_count);
+        if (result.empty()) throw std::invalid_argument("Awakener requires an eligible influenced modifier on each input");
+        return result;
+    };
+    const auto from_donor = candidates(donor_session, donor);
+    const auto from_receiver = candidates(session, receiver);
+    // Preflight every possible pair before sampling. Never reject-and-resample
+    // collisions, which would silently change the approved selection law.
+    for (auto a : from_donor) for (auto b : from_receiver) {
+        for (auto x = session.group_offsets[a]; x < session.group_offsets[a + 1]; ++x)
+            for (auto y = session.group_offsets[b]; y < session.group_offsets[b + 1]; ++y)
+                if (session.group_ids[x] == session.group_ids[y])
+                    throw std::invalid_argument("Awakener group collision discard probabilities are unresolved");
+    }
+    pc_item_state result = receiver;
+    pc_item_clear_side(&result, PC_SIDE_PREFIX); pc_item_clear_side(&result, PC_SIDE_SUFFIX);
+    result.rarity = PC_RARITY_RARE;
+    result.generic_influence_bits |= donor.generic_influence_bits;
+    for (const auto* choices : {&from_donor, &from_receiver}) {
+        const auto id = (*choices)[context.rng.next_below(choices->size())];
+        if (pc_item_add_mod(&result, session.gen_type[id], id,
+                static_cast<std::uint16_t>(session.primary_group[id]), 0, nullptr) != PC_RESULT_OK)
+            throw std::invalid_argument("Retained Awakener modifiers exceed receiver capacity");
+    }
+    PoolBuildRequest request;
+    request.respects_metamod_pool_blocks = false;
+    fill_random_mods(context, request, &result, rare_count(context));
+    return result;
 }
 
 } // namespace poecraft

@@ -22,6 +22,7 @@ const LAYOUT_KEY = "poecraft.layout";
 
 /** Exported item state plus the session identity needed to reopen it. */
 export interface ItemSnapshot {
+    resourceIdentity?: string;
     base: string;
     itemLevel: number;
     /** Current engine rarity, used when reopening or rebuilding the item. */
@@ -88,6 +89,8 @@ export interface EmulatorHistoryState {
     snapshot: ItemSnapshot;
     entry: CraftHistoryEntry;
     spend?: CraftSpend;
+    /** Full recorded workspace resources affected by this history branch. */
+    resources?: ItemStashRecord[];
 }
 
 export interface StrategyHistoryState {
@@ -122,6 +125,7 @@ export interface CalculatorGoalSlot {
 /** Calculator documents are never Stash resources; the draft only powers
  * reload recovery, so there is no savedRef/dirty machinery. */
 export interface CalculatorDraftRecord {
+    resourceIdentity?: string;
     docId: string;
     base: string;
     itemLevel: number;
@@ -180,8 +184,76 @@ function tx<T>(
 
 // --- stash ------------------------------------------------------------------
 
-export function putStash(record: StashRecord): Promise<unknown> {
-    return tx("stash", "readwrite", (store) => store.put(record));
+export async function putStash(record: StashRecord): Promise<unknown> {
+    const db = await openDb();
+    return new Promise<void>((resolve, reject) => {
+        const transaction = db.transaction("stash", "readwrite");
+        const store = transaction.objectStore("stash");
+        let failure: Error | undefined;
+        const read = store.get(record.id);
+        read.onsuccess = () => {
+            const old = read.result as StashRecord | undefined;
+            if (old && old.resourceType !== "strategy" &&
+                Number((old.state as {lifecycle?: number})?.lifecycle ?? 0) !== 0 &&
+                JSON.stringify(old) !== JSON.stringify(record)) {
+                failure = new Error("This resource was consumed or destroyed. Use the craft's Undo to restore it; a stale editor cannot overwrite it.");
+                transaction.abort();
+                return;
+            }
+            store.put(record);
+        };
+        transaction.oncomplete = () => resolve();
+        transaction.onabort = () => reject(failure ?? transaction.error);
+    });
+}
+
+/** Commit all craft resources and the receiver draft in one IndexedDB
+ * transaction. Compare before values so another document cannot silently
+ * overwrite a consumed donor or a later edit during Undo/Redo. */
+export async function commitWorkspaceResources(
+    before: ItemStashRecord[], after: ItemStashRecord[], draft: DraftRecord,
+): Promise<void> {
+    const beforeIds = new Set(before.map(item => item.id));
+    const afterIds = new Set(after.map(item => item.id));
+    if (beforeIds.size !== before.length || afterIds.size !== after.length ||
+        [...beforeIds].some(id => !afterIds.has(id)))
+        throw new Error("Resource transaction identities must be unique and preserve consumed records.");
+    const db = await openDb();
+    await new Promise<void>((resolve, reject) => {
+        const transaction = db.transaction(["stash", "drafts"], "readwrite");
+        const stash = transaction.objectStore("stash");
+        let failure: Error | undefined;
+        const created = after.filter(item => !beforeIds.has(item.id));
+        let remaining = before.length + created.length;
+        const write = () => {
+            for (const resource of after) stash.put(resource);
+            transaction.objectStore("drafts").put(draft);
+        };
+        transaction.oncomplete = () => resolve();
+        transaction.onabort = () => reject(failure ?? transaction.error ?? new Error("Workspace transaction aborted"));
+        transaction.onerror = () => { /* onabort owns rejection */ };
+        if (!remaining) write();
+        for (const item of created) {
+            const request = stash.get(item.id);
+            request.onsuccess = () => {
+                if (request.result !== undefined) {
+                    failure = new Error(`Resource identity ${item.id} already exists.`);
+                    transaction.abort();
+                } else if (--remaining === 0) write();
+            };
+        }
+        for (const expected of before) {
+            const request = stash.get(expected.id);
+            request.onsuccess = () => {
+                if (JSON.stringify(request.result) !== JSON.stringify(expected)) {
+                    failure = new Error(`Resource ${expected.name} changed in another document. Reload it before continuing.`);
+                    transaction.abort();
+                    return;
+                }
+                if (--remaining === 0) write();
+            };
+        }
+    });
 }
 
 export function listStash(): Promise<StashRecord[]> {

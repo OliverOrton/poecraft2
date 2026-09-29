@@ -3289,6 +3289,9 @@ std::string action_type_name(ActionType type) {
     case ActionType::EldritchChaos: return "eldritch_chaos";
     case ActionType::EldritchAnnul: return "eldritch_annul";
     case ActionType::InfluenceExalt: return "influence_exalt";
+    case ActionType::FoulbornAugment: return "foulborn_augment";
+    case ActionType::FoulbornRegal: return "foulborn_regal";
+    case ActionType::FoulbornExalt: return "foulborn_exalt";
     case ActionType::Fracture: return "fracture";
     case ActionType::RemoveCraftedModifiers:
         return "remove_crafted_modifiers";

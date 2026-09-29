@@ -186,6 +186,7 @@ def _fixture_sources() -> dict[str, object]:
         },
         "item_classes.json": {
             "BodyArmour": {
+                "influence_tags": ["bodyarmour_shaper"],
                 "category": "Armour",
                 "category_id": "Armour",
                 "name": "Body Armours",

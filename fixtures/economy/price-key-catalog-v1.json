@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "catalog_version": "2026-08-09.1",
+  "catalog_version": "2026-09-28.1",
   "source": "poe-ninja",
   "direct": {
     "transmute": "transmute",
@@ -26,6 +26,11 @@
     "eldritch_chaos": "eldritch-chaos-orb",
     "eldritch_annul": "eldritch-orb-of-annulment",
     "influence_exalt:crusader": "crusaders-exalted-orb",
+    "foulborn_augment": "foulborn-orb-of-augmentation",
+    "foulborn_regal": "foulborn-regal-orb",
+    "foulborn_exalt": "foulborn-exalted-orb",
+    "influence_exalt:elder": "elders-exalted-orb",
+    "influence_exalt:shaper": "shapers-exalted-orb",
     "influence_exalt:hunter": "hunters-exalted-orb",
     "influence_exalt:redeemer": "redeemers-exalted-orb",
     "influence_exalt:warlord": "warlords-exalted-orb",
@@ -34,10 +39,21 @@
     "lifeforce:vivid": "vivid-lifeforce",
     "lifeforce:primal": "primal-lifeforce",
     "lifeforce:sacred": "sacred-lifeforce",
-    "lifeforce:rancour": "sandswept-lifeforce"
+    "lifeforce:rancour": "sandswept-lifeforce",
+    "awakener": "awakeners-orb",
+    "dominance": "orb-of-dominance",
+    "tempering": "tempering-orb",
+    "tailoring": "tailoring-orb",
+    "vaal": "vaal",
+    "remembrance": "orb-of-remembrance",
+    "unravelling": "orb-of-unravelling"
   },
-  "zero_cost": ["unveil"],
-  "manual_only": ["base"],
+  "zero_cost": [
+    "unveil"
+  ],
+  "manual_only": [
+    "base"
+  ],
   "owner_defaults": {
     "beast:rare": {
       "chaos_value": 1,
@@ -46,8 +62,18 @@
       "overridable": true
     }
   },
-  "derived_prefixes": ["bench:", "harvest_reforge:", "harvest_augment:", "harvest_resist:"],
-  "market_prefixes": ["essence:", "fossil:", "resonator:", "beast:"],
+  "derived_prefixes": [
+    "bench:",
+    "harvest_reforge:",
+    "harvest_augment:",
+    "harvest_resist:"
+  ],
+  "market_prefixes": [
+    "essence:",
+    "fossil:",
+    "resonator:",
+    "beast:"
+  ],
   "unsupported_prefixes": [],
   "resonators": {
     "primitive-chaotic-resonator": "resonator:1",

@@ -158,7 +158,9 @@ enum class SolverActionFamily : std::uint8_t {
     Metamod = 11,
     Imprint = 12,
     Restart = 13,
-    Count = 14,
+    Foulborn = 14,
+    Memory = 15,
+    Count = 16,
 };
 
 inline constexpr std::size_t kSolverActionFamilyCount =

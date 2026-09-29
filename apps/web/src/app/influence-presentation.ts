@@ -15,9 +15,9 @@ const PRESENTATION_BY_INTERNAL: Readonly<
     adjudicator: { name: "Warlord", influenceExaltKey: "warlord" },
     basilisk: { name: "Hunter", influenceExaltKey: "hunter" },
     crusader: { name: "Crusader", influenceExaltKey: "crusader" },
-    elder: { name: "Elder" },
+    elder: { name: "Elder", influenceExaltKey: "elder" },
     eyrie: { name: "Redeemer", influenceExaltKey: "redeemer" },
-    shaper: { name: "Shaper" },
+    shaper: { name: "Shaper", influenceExaltKey: "shaper" },
 };
 
 const GENERIC_DISPLAY_ORDER = [
@@ -39,6 +39,8 @@ const GENERIC_DISPLAY_LABEL_ORDER = [
 ];
 
 const INFLUENCE_EXALT_DISPLAY_ORDER = [
+    "shaper",
+    "elder",
     "crusader",
     "warlord",
     "redeemer",

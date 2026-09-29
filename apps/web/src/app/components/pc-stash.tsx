@@ -61,14 +61,16 @@ export class PcStash extends HTMLElement {
             <div className="pc-stash-list">{records.length ? records.map(record => {
                 const strategy = isStrategyStashRecord(record);
                 const graph = strategy && isStrategyDocument(record.strategy) ? record.strategy : null;
+                const lifecycle = !strategy ? Number((record.state as {lifecycle?: number})?.lifecycle ?? 0) : 0;
                 const routes = graph?.edges.filter(edge => graph.nodes.find(node => node.id === edge.to)?.terminal === "success").length ?? 0;
                 const detail = strategy ? graph ? `${graph.nodes.length} nodes · ${routes} success route${routes === 1 ? "" : "s"}` : "Invalid saved strategy"
-                    : <><GameItemName assetKey={record.base} fallback={baseLabel(record.base)} /> · iLvl {record.itemLevel}</>;
+                    : <><GameItemName assetKey={record.base} fallback={baseLabel(record.base)} /> · iLvl {record.itemLevel}{lifecycle ? lifecycle === 1 ? " · Consumed" : " · Destroyed" : ""}</>;
                 const entries = [["open", "Edit"], ["copy", "Import copy"], ...(!strategy ? [["odds", "Odds"]] : []), ["delete", "Delete"]];
                 return <div className="pc-stash-item" key={record.id}>
                     <GameIcon assetKey={strategy ? graph?.base_state.base_key ?? "" : record.base} size="item" />
                     <div className="pc-stash-meta"><span className="pc-stash-name">{record.name}</span><span className="pc-stash-base">{detail}</span></div>
                     <div className="pc-stash-actions">{entries.map(([action, label]) => <button key={action}
+                        disabled={!!lifecycle && action !== "delete"}
                         onClick={() => void this.handle(action, record)}>{label}</button>)}</div>
                 </div>;
             }) : <p className="pc-empty">No saved resources in this view.</p>}</div>
@@ -97,6 +99,7 @@ export class PcStash extends HTMLElement {
         }
 
         const snapshot = {
+            resourceIdentity: record.id,
             base: record.base,
             itemLevel: record.itemLevel,
             rarity: record.rarity,

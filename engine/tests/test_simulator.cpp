@@ -387,8 +387,9 @@ void run_simulator_tests(const char* artifact_dir) {
             PC_CHECK(pc_strategy_compile_json(
                          session, unsupported_json.data(),
                          unsupported_json.size(), &unsupported_strategy,
-                         &error) == PC_RESULT_DATA_ERROR);
-            PC_CHECK(unsupported_strategy == nullptr);
+                         &error) == PC_RESULT_OK);
+            PC_CHECK(unsupported_strategy != nullptr);
+            pc_strategy_destroy(unsupported_strategy);
         }
     }
 

@@ -1267,6 +1267,7 @@ bool CalcContext::can_retain_reforge_distribution(
 
 bool calc_supports(const ActionDescriptor& action) {
     if (action.synthetic) return true;
+    if (is_foulborn(action.params.type)) return true;
     switch (action.params.type) {
     case ActionType::Transmute:
     case ActionType::Augment:
@@ -2701,21 +2702,28 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
             break;
         }
         case ActionType::Augment:
+        case ActionType::FoulbornAugment:
+        case ActionType::FoulbornExalt:
         case ActionType::Exalt: {
             result.supported = true;
-            if (!evaluate_pool_add(item, PoolBuildRequest{}, accumulated)) {
+            PoolBuildRequest request;
+            if (is_foulborn(action.params.type)) request.weight_kind = PoolWeightKind::Foulborn;
+            if (!evaluate_pool_add(item, request, accumulated)) {
                 self_loop();
             }
             break;
         }
+        case ActionType::FoulbornRegal:
         case ActionType::Regal: {
             /* Magic -> rare always applies; the added mod comes from the
              * pool of the upgraded item. An empty pool still upgrades. */
             pc_item_state upgraded = item;
             upgraded.rarity = PC_RARITY_RARE;
             result.supported = true;
+            PoolBuildRequest request;
+            if (is_foulborn(action.params.type)) request.weight_kind = PoolWeightKind::Foulborn;
             if (!evaluate_pool_add(
-                    upgraded, PoolBuildRequest{}, accumulated)) {
+                    upgraded, request, accumulated)) {
                 add_successor(upgraded, 1.0);
             }
             break;

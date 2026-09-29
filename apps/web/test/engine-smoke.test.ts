@@ -493,7 +493,7 @@ function phase13Strategy(): Record<string, unknown> {
 }
 
 test("API shape: ABI version is current", async () => {
-    assert.equal(client.getAbiVersion(), 2);
+    assert.equal(client.getAbiVersion(), 3);
 });
 
 test("load data through the memory bundle path", async () => {
@@ -618,6 +618,8 @@ test("catalog exposes mod groups, essences, and fossils as usable keys", async (
     assert.deepEqual(
         catalog.influences.map((entry) => [entry.key, entry.code]),
         [
+            ["shaper", 6],
+            ["elder", 4],
             ["crusader", 3],
             ["warlord", 1],
             ["redeemer", 5],
@@ -2481,6 +2483,104 @@ test("emulator native cost descriptors", async () => {
             assert.deepEqual(await costs.forAction(client, sessionId, {type: "bench", mod_key: mod.key}), [`bench:${mod.key}`]);
             break;
         }
+    }
+});
+
+test("currency expansion state and original-root policy contracts", async () => {
+    const lock = JSON.parse(readText(new URL("apps/web/runtime.lock.json", REPO_ROOT)));
+    const runtime = new URL(lock.runtime_directory + "/", REPO_ROOT);
+    const bundle = Object.fromEntries(["manifest", "strings", "game-data"].map(key =>
+        [key === "game-data" ? "game_data" : key, JSON.parse(readText(new URL(key + ".json", runtime)))]));
+    const expandedData = await client.loadData(new TextEncoder().encode(JSON.stringify(bundle)));
+    const sessionId = await client.createSession(expandedData, BASE, ITEM_LEVEL);
+    const contextId = await client.createContext(sessionId, 1);
+    const item = await client.createItem(sessionId, {rarity: "magic", withImplicits: false});
+    const normal = await client.exportItem(item, sessionId) as Record<string, unknown>;
+    const remembered = await client.importItem({...normal, memory_strands: 73}, sessionId);
+    assert.equal((await client.itemInfo(remembered, sessionId)).memory_strands, 73);
+    const copy = await client.cloneItem(remembered);
+    assert.equal((await client.itemInfo(copy, sessionId)).memory_strands, 73);
+    assert.equal((await client.bestiaryApply(expandedData, remembered, "bestiary:imprint")).applied, true);
+    const checkpointCopy = await client.cloneItem(remembered);
+    assert.equal((await client.bestiaryApply(expandedData, checkpointCopy, "bestiary:restore_imprint")).applied, true);
+    assert.equal((await client.itemInfo(checkpointCopy, sessionId)).memory_strands, 73);
+    await client.closeItem(checkpointCopy);
+    const keyed = await client.createItem(sessionId, {rarity: "magic", withImplicits: false});
+    await client.addMod(keyed, sessionId, {key: "LocalIncreasedEnergyShield11", side: "prefix"});
+    const keyedState = await client.exportItem(keyed, sessionId) as {prefixes: {mod_id: number; mod_key: string}[]};
+    const key = keyedState.prefixes[0].mod_key;
+    keyedState.prefixes[0].mod_id = 999999;
+    const remapped = await client.importItem(keyedState, sessionId);
+    assert.equal((await client.exportItem(remapped, sessionId) as typeof keyedState).prefixes[0].mod_key, key);
+    const legacy = structuredClone(keyedState) as {prefixes: Partial<typeof keyedState.prefixes[number]>[]};
+    delete legacy.prefixes[0].mod_key;
+    await assert.rejects(client.importItem(legacy, sessionId), /stable|key/i);
+    await client.closeItem(remapped); await client.closeItem(keyed);
+    await assert.rejects(client.importItem({...normal, memory_strands: 101}, sessionId), /integer from 0 to 100/);
+    await assert.rejects(client.apply(contextId, remembered, {type: "alchemy"}), /unavailable/);
+    await assert.rejects(client.apply(contextId, item, {type: "tempering"}), /weights/);
+    const goal = {version: "v1" as const, rarity: "magic" as const, allow_extra_modifiers: true,
+        slots: [{family_mod_key: "LocalIncreasedEnergyShield11", min_tier: 0}],
+        actions: ["alteration", "foulborn_augment"]};
+    const economySpec = {version: "v1", prices: {alteration: 2, foulborn_augment: 0.01}};
+    const economy = await client.loadEconomy(economySpec);
+    const solver = await client.openSolver(sessionId, goal);
+    try {
+        for (const mode of ["current", "strategy_finder"] as const) {
+            await assert.rejects(client.solverSolve(solver, remembered, economy, {solver_mode: mode}), /Pro/);
+            const result = await client.solverSolve(solver, item, economy, {solver_mode: mode, solve_profile: "calculator_product_v1"});
+            assert.equal(result.cancelled, false);
+            if (result.cancelled) assert.fail("unexpected cancellation");
+            assert.equal(result.policy_available, true, JSON.stringify(result));
+            assert.ok(result.lower_bound === null || result.lower_bound === 0);
+            const graph = prepareSolverStrategy(await client.solverCompileStrategy(solver));
+            const checked = await client.strategyEvaluate(sessionId, graph, undefined, {economy: economySpec});
+            assert.ok(checked.converged && checked.terminals.success > 1-1e-9);
+            assert.ok(Math.abs(checked.accounting.totals.per_invocation.total_expected_cost! - result.evaluated_policy_cost!) < 1e-6);
+        }
+        const disabled = await client.openSolver(sessionId, {...goal, disabled_action_families: ["foulborn"]});
+        await assert.rejects(client.solverCalc(disabled, item, "foulborn_augment"), /disabled/);
+        const absentPriceSpec = {version: "v1", prices: {alteration: 2}};
+        const absentPrice = await client.loadEconomy(absentPriceSpec);
+        try {
+            const result = await client.solverSolve(solver, item, absentPrice, {solver_mode: "current", solve_profile: "calculator_product_v1"});
+            assert.ok(!result.cancelled && result.skipped_missing_price_actions >= 1);
+        } finally { await client.closeEconomy(absentPrice); }
+
+        await client.closeSolver(disabled);
+        // Keep the rare-root capability gap reproducible without pinning failure as desired behavior.
+        const rareGoal = {...goal, rarity: "rare" as const, actions: ["alchemy", "foulborn_exalt", "scour"]};
+        const rareEconomySpec = {version: "v1", prices: {alchemy: 2, foulborn_exalt: 0.01, scour: 0.1}};
+        const rareRoot = await client.createItem(sessionId, {rarity: "normal", withImplicits: false});
+        const rareSolver = await client.openSolver(sessionId, rareGoal);
+        const rareEconomy = await client.loadEconomy(rareEconomySpec);
+        try {
+            for (const mode of ["current", "strategy_finder"] as const) {
+                const result = await client.solverSolve(rareSolver, rareRoot, rareEconomy, {solver_mode: mode, solve_profile: "calculator_product_v1"});
+                assert.equal(result.cancelled, false);
+                if (result.cancelled) assert.fail("unexpected cancellation");
+                assert.ok(result.lower_bound === null || result.lower_bound === 0);
+                if (result.policy_available) {
+                    const graph = prepareSolverStrategy(await client.solverCompileStrategy(rareSolver));
+                    const checked = await client.strategyEvaluate(sessionId, graph, undefined, {economy: rareEconomySpec});
+                    assert.ok(checked.converged && checked.terminals.success > 1-1e-9);
+                    assert.ok(Math.abs(checked.accounting.totals.per_invocation.total_expected_cost! - result.evaluated_policy_cost!) < 1e-6);
+                }
+                console.log("currency-pro-witness " + JSON.stringify({base_key: BASE, item_level: ITEM_LEVEL,
+                    root_rarity: "normal", with_implicits: false, goal: rareGoal, economy: rareEconomySpec,
+                    options: {solver_mode: mode, solve_profile: "calculator_product_v1"}, result: {
+                        policy_available: result.policy_available, termination: result.termination,
+                        lower_bound: result.lower_bound, upper_bound: result.upper_bound,
+                        evaluated_policy_cost: result.evaluated_policy_cost, start_value: result.start_value,
+                        expanded_states: result.expanded_states, skipped_missing_price_actions: result.skipped_missing_price_actions}}));
+            }
+        } finally {
+            await client.closeEconomy(rareEconomy); await client.closeSolver(rareSolver); await client.closeItem(rareRoot);
+        }
+    } finally {
+        await client.closeSolver(solver); await client.closeEconomy(economy);
+        await client.closeItem(copy); await client.closeItem(remembered); await client.closeItem(item);
+        await client.closeContext(contextId); await client.closeSession(sessionId); await client.closeData(expandedData);
     }
 });
 

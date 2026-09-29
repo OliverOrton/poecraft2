@@ -8,6 +8,16 @@ int g_failures = 0;
 } // namespace pctest
 
 int main(int argc, char** argv) {
+    if (argc > 2 && std::string(argv[1]) == "--currency-contracts-only") {
+        run_foulborn_weight_tests(); run_foulborn_kernel_tests(); run_currency_contract_tests(argv[2]);
+        std::printf("Currency contracts: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--foulborn-only") {
+        run_foulborn_weight_tests();
+        std::printf("Foulborn tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-assertion-service-only") {
         run_solver_assertion_service_tests();
         std::printf("solver assertion service tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

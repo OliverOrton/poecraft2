@@ -1,0 +1,191 @@
+{
+  "research_date_local": "2026-09-28",
+  "timezone": "America/Vancouver",
+  "baseline_local_head": "7c3d408143e98734890ba5a3cc4be8066dd235e3",
+  "baseline_remote_main_verified": "7c3d408143e98734890ba5a3cc4be8066dd235e3",
+  "status": "supported_subsets_implemented_and_qualified_mechanics_holds_remain",
+  "wiki_pages": [
+    {
+      "title": "Awakener's Orb",
+      "revision_id": 1697721,
+      "revision_timestamp_utc": "2026-07-31T06:32:27Z",
+      "url": "https://www.poewiki.net/wiki/Awakener%27s_Orb",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Awakener%27s+Orb&oldid=1697721",
+      "wikitext_sha256": "d61f9ca718f5e4a94d6e6ee4c16fa2f3e7fda91f44c42b957827e87268714c2b",
+      "disposition": "incorporated_as_approved_mechanic_description"
+    },
+    {
+      "title": "Elder's Exalted Orb",
+      "revision_id": 1681183,
+      "revision_timestamp_utc": "2026-07-26T22:39:14Z",
+      "url": "https://www.poewiki.net/wiki/Elder%27s_Exalted_Orb",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Elder%27s+Exalted+Orb&oldid=1681183",
+      "wikitext_sha256": "ad281b0339986b4d9448b1ffead065247dc7f0148f0ded7329bccc155bdc8304",
+      "disposition": "incorporated_as_approved_mechanic_description"
+    },
+    {
+      "title": "Foulborn currency item",
+      "revision_id": 1648472,
+      "revision_timestamp_utc": "2026-05-08T23:38:30Z",
+      "url": "https://www.poewiki.net/wiki/Foulborn_currency_item",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Foulborn+currency+item&oldid=1648472",
+      "wikitext_sha256": "3040c3a6d79c2e3d63753159f74a57b7315d84cc3374d09acb7872854f5c9502",
+      "disposition": "incorporated_as_approved_mechanic_description"
+    },
+    {
+      "title": "Harvest crafting",
+      "revision_id": 1699145,
+      "revision_timestamp_utc": "2026-08-05T21:47:42Z",
+      "url": "https://www.poewiki.net/wiki/Harvest_crafting",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Harvest+crafting&oldid=1699145",
+      "wikitext_sha256": "c882ec0f89fd0f2b3128d1cba0bf4bb0d51bb96249557c9b3de7527f5620f091",
+      "disposition": "scope_and_recipe_incorporated_weighting_held"
+    },
+    {
+      "title": "List of harvest crafting options",
+      "revision_id": 1699144,
+      "revision_timestamp_utc": "2026-08-05T21:47:20Z",
+      "url": "https://www.poewiki.net/wiki/List_of_harvest_crafting_options",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=List+of+harvest+crafting+options&oldid=1699144",
+      "wikitext_sha256": "df8a508527bc868789bfa3d2ef181e0ff62592003e234f3c31e35a61620ada13",
+      "disposition": "scope_and_recipe_incorporated_weighting_held"
+    },
+    {
+      "title": "Locus of Corruption",
+      "revision_id": 1673917,
+      "revision_timestamp_utc": "2026-07-17T12:40:41Z",
+      "url": "https://www.poewiki.net/wiki/Locus_of_Corruption",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Locus+of+Corruption&oldid=1673917",
+      "wikitext_sha256": "aee3a5e962c97411bec6387af54be45ccbe2116124903849ad7981330b55385f",
+      "disposition": "incorporated_as_approved_mechanic_description"
+    },
+    {
+      "title": "Memory strand",
+      "revision_id": 1699338,
+      "revision_timestamp_utc": "2026-08-07T07:57:22Z",
+      "url": "https://www.poewiki.net/wiki/Memory_strand",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Memory+strand&oldid=1699338",
+      "wikitext_sha256": "385772632398bb929ad3feedf1150ad7ae22f49ca9fd8b4b54c1049dd9e3426b",
+      "disposition": "non_solver_scope_approved_incomplete_probability_laws_open_solver_reserved_for_pro"
+    },
+    {
+      "title": "Orb of Dominance",
+      "revision_id": 1699839,
+      "revision_timestamp_utc": "2026-08-07T13:37:09Z",
+      "url": "https://www.poewiki.net/wiki/Orb_of_Dominance",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Orb+of+Dominance&oldid=1699839",
+      "wikitext_sha256": "233f84c9f9c9e5ed1d432a69b3a7bf883743b192988f6c980d283451f431e35c",
+      "disposition": "incorporated_as_approved_mechanic_description"
+    },
+    {
+      "title": "Orb of Intention",
+      "revision_id": 1681186,
+      "revision_timestamp_utc": "2026-07-26T22:39:18Z",
+      "url": "https://www.poewiki.net/wiki/Orb_of_Intention",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Orb+of+Intention&oldid=1681186",
+      "wikitext_sha256": "0585cd5c0491532ddb3ee4e519a048aa342a7e38c3cb4640269a70a76a32e9a2",
+      "disposition": "documented_outside_equipment_crafting_scope"
+    },
+    {
+      "title": "Orb of Remembrance",
+      "revision_id": 1681184,
+      "revision_timestamp_utc": "2026-07-26T22:39:15Z",
+      "url": "https://www.poewiki.net/wiki/Orb_of_Remembrance",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Orb+of+Remembrance&oldid=1681184",
+      "wikitext_sha256": "8f35f10f679182eb284c70a6731c16875ff05d458dd0210f9ffeb3ae432d1236",
+      "disposition": "non_solver_scope_approved_incomplete_probability_laws_open_solver_reserved_for_pro"
+    },
+    {
+      "title": "Orb of Unravelling",
+      "revision_id": 1702792,
+      "revision_timestamp_utc": "2026-09-29T02:27:19Z",
+      "url": "https://www.poewiki.net/wiki/Orb_of_Unravelling",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Orb+of+Unravelling&oldid=1702792",
+      "wikitext_sha256": "e4fd7d2eb279f3cda9ce216e405b68224a0e8adf954e91240f8bb68d0989ed01",
+      "disposition": "non_solver_scope_approved_incomplete_probability_laws_open_solver_reserved_for_pro"
+    },
+    {
+      "title": "Shaper's Exalted Orb",
+      "revision_id": 1681182,
+      "revision_timestamp_utc": "2026-07-26T22:39:12Z",
+      "url": "https://www.poewiki.net/wiki/Shaper%27s_Exalted_Orb",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Shaper%27s+Exalted+Orb&oldid=1681182",
+      "wikitext_sha256": "ebe188bff0b831e00fe469d47284713033586a6bea13f7fdb817263b8a933ae1",
+      "disposition": "incorporated_as_approved_mechanic_description"
+    },
+    {
+      "title": "Tailoring Orb",
+      "revision_id": 1681191,
+      "revision_timestamp_utc": "2026-07-26T22:39:26Z",
+      "url": "https://www.poewiki.net/wiki/Tailoring_Orb",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Tailoring+Orb&oldid=1681191",
+      "wikitext_sha256": "4373edb654d5ff25ace5ae2f0d324b57fe37f473eff58bd2c8c0c71535cf3be5",
+      "disposition": "incorporated_as_approved_mechanic_description"
+    },
+    {
+      "title": "Tempering Orb",
+      "revision_id": 1681190,
+      "revision_timestamp_utc": "2026-07-26T22:39:23Z",
+      "url": "https://www.poewiki.net/wiki/Tempering_Orb",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Tempering+Orb&oldid=1681190",
+      "wikitext_sha256": "15846419f14bfc019c370c9e5587d11d754612783edd2bd1fb34a20841f7a26f",
+      "disposition": "incorporated_as_approved_mechanic_description"
+    },
+    {
+      "title": "Vaal Orb",
+      "revision_id": 1702321,
+      "revision_timestamp_utc": "2026-09-06T23:49:50Z",
+      "url": "https://www.poewiki.net/wiki/Vaal_Orb",
+      "pinned_url": "https://www.poewiki.net/w/index.php?title=Vaal+Orb&oldid=1702321",
+      "wikitext_sha256": "a42e18896e65e973aace71eb2419647a228b7b21cd1f5934062c8abb687fc40c",
+      "disposition": "incorporated_as_approved_mechanic_description"
+    }
+  ],
+  "other_sources": [
+    {
+      "url": "https://www.pathofexile.com/forum/view-thread/3985332#gemsocketchanges",
+      "description": "Official 3.29 socket/corruption and Heist-enchantment changes",
+      "disposition": "incorporated"
+    },
+    {
+      "url": "https://www.pathofexile.com/forum/view-thread/3804113",
+      "description": "Official Unravelling crafted-mod and unidentified-item fixes",
+      "disposition": "incorporated"
+    },
+    {
+      "url": "https://www.reddit.com/r/pathofexile/comments/1wr9445/329_everything_you_need_to_know_about_memory/",
+      "description": "Macookta primary empirical strand, Foulborn interaction, Unravelling and Remembrance research",
+      "disposition": "candidate_models_recorded_uncertainty_retained_not_certified_exact"
+    },
+    {
+      "url": "https://www.craftofexile.com/faq",
+      "description": "Author-reported historical Harvest more-likely weighting",
+      "disposition": "historical_only_not_authority_for_current_exact_weights"
+    },
+    {
+      "url": "https://unravel.port8080.sh/",
+      "description": "Calculator linked from current Unravelling wiki",
+      "disposition": "unavailable_http_403_not_independent_validation"
+    }
+  ],
+  "notes": [
+    "Revision timestamps are UTC; the Unravelling revision dated September 29 UTC was read during September 28 in America/Vancouver.",
+    "Wiki Foulborn testing references membership-only Prohibited Library posts; those posts were not independently reviewed.",
+    "Owner approval resolves the Shaper wiki Eldritch-input contradiction in favor of exclusion.",
+    "A wiki description or sampled dataset does not establish unreported probability distributions.",
+    "This is a source/disposition index, not an implementation receipt or solver certificate."
+  ],
+  "implementation_evidence": {
+    "runtime_manifest_sha256": "ef06ad1171b10975fd56a43fb596e94f789e8c5bae5092b0617f5331a285db99",
+    "abi_version": 3,
+    "canonical_database_modified": false,
+    "law_gaps": [
+      "Dominance elevation relationships and pair selection",
+      "Awakener collision and numerical rerolls; possible non-group exclusions",
+      "Heist enchantment weights and socket/effect contract",
+      "Vaal socket/link and jewel/unique paths",
+      "Locus internal reforge and exceptional-base laws",
+      "Memory consumption timing/distributions, Remembrance and Unravelling probabilities"
+    ]
+  }
+}

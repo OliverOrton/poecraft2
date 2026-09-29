@@ -126,3 +126,23 @@ value.
 - Should raw `annul` be legal on any non-corrupted, non-mirrored item that
   happens to carry removable affixes, or should native application enforce the
   magic/rare legality already used by the solver registry?
+
+## Foulborn (2026-09-28 expansion)
+
+`foulborn_augment`, `foulborn_regal` and `foulborn_exalt` share ordinary legality
+and side selection. The one native transform groups positive eligible modifiers
+by canonical modifier-type key and generation side after item-level, generation,
+metamod and group filtering. Tiers are ordered by required level; ambiguous ties
+refuse instead of inventing an order. For N tiers, keep the highest ceil(N/2)
+when N <= 6, otherwise floor(N/2)+1. Each survivor gets its original weight times
+N/K; unequal weights stay unequal. Reduced rational factors are lifted to a
+common integer unit without truncation. Debug weights therefore preserve ratios,
+not necessarily the ordinary pool's absolute unit. Overflow refuses explicitly.
+
+Sampling, diagnostic pools and exact kernels share this transform. Its cache
+identity includes the Foulborn weight kind. The separate native family restriction
+covers direct actions and dependency admission. Authored evaluation and Simulator
+use the same action identities and individual currency prices. Missing quotes
+remain missing. Expanded search scopes retain the existing zero-lower capability;
+ordinary positive lower/closure certificates do not transfer to Foulborn scope.
+See the [execution qualification](../active/2026-09-28-currency-expansion/README.md).

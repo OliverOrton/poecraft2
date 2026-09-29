@@ -76,6 +76,9 @@ AuditActionFamily audit_action_family(
     case ActionType::Fossil: return AuditActionFamily::Fossil;
     case ActionType::EldritchChaos:
         return AuditActionFamily::EldritchChaos;
+    case ActionType::FoulbornAugment:
+    case ActionType::FoulbornRegal:
+    case ActionType::FoulbornExalt:
     case ActionType::Augment:
     case ActionType::Alteration:
     case ActionType::Regal:

@@ -167,7 +167,7 @@ bool intended_eldritch_action_legal(
 }
 
 bool approved_renewal_roll(const ActionDescriptor& action) {
-    switch (action.params.type) {
+    switch (ordinary_add_equivalent(action.params.type)) {
     case ActionType::Alteration:
     case ActionType::Chaos:
     case ActionType::Essence:
@@ -184,7 +184,7 @@ bool approved_renewal_roll(const ActionDescriptor& action) {
 
 bool imprint_action_may_roll_influence_pool(
     const ActionDescriptor& action) {
-    switch (action.params.type) {
+    switch (ordinary_add_equivalent(action.params.type)) {
     case ActionType::Transmute:
     case ActionType::Augment:
     case ActionType::Alteration:
@@ -276,7 +276,7 @@ bool temporary_followup(const ActionDescriptor& action) {
         action.kind != TransitionKind::SingleSlot) {
         return false;
     }
-    switch (action.params.type) {
+    switch (ordinary_add_equivalent(action.params.type)) {
     case ActionType::Augment:
     case ActionType::Regal:
     case ActionType::Exalt:
@@ -863,7 +863,7 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             const ActionDescriptor& followup =
                 registry.actions.at(effect.followup_action);
             std::uint8_t followup_rarity = carrier.rarity;
-            if (followup.params.type == ActionType::Regal) {
+            if (ordinary_add_equivalent(followup.params.type) == ActionType::Regal) {
                 followup_rarity = PC_RARITY_RARE;
             }
             const std::uint8_t cap =

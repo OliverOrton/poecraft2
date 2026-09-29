@@ -1,4 +1,5 @@
 #include "solver_solve_types.hpp"
+#include "solver_action_family_contract.hpp"
 
 namespace poecraft {
 namespace solver {
@@ -35,6 +36,21 @@ SolveWork::Impl::Impl(
         : calc(context), session(context.session()),
           exact_start_item(start_item), options(solve_options), prices(prices),
           reported_unsupported(context.operators().size(), false) {
+        // Foulborn changes acquisition probabilities. Existing ordinary-clean
+        // lower proofs have not been extended to this family. Retain the
+        // existing checked-policy capability and zero global lower only.
+        for (const auto action : calc.candidates()) {
+            if (!solver_action_disabled(calc.goal(), calc.registry().actions.at(action)) &&
+                is_foulborn(calc.registry().actions.at(action).params.type))
+                options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+        }
+        for (const auto index : calc.candidate_operators()) {
+            const auto semantics = planner_operator_runtime_semantics(calc.operators().at(index), calc.registry());
+            for (const auto action : semantics.action_dependencies)
+                if (!solver_action_disabled(calc.goal(), calc.registry().actions.at(action)) &&
+                    is_foulborn(calc.registry().actions.at(action).params.type))
+                    options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+        }
         if (options.goal_proof_profile ==
             GoalProofProfile::TargetNeutralZero) {
             if (options.max_absolute_optimality_gap > 0.0 ||

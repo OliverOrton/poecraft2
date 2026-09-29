@@ -2380,6 +2380,11 @@ void check_action_family_contract(
         missing.insert(key.as_string());
     }
 
+    std::string catalog_text;
+    PC_CHECK(read_text_file((repo_root / "fixtures/economy/price-key-catalog-v1.json").string(), catalog_text));
+    const auto catalog = json::Parser(catalog_text.data(), catalog_text.size()).parse();
+    for (const auto& [key, unused] : catalog.at("direct").object)
+        if (!sources.contains(key)) missing.insert(key);
     std::array<bool, 6> observed_provenance{};
     for (const ActionDescriptor& action : registry.actions) {
         const ExpectedPriceProvenance expected =
@@ -3748,7 +3753,46 @@ void run_solver_action_family_contract_tests(const char* artifact_dir) {
     }
 }
 
+void run_foulborn_kernel_tests() {
+    auto session = make_calc_session();
+    auto data = std::const_pointer_cast<DataImpl>(session->data);
+    data->strings = {"life", "hybrid", "attack", "caster", "fire", "cold", "speed", "veilP", "veilS"};
+    data->mod_type_key_sid = {0,0,1,2,3,4,5,6,7,8};
+    session->required_level[0] = 10;
+    const auto registry = build_action_registry(*session);
+    for (const char* id : {"foulborn_augment", "foulborn_regal", "foulborn_exalt"}) {
+        const auto action = registry.index_by_id.at(id);
+        CalcContext calc(session, family_goal_100(), registry, {action},
+            false, true, true, std::nullopt, {}, false, {}, true);
+        pc_item_state start{};
+        start.rarity = std::string(id) == "foulborn_exalt" ? PC_RARITY_RARE : PC_RARITY_MAGIC;
+        const auto& distribution = calc.outcomes(calc.intern_item(start), action);
+        PC_CHECK(distribution.supported && sums_to_one(distribution));
+        double mass[8]{};
+        for (const auto& outcome : distribution.entries) {
+            pc_item_state item{};
+            PC_CHECK(calc.materialize(outcome.state, item));
+            PC_CHECK(item.prefix_count + item.suffix_count == 1);
+            for (unsigned mod = 0; mod < 8; ++mod)
+                if (item_contains_mod(item, mod)) mass[mod] += outcome.probability;
+        }
+        // Independent law: retained life gets 200; five other weight-100
+        // modifiers and weight-400 speed give a total of 1100.
+        const double expected[] = {2./11, 0, 1./11, 1./11, 1./11, 1./11, 1./11, 4./11};
+        for (unsigned mod=0; mod<8; ++mod) PC_CHECK(std::abs(mass[mod]-expected[mod])<1e-12);
+        ActionContextImpl context(741); context.session = session;
+        int count[8]{};
+        for (int n=0;n<1000;++n) {
+            auto item=start; PC_CHECK(apply_action(context,&item,registry.actions[action].params).applied);
+            const auto mod=item.prefix_count ? item.prefixes[0].mod_id : item.suffixes[0].mod_id;
+            PC_CHECK(mod<8); if(mod<8) ++count[mod];
+        }
+        for(unsigned mod=0;mod<8;++mod) PC_CHECK(std::abs(count[mod]/1000.-expected[mod])<0.055);
+    }
+}
+
 void run_solver_calc_tests(const char* artifact_dir) {
+    run_foulborn_kernel_tests();
     run_product_dead_feature_reduction_tests();
     run_exact_goal_member_materialization_test();
     run_goal_threshold_tests();

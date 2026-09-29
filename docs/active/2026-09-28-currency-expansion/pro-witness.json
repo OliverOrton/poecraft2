@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "scope": "Bounded capability witness, not a benchmark or optimality certificate",
+  "source_baseline": "7c3d408143e98734890ba5a3cc4be8066dd235e3",
+  "runtime_manifest_sha256": "ef06ad1171b10975fd56a43fb596e94f789e8c5bae5092b0617f5331a285db99",
+  "wasm_sha256": "b266f1b1ea2305751a65c76df1544c379b5b3fa21e1d3ef2a75c84d2a8c75db7",
+  "reproduction": {
+    "cwd": "apps/web",
+    "environment": {
+      "POECRAFT_SMOKE_TEST": "currency expansion state and original-root policy contracts"
+    },
+    "command": "npx tsx test/engine-smoke.test.ts"
+  },
+  "cases": [
+    {
+      "base_key": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+      "item_level": 86,
+      "root_rarity": "normal",
+      "with_implicits": false,
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "allow_extra_modifiers": true,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreasedEnergyShield11",
+            "min_tier": 0
+          }
+        ],
+        "actions": [
+          "alchemy",
+          "foulborn_exalt",
+          "scour"
+        ]
+      },
+      "economy": {
+        "version": "v1",
+        "prices": {
+          "alchemy": 2,
+          "foulborn_exalt": 0.01,
+          "scour": 0.1
+        }
+      },
+      "options": {
+        "solver_mode": "current",
+        "solve_profile": "calculator_product_v1"
+      },
+      "result": {
+        "policy_available": false,
+        "termination": "no_executable_policy",
+        "lower_bound": 0,
+        "upper_bound": null,
+        "evaluated_policy_cost": null,
+        "start_value": 558507123946.0701,
+        "expanded_states": 3,
+        "skipped_missing_price_actions": 0
+      }
+    },
+    {
+      "base_key": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+      "item_level": 86,
+      "root_rarity": "normal",
+      "with_implicits": false,
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "allow_extra_modifiers": true,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreasedEnergyShield11",
+            "min_tier": 0
+          }
+        ],
+        "actions": [
+          "alchemy",
+          "foulborn_exalt",
+          "scour"
+        ]
+      },
+      "economy": {
+        "version": "v1",
+        "prices": {
+          "alchemy": 2,
+          "foulborn_exalt": 0.01,
+          "scour": 0.1
+        }
+      },
+      "options": {
+        "solver_mode": "strategy_finder",
+        "solve_profile": "calculator_product_v1"
+      },
+      "result": {
+        "policy_available": false,
+        "termination": "no_executable_policy",
+        "lower_bound": null,
+        "upper_bound": null,
+        "evaluated_policy_cost": null,
+        "start_value": null,
+        "expanded_states": 0,
+        "skipped_missing_price_actions": 0
+      }
+    }
+  ]
+}

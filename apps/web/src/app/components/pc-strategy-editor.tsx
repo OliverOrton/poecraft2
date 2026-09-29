@@ -56,6 +56,8 @@ import {
     StrategyStashRecord,
     getStrategyDraft,
     putStrategyDraft,
+    listStash,
+    type ItemStashRecord,
 } from "../workspace/persistence";
 import { workspace } from "../workspace/registry";
 import { openTextModal } from "../workspace/dirty-modal";
@@ -90,6 +92,12 @@ import "./pc-strategy-odds";
 type Selection = { kind: "node" | "edge"; id: string } | null;
 
 const OPERATIONS = [
+    "acquire_resource",
+    "awakener",
+    "foulborn_augment",
+    "foulborn_regal",
+    "foulborn_exalt",
+    "vaal",
     "transmute",
     "augment",
     "alteration",
@@ -124,6 +132,12 @@ const OPERATIONS = [
 
 const PALETTE: Array<[string, string]> = [
     ["start", "Start state"],
+    ["operation:acquire_resource", "Acquire donor"],
+    ["operation:awakener", "Awakener's Orb"],
+    ["operation:foulborn_augment", "Foulborn Augmentation"],
+    ["operation:foulborn_regal", "Foulborn Regal"],
+    ["operation:foulborn_exalt", "Foulborn Exalted"],
+    ["operation:vaal", "Vaal (item-level 86+ socketless amulets/belts)"],
     ["operation:restart", "Restart · fresh base"],
     ["operation:transmute", "Orb of Transmutation"],
     ["operation:chaos", "Chaos Orb"],
@@ -160,6 +174,7 @@ const PALETTE: Array<[string, string]> = [
 ];
 
 export class PcStrategyEditor extends HTMLElement {
+    private resourceOptions: ItemStashRecord[] = [];
     private shellVersion = 0;
     private client!: EngineClient;
     private dataId = 0;
@@ -255,6 +270,8 @@ export class PcStrategyEditor extends HTMLElement {
                 (base) => base.support === 0,
             );
             this.catalog = await this.client.catalog(this.dataId);
+            this.resourceOptions = (await listStash()).filter((record): record is ItemStashRecord =>
+                record.resourceType !== "strategy" && !Number((record.state as {lifecycle?: number})?.lifecycle ?? 0));
             this.essenceOptions = this.catalog.essences.map((entry) => ({
                 value: entry.key,
                 label: entry.name,
@@ -837,6 +854,12 @@ export class PcStrategyEditor extends HTMLElement {
                             .join("")}
                     </select>
                 </label>
+                <label class="pc-field"><span>Memory strands</span><input data-field="start-memory" type="number" min="0" max="100" step="1" value="${this.strategy.base_state.memory_strands ?? 0}"></label>
+                <p class="pc-help">Strand-bearing random crafts and solving are unavailable while their laws remain unresolved.</p>
+                <label class="pc-field"><span>Donor template from Stash</span><select data-donor-template>${this.resourceOptions.map(record => `<option value="${escapeAttribute(record.id)}">${escapeHtml(record.name)}</option>`).join("")}</select></label>
+                <button data-add-donor ${this.resourceOptions.length ? "" : "disabled"}>Add donor template</button>
+                <p class="pc-help">Templates do not consume Stash items. Add Acquire donor before Awakener; every acquisition has a separate price key. Missing prices remain unknown.</p>
+                ${(this.strategy.resources ?? []).map(resource => `<label class="pc-field"><span>${escapeHtml(resource.id)} · ${escapeHtml(resource.name ?? "Donor")} acquisition price key</span><input data-resource-price="${escapeAttribute(resource.id)}" value="${escapeAttribute(resource.acquisition_price_key)}"></label>`).join("")}
                 <div class="pc-start-mod-summary">
                     ${(this.strategy.base_state.prefixes?.length ?? 0)} prefixes ·
                     ${(this.strategy.base_state.suffixes?.length ?? 0)} suffixes
@@ -859,6 +882,7 @@ export class PcStrategyEditor extends HTMLElement {
                         ).join("")}
                     </select>
                 </label>
+                ${type === "awakener" || type === "acquire_resource" ? `<label class="pc-field"><span>Donor resource</span><select data-field="resource-id"><option value="">Choose donor</option>${(this.strategy.resources ?? []).map(resource => `<option value="${escapeAttribute(resource.id)}" ${resource.id === (type === "awakener" ? (params.roles as {donor?: string} | undefined)?.donor : params.resource_id) ? "selected" : ""}>${escapeHtml(resource.id)} · ${escapeHtml(resource.name ?? "Donor")}</option>`).join("")}</select></label><p class="pc-help">${type === "awakener" ? "Consumes an acquired donor; receiver is the current item." : "Acquires one replacement donor and charges its acquisition price. It does not replace an available donor."}</p>` : ""}
                 ${
                     type === "essence"
                         ? `<label class="pc-field">
@@ -974,6 +998,27 @@ export class PcStrategyEditor extends HTMLElement {
             .join("");
     }
 
+    private async addDonorTemplate(stashId: string): Promise<void> {
+        const record = this.resourceOptions.find(resource => resource.id === stashId);
+        if (!record) return;
+        const session = await this.client.createSession(this.dataId, record.base, record.itemLevel);
+        let item = 0;
+        try {
+            item = await this.client.importItem(record.state, session);
+            const snapshot = {...record, state: await this.client.exportItem(item, session)};
+            const base_state = createStrategyFromItemSnapshot(snapshot, () => undefined).base_state;
+            const id = nextGraphId("donor", (this.strategy.resources ?? []).map(resource => resource.id));
+            this.strategy.resources ??= [];
+            this.strategy.resources.push({id, name: record.name, base_state, acquisition_price_key: `resource:${id}`});
+            this.markChanged();
+        } catch (error) {
+            this.setStatus(error instanceof Error ? error.message : String(error));
+        } finally {
+            if (item) await this.client.closeItem(item);
+            await this.client.closeSession(session);
+        }
+    }
+
     private renderResistanceSelect(
         field: string,
         label: string,
@@ -993,6 +1038,24 @@ export class PcStrategyEditor extends HTMLElement {
     }
 
     private bindNodeInspector(node: StrategyNode, host: HTMLElement): void {
+        host.querySelector<HTMLButtonElement>("[data-add-donor]")?.addEventListener("click", () => {
+            const selected = host.querySelector<HTMLSelectElement>("[data-donor-template]")?.value;
+            if (selected) void this.addDonorTemplate(selected);
+        });
+        host.querySelectorAll<HTMLInputElement>("[data-resource-price]").forEach(input => input.addEventListener("change", () => {
+            const resource = this.strategy.resources?.find(resource => resource.id === input.dataset.resourcePrice);
+            if (resource) { resource.acquisition_price_key = input.value.trim() || `resource:${resource.id}`; this.markChanged(); }
+        }));
+        host.querySelector<HTMLInputElement>("[data-field=start-memory]")?.addEventListener("change", event => {
+            const count = Number((event.currentTarget as HTMLInputElement).value);
+            if (Number.isInteger(count) && count >= 0 && count <= 100) { this.strategy.base_state.memory_strands = count; this.markChanged(); }
+        });
+        host.querySelector<HTMLSelectElement>("[data-field=resource-id]")?.addEventListener("change", event => {
+            if (!node.operation) return;
+            const id = (event.currentTarget as HTMLSelectElement).value;
+            node.operation.params = node.operation.type === "awakener" ? {roles: {donor: id, receiver: "current"}} : {resource_id: id};
+            this.markChanged();
+        });
         host.querySelector<HTMLInputElement>('[data-field="node-name"]')
             ?.addEventListener("input", (event) => {
                 node.name = (event.currentTarget as HTMLInputElement).value;

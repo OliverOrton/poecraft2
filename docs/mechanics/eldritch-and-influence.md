@@ -17,19 +17,23 @@ This family owns `eldritch_ember`, `eldritch_ichor`, `eldritch_exalt`,
 
 The compiled modifier pools recognize the generic influence names
 `adjudicator`, `basilisk`, `crusader`, `elder`, `eyrie`, and `shaper` in
-addition to the no-influence state. Influence Exalt currency exists for only
-four of those pool identities, with this owner-adjudicated mapping:
+addition to the no-influence state. Influence Exalt currency now exists for all six pool identities. Oliver approved
+the Shaper/Elder expansion on 2026-09-28:
 
 - Warlord's Exalted Orb -> `adjudicator`;
 - Hunter's Exalted Orb -> `basilisk`;
 - Crusader's Exalted Orb -> `crusader`; and
-- Redeemer's Exalted Orb -> `eyrie`.
+- Redeemer's Exalted Orb -> `eyrie`;
+- Elder's Exalted Orb -> `elder`; and
+- Shaper's Exalted Orb -> `shaper`.
 
-`elder` and `shaper` remain valid modifier-pool influences, but have no
-corresponding Influence Exalt currency or product action.
+Canonical item-class influence selector tags replace guessed normalized class
+names. This fixes missing sword, axe and mace influence pools. Above-level
+transferred tiers and elevated modifiers are retained separately from natural
+roll eligibility.
 
 Registry IDs, compiled strategy operations, and economy keys use the public
-currency names `crusader`, `hunter`, `redeemer`, and `warlord`. The strategy
+currency names `crusader`, `hunter`, `redeemer`, `warlord`, `elder`, and `shaper`. The strategy
 and primitive-action parsers retain the old internal names for those four as
 input aliases, while emitting and charging only the public names.
 
@@ -64,9 +68,9 @@ one uniformly sampled non-fractured affix from the targeted side; it does not
 consult a target-side metamod lock. Without dominance it performs the ordinary
 lock-aware Annul transition. The raw dispatcher does not add a rarity guard.
 
-Each of the four currency-backed `influence_exalt:<currency-influence>` actions
+Each of the six currency-backed `influence_exalt:<currency-influence>` actions
 requires a rare item with no existing
-generic influence, no Eldritch tiers, and no fractured affix. It adds the
+generic influence, no Eldritch tiers, no synthesised state, and no fractured affix. It adds the
 requested influence bit, then attempts to add one modifier from only that
 influence’s pool. If no modifier can be added, it rolls the influence bit back
 and reports the action unapplied.
@@ -80,9 +84,9 @@ All actions in this family also share the global corrupted/mirrored refusal.
   solver option that establishes dominance and pays for every setup currency.
   This is recorded in the archived
   [S7 plan](../archive/2026-07-solver-s7/plan.md).
-- **2026-08-09:** Influence Exalt exposure is limited to the four real
-  currency mappings above. Elder and Shaper pools do not imply Exalted Orb
-  actions.
+- **2026-08-09 (superseded 2026-09-28):** the original release exposed four
+  currencies. Oliver now explicitly authorizes Elder/Shaper, including the
+  Eldritch exclusion despite conflicting external prose.
 
 ## Engine Coverage And Code Pointers
 
@@ -165,11 +169,11 @@ exact calculation.
 - Ember/Ichor and Influence Exalt do not combine generic and Eldritch
   influence states.
 - Influence Exalt is refused when any fractured affix exists.
-- Elder and Shaper modifier pools do not create Influence Exalt actions.
+- An influence registry entry supplies no new automatic search grammar.
 - Side intent is not an opaque primitive mechanic; it is a compound solver
   option made from real tier setup and explicit-currency actions.
-- No generic influence operation beyond `influence_exalt` is present in the
-  primitive action vocabulary.
+- `influence_exalt` is the single-item influence primitive. Awakener uses the
+  separate multi-item transaction described below.
 
 ## Open Questions Requiring Oliver
 
@@ -179,3 +183,21 @@ exact calculation.
 - Should raw `eldritch_annul` retain its current no-rarity-guard behavior, or
   should native legality be narrowed to the rarities exposed by the solver and
   product?
+
+## Awakener and Dominance (2026-09-28 expansion)
+
+Awakener uses the native role-based multi-item transaction, resolves stable
+modifier keys across sessions, consumes exactly one donor and changes its receiver.
+The sampled subset requires same-class, distinct single influences and structural
+modifiers without numerical rolls; every possible selected pair must be compatible
+under all modifier groups. Group collision cases refuse atomically rather than
+resampling. Elevated and above-level influence tiers can be retained. The receiver
+keeps its base, level, sockets, links, quality, implicits and enchantments. Selection
+and 4–6 affix refill use the existing structural engine. Possible additional
+non-group exclusions remain an evidence limitation, not a verified game claim.
+
+Dominance is recognized but unavailable: canonical data lacks explicit ordinary-T1
+to elevated relationships; multi-candidate pair probabilities are unresolved.
+Name and zero-weight selector metadata permit elevated retention only. They do
+not establish upgrade mappings. The [execution record](../active/2026-09-28-currency-expansion/README.md)
+owns the pinned sources, scope qualification and Pro handoff.

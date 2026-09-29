@@ -157,7 +157,7 @@ bool temporary_followup_can_target_goal(
     const ActionRegistryBuildOptions& options,
     const ActionDescriptor& action,
     const std::vector<std::uint32_t>& goal_mods) {
-    switch (action.params.type) {
+    switch (ordinary_add_equivalent(action.params.type)) {
     case ActionType::Augment:
     case ActionType::Regal:
     case ActionType::Exalt:
@@ -272,7 +272,7 @@ ProductAdmissionDecision classify_goal_relevant_action(
     if (action.synthetic) {
         return {ProductActionRole::Candidate, "candidate_structural_restart"};
     }
-    switch (action.params.type) {
+    switch (ordinary_add_equivalent(action.params.type)) {
     case ActionType::Essence: {
         const std::uint32_t essence = action.params.essence_index;
         return essence < session.essence_guaranteed_mod_ids.size() &&
@@ -1246,7 +1246,7 @@ ActionRefinementContract derive_refinement_contract(
 
     const ActionTransitionFacts transition =
         action_transition_facts(action.params.type);
-    switch (action.params.type) {
+    switch (ordinary_add_equivalent(action.params.type)) {
     case ActionType::Transmute:
     case ActionType::Alteration:
     case ActionType::Alchemy:
@@ -1348,7 +1348,7 @@ ActionRefinementContract derive_refinement_contract(
         contract.preserved_affixes.push_back(affixes());
         observe_pool_add(contract);
         may_rewrite_item_features(contract, kAffixCountFeatures);
-        if (action.params.type == ActionType::Regal) {
+        if (ordinary_add_equivalent(action.params.type) == ActionType::Regal) {
             replace_item_features(
                 contract, feature(Feature::Rarity));
         } else if (
@@ -1660,7 +1660,7 @@ ActionPreservationMetadata derive_preservation_metadata(
     }
 
     metadata.can_preserve = kAllCarrierProperties;
-    switch (action.params.type) {
+    switch (ordinary_add_equivalent(action.params.type)) {
     case ActionType::Augment:
     case ActionType::Regal:
     case ActionType::Exalt:
@@ -1735,7 +1735,15 @@ ActionPreservationMetadata derive_preservation_metadata(
     return metadata;
 }
 
-void add_basic_currency(ActionRegistry& registry) {
+void add_basic_currency(const SessionImpl& session, ActionRegistry& registry) {
+    if (!session.data->mod_type_key_sid.empty())
+    for (const auto type : {ActionType::FoulbornAugment, ActionType::FoulbornRegal, ActionType::FoulbornExalt}) {
+        auto d = base_descriptor(action_family_contract(type).operation_id.data(), type,
+            TransitionKind::SingleSlot, type == ActionType::FoulbornExalt ? kRarityRare : kRarityMagic);
+        d.legality.requires_open_affix = type != ActionType::FoulbornRegal;
+        add(registry, std::move(d));
+    }
+
     {
         auto d = base_descriptor("transmute", ActionType::Transmute,
                                  TransitionKind::Reforge, kRarityNormal);
@@ -2227,7 +2235,7 @@ void add_influence_exalts(const SessionImpl& session,
         d.legality.rarity_mask = kRarityRare;
         d.legality.requires_open_affix = true;
         d.legality.forbidden_flags |=
-            kFlagInfluenced | kFlagEldritchImplicit | kFlagFractured;
+            kFlagInfluenced | kFlagEldritchImplicit | kFlagFractured | kFlagSynthesised;
         d.sets_flags = kFlagInfluenced;
         add(registry, std::move(d));
     }
@@ -2763,7 +2771,7 @@ ActionRegistry build_action_registry(
     const SessionImpl& session,
     const ActionRegistryBuildOptions& options) {
     ActionRegistry registry;
-    add_basic_currency(registry);
+    add_basic_currency(session, registry);
     add_essences(session, registry, options);
     add_fossils(session, registry, options);
     add_bench(session, registry);

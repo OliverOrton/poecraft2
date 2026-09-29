@@ -190,3 +190,19 @@ fallback, and pinning semantics.
   workspace fluency remain non-authoritative notes.
 
 See [Product Notes](NOTES.md).
+
+## Multi-item resource history
+
+Awakener selects an existing Stash donor using the shared item card. Native
+mutation runs on prepared copies; one IndexedDB transaction compares all saved
+before-values and writes donor consumption, receiver state and the document's
+history/spend snapshot. Undo restores all affected resources and spend; Redo
+replays the recorded result without sampling or charging again. Branch history
+carries the resource snapshots. Conflicting later edits refuse the entire
+transaction. A stale editor cannot save over a consumed/destroyed record.
+
+Calculator preview uses copies and opens a new Emulator result without consuming
+Stash originals. Saved identity excludes accidental self-donation. Memory state
+edits record history without currency cost. Consumed/destroyed Stash cards cannot
+be opened as live inputs. Stable-key import boundaries are documented in
+[Item state](../engine/items.md#export-import-and-cloning).

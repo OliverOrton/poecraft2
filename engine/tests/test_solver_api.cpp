@@ -814,7 +814,7 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     PC_CHECK(pc_solver_candidates(
                  solver, candidates.data(), candidate_count,
                  &candidate_count, &error) == PC_RESULT_OK);
-    PC_CHECK(candidate_count == 19);
+    PC_CHECK(candidate_count == 22);
     std::set<std::string> candidate_ids;
     for (const std::uint32_t candidate : candidates) {
         pc_solver_action_info info{};
@@ -844,7 +844,7 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     PC_CHECK(create_telemetry.find(
                  "\"automatic_eldritch_side_dependency\":") !=
              std::string::npos);
-    PC_CHECK(create_telemetry.find("\"layout_primitives\":19") !=
+    PC_CHECK(create_telemetry.find("\"layout_primitives\":22") !=
              std::string::npos);
     PC_CHECK(create_telemetry.find(
                  "\"fossil_loadouts\":{\"possible\":12950,"
@@ -1501,7 +1501,7 @@ void run_public_product_reforge_family_gate(const char* artifact_dir) {
         PC_CHECK(telemetry.find(
                      "candidate_bounded_goal_relevant_fossil") !=
                  std::string::npos);
-        PC_CHECK(telemetry.find("\"layout_primitives\":17") !=
+        PC_CHECK(telemetry.find("\"layout_primitives\":20") !=
                  std::string::npos);
         PC_CHECK(telemetry.find(
                      "\"fossil_loadouts\":{\"possible\":12950,"
@@ -1891,6 +1891,8 @@ void run_public_solver_gate(const char* artifact_dir) {
         }
     }
     PC_CHECK(influence_exalt_ids == std::set<std::string>({
+                 "influence_exalt:shaper",
+                 "influence_exalt:elder",
                  "influence_exalt:crusader",
                  "influence_exalt:hunter",
                  "influence_exalt:redeemer",
@@ -1898,9 +1900,7 @@ void run_public_solver_gate(const char* artifact_dir) {
     for (const char* unavailable : {
              "influence_exalt:adjudicator",
              "influence_exalt:basilisk",
-             "influence_exalt:elder",
-             "influence_exalt:eyrie",
-             "influence_exalt:shaper"}) {
+             "influence_exalt:eyrie"}) {
         uint32_t unavailable_index = 0;
         PC_CHECK(pc_solver_find_action(
                      solver, unavailable, &unavailable_index, &error) ==
@@ -2608,9 +2608,9 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(solved_telemetry.find(
                  "\"transition_bits_hash\":\"9dde2a4bdd865e2d\"") !=
              std::string::npos);
+    // ABI v3 and the expanded action registry change the stable policy identity.
     PC_CHECK(solved_telemetry.find(
-                 "\"policy_bits_hash\":\"ebffa3b215ea60bd\"") !=
-             std::string::npos);
+                 "\"policy_bits_hash\":\"a5f708da6cf88b51\"") != std::string::npos);
     const bool stepped_policy_guided_refined =
         solved_telemetry.find(
             "\"solution_scope\":"

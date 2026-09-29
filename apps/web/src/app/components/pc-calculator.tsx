@@ -52,6 +52,9 @@ import {
     putCalculatorDraft,
 } from "../workspace/persistence";
 import { workspace } from "../workspace/registry";
+import { listStash, type ItemStashRecord } from "../workspace/persistence";
+import { readItemCard } from "../item-preview";
+import type { ConcreteModListModel } from "./pc-mod-list";
 import {
     getActionPrice,
     getActionPriceResolution,
@@ -127,6 +130,7 @@ const DIAGNOSTIC_SOLVER_FAMILIES: ReadonlyArray<{
     { family: "influence", label: "Influence Exalts" },
     { family: "cleanup", label: "Crafted-mod cleanup" },
     { family: "currency", label: "Ordinary currency" },
+    { family: "foulborn", label: "Foulborn (checked policies; no optimality proof)" },
 ];
 
 /** Same craft panels as the Emulator; buttons select instead of apply. */
@@ -190,10 +194,16 @@ export class PcCalculator extends HTMLElement {
     private pickerActions: SolverActionInfo[] = [];
 
     private itemRarity = "normal";
+    private itemMemoryStrands = 0;
+    private resourceIdentity: string | undefined;
+    private donors: ItemStashRecord[] = [];
+    private donorModel: ConcreteModListModel | undefined;
     private itemInfluences: string[] = [];
     private itemPrefixes: SlotMod[] = [];
     private itemSuffixes: SlotMod[] = [];
     private itemImplicits: SlotMod[] = [];
+    private itemEnchantments: SlotMod[] = [];
+    private itemLifecycle = 0;
     private itemMaxPrefix = 3;
     private itemMaxSuffix = 3;
     private activeContext: "input" | "goal" = "goal";
@@ -291,6 +301,7 @@ export class PcCalculator extends HTMLElement {
         }
 
         const draft = await getCalculatorDraft(this.docId);
+        this.resourceIdentity = draft?.resourceIdentity;
         if (draft) {
             this.base = draft.base;
             this.itemLevel = draft.itemLevel;
@@ -325,7 +336,7 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         const item = draft?.state
-            ? await this.client.importItem(draft.state)
+            ? await this.client.importItem(draft.state, this.session)
             : await this.client.createItem(this.session, {
                 rarity: this.freshRarity,
                 withImplicits: true,
@@ -830,7 +841,7 @@ export class PcCalculator extends HTMLElement {
             // Clone the submitted carrier before asynchronous preparation.
             // Later edits to the form or its native item cannot alter this run.
             solveItem = await this.client.cloneItem(submittedItem);
-            trace.resolved.start_item = await this.client.exportItem(solveItem);
+            trace.resolved.start_item = await this.client.exportItem(solveItem, this.session);
             if (solveAbort.signal.aborted) {
                 this.solveCancelled = true;
                 return;
@@ -1034,7 +1045,7 @@ export class PcCalculator extends HTMLElement {
                 (action) => action.cost_keys,
             ),
         );
-        const state = await this.client.exportItem(this.item);
+        const state = await this.client.exportItem(this.item, this.session);
         const info = await this.client.itemInfo(this.item, this.session);
         const goal = this.solverGoal("product_envelope");
         const payload = buildSolverLabCalculatorExport({
@@ -1163,7 +1174,7 @@ export class PcCalculator extends HTMLElement {
             let calculationItem = 0;
             try {
                 calculationItem = await this.client.cloneItem(submittedItem);
-                (report.request as {state: unknown}).state = await this.client.exportItem(calculationItem);
+                (report.request as {state: unknown}).state = await this.client.exportItem(calculationItem, this.session);
                 const bestiary = this.bestiaryActions.find(
                     (action) => action.id === actionId,
                 );
@@ -1202,10 +1213,11 @@ export class PcCalculator extends HTMLElement {
 
     private async persist(): Promise<void> {
         const draft: CalculatorDraftRecord = {
+            resourceIdentity: this.resourceIdentity,
             docId: this.docId,
             base: this.base,
             itemLevel: this.itemLevel,
-            state: this.item ? await this.client.exportItem(this.item) : null,
+            state: this.item ? await this.client.exportItem(this.item, this.session) : null,
             goalRarity: this.goalRarity,
             allowExtraModifiers: this.allowExtraModifiers,
             slots: this.slots,
@@ -1230,6 +1242,9 @@ export class PcCalculator extends HTMLElement {
         const suffixIds = info.suffix_mod_ids as number[];
         const implicitIds = info.implicit_mod_ids as number[];
         this.itemRarity = info.rarity as string;
+        this.itemMemoryStrands = Number(info.memory_strands ?? 0);
+        this.itemLifecycle = Number(info.lifecycle ?? 0);
+        this.itemEnchantments = ((info.enchantment_mod_ids as number[]) ?? []).map(id => this.toSlot(id, new Set()));
         this.itemInfluences = influenceLabels(
             Number(info.generic_influence_bits ?? 0),
             Number(info.searing_exarch_tier ?? 0),
@@ -1252,7 +1267,7 @@ export class PcCalculator extends HTMLElement {
         // Feed the goal-selection pool exactly like the Emulator feeds its
         // browser: live chaos-pool weights for the active tab.
         const pool =
-            this.modPool.getActiveTab() === "implicit"
+            this.modPool.getActiveTab() === "implicit" || this.itemMemoryStrands > 0 || this.itemLifecycle !== 0 || this.itemEnchantments.length > 0
                 ? null
                 : await this.client.debugPool(this.context, this.item, {
                       action: { type: "chaos" },
@@ -1320,8 +1335,11 @@ export class PcCalculator extends HTMLElement {
             baseName: this.baseDisplayName(),
             itemLevel: this.itemLevel,
             rarity: this.itemRarity,
+            memoryStrands: this.itemMemoryStrands,
             influences: this.itemInfluences,
             implicits: this.itemImplicits,
+            enchantments: this.itemEnchantments,
+            lifecycle: this.itemLifecycle,
             prefixes: this.itemPrefixes,
             suffixes: this.itemSuffixes,
             maxPrefix: this.itemMaxPrefix,
@@ -1500,9 +1518,13 @@ export class PcCalculator extends HTMLElement {
             itemClass: this.bases.find(base => base.path === this.base)?.item_class_key,
             values: this.mechanicValues, fossils: this.selectedFossils, bestiary: this.bestiaryActions,
             selectedAction: this.actionId, selectedLabel: this.actionLabel(this.actionId),
-            onPanel: panel => { this.activeCraftPanel = panel; this.renderActionPanels(); },
+            memoryStrands: this.itemMemoryStrands,
+            donors: this.donors.map(record => ({key: record.id, name: record.name})), donorModel: this.donorModel,
+            onAwakener: () => { void this.guard(() => this.previewAwakener()); },
+            onPanel: panel => { this.activeCraftPanel = panel; this.renderActionPanels(); if (panel === "awakener") void this.guard(() => this.loadDonors()); },
             onValue: (name, value) => {
                 this.mechanicValues.set(name, value);
+                if (name === "awakener-donor") { void this.guard(() => this.loadDonors()); return; }
                 if (name === "essence-type") this.mechanicValues.delete("essence-key");
                 this.renderActionPanels();
             },
@@ -1525,6 +1547,38 @@ export class PcCalculator extends HTMLElement {
 
 
     /** Registry action id from the staged mechanic choices. */
+    private async loadDonors(): Promise<void> {
+        this.donors = (await listStash()).filter((record): record is ItemStashRecord =>
+            record.resourceType !== "strategy" && record.id !== this.resourceIdentity && !Number((record.state as {lifecycle?: number})?.lifecycle ?? 0));
+        if (!this.donors.some(record => record.id === this.mechanicValues.get("awakener-donor")))
+            this.mechanicValues.set("awakener-donor", this.donors[0]?.id ?? "");
+        const donor = this.donors.find(record => record.id === this.mechanicValues.get("awakener-donor"));
+        this.donorModel = donor ? await readItemCard(this.client, this.dataId, this.catalog, donor, donor.name) : undefined;
+        this.renderActionPanels();
+    }
+
+    private async previewAwakener(): Promise<void> {
+        const donor = this.donors.find(record => record.id === this.mechanicValues.get("awakener-donor"));
+        if (!donor) throw new Error("Choose a donor from Stash.");
+        const session = await this.client.createSession(this.dataId, donor.base, donor.itemLevel);
+        let donorItem = 0, receiverItem = 0;
+        try {
+            donorItem = await this.client.importItem(donor.state, session);
+            receiverItem = await this.client.importItem(await this.client.exportItem(this.item, this.session), this.session);
+            await this.client.multiItemApply(this.context, {action: "awakener", resources: [
+                {identity: donor.id, role: "donor", session, item: donorItem},
+                {identity: this.resourceIdentity ?? "preview-receiver", role: "receiver", session: this.session, item: receiverItem},
+            ]});
+            await workspace().openEmulator({base: this.base, itemLevel: this.itemLevel, rarity: "rare",
+                state: await this.client.exportItem(receiverItem, this.session)}, "copy");
+            this.setStatus("Opened a sampled Awakener preview. Exact inventory evaluation is unavailable; preview consumes no Stash resource or currency.");
+        } finally {
+            if (donorItem) await this.client.closeItem(donorItem);
+            if (receiverItem) await this.client.closeItem(receiverItem);
+            await this.client.closeSession(session);
+        }
+    }
+
     private derivedActionId(kind: string): string {
         const value = (name: string) => this.mechanicValues.get(name) ?? "";
         switch (kind) {
@@ -2544,6 +2598,7 @@ export class PcCalculator extends HTMLElement {
 }
 
 function panelForAction(id: string): CraftPanel {
+    if (id.startsWith("foulborn_")) return "foulborn";
     if (id.startsWith("bestiary:")) return "bestiary";
     if (id.startsWith("essence:")) return "essence";
     if (id.startsWith("fossil:")) return "fossil";

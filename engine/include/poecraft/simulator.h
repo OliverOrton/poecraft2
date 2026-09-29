@@ -138,6 +138,7 @@ typedef struct pc_trace_entry {
     int32_t terminal_kind; /* pc_terminal_kind, or -1 */
     int32_t failure_reason; /* pc_simulation_failure_reason */
     pc_item_state item;
+    const char* resources_json; /* stable resource IDs, acquisitions and lifecycle */
 } pc_trace_entry;
 
 typedef struct pc_simulation_example {

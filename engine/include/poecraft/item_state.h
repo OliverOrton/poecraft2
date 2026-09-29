@@ -49,6 +49,12 @@ typedef enum pc_rarity {
     PC_RARITY_RARE = 2
 } pc_rarity;
 
+typedef enum pc_item_lifecycle {
+    PC_ITEM_LIVE = 0,
+    PC_ITEM_CONSUMED = 1,
+    PC_ITEM_DESTROYED = 2
+} pc_item_lifecycle;
+
 /* A mod side. Implicits/enchantments use the dedicated arrays directly. */
 typedef enum pc_affix_side {
     PC_SIDE_PREFIX = 0,
@@ -71,6 +77,8 @@ typedef struct pc_mod_slot {
 typedef struct pc_item_state {
     uint8_t rarity; /* pc_rarity */
     uint8_t quality;
+    uint8_t memory_strands; /* 0 = absent; bounded 0..100. ABI v3. */
+    uint8_t lifecycle; /* pc_item_lifecycle; absent resources cannot be crafted. */
     uint8_t item_flags; /* pc_item_flags */
 
     uint8_t prefix_count;

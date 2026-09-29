@@ -160,3 +160,13 @@ the calculation.
 
 Implementation entry points: `engine/src/session_builder.cpp`,
 `engine/src/actions_basic.cpp`, and `engine/src/rng.cpp`.
+
+## Foulborn arithmetic
+
+The Foulborn weight kind applies one rational tier transform to the eligible
+ordinary pool. A common integer scale preserves every survivor's N/K factor;
+it does not renormalize each type back to its pre-cull total. The complete formula
+and ordering live in [Ordinary currency](../mechanics/ordinary-currency.md#foulborn-2026-09-28-expansion).
+Nonzero memory refuses pool construction, so no memory-dependent pool can reuse
+a zero-strand cache entry. Unknown memory interactions are exposed separately by
+`pc_action_memory_interaction`.

@@ -1,5 +1,19 @@
 # Handoff
 
+The [currency expansion execution record](docs/active/2026-09-28-currency-expansion/README.md#execution-receipt-and-remaining-holds)
+owns the local implementation, per-family capability table, validation and Pro
+handoff. Supported slices are implemented and qualified; the whole programme is
+not complete. Missing mechanics laws hold Dominance, Heist enchantment rolls,
+full corruption and memory stochastic actions. Structural Awakener/resource
+transactions and scoped Vaal sampling are delivered. Foulborn has checked magic
+policies in Current/Finder, zero lower only; the durable rare-root witness returns
+no executable policy in either lane. Memory search remains unavailable/default
+off. Legacy nonempty dense-only saves require original-runtime key migration.
+No push/deployment or previous research allowance was authorized or renewed.
+Work sequentially on main, preserve root `0`, and use the record to select a
+named remaining hold or Pro task. Existing release and IC receipts below remain
+unchanged.
+
 Current release (2026-09-28): Oliver requested a Calculator layout closer
 to the familiar item editor, with crafting and modifiers always visible and only
 Odds/Strategy finder sharing the compact panel. Emulator now gives crafting and

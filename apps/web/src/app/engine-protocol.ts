@@ -58,6 +58,16 @@ export interface CraftAction {
         | "alchemy"
         | "chaos"
         | "exalt"
+        | "foulborn_augment"
+        | "foulborn_regal"
+        | "foulborn_exalt"
+        | "vaal"
+        | "remembrance"
+        | "unravelling"
+        | "dominance"
+        | "tempering"
+        | "tailoring"
+        | "double_corruption"
         | "annul"
         | "scour"
         | "essence"
@@ -89,9 +99,19 @@ export interface CraftAction {
 export type AffixSide = "both" | "prefix" | "suffix";
 
 export interface ActionOutcome {
+    cost_keys?: string[];
     applied: boolean;
     added: number;
     removed: number;
+}
+
+export interface MultiItemRequest {
+    action: "awakener";
+    resources: Array<{identity: string; role: string; session: number; item: number}>;
+}
+export interface MultiItemResult {
+    cost_keys: string[];
+    resources: Array<{identity: string; effect: number; before: unknown; after: unknown}>;
 }
 
 export interface BestiaryActionInfo {
@@ -209,6 +229,7 @@ export interface SimulationSummary {
 }
 
 export interface StrategyTraceEntry {
+    resources?: Array<{resource_id: string; acquisitions: number; lifecycle: number; memory_strands: number}>;
     step_index: number;
     node_id: string;
     node_kind: number;
@@ -597,6 +618,8 @@ export interface SolverActionInfo {
 }
 
 export type SolverActionFamily =
+    | "foulborn"
+    | "memory"
     | "currency"
     | "essence"
     | "fossil"
@@ -964,6 +987,7 @@ export interface Catalog {
 }
 
 export interface ItemInfo {
+    memory_strands?: number;
     rarity: string;
     prefix_mod_ids: number[];
     suffix_mod_ids: number[];

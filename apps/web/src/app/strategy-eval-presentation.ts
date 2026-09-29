@@ -38,6 +38,7 @@ export function strategyStructuralSignature(
         version: strategy.version,
         start_node_id: strategy.start_node_id,
         base_state: strategy.base_state,
+        resources: strategy.resources,
         nodes: strategy.nodes.map((node) => ({
             id: node.id,
             kind: node.kind,

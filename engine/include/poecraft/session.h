@@ -188,7 +188,10 @@ typedef enum pc_mod_reach_kind {
     PC_MOD_REACH_VEILED = 6,
     PC_MOD_REACH_UNVEILED = 7,
     PC_MOD_REACH_CORRUPTED_IMPLICIT = 8,
-    PC_MOD_REACH_ELDRITCH_IMPLICIT = 9
+    PC_MOD_REACH_ELDRITCH_IMPLICIT = 9,
+    PC_MOD_REACH_RETAINED_INFLUENCE = 10,
+    PC_MOD_REACH_RETAINED_ELEVATED = 11,
+    PC_MOD_REACH_RETAINED_ENCHANTMENT = 12
 } pc_mod_reach_kind;
 
 pc_result pc_session_get_mod_info(
@@ -336,7 +339,17 @@ typedef enum pc_action_type {
     PC_ACTION_ELDRITCH_ANNUL = 22,
     PC_ACTION_INFLUENCE_EXALT = 23,
     PC_ACTION_FRACTURE = 24,
-    PC_ACTION_REMOVE_CRAFTED_MODIFIERS = 25
+    PC_ACTION_REMOVE_CRAFTED_MODIFIERS = 25,
+    PC_ACTION_FOULBORN_AUGMENT = 26,
+    PC_ACTION_FOULBORN_REGAL = 27,
+    PC_ACTION_FOULBORN_EXALT = 28,
+    PC_ACTION_REMEMBRANCE = 29,
+    PC_ACTION_UNRAVELLING = 30,
+    PC_ACTION_DOMINANCE = 31,
+    PC_ACTION_TEMPERING = 32,
+    PC_ACTION_TAILORING = 33,
+    PC_ACTION_VAAL = 34,
+    PC_ACTION_DOUBLE_CORRUPTION = 35
 } pc_action_type;
 
 #define PC_MAX_FOSSILS_PER_ACTION 4
@@ -354,6 +367,20 @@ typedef struct pc_action_request {
     const char* influence;    /* influence name for influence exalt */
     uint32_t tier;            /* Eldritch implicit tier, 1..4 */
 } pc_action_request;
+
+/* Memory interaction evidence. -1 means unresolved, 0 no, 1 yes. No missing
+ * distribution is replaced with a uniform law. Imprints copy full item state
+ * and use the separate Bestiary API. Returned reason has static lifetime. */
+typedef struct pc_memory_interaction {
+    int32_t observes_strands;
+    int32_t consumes_strands;
+    int32_t reads_before_consumption;
+    int32_t available_with_strands;
+    const char* unavailable_reason;
+} pc_memory_interaction;
+
+pc_result pc_action_memory_interaction(int32_t action_type,
+                                      pc_memory_interaction* out_interaction);
 
 typedef struct pc_action_result {
     uint32_t struct_size;
@@ -411,7 +438,8 @@ typedef enum pc_pool_debug_failure {
     PC_POOL_DEBUG_MECHANIC_FILTER = 3,
     PC_POOL_DEBUG_INFLUENCE_FILTER = 4,
     PC_POOL_DEBUG_GROUP_BLOCK = 5,
-    PC_POOL_DEBUG_ZERO_WEIGHT = 6
+    PC_POOL_DEBUG_ZERO_WEIGHT = 6,
+    PC_POOL_DEBUG_TIER_CULLED = 7
 } pc_pool_debug_failure;
 
 typedef struct pc_pool_query_request {

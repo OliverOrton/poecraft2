@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { createElement } from "react";
 import type { BestiaryActionInfo, Catalog, CatalogEntry } from "../engine-protocol";
 import { craftActionLabel, groupEssences, resistanceEntries } from "../craft-choices";
 import { HARVEST_AUGMENT, HARVEST_REFORGE, harvestTagsFor } from "../harvest-crafts";
@@ -6,12 +7,17 @@ import { disconnectReact, renderReact } from "../react-host";
 import { GameIcon } from "./pc-game-icon";
 import { CraftChoice } from "./craft-choice";
 import { HarvestCost } from "./craft-cost";
+import type { ConcreteModListModel, PcModList } from "./pc-mod-list";
 
-export type CraftPanel = "basic" | "essence" | "harvest" | "fossil" | "eldritch" | "influenced" | "veiled" | "bestiary";
+export type CraftPanel = "basic" | "foulborn" | "essence" | "harvest" | "fossil" | "eldritch" | "influenced" | "veiled" | "bestiary" | "memory" | "awakener" | "advanced";
 const PANELS: Array<[CraftPanel, string, string]> = [
-    ["basic", "Basic currency", "chaos"], ["essence", "Essences", "essence"], ["harvest", "Harvest", "harvest_reforge"],
+    ["basic", "Basic currency", "chaos"], ["foulborn", "Foulborn", "foulborn_exalt"],
+    ["essence", "Essences", "essence"], ["harvest", "Harvest", "harvest_reforge"],
     ["fossil", "Fossil", "fossil"], ["eldritch", "Eldritch", "eldritch_ember"], ["influenced", "Influenced", "influence_exalt"],
     ["veiled", "Veiled", "veiled_exalt"], ["bestiary", "Bestiary", "bestiary:imprint"],
+    ["memory", "Memory", "remembrance"],
+    ["awakener", "Awakener", "awakener"],
+    ["advanced", "Corruption / enchantment", "vaal"],
 ];
 const BASIC = ["transmute", "augment", "alteration", "regal", "alchemy", "chaos", "exalt", "annul", "scour", "remove_crafted_modifiers", "fracture"];
 
@@ -24,6 +30,11 @@ export interface CraftControlsModel {
     fossils: string[];
     bestiary: BestiaryActionInfo[];
     checkpoint?: boolean;
+    memoryStrands?: number;
+    onMemoryStrands?: (count: number) => void;
+    donors?: CatalogEntry[];
+    donorModel?: ConcreteModListModel;
+    onAwakener?: () => void;
     unveils?: CatalogEntry[];
     selectedAction?: string;
     selectedLabel?: string;
@@ -63,6 +74,31 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
         </div>;
     let panel: ReactNode;
     switch (m.panel) {
+        case "awakener": panel = <div className="pc-material-panel">
+            {select("awakener-donor", m.donors ?? [], undefined, "Donor from Stash")}
+            {m.donorModel && createElement("pc-mod-list", {ref: (element: PcModList | null) => { if (element && m.donorModel) element.setModel(m.donorModel); }})}
+            <span className="pc-help">The current item is the receiver. A successful craft consumes this donor. Group collisions and numerical roll inputs are currently unavailable.</span>
+            <button disabled={!m.onAwakener || !m.donors?.length} onClick={m.onAwakener}><GameIcon assetKey="action:awakener" />{calculator ? "Preview Awakener" : "Apply Awakener"}</button>
+            {calculator && !m.onAwakener && <span className="pc-help">Exact inventory strategy evaluation and automatic donor search are reserved for Pro.</span>}
+        </div>; break;
+        case "memory": panel = <div className="pc-material-panel">
+            <label>Memory strands <input aria-label="Memory strands" type="number" min={0} max={100} step={1}
+                value={m.memoryStrands ?? 0} disabled={!m.onMemoryStrands}
+                onChange={event => { const count = Number(event.target.value); if (Number.isInteger(count) && count >= 0 && count <= 100) m.onMemoryStrands?.(count); }} /></label>
+            <span className="pc-help">Edit the imported item's strand count. This records item state; it does not spend currency.</span>
+            <span className="pc-help">Remembrance and Unravelling are unavailable while their probability laws are unresolved. Strand-bearing crafting and solving are unavailable; Imprint preserves the count.</span>
+        </div>; break;
+        case "advanced": panel = <div className="pc-material-panel">
+            {action("vaal", "Vaal: iLvl 86+ socketless amulets / belts", false, calculator)}
+            <span className="pc-help">Native structural sampling only. Numerical rolls, socket-capable equipment and jewel/unique outcomes are unavailable. Exact corruption calculation and search need Pro integration.</span>
+            <button disabled><GameIcon assetKey="action:dominance" />Orb of Dominance</button>
+            <span className="pc-help">Unavailable: elevation relationships and eligible-pair probabilities are unresolved. Existing elevated modifiers can be retained.</span>
+            <button disabled><GameIcon assetKey="action:tempering" />Tempering Orb</button><button disabled><GameIcon assetKey="action:tailoring" />Tailoring Orb</button>
+            <span className="pc-help">Unavailable: current enchantment weights and socket consequences are unresolved. Imported enchantments are preserved; stat-total effects are unsupported.</span>
+            <button disabled>Double corruption</button>
+            <span className="pc-help">Unavailable: influence, affix, socket/link and exceptional-base laws within the reforge branch are unresolved.</span>
+        </div>; break;
+        case "foulborn": panel = <div className="pc-craft-options">{["foulborn_augment", "foulborn_regal", "foulborn_exalt"].map(id => action(id))}</div>; break;
         case "basic": panel = <><div className="pc-craft-options">{BASIC.map(id => action(id))}{calculator && action("restart", "Restart (fresh base)")}</div>
             {!calculator && <div className="pc-fracture-hint">Fracture rolls a random modifier. Right-click an item modifier or pool tier to set an exact fracture.</div>}</>; break;
         case "essence": {

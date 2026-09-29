@@ -1,12 +1,17 @@
 #include "tests.hpp"
+#include <cstring>
 
 #include "../src/engine_internal.hpp"
 #include "poecraft/api.h"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 #include "poecraft/session.h"
+#include "poecraft/solver.h"
+#include "../src/multi_item.hpp"
+#include "poecraft/multi_item.h"
 
 #include <memory>
+#include <cmath>
 #include <set>
 #include <string>
 #include <vector>
@@ -928,12 +933,21 @@ void run_integration_tests(const char* artifact_dir) {
             PC_CHECK(result.applied == 1);
             PC_CHECK(item.generic_influence_bits != 0);
         }
-        for (const char* unsupported : {"elder", "shaper"}) {
+        for (const char* influence : {"elder", "shaper"}) {
             item = make_item(session, PC_RARITY_RARE);
-            req.influence = unsupported;
+            req.influence = influence;
             PC_CHECK(pc_apply_action(ctx, &item, &req, &result, &error) ==
-                     PC_RESULT_NOT_FOUND);
-            PC_CHECK(item.generic_influence_bits == 0);
+                     PC_RESULT_OK);
+            PC_CHECK(result.applied == 1);
+            PC_CHECK(item.generic_influence_bits != 0);
+            for (const auto flag : {PC_ITEM_CORRUPTED, PC_ITEM_MIRRORED, PC_ITEM_SYNTHESISED}) {
+                item = make_item(session, PC_RARITY_RARE);
+                item.item_flags = flag;
+                const auto before = item;
+                PC_CHECK(pc_apply_action(ctx, &item, &req, &result, &error) == PC_RESULT_OK);
+                PC_CHECK(!result.applied);
+                PC_CHECK(std::memcmp(&before, &item, sizeof(item)) == 0);
+            }
         }
     }
 
@@ -967,7 +981,124 @@ void run_integration_tests(const char* artifact_dir) {
 
 } // namespace
 
+void run_foulborn_weight_tests() {
+    const unsigned keep[] = {0, 1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 7};
+    for (unsigned n = 1; n <= 13; ++n) {
+        auto data = std::make_shared<DataImpl>();
+        data->strings = {"type"};
+        SessionImpl session;
+        session.data = data;
+        WeightedPool pool;
+        for (unsigned i = 0; i < n; ++i) {
+            data->mod_type_key_sid.push_back(0);
+            session.global_index.push_back(i);
+            PoolEntry entry{};
+            entry.session_mod_id = i;
+            entry.required_level = i + 1;
+            entry.final_weight = 100;
+            pool.entries.push_back(entry);
+        }
+        apply_foulborn_transform(session, pool);
+        PC_CHECK(pool.entries.size() == keep[n]);
+        for (const auto& entry : pool.entries) {
+            PC_CHECK(entry.required_level > n - keep[n]);
+            PC_CHECK(std::abs(double(entry.final_weight) / pool.total_weight - 1.0 / keep[n]) < 1e-12);
+        }
+    }
+    // Unequal-weight witness: low -> high 800/400/200/100 against
+    // an independent weight-600 type gives 1/3, 1/6, 1/2.
+    auto data = std::make_shared<DataImpl>();
+    data->strings = {"first", "other"};
+    data->mod_type_key_sid = {0,0,0,0,1};
+    SessionImpl session;
+    session.data = data;
+    session.global_index = {0,1,2,3,4};
+    WeightedPool pool;
+    const unsigned weights[] = {800,400,200,100,600};
+    for (unsigned i=0; i<5; ++i) {
+        PoolEntry e{}; e.session_mod_id=i; e.required_level=i+1; e.final_weight=weights[i];
+        pool.entries.push_back(e);
+    }
+    apply_foulborn_transform(session,pool);
+    PC_CHECK(pool.entries.size()==3 && pool.total_weight==1200);
+    PC_CHECK(pool.entries[0].final_weight==400);
+    PC_CHECK(pool.entries[1].final_weight==200);
+    PC_CHECK(pool.entries[2].final_weight==600);
+    // Fractional witness: N=3,K=2 with high weights 1,2 versus
+    // a separate weight-1 type gives ratio 3:6:2, without truncation.
+    data->mod_type_key_sid={0,0,0,1}; session.global_index={0,1,2,3};
+    pool={};
+    for (unsigned i=0; i<4; ++i) {
+        PoolEntry e{}; e.session_mod_id=i; e.required_level=i+1; e.final_weight=i==2?2:1;
+        pool.entries.push_back(e);
+    }
+    apply_foulborn_transform(session,pool);
+    PC_CHECK(pool.total_weight==11 && pool.entries.size()==3);
+    PC_CHECK(pool.entries[0].final_weight==3 && pool.entries[1].final_weight==6 && pool.entries[2].final_weight==2);
+}
+
+void run_currency_contract_tests(const char* artifact_dir) {
+    // Role-neutral foundation: consume both sources and create a third identity.
+    auto session = std::make_shared<SessionImpl>(make_synth_session());
+    CraftResource a{"a", "left", session, {}}, b{"b", "right", session, {}};
+    a.item.memory_strands = 17;
+    CraftResource gone_a = a, gone_b = b, made{"c", "output", session, {}};
+    gone_a.item.lifecycle = gone_b.item.lifecycle = PC_ITEM_CONSUMED;
+    CraftTransaction transaction{{{"a", PC_RESOURCE_CONSUMED, a, gone_a},
+        {"b", PC_RESOURCE_CONSUMED, b, gone_b}, {"c", PC_RESOURCE_CREATED, {}, made}}, {}};
+    std::vector<CraftResource> resources{a, b};
+    commit_craft_transaction(resources, transaction);
+    PC_CHECK(resources.size() == 3 && resources[0].item.lifecycle == PC_ITEM_CONSUMED);
+    PC_CHECK(resources[1].item.lifecycle == PC_ITEM_CONSUMED && resources[2].identity == "c");
+    PC_CHECK(resources[0].item.memory_strands == 17);
+    bool rejected = false;
+    try { commit_craft_transaction(resources, transaction); } catch (...) { rejected = true; }
+    PC_CHECK(rejected && resources.size() == 3 && resources[2].item.lifecycle == PC_ITEM_LIVE);
+    if (!artifact_dir) return;
+    pc_error_info error{}; pc_error_info_init(&error);
+    pc_data_handle data{}; const auto manifest = std::string(artifact_dir) + "/manifest.json";
+    PC_CHECK(pc_data_load_file(manifest.c_str(), &data, &error) == PC_RESULT_OK);
+    pc_session_options opts{}; opts.struct_size = sizeof(opts); opts.abi_version = PC_ABI_VERSION;
+    opts.base_metadata_path = "Metadata/Items/Armours/BodyArmours/BodyInt17"; opts.item_level = 86;
+    pc_session_handle native{};
+    PC_CHECK(pc_session_create(data, &opts, &native, &error) == PC_RESULT_OK);
+    const std::string goal = R"({"version":"v1","rarity":"magic","slots":[{"family_mod_key":"LocalIncreasedEnergyShield11","min_tier":1}],"actions":["foulborn_augment"]})";
+    const std::string prices = R"({"version":"v1","prices":{"foulborn_augment":1}})";
+    pc_solver_handle solver{}; pc_economy_handle economy{};
+    PC_CHECK(pc_solver_create(native, goal.c_str(), goal.size(), &solver, &error) == PC_RESULT_OK);
+    PC_CHECK(pc_economy_load_json(prices.c_str(), prices.size(), &economy, &error) == PC_RESULT_OK);
+    if (solver && economy) {
+        pc_item_state start{}; start.rarity = PC_RARITY_MAGIC;
+        for (int dimension = 0; dimension < 3; ++dimension) {
+            auto affected = start;
+            if (dimension == 0) affected.memory_strands = 50;
+            if (dimension == 1) affected.lifecycle = PC_ITEM_DESTROYED;
+            if (dimension == 2) affected.enchantment_count = 1;
+            for (const auto mode : {PC_SOLVER_MODE_CURRENT, PC_SOLVER_MODE_STRATEGY_FINDER}) {
+                pc_solve_options options{}; options.struct_size = sizeof(options); options.abi_version = PC_ABI_VERSION;
+                options.solver_mode = mode;
+                PC_CHECK(pc_solver_solve_begin(solver, &affected, economy, &options, &error) == PC_RESULT_UNSUPPORTED_FEATURE);
+                PC_CHECK(std::strstr(error.message, "Pro") != nullptr);
+                pc_solve_summary summary{};
+                PC_CHECK(pc_solver_solve(solver, &affected, economy, &options, &summary, &error) == PC_RESULT_UNSUPPORTED_FEATURE);
+            }
+        }
+        std::uint32_t state = 0;
+        PC_CHECK(pc_solver_project_item(solver, &start, &state, &error) == PC_RESULT_OK);
+        const auto disabled_goal = goal.substr(0, goal.size()-1) + ",\"disabled_action_families\":[\"foulborn\"]}";
+        pc_solver_handle disabled{};
+        PC_CHECK(pc_solver_create(native, disabled_goal.c_str(), disabled_goal.size(), &disabled, &error) == PC_RESULT_OK);
+        std::uint32_t action=0, count=0;
+        PC_CHECK(pc_solver_find_action(disabled, "foulborn_augment", &action, &error) == PC_RESULT_OK);
+        PC_CHECK(pc_calc_action_outcomes(disabled, &start, action, nullptr, 0, &count, nullptr, &error) == PC_RESULT_UNSUPPORTED_FEATURE);
+        pc_solver_destroy(disabled);
+    }
+    pc_solver_destroy(solver); pc_economy_destroy(economy); pc_session_destroy(native); pc_data_destroy(data);
+}
+
 void run_action_tests(const char* artifact_dir) {
+    run_currency_contract_tests(artifact_dir);
+    run_foulborn_weight_tests();
     run_reforge_unit_tests(); // always runs (synthetic, no data needed)
     run_metamod_renewal_unit_tests();
     run_fossil_precision_unit_test();

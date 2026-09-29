@@ -18,6 +18,8 @@ export interface SlotMod {
 }
 
 export interface ConcreteModListModel {
+    memoryStrands?: number;
+    lifecycle?: number;
     kind: "concrete";
     baseKey?: string;
     baseName?: string;
@@ -25,6 +27,7 @@ export interface ConcreteModListModel {
     rarity: string;
     influences: string[];
     implicits: SlotMod[];
+    enchantments?: SlotMod[];
     prefixes: SlotMod[];
     suffixes: SlotMod[];
     maxPrefix: number;
@@ -129,6 +132,8 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
             <div className="pc-mod-list-header">
                 <span className="pc-item-heading">
                     <span className={`pc-rarity pc-rarity-${model.rarity}`}>{model.rarity}</span>
+                    {model.kind === "concrete" && !!model.memoryStrands && <span>Memory strands: {model.memoryStrands}</span>}
+                    {model.kind === "concrete" && !!model.lifecycle && <span>{model.lifecycle === 1 ? "Consumed" : "Destroyed"}</span>}
                     {target && <span className="pc-item-target-badge">TARGET</span>}
                     {model.kind === "concrete" && !!model.influences.length && <span className="pc-item-influences">
                         {model.influences.map(influence => <span key={influence} className="pc-item-influence"><GameIcon assetKey={"influence:" + influence} />{influence}</span>)}
@@ -140,6 +145,10 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
         {model.kind === "concrete" && !!model.implicits.length && <section className="pc-mod-group pc-mod-group-implicit">
             <h4><span>Implicits</span><span>{model.implicits.length}</span></h4>
             <ul className="pc-mod-slots">{model.implicits.map((mod, index) => <ConcreteSlot key={index} mod={mod} side="implicit" index={index} />)}</ul>
+        </section>}
+        {model.kind === "concrete" && !!model.enchantments?.length && <section className="pc-mod-group pc-mod-group-implicit">
+            <h4>Enchantments · retained state; stat-total effects unavailable</h4>
+            <ul className="pc-mod-slots">{model.enchantments.map((mod, index) => <ConcreteSlot key={index} mod={mod} side="implicit" index={index} />)}</ul>
         </section>}
         <div className="pc-mod-explicit-ledger">
             {group("prefix")}{group("suffix")}

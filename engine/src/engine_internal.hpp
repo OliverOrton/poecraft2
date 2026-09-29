@@ -90,6 +90,7 @@ enum class BestiaryRefusalReason : std::uint8_t {
     CheckpointAlreadyExists = 5,
     CheckpointMissing = 6,
     CheckpointBoundToDifferentItem = 7,
+    ItemAbsent = 8,
 };
 
 /* One live item plus an optional saved copy. The checkpoint is not a second
@@ -167,6 +168,7 @@ struct DataImpl {
     std::uint32_t item_class_count = 0;
     std::vector<std::uint32_t> item_class_global_ids;
     std::vector<std::uint32_t> item_class_key_sid;
+    std::vector<std::vector<std::uint32_t>> item_class_influence_tag_sids;
     std::unordered_map<std::uint32_t, std::uint32_t> item_class_index_by_id;
 
     // base item tag links (flat, indexed by base_tag_offsets)
@@ -180,6 +182,8 @@ struct DataImpl {
     std::uint32_t mod_count = 0;
     std::vector<std::uint32_t> mod_global_ids;
     std::vector<std::uint32_t> mod_key_sid;
+    std::vector<std::uint32_t> mod_name_sid;
+    std::vector<std::uint32_t> mod_type_key_sid;
     std::vector<std::int32_t> mod_gen_type_code;
     std::vector<std::int32_t> mod_domain_code;
     std::vector<std::uint32_t> mod_required_level;
@@ -314,7 +318,10 @@ enum class ReachKind : std::uint8_t {
     Veiled = 6,
     Unveiled = 7,
     CorruptedImplicit = 8,
-    EldritchImplicit = 9
+    EldritchImplicit = 9,
+    RetainedInfluence = 10,
+    RetainedElevated = 11,
+    RetainedEnchantment = 12
 };
 
 /*
@@ -450,7 +457,8 @@ struct WeightedPool {
 enum class PoolWeightKind : std::uint8_t {
     Normal = 0,
     TargetedNatural = 1,
-    Fossil = 2
+    Fossil = 2,
+    Foulborn = 3
 };
 
 struct PoolBuildRequest {
@@ -738,8 +746,37 @@ enum class ActionType : int {
     EldritchAnnul = 22,
     InfluenceExalt = 23,
     Fracture = 24,
-    RemoveCraftedModifiers = 25
+    RemoveCraftedModifiers = 25,
+    FoulbornAugment = 26,
+    FoulbornRegal = 27,
+    FoulbornExalt = 28,
+    Remembrance = 29,
+    Unravelling = 30,
+    Dominance = 31,
+    Tempering = 32,
+    Tailoring = 33,
+    Vaal = 34,
+    DoubleCorruption = 35
 };
+
+// A non-null reason means no stochastic implementation is admitted.
+const char* unavailable_currency_reason(ActionType type);
+
+inline bool is_foulborn(ActionType type) {
+    return type == ActionType::FoulbornAugment || type == ActionType::FoulbornRegal ||
+           type == ActionType::FoulbornExalt;
+}
+
+inline ActionType ordinary_add_equivalent(ActionType type) {
+    switch (type) {
+    case ActionType::FoulbornAugment: return ActionType::Augment;
+    case ActionType::FoulbornRegal: return ActionType::Regal;
+    case ActionType::FoulbornExalt: return ActionType::Exalt;
+    default: return type;
+    }
+}
+
+void apply_foulborn_transform(const SessionImpl& session, WeightedPool& pool);
 
 /* Native transition facts shared by sampled application, exact calculation,
  * and solver preservation metadata. This is the mechanic authority for
@@ -986,12 +1023,15 @@ struct StrategyDirectDispatchSignature {
 inline constexpr int kStrategyRestartOperation = 1000;
 inline constexpr int kStrategyBestiaryImprintOperation = 1001;
 inline constexpr int kStrategyBestiaryRestoreImprintOperation = 1002;
+inline constexpr int kStrategyAcquireResourceOperation = 1003;
+inline constexpr int kStrategyMultiItemOperation = 1004;
 
 struct StrategyNode {
     std::string id;
     StrategyNodeKind kind = StrategyNodeKind::Start;
     ActionParameters action;
     int action_type = -1;
+    std::string resource_id;
     std::uint32_t bestiary_action_index =
         std::numeric_limits<std::uint32_t>::max();
     std::vector<std::string> price_keys;
@@ -1016,6 +1056,13 @@ struct StrategyNode {
         direct_dispatch_signatures;
 };
 
+struct StrategyResourceDefinition {
+    std::string id;
+    std::shared_ptr<const SessionImpl> session;
+    pc_item_state item{};
+    std::string acquisition_price_key;
+};
+
 struct StrategyImpl {
     std::string source_json; // Exact parser input for graph-local provenance checks.
     std::shared_ptr<const SessionImpl> session;
@@ -1023,6 +1070,7 @@ struct StrategyImpl {
     pc_item_state start_item{};
     std::uint32_t start_node = 0;
     std::vector<StrategyNode> nodes;
+    std::vector<StrategyResourceDefinition> resources;
     std::unordered_map<std::string, std::uint32_t> node_by_id;
     std::uint32_t condition_memo_slots = 0;
     std::uint32_t count_memo_slots = 0;
@@ -1053,6 +1101,7 @@ struct TraceEntryInternal {
     int terminal_kind = -1;
     int failure_reason = PC_SIM_FAILURE_NONE;
     pc_item_state item{};
+    std::string resources_json = "[]";
 };
 
 struct RetainedTrace {

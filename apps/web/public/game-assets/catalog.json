@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": {
-    "runtime_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+    "runtime_manifest_sha256": "ef06ad1171b10975fd56a43fb596e94f789e8c5bae5092b0617f5331a285db99",
     "canonical_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
     "source_version": "repoe-e4eaf06c20e1ddb4",
     "image_origin": "https://web.poecdn.com/image/"
@@ -4251,6 +4251,15 @@
       "width": 78,
       "height": 78
     },
+    "Metadata/Items/AtlasExiles/ApplyInfluence": {
+      "name": "Awakener's Orb",
+      "visual_identity": "AtlasExilesApplyInfluence",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/TransferOrb.png",
+      "description": "Destroys an item, applying its influence to another of the same item class\r\nThe second item is reforged as a rare item with both influence types and new modifiers",
+      "image": "360668ba03fa7e14da527be50813f900ec6b746c435c6b4d276c8b8cace33149.png",
+      "width": 78,
+      "height": 78
+    },
     "Metadata/Items/Belts/Belt1": {
       "name": "Rustic Sash",
       "visual_identity": "Belt1",
@@ -4415,12 +4424,30 @@
       "width": 78,
       "height": 78
     },
+    "Metadata/Items/Currency/CurrencyAddZanaInfluence": {
+      "name": "Orb of Remembrance",
+      "visual_identity": "CurrencyAddZanaInfluence_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/SecretsoftheAtlas/ZanaPinnacleOrb1.png",
+      "description": "Randomises the number of Memory Strands on a normal equipment item",
+      "image": "86b023fb4e14fd3b80738fe0eb02e3e54916a3f7dc77169a2d34ec8209bf3f6c.png",
+      "width": 78,
+      "height": 78
+    },
     "Metadata/Items/Currency/CurrencyConvertToNormal": {
       "name": "Orb of Scouring",
       "visual_identity": "CurrencyConvertToNormal",
       "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyConvertToNormal.png",
       "description": "Removes all modifiers from an item",
       "image": "0b56a207cf932633559ec0eeb925fdfd255e622ee79312c4363dcabebae96f98.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Currency/CurrencyCorrupt": {
+      "name": "Vaal Orb",
+      "visual_identity": "CurrencyCorrupt",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyVaal.png",
+      "description": "Corrupts an item, modifying it unpredictably",
+      "image": "dd853d10ffdeb0eecb15472c292dd8c04d359df930048b6fcfed8d6804c4d318.png",
       "width": 78,
       "height": 78
     },
@@ -8168,6 +8195,24 @@
       "width": 78,
       "height": 78
     },
+    "Metadata/Items/Currency/CurrencyHeistArmourEnchant": {
+      "name": "Tailoring Orb",
+      "visual_identity": "CurrencyHeistArmourEnchant",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/DivineEnchantWeaponCurrency.png",
+      "description": "Adds or replaces an enchantment on a body armour\r\nThis may reforge the body armour's sockets",
+      "image": "1c3b92a50680a2725255ae982feef46b84f47fde8c9f4e2264b88920d3d2f8ac.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Currency/CurrencyHeistWeaponEnchant": {
+      "name": "Tempering Orb",
+      "visual_identity": "CurrencyHeistWeaponEnchant",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/DivineEnchantBodyArmourCurrency.png",
+      "description": "Adds or replaces an enchantment on a weapon\r\nThis may reforge the weapon's sockets",
+      "image": "cbe2d9bf2dcd830a325daf4cd3ca60c53a0f731ad2da869408de55e8b1924c00.png",
+      "width": 78,
+      "height": 78
+    },
     "Metadata/Items/Currency/CurrencyModValues": {
       "name": "Divine Orb",
       "visual_identity": "CurrencyModValues",
@@ -8177,12 +8222,48 @@
       "width": 78,
       "height": 78
     },
+    "Metadata/Items/Currency/CurrencyMutatedAddModToMagic": {
+      "name": "Foulborn Orb of Augmentation",
+      "visual_identity": "CurrencyMutatedAddModToMagic",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/Chayula/FoulbornAugmentation.png",
+      "description": "Augments a magic item with a new random modifier with\nhigher level modifiers being more likely",
+      "image": "464be5796eb6c5abc2d7e8108aaca5f5b7fafcc3f1f7a071e12f1499c6873061.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Currency/CurrencyMutatedAddModToRare": {
+      "name": "Foulborn Exalted Orb",
+      "visual_identity": "CurrencyMutatedAddModToRare",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/Chayula/FoulbornExalted.png",
+      "description": "Augments a rare item with a new random modifier with\nhigher level modifiers being more likely",
+      "image": "ffc5f172d4a1bbca747c265a318444d68a734db3d28f56a92fe34ba92880574f.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Currency/CurrencyMutatedUpgradeMagicToRare": {
+      "name": "Foulborn Regal Orb",
+      "visual_identity": "CurrencyMutatedUpgradeMagicToRare",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/Chayula/FoulbornRegal.png",
+      "description": "Upgrades a magic item to a rare item with higher level\nmodifiers being more likely",
+      "image": "14d12aea2fcc109afbc7fceee4223fdef6baddf31a916675ea9953cbd25f9117.png",
+      "width": 78,
+      "height": 78
+    },
     "Metadata/Items/Currency/CurrencyRemoveMod": {
       "name": "Orb of Annulment",
       "visual_identity": "CurrencyRemoveMod",
       "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/AnnullOrb.png",
       "description": "Removes a random modifier from an item",
       "image": "8eb58393e883687ffcc92d6a59df7f037379711aadc65ac2a4e3ceca6c6df781.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Currency/CurrencyRemoveZanaInfluence": {
+      "name": "Orb of Unravelling",
+      "visual_identity": "CurrencyRemoveZanaInfluence",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/SecretsoftheAtlas/ZanaPinnacleOrb2.png",
+      "description": "Consumes all Memory Strands on an item to attempt to upgrade the tier\r\nof explicit modifiers based on the number of Memory Strands consumed",
+      "image": "9c7482e4c6b68660f474e63e757361ed4b24c2ad821c23e49fbf6f0652eefa87.png",
       "width": 78,
       "height": 78
     },
@@ -8228,6 +8309,15 @@
       "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/VeiledChaosOrb.png",
       "description": "Reforges a rare item with new random modifiers including a random Veiled modifier",
       "image": "9aecd6f292d932046527121a83a9e75efefddc95891323c008f73b96a30aa512.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Currency/CurrencyUpgradeInfluenceMod": {
+      "name": "Orb of Dominance",
+      "visual_identity": "MavenOrb",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/MavenOrb.png",
+      "description": "Removes one Influenced Modifier from an item with at least two Influenced\r\nModifiers and upgrades another Influenced Modifier\r\nUpgrading a modifier of the highest tier transforms the\r\nmodifier into an Elevated Modifier\r\nAttempting to upgrade an Elevated Modifier rerolls its values\r\nCan be used on Body Armours, Boots, Gloves and Helmets",
+      "image": "63506af04bb816e5b57a79cfab1b2f2d0fd4ba539c67bc6f5de2f75541a3b313.png",
       "width": 78,
       "height": 78
     },
@@ -11796,6 +11886,16 @@
     }
   },
   "actions": {
+    "awakener": "Metadata/Items/AtlasExiles/ApplyInfluence",
+    "dominance": "Metadata/Items/Currency/CurrencyUpgradeInfluenceMod",
+    "tempering": "Metadata/Items/Currency/CurrencyHeistWeaponEnchant",
+    "tailoring": "Metadata/Items/Currency/CurrencyHeistArmourEnchant",
+    "vaal": "Metadata/Items/Currency/CurrencyCorrupt",
+    "remembrance": "Metadata/Items/Currency/CurrencyAddZanaInfluence",
+    "unravelling": "Metadata/Items/Currency/CurrencyRemoveZanaInfluence",
+    "foulborn_augment": "Metadata/Items/Currency/CurrencyMutatedAddModToMagic",
+    "foulborn_regal": "Metadata/Items/Currency/CurrencyMutatedUpgradeMagicToRare",
+    "foulborn_exalt": "Metadata/Items/Currency/CurrencyMutatedAddModToRare",
     "transmute": "Metadata/Items/Currency/CurrencyUpgradeToMagic",
     "augment": "Metadata/Items/Currency/CurrencyAddModToMagic",
     "alteration": "Metadata/Items/Currency/CurrencyRerollMagic",
@@ -13732,6 +13832,27 @@
       "width": 78,
       "height": 78
     },
+    "https://web.poecdn.com/image/Art/2DItems/Currency/Chayula/FoulbornAugmentation.png": {
+      "file": "464be5796eb6c5abc2d7e8108aaca5f5b7fafcc3f1f7a071e12f1499c6873061.png",
+      "sha256": "464be5796eb6c5abc2d7e8108aaca5f5b7fafcc3f1f7a071e12f1499c6873061",
+      "bytes": 11044,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Currency/Chayula/FoulbornExalted.png": {
+      "file": "ffc5f172d4a1bbca747c265a318444d68a734db3d28f56a92fe34ba92880574f.png",
+      "sha256": "ffc5f172d4a1bbca747c265a318444d68a734db3d28f56a92fe34ba92880574f",
+      "bytes": 12989,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Currency/Chayula/FoulbornRegal.png": {
+      "file": "14d12aea2fcc109afbc7fceee4223fdef6baddf31a916675ea9953cbd25f9117.png",
+      "sha256": "14d12aea2fcc109afbc7fceee4223fdef6baddf31a916675ea9953cbd25f9117",
+      "bytes": 14141,
+      "width": 78,
+      "height": 78
+    },
     "https://web.poecdn.com/image/Art/2DItems/Currency/CleansingFireOrbRank1.png": {
       "file": "154803c14a28d2fa165a01ad31e6dd4ed6c8e4075cb6d0936eaed9719ce063aa.png",
       "sha256": "154803c14a28d2fa165a01ad31e6dd4ed6c8e4075cb6d0936eaed9719ce063aa",
@@ -13806,6 +13927,13 @@
       "file": "b9fc6658bba1a50d69d1b043c5e38c8fb53cde9e60ffbc5606c30499b5f730d4.png",
       "sha256": "b9fc6658bba1a50d69d1b043c5e38c8fb53cde9e60ffbc5606c30499b5f730d4",
       "bytes": 9340,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Currency/CurrencyVaal.png": {
+      "file": "dd853d10ffdeb0eecb15472c292dd8c04d359df930048b6fcfed8d6804c4d318.png",
+      "sha256": "dd853d10ffdeb0eecb15472c292dd8c04d359df930048b6fcfed8d6804c4d318",
+      "bytes": 10576,
       "width": 78,
       "height": 78
     },
@@ -13981,6 +14109,20 @@
       "file": "23b30fd63b5a05ef72836045c08d7e4e73eb80bf7a7ab80a9c77089fe83e34f2.png",
       "sha256": "23b30fd63b5a05ef72836045c08d7e4e73eb80bf7a7ab80a9c77089fe83e34f2",
       "bytes": 9683,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Currency/DivineEnchantBodyArmourCurrency.png": {
+      "file": "cbe2d9bf2dcd830a325daf4cd3ca60c53a0f731ad2da869408de55e8b1924c00.png",
+      "sha256": "cbe2d9bf2dcd830a325daf4cd3ca60c53a0f731ad2da869408de55e8b1924c00",
+      "bytes": 11207,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Currency/DivineEnchantWeaponCurrency.png": {
+      "file": "1c3b92a50680a2725255ae982feef46b84f47fde8c9f4e2264b88920d3d2f8ac.png",
+      "sha256": "1c3b92a50680a2725255ae982feef46b84f47fde8c9f4e2264b88920d3d2f8ac",
+      "bytes": 12128,
       "width": 78,
       "height": 78
     },
@@ -14810,6 +14952,13 @@
       "width": 78,
       "height": 78
     },
+    "https://web.poecdn.com/image/Art/2DItems/Currency/MavenOrb.png": {
+      "file": "63506af04bb816e5b57a79cfab1b2f2d0fd4ba539c67bc6f5de2f75541a3b313.png",
+      "sha256": "63506af04bb816e5b57a79cfab1b2f2d0fd4ba539c67bc6f5de2f75541a3b313",
+      "bytes": 10820,
+      "width": 78,
+      "height": 78
+    },
     "https://web.poecdn.com/image/Art/2DItems/Currency/SecretsoftheAtlas/ElderExaltedOrb.png": {
       "file": "d1627fbb7e4676023fe170ac56c6fb668bbe7d5df2dd36cba95041af06706feb.png",
       "sha256": "d1627fbb7e4676023fe170ac56c6fb668bbe7d5df2dd36cba95041af06706feb",
@@ -14824,10 +14973,31 @@
       "width": 78,
       "height": 78
     },
+    "https://web.poecdn.com/image/Art/2DItems/Currency/SecretsoftheAtlas/ZanaPinnacleOrb1.png": {
+      "file": "86b023fb4e14fd3b80738fe0eb02e3e54916a3f7dc77169a2d34ec8209bf3f6c.png",
+      "sha256": "86b023fb4e14fd3b80738fe0eb02e3e54916a3f7dc77169a2d34ec8209bf3f6c",
+      "bytes": 13583,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Currency/SecretsoftheAtlas/ZanaPinnacleOrb2.png": {
+      "file": "9c7482e4c6b68660f474e63e757361ed4b24c2ad821c23e49fbf6f0652eefa87.png",
+      "sha256": "9c7482e4c6b68660f474e63e757361ed4b24c2ad821c23e49fbf6f0652eefa87",
+      "bytes": 13181,
+      "width": 78,
+      "height": 78
+    },
     "https://web.poecdn.com/image/Art/2DItems/Currency/TangleOrbRank1.png": {
       "file": "5c78e7ca29036e59cb9b69d080c960672726c5bac2ee8abc5f281b0676c0df6c.png",
       "sha256": "5c78e7ca29036e59cb9b69d080c960672726c5bac2ee8abc5f281b0676c0df6c",
       "bytes": 6522,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Currency/TransferOrb.png": {
+      "file": "360668ba03fa7e14da527be50813f900ec6b746c435c6b4d276c8b8cace33149.png",
+      "sha256": "360668ba03fa7e14da527be50813f900ec6b746c435c6b4d276c8b8cace33149",
+      "bytes": 13036,
       "width": 78,
       "height": 78
     },

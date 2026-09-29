@@ -177,6 +177,8 @@ std::vector<std::uint64_t> exact_item_state_key(
         1,
         item.rarity,
         item.quality,
+        item.memory_strands,
+        item.lifecycle,
         item.item_flags,
         item.generic_influence_bits,
         item.searing_exarch_tier,

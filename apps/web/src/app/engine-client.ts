@@ -346,16 +346,20 @@ export class EngineClient {
         return this.call("itemInfo", { item, session });
     }
 
-    async exportItem(item: number): Promise<unknown> {
+    async exportItem(item: number, session = 0): Promise<unknown> {
         const { state } = await this.call<{ state: unknown }>("exportItem", {
-            item,
+            item, session,
         });
         return state;
     }
 
-    async importItem(state: unknown): Promise<number> {
+    multiItemApply(context: number, request: import("./engine-protocol").MultiItemRequest): Promise<import("./engine-protocol").MultiItemResult> {
+        return this.call("multiItemApply", {context, request});
+    }
+
+    async importItem(state: unknown, session = 0): Promise<number> {
         const { item } = await this.call<{ item: number }>("importItem", {
-            state,
+            state, session,
         });
         return item;
     }

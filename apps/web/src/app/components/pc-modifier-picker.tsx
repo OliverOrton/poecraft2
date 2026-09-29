@@ -22,7 +22,9 @@ export function ModifierPicker({ options, selected, buttonLabel, onSelect }: Pic
         const title = option.sourceKind === "base" ? "Base Mod Pool"
             : option.sourceKind === "influence" ? (option.sourceLabel || "Influenced") + " Mods"
             : option.sourceKind === "crafted" ? "Crafted Mods"
-            : option.sourceKind === "essence" ? "Essence Mods" : "Fossil Mods";
+            : option.sourceKind === "essence" ? "Essence Mods"
+            : option.sourceKind === "veiled" ? "Veiled Mods"
+            : option.sourceKind === "unveiled" ? "Unveiled Mods" : "Fossil Mods";
         sections.set(title, [...(sections.get(title) ?? []), option]);
     }
     function select(value: string, fractured: boolean) {

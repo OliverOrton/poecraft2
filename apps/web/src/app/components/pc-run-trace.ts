@@ -29,6 +29,16 @@ const ACTION_NAMES = [
     "Influence Exalt",
     "Fracturing Orb",
     "Remove Crafted Modifiers",
+    "Foulborn Augmentation",
+    "Foulborn Regal",
+    "Foulborn Exalted",
+    "Remembrance (unavailable)",
+    "Unravelling (unavailable)",
+    "Dominance (unavailable)",
+    "Tempering (unavailable)",
+    "Tailoring (unavailable)",
+    "Vaal",
+    "Double corruption (unavailable)",
 ];
 
 export class PcRunTrace extends HTMLElement {
@@ -112,7 +122,7 @@ export class PcRunTrace extends HTMLElement {
                                 <div class="pc-action-distribution-row">
                                     <div class="pc-action-distribution-label">
                                         <strong>${escapeHtml(
-                                            ACTION_NAMES[row.action_type] ??
+                                            ({1003: "Acquire resource", 1004: "Awakener"} as Record<number, string>)[row.action_type] ?? ACTION_NAMES[row.action_type] ??
                                                 `Action ${row.action_type}`,
                                         )}</strong>
                                         <span>${escapeHtml(row.node_id)}</span>
@@ -187,6 +197,7 @@ export class PcRunTrace extends HTMLElement {
                         <summary>Item snapshot</summary>
                         <pre>${escapeHtml(JSON.stringify(entry.item, null, 2))}</pre>
                     </details>
+                    ${entry.resources?.length ? `<details><summary>Resource inventory</summary><pre>${escapeHtml(JSON.stringify(entry.resources, null, 2))}</pre></details>` : ""}
                 </div>
             </div>`;
     }

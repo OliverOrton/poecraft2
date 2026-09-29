@@ -56,6 +56,7 @@ facade running in a worker. Python reaches a subset through the shared library.
 | `item_state.h` | Value-copyable item and slot representation |
 | `session.h` | Sessions, contexts, actions, pools, and diagnostics |
 | `bestiary.h` | Compound Bestiary checkpoint/action/calculation contract |
+| `multi_item.h` | Named item roles, atomic resource changes and consumption receipts |
 | `simulator.h` | Strategy graph, economy, chunked simulation, traces, and accounting |
 | `solver.h` | Exact calculation, graph evaluation, solve, compile, telemetry, and memory |
 
@@ -144,10 +145,9 @@ not duplicated here.
 
 - C ABI structs that cross an extensible boundary carry `struct_size` and
   `abi_version` where defined by their header.
-- The current public ABI is version 2. The bounded-policy summary/progress
-  growth intentionally broke ABI v1 because output helpers replace complete
-  compile-time structs; consumers must rebuild and must not claim v1 binary
-  compatibility.
+- The current public ABI is version 3. Currency expansion adds memory/lifecycle
+  fields to item state and resource inventory to Simulator traces. Rebuild native,
+  Python and WASM consumers together; neither v1 nor v2 is binary compatible.
 - Variable-length results use query-required-count or query-required-buffer
   conventions.
 - Every created opaque handle has a matching null-safe destroy function.

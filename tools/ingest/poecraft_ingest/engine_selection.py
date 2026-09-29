@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
+import json
 import re
 import sqlite3
 from typing import Any, Iterable
@@ -91,7 +92,7 @@ def resolve_base_selection(
     rows = list(
         connection.execute(
             """
-            SELECT b.*, ic.key AS item_class
+            SELECT b.*, ic.key AS item_class, ic.source_json AS item_class_source_json
             FROM base_item AS b
             JOIN item_class AS ic ON ic.item_class_id = b.item_class_id
             WHERE b.metadata_path = ? OR b.name = ?
@@ -130,10 +131,12 @@ def resolve_base_selection(
             "cluster_jewel_session is not supported before cluster runtime rules"
         )
 
-    item_class_selector = _normalize_item_class(str(base["item_class"]))
+    item_class_source = json.loads(base["item_class_source_json"])
     selector_tags = {
-        influence: f"{item_class_selector}_{influence}"
+        influence: tag
         for influence in INFLUENCES
+        for tag in item_class_source.get("influence_tags", [])
+        if tag.endswith("_" + influence)
     }
     selector_tag_ids: dict[str, int] = {}
     for influence, tag in selector_tags.items():

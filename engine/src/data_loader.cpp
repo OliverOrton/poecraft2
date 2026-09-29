@@ -138,6 +138,8 @@ static std::shared_ptr<DataImpl> build_data_impl(
     add_influence_exalt_alias("basilisk", "hunter");
     add_influence_exalt_alias("crusader", "crusader");
     add_influence_exalt_alias("eyrie", "redeemer");
+    add_influence_exalt_alias("shaper", "shaper");
+    add_influence_exalt_alias("elder", "elder");
     const Value& metamod_enum = enums.at("metamod_type");
     for (const auto& member : metamod_enum.object) {
         const int code = static_cast<int>(member.second.as_int());
@@ -217,6 +219,22 @@ static std::shared_ptr<DataImpl> build_data_impl(
     data->item_class_count = read_count(item_classes);
     read_u32(item_classes, "global_item_class_ids", data->item_class_global_ids);
     read_u32(item_classes, "key_string_ids", data->item_class_key_sid);
+    if (const auto* tags = item_classes.find("influence_tag_string_ids")) {
+        std::vector<std::uint32_t> offsets, ids;
+        read_u32(item_classes, "influence_tag_offsets", offsets);
+        json::read_int_array(*tags, ids);
+        require(offsets.size() == data->item_class_count + 1 &&
+                offsets.front() == 0 && offsets.back() == ids.size(),
+                "item class influence tags inconsistent");
+        for (auto id : ids) {
+            require(id < data->strings.size(), "invalid class influence tag string");
+        }
+        for (std::size_t i = 0; i < data->item_class_count; ++i) {
+            require(offsets[i] <= offsets[i + 1], "invalid class influence tag offsets");
+            data->item_class_influence_tag_sids.emplace_back(
+                ids.begin() + offsets[i], ids.begin() + offsets[i + 1]);
+        }
+    }
     require(data->item_class_global_ids.size() == data->item_class_count,
             "item_classes arrays inconsistent");
     for (std::uint32_t i = 0; i < data->item_class_count; ++i) {
@@ -280,6 +298,9 @@ static std::shared_ptr<DataImpl> build_data_impl(
     data->mod_count = read_count(mods);
     read_u32(mods, "global_mod_ids", data->mod_global_ids);
     read_u32(mods, "key_string_ids", data->mod_key_sid);
+    read_u32(mods, "name_string_ids", data->mod_name_sid);
+    read_u32(mods, "mod_type_key_string_ids", data->mod_type_key_sid);
+    require(data->mod_type_key_sid.size() == data->mod_count, "mod type identities inconsistent");
     read_i32(mods, "generation_type_codes", data->mod_gen_type_code);
     read_i32(mods, "domain_codes", data->mod_domain_code);
     read_u32(mods, "required_levels", data->mod_required_level);

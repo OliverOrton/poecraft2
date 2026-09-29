@@ -83,9 +83,19 @@ export/import around it, translating session-local IDs to stable keys. The
 JSON includes rarity, explicit/implicit/enchantment slots, flags, influence,
 quality, sockets, links, and the current Bestiary compound checkpoint.
 
-The facade's `pcw_item_clone` copies the `pc_item_state` value but starts the
-new handle without that Bestiary checkpoint. Code that needs a compound
-checkpoint copy should export and import instead.
+ABI v3 adds `memory_strands` (integer 0–100; absent imports default to zero)
+and `lifecycle` (live=0, consumed=1, destroyed=2). The WASM item-state format is
+version 3. Session-aware exports persist base, level, stable mod keys, numeric
+rolls and veil keys, including checkpoint slots. Import remaps keys and rejects
+unknown mappings, invalid bounds/capacities and mismatched base/level. Dense-only
+legacy slots cannot safely cross the corrected catalogue revision: session-aware
+import refuses them and requires an export with stable keys from the original
+runtime. Empty legacy states retain zero-strand/live defaults.
+
+`pcw_item_clone` preserves the compound checkpoint and rebinds its identity to
+the clone. In-game Imprint restoration restores the complete item, including
+strands, but never restores a consumed donor. Old native callers with ABI v2
+options are rejected; bindings and WASM must be rebuilt together.
 
 ## Current boundaries
 
@@ -95,8 +105,15 @@ checkpoint copy should export and import instead.
   quality mutation.
 - Structural simulation therefore cannot evaluate conditions that depend on
   rolled stat totals.
-- The engine supports one-item actions. There is no two-item or recombinator
-  state model.
+- `multi_item.h` exposes named resource roles and retained/changed/created/consumed
+  receipts. Internal commit validates unique identities, unchanged before-state,
+  compatible sessions/data and atomically swaps all outputs. A two-input/new-output
+  fixture qualifies this foundation; no recombination law is implemented.
+- Strand-bearing crafting and exact solving refuse unresolved interaction laws.
+  Retained enchantments are preserved and displayed; crafting on them and exact
+  effect goals are unavailable. Structural Awakener preserves receiver enchantments without claiming stat-total evaluation.
+- Consumed/destroyed resources cannot be crafted, projected as empty live items,
+  or resurrected by in-game Imprint restoration.
 - Full catalog-sized masks are context/session data, not embedded in the item.
 - Session-local integer IDs are never persistence identities.
 

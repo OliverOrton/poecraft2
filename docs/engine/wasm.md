@@ -388,3 +388,12 @@ Implementation entry points: `scripts/build-wasm.ps1`, `scripts/dev-wasm.ps1`,
 `bindings/wasm/wasm_api.cpp`, `apps/web/src/app/engine-wasm.ts`,
 `apps/web/src/app/engine-worker.ts`, `apps/web/src/app/engine-client.ts`, and
 `apps/web/test/engine-smoke.test.ts`.
+
+## Currency expansion ABI v3
+
+The 2026-09-28 expansion supersedes the earlier ABI-v2 statement: item layout
+and Simulator trace entries changed, primitive IDs 26–35 are appended, and
+`pcw_multi_item_apply` is exported through worker/client RPC. Session-aware
+item import/export and clone preserve full compound state. The living
+[currency record](../active/2026-09-28-currency-expansion/README.md) owns the final
+source, data and rebuilt-module hashes and its scoped validation receipt.

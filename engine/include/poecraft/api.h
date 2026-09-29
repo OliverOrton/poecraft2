@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#define PC_ABI_VERSION 2u
+#define PC_ABI_VERSION 3u
 
 /*
  * Opaque handles. Lifetime/threading rules (see docs/foundation/codebase-structure.md):

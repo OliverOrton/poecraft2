@@ -4,7 +4,7 @@
  */
 
 import { StrategyDocument } from "../strategy-model";
-import { ItemSnapshot, StashRecord } from "./persistence";
+import { DraftRecord, ItemSnapshot, ItemStashRecord, StashRecord } from "./persistence";
 
 export type OpenMode = "edit" | "copy";
 
@@ -39,6 +39,7 @@ export interface WorkspaceApi {
     openStash(): void;
     /** Persist a stash record and notify open Stash documents. */
     saveToStash(record: StashRecord): Promise<void>;
+    commitResources(before: ItemStashRecord[], after: ItemStashRecord[], draft: DraftRecord): Promise<void>;
     /** Report a document's dirty state and title so its tab can update. */
     notifyDirty(docId: string, dirty: boolean, title: string): void;
     /** Subscribe to stash changes; returns an unsubscribe function. */

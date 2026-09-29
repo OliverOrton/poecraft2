@@ -27,6 +27,7 @@
 #include <emscripten.h>
 
 #include "poecraft/bestiary.h"
+#include "poecraft/multi_item.h"
 #include "poecraft/api.h"
 #include "poecraft/item_state.h"
 #include "poecraft/session.h"
@@ -178,6 +179,17 @@ bool action_type_from_name(const std::string& name, int32_t& out) {
         {"eldritch_chaos", PC_ACTION_ELDRITCH_CHAOS},
         {"eldritch_annul", PC_ACTION_ELDRITCH_ANNUL},
         {"influence_exalt", PC_ACTION_INFLUENCE_EXALT},
+        {"foulborn_augment", PC_ACTION_FOULBORN_AUGMENT},
+        {"foulborn_regal", PC_ACTION_FOULBORN_REGAL},
+        {"foulborn_exalt", PC_ACTION_FOULBORN_EXALT},
+        {"remembrance", PC_ACTION_REMEMBRANCE},
+        {"unravelling", PC_ACTION_UNRAVELLING},
+        {"dominance", PC_ACTION_DOMINANCE},
+        {"tempering", PC_ACTION_TEMPERING},
+        {"tailoring", PC_ACTION_TAILORING},
+        {"vaal", PC_ACTION_VAAL},
+        {"double_corruption", PC_ACTION_DOUBLE_CORRUPTION},
+
         {"fracture", PC_ACTION_FRACTURE},
         {"remove_crafted_modifiers", PC_ACTION_REMOVE_CRAFTED_MODIFIERS},
     };
@@ -322,6 +334,7 @@ void append_item_info(std::string& out, const pc_item_state& item) {
     append_ids("prefix_mod_ids", item.prefixes, item.prefix_count, false);
     append_ids("suffix_mod_ids", item.suffixes, item.suffix_count, false);
     append_ids("implicit_mod_ids", item.implicits, item.implicit_count, false);
+    append_ids("enchantment_mod_ids", item.enchantments, item.enchantment_count, false);
     out += ",\"fractured_prefix_mod_ids\":[";
     {
         bool first = true;
@@ -347,6 +360,8 @@ void append_item_info(std::string& out, const pc_item_state& item) {
     out += ",\"suffix_count\":";
     out += std::to_string(item.suffix_count);
     out += ",\"item_flags\":" + std::to_string(item.item_flags);
+    out += ",\"memory_strands\":" + std::to_string(item.memory_strands);
+    out += ",\"lifecycle\":" + std::to_string(item.lifecycle);
     out += ",\"generic_influence_bits\":" +
            std::to_string(item.generic_influence_bits);
     out += ",\"searing_exarch_tier\":" +
@@ -372,8 +387,25 @@ void append_item_info(std::string& out, const pc_item_state& item) {
 
 // --- full item state serialization (for Stash save/restore) ----------------
 
-void append_slot(std::string& out, const pc_mod_slot& slot) {
+void append_slot(std::string& out, const pc_mod_slot& slot, pc_session_handle session = nullptr) {
     out += "{\"mod_id\":" + std::to_string(slot.mod_id);
+    if (session) {
+        const auto append_key = [&](uint32_t id) {
+            pc_mod_info info{}; pc_error_info error{};
+            if (pc_session_get_mod_info(session, id, &info, &error) != PC_RESULT_OK)
+                throw std::invalid_argument("Cannot export a modifier outside its session");
+            append_escaped(out, info.key);
+        };
+        out += ",\"mod_key\":"; append_key(slot.mod_id);
+        out += ",\"veiled_option_keys\":[";
+        for (unsigned i = 0; i < slot.veiled_option_count; ++i) {
+            if (i) out += ','; append_key(slot.veiled_option_mod_ids[i]);
+        }
+        out += "]";
+        if (slot.veiled_chosen_mod_id != PC_MOD_NONE) {
+            out += ",\"veiled_chosen_key\":"; append_key(slot.veiled_chosen_mod_id);
+        }
+    }
     out += ",\"group_id\":" + std::to_string(slot.group_id);
     out += ",\"flags\":" + std::to_string(slot.flags);
     out += ",\"rolls\":[";
@@ -392,20 +424,30 @@ void append_slot(std::string& out, const pc_mod_slot& slot) {
 }
 
 void append_slot_array(std::string& out, const char* name,
-                       const pc_mod_slot* slots, uint8_t count) {
+                       const pc_mod_slot* slots, uint8_t count, pc_session_handle session = nullptr) {
     out += "\"";
     out += name;
     out += "\":[";
     for (uint8_t i = 0; i < count; ++i) {
         if (i != 0) out.push_back(',');
-        append_slot(out, slots[i]);
+        append_slot(out, slots[i], session);
     }
     out.push_back(']');
 }
 
-void append_item_state(std::string& out, const pc_item_state& item) {
+void append_item_state(std::string& out, const pc_item_state& item, pc_session_handle session = nullptr) {
     out += "{\"rarity\":" + std::to_string(item.rarity);
+    if (session) {
+        pc_base_info base{}; pc_error_info error{};
+        if (pc_session_get_base_info(session, &base, &error) != PC_RESULT_OK)
+            throw std::invalid_argument("Cannot export item session identity");
+        out += ",\"item_state_version\":3,\"base_key\":";
+        append_escaped(out, base.metadata_path);
+        out += ",\"item_level\":" + std::to_string(base.item_level);
+    }
     out += ",\"quality\":" + std::to_string(item.quality);
+    out += ",\"memory_strands\":" + std::to_string(item.memory_strands);
+    out += ",\"lifecycle\":" + std::to_string(item.lifecycle);
     out += ",\"item_flags\":" + std::to_string(item.item_flags);
     out += ",\"generic_influence_bits\":" +
            std::to_string(item.generic_influence_bits);
@@ -421,27 +463,27 @@ void append_item_state(std::string& out, const pc_item_state& item) {
         out += std::to_string(item.socket_colors[i]);
     }
     out += "],";
-    append_slot_array(out, "prefixes", item.prefixes, item.prefix_count);
+    append_slot_array(out, "prefixes", item.prefixes, item.prefix_count, session);
     out.push_back(',');
-    append_slot_array(out, "suffixes", item.suffixes, item.suffix_count);
+    append_slot_array(out, "suffixes", item.suffixes, item.suffix_count, session);
     out.push_back(',');
-    append_slot_array(out, "implicits", item.implicits, item.implicit_count);
+    append_slot_array(out, "implicits", item.implicits, item.implicit_count, session);
     out.push_back(',');
     append_slot_array(
-        out, "enchantments", item.enchantments, item.enchantment_count);
+        out, "enchantments", item.enchantments, item.enchantment_count, session);
     out.push_back('}');
 }
 
 void append_compound_item_state(
     std::string& out,
-    const pc_bestiary_craft_state& state) {
-    append_item_state(out, state.item);
+    const pc_bestiary_craft_state& state, pc_session_handle session = nullptr) {
+    append_item_state(out, state.item, session);
     out.pop_back();
     out += ",\"bestiary\":{\"checkpoint_present\":";
     out += state.checkpoint_present ? "true" : "false";
     if (state.checkpoint_present) {
         out += ",\"checkpoint\":";
-        append_item_state(out, state.checkpoint);
+        append_item_state(out, state.checkpoint, session);
     }
     out += "}}";
 }
@@ -1005,7 +1047,18 @@ const char* terminal_name(int32_t kind) {
     return "";
 }
 
-pc_mod_slot parse_slot(const Value& object) {
+pc_mod_info mod_by_key(pc_session_handle session, const std::string& key) {
+    if (!session) throw std::invalid_argument("Stable item import requires a session");
+    uint32_t count = 0; pc_error_info error{};
+    pc_session_get_mod_count(session, &count, &error);
+    for (uint32_t i = 0; i < count; ++i) {
+        pc_mod_info info{};
+        if (pc_session_get_mod_info(session, i, &info, &error) == PC_RESULT_OK && key == info.key) return info;
+    }
+    throw std::invalid_argument("Imported modifier is not retained by the selected session: " + key);
+}
+
+pc_mod_slot parse_slot(const Value& object, pc_session_handle session) {
     pc_mod_slot slot;
     std::memset(&slot, 0, sizeof(slot));
     slot.mod_id = obj_u32(object, "mod_id", PC_MOD_NONE);
@@ -1014,9 +1067,15 @@ pc_mod_slot parse_slot(const Value& object) {
     slot.veiled_chosen_mod_id =
         obj_u32(object, "veiled_chosen_mod_id", PC_MOD_NONE);
     const Value* rolls = object.find("rolls");
-    if (rolls != nullptr && rolls->type == Type::Array) {
+    if (rolls != nullptr) {
+        if (rolls->type != Type::Array || rolls->array.size() > PC_MAX_ROLL_VALUES)
+            throw std::invalid_argument("Invalid numeric roll array");
         for (std::size_t i = 0;
              i < rolls->array.size() && i < PC_MAX_ROLL_VALUES; ++i) {
+            const auto& value = rolls->array[i];
+            if (value.type != Type::Number || value.number != std::floor(value.number) ||
+                value.number < INT32_MIN || value.number > INT32_MAX)
+                throw std::invalid_argument("Numeric rolls must be signed 32-bit integers");
             slot.rolls[i] = static_cast<int32_t>(rolls->array[i].number);
             slot.roll_count = static_cast<uint8_t>(i + 1);
         }
@@ -1030,28 +1089,63 @@ pc_mod_slot parse_slot(const Value& object) {
             slot.veiled_option_count = static_cast<uint8_t>(i + 1);
         }
     }
+    if (const auto* key = object.find("mod_key")) {
+        const auto info = mod_by_key(session, key->as_string());
+        slot.mod_id = info.session_mod_id;
+        slot.group_id = static_cast<uint16_t>(info.primary_group_id);
+        slot.veiled_option_count = 0;
+        if (const auto* keys = object.find("veiled_option_keys")) {
+            if (keys->type != Type::Array || keys->array.size() > PC_MAX_VEILED_OPTIONS)
+                throw std::invalid_argument("Invalid veiled option keys");
+            for (const auto& option : keys->array)
+                slot.veiled_option_mod_ids[slot.veiled_option_count++] = mod_by_key(session, option.as_string()).session_mod_id;
+        }
+        slot.veiled_chosen_mod_id = PC_MOD_NONE;
+        if (const auto* chosen = object.find("veiled_chosen_key"))
+            slot.veiled_chosen_mod_id = mod_by_key(session, chosen->as_string()).session_mod_id;
+    } else if (session)
+        throw std::invalid_argument("Legacy dense-only modifier state cannot be imported across data revisions; export stable modifier keys from the original runtime first");
     return slot;
 }
 
 uint8_t parse_slot_array(const Value& state, const char* name,
-                         pc_mod_slot* slots, uint8_t capacity) {
+                         pc_mod_slot* slots, uint8_t capacity, pc_session_handle session) {
     const Value* array = state.find(name);
-    if (array == nullptr || array->type != Type::Array) {
-        return 0;
-    }
+    if (array == nullptr) return 0;
+    if (array->type != Type::Array || array->array.size() > capacity)
+        throw std::invalid_argument("Invalid item slot array or capacity");
     uint8_t count = 0;
     for (const auto& entry : array->array) {
-        if (count >= capacity || entry.type != Type::Object) {
-            break;
-        }
-        slots[count++] = parse_slot(entry);
+        if (entry.type != Type::Object) throw std::invalid_argument("Item slots must be objects");
+        slots[count++] = parse_slot(entry, session);
     }
     return count;
 }
-pc_item_state parse_item_state(const Value& state) {
+pc_item_state parse_item_state(const Value& state, pc_session_handle session = nullptr) {
+    if (obj_u32(state, "item_state_version") > 3) throw std::invalid_argument("Unsupported item state version");
+    if (const auto* key = state.find("base_key")) {
+        if (!session) throw std::invalid_argument("Stable item import requires a session");
+        pc_base_info base{}; pc_error_info error{};
+        pc_session_get_base_info(session, &base, &error);
+        if (key->as_string() != base.metadata_path || obj_u32(state, "item_level") != base.item_level)
+            throw std::invalid_argument("Imported item base/level does not match its session");
+    }
     pc_item_state item{};
     item.rarity = static_cast<uint8_t>(obj_u32(state, "rarity"));
     item.quality = static_cast<uint8_t>(obj_u32(state, "quality"));
+    if (const Value* strands = state.find("memory_strands")) {
+        if (strands->type != Type::Number || !std::isfinite(strands->number) ||
+            strands->number < 0 || strands->number > 100 ||
+            std::floor(strands->number) != strands->number) {
+            throw std::invalid_argument("memory_strands must be an integer from 0 to 100");
+        }
+        item.memory_strands = static_cast<uint8_t>(strands->number);
+    }
+    if (const auto* life = state.find("lifecycle")) {
+        if (life->type != Type::Number || life->number < 0 || life->number > 2 || std::floor(life->number) != life->number)
+            throw std::invalid_argument("Invalid item lifecycle");
+        item.lifecycle = static_cast<uint8_t>(life->number);
+    }
     item.item_flags = static_cast<uint8_t>(obj_u32(state, "item_flags"));
     item.generic_influence_bits =
         static_cast<uint8_t>(obj_u32(state, "generic_influence_bits"));
@@ -1061,7 +1155,12 @@ pc_item_state parse_item_state(const Value& state) {
         static_cast<uint8_t>(obj_u32(state, "eater_of_worlds_tier"));
     item.link_mask = static_cast<uint8_t>(obj_u32(state, "link_mask"));
     const Value* sockets = state.find("socket_colors");
-    if (sockets != nullptr && sockets->type == Type::Array) {
+    if (sockets != nullptr) {
+        if (sockets->type != Type::Array || sockets->array.size() > PC_MAX_SOCKETS)
+            throw std::invalid_argument("Invalid socket array or capacity");
+        for (const auto& color : sockets->array)
+            if (color.type != Type::Number || color.number < 0 || color.number > 255 || std::floor(color.number) != color.number)
+                throw std::invalid_argument("Invalid socket colour");
         for (std::size_t i = 0;
              i < sockets->array.size() && i < PC_MAX_SOCKETS; ++i) {
             item.socket_colors[i] =
@@ -1070,13 +1169,13 @@ pc_item_state parse_item_state(const Value& state) {
         }
     }
     item.prefix_count =
-        parse_slot_array(state, "prefixes", item.prefixes, PC_MAX_PREFIXES);
+        parse_slot_array(state, "prefixes", item.prefixes, PC_MAX_PREFIXES, session);
     item.suffix_count =
-        parse_slot_array(state, "suffixes", item.suffixes, PC_MAX_SUFFIXES);
+        parse_slot_array(state, "suffixes", item.suffixes, PC_MAX_SUFFIXES, session);
     item.implicit_count =
-        parse_slot_array(state, "implicits", item.implicits, PC_MAX_IMPLICITS);
+        parse_slot_array(state, "implicits", item.implicits, PC_MAX_IMPLICITS, session);
     item.enchantment_count = parse_slot_array(
-        state, "enchantments", item.enchantments, PC_MAX_ENCHANTS);
+        state, "enchantments", item.enchantments, PC_MAX_ENCHANTS, session);
     return item;
 }
 
@@ -1500,7 +1599,12 @@ const char* pcw_item_clone(uint32_t item_id) {
     if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
     std::uint32_t id = g_next_id++;
     g_items[id] = *item;
-    reset_bestiary_state(id, *item);
+    if (auto* original = sync_bestiary_state(item_id, *item)) {
+        auto copy = *original;
+        copy.live_item_identity = id;
+        if (copy.checkpoint_present) copy.checkpoint_bound_identity = id;
+        g_bestiary_states[id] = copy;
+    } else reset_bestiary_state(id, *item);
     std::string out = "{\"ok\":true,\"item\":";
     out += std::to_string(id);
     out.push_back('}');
@@ -1684,7 +1788,7 @@ const char* pcw_item_set_mod_fractured(uint32_t item_id, const char* spec_json) 
 // Serialize the complete item state so the UI can persist it to the Stash /
 // crash-recovery store and reconstruct it exactly later.
 EMSCRIPTEN_KEEPALIVE
-const char* pcw_item_export(uint32_t item_id) {
+const char* pcw_item_export(uint32_t item_id, uint32_t session_id) {
     pc_item_state* item = find(g_items, item_id);
     if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
     std::string out = "{\"ok\":true,\"state\":";
@@ -1692,16 +1796,58 @@ const char* pcw_item_export(uint32_t item_id) {
         sync_bestiary_state(item_id, *item);
     if (bestiary == nullptr)
         return fail(PC_RESULT_INTERNAL_ERROR, "Bestiary state unavailable");
-    append_compound_item_state(out, *bestiary);
+    const auto* session = find(g_sessions, session_id);
+    try { append_compound_item_state(out, *bestiary, session ? *session : nullptr); }
+    catch (const std::exception& error) { return fail(PC_RESULT_INVALID_ARGUMENT, error.what()); }
     out.push_back('}');
     return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_multi_item_apply(uint32_t context_id, const char* request_json) {
+    const auto* context = find(g_contexts, context_id);
+    if (!context) return fail(PC_RESULT_NOT_FOUND, "unknown action context");
+    try {
+        const auto request = Parser(request_json, std::strlen(request_json)).parse();
+        const auto& input = request.at("resources").array;
+        if (input.empty() || input.size() > PC_MAX_CRAFT_RESOURCES)
+            return fail(PC_RESULT_INVALID_ARGUMENT, "Invalid resource count");
+        std::vector<pc_craft_resource> resources;
+        for (const auto& value : input) {
+            const auto* session = find(g_sessions, obj_u32(value, "session"));
+            auto* item = find(g_items, obj_u32(value, "item"));
+            if (!session || !item) return fail(PC_RESULT_NOT_FOUND, "Unknown resource session/item");
+            resources.push_back({value.at("identity").as_string().c_str(),
+                                 value.at("role").as_string().c_str(), *session, item});
+        }
+        pc_multi_item_result result{}; pc_error_info error = make_error();
+        const auto rc = pc_multi_item_apply(*context, request.at("action").as_string().c_str(),
+            resources.data(), static_cast<uint32_t>(resources.size()), &result, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
+        std::string out = "{\"ok\":true,\"cost_keys\":[";
+        append_escaped(out, result.consumed_price_key);
+        out += "],\"resources\":[";
+        for (unsigned i = 0; i < result.resource_count; ++i) {
+            if (i) out += ',';
+            out += "{\"identity\":"; append_escaped(out, result.resources[i].identity);
+            out += ",\"effect\":" + std::to_string(result.resources[i].effect);
+            out += ",\"before\":";
+            append_item_state(out, result.resources[i].before, resources[i].session);
+            out += ",\"after\":";
+            append_item_state(out, result.resources[i].after, resources[i].session);
+            out += '}';
+        }
+        return respond(out + "]}");
+    } catch (const std::exception& e) { return fail(PC_RESULT_INVALID_ARGUMENT, e.what()); }
 }
 
 // Reconstruct an item from a previously exported state document and register it
 // as a fresh handle. The input is the {"state":{...}} document or the bare
 // state object.
 EMSCRIPTEN_KEEPALIVE
-const char* pcw_item_import(const char* state_json) {
+const char* pcw_item_import(const char* state_json, uint32_t session_id) {
+    const auto* session_ptr = find(g_sessions, session_id);
+    const auto session = session_ptr ? *session_ptr : nullptr;
     Value document;
     try {
         document = Parser(state_json, std::strlen(state_json)).parse();
@@ -1715,7 +1861,9 @@ const char* pcw_item_import(const char* state_json) {
     if (state->type != Type::Object) {
         return fail(PC_RESULT_INVALID_ARGUMENT, "item state must be an object");
     }
-    pc_item_state item = parse_item_state(*state);
+    pc_item_state item{};
+    try { item = parse_item_state(*state, session); }
+    catch (const std::exception& e) { return fail(PC_RESULT_INVALID_ARGUMENT, e.what()); }
     if (item.generic_influence_bits != 0 &&
         pc_item_find_fractured(&item, nullptr, nullptr) == PC_RESULT_OK) {
         return fail(
@@ -1737,7 +1885,8 @@ const char* pcw_item_import(const char* state_json) {
                     PC_RESULT_INVALID_ARGUMENT,
                     "active Bestiary checkpoint requires saved item state");
             }
-            checkpoint = parse_item_state(*saved);
+            try { checkpoint = parse_item_state(*saved, session); }
+            catch (const std::exception& e) { return fail(PC_RESULT_INVALID_ARGUMENT, e.what()); }
             if (checkpoint.generic_influence_bits != 0 &&
                 pc_item_find_fractured(
                     &checkpoint, nullptr, nullptr) == PC_RESULT_OK) {
@@ -1858,6 +2007,7 @@ const char* pcw_apply(uint32_t context_id, uint32_t item_id,
     out += result.applied ? "true" : "false";
     out += ",\"added\":" + std::to_string(result.added);
     out += ",\"removed\":" + std::to_string(result.removed);
+    if (request.action_type == PC_ACTION_VAAL) out += result.applied ? ",\"cost_keys\":[\"vaal\"]" : ",\"cost_keys\":[]";
     out += "}}";
     return respond(std::move(out));
 }
@@ -2467,6 +2617,8 @@ const char* pcw_simulator_result(uint32_t simulator_id) {
                    std::to_string(entry.failure_reason);
             out += ",\"item\":";
             append_item_state(out, entry.item);
+            out += ",\"resources\":";
+            out += entry.resources_json ? entry.resources_json : "[]";
             out.push_back('}');
         }
         out += "]}";

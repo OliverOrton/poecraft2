@@ -7,6 +7,9 @@
 #include <cctype>
 #include <cstring>
 #include <limits>
+#include <map>
+#include <numeric>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -18,6 +21,7 @@ namespace {
 constexpr std::int32_t kFlagEssenceOnly = 1 << 0;
 constexpr std::int32_t kFlagCrafted = 1 << 1;
 constexpr std::int32_t kFlagMetamod = 1 << 2;
+constexpr std::int32_t kFlagInfluence = 1 << 3;
 constexpr std::int32_t kFlagDelve = 1 << 4;
 constexpr std::int32_t kFlagImplicit = 1 << 5;
 constexpr std::int32_t kFlagCorruptedImplicit = 1 << 6;
@@ -536,8 +540,20 @@ void build_session(SessionImpl& session) {
     session.selector_tag_by_influence.assign(
         d.influence_name_by_code.size(), -1);
     for (std::size_t code = 1; code < d.influence_name_by_code.size(); ++code) {
-        const auto it = d.tag_id_by_name.find(
-            class_selector + "_" + d.influence_name_by_code[code]);
+        std::string selector = class_selector + "_" + d.influence_name_by_code[code];
+        if (!d.item_class_influence_tag_sids.empty()) {
+            // Current artifacts preserve the canonical class mapping. Do not
+            // guess weapon selectors from a display name (e.g. 2h_sword).
+            selector.clear();
+            if (class_it != d.item_class_index_by_id.end()) {
+                const std::string suffix = "_" + d.influence_name_by_code[code];
+                for (auto sid : d.item_class_influence_tag_sids[class_it->second]) {
+                    const auto& tag = d.string_at(sid);
+                    if (tag.ends_with(suffix)) selector = tag;
+                }
+            }
+        }
+        const auto it = d.tag_id_by_name.find(selector);
         if (it != d.tag_id_by_name.end()) {
             session.selector_tag_by_influence[code] = it->second;
         }
@@ -658,6 +674,22 @@ void build_session(SessionImpl& session) {
                 0);
             if (spawn.weight > 0 && spawn.tag_id != default_tag_id) {
                 add_mod(p, ReachKind::Unveiled, "veiled:unveil");
+            } else {
+                // Member-specific sources belong in the visible catalog, but
+                // not in generic Veiled currency offers. Evaluate the ordered
+                // rules with the actual member tag and this base's tags.
+                for (auto row = d.spawn_offsets[p]; row < d.spawn_offsets[p + 1]; ++row) {
+                    if (d.spawn_weights[row] <= 0) continue;
+                    const auto tag = d.spawn_tag_ids[row];
+                    const auto name = d.tag_name_by_id.find(tag);
+                    if (name == d.tag_name_by_id.end() ||
+                        !(name->second.ends_with("_veiled_prefix") || name->second.ends_with("_veiled_suffix"))) continue;
+                    auto tags = base_set; tags.insert(tag);
+                    if (first_matching(d.spawn_offsets, d.spawn_tag_ids, d.spawn_weights, p, tags, 0).weight > 0) {
+                        add_mod(p, ReachKind::Unveiled, "veiled:member:" + name->second);
+                        break;
+                    }
+                }
             }
             continue;
         }
@@ -768,6 +800,57 @@ void build_session(SessionImpl& session) {
         }
     }
 
+    // Legal transfer retention is separate from ordinary item-level roll
+    // eligibility. Append these rows so existing eligible dense IDs stay put.
+    for (std::uint32_t p = 0; p < d.mod_count; ++p) {
+        if (d.mod_required_level[p] <= session.item_level ||
+            !allowed_domains.count(d.mod_domain_code[p])) continue;
+        const int gen = d.mod_gen_type_code[p];
+        if (gen != d.gen_prefix_code && gen != d.gen_suffix_code) continue;
+        const int influence = d.mod_influence_code[p];
+        if (influence <= 0 || static_cast<std::size_t>(influence) >= session.selector_tag_by_influence.size()) continue;
+        const auto tag = session.selector_tag_by_influence[influence];
+        if (tag < 0) continue;
+        auto tags = base_set;
+        tags.insert(static_cast<std::uint32_t>(tag));
+        if (first_matching(d.spawn_offsets, d.spawn_tag_ids, d.spawn_weights, p, tags, 0).weight > 0)
+            add_mod(p, ReachKind::RetainedInfluence, "retained:influence:" + d.influence_name_by_code[influence]);
+    }
+    // Canonical elevated names and their zero-weight influence selectors
+    // establish retention, not an upgrade relationship or random roll law.
+    for (std::uint32_t p = 0; p < d.mod_count; ++p) {
+        if (d.mod_name_sid.size() != d.mod_count ||
+            d.string_at(d.mod_name_sid[p]).find("Elevated") == std::string::npos) continue;
+        const int gen = d.mod_gen_type_code[p];
+        if (gen != d.gen_prefix_code && gen != d.gen_suffix_code) continue;
+        if (!allowed_domains.count(d.mod_domain_code[p])) continue;
+        for (std::size_t influence = 1; influence < session.selector_tag_by_influence.size(); ++influence) {
+            const auto tag = session.selector_tag_by_influence[influence];
+            if (tag < 0) continue;
+            bool matched = false;
+            for (auto row = d.spawn_offsets[p]; row < d.spawn_offsets[p + 1]; ++row)
+                matched |= d.spawn_tag_ids[row] == static_cast<std::uint32_t>(tag);
+            if (!matched) continue;
+            add_mod(p, ReachKind::RetainedElevated, "retained:elevated:" + d.influence_name_by_code[influence]);
+            const auto id = session.session_id_by_global_id.at(d.mod_global_ids[p]);
+            session.influence_code[id] = static_cast<int>(influence);
+            session.reach_influence[id] = static_cast<int>(influence);
+            session.flags[id] |= kFlagInfluence;
+        }
+    }
+    const auto weapon = d.tag_id_by_name.find("weapon");
+    const bool is_weapon = weapon != d.tag_id_by_name.end() && base_set.count(weapon->second);
+    const auto enchant_group = d.group_id_by_key.find(is_weapon ? "EnchantmentHeistWeapon" : "EnchantmentHeistArmour");
+    if ((is_weapon || item_class_key == "Body Armour") && enchant_group != d.group_id_by_key.end()) {
+        for (std::uint32_t p = 0; p < d.mod_count; ++p) {
+            bool matches = false;
+            for (auto row = d.mod_group_offsets[p]; row < d.mod_group_offsets[p + 1]; ++row)
+                matches |= d.mod_group_ids_flat[row] == enchant_group->second;
+            if (!matches) continue;
+            add_mod(p, ReachKind::RetainedEnchantment, "retained:heist_enchantment");
+            session.flags[session.session_id_by_global_id.at(d.mod_global_ids[p])] &= ~kFlagImplicit;
+        }
+    }
     session.mod_count = static_cast<std::uint32_t>(session.global_index.size());
     session.words = pc_bitset_words(session.mod_count);
     if (!d.mod_group_ids_flat.empty()) {
@@ -861,7 +944,7 @@ void build_session(SessionImpl& session) {
             pc_bitset_set(session.veiled_template_mask.data(), s);
         if (session.flags[s] & kFlagUnveiled) {
             pc_bitset_set(session.unveiled_mask.data(), s);
-            bool named = false;
+            bool named = session.reach_via[s].starts_with("veiled:member:");
             for (std::uint32_t i = session.class_offsets[s];
                  i < session.class_offsets[s + 1]; ++i) {
                 const auto it = d.tag_name_by_id.find(session.class_tag_ids[i]);
@@ -1083,6 +1166,10 @@ const WeightedPool& get_weighted_pool(
     const PoolBuildRequest& request,
     bool* out_cache_hit,
     const PoolBuildHints* hints) {
+    if (item != nullptr && item->lifecycle != PC_ITEM_LIVE)
+        throw std::invalid_argument("An absent resource has no crafting pool");
+    if (item != nullptr && item->memory_strands > 0)
+        throw std::invalid_argument("Memory-strand odds are unavailable: the tier and consumption laws are unresolved");
     const SessionImpl& session = *context.session;
     const std::uint32_t signature_id =
         intern_item_tag_signature(context, item);
@@ -1313,6 +1400,9 @@ const WeightedPool& get_weighted_pool(
         pool.prefix_sums.push_back(pool.total_weight);
     });
 
+    if (request.weight_kind == PoolWeightKind::Foulborn) {
+        apply_foulborn_transform(session, pool);
+    }
     ++context.pool_cache_misses;
     if (context.perf_timing_enabled) {
         context.weighted_pool_build_ns +=
@@ -1473,12 +1563,75 @@ void build_pool_debug_rows(
         } else if (!row.positively_weighted) {
             row.first_failure = 6;
         }
+        if (request.weight_kind == PoolWeightKind::Foulborn &&
+            accepted_it == accepted.end() && row.first_failure == 0) {
+            row.first_failure = 7; // tier culled
+        }
         if (accepted_it != accepted.end()) {
             row.entry = *accepted_it->second;
             row.first_failure = 0;
         }
         out_rows.push_back(row);
     }
+}
+
+void apply_foulborn_transform(const SessionImpl& session, WeightedPool& pool) {
+    // The canonical mod type is the tier identity, never the display family.
+    // Pool eligibility (including item level, ordered weights and exclusions)
+    // precedes this transform. Count only positive eligible tiers.
+    std::map<std::pair<int, std::uint32_t>, std::vector<std::size_t>> types;
+    for (std::size_t i = 0; i < pool.entries.size(); ++i) {
+        const auto& e = pool.entries[i];
+        const auto pos = session.global_index.at(e.session_mod_id);
+        const auto type = session.data->mod_type_key_sid.at(pos);
+        if (session.data->string_at(type).empty())
+            throw std::invalid_argument("Foulborn requires canonical modifier type identity");
+        types[{e.gen_type, type}].push_back(i);
+    }
+    std::vector<std::uint64_t> numerators(pool.entries.size());
+    std::vector<std::uint64_t> denominators(pool.entries.size(), 1);
+    std::uint64_t scale = 1;
+    for (auto& [type, ids] : types) {
+        std::sort(ids.begin(), ids.end(), [&](auto a, auto b) {
+            return pool.entries[a].required_level > pool.entries[b].required_level;
+        });
+        for (std::size_t i = 1; i < ids.size(); ++i) {
+            if (pool.entries[ids[i]].required_level == pool.entries[ids[i-1]].required_level)
+                throw std::invalid_argument("Foulborn tier ordering unresolved: multiple eligible modifiers of one type at the same level");
+        }
+        const auto n = ids.size();
+        const auto k = n <= 6 ? (n + 1) / 2 : n / 2 + 1;
+        for (std::size_t i = 0; i < k; ++i) {
+            const auto id = ids[i];
+            const std::uint64_t numerator = std::uint64_t(pool.entries[id].final_weight) * n;
+            const auto divisor = std::gcd(numerator, std::uint64_t(k));
+            numerators[id] = numerator / divisor;
+            denominators[id] = k / divisor;
+            const auto factor = denominators[id] / std::gcd(scale, denominators[id]);
+            if (scale > UINT32_MAX / factor)
+                throw std::overflow_error("Foulborn rational weight scale exceeds native capacity");
+            scale *= factor;
+        }
+    }
+    // A common integer unit preserves N/K exactly, including unequal weights.
+    // It is not family-total renormalization. The common scale cancels in all
+    // probabilities and is shared by diagnostics, sampling and exact rows.
+    std::vector<PoolEntry> kept;
+    pool.prefix_sums.clear();
+    pool.total_weight = pool.prefix_total_weight = pool.suffix_total_weight = 0;
+    for (std::size_t i = 0; i < pool.entries.size(); ++i) {
+        if (!numerators[i]) continue;
+        auto e = pool.entries[i];
+        const auto factor = scale / denominators[i];
+        if (numerators[i] > UINT32_MAX / factor)
+            throw std::overflow_error("Foulborn rational weight exceeds native capacity");
+        e.final_weight = static_cast<std::uint32_t>(numerators[i] * factor);
+        kept.push_back(e);
+        pool.total_weight += e.final_weight;
+        (e.gen_type == 0 ? pool.prefix_total_weight : pool.suffix_total_weight) += e.final_weight;
+        pool.prefix_sums.push_back(pool.total_weight);
+    }
+    pool.entries = std::move(kept);
 }
 
 } // namespace poecraft

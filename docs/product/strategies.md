@@ -225,3 +225,21 @@ publishing remain deferred in [Product Notes](NOTES.md), the
 
 Historical UI plans and approved visual evidence are in the
 [product-design archive](../archive/2026-07-product-design/README.md).
+
+## Explicit resources
+
+An authored graph may contain up to seven resource templates with stable IDs,
+base/item-level state and an `acquisition_price_key` (default `resource:<id>`).
+Templates are initially unavailable. `acquire_resource` makes one live copy and
+charges acquisition once; `awakener` uses explicit donor/receiver roles and
+charges its own currency separately. A consumed donor remains absent across
+Restart and recipient Imprint restore. Repeated use requires another acquisition;
+an absent quote marks cost incomplete, and a cost-capped run stops before that
+operation. Unknown cost is never reported as a zero total. Traces include resource
+acquisitions, lifecycle and strands. Exact whole-graph evaluation refuses resource
+graphs because inventory/control identity is reserved for Pro.
+
+Foulborn operations have exact authored evaluation. Vaal is a native structural
+sampler for item-level 86+ socketless amulets/belts; exact corruption graph evaluation is
+unavailable. Memory actions and the other evidence-held currencies refuse at
+compilation with their missing-law reason.

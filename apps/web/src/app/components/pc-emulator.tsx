@@ -20,6 +20,7 @@ import "./pc-craft-spend";
  */
 
 import { getEngine } from "../engine-service";
+import { readItemCard } from "../item-preview";
 import { EngineClient } from "../engine-client";
 import {
     BaseInfo,
@@ -35,13 +36,15 @@ import {
     ItemStashRecord,
     ItemSnapshot,
     getDraft,
+    getStash,
+    listStash,
     putDraft,
 } from "../workspace/persistence";
 import { workspace } from "../workspace/registry";
 import { openTextModal } from "../workspace/dirty-modal";
 import { influenceLabels } from "../item-display";
 import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
-import { PcModList, SlotMod } from "./pc-mod-list";
+import { PcModList, SlotMod, type ConcreteModListModel } from "./pc-mod-list";
 import { PcModPool } from "./pc-mod-pool";
 import "./pc-base-picker";
 import "./pc-mod-list";
@@ -63,6 +66,9 @@ export class PcEmulator extends HTMLElement {
     private catalog: Catalog | null = null;
     private bestiaryActions: BestiaryActionInfo[] = [];
     private checkpointPresent = false;
+    private memoryStrands = 0;
+    private donors: ItemStashRecord[] = [];
+    private donorModel: ConcreteModListModel | undefined;
 
     private docId = "";
     private base = DEFAULT_BASE;
@@ -167,7 +173,7 @@ export class PcEmulator extends HTMLElement {
             return;
         }
         const item = draft?.state
-            ? await this.client.importItem(draft.state)
+            ? await this.client.importItem(draft.state, this.session)
             : await this.client.createItem(this.session, {
                 rarity: this.rarity,
                 withImplicits: true,
@@ -189,7 +195,8 @@ export class PcEmulator extends HTMLElement {
             })),
         };
         this.spend = recoveredHistory?.entries[recoveredHistory.cursor]?.spend ?? {counts: {}, untracked: this.history.length > 0};
-        this.undoHistory.restore(recoveredHistory, {snapshot, entry, spend: this.spend});
+        const resources = recoveredHistory?.entries[recoveredHistory.cursor]?.resources;
+        this.undoHistory.restore(recoveredHistory, {snapshot, entry, spend: this.spend, ...(resources ? {resources} : {})});
         if (!this.dirty) this.savedStateKey = JSON.stringify(snapshot);
         this.initializing = false;
         try {
@@ -300,6 +307,76 @@ export class PcEmulator extends HTMLElement {
         await this.applyConfiguredAction({type});
     }
 
+    private async loadDonors(): Promise<void> {
+        this.donors = (await listStash()).filter((record): record is ItemStashRecord =>
+            record.resourceType !== "strategy" && record.id !== this.savedRef &&
+            Number((record.state as {lifecycle?: number})?.lifecycle ?? 0) === 0);
+        if (!this.donors.some(donor => donor.id === this.mechanicValues.get("awakener-donor")))
+            this.mechanicValues.set("awakener-donor", this.donors[0]?.id ?? "");
+        this.donorModel = undefined;
+        const selected = this.donors.find(donor => donor.id === this.mechanicValues.get("awakener-donor"));
+        if (selected) this.donorModel = await readItemCard(this.client, this.dataId, this.catalog, selected, selected.name);
+        this.renderMechanicControls();
+    }
+
+    private async applyAwakener(): Promise<void> {
+        const donor = this.donors.find(record => record.id === this.mechanicValues.get("awakener-donor"));
+        if (!donor) throw new Error("Choose an available donor from Stash.");
+        const donorSession = await this.client.createSession(this.dataId, donor.base, donor.itemLevel);
+        let donorItem = 0, receiverItem = 0;
+        try {
+            donorItem = await this.client.importItem(donor.state, donorSession);
+            receiverItem = await this.client.importItem(await this.client.exportItem(this.item, this.session), this.session);
+            const result = await this.client.multiItemApply(this.context, {action: "awakener", resources: [
+                {identity: donor.id, role: "donor", session: donorSession, item: donorItem},
+                {identity: this.savedRef ?? this.docId, role: "receiver", session: this.session, item: receiverItem},
+            ]});
+            const snapshot = {base: this.base, itemLevel: this.itemLevel, rarity: "rare", state: await this.client.exportItem(receiverItem, this.session)};
+            const history = this.undoHistory.export();
+            const before = [...(history.entries[history.cursor]?.resources ?? [])];
+            const receiverRecord = this.savedRef ? await getStash(this.savedRef) : undefined;
+            const involved = [donor, ...(receiverRecord && receiverRecord.resourceType !== "strategy" ? [receiverRecord] : [])];
+            for (const resource of involved) {
+                if (!before.some(record => record.id === resource.id)) before.push(resource);
+                for (const frame of history.entries) {
+                    frame.resources ??= [];
+                    if (!frame.resources.some(record => record.id === resource.id)) frame.resources.push(resource);
+                }
+            }
+            const consumed = {...donor, state: await this.client.exportItem(donorItem, donorSession)};
+            const after = before.map(resource => resource.id === donor.id ? consumed :
+                resource.id === this.savedRef ? {...resource, ...snapshot} : resource);
+            const spend = addCraftSpend(this.spend, result.cost_keys);
+            const nextHistory = new EditHistory<EmulatorHistoryState>();
+            nextHistory.restore(history, history.entries[history.cursor]);
+            nextHistory.record({snapshot, resources: after, spend, entry: {action: "Awakener's Orb", applied: true, added: 0, removed: 0,
+                costKeys: result.cost_keys, detail: `Consumed ${donor.name}`}});
+            await workspace().commitResources(before, after, this.draftFor(snapshot, nextHistory.export()));
+            const previous = this.item;
+            this.item = receiverItem; receiverItem = 0;
+            this.undoHistory = nextHistory; this.spend = spend;
+            this.dirty = true;
+            await this.client.closeItem(previous);
+            await this.refresh();
+            await this.loadDonors();
+            workspace().notifyDirty(this.docId, true, this.docTitle);
+        } finally {
+            if (donorItem) await this.client.closeItem(donorItem);
+            if (receiverItem) await this.client.closeItem(receiverItem);
+            await this.client.closeSession(donorSession);
+        }
+    }
+
+    private async setMemoryStrands(count: number): Promise<void> {
+        const state = await this.client.exportItem(this.item, this.session) as Record<string, unknown>;
+        const replacement = await this.client.importItem({...state, memory_strands: count}, this.session);
+        const old = this.item;
+        this.item = replacement;
+        await this.client.closeItem(old);
+        this.pendingHistoryEntry = {action: "Set memory strands", applied: true, added: 0, removed: 0, costKeys: [], detail: String(count)};
+        await this.markChanged();
+    }
+
     private async applyConfiguredAction(action: CraftAction): Promise<void> {
         // Pricing metadata must never prevent an otherwise supported craft.
         const keys = await this.craftCosts.forAction(this.client, this.session, action).catch(() => undefined);
@@ -309,7 +386,7 @@ export class PcEmulator extends HTMLElement {
             applied: outcome.applied,
             added: outcome.added,
             removed: outcome.removed,
-            costKeys: outcome.applied ? keys : [],
+            costKeys: outcome.applied ? outcome.cost_keys ?? keys : [],
         };
         await this.markChanged();
     }
@@ -400,7 +477,8 @@ export class PcEmulator extends HTMLElement {
         const snapshot = await this.snapshot();
         if (this.pendingHistoryEntry) {
             this.spend = addCraftSpend(this.spend, this.pendingHistoryEntry.costKeys);
-            this.undoHistory.record({snapshot, entry: this.pendingHistoryEntry, spend: this.spend});
+            const resources = this.undoHistory.at(this.undoHistory.cursor)?.resources;
+            this.undoHistory.record({snapshot, entry: this.pendingHistoryEntry, spend: this.spend, ...(resources ? {resources} : {})});
             this.pendingHistoryEntry = null;
         }
         this.dirty = this.savedStateKey !== JSON.stringify(snapshot);
@@ -421,15 +499,20 @@ export class PcEmulator extends HTMLElement {
         let mods = this.modCache;
         const differentBase = snapshot.base !== this.base || snapshot.itemLevel !== this.itemLevel;
         try {
-            item = await this.client.importItem(snapshot.state);
             if (differentBase) {
                 session = await this.client.createSession(this.dataId, snapshot.base, snapshot.itemLevel);
                 context = await this.client.createContext(session, 0);
                 const count = await this.client.modCount(session);
                 mods = await Promise.all(Array.from({length: count}, (_, id) => this.client.modInfo(session, id)));
             }
+            item = await this.client.importItem(snapshot.state, session || this.session);
             await this.client.itemInfo(item, session || this.session);
             if (this.disposed) return;
+            const oldResources = this.undoHistory.at(this.undoHistory.cursor)?.resources ?? [];
+            if (oldResources.length || frame.resources?.length) {
+                const history = this.undoHistory.export(); history.cursor = index;
+                await workspace().commitResources(oldResources, frame.resources ?? [], this.draftFor(snapshot, history));
+            }
             const previous = {item: this.item, session: this.session, context: this.context};
             this.item = item;
             item = 0;
@@ -468,26 +551,29 @@ export class PcEmulator extends HTMLElement {
             base: this.base,
             itemLevel: this.itemLevel,
             rarity: info.rarity as string,
-            state: await this.client.exportItem(this.item),
+            state: await this.client.exportItem(this.item, this.session),
+        };
+    }
+
+    private draftFor(snapshot: ItemSnapshot, history = this.undoHistory.export()): DraftRecord {
+        return {
+            docId: this.docId,
+            base: snapshot.base,
+            itemLevel: snapshot.itemLevel,
+            rarity: snapshot.rarity ?? this.rarity,
+            state: snapshot.state,
+            history: this.history,
+            undoHistory: history,
+            savedStateKey: this.savedStateKey,
+            savedRef: this.savedRef,
+            savedName: this.savedName,
+            dirty: this.savedStateKey !== JSON.stringify(snapshot),
+            updatedAt: Date.now(),
         };
     }
 
     private async persist(): Promise<void> {
-        const draft: DraftRecord = {
-            docId: this.docId,
-            base: this.base,
-            itemLevel: this.itemLevel,
-            rarity: this.rarity,
-            state: this.item ? await this.client.exportItem(this.item) : null,
-            history: this.history,
-            undoHistory: this.undoHistory.export(),
-            savedStateKey: this.savedStateKey,
-            savedRef: this.savedRef,
-            savedName: this.savedName,
-            dirty: this.dirty,
-            updatedAt: Date.now(),
-        };
-        await putDraft(draft);
+        await putDraft(this.draftFor(this.item ? await this.snapshot() : {base: this.base, itemLevel: this.itemLevel, rarity: this.rarity, state: null}));
     }
 
     // --- save / save-as / duplicate ----------------------------------------
@@ -525,6 +611,16 @@ export class PcEmulator extends HTMLElement {
     }
 
     private async markSaved(record: ItemStashRecord): Promise<void> {
+        // Saving this receiver establishes a new CAS baseline for the current
+        // frame. Keep its other resource receipts and historical item states.
+        if (record.id === this.savedRef) {
+            const history = this.undoHistory.export();
+            for (const [index, frame] of history.entries.entries()) {
+                frame.resources = frame.resources?.map(resource => resource.id !== record.id ? resource :
+                    index === history.cursor ? record : {...resource, name: record.name, createdAt: record.createdAt});
+            }
+            if (history.entries.length) this.undoHistory.restore(history, history.entries[history.cursor]);
+        }
         this.savedRef = record.id;
         this.savedName = record.name;
         this.savedCreatedAt = record.createdAt;
@@ -544,7 +640,7 @@ export class PcEmulator extends HTMLElement {
     }
 
     private async openInCalculator(): Promise<void> {
-        await workspace().openCalculator(await this.snapshot());
+        await workspace().openCalculator({...await this.snapshot(), resourceIdentity: this.savedRef ?? this.docId});
     }
 
     private async disposeEngine(): Promise<void> {
@@ -584,6 +680,7 @@ export class PcEmulator extends HTMLElement {
     private async refresh(): Promise<void> {
         const info = await this.client.itemInfo(this.item, this.session);
         this.checkpointPresent = Boolean(info.checkpoint_present);
+        this.memoryStrands = Number(info.memory_strands ?? 0);
         this.rarity = info.rarity as string;
         this.veiledOptions =
             (info.veiled_option_mod_ids as number[] | undefined) ?? [];
@@ -603,6 +700,8 @@ export class PcEmulator extends HTMLElement {
             baseName: this.baseDisplayName(),
             itemLevel: this.itemLevel,
             rarity: info.rarity as string,
+            memoryStrands: Number(info.memory_strands ?? 0),
+            lifecycle: Number(info.lifecycle ?? 0),
             influences: influenceLabels(
                 Number(info.generic_influence_bits ?? 0),
                 Number(info.searing_exarch_tier ?? 0),
@@ -612,6 +711,7 @@ export class PcEmulator extends HTMLElement {
             prefixes,
             suffixes,
             implicits,
+            enchantments: ((info.enchantment_mod_ids as number[]) ?? []).map(id => this.toSlot(id, new Set())),
             maxPrefix: (info.max_prefix as number) ?? prefixes.length,
             maxSuffix: (info.max_suffix as number) ?? suffixes.length,
         });
@@ -620,7 +720,7 @@ export class PcEmulator extends HTMLElement {
         const poolAction: CraftAction["type"] =
             tab === "implicit" ? "chaos" : tab === "prefix" ? "chaos" : "chaos";
         const pool =
-            tab === "implicit"
+            tab === "implicit" || Number(info.memory_strands ?? 0) > 0 || Number(info.lifecycle ?? 0) !== 0 || ((info.enchantment_mod_ids as number[]) ?? []).length > 0
                 ? null
                 : await this.client.debugPool(this.context, this.item, {
                       action: { type: poolAction },
@@ -810,10 +910,15 @@ export class PcEmulator extends HTMLElement {
             itemClass: this.bases.find(base => base.path === this.base)?.item_class_key,
             values: this.mechanicValues, fossils: this.selectedFossils, bestiary: this.bestiaryActions,
             checkpoint: this.checkpointPresent,
+            memoryStrands: this.memoryStrands,
+            onMemoryStrands: count => { void this.guard(() => this.setMemoryStrands(count)); },
+            donors: this.donors.map(record => ({key: record.id, name: record.name})), donorModel: this.donorModel,
+            onAwakener: () => { void this.guard(() => this.applyAwakener()); },
             unveils,
-            onPanel: panel => { this.activeCraftPanel = panel; this.renderMechanicControls(); },
+            onPanel: panel => { this.activeCraftPanel = panel; this.renderMechanicControls(); if (panel === "awakener") void this.guard(() => this.loadDonors()); },
             onValue: (name, value) => {
                 this.mechanicValues.set(name, value);
+                if (name === "awakener-donor") { void this.guard(() => this.loadDonors()); return; }
                 if (name === "essence-type") this.mechanicValues.delete("essence-key");
                 this.renderMechanicControls();
             },

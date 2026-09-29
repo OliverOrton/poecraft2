@@ -22,6 +22,7 @@ import {
 
 import {
     ItemSnapshot,
+    ItemStashRecord,
     StashRecord,
     DraftRecord,
     deleteDraft,
@@ -33,6 +34,7 @@ import {
     putStash,
     saveLayout,
     loadLayout,
+    commitWorkspaceResources,
 } from "../workspace/persistence";
 import {
     StrategyDocument,
@@ -215,6 +217,7 @@ export class PcWorkspace extends HTMLElement implements WorkspaceApi {
                 itemLevel: seed.itemLevel,
                 state: seed.state,
                 goalRarity: "rare",
+                resourceIdentity: seed.resourceIdentity,
                 slots: [],
                 actionId: "",
                 fossilKeys: [],
@@ -248,6 +251,11 @@ export class PcWorkspace extends HTMLElement implements WorkspaceApi {
     async saveToStash(record: StashRecord): Promise<void> {
         await putStash(record);
         this.stashListeners.forEach((listener) => listener());
+    }
+
+    async commitResources(before: ItemStashRecord[], after: ItemStashRecord[], draft: DraftRecord): Promise<void> {
+        await commitWorkspaceResources(before, after, draft);
+        this.stashListeners.forEach(listener => listener());
     }
 
     notifyDirty(docId: string, dirty: boolean, title: string): void {

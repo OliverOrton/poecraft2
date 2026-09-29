@@ -7,6 +7,8 @@ src/item_state.cpp
 src/rng.cpp
 src/session_builder.cpp
 src/actions_basic.cpp
+src/memory_contract.cpp
+src/multi_item.cpp
 src/actions_bestiary.cpp
 src/bestiary_api.cpp
 src/simulator.cpp

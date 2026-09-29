@@ -118,3 +118,11 @@ policy may also compile Unveil routing to ordinary strategy nodes.
   classification.
 - Post-acquisition blockers are not admitted by the automatic grammar because
   offers are already fixed.
+
+## Catalogue visibility correction (2026-09-28)
+
+Veiled templates and unveiled tiers are visible in both modifier selectors.
+Member-specific unveiled modifiers are admitted by their canonical positive member
+selector, after the base's ordered exclusions and item-level constraints. Their
+`veiled:member:<tag>` reach identity excludes them from the generic unveil-offer
+mask. Catalogue visibility does not authorize generic currency offers.
