@@ -823,4 +823,20 @@ and no new Simulator qualification was run. Logs: `out/currency-followup/item-go
 Release WASM SHA-256:
 `c67d99dbfc93cbfe0db0eaf7bc2c13436cf28612fadb05d9711e5ce53bc97977`.
 
-The implementation is complete and ready for the authorized hosted deployment.
+## Hosted joint item-goal release (2026-09-29)
+
+The authorized follow-up is committed, pushed and live from source
+`a468feb4a457dc7033489cf63d6531c46753beb4` as Beta `1d1fe26c` at
+https://oliverorton.github.io/poecraft2/. The manual
+[hosting workflow](https://github.com/OliverOrton/poecraft2/actions/runs/36631500946)
+passed Chromium/Firefox at `/` and `/poecraft2/`. Fresh live Chromium checks
+passed editing, Copy input to goal, combined Vaal success, double-corruption
+pair goals, reload persistence and the extended Strategy finder guard, with
+no browser errors. The executing build matches the live deployment manifest.
+
+The [release receipt](hosted-item-goals-2026-09-29.json) records all identities
+and validation. Its durable archive matches GitHub's digest and verifies all
+665 components; the live manifest equals the archived manifest byte-for-byte.
+Previous known-good run `36603885756` and its archive remain available for rollback.
+No rollback rehearsal or rendered design acceptance is claimed. Only release-record
+prose follows the deployed source revision.

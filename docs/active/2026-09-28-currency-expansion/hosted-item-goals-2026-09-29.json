@@ -1,0 +1,51 @@
+{
+  "source_commit": "a468feb4a457dc7033489cf63d6531c46753beb4",
+  "build_id": "1d1fe26cb65cd9d80c038cc53beffa53fa87d5130f7a93de60e9e186e900e174",
+  "bundle_id": "a6f1dac25d2238e4031a23adb4ec8fc5a499c9932dcf859b82972e14d26d01ed",
+  "workflow_run_id": 36631500946,
+  "workflow_url": "https://github.com/OliverOrton/poecraft2/actions/runs/36631500946",
+  "archive_path": "C:\\Users\\Oliver\\Documents\\poecraft2-tester-archives\\hosted-tester-run-36631500946.zip",
+  "archive_sha256": "ea7e5cc58eda65f338dc7567c1f9bb645f493780e6dcdc37ba062eb2e1756419",
+  "extracted_path": "C:\\Users\\Oliver\\Documents\\poecraft2-tester-archives\\hosted-tester-run-36631500946",
+  "manifest_sha256": "b65fd1c1881de757a9127502d933f7ef3ed914606188961fe7019b11ed641eb1",
+  "status": "published and live functionally verified",
+  "verified_at_utc": "2026-09-29T21:14:55.709Z",
+  "site_url": "https://oliverorton.github.io/poecraft2/",
+  "workflow_result": "success",
+  "browsers": {
+    "chromium": "passed",
+    "firefox": "passed",
+    "bases": [
+      "/",
+      "/poecraft2/"
+    ],
+    "live_chromium_version": "145.0.7632.6"
+  },
+  "live_checks": [
+    "HTTPS manifest matches verified archive byte-for-byte",
+    "Executing live build matches the deployment manifest",
+    "Native implicit, rarity, influence and corruption editing from item controls",
+    "Vaal success evaluates the copied item plus corrupted goal jointly",
+    "Two normal implicit goal rows give the sequential double-corruption pair probability",
+    "Joint implicit, influence and corruption goals survive reload",
+    "Strategy finder refuses unsupported extended goals",
+    "No browser errors"
+  ],
+  "verified_component_count": 665,
+  "artifact_id": 11061779520,
+  "github_digest": "sha256:ea7e5cc58eda65f338dc7567c1f9bb645f493780e6dcdc37ba062eb2e1756419",
+  "previous_known_good_rollback_run": 36603885756,
+  "rollback_run": 36631500946,
+  "rollback_rehearsal": "not performed; preceding verified archive retained",
+  "visual_acceptance": "remains with Oliver; live checks were functional",
+  "scope": "Joint Input to Goal single-action probabilities with implicit and item-property requirements. Extended strategy goals remain unsupported.",
+  "validation": {
+    "python_tests": 20,
+    "native_calculator_checks": 448697,
+    "release_wasm_smoke_tests": 36,
+    "full_web_suite": "passed",
+    "typescript": "passed",
+    "production_build": "passed"
+  },
+  "wasm_sha256": "c67d99dbfc93cbfe0db0eaf7bc2c13436cf28612fadb05d9711e5ce53bc97977"
+}

@@ -1,12 +1,17 @@
 # Handoff
 
-Current work: Oliver requested unified Input → Goal Calculator odds, implicit
-and item-property editing. The [joint item-goal follow-up](docs/active/2026-09-28-currency-expansion/README.md#joint-item-goal-calculator-follow-up-2026-09-29)
-owns scope and validation. Native, rebuilt WASM, full web checks and functional
-browser acceptance pass. The authorized post-completion deployment is next. The last verified live
-release below remains the rollback source.
+Completed: Oliver's unified Input → Goal Calculator and item editing follow-up
+is live as Beta `1d1fe26c`, source `a468feb`. The
+[joint item-goal record](docs/active/2026-09-28-currency-expansion/README.md#joint-item-goal-calculator-follow-up-2026-09-29)
+owns scope and validation; its [hosted receipt](docs/active/2026-09-28-currency-expansion/hosted-item-goals-2026-09-29.json)
+records the successful Chromium/Firefox matrix, live functional checks and verified
+665-component archive. Input/Goal support implicit rows, influence/corruption/rarity
+editing and Copy input to goal. All supported actions check the combined native
+successor predicate. Extended goals remain single-action only; Strategy finder
+refuses them. Previous run `36603885756` is retained for rollback. No pending work
+remains in this selected follow-up; rendered design acceptance belongs to Oliver.
 
-Current follow-up: Oliver approved double-corruption Calculator odds with the
+Previous release: Oliver approved double-corruption Calculator odds with the
 changed-mod brick counted as failure and sequential weighted implicit rolls.
 Native odds and the Temple Calculator control now cover all four 25% branches,
 implicit marginals and unordered pairs, replacing existing implicits and excluding
