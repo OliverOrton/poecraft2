@@ -110,6 +110,11 @@ pc_result pc_item_init(
     pc_item_state* out_item,
     pc_error_info* out_error);
 
+/* Author an input fixture without spending currency. Atomic native validation.
+ * JSON fields: rarity, influence_bits, corrupted, add_implicit, remove_implicit. */
+pc_result pc_item_edit_json(pc_session_handle session, pc_item_state* item,
+    const char* json, size_t json_size, pc_error_info* out_error);
+
 /* Session-aware affix caps. Honours jewel / abyss-jewel limits (rare = 2/2)
  * unlike the static pc_item_max_prefix/pc_item_max_suffix helpers that always
  * use 3 for rare. Returns 0 for normal, 1 for magic, and the session's rare

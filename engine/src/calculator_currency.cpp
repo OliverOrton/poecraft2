@@ -1,6 +1,8 @@
 #include "calculator_currency.hpp"
 #include "currency_outcomes.hpp"
 #include "poecraft/bitset.h"
+#include "json.hpp"
+#include "solver_action_family_contract.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -9,14 +11,55 @@
 #include <sstream>
 
 namespace poecraft::solver {
-std::string calculate_currency_json(const CalcContext& source,
+CalculatorItemGoal parse_calculator_item_goal(const SessionImpl& session, const char* text, std::size_t size) {
+    const auto root = json::Parser(text, size).parse();
+    CalculatorItemGoal goal;
+    if (const auto* mods = root.find("implicit_mod_keys")) {
+        if (mods->type != json::Type::Array || mods->array.size() > PC_MAX_IMPLICITS)
+            throw std::invalid_argument("Goal implicits must be a bounded array of modifier keys");
+        for (const auto& key : mods->array) {
+            if (key.type != json::Type::String) throw std::invalid_argument("Goal implicit needs a stable modifier key");
+            const auto pos = session.data->mod_pos_by_key.find(key.string);
+            if (pos == session.data->mod_pos_by_key.end()) throw std::invalid_argument("Unknown goal implicit");
+            const auto id = session.session_id_by_global_id.find(session.data->mod_global_ids[pos->second]);
+            if (id == session.session_id_by_global_id.end() ||
+                    (std::find(session.base_implicit_mod_ids.begin(), session.base_implicit_mod_ids.end(), id->second) == session.base_implicit_mod_ids.end() &&
+                     !pc_bitset_test(session.corrupted_implicit_mask.data(), id->second) &&
+                     !pc_bitset_test(session.eldritch_implicit_mask.data(), id->second)))
+                throw std::invalid_argument("Goal modifier is not an eligible implicit in this session");
+            if (std::find(goal.implicit_mods.begin(), goal.implicit_mods.end(), id->second) != goal.implicit_mods.end())
+                throw std::invalid_argument("Duplicate goal implicit");
+            goal.implicit_mods.push_back(id->second);
+        }
+    }
+    if (const auto* bits = root.find("influence_bits")) {
+        if (bits->type != json::Type::Number || bits->number < 0 || bits->number > 63 || std::floor(bits->number) != bits->number)
+            throw std::invalid_argument("Goal influence_bits must be an integer from 0 to 63");
+        goal.influence_bits = static_cast<std::uint8_t>(bits->number);
+    }
+    if (const auto* corrupted = root.find("corrupted")) {
+        if (corrupted->type != json::Type::Bool) throw std::invalid_argument("Goal corrupted must be boolean");
+        goal.corrupted = corrupted->boolean;
+    }
+    return goal;
+}
+
+std::string calculate_currency_json(CalcContext& source,
         const pc_item_state& receiver, const std::string& action,
-        const SessionImpl* donor_session, const pc_item_state* donor) {
+        const SessionImpl* donor_session, const pc_item_state* donor,
+        const CalculatorItemGoal& item_goal) {
     const bool double_corruption = action == "double_corruption";
-    if (action != "awakener" && action != "dominance" && action != "vaal" && !double_corruption)
-        throw std::invalid_argument("Unknown single-action currency");
+    const bool expanded = action == "awakener" || action == "dominance" || action == "vaal" || double_corruption || action == "observe";
+    const auto found_action = source.registry().index_by_id.find(action);
+    if (!expanded && found_action == source.registry().index_by_id.end()) throw std::invalid_argument("Unknown Calculator action");
+    const bool renewal = !expanded && !source.registry().actions[found_action->second].synthetic &&
+        action_transition_facts(source.registry().actions[found_action->second].params.type).renewal;
+    const bool omit_affixes = (renewal || action == "awakener" || action == "vaal") && source.goal().slots.empty() &&
+        source.goal().terminal.extras == ExtraExplicitPolicy::Allow && !source.goal().terminal.prefixes && !source.goal().terminal.suffixes;
     if (receiver.memory_strands || receiver.lifecycle != PC_ITEM_LIVE)
         throw std::invalid_argument("Calculation requires a live item without memory strands");
+    if (!expanded && receiver.enchantment_count)
+        throw std::invalid_argument("Crafting on retained enchantments is unavailable until their effect and socket contracts are implemented");
     const auto& session = source.session();
     // Include concrete retained/upgrade tiers and all influence signatures.
     // The refill kernel builds its pool from the concrete item, so no donor
@@ -29,12 +72,28 @@ std::string calculate_currency_json(const CalcContext& source,
     // terminal rows merge junk that has identical goal/count/flag observations.
     // Admitting Chaos as a future action here would unnecessarily distinguish
     // hundreds of thousands of final junk configurations on jewellery.
-    CalcContext calc(source.shared_session(), source.goal(), source.registry(),
+    CalcContext terminal(source.shared_session(), source.goal(), source.registry(),
         {}, true, false, false, std::nullopt, {}, false, reachable,
         false, false, true, false, true);
+    auto& calc = expanded || renewal ? terminal : source;
     // Oversized requests fail explicitly; never publish truncated mass.
     calc.set_solve_resource_caps(250000, 100000000, false, 512ull * 1024 * 1024);
-    std::map<std::uint32_t, long double> mass;
+    // Preserve implicit-goal observations until the final joint predicate;
+    // states with equal affixes but different implicits must not merge early.
+    using Observation = std::pair<std::uint32_t, std::uint32_t>;
+    std::map<Observation, long double> mass;
+    const auto implicit_mask = [&](const pc_item_state& item) {
+        std::uint32_t mask = 0;
+        for (std::size_t goal = 0; goal < item_goal.implicit_mods.size(); ++goal)
+            for (unsigned i = 0; i < item.implicit_count; ++i)
+                if (item.implicits[i].mod_id == item_goal.implicit_mods[goal]) mask |= 1u << goal;
+        return mask;
+    };
+    const auto properties_match = [&](const AbstractState& state, std::uint32_t mask) {
+        return mask == ((1u << item_goal.implicit_mods.size()) - 1) &&
+            (!item_goal.influence_bits || state.influence_bits == *item_goal.influence_bits) &&
+            (!item_goal.corrupted || bool(state.flags & kFlagCorrupted) == *item_goal.corrupted);
+    };
     std::map<std::uint32_t, long double> implicit_present;
     std::map<std::uint32_t, std::uint64_t> implicit_weights;
     std::map<std::uint32_t, long double> implicit_added;
@@ -53,19 +112,70 @@ std::string calculate_currency_json(const CalcContext& source,
         return calc.intern_item(item);
     };
     const auto add = [&](const pc_item_state& item, long double p) {
-        mass[project(item)] += p;
+        mass[{project(item), implicit_mask(item)}] += p;
     };
     const auto refill = [&](pc_item_state base, long double p,
                             std::uint8_t target, bool blocks, bool clear) {
         base.enchantment_count = 0;
-        const auto distribution = calc.concrete_refill({base, target, blocks, clear});
+        const auto distribution = calc.concrete_refill({base, target, blocks, clear, kNoId, !omit_affixes});
         if (!distribution->supported || !distribution->applicable)
             throw std::invalid_argument("Exact currency refill is unavailable for this input");
         for (const auto& entry : distribution->entries)
-            mass[entry.state] += p * entry.probability;
+            mass[{entry.state, implicit_mask(base)}] += p * entry.probability;
     };
     bool legal = !(receiver.item_flags & (PC_ITEM_CORRUPTED | PC_ITEM_MIRRORED));
-    if (action == "awakener") {
+    if (action == "observe") {
+        legal = true;
+        add(receiver, 1);
+    } else if (!expanded) {
+        const auto index = found_action->second;
+        const auto& descriptor = calc.registry().actions[index];
+        if (solver_action_disabled(calc.goal(), descriptor)) throw std::invalid_argument("Calculation action belongs to a disabled family");
+        const auto start = project(receiver);
+        legal = action_legal(session, descriptor, calc.state(start));
+        if (!legal) add(receiver, 1);
+        else if (descriptor.params.type == ActionType::EldritchEmber || descriptor.params.type == ActionType::EldritchIchor) {
+            const bool searing = descriptor.params.type == ActionType::EldritchEmber;
+            const auto weights = eldritch_implicit_weights(session, searing, descriptor.params.tier);
+            std::uint64_t total_weight = 0;
+            for (const auto& [id, weight] : weights) total_weight += weight;
+            if (!total_weight) throw std::invalid_argument("Eldritch implicit pool is empty");
+            for (const auto& [id, weight] : weights) {
+                auto next = receiver;
+                if (!set_eldritch_implicit(session, next, searing, descriptor.params.tier, id))
+                    throw std::invalid_argument("Eldritch result exceeds implicit capacity");
+                add(next, static_cast<long double>(weight) / total_weight);
+            }
+        } else {
+            auto prepared = receiver;
+            prepared.enchantment_count = 0;
+            const auto concrete = renewal ? calc.concrete_refill({prepared, 0,
+                action_transition_facts(descriptor.params.type).respects_metamod_pool_blocks, true, index, !omit_affixes}) : nullptr;
+            const auto& distribution = concrete ? *concrete : calc.outcomes(start, index);
+            if (!distribution.supported) throw std::invalid_argument("Exact outcomes are unavailable for this action");
+            legal = distribution.applicable;
+            auto implicits = receiver;
+            if (action == "restart") {
+                pc_item_clear(&implicits);
+                for (const auto id : session.base_implicit_mod_ids) implicits.implicits[implicits.implicit_count++].mod_id = id;
+            }
+            const auto special = descriptor.params.type == ActionType::Fossil
+                ? fossil_implicit_outcomes(session, implicits, descriptor.params.fossil_indices)
+                : std::vector<std::pair<pc_item_state, long double>>{{implicits, 1.0L}};
+            for (const auto& entry : distribution.entries) for (const auto& [implicit_item, p] : special) {
+                auto id = entry.state;
+                if (descriptor.params.type == ActionType::Fossil) {
+                    auto state = calc.state(id);
+                    state.flags &= ~(kFlagCorrupted | kFlagMirrored);
+                    if (implicit_item.item_flags & PC_ITEM_CORRUPTED) state.flags |= kFlagCorrupted;
+                    if (implicit_item.item_flags & PC_ITEM_MIRRORED) state.flags |= kFlagMirrored;
+                    id = calc.intern_state(state);
+                }
+                mass[{id, implicit_mask(implicit_item)}] += entry.probability * p;
+            }
+            if (!legal && mass.empty()) add(receiver, 1);
+        }
+    } else if (action == "awakener") {
         if (!donor_session || !donor)
             throw std::invalid_argument("Choose an Awakener donor from Stash");
         const auto choices = awakener_choices(session, *donor_session, *donor, receiver);
@@ -149,10 +259,13 @@ std::string calculate_currency_json(const CalcContext& source,
     }
     long double total = failed_mass, success = 0;
     std::array<long double, kMaxGoalSlots> slots{};
-    for (const auto& [id, p] : mass) {
+    std::vector<long double> implicit_slots(item_goal.implicit_mods.size());
+    for (const auto& [observation, p] : mass) {
+        const auto [id, mask] = observation;
         total += p;
         const auto& state = calc.state(id);
-        if (legal && calc.is_goal_state(state)) success += p;
+        if (legal && calc.is_goal_state(state) && properties_match(state, mask)) success += p;
+        for (std::size_t i = 0; i < implicit_slots.size(); ++i) if (mask & (1u << i)) implicit_slots[i] += p;
         for (std::size_t i = 0; i < slots.size(); ++i)
             if (state.slot_status[i] == 2) slots[i] += p;
     }
@@ -163,16 +276,23 @@ std::string calculate_currency_json(const CalcContext& source,
         << (legal ? "true" : "false") << ",\"success_probability\":" << double(success)
         << ",\"slot_satisfied\":[";
     for (std::size_t i = 0; i < slots.size(); ++i) out << (i ? "," : "") << double(slots[i]);
+    out << "],\"implicit_satisfied\":[";
+    for (std::size_t i = 0; i < implicit_slots.size(); ++i) out << (i ? "," : "") << double(implicit_slots[i]);
     out << "],\"outcomes\":[";
     bool comma = false;
-    for (const auto& [id, p] : mass) {
+    unsigned row_id = 0;
+    for (const auto& [observation, p] : mass) {
+        const auto [id, mask] = observation;
         const auto& state = calc.state(id);
-        out << (comma ? "," : "") << "{\"state\":" << id
+        out << (comma ? "," : "") << "{\"state\":" << row_id++
+            << ",\"affixes_unobserved\":" << (omit_affixes ? "true" : "false")
             << ",\"probability\":" << double(p) << ",\"rarity\":" << unsigned(state.rarity)
             << ",\"prefixes\":" << unsigned(state.prefix_count)
             << ",\"suffixes\":" << unsigned(state.suffix_count)
             << ",\"flags\":" << state.flags << ",\"blocked\":" << state.blocked_mask
-            << ",\"is_goal\":" << (calc.is_goal_state(state) ? "true" : "false") << ",\"slots\":[";
+            << ",\"goal_properties_satisfied\":" << (properties_match(state, mask) ? "true" : "false")
+            << ",\"influence_bits\":" << unsigned(state.influence_bits)
+            << ",\"is_goal\":" << (legal && calc.is_goal_state(state) && properties_match(state, mask) ? "true" : "false") << ",\"slots\":[";
         for (std::size_t i = 0; i < slots.size(); ++i) out << (i ? "," : "") << unsigned(state.slot_status[i]);
         out << "]}";
         comma = true;

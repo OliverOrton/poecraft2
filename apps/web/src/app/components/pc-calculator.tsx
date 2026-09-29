@@ -32,7 +32,6 @@ import {
     BaseInfo,
     CalcOutcome,
     BestiaryActionInfo,
-    BestiaryCalculation,
     BestiarySolverOptionInfo,
     CalcResult,
     Catalog,
@@ -55,7 +54,7 @@ import { workspace } from "../workspace/registry";
 import { listStash, type ItemStashRecord } from "../workspace/persistence";
 import { readItemCard } from "../item-preview";
 import { modTextLabel } from "../mod-text";
-import type { ConcreteModListModel } from "./pc-mod-list";
+import type { ConcreteModListModel, ItemPropertyChange } from "./pc-mod-list";
 import {
     getActionPrice,
     getActionPriceResolution,
@@ -206,12 +205,16 @@ export class PcCalculator extends HTMLElement {
     private itemEnchantments: SlotMod[] = [];
     private itemLifecycle = 0;
     private itemFlags = 0;
+    private itemInfluenceBits = 0;
     private itemMaxPrefix = 3;
     private itemMaxSuffix = 3;
     private activeContext: "input" | "goal" = "goal";
     private activeTool: "odds" | "solve" = "odds";
 
     private goalRarity: "normal" | "magic" | "rare" = "rare";
+    private goalImplicitKeys: string[] = [];
+    private goalInfluenceBits: number | undefined;
+    private goalCorrupted: boolean | undefined;
     private allowExtraModifiers = false;
     private slots: CalculatorGoalSlot[] = [];
     private minSatisfiedSlots = 1;
@@ -222,7 +225,6 @@ export class PcCalculator extends HTMLElement {
     private mechanicValues = new Map<string, string>();
     private calc: CalcResult | null = null;
     private calcError = "";
-    private bestiaryCalc: BestiaryCalculation | null = null;
     private solveSummary: SolveSummary | null = null;
     private solvedStrategy: StrategyDocument | null = null;
     private solveEconomy: PinnedEconomy | null = null;
@@ -308,6 +310,9 @@ export class PcCalculator extends HTMLElement {
             this.base = draft.base;
             this.itemLevel = draft.itemLevel;
             this.goalRarity = draft.goalRarity;
+            this.goalImplicitKeys = draft.goalImplicitKeys ?? [];
+            this.goalInfluenceBits = draft.goalInfluenceBits;
+            this.goalCorrupted = draft.goalCorrupted;
             this.allowExtraModifiers = draft.allowExtraModifiers === true;
             this.slots = draft.slots;
             this.minSatisfiedSlots =
@@ -413,6 +418,7 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         this.modCache = cache;
+        this.goalImplicitKeys = this.goalImplicitKeys.filter(key => cache.some(mod => mod.key === key));
         this.modifierOptions = this.catalog
             ? buildModifierOptions(cache, this.catalog)
             : [];
@@ -438,7 +444,6 @@ export class PcCalculator extends HTMLElement {
         this.clearSolveResult();
         await this.closeSolverHandle();
         this.calc = null;
-        this.bestiaryCalc = null;
         this.calcError = "";
         if (this.disposed || this.slots.length === 0) {
             return;
@@ -486,6 +491,33 @@ export class PcCalculator extends HTMLElement {
                 ? []
                 : Array.from(this.solveDisabledActionFamilies).sort(),
         );
+    }
+
+    private hasItemRequirements(): boolean {
+        return this.goalImplicitKeys.length > 0 || this.goalInfluenceBits !== undefined || this.goalCorrupted !== undefined;
+    }
+
+    private itemGoal(): import("../engine-protocol").CalculatorItemGoal {
+        const goal: import("../engine-protocol").CalculatorItemGoal = {...this.solverGoal("odds"),
+            implicit_mod_keys: [...this.goalImplicitKeys],
+            ...(this.goalInfluenceBits === undefined ? {} : {influence_bits: this.goalInfluenceBits}),
+            ...(this.goalCorrupted === undefined ? {} : {corrupted: this.goalCorrupted})};
+        if (!goal.slots.length) delete goal.min_satisfied_slots;
+        return goal;
+    }
+
+    private async copyInputToGoal(): Promise<void> {
+        this.goalRarity = this.itemRarity as typeof this.goalRarity;
+        this.slots = [...this.itemPrefixes, ...this.itemSuffixes].flatMap(mod => {
+            const familyModKey = this.modKeyToFamily.get(mod.key);
+            return familyModKey ? [{familyModKey, minTier: mod.tierIndex}] : [];
+        });
+        this.goalImplicitKeys = this.itemImplicits.map(mod => mod.key);
+        this.goalInfluenceBits = this.itemInfluenceBits;
+        this.goalCorrupted = Boolean(this.itemFlags & 1);
+        this.normalizeSuccessThreshold(true);
+        this.selectContext("goal");
+        await this.goalChanged();
     }
 
     private async closeSolverHandle(): Promise<void> {
@@ -575,11 +607,13 @@ export class PcCalculator extends HTMLElement {
 
     private async addInputMod(
         key: string,
-        side: "prefix" | "suffix",
+        side: "prefix" | "suffix" | "implicit",
         fractured = false,
     ): Promise<void> {
         const info = this.modCache.find((mod) => mod.key === key);
-        if (info?.reach_kind === REACH_KIND_CRAFTED && !fractured) {
+        if (side === "implicit") {
+            await this.client.editItem(this.item, this.session, {add_implicit: key});
+        } else if (info?.reach_kind === REACH_KIND_CRAFTED && !fractured) {
             await this.client.apply(this.context, this.item, {
                 type: "bench",
                 mod_key: key,
@@ -596,9 +630,10 @@ export class PcCalculator extends HTMLElement {
 
     private async removeInputMod(
         modId: number,
-        side: "prefix" | "suffix",
+        side: "prefix" | "suffix" | "implicit",
     ): Promise<void> {
-        await this.client.removeMod(this.item, { modId, side });
+        if (side === "implicit") await this.client.editItem(this.item, this.session, {remove_implicit: this.modCache[modId].key});
+        else await this.client.removeMod(this.item, { modId, side });
         await this.inputChanged();
     }
 
@@ -735,6 +770,7 @@ export class PcCalculator extends HTMLElement {
     }
 
     private async startSolve(): Promise<void> {
+        if (this.hasItemRequirements()) { this.setStatus("Use Odds for implicit and item-property requirements."); return; }
         const imprintCostKeys = this.bestiaryOption
             ? this.imprintCreationCostKeys()
             : [];
@@ -1033,6 +1069,7 @@ export class PcCalculator extends HTMLElement {
     }
 
     private async copySolverLabCase(): Promise<void> {
+        if (this.hasItemRequirements()) { this.setStatus("Implicit and item-property goals cannot be exported to Solver Lab."); return; }
         if (!this.solver || !this.item || this.slots.length === 0) {
             throw new Error(
                 "Choose an input item and define at least one goal modifier before exporting.",
@@ -1165,44 +1202,34 @@ export class PcCalculator extends HTMLElement {
 
     private async recalc(): Promise<void> {
         this.calc = null;
-        this.bestiaryCalc = null;
         this.calcError = "";
         if (this.item && this.actionId) {
             const submittedItem = this.item;
-            const submittedSolver = this.solver;
             const actionId = this.actionId;
             const report = beginDiagnosticRun('calculator-odds', {
                 base: this.base, item_level: this.itemLevel, action: actionId,
-                goal: this.solverGoal('odds'), economy: pinEconomy(), state: null as unknown,
+                goal: this.itemGoal(), economy: pinEconomy(), state: null as unknown,
                 pricing_note: 'Exact action probabilities do not consume prices.',
             });
             let calculationItem = 0, inspector = 0;
             try {
                 calculationItem = await this.client.cloneItem(submittedItem);
                 (report.request as {state: unknown}).state = await this.client.exportItem(calculationItem, this.session);
+                inspector = await this.client.openCalcGoal(this.session, this.itemGoal());
+                this.pickerActions = await this.client.solverActions(inspector);
                 const bestiary = this.bestiaryActions.find(
                     (action) => action.id === actionId,
                 );
                 if (bestiary) {
-                    this.bestiaryCalc = await this.client.bestiaryCalculate(
-                        this.dataId,
-                        calculationItem,
-                        bestiary.id,
-                    );
-                } else if (isExpandedCurrency(actionId)) {
-                    const calculator = submittedSolver || (inspector = await this.client.openCalcInspector(this.session));
+                    this.calc = await this.client.bestiaryGoalCalc(this.dataId, inspector, calculationItem, bestiary.id);
+                } else {
+                    const calculator = inspector;
                     this.calc = actionId === "awakener"
                         ? await this.calculateAwakener(calculator, calculationItem, report.request as Record<string, unknown>)
                         : await this.client.currencyCalc(calculator, calculationItem, actionId);
-                } else if (submittedSolver) {
-                    this.calc = await this.client.solverCalc(
-                        submittedSolver,
-                        calculationItem,
-                        actionId,
-                    );
                 }
                 report.status = 'completed';
-                report.result = structuredClone(this.bestiaryCalc ?? this.calc);
+                report.result = structuredClone(this.calc);
             } catch (error) {
                 report.status = 'error';
                 report.error = error instanceof Error ? error.message : String(error);
@@ -1230,6 +1257,9 @@ export class PcCalculator extends HTMLElement {
             itemLevel: this.itemLevel,
             state: this.item ? await this.client.exportItem(this.item, this.session) : null,
             goalRarity: this.goalRarity,
+            goalImplicitKeys: this.goalImplicitKeys,
+            goalInfluenceBits: this.goalInfluenceBits,
+            goalCorrupted: this.goalCorrupted,
             allowExtraModifiers: this.allowExtraModifiers,
             slots: this.slots,
             minSatisfiedSlots: this.effectiveMinSatisfiedSlots(),
@@ -1257,6 +1287,7 @@ export class PcCalculator extends HTMLElement {
         this.itemMemoryStrands = Number(info.memory_strands ?? 0);
         this.itemLifecycle = Number(info.lifecycle ?? 0);
         this.itemFlags = Number(info.item_flags ?? 0);
+        this.itemInfluenceBits = Number(info.generic_influence_bits ?? 0);
         this.itemEnchantments = ((info.enchantment_mod_ids as number[]) ?? []).map(id => this.toSlot(id, new Set()));
         this.itemInfluences = influenceLabels(
             Number(info.generic_influence_bits ?? 0),
@@ -1345,6 +1376,7 @@ export class PcCalculator extends HTMLElement {
 
     private renderItem(): void {
         this.inputModList?.setModel({
+            properties: {influences: this.catalog?.genericInfluences ?? [], influenceBits: this.itemInfluenceBits, corrupted: Boolean(this.itemFlags & 1)},
             kind: "concrete",
             baseKey: this.base,
             baseName: this.baseDisplayName(),
@@ -1407,6 +1439,7 @@ export class PcCalculator extends HTMLElement {
 
     private successTargetLabel(): string {
         const rarity = titleCase(this.goalRarity);
+        if (this.hasItemRequirements()) return `${rarity} · ${this.slots.length} explicit + ${this.goalImplicitKeys.length} implicit requirements${this.goalInfluenceBits !== undefined ? " · selected influences" : ""}${this.goalCorrupted !== undefined ? this.goalCorrupted ? " · corrupted" : " · uncorrupted" : ""}`;
         if (this.slots.length === 1) {
             return `${rarity} · ${this.slotLabel(this.slots[0])}`;
         }
@@ -1422,6 +1455,16 @@ export class PcCalculator extends HTMLElement {
     private addGoalFromPool(modKey: string): void {
         const familyKey = this.modKeyToFamily.get(modKey);
         const info = this.modCache.find((mod) => mod.key === modKey);
+        if (info && [4, 8, 9].includes(info.reach_kind)) {
+            if (this.goalImplicitKeys.includes(modKey)) {
+                this.goalImplicitKeys = this.goalImplicitKeys.filter(key => key !== modKey);
+            } else {
+                if (this.goalImplicitKeys.length >= 8) { this.setStatus("Goals are limited to eight implicits."); return; }
+                this.goalImplicitKeys = [...this.goalImplicitKeys, modKey];
+            }
+            void this.guard(() => this.goalChanged());
+            return;
+        }
         if (!familyKey || !info) {
             return;
         }
@@ -1446,6 +1489,7 @@ export class PcCalculator extends HTMLElement {
     }
 
     private syncModPoolSelections(): void {
+        this.querySelector<PcModPool>("pc-mod-pool")?.setSelectedImplicits(this.goalImplicitKeys);
         this.querySelector<PcModPool>("pc-mod-pool")?.setSelectedTiers(
             this.slots.flatMap((slot) =>
                 slot.familyModKey
@@ -1465,8 +1509,8 @@ export class PcCalculator extends HTMLElement {
             this.calc && this.calc.legal && this.calc.supported,
         );
         this.syncModPoolSelections();
-        this.goalModList?.setModel(
-            buildCalculatorTargetModel({
+        this.goalModList?.setModel({
+            ...buildCalculatorTargetModel({
                 baseKey: this.base,
                 baseName: this.baseDisplayName(),
                 itemLevel: this.itemLevel,
@@ -1487,7 +1531,10 @@ export class PcCalculator extends HTMLElement {
                     );
                 },
             }),
-        );
+            properties: {influences: this.catalog?.genericInfluences ?? [], influenceBits: this.goalInfluenceBits, corrupted: this.goalCorrupted},
+            implicits: this.goalImplicitKeys.map((key, index) => ({key, textLines: this.modCache.find(mod => mod.key === key)?.text_lines ?? [key],
+                probabilityLabel: showOdds && this.calc?.implicit_satisfied?.[index] !== undefined ? formatProbabilityExact(this.calc.implicit_satisfied[index]) : undefined})),
+        });
 
         const rarity = this.querySelector<HTMLSelectElement>(
             '[data-role="goal-rarity"]',
@@ -1687,22 +1734,6 @@ export class PcCalculator extends HTMLElement {
             host.innerHTML = '<p class="pc-empty">Pick an action.</p>';
             return;
         }
-        const selectedBestiary = this.bestiaryActions.some(
-            (action) => action.id === this.actionId,
-        );
-        if (selectedBestiary) {
-            if (!this.bestiaryCalc) {
-                host.innerHTML = '<p class="pc-empty">Calculating...</p>';
-                return;
-            }
-            host.innerHTML = this.renderBestiaryResult(this.bestiaryCalc);
-            this.bindPriceInputs(host);
-            return;
-        }
-        if (this.slots.length === 0 && !isExpandedCurrency(this.actionId)) {
-            host.innerHTML = '<p class="pc-empty">Define a goal to compute odds against.</p>';
-            return;
-        }
         const calc = this.calc;
         if (!calc) {
             host.innerHTML = '<p class="pc-empty">Calculating…</p>';
@@ -1719,58 +1750,9 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         host.innerHTML = `
-            ${this.slots.length ? this.renderExactResult(calc) : '<p class="pc-help">Add goal modifiers to calculate success odds.</p>'}
-            ${this.renderVaalImplicits(calc)}
-            ${this.slots.length ? this.renderCost(calc.success_probability) + this.renderOutcomes(calc) : ''}`;
+            ${this.renderExactResult(calc)}
+            ${this.renderCost(calc.success_probability) + this.renderOutcomes(calc)}`;
         this.bindPriceInputs(host);
-        host.querySelectorAll<HTMLSelectElement>("[data-corruption-implicit]").forEach(select => {
-            select.addEventListener("change", () => {
-                this.mechanicValues.set(`corruption-implicit-${select.dataset.corruptionImplicit}`, select.value);
-                this.renderResults();
-            });
-        });
-    }
-
-    private renderVaalImplicits(calc: CalcResult): string {
-        const branches = calc.double_corruption_branches ?? calc.vaal_branches;
-        if (!branches || !calc.implicit_outcomes) return "";
-        const doubleCorruption = Boolean(calc.double_corruption_branches);
-        const labelFor = (id: number) => {
-            const mod = this.modCache[id];
-            return mod ? modTextLabel(mod.text_lines, mod.key) : `Modifier ${id}`;
-        };
-        const rows = [...calc.implicit_outcomes].sort((a, b) => b.added_probability - a.added_probability || a.mod - b.mod)
-            .map(outcome => {
-                return `<tr><td>${escapeHtml(labelFor(outcome.mod))}</td><td>${outcome.weight || "—"}</td>
-                    <td>${formatProbabilityExact(outcome.added_probability)}</td>
-                    <td>${formatProbabilityExact(outcome.present_probability)}</td></tr>`;
-            }).join("");
-        let pairMarkup = "";
-        if (calc.implicit_pairs) {
-            const candidates = calc.implicit_outcomes.filter(row => row.weight > 0);
-            const selected = ["first", "second"].map(key => this.mechanicValues.get(`corruption-implicit-${key}`) ?? "");
-            const selectors = ["first", "second"].map((key, index) => `<label>${index ? "Second" : "First"} implicit
-                <select data-corruption-implicit="${key}"><option value="">Choose an implicit</option>
-                    ${candidates.map(row => `<option value="${row.mod}" ${selected[index] === String(row.mod) ? "selected" : ""}>${escapeHtml(labelFor(row.mod))}</option>`).join("")}
-                </select></label>`).join("");
-            const pair = selected.every(Boolean) ? calc.implicit_pairs.find(row =>
-                row.mods.includes(Number(selected[0])) && row.mods.includes(Number(selected[1])) && selected[0] !== selected[1]) : undefined;
-            pairMarkup = `<div class="pc-calc-implicit-pair"><h4>Specific implicit pair</h4>${selectors}
-                ${selected.every(Boolean) ? `<strong>${formatProbabilityExact(pair?.probability ?? 0)}</strong><p class="pc-help">Chance per double-corruption attempt, including the two-implicit branch.</p>` : ""}</div>`;
-        }
-        return `<section class="pc-calc-section"><h4>${doubleCorruption ? "Double corruption" : "Vaal"} outcomes</h4>
-            <div class="pc-calc-coverage">
-                <div class="pc-calc-coverage-row"><span>${doubleCorruption ? "Two corruption implicits" : "Corruption implicit"}</span><strong>${formatProbabilityExact(branches.implicit)}</strong></div>
-                <div class="pc-calc-coverage-row"><span>Socket change</span><strong>${formatProbabilityExact(branches.sockets)}</strong></div>
-                <div class="pc-calc-coverage-row"><span>${doubleCorruption ? "Bricked (modifiers changed)" : "Rare reforge"}</span><strong>${formatProbabilityExact(branches.reforge)}</strong></div>
-                <div class="pc-calc-coverage-row"><span>${doubleCorruption ? "Destroyed" : "No change beyond corruption"}</span><strong>${formatProbabilityExact("destroyed" in branches ? branches.destroyed : branches.unchanged)}</strong></div>
-            </div>
-            <p class="pc-help">${doubleCorruption ? "Brick and destruction count as failures. The implicit branch replaces all existing implicits with two sequential weighted rolls, excluding conflicting groups." : "Every outcome corrupts the item."} Socket changes keep their probability but are otherwise ignored.</p>
-            ${pairMarkup}
-            <details open><summary>Implicit odds</summary>
-                <p class="pc-help">Roll chance includes the implicit branch's probability. Final chance also includes an existing implicit surviving.${doubleCorruption ? " Both exclude bricked and destroyed items." : ""}</p>
-                <div class="pc-calc-implicit-scroll"><table class="pc-calc-table pc-calc-implicit-table"><thead><tr><th>Implicit</th><th>Weight</th><th>Roll chance</th><th>Final chance</th></tr></thead><tbody>${rows}</tbody></table></div>
-            </details></section>`;
     }
 
     private bindPriceInputs(host: HTMLElement): void {
@@ -1788,6 +1770,10 @@ export class PcCalculator extends HTMLElement {
     private renderSolvePanel(): void {
         const host = this.querySelector<HTMLElement>(".pc-calc-solve-panel");
         if (!host) return;
+        if (this.hasItemRequirements()) {
+            host.innerHTML = '<p class="pc-help">This goal includes implicit or item-property requirements. Use Odds to calculate the complete outcome after one action. Strategy finder does not support these requirements yet.</p>';
+            return;
+        }
         const readiness = solvePriceReadiness(
             this.enabledSolvePickerActions(),
             getActionPrice,
@@ -2160,36 +2146,6 @@ export class PcCalculator extends HTMLElement {
         </section>`;
     }
 
-    private renderBestiaryResult(calc: BestiaryCalculation): string {
-        const result = calc.result;
-        const checkpoint = result.checkpoint_present
-            ? "Present after this action"
-            : result.consumed_checkpoint_count
-              ? "Consumed by restoration"
-              : "Absent after this action";
-        const consumption = result.consumed_price_keys.length
-            ? result.consumed_price_keys.map(escapeHtml).join(" + ")
-            : "Nothing consumed";
-        const refusal = result.applied
-            ? ""
-            : `<p class="pc-calc-error"><strong>Engine refusal:</strong> ${escapeHtml(result.refusal_reason)} (${escapeHtml(result.refusal_key)})</p>
-               <p class="pc-help">The live item, checkpoint, and costs are preserved.</p>`;
-        const cost = result.cost_keys.length
-            ? this.renderCost(calc.probability)
-            : `<section class="pc-calc-section pc-calc-cost"><h4>Cost</h4><p>Restoration is beast-free.</p></section>`;
-        return `<section class="pc-calc-answer">
-            <span class="pc-calc-answer-kicker">Deterministic engine result</span>
-            <strong class="pc-calc-answer-value">${formatProbabilityExact(calc.probability)}</strong>
-            <span class="pc-calc-answer-action">${escapeHtml(this.actionLabel(result.action_id))}</span>
-            <div class="pc-calc-answer-details">
-                <span><small>Applied</small><strong>${result.applied ? "Yes" : "No"}</strong></span>
-                <span><small>Checkpoint</small><strong>${checkpoint}</strong></span>
-                <span><small>Consumption</small><strong>${consumption}</strong></span>
-            </div>
-            ${refusal}
-        </section>${cost}`;
-    }
-
     private renderCost(successProbability: number): string {
         const keys = this.selectedCostKeys();
         if (keys.length === 0) {
@@ -2278,6 +2234,10 @@ export class PcCalculator extends HTMLElement {
                 probability: calc.outcomes.reduce((sum, row) => sum + (row.terminal === terminal ? row.probability : 0), 0),
             })),
             {
+                label: "Implicit or item-property requirements not met",
+                probability: probabilityWhere(outcome => outcome.goal_properties_satisfied === false),
+            },
+            {
                 label: "Below modifier threshold",
                 probability: probabilityWhere(
                     (outcome) => satisfiedCount(outcome) < required,
@@ -2354,7 +2314,7 @@ export class PcCalculator extends HTMLElement {
                 (outcome) => `<tr class="${isSuccess(outcome) ? "is-success" : ""}">
                     <td class="pc-calc-p">${formatProbabilityExact(outcome.probability)}</td>
                     <td>${outcome.terminal ? titleCase(outcome.terminal) : RARITY_NAMES[outcome.rarity] ?? outcome.rarity}</td>
-                    <td>${outcome.terminal ? "—" : `${outcome.prefixes}P/${outcome.suffixes}S`}</td>
+                    <td>${outcome.terminal ? "—" : outcome.affixes_unobserved ? "Unconstrained" : `${outcome.prefixes}P/${outcome.suffixes}S`}</td>
                     ${this.slots
                         .map((_, index) =>
                             slotStatusCell(outcome, index),
@@ -2371,9 +2331,8 @@ export class PcCalculator extends HTMLElement {
             )
             .join("");
         return `<section class="pc-calc-section">
-            <h4>Goal coverage</h4>
-            <div class="pc-calc-coverage">${coverageRows}</div>
-            <p class="pc-help pc-calc-coverage-help">Modifier coverage only; exact success also checks rarity and the extra-modifier setting.${calc.double_corruption_branches ? " Bricked and destroyed outcomes count as zero coverage and cannot succeed." : ""}</p>
+            ${this.slots.length ? `<h4>Explicit modifier coverage</h4><div class="pc-calc-coverage">${coverageRows}</div>` : ""}
+            <p class="pc-help pc-calc-coverage-help">Success checks the complete goal: rarity, explicit modifiers, selected implicits and item properties.${calc.double_corruption_branches ? " Bricked and destroyed outcomes cannot succeed." : ""}</p>
             <div class="pc-calc-misses">
                 <h5>Miss signals <span>can overlap</span></h5>
                 ${missRows}
@@ -2540,7 +2499,7 @@ export class PcCalculator extends HTMLElement {
         });
         this.modPool.addEventListener("craft-mod", (event) => {
             const detail = (
-                event as CustomEvent<{ key: string; side: "prefix" | "suffix" }>
+                event as CustomEvent<{ key: string; side: "prefix" | "suffix" | "implicit" }>
             ).detail;
             if (this.activeContext === "input") {
                 void this.guard(() =>
@@ -2555,7 +2514,7 @@ export class PcCalculator extends HTMLElement {
             const detail = (
                 event as CustomEvent<{
                     modId: number;
-                    side: "prefix" | "suffix";
+                    side: "prefix" | "suffix" | "implicit";
                 }>
             ).detail;
             void this.guard(() =>
@@ -2624,8 +2583,14 @@ export class PcCalculator extends HTMLElement {
                 event as CustomEvent<{
                     familyModKey?: string;
                     slotIndex?: number;
+                    implicitKey?: string;
                 }>
             ).detail;
+            if (detail.implicitKey) {
+                this.goalImplicitKeys = this.goalImplicitKeys.filter(key => key !== detail.implicitKey);
+                void this.guard(() => this.goalChanged());
+                return;
+            }
             const index = detail.familyModKey
                 ? this.slots.findIndex(
                       (slot) => slot.familyModKey === detail.familyModKey,
@@ -2639,6 +2604,32 @@ export class PcCalculator extends HTMLElement {
             this.normalizeSuccessThreshold(followedAll);
             this.syncModPoolSelections();
             void this.guard(() => this.goalChanged());
+        });
+        this.querySelector('[data-copy-input-goal]')?.addEventListener("click", () => void this.guard(() => this.copyInputToGoal()));
+        for (const [card, context] of [[this.inputModList, "input"], [this.goalModList, "goal"]] as const) {
+            card?.addEventListener("choose-mods", event => {
+                this.selectContext(context);
+                this.modPool.setActiveTab((event as CustomEvent<{side: "prefix" | "suffix" | "implicit"}>).detail.side);
+                this.modPool.scrollIntoView({block: "nearest"});
+            });
+            card?.addEventListener("item-properties-change", event => {
+                const edit = (event as CustomEvent<ItemPropertyChange>).detail;
+                void this.guard(async () => {
+                    if (context === "input") {
+                        await this.client.editItem(this.item, this.session, {...edit, influence_bits: edit.influence_bits ?? undefined, corrupted: edit.corrupted ?? undefined});
+                        await this.inputChanged();
+                    } else {
+                        if (edit.rarity) this.goalRarity = edit.rarity;
+                        if ("influence_bits" in edit) this.goalInfluenceBits = edit.influence_bits ?? undefined;
+                        if ("corrupted" in edit) this.goalCorrupted = edit.corrupted ?? undefined;
+                        await this.goalChanged();
+                    }
+                });
+            });
+        }
+        this.inputModList?.addEventListener("remove-item-mod", event => {
+            const edit = (event as CustomEvent<{modId: number; side: "prefix" | "suffix" | "implicit"}>).detail;
+            void this.guard(() => this.removeInputMod(edit.modId, edit.side));
         });
         this.selectContext(this.activeContext);
         this.renderItem();

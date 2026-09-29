@@ -555,6 +555,17 @@ export class EngineClient {
         return this.call<{solver: number}>("openCalcInspector", {session}).then(result => result.solver);
     }
 
+    openCalcGoal(session: number, goal: import("./engine-protocol").CalculatorItemGoal): Promise<number> {
+        return this.call<{solver: number}>("openCalcGoal", {session, goal}).then(result => result.solver);
+    }
+    bestiaryGoalCalc(data: number, solver: number, item: number, action: string): Promise<CalcResult> {
+        return this.call("bestiaryGoalCalc", {data, solver, item, action});
+    }
+
+    editItem(item: number, session: number, edit: import("./engine-protocol").ItemEdit): Promise<void> {
+        return this.call("editItem", {item, session, edit});
+    }
+
     currencyCalc(solver: number, item: number, action: string, donorSession = 0, donorItem = 0): Promise<CalcResult> {
         return this.call<CalcResult>("currencyCalc", {solver, item, action, donorSession, donorItem});
     }

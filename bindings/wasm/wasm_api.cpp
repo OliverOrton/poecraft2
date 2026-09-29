@@ -1638,6 +1638,16 @@ const char* pcw_item_info(uint32_t item_id, uint32_t session_id) {
     return respond(std::move(out));
 }
 
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_item_edit(uint32_t item_id, uint32_t session_id, const char* spec_json) {
+    auto* item = find(g_items, item_id);
+    auto* session = find(g_sessions, session_id);
+    if (!item || !session || !spec_json) return fail(PC_RESULT_INVALID_ARGUMENT, "Item editor requires item, session and edit");
+    pc_error_info error = make_error();
+    if (pc_item_edit_json(*session, item, spec_json, std::strlen(spec_json), &error) != PC_RESULT_OK) return fail(error);
+    return respond("{\"ok\":true}");
+}
+
 // Add an explicit mod to an item, resolving it by session mod key. Used to
 // build the exact fixtures the native tests use (e.g. fractured reforge).
 EMSCRIPTEN_KEEPALIVE
@@ -1977,6 +1987,25 @@ const char* pcw_bestiary_calculate(
     append_compound_item_state(out, calculation.successor);
     out.push_back('}');
     return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_bestiary_goal_calc(uint32_t data_id, uint32_t solver_id,
+        uint32_t item_id, const char* action_id) {
+    auto* data = find(g_data, data_id);
+    auto* solver = find(g_solvers, solver_id);
+    auto* item = find(g_items, item_id);
+    if (!data || !solver || !item || !action_id) return fail(PC_RESULT_INVALID_ARGUMENT, "Invalid Bestiary goal calculation");
+    auto* state = sync_bestiary_state(item_id, *item);
+    if (!state) return fail(PC_RESULT_INTERNAL_ERROR, "Bestiary state unavailable");
+    pc_bestiary_action_request request{sizeof(pc_bestiary_action_request), PC_ABI_VERSION, action_id};
+    pc_bestiary_calculation calculation{};
+    pc_error_info error = make_error();
+    if (pc_bestiary_calculate_action(*data, state, &request, &calculation, &error) != PC_RESULT_OK) return fail(error);
+    if (!calculation.result.applied) return fail(PC_RESULT_INVALID_ARGUMENT, calculation.result.refusal_reason);
+    const char* result = nullptr;
+    if (pc_calc_currency_outcomes_json(*solver, &calculation.successor.item, "observe", nullptr, nullptr, &result, &error) != PC_RESULT_OK) return fail(error);
+    return respond(result);
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -2845,6 +2874,18 @@ const char* pcw_calc_inspector(uint32_t session_id) {
     pc_error_info error = make_error();
     pc_solver_handle solver = nullptr;
     if (pc_calc_create_inspector(*session, &solver, &error) != PC_RESULT_OK) return fail(error);
+    const auto id = g_next_id++;
+    g_solvers[id] = solver;
+    return respond("{\"ok\":true,\"solver\":" + std::to_string(id) + "}");
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_calc_goal(uint32_t session_id, const char* goal_json) {
+    auto* session = find(g_sessions, session_id);
+    if (!session || !goal_json) return fail(PC_RESULT_INVALID_ARGUMENT, "Calculator goal requires session and goal");
+    pc_error_info error = make_error();
+    pc_solver_handle solver = nullptr;
+    if (pc_calc_create_goal(*session, goal_json, std::strlen(goal_json), &solver, &error) != PC_RESULT_OK) return fail(error);
     const auto id = g_next_id++;
     g_solvers[id] = solver;
     return respond("{\"ok\":true,\"solver\":" + std::to_string(id) + "}");

@@ -6,6 +6,9 @@
 #include "engine_internal.hpp"
 #include "harvest_crafts.generated.hpp"
 #include "handles_internal.hpp"
+#include "currency_outcomes.hpp"
+#include "json.hpp"
+#include <bit>
 
 #include <algorithm>
 #include <cmath>
@@ -1409,6 +1412,116 @@ pc_result pc_item_init(
     *out_item = scratch; /* commit only on success */
     clear_error(out_error);
     return PC_RESULT_OK;
+}
+
+pc_result pc_item_edit_json(pc_session_handle session, pc_item_state* item,
+        const char* text, size_t size, pc_error_info* error) {
+    if (!session || !item || !text) {
+        set_error(error, PC_RESULT_INVALID_ARGUMENT, "Item editor requires a session and item");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        using poecraft::json::Type;
+        using poecraft::pc_bitset_test;
+        const auto root = poecraft::json::Parser(text, size).parse();
+        if (root.type != Type::Object) throw std::invalid_argument("Item edit must be an object");
+        const auto& s = *session->impl;
+        auto next = *item;
+        if (next.lifecycle != PC_ITEM_LIVE) throw std::invalid_argument("Cannot edit an absent item");
+        if (const auto* rarity = root.find("rarity")) {
+            if (rarity->type != Type::String) throw std::invalid_argument("Rarity must be normal, magic or rare");
+            if (rarity->string == "normal") next.rarity = PC_RARITY_NORMAL;
+            else if (rarity->string == "magic") next.rarity = PC_RARITY_MAGIC;
+            else if (rarity->string == "rare") next.rarity = PC_RARITY_RARE;
+            else throw std::invalid_argument("Rarity must be normal, magic or rare");
+            const unsigned cap = next.rarity == PC_RARITY_NORMAL ? 0 : next.rarity == PC_RARITY_MAGIC ? 1 : s.rare_affix_cap;
+            if (next.prefix_count > cap || next.suffix_count > cap) throw std::invalid_argument("Remove excess explicit modifiers before lowering rarity");
+        }
+        if (const auto* bits = root.find("influence_bits")) {
+            if (bits->type != Type::Number || bits->number < 0 || bits->number > 63 || std::floor(bits->number) != bits->number)
+                throw std::invalid_argument("Invalid influence selection");
+            next.generic_influence_bits = static_cast<std::uint8_t>(bits->number);
+            if (std::popcount(next.generic_influence_bits) > 2) throw std::invalid_argument("An item can have at most two ordinary influences");
+            for (unsigned code = 1; code <= 6; ++code)
+                if ((next.generic_influence_bits & (1u << (code - 1))) &&
+                    (code >= s.selector_tag_by_influence.size() || s.selector_tag_by_influence[code] < 0))
+                    throw std::invalid_argument("This influence is unavailable for the selected base");
+        }
+        if (const auto* corrupted = root.find("corrupted")) {
+            if (corrupted->type != Type::Bool) throw std::invalid_argument("Corrupted must be boolean");
+            if (corrupted->boolean) next.item_flags |= PC_ITEM_CORRUPTED;
+            else next.item_flags &= ~PC_ITEM_CORRUPTED;
+        }
+        const auto resolve = [&](const poecraft::json::Value& key) {
+            if (key.type != Type::String) throw std::invalid_argument("Implicit modifier needs a stable key");
+            const auto pos = s.data->mod_pos_by_key.find(key.string);
+            if (pos == s.data->mod_pos_by_key.end()) throw std::invalid_argument("Unknown implicit modifier");
+            const auto found = s.session_id_by_global_id.find(s.data->mod_global_ids[pos->second]);
+            if (found == s.session_id_by_global_id.end()) throw std::invalid_argument("Implicit is not available in this session");
+            const auto id = found->second;
+            if (!pc_bitset_test(s.implicit_mask.data(), id) && !pc_bitset_test(s.corrupted_implicit_mask.data(), id) && !pc_bitset_test(s.eldritch_implicit_mask.data(), id))
+                throw std::invalid_argument("Modifier is not an implicit");
+            return id;
+        };
+        const auto erase = [&](unsigned index) {
+            const auto id = next.implicits[index].mod_id;
+            const auto gen = s.data->mod_gen_type_code[s.global_index[id]];
+            if (gen == s.data->gen_searing_implicit_code) next.searing_exarch_tier = 0;
+            if (gen == s.data->gen_eater_implicit_code) next.eater_of_worlds_tier = 0;
+            for (unsigned i = index + 1; i < next.implicit_count; ++i) next.implicits[i - 1] = next.implicits[i];
+            next.implicits[--next.implicit_count] = {};
+            next.implicits[next.implicit_count].mod_id = PC_MOD_NONE;
+        };
+        if (const auto* key = root.find("remove_implicit")) {
+            const auto id = resolve(*key);
+            bool removed = false;
+            for (unsigned i = 0; i < next.implicit_count; ++i) if (next.implicits[i].mod_id == id) { erase(i); removed = true; break; }
+            if (!removed) throw std::invalid_argument("Implicit is not on this item");
+        }
+        if (const auto* key = root.find("add_implicit")) {
+            const auto id = resolve(*key);
+            const auto old_searing_tier = next.searing_exarch_tier;
+            const auto old_eater_tier = next.eater_of_worlds_tier;
+            for (unsigned i = 0; i < next.implicit_count;) {
+                const auto old = next.implicits[i].mod_id;
+                bool conflict = id == old;
+                for (auto a = s.group_offsets[id]; a < s.group_offsets[id + 1]; ++a)
+                    for (auto b = s.group_offsets[old]; b < s.group_offsets[old + 1]; ++b) conflict |= s.group_ids[a] == s.group_ids[b];
+                if (conflict) erase(i); else ++i;
+            }
+            if (pc_bitset_test(s.eldritch_implicit_mask.data(), id)) {
+                const bool searing = s.data->mod_gen_type_code[s.global_index[id]] == s.data->gen_searing_implicit_code;
+                const auto& tiers = searing ? s.eldritch_searing_tier_mod_ids : s.eldritch_eater_tier_mod_ids;
+                // A modifier can occur in several currency-tier pools. Keep
+                // the authored side's tier when eligible; a new side starts
+                // at the lowest tier admitting this modifier.
+                unsigned tier = searing ? old_searing_tier : old_eater_tier;
+                if (!tier || tier >= tiers.size() || std::find(tiers[tier].begin(), tiers[tier].end(), id) == tiers[tier].end()) {
+                    tier = 0;
+                    for (unsigned i = 1; i < tiers.size(); ++i)
+                        if (std::find(tiers[i].begin(), tiers[i].end(), id) != tiers[i].end()) { tier = i; break; }
+                }
+                if (!tier || !poecraft::set_eldritch_implicit(s, next, searing, tier, id)) throw std::invalid_argument("Invalid Eldritch implicit or full implicit slots");
+            } else {
+                if (next.implicit_count == PC_MAX_IMPLICITS) throw std::invalid_argument("Implicit slots are full");
+                auto& slot = next.implicits[next.implicit_count++];
+                slot = {};
+                slot.mod_id = id;
+                slot.group_id = static_cast<std::uint16_t>(s.primary_group[id]);
+            }
+        }
+        if (next.generic_influence_bits) {
+            if (next.searing_exarch_tier || next.eater_of_worlds_tier) throw std::invalid_argument("Ordinary and Eldritch influence cannot coexist");
+            for (unsigned i = 0; i < next.prefix_count; ++i) if (next.prefixes[i].flags & PC_MOD_SLOT_FRACTURED) throw std::invalid_argument("Ordinary influence cannot coexist with fractured modifiers");
+            for (unsigned i = 0; i < next.suffix_count; ++i) if (next.suffixes[i].flags & PC_MOD_SLOT_FRACTURED) throw std::invalid_argument("Ordinary influence cannot coexist with fractured modifiers");
+        }
+        *item = next;
+        clear_error(error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
 }
 
 pc_result pc_item_debug_format(

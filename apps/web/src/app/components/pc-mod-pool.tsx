@@ -91,6 +91,7 @@ export class PcModPool extends HTMLElement {
     /** Host-authored goal thresholds, keyed by the persisted representative
      * family mod key. Item selections are derived from PoolModel instead. */
     private selectedTiers = new Map<string, number>();
+    private selectedImplicitKeys = new Set<string>();
     private sectionOpen: Record<string, boolean> = {
         base: true,
         "source:base_implicit": true,
@@ -137,6 +138,11 @@ export class PcModPool extends HTMLElement {
         this.render();
     }
 
+    setSelectedImplicits(keys: readonly string[]): void {
+        this.selectedImplicitKeys = new Set(keys);
+        this.render();
+    }
+
     setInteractionMode(mode: ModPoolMode): void {
         if (this.mode === mode) return;
         this.mode = mode;
@@ -169,11 +175,11 @@ export class PcModPool extends HTMLElement {
         );
     }
 
-    private dispatchCraft(modKey: string, side: "prefix" | "suffix"): void {
+    private dispatchCraft(modKey: string, side: "prefix" | "suffix" | "implicit"): void {
         this.dispatchEvent(
             new CustomEvent<{
                 key: string;
-                side: "prefix" | "suffix";
+                side: "prefix" | "suffix" | "implicit";
                 fractured?: boolean;
             }>(
                 "craft-mod",
@@ -203,10 +209,10 @@ export class PcModPool extends HTMLElement {
 
     private dispatchRemove(
         modId: number,
-        side: "prefix" | "suffix",
+        side: "prefix" | "suffix" | "implicit",
     ): void {
         this.dispatchEvent(
-            new CustomEvent<{ modId: number; side: "prefix" | "suffix" }>(
+            new CustomEvent<{ modId: number; side: "prefix" | "suffix" | "implicit" }>(
                 "remove-mod",
                 { detail: { modId, side }, bubbles: true },
             ),
@@ -316,7 +322,7 @@ export class PcModPool extends HTMLElement {
                 sorted.flatMap((tier) => tier.classification_tags),
             ).sort();
             const selectedThreshold = sorted
-                .map((tier) => this.selectedTiers.get(tier.key))
+                .map((tier) => this.tab === "implicit" ? this.selectedImplicitKeys.has(tier.key) ? tier.family_tier_index : undefined : this.selectedTiers.get(tier.key))
                 .find((tier) => tier !== undefined);
             const itemTier = sorted.find((tier) =>
                 this.tab === "prefix"
@@ -443,11 +449,11 @@ export class PcModPool extends HTMLElement {
         }
         const clickable =
             (this.allowDirectCraft || this.selectMode) &&
-            (this.tab === "prefix" || this.tab === "suffix") &&
+            (this.tab === "prefix" || this.tab === "suffix" || this.tab === "implicit") &&
             !blockedReason;
 
         const tags = visibleModTags(tier.classification_tags);
-        const tierSelected = family.selectedTier !== undefined && family.selectedTier === tier.family_tier_index;
+        const tierSelected = this.selectMode && this.tab === "implicit" ? this.selectedImplicitKeys.has(tier.key) : family.selectedTier !== undefined && family.selectedTier === tier.family_tier_index;
         return <li key={tier.session_mod_id}
             className={`pc-mod-tier ${blockedReason ? "is-blocked" : ""} ${tierOnItem ? "is-on-item" : ""} ${tierFractured ? "is-fractured" : ""} ${tierSelected ? "is-selected" : ""}`}
             data-mod-key={tier.key} data-mod-id={tier.session_mod_id} data-side={this.tab} data-on-item={tierOnItem}
@@ -458,7 +464,7 @@ export class PcModPool extends HTMLElement {
                 this.dispatchFracture(tier.key, tier.session_mod_id, this.tab, tierOnItem);
             }}>
             <button className="pc-mod-tier-btn" disabled={!clickable} onClick={() => {
-                if (!clickable || (this.tab !== "prefix" && this.tab !== "suffix")) return;
+                if (!clickable || this.tab === "enchantment") return;
                 if (!this.selectMode && tierOnItem) this.dispatchRemove(tier.session_mod_id, this.tab);
                 else this.dispatchCraft(tier.key, this.tab);
             }}>

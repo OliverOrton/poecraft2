@@ -27,4 +27,10 @@ std::vector<std::pair<std::uint32_t, std::uint64_t>> vaal_implicit_weights(
     const SessionImpl&);
 pc_item_state vaal_implicit_result(const SessionImpl&, const pc_item_state&,
     std::uint32_t mod, std::uint32_t removed);
+std::vector<std::pair<std::uint32_t, std::uint64_t>> eldritch_implicit_weights(
+    const SessionImpl&, bool searing, std::uint32_t tier);
+bool set_eldritch_implicit(const SessionImpl&, pc_item_state&,
+    bool searing, std::uint32_t tier, std::uint32_t mod);
+std::vector<std::pair<pc_item_state, long double>> fossil_implicit_outcomes(
+    const SessionImpl&, const pc_item_state&, const std::vector<std::uint32_t>& fossils);
 }

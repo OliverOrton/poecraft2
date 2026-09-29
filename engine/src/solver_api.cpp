@@ -200,10 +200,9 @@ solver::ActionRegistryBuildOptions registry_build_options(
     if (options.goal_relevant_fossils || options.goal_relevant_actions) {
         const poecraft::DataImpl& data = *session.data;
         const Value* slots = root.find("slots");
-        if (slots == nullptr || slots->type != Type::Array ||
-            slots->array.empty()) {
+        if (slots == nullptr || slots->type != Type::Array) {
             throw std::runtime_error(
-                "goal: slots must be a non-empty array");
+                "goal: slots must be an array");
         }
         for (const Value& entry : slots->array) {
             if (entry.type != Type::Object) {
@@ -285,7 +284,7 @@ solver::GoalSpec parse_goal(
     const char* goal_json,
     std::size_t goal_json_size,
     std::vector<std::uint32_t>& out_candidates,
-    const solver::ActionRegistry& registry) {
+    const solver::ActionRegistry& registry, bool calculator_only = false) {
     const poecraft::DataImpl& data = *session.data;
     Value root = Parser(goal_json, goal_json_size).parse();
     if (root.type != Type::Object) {
@@ -329,7 +328,7 @@ solver::GoalSpec parse_goal(
 
     const Value* slots = root.find("slots");
     if (slots == nullptr || slots->type != Type::Array ||
-        slots->array.empty()) {
+        (!calculator_only && slots->array.empty())) {
         throw std::runtime_error("goal: slots must be a non-empty array");
     }
     for (const Value& entry : slots->array) {
@@ -592,6 +591,7 @@ solver::GoalSpec parse_goal(
 
 struct pc_solver {
     bool inspection_only = false;
+    solver::CalculatorItemGoal item_goal;
     std::string currency_calculation_json;
     std::shared_ptr<const poecraft::SessionImpl> session;
     std::unique_ptr<solver::CalcContext> calc;
@@ -648,7 +648,7 @@ pc_result create_solver(
     const std::optional<std::uint32_t> automatic_candidate_kind_mask,
     const solver::GoalTerminalDiagnosticMode terminal_mode,
     pc_solver_handle* out_solver,
-    pc_error_info* out_error) {
+    pc_error_info* out_error, bool calculator_only = false) {
     if (session == nullptr || goal_json == nullptr || out_solver == nullptr) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
@@ -672,6 +672,10 @@ pc_result create_solver(
     try {
         auto holder = std::make_unique<pc_solver>();
         holder->session = session->impl;
+        holder->item_goal = solver::parse_calculator_item_goal(*holder->session, goal_json, goal_json_size);
+        if (!calculator_only && (!holder->item_goal.implicit_mods.empty() || holder->item_goal.influence_bits || holder->item_goal.corrupted))
+            throw std::invalid_argument("Implicit and item-property requirements are Calculator-only; strategy solving is unavailable for this goal");
+        holder->inspection_only = calculator_only;
         const auto registry_started = std::chrono::steady_clock::now();
         const solver::ActionRegistryBuildOptions registry_options =
             registry_build_options(
@@ -685,7 +689,7 @@ pc_result create_solver(
         std::vector<std::uint32_t> candidates;
         solver::GoalSpec goal = parse_goal(
             *holder->session, goal_json, goal_json_size, candidates,
-            registry);
+            registry, calculator_only);
         for (const auto action : candidates) {
             if (!solver::solver_action_disabled(goal, registry.actions.at(action)) &&
                 poecraft::is_foulborn(registry.actions.at(action).params.type))
@@ -751,7 +755,7 @@ pc_result create_solver(
                 *automatic_candidate_kind_mask;
         }
         holder->calc = std::make_unique<solver::CalcContext>(
-            holder->session, goal, std::move(registry), candidates, false,
+            holder->session, goal, std::move(registry), candidates, calculator_only,
             !goal.primitive_actions_explicit, false, std::nullopt,
             std::vector<solver::CountObservation>{},
             goal.automatic_candidates);
@@ -1948,7 +1952,7 @@ pc_result pc_calc_currency_outcomes_json(
     try {
         solver->currency_calculation_json = solver::calculate_currency_json(
             *solver->calc, *receiver, action,
-            donor_session ? donor_session->impl.get() : nullptr, donor);
+            donor_session ? donor_session->impl.get() : nullptr, donor, solver->item_goal);
         *out_json = solver->currency_calculation_json.c_str();
         clear_error(out_error);
         return PC_RESULT_OK;
@@ -1956,6 +1960,12 @@ pc_result pc_calc_currency_outcomes_json(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
         return PC_RESULT_INVALID_ARGUMENT;
     }
+}
+
+pc_result pc_calc_create_goal(pc_session_handle session, const char* goal_json,
+        size_t goal_json_size, pc_solver_handle* out_solver, pc_error_info* out_error) {
+    return create_solver(session, goal_json, goal_json_size, std::nullopt,
+        solver::GoalTerminalDiagnosticMode::LegacyClean, out_solver, out_error, true);
 }
 
 pc_result pc_calc_create_inspector(pc_session_handle session,

@@ -127,6 +127,9 @@ export interface CalculatorGoalSlot {
 /** Calculator documents are never Stash resources; the draft only powers
  * reload recovery, so there is no savedRef/dirty machinery. */
 export interface CalculatorDraftRecord {
+    goalImplicitKeys?: string[];
+    goalInfluenceBits?: number;
+    goalCorrupted?: boolean;
     awakenerDonorId?: string;
     resourceIdentity?: string;
     docId: string;

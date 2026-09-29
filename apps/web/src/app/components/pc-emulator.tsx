@@ -420,7 +420,7 @@ export class PcEmulator extends HTMLElement {
 
     private async craftMod(
         key: string,
-        side: "prefix" | "suffix",
+        side: "prefix" | "suffix" | "implicit",
         fractured = false,
     ): Promise<void> {
         const info = this.modCache.find((mod) => mod.key === key);
@@ -428,7 +428,8 @@ export class PcEmulator extends HTMLElement {
             await this.applyConfiguredAction({type: "bench", mod_key: key});
             return;
         }
-        await this.client.addMod(this.item, this.session, {key, side, fractured});
+        if (side === "implicit") await this.client.editItem(this.item, this.session, {add_implicit: key});
+        else await this.client.addMod(this.item, this.session, {key, side, fractured});
         this.pendingHistoryEntry = {
             action: `${fractured ? "fracture" : "add"} ${side} ${key}`,
             applied: true,
@@ -462,10 +463,11 @@ export class PcEmulator extends HTMLElement {
 
     private async removeMod(
         modId: number,
-        side: "prefix" | "suffix",
+        side: "prefix" | "suffix" | "implicit",
     ): Promise<void> {
         const info = this.modCache[modId];
-        await this.client.removeMod(this.item, { modId, side });
+        if (side === "implicit") await this.client.editItem(this.item, this.session, {remove_implicit: info.key});
+        else await this.client.removeMod(this.item, { modId, side });
         this.pendingHistoryEntry = {
             action: `remove ${side} ${info?.key ?? modId}`,
             applied: true,
@@ -703,6 +705,7 @@ export class PcEmulator extends HTMLElement {
         const implicits = implicitIds.map((id) => this.toSlot(id, new Set()));
 
         this.modList.setModel({
+            properties: {influences: this.catalog?.genericInfluences ?? [], influenceBits: Number(info.generic_influence_bits ?? 0), corrupted: Boolean(Number(info.item_flags ?? 0) & 1)},
             kind: "concrete",
             baseKey: this.base,
             baseName: this.baseDisplayName(),
@@ -1067,7 +1070,7 @@ export class PcEmulator extends HTMLElement {
             const detail = (
                 event as CustomEvent<{
                     key: string;
-                    side: "prefix" | "suffix";
+                    side: "prefix" | "suffix" | "implicit";
                     fractured?: boolean;
                 }>
             ).detail;
@@ -1118,13 +1121,29 @@ export class PcEmulator extends HTMLElement {
             const detail = (
                 event as CustomEvent<{
                     modId: number;
-                    side: "prefix" | "suffix";
+                    side: "prefix" | "suffix" | "implicit";
                 }>
             ).detail;
             void this.guard(() => this.removeMod(detail.modId, detail.side));
         });
         this.modPool.addEventListener("tab-change", () => {
             void this.guard(() => this.refresh(), "inspect");
+        });
+        this.modList.addEventListener("choose-mods", event => {
+            if (this.busy || this.awaitingUnveilChoice) return;
+            this.modPool.setActiveTab((event as CustomEvent<{side: "prefix" | "suffix" | "implicit"}>).detail.side);
+        });
+        this.modList.addEventListener("remove-item-mod", event => {
+            const edit = (event as CustomEvent<{modId: number; side: "prefix" | "suffix" | "implicit"}>).detail;
+            void this.guard(() => this.removeMod(edit.modId, edit.side));
+        });
+        this.modList.addEventListener("item-properties-change", event => {
+            const edit = (event as CustomEvent<import("./pc-mod-list").ItemPropertyChange>).detail;
+            void this.guard(async () => {
+                await this.client.editItem(this.item, this.session, {...edit, influence_bits: edit.influence_bits ?? undefined, corrupted: edit.corrupted ?? undefined});
+                this.pendingHistoryEntry = {action: "Edit item properties", applied: true, added: 0, removed: 0, costKeys: []};
+                await this.markChanged();
+            });
         });
     }
 

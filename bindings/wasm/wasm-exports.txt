@@ -68,3 +68,6 @@ _malloc
 _free
 _pcw_currency_calc
 _pcw_calc_inspector
+_pcw_calc_goal
+_pcw_bestiary_goal_calc
+_pcw_item_edit

@@ -2664,6 +2664,72 @@ test("Expanded currency Calculator returns native odds without consuming items",
     }
 });
 
+test("Calculator item goals and editors preserve native joint outcomes", async () => {
+    const low = await client.createSession(dataId, BASE, 1);
+    const items: number[] = [], handles: number[] = [];
+    try {
+        const item = await client.createItem(low, {rarity: "rare"}); items.push(item);
+        const implicitGoal = {version: "v1" as const, rarity: "rare" as const, slots: [],
+            allow_extra_modifiers: true, fossil_mode: "goal_relevant" as const};
+        const inspector = await client.openCalcGoal(low, implicitGoal); handles.push(inspector);
+        const initial = await client.currencyCalc(inspector, item, "double_corruption");
+        const pair = initial.implicit_pairs![0];
+        const keys = await Promise.all(pair.mods.map(async mod => (await client.modInfo(low, mod)).key));
+        const complete = await client.openCalcGoal(low, {...implicitGoal,
+            implicit_mod_keys: keys, influence_bits: 0, corrupted: true}); handles.push(complete);
+        const before = await client.exportItem(item, low);
+        const doubled = await client.currencyCalc(complete, item, "double_corruption");
+        assert.ok(Math.abs(doubled.success_probability - pair.probability) < 1e-12);
+        const single = await client.currencyCalc(complete, item, "vaal");
+        assert.equal(single.success_probability, 0, "One Vaal roll cannot add two required implicits");
+        assert.deepEqual(await client.exportItem(item, low), before);
+        const unsupportedSolverGoal = {...implicitGoal, slots: [{family_mod_key: "LocalIncreasedEnergyShield1"}], corrupted: false};
+        await assert.rejects(client.openSolver(low, unsupportedSolverGoal), /Calculator-only/);
+
+        await client.editItem(item, low, {influence_bits: 40, corrupted: true});
+        assert.equal((await client.itemInfo(item)).generic_influence_bits, 40);
+        const influenced = await client.exportItem(item, low);
+        await assert.rejects(client.editItem(item, low, {influence_bits: 41, corrupted: false}), /at most two/);
+        assert.deepEqual(await client.exportItem(item, low), influenced);
+        await client.editItem(item, low, {influence_bits: 0, corrupted: false, add_implicit: keys[0]});
+        assert.equal(((await client.itemInfo(item)).implicit_mod_ids as number[]).length, 1);
+        await client.editItem(item, low, {remove_implicit: keys[0]});
+        assert.equal(((await client.itemInfo(item)).implicit_mod_ids as number[]).length, 0);
+
+        // Every existing ordinary kernel agrees with the unified endpoint when
+        // extra item requirements are absent. Use the same bounded low-ilvl base.
+        const fossil = "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences";
+        const target = {...implicitGoal, requested_fossil_actions: [fossil], slots: [{family_mod_key: "LocalIncreasedEnergyShield1"}]};
+        const legacy = await client.openSolver(low, target); handles.push(legacy);
+        const unified = await client.openCalcGoal(low, target); handles.push(unified);
+        const actions = await client.solverActions(legacy);
+        const representative = ["alchemy", "chaos", "exalt", "annul", "scour", "veiled_chaos", "harvest_reforge:defences",
+            actions.find(action => action.id.startsWith("essence:"))!.id,
+            fossil];
+        await client.addMod(item, low, {key: "LocalIncreasedEnergyShield1", side: "prefix"});
+        for (const action of representative) {
+            await client.editItem(item, low, {rarity: action === "alchemy" ? "magic" : "rare"});
+            const old = await client.solverCalc(legacy, item, action);
+            const current = await client.currencyCalc(unified, item, action);
+            assert.equal(current.legal, old.legal, action);
+            assert.ok(Math.abs(current.success_probability - old.success_probability) < 1e-12, action);
+            assert.ok(Math.abs(current.outcomes.reduce((sum, row) => sum + row.probability, 0) - 1) < 1e-12, action);
+        }
+
+        // Imprinting applies deterministically, but its item satisfies a rare
+        // goal with probability zero. The checkpoint stays read-only.
+        await client.editItem(item, low, {rarity: "magic"});
+        const beforeImprint = await client.exportItem(item, low);
+        const fail = await client.bestiaryGoalCalc(dataId, unified, item, "bestiary:imprint");
+        assert.equal(fail.success_probability, 0);
+        assert.deepEqual(await client.exportItem(item, low), beforeImprint);
+    } finally {
+        for (const handle of handles) await client.closeSolver(handle);
+        for (const item of items) await client.closeItem(item);
+        await client.closeSession(low);
+    }
+});
+
 // Wire the shared client into the runner before executing.
 {
     const spawned = spawnClient();

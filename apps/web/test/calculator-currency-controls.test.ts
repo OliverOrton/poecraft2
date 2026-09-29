@@ -24,6 +24,7 @@ const access = calculator as unknown as {
     actionChanged(): Promise<void>; recalc(): Promise<void>; selectedCostKeys(): string[];
     currentWork: Promise<void> | null;
     mechanicValues: Map<string, string>;
+    goalImplicitKeys: string[]; goalInfluenceBits?: number; goalCorrupted?: boolean;
 };
 Object.assign(access, {catalog, item: 1, session: 2, solver: 3, busy: false});
 let selected = "";
@@ -49,56 +50,62 @@ await access.currentWork;
 assert.equal(selected, "awakener");
 
 const calls: unknown[][] = [];
-const result: CalcResult = {supported: true, legal: true, success_probability: 0,
-    slot_satisfied: [], outcomes: [], vaal_branches: {implicit: 0.25, sockets: 0.25, reforge: 0.25, unchanged: 0.25},
-    implicit_outcomes: [{mod: 0, weight: 100, added_probability: 0.05, present_probability: 0.8}]};
+const result: CalcResult = {supported: true, legal: true, success_probability: 0.03,
+    slot_satisfied: [], implicit_satisfied: [0.07, 0.13], outcomes: [],
+    double_corruption_branches: {implicit: 0.25, sockets: 0.25, reforge: 0.25, destroyed: 0.25}};
 access.client = {
     cloneItem: async () => 4, exportItem: async () => ({}), closeItem: async (...args) => {calls.push(["closeItem", ...args]);},
     currencyCalc: async (...args) => {calls.push(["currencyCalc", ...args]); return result;},
-    openCalcInspector: async () => 5, closeSolver: async (...args) => {calls.push(["closeSolver", ...args]);},
+    openCalcGoal: async (...args) => {calls.push(["openCalcGoal", ...args]); return 5;},
+    solverActions: async () => [], closeSolver: async (...args) => {calls.push(["closeSolver", ...args]);},
 };
 access.renderGoal = () => {};
-access.actionId = "vaal";
-access.solver = 0; // Branch inspection must also work before a goal is chosen.
-await access.recalc();
-assert.deepEqual(calls, [["currencyCalc", 5, 4, "vaal"], ["closeItem", 4], ["closeSolver", 5]]);
-assert.match(calculator.textContent!, /Vaal outcomes/);
-assert.match(calculator.textContent!, /Roll chance/);
-assert.match(calculator.textContent!, /Final chance/);
-assert.doesNotMatch(calculator.textContent!, /Exact result/);
-access.calc = {...result, vaal_branches: undefined,
-    double_corruption_branches: {implicit: 0.25, sockets: 0.25, reforge: 0.25, destroyed: 0.25},
-    implicit_outcomes: [
-        {mod: 0, weight: 100, added_probability: 0.07, present_probability: 0.07},
-        {mod: 1, weight: 200, added_probability: 0.13, present_probability: 0.13},
-    ], implicit_pairs: [{mods: [0, 1], probability: 0.03}]};
-access.mechanicValues.set("corruption-implicit-first", "0");
-access.mechanicValues.set("corruption-implicit-second", "1");
-access.renderResults();
-assert.match(calculator.textContent!, /Two corruption implicits/);
-assert.match(calculator.textContent!, /Destroyed/);
-assert.match(calculator.textContent!, /3%/);
-assert.doesNotMatch(calculator.textContent!, /No change beyond corruption/);
-assert.match(calculator.textContent!, /Bricked \(modifiers changed\)/);
-assert.match(calculator.textContent!, /excluding conflicting groups/);
-const terminalMarkup = access.renderOutcomes({...access.calc, outcomes: ["bricked", "destroyed"].map((terminal, index) => ({
+access.goalImplicitKeys = ["implicit-a", "implicit-b"];
+access.goalInfluenceBits = 40;
+access.goalCorrupted = true;
+access.solver = 0;
+for (const action of ["double_corruption", "vaal", "chaos", "dominance"]) {
+    calls.length = 0;
+    access.actionId = action;
+    await access.recalc();
+    const goal = calls[0][2] as Record<string, unknown>;
+    assert.deepEqual(goal.implicit_mod_keys, ["implicit-a", "implicit-b"]);
+    assert.equal(goal.influence_bits, 40);
+    assert.equal(goal.corrupted, true);
+    assert.equal(goal.min_satisfied_slots, undefined, "Implicit-only goals need no fake explicit slot");
+    assert.deepEqual(calls.slice(1), [["currencyCalc", 5, 4, action], ["closeItem", 4], ["closeSolver", 5]]);
+    assert.match(calculator.textContent!, /3%/);
+    assert.doesNotMatch(calculator.textContent!, /Specific implicit pair|Roll chance|Final chance|Add goal modifiers/);
+}
+const terminalMarkup = access.renderOutcomes({...result, outcomes: ["bricked", "destroyed"].map((terminal, index) => ({
     terminal: terminal as "bricked" | "destroyed", state: -1 - index, probability: 0.25,
     rarity: -1, prefixes: 0, suffixes: 0, flags: 0, blocked: 0, is_goal: false, slots: [],
 }))});
 assert.match(terminalMarkup, /<td>Bricked<\/td>/);
 assert.match(terminalMarkup, /<td>Destroyed<\/td>/);
-assert.doesNotMatch(terminalMarkup, /Finished item is not/);
-assert.doesNotMatch(terminalMarkup, /0P\/0S/);
-assert.deepEqual(calls, [["currencyCalc", 5, 4, "vaal"], ["closeItem", 4], ["closeSolver", 5]],
-    "Selecting a pair displays the native joint probability without another calculation");
-access.actionId = "double_corruption";
-await access.recalc();
-assert.deepEqual(calls.slice(-3), [["currencyCalc", 5, 4, "double_corruption"], ["closeItem", 4], ["closeSolver", 5]]);
+assert.doesNotMatch(terminalMarkup, /Finished item is not|0P\/0S/);
 access.client.currencyCalc = async () => { throw new Error("Unsupported input"); };
 await access.recalc();
 assert.equal(access.calcError, "Unsupported input");
 assert.match(calculator.textContent!, /Unsupported input/);
-assert.doesNotMatch(calculator.textContent!, /Vaal outcomes/, "A failed calculation must clear stale odds");
+assert.doesNotMatch(calculator.textContent!, /3%/, "A failed calculation must clear stale odds");
+const copyAccess = calculator as unknown as {
+    itemRarity: string; itemPrefixes: unknown[]; itemSuffixes: unknown[]; itemImplicits: unknown[];
+    itemInfluenceBits: number; itemFlags: number; modKeyToFamily: Map<string, string>;
+    slots: unknown[]; goalImplicitKeys: string[]; goalInfluenceBits?: number; goalCorrupted?: boolean;
+    goalRarity: string; copyInputToGoal(): Promise<void>; goalChanged(): Promise<void>; selectContext(context: string): void;
+};
+Object.assign(copyAccess, {itemRarity: "rare", itemPrefixes: [{key: "life", tierIndex: 2}], itemSuffixes: [],
+    itemImplicits: [{key: "vaal-implicit"}], itemInfluenceBits: 40, itemFlags: 1,
+    modKeyToFamily: new Map([["life", "life-family"]])});
+copyAccess.goalChanged = async () => {};
+copyAccess.selectContext = () => {};
+await copyAccess.copyInputToGoal();
+assert.deepEqual(copyAccess.slots, [{familyModKey: "life-family", minTier: 2}]);
+assert.deepEqual(copyAccess.goalImplicitKeys, ["vaal-implicit"]);
+assert.equal(copyAccess.goalInfluenceBits, 40);
+assert.equal(copyAccess.goalCorrupted, true);
+assert.equal(copyAccess.goalRarity, "rare");
 const {loadGameAssets} = await import("../src/app/game-assets");
 const {disposeReact} = await import("../src/app/react-host");
 await loadGameAssets();

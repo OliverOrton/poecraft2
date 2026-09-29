@@ -71,6 +71,10 @@ for (const name of ["craft-mod", "fracture-mod", "remove-mod"]) {
     pool.dispatchEvent(new dom.CustomEvent(name, {detail: {key: "mod", modId: 0, side: "prefix", onItem: true}}));
 }
 assert.deepEqual([...applied], [], "Currency callbacks cannot bypass the locked UI");
+const lockedCard = emulator.querySelector("pc-mod-list")!;
+lockedCard.dispatchEvent(new dom.CustomEvent("remove-item-mod", {detail: {modId: 0, side: "implicit"}}));
+lockedCard.dispatchEvent(new dom.CustomEvent("item-properties-change", {detail: {corrupted: true, influence_bits: 32}}));
+await access.currentWork;
 assert.equal(directEdits, 0, "Direct editing events cannot modify a revealed item");
 assert.equal(await access.save(), false, "Workspace save cannot export an unfinished choice");
 assert.equal(access.activeCraftPanel, "unveil");

@@ -544,6 +544,19 @@ export class EngineBindings {
         return this.callJson("pcw_calc_inspector", ["number"], [session]).solver as number;
     }
 
+    openCalcGoal(session: number, goal: import("./engine-protocol").CalculatorItemGoal): number {
+        return this.callJson("pcw_calc_goal", ["number", "string"], [session, JSON.stringify(goal)]).solver as number;
+    }
+    bestiaryGoalCalc(data: number, solver: number, item: number, action: string): CalcResult {
+        const {ok, ...rest} = this.callJson("pcw_bestiary_goal_calc", ["number", "number", "number", "string"], [data, solver, item, action]);
+        void ok;
+        return rest as unknown as CalcResult;
+    }
+
+    editItem(item: number, session: number, edit: import("./engine-protocol").ItemEdit): void {
+        this.callJson("pcw_item_edit", ["number", "number", "string"], [item, session, JSON.stringify(edit)]);
+    }
+
     solverCalc(solver: number, item: number, actionId: string): CalcResult {
         const { ok, ...rest } = this.callJson(
             "pcw_solver_calc",

@@ -49,7 +49,7 @@ export function CalculatorShell({freshRarity, allowExtraModifiers}: {freshRarity
                     <div className="pc-calc-item-scroll"><Element tag="pc-mod-list" data-role="input-item" /></div>
                 </article>
                 <article className="pc-calc-context-card pc-calc-goal" data-context-card="goal">
-                    <header className="pc-calc-context-header"><h3>Goal item</h3></header>
+                    <header className="pc-calc-context-header"><h3>Goal item</h3><button type="button" data-copy-input-goal>Copy input to goal</button></header>
                     <div className="pc-calc-item-settings"><div className="pc-calc-goal-controls">
                         <label><span>Finished rarity</span><select data-role="goal-rarity">
                             <option value="normal">Normal</option><option value="magic">Magic</option><option value="rare">Rare</option>
@@ -57,7 +57,8 @@ export function CalculatorShell({freshRarity, allowExtraModifiers}: {freshRarity
                         <label><span>Success means</span><select data-role="success-threshold" /></label>
                     </div>
                     <label className="pc-calc-extra-modifiers"><input type="checkbox" data-role="allow-extra-modifiers" defaultChecked={allowExtraModifiers} />
-                        <span>Allow extra modifiers</span></label>
+                        <span>Allow extra explicit modifiers</span></label>
+                    <p className="pc-help">All selected implicits must be present. Copy the input to keep its modifiers in your goal.</p>
                     </div>
                     <div className="pc-calc-item-scroll"><Element tag="pc-mod-list" data-role="goal-item" /></div>
                 </article>

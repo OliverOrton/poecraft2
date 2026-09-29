@@ -41,26 +41,39 @@ one concrete input item
 -> exact native, goal-aware outcomes for that action
 ```
 
-Bestiary's exact Calculator surface operates
-on compound item-plus-checkpoint state and does not require goal slots merely
-to show the deterministic action result. Goal slots are required to open the
-ordinary solver handle and to run Solve.
+Every Odds action measures the probability that the same successor satisfies
+Input → Goal. Native success is the conjunction of finished rarity, the existing
+explicit family/tier/count policy, every selected exact implicit key, and any
+selected exact influence set or corruption status. Unselected item properties
+are unrestricted. **Allow extra explicit modifiers** does not relax implicit
+requirements. Empty explicit goals are supported without a placeholder slot;
+with extra modifiers disabled they require zero explicit modifiers.
 
 Awakener uses the current item as receiver and a selected Stash donor. Calculate
-enumerates its retained pairs and weighted refill without modifying either
-resource. Dominance and Vaal also have native single-action odds, separate from
-strategy search. Vaal exposes all four branch probabilities and a weighted
-implicit table even before an explicit goal is selected. The table distinguishes
-rolling an implicit from having it on the final item, including survival of an
-existing implicit. Socket changes retain their 25% mass but are otherwise ignored.
+enumerates retained pairs and weighted refill without modifying either resource.
+Bestiary evaluates the deterministic successor against the same goal, preserving
+its item-plus-checkpoint input. Applying successfully is not itself goal success.
 
-Temple exposes double-corruption odds using the same native Vaal weights. Two
-sequential rolls exclude conflicting modifier groups and replace all existing
-implicits. Select a specific unordered pair to see its unconditional probability.
-The 25% changed-mod brick and 25% destruction branches count as terminal failures;
-the remaining socket branch retains its 25% mass with socket details ignored.
-Final implicit presence excludes bricked/destroyed items. This is a terminal odds
-query; applying an influenced rare brick in Emulator remains unavailable.
+Vaal and Temple double corruption use the normal Goal item and result display.
+Add their required implicits from the modifier pool instead of a separate pair
+picker. Socket changes retain their 25% mass but are otherwise ignored. Double
+corruption draws two weighted, group-compatible implicits sequentially and
+replaces all existing implicits. The 25% changed-mod brick and 25% destruction
+branches are terminal failures. Applying an influenced rare brick in Emulator
+remains unavailable.
+
+Input and Goal each have an implicit section and item-property controls for
+rarity, corruption and ordinary influences. **Copy input to goal** copies explicit
+family thresholds, implicit keys, rarity, influences and corruption; the user can
+then remove or adjust requirements. Input edits go through the native atomic
+editor, which rejects incompatible influence/fracture/Eldritch state and excessive
+affix counts. Adding an Eldritch implicit keeps that side's tier when eligible,
+otherwise starts at its lowest admitted currency tier. Enchantments remain a
+separate retained-state section. Pending Unveil choices lock these editing paths.
+
+Implicit and item-property goals are single-action Calculator requirements.
+Strategy finder and Solver Lab export refuse this extended goal; no search or
+policy-evaluation authority is inferred from the new endpoint.
 
 Selecting an action does not mutate the input item. Input modifiers and goal
 requirements share the engine-backed modifier pool but use different modes.
@@ -97,18 +110,24 @@ Code authority:
 
 ## Exact One-Action Result
 
-Calculator opens a native solver handle for the current goal and uses
-`pc_calc_action_outcomes` through the WASM worker. A hand-selected Fossil
-loadout is explicitly requested when needed so it remains queryable outside
-the bounded automatically generated Fossil set.
+Calculator opens an inspection-only `pc_calc_create_goal` context and uses
+`pc_calc_currency_outcomes_json` for ordinary and expanded actions through WASM.
+A hand-selected Fossil loadout is explicitly requested when needed so it remains
+queryable outside the bounded automatically generated Fossil set. Bestiary's
+compound-state adapter observes its native deterministic successor in that context.
 
-Awakener, Dominance, Vaal and double corruption use `pc_calc_currency_outcomes_json`. This native
-endpoint reuses the physical weighted-refill DP from concrete prepared items and
-returns terminal structural observations, native success and slot marginals.
-Its response-local state IDs are not strategy state handles. The goal-free
-`pc_calc_create_inspector` is inspection-only and refuses strategy solving.
-The existing execution subset and unresolved-law refusals still apply; numeric
-roll-value goals and automatic multi-item/corruption search are not introduced.
+The endpoint reuses existing native action kernels and concrete weighted refill.
+Implicit-goal masks remain attached to each explicit successor until combined
+success is evaluated; matching explicit projections cannot merge distinct implicit
+requirements prematurely. Eldritch draws and fossil implicit side effects use
+native canonical weights and preservation rules. Response-local state IDs are not
+strategy state handles. Unconstrained explicit structure may be omitted for a
+terminal item-property-only refill; those rows are labelled **Unconstrained**,
+never presented as an actual zero-affix item. Work caps refuse oversized rows
+without publishing partial probability.
+
+The execution subset and unresolved-law refusals still apply. Numeric roll-value
+goals and automatic multi-item/corruption search are not introduced.
 
 The engine result owns:
 
@@ -116,7 +135,8 @@ The engine result owns:
 - sparse abstract successor probabilities;
 - per-slot satisfied probability; and
 - combined success probability for finished rarity, the requested slot
-  threshold and selected extra-modifier policy. With the default clean setting,
+  threshold, selected extra-modifier policy, required implicits and selected item
+  properties. With the default clean setting,
   a covered item with an unmatched explicit affix is not success.
 
 The Odds inspector presents that result, groups returned classes by goal
@@ -344,7 +364,8 @@ base.
 ## Economy And Persistence
 
 Calculator drafts in IndexedDB preserve the base, item level, input state,
-goal rarity/slots/threshold, selected action, Awakener donor identity, and Fossil loadout. They are
+goal rarity/slots/threshold, implicit keys, influence/corruption requirements,
+selected action, Awakener donor identity, and Fossil loadout. They are
 crash-recovery state rather than Stash resources. Emulator and Stash item cards
 open Calculator through their `Odds` handoff.
 

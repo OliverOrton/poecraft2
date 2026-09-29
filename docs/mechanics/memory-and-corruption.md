@@ -25,10 +25,10 @@ become corrupted. Newly rolled modifiers receive canonical numeric values;
 protected slots retain their values. Enchantments and quality are preserved.
 Eldritch metadata follows any replaced implicit. Socket fields carried through
 this projection do not describe the in-game reforge result. Jewel and unique
-transformation outcomes remain unsupported. Exact corruption strategy evaluation,
-implicit goals and stat-total optimization are still reserved for Pro.
+transformation outcomes remain unsupported. Exact corruption strategy evaluation and stat-total optimization remain outside
+this single-action scope.
 Single-action Calculator now covers the existing Vaal equipment law, including
-explicit-goal odds and per-implicit marginals. Eligible canonical spawn weights
+joint explicit/implicit/item-property goal odds and per-implicit marginals. Eligible canonical spawn weights
 are normalized inside the 25% implicit branch. Current data has 522 corruption
 implicit records, 348 with positive spawn-weight rules; a specific base/level
 uses only its eligible subset. Final-presence odds include uniform replacement

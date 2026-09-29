@@ -549,6 +549,21 @@ export interface SolverGoal {
     options?: SolverFixedOption[];
 }
 
+/** Terminal item requirements for single-action odds; never sent to strategy solving. */
+export interface CalculatorItemGoal extends SolverGoal {
+    implicit_mod_keys?: string[];
+    influence_bits?: number;
+    corrupted?: boolean;
+}
+
+export interface ItemEdit {
+    rarity?: "normal" | "magic" | "rare";
+    influence_bits?: number;
+    corrupted?: boolean;
+    add_implicit?: string;
+    remove_implicit?: string;
+}
+
 export type SolverFixedOption =
     | { type: "scour_alchemy" }
     | {
@@ -647,6 +662,10 @@ export type CarrierProperty =
 
 /** One abstract successor class from the calculation engine. */
 export interface CalcOutcome {
+    /** Property-only refills need no explicit enumeration; counts/affix flags are omitted. */
+    affixes_unobserved?: boolean;
+    goal_properties_satisfied?: boolean;
+    influence_bits?: number;
     /** Terminal failure observations have no live item to inspect. */
     terminal?: "destroyed" | "bricked";
     state: number;
@@ -663,6 +682,7 @@ export interface CalcOutcome {
 }
 
 export interface CalcResult {
+    implicit_satisfied?: number[];
     /** Vaal probabilities over final implicit identities, calculated natively. */
     implicit_outcomes?: Array<{mod: number; weight: number; added_probability: number; present_probability: number}>;
     vaal_branches?: {implicit: number; sockets: number; reforge: number; unchanged: number};

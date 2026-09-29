@@ -619,6 +619,19 @@ select {
     margin-bottom: 12px;
 }
 
+.pc-item-properties { margin: 8px 0; padding: 8px 10px; border: 1px solid var(--border, #443c32); border-radius: 4px; }
+.pc-item-properties summary { cursor: pointer; color: #cbb98a; }
+.pc-item-properties > label { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
+.pc-item-properties select { min-width: 130px; }
+.pc-item-properties fieldset { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 0; border: 0; padding: 0; }
+.pc-item-properties legend { margin-bottom: 6px; }
+.pc-item-properties fieldset label { display: flex; align-items: center; gap: 5px; }
+.pc-item-properties fieldset small { flex-basis: 100%; color: #b8aca0; }
+.pc-item-add-mod { margin-left: auto; padding: 2px 7px; font-size: 11px; text-transform: none; }
+.pc-item-remove-mod { position: absolute; top: 4px; right: 4px; padding: 0 4px; color: #c3ad90; background: transparent; border: 0; }
+.pc-mod-slot:has(.pc-item-remove-mod) .pc-mod-slot-content { padding-right: 20px; }
+.pc-calc-context-header [data-copy-input-goal] { margin-left: auto; font-size: 11px; }
+
 .pc-mod-group h4 {
     margin: 0 0 4px;
     font-size: 11px;

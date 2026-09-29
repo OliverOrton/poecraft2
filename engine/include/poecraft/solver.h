@@ -278,7 +278,8 @@ pc_result pc_calc_action_outcomes(
 
 /* --- exact compiled-strategy evaluation ------------------------------------ */
 
-/* Calculator-only structural terminal odds for awakening, dominance, Vaal and
+/* Calculator-only structural terminal odds for registered actions plus
+ * awakening, dominance, Vaal and
  * double_corruption (changed-affix brick and destruction count as failures).
  * The donor session/item are required only for "awakener". Inputs are read-only.
  * JSON includes native goal results, implicit marginals and unordered pair odds.
@@ -296,6 +297,13 @@ pc_result pc_calc_currency_outcomes_json(
  * explicit goal. Destroy with pc_solver_destroy; do not use for strategy solve. */
 pc_result pc_calc_create_inspector(pc_session_handle session,
     pc_solver_handle* out_solver, pc_error_info* out_error);
+
+/* Read-only one-action goal. Accepts v1 explicit slots (including empty),
+ * implicit_mod_keys, exact influence_bits and optional corrupted boolean.
+ * All selected implicit/property requirements must match the same successor.
+ * Strategy solving on this handle is refused. Destroy with pc_solver_destroy. */
+pc_result pc_calc_create_goal(pc_session_handle session, const char* goal_json,
+    size_t goal_json_size, pc_solver_handle* out_solver, pc_error_info* out_error);
 
 typedef struct pc_strategy_eval_options {
     uint32_t struct_size;

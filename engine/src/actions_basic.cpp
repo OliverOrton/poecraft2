@@ -1070,23 +1070,7 @@ bool add_eldritch_implicit(
         context, nullptr, by_tier[tier], -1,
         tag == session.data->tag_id_by_name.end() ? kNoTag : tag->second);
     if (chosen == kNoMod) return false;
-    const int expected_gen = searing ? session.data->gen_searing_implicit_code
-                                     : session.data->gen_eater_implicit_code;
-    for (std::uint32_t i = 0; i < item->implicit_count;) {
-        const std::uint32_t id = item->implicits[i].mod_id;
-        if ((item->implicits[i].flags & PC_MOD_SLOT_ELDRITCH) &&
-            id < session.mod_count &&
-            session.data->mod_gen_type_code[session.global_index[id]] ==
-                expected_gen) {
-            remove_implicit_at(item, i);
-        } else {
-            ++i;
-        }
-    }
-    if (!add_implicit(session, item, chosen, PC_MOD_SLOT_ELDRITCH))
-        return false;
-    if (searing) item->searing_exarch_tier = static_cast<std::uint8_t>(tier);
-    else item->eater_of_worlds_tier = static_cast<std::uint8_t>(tier);
+    if (!set_eldritch_implicit(session, *item, searing, tier, chosen)) return false;
     record_direct(context, item, chosen, -1);
     return true;
 }
@@ -1229,6 +1213,71 @@ ActionOutcome dominance(ActionContextImpl& context, pc_item_state* item) {
 }
 
 } // namespace
+
+std::vector<std::pair<std::uint32_t, std::uint64_t>> eldritch_implicit_weights(
+        const SessionImpl& session, bool searing, std::uint32_t tier) {
+    const auto& by_tier = searing ? session.eldritch_searing_tier_mod_ids : session.eldritch_eater_tier_mod_ids;
+    std::vector<std::pair<std::uint32_t, std::uint64_t>> weights;
+    if (!session.eldritch_eligible || tier < 1 || tier > 4 || tier >= by_tier.size()) return weights;
+    const auto tag = session.data->tag_id_by_name.find("no_tier_" + std::to_string(tier) + "_eldritch_implicit");
+    for (const auto id : by_tier[tier]) {
+        const auto weight = active_spawn_weight(session, id, tag == session.data->tag_id_by_name.end() ? kNoTag : tag->second);
+        if (weight) weights.emplace_back(id, weight);
+    }
+    return weights;
+}
+
+bool set_eldritch_implicit(const SessionImpl& session, pc_item_state& item,
+        bool searing, std::uint32_t tier, std::uint32_t chosen) {
+    const int expected_gen = searing ? session.data->gen_searing_implicit_code : session.data->gen_eater_implicit_code;
+    for (std::uint32_t i = 0; i < item.implicit_count;) {
+        const auto id = item.implicits[i].mod_id;
+        if ((item.implicits[i].flags & PC_MOD_SLOT_ELDRITCH) && id < session.mod_count &&
+                session.data->mod_gen_type_code[session.global_index[id]] == expected_gen) remove_implicit_at(&item, i);
+        else ++i;
+    }
+    if (!add_implicit(session, &item, chosen, PC_MOD_SLOT_ELDRITCH)) return false;
+    if (searing) item.searing_exarch_tier = static_cast<std::uint8_t>(tier);
+    else item.eater_of_worlds_tier = static_cast<std::uint8_t>(tier);
+    return true;
+}
+
+std::vector<std::pair<pc_item_state, long double>> fossil_implicit_outcomes(
+        const SessionImpl& session, const pc_item_state& item, const std::vector<std::uint32_t>& fossils) {
+    std::vector<std::pair<pc_item_state, long double>> results{{item, 1.0L}};
+    const auto append_choices = [&](const std::vector<std::pair<std::uint32_t, std::uint64_t>>& weights, bool corrupts) {
+        std::uint64_t total = 0;
+        for (const auto& [id, weight] : weights) total += weight;
+        if (!total) return;
+        std::vector<std::pair<pc_item_state, long double>> next;
+        if (results.size() > 100000 / weights.size()) throw std::invalid_argument("Fossil implicit outcomes exceed Calculator work limit");
+        for (const auto& [base, probability] : results) for (const auto& [id, weight] : weights) {
+            auto copy = base;
+            if (add_implicit(session, &copy, id) && corrupts) copy.item_flags |= PC_ITEM_CORRUPTED;
+            next.emplace_back(copy, probability * weight / total);
+        }
+        results = std::move(next);
+    };
+    for (const auto fossil : fossils) {
+        const auto& data = *session.data;
+        if (data.string_at(data.fossil_name_sids.at(fossil)) == "Bloodstained Fossil") {
+            std::vector<std::pair<std::uint32_t, std::uint64_t>> weights;
+            for (const auto id : ids_from_mask(session, session.corrupted_implicit_mask)) {
+                const auto weight = active_spawn_weight(session, id);
+                if (weight) weights.emplace_back(id, weight);
+            }
+            append_choices(weights, true);
+        }
+        if (fossil < session.fossil_sell_price_mod_ids.size()) {
+            std::vector<std::pair<std::uint32_t, std::uint64_t>> weights;
+            for (const auto id : session.fossil_sell_price_mod_ids[fossil]) weights.emplace_back(id, 1);
+            append_choices(weights, false);
+        }
+        if (fossil < data.fossil_mirrors.size() && data.fossil_mirrors[fossil])
+            for (auto& [copy, p] : results) copy.item_flags |= PC_ITEM_MIRRORED;
+    }
+    return results;
+}
 
 std::vector<DominanceChoice> dominance_choices(const SessionImpl& s, const pc_item_state& source) {
     const auto* item = &source;

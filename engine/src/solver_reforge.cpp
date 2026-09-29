@@ -1217,6 +1217,22 @@ CalcContext::evaluate_reforge_cooperatively(
     }
     retry_base.item_flags |= special_flags;
 
+    // A terminal item-property query with no explicit requirements observes
+    // only rarity/influence/item flags. Admission and forced-mod validation
+    // above still run, but every possible refill has the same observation.
+    // This mode is private to Calculator; no continuation or counts are claimed.
+    if (concrete && !concrete->observe_affixes) {
+        if (!goal_.slots.empty() || goal_.terminal.extras != ExtraExplicitPolicy::Allow ||
+                goal_.terminal.prefixes || goal_.terminal.suffixes)
+            throw std::invalid_argument("Cannot omit constrained explicit structure");
+        base.rarity = magic_reforge ? PC_RARITY_MAGIC : PC_RARITY_RARE;
+        base.item_flags |= special_flags;
+        base.prefix_count = base.suffix_count = 0;
+        result.supported = true;
+        result.entries.push_back({intern_item(base), 1.0});
+        co_return std::make_shared<OutcomeDistribution>(std::move(result));
+    }
+
     /* --- roll pool and buckets --------------------------------------------- */
     PoolBuildRequest request;
     request.respects_metamod_pool_blocks =
@@ -3790,7 +3806,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
 
 std::shared_ptr<const OutcomeDistribution> CalcContext::concrete_refill(
         const ConcreteRefill& concrete) {
-    const auto action = registry_.index_by_id.at("chaos");
+    const auto action = concrete.action_index == kNoId ? registry_.index_by_id.at("chaos") : concrete.action_index;
     auto task = evaluate_reforge_cooperatively(
         intern_item(concrete.base), action, false, &concrete);
     while (!task.resume()) {}

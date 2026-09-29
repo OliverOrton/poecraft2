@@ -724,6 +724,9 @@ struct ConcreteRefill {
     std::uint8_t target = 0;
     bool respects_metamod_pool_blocks = true;
     bool clear_unprotected = false;
+    // Omitted selects Chaos for the prepared Awakener/Vaal refill contracts.
+    std::uint32_t action_index = kNoId;
+    bool observe_affixes = true;
 };
 
 class CalcContext {

@@ -1021,6 +1021,13 @@ async function dispatch(
                 params.action as string, params.donorSession as number, params.donorItem as number);
         case "openCalcInspector":
             return {solver: bindings.openCalcInspector(params.session as number)};
+        case "openCalcGoal":
+            return {solver: bindings.openCalcGoal(params.session as number, params.goal as import("./engine-protocol").CalculatorItemGoal)};
+        case "bestiaryGoalCalc":
+            return bindings.bestiaryGoalCalc(params.data as number, params.solver as number, params.item as number, params.action as string);
+        case "editItem":
+            bindings.editItem(params.item as number, params.session as number, params.edit as import("./engine-protocol").ItemEdit);
+            return {};
         case "solverCalc":
             return bindings.solverCalc(
                 params.solver as number,

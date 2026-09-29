@@ -714,6 +714,8 @@ _lib.pc_solver_create.argtypes = [
 _lib.pc_solver_create.restype = ct.c_int32
 _lib.pc_calc_create_inspector.argtypes = [_handle, ct.POINTER(_handle), ct.POINTER(_ErrorInfo)]
 _lib.pc_calc_create_inspector.restype = ct.c_int32
+_lib.pc_calc_create_goal.argtypes = [_handle, ct.c_char_p, ct.c_size_t, ct.POINTER(_handle), ct.POINTER(_ErrorInfo)]
+_lib.pc_calc_create_goal.restype = ct.c_int32
 _lib.pc_calc_currency_outcomes_json.argtypes = [
     _handle, ct.POINTER(_ItemState), ct.c_char_p, _handle, ct.POINTER(_ItemState),
     ct.POINTER(ct.c_char_p), ct.POINTER(_ErrorInfo),
@@ -755,6 +757,8 @@ _lib.pc_item_init.argtypes = [
     ct.POINTER(_ErrorInfo),
 ]
 _lib.pc_item_init.restype = ct.c_int32
+_lib.pc_item_edit_json.argtypes = [_handle, ct.POINTER(_ItemState), ct.c_char_p, ct.c_size_t, ct.POINTER(_ErrorInfo)]
+_lib.pc_item_edit_json.restype = ct.c_int32
 _lib.pc_item_add_mod.argtypes = [
     ct.POINTER(_ItemState),
     ct.c_int32,
@@ -1581,7 +1585,7 @@ class Session(_OwnedHandle):
             _check(_lib.pc_calc_create_inspector(self._handle, ct.byref(solver), ct.byref(error)), error)
         else:
             encoded = _json_bytes(goal)
-            _check(_lib.pc_solver_create(self._handle, encoded, len(encoded), ct.byref(solver), ct.byref(error)), error)
+            _check(_lib.pc_calc_create_goal(self._handle, encoded, len(encoded), ct.byref(solver), ct.byref(error)), error)
         try:
             result = ct.c_char_p()
             _check(_lib.pc_calc_currency_outcomes_json(solver, ct.byref(item._state), action.encode(),
@@ -1863,6 +1867,12 @@ class Item:
         state = _ItemState()
         ct.memmove(ct.byref(state), ct.byref(self._state), ct.sizeof(state))
         return Item(self._session, state)
+
+    def edit(self, **changes: Any) -> None:
+        """Author properties/implicits atomically through native validation."""
+        encoded = _json_bytes(changes)
+        error = _error()
+        _check(_lib.pc_item_edit_json(self._session._handle, ct.byref(self._state), encoded, len(encoded), ct.byref(error)), error)
 
     def add_mod(
         self,

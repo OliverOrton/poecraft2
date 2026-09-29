@@ -772,3 +772,55 @@ case-sensitive text transformed by CSS; correcting the harness required no
 product changes. Rendered design acceptance remains Oliver's. Detailed release
 evidence is under `out/currency-followup/`; the tracked receipt is the durable
 identity record. Only release-record prose follows the deployed source revision.
+
+
+## Joint item-goal Calculator follow-up (2026-09-29)
+
+Oliver requested normal Input → Goal probabilities for every Calculator action,
+including Vaal, double corruption and Awakener, with implicit and influence editing.
+The shared item editor now has implicit rows, rarity/corruption/ordinary-influence
+controls, direct removal and Copy input to goal. Native atomic edits preserve valid
+state; pending Unveil choices lock all new controls. Separate corruption odds tables
+and pair picking are superseded by ordinary goal requirements and one result.
+
+The native `pc_calc_create_goal` context accepts zero or more explicit slots plus
+exact implicit keys and optional exact influence/corruption requirements. Combined
+success checks all requirements on one successor. Aggregation keys carry both the
+explicit state and implicit-satisfaction mask; thus incompatible Vaal branches
+cannot combine their marginals into a spurious success. Double corruption's approved
+brick/destruction failures and sequential weighted pair law are unchanged.
+
+Ordinary actions reuse their existing kernels; native Eldritch draws and fossil
+implicit side effects preserve the same observation through the terminal predicate.
+Bestiary checks its deterministic successor against the goal, and Awakener retains
+the receiver's implicit state and union of donor/receiver influences without
+consuming either item. Oversized queries refuse rather than approximate.
+
+Concrete refills without explicit requirements and with extras allowed may omit
+affix details: after admission/forced-mod checks, every refill has the same observed
+rarity/influence/corruption result. These rows explicitly mark affixes unobserved;
+no continuation, affix counts or strategy authority is asserted. Constrained refills
+retain complete physical group exclusions and weighted draw denominators. Default
+ConcreteRefill behavior and ordinary strategy kernels are unchanged. Native and UI
+guards keep these extended goals out of strategy solving and Solver Lab export.
+
+Validation passes: 20 focused Python checks and 448,697 native Calculator checks;
+full `npm test` including 36 release-WASM smoke tests; TypeScript and production
+build. Independent canonical Vaal/double/Eldritch weights, joint branch
+impossibility, Awakener goals, fossil side effects, editor atomicity and native
+solver refusal are covered. WASM parity agrees with the prior endpoint for ordinary
+reforges, add/remove actions, Essence, Fossil, Harvest and Veiled Chaos. Bestiary's
+successful imprint is correctly zero probability for a mismatched rare goal.
+
+Fresh Chromium functional checks pass native implicit/rarity/influence/corruption
+editing, Copy input to goal, Vaal preservation plus corruption requirements, two
+ordinary implicit rows matching double-corruption pair probability, reload
+persistence and Strategy finder refusal. No browser errors occurred. Playwright's
+instant checkbox assertion initially ran before the asynchronous native edit had
+returned; clicking then awaiting the existing controller completion passed without
+a product change. Rendered design acceptance remains Oliver's. No strategy changed
+and no new Simulator qualification was run. Logs: `out/currency-followup/item-goal-*`.
+Release WASM SHA-256:
+`c67d99dbfc93cbfe0db0eaf7bc2c13436cf28612fadb05d9711e5ce53bc97977`.
+
+The implementation is complete and ready for the authorized hosted deployment.
