@@ -2605,6 +2605,56 @@ test("Dominance and Vaal native actions preserve transport and costs", async () 
     } finally { await client.closeItem(item); }
 });
 
+test("Expanded currency Calculator returns native odds without consuming items", async () => {
+    const lowSession = await client.createSession(dataId, BASE, 1);
+    const items: number[] = [], solvers: number[] = [];
+    try {
+        const dominance = await client.createItem(lowSession, {rarity: "rare"}); items.push(dominance);
+        await client.addMod(dominance, lowSession, {key: "LocalIncreaseSocketedActiveGemLevelUber1", side: "prefix"});
+        await client.addMod(dominance, lowSession, {key: "AdditionalCriticalStrikeChanceWithSpellsUber2_", side: "suffix"});
+        const goal = {version: "v1" as const, rarity: "rare" as const, allow_extra_modifiers: true,
+            fossil_mode: "goal_relevant" as const,
+            slots: [{family_mod_key: "LocalIncreaseSocketedActiveGemLevelUberMaven"}]};
+        const solver = await client.openSolver(lowSession, goal); solvers.push(solver);
+        const before = await client.exportItem(dominance, lowSession);
+        const odds = await client.currencyCalc(solver, dominance, "dominance");
+        assert.equal(odds.success_probability, 0.5);
+        assert.equal(odds.slot_satisfied[0], 0.5);
+        assert.deepEqual(await client.exportItem(dominance, lowSession), before);
+        assert.ok(odds.outcomes.every(row => row.prefixes + row.suffixes === 1));
+
+        const normal = await client.createItem(sessionId, {rarity: "normal", withImplicits: true}); items.push(normal);
+        const inspector = await client.openCalcInspector(sessionId); solvers.push(inspector);
+        const vaal = await client.currencyCalc(inspector, normal, "vaal");
+        assert.deepEqual(vaal.vaal_branches, {implicit: 0.25, sockets: 0.25, reforge: 0.25, unchanged: 0.25});
+        assert.ok(Math.abs(vaal.outcomes.reduce((sum, row) => sum + row.probability, 0) - 1) < 1e-12);
+        assert.ok(Math.abs(vaal.implicit_outcomes!.reduce((sum, row) => sum + row.added_probability, 0) - 0.25) < 1e-12);
+        assert.equal((await client.itemInfo(normal)).item_flags, 0);
+
+        const donor = await client.createItem(sessionId, {rarity: "rare"}); items.push(donor);
+        await client.addMod(donor, sessionId, {key: "LocalIncreaseSocketedActiveGemLevelUber1", side: "prefix"});
+        const receiver = await client.createItem(lowSession, {rarity: "rare"}); items.push(receiver);
+        await client.addMod(receiver, lowSession, {key: "AdditionalCriticalStrikeChanceWithAttacksUber1", side: "suffix"});
+        const donorState = {...await client.exportItem(donor, sessionId) as object, generic_influence_bits: 32};
+        const receiverState = {...await client.exportItem(receiver, lowSession) as object, generic_influence_bits: 8};
+        const d = await client.importItem(donorState, sessionId); items.push(d);
+        const r = await client.importItem(receiverState, lowSession); items.push(r);
+        const awakenerSolver = await client.openSolver(lowSession, {...goal, slots: [
+            {family_mod_key: "LocalIncreaseSocketedActiveGemLevelUber1"},
+            {family_mod_key: "AdditionalCriticalStrikeChanceWithAttacksUber1"},
+        ]}); solvers.push(awakenerSolver);
+        const awakened = await client.currencyCalc(awakenerSolver, r, "awakener", sessionId, d);
+        assert.ok(Math.abs(awakened.success_probability - 1) < 1e-12);
+        assert.deepEqual(await client.exportItem(d, sessionId), donorState);
+        assert.deepEqual(await client.exportItem(r, lowSession), receiverState);
+        await assert.rejects(client.currencyCalc(awakenerSolver, r, "awakener", lowSession, r), /aliased/);
+    } finally {
+        for (const solver of solvers) await client.closeSolver(solver);
+        for (const item of items) await client.closeItem(item);
+        await client.closeSession(lowSession);
+    }
+});
+
 // Wire the shared client into the runner before executing.
 {
     const spawned = spawnClient();

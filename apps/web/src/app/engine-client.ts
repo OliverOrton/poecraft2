@@ -551,6 +551,14 @@ export class EngineClient {
     }
 
     /** Exact outcome odds for one action on a live item. */
+    openCalcInspector(session: number): Promise<number> {
+        return this.call<{solver: number}>("openCalcInspector", {session}).then(result => result.solver);
+    }
+
+    currencyCalc(solver: number, item: number, action: string, donorSession = 0, donorItem = 0): Promise<CalcResult> {
+        return this.call<CalcResult>("currencyCalc", {solver, item, action, donorSession, donorItem});
+    }
+
     solverCalc(
         solver: number,
         item: number,

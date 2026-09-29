@@ -22,6 +22,7 @@
 #include "solver_diagnostic_options.hpp"
 #include "solver_finder.hpp"
 #include "solver_options_helpers.hpp"
+#include "calculator_currency.hpp"
 
 /*
  * C ABI for the solver/calculation engine. Thin translation layer: goal
@@ -590,6 +591,8 @@ solver::GoalSpec parse_goal(
 } // namespace
 
 struct pc_solver {
+    bool inspection_only = false;
+    std::string currency_calculation_json;
     std::shared_ptr<const poecraft::SessionImpl> session;
     std::unique_ptr<solver::CalcContext> calc;
     /* Product solving may use a deliberately coarse parent abstraction.
@@ -1933,6 +1936,55 @@ pc_result pc_solver_goal_feasibility(
     }
 }
 
+pc_result pc_calc_currency_outcomes_json(
+        pc_solver_handle solver, const pc_item_state* receiver, const char* action,
+        pc_session_handle donor_session, const pc_item_state* donor,
+        const char** out_json, pc_error_info* out_error) {
+    if (out_json) *out_json = nullptr;
+    if (!solver || !receiver || !action || !out_json || donor == receiver) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "Invalid or aliased currency calculation inputs");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        solver->currency_calculation_json = solver::calculate_currency_json(
+            *solver->calc, *receiver, action,
+            donor_session ? donor_session->impl.get() : nullptr, donor);
+        *out_json = solver->currency_calculation_json.c_str();
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+}
+
+pc_result pc_calc_create_inspector(pc_session_handle session,
+        pc_solver_handle* out_solver, pc_error_info* out_error) {
+    if (!session || !out_solver) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "Inspector requires a session");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_solver = nullptr;
+    try {
+        auto holder = std::make_unique<pc_solver>();
+        holder->inspection_only = true;
+        holder->session = session->impl;
+        solver::ActionRegistryBuildOptions options;
+        options.exhaustive_fossils = false;
+        auto registry = solver::build_action_registry(*holder->session, options);
+        const auto chaos = registry.index_by_id.at("chaos");
+        holder->calc = std::make_unique<solver::CalcContext>(holder->session,
+            solver::GoalSpec{}, std::move(registry), std::vector<std::uint32_t>{chaos}, true);
+        holder->goal_proof_profile = solver::GoalProofProfile::TargetNeutralZero;
+        *out_solver = holder.release();
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+}
+
 pc_result pc_calc_action_outcomes(
     pc_solver_handle solver,
     const pc_item_state* item,
@@ -2044,6 +2096,10 @@ pc_result pc_solver_solve(
                   "solver, start item, and economy are required");
         return PC_RESULT_INVALID_ARGUMENT;
     }
+    if (solver->inspection_only) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "Currency inspector cannot solve strategies; define an explicit goal");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
     if (start_item->memory_strands || start_item->lifecycle != PC_ITEM_LIVE || start_item->enchantment_count) {
         set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
             "Memory strands, absent resources and enchantment effects require Pro solver integration; state cannot be dropped");
@@ -2121,6 +2177,10 @@ pc_result pc_solver_solve_begin(
     if (solver == nullptr || start_item == nullptr || economy == nullptr) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
                   "solver, start item, and economy are required");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (solver->inspection_only) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "Currency inspector cannot solve strategies; define an explicit goal");
         return PC_RESULT_INVALID_ARGUMENT;
     }
     if (start_item->memory_strands || start_item->lifecycle != PC_ITEM_LIVE || start_item->enchantment_count) {

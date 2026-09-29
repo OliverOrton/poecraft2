@@ -712,6 +712,13 @@ _lib.pc_solver_create.argtypes = [
     ct.POINTER(_ErrorInfo),
 ]
 _lib.pc_solver_create.restype = ct.c_int32
+_lib.pc_calc_create_inspector.argtypes = [_handle, ct.POINTER(_handle), ct.POINTER(_ErrorInfo)]
+_lib.pc_calc_create_inspector.restype = ct.c_int32
+_lib.pc_calc_currency_outcomes_json.argtypes = [
+    _handle, ct.POINTER(_ItemState), ct.c_char_p, _handle, ct.POINTER(_ItemState),
+    ct.POINTER(ct.c_char_p), ct.POINTER(_ErrorInfo),
+]
+_lib.pc_calc_currency_outcomes_json.restype = ct.c_int32
 _lib.pc_solver_destroy.argtypes = [_handle]
 _lib.pc_solver_goal_feasibility.argtypes = [
     _handle,
@@ -1559,6 +1566,30 @@ class Session(_OwnedHandle):
             error,
         )
         return Strategy(handle, self)
+
+    def calculate_currency(self, item: "Item", action: str,
+                           goal: Mapping[str, Any] | None = None,
+                           donor: "Item | None" = None) -> dict[str, Any]:
+        """Native structural single-action odds; neither resource is modified."""
+        if item._session is not self:
+            raise ValueError("item belongs to a different session")
+        if donor is item:
+            raise ValueError("Awakener donor and receiver must be distinct")
+        solver = _handle()
+        error = _error()
+        if goal is None:
+            _check(_lib.pc_calc_create_inspector(self._handle, ct.byref(solver), ct.byref(error)), error)
+        else:
+            encoded = _json_bytes(goal)
+            _check(_lib.pc_solver_create(self._handle, encoded, len(encoded), ct.byref(solver), ct.byref(error)), error)
+        try:
+            result = ct.c_char_p()
+            _check(_lib.pc_calc_currency_outcomes_json(solver, ct.byref(item._state), action.encode(),
+                donor._session._handle if donor else None, ct.byref(donor._state) if donor else None,
+                ct.byref(result), ct.byref(error)), error)
+            return json.loads(result.value)
+        finally:
+            _lib.pc_solver_destroy(solver)
 
     def goal_feasibility(
         self,

@@ -1016,6 +1016,11 @@ async function dispatch(
             }
             return { actions };
         }
+        case "currencyCalc":
+            return bindings.currencyCalc(params.solver as number, params.item as number,
+                params.action as string, params.donorSession as number, params.donorItem as number);
+        case "openCalcInspector":
+            return {solver: bindings.openCalcInspector(params.session as number)};
         case "solverCalc":
             return bindings.solverCalc(
                 params.solver as number,

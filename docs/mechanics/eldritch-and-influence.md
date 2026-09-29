@@ -207,7 +207,10 @@ elevated selection rerolls its numeric values. Locked/fractured/legacy modifiers
 are preserved. Insufficient candidates leave the item and cost unchanged.
 Unmapped current upgrades fail atomically; the Crusader gloves energy-shield
 leech suffix currently has no compatible elevated mapping. Retained enchantments
-are preserved. Exact evaluation and automatic Dominance search require Pro's
-representation/transition work and remain unavailable. The
+are preserved. Calculator has exact single-action Dominance outcomes and
+Awakener retained-pair/refill odds over structural goals. The native preparation
+is shared with execution; all pair mass is retained and uncovered collision or
+upgrade cases refuse. Multi-step exact evaluation and automatic Dominance/Awakener
+search still require separate representation/transition work. The
 [execution record](../active/2026-09-28-currency-expansion/README.md#currency-follow-up-2026-09-29)
 owns source identities, qualification and the remaining scope.

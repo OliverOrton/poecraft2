@@ -643,3 +643,68 @@ using the existing fallback behavior. This is a local implementation receipt,
 not a hosted-release or market-price-refresh receipt.
 
 Detailed execution logs and compact audit: `out/currency-followup/`.
+
+## Single-action Calculator follow-up (2026-09-29)
+
+Oliver explicitly requested odds after one action for the newly added currencies,
+including Awakener, and asked whether Vaal implicit weights exist. This supersedes
+the earlier single-action Dominance/Vaal hold; it does not select a new strategy
+research programme. Starting local revision was `3d65874`, with a clean relevant
+working tree. Work remained sequential, local, and outside protected root `0`.
+
+Calculator now calls a native terminal evaluator for Awakener, Dominance and
+Vaal. Shared native preparation owns candidate eligibility, stable-key transfer,
+upgrade destinations, collision refusal and Vaal implicit replacement. Awakener
+uses the current receiver and a Stash donor without consuming either. Its donor
+selection persists, its calculation reads the current saved donor, and diagnostics
+include both inputs. Existing structural-input and unresolved-law refusals remain.
+Foulborn already had exact single-action support; held currencies stay held.
+
+The probability argument is a finite mixture over the existing execution law:
+
+- Dominance enumerates all `n(n-1)` ordered upgrade/remove pairs at equal mass.
+  Concrete resulting affixes are projected only after the selected operation.
+- Awakener enumerates each donor/receiver pair at `1/(d*r)`, then evaluates the
+  existing uniform 4/5/6 refill law from the concrete retained pair and combined
+  influence signature. Metamod pool blocks remain ignored as in execution.
+- Vaal retains all four 25% branches. Its rare branch uses the native preserved
+  base, fixed-six refill target, side limits and empty-pool stopping. The implicit
+  branch uses canonical positive weights and uniform replacement of one existing
+  implicit; the other branches retain existing implicits. The socket branch is
+  the owner-approved projection and is not given a fabricated socket model.
+
+Refills reuse the native factored DP with complete physical modifier-group
+conflicts through every draw. There is no continuation after this query, so final
+junk observations can merge when goal status, counts and mechanic flags agree.
+The clean/coverage predicate and slot marginals remain native-owned. This avoids
+unneeded continuation distinctions on jewellery without approximating the draw
+denominators. Concrete refill calls bypass the ordinary state/row cache, and
+response state IDs are local to the query. No action is added to Current/Finder
+or exact authored-policy evaluation. Explicit work/state/memory caps refuse
+oversized rows rather than publishing partial probability.
+
+Vaal's table is available without a goal and shows canonical weight, unconditional
+roll chance and final-presence chance. Current SQLite has 522 corruption-implicit
+records, 348 with positive spawn rules; each base/level uses its own eligible
+subset. The inspection-only native handle refuses strategy solving. Ordinary
+goal odds retain rarity, tier, minimum-slot and extra-modifier semantics. Currency
+prices are shown through the existing economy; Awakener's estimate explicitly
+excludes donor acquisition and replacement inputs.
+
+Validation: the native Calculator suite passes 448,697 checks, including an
+independent ordered-draw enumeration for retained-pair and fixed-six refills,
+overlapping groups, side limits, pool exhaustion and ordinary-cache separation.
+Eleven focused Python checks pass for pair/threshold/clean-goal probabilities,
+above-level cross-session transfer, immutability, fracture protection, illegal
+inputs and canonical Vaal weights across armour, weapons and jewellery. Existing
+sampled Awakener/Dominance/Vaal preservation checks also pass in that selection.
+WASM was rebuilt; full `npm test` passes, including all 35 engine smoke tests and
+the new Calculator controller check. TypeScript and production build pass.
+No new Simulator or rendered UI qualification was requested.
+
+The general native build initially hit a locked `poecraft_solver_benchmark.exe`
+owned by an already-running process. That process was left alone; the required
+engine shared-library and native-test targets built successfully. No benchmark
+result is attributed to this change. Logs: `out/currency-followup/calculator-*`.
+WASM SHA-256: `c042a996eb6df24e800e9fbf8ab1c5b27847b913d39705947af2566a1aa2c392`.
+This is a local delivery, with no push or hosted deployment.

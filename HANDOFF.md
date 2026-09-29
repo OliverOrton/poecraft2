@@ -10,8 +10,12 @@ immutable source archives and compiler-derived runtime identity.
 
 Oliver explicitly held Tempering/Tailoring because random weights are not public.
 Double corruption, jewel/unique transformations and memory-law gaps remain held.
-Exact Dominance/Vaal evaluation and substantive solver integration remain for Pro;
-prior Foulborn and multi-item qualifications are unchanged. Work stays sequential
+Oliver's next request explicitly enabled single-action Calculator work. Awakener,
+Dominance and Vaal now have native structural outcome odds; Vaal includes weighted
+implicit marginals and its 25% socket projection. The
+[Calculator receipt](docs/active/2026-09-28-currency-expansion/README.md#single-action-calculator-follow-up-2026-09-29)
+owns this delta. Multi-step exact evaluation and substantive solver integration
+remain separate; prior Foulborn and multi-item qualifications are unchanged. Work stays sequential
 on main, preserving root `0`. No push/deployment or old experiment allowance was
 requested. The execution record distinguishes remaining holds from delivered work.
 Existing release and IC receipts below remain historical and unchanged.

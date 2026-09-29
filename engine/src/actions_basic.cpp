@@ -1,3 +1,4 @@
+#include "currency_outcomes.hpp"
 #include "engine_internal.hpp"
 #include "multi_item.hpp"
 
@@ -1209,12 +1210,33 @@ void roll_mod_values(ActionContextImpl& context, pc_mod_slot& slot) {
 
 ActionOutcome dominance(ActionContextImpl& context, pc_item_state* item) {
     const auto& s = *context.session;
+    const auto choices = dominance_choices(s, *item);
+    if (choices.size() < 2) return {};
+    const auto saved_rng = context.rng;
+    try {
+        const auto upgraded = context.rng.next_below(choices.size());
+        auto removed = context.rng.next_below(choices.size() - 1);
+        if (removed >= upgraded) ++removed;
+        const auto a = choices[upgraded], b = choices[removed];
+        auto next = dominance_result(s, *item, a, b);
+        const auto index = a.side == b.side && a.index == (a.side == PC_SIDE_PREFIX ? item->prefix_count : item->suffix_count) - 1
+            ? b.index : a.index;
+        roll_mod_values(context, a.side == PC_SIDE_PREFIX ? next.prefixes[index] : next.suffixes[index]);
+        record_direct(context, &next, a.upgrade, a.side);
+        *item = next;
+        return {true, 1, 2};
+    } catch (...) { context.rng = saved_rng; context.last_action_trace.clear(); throw; }
+}
+
+} // namespace
+
+std::vector<DominanceChoice> dominance_choices(const SessionImpl& s, const pc_item_state& source) {
+    const auto* item = &source;
     const auto& d = *s.data;
     const auto& cls = d.string_at(d.item_class_key_sid.at(d.item_class_index_by_id.at(d.base_item_class_id[s.base_index])));
     if (item->rarity != PC_RARITY_MAGIC && item->rarity != PC_RARITY_RARE) return {};
     if (cls != "Helmet" && cls != "Body Armour" && cls != "Gloves" && cls != "Boots") return {};
-    struct Choice { int side; std::uint8_t index; std::uint32_t upgrade; };
-    std::vector<Choice> choices;
+    std::vector<DominanceChoice> choices;
     for (int side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
         if (side_locked(s, item, side)) continue;
         const auto* slots = side == PC_SIDE_PREFIX ? item->prefixes : item->suffixes;
@@ -1259,38 +1281,28 @@ ActionOutcome dominance(ActionContextImpl& context, pc_item_state* item) {
             choices.push_back({side, i, destination});
         }
     }
-    if (choices.size() < 2) return {};
-    const auto saved_rng = context.rng;
-    try {
-        // Uniform ordered pair of distinct eligible modifiers: upgrade, remove.
-        const auto upgraded = context.rng.next_below(choices.size());
-        auto removed = context.rng.next_below(choices.size() - 1);
-        if (removed >= upgraded) ++removed;
-        const auto a = choices[upgraded], b = choices[removed];
-        pc_item_state next = *item;
-        auto& slot = a.side == PC_SIDE_PREFIX ? next.prefixes[a.index] : next.suffixes[a.index];
-        slot.mod_id = a.upgrade;
-        slot.group_id = static_cast<std::uint16_t>(s.primary_group[a.upgrade]);
-        roll_mod_values(context, slot);
-        pc_item_remove_at(&next, b.side, b.index);
-        // Removal can swap the last slot into the vacated position.
-        const auto index = a.side == b.side && a.index == (a.side == PC_SIDE_PREFIX ? item->prefix_count : item->suffix_count) - 1
-            ? b.index : a.index;
-        if (groups_conflict(s, &next, a.upgrade, a.side, index))
-            throw std::invalid_argument("Dominance upgrade conflicts with another retained modifier group");
-        record_direct(context, &next, a.upgrade, a.side);
-        *item = next;
-        return {true, 1, 2};
-    } catch (...) { context.rng = saved_rng; context.last_action_trace.clear(); throw; }
+    return choices;
 }
 
-} // namespace
+pc_item_state dominance_result(const SessionImpl& s, const pc_item_state& item,
+        const DominanceChoice& a, const DominanceChoice& b) {
+    pc_item_state next = item;
+    auto& slot = a.side == PC_SIDE_PREFIX ? next.prefixes[a.index] : next.suffixes[a.index];
+    slot.mod_id = a.upgrade;
+    slot.group_id = static_cast<std::uint16_t>(s.primary_group[a.upgrade]);
+    slot.roll_count = 0;
+    pc_item_remove_at(&next, b.side, b.index);
+    const auto index = a.side == b.side && a.index == (a.side == PC_SIDE_PREFIX ? item.prefix_count : item.suffix_count) - 1
+        ? b.index : a.index;
+    if (groups_conflict(s, &next, a.upgrade, a.side, index))
+        throw std::invalid_argument("Dominance upgrade conflicts with another retained modifier group");
+    return next;
+}
 
 // Owner-approved affix projection: sockets are not observed or sampled, but
 // their 25% outcome retains its probability mass. Existing socket fields are
 // carried through, not a claim about the in-game result of a reforge.
-ActionOutcome vaal_equipment(ActionContextImpl& context, pc_item_state* item) {
-    const auto& session = *context.session;
+std::vector<std::pair<std::uint32_t, std::uint64_t>> vaal_implicit_weights(const SessionImpl& session) {
     const auto& d = *session.data;
     const std::string& cls = d.string_at(d.item_class_key_sid.at(d.item_class_index_by_id.at(d.base_item_class_id[session.base_index])));
     static const std::unordered_set<std::string> equipment{
@@ -1301,9 +1313,36 @@ ActionOutcome vaal_equipment(ActionContextImpl& context, pc_item_state* item) {
     if (!equipment.count(cls))
         throw std::invalid_argument("Vaal supports ordinary equipment; jewel and unique transformation outcomes are not modelled");
     const auto ids = ids_from_mask(session, session.corrupted_implicit_mask);
-    bool has_weight = false;
-    for (const auto id : ids) has_weight |= active_spawn_weight(session, id) > 0;
-    if (!has_weight) throw std::invalid_argument("Vaal corruption implicit pool is unavailable for this base");
+    std::vector<std::pair<std::uint32_t, std::uint64_t>> weights;
+    for (const auto id : ids) {
+        const auto weight = active_spawn_weight(session, id);
+        if (weight) weights.emplace_back(id, weight);
+    }
+    if (weights.empty()) throw std::invalid_argument("Vaal corruption implicit pool is unavailable for this base");
+    return weights;
+}
+
+pc_item_state vaal_implicit_result(const SessionImpl& session, const pc_item_state& item,
+        std::uint32_t chosen, std::uint32_t removed) {
+    const auto& d = *session.data;
+    auto next = item;
+    if (next.implicit_count) {
+        if (removed >= next.implicit_count) throw std::invalid_argument("Invalid Vaal implicit replacement");
+        const auto p = session.global_index.at(next.implicits[removed].mod_id);
+        if (d.mod_gen_type_code[p] == d.gen_searing_implicit_code) next.searing_exarch_tier = 0;
+        if (d.mod_gen_type_code[p] == d.gen_eater_implicit_code) next.eater_of_worlds_tier = 0;
+        remove_implicit_at(&next, removed);
+    }
+    if (!add_implicit(session, &next, chosen))
+        throw std::invalid_argument("Vaal implicit result exceeds item capacity");
+    next.item_flags |= PC_ITEM_CORRUPTED;
+    return next;
+}
+
+ActionOutcome vaal_equipment(ActionContextImpl& context, pc_item_state* item) {
+    const auto& session = *context.session;
+    std::vector<std::uint32_t> ids;
+    for (const auto& [id, weight] : vaal_implicit_weights(session)) ids.push_back(id);
     const auto saved_rng = context.rng;
     try {
         pc_item_state next = *item;
@@ -1311,15 +1350,8 @@ ActionOutcome vaal_equipment(ActionContextImpl& context, pc_item_state* item) {
         switch (context.rng.next_below(4)) {
         case 0: {
             const auto chosen = pick_weighted_id(context, nullptr, ids);
-            if (next.implicit_count) {
-                const auto removed = context.rng.next_below(next.implicit_count);
-                const auto p = session.global_index.at(next.implicits[removed].mod_id);
-                if (d.mod_gen_type_code[p] == d.gen_searing_implicit_code) next.searing_exarch_tier = 0;
-                if (d.mod_gen_type_code[p] == d.gen_eater_implicit_code) next.eater_of_worlds_tier = 0;
-                remove_implicit_at(&next, removed);
-            }
-            if (!add_implicit(session, &next, chosen))
-                throw std::invalid_argument("Vaal implicit result exceeds item capacity");
+            const auto removed = next.implicit_count ? context.rng.next_below(next.implicit_count) : 0;
+            next = vaal_implicit_result(session, next, chosen, removed);
             roll_mod_values(context, next.implicits[next.implicit_count - 1]);
             record_direct(context, &next, chosen, -1);
             break;
@@ -1613,10 +1645,17 @@ ActionOutcome apply_action(
     return {};
 }
 
-pc_item_state awaken_item(ActionContextImpl& context,
+AwakenerChoices awakener_choices(const SessionImpl& session,
         const SessionImpl& donor_session, const pc_item_state& donor,
         const pc_item_state& receiver) {
-    const auto& session = *context.session;
+    const auto& a = *donor_session.data;
+    const auto& b = *session.data;
+    if (donor_session.data != session.data &&
+        (a.artifact_game_data_hash.empty() || a.artifact_game_data_hash != b.artifact_game_data_hash ||
+         a.artifact_strings_hash != b.artifact_strings_hash))
+        throw std::invalid_argument("Resource data identities are incompatible");
+    if (a.base_item_class_id[donor_session.base_index] != b.base_item_class_id[session.base_index])
+        throw std::invalid_argument("Awakener input item classes differ");
     const auto eligible = [](const pc_item_state& item) {
         const auto influence = item.generic_influence_bits;
         return item_craftable(&item) && influence && !(influence & (influence - 1)) &&
@@ -1659,16 +1698,30 @@ pc_item_state awaken_item(ActionContextImpl& context,
                 if (session.group_ids[x] == session.group_ids[y])
                     throw std::invalid_argument("Awakener group collision discard probabilities are unresolved");
     }
+    return {from_donor, from_receiver};
+}
+
+pc_item_state awakener_base(const SessionImpl& session, const pc_item_state& donor,
+        const pc_item_state& receiver, std::uint32_t donor_mod, std::uint32_t receiver_mod) {
     pc_item_state result = receiver;
     pc_item_clear_side(&result, PC_SIDE_PREFIX); pc_item_clear_side(&result, PC_SIDE_SUFFIX);
     result.rarity = PC_RARITY_RARE;
     result.generic_influence_bits |= donor.generic_influence_bits;
-    for (const auto* choices : {&from_donor, &from_receiver}) {
-        const auto id = (*choices)[context.rng.next_below(choices->size())];
+    for (const auto id : {donor_mod, receiver_mod}) {
         if (pc_item_add_mod(&result, session.gen_type[id], id,
                 static_cast<std::uint16_t>(session.primary_group[id]), 0, nullptr) != PC_RESULT_OK)
             throw std::invalid_argument("Retained Awakener modifiers exceed receiver capacity");
     }
+    return result;
+}
+
+pc_item_state awaken_item(ActionContextImpl& context,
+        const SessionImpl& donor_session, const pc_item_state& donor,
+        const pc_item_state& receiver) {
+    const auto choices = awakener_choices(*context.session, donor_session, donor, receiver);
+    const auto a = choices.donor[context.rng.next_below(choices.donor.size())];
+    const auto b = choices.receiver[context.rng.next_below(choices.receiver.size())];
+    auto result = awakener_base(*context.session, donor, receiver, a, b);
     PoolBuildRequest request;
     request.respects_metamod_pool_blocks = false;
     fill_random_mods(context, request, &result, rare_count(context));

@@ -718,8 +718,20 @@ CountObservation temporary_bench_conflict_observation(
 bool temporary_bench_source_observation_complete(
     const class CalcContext&, std::uint32_t state, const ActionDescriptor&);
 
+struct ConcreteRefill {
+    pc_item_state base{};
+    // Zero uses the ordinary uniform 4/5/6 target law.
+    std::uint8_t target = 0;
+    bool respects_metamod_pool_blocks = true;
+    bool clear_unprotected = false;
+};
+
 class CalcContext {
   public:
+    // Calculator-only terminal projection from a concrete prepared base.
+    // Does not add an action to the strategy registry or share its row cache.
+    std::shared_ptr<const OutcomeDistribution> concrete_refill(
+        const ConcreteRefill&);
     CalcContext(
         std::shared_ptr<const SessionImpl> session,
         const GoalSpec& goal,
@@ -1265,7 +1277,8 @@ class CalcContext {
     evaluate_reforge_cooperatively(
         std::uint32_t state_id,
         std::uint32_t action_index,
-        bool goal_progress_gated);
+        bool goal_progress_gated,
+        const ConcreteRefill* concrete = nullptr);
     void record_distribution_row(
         std::uint64_t key,
         PrimitiveFamilyTelemetry& family,

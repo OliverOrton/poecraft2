@@ -3792,6 +3792,67 @@ void run_foulborn_kernel_tests() {
 }
 
 void run_solver_calc_tests(const char* artifact_dir) {
+    // Compare concrete refill with independent ordered-draw enumeration. This
+    // covers fixed-six Vaal, retained Awakener pairs, group overlap, empty-pool
+    // stopping, side caps and separation from ordinary cached Chaos rows.
+    {
+        auto session = make_calc_session();
+        auto registry = build_action_registry(*session);
+        const auto chaos = registry.index_by_id.at("chaos");
+        CalcContext calc(session, family_goal_100(), registry, {}, false,
+            false, false, std::nullopt, {}, false, session->normal_random_roll_mask,
+            false, false, true, false, true);
+        pc_item_state empty;
+        pc_item_clear(&empty);
+        empty.rarity = PC_RARITY_RARE;
+        const auto before = calc.outcomes(calc.intern_item(empty), chaos);
+        ActionContextImpl context(0);
+        context.session = session;
+        for (unsigned variant = 0; variant < 4; ++variant) {
+            auto base = empty;
+            if (variant == 1) { place(&base, 0, 0, 10); place(&base, 1, 5, 20); }
+            if (variant == 2) { place(&base, 0, 2, 10); place(&base, 1, 6, 21); }
+            if (variant == 3) {
+                place(&base, 0, 0, 10, PC_MOD_SLOT_FRACTURED);
+                place(&base, 1, 7, 22);
+            }
+            auto expected_base = base;
+            if (variant == 3) pc_item_clear_side(&expected_base, PC_SIDE_SUFFIX);
+            const auto actual = calc.concrete_refill({base,
+                static_cast<std::uint8_t>(variant == 1 ? 0 : 6), variant != 1, variant == 3});
+            PC_CHECK(actual->supported && sums_to_one(*actual));
+            std::map<std::uint32_t, double> expected;
+            std::function<void(pc_item_state, unsigned, double)> visit;
+            visit = [&](pc_item_state item, unsigned target, double p) {
+                if (item.prefix_count + item.suffix_count >= target) {
+                    expected[calc.intern_item(item)] += p;
+                    return;
+                }
+                PoolBuildRequest request;
+                request.respects_metamod_pool_blocks = variant != 1;
+                const auto cap = rarity_affix_cap(*session, item.rarity);
+                const bool prefix = item.prefix_count < cap, suffix = item.suffix_count < cap;
+                request.side_filter = prefix && suffix ? -1 : (prefix ? 0 : 1);
+                const auto pool = get_weighted_pool(context, &item, request);
+                if ((!prefix && !suffix) || !pool.total_weight) {
+                    expected[calc.intern_item(item)] += p;
+                    return;
+                }
+                for (const auto& row : pool.entries) {
+                    if (!row.final_weight) continue;
+                    auto next = item;
+                    PC_CHECK(pc_item_add_mod(&next, row.gen_type, row.session_mod_id,
+                        static_cast<std::uint16_t>(row.primary_group), 0, nullptr) == PC_RESULT_OK);
+                    visit(next, target, p * row.final_weight / pool.total_weight);
+                }
+            };
+            if (variant == 1) for (unsigned t = 4; t <= 6; ++t) visit(expected_base, t, 1.0 / 3);
+            else visit(expected_base, 6, 1);
+            PC_CHECK(expected.size() == actual->entries.size());
+            for (const auto& row : actual->entries) PC_CHECK(near(row.probability, expected[row.state], 1e-12));
+        }
+        PC_CHECK(same_distribution(before, calc.outcomes(calc.intern_item(empty), chaos)));
+    }
     run_foulborn_kernel_tests();
     run_product_dead_feature_reduction_tests();
     run_exact_goal_member_materialization_test();

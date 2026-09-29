@@ -661,6 +661,9 @@ export interface CalcOutcome {
 }
 
 export interface CalcResult {
+    /** Vaal probabilities over final implicit identities, calculated natively. */
+    implicit_outcomes?: Array<{mod: number; weight: number; added_probability: number; present_probability: number}>;
+    vaal_branches?: {implicit: number; sockets: number; reforge: number; unchanged: number};
     supported: boolean;
     legal: boolean;
     /** Rarity and configured slot threshold satisfied together. */

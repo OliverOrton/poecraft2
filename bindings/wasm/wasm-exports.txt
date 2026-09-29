@@ -66,3 +66,5 @@ _pcw_solver_solve_finish
 _pcw_solver_solve_abandon
 _malloc
 _free
+_pcw_currency_calc
+_pcw_calc_inspector

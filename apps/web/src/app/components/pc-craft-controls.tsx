@@ -80,8 +80,8 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
         case "awakener": panel = <div className="pc-material-panel">
             {select("awakener-donor", m.donors ?? [], undefined, "Donor from Stash")}
             {m.donorModel && createElement("pc-mod-list", {ref: (element: PcModList | null) => { if (element && m.donorModel) element.setModel(m.donorModel); }})}
-            <span className="pc-help">The current item is the receiver. A successful craft consumes this donor. Group collisions and numerical roll inputs are currently unavailable.</span>
-            <button disabled={!m.onAwakener || !m.donors?.length} onClick={m.onAwakener}><GameIcon assetKey="action:awakener" />{calculator ? "Preview Awakener" : "Apply Awakener"}</button>
+            <span className="pc-help">The current item is the receiver. {calculator ? "Calculate outcome odds using this donor; both items stay unchanged." : "A successful craft consumes this donor."} Group collisions and numerical roll inputs are currently unavailable.</span>
+            <button disabled={!m.onAwakener || !m.donors?.length} onClick={m.onAwakener}><GameIcon assetKey="action:awakener" />{calculator ? "Calculate Awakener" : "Apply Awakener"}</button>
             {calculator && !m.onAwakener && <span className="pc-help">Exact inventory strategy evaluation and automatic donor search are reserved for Pro.</span>}
         </div>; break;
         case "memory": panel = <div className="pc-material-panel">
@@ -100,7 +100,7 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
             <span className="pc-help">Unavailable: influence, affix, socket/link and exceptional-base laws within the reforge branch are unresolved.</span>
         </div>; break;
         case "foulborn": panel = <div className="pc-craft-options">{["foulborn_augment", "foulborn_regal", "foulborn_exalt"].map(id => action(id))}</div>; break;
-        case "basic": panel = <><div className="pc-craft-options">{BASIC.map(id => action(id, id === "vaal" ? "Vaal Orb" : craftActionLabel(id), false, calculator && id === "vaal"))}{calculator && action("restart", "Restart (fresh base)")}</div>
+        case "basic": panel = <><div className="pc-craft-options">{BASIC.map(id => action(id, id === "vaal" ? "Vaal Orb" : craftActionLabel(id)))}{calculator && action("restart", "Restart (fresh base)")}</div>
             {!calculator && <div className="pc-fracture-hint">Fracture rolls a random modifier. Right-click an item modifier or pool tier to set an exact fracture.</div>}
             {!calculator && <div className="pc-help">Vaal Orb models affixes and implicits. Socket changes are ignored; the socket-only outcome still has a 25% chance.</div>}</>; break;
         case "essence": {
@@ -155,7 +155,7 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
         case "influenced": panel = <div className="pc-material-panel">
             {choices("influence", "Influence", m.catalog.influences, entry => "influence:" + entry.key)}
             <div className="pc-material-footer">{action("influence_exalt", calculator ? "Calculate odds" : "Influenced exalt", true)}</div>
-            {action("dominance", "Orb of Dominance", false, calculator)}
+            {action("dominance", "Orb of Dominance")}
         </div>; break;
         case "bestiary": panel = <><div className="pc-craft-options">{m.bestiary.map(entry => <button key={entry.id}
             {...{[calculator ? "data-select-action" : "data-bestiary-action"]: entry.id}} className={m.selectedAction === entry.id ? "is-selected" : ""}

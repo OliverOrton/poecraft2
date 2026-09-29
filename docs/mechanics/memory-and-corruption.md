@@ -27,6 +27,12 @@ Eldritch metadata follows any replaced implicit. Socket fields carried through
 this projection do not describe the in-game reforge result. Jewel and unique
 transformation outcomes remain unsupported. Exact corruption strategy evaluation,
 implicit goals and stat-total optimization are still reserved for Pro.
+Single-action Calculator now covers the existing Vaal equipment law, including
+explicit-goal odds and per-implicit marginals. Eligible canonical spawn weights
+are normalized inside the 25% implicit branch. Current data has 522 corruption
+implicit records, 348 with positive spawn-weight rules; a specific base/level
+uses only its eligible subset. Final-presence odds include uniform replacement
+of one existing implicit and survival in the other three branches.
 
 Double corruption is recognized but unavailable. Its outer 25% branch weights do
 not establish the influenced rare reforge's internal influence/affix/socket law

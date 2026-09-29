@@ -4523,6 +4523,17 @@ pc-run-trace {
     font-size: 11px;
 }
 
+.pc-calc-implicit-scroll {
+    overflow: auto;
+    max-height: 360px;
+}
+
+.pc-calc-implicit-table td:first-child {
+    white-space: normal;
+    min-width: 160px;
+    color: var(--pc-mod-implicit, #b7a2e3);
+}
+
 .pc-calc-table th,
 .pc-calc-table td {
     padding: 3px 6px;

@@ -693,7 +693,8 @@ solve_detail::CooperativeTask<
 CalcContext::evaluate_reforge_cooperatively(
     std::uint32_t state_id,
     std::uint32_t action_index,
-    const bool goal_progress_gated) {
+    const bool goal_progress_gated,
+    const ConcreteRefill* concrete) {
     ++telemetry_.reforge_requests;
     ReforgeBuildTimer telemetry_timer{telemetry_};
     const ActionDescriptor& action = registry_.actions.at(action_index);
@@ -711,7 +712,8 @@ CalcContext::evaluate_reforge_cooperatively(
     OutcomeDistribution result;
 
     pc_item_state item;
-    if (!materialize(state_id, item)) {
+    if (concrete) item = concrete->base;
+    else if (!materialize(state_id, item)) {
         ++telemetry_.reforge_misses;
         telemetry_timer.miss = true;
         co_return std::make_shared<OutcomeDistribution>(std::move(result));
@@ -733,7 +735,8 @@ CalcContext::evaluate_reforge_cooperatively(
             : (item.eater_of_worlds_tier > item.searing_exarch_tier
                    ? PC_SIDE_SUFFIX
                    : -1);
-    pc_item_state base = preserved_reforge_base(session, action, item);
+    pc_item_state base = concrete && !concrete->clear_unprotected ? concrete->base
+        : preserved_reforge_base(session, action, item);
 
     /* A reforge's distribution depends only on the preserved base, so
      * states differing only in wiped mods share one roll DP. */
@@ -743,7 +746,7 @@ CalcContext::evaluate_reforge_cooperatively(
     const std::tuple<std::uint32_t, std::uint64_t, bool> memo_key{
         action_index, base_hash, goal_progress_gated};
     const auto memo = reforge_cache_.find(memo_key);
-    if (memo != reforge_cache_.end()) {
+    if (!concrete && memo != reforge_cache_.end()) {
         for (const ReforgeCacheMemo& candidate : memo->second) {
             if (candidate.observation_signature == base_observation) {
                 ++telemetry_.reforge_hits;
@@ -1129,7 +1132,7 @@ CalcContext::evaluate_reforge_cooperatively(
         }
         result.supported = true;
         const bool retain_shared_kernel =
-            allow_shared_kernel && !state_dependent &&
+            !concrete && allow_shared_kernel && !state_dependent &&
             can_retain_reforge_distribution(result);
         result.stable_shared_kernel = retain_shared_kernel;
         attribution.unique_projected_outcomes =
@@ -1217,7 +1220,8 @@ CalcContext::evaluate_reforge_cooperatively(
     /* --- roll pool and buckets --------------------------------------------- */
     PoolBuildRequest request;
     request.respects_metamod_pool_blocks =
-        transition_facts.respects_metamod_pool_blocks;
+        concrete ? concrete->respects_metamod_pool_blocks
+                 : transition_facts.respects_metamod_pool_blocks;
     if (action.params.type == ActionType::Fossil) {
         request.weight_kind = PoolWeightKind::Fossil;
         request.fossil_indices = action.params.fossil_indices;
@@ -1932,7 +1936,9 @@ CalcContext::evaluate_reforge_cooperatively(
         targets[std::max(std::min<int>(target, cap * 2), first_depth)] +=
             probability;
     };
-    if (magic_reforge) {
+    if (concrete && concrete->target) {
+        add_target(concrete->target, 1.0);
+    } else if (magic_reforge) {
         add_target(1, 0.5);
         add_target(2, 0.5);
     } else if (eldritch_reforge && eldritch_side >= 0) {
@@ -3778,6 +3784,15 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     const bool goal_progress_gated) {
     auto task = evaluate_reforge_cooperatively(
         state_id, action_index, goal_progress_gated);
+    while (!task.resume()) {}
+    return task.take_result();
+}
+
+std::shared_ptr<const OutcomeDistribution> CalcContext::concrete_refill(
+        const ConcreteRefill& concrete) {
+    const auto action = registry_.index_by_id.at("chaos");
+    auto task = evaluate_reforge_cooperatively(
+        intern_item(concrete.base), action, false, &concrete);
     while (!task.resume()) {}
     return task.take_result();
 }

@@ -2839,6 +2839,35 @@ const char* pcw_solver_actions(uint32_t solver_id) {
 /* Exact outcome distribution for one action on a live item: the
  * Calculator's "odds before you click". */
 EMSCRIPTEN_KEEPALIVE
+const char* pcw_calc_inspector(uint32_t session_id) {
+    auto* session = find(g_sessions, session_id);
+    if (!session) return fail(PC_RESULT_NOT_FOUND, "Unknown inspector session");
+    pc_error_info error = make_error();
+    pc_solver_handle solver = nullptr;
+    if (pc_calc_create_inspector(*session, &solver, &error) != PC_RESULT_OK) return fail(error);
+    const auto id = g_next_id++;
+    g_solvers[id] = solver;
+    return respond("{\"ok\":true,\"solver\":" + std::to_string(id) + "}");
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_currency_calc(uint32_t solver_id, uint32_t item_id,
+        const char* action, uint32_t donor_session_id, uint32_t donor_item_id) {
+    auto* solver = find(g_solvers, solver_id);
+    auto* item = find(g_items, item_id);
+    auto* donor_session = find(g_sessions, donor_session_id);
+    auto* donor = find(g_items, donor_item_id);
+    if (!solver || !item || !action)
+        return fail(PC_RESULT_INVALID_ARGUMENT, "Invalid currency calculation inputs");
+    pc_error_info error = make_error();
+    const char* result = nullptr;
+    if (pc_calc_currency_outcomes_json(*solver, item, action,
+            donor_session ? *donor_session : nullptr, donor, &result, &error) != PC_RESULT_OK)
+        return fail(error);
+    return respond(result);
+}
+
+EMSCRIPTEN_KEEPALIVE
 const char* pcw_solver_calc(uint32_t solver_id, uint32_t item_id,
                             const char* action_id) {
     pc_solver_handle* solver = find(g_solvers, solver_id);

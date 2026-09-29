@@ -532,6 +532,18 @@ export class EngineBindings {
             .actions as unknown as SolverActionInfo[];
     }
 
+    currencyCalc(solver: number, item: number, action: string, donorSession = 0, donorItem = 0): CalcResult {
+        const {ok, ...rest} = this.callJson("pcw_currency_calc",
+            ["number", "number", "string", "number", "number"],
+            [solver, item, action, donorSession, donorItem]);
+        void ok;
+        return rest as unknown as CalcResult;
+    }
+
+    openCalcInspector(session: number): number {
+        return this.callJson("pcw_calc_inspector", ["number"], [session]).solver as number;
+    }
+
     solverCalc(solver: number, item: number, actionId: string): CalcResult {
         const { ok, ...rest } = this.callJson(
             "pcw_solver_calc",

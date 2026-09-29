@@ -64,3 +64,4 @@ src/solver_eval.cpp
 src/solver_eval_report.cpp
 src/solver_eval_resolve.cpp
 src/solver_api.cpp
+src/calculator_currency.cpp

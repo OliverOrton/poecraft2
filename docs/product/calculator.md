@@ -41,10 +41,18 @@ one concrete input item
 -> exact native, goal-aware outcomes for that action
 ```
 
-Bestiary is the deliberate exception: its exact Calculator surface operates
+Bestiary's exact Calculator surface operates
 on compound item-plus-checkpoint state and does not require goal slots merely
 to show the deterministic action result. Goal slots are required to open the
 ordinary solver handle and to run Solve.
+
+Awakener uses the current item as receiver and a selected Stash donor. Calculate
+enumerates its retained pairs and weighted refill without modifying either
+resource. Dominance and Vaal also have native single-action odds, separate from
+strategy search. Vaal exposes all four branch probabilities and a weighted
+implicit table even before an explicit goal is selected. The table distinguishes
+rolling an implicit from having it on the final item, including survival of an
+existing implicit. Socket changes retain their 25% mass but are otherwise ignored.
 
 Selecting an action does not mutate the input item. Input modifiers and goal
 requirements share the engine-backed modifier pool but use different modes.
@@ -85,6 +93,14 @@ Calculator opens a native solver handle for the current goal and uses
 `pc_calc_action_outcomes` through the WASM worker. A hand-selected Fossil
 loadout is explicitly requested when needed so it remains queryable outside
 the bounded automatically generated Fossil set.
+
+Awakener, Dominance and Vaal use `pc_calc_currency_outcomes_json`. This native
+endpoint reuses the physical weighted-refill DP from concrete prepared items and
+returns terminal structural observations, native success and slot marginals.
+Its response-local state IDs are not strategy state handles. The goal-free
+`pc_calc_create_inspector` is inspection-only and refuses strategy solving.
+The existing execution subset and unresolved-law refusals still apply; numeric
+roll-value goals and automatic multi-item/corruption search are not introduced.
 
 The engine result owns:
 
@@ -320,7 +336,7 @@ base.
 ## Economy And Persistence
 
 Calculator drafts in IndexedDB preserve the base, item level, input state,
-goal rarity/slots/threshold, selected action, and Fossil loadout. They are
+goal rarity/slots/threshold, selected action, Awakener donor identity, and Fossil loadout. They are
 crash-recovery state rather than Stash resources. Emulator and Stash item cards
 open Calculator through their `Odds` handoff.
 

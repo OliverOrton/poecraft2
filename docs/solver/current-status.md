@@ -39,6 +39,13 @@ corruption optimization require Pro's separate representation/algorithm work.
 No A4/A5 performance, proof or browser-timing receipt below is promoted by this
 delta. Disabled-family and missing-price checks remain native authorities.
 
+The [single-action Calculator follow-up](../active/2026-09-28-currency-expansion/README.md#single-action-calculator-follow-up-2026-09-29)
+adds structural terminal odds for Awakener, Dominance and Vaal without admitting
+new strategy actions or continuations. Concrete preparation preserves input
+identity and full refill conflicts; the observation is only the final goal,
+counts/flags and Vaal implicit marginals. It does not broaden the strategy
+carrier or promote any historical search/proof qualification.
+
 ## Goal, authority and lane map
 
 Public v1 defaults to a clean final explicit-affix target. The later

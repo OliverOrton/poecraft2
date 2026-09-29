@@ -54,6 +54,7 @@ import {
 import { workspace } from "../workspace/registry";
 import { listStash, type ItemStashRecord } from "../workspace/persistence";
 import { readItemCard } from "../item-preview";
+import { modTextLabel } from "../mod-text";
 import type { ConcreteModListModel } from "./pc-mod-list";
 import {
     getActionPrice,
@@ -314,6 +315,7 @@ export class PcCalculator extends HTMLElement {
             this.normalizeSuccessThreshold();
             this.actionId = draft.actionId;
             this.mechanicValues = craftValuesFromAction(this.catalog, this.actionId);
+            if (draft.awakenerDonorId) this.mechanicValues.set("awakener-donor", draft.awakenerDonorId);
             this.fossilKeys = draft.fossilKeys;
             this.selectedFossils = [...draft.fossilKeys];
             this.activeCraftPanel = panelForAction(this.actionId);
@@ -347,6 +349,7 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         this.item = item;
+        if (this.actionId === "awakener") await this.loadDonors();
         await this.openSolver();
         await this.refresh();
         await this.recalc();
@@ -711,6 +714,7 @@ export class PcCalculator extends HTMLElement {
             (action) => action.id === this.actionId,
         );
         if (bestiary) return bestiary.cost_keys;
+        if (isExpandedCurrency(this.actionId)) return [this.actionId];
         if (this.actionId.startsWith("fossil:") && this.fossilKeys.length) {
             return [
                 ...[...this.fossilKeys].sort().map((key) => `fossil:${key}`),
@@ -1172,7 +1176,7 @@ export class PcCalculator extends HTMLElement {
                 goal: this.solverGoal('odds'), economy: pinEconomy(), state: null as unknown,
                 pricing_note: 'Exact action probabilities do not consume prices.',
             });
-            let calculationItem = 0;
+            let calculationItem = 0, inspector = 0;
             try {
                 calculationItem = await this.client.cloneItem(submittedItem);
                 (report.request as {state: unknown}).state = await this.client.exportItem(calculationItem, this.session);
@@ -1185,6 +1189,11 @@ export class PcCalculator extends HTMLElement {
                         calculationItem,
                         bestiary.id,
                     );
+                } else if (isExpandedCurrency(actionId)) {
+                    const calculator = submittedSolver || (inspector = await this.client.openCalcInspector(this.session));
+                    this.calc = actionId === "awakener"
+                        ? await this.calculateAwakener(calculator, calculationItem, report.request as Record<string, unknown>)
+                        : await this.client.currencyCalc(calculator, calculationItem, actionId);
                 } else if (submittedSolver) {
                     this.calc = await this.client.solverCalc(
                         submittedSolver,
@@ -1206,6 +1215,7 @@ export class PcCalculator extends HTMLElement {
                           : String(error);
             } finally {
                 if (calculationItem) await this.client.closeItem(calculationItem);
+                if (inspector) await this.client.closeSolver(inspector);
             }
         }
         this.renderGoal(); // per-slot odds live inline on the goal rows
@@ -1224,6 +1234,7 @@ export class PcCalculator extends HTMLElement {
             slots: this.slots,
             minSatisfiedSlots: this.effectiveMinSatisfiedSlots(),
             actionId: this.actionId,
+            awakenerDonorId: this.mechanicValues.get("awakener-donor"),
             fossilKeys: this.fossilKeys,
             updatedAt: Date.now(),
         };
@@ -1525,11 +1536,15 @@ export class PcCalculator extends HTMLElement {
             selectedAction: this.actionId, selectedLabel: this.actionLabel(this.actionId),
             memoryStrands: this.itemMemoryStrands,
             donors: this.donors.map(record => ({key: record.id, name: record.name})), donorModel: this.donorModel,
-            onAwakener: () => { void this.guard(() => this.previewAwakener()); },
+            onAwakener: () => { this.selectAction("awakener"); },
             onPanel: panel => { this.activeCraftPanel = panel; this.renderActionPanels(); if (panel === "awakener") void this.guard(() => this.loadDonors()); },
             onValue: (name, value) => {
                 this.mechanicValues.set(name, value);
-                if (name === "awakener-donor") { void this.guard(() => this.loadDonors()); return; }
+                if (name === "awakener-donor") { void this.guard(async () => {
+                    await this.loadDonors();
+                    if (this.actionId === "awakener") await this.recalc();
+                    await this.persist();
+                }); return; }
                 if (name === "essence-type") this.mechanicValues.delete("essence-key");
                 this.renderActionPanels();
             },
@@ -1562,24 +1577,20 @@ export class PcCalculator extends HTMLElement {
         this.renderActionPanels();
     }
 
-    private async previewAwakener(): Promise<void> {
-        const donor = this.donors.find(record => record.id === this.mechanicValues.get("awakener-donor"));
-        if (!donor) throw new Error("Choose a donor from Stash.");
+    private async calculateAwakener(solver: number, receiver: number, request: Record<string, unknown>): Promise<CalcResult> {
+        const donor = (await listStash()).find((record): record is ItemStashRecord =>
+            record.resourceType !== "strategy" && record.id === this.mechanicValues.get("awakener-donor"));
+        if (!donor || donor.id === this.resourceIdentity) throw new Error("Choose a distinct donor from Stash.");
+        request.donor = {resource_identity: donor.id, base: donor.base, item_level: donor.itemLevel, state: donor.state};
+        this.donorModel = await readItemCard(this.client, this.dataId, this.catalog, donor, donor.name);
+        this.renderActionPanels();
         const session = await this.client.createSession(this.dataId, donor.base, donor.itemLevel);
-        let donorItem = 0, receiverItem = 0;
+        let donorItem = 0;
         try {
             donorItem = await this.client.importItem(donor.state, session);
-            receiverItem = await this.client.importItem(await this.client.exportItem(this.item, this.session), this.session);
-            await this.client.multiItemApply(this.context, {action: "awakener", resources: [
-                {identity: donor.id, role: "donor", session, item: donorItem},
-                {identity: this.resourceIdentity ?? "preview-receiver", role: "receiver", session: this.session, item: receiverItem},
-            ]});
-            await workspace().openEmulator({base: this.base, itemLevel: this.itemLevel, rarity: "rare",
-                state: await this.client.exportItem(receiverItem, this.session)}, "copy");
-            this.setStatus("Opened a sampled Awakener preview. Exact inventory evaluation is unavailable; preview consumes no Stash resource or currency.");
+            return await this.client.currencyCalc(solver, receiver, "awakener", session, donorItem);
         } finally {
             if (donorItem) await this.client.closeItem(donorItem);
-            if (receiverItem) await this.client.closeItem(receiverItem);
             await this.client.closeSession(session);
         }
     }
@@ -1688,9 +1699,8 @@ export class PcCalculator extends HTMLElement {
             this.bindPriceInputs(host);
             return;
         }
-        if (this.slots.length === 0) {
-            host.innerHTML =
-                '<p class="pc-empty">Define a goal to compute odds against.</p>';
+        if (this.slots.length === 0 && !isExpandedCurrency(this.actionId)) {
+            host.innerHTML = '<p class="pc-empty">Define a goal to compute odds against.</p>';
             return;
         }
         const calc = this.calc;
@@ -1709,10 +1719,35 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         host.innerHTML = `
-            ${this.renderExactResult(calc)}
-            ${this.renderCost(calc.success_probability)}
-            ${this.renderOutcomes(calc)}`;
+            ${this.slots.length ? this.renderExactResult(calc) : '<p class="pc-help">Add goal modifiers to calculate success odds.</p>'}
+            ${this.renderVaalImplicits(calc)}
+            ${this.slots.length ? this.renderCost(calc.success_probability) + this.renderOutcomes(calc) : ''}`;
         this.bindPriceInputs(host);
+    }
+
+    private renderVaalImplicits(calc: CalcResult): string {
+        if (!calc.vaal_branches || !calc.implicit_outcomes) return "";
+        const branches = calc.vaal_branches;
+        const rows = [...calc.implicit_outcomes].sort((a, b) => b.added_probability - a.added_probability || a.mod - b.mod)
+            .map(outcome => {
+                const mod = this.modCache[outcome.mod];
+                const label = mod ? modTextLabel(mod.text_lines, mod.key) : `Modifier ${outcome.mod}`;
+                return `<tr><td>${escapeHtml(label)}</td><td>${outcome.weight || "—"}</td>
+                    <td>${formatProbabilityExact(outcome.added_probability)}</td>
+                    <td>${formatProbabilityExact(outcome.present_probability)}</td></tr>`;
+            }).join("");
+        return `<section class="pc-calc-section"><h4>Vaal outcomes</h4>
+            <div class="pc-calc-coverage">
+                <div class="pc-calc-coverage-row"><span>Corruption implicit</span><strong>${formatProbabilityExact(branches.implicit)}</strong></div>
+                <div class="pc-calc-coverage-row"><span>Socket change</span><strong>${formatProbabilityExact(branches.sockets)}</strong></div>
+                <div class="pc-calc-coverage-row"><span>Rare reforge</span><strong>${formatProbabilityExact(branches.reforge)}</strong></div>
+                <div class="pc-calc-coverage-row"><span>No change beyond corruption</span><strong>${formatProbabilityExact(branches.unchanged)}</strong></div>
+            </div>
+            <p class="pc-help">Every outcome corrupts the item. Socket changes keep their probability but are otherwise ignored.</p>
+            <details open><summary>Implicit odds</summary>
+                <p class="pc-help">Roll chance includes the implicit branch's probability. Final chance also includes an existing implicit surviving.</p>
+                <div class="pc-calc-implicit-scroll"><table class="pc-calc-table pc-calc-implicit-table"><thead><tr><th>Implicit</th><th>Weight</th><th>Roll chance</th><th>Final chance</th></tr></thead><tbody>${rows}</tbody></table></div>
+            </details></section>`;
     }
 
     private bindPriceInputs(host: HTMLElement): void {
@@ -2170,7 +2205,7 @@ export class PcCalculator extends HTMLElement {
                     }</strong>
                 </span>
             </div>
-            <p class="pc-help pc-calc-cost-note">Uses ${formatExpectedAttempts(successProbability)} attempts at the current success rate. Base, reset, cleanup, and recovery costs are not included unless they are part of the selected action.</p>
+            <p class="pc-help pc-calc-cost-note">Uses ${formatExpectedAttempts(successProbability)} attempts at the current success rate. ${this.actionId === "awakener" ? "Donor acquisition, receiver, and recovery costs are excluded; the estimate covers currency only." : "Base, reset, cleanup, and recovery costs are not included unless they are part of the selected action."}</p>
         </section>`;
     }
 
@@ -2609,7 +2644,8 @@ function panelForAction(id: string): CraftPanel {
     if (id.startsWith("fossil:")) return "fossil";
     if (id.startsWith("harvest_")) return "harvest";
     if (id.startsWith("eldritch_")) return "eldritch";
-    if (id.startsWith("influence_exalt:")) return "influenced";
+    if (id === "awakener") return "awakener";
+    if (id === "dominance" || id.startsWith("influence_exalt:")) return "influenced";
     if (id === "unveil") return "unveil";
     if (id.startsWith("veiled_")) return "veiled";
     return "basic";
@@ -2671,3 +2707,7 @@ function escapeHtml(text: string): string {
 }
 
 customElements.define("pc-calculator", PcCalculator);
+
+function isExpandedCurrency(action: string): boolean {
+    return action === "awakener" || action === "dominance" || action === "vaal";
+}
