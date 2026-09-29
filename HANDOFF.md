@@ -1,7 +1,7 @@
 # Handoff
 
 The [currency expansion execution record](docs/active/2026-09-28-currency-expansion/README.md#execution-receipt-and-remaining-holds)
-owns the local implementation, per-family capability table, validation and Pro
+owns local implementation `52d5fc4`, the per-family capability table, validation and Pro
 handoff. Supported slices are implemented and qualified; the whole programme is
 not complete. Missing mechanics laws hold Dominance, Heist enchantment rolls,
 full corruption and memory stochastic actions. Structural Awakener/resource

@@ -440,8 +440,7 @@ Suggested fresh-session prompt:
 
 The supported slices below are implemented on `main`; this is **not completion
 of every mandatory runtime family**. Source baseline was
-`7c3d408143e98734890ba5a3cc4be8066dd235e3`. The local implementation commit is
-recorded in the receipt below. No push, deployment, timed research campaign or
+`7c3d408143e98734890ba5a3cc4be8066dd235e3`. Implementation commit: `52d5fc463c0e4d1b20db2b1d89330d02afc599bb`. No push, deployment, timed research campaign or
 renewal of an earlier experiment allowance occurred.
 
 ### Per-family capability
@@ -513,7 +512,7 @@ existing owners; no new supervision or benchmark layer was introduced.
 | WASM rebuild | Pass, `wasm-final-verified.log` (existing switch warnings retained) |
 | Web suite | `npm test` passed, `web-verified.log`; includes worker contracts, native missing-price/disabled-family checks and functional IndexedDB transaction tests |
 | Final added Pro witness | Filtered worker smoke 4/4 passed, `pro-witness-verified.log`; normal-root rare goal failure is recorded as a capability limitation, not a successful solve |
-| TypeScript / production | `npx tsc --noEmit` and `npm run build` passed, `tsc-verified.log`, `production-verified.log` (bundle-size warning retained) |
+| TypeScript / production | `npx tsc --noEmit` and `npm run build` passed, `tsc-verified.log`, `production-verified.log`; post-commit build `production-committed.log` binds source `52d5fc4` (bundle-size warning retained) |
 | Static hosting parity | Chromium passed functional/runtime checks; Firefox could not launch (`spawn UNKNOWN`), `static-verified.log`. Firefox is unverified; no rendered-design approval is claimed. |
 
 An earlier full native run (`native-final.log`) made 3,927,461 checks with 11

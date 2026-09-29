@@ -186,6 +186,13 @@
       "Vaal socket/link and jewel/unique paths",
       "Locus internal reforge and exceptional-base laws",
       "Memory consumption timing/distributions, Remembrance and Unravelling probabilities"
-    ]
+    ],
+    "implementation_commit": "52d5fc463c0e4d1b20db2b1d89330d02afc599bb",
+    "build_sha256": {
+      "build/engine/poecraft_engine.dll": "da729017a202fc407768d2123b473ed6c179eb0dcf5d59be0256d0b21e01c4a1",
+      "build/engine/poecraft_engine_tests.exe": "39e4720a49ed486c3eb338007153ef4a2be945d3f1df18ca82a9bb030e4b7000",
+      "bindings/wasm/dist/poecraft_engine.wasm": "b266f1b1ea2305751a65c76df1544c379b5b3fa21e1d3ef2a75c84d2a8c75db7",
+      "bindings/wasm/dist/poecraft_engine.mjs": "7396921b2bc85fd6c16c17d24ea25f81ba288fc0502226f9e906d22d9de69ab1"
+    }
   }
 }
