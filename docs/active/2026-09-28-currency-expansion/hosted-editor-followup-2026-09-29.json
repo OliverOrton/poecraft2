@@ -1,0 +1,61 @@
+{
+  "source_commit": "f43d6473b20adc36e6464f74d5c3fc10c4e721b5",
+  "build_id": "18dbec78fc650ccc7b7ef85ef45e952ab4b96f3021e1bdeeec75005cefe5c334",
+  "bundle_id": "859a98b123ece06e97d48b22eefa66b7f6813ef70dcde44a5ed182d19c896465",
+  "workflow_run_id": 36637818241,
+  "workflow_url": "https://github.com/OliverOrton/poecraft2/actions/runs/36637818241",
+  "archive_path": "C:\\Users\\Oliver\\Documents\\poecraft2-tester-archives\\hosted-tester-run-36637818241.zip",
+  "archive_sha256": "c379212cc9e59e4e6163429e48fc79a751e3b9e45d8f056639b6b8d52ba52fb7",
+  "extracted_path": "C:\\Users\\Oliver\\Documents\\poecraft2-tester-archives\\hosted-tester-run-36637818241",
+  "manifest_sha256": "22bbcbeac81204787855f44607a32085d65f58cf2252e0a1ee61c30fdfa63a42",
+  "artifact_id": 11064968093,
+  "github_digest": "sha256:c379212cc9e59e4e6163429e48fc79a751e3b9e45d8f056639b6b8d52ba52fb7",
+  "status": "published and live functionally verified",
+  "verified_at_utc": "2026-09-29T22:12:49.284Z",
+  "site_url": "https://oliverorton.github.io/poecraft2/",
+  "workflow_result": "success",
+  "browsers": {
+    "chromium": "passed",
+    "firefox": "passed",
+    "bases": [
+      "/",
+      "/poecraft2/"
+    ],
+    "live_chromium_version": "145.0.7632.6"
+  },
+  "live_checks": [
+    "HTTPS manifest matches verified archive byte-for-byte",
+    "Executing live build matches the deployment manifest",
+    "Emulator columns are item, crafting/history, modifiers; currency targets are larger; no Add implicit button",
+    "Pool clicks set native Eldritch tier/header and corruption; removing Eldritch clears the tier",
+    "Corrupted Calculator input permits ordinary, influenced and crafted mod editing; real Chaos odds still refuse",
+    "Normal goal-row clicks add Vaal corruption and Shaper influence requirements",
+    "Authored input and automatic goal properties persist through reload",
+    "No browser errors"
+  ],
+  "verified_component_count": 665,
+  "previous_known_good_rollback_run": 36631500946,
+  "rollback_run": 36637818241,
+  "rollback_rehearsal": "not performed; preceding verified archive retained",
+  "visual_acceptance": "remains with Oliver; browser checks were functional",
+  "scope": "Direct modifier-pool editing with native automatic influence/Eldritch/corruption state, editable corrupted Calculator fixtures, larger controls, Emulator column order, tooltip scrolling and updated contracts.",
+  "validation": {
+    "python_tests": 21,
+    "release_wasm_smoke_tests": 36,
+    "full_web_suite": "passed for editor changes; tooltip correction additionally passed the full static browser matrix",
+    "typescript": "passed",
+    "production_build": "passed",
+    "local_firefox": "could not launch (spawn UNKNOWN); Linux Firefox passed both deployment paths"
+  },
+  "failed_prepublication_runs": [
+    {
+      "id": 36636768896,
+      "reason": "Focus-scroll tooltip dismissal; corrected and original check passed"
+    },
+    {
+      "id": 36637352130,
+      "reason": "Firefox wait for offscreen lazy artwork; test now scrolls and verifies every image"
+    }
+  ],
+  "wasm_sha256": "c62ceb9ea0c4a3da74feeb201e49e74e80ede1e2799a30a86d2668eeacbbc413"
+}

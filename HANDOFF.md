@@ -1,11 +1,15 @@
 # Handoff
 
-Current follow-up: Oliver's modifier selection, automatic item-state, larger
-currency controls and Emulator column changes are implemented and locally checked.
+Completed: Oliver's modifier selection, automatic item-state, larger currency
+controls and Emulator column changes are live as Beta `18dbec78`, source `f43d647`.
 The [editor follow-up record](docs/active/2026-09-28-currency-expansion/README.md#modifier-editing-and-layout-follow-up-2026-09-29)
-owns the exact scope and validation. The authorized live release is the remaining
-step. Work remains sequential on `main`, preserving root `0`; no strategy or
-mechanics hold has been expanded. Rendered design acceptance remains Oliver's.
+owns scope and validation; the [hosted receipt](docs/active/2026-09-28-currency-expansion/hosted-editor-followup-2026-09-29.json)
+records the passing Chromium/Firefox matrix, live functional checks and verified
+665-component archive. Documentation is reconciled for the recent currency,
+Calculator and editor work. No pending work remains in this follow-up. Previous
+run `36631500946` is retained for rollback. Work stayed sequential on `main`,
+preserving root `0`; no strategy or mechanics hold was expanded. Rendered design
+acceptance remains Oliver's.
 
 Previous release: Oliver's unified Input → Goal Calculator and item editing follow-up
 is live as Beta `1d1fe26c`, source `a468feb`. The

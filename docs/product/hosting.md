@@ -1,7 +1,7 @@
 # Hosted tester
 
 The public tester is at <https://oliverorton.github.io/poecraft2/>. The
-[latest hosted release](../active/2026-09-28-currency-expansion/README.md#hosted-joint-item-goal-release-2026-09-29)
+[latest hosted release](../active/2026-09-28-currency-expansion/README.md#hosted-editor-follow-up-release-2026-09-29)
 records its verified deployment and durable rollback archive. Oliver currently
 prefers development directly on `main`; publishing remains a manual release.
 

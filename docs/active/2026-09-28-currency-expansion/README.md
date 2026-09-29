@@ -903,3 +903,24 @@ then stopped on the existing all-artwork wait. Larger Basic rows can leave lazy
 icons outside Firefox's loading region. The smoke test now brings every icon into
 view before requiring a complete decoded image, retaining the full artwork check.
 Neither failed run published; the prior live release remained unchanged.
+
+## Hosted editor follow-up release (2026-09-29)
+
+The complete authorized update is pushed and live from source
+`f43d6473b20adc36e6464f74d5c3fc10c4e721b5` as Beta `18dbec78` at
+https://oliverorton.github.io/poecraft2/. The successful
+[hosting workflow](https://github.com/OliverOrton/poecraft2/actions/runs/36637818241)
+passed Chromium and Firefox at both `/` and `/poecraft2/`, including the unchanged
+tooltip assertions and the complete artwork check. The two earlier failed
+attempts above were resolved before publication.
+
+Fresh live Chromium checks pass the executing build identity, direct modifier
+selection, automatic Eldritch/corruption state, corrupted Calculator editing,
+ordinary influence and crafted flags, actual Chaos refusal, automatic goal
+properties, persistence, larger controls and Emulator column order. No browser
+errors occurred. The [release receipt](hosted-editor-followup-2026-09-29.json)
+records the exact identities and validation. GitHub's archive digest matches the
+saved ZIP; all 665 components verify, and the live deployment manifest matches the
+archived bytes. Previous run `36631500946` remains available for rollback. No
+rollback rehearsal or rendered design acceptance is claimed. Only release-record
+documentation follows the deployed source revision.
