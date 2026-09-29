@@ -897,3 +897,9 @@ weakening it, and the complete local Chromium static smoke passes after rebuildi
 Local Firefox could not launch (`spawn UNKNOWN`); the required Linux hosting matrix
 must still pass both browsers and paths before publication. No native change or
 second WASM rebuild was needed for this presentation fix.
+
+Retry `36637352130` passed Chromium and the Firefox craft/tooltip interactions,
+then stopped on the existing all-artwork wait. Larger Basic rows can leave lazy
+icons outside Firefox's loading region. The smoke test now brings every icon into
+view before requiring a complete decoded image, retaining the full artwork check.
+Neither failed run published; the prior live release remained unchanged.

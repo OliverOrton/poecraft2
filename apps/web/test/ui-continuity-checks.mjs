@@ -102,10 +102,14 @@ export async function checkUiContinuity(page) {
     await page.locator('.pc-tab-title').filter({hasText: /^Untitled$/}).click();
     await page.waitForFunction(() => document.querySelector('pc-emulator')?.item && !document.querySelector('pc-emulator')?.busy);
     assert.ok(await page.locator('pc-emulator .pc-mod-slot.is-filled').count() >= 4);
-    await page.waitForFunction(() => {
-        const images = Array.from(document.querySelectorAll('pc-emulator .pc-game-art'));
-        return images.length > 3 && images.every(image => image.complete && image.naturalWidth > 0);
-    });
+    const artwork = page.locator('pc-emulator .pc-game-art');
+    assert.ok(await artwork.count() > 3);
+    // Larger currency rows can leave icons outside the scrolling pane. Firefox
+    // correctly defers those lazy images until they are brought into view.
+    for (const image of await artwork.all()) {
+        await image.scrollIntoViewIfNeeded();
+        await page.waitForFunction(image => image.complete && image.naturalWidth > 0, await image.elementHandle());
+    }
     const itemMods = await page.locator('pc-emulator .pc-mod-slot.is-filled').allTextContents();
     await page.locator('pc-emulator [data-cmd="save-as"]').click();
     await page.locator('.pc-text-modal input').fill('UI continuity item');
