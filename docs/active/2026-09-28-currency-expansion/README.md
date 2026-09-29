@@ -11,8 +11,8 @@ Work sequentially on `main`, preserving unrelated changes and protected root
 `0`. At planning time local HEAD and freshly queried remote `refs/heads/main`
 were both `7c3d408143e98734890ba5a3cc4be8066dd235e3`; the working tree was clean
 apart from ignored research caches. Recheck the actual checkout before execution.
-The current hosted release remains the one recorded in HANDOFF; this programme
-does not authorize a push or deployment.
+The current hosted release remains the one recorded in HANDOFF. Oliver later
+authorized live deployment after completing the Calculator follow-ups below.
 
 Oliver approved the nine researched descriptions, including exclusion of
 Eldritch items from Shaper/Elder Exalts and holding Harvest more/less likely.
@@ -708,3 +708,38 @@ engine shared-library and native-test targets built successfully. No benchmark
 result is attributed to this change. Logs: `out/currency-followup/calculator-*`.
 WASM SHA-256: `c042a996eb6df24e800e9fbf8ab1c5b27847b913d39705947af2566a1aa2c392`.
 This is a local delivery, with no push or hosted deployment.
+
+## Double-corruption Calculator follow-up (2026-09-29)
+
+Oliver approved the two outstanding choices: changed-mod bricks are failed
+attempts, and the two implicits roll sequentially. The ordinary-equipment query
+therefore uses four 25% branches, with brick and destruction represented as
+distinct terminal failures. The socket branch carries the original affixes and
+implicits under the existing owner-approved socket projection. The implicit
+branch replaces every old implicit and clears Eldritch tiers.
+
+For first modifier a with weight w(a), the first draw is w(a)/W. The second
+denominator W(a) sums weights of modifiers sharing no group with a, also excluding
+a itself. Each ordered draw contributes 0.25*w(a)/W*w(b)/W(a). The returned
+unordered pair adds both orders; its marginals sum all pairs containing each
+modifier. Pair mass sums to 0.25; added-implicit marginal mass sums to 0.5.
+Existing implicit retention contributes only the socket branch's 0.25. A pool
+with no compatible second draw refuses rather than dropping probability mass.
+Full rows include both terminal failures, conserve total mass, and never award
+goal success or slot satisfaction to either failure.
+
+Calculator's Temple action is enabled, including goal-free inspection, native
+pair selection, explicit-goal odds, terminal labels, costs and persistence.
+Emulator's sampled influenced reforge remains held: no replacement influence or
+affix distribution has been invented. Strategy search/evaluation scope is unchanged.
+Validation passes: all 13 focused Python Calculator tests, including independent
+canonical-group pair enumeration for armour, bows and jewellery; the complete
+web suite including 35/35 release-WASM smoke tests; TypeScript; and the production
+build. The controller checks native dispatch, terminal presentation, pair display
+and read-only cleanup. The native shared library and release WASM were rebuilt.
+No strategy changed and no new Simulator qualification was run. Logs:
+`out/currency-followup/double-corruption-*`. WASM SHA-256:
+`b87e423888d398d0cd29933b4d29f6b8997bfdb7b6666b9b4560e5cf9d74bb62`.
+
+Oliver requested deployment after finishing all work. The hosted receipt will
+record the selected source revision and verified archive separately below.

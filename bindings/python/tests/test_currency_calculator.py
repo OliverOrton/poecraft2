@@ -136,3 +136,59 @@ def test_vaal_existing_implicit_survival_and_fracture_retention():
         item._state.memory_strands = 1
         with pytest.raises(EngineError, match="memory"):
             session.calculate_currency(item, "vaal")
+
+
+@pytest.mark.parametrize("name", ["Vaal Regalia", "Archdemon Crown", "Spine Bow", "Ruby Ring"])
+def test_double_corruption_sequential_pairs_match_canonical_groups(name):
+    with sqlite3.connect(ROOT / "data/sqlite/poecraft.db") as sql, load_data(ARTIFACT) as data:
+        sql.row_factory = sqlite3.Row
+        base = resolve_base_selection(sql, name, 86)
+        with data.create_session(base.metadata_path, 86) as session:
+            item = session.create_item("normal")
+            before = bytes(item._state)
+            result = session.calculate_currency(item, "double_corruption")
+            conserved(result)
+            assert result["double_corruption_branches"] == dict.fromkeys(
+                ["implicit", "sockets", "reforge", "destroyed"], 0.25)
+            assert {r["terminal"]: r["probability"] for r in result["outcomes"] if "terminal" in r} == {
+                "bricked": 0.25, "destroyed": 0.25}
+            assert all(not r["is_goal"] and not any(r["slots"])
+                       for r in result["outcomes"] if "terminal" in r)
+            weights = {r["mod"]: r["weight"] for r in result["implicit_outcomes"] if r["weight"]}
+            groups = {mod: set(json.loads(sql.execute("select source_json from mod where key=?",
+                (session.mod_info(mod).key,)).fetchone()[0])["groups"]) for mod in weights}
+            total = sum(weights.values())
+            remaining = {a: sum(w for b, w in weights.items() if a != b and not groups[a] & groups[b])
+                         for a in weights}
+            expected = {(a, b): 0.25 * weights[a] * weights[b] / total * (1 / remaining[a] + 1 / remaining[b])
+                        for a in weights for b in weights if a < b and not groups[a] & groups[b]}
+            actual = {tuple(r["mods"]): r["probability"] for r in result["implicit_pairs"]}
+            assert actual == pytest.approx(expected, abs=1e-14)
+            assert sum(actual.values()) == pytest.approx(0.25)
+            assert sum(r["added_probability"] for r in result["implicit_outcomes"]) == pytest.approx(0.5)
+            for row in result["implicit_outcomes"]:
+                assert row["added_probability"] == pytest.approx(sum(p for pair, p in expected.items() if row["mod"] in pair))
+            assert bytes(item._state) == before
+
+
+def test_double_corruption_explicit_goal_and_existing_implicit_replacement():
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session:
+        item = session.create_item("rare")
+        item.add_mod("LocalIncreasedEnergyShield11", fractured=True)
+        initial = session.calculate_currency(item, "double_corruption")
+        chosen = next(r for r in initial["implicit_outcomes"] if r["weight"])
+        item._state.implicit_count = 1
+        item._state.implicits[0].mod_id = chosen["mod"]
+        before = bytes(item._state)
+        result = session.calculate_currency(item, "double_corruption", goal("LocalIncreasedEnergyShield11", extras=False))
+        conserved(result)
+        assert result["success_probability"] == pytest.approx(0.5)
+        assert result["slot_satisfied"][0] == pytest.approx(0.5)
+        row = next(r for r in result["implicit_outcomes"] if r["mod"] == chosen["mod"])
+        assert row["present_probability"] == pytest.approx(0.25 + row["added_probability"])
+        assert bytes(item._state) == before
+        item._state.item_flags |= 1
+        illegal = session.calculate_currency(item, "double_corruption")
+        assert not illegal["legal"] and not illegal["success_probability"]
+        assert "double_corruption_branches" not in illegal
+        assert sum(r["probability"] for r in illegal["outcomes"]) == pytest.approx(1)

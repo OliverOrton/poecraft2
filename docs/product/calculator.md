@@ -54,6 +54,14 @@ implicit table even before an explicit goal is selected. The table distinguishes
 rolling an implicit from having it on the final item, including survival of an
 existing implicit. Socket changes retain their 25% mass but are otherwise ignored.
 
+Temple exposes double-corruption odds using the same native Vaal weights. Two
+sequential rolls exclude conflicting modifier groups and replace all existing
+implicits. Select a specific unordered pair to see its unconditional probability.
+The 25% changed-mod brick and 25% destruction branches count as terminal failures;
+the remaining socket branch retains its 25% mass with socket details ignored.
+Final implicit presence excludes bricked/destroyed items. This is a terminal odds
+query; applying an influenced rare brick in Emulator remains unavailable.
+
 Selecting an action does not mutate the input item. Input modifiers and goal
 requirements share the engine-backed modifier pool but use different modes.
 New goals author stable modifier families; recovered legacy group slots remain
@@ -94,7 +102,7 @@ Calculator opens a native solver handle for the current goal and uses
 loadout is explicitly requested when needed so it remains queryable outside
 the bounded automatically generated Fossil set.
 
-Awakener, Dominance and Vaal use `pc_calc_currency_outcomes_json`. This native
+Awakener, Dominance, Vaal and double corruption use `pc_calc_currency_outcomes_json`. This native
 endpoint reuses the physical weighted-refill DP from concrete prepared items and
 returns terminal structural observations, native success and slot marginals.
 Its response-local state IDs are not strategy state handles. The goal-free

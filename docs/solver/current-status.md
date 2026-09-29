@@ -40,10 +40,12 @@ No A4/A5 performance, proof or browser-timing receipt below is promoted by this
 delta. Disabled-family and missing-price checks remain native authorities.
 
 The [single-action Calculator follow-up](../active/2026-09-28-currency-expansion/README.md#single-action-calculator-follow-up-2026-09-29)
-adds structural terminal odds for Awakener, Dominance and Vaal without admitting
+adds structural terminal odds for Awakener, Dominance, Vaal and double corruption without admitting
 new strategy actions or continuations. Concrete preparation preserves input
 identity and full refill conflicts; the observation is only the final goal,
-counts/flags and Vaal implicit marginals. It does not broaden the strategy
+counts/flags and corruption implicit marginals/pairs. Double corruption treats
+changed-affix brick and destruction as terminal failures under Oliver's ruling.
+It does not broaden the strategy
 carrier or promote any historical search/proof qualification.
 
 ## Goal, authority and lane map

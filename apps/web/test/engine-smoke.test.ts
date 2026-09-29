@@ -2631,6 +2631,15 @@ test("Expanded currency Calculator returns native odds without consuming items",
         assert.ok(Math.abs(vaal.implicit_outcomes!.reduce((sum, row) => sum + row.added_probability, 0) - 0.25) < 1e-12);
         assert.equal((await client.itemInfo(normal)).item_flags, 0);
 
+        const doubled = await client.currencyCalc(inspector, normal, "double_corruption");
+        assert.deepEqual(doubled.double_corruption_branches, {implicit: 0.25, sockets: 0.25, reforge: 0.25, destroyed: 0.25});
+        assert.ok(Math.abs(doubled.outcomes.reduce((sum, row) => sum + row.probability, 0) - 1) < 1e-12);
+        assert.ok(Math.abs(doubled.implicit_pairs!.reduce((sum, row) => sum + row.probability, 0) - 0.25) < 1e-12);
+        assert.ok(Math.abs(doubled.implicit_outcomes!.reduce((sum, row) => sum + row.added_probability, 0) - 0.5) < 1e-12);
+        assert.deepEqual(doubled.outcomes.filter(row => row.terminal).map(row => [row.terminal, row.probability, row.is_goal]),
+            [["bricked", 0.25, false], ["destroyed", 0.25, false]]);
+        assert.equal((await client.itemInfo(normal)).item_flags, 0);
+
         const donor = await client.createItem(sessionId, {rarity: "rare"}); items.push(donor);
         await client.addMod(donor, sessionId, {key: "LocalIncreaseSocketedActiveGemLevelUber1", side: "prefix"});
         const receiver = await client.createItem(lowSession, {rarity: "rare"}); items.push(receiver);

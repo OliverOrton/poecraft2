@@ -34,10 +34,18 @@ implicit records, 348 with positive spawn-weight rules; a specific base/level
 uses only its eligible subset. Final-presence odds include uniform replacement
 of one existing implicit and survival in the other three branches.
 
-Double corruption is recognized but unavailable. Its outer 25% branch weights do
-not establish the influenced rare reforge's internal influence/affix/socket law
-or exceptional unique outcomes. Destroyed lifecycle state is representable and
-refused as a live input, but no invented destruction-only sampler is exposed.
+Double corruption has single-action Calculator support for ordinary equipment.
+Oliver approved counting the changed-mod brick as failure and rolling the two
+implicits sequentially on 2026-09-29. The four equal branches are two implicits,
+ignored socket changes, the changed-affix brick, and destruction. The implicit
+branch replaces all old implicits, clears Eldritch tiers, and draws from canonical
+weights with all groups conflicting with the first draw excluded from the second.
+The native query reports unconditional unordered pair odds and implicit marginals;
+only the socket branch can retain an old implicit. Brick and destruction are
+terminal failures, never successful explicit-goal outcomes or live item states.
+This query does not calculate a lucky brick's replacement affixes. Sampled crafting
+remains unavailable because the influenced reforge's internal law and exceptional
+unique outcomes are not established. No fabricated reforge item is produced.
 
 Tempering/Tailoring are recognized but unavailable: canonical Heist enchantments
 have no public selection weights. Oliver explicitly accepted that hold on

@@ -12,7 +12,8 @@ namespace poecraft::solver {
 std::string calculate_currency_json(const CalcContext& source,
         const pc_item_state& receiver, const std::string& action,
         const SessionImpl* donor_session, const pc_item_state* donor) {
-    if (action != "awakener" && action != "dominance" && action != "vaal")
+    const bool double_corruption = action == "double_corruption";
+    if (action != "awakener" && action != "dominance" && action != "vaal" && !double_corruption)
         throw std::invalid_argument("Unknown single-action currency");
     if (receiver.memory_strands || receiver.lifecycle != PC_ITEM_LIVE)
         throw std::invalid_argument("Calculation requires a live item without memory strands");
@@ -36,6 +37,9 @@ std::string calculate_currency_json(const CalcContext& source,
     std::map<std::uint32_t, long double> mass;
     std::map<std::uint32_t, long double> implicit_present;
     std::map<std::uint32_t, std::uint64_t> implicit_weights;
+    std::map<std::uint32_t, long double> implicit_added;
+    std::map<std::pair<std::uint32_t, std::uint32_t>, long double> implicit_pairs;
+    long double failed_mass = 0;
     std::uint64_t total_implicit_weight = 0;
     const auto observe_implicits = [&](const pc_item_state& item, long double p) {
         std::set<std::uint32_t> ids;
@@ -43,7 +47,7 @@ std::string calculate_currency_json(const CalcContext& source,
         for (const auto id : ids) implicit_present[id] += p;
     };
     const auto project = [&](pc_item_state item) {
-        // These three mechanics retain enchantments. Only explicit structure
+        // These mechanics retain enchantments. Only explicit structure
         // is observed here; no enchantment/socket continuation is asserted.
         item.enchantment_count = 0;
         return calc.intern_item(item);
@@ -88,20 +92,62 @@ std::string calculate_currency_json(const CalcContext& source,
         }
         auto unchanged = receiver;
         unchanged.item_flags |= PC_ITEM_CORRUPTED;
-        add(unchanged, 0.5L); // unchanged + ignored socket branch
-        observe_implicits(unchanged, 0.75L); // reforge also retains implicits
-        refill(unchanged, 0.25L, 6, true, true);
-        const auto replacements = std::max<unsigned>(1, receiver.implicit_count);
-        for (const auto& [id, weight] : weights) {
-            const long double p = 0.25L * weight / total_implicit_weight / replacements;
-            for (unsigned removed = 0; removed < replacements; ++removed) {
-                const auto next = vaal_implicit_result(session, receiver, id, removed);
+        if (double_corruption) {
+            // Owner-selected terminal query: changed-affix brick and destruction
+            // are failures. Do not invent the influenced reforge's internal law.
+            failed_mass = 0.5L;
+            add(unchanged, 0.25L); // ignored socket branch
+            observe_implicits(unchanged, 0.25L);
+            const auto compatible = [&](std::uint32_t a, std::uint32_t b) {
+                if (a == b) return false;
+                for (auto i = session.group_offsets[a]; i < session.group_offsets[a + 1]; ++i)
+                    for (auto j = session.group_offsets[b]; j < session.group_offsets[b + 1]; ++j)
+                        if (session.group_ids[i] == session.group_ids[j]) return false;
+                return true;
+            };
+            for (const auto& [first, first_weight] : weights) {
+                std::uint64_t remaining = 0;
+                for (const auto& [second, weight] : weights)
+                    if (compatible(first, second)) remaining += weight;
+                if (!remaining)
+                    throw std::invalid_argument("Double corruption requires two compatible corruption implicits");
+                for (const auto& [second, weight] : weights) {
+                    if (!compatible(first, second)) continue;
+                    const long double p = 0.25L * first_weight / total_implicit_weight * weight / remaining;
+                    implicit_pairs[std::minmax(first, second)] += p;
+                    implicit_added[first] += p;
+                    implicit_added[second] += p;
+                }
+            }
+            // Each unordered pair aggregates both draw orders. All old implicits
+            // (including Eldritch tiers) are replaced; explicit affixes survive.
+            for (const auto& [pair, p] : implicit_pairs) {
+                auto base = receiver;
+                base.implicit_count = 0;
+                base.searing_exarch_tier = base.eater_of_worlds_tier = 0;
+                auto next = vaal_implicit_result(session, base, pair.first, 0);
+                const auto other = vaal_implicit_result(session, base, pair.second, 0);
+                next.implicits[next.implicit_count++] = other.implicits[0];
                 add(next, p);
                 observe_implicits(next, p);
             }
+        } else {
+            add(unchanged, 0.5L); // unchanged + ignored socket branch
+            observe_implicits(unchanged, 0.75L); // reforge also retains implicits
+            refill(unchanged, 0.25L, 6, true, true);
+            const auto replacements = std::max<unsigned>(1, receiver.implicit_count);
+            for (const auto& [id, weight] : weights) {
+                implicit_added[id] = 0.25L * weight / total_implicit_weight;
+                const long double p = implicit_added[id] / replacements;
+                for (unsigned removed = 0; removed < replacements; ++removed) {
+                    const auto next = vaal_implicit_result(session, receiver, id, removed);
+                    add(next, p);
+                    observe_implicits(next, p);
+                }
+            }
         }
     }
-    long double total = 0, success = 0;
+    long double total = failed_mass, success = 0;
     std::array<long double, kMaxGoalSlots> slots{};
     for (const auto& [id, p] : mass) {
         total += p;
@@ -131,18 +177,41 @@ std::string calculate_currency_json(const CalcContext& source,
         out << "]}";
         comma = true;
     }
+    if (failed_mass) {
+        int terminal_id = -1;
+        for (const auto* terminal : {"bricked", "destroyed"}) {
+            out << (comma ? "," : "") << "{\"state\":" << terminal_id--
+                << ",\"terminal\":\"" << terminal << "\",\"probability\":0.25,\"rarity\":-1,\"prefixes\":0,\"suffixes\":0,\"flags\":0,\"blocked\":0,\"is_goal\":false,\"slots\":[";
+            for (std::size_t i = 0; i < slots.size(); ++i) out << (i ? "," : "") << 0;
+            out << "]}";
+            comma = true;
+        }
+    }
     out << "]";
-    if (action == "vaal" && legal) {
-        out << ",\"vaal_branches\":{\"implicit\":0.25,\"sockets\":0.25,\"reforge\":0.25,\"unchanged\":0.25},\"implicit_outcomes\":[";
+    if ((action == "vaal" || double_corruption) && legal) {
+        out << (double_corruption
+            ? ",\"double_corruption_branches\":{\"implicit\":0.25,\"sockets\":0.25,\"reforge\":0.25,\"destroyed\":0.25}"
+            : ",\"vaal_branches\":{\"implicit\":0.25,\"sockets\":0.25,\"reforge\":0.25,\"unchanged\":0.25}");
+        out << ",\"implicit_outcomes\":[";
         comma = false;
         for (const auto& [id, p] : implicit_present) {
             const auto weight = implicit_weights[id];
             out << (comma ? "," : "") << "{\"mod\":" << id << ",\"weight\":" << weight
-                << ",\"added_probability\":" << double(0.25L * weight / total_implicit_weight)
+                << ",\"added_probability\":" << double(implicit_added[id])
                 << ",\"present_probability\":" << double(p) << "}";
             comma = true;
         }
         out << "]";
+        if (double_corruption) {
+            out << ",\"implicit_pairs\":[";
+            comma = false;
+            for (const auto& [pair, p] : implicit_pairs) {
+                out << (comma ? "," : "") << "{\"mods\":[" << pair.first << "," << pair.second
+                    << "],\"probability\":" << double(p) << "}";
+                comma = true;
+            }
+            out << "]";
+        }
     }
     out << "}";
     return out.str();

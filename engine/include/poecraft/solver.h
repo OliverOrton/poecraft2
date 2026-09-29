@@ -278,9 +278,12 @@ pc_result pc_calc_action_outcomes(
 
 /* --- exact compiled-strategy evaluation ------------------------------------ */
 
-/* Calculator-only structural terminal odds for awakening, dominance and Vaal.
+/* Calculator-only structural terminal odds for awakening, dominance, Vaal and
+ * double_corruption (changed-affix brick and destruction count as failures).
  * The donor session/item are required only for "awakener". Inputs are read-only.
- * JSON includes native goal results and Vaal implicit marginals. Its state IDs
+ * JSON includes native goal results, implicit marginals and unordered pair odds.
+ * Terminal failure rows have negative state IDs and no live item structure.
+ * Its state IDs
  * are local to the response, not solver state handles. The returned string is
  * owned by the solver and valid until its next currency calculation/destruction.
  * This does not admit these actions to strategy search or policy evaluation. */

@@ -4528,6 +4528,23 @@ pc-run-trace {
     max-height: 360px;
 }
 
+.pc-calc-implicit-pair {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.pc-calc-implicit-pair label {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.pc-calc-implicit-pair select {
+    width: 100%;
+    min-width: 0;
+}
+
 .pc-calc-implicit-table td:first-child {
     white-space: normal;
     min-width: 160px;

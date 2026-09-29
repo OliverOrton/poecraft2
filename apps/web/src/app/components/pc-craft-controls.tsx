@@ -96,8 +96,10 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
             <span className="pc-help">Unavailable: random enchantment weights are not public. Imported enchantments are preserved; stat-total effects are unsupported.</span>
         </div>; break;
         case "temple": panel = <div className="pc-material-panel">
-            <button disabled>Double corruption</button>
-            <span className="pc-help">Unavailable: influence, affix, socket/link and exceptional-base laws within the reforge branch are unresolved.</span>
+            {action("double_corruption", "Double corruption", false, !calculator)}
+            <span className="pc-help">{calculator
+                ? "Calculate two sequential corruption implicits. The changed-mod brick and destruction branches count as failures; socket details are ignored."
+                : "Double-corruption odds are available in Calculator. Applying the influenced reforge to an item is not supported."}</span>
         </div>; break;
         case "foulborn": panel = <div className="pc-craft-options">{["foulborn_augment", "foulborn_regal", "foulborn_exalt"].map(id => action(id))}</div>; break;
         case "basic": panel = <><div className="pc-craft-options">{BASIC.map(id => action(id, id === "vaal" ? "Vaal Orb" : craftActionLabel(id)))}{calculator && action("restart", "Restart (fresh base)")}</div>

@@ -647,6 +647,8 @@ export type CarrierProperty =
 
 /** One abstract successor class from the calculation engine. */
 export interface CalcOutcome {
+    /** Terminal failure observations have no live item to inspect. */
+    terminal?: "destroyed" | "bricked";
     state: number;
     /** Native goal predicate, including rarity and clean/coverage semantics. */
     is_goal?: boolean;
@@ -664,6 +666,9 @@ export interface CalcResult {
     /** Vaal probabilities over final implicit identities, calculated natively. */
     implicit_outcomes?: Array<{mod: number; weight: number; added_probability: number; present_probability: number}>;
     vaal_branches?: {implicit: number; sockets: number; reforge: number; unchanged: number};
+    double_corruption_branches?: {implicit: number; sockets: number; reforge: number; destroyed: number};
+    /** Unordered pairs and unconditional probabilities, supplied by native code. */
+    implicit_pairs?: Array<{mods: [number, number]; probability: number}>;
     supported: boolean;
     legal: boolean;
     /** Rarity and configured slot threshold satisfied together. */

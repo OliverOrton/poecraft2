@@ -1723,29 +1723,52 @@ export class PcCalculator extends HTMLElement {
             ${this.renderVaalImplicits(calc)}
             ${this.slots.length ? this.renderCost(calc.success_probability) + this.renderOutcomes(calc) : ''}`;
         this.bindPriceInputs(host);
+        host.querySelectorAll<HTMLSelectElement>("[data-corruption-implicit]").forEach(select => {
+            select.addEventListener("change", () => {
+                this.mechanicValues.set(`corruption-implicit-${select.dataset.corruptionImplicit}`, select.value);
+                this.renderResults();
+            });
+        });
     }
 
     private renderVaalImplicits(calc: CalcResult): string {
-        if (!calc.vaal_branches || !calc.implicit_outcomes) return "";
-        const branches = calc.vaal_branches;
+        const branches = calc.double_corruption_branches ?? calc.vaal_branches;
+        if (!branches || !calc.implicit_outcomes) return "";
+        const doubleCorruption = Boolean(calc.double_corruption_branches);
+        const labelFor = (id: number) => {
+            const mod = this.modCache[id];
+            return mod ? modTextLabel(mod.text_lines, mod.key) : `Modifier ${id}`;
+        };
         const rows = [...calc.implicit_outcomes].sort((a, b) => b.added_probability - a.added_probability || a.mod - b.mod)
             .map(outcome => {
-                const mod = this.modCache[outcome.mod];
-                const label = mod ? modTextLabel(mod.text_lines, mod.key) : `Modifier ${outcome.mod}`;
-                return `<tr><td>${escapeHtml(label)}</td><td>${outcome.weight || "—"}</td>
+                return `<tr><td>${escapeHtml(labelFor(outcome.mod))}</td><td>${outcome.weight || "—"}</td>
                     <td>${formatProbabilityExact(outcome.added_probability)}</td>
                     <td>${formatProbabilityExact(outcome.present_probability)}</td></tr>`;
             }).join("");
-        return `<section class="pc-calc-section"><h4>Vaal outcomes</h4>
+        let pairMarkup = "";
+        if (calc.implicit_pairs) {
+            const candidates = calc.implicit_outcomes.filter(row => row.weight > 0);
+            const selected = ["first", "second"].map(key => this.mechanicValues.get(`corruption-implicit-${key}`) ?? "");
+            const selectors = ["first", "second"].map((key, index) => `<label>${index ? "Second" : "First"} implicit
+                <select data-corruption-implicit="${key}"><option value="">Choose an implicit</option>
+                    ${candidates.map(row => `<option value="${row.mod}" ${selected[index] === String(row.mod) ? "selected" : ""}>${escapeHtml(labelFor(row.mod))}</option>`).join("")}
+                </select></label>`).join("");
+            const pair = selected.every(Boolean) ? calc.implicit_pairs.find(row =>
+                row.mods.includes(Number(selected[0])) && row.mods.includes(Number(selected[1])) && selected[0] !== selected[1]) : undefined;
+            pairMarkup = `<div class="pc-calc-implicit-pair"><h4>Specific implicit pair</h4>${selectors}
+                ${selected.every(Boolean) ? `<strong>${formatProbabilityExact(pair?.probability ?? 0)}</strong><p class="pc-help">Chance per double-corruption attempt, including the two-implicit branch.</p>` : ""}</div>`;
+        }
+        return `<section class="pc-calc-section"><h4>${doubleCorruption ? "Double corruption" : "Vaal"} outcomes</h4>
             <div class="pc-calc-coverage">
-                <div class="pc-calc-coverage-row"><span>Corruption implicit</span><strong>${formatProbabilityExact(branches.implicit)}</strong></div>
+                <div class="pc-calc-coverage-row"><span>${doubleCorruption ? "Two corruption implicits" : "Corruption implicit"}</span><strong>${formatProbabilityExact(branches.implicit)}</strong></div>
                 <div class="pc-calc-coverage-row"><span>Socket change</span><strong>${formatProbabilityExact(branches.sockets)}</strong></div>
-                <div class="pc-calc-coverage-row"><span>Rare reforge</span><strong>${formatProbabilityExact(branches.reforge)}</strong></div>
-                <div class="pc-calc-coverage-row"><span>No change beyond corruption</span><strong>${formatProbabilityExact(branches.unchanged)}</strong></div>
+                <div class="pc-calc-coverage-row"><span>${doubleCorruption ? "Bricked (modifiers changed)" : "Rare reforge"}</span><strong>${formatProbabilityExact(branches.reforge)}</strong></div>
+                <div class="pc-calc-coverage-row"><span>${doubleCorruption ? "Destroyed" : "No change beyond corruption"}</span><strong>${formatProbabilityExact("destroyed" in branches ? branches.destroyed : branches.unchanged)}</strong></div>
             </div>
-            <p class="pc-help">Every outcome corrupts the item. Socket changes keep their probability but are otherwise ignored.</p>
+            <p class="pc-help">${doubleCorruption ? "Brick and destruction count as failures. The implicit branch replaces all existing implicits with two sequential weighted rolls, excluding conflicting groups." : "Every outcome corrupts the item."} Socket changes keep their probability but are otherwise ignored.</p>
+            ${pairMarkup}
             <details open><summary>Implicit odds</summary>
-                <p class="pc-help">Roll chance includes the implicit branch's probability. Final chance also includes an existing implicit surviving.</p>
+                <p class="pc-help">Roll chance includes the implicit branch's probability. Final chance also includes an existing implicit surviving.${doubleCorruption ? " Both exclude bricked and destroyed items." : ""}</p>
                 <div class="pc-calc-implicit-scroll"><table class="pc-calc-table pc-calc-implicit-table"><thead><tr><th>Implicit</th><th>Weight</th><th>Roll chance</th><th>Final chance</th></tr></thead><tbody>${rows}</tbody></table></div>
             </details></section>`;
     }
@@ -2219,14 +2242,14 @@ export class PcCalculator extends HTMLElement {
                 0,
             );
         const isSuccess = (outcome: CalcOutcome) =>
-            outcome.is_goal ?? (outcome.rarity === rarityCode &&
-            satisfiedCount(outcome) >= required);
+            !outcome.terminal && (outcome.is_goal ?? (outcome.rarity === rarityCode &&
+            satisfiedCount(outcome) >= required));
         const probabilityWhere = (
             predicate: (outcome: CalcOutcome) => boolean,
         ) =>
             calc.outcomes.reduce(
                 (sum, outcome) =>
-                    predicate(outcome) ? sum + outcome.probability : sum,
+                    !outcome.terminal && predicate(outcome) ? sum + outcome.probability : sum,
                 0,
             );
 
@@ -2250,6 +2273,10 @@ export class PcCalculator extends HTMLElement {
             .join("");
 
         const missSignals = [
+            ...(["bricked", "destroyed"] as const).map(terminal => ({
+                label: terminal === "bricked" ? "Bricked (modifiers changed)" : "Destroyed",
+                probability: calc.outcomes.reduce((sum, row) => sum + (row.terminal === terminal ? row.probability : 0), 0),
+            })),
             {
                 label: "Below modifier threshold",
                 probability: probabilityWhere(
@@ -2326,8 +2353,8 @@ export class PcCalculator extends HTMLElement {
             .map(
                 (outcome) => `<tr class="${isSuccess(outcome) ? "is-success" : ""}">
                     <td class="pc-calc-p">${formatProbabilityExact(outcome.probability)}</td>
-                    <td>${RARITY_NAMES[outcome.rarity] ?? outcome.rarity}</td>
-                    <td>${outcome.prefixes}P/${outcome.suffixes}S</td>
+                    <td>${outcome.terminal ? titleCase(outcome.terminal) : RARITY_NAMES[outcome.rarity] ?? outcome.rarity}</td>
+                    <td>${outcome.terminal ? "—" : `${outcome.prefixes}P/${outcome.suffixes}S`}</td>
                     ${this.slots
                         .map((_, index) =>
                             slotStatusCell(outcome, index),
@@ -2346,7 +2373,7 @@ export class PcCalculator extends HTMLElement {
         return `<section class="pc-calc-section">
             <h4>Goal coverage</h4>
             <div class="pc-calc-coverage">${coverageRows}</div>
-            <p class="pc-help pc-calc-coverage-help">Modifier coverage only; exact success also checks rarity and the extra-modifier setting.</p>
+            <p class="pc-help pc-calc-coverage-help">Modifier coverage only; exact success also checks rarity and the extra-modifier setting.${calc.double_corruption_branches ? " Bricked and destroyed outcomes count as zero coverage and cannot succeed." : ""}</p>
             <div class="pc-calc-misses">
                 <h5>Miss signals <span>can overlap</span></h5>
                 ${missRows}
@@ -2645,6 +2672,7 @@ function panelForAction(id: string): CraftPanel {
     if (id.startsWith("harvest_")) return "harvest";
     if (id.startsWith("eldritch_")) return "eldritch";
     if (id === "awakener") return "awakener";
+    if (id === "double_corruption") return "temple";
     if (id === "dominance" || id.startsWith("influence_exalt:")) return "influenced";
     if (id === "unveil") return "unveil";
     if (id.startsWith("veiled_")) return "veiled";
@@ -2652,6 +2680,7 @@ function panelForAction(id: string): CraftPanel {
 }
 
 function slotStatusCell(outcome: CalcOutcome, index: number): string {
+    if (outcome.terminal) return '<td title="Terminal failure">—</td>';
     const blocked = (outcome.blocked >> index) & 1;
     const status = outcome.slots[index] ?? 0;
     if (status === 2) {
@@ -2709,5 +2738,5 @@ function escapeHtml(text: string): string {
 customElements.define("pc-calculator", PcCalculator);
 
 function isExpandedCurrency(action: string): boolean {
-    return action === "awakener" || action === "dominance" || action === "vaal";
+    return action === "awakener" || action === "dominance" || action === "vaal" || action === "double_corruption";
 }

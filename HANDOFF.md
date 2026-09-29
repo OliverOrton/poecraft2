@@ -1,5 +1,14 @@
 # Handoff
 
+Current follow-up: Oliver approved double-corruption Calculator odds with the
+changed-mod brick counted as failure and sequential weighted implicit rolls.
+Native odds and the Temple Calculator control now cover all four 25% branches,
+implicit marginals and unordered pairs, replacing existing implicits and excluding
+conflicting groups between draws. Brick/destruction cannot satisfy goals. Sampled
+influenced reforging remains unavailable. The currency execution record owns
+validation and the release receipt. Oliver requested live deployment after all
+this work is finished; the release is being prepared, not yet claimed live.
+
 The [currency follow-up](docs/active/2026-09-28-currency-expansion/README.md#currency-follow-up-2026-09-29)
 owns the current local scope and validation. Dominance now has native/Emulator/
 authored Simulator execution using 220 explicit elevation links. Vaal covers
@@ -9,15 +18,15 @@ craft and mod-pool categories. Game data is refreshed to RePoE 3.29.3.3 with
 immutable source archives and compiler-derived runtime identity.
 
 Oliver explicitly held Tempering/Tailoring because random weights are not public.
-Double corruption, jewel/unique transformations and memory-law gaps remain held.
+Sampled double corruption, jewel/unique transformations and memory-law gaps remain held.
 Oliver's next request explicitly enabled single-action Calculator work. Awakener,
 Dominance and Vaal now have native structural outcome odds; Vaal includes weighted
 implicit marginals and its 25% socket projection. The
 [Calculator receipt](docs/active/2026-09-28-currency-expansion/README.md#single-action-calculator-follow-up-2026-09-29)
 owns this delta. Multi-step exact evaluation and substantive solver integration
 remain separate; prior Foulborn and multi-item qualifications are unchanged. Work stays sequential
-on main, preserving root `0`. No push/deployment or old experiment allowance was
-requested. The execution record distinguishes remaining holds from delivered work.
+on main, preserving root `0`. Deployment is now authorized; no old experiment
+allowance was requested. The execution record distinguishes remaining holds from delivered work.
 Existing release and IC receipts below remain historical and unchanged.
 
 Current release (2026-09-28): Oliver requested a Calculator layout closer
