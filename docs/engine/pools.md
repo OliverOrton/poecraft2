@@ -178,9 +178,14 @@ debug functions in the public C ABI.
 ## Additional catalogue reach (2026-09-28)
 
 Reach kinds 10, 11 and 12 mean retained above-level influence, retained elevated
-modifier and retained Heist enchantment. These are transport/retention entries,
+modifier and retained enchantment. These are transport/retention entries,
 not members of the ordinary random pool. Elevated retention reads canonical names
 and class influence selector metadata, without inferring an upgrade relationship.
-Heist enchantment group membership preserves imported current and historical rows;
-zero absent weights never become a uniform action pool. Ordinary and generic-unveil
+Heist enchantment group membership preserves imported current and historical rows.
+The catalogue also retains Labyrinth enchantments selected by ordered base-tag
+weights, Harvest alternate-quality groups on weapons/armour, and Blight tower
+enchantments on rings. Their distinct `reach_via` sources drive the UI groups.
+These entries include historical modifiers, without asserting a currently
+available application recipe; zero absent weights never become a uniform action pool.
+Ordinary and generic-unveil
 pool boundaries are independently checked by the currency expansion witnesses.

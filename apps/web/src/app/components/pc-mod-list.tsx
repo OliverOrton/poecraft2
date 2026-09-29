@@ -5,7 +5,7 @@
  * family thresholds and emits stable goal-edit actions.
  */
 
-import { placeStableSlots, visibleModTags } from "../item-display";
+import { isCorrupted, placeStableSlots, visibleModTags } from "../item-display";
 
 export interface SlotMod {
     sessionModId: number;
@@ -18,6 +18,7 @@ export interface SlotMod {
 }
 
 export interface ConcreteModListModel {
+    itemFlags: number;
     memoryStrands?: number;
     lifecycle?: number;
     kind: "concrete";
@@ -95,6 +96,7 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
     const concreteIds = useRef(slotHistory?.concrete ?? {prefix: [] as Array<number | undefined>, suffix: [] as Array<number | undefined>});
     const targetIds = useRef(slotHistory?.target ?? {prefix: [] as Array<string | undefined>, suffix: [] as Array<string | undefined>});
     const target = model.kind === "target";
+    const corrupted = model.kind === "concrete" && isCorrupted(model.itemFlags);
     const count = model.prefixes.length + model.suffixes.length;
     const countLabel = target
         ? `${count + model.otherRequirements.length} requirements · ${model.prefixes.length}P / ${model.suffixes.length}S`
@@ -125,13 +127,14 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
             <ul className="pc-mod-slots">{rows}</ul>
         </section>;
     }
-    return <div className={`pc-mod-list ${target ? "pc-mod-list-target" : ""} pc-item-rarity-${model.rarity}`} data-mode={model.kind}>
+    return <div className={`pc-mod-list ${target ? "pc-mod-list-target" : ""} ${corrupted ? "is-corrupted" : ""} pc-item-rarity-${model.rarity}`} data-mode={model.kind}>
         <header className="pc-item-card-header">
             <GameIcon assetKey={model.baseKey ?? "name:" + model.baseName} size="item" />
             {model.baseName && <div className="pc-item-title-line"><strong>{model.baseName}</strong>{!!model.itemLevel && <span>iLvl {model.itemLevel}</span>}</div>}
             <div className="pc-mod-list-header">
                 <span className="pc-item-heading">
                     <span className={`pc-rarity pc-rarity-${model.rarity}`}>{model.rarity}</span>
+                    {corrupted && <span className="pc-item-corrupted">Corrupted</span>}
                     {model.kind === "concrete" && !!model.memoryStrands && <span>Memory strands: {model.memoryStrands}</span>}
                     {model.kind === "concrete" && !!model.lifecycle && <span>{model.lifecycle === 1 ? "Consumed" : "Destroyed"}</span>}
                     {target && <span className="pc-item-target-badge">TARGET</span>}

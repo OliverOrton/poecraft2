@@ -129,3 +129,72 @@ assert.deepEqual(
 );
 
 console.log("  ok - concrete and target slots keep stable presentation identities");
+
+// Exercise the rendered pool: equal family ids from different sources must not
+// collapse, and enchantment membership/on-item state must remain independent.
+const { parseHTML } = await import("linkedom");
+const dom = parseHTML("<!doctype html><html><body></body></html>");
+Object.defineProperty(globalThis, "navigator", {value: {userAgent: "linkedom"}, configurable: true});
+Object.assign(globalThis, {
+    window: dom.window, document: dom.document, HTMLElement: dom.HTMLElement,
+    customElements: dom.customElements, CustomEvent: dom.CustomEvent,
+});
+const { PcModPool } = await import("../src/app/components/pc-mod-pool");
+const { readItemCard } = await import("../src/app/item-preview");
+const { renderToStaticMarkup } = await import("react-dom/server");
+const { createElement } = await import("react");
+const { ItemCard } = await import("../src/app/components/pc-mod-list");
+const pool = new PcModPool();
+const mods = [
+    [4, "base_implicit"], [8, "implicit:corrupted"],
+    [9, "implicit:searing_exarch"], [9, "implicit:eater_of_worlds"],
+    [12, "retained:heist_enchantment"], [12, "retained:labyrinth_enchantment"],
+    [12, "retained:harvest_enchantment"], [12, "retained:blight_enchantment"],
+].map(([reach, via], id) => ({
+    session_mod_id: id, global_mod_id: id, key: `mod-${id}`, generation_type: -1,
+    reach_kind: Number(reach), reach_influence: -1, reach_via: String(via),
+    primary_group_id: 1, family_id: 1, family_tier_index: 1,
+    required_level: 1, group_display_name: "Shared group", text_lines: [`Modifier ${id}`], classification_tags: [],
+}));
+pool.setModel({mods, item: {
+    rarity: "rare", prefixOnItem: new Set(), suffixOnItem: new Set(),
+    implicitOnItem: new Set([1]), enchantmentOnItem: new Set([4]),
+    fracturedPrefixOnItem: new Set(), fracturedSuffixOnItem: new Set(), groupOnItem: new Set(),
+    maxPrefix: 3, maxSuffix: 3,
+}, poolWeights: new Map(), pool: null});
+const openSections = () => pool.querySelectorAll<HTMLButtonElement>('[data-section][aria-expanded="false"]').forEach(button => button.click());
+pool.setActiveTab("implicit");
+openSections();
+assert.equal(pool.querySelectorAll(".pc-mod-family").length, 4);
+assert.equal(pool.querySelectorAll(".pc-mod-family.is-on-item").length, 1);
+assert.match(pool.textContent!, /Vaal Implicits/);
+assert.match(pool.textContent!, /Eldritch: Searing Exarch Implicits/);
+assert.match(pool.textContent!, /Eldritch: Eater of Worlds Implicits/);
+assert.doesNotMatch(pool.textContent!, /Modifier [4-7]/);
+pool.setActiveTab("enchantment");
+openSections();
+assert.equal(pool.querySelectorAll(".pc-mod-family").length, 4);
+assert.equal(pool.querySelectorAll(".pc-mod-family.is-on-item").length, 1);
+for (const source of ["Heist", "Labyrinth", "Harvest", "Blight"]) assert.match(pool.textContent!, new RegExp(`${source} Enchantments`));
+assert.doesNotMatch(pool.textContent!, /Modifier [0-3]/);
+pool.querySelector<HTMLButtonElement>(".pc-mod-family-header")!.click();
+assert.equal(pool.querySelector<HTMLButtonElement>(".pc-mod-tier-btn")!.disabled, true);
+
+// Saved native flags reach the shared card, and a later uncorrupted state clears
+// both the label and border class (including when other item flags remain set).
+const client = {
+    createSession: async () => 1, importItem: async () => 2,
+    itemInfo: async () => ({rarity: "rare", item_flags: 5, memory_strands: 0, lifecycle: 0,
+        prefix_mod_ids: [], suffix_mod_ids: [], implicit_mod_ids: [], enchantment_mod_ids: [],
+        fractured_prefix_mod_ids: [], fractured_suffix_mod_ids: [], max_prefix: 3, max_suffix: 3}),
+    closeItem: async () => {}, closeSession: async () => {},
+} as unknown as import("../src/app/engine-client").EngineClient;
+const card = await readItemCard(client, 1, null,
+    {base: "base", itemLevel: 86, rarity: "rare", state: {}}, "Example item");
+assert.equal(card.itemFlags, 5);
+const corruptedCard = renderToStaticMarkup(createElement(ItemCard, {model: card}));
+assert.match(corruptedCard, /is-corrupted/);
+assert.match(corruptedCard, />Corrupted</);
+const clearedCard = renderToStaticMarkup(createElement(ItemCard, {model: {...card, itemFlags: 4}}));
+assert.doesNotMatch(clearedCard, /is-corrupted|>Corrupted</);
+console.log("  ok - modifier sources stay distinct and native corrupted flags reach item cards");

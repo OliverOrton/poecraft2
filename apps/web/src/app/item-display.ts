@@ -1,5 +1,10 @@
 import { Catalog } from "./engine-protocol";
 
+/** PC_ITEM_CORRUPTED in the engine's public item-state flags. */
+export function isCorrupted(itemFlags: number): boolean {
+    return (itemFlags & 1) !== 0;
+}
+
 /**
  * RePoE implicit tags include both broad labels players recognize from advanced
  * modifier descriptions and narrow implementation tags such as

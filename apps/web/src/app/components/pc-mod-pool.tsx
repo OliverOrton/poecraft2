@@ -53,6 +53,7 @@ interface FamilyView {
     selectedTier: number | undefined;
     category: Section;
     sourceLabel: string;
+    sourceKey: string;
     tags: string[];
     tiers: ModInfo[];
 }
@@ -65,7 +66,20 @@ const REACH_KIND_BASE_IMPLICIT = 4;
 const REACH_KIND_FOSSIL = 5;
 const REACH_KIND_VEILED = 6;
 const REACH_KIND_UNVEILED = 7;
+const REACH_KIND_VAAL_IMPLICIT = 8;
+const REACH_KIND_ELDRITCH_IMPLICIT = 9;
 const REACH_KIND_ENCHANTMENT = 12;
+
+const NON_EXPLICIT_SOURCES = [
+    { key: "base_implicit", label: "Base" },
+    { key: "implicit:corrupted", label: "Vaal" },
+    { key: "implicit:searing_exarch", label: "Eldritch: Searing Exarch" },
+    { key: "implicit:eater_of_worlds", label: "Eldritch: Eater of Worlds" },
+    { key: "retained:heist_enchantment", label: "Heist" },
+    { key: "retained:labyrinth_enchantment", label: "Labyrinth" },
+    { key: "retained:harvest_enchantment", label: "Harvest" },
+    { key: "retained:blight_enchantment", label: "Blight" },
+];
 
 export class PcModPool extends HTMLElement {
     private model: PoolModel | null = null;
@@ -79,6 +93,7 @@ export class PcModPool extends HTMLElement {
     private selectedTiers = new Map<string, number>();
     private sectionOpen: Record<string, boolean> = {
         base: true,
+        "source:base_implicit": true,
         crafted: false,
         essence: false,
         fossil: false,
@@ -225,7 +240,20 @@ export class PcModPool extends HTMLElement {
         const filtered = this.buildFamilies().filter(family => !search ||
             [family.label, family.sourceLabel, ...family.tags, ...family.tiers.flatMap(tier => [modTextLabel(tier.text_lines), tier.key])]
                 .some(value => value.toLowerCase().includes(search)));
-        if (this.tab === "implicit" || this.tab === "enchantment") return this.renderFamilyList(filtered);
+        if (this.tab === "implicit" || this.tab === "enchantment") {
+            if (!filtered.length) return this.renderFamilyList(filtered);
+            const sources = new Map<string, FamilyView[]>();
+            for (const family of filtered) {
+                sources.set(family.sourceKey, [...(sources.get(family.sourceKey) ?? []), family]);
+            }
+            const order = (key: string) => {
+                const index = NON_EXPLICIT_SOURCES.findIndex(source => source.key === key);
+                return index < 0 ? NON_EXPLICIT_SOURCES.length : index;
+            };
+            return [...sources].sort(([a], [b]) => order(a) - order(b) || a.localeCompare(b))
+                .map(([key, entries]) => this.renderSection("source:" + key,
+                    `${entries[0].sourceLabel} ${this.tab === "implicit" ? "Implicits" : "Enchantments"}`, entries));
+        }
         const inSection = (section: Section) => filtered.filter(family => family.category === section);
         const groups = new Map<string, FamilyView[]>();
         for (const family of inSection("influenced")) {
@@ -249,7 +277,7 @@ export class PcModPool extends HTMLElement {
         const tabFilter = (info: ModInfo): boolean => {
             if (info.reach_kind === REACH_KIND_ENCHANTMENT) return this.tab === "enchantment";
             if (this.tab === "enchantment") return false;
-            if (this.tab === "implicit") return info.reach_kind === REACH_KIND_BASE_IMPLICIT || info.generation_type === -1;
+            if (this.tab === "implicit") return [REACH_KIND_BASE_IMPLICIT, REACH_KIND_VAAL_IMPLICIT, REACH_KIND_ELDRITCH_IMPLICIT].includes(info.reach_kind);
             if (this.tab === "prefix") return info.generation_type === 0;
             return info.generation_type === 1;
         };
@@ -268,7 +296,8 @@ export class PcModPool extends HTMLElement {
                 : info.primary_group_id;
             const influence =
                 category === "influenced" ? `:${info.reach_influence}` : "";
-            const key = `${category}${influence}:${familyId}`;
+            const source = (this.tab === "implicit" || this.tab === "enchantment") ? `:${info.reach_via}` : "";
+            const key = `${category}${influence}${source}:${familyId}`;
             const slot = byFamily.get(key) ?? {
                 category,
                 familyId,
@@ -319,6 +348,7 @@ export class PcModPool extends HTMLElement {
                         : itemTier?.family_tier_index,
                 category: family.category,
                 sourceLabel: sourceLabel(first),
+                sourceKey: first.reach_via,
                 tags,
                 tiers: sorted,
             });
@@ -466,7 +496,12 @@ function categoryFor(reachKind: number): Section | null {
 
 function sourceLabel(info: ModInfo | undefined): string {
     if (!info) return "";
-    if (info.reach_kind === REACH_KIND_ENCHANTMENT) return "Enchantment";
+    const source = NON_EXPLICIT_SOURCES.find(source => source.key === info.reach_via);
+    if (source) return source.label;
+    if (info.reach_kind === REACH_KIND_ENCHANTMENT) return "Other";
+    if (info.reach_kind === REACH_KIND_BASE_IMPLICIT) return "Base";
+    if (info.reach_kind === REACH_KIND_VAAL_IMPLICIT) return "Vaal";
+    if (info.reach_kind === REACH_KIND_ELDRITCH_IMPLICIT) return "Eldritch";
     if (info.reach_kind === 10) return "Retained influence (above item level)";
     if (info.reach_kind === 11) return "Elevated (retained)";
     if (info.reach_kind === REACH_KIND_INFLUENCE) {

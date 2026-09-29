@@ -851,6 +851,36 @@ void build_session(SessionImpl& session) {
             session.flags[session.session_id_by_global_id.at(d.mod_global_ids[p])] &= ~kFlagImplicit;
         }
     }
+    // Retained enchantments from other sources belong in the catalogue too.
+    // Ordered base selectors identify Labyrinth rows; the named source groups
+    // identify Harvest quality and Blight ring enchants with no spawn weights.
+    // None of these entries supplies a random-roll law or ordinary pool member.
+    const auto armour = d.tag_id_by_name.find("armour");
+    const bool is_armour = armour != d.tag_id_by_name.end() && base_set.count(armour->second);
+    for (std::uint32_t p = 0; p < d.mod_count; ++p) {
+        if (!allowed_domains.count(d.mod_domain_code[p])) continue;
+        const int gen = d.mod_gen_type_code[p];
+        if (gen == d.gen_prefix_code || gen == d.gen_suffix_code) continue;
+        std::string via;
+        for (auto row = d.mod_group_offsets[p]; row < d.mod_group_offsets[p + 1]; ++row) {
+            const auto& group = d.string_at(d.group_key_sids[d.mod_group_ids_flat[row]]);
+            if ((group == "AlternateWeaponQuality" && is_weapon) ||
+                (group == "AlternateArmourQuality" && is_armour)) {
+                via = "retained:harvest_enchantment";
+            } else if (group == "BlightTowerEnchantment" && item_class_key == "Ring") {
+                via = "retained:blight_enchantment";
+            } else if (group == "SkillEnchantment" || group == "TriggerEnchantment" ||
+                       group == "ConditionalBuffEnchantment" || group == "BuffEnchantment") {
+                const auto spawn = first_matching(
+                    d.spawn_offsets, d.spawn_tag_ids, d.spawn_weights, p, base_set, 0);
+                if (spawn.weight > 0 && spawn.tag_id != default_tag_id)
+                    via = "retained:labyrinth_enchantment";
+            }
+        }
+        if (via.empty()) continue;
+        add_mod(p, ReachKind::RetainedEnchantment, via);
+        session.flags[session.session_id_by_global_id.at(d.mod_global_ids[p])] &= ~kFlagImplicit;
+    }
     session.mod_count = static_cast<std::uint32_t>(session.global_index.size());
     session.words = pc_bitset_words(session.mod_count);
     if (!d.mod_group_ids_flat.empty()) {

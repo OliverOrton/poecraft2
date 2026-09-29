@@ -204,6 +204,7 @@ export class PcCalculator extends HTMLElement {
     private itemImplicits: SlotMod[] = [];
     private itemEnchantments: SlotMod[] = [];
     private itemLifecycle = 0;
+    private itemFlags = 0;
     private itemMaxPrefix = 3;
     private itemMaxSuffix = 3;
     private activeContext: "input" | "goal" = "goal";
@@ -1244,6 +1245,7 @@ export class PcCalculator extends HTMLElement {
         this.itemRarity = info.rarity as string;
         this.itemMemoryStrands = Number(info.memory_strands ?? 0);
         this.itemLifecycle = Number(info.lifecycle ?? 0);
+        this.itemFlags = Number(info.item_flags ?? 0);
         this.itemEnchantments = ((info.enchantment_mod_ids as number[]) ?? []).map(id => this.toSlot(id, new Set()));
         this.itemInfluences = influenceLabels(
             Number(info.generic_influence_bits ?? 0),
@@ -1336,6 +1338,7 @@ export class PcCalculator extends HTMLElement {
             baseName: this.baseDisplayName(),
             itemLevel: this.itemLevel,
             rarity: this.itemRarity,
+            itemFlags: this.itemFlags,
             memoryStrands: this.itemMemoryStrands,
             influences: this.itemInfluences,
             implicits: this.itemImplicits,

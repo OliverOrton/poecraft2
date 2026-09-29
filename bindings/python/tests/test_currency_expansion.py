@@ -345,6 +345,31 @@ def test_dominance_authored_strategy_costs_and_exact_boundary():
                 assert result.summary["known_total_cost"] == 7000
 
 
+@pytest.mark.parametrize("name,sources", [
+    ("Vaal Regalia", {"heist", "harvest"}),
+    ("Archdemon Crown", {"labyrinth", "harvest"}),
+    ("Sorcerer Gloves", {"labyrinth", "harvest"}),
+    ("Sorcerer Boots", {"labyrinth", "harvest"}),
+    ("Metadata/Items/Belts/Belt4", {"labyrinth"}),
+    ("Iron Ring", {"blight"}),
+    ("Jewelled Foil", {"heist", "harvest"}),
+    ("Titanium Spirit Shield", {"harvest"}),
+    ("Heavy Arrow Quiver", set()),
+])
+def test_enchantment_catalogue_sources_are_base_specific_and_never_random(name, sources):
+    with sqlite3.connect(f"file:{ROOT / 'data/sqlite/poecraft.db'}?mode=ro", uri=True) as c, load_data(ARTIFACT) as data:
+        c.row_factory = sqlite3.Row
+        base = resolve_base_selection(c, name, 86)
+        with data.create_session(base.metadata_path, 86) as session, session.create_action_context(19) as ctx:
+            enchants = [m for i in range(session.mod_count) if (m := session.mod_info(i)).reach_kind == 12]
+            assert {m.reach_via for m in enchants} == {f"retained:{source}_enchantment" for source in sources}
+            item = session.create_item("rare")
+            pool = {r["session_mod_id"] for r in ctx.debug_pool(item, "exalt")}
+            assert not pool.intersection(m.session_mod_id for m in enchants)
+            assert not set(item.implicit_mod_ids).intersection(m.session_mod_id for m in enchants)
+            assert all(m.generation_type == -1 for m in enchants)
+
+
 def test_retained_elevated_enchantments_and_member_unveils_are_not_roll_pool():
     with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(19) as ctx:
         mods = [session.mod_info(i) for i in range(session.mod_count)]

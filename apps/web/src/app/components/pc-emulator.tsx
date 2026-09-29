@@ -700,6 +700,7 @@ export class PcEmulator extends HTMLElement {
             baseName: this.baseDisplayName(),
             itemLevel: this.itemLevel,
             rarity: info.rarity as string,
+            itemFlags: Number(info.item_flags ?? 0),
             memoryStrands: Number(info.memory_strands ?? 0),
             lifecycle: Number(info.lifecycle ?? 0),
             influences: influenceLabels(

@@ -22,6 +22,7 @@ function baseLabel(path: string): string {
 
 import { disconnectReact, renderReact } from "../react-host";
 import { GameIcon, GameItemName } from "./pc-game-icon";
+import { isCorrupted } from "../item-display";
 
 export class PcStash extends HTMLElement {
     private unsubscribe: (() => void) | null = null;
@@ -62,13 +63,14 @@ export class PcStash extends HTMLElement {
                 const strategy = isStrategyStashRecord(record);
                 const graph = strategy && isStrategyDocument(record.strategy) ? record.strategy : null;
                 const lifecycle = !strategy ? Number((record.state as {lifecycle?: number})?.lifecycle ?? 0) : 0;
+                const corrupted = !strategy && isCorrupted(Number((record.state as {item_flags?: number})?.item_flags ?? 0));
                 const routes = graph?.edges.filter(edge => graph.nodes.find(node => node.id === edge.to)?.terminal === "success").length ?? 0;
                 const detail = strategy ? graph ? `${graph.nodes.length} nodes · ${routes} success route${routes === 1 ? "" : "s"}` : "Invalid saved strategy"
                     : <><GameItemName assetKey={record.base} fallback={baseLabel(record.base)} /> · iLvl {record.itemLevel}{lifecycle ? lifecycle === 1 ? " · Consumed" : " · Destroyed" : ""}</>;
                 const entries = [["open", "Edit"], ["copy", "Import copy"], ...(!strategy ? [["odds", "Odds"]] : []), ["delete", "Delete"]];
-                return <div className="pc-stash-item" key={record.id}>
+                return <div className={`pc-stash-item ${corrupted ? "is-corrupted" : ""}`} key={record.id}>
                     <GameIcon assetKey={strategy ? graph?.base_state.base_key ?? "" : record.base} size="item" />
-                    <div className="pc-stash-meta"><span className="pc-stash-name">{record.name}</span><span className="pc-stash-base">{detail}</span></div>
+                    <div className="pc-stash-meta"><span className="pc-stash-name">{record.name} {corrupted && <span className="pc-item-corrupted">Corrupted</span>}</span><span className="pc-stash-base">{detail}</span></div>
                     <div className="pc-stash-actions">{entries.map(([action, label]) => <button key={action}
                         disabled={!!lifecycle && action !== "delete"}
                         onClick={() => void this.handle(action, record)}>{label}</button>)}</div>

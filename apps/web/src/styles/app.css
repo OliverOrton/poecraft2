@@ -941,6 +941,25 @@ select {
     --pc-item-rarity: var(--pc-rare);
 }
 
+.pc-mod-list.is-corrupted,
+.pc-stash-item.is-corrupted {
+    border-color: #b94545;
+}
+
+.pc-mod-list.is-corrupted .pc-item-card-header {
+    border-bottom-color: #793737;
+}
+
+.pc-item-corrupted {
+    padding: 1px 5px;
+    border: 1px solid #793737;
+    border-radius: 2px;
+    color: #f08080;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
 .pc-item-card-header {
     display: block;
     margin: -10px -10px 8px;

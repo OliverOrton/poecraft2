@@ -213,3 +213,10 @@ Enchantment membership comes from the native reach kind, never the absence of a
 prefix/suffix side. Their on-item selections use separate item arrays. In crafting
 controls, Vaal Orb belongs to Basic currency, Dominance to Influenced, and Temple
 and Enchantments are separate categories.
+
+Implicits have collapsible Base, Vaal, Searing Exarch and Eater of Worlds groups.
+Enchantments group the native catalogue by Heist, Labyrinth, Harvest and Blight
+source, showing sources represented on the selected base. Families from different
+sources remain separate even when they share an exclusion group. Concrete item
+cards and Stash rows show a red border and Corrupted label from the native item
+flag; refreshing or undoing the state updates both.

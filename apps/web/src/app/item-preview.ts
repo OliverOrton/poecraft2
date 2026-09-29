@@ -19,6 +19,7 @@ export async function readItemCard(client: EngineClient, data: number, catalog: 
                 classificationTags: mod.classification_tags, fractured: fractured.has(id), crafted: mod.reach_kind === 2};
         }));
         return {kind: "concrete", baseKey: snapshot.base, baseName: name, itemLevel: snapshot.itemLevel,
+            itemFlags: Number(info.item_flags ?? 0),
             rarity: String(info.rarity), memoryStrands: Number(info.memory_strands ?? 0), lifecycle: Number(info.lifecycle ?? 0),
             influences: influenceLabels(Number(info.generic_influence_bits), Number(info.searing_exarch_tier), Number(info.eater_of_worlds_tier), catalog),
             prefixes: await slots(info.prefix_mod_ids as number[]), suffixes: await slots(info.suffix_mod_ids as number[]),
