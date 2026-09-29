@@ -74,9 +74,13 @@ Veiled currency exposes Veiled Chaos and Veiled Exalt. A successful acquisition
 opens the separate Unveil panel. Its Unveil button reveals the already-stored
 offers without sampling, charging currency or changing item state. The player
 explicitly selects a modifier card and confirms; only confirmation sends that
-`mod_key` to the native Unveil action. Panel navigation retains the revealed
-offers and selection; a changed offer set or restored/imported item clears stale
-selection. Veiled placeholders use decorative script in the shared item card.
+`mod_key` to the native Unveil action. Revealing locks other crafts, direct item
+edits, base changes, history navigation and item export/save until confirmation
+successfully consumes the offers. Merely selecting a card or a refused action
+does not release the lock. The pending choice is persisted before offers become
+visible; draft recovery reopens the same offers with editing still locked.
+The item and modifier pool remain readable. Veiled placeholders use decorative
+script in the shared item card.
 The Calculator has its own Unveil action panel for existing exact calculation.
 
 ## Solver Support

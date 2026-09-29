@@ -66,6 +66,8 @@ export interface DraftRecord {
     state: unknown | null;
     history: { action: string; applied: boolean; added: number; removed: number }[];
     undoHistory?: HistoryData<EmulatorHistoryState>;
+    /** The Emulator has revealed its stored offers and must finish that choice. */
+    unveilRevealed?: boolean;
     savedStateKey?: string | null;
     /** Stash id this draft was last saved as, if any. */
     savedRef: string | null;

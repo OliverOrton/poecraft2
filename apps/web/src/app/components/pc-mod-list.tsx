@@ -21,6 +21,7 @@ export interface SlotMod {
 
 export interface ConcreteModListModel {
     itemFlags: number;
+    readOnly?: boolean;
     memoryStrands?: number;
     lifecycle?: number;
     kind: "concrete";
@@ -113,7 +114,7 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
             concreteIds.current[side] = layout.ids;
             length = layout.slots.length;
             rows = layout.slots.map((mod, index) => mod
-                ? <ConcreteSlot key={index} mod={mod} side={side} index={index} onFracture={onFracture} />
+                ? <ConcreteSlot key={index} mod={mod} side={side} index={index} onFracture={model.readOnly ? undefined : onFracture} />
                 : <EmptySlot key={index} side={side} index={index} target={false} />);
         } else {
             const layout = placeStableSlots(mods as TargetSlotMod[], Math.max(capacity, mods.length), targetIds.current[side], mod => mod.familyModKey);
@@ -185,9 +186,9 @@ function ConcreteSlot({ mod, side, index, onFracture }: {
     const tags = visibleModTags(mod.classificationTags).map(formatTag);
     return <li className={`pc-mod-slot pc-mod-${side} is-filled ${mod.crafted ? "is-crafted" : ""} ${mod.fractured ? "is-fractured" : ""}`}
         data-side={side === "implicit" ? undefined : side} data-mod-id={mod.sessionModId} data-mod-key={mod.key} data-fractured={mod.fractured}
-        title={[...mod.textLines.map(formatModText), side === "implicit" ? "" : mod.fractured ? "Fractured modifier" : "Right-click to mark this modifier as fractured"].filter(Boolean).join("\n")}
+        title={[...mod.textLines.map(formatModText), side === "implicit" ? "" : mod.fractured ? "Fractured modifier" : onFracture ? "Right-click to mark this modifier as fractured" : ""].filter(Boolean).join("\n")}
         onContextMenu={event => {
-            if (side === "implicit") return;
+            if (side === "implicit" || !onFracture) return;
             event.preventDefault();
             if (!mod.fractured) onFracture?.({key: mod.key, modId: mod.sessionModId, side});
         }}>
@@ -242,6 +243,9 @@ export class PcModList extends HTMLElement {
     private slotHistory: ItemSlotHistory = {concrete: {prefix: [], suffix: []}, target: {prefix: [], suffix: []}};
     connectedCallback(): void { if (this.model) this.setModel(this.model); }
     disconnectedCallback(): void { disconnectReact(this); }
+    setReadOnly(readOnly: boolean): void {
+        if (this.model?.kind === "concrete" && Boolean(this.model.readOnly) !== readOnly) this.setModel({...this.model, readOnly});
+    }
     setModel(model: PcModListModel): void {
         this.model = model;
         const emit = (name: string, detail: unknown) => this.dispatchEvent(new CustomEvent(name, {bubbles: true, detail}));

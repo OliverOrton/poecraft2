@@ -185,6 +185,7 @@ export class PcEmulator extends HTMLElement {
         }
         this.item = item;
         const snapshot = await this.snapshot();
+        this.restoreUnveilChoice(Boolean(draft?.unveilRevealed));
         const entry = draft?.undoHistory?.entries[draft.undoHistory.cursor]?.entry ?? {
             action: "Opened item", applied: true, added: 0, removed: 0, detail: "starting state",
         };
@@ -566,6 +567,7 @@ export class PcEmulator extends HTMLElement {
             state: snapshot.state,
             history: this.history,
             undoHistory: history,
+            unveilRevealed: this.awaitingUnveilChoice,
             savedStateKey: this.savedStateKey,
             savedRef: this.savedRef,
             savedName: this.savedName,
@@ -581,6 +583,10 @@ export class PcEmulator extends HTMLElement {
     // --- save / save-as / duplicate ----------------------------------------
 
     private async save(): Promise<boolean> {
+        if (this.awaitingUnveilChoice) {
+            this.setStatus("Confirm an unveiled modifier before saving this item.");
+            return false;
+        }
         if (!this.savedRef) {
             return this.saveAs();
         }
@@ -820,10 +826,14 @@ export class PcEmulator extends HTMLElement {
         this.querySelectorAll<HTMLElement>(".pc-advanced-crafts, pc-mod-pool, pc-mod-list").forEach(element => {
             element.inert = busy;
         });
+        this.querySelector<PcModPool>("pc-mod-pool")?.setInteractionMode(this.awaitingUnveilChoice ? "inspect" : "direct");
+        this.querySelector<PcModList>("pc-mod-list")?.setReadOnly(this.awaitingUnveilChoice);
         this.querySelectorAll<HTMLButtonElement>(
             "button[data-cmd], button[data-craft-panel], button[data-simple-action], button[data-config-action], button[data-bestiary-action], button[data-fossil-add], button[data-fossil-remove]",
         ).forEach((button) => {
-            if (busy) {
+            const locked = this.awaitingUnveilChoice &&
+                button.dataset.configAction !== "unveil" && button.dataset.craftPanel !== "unveil";
+            if (busy || locked) {
                 button.dataset.disabledBeforeBusy ??= String(button.disabled);
                 button.disabled = true;
             } else if (button.dataset.disabledBeforeBusy !== undefined) {
@@ -837,15 +847,19 @@ export class PcEmulator extends HTMLElement {
     private syncHistoryButtons(): void {
         for (const command of ["undo", "redo"] as const) {
             const button = this.querySelector<HTMLButtonElement>(`[data-cmd="${command}"]`);
-            if (button) button.disabled = this.busy || !(command === "undo" ? this.undoHistory.canUndo : this.undoHistory.canRedo);
+            if (button) button.disabled = this.busy || this.awaitingUnveilChoice || !(command === "undo" ? this.undoHistory.canUndo : this.undoHistory.canRedo);
         }
         this.querySelectorAll<HTMLButtonElement>("[data-history-index]").forEach(button => {
-            button.disabled = this.busy || Number(button.dataset.historyIndex) === this.undoHistory.cursor;
+            button.disabled = this.busy || this.awaitingUnveilChoice || Number(button.dataset.historyIndex) === this.undoHistory.cursor;
         });
     }
 
-    private async guard(work: () => Promise<void>): Promise<void> {
+    private async guard(work: () => Promise<void>, intent: "edit" | "inspect" | "unveil" = "edit"): Promise<void> {
         if (this.busy || this.disposed) {
+            return;
+        }
+        if (this.awaitingUnveilChoice && intent === "edit") {
+            this.setStatus("Confirm an unveiled modifier before modifying this item.");
             return;
         }
         const restoreFocus = this.contains(document.activeElement);
@@ -916,6 +930,7 @@ export class PcEmulator extends HTMLElement {
         const unveils = this.veiledOptions.map(id => this.modCache[id]).filter((mod): mod is ModInfo => Boolean(mod))
             .map(mod => ({key: mod.key, textLines: mod.text_lines.length ? mod.text_lines : [mod.key], side: mod.generation_type === 0 ? "prefix" as const : "suffix" as const}));
         if (!unveils.some(mod => mod.key === this.mechanicValues.get("unveil"))) this.mechanicValues.delete("unveil");
+        if (this.awaitingUnveilChoice) this.activeCraftPanel = "unveil";
         host.setModel({
             mode: "emulator", catalog: this.catalog, panel: this.activeCraftPanel,
             itemClass: this.bases.find(base => base.path === this.base)?.item_class_key,
@@ -929,11 +944,16 @@ export class PcEmulator extends HTMLElement {
             unveilRevealed: this.unveilRevealed,
             onRevealUnveil: () => {
                 if (this.busy || !unveils.length) return;
-                this.unveilRevealed = true;
-                this.renderMechanicControls();
-                host.querySelector<HTMLInputElement>(".pc-unveil-choice input")?.focus();
+                void this.guard(() => this.revealUnveil()).then(() => {
+                    host.querySelector<HTMLInputElement>(".pc-unveil-choice input")?.focus();
+                });
             },
-            onPanel: panel => { this.activeCraftPanel = panel; this.renderMechanicControls(); if (panel === "awakener") void this.guard(() => this.loadDonors()); },
+            onPanel: panel => {
+                if (this.awaitingUnveilChoice && panel !== "unveil") return;
+                this.activeCraftPanel = panel;
+                this.renderMechanicControls();
+                if (panel === "awakener") void this.guard(() => this.loadDonors());
+            },
             onValue: (name, value) => {
                 this.mechanicValues.set(name, value);
                 if (name === "awakener-donor") { void this.guard(() => this.loadDonors()); return; }
@@ -959,7 +979,7 @@ export class PcEmulator extends HTMLElement {
                     if (!this.unveilRevealed || !unveils.some(mod => mod.key === value("unveil"))) return;
                     action = {type, mod_key: value("unveil")};
                 }
-                void this.guard(() => this.applyConfiguredAction(action));
+                void this.guard(() => this.applyConfiguredAction(action), type === "unveil" ? "unveil" : "edit");
             },
             onAddFossil: key => {
                 if (key && this.selectedFossils.length < 4 && !this.selectedFossils.includes(key)) {
@@ -972,6 +992,30 @@ export class PcEmulator extends HTMLElement {
             },
         });
         this.setBusy(this.busy);
+    }
+
+    private get awaitingUnveilChoice(): boolean {
+        return this.unveilRevealed && this.veiledOptions.length > 0;
+    }
+
+    private restoreUnveilChoice(revealed: boolean): void {
+        this.unveilOfferKey = JSON.stringify([this.item, this.session, this.veiledOptions]);
+        this.unveilRevealed = revealed && this.veiledOptions.length > 0;
+        this.mechanicValues.delete("unveil");
+        if (this.awaitingUnveilChoice) this.activeCraftPanel = "unveil";
+    }
+
+    private async revealUnveil(): Promise<void> {
+        this.unveilRevealed = true;
+        // Persist the pending choice before displaying offers, so reload cannot
+        // turn an already-observed item back into an editable veiled item.
+        try {
+            await this.persist();
+        } catch (error) {
+            this.unveilRevealed = false;
+            throw error;
+        }
+        this.renderMechanicControls();
     }
 
 
@@ -1001,6 +1045,7 @@ export class PcEmulator extends HTMLElement {
 
         this.querySelectorAll<HTMLButtonElement>("button[data-cmd]").forEach((button) => {
             button.addEventListener("click", () => {
+                if (this.busy || this.awaitingUnveilChoice) return;
                 const cmd = button.dataset.cmd;
                 if (cmd === "change-base") {
                     this.pickerOpen = true;
@@ -1079,7 +1124,7 @@ export class PcEmulator extends HTMLElement {
             void this.guard(() => this.removeMod(detail.modId, detail.side));
         });
         this.modPool.addEventListener("tab-change", () => {
-            void this.guard(() => this.refresh());
+            void this.guard(() => this.refresh(), "inspect");
         });
     }
 

@@ -34,7 +34,7 @@ export function UnveilPanel({options, revealed, selectedKey, onReveal, onSelect,
     return <section className="pc-unveil-panel" aria-labelledby={id}>
         <header className="pc-unveil-heading"><span aria-hidden="true">◇</span><h3 id={id}>Unveiling</h3><span aria-hidden="true">◇</span></header>
         <p className="pc-unveil-instruction" aria-live="polite">{!options.length ? "This item has no veiled modifier."
-            : revealed ? "Choose one modifier to unveil." : "A hidden power lies beneath the veil."}</p>
+            : revealed ? "Choose and confirm a modifier to continue crafting." : "A hidden power lies beneath the veil."}</p>
         {!options.length ? <div className="pc-unveil-empty"><VeiledInscription />
             <button type="button" onClick={onVeiledCurrency}>Veiled currency</button>
         </div> : <>
