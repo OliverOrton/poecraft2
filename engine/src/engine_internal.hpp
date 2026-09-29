@@ -221,6 +221,8 @@ struct DataImpl {
     // stats (used for capacity checks and display-family identity)
     std::vector<std::uint32_t> stat_offsets; // mod_count + 1
     std::vector<std::uint32_t> stat_key_sids; // flat
+    std::vector<std::int32_t> stat_min_values, stat_max_values;
+    std::unordered_map<std::uint32_t, std::uint32_t> influence_elevations; // global mod IDs
 
     // bench options
     std::uint32_t bench_count = 0;

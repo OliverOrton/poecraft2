@@ -206,3 +206,10 @@ Stash originals. Saved identity excludes accidental self-donation. Memory state
 edits record history without currency cost. Consumed/destroyed Stash cards cannot
 be opened as live inputs. Stable-key import boundaries are documented in
 [Item state](../engine/items.md#export-import-and-cloning).
+
+
+The modifier pool has separate Prefixes, Suffixes, Implicits and Enchantments tabs.
+Enchantment membership comes from the native reach kind, never the absence of a
+prefix/suffix side. Their on-item selections use separate item arrays. In crafting
+controls, Vaal Orb belongs to Basic currency, Dominance to Influenced, and Temple
+and Enchantments are separate categories.

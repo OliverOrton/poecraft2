@@ -541,12 +541,28 @@ void run_session_builder_tests(const char* artifact_dir,
         (repo_root / "fixtures/economy/price-key-catalog-v1.json").string());
     for (const auto& [key, unused] : price_catalog.at("direct").object)
         if (!current_price_keys.count(key)) explicit_missing_price_keys.insert(key);
+    // Refreshing game data adds bench recipes independently of this historical
+    // quote. Enumerate the current canonical bench catalogue, keeping those
+    // unquoted recipes explicitly missing rather than assigning a free cost.
+    const auto current_data = load_fixture(std::string(artifact_dir) + "/game-data.json");
+    const auto current_strings = load_fixture(std::string(artifact_dir) + "/strings.json");
+    const auto& global_ids = current_data.at("mods").at("global_mod_ids").array;
+    const auto& key_sids = current_data.at("mods").at("key_string_ids").array;
+    std::map<std::int64_t, std::string> keys_by_id;
+    for (std::size_t i = 0; i < global_ids.size(); ++i)
+        keys_by_id.emplace(global_ids[i].as_int(),
+            current_strings.at("strings").array.at(key_sids[i].as_int()).as_string());
+    for (const auto& id : current_data.at("bench_options").at("global_mod_ids").array) {
+        if (id.as_int() < 0) continue;
+        const auto key = "bench:" + keys_by_id.at(id.as_int());
+        if (!current_price_keys.count(key)) explicit_missing_price_keys.insert(key);
+    }
 
     uint32_t base_count = 0;
     pc_data_summary summary;
     pc_data_get_summary(data, &summary, &error);
     base_count = summary.base_item_count;
-    PC_CHECK(summary.ordinary_session_base_count == 979);
+    PC_CHECK(summary.ordinary_session_base_count == 1079);
 
     bool found_armour = false, found_weapon = false, found_jewel = false,
          found_abyss = false, found_implicit = false;
@@ -1129,7 +1145,7 @@ void run_session_builder_tests(const char* artifact_dir,
         built, with_mods, found_armour, found_weapon, found_jewel, found_abyss,
         feasible_goal_witnesses, price_accounted_vocabularies,
         compiled_evaluator_smokes);
-    PC_CHECK(built == 979);
+    PC_CHECK(built == 1079);
     PC_CHECK(feasible_goal_witnesses == built);
     PC_CHECK(price_accounted_vocabularies == built);
     PC_CHECK(compiled_evaluator_smokes == built);

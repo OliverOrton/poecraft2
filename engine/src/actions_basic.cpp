@@ -528,9 +528,7 @@ void remove_implicit_at(pc_item_state* item, std::uint32_t index) {
 
 struct KeptSlot {
     int side;
-    std::uint32_t mod_id;
-    std::uint16_t group_id;
-    std::uint8_t flags;
+    pc_mod_slot value;
 };
 
 // Collect the slots a reforge must keep: fractured slots, and every slot on a
@@ -546,8 +544,7 @@ std::vector<KeptSlot> collect_preserved(
         for (std::uint8_t i = 0; i < count; ++i) {
             const bool fractured = slots[i].flags & PC_MOD_SLOT_FRACTURED;
             if (fractured || locked) {
-                kept.push_back({side, slots[i].mod_id, slots[i].group_id,
-                                slots[i].flags});
+                kept.push_back({side, slots[i]});
             }
         }
     };
@@ -561,10 +558,10 @@ void restore_slots(pc_item_state* item, const std::vector<KeptSlot>& kept) {
     pc_item_clear_side(item, PC_SIDE_SUFFIX);
     for (const KeptSlot& k : kept) {
         pc_mod_slot* slot = nullptr;
-        if (pc_item_add_mod(item, k.side, k.mod_id, k.group_id, k.flags,
+        if (pc_item_add_mod(item, k.side, k.value.mod_id, k.value.group_id, k.value.flags,
                             &slot) == PC_RESULT_OK &&
             slot != nullptr) {
-            // flags already carried (fractured etc.)
+            *slot = k.value;
         }
     }
 }
@@ -692,13 +689,11 @@ ActionOutcome do_scour(
     if (prefix_locked && !suffix_locked) {
         // keep prefixes, drop suffixes
         for (std::uint8_t i = 0; i < item->prefix_count; ++i) {
-            kept.push_back({PC_SIDE_PREFIX, item->prefixes[i].mod_id,
-                            item->prefixes[i].group_id, item->prefixes[i].flags});
+            kept.push_back({PC_SIDE_PREFIX, item->prefixes[i]});
         }
     } else if (suffix_locked && !prefix_locked) {
         for (std::uint8_t i = 0; i < item->suffix_count; ++i) {
-            kept.push_back({PC_SIDE_SUFFIX, item->suffixes[i].mod_id,
-                            item->suffixes[i].group_id, item->suffixes[i].flags});
+            kept.push_back({PC_SIDE_SUFFIX, item->suffixes[i]});
         }
     } else {
         // keep only fractured slots
@@ -706,8 +701,7 @@ ActionOutcome do_scour(
                                   std::uint8_t count) {
             for (std::uint8_t i = 0; i < count; ++i) {
                 if (slots[i].flags & PC_MOD_SLOT_FRACTURED) {
-                    kept.push_back({side, slots[i].mod_id, slots[i].group_id,
-                                    slots[i].flags});
+                    kept.push_back({side, slots[i]});
                 }
             }
         };
@@ -1195,22 +1189,117 @@ void apply_fossil_specials(
     }
 }
 
+void roll_mod_values(ActionContextImpl& context, pc_mod_slot& slot) {
+    const auto& session = *context.session;
+    const auto& data = *session.data;
+    const auto p = session.global_index.at(slot.mod_id);
+    const auto begin = data.stat_offsets[p], end = data.stat_offsets[p + 1];
+    if (end - begin > PC_MAX_ROLL_VALUES)
+        throw std::invalid_argument("Modifier roll count exceeds item capacity");
+    slot.roll_count = static_cast<std::uint8_t>(end - begin);
+    std::fill(std::begin(slot.rolls), std::end(slot.rolls), 0);
+    for (auto i = begin; i < end; ++i) {
+        const auto low = data.stat_min_values.at(i), high = data.stat_max_values.at(i);
+        if (low > high) throw std::invalid_argument("Invalid modifier value range");
+        slot.rolls[i - begin] = static_cast<std::int32_t>(
+            static_cast<std::int64_t>(low) + context.rng.next_below(
+                static_cast<std::uint64_t>(static_cast<std::int64_t>(high) - low) + 1));
+    }
+}
+
+ActionOutcome dominance(ActionContextImpl& context, pc_item_state* item) {
+    const auto& s = *context.session;
+    const auto& d = *s.data;
+    const auto& cls = d.string_at(d.item_class_key_sid.at(d.item_class_index_by_id.at(d.base_item_class_id[s.base_index])));
+    if (item->rarity != PC_RARITY_MAGIC && item->rarity != PC_RARITY_RARE) return {};
+    if (cls != "Helmet" && cls != "Body Armour" && cls != "Gloves" && cls != "Boots") return {};
+    struct Choice { int side; std::uint8_t index; std::uint32_t upgrade; };
+    std::vector<Choice> choices;
+    for (int side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+        if (side_locked(s, item, side)) continue;
+        const auto* slots = side == PC_SIDE_PREFIX ? item->prefixes : item->suffixes;
+        const auto count = side == PC_SIDE_PREFIX ? item->prefix_count : item->suffix_count;
+        for (std::uint8_t i = 0; i < count; ++i) {
+            const auto id = slots[i].mod_id;
+            if (id >= s.mod_count || slots[i].flags & (PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED | PC_MOD_SLOT_VEILED)) continue;
+            const int influence = s.influence_code[id];
+            if (influence <= 0) continue;
+            const auto p = s.global_index[id], global = d.mod_global_ids[p];
+            auto destination = kNoMod;
+            if (std::any_of(d.influence_elevations.begin(), d.influence_elevations.end(),
+                    [&](const auto& link) { return link.second == global; })) {
+                destination = id; // Already elevated: reroll the values.
+            } else {
+                const auto selector = s.selector_tag_by_influence.at(influence);
+                if (selector < 0 || !active_spawn_weight(s, id, selector)) continue; // Retired tier.
+                const auto elevation = d.influence_elevations.find(global);
+                if (elevation != d.influence_elevations.end()) {
+                    const auto found = s.session_id_by_global_id.find(elevation->second);
+                    if (found != s.session_id_by_global_id.end()) destination = found->second;
+                } else {
+                    // Tier identity is canonical mod type, generation side and influence.
+                    // Item level limits rolling a tier, but not upgrading to it.
+                    auto next_level = std::numeric_limits<std::uint32_t>::max();
+                    bool ambiguous = false;
+                    for (std::uint32_t candidate = 0; candidate < s.mod_count; ++candidate) {
+                        const auto q = s.global_index[candidate];
+                        if (s.gen_type[candidate] != side || s.influence_code[candidate] != influence ||
+                            d.mod_type_key_sid[q] != d.mod_type_key_sid[p] ||
+                            d.mod_required_level[q] <= d.mod_required_level[p] ||
+                            !active_spawn_weight(s, candidate, selector)) continue;
+                        const auto level = d.mod_required_level[q];
+                        if (level < next_level) { next_level = level; destination = candidate; ambiguous = false; }
+                        else if (level == next_level) ambiguous = true;
+                    }
+                    if (ambiguous) throw std::invalid_argument("Dominance tier progression is ambiguous for this modifier");
+                }
+            }
+            if (destination == kNoMod || s.gen_type[destination] != side)
+                throw std::invalid_argument("Dominance upgrade mapping is unavailable for this modifier in the current data");
+            choices.push_back({side, i, destination});
+        }
+    }
+    if (choices.size() < 2) return {};
+    const auto saved_rng = context.rng;
+    try {
+        // Uniform ordered pair of distinct eligible modifiers: upgrade, remove.
+        const auto upgraded = context.rng.next_below(choices.size());
+        auto removed = context.rng.next_below(choices.size() - 1);
+        if (removed >= upgraded) ++removed;
+        const auto a = choices[upgraded], b = choices[removed];
+        pc_item_state next = *item;
+        auto& slot = a.side == PC_SIDE_PREFIX ? next.prefixes[a.index] : next.suffixes[a.index];
+        slot.mod_id = a.upgrade;
+        slot.group_id = static_cast<std::uint16_t>(s.primary_group[a.upgrade]);
+        roll_mod_values(context, slot);
+        pc_item_remove_at(&next, b.side, b.index);
+        // Removal can swap the last slot into the vacated position.
+        const auto index = a.side == b.side && a.index == (a.side == PC_SIDE_PREFIX ? item->prefix_count : item->suffix_count) - 1
+            ? b.index : a.index;
+        if (groups_conflict(s, &next, a.upgrade, a.side, index))
+            throw std::invalid_argument("Dominance upgrade conflicts with another retained modifier group");
+        record_direct(context, &next, a.upgrade, a.side);
+        *item = next;
+        return {true, 1, 2};
+    } catch (...) { context.rng = saved_rng; context.last_action_trace.clear(); throw; }
+}
+
 } // namespace
 
-// The socketless subset has a complete structural branch law. Socket-capable
-// classes and jewels remain outside this sampler until their full laws exist.
-ActionOutcome vaal_socketless(ActionContextImpl& context, pc_item_state* item) {
+// Owner-approved affix projection: sockets are not observed or sampled, but
+// their 25% outcome retains its probability mass. Existing socket fields are
+// carried through, not a claim about the in-game result of a reforge.
+ActionOutcome vaal_equipment(ActionContextImpl& context, pc_item_state* item) {
     const auto& session = *context.session;
     const auto& d = *session.data;
     const std::string& cls = d.string_at(d.item_class_key_sid.at(d.item_class_index_by_id.at(d.base_item_class_id[session.base_index])));
-    if ((cls != "Amulet" && cls != "Belt") || session.item_level < 86 || item->socket_count != 0 ||
-        item->searing_exarch_tier || item->eater_of_worlds_tier)
-        throw std::invalid_argument("Vaal sampling currently supports item-level 86+ socketless amulets and belts; lower-level six-affix, socket/link and jewel/unique outcome laws are unavailable");
-    for (const auto pair : {std::pair{item->prefixes, item->prefix_count},
-                            std::pair{item->suffixes, item->suffix_count}})
-        for (std::uint8_t i = 0; i < pair.second; ++i)
-            if (pair.first[i].roll_count)
-                throw std::invalid_argument("Vaal numerical rerolls are unavailable; only structural modifiers are supported");
+    static const std::unordered_set<std::string> equipment{
+        "Amulet", "Belt", "Ring", "Quiver", "Helmet", "Body Armour", "Gloves", "Boots", "Shield",
+        "Claw", "Dagger", "Rune Dagger", "Wand", "One Hand Sword", "Thrusting One Hand Sword",
+        "One Hand Axe", "One Hand Mace", "Sceptre", "Bow", "Staff", "Warstaff",
+        "Two Hand Sword", "Two Hand Axe", "Two Hand Mace"};
+    if (!equipment.count(cls))
+        throw std::invalid_argument("Vaal supports ordinary equipment; jewel and unique transformation outcomes are not modelled");
     const auto ids = ids_from_mask(session, session.corrupted_implicit_mask);
     bool has_weight = false;
     for (const auto id : ids) has_weight |= active_spawn_weight(session, id) > 0;
@@ -1222,19 +1311,31 @@ ActionOutcome vaal_socketless(ActionContextImpl& context, pc_item_state* item) {
         switch (context.rng.next_below(4)) {
         case 0: {
             const auto chosen = pick_weighted_id(context, nullptr, ids);
-            if (next.implicit_count)
-                remove_implicit_at(&next, context.rng.next_below(next.implicit_count));
+            if (next.implicit_count) {
+                const auto removed = context.rng.next_below(next.implicit_count);
+                const auto p = session.global_index.at(next.implicits[removed].mod_id);
+                if (d.mod_gen_type_code[p] == d.gen_searing_implicit_code) next.searing_exarch_tier = 0;
+                if (d.mod_gen_type_code[p] == d.gen_eater_implicit_code) next.eater_of_worlds_tier = 0;
+                remove_implicit_at(&next, removed);
+            }
             if (!add_implicit(session, &next, chosen))
                 throw std::invalid_argument("Vaal implicit result exceeds item capacity");
+            roll_mod_values(context, next.implicits[next.implicit_count - 1]);
             record_direct(context, &next, chosen, -1);
             break;
         }
-        case 1: break; // No sockets, so the white-to-non-white branch is a no-op.
-        case 2:
+        case 1: break; // Socket-only outcome is a no-op in this affix projection.
+        case 2: {
+            const auto kept = collect_preserved(session, &next);
+            std::uint8_t prefixes = 0, suffixes = 0;
+            for (const auto& slot : kept) (slot.side == PC_SIDE_PREFIX ? prefixes : suffixes)++;
             result = reforge(context, &next, PC_RARITY_RARE, 6, PoolBuildRequest{});
-            if (next.prefix_count + next.suffix_count != 6)
-                throw std::invalid_argument("Vaal six-affix reforge is unavailable for this constrained pool");
+            // Use the ordinary reforge exhaustion rule if a very low-level
+            // pool cannot supply six mutually compatible affixes.
+            for (auto i = prefixes; i < next.prefix_count; ++i) roll_mod_values(context, next.prefixes[i]);
+            for (auto i = suffixes; i < next.suffix_count; ++i) roll_mod_values(context, next.suffixes[i]);
             break;
+        }
         case 3: break;
         }
         next.item_flags |= PC_ITEM_CORRUPTED;
@@ -1275,7 +1376,7 @@ ActionOutcome apply_action(
     pc_item_state* item,
     const ActionParameters& action) {
     const SessionImpl& session = *context.session;
-    if (item->enchantment_count)
+    if (item->enchantment_count && action.type != ActionType::Vaal && action.type != ActionType::Dominance)
         throw std::invalid_argument("Crafting on retained enchantments is unavailable until their effect and socket contracts are implemented");
     if (item->memory_strands > 100 || item->lifecycle > PC_ITEM_DESTROYED)
         throw std::invalid_argument("Invalid memory strand count or item lifecycle");
@@ -1293,8 +1394,9 @@ ActionOutcome apply_action(
     if (!item_craftable(item)) return {};
     switch (action.type) {
     case ActionType::Vaal:
-        return vaal_socketless(context, item);
+        return vaal_equipment(context, item);
     case ActionType::Dominance:
+        return dominance(context, item);
     case ActionType::Tempering:
     case ActionType::Tailoring:
     case ActionType::DoubleCorruption:

@@ -720,7 +720,7 @@ export class PcEmulator extends HTMLElement {
         const poolAction: CraftAction["type"] =
             tab === "implicit" ? "chaos" : tab === "prefix" ? "chaos" : "chaos";
         const pool =
-            tab === "implicit" || Number(info.memory_strands ?? 0) > 0 || Number(info.lifecycle ?? 0) !== 0 || ((info.enchantment_mod_ids as number[]) ?? []).length > 0
+            (tab === "implicit" || tab === "enchantment") || Number(info.memory_strands ?? 0) > 0 || Number(info.lifecycle ?? 0) !== 0 || ((info.enchantment_mod_ids as number[]) ?? []).length > 0
                 ? null
                 : await this.client.debugPool(this.context, this.item, {
                       action: { type: poolAction },
@@ -748,6 +748,7 @@ export class PcEmulator extends HTMLElement {
                 prefixOnItem,
                 suffixOnItem,
                 implicitOnItem,
+                enchantmentOnItem: new Set((info.enchantment_mod_ids as number[]) ?? []),
                 fracturedPrefixOnItem: fracturedP,
                 fracturedSuffixOnItem: fracturedS,
                 groupOnItem,

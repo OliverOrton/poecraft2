@@ -559,3 +559,87 @@ unreported probabilities remain explicit holds. There is no new claim/proof
 packet, solver campaign, lower certificate or old-benchmark promotion. The next
 execution must resolve a named hold or select a concrete Pro programme, not
 silently continue the archived IC work.
+
+
+## Currency follow-up 2026-09-29
+
+Oliver asked to revisit Dominance and Vaal, check data freshness, put Vaal under
+Basic currency and separate enchantments from corruption. He then explicitly held
+Tempering/Tailoring because their random weights are not public, and approved
+ignoring socket changes while retaining Vaal's 25% socket-only outcome. His later
+mod-pool observation exposed a broad `generation_type == -1` filter that also
+classified enchantments as implicits. That presentation error is corrected with
+separate Implicits/Enchantments tabs and separate on-item selections.
+
+The earlier receipt above describes its own delivery; this section supersedes
+its Dominance/Vaal/data-freshness holds. Work remains sequential on main, local
+only. No push, deployment, solver programme or new exactness claim is authorized.
+
+### Implemented scope
+
+- Dominance is a native sampled action in Emulator and authored Simulator,
+  with currency accounting. It chooses a uniform ordered pair among eligible
+  influenced modifiers, removes one and upgrades the other. Protected/legacy
+  modifiers are excluded; insufficient candidates do not spend currency.
+  Canonical mod-type/side/influence identity orders ordinary tiers; item level
+  does not prevent an upgrade. T1 elevation uses 220 explicit stable-key links
+  ingested into SQLite from the published CoE table, cross-checked with PoEDB.
+  Elevated selections reroll their canonical value ranges. Untouched values,
+  enchantments, quality and sockets are retained. An unmapped current modifier
+  refuses atomically: Crusader gloves' energy-shield leech suffix has an old
+  prefix-only elevated row and no compatible published link.
+- Vaal now samples ordinary weapons, armour and jewellery without an arbitrary
+  item-level floor. Four equal branches remain: corruption implicit, socket-only
+  projected no-op, rare reforge targeting six affixes, and unchanged. A constrained
+  pool stops at the existing reforge limit (the item-level 1 quiver witness reaches
+  five). Numerical rerolls are populated; locked/fractured values and enchantments
+  are retained. Replacing an Eldritch implicit clears its matching tier metadata.
+  Survivors are corrupted. Socket fields are carried through this affix projection
+  and are not a claim about the game's socket result. Jewel/unique transformations
+  and unresolved strand interactions still refuse. Exact Vaal/Dominance evaluation
+  and automatic search remain reserved for Pro.
+- Vaal is under Basic currency; Dominance is under Influenced. Temple and
+  Enchantments are distinct craft categories. Tempering/Tailoring remain held by
+  Oliver's explicit decision. Double-corruption and memory-law holds remain.
+- Reforge/scour preservation now carries the full modifier slot, including numeric
+  values and unveil metadata, instead of reconstructing only ID/group/flags.
+
+### Data identity and evidence
+
+The previously selected raw export dated from June. Current upstream is RePoE
+3.29.3.3, commit `a77305840b4cc8555eeeea144eac3eeddeff134b` (2026-09-15).
+All twelve fetched files were matched byte-for-byte to immutable commit URLs.
+The source lock now pins those archives, exact transforms and output hashes.
+Current ingest has 40,355 modifiers and 5,383 bases, including 1,079 ordinary
+session bases. Relative to the old export, 1,063 modifier keys were added and
+2,154 modifier rows are new or changed. Heist enchantment weights remain absent.
+
+Schema 3 adds the ingest-owned elevation relation. Canonical data hash:
+`d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e`.
+Selected runtime manifest:
+`82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d`.
+The compiler regenerated the runtime and lean rule fixtures; the artwork owner
+regenerated the matching catalogue. Immutable historical runtime/economy files
+remain intact. The native cross-base test now accounts for newly catalogued bench
+recipes as explicitly unquoted against its deliberately historical price snapshot;
+no new zero price or fabricated market quote was introduced.
+
+Final validation: all 52 Python currency tests pass, including 1,000-trial
+Dominance/Vaal authored Simulator checks, low-level equipment, pair frequencies,
+protected numeric values and enchantments. The native core passes 3,446,324 checks
+with zero failures across all 1,079 ordinary sessions. The explicit mapping audit
+exercised all 220 links across 222 class/modifier combinations with zero errors.
+Ingest/compiled-data/locked-source checks pass all 19 tests. Full `npm test`,
+TypeScript and the production build pass. The WASM smoke includes actual Dominance
+and Vaal action transport, elevated results, corrupted-state refusal and cost keys.
+Historical benchmark corpus unit tests now load their original immutable runtime
+rather than the mutable `data/compiled/current` directory; their corpus pins and
+research identities were not changed. No rendered UI review was requested.
+
+Final WASM SHA-256:
+`716c7473688e807adf7906cbb0d01fd9df995ec0fa8333a7de2348777c02f2f9`.
+The artwork refresh contains 637 available images and 55 unavailable source images
+using the existing fallback behavior. This is a local implementation receipt,
+not a hosted-release or market-price-refresh receipt.
+
+Detailed execution logs and compact audit: `out/currency-followup/`.

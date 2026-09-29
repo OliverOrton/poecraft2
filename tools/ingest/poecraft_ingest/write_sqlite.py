@@ -956,6 +956,21 @@ def _compute_data_hash(connection: sqlite3.Connection) -> str:
     return digest.hexdigest()
 
 
+def _insert_influence_elevations(connection: sqlite3.Connection) -> None:
+    path = Path(__file__).resolve().parents[3] / "fixtures/mechanics/influence-elevations-v1.json"
+    contract = json.loads(path.read_text(encoding="utf-8"))
+    mods = {row[1]: row[0] for row in connection.execute("SELECT mod_id, key FROM mod")}
+    for link in contract["elevations"]:
+        # Small source fixtures intentionally omit most of the catalog.
+        if link["from"] not in mods and link["to"] not in mods:
+            continue
+        if link["from"] not in mods or link["to"] not in mods:
+            raise ValueError(f"Incomplete influence elevation: {link['from']} -> {link['to']}")
+        connection.execute("INSERT INTO influence_elevation VALUES (?, ?, ?, ?)",
+                           (mods[link["from"]], mods[link["to"]],
+                            contract["source_url"], contract["source_sha256"]))
+
+
 def _insert_bestiary_contract(
     connection: sqlite3.Connection,
     contract_root: Path,
@@ -1155,6 +1170,7 @@ def build_database(
             )
             _insert_auxiliary_catalogs(connection, snapshot, source_ids)
             _insert_bestiary_contract(connection, bestiary_contract_root)
+            _insert_influence_elevations(connection)
 
             foreign_key_errors = list(
                 connection.execute("PRAGMA foreign_key_check")

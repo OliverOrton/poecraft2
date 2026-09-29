@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source": {
-    "runtime_manifest_sha256": "ef06ad1171b10975fd56a43fb596e94f789e8c5bae5092b0617f5331a285db99",
-    "canonical_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
-    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "canonical_data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+    "source_version": "repoe-b458174874efbe64",
     "image_origin": "https://web.poecdn.com/image/"
   },
   "items": {
@@ -52,6 +52,14 @@
       "visual_identity": "Amulet12",
       "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/UnsetAmulet.png",
       "image": "43fb75f1426622f34eb84a80d7dcbf3725906be8db732b9a765f3ad830da40f7.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Amulet13": {
+      "name": "Pearlescent Amulet",
+      "visual_identity": "Amulet13",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/PearlescentAmulet.png",
+      "image": "d673bac21bc598c6134e854c0156ff3e46d843f7a8204a334d0dced7ed784bcc.png",
       "width": 78,
       "height": 78
     },
@@ -142,6 +150,11 @@
       "image": "2affee714121d248e92d14be3d45eec6de83c6590c9b7a02060f36f138d5be49.png",
       "width": 78,
       "height": 78
+    },
+    "Metadata/Items/Amulets/AmuletGamble": {
+      "name": "Random Amulet",
+      "visual_identity": "AmuletSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersAmulet.png"
     },
     "Metadata/Items/Amulets/AmuletRoyale1": {
       "name": "Onyx Amulet",
@@ -431,6 +444,350 @@
       "width": 78,
       "height": 78
     },
+    "Metadata/Items/Amulets/Talismans/TalismanBeast": {
+      "name": "Gargantuan Talisman",
+      "visual_identity": "UndyingFleshTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanWhite6.png",
+      "image": "927f23e0d43c7261f867b6ebc9cb5b0d194398274e74e884c3304737f39df4f0.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanBlackMaw": {
+      "name": "Black Maw Talisman",
+      "visual_identity": "OddskullTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanWhite3.png",
+      "image": "537db614e3e5c895dbc680378e0c5af4b11841df874a57bc590df1c430219be5.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanBossBird": {
+      "name": "Saqawine Talisman",
+      "visual_identity": "BirdBossTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanRhexBossSpecial.png",
+      "image": "9b8b32cf23f1ac0ec0909ccd26a3a3fc8da8b746fbcc03bbf089408c34fe6b57.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanBossCrab": {
+      "name": "Craicic Talisman",
+      "visual_identity": "CrabBossTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanCrabBossSpecial.png",
+      "image": "3ca3d3db2a20a78aab56bf2669d267962d63c6d65c95689b29621c3f32290b13.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanBossSpider": {
+      "name": "Fenumal Talisman",
+      "visual_identity": "SpiderBossTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanSpiderBossSpecial.png",
+      "image": "87eba1177940984c467b7b63b35a17917e3336e423f29ddae19732f8453cf335.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanBossTiger": {
+      "name": "Farric Talisman",
+      "visual_identity": "TigerBossTalisman_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanTigerBossSpecial.png",
+      "image": "8aa84e3d9d8f3f9543fa1d93a37b0d242a42017558072fe563f21353a1133d25.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanBull": {
+      "name": "Taurus Talisman",
+      "visual_identity": "HornedTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/NewTalisman7.png",
+      "image": "c086f8b757b5738e47038bab257bc985c815d88e1ffb0a3d8e4f41ecbd1c4906.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanCarrionQueen": {
+      "name": "Carrion Queen Talisman",
+      "visual_identity": "RotHeadTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/FishTalisman.png",
+      "image": "c1452ad11e4eebc27a038285f72ccfe009dc59568a2c8c8df5a187ccc14698c6.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanChieftain": {
+      "name": "Chieftain Talisman",
+      "visual_identity": "DeadhandTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanWhite4.png",
+      "image": "e5bc62b0ba74ce5846f2d8b566d9102e9b4ce4c694a5af0ddd9a74e1c3862637.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanCrab": {
+      "name": "Savage Crab Talisman",
+      "visual_identity": "DeepmawTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanWhite5.png",
+      "image": "cf701d2102a6a21e34c6af72cd5273637df550879f10cd68f961dcb016b9d13f.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanCrab2": {
+      "name": "Spider Crab Talisman",
+      "visual_identity": "ThreeHandsTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanRed8.png",
+      "image": "9d832af128950aae795487e309d24deba83f56f7a0c4ad0f6dfc340b08dcc4ea.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanDevourer": {
+      "name": "Devourer Talisman",
+      "visual_identity": "AshscaleTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanWhite8.png",
+      "image": "3dee039033ccfba95e30e7536016fb393702bd07b8be57148632513088a68b27.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanForestSnake": {
+      "name": "Cobra Talisman",
+      "visual_identity": "HornedTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/NewTalisman7.png",
+      "image": "c086f8b757b5738e47038bab257bc985c815d88e1ffb0a3d8e4f41ecbd1c4906.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanFrog": {
+      "name": "Great Maw Talisman",
+      "visual_identity": "ThreeRodentsTalisman_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanRed7.png",
+      "image": "a039b1964d2f6140f839cc6aa3fc377f74cc361c17dc7289883183ec7f6e2169.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanGemFrog": {
+      "name": "Croaker Talisman",
+      "visual_identity": "MonkeyPawTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/MonkeyPawTalisman.png",
+      "image": "47c38cb3034ecea8c232ea51f14ba4c508677a054b99a3f50e5425e8d7a40596.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanGoatman": {
+      "name": "Goatman Talisman",
+      "visual_identity": "LoneAntlerTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanWhite2.png",
+      "image": "f9015e6cf88b074823155f504fdc9ee72e382423b62c1ae182381f4351a17267.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanGreatwolf": {
+      "name": "Greatwolf Talisman",
+      "visual_identity": "GreatwolfTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/T4Talisman.png",
+      "image": "e611467af863cfed432561fd31120d81b015caf465c53b45457bc6f4adb496b3.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanHellionFire": {
+      "name": "Flame Hellion Talisman",
+      "visual_identity": "PrimalSkullTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanBlack7.png",
+      "image": "9656deee100ddea81c6d362795acf302278e2307e0adc87e99c82b00be242d8e.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanHellionIce": {
+      "name": "Frost Hellion Talisman",
+      "visual_identity": "PrimalSkullTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanBlack7.png",
+      "image": "9656deee100ddea81c6d362795acf302278e2307e0adc87e99c82b00be242d8e.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanHound": {
+      "name": "Magma Hound Talisman",
+      "visual_identity": "DogSkullTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanDogSkullBlack.png",
+      "image": "9a3aa2e90f23473b84137d97c0f72a55ba78c3615f8a68f50da58ac9aed86f07.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanIguana": {
+      "name": "Chimeral Talisman",
+      "visual_identity": "BonespireTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanWhite7.png",
+      "image": "23fd4eccf79096f65a230334f9fe745ed064dc42316e7b506c63ac5658c944b1.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanKiweth": {
+      "name": "Retch Talisman",
+      "visual_identity": "HornedTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/NewTalisman7.png",
+      "image": "c086f8b757b5738e47038bab257bc985c815d88e1ffb0a3d8e4f41ecbd1c4906.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanLynx": {
+      "name": "Lynx Talisman",
+      "visual_identity": "PrimalSkullTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanBlack7.png",
+      "image": "9656deee100ddea81c6d362795acf302278e2307e0adc87e99c82b00be242d8e.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanMonkey": {
+      "name": "Ape Talisman",
+      "visual_identity": "MonkeyHandTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanMonkeyHandBlack.png",
+      "image": "28c95d60685ccd1de694baab92c6084aab8ee72ec6edb1d4b240f13397f63d11.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanParasiticSquid": {
+      "name": "Octopus Talisman",
+      "visual_identity": "MonkeyTwinsTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanRed6.png",
+      "image": "47b9ffece512cd9cbfd62624d11728aff17966d27191dc64943c73d3058af173.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanPitbull": {
+      "name": "Pitbull Talisman",
+      "visual_identity": "WereclawTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/DireClawTalisman.png",
+      "image": "5af77cdf88361f60a9a5ed7716be4e266a840dde285b50de7a9803477d61a7c1.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanPlagueSpider": {
+      "name": "Plagued Arachnid Talisman",
+      "visual_identity": "OddskullTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanWhite3.png",
+      "image": "537db614e3e5c895dbc680378e0c5af4b11841df874a57bc590df1c430219be5.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanPlatedSpider": {
+      "name": "Hybrid Arachnid Talisman",
+      "visual_identity": "SpiderLegsTalisman_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanSpiderLegsRed.png",
+      "image": "717aa18e17f5ea966182ad7a9b1ab74be68257284809b8cbf20bccdb7bd9a940.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanRhex": {
+      "name": "Rhex Talisman",
+      "visual_identity": "BonefuseTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanRed3.png",
+      "image": "0efe58177a2b213b7982b3c3a9432e3dd337d9e668aa8153e667fb358c814fcc.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanRhoa": {
+      "name": "Rhoa Talisman",
+      "visual_identity": "ManyClawedTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanBlack6.png",
+      "image": "90610fd0a5ac05d252f5a8b840b5b034c7be4821efc27f5d1ee3d0d5bbc94c32.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanSandLeaper": {
+      "name": "Scrabbler Talisman",
+      "visual_identity": "UndermawTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanBlack5.png",
+      "image": "64d52d87e4f71c8d287562983a07cac24b4f27d2a25e24d6bb866d048b210502.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanSandSnake": {
+      "name": "Blood Viper Talisman",
+      "visual_identity": "SnakeFangTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanSnakeFangWhite.png",
+      "image": "2c50603f2755640dc08d9c9241a2d5ea25c74587a064a4aba5fc48f0653a22a7.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanSandSpitter": {
+      "name": "Sand Spitter Talisman",
+      "visual_identity": "WrithingTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/NewTalisman3.png",
+      "image": "e2eb36b861dfd63631de8a2680e00762bab89d21f4bca0d4541a3ecc9c2339c3.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanScorpion": {
+      "name": "Scorpion Talisman",
+      "visual_identity": "SkylordTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/Talisman16.png",
+      "image": "977502ff20c057207a17b0209333564111b8e8fd59525aba9310aff6b47001b9.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanShieldCrab": {
+      "name": "Shield Crab Talisman",
+      "visual_identity": "CrabClawTalisman_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanCrabClawWhite.png",
+      "image": "d339ca3b93b3d292a9d512b9de7f604ba402f7a0a5002e5f3acbea78c7234bf4.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanSirenSpawn": {
+      "name": "Squid Talisman",
+      "visual_identity": "ChrysalisTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/NewTalisman2.png",
+      "image": "16419cddcbc6fa46aa5caac04da5509067c42cb0bcc3e9e4f4d232f372524eea.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanSpider": {
+      "name": "Black Widow Talisman",
+      "visual_identity": "ClutchingTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanBlack3.png",
+      "image": "9cfdea48f072953e73b54c83c4ae1a67c9f30ff7d42f66e53f8d114e0dde9903.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanSpiker": {
+      "name": "Goliath Talisman",
+      "visual_identity": "BrokenRibTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanWhite1.png",
+      "image": "84e72eb3edd34fb31839720da58ed7e98c97473c87ad7861b2839564873d86ab.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanSquid": {
+      "name": "Watcher Talisman",
+      "visual_identity": "MandibleTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/NewTalisman.png",
+      "image": "655462adfa04d8fd51c995b5dbcf6517b23a8143650dad76dbaa92c6364cacb6.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanTiger": {
+      "name": "Tiger Talisman",
+      "visual_identity": "LongtoothTalisman_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanRed4.png",
+      "image": "f170d93b69c6691f88be6e7605758dbe7c7b099c62bd80ee4e97818e81b8eb23.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanUrsa": {
+      "name": "Ursa Talisman",
+      "visual_identity": "SplitnewtTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanBlack4.png",
+      "image": "9dc353824d2f65b43c7279c9c4aa902dc75db842b7c274097419d04fe1e8ec98.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanVulture": {
+      "name": "Vulture Talisman",
+      "visual_identity": "RottingSkiesTalisman_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanRed1.png",
+      "image": "ad73e14bd247bec878947ef937d70af2060668461166527bfee6a55266bd0671.png",
+      "width": 78,
+      "height": 78
+    },
+    "Metadata/Items/Amulets/Talismans/TalismanWolf": {
+      "name": "Wolf Alpha Talisman",
+      "visual_identity": "WolfFangTalisman",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanWolfFangBlack.png",
+      "image": "95770fd0b724e1bb09e68e1a39449151c505ef27f23e26c790da009bcfa942b0.png",
+      "width": 78,
+      "height": 78
+    },
     "Metadata/Items/Armours/BodyArmours/BodyDex1": {
       "name": "Shabby Jerkin",
       "visual_identity": "BodyDex1A",
@@ -590,6 +947,11 @@
       "image": "2dcbb8d5b1ec6ec922f62c6860477457a90537a5479766f987c884375831d6f1.png",
       "width": 156,
       "height": 234
+    },
+    "Metadata/Items/Armours/BodyArmours/BodyDexGamble": {
+      "name": "Random Evasion Body",
+      "visual_identity": "BodyDexSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionBody.png"
     },
     "Metadata/Items/Armours/BodyArmours/BodyDexInt1": {
       "name": "Padded Vest",
@@ -751,6 +1113,11 @@
       "width": 156,
       "height": 234
     },
+    "Metadata/Items/Armours/BodyArmours/BodyDexIntGamble": {
+      "name": "Random Evasion and Energy Shield Body",
+      "visual_identity": "BodyDexIntSettlersGamble___",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionEnergyShieldBody.png"
+    },
     "Metadata/Items/Armours/BodyArmours/BodyInt1": {
       "name": "Simple Robe",
       "visual_identity": "BodyInt1A",
@@ -910,6 +1277,11 @@
       "image": "a9c66de668953ba975482cfd9212b11f4b13aca38ac87ca25f6bb0abe7ea999b.png",
       "width": 156,
       "height": 234
+    },
+    "Metadata/Items/Armours/BodyArmours/BodyIntGamble": {
+      "name": "Random Energy Shield Body",
+      "visual_identity": "BodyIntSettlersGamble__",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEnergyShieldBody.png"
     },
     "Metadata/Items/Armours/BodyArmours/BodyStr1": {
       "name": "Plate Vest",
@@ -1231,6 +1603,11 @@
       "width": 156,
       "height": 234
     },
+    "Metadata/Items/Armours/BodyArmours/BodyStrDexGamble": {
+      "name": "Random Armour and Evasion Body",
+      "visual_identity": "BodyStrDexSettlersGamble_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEvasionBody.png"
+    },
     "Metadata/Items/Armours/BodyArmours/BodyStrDexInt1": {
       "name": "Sacrificial Garb",
       "visual_identity": "BodySacrificialGarb",
@@ -1246,6 +1623,11 @@
       "image": "e17c66f4f104b9ec89cd34f45a7d5218c6f4d54d4b017320707140b74df7edbc.png",
       "width": 156,
       "height": 234
+    },
+    "Metadata/Items/Armours/BodyArmours/BodyStrGamble": {
+      "name": "Random Armour Body",
+      "visual_identity": "BodyStrSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourBody.png"
     },
     "Metadata/Items/Armours/BodyArmours/BodyStrInt1": {
       "name": "Chainmail Vest",
@@ -1407,6 +1789,11 @@
       "width": 156,
       "height": 234
     },
+    "Metadata/Items/Armours/BodyArmours/BodyStrIntGamble": {
+      "name": "Random Armour and Energy Shield Body",
+      "visual_identity": "BodyStrIntSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEnergyShieldBody.png"
+    },
     "Metadata/Items/Armours/Boots/BootsAtlas1": {
       "name": "Two-Toned Boots",
       "visual_identity": "BootsAtlas1",
@@ -1535,6 +1922,11 @@
       "width": 156,
       "height": 156
     },
+    "Metadata/Items/Armours/Boots/BootsDexGamble": {
+      "name": "Random Evasion Boots",
+      "visual_identity": "BootsDexSettlersGamble__",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionBoots.png"
+    },
     "Metadata/Items/Armours/Boots/BootsDexInt1": {
       "name": "Wrapped Boots",
       "visual_identity": "BootsDexInt1",
@@ -1622,6 +2014,11 @@
       "image": "3d29714446c01ea5446419982b5fd48cab68f64f33b0a6752e17013c017b95df.png",
       "width": 156,
       "height": 156
+    },
+    "Metadata/Items/Armours/Boots/BootsDexIntGamble": {
+      "name": "Random Evasion and Energy Shield Boots",
+      "visual_identity": "BootsDexIntSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionEnergyShieldBoots.png"
     },
     "Metadata/Items/Armours/Boots/BootsDexRitual1": {
       "name": "Cloudwhisper Boots",
@@ -1758,6 +2155,11 @@
       "image": "fb090f69d4fe9aed35257a379fd5fc8d63314a0e21ae5e299bf7153030b02613.png",
       "width": 156,
       "height": 156
+    },
+    "Metadata/Items/Armours/Boots/BootsIntGamble": {
+      "name": "Random Energy Shield Boots",
+      "visual_identity": "BootsIntSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEnergyShieldBoots.png"
     },
     "Metadata/Items/Armours/Boots/BootsIntRitual1": {
       "name": "Duskwalk Slippers",
@@ -1951,6 +2353,16 @@
       "width": 156,
       "height": 156
     },
+    "Metadata/Items/Armours/Boots/BootsStrDexGamble": {
+      "name": "Random Armour and Evasion Boots",
+      "visual_identity": "BootsStrDexSettlersGamble_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEvasionBoots.png"
+    },
+    "Metadata/Items/Armours/Boots/BootsStrGamble": {
+      "name": "Random Armour Boots",
+      "visual_identity": "BootsStrSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourBoots.png"
+    },
     "Metadata/Items/Armours/Boots/BootsStrInt1": {
       "name": "Chain Boots",
       "visual_identity": "BootsStrInt1",
@@ -2030,6 +2442,11 @@
       "image": "59892bac196ebe9614224d995cc40f0e54b7acf1cb00f9490b53964f633e3b15.png",
       "width": 156,
       "height": 156
+    },
+    "Metadata/Items/Armours/Boots/BootsStrIntGamble": {
+      "name": "Random Armour and Energy Shield Boots",
+      "visual_identity": "BootsStrIntSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEnergyShieldBoots.png"
     },
     "Metadata/Items/Armours/Boots/BootsStrRitual1": {
       "name": "Basemetal Treads",
@@ -2175,6 +2592,11 @@
       "width": 156,
       "height": 156
     },
+    "Metadata/Items/Armours/Gloves/GlovesDexGamble": {
+      "name": "Random Evasion Gloves",
+      "visual_identity": "GlovesDexSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionGloves.png"
+    },
     "Metadata/Items/Armours/Gloves/GlovesDexInt1": {
       "name": "Wrapped Mitts",
       "visual_identity": "GlovesDexInt1",
@@ -2254,6 +2676,11 @@
       "image": "b165fed27a572145ab28424ebc66759d87e4089c7c22a8403490197cabd8b67f.png",
       "width": 156,
       "height": 156
+    },
+    "Metadata/Items/Armours/Gloves/GlovesDexIntGamble": {
+      "name": "Random Evasion and Energy Shield Gloves",
+      "visual_identity": "GlovesDexIntSettlersGamble__",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionEnergyShieldGloves.png"
     },
     "Metadata/Items/Armours/Gloves/GlovesDexRitual1": {
       "name": "Tinker Gloves",
@@ -2390,6 +2817,11 @@
       "image": "10a23b8073d0c1c49fa78c1612f45ec3313b1f046ac66d3f68a2195e0ecb7764.png",
       "width": 156,
       "height": 156
+    },
+    "Metadata/Items/Armours/Gloves/GlovesIntGamble": {
+      "name": "Random Energy Shield Gloves",
+      "visual_identity": "GlovesIntSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEnergyShieldGloves.png"
     },
     "Metadata/Items/Armours/Gloves/GlovesIntRitual1": {
       "name": "Leyline Gloves",
@@ -2583,6 +3015,16 @@
       "width": 156,
       "height": 156
     },
+    "Metadata/Items/Armours/Gloves/GlovesStrDexGamble": {
+      "name": "Random Armour and Evasion Gloves",
+      "visual_identity": "GlovesStrDexSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEvasionGloves.png"
+    },
+    "Metadata/Items/Armours/Gloves/GlovesStrGamble": {
+      "name": "Random Armour Gloves",
+      "visual_identity": "GlovesStrSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourGloves.png"
+    },
     "Metadata/Items/Armours/Gloves/GlovesStrInt1": {
       "name": "Chain Gloves",
       "visual_identity": "GlovesStrInt1",
@@ -2662,6 +3104,11 @@
       "image": "6129c33d4efb648bea46fd929fb91fd62351b5301cc6d53781a0137c03822c22.png",
       "width": 156,
       "height": 156
+    },
+    "Metadata/Items/Armours/Gloves/GlovesStrIntGamble": {
+      "name": "Random Armour and Energy Shield Gloves",
+      "visual_identity": "GlovesStrIntSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEnergyShieldGloves.png"
     },
     "Metadata/Items/Armours/Gloves/GlovesStrRitual1": {
       "name": "Preserving Gauntlets",
@@ -2799,6 +3246,11 @@
       "width": 156,
       "height": 156
     },
+    "Metadata/Items/Armours/Helmets/HelmetDexGamble": {
+      "name": "Random Evasion Helmet",
+      "visual_identity": "HelmetDexSettlersGamble__",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionHelmet.png"
+    },
     "Metadata/Items/Armours/Helmets/HelmetDexInt1": {
       "name": "Scare Mask",
       "visual_identity": "HelmetDexInt1",
@@ -2910,6 +3362,11 @@
       "image": "d0b0a894fee9eb320470b48e55f12a4eaee127238b2af147606dde833a43c240.png",
       "width": 156,
       "height": 156
+    },
+    "Metadata/Items/Armours/Helmets/HelmetDexIntGamble": {
+      "name": "Random Evasion and Energy Shield Helmet",
+      "visual_identity": "HelmetDexIntSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionEnergyShieldHelmet.png"
     },
     "Metadata/Items/Armours/Helmets/HelmetDexIntRitual1": {
       "name": "Gale Crown",
@@ -3070,6 +3527,11 @@
       "image": "cc1e4022775ee013237b83d2d9b00050fd1c560f1892a21ea5e2b91cf30c850a.png",
       "width": 156,
       "height": 156
+    },
+    "Metadata/Items/Armours/Helmets/HelmetIntGamble": {
+      "name": "Random Energy Shield Helmet",
+      "visual_identity": "HelmetIntSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEnergyShieldHelmet.png"
     },
     "Metadata/Items/Armours/Helmets/HelmetStr1": {
       "name": "Iron Hat",
@@ -3287,6 +3749,11 @@
       "width": 156,
       "height": 156
     },
+    "Metadata/Items/Armours/Helmets/HelmetStrDexGamble": {
+      "name": "Random Armour and Evasion Helmet",
+      "visual_identity": "HelmetStrDexSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEvasionHelmet.png"
+    },
     "Metadata/Items/Armours/Helmets/HelmetStrDexRitual1": {
       "name": "Sorrow Mask",
       "visual_identity": "HelmetStrDexR1",
@@ -3310,6 +3777,11 @@
       "image": "3e8de5b0ff6ca8a721090152248994f922fc020d91fdfad8da7c6f18c1907cca.png",
       "width": 156,
       "height": 156
+    },
+    "Metadata/Items/Armours/Helmets/HelmetStrGamble": {
+      "name": "Random Armour Helmet",
+      "visual_identity": "HelmetStrSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourHelmet.png"
     },
     "Metadata/Items/Armours/Helmets/HelmetStrInt1": {
       "name": "Rusted Coif",
@@ -3414,6 +3886,11 @@
       "image": "d00d6abbe09ef6fb7d577b5ac404ca439ff6755143231d03d96f9e3dae4520e6.png",
       "width": 156,
       "height": 156
+    },
+    "Metadata/Items/Armours/Helmets/HelmetStrIntGamble": {
+      "name": "Random Armour and Energy Shield Helmet",
+      "visual_identity": "HelmetStrIntSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersAmourEnergyShieldHelmet.png"
     },
     "Metadata/Items/Armours/Helmets/HelmetStrIntRitual1": {
       "name": "Imp Crown",
@@ -3591,6 +4068,11 @@
       "width": 156,
       "height": 156
     },
+    "Metadata/Items/Armours/Shields/ShieldDexGamble": {
+      "name": "Random Evasion Shield",
+      "visual_identity": "ShieldDexSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionShield.png"
+    },
     "Metadata/Items/Armours/Shields/ShieldDexInt1": {
       "name": "Spiked Bundle",
       "visual_identity": "ShieldDexInt1",
@@ -3694,6 +4176,11 @@
       "image": "2ed934d740e5ae41759247236562f4a166225ca728eca8f286b7c278d163ad28.png",
       "width": 156,
       "height": 156
+    },
+    "Metadata/Items/Armours/Shields/ShieldDexIntGamble": {
+      "name": "Random Evasion and Energy Shield Shield",
+      "visual_identity": "ShieldDexIntSettlersGamble__",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionEnergyShieldShield.png"
     },
     "Metadata/Items/Armours/Shields/ShieldInt1": {
       "name": "Twig Spirit Shield",
@@ -3846,6 +4333,11 @@
       "image": "52256b8108b1a771046a8091e8a49a072d3af19c766663cd6db80df3dbde1663.png",
       "width": 156,
       "height": 234
+    },
+    "Metadata/Items/Armours/Shields/ShieldIntGamble": {
+      "name": "Random Energy Shield Shield",
+      "visual_identity": "ShieldIntSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEnergyShieldShield.png"
     },
     "Metadata/Items/Armours/Shields/ShieldStr1": {
       "name": "Splintered Tower Shield",
@@ -4087,6 +4579,11 @@
       "width": 156,
       "height": 234
     },
+    "Metadata/Items/Armours/Shields/ShieldStrDexGamble": {
+      "name": "Random Armour and Evasion Shield",
+      "visual_identity": "ShieldStrDexSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEvasionShield.png"
+    },
     "Metadata/Items/Armours/Shields/ShieldStrE1": {
       "name": "Exothermic Tower Shield",
       "visual_identity": "StrShieldExperimented1_",
@@ -4110,6 +4607,11 @@
       "image": "8b2735435ac94321f664e3bcf34c4b034e5d7358327c9577622f1658d5f37dcb.png",
       "width": 156,
       "height": 234
+    },
+    "Metadata/Items/Armours/Shields/ShieldStrGamble": {
+      "name": "Random Armour Shield",
+      "visual_identity": "ShieldStrSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourShield.png"
     },
     "Metadata/Items/Armours/Shields/ShieldStrInt1": {
       "name": "Plank Kite Shield",
@@ -4214,6 +4716,11 @@
       "image": "f2631f6350c4556e9a33d9352a82f639904abad3194e35d6937306ab34ce7b91.png",
       "width": 156,
       "height": 234
+    },
+    "Metadata/Items/Armours/Shields/ShieldStrIntGamble": {
+      "name": "Random Armour and Energy Shield Shield",
+      "visual_identity": "ShieldStrIntSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEnergyShieldShield.png"
     },
     "Metadata/Items/AtlasExiles/AddModToRareCrusader": {
       "name": "Crusader's Exalted Orb",
@@ -4363,6 +4870,11 @@
       "image": "3c5edb3c215f3aa2c8f6d59987b3321db3268028cfe7617c68b5972314b23617.png",
       "width": 156,
       "height": 78
+    },
+    "Metadata/Items/Belts/BeltGamble": {
+      "name": "Random Belt",
+      "visual_identity": "BeltSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersBelt.png"
     },
     "Metadata/Items/Belts/BeltRoyale1": {
       "name": "Leather Belt",
@@ -4608,7 +5120,7 @@
       "name": "Fractured Fossil",
       "visual_identity": "CurrencyDelveCraftingMirror",
       "source_url": "https://web.poecdn.com/image/Art/2DItems/Currency/Delve/FracturedFossil.png",
-      "description": "Creates a split copy",
+      "description": "Fracture a random modifier",
       "image": "74666a60fadb38b14bf7db9d363a91623216dee908f52989962da963f2469a30.png",
       "width": 78,
       "height": 78
@@ -4929,24 +5441,24 @@
         "Belt": "(43-46)% chance to Avoid being Ignited",
         "Body Armour": "(6-7)% chance to Avoid Fire Damage from Hits",
         "Boots": "(43-46)% chance to Avoid being Ignited",
-        "Bow": "Adds (32-44) to (65-76) Fire Damage to Spells",
-        "Claw": "Adds (24-33) to (48-57) Fire Damage to Spells",
-        "Dagger": "Adds (24-33) to (48-57) Fire Damage to Spells",
+        "Bow": "Adds (48-65) to (96-113) Fire Damage to Spells",
+        "Claw": "Adds (28-39) to (57-67) Fire Damage to Spells",
+        "Dagger": "Adds (28-39) to (57-67) Fire Damage to Spells",
         "Gloves": "Adds (5-7) to (11-13) Fire Damage to Attacks",
         "Helmet": "(43-46)% chance to Avoid being Ignited",
-        "One Hand Axe": "Adds (24-33) to (48-57) Fire Damage to Spells",
-        "One Hand Mace": "Adds (24-33) to (48-57) Fire Damage to Spells",
-        "One Hand Sword": "Adds (24-33) to (48-57) Fire Damage to Spells",
+        "One Hand Axe": "Adds (28-39) to (57-67) Fire Damage to Spells",
+        "One Hand Mace": "Adds (28-39) to (57-67) Fire Damage to Spells",
+        "One Hand Sword": "Adds (28-39) to (57-67) Fire Damage to Spells",
         "Quiver": "Adds (17-22) to (33-38) Fire Damage to Attacks",
         "Ring": "Adds (11-15) to (23-27) Fire Damage to Attacks",
-        "Sceptre": "Adds (24-33) to (48-57) Fire Damage to Spells",
+        "Sceptre": "Adds (28-39) to (57-67) Fire Damage to Spells",
         "Shield": "(6-7)% chance to Avoid Fire Damage from Hits",
-        "Staff": "Adds (32-44) to (65-76) Fire Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (24-33) to (48-57) Fire Damage to Spells",
-        "Two Hand Axe": "Adds (32-44) to (65-76) Fire Damage to Spells",
-        "Two Hand Mace": "Adds (32-44) to (65-76) Fire Damage to Spells",
-        "Two Hand Sword": "Adds (32-44) to (65-76) Fire Damage to Spells",
-        "Wand": "Adds (24-33) to (48-57) Fire Damage to Spells"
+        "Staff": "Adds (48-65) to (96-113) Fire Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (28-39) to (57-67) Fire Damage to Spells",
+        "Two Hand Axe": "Adds (48-65) to (96-113) Fire Damage to Spells",
+        "Two Hand Mace": "Adds (48-65) to (96-113) Fire Damage to Spells",
+        "Two Hand Sword": "Adds (48-65) to (96-113) Fire Damage to Spells",
+        "Wand": "Adds (28-39) to (57-67) Fire Damage to Spells"
       },
       "image": "f99c671bfb550846e09defc2d2bdf1a31b45806777880c7efe6613db701ebd58.png",
       "width": 78,
@@ -4962,24 +5474,24 @@
         "Belt": "(47-50)% chance to Avoid being Ignited",
         "Body Armour": "(7-8)% chance to Avoid Fire Damage from Hits",
         "Boots": "(47-50)% chance to Avoid being Ignited",
-        "Bow": "Adds (42-56) to (85-99) Fire Damage to Spells",
-        "Claw": "Adds (31-42) to (64-73) Fire Damage to Spells",
-        "Dagger": "Adds (31-42) to (64-73) Fire Damage to Spells",
+        "Bow": "Adds (64-85) to (129-150) Fire Damage to Spells",
+        "Claw": "Adds (38-51) to (77-88) Fire Damage to Spells",
+        "Dagger": "Adds (38-51) to (77-88) Fire Damage to Spells",
         "Gloves": "Adds (7-10) to (15-18) Fire Damage to Attacks",
         "Helmet": "(47-50)% chance to Avoid being Ignited",
-        "One Hand Axe": "Adds (31-42) to (64-73) Fire Damage to Spells",
-        "One Hand Mace": "Adds (31-42) to (64-73) Fire Damage to Spells",
-        "One Hand Sword": "Adds (31-42) to (64-73) Fire Damage to Spells",
+        "One Hand Axe": "Adds (38-51) to (77-88) Fire Damage to Spells",
+        "One Hand Mace": "Adds (38-51) to (77-88) Fire Damage to Spells",
+        "One Hand Sword": "Adds (38-51) to (77-88) Fire Damage to Spells",
         "Quiver": "Adds (27-35) to (53-62) Fire Damage to Attacks",
         "Ring": "Adds (16-22) to (32-38) Fire Damage to Attacks",
-        "Sceptre": "Adds (31-42) to (64-73) Fire Damage to Spells",
+        "Sceptre": "Adds (38-51) to (77-88) Fire Damage to Spells",
         "Shield": "(7-8)% chance to Avoid Fire Damage from Hits",
-        "Staff": "Adds (42-56) to (85-99) Fire Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (31-42) to (64-73) Fire Damage to Spells",
-        "Two Hand Axe": "Adds (42-56) to (85-99) Fire Damage to Spells",
-        "Two Hand Mace": "Adds (42-56) to (85-99) Fire Damage to Spells",
-        "Two Hand Sword": "Adds (42-56) to (85-99) Fire Damage to Spells",
-        "Wand": "Adds (31-42) to (64-73) Fire Damage to Spells"
+        "Staff": "Adds (64-85) to (129-150) Fire Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (38-51) to (77-88) Fire Damage to Spells",
+        "Two Hand Axe": "Adds (64-85) to (129-150) Fire Damage to Spells",
+        "Two Hand Mace": "Adds (64-85) to (129-150) Fire Damage to Spells",
+        "Two Hand Sword": "Adds (64-85) to (129-150) Fire Damage to Spells",
+        "Wand": "Adds (38-51) to (77-88) Fire Damage to Spells"
       },
       "image": "c7d73ef1c9d4b37449271f49ef8d8c3a85295b3f1366ce41624746cab03215c5.png",
       "width": 78,
@@ -4995,24 +5507,24 @@
         "Belt": "(51-55)% chance to Avoid being Ignited",
         "Body Armour": "(8-9)% chance to Avoid Fire Damage from Hits",
         "Boots": "(51-55)% chance to Avoid being Ignited",
-        "Bow": "Adds (53-70) to (107-123) Fire Damage to Spells",
-        "Claw": "Adds (40-52) to (79-91) Fire Damage to Spells",
-        "Dagger": "Adds (40-52) to (79-91) Fire Damage to Spells",
+        "Bow": "Adds (83-109) to (166-191) Fire Damage to Spells",
+        "Claw": "Adds (50-64) to (98-113) Fire Damage to Spells",
+        "Dagger": "Adds (50-64) to (98-113) Fire Damage to Spells",
         "Gloves": "Adds (9-12) to (19-22) Fire Damage to Attacks",
         "Helmet": "(51-55)% chance to Avoid being Ignited",
-        "One Hand Axe": "Adds (40-52) to (79-91) Fire Damage to Spells",
-        "One Hand Mace": "Adds (40-52) to (79-91) Fire Damage to Spells",
-        "One Hand Sword": "Adds (40-52) to (79-91) Fire Damage to Spells",
+        "One Hand Axe": "Adds (50-64) to (98-113) Fire Damage to Spells",
+        "One Hand Mace": "Adds (50-64) to (98-113) Fire Damage to Spells",
+        "One Hand Sword": "Adds (50-64) to (98-113) Fire Damage to Spells",
         "Quiver": "Adds (37-50) to (74-87) Fire Damage to Attacks",
         "Ring": "Adds (19-25) to (39-45) Fire Damage to Attacks",
-        "Sceptre": "Adds (40-52) to (79-91) Fire Damage to Spells",
+        "Sceptre": "Adds (50-64) to (98-113) Fire Damage to Spells",
         "Shield": "(8-9)% chance to Avoid Fire Damage from Hits",
-        "Staff": "Adds (53-70) to (107-123) Fire Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (40-52) to (79-91) Fire Damage to Spells",
-        "Two Hand Axe": "Adds (53-70) to (107-123) Fire Damage to Spells",
-        "Two Hand Mace": "Adds (53-70) to (107-123) Fire Damage to Spells",
-        "Two Hand Sword": "Adds (53-70) to (107-123) Fire Damage to Spells",
-        "Wand": "Adds (40-52) to (79-91) Fire Damage to Spells"
+        "Staff": "Adds (83-109) to (166-191) Fire Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (50-64) to (98-113) Fire Damage to Spells",
+        "Two Hand Axe": "Adds (83-109) to (166-191) Fire Damage to Spells",
+        "Two Hand Mace": "Adds (83-109) to (166-191) Fire Damage to Spells",
+        "Two Hand Sword": "Adds (83-109) to (166-191) Fire Damage to Spells",
+        "Wand": "Adds (50-64) to (98-113) Fire Damage to Spells"
       },
       "image": "0c0d1120859654d353ff2a70605134865d7dd76cf60166929cb5ead815eda015.png",
       "width": 78,
@@ -5028,24 +5540,24 @@
         "Belt": "(56-60)% chance to Avoid being Ignited",
         "Body Armour": "(9-10)% chance to Avoid Fire Damage from Hits",
         "Boots": "(56-60)% chance to Avoid being Ignited",
-        "Bow": "Adds (66-88) to (132-155) Fire Damage to Spells",
-        "Claw": "Adds (49-66) to (98-115) Fire Damage to Spells",
-        "Dagger": "Adds (49-66) to (98-115) Fire Damage to Spells",
+        "Bow": "Adds (105-140) to (210-246) Fire Damage to Spells",
+        "Claw": "Adds (62-84) to (124-146) Fire Damage to Spells",
+        "Dagger": "Adds (62-84) to (124-146) Fire Damage to Spells",
         "Gloves": "Adds (11-15) to (23-27) Fire Damage to Attacks",
         "Helmet": "(56-60)% chance to Avoid being Ignited",
-        "One Hand Axe": "Adds (49-66) to (98-115) Fire Damage to Spells",
-        "One Hand Mace": "Adds (49-66) to (98-115) Fire Damage to Spells",
-        "One Hand Sword": "Adds (49-66) to (98-115) Fire Damage to Spells",
+        "One Hand Axe": "Adds (62-84) to (124-146) Fire Damage to Spells",
+        "One Hand Mace": "Adds (62-84) to (124-146) Fire Damage to Spells",
+        "One Hand Sword": "Adds (62-84) to (124-146) Fire Damage to Spells",
         "Quiver": "Adds (41-55) to (81-96) Fire Damage to Attacks",
         "Ring": "Adds (23-27) to (43-48) Fire Damage to Attacks",
-        "Sceptre": "Adds (49-66) to (98-115) Fire Damage to Spells",
+        "Sceptre": "Adds (62-84) to (124-146) Fire Damage to Spells",
         "Shield": "(9-10)% chance to Avoid Fire Damage from Hits",
-        "Staff": "Adds (66-88) to (132-155) Fire Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (49-66) to (98-115) Fire Damage to Spells",
-        "Two Hand Axe": "Adds (66-88) to (132-155) Fire Damage to Spells",
-        "Two Hand Mace": "Adds (66-88) to (132-155) Fire Damage to Spells",
-        "Two Hand Sword": "Adds (66-88) to (132-155) Fire Damage to Spells",
-        "Wand": "Adds (49-66) to (98-115) Fire Damage to Spells"
+        "Staff": "Adds (105-140) to (210-246) Fire Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (62-84) to (124-146) Fire Damage to Spells",
+        "Two Hand Axe": "Adds (105-140) to (210-246) Fire Damage to Spells",
+        "Two Hand Mace": "Adds (105-140) to (210-246) Fire Damage to Spells",
+        "Two Hand Sword": "Adds (105-140) to (210-246) Fire Damage to Spells",
+        "Wand": "Adds (62-84) to (124-146) Fire Damage to Spells"
       },
       "image": "c2cc999a6a0f04a3827dee38cc2cf5a94de46dbf1cdd68bc23669e0202400a87.png",
       "width": 78,
@@ -6456,7 +6968,7 @@
         "One Hand Mace": "Triggers Level 20 Spectral Spirits when Equipped\n+3 to maximum number of Spectral Spirits",
         "One Hand Sword": "Triggers Level 20 Spectral Spirits when Equipped\n+3 to maximum number of Spectral Spirits",
         "Quiver": "Projectiles Pierce 2 additional Targets",
-        "Ring": "60% of Hit Damage from you and your Minions cannot be Reflected",
+        "Ring": "You and your Minions prevent +60% of Reflected Damage",
         "Sceptre": "Triggers Level 20 Spectral Spirits when Equipped\n+3 to maximum number of Spectral Spirits",
         "Shield": "25% chance to gain a Power Charge when you Block",
         "Staff": "Triggers Level 20 Spectral Spirits when Equipped\n+3 to maximum number of Spectral Spirits",
@@ -6876,24 +7388,24 @@
         "Belt": "(12-13)% reduced Enemy Stun Threshold",
         "Body Armour": "(31-39)% increased Stun Threshold",
         "Boots": "(23-26)% chance to Avoid being Stunned",
-        "Bow": "(80-99)% increased Spell Critical Strike Chance",
-        "Claw": "(80-99)% increased Spell Critical Strike Chance",
-        "Dagger": "(80-99)% increased Spell Critical Strike Chance",
+        "Bow": "(80-89)% increased Spell Critical Strike Chance",
+        "Claw": "(80-89)% increased Spell Critical Strike Chance",
+        "Dagger": "(80-89)% increased Spell Critical Strike Chance",
         "Gloves": "(23-26)% chance to Avoid being Stunned",
         "Helmet": "(23-26)% chance to Avoid being Stunned",
-        "One Hand Axe": "(80-99)% increased Spell Critical Strike Chance",
-        "One Hand Mace": "(80-99)% increased Spell Critical Strike Chance",
-        "One Hand Sword": "(80-99)% increased Spell Critical Strike Chance",
+        "One Hand Axe": "(80-89)% increased Spell Critical Strike Chance",
+        "One Hand Mace": "(80-89)% increased Spell Critical Strike Chance",
+        "One Hand Sword": "(80-89)% increased Spell Critical Strike Chance",
         "Quiver": "+(25-29)% to Global Critical Strike Multiplier",
         "Ring": "+(15-17)% to Global Critical Strike Multiplier",
-        "Sceptre": "(80-99)% increased Spell Critical Strike Chance",
-        "Shield": "(80-99)% increased Spell Critical Strike Chance",
-        "Staff": "(80-99)% increased Spell Critical Strike Chance",
-        "Thrusting One Hand Sword": "(80-99)% increased Spell Critical Strike Chance",
-        "Two Hand Axe": "(80-99)% increased Spell Critical Strike Chance",
-        "Two Hand Mace": "(80-99)% increased Spell Critical Strike Chance",
-        "Two Hand Sword": "(80-99)% increased Spell Critical Strike Chance",
-        "Wand": "(80-99)% increased Spell Critical Strike Chance"
+        "Sceptre": "(80-89)% increased Spell Critical Strike Chance",
+        "Shield": "(80-89)% increased Spell Critical Strike Chance",
+        "Staff": "(80-89)% increased Spell Critical Strike Chance",
+        "Thrusting One Hand Sword": "(80-89)% increased Spell Critical Strike Chance",
+        "Two Hand Axe": "(80-89)% increased Spell Critical Strike Chance",
+        "Two Hand Mace": "(80-89)% increased Spell Critical Strike Chance",
+        "Two Hand Sword": "(80-89)% increased Spell Critical Strike Chance",
+        "Wand": "(80-89)% increased Spell Critical Strike Chance"
       },
       "image": "79e1e9236326ba43448cf6eb0d7b7cdf7faf2a67bb40010ce9f086b918416108.png",
       "width": 78,
@@ -6909,24 +7421,24 @@
         "Belt": "(14-15)% reduced Enemy Stun Threshold",
         "Body Armour": "(40-45)% increased Stun Threshold",
         "Boots": "(27-30)% chance to Avoid being Stunned",
-        "Bow": "(100-109)% increased Spell Critical Strike Chance",
-        "Claw": "(100-109)% increased Spell Critical Strike Chance",
-        "Dagger": "(100-109)% increased Spell Critical Strike Chance",
+        "Bow": "(90-109)% increased Spell Critical Strike Chance",
+        "Claw": "(90-109)% increased Spell Critical Strike Chance",
+        "Dagger": "(90-109)% increased Spell Critical Strike Chance",
         "Gloves": "(27-30)% chance to Avoid being Stunned",
         "Helmet": "(27-30)% chance to Avoid being Stunned",
-        "One Hand Axe": "(100-109)% increased Spell Critical Strike Chance",
-        "One Hand Mace": "(100-109)% increased Spell Critical Strike Chance",
-        "One Hand Sword": "(100-109)% increased Spell Critical Strike Chance",
+        "One Hand Axe": "(90-109)% increased Spell Critical Strike Chance",
+        "One Hand Mace": "(90-109)% increased Spell Critical Strike Chance",
+        "One Hand Sword": "(90-109)% increased Spell Critical Strike Chance",
         "Quiver": "+(30-34)% to Global Critical Strike Multiplier",
         "Ring": "+(18-20)% to Global Critical Strike Multiplier",
-        "Sceptre": "(100-109)% increased Spell Critical Strike Chance",
-        "Shield": "(100-109)% increased Spell Critical Strike Chance",
-        "Staff": "(100-109)% increased Spell Critical Strike Chance",
-        "Thrusting One Hand Sword": "(100-109)% increased Spell Critical Strike Chance",
-        "Two Hand Axe": "(100-109)% increased Spell Critical Strike Chance",
-        "Two Hand Mace": "(100-109)% increased Spell Critical Strike Chance",
-        "Two Hand Sword": "(100-109)% increased Spell Critical Strike Chance",
-        "Wand": "(100-109)% increased Spell Critical Strike Chance"
+        "Sceptre": "(90-109)% increased Spell Critical Strike Chance",
+        "Shield": "(90-109)% increased Spell Critical Strike Chance",
+        "Staff": "(90-109)% increased Spell Critical Strike Chance",
+        "Thrusting One Hand Sword": "(90-109)% increased Spell Critical Strike Chance",
+        "Two Hand Axe": "(90-109)% increased Spell Critical Strike Chance",
+        "Two Hand Mace": "(90-109)% increased Spell Critical Strike Chance",
+        "Two Hand Sword": "(90-109)% increased Spell Critical Strike Chance",
+        "Wand": "(90-109)% increased Spell Critical Strike Chance"
       },
       "image": "020a5dc4bccca1930470059f46a891924b8866e2a45c1d62ce63e8739a827c37.png",
       "width": 78,
@@ -6942,7 +7454,7 @@
         "Belt": "(16-17)% reduced Enemy Stun Threshold",
         "Body Armour": "(46-60)% increased Stun Threshold",
         "Boots": "(31-44)% chance to Avoid being Stunned",
-        "Bow": "(110-119)% increased Spell Critical Strike Chance",
+        "Bow": "(165-179)% increased Spell Critical Strike Chance",
         "Claw": "(110-119)% increased Spell Critical Strike Chance",
         "Dagger": "(110-119)% increased Spell Critical Strike Chance",
         "Gloves": "(31-44)% chance to Avoid being Stunned",
@@ -6954,11 +7466,11 @@
         "Ring": "+(21-25)% to Global Critical Strike Multiplier",
         "Sceptre": "(110-119)% increased Spell Critical Strike Chance",
         "Shield": "(110-119)% increased Spell Critical Strike Chance",
-        "Staff": "(110-119)% increased Spell Critical Strike Chance",
+        "Staff": "(165-179)% increased Spell Critical Strike Chance",
         "Thrusting One Hand Sword": "(110-119)% increased Spell Critical Strike Chance",
-        "Two Hand Axe": "(110-119)% increased Spell Critical Strike Chance",
-        "Two Hand Mace": "(110-119)% increased Spell Critical Strike Chance",
-        "Two Hand Sword": "(110-119)% increased Spell Critical Strike Chance",
+        "Two Hand Axe": "(165-179)% increased Spell Critical Strike Chance",
+        "Two Hand Mace": "(165-179)% increased Spell Critical Strike Chance",
+        "Two Hand Sword": "(165-179)% increased Spell Critical Strike Chance",
         "Wand": "(110-119)% increased Spell Critical Strike Chance"
       },
       "image": "90048460e5e253b63920ca9da68590b5efae9b7bc195dfb3d55fc930b25c453e.png",
@@ -7305,24 +7817,24 @@
         "Belt": "(39-42)% chance to Avoid being Frozen",
         "Body Armour": "(5-6)% chance to Avoid Cold Damage from Hits",
         "Boots": "(39-42)% chance to Avoid being Frozen",
-        "Bow": "Adds (16-22) to (33-38) Cold Damage to Spells",
-        "Claw": "Adds (11-15) to (22-25) Cold Damage to Spells",
-        "Dagger": "Adds (11-15) to (22-25) Cold Damage to Spells",
+        "Bow": "Adds (23-31) to (46-54) Cold Damage to Spells",
+        "Claw": "Adds (12-17) to (25-28) Cold Damage to Spells",
+        "Dagger": "Adds (12-17) to (25-28) Cold Damage to Spells",
         "Gloves": "Adds (3-4) to (7-8) Cold Damage to Attacks",
         "Helmet": "(39-42)% chance to Avoid being Frozen",
-        "One Hand Axe": "Adds (11-15) to (22-25) Cold Damage to Spells",
-        "One Hand Mace": "Adds (11-15) to (22-25) Cold Damage to Spells",
-        "One Hand Sword": "Adds (11-15) to (22-25) Cold Damage to Spells",
+        "One Hand Axe": "Adds (12-17) to (25-28) Cold Damage to Spells",
+        "One Hand Mace": "Adds (12-17) to (25-28) Cold Damage to Spells",
+        "One Hand Sword": "Adds (12-17) to (25-28) Cold Damage to Spells",
         "Quiver": "Adds (10-13) to (19-22) Cold Damage to Attacks",
         "Ring": "Adds (6-9) to (13-16) Cold Damage to Attacks",
-        "Sceptre": "Adds (11-15) to (22-25) Cold Damage to Spells",
+        "Sceptre": "Adds (12-17) to (25-28) Cold Damage to Spells",
         "Shield": "(5-6)% chance to Avoid Cold Damage from Hits",
-        "Staff": "Adds (16-22) to (33-38) Cold Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (11-15) to (22-25) Cold Damage to Spells",
-        "Two Hand Axe": "Adds (16-22) to (33-38) Cold Damage to Spells",
-        "Two Hand Mace": "Adds (16-22) to (33-38) Cold Damage to Spells",
-        "Two Hand Sword": "Adds (16-22) to (33-38) Cold Damage to Spells",
-        "Wand": "Adds (11-15) to (22-25) Cold Damage to Spells"
+        "Staff": "Adds (23-31) to (46-54) Cold Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (12-17) to (25-28) Cold Damage to Spells",
+        "Two Hand Axe": "Adds (23-31) to (46-54) Cold Damage to Spells",
+        "Two Hand Mace": "Adds (23-31) to (46-54) Cold Damage to Spells",
+        "Two Hand Sword": "Adds (23-31) to (46-54) Cold Damage to Spells",
+        "Wand": "Adds (12-17) to (25-28) Cold Damage to Spells"
       },
       "image": "b6d9300f4794a91667a15b1243a08a7d22bb693deb6a836cc9ebffaf9de21b51.png",
       "width": 78,
@@ -7338,24 +7850,24 @@
         "Belt": "(43-46)% chance to Avoid being Frozen",
         "Body Armour": "(6-7)% chance to Avoid Cold Damage from Hits",
         "Boots": "(43-46)% chance to Avoid being Frozen",
-        "Bow": "Adds (30-40) to (59-69) Cold Damage to Spells",
-        "Claw": "Adds (20-26) to (40-46) Cold Damage to Spells",
-        "Dagger": "Adds (20-26) to (40-46) Cold Damage to Spells",
+        "Bow": "Adds (44-59) to (88-101) Cold Damage to Spells",
+        "Claw": "Adds (24-31) to (47-54) Cold Damage to Spells",
+        "Dagger": "Adds (24-31) to (47-54) Cold Damage to Spells",
         "Gloves": "Adds (5-7) to (10-12) Cold Damage to Attacks",
         "Helmet": "(43-46)% chance to Avoid being Frozen",
-        "One Hand Axe": "Adds (20-26) to (40-46) Cold Damage to Spells",
-        "One Hand Mace": "Adds (20-26) to (40-46) Cold Damage to Spells",
-        "One Hand Sword": "Adds (20-26) to (40-46) Cold Damage to Spells",
+        "One Hand Axe": "Adds (24-31) to (47-54) Cold Damage to Spells",
+        "One Hand Mace": "Adds (24-31) to (47-54) Cold Damage to Spells",
+        "One Hand Sword": "Adds (24-31) to (47-54) Cold Damage to Spells",
         "Quiver": "Adds (15-20) to (30-35) Cold Damage to Attacks",
         "Ring": "Adds (10-13) to (20-24) Cold Damage to Attacks",
-        "Sceptre": "Adds (20-26) to (40-46) Cold Damage to Spells",
+        "Sceptre": "Adds (24-31) to (47-54) Cold Damage to Spells",
         "Shield": "(6-7)% chance to Avoid Cold Damage from Hits",
-        "Staff": "Adds (30-40) to (59-69) Cold Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (20-26) to (40-46) Cold Damage to Spells",
-        "Two Hand Axe": "Adds (30-40) to (59-69) Cold Damage to Spells",
-        "Two Hand Mace": "Adds (30-40) to (59-69) Cold Damage to Spells",
-        "Two Hand Sword": "Adds (30-40) to (59-69) Cold Damage to Spells",
-        "Wand": "Adds (20-26) to (40-46) Cold Damage to Spells"
+        "Staff": "Adds (44-59) to (88-101) Cold Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (24-31) to (47-54) Cold Damage to Spells",
+        "Two Hand Axe": "Adds (44-59) to (88-101) Cold Damage to Spells",
+        "Two Hand Mace": "Adds (44-59) to (88-101) Cold Damage to Spells",
+        "Two Hand Sword": "Adds (44-59) to (88-101) Cold Damage to Spells",
+        "Wand": "Adds (24-31) to (47-54) Cold Damage to Spells"
       },
       "image": "3444d2a48e7576bad422b0bea56c31baab336ddad1fc0037660d03efd117701b.png",
       "width": 78,
@@ -7371,24 +7883,24 @@
         "Belt": "(47-50)% chance to Avoid being Frozen",
         "Body Armour": "(7-8)% chance to Avoid Cold Damage from Hits",
         "Boots": "(47-50)% chance to Avoid being Frozen",
-        "Bow": "Adds (39-52) to (77-90) Cold Damage to Spells",
-        "Claw": "Adds (26-35) to (51-60) Cold Damage to Spells",
-        "Dagger": "Adds (26-35) to (51-60) Cold Damage to Spells",
+        "Bow": "Adds (59-79) to (116-136) Cold Damage to Spells",
+        "Claw": "Adds (31-42) to (62-73) Cold Damage to Spells",
+        "Dagger": "Adds (31-42) to (62-73) Cold Damage to Spells",
         "Gloves": "Adds (6-9) to (13-16) Cold Damage to Attacks",
         "Helmet": "(47-50)% chance to Avoid being Frozen",
-        "One Hand Axe": "Adds (26-35) to (51-60) Cold Damage to Spells",
-        "One Hand Mace": "Adds (26-35) to (51-60) Cold Damage to Spells",
-        "One Hand Sword": "Adds (26-35) to (51-60) Cold Damage to Spells",
+        "One Hand Axe": "Adds (31-42) to (62-73) Cold Damage to Spells",
+        "One Hand Mace": "Adds (31-42) to (62-73) Cold Damage to Spells",
+        "One Hand Sword": "Adds (31-42) to (62-73) Cold Damage to Spells",
         "Quiver": "Adds (18-24) to (36-42) Cold Damage to Attacks",
         "Ring": "Adds (12-16) to (24-28) Cold Damage to Attacks",
-        "Sceptre": "Adds (26-35) to (51-60) Cold Damage to Spells",
+        "Sceptre": "Adds (31-42) to (62-73) Cold Damage to Spells",
         "Shield": "(7-8)% chance to Avoid Cold Damage from Hits",
-        "Staff": "Adds (39-52) to (77-90) Cold Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (26-35) to (51-60) Cold Damage to Spells",
-        "Two Hand Axe": "Adds (39-52) to (77-90) Cold Damage to Spells",
-        "Two Hand Mace": "Adds (39-52) to (77-90) Cold Damage to Spells",
-        "Two Hand Sword": "Adds (39-52) to (77-90) Cold Damage to Spells",
-        "Wand": "Adds (26-35) to (51-60) Cold Damage to Spells"
+        "Staff": "Adds (59-79) to (116-136) Cold Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (31-42) to (62-73) Cold Damage to Spells",
+        "Two Hand Axe": "Adds (59-79) to (116-136) Cold Damage to Spells",
+        "Two Hand Mace": "Adds (59-79) to (116-136) Cold Damage to Spells",
+        "Two Hand Sword": "Adds (59-79) to (116-136) Cold Damage to Spells",
+        "Wand": "Adds (31-42) to (62-73) Cold Damage to Spells"
       },
       "image": "9e85a4848a12e5738ababacd575cf5623b216023623de95465a1136b3dd83050.png",
       "width": 78,
@@ -7404,24 +7916,24 @@
         "Belt": "(51-55)% chance to Avoid being Frozen",
         "Body Armour": "(8-9)% chance to Avoid Cold Damage from Hits",
         "Boots": "(51-55)% chance to Avoid being Frozen",
-        "Bow": "Adds (49-64) to (96-113) Cold Damage to Spells",
-        "Claw": "Adds (33-43) to (64-75) Cold Damage to Spells",
-        "Dagger": "Adds (33-43) to (64-75) Cold Damage to Spells",
+        "Bow": "Adds (76-99) to (149-175) Cold Damage to Spells",
+        "Claw": "Adds (41-53) to (79-93) Cold Damage to Spells",
+        "Dagger": "Adds (41-53) to (79-93) Cold Damage to Spells",
         "Gloves": "Adds (8-11) to (16-19) Cold Damage to Attacks",
         "Helmet": "(51-55)% chance to Avoid being Frozen",
-        "One Hand Axe": "Adds (33-43) to (64-75) Cold Damage to Spells",
-        "One Hand Mace": "Adds (33-43) to (64-75) Cold Damage to Spells",
-        "One Hand Sword": "Adds (33-43) to (64-75) Cold Damage to Spells",
+        "One Hand Axe": "Adds (41-53) to (79-93) Cold Damage to Spells",
+        "One Hand Mace": "Adds (41-53) to (79-93) Cold Damage to Spells",
+        "One Hand Sword": "Adds (41-53) to (79-93) Cold Damage to Spells",
         "Quiver": "Adds (33-45) to (67-78) Cold Damage to Attacks",
         "Ring": "Adds (17-22) to (34-40) Cold Damage to Attacks",
-        "Sceptre": "Adds (33-43) to (64-75) Cold Damage to Spells",
+        "Sceptre": "Adds (41-53) to (79-93) Cold Damage to Spells",
         "Shield": "(8-9)% chance to Avoid Cold Damage from Hits",
-        "Staff": "Adds (49-64) to (96-113) Cold Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (33-43) to (64-75) Cold Damage to Spells",
-        "Two Hand Axe": "Adds (49-64) to (96-113) Cold Damage to Spells",
-        "Two Hand Mace": "Adds (49-64) to (96-113) Cold Damage to Spells",
-        "Two Hand Sword": "Adds (49-64) to (96-113) Cold Damage to Spells",
-        "Wand": "Adds (33-43) to (64-75) Cold Damage to Spells"
+        "Staff": "Adds (76-99) to (149-175) Cold Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (41-53) to (79-93) Cold Damage to Spells",
+        "Two Hand Axe": "Adds (76-99) to (149-175) Cold Damage to Spells",
+        "Two Hand Mace": "Adds (76-99) to (149-175) Cold Damage to Spells",
+        "Two Hand Sword": "Adds (76-99) to (149-175) Cold Damage to Spells",
+        "Wand": "Adds (41-53) to (79-93) Cold Damage to Spells"
       },
       "image": "55943eb41c6a426d5b5c5a0fd11f45764ac29c2320a2ff57eaa9e5d9c3e6d869.png",
       "width": 78,
@@ -7437,24 +7949,24 @@
         "Belt": "(56-60)% chance to Avoid being Frozen",
         "Body Armour": "(9-10)% chance to Avoid Cold Damage from Hits",
         "Boots": "(56-60)% chance to Avoid being Frozen",
-        "Bow": "Adds (61-81) to (120-140) Cold Damage to Spells",
-        "Claw": "Adds (41-54) to (81-93) Cold Damage to Spells",
-        "Dagger": "Adds (41-54) to (81-93) Cold Damage to Spells",
+        "Bow": "Adds (96-129) to (190-223) Cold Damage to Spells",
+        "Claw": "Adds (52-69) to (103-118) Cold Damage to Spells",
+        "Dagger": "Adds (52-69) to (103-118) Cold Damage to Spells",
         "Gloves": "Adds (10-13) to (20-24) Cold Damage to Attacks",
         "Helmet": "(56-60)% chance to Avoid being Frozen",
-        "One Hand Axe": "Adds (41-54) to (81-93) Cold Damage to Spells",
-        "One Hand Mace": "Adds (41-54) to (81-93) Cold Damage to Spells",
-        "One Hand Sword": "Adds (41-54) to (81-93) Cold Damage to Spells",
+        "One Hand Axe": "Adds (52-69) to (103-118) Cold Damage to Spells",
+        "One Hand Mace": "Adds (52-69) to (103-118) Cold Damage to Spells",
+        "One Hand Sword": "Adds (52-69) to (103-118) Cold Damage to Spells",
         "Quiver": "Adds (36-50) to (74-86) Cold Damage to Attacks",
         "Ring": "Adds (20-24) to (38-44) Cold Damage to Attacks",
-        "Sceptre": "Adds (41-54) to (81-93) Cold Damage to Spells",
+        "Sceptre": "Adds (52-69) to (103-118) Cold Damage to Spells",
         "Shield": "(9-10)% chance to Avoid Cold Damage from Hits",
-        "Staff": "Adds (61-81) to (120-140) Cold Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (41-54) to (81-93) Cold Damage to Spells",
-        "Two Hand Axe": "Adds (61-81) to (120-140) Cold Damage to Spells",
-        "Two Hand Mace": "Adds (61-81) to (120-140) Cold Damage to Spells",
-        "Two Hand Sword": "Adds (61-81) to (120-140) Cold Damage to Spells",
-        "Wand": "Adds (41-54) to (81-93) Cold Damage to Spells"
+        "Staff": "Adds (96-129) to (190-223) Cold Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (52-69) to (103-118) Cold Damage to Spells",
+        "Two Hand Axe": "Adds (96-129) to (190-223) Cold Damage to Spells",
+        "Two Hand Mace": "Adds (96-129) to (190-223) Cold Damage to Spells",
+        "Two Hand Sword": "Adds (96-129) to (190-223) Cold Damage to Spells",
+        "Wand": "Adds (52-69) to (103-118) Cold Damage to Spells"
       },
       "image": "7c0da4d8653a36016d521d934f98a85d1cb8f6821d775edd634bd80f6f1f5070.png",
       "width": 78,
@@ -7470,24 +7982,24 @@
         "Belt": "(35-38)% chance to Avoid being Shocked",
         "Body Armour": "(4-5)% chance to Avoid Lightning Damage from Hits",
         "Boots": "(35-38)% chance to Avoid being Shocked",
-        "Bow": "Adds (1-3) to (32-34) Lightning Damage to Spells",
-        "Claw": "Adds (1-2) to (21-22) Lightning Damage to Spells",
-        "Dagger": "Adds (1-2) to (21-22) Lightning Damage to Spells",
+        "Bow": "Adds (1-4) to (43-45) Lightning Damage to Spells",
+        "Claw": "Adds (1-2) to (22-23) Lightning Damage to Spells",
+        "Dagger": "Adds (1-2) to (22-23) Lightning Damage to Spells",
         "Gloves": "Adds 1 to 5 Lightning Damage to Attacks",
         "Helmet": "(35-38)% chance to Avoid being Shocked",
-        "One Hand Axe": "Adds (1-2) to (21-22) Lightning Damage to Spells",
-        "One Hand Mace": "Adds (1-2) to (21-22) Lightning Damage to Spells",
-        "One Hand Sword": "Adds (1-2) to (21-22) Lightning Damage to Spells",
+        "One Hand Axe": "Adds (1-2) to (22-23) Lightning Damage to Spells",
+        "One Hand Mace": "Adds (1-2) to (22-23) Lightning Damage to Spells",
+        "One Hand Sword": "Adds (1-2) to (22-23) Lightning Damage to Spells",
         "Quiver": "Adds 2 to (16-18) Lightning Damage to Attacks",
         "Ring": "Adds 1 to (14-15) Lightning Damage to Attacks",
-        "Sceptre": "Adds (1-2) to (21-22) Lightning Damage to Spells",
+        "Sceptre": "Adds (1-2) to (22-23) Lightning Damage to Spells",
         "Shield": "(4-5)% chance to Avoid Lightning Damage from Hits",
-        "Staff": "Adds (1-3) to (32-34) Lightning Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (1-2) to (21-22) Lightning Damage to Spells",
-        "Two Hand Axe": "Adds (1-3) to (32-34) Lightning Damage to Spells",
-        "Two Hand Mace": "Adds (1-3) to (32-34) Lightning Damage to Spells",
-        "Two Hand Sword": "Adds (1-3) to (32-34) Lightning Damage to Spells",
-        "Wand": "Adds (1-2) to (21-22) Lightning Damage to Spells"
+        "Staff": "Adds (1-4) to (43-45) Lightning Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (1-2) to (22-23) Lightning Damage to Spells",
+        "Two Hand Axe": "Adds (1-4) to (43-45) Lightning Damage to Spells",
+        "Two Hand Mace": "Adds (1-4) to (43-45) Lightning Damage to Spells",
+        "Two Hand Sword": "Adds (1-4) to (43-45) Lightning Damage to Spells",
+        "Wand": "Adds (1-2) to (22-23) Lightning Damage to Spells"
       },
       "image": "d01d2972c87a8b7fdae253eac6dfbde9ad58e7803e37860a46dd5fde210cecd5.png",
       "width": 78,
@@ -7503,24 +8015,24 @@
         "Belt": "(39-42)% chance to Avoid being Shocked",
         "Body Armour": "(5-6)% chance to Avoid Lightning Damage from Hits",
         "Boots": "(39-42)% chance to Avoid being Shocked",
-        "Bow": "Adds (2-5) to (69-73) Lightning Damage to Spells",
-        "Claw": "Adds (1-4) to (46-48) Lightning Damage to Spells",
-        "Dagger": "Adds (1-4) to (46-48) Lightning Damage to Spells",
+        "Bow": "Adds (3-8) to (96-103) Lightning Damage to Spells",
+        "Claw": "Adds (1-4) to (52-54) Lightning Damage to Spells",
+        "Dagger": "Adds (1-4) to (52-54) Lightning Damage to Spells",
         "Gloves": "Adds 1 to (14-15) Lightning Damage to Attacks",
         "Helmet": "(39-42)% chance to Avoid being Shocked",
-        "One Hand Axe": "Adds (1-4) to (46-48) Lightning Damage to Spells",
-        "One Hand Mace": "Adds (1-4) to (46-48) Lightning Damage to Spells",
-        "One Hand Sword": "Adds (1-4) to (46-48) Lightning Damage to Spells",
+        "One Hand Axe": "Adds (1-4) to (52-54) Lightning Damage to Spells",
+        "One Hand Mace": "Adds (1-4) to (52-54) Lightning Damage to Spells",
+        "One Hand Sword": "Adds (1-4) to (52-54) Lightning Damage to Spells",
         "Quiver": "Adds (2-3) to (35-40) Lightning Damage to Attacks",
         "Ring": "Adds (1-2) to (27-28) Lightning Damage to Attacks",
-        "Sceptre": "Adds (1-4) to (46-48) Lightning Damage to Spells",
+        "Sceptre": "Adds (1-4) to (52-54) Lightning Damage to Spells",
         "Shield": "(5-6)% chance to Avoid Lightning Damage from Hits",
-        "Staff": "Adds (2-5) to (69-73) Lightning Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (1-4) to (46-48) Lightning Damage to Spells",
-        "Two Hand Axe": "Adds (2-5) to (69-73) Lightning Damage to Spells",
-        "Two Hand Mace": "Adds (2-5) to (69-73) Lightning Damage to Spells",
-        "Two Hand Sword": "Adds (2-5) to (69-73) Lightning Damage to Spells",
-        "Wand": "Adds (1-4) to (46-48) Lightning Damage to Spells"
+        "Staff": "Adds (3-8) to (96-103) Lightning Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (1-4) to (52-54) Lightning Damage to Spells",
+        "Two Hand Axe": "Adds (3-8) to (96-103) Lightning Damage to Spells",
+        "Two Hand Mace": "Adds (3-8) to (96-103) Lightning Damage to Spells",
+        "Two Hand Sword": "Adds (3-8) to (96-103) Lightning Damage to Spells",
+        "Wand": "Adds (1-4) to (52-54) Lightning Damage to Spells"
       },
       "image": "1f48f31b53778895a54f9cad340b1f90662628d14fd792b78815441821a94f64.png",
       "width": 78,
@@ -7536,24 +8048,24 @@
         "Belt": "(43-46)% chance to Avoid being Shocked",
         "Body Armour": "(6-7)% chance to Avoid Lightning Damage from Hits",
         "Boots": "(43-46)% chance to Avoid being Shocked",
-        "Bow": "Adds (3-10) to (126-133) Lightning Damage to Spells",
-        "Claw": "Adds (2-7) to (84-88) Lightning Damage to Spells",
-        "Dagger": "Adds (2-7) to (84-88) Lightning Damage to Spells",
+        "Bow": "Adds (5-15) to (186-196) Lightning Damage to Spells",
+        "Claw": "Adds (2-8) to (99-104) Lightning Damage to Spells",
+        "Dagger": "Adds (2-8) to (99-104) Lightning Damage to Spells",
         "Gloves": "Adds (1-2) to (22-23) Lightning Damage to Attacks",
         "Helmet": "(43-46)% chance to Avoid being Shocked",
-        "One Hand Axe": "Adds (2-7) to (84-88) Lightning Damage to Spells",
-        "One Hand Mace": "Adds (2-7) to (84-88) Lightning Damage to Spells",
-        "One Hand Sword": "Adds (2-7) to (84-88) Lightning Damage to Spells",
+        "One Hand Axe": "Adds (2-8) to (99-104) Lightning Damage to Spells",
+        "One Hand Mace": "Adds (2-8) to (99-104) Lightning Damage to Spells",
+        "One Hand Sword": "Adds (2-8) to (99-104) Lightning Damage to Spells",
         "Quiver": "Adds (2-5) to (56-62) Lightning Damage to Attacks",
         "Ring": "Adds (1-4) to (40-43) Lightning Damage to Attacks",
-        "Sceptre": "Adds (2-7) to (84-88) Lightning Damage to Spells",
+        "Sceptre": "Adds (2-8) to (99-104) Lightning Damage to Spells",
         "Shield": "(6-7)% chance to Avoid Lightning Damage from Hits",
-        "Staff": "Adds (3-10) to (126-133) Lightning Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (2-7) to (84-88) Lightning Damage to Spells",
-        "Two Hand Axe": "Adds (3-10) to (126-133) Lightning Damage to Spells",
-        "Two Hand Mace": "Adds (3-10) to (126-133) Lightning Damage to Spells",
-        "Two Hand Sword": "Adds (3-10) to (126-133) Lightning Damage to Spells",
-        "Wand": "Adds (2-7) to (84-88) Lightning Damage to Spells"
+        "Staff": "Adds (5-15) to (186-196) Lightning Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (2-8) to (99-104) Lightning Damage to Spells",
+        "Two Hand Axe": "Adds (5-15) to (186-196) Lightning Damage to Spells",
+        "Two Hand Mace": "Adds (5-15) to (186-196) Lightning Damage to Spells",
+        "Two Hand Sword": "Adds (5-15) to (186-196) Lightning Damage to Spells",
+        "Wand": "Adds (2-8) to (99-104) Lightning Damage to Spells"
       },
       "image": "664871f256f40a2926e4e0d08b49b1f8e2807f5567dac0f089b40b4401e357e7.png",
       "width": 78,
@@ -7569,24 +8081,24 @@
         "Belt": "(47-50)% chance to Avoid being Shocked",
         "Body Armour": "(7-8)% chance to Avoid Lightning Damage from Hits",
         "Boots": "(47-50)% chance to Avoid being Shocked",
-        "Bow": "Adds (5-12) to (164-173) Lightning Damage to Spells",
-        "Claw": "Adds (2-9) to (109-115) Lightning Damage to Spells",
-        "Dagger": "Adds (2-9) to (109-115) Lightning Damage to Spells",
+        "Bow": "Adds (8-19) to (248-261) Lightning Damage to Spells",
+        "Claw": "Adds (2-11) to (132-139) Lightning Damage to Spells",
+        "Dagger": "Adds (2-11) to (132-139) Lightning Damage to Spells",
         "Gloves": "Adds (1-2) to (27-28) Lightning Damage to Attacks",
         "Helmet": "(47-50)% chance to Avoid being Shocked",
-        "One Hand Axe": "Adds (2-9) to (109-115) Lightning Damage to Spells",
-        "One Hand Mace": "Adds (2-9) to (109-115) Lightning Damage to Spells",
-        "One Hand Sword": "Adds (2-9) to (109-115) Lightning Damage to Spells",
+        "One Hand Axe": "Adds (2-11) to (132-139) Lightning Damage to Spells",
+        "One Hand Mace": "Adds (2-11) to (132-139) Lightning Damage to Spells",
+        "One Hand Sword": "Adds (2-11) to (132-139) Lightning Damage to Spells",
         "Quiver": "Adds (3-8) to (89-99) Lightning Damage to Attacks",
         "Ring": "Adds (3-6) to (57-61) Lightning Damage to Attacks",
-        "Sceptre": "Adds (2-9) to (109-115) Lightning Damage to Spells",
+        "Sceptre": "Adds (2-11) to (132-139) Lightning Damage to Spells",
         "Shield": "(7-8)% chance to Avoid Lightning Damage from Hits",
-        "Staff": "Adds (5-12) to (164-173) Lightning Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (2-9) to (109-115) Lightning Damage to Spells",
-        "Two Hand Axe": "Adds (5-12) to (164-173) Lightning Damage to Spells",
-        "Two Hand Mace": "Adds (5-12) to (164-173) Lightning Damage to Spells",
-        "Two Hand Sword": "Adds (5-12) to (164-173) Lightning Damage to Spells",
-        "Wand": "Adds (2-9) to (109-115) Lightning Damage to Spells"
+        "Staff": "Adds (8-19) to (248-261) Lightning Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (2-11) to (132-139) Lightning Damage to Spells",
+        "Two Hand Axe": "Adds (8-19) to (248-261) Lightning Damage to Spells",
+        "Two Hand Mace": "Adds (8-19) to (248-261) Lightning Damage to Spells",
+        "Two Hand Sword": "Adds (8-19) to (248-261) Lightning Damage to Spells",
+        "Wand": "Adds (2-11) to (132-139) Lightning Damage to Spells"
       },
       "image": "5f335d1bbf176f496c8d8dd3ac19d920e22a4a02caae597132912d3c742df77d.png",
       "width": 78,
@@ -7602,24 +8114,24 @@
         "Belt": "(51-55)% chance to Avoid being Shocked",
         "Body Armour": "(8-9)% chance to Avoid Lightning Damage from Hits",
         "Boots": "(51-55)% chance to Avoid being Shocked",
-        "Bow": "Adds (5-17) to (204-216) Lightning Damage to Spells",
-        "Claw": "Adds (4-11) to (136-144) Lightning Damage to Spells",
-        "Dagger": "Adds (4-11) to (136-144) Lightning Damage to Spells",
+        "Bow": "Adds (8-26) to (316-335) Lightning Damage to Spells",
+        "Claw": "Adds (5-14) to (169-179) Lightning Damage to Spells",
+        "Dagger": "Adds (5-14) to (169-179) Lightning Damage to Spells",
         "Gloves": "Adds (1-3) to (33-34) Lightning Damage to Attacks",
         "Helmet": "(51-55)% chance to Avoid being Shocked",
-        "One Hand Axe": "Adds (4-11) to (136-144) Lightning Damage to Spells",
-        "One Hand Mace": "Adds (4-11) to (136-144) Lightning Damage to Spells",
-        "One Hand Sword": "Adds (4-11) to (136-144) Lightning Damage to Spells",
+        "One Hand Axe": "Adds (5-14) to (169-179) Lightning Damage to Spells",
+        "One Hand Mace": "Adds (5-14) to (169-179) Lightning Damage to Spells",
+        "One Hand Sword": "Adds (5-14) to (169-179) Lightning Damage to Spells",
         "Quiver": "Adds (5-11) to (124-140) Lightning Damage to Attacks",
         "Ring": "Adds (3-7) to (68-72) Lightning Damage to Attacks",
-        "Sceptre": "Adds (4-11) to (136-144) Lightning Damage to Spells",
+        "Sceptre": "Adds (5-14) to (169-179) Lightning Damage to Spells",
         "Shield": "(8-9)% chance to Avoid Lightning Damage from Hits",
-        "Staff": "Adds (5-17) to (204-216) Lightning Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (4-11) to (136-144) Lightning Damage to Spells",
-        "Two Hand Axe": "Adds (5-17) to (204-216) Lightning Damage to Spells",
-        "Two Hand Mace": "Adds (5-17) to (204-216) Lightning Damage to Spells",
-        "Two Hand Sword": "Adds (5-17) to (204-216) Lightning Damage to Spells",
-        "Wand": "Adds (4-11) to (136-144) Lightning Damage to Spells"
+        "Staff": "Adds (8-26) to (316-335) Lightning Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (5-14) to (169-179) Lightning Damage to Spells",
+        "Two Hand Axe": "Adds (8-26) to (316-335) Lightning Damage to Spells",
+        "Two Hand Mace": "Adds (8-26) to (316-335) Lightning Damage to Spells",
+        "Two Hand Sword": "Adds (8-26) to (316-335) Lightning Damage to Spells",
+        "Wand": "Adds (5-14) to (169-179) Lightning Damage to Spells"
       },
       "image": "2d81ccc03a2a21483b4533179490a7aa52e093889f605004e749430c65607e41.png",
       "width": 78,
@@ -7635,24 +8147,24 @@
         "Belt": "(56-60)% chance to Avoid being Shocked",
         "Body Armour": "(9-10)% chance to Avoid Lightning Damage from Hits",
         "Boots": "(56-60)% chance to Avoid being Shocked",
-        "Bow": "Adds (7-20) to (255-270) Lightning Damage to Spells",
-        "Claw": "Adds (4-14) to (170-179) Lightning Damage to Spells",
-        "Dagger": "Adds (4-14) to (170-179) Lightning Damage to Spells",
+        "Bow": "Adds (11-31) to (405-429) Lightning Damage to Spells",
+        "Claw": "Adds (5-18) to (216-227) Lightning Damage to Spells",
+        "Dagger": "Adds (5-18) to (216-227) Lightning Damage to Spells",
         "Gloves": "Adds (1-4) to (40-43) Lightning Damage to Attacks",
         "Helmet": "(56-60)% chance to Avoid being Shocked",
-        "One Hand Axe": "Adds (4-14) to (170-179) Lightning Damage to Spells",
-        "One Hand Mace": "Adds (4-14) to (170-179) Lightning Damage to Spells",
-        "One Hand Sword": "Adds (4-14) to (170-179) Lightning Damage to Spells",
+        "One Hand Axe": "Adds (5-18) to (216-227) Lightning Damage to Spells",
+        "One Hand Mace": "Adds (5-18) to (216-227) Lightning Damage to Spells",
+        "One Hand Sword": "Adds (5-18) to (216-227) Lightning Damage to Spells",
         "Quiver": "Adds (6-13) to (136-155) Lightning Damage to Attacks",
         "Ring": "Adds (4-8) to (71-76) Lightning Damage to Attacks",
-        "Sceptre": "Adds (4-14) to (170-179) Lightning Damage to Spells",
+        "Sceptre": "Adds (5-18) to (216-227) Lightning Damage to Spells",
         "Shield": "(9-10)% chance to Avoid Lightning Damage from Hits",
-        "Staff": "Adds (7-20) to (255-270) Lightning Damage to Spells",
-        "Thrusting One Hand Sword": "Adds (4-14) to (170-179) Lightning Damage to Spells",
-        "Two Hand Axe": "Adds (7-20) to (255-270) Lightning Damage to Spells",
-        "Two Hand Mace": "Adds (7-20) to (255-270) Lightning Damage to Spells",
-        "Two Hand Sword": "Adds (7-20) to (255-270) Lightning Damage to Spells",
-        "Wand": "Adds (4-14) to (170-179) Lightning Damage to Spells"
+        "Staff": "Adds (11-31) to (405-429) Lightning Damage to Spells",
+        "Thrusting One Hand Sword": "Adds (5-18) to (216-227) Lightning Damage to Spells",
+        "Two Hand Axe": "Adds (11-31) to (405-429) Lightning Damage to Spells",
+        "Two Hand Mace": "Adds (11-31) to (405-429) Lightning Damage to Spells",
+        "Two Hand Sword": "Adds (11-31) to (405-429) Lightning Damage to Spells",
+        "Wand": "Adds (5-18) to (216-227) Lightning Damage to Spells"
       },
       "image": "6047c77e6ecff0749e2b5a04f2455aef77c3008e898206c2c4ba7786a2fe4acf.png",
       "width": 78,
@@ -7668,7 +8180,7 @@
         "Belt": "+(1-3) to maximum Energy Shield",
         "Body Armour": "+(3-5) to maximum Energy Shield",
         "Boots": "+(3-5) to maximum Energy Shield",
-        "Bow": "(15-29)% increased Spell Damage",
+        "Bow": "(18-34)% increased Spell Damage",
         "Claw": "(10-19)% increased Spell Damage",
         "Dagger": "(10-19)% increased Spell Damage",
         "Gloves": "+(3-5) to maximum Energy Shield",
@@ -7680,11 +8192,11 @@
         "Ring": "+(1-3) to maximum Energy Shield",
         "Sceptre": "(10-19)% increased Spell Damage",
         "Shield": "+(3-5) to maximum Energy Shield",
-        "Staff": "(15-29)% increased Spell Damage",
+        "Staff": "(18-34)% increased Spell Damage",
         "Thrusting One Hand Sword": "(10-19)% increased Spell Damage",
-        "Two Hand Axe": "(15-29)% increased Spell Damage",
-        "Two Hand Mace": "(15-29)% increased Spell Damage",
-        "Two Hand Sword": "(15-29)% increased Spell Damage",
+        "Two Hand Axe": "(18-34)% increased Spell Damage",
+        "Two Hand Mace": "(18-34)% increased Spell Damage",
+        "Two Hand Sword": "(18-34)% increased Spell Damage",
         "Wand": "(10-19)% increased Spell Damage"
       },
       "image": "8658c3a854b892e68a5406a290f5bf7ff453613da74733a77227c9fffafaf113.png",
@@ -7701,7 +8213,7 @@
         "Belt": "+(4-8) to maximum Energy Shield",
         "Body Armour": "+(6-11) to maximum Energy Shield",
         "Boots": "+(6-11) to maximum Energy Shield",
-        "Bow": "(30-44)% increased Spell Damage",
+        "Bow": "(35-52)% increased Spell Damage",
         "Claw": "(20-29)% increased Spell Damage",
         "Dagger": "(20-29)% increased Spell Damage",
         "Gloves": "+(6-11) to maximum Energy Shield",
@@ -7713,11 +8225,11 @@
         "Ring": "+(4-8) to maximum Energy Shield",
         "Sceptre": "(20-29)% increased Spell Damage",
         "Shield": "+(6-11) to maximum Energy Shield",
-        "Staff": "(30-44)% increased Spell Damage",
+        "Staff": "(35-52)% increased Spell Damage",
         "Thrusting One Hand Sword": "(20-29)% increased Spell Damage",
-        "Two Hand Axe": "(30-44)% increased Spell Damage",
-        "Two Hand Mace": "(30-44)% increased Spell Damage",
-        "Two Hand Sword": "(30-44)% increased Spell Damage",
+        "Two Hand Axe": "(35-52)% increased Spell Damage",
+        "Two Hand Mace": "(35-52)% increased Spell Damage",
+        "Two Hand Sword": "(35-52)% increased Spell Damage",
         "Wand": "(20-29)% increased Spell Damage"
       },
       "image": "de2cf636db7bb557dda7c41e062a5bb64a2f9f3979cf1090c9d52d9d5d17def4.png",
@@ -7734,7 +8246,7 @@
         "Belt": "+(16-19) to maximum Energy Shield",
         "Body Armour": "+(17-23) to maximum Energy Shield",
         "Boots": "+(17-23) to maximum Energy Shield",
-        "Bow": "(45-59)% increased Spell Damage",
+        "Bow": "(53-69)% increased Spell Damage",
         "Claw": "(30-39)% increased Spell Damage",
         "Dagger": "(30-39)% increased Spell Damage",
         "Gloves": "+(17-23) to maximum Energy Shield",
@@ -7746,11 +8258,11 @@
         "Ring": "+(16-19) to maximum Energy Shield",
         "Sceptre": "(30-39)% increased Spell Damage",
         "Shield": "+(17-23) to maximum Energy Shield",
-        "Staff": "(45-59)% increased Spell Damage",
+        "Staff": "(53-69)% increased Spell Damage",
         "Thrusting One Hand Sword": "(30-39)% increased Spell Damage",
-        "Two Hand Axe": "(45-59)% increased Spell Damage",
-        "Two Hand Mace": "(45-59)% increased Spell Damage",
-        "Two Hand Sword": "(45-59)% increased Spell Damage",
+        "Two Hand Axe": "(53-69)% increased Spell Damage",
+        "Two Hand Mace": "(53-69)% increased Spell Damage",
+        "Two Hand Sword": "(53-69)% increased Spell Damage",
         "Wand": "(30-39)% increased Spell Damage"
       },
       "image": "4d3fa1c988b1cbf2d89ba6903958e45bcee8fd85d5ab07a864c21550d6aa2df1.png",
@@ -7767,7 +8279,7 @@
         "Belt": "+(23-26) to maximum Energy Shield",
         "Body Armour": "+(31-38) to maximum Energy Shield",
         "Boots": "+(18-26) to maximum Energy Shield",
-        "Bow": "(60-84)% increased Spell Damage",
+        "Bow": "(70-95)% increased Spell Damage",
         "Claw": "(40-54)% increased Spell Damage",
         "Dagger": "(40-54)% increased Spell Damage",
         "Gloves": "+(18-26) to maximum Energy Shield",
@@ -7779,11 +8291,11 @@
         "Ring": "+(23-26) to maximum Energy Shield",
         "Sceptre": "(40-54)% increased Spell Damage",
         "Shield": "+(39-49) to maximum Energy Shield",
-        "Staff": "(60-84)% increased Spell Damage",
+        "Staff": "(70-95)% increased Spell Damage",
         "Thrusting One Hand Sword": "(40-54)% increased Spell Damage",
-        "Two Hand Axe": "(60-84)% increased Spell Damage",
-        "Two Hand Mace": "(60-84)% increased Spell Damage",
-        "Two Hand Sword": "(60-84)% increased Spell Damage",
+        "Two Hand Axe": "(70-95)% increased Spell Damage",
+        "Two Hand Mace": "(70-95)% increased Spell Damage",
+        "Two Hand Sword": "(70-95)% increased Spell Damage",
         "Wand": "(40-54)% increased Spell Damage"
       },
       "image": "55e9872d68d59bcf82f06dafe75f9712d8513c984f59d2133bf2acf9f56d7e21.png",
@@ -7800,7 +8312,7 @@
         "Belt": "+(27-31) to maximum Energy Shield",
         "Body Armour": "+(50-61) to maximum Energy Shield",
         "Boots": "+(27-32) to maximum Energy Shield",
-        "Bow": "(85-106)% increased Spell Damage",
+        "Bow": "(88-116)% increased Spell Damage",
         "Claw": "(50-66)% increased Spell Damage",
         "Dagger": "(50-66)% increased Spell Damage",
         "Gloves": "+(27-32) to maximum Energy Shield",
@@ -7812,11 +8324,11 @@
         "Ring": "+(27-31) to maximum Energy Shield",
         "Sceptre": "(50-66)% increased Spell Damage",
         "Shield": "+(50-59) to maximum Energy Shield",
-        "Staff": "(85-106)% increased Spell Damage",
+        "Staff": "(88-116)% increased Spell Damage",
         "Thrusting One Hand Sword": "(50-66)% increased Spell Damage",
-        "Two Hand Axe": "(85-106)% increased Spell Damage",
-        "Two Hand Mace": "(85-106)% increased Spell Damage",
-        "Two Hand Sword": "(85-106)% increased Spell Damage",
+        "Two Hand Axe": "(88-116)% increased Spell Damage",
+        "Two Hand Mace": "(88-116)% increased Spell Damage",
+        "Two Hand Sword": "(88-116)% increased Spell Damage",
         "Wand": "(50-66)% increased Spell Damage"
       },
       "image": "9f294ce47275edc5a9ed14262563d702ece9273e190a4a9b6389b1c8806a84cf.png",
@@ -7833,7 +8345,7 @@
         "Belt": "+(32-37) to maximum Energy Shield",
         "Body Armour": "+(77-90) to maximum Energy Shield",
         "Boots": "+(28-35) to maximum Energy Shield",
-        "Bow": "(107-122)% increased Spell Damage",
+        "Bow": "(117-144)% increased Spell Damage",
         "Claw": "(67-82)% increased Spell Damage",
         "Dagger": "(67-82)% increased Spell Damage",
         "Gloves": "+(28-35) to maximum Energy Shield",
@@ -7845,11 +8357,11 @@
         "Ring": "+(38-43) to maximum Energy Shield",
         "Sceptre": "(67-82)% increased Spell Damage",
         "Shield": "+(60-69) to maximum Energy Shield",
-        "Staff": "(107-122)% increased Spell Damage",
+        "Staff": "(117-144)% increased Spell Damage",
         "Thrusting One Hand Sword": "(67-82)% increased Spell Damage",
-        "Two Hand Axe": "(107-122)% increased Spell Damage",
-        "Two Hand Mace": "(107-122)% increased Spell Damage",
-        "Two Hand Sword": "(107-122)% increased Spell Damage",
+        "Two Hand Axe": "(117-144)% increased Spell Damage",
+        "Two Hand Mace": "(117-144)% increased Spell Damage",
+        "Two Hand Sword": "(117-144)% increased Spell Damage",
         "Wand": "(67-82)% increased Spell Damage"
       },
       "image": "95d41d35cd3ff8671c8b0efdb00ad72490be83c828681fd8c6d36dd21d2d80e7.png",
@@ -7866,7 +8378,7 @@
         "Belt": "+(38-43) to maximum Energy Shield",
         "Body Armour": "+(88-95) to maximum Energy Shield",
         "Boots": "+(38-45) to maximum Energy Shield",
-        "Bow": "(123-144)% increased Spell Damage",
+        "Bow": "(145-165)% increased Spell Damage",
         "Claw": "(83-94)% increased Spell Damage",
         "Dagger": "(83-94)% increased Spell Damage",
         "Gloves": "+(38-45) to maximum Energy Shield",
@@ -7878,11 +8390,11 @@
         "Ring": "+(44-47) to maximum Energy Shield",
         "Sceptre": "(83-94)% increased Spell Damage",
         "Shield": "+(75-85) to maximum Energy Shield",
-        "Staff": "(123-144)% increased Spell Damage",
+        "Staff": "(145-165)% increased Spell Damage",
         "Thrusting One Hand Sword": "(83-94)% increased Spell Damage",
-        "Two Hand Axe": "(123-144)% increased Spell Damage",
-        "Two Hand Mace": "(123-144)% increased Spell Damage",
-        "Two Hand Sword": "(123-144)% increased Spell Damage",
+        "Two Hand Axe": "(145-165)% increased Spell Damage",
+        "Two Hand Mace": "(145-165)% increased Spell Damage",
+        "Two Hand Sword": "(145-165)% increased Spell Damage",
         "Wand": "(83-94)% increased Spell Damage"
       },
       "image": "de91f75d586dc03829d7c832383b55ff8d073e8cc4950ef5e75ae9dad634cac5.png",
@@ -8516,6 +9028,11 @@
       "width": 156,
       "height": 234
     },
+    "Metadata/Items/Quivers/QuiverGamble": {
+      "name": "Random Quiver",
+      "visual_identity": "QuiverSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersQuiver.png"
+    },
     "Metadata/Items/Quivers/QuiverNew1": {
       "name": "Serrated Arrow Quiver",
       "visual_identity": "QuiverNew1",
@@ -8619,6 +9136,36 @@
       "image": "ba0edadba1e45b963f77135d59e0010dc98fa1f4645bedb42ee6b91d6986a668.png",
       "width": 156,
       "height": 234
+    },
+    "Metadata/Items/Relics/AtlasRelic1x1Gamble": {
+      "name": "Random Minor Idol",
+      "visual_identity": "AtlasRelic1x1Gamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRelic1x1.png"
+    },
+    "Metadata/Items/Relics/AtlasRelic1x2Gamble": {
+      "name": "Random Kamasan Idol",
+      "visual_identity": "AtlasRelic1x2Gamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRelic1x2.png"
+    },
+    "Metadata/Items/Relics/AtlasRelic1x3Gamble": {
+      "name": "Random Totemic Idol",
+      "visual_identity": "AtlasRelic1x3Gamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRelic1x3.png"
+    },
+    "Metadata/Items/Relics/AtlasRelic2x1Gamble": {
+      "name": "Random Noble Idol",
+      "visual_identity": "AtlasRelic2x1Gamble___",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRelic2x1.png"
+    },
+    "Metadata/Items/Relics/AtlasRelic2x2Gamble": {
+      "name": "Random Conqueror Idol",
+      "visual_identity": "AtlasRelic2x2Gamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRelic2x2.png"
+    },
+    "Metadata/Items/Relics/AtlasRelic3x1Gamble": {
+      "name": "Random Burial Idol",
+      "visual_identity": "AtlasRelic3x1Gamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRelic3x1.png"
     },
     "Metadata/Items/Rings/BreachRing": {
       "name": "Breach Ring",
@@ -8899,6 +9446,11 @@
       "image": "b9c0b80745c8d90b375a322abbf2268d5f530c7e3c35970ee56d77d52207bb69.png",
       "width": 78,
       "height": 78
+    },
+    "Metadata/Items/Rings/RingGamble": {
+      "name": "Random Ring",
+      "visual_identity": "RingSettlersGamble_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRing.png"
     },
     "Metadata/Items/Rings/RingK1": {
       "name": "Dusk Ring",
@@ -9196,6 +9748,11 @@
       "width": 156,
       "height": 156
     },
+    "Metadata/Items/Weapons/OneHandWeapons/Claws/ClawGamble": {
+      "name": "Random Claw",
+      "visual_identity": "ClawSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersClaw.png"
+    },
     "Metadata/Items/Weapons/OneHandWeapons/Claws/ClawM1": {
       "name": "Double Claw",
       "visual_identity": "Claw9",
@@ -9420,6 +9977,11 @@
       "width": 78,
       "height": 234
     },
+    "Metadata/Items/Weapons/OneHandWeapons/Daggers/DaggerGamble": {
+      "name": "Random Dagger",
+      "visual_identity": "DaggerSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersDagger.png"
+    },
     "Metadata/Items/Weapons/OneHandWeapons/Daggers/DaggerM1": {
       "name": "Prong Dagger",
       "visual_identity": "Dagger9",
@@ -9467,6 +10029,11 @@
       "image": "0b90d136de389feca47d9b2d34f0fb2bac86478fd8f7de75caf1fd8f0e963484.png",
       "width": 78,
       "height": 234
+    },
+    "Metadata/Items/Weapons/OneHandWeapons/Daggers/RuneDaggerGamble": {
+      "name": "Random Rune Dagger",
+      "visual_identity": "RuneDaggerSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRuneDagger.png"
     },
     "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxe1": {
       "name": "Rusted Hatchet",
@@ -9667,6 +10234,11 @@
       "image": "5588cf2631549d4a10fc861f52ebbf879ea24ebe4b44657d518e0c333b82704e.png",
       "width": 156,
       "height": 234
+    },
+    "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxeGamble": {
+      "name": "Random One Hand Axe",
+      "visual_identity": "OneHandAxeSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersOneHandAxe.png"
     },
     "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxeM1": {
       "name": "Etched Hatchet",
@@ -9892,6 +10464,11 @@
       "width": 156,
       "height": 234
     },
+    "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/OneHandMaceGamble": {
+      "name": "Random One Hand Mace",
+      "visual_identity": "OneHandMaceSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersOneHandMace.png"
+    },
     "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/OneHandMaceM1": {
       "name": "Wyrm Mace",
       "visual_identity": "OneHandMace9",
@@ -10116,6 +10693,11 @@
       "width": 156,
       "height": 234
     },
+    "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/SceptreGamble": {
+      "name": "Random Sceptre",
+      "visual_identity": "SceptreSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersSceptre.png"
+    },
     "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/SceptreM1": {
       "name": "Horned Sceptre",
       "visual_identity": "Sceptre9",
@@ -10316,6 +10898,14 @@
       "width": 78,
       "height": 234
     },
+    "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/OneHandSwordD1": {
+      "name": "Ghostflame Blade",
+      "visual_identity": "OneHandSwordD1",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Weapons/OneHandWeapons/OneHandSwords/OneHandSword3.png",
+      "image": "e9de88b48a3b150d57a7f5d52665289de66a8bcce81e8e12a1724930d2d5e202.png",
+      "width": 78,
+      "height": 234
+    },
     "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/OneHandSwordE1": {
       "name": "Fickle Spiritblade",
       "visual_identity": "OneHandSwordExperimented1",
@@ -10339,6 +10929,11 @@
       "image": "be6ae598dd336f6273a9e52027ea91f2c3771bcb6f8a0e7ee825cfa228f9802b.png",
       "width": 156,
       "height": 234
+    },
+    "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/OneHandSwordGamble": {
+      "name": "Random One Hand Sword",
+      "visual_identity": "OneHandSwordSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersOneHandSword.png"
     },
     "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/OneHandSwordM1": {
       "name": "Hook Sword",
@@ -10371,6 +10966,11 @@
       "image": "3e9d9b1e56525ad6bed5102b50b6258d45c802ab5fd28adfefda6d7a95dd6d34.png",
       "width": 156,
       "height": 234
+    },
+    "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/ThrustingOneHandSwordGamble": {
+      "name": "Random Rapier",
+      "visual_identity": "ThrustingOneHandSwordSettlersGamble_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRapier.png"
     },
     "Metadata/Items/Weapons/OneHandWeapons/OneHandThrustingSwords/Rapier1": {
       "name": "Rusted Spike",
@@ -10740,6 +11340,11 @@
       "width": 78,
       "height": 234
     },
+    "Metadata/Items/Weapons/OneHandWeapons/Wands/WandGamble": {
+      "name": "Random Wand",
+      "visual_identity": "WandSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersWand.png"
+    },
     "Metadata/Items/Weapons/OneHandWeapons/Wands/WandK1": {
       "name": "Somatic Wand",
       "visual_identity": "Wand3",
@@ -11020,6 +11625,11 @@
       "width": 156,
       "height": 312
     },
+    "Metadata/Items/Weapons/TwoHandWeapons/Bows/BowGamble": {
+      "name": "Random Bow",
+      "visual_identity": "BowSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersBow.png"
+    },
     "Metadata/Items/Weapons/TwoHandWeapons/Bows/BowM1": {
       "name": "Reflex Bow",
       "visual_identity": "Bow9",
@@ -11220,6 +11830,11 @@
       "width": 156,
       "height": 312
     },
+    "Metadata/Items/Weapons/TwoHandWeapons/Staves/StaffGamble": {
+      "name": "Random Staff",
+      "visual_identity": "StaffSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersStaff.png"
+    },
     "Metadata/Items/Weapons/TwoHandWeapons/Staves/StaffM1": {
       "name": "Crescent Staff",
       "visual_identity": "Staff8",
@@ -11267,6 +11882,11 @@
       "image": "2fd9316781e6ff6ee71c3dfa0c1b581b79c594a2329ef620857a41089cb0c8d7.png",
       "width": 156,
       "height": 312
+    },
+    "Metadata/Items/Weapons/TwoHandWeapons/Staves/WarstaffGamble": {
+      "name": "Random Warstaff",
+      "visual_identity": "WarstaffSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersWarstaff.png"
     },
     "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/TwoHandAxe1": {
       "name": "Stone Axe",
@@ -11443,6 +12063,11 @@
       "image": "ea3138e84aa37fab6eea63b0710a31076d818a0e5da027a8e183ecfb01713f0c.png",
       "width": 156,
       "height": 312
+    },
+    "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/TwoHandAxeGamble": {
+      "name": "Random Two Hand Axe",
+      "visual_identity": "TwoHandAxeSettlersGamble_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersTwoHandAxe.png"
     },
     "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/TwoHandAxeM1": {
       "name": "Dagger Axe",
@@ -11643,6 +12268,11 @@
       "image": "140b9f94398ef08b7054da8ba348f294df9d00f9dd9a911ef126d0a12c660cd3.png",
       "width": 156,
       "height": 312
+    },
+    "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/TwoHandMaceGamble": {
+      "name": "Random Two Hand Mace",
+      "visual_identity": "TwoHandMaceSettlersGamble_",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersTwoHandMace.png"
     },
     "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/TwoHandMaceM1": {
       "name": "Morning Star",
@@ -11851,6 +12481,11 @@
       "image": "7ba7b3faaf262eba9704fa242a0d77be53b6d923edd590f0262b03d3626bf6ad.png",
       "width": 156,
       "height": 312
+    },
+    "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/TwoHandSwordGamble": {
+      "name": "Random Two Hand Sword",
+      "visual_identity": "TwoHandSwordSettlersGamble",
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersTwoHandSword.png"
     },
     "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/TwoHandSwordM1": {
       "name": "Curved Blade",
@@ -12124,10 +12759,24 @@
       "width": 78,
       "height": 78
     },
+    "https://web.poecdn.com/image/Art/2DItems/Amulets/PearlescentAmulet.png": {
+      "file": "d673bac21bc598c6134e854c0156ff3e46d843f7a8204a334d0dced7ed784bcc.png",
+      "sha256": "d673bac21bc598c6134e854c0156ff3e46d843f7a8204a334d0dced7ed784bcc",
+      "bytes": 11349,
+      "width": 78,
+      "height": 78
+    },
     "https://web.poecdn.com/image/Art/2DItems/Amulets/T4Talisman.png": {
       "file": "e611467af863cfed432561fd31120d81b015caf465c53b45457bc6f4adb496b3.png",
       "sha256": "e611467af863cfed432561fd31120d81b015caf465c53b45457bc6f4adb496b3",
       "bytes": 7015,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Amulets/Talisman16.png": {
+      "file": "977502ff20c057207a17b0209333564111b8e8fd59525aba9310aff6b47001b9.png",
+      "sha256": "977502ff20c057207a17b0209333564111b8e8fd59525aba9310aff6b47001b9",
+      "bytes": 7701,
       "width": 78,
       "height": 78
     },
@@ -12173,6 +12822,34 @@
       "width": 78,
       "height": 78
     },
+    "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanCrabBossSpecial.png": {
+      "file": "3ca3d3db2a20a78aab56bf2669d267962d63c6d65c95689b29621c3f32290b13.png",
+      "sha256": "3ca3d3db2a20a78aab56bf2669d267962d63c6d65c95689b29621c3f32290b13",
+      "bytes": 8363,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanCrabClawWhite.png": {
+      "file": "d339ca3b93b3d292a9d512b9de7f604ba402f7a0a5002e5f3acbea78c7234bf4.png",
+      "sha256": "d339ca3b93b3d292a9d512b9de7f604ba402f7a0a5002e5f3acbea78c7234bf4",
+      "bytes": 5010,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanDogSkullBlack.png": {
+      "file": "9a3aa2e90f23473b84137d97c0f72a55ba78c3615f8a68f50da58ac9aed86f07.png",
+      "sha256": "9a3aa2e90f23473b84137d97c0f72a55ba78c3615f8a68f50da58ac9aed86f07",
+      "bytes": 5875,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanMonkeyHandBlack.png": {
+      "file": "28c95d60685ccd1de694baab92c6084aab8ee72ec6edb1d4b240f13397f63d11.png",
+      "sha256": "28c95d60685ccd1de694baab92c6084aab8ee72ec6edb1d4b240f13397f63d11",
+      "bytes": 7366,
+      "width": 78,
+      "height": 78
+    },
     "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanRed1.png": {
       "file": "ad73e14bd247bec878947ef937d70af2060668461166527bfee6a55266bd0671.png",
       "sha256": "ad73e14bd247bec878947ef937d70af2060668461166527bfee6a55266bd0671",
@@ -12212,6 +12889,41 @@
       "file": "9d832af128950aae795487e309d24deba83f56f7a0c4ad0f6dfc340b08dcc4ea.png",
       "sha256": "9d832af128950aae795487e309d24deba83f56f7a0c4ad0f6dfc340b08dcc4ea",
       "bytes": 9038,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanRhexBossSpecial.png": {
+      "file": "9b8b32cf23f1ac0ec0909ccd26a3a3fc8da8b746fbcc03bbf089408c34fe6b57.png",
+      "sha256": "9b8b32cf23f1ac0ec0909ccd26a3a3fc8da8b746fbcc03bbf089408c34fe6b57",
+      "bytes": 9184,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanSnakeFangWhite.png": {
+      "file": "2c50603f2755640dc08d9c9241a2d5ea25c74587a064a4aba5fc48f0653a22a7.png",
+      "sha256": "2c50603f2755640dc08d9c9241a2d5ea25c74587a064a4aba5fc48f0653a22a7",
+      "bytes": 5700,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanSpiderBossSpecial.png": {
+      "file": "87eba1177940984c467b7b63b35a17917e3336e423f29ddae19732f8453cf335.png",
+      "sha256": "87eba1177940984c467b7b63b35a17917e3336e423f29ddae19732f8453cf335",
+      "bytes": 7633,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanSpiderLegsRed.png": {
+      "file": "717aa18e17f5ea966182ad7a9b1ab74be68257284809b8cbf20bccdb7bd9a940.png",
+      "sha256": "717aa18e17f5ea966182ad7a9b1ab74be68257284809b8cbf20bccdb7bd9a940",
+      "bytes": 5038,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanTigerBossSpecial.png": {
+      "file": "8aa84e3d9d8f3f9543fa1d93a37b0d242a42017558072fe563f21353a1133d25.png",
+      "sha256": "8aa84e3d9d8f3f9543fa1d93a37b0d242a42017558072fe563f21353a1133d25",
+      "bytes": 8832,
       "width": 78,
       "height": 78
     },
@@ -12268,6 +12980,13 @@
       "file": "3dee039033ccfba95e30e7536016fb393702bd07b8be57148632513088a68b27.png",
       "sha256": "3dee039033ccfba95e30e7536016fb393702bd07b8be57148632513088a68b27",
       "bytes": 6536,
+      "width": 78,
+      "height": 78
+    },
+    "https://web.poecdn.com/image/Art/2DItems/Amulets/TalismanWolfFangBlack.png": {
+      "file": "95770fd0b724e1bb09e68e1a39449151c505ef27f23e26c790da009bcfa942b0.png",
+      "sha256": "95770fd0b724e1bb09e68e1a39449151c505ef27f23e26c790da009bcfa942b0",
+      "bytes": 5934,
       "width": 78,
       "height": 78
     },
@@ -16346,5 +17065,226 @@
       "height": 312
     }
   },
-  "unavailable": []
+  "unavailable": [
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersAmourEnergyShieldHelmet.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersAmulet.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourBody.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourBoots.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEnergyShieldBody.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEnergyShieldBoots.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEnergyShieldGloves.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEnergyShieldShield.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEvasionBody.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEvasionBoots.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEvasionGloves.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEvasionHelmet.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourEvasionShield.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourGloves.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourHelmet.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersArmourShield.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersBelt.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersBow.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersClaw.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersDagger.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEnergyShieldBody.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEnergyShieldBoots.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEnergyShieldGloves.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEnergyShieldHelmet.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEnergyShieldShield.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionBody.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionBoots.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionEnergyShieldBody.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionEnergyShieldBoots.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionEnergyShieldGloves.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionEnergyShieldHelmet.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionEnergyShieldShield.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionGloves.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionHelmet.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersEvasionShield.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersOneHandAxe.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersOneHandMace.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersOneHandSword.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersQuiver.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRapier.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRelic1x1.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRelic1x2.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRelic1x3.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRelic2x1.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRelic2x2.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRelic3x1.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRing.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersRuneDagger.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersSceptre.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersStaff.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersTwoHandAxe.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersTwoHandMace.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersTwoHandSword.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersWand.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    },
+    {
+      "source_url": "https://web.poecdn.com/image/Art/2DItems/Effects/WrappingPaper/SettlersWarstaff.png",
+      "reason": "curl: (22) The requested URL returned error: 404"
+    }
+  ]
 }

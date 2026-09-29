@@ -2008,6 +2008,7 @@ const char* pcw_apply(uint32_t context_id, uint32_t item_id,
     out += ",\"added\":" + std::to_string(result.added);
     out += ",\"removed\":" + std::to_string(result.removed);
     if (request.action_type == PC_ACTION_VAAL) out += result.applied ? ",\"cost_keys\":[\"vaal\"]" : ",\"cost_keys\":[]";
+    if (request.action_type == PC_ACTION_DOMINANCE) out += result.applied ? ",\"cost_keys\":[\"dominance\"]" : ",\"cost_keys\":[]";
     out += "}}";
     return respond(std::move(out));
 }

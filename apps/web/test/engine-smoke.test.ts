@@ -2584,6 +2584,27 @@ test("currency expansion state and original-root policy contracts", async () => 
     }
 });
 
+test("Dominance and Vaal native actions preserve transport and costs", async () => {
+    const item = await client.createItem(sessionId, {rarity: "rare"});
+    try {
+        await client.addMod(item, sessionId, {key: "LocalIncreaseSocketedActiveGemLevelUber1", side: "prefix"});
+        await client.addMod(item, sessionId, {key: "AdditionalCriticalStrikeChanceWithSpellsUber2_", side: "suffix"});
+        const result = await client.apply(contextId, item, {type: "dominance"});
+        assert.equal(result.applied, true);
+        assert.deepEqual(result.cost_keys, ["dominance"]);
+        let info = await client.itemInfo(item);
+        const ids = [...info.prefix_mod_ids as number[], ...info.suffix_mod_ids as number[]];
+        assert.equal(ids.length, 1);
+        assert.equal((await client.modInfo(sessionId, ids[0])).reach_kind, 11);
+        const vaal = await client.apply(contextId, item, {type: "vaal"});
+        assert.equal(vaal.applied, true);
+        assert.deepEqual(vaal.cost_keys, ["vaal"]);
+        info = await client.itemInfo(item);
+        assert.ok(Number(info.item_flags) & 1);
+        assert.equal((await client.apply(contextId, item, {type: "vaal"})).applied, false);
+    } finally { await client.closeItem(item); }
+});
+
 // Wire the shared client into the runner before executing.
 {
     const spawned = spawnClient();

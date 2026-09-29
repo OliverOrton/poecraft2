@@ -169,7 +169,7 @@ def test_authored_resources_are_acquired_charged_and_consumed():
             assert result.summary["known_total_cost"] == 0
 
 
-@pytest.mark.parametrize("action,reason", [("dominance", "elevated"), ("tempering", "weights"), ("tailoring", "weights"), ("double_corruption", "reforge"), ("remembrance", "distribution"), ("unravelling", "probabilities")])
+@pytest.mark.parametrize("action,reason", [("tempering", "weights"), ("tailoring", "weights"), ("double_corruption", "reforge"), ("remembrance", "distribution"), ("unravelling", "probabilities")])
 def test_unknown_currency_laws_refuse_before_mutation(action, reason):
     from poecraft_engine import EngineError
     with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(1) as ctx:
@@ -207,10 +207,142 @@ def test_vaal_socketless_branch_and_refusal_contract():
             with strategy.create_simulator(economy) as sim:
                 result = sim.run(SimulationOptions(target_runs=1000, seed=920))
                 assert result.summary["known_total_cost"] == 3000 and result.summary["success_count"] == 1000
-    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(920) as ctx:
+    with load_data(ARTIFACT) as data, data.create_session("Metadata/Items/Jewels/JewelStr", 86) as session, session.create_action_context(920) as ctx:
         item = session.create_item("rare"); before = bytes(item._state)
-        with pytest.raises(EngineError, match="socketless"): ctx.apply(item, "vaal")
+        with pytest.raises(EngineError, match="jewel.*unique"): ctx.apply(item, "vaal")
         assert bytes(item._state) == before
+
+
+@pytest.mark.parametrize("base", [BASE, "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/OneHandSword14",
+    "Metadata/Items/Rings/Ring15", "Metadata/Items/Quivers/QuiverNew7", "Metadata/Items/Amulets/Amulet1"])
+@pytest.mark.parametrize("level", [1, 68, 86])
+def test_vaal_equipment_affix_projection(base, level):
+    with load_data(ARTIFACT) as data, data.create_session(base, level) as session, session.create_action_context(920) as ctx:
+        item = session.create_item("normal")
+        item._state.socket_count = 6
+        item._state.socket_colors[:] = [0, 1, 2, 3, 0, 0]
+        item._state.link_mask = 31
+        item._state.quality = 20
+        branches = [0, 0, 0]
+        original = tuple(s.mod_id for s in item._state.implicits[:item._state.implicit_count])
+        for _ in range(1000):
+            made = item.copy()
+            assert ctx.apply(made, "vaal").applied
+            assert made._state.item_flags & 1
+            assert made._state.socket_count == 6 and made._state.link_mask == 31
+            assert list(made._state.socket_colors) == [0, 1, 2, 3, 0, 0]
+            assert made._state.quality == 20
+            if made.explicit_count:
+                branches[0] += 1
+                assert made.explicit_count == (5 if level == 1 and "Quiver" in base else 6)
+                assert all(s.roll_count for s in list(made._state.prefixes[:made._state.prefix_count]) +
+                           list(made._state.suffixes[:made._state.suffix_count]))
+            elif tuple(s.mod_id for s in made._state.implicits[:made._state.implicit_count]) != original:
+                branches[1] += 1
+            else: branches[2] += 1
+        assert all(180 < n < 320 for n in branches[:2]) and 420 < branches[2] < 580
+
+
+def test_vaal_preserves_locked_values_and_enchantments():
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(29) as ctx:
+        item = session.create_item("rare")
+        item.add_mod("LocalIncreasedEnergyShield11")
+        item.add_mod("StrMasterItemGenerationCannotChangePrefixes")
+        item._state.prefixes[0].roll_count = 1
+        item._state.prefixes[0].rolls[0] = 123
+        enchant = next(session.mod_info(i) for i in range(session.mod_count) if session.mod_info(i).reach_kind == 12)
+        item._state.enchantment_count = 1
+        item._state.enchantments[0].mod_id = enchant.session_mod_id
+        def values(slot):
+            # C struct padding is not part of persisted item identity.
+            return (slot.mod_id, slot.flags, slot.roll_count, tuple(slot.rolls),
+                    slot.veiled_option_count, tuple(slot.veiled_option_mod_ids), slot.veiled_chosen_mod_id)
+        prefix, enchanted = values(item._state.prefixes[0]), values(item._state.enchantments[0])
+        for _ in range(100):
+            made = item.copy()
+            assert ctx.apply(made, "vaal").applied
+            assert values(made._state.prefixes[0]) == prefix
+            assert values(made._state.enchantments[0]) == enchanted
+
+
+def test_dominance_upgrade_removal_values_and_protection():
+    # T1/elevated explicit mappings remain usable below their roll item level.
+    pairs = [
+        ("LocalIncreaseSocketedActiveGemLevelUber1", "LocalIncreaseSocketedActiveGemLevelUberMaven"),
+        ("AdditionalCriticalStrikeChanceWithSpellsUber2_", "AdditionalCriticalStrikeChanceWithSpellsUberMaven"),
+        ("PercentageIntelligenceUber2", "PercentageIntelligenceUberMaven__"),
+    ]
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 1) as session, session.create_action_context(194) as ctx:
+        mods = [session.find_mod(a) for a, _ in pairs]
+        elevated = {session.find_mod(b).session_mod_id for _, b in pairs}
+        item = session.create_item("rare")
+        for mod in mods: item.add_mod(mod)
+        item._state.generic_influence_bits = 32
+        counts = {}
+        for _ in range(1000):
+            made = item.copy()
+            assert ctx.apply(made, "dominance").applied
+            assert made.explicit_count == 2
+            ids = set(made.prefix_mod_ids + made.suffix_mod_ids)
+            upgraded = next(iter(ids & elevated))
+            removed = next(m.session_mod_id for m in mods if m.session_mod_id not in ids and
+                           session.find_mod(pairs[mods.index(m)][1]).session_mod_id != upgraded)
+            counts[upgraded, removed] = counts.get((upgraded, removed), 0) + 1
+            slot = next(s for s in list(made._state.prefixes[:made._state.prefix_count]) +
+                        list(made._state.suffixes[:made._state.suffix_count]) if s.mod_id == upgraded)
+            assert slot.roll_count > 0
+        assert len(counts) == 6 and all(110 < n < 230 for n in counts.values())
+        # Fractured affixes and their concrete values are not selectable.
+        item._state.prefixes[0].flags = 1
+        item._state.prefixes[0].roll_count = 1
+        item._state.prefixes[0].rolls[0] = 17
+        protected = bytes(item._state.prefixes[0])
+        made = item.copy()
+        assert ctx.apply(made, "dominance").applied
+        assert bytes(made._state.prefixes[0]) == protected
+        assert not ctx.apply(made, "dominance").applied
+        # A tier upgrade can exceed the base's item level and is only one step.
+        low = session.create_item("rare")
+        low.add_mod("AdditionalCriticalStrikeChanceWithSpellsUber1_")
+        low.add_mod(pairs[0][0])
+        seen = set()
+        for _ in range(30):
+            made = low.copy()
+            assert ctx.apply(made, "dominance").applied
+            seen.update(session.mod_info(i).key for i in made.prefix_mod_ids + made.suffix_mod_ids)
+        assert seen == {pairs[1][0], pairs[0][1]}
+        locked = session.create_item("rare")
+        for mod in mods: locked.add_mod(mod)
+        locked.add_mod("StrMasterItemGenerationCannotChangePrefixes")
+        assert ctx.apply(locked, "dominance").applied
+        assert locked.prefix_mod_ids == (mods[0].session_mod_id,)
+        # An already elevated modifier stays elevated when selected again.
+        item = session.create_item("rare")
+        for _, key in pairs[:2]: item.add_mod(session.find_mod(key))
+        for _ in range(30):
+            made = item.copy()
+            assert ctx.apply(made, "dominance").applied
+            assert set(made.prefix_mod_ids + made.suffix_mod_ids) <= elevated
+            assert made.explicit_count == 1
+
+
+def test_dominance_authored_strategy_costs_and_exact_boundary():
+    from poecraft_engine import EngineError
+    graph = {"version": "v1", "start_node_id": "s",
+        "base_state": {"base_key": BASE, "item_level": 86, "rarity": "rare", "generic_influence_bits": 32,
+            "prefixes": [{"mod_key": "LocalIncreaseSocketedActiveGemLevelUber1"}],
+            "suffixes": [{"mod_key": "AdditionalCriticalStrikeChanceWithSpellsUber2_"}]},
+        "nodes": [{"id": "s", "kind": "start"},
+            {"id": "d", "kind": "operation", "operation": {"type": "dominance"}},
+            {"id": "t", "kind": "terminal", "terminal": "success"}],
+        "edges": [{"id": "a", "from": "s", "to": "d"}, {"id": "b", "from": "d", "to": "t"}]}
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.compile_strategy(graph) as strategy:
+        with load_economy({"version": "v1", "prices": {"dominance": 7}}) as economy:
+            with pytest.raises(EngineError, match="Dominance.*Pro"): strategy.evaluate(economy=economy)
+            with strategy.create_simulator(economy) as sim:
+                result = sim.run(SimulationOptions(target_runs=1000, seed=194))
+                assert result.summary["success_count"] == 1000
+                assert result.summary["known_total_cost"] == 7000
 
 
 def test_retained_elevated_enchantments_and_member_unveils_are_not_roll_pool():

@@ -24,7 +24,7 @@ import {
     genericInfluenceDisplayRank,
 } from "../influence-presentation";
 
-type Tab = "prefix" | "suffix" | "implicit";
+type Tab = "prefix" | "suffix" | "implicit" | "enchantment";
 type Section = "base" | "influenced" | "crafted" | "essence" | "fossil" | "veiled" | "unveiled";
 export type ModPoolMode = "inspect" | "direct" | "goal";
 
@@ -35,6 +35,7 @@ interface PoolModel {
         prefixOnItem: Set<number>;
         suffixOnItem: Set<number>;
         implicitOnItem: Set<number>;
+        enchantmentOnItem: Set<number>;
         fracturedPrefixOnItem: Set<number>;
         fracturedSuffixOnItem: Set<number>;
         groupOnItem: Set<number>;
@@ -64,6 +65,7 @@ const REACH_KIND_BASE_IMPLICIT = 4;
 const REACH_KIND_FOSSIL = 5;
 const REACH_KIND_VEILED = 6;
 const REACH_KIND_UNVEILED = 7;
+const REACH_KIND_ENCHANTMENT = 12;
 
 export class PcModPool extends HTMLElement {
     private model: PoolModel | null = null;
@@ -208,9 +210,9 @@ export class PcModPool extends HTMLElement {
             <input className="pc-mod-pool-search" type="search" aria-label="Search modifier pool" placeholder="Search mods, groups, stat text…"
                 value={this.search} onChange={event => { this.search = event.target.value; this.render(); }} />
             <div className="pc-mod-pool-tabs" role="tablist" aria-label="Modifier pool side">
-                {(["prefix", "suffix", "implicit"] as const).map(tab => <button key={tab} role="tab" aria-selected={this.tab === tab}
+                {(["prefix", "suffix", "implicit", "enchantment"] as const).map(tab => <button key={tab} role="tab" aria-selected={this.tab === tab}
                     data-tab={tab} className={"pc-tab " + (this.tab === tab ? "is-active" : "")}
-                    onClick={() => this.setActiveTab(tab)}>{tab === "prefix" ? "Prefixes" : tab === "suffix" ? "Suffixes" : "Implicits"}</button>)}
+                    onClick={() => this.setActiveTab(tab)}>{tab === "prefix" ? "Prefixes" : tab === "suffix" ? "Suffixes" : tab === "implicit" ? "Implicits" : "Enchantments"}</button>)}
             </div>
             <div className="pc-mod-pool-body">{this.renderBody()}</div>
         </div>);
@@ -223,7 +225,7 @@ export class PcModPool extends HTMLElement {
         const filtered = this.buildFamilies().filter(family => !search ||
             [family.label, family.sourceLabel, ...family.tags, ...family.tiers.flatMap(tier => [modTextLabel(tier.text_lines), tier.key])]
                 .some(value => value.toLowerCase().includes(search)));
-        if (this.tab === "implicit") return this.renderFamilyList(filtered);
+        if (this.tab === "implicit" || this.tab === "enchantment") return this.renderFamilyList(filtered);
         const inSection = (section: Section) => filtered.filter(family => family.category === section);
         const groups = new Map<string, FamilyView[]>();
         for (const family of inSection("influenced")) {
@@ -245,14 +247,9 @@ export class PcModPool extends HTMLElement {
     private buildFamilies(): FamilyView[] {
         if (!this.model) return [];
         const tabFilter = (info: ModInfo): boolean => {
-            if (this.tab === "implicit") {
-                // generation_type for implicit may be -1; engine returns
-                // implicits via reach_kind = base-implicit (4).
-                return (
-                    info.reach_kind === REACH_KIND_BASE_IMPLICIT ||
-                    info.generation_type === -1
-                );
-            }
+            if (info.reach_kind === REACH_KIND_ENCHANTMENT) return this.tab === "enchantment";
+            if (this.tab === "enchantment") return false;
+            if (this.tab === "implicit") return info.reach_kind === REACH_KIND_BASE_IMPLICIT || info.generation_type === -1;
             if (this.tab === "prefix") return info.generation_type === 0;
             return info.generation_type === 1;
         };
@@ -264,7 +261,7 @@ export class PcModPool extends HTMLElement {
         for (const info of this.model.mods) {
             if (!tabFilter(info)) continue;
             const category =
-                this.tab === "implicit" ? "base" : categoryFor(info.reach_kind);
+                (this.tab === "implicit" || this.tab === "enchantment") ? "base" : categoryFor(info.reach_kind);
             if (!category) continue;
             const familyId = Number.isFinite(info.family_id)
                 ? info.family_id
@@ -297,7 +294,7 @@ export class PcModPool extends HTMLElement {
                     ? this.model?.item.prefixOnItem.has(tier.session_mod_id)
                     : this.tab === "suffix"
                       ? this.model?.item.suffixOnItem.has(tier.session_mod_id)
-                      : this.model?.item.implicitOnItem.has(
+                      : (this.tab === "enchantment" ? this.model?.item.enchantmentOnItem : this.model?.item.implicitOnItem)?.has(
                             tier.session_mod_id,
                         ),
             );
@@ -312,7 +309,7 @@ export class PcModPool extends HTMLElement {
                         ? this.model?.item.prefixOnItem.has(tier.session_mod_id)
                         : this.tab === "suffix"
                           ? this.model?.item.suffixOnItem.has(tier.session_mod_id)
-                          : this.model?.item.implicitOnItem.has(
+                          : (this.tab === "enchantment" ? this.model?.item.enchantmentOnItem : this.model?.item.implicitOnItem)?.has(
                                 tier.session_mod_id,
                             ),
                 ),
@@ -380,7 +377,7 @@ export class PcModPool extends HTMLElement {
                 ? item.prefixOnItem.has(tier.session_mod_id)
                 : this.tab === "suffix"
                   ? item.suffixOnItem.has(tier.session_mod_id)
-                  : item.implicitOnItem.has(tier.session_mod_id);
+                  : (this.tab === "enchantment" ? item.enchantmentOnItem : item.implicitOnItem).has(tier.session_mod_id);
         const conflictingGroupOnItem = item.groupOnItem.has(
             tier.primary_group_id,
         );
@@ -391,7 +388,7 @@ export class PcModPool extends HTMLElement {
                   ? item.fracturedSuffixOnItem.has(tier.session_mod_id)
                   : false;
         let blockedReason: string | null = null;
-        if (this.tab !== "implicit" && !this.selectMode) {
+        if ((this.tab === "prefix" || this.tab === "suffix") && !this.selectMode) {
             if (family.onItem && !tierOnItem) {
                 blockedReason = "Another tier from this family is on the item";
             } else if (!family.onItem && conflictingGroupOnItem) {
@@ -416,7 +413,7 @@ export class PcModPool extends HTMLElement {
         }
         const clickable =
             (this.allowDirectCraft || this.selectMode) &&
-            this.tab !== "implicit" &&
+            (this.tab === "prefix" || this.tab === "suffix") &&
             !blockedReason;
 
         const tags = visibleModTags(tier.classification_tags);
@@ -426,12 +423,12 @@ export class PcModPool extends HTMLElement {
             data-mod-key={tier.key} data-mod-id={tier.session_mod_id} data-side={this.tab} data-on-item={tierOnItem}
             data-fractured={tierFractured} data-can-fracture={family.category !== "crafted"} title={blockedReason ?? undefined}
             onContextMenu={event => {
-                if (!clickable || this.selectMode || tierFractured || family.category === "crafted" || this.tab === "implicit") return;
+                if (!clickable || this.selectMode || tierFractured || family.category === "crafted" || (this.tab !== "prefix" && this.tab !== "suffix")) return;
                 event.preventDefault();
                 this.dispatchFracture(tier.key, tier.session_mod_id, this.tab, tierOnItem);
             }}>
             <button className="pc-mod-tier-btn" disabled={!clickable} onClick={() => {
-                if (!clickable || this.tab === "implicit") return;
+                if (!clickable || (this.tab !== "prefix" && this.tab !== "suffix")) return;
                 if (!this.selectMode && tierOnItem) this.dispatchRemove(tier.session_mod_id, this.tab);
                 else this.dispatchCraft(tier.key, this.tab);
             }}>
@@ -443,7 +440,7 @@ export class PcModPool extends HTMLElement {
                 </span>
                 <span className="pc-mod-tier-meta"><span>iLvl {tier.required_level}</span>
                     {tierOnItem && !this.selectMode
-                        ? tierFractured ? <span className="pc-mod-tier-fractured">FRACTURED</span> : <span className="pc-mod-tier-remove">REMOVE</span>
+                        ? tierFractured ? <span className="pc-mod-tier-fractured">FRACTURED</span> : <span className="pc-mod-tier-remove">{clickable ? "REMOVE" : "ON ITEM"}</span>
                         : weight !== undefined ? <span className="pc-mod-tier-weight">{weight.toLocaleString()}</span>
                         : <span className="pc-mod-tier-weight pc-mod-tier-zero">—</span>}
                 </span>
@@ -469,6 +466,7 @@ function categoryFor(reachKind: number): Section | null {
 
 function sourceLabel(info: ModInfo | undefined): string {
     if (!info) return "";
+    if (info.reach_kind === REACH_KIND_ENCHANTMENT) return "Enchantment";
     if (info.reach_kind === 10) return "Retained influence (above item level)";
     if (info.reach_kind === 11) return "Elevated (retained)";
     if (info.reach_kind === REACH_KIND_INFLUENCE) {

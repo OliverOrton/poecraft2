@@ -100,9 +100,9 @@ options are rejected; bindings and WASM must be rebuilt together.
 ## Current boundaries
 
 - The fields for numeric rolls, sockets, links, quality, enchantments, and
-  unveil choices are real and participate in import/export. Current crafting
-  actions do not populate numeric roll values or implement socket, link, or
-  quality mutation.
+  unveil choices are real and participate in import/export. Dominance and Vaal
+  populate changed modifier values from canonical ranges. Socket, link and
+  quality mutation remain unmodelled; Vaal uses the owner-approved affix projection.
 - Structural simulation therefore cannot evaluate conditions that depend on
   rolled stat totals.
 - `multi_item.h` exposes named resource roles and retained/changed/created/consumed
@@ -110,8 +110,9 @@ options are rejected; bindings and WASM must be rebuilt together.
   compatible sessions/data and atomically swaps all outputs. A two-input/new-output
   fixture qualifies this foundation; no recombination law is implemented.
 - Strand-bearing crafting and exact solving refuse unresolved interaction laws.
-  Retained enchantments are preserved and displayed; crafting on them and exact
-  effect goals are unavailable. Structural Awakener preserves receiver enchantments without claiming stat-total evaluation.
+  Retained enchantments are preserved and displayed separately from implicits.
+  Vaal, Dominance and Awakener preserve them without claiming stat-total evaluation;
+  other crafting on them and exact effect goals remain unavailable.
 - Consumed/destroyed resources cannot be crafted, projected as empty live items,
   or resurrected by in-game Imprint restoration.
 - Full catalog-sized masks are context/session data, not embedded in the item.

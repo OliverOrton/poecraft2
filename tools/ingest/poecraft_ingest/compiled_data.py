@@ -237,6 +237,9 @@ def _build_full_payloads(
         FROM mod_stat ORDER BY mod_id, ordinal
         """,
     )
+    elevation_rows = _query(connection,
+        "SELECT mod_id, elevated_mod_id FROM influence_elevation ORDER BY mod_id"
+    ) if connection.execute("SELECT 1 FROM sqlite_master WHERE name='influence_elevation'").fetchone() else []
     stat_translation_rows = _query(
         connection,
         """
@@ -851,6 +854,10 @@ def _build_full_payloads(
             "min_values": [row["min_value"] for row in flat_stats],
             "max_values": [row["max_value"] for row in flat_stats],
         },
+        "influence_elevations": {
+            "mod_ids": [int(row["mod_id"]) for row in elevation_rows],
+            "elevated_mod_ids": [int(row["elevated_mod_id"]) for row in elevation_rows],
+        },
         "bench_options": {
             "count": len(bench_options),
             "global_bench_option_ids": bench_ids,
@@ -1154,6 +1161,7 @@ def _build_full_payloads(
         "groups": len(group_values),
         "mod_group_links": len(mod_groups),
         "stat_rows": len(mod_stats),
+        "influence_elevations": len(elevation_rows),
         "spawn_weight_rows": len(spawn_weights),
         "generation_weight_rows": len(generation_weights),
         "classification_tag_links": len(classification_tags),
@@ -1312,6 +1320,14 @@ def _validate_parallel_arrays(
     if "influence_tag_string_ids" in game_data.get("item_classes", {}):
         errors.extend(_validate_offsets(game_data, "item_classes",
             game_data["item_classes"]["count"], "influence_tag_offsets", ("influence_tag_string_ids",)))
+
+    elevations = game_data.get("influence_elevations", {})
+    sources, destinations = elevations.get("mod_ids", []), elevations.get("elevated_mod_ids", [])
+    known_mods = set(game_data.get("mods", {}).get("global_mod_ids", []))
+    if len(sources) != len(destinations) or len(set(sources)) != len(sources):
+        errors.append("influence_elevations must have matching lengths and unique sources")
+    if any(mod not in known_mods for mod in sources + destinations):
+        errors.append("influence_elevations refers to an unknown modifier")
 
     counted_sections = {
         "tags": ("global_tag_ids", "name_string_ids", "source_listed"),

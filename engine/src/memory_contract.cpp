@@ -4,8 +4,6 @@
 namespace poecraft {
 const char* unavailable_currency_reason(ActionType type) {
     switch (type) {
-    case ActionType::Dominance:
-        return "Dominance is unavailable: canonical T1-to-elevated relationships and selectable-pair probabilities are unresolved";
     case ActionType::Tempering:
     case ActionType::Tailoring:
         return "Heist enchantment crafting is unavailable: current eligible-pool weights and socket consequences are unresolved; retained enchantments are preserved";

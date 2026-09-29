@@ -15,14 +15,18 @@ remain unapproved. Published consumption intervals are not probability laws.
 All affected stochastic paths stay unavailable. Current and Finder reject nonzero
 strands at the native boundary; there is no enabled memory search toggle.
 
-Vaal sampling supports item-level 86+ socketless amulets and belts with structural affixes and
-no retained enchantment effects. Its four equally likely branches are a weighted
-canonical corruption implicit (replace a uniformly chosen existing implicit),
-a no-op white-socket branch because there are no sockets, an ordinary six-affix
-reforge respecting metamods, and unchanged. Survivors become corrupted. Numerical
-rolled inputs, socket-capable classes and jewel/unique paths refuse. This does not
-claim stat-total simulation or exact corruption strategy evaluation. No obsolete
-white-socket creation branch is implemented.
+Vaal samples ordinary weapons, armour and jewellery. Oliver approved an affix-only
+projection on 2026-09-29: socket changes are ignored, while the socket-only branch
+keeps its 25% probability. The other equal branches are a weighted canonical
+corruption implicit (replace one existing implicit uniformly), an ordinary
+six-affix reforge respecting metamods, and unchanged. The existing reforge rule
+stops when a constrained low-level pool runs out of compatible affixes. Survivors
+become corrupted. Newly rolled modifiers receive canonical numeric values;
+protected slots retain their values. Enchantments and quality are preserved.
+Eldritch metadata follows any replaced implicit. Socket fields carried through
+this projection do not describe the in-game reforge result. Jewel and unique
+transformation outcomes remain unsupported. Exact corruption strategy evaluation,
+implicit goals and stat-total optimization are still reserved for Pro.
 
 Double corruption is recognized but unavailable. Its outer 25% branch weights do
 not establish the influenced rare reforge's internal influence/affix/socket law
@@ -30,12 +34,13 @@ or exceptional unique outcomes. Destroyed lifecycle state is representable and
 refused as a live input, but no invented destruction-only sampler is exposed.
 
 Tempering/Tailoring are recognized but unavailable: canonical Heist enchantments
-have no selection weights and the current socket/effect contract is incomplete.
+have no public selection weights. Oliver explicitly accepted that hold on
+2026-09-29 after further investigation.
 Existing enchantments are transported/displayed separately and excluded from
 ordinary rolls. Legacy white/all-colour rows are retention data, never a current
-eligible pool. Primitive crafting on retained enchantments and effect-dependent
-exact goals refuse rather than ignore extra-craft/socket/stat effects. Structural
-Awakener preserves receiver enchantments without evaluating their stat effects.
+eligible pool. Other primitive crafting on retained enchantments and effect-dependent exact
+goals refuse rather than ignore extra-craft/stat effects. Vaal, Dominance and
+structural Awakener preserve enchantments without evaluating their stat totals.
 
 Harvest more/less likely remains held by Oliver. Orb of Intention is map
 preparation and has no equipment action. No empirical memory model is activated.

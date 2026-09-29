@@ -360,10 +360,26 @@ static std::shared_ptr<DataImpl> build_data_impl(
     const Value& stats = game.at("stats");
     read_u32(stats, "offsets", data->stat_offsets);
     read_u32(stats, "stat_key_string_ids", data->stat_key_sids);
+    read_i32(stats, "min_values", data->stat_min_values);
+    read_i32(stats, "max_values", data->stat_max_values);
     require(data->stat_offsets.size() == data->mod_count + 1,
             "stats offsets must be mod_count + 1");
     require(data->stat_key_sids.size() == data->stat_offsets.back(),
             "stats stat_key_string_ids length must match offsets");
+    require(data->stat_min_values.size() == data->stat_key_sids.size() &&
+            data->stat_max_values.size() == data->stat_key_sids.size(), "stat value lengths mismatch");
+    if (const auto* elevations = game.find("influence_elevations")) {
+        std::vector<std::uint32_t> from, to;
+        read_u32(*elevations, "mod_ids", from);
+        read_u32(*elevations, "elevated_mod_ids", to);
+        require(from.size() == to.size(), "influence elevation lengths mismatch");
+        for (std::size_t i = 0; i < from.size(); ++i) {
+            require(data->mod_pos_by_global_id.count(from[i]) && data->mod_pos_by_global_id.count(to[i]),
+                    "influence elevation references an unknown mod");
+            require(data->influence_elevations.emplace(from[i], to[i]).second,
+                    "duplicate influence elevation source");
+        }
+    }
 
     // --- bench options ------------------------------------------------------
     const Value* bench = game.find("bench_options");

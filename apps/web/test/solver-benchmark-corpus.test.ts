@@ -119,10 +119,11 @@ test("Gate 1 solver-anytime controls disclose exact mechanic-family proofs", () 
     }
 });
 
+// Historical research cases keep their original runtime pins when product data refreshes.
 test("corpus artifact pins reject stale WASM/data combinations", () => {
     const corpus = loadSolverBenchmarkCorpus(fileURLToPath(MANIFEST));
     const artifactPath = fileURLToPath(
-        new URL("../../../data/compiled/current/manifest.json", import.meta.url),
+        new URL("../../../data/runtime-snapshots/852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb/manifest.json", import.meta.url),
     );
     const artifact = JSON.parse(readFileSync(artifactPath, "utf8")) as unknown;
     validateCorpusArtifactPins(corpus.manifest, artifact, 2);
@@ -161,7 +162,7 @@ test("state-scaling corpus materializes its pinned economy snapshot", () => {
 test("goal-realignment corpora validate every current case and economy", () => {
     const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
     const artifactPath = fileURLToPath(
-        new URL("../../../data/compiled/current/manifest.json", import.meta.url),
+        new URL("../../../data/runtime-snapshots/852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb/manifest.json", import.meta.url),
     );
     const artifact = JSON.parse(readFileSync(artifactPath, "utf8")) as unknown;
     const loaded = GOAL_REALIGNMENT_MANIFESTS.map((manifestUrl) =>

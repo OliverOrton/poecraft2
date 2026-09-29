@@ -9,7 +9,7 @@ import { CraftChoice } from "./craft-choice";
 import { HarvestCost } from "./craft-cost";
 import type { ConcreteModListModel, PcModList } from "./pc-mod-list";
 
-export type CraftPanel = "basic" | "foulborn" | "essence" | "harvest" | "fossil" | "eldritch" | "influenced" | "veiled" | "bestiary" | "memory" | "awakener" | "advanced";
+export type CraftPanel = "basic" | "foulborn" | "essence" | "harvest" | "fossil" | "eldritch" | "influenced" | "veiled" | "bestiary" | "memory" | "awakener" | "enchantment" | "temple";
 const PANELS: Array<[CraftPanel, string, string]> = [
     ["basic", "Basic currency", "chaos"], ["foulborn", "Foulborn", "foulborn_exalt"],
     ["essence", "Essences", "essence"], ["harvest", "Harvest", "harvest_reforge"],
@@ -17,9 +17,9 @@ const PANELS: Array<[CraftPanel, string, string]> = [
     ["veiled", "Veiled", "veiled_exalt"], ["bestiary", "Bestiary", "bestiary:imprint"],
     ["memory", "Memory", "remembrance"],
     ["awakener", "Awakener", "awakener"],
-    ["advanced", "Corruption / enchantment", "vaal"],
+    ["enchantment", "Enchantments", "tempering"], ["temple", "Temple", "double_corruption"],
 ];
-const BASIC = ["transmute", "augment", "alteration", "regal", "alchemy", "chaos", "exalt", "annul", "scour", "remove_crafted_modifiers", "fracture"];
+const BASIC = ["transmute", "augment", "alteration", "regal", "alchemy", "chaos", "exalt", "annul", "scour", "remove_crafted_modifiers", "fracture", "vaal"];
 
 export interface CraftControlsModel {
     mode: "emulator" | "calculator";
@@ -88,19 +88,18 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
             <span className="pc-help">Edit the imported item's strand count. This records item state; it does not spend currency.</span>
             <span className="pc-help">Remembrance and Unravelling are unavailable while their probability laws are unresolved. Strand-bearing crafting and solving are unavailable; Imprint preserves the count.</span>
         </div>; break;
-        case "advanced": panel = <div className="pc-material-panel">
-            {action("vaal", "Vaal: iLvl 86+ socketless amulets / belts", false, calculator)}
-            <span className="pc-help">Native structural sampling only. Numerical rolls, socket-capable equipment and jewel/unique outcomes are unavailable. Exact corruption calculation and search need Pro integration.</span>
-            <button disabled><GameIcon assetKey="action:dominance" />Orb of Dominance</button>
-            <span className="pc-help">Unavailable: elevation relationships and eligible-pair probabilities are unresolved. Existing elevated modifiers can be retained.</span>
+        case "enchantment": panel = <div className="pc-material-panel">
             <button disabled><GameIcon assetKey="action:tempering" />Tempering Orb</button><button disabled><GameIcon assetKey="action:tailoring" />Tailoring Orb</button>
-            <span className="pc-help">Unavailable: current enchantment weights and socket consequences are unresolved. Imported enchantments are preserved; stat-total effects are unsupported.</span>
+            <span className="pc-help">Unavailable: random enchantment weights are not public. Imported enchantments are preserved; stat-total effects are unsupported.</span>
+        </div>; break;
+        case "temple": panel = <div className="pc-material-panel">
             <button disabled>Double corruption</button>
             <span className="pc-help">Unavailable: influence, affix, socket/link and exceptional-base laws within the reforge branch are unresolved.</span>
         </div>; break;
         case "foulborn": panel = <div className="pc-craft-options">{["foulborn_augment", "foulborn_regal", "foulborn_exalt"].map(id => action(id))}</div>; break;
-        case "basic": panel = <><div className="pc-craft-options">{BASIC.map(id => action(id))}{calculator && action("restart", "Restart (fresh base)")}</div>
-            {!calculator && <div className="pc-fracture-hint">Fracture rolls a random modifier. Right-click an item modifier or pool tier to set an exact fracture.</div>}</>; break;
+        case "basic": panel = <><div className="pc-craft-options">{BASIC.map(id => action(id, id === "vaal" ? "Vaal Orb" : craftActionLabel(id), false, calculator && id === "vaal"))}{calculator && action("restart", "Restart (fresh base)")}</div>
+            {!calculator && <div className="pc-fracture-hint">Fracture rolls a random modifier. Right-click an item modifier or pool tier to set an exact fracture.</div>}
+            {!calculator && <div className="pc-help">Vaal Orb models affixes and implicits. Socket changes are ignored; the socket-only outcome still has a 25% chance.</div>}</>; break;
         case "essence": {
             const groups = groupEssences(m.catalog.essences);
             const group = groups.find(group => group.type === value("essence-type")) ?? groups[0];
@@ -153,6 +152,7 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
         case "influenced": panel = <div className="pc-material-panel">
             {choices("influence", "Influence", m.catalog.influences, entry => "influence:" + entry.key)}
             <div className="pc-material-footer">{action("influence_exalt", calculator ? "Calculate odds" : "Influenced exalt", true)}</div>
+            {action("dominance", "Orb of Dominance", false, calculator)}
         </div>; break;
         case "bestiary": panel = <><div className="pc-craft-options">{m.bestiary.map(entry => <button key={entry.id}
             {...{[calculator ? "data-select-action" : "data-bestiary-action"]: entry.id}} className={m.selectedAction === entry.id ? "is-selected" : ""}

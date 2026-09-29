@@ -34,7 +34,7 @@ const ACTION_NAMES = [
     "Foulborn Exalted",
     "Remembrance (unavailable)",
     "Unravelling (unavailable)",
-    "Dominance (unavailable)",
+    "Orb of Dominance",
     "Tempering (unavailable)",
     "Tailoring (unavailable)",
     "Vaal",

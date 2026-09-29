@@ -381,6 +381,13 @@ CREATE TABLE bestiary_action_cost (
     PRIMARY KEY (bestiary_action_id, ordinal)
 );
 
+CREATE TABLE influence_elevation (
+    mod_id INTEGER PRIMARY KEY REFERENCES mod(mod_id),
+    elevated_mod_id INTEGER NOT NULL REFERENCES mod(mod_id),
+    source_url TEXT NOT NULL,
+    source_hash TEXT NOT NULL
+);
+
 CREATE VIEW normal_rollable_mod AS
 SELECT
     m.mod_id,

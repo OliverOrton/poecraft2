@@ -239,7 +239,9 @@ operation. Unknown cost is never reported as a zero total. Traces include resour
 acquisitions, lifecycle and strands. Exact whole-graph evaluation refuses resource
 graphs because inventory/control identity is reserved for Pro.
 
-Foulborn operations have exact authored evaluation. Vaal is a native structural
-sampler for item-level 86+ socketless amulets/belts; exact corruption graph evaluation is
-unavailable. Memory actions and the other evidence-held currencies refuse at
-compilation with their missing-law reason.
+Foulborn operations have exact authored evaluation. Dominance and Vaal are native
+sampled operations with authored Simulator support and currency accounting.
+Vaal models affixes/implicits on ordinary equipment, retaining the 25% socket-only
+branch while ignoring socket changes as Oliver approved. Exact Dominance and
+corruption graph evaluation remain unavailable. Memory actions and the other
+evidence-held currencies refuse compilation with their missing-law reason.

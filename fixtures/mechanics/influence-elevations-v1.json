@@ -1,0 +1,890 @@
+{
+  "version": 1,
+  "source_url": "https://beta.craftofexile.com/json/poe1/3.29.3.1.2/data.json?v=1788821693",
+  "source_sha256": "82b23ff5c2dc78d5ff3416f69911fe4ebc8f99cc47b32c97dc0e6c35de13ddd9",
+  "cross_check_url": "https://poedb.tw/us/Orb_of_Dominance",
+  "retrieved_date": "2026-09-29",
+  "note": "Explicit top-tier to elevated mappings, joined from published modifier IDs to stable keys. Missing retired source IDs are excluded. Lower-tier progression is native and uses canonical type/side/influence ordering.",
+  "elevations": [
+    {
+      "from": "AddPowerChargeOnCritInfluence1",
+      "to": "AddPowerChargeOnCritInfluenceMaven"
+    },
+    {
+      "from": "AddedColdDamageCritRecentlyInfluence2",
+      "to": "AddedColdDamageCritRecentlyInfluenceMaven_"
+    },
+    {
+      "from": "AddedFireDamageCritRecentlyInfluence2",
+      "to": "AddedFireDamageCritRecentlyInfluenceMaven_"
+    },
+    {
+      "from": "AddedLightningDamageCritRecentlyInfluence2",
+      "to": "AddedLightningDamageCritRecentlyInfluenceMaven"
+    },
+    {
+      "from": "AddedManaRegenerationInfluence2__",
+      "to": "AddedManaRegenerationInfluenceMaven_"
+    },
+    {
+      "from": "AddedManaRegenerationUber2",
+      "to": "AddedManaRegenerationUberMaven_"
+    },
+    {
+      "from": "AddedPhysicalDamageCritRecentlyInfluence2",
+      "to": "AddedPhysicalDamageCritRecentlyInfluenceMaven"
+    },
+    {
+      "from": "AdditionalBlockChanceUber2",
+      "to": "AdditionalBlockChanceUberMaven___"
+    },
+    {
+      "from": "AdditionalCritWithAttacksInfluence2_",
+      "to": "AdditionalCritWithAttacksInfluenceMaven"
+    },
+    {
+      "from": "AdditionalCritWithSpellsInfluence2",
+      "to": "AdditionalCritWithSpellsInfluenceMaven"
+    },
+    {
+      "from": "AdditionalCriticalStrikeChanceWithAttacksUber2",
+      "to": "AdditionalCriticalStrikeChanceWithAttacksUberMaven"
+    },
+    {
+      "from": "AdditionalCriticalStrikeChanceWithSpellsUber2_",
+      "to": "AdditionalCriticalStrikeChanceWithSpellsUberMaven"
+    },
+    {
+      "from": "AdditionalCurseOnEnemiesInfluence1",
+      "to": "AdditionalCurseOnEnemiesInfluenceMavenV2___"
+    },
+    {
+      "from": "AdditionalPierceInfluence2__",
+      "to": "AdditionalPierceInfluenceMaven__"
+    },
+    {
+      "from": "AdditionalSpellBlockChanceUber2",
+      "to": "AdditionalSpellBlockChanceUberMaven"
+    },
+    {
+      "from": "AilmentDurationInfluence2",
+      "to": "AilmentDurationInfluenceMaven"
+    },
+    {
+      "from": "AllResistancesInfluence3_",
+      "to": "AllResistancesInfluenceMaven____"
+    },
+    {
+      "from": "AreaDamageSupportedUber3",
+      "to": "AreaDamageSupportedUberMaven"
+    },
+    {
+      "from": "AreaOfEffectSupportedUber3",
+      "to": "AreaOfEffectSupportedUberMaven"
+    },
+    {
+      "from": "AuraEffectBodyInfluence2",
+      "to": "AuraEffectBodyInfluenceMaven"
+    },
+    {
+      "from": "AvoidBleedAndPoisonInfluence3",
+      "to": "AvoidBleedAndPoisonInfluenceMaven"
+    },
+    {
+      "from": "AvoidColdDamageInfluence2",
+      "to": "AvoidColdDamageInfluenceMaven_"
+    },
+    {
+      "from": "AvoidFireDamageInfluence2__",
+      "to": "AvoidFireDamageInfluenceMaven_____"
+    },
+    {
+      "from": "AvoidFreezeInfluence3",
+      "to": "AvoidFreezeInfluenceMaven"
+    },
+    {
+      "from": "AvoidIgniteInfluence3",
+      "to": "AvoidIgniteInfluenceMaven"
+    },
+    {
+      "from": "AvoidInterruptionWhileCastingInfluence3",
+      "to": "AvoidInterruptionWhileCastingInfluenceMaven"
+    },
+    {
+      "from": "AvoidLightningDamageInfluence2",
+      "to": "AvoidLightningDamageInfluenceMaven"
+    },
+    {
+      "from": "AvoidProjectilesInfluence2",
+      "to": "AvoidProjectilesInfluenceMaven_"
+    },
+    {
+      "from": "AvoidShockInfluence3",
+      "to": "AvoidShockInfluenceMaven"
+    },
+    {
+      "from": "AvoidStunInfluence3",
+      "to": "AvoidStunInfluenceMaven__"
+    },
+    {
+      "from": "BleedingDamageUber3",
+      "to": "BleedingDamageUberMaven"
+    },
+    {
+      "from": "BlindOnHitSupportedUber3",
+      "to": "BlindOnHitSupportedUberMaven"
+    },
+    {
+      "from": "BlockPercentInfluence2",
+      "to": "BlockPercentInfluenceMaven"
+    },
+    {
+      "from": "ChanceToAvoidElementalAilmentsUber3",
+      "to": "ChanceToAvoidElementalAilmentsUberMaven"
+    },
+    {
+      "from": "ChanceToAvoidInterruptionWhileCastingUber3",
+      "to": "ChanceToAvoidInterruptionWhileCastingUberMaven_"
+    },
+    {
+      "from": "ChanceToAvoidProjectilesUber2",
+      "to": "ChanceToAvoidProjectilesUberMaven___"
+    },
+    {
+      "from": "ChanceToAvoidStunUber3",
+      "to": "ChanceToAvoidStunUberMaven"
+    },
+    {
+      "from": "ChanceToGainEnduranceChargeOnKillUber2",
+      "to": "ChanceToGainEnduranceChargeOnKillUberMaven"
+    },
+    {
+      "from": "ChanceToGainFrenzyChargeOnKillUberElder2_",
+      "to": "ChanceToGainFrenzyChargeOnKillUberElderMaven"
+    },
+    {
+      "from": "ChanceToGainPowerChargeOnKillUber2",
+      "to": "ChanceToGainPowerChargeOnKillUberMaven"
+    },
+    {
+      "from": "ChanceToImpaleInfluence2",
+      "to": "ChanceToImpaleInfluenceMaven_"
+    },
+    {
+      "from": "ChanceToIntimidateOnHitInfluence1",
+      "to": "ChanceToIntimidateOnHitInfluenceMaven"
+    },
+    {
+      "from": "ChanceToUnnerveOnHitInfluence1___",
+      "to": "ChanceToUnnerveOnHitInfluenceMaven"
+    },
+    {
+      "from": "ChaosDamageOverTimeMultiplierInfluence2",
+      "to": "ChaosDamageOverTimeMultiplierInfluenceMaven"
+    },
+    {
+      "from": "ChaosNonAilmentDamageOverTimeMultiplierUber2",
+      "to": "ChaosNonAilmentDamageOverTimeMultiplierUberMaven"
+    },
+    {
+      "from": "ChillingConfluxInfluence1__",
+      "to": "ChillingConfluxInfluenceMaven_"
+    },
+    {
+      "from": "ColdDamageOverTimeMultiplierInfluence2__",
+      "to": "ColdDamageOverTimeMultiplierInfluenceMaven_"
+    },
+    {
+      "from": "ColdDamageOverTimeMultiplierUber2_",
+      "to": "ColdDamageOverTimeMultiplierUberMaven"
+    },
+    {
+      "from": "ConsecratedGroundStationaryInfluence1_",
+      "to": "ConsecratedGroundStationaryInfluenceMaven"
+    },
+    {
+      "from": "ConvertPhysicalToColdInfluence2",
+      "to": "ConvertPhysicalToColdInfluenceMaven"
+    },
+    {
+      "from": "ConvertPhysicalToFireInfluence2",
+      "to": "ConvertPhysicalToFireInfluenceMaven"
+    },
+    {
+      "from": "ConvertPhysicalToLightningInfluence2",
+      "to": "ConvertPhysicalToLightningInfluenceMaven"
+    },
+    {
+      "from": "CooldownRecoveryInfluence2",
+      "to": "CooldownRecoveryInfluenceMaven_"
+    },
+    {
+      "from": "CriticalStrikeMultiplierInfluence3",
+      "to": "CriticalStrikeMultiplierInfluenceMaven__"
+    },
+    {
+      "from": "CullingStrikeInfluence1",
+      "to": "CullingStrikeInfluenceMaven__"
+    },
+    {
+      "from": "DamageOverTimeInfluence3",
+      "to": "DamageOverTimeInfluenceMaven"
+    },
+    {
+      "from": "ElementalDamageCannotBeReflectedPercentInfluence1",
+      "to": "ElementalDamageCannotBeReflectedPercentInfluenceMaven"
+    },
+    {
+      "from": "ElementalDamageCannotBeReflectedPercentUber1",
+      "to": "ElementalDamageCannotBeReflectedPercentUberMaven"
+    },
+    {
+      "from": "ElementalDamageInfluence3",
+      "to": "ElementalDamageInfluenceMaven"
+    },
+    {
+      "from": "ElusiveOnCriticalStrikeInfluence1",
+      "to": "ElusiveOnCriticalStrikeInfluenceMaven"
+    },
+    {
+      "from": "EnduranceChargeIfHitRecentlyInfluence1",
+      "to": "EnduranceChargeIfHitRecentlyInfluenceMaven"
+    },
+    {
+      "from": "EnduranceChargeOnKillInfluence2",
+      "to": "EnduranceChargeOnKillInfluenceMaven"
+    },
+    {
+      "from": "EnemyChaosResistanceAuraInfluence1_",
+      "to": "EnemyChaosResistanceAuraInfluenceMaven"
+    },
+    {
+      "from": "EnemyColdResistanceAuraInfluence1__",
+      "to": "EnemyColdResistanceAuraInfluenceMaven"
+    },
+    {
+      "from": "EnemyElementalDamageTakenAuraUber1",
+      "to": "EnemyElementalDamageTakenAuraUberMaven_"
+    },
+    {
+      "from": "EnemyFireResistanceAuraInfluence1",
+      "to": "EnemyFireResistanceAuraInfluenceMaven"
+    },
+    {
+      "from": "EnemyLightningResistanceAuraInfluence1_",
+      "to": "EnemyLightningResistanceAuraInfluenceMaven"
+    },
+    {
+      "from": "EnemyPhysicalDamageTakenAuraUber1_",
+      "to": "EnemyPhysicalDamageTakenAuraUberMaven"
+    },
+    {
+      "from": "EnergyShieldOnKillPercentInfluence2_",
+      "to": "EnergyShieldOnKillPercentInfluenceMaven"
+    },
+    {
+      "from": "EnergyShieldRecoveryRateBodyInfluence2",
+      "to": "EnergyShieldRecoveryRateBodyInfluenceMaven"
+    },
+    {
+      "from": "FasterBleedInfluence2",
+      "to": "FasterBleedInfluenceMaven"
+    },
+    {
+      "from": "FasterIgniteInfluence2_",
+      "to": "FasterIgniteInfluenceMaven"
+    },
+    {
+      "from": "FasterPoisonInfluence2",
+      "to": "FasterPoisonInfluenceMaven"
+    },
+    {
+      "from": "FireDamageOverTimeMultiplierInfluence2",
+      "to": "FireDamageOverTimeMultiplierInfluenceMaven"
+    },
+    {
+      "from": "FireDamageOverTimeMultiplierUber2",
+      "to": "FireDamageOverTimeMultiplierUberMaven"
+    },
+    {
+      "from": "FreezeChanceAndDurationInfluence2_",
+      "to": "FreezeChanceAndDurationInfluenceMaven"
+    },
+    {
+      "from": "FrenzyChargeOnHitChanceInfluence1",
+      "to": "FrenzyChargeOnHitChanceInfluenceMaven"
+    },
+    {
+      "from": "FrenzyChargeOnKillInfluence2",
+      "to": "FrenzyChargeOnKillInfluenceMaven"
+    },
+    {
+      "from": "GainAccuracyEqualToStrengthInfluence1",
+      "to": "GainAccuracyEqualToStrengthInfluenceMaven"
+    },
+    {
+      "from": "GlobalChanceToBlindOnHitInfluence2_",
+      "to": "GlobalChanceToBlindOnHitInfluenceMaven"
+    },
+    {
+      "from": "GlobalCriticalStrikeChanceInfluence3",
+      "to": "GlobalCriticalStrikeChanceInfluenceMaven"
+    },
+    {
+      "from": "GlobalRaiseSpectreGemLevelUber1",
+      "to": "GlobalRaiseSpectreGemLevelUberMaven"
+    },
+    {
+      "from": "GrantsDecoyTotemSkillUber1",
+      "to": "GrantsDecoyTotemSkillUberMaven_"
+    },
+    {
+      "from": "HolyPhysicalExplosionChanceInfluence2_",
+      "to": "HolyPhysicalExplosionChanceInfluenceMaven"
+    },
+    {
+      "from": "IgniteChanceAndDamageInfluence2_",
+      "to": "IgniteChanceAndDamageInfluenceMaven"
+    },
+    {
+      "from": "IgniteDurationSupportedUber3",
+      "to": "IgniteDurationSupportedUberMaven"
+    },
+    {
+      "from": "IgnitingConfluxInfluence1",
+      "to": "IgnitingConfluxInfluenceMaven"
+    },
+    {
+      "from": "ImmuneToBurningGroundUber1",
+      "to": "ImmuneToBurningGroundUberMaven_"
+    },
+    {
+      "from": "ImmuneToChilledGroundUber1",
+      "to": "ImmuneToChilledGroundUberMaven"
+    },
+    {
+      "from": "ImmuneToDesecratedGroundUber1_",
+      "to": "ImmuneToDesecratedGroundUberMaven"
+    },
+    {
+      "from": "ImmuneToShockedGroundUber1",
+      "to": "ImmuneToShockedGroundUberMaven"
+    },
+    {
+      "from": "IncreasedAccuracyPercentInfluence2",
+      "to": "IncreasedAccuracyPercentInfluenceMaven_"
+    },
+    {
+      "from": "IncreasedAccuracySupportedUber3",
+      "to": "IncreasedAccuracySupportedUberMaven"
+    },
+    {
+      "from": "IncreasedAilmentEffectOnEnemiesInfluence2",
+      "to": "IncreasedAilmentEffectOnEnemiesInfluenceMaven"
+    },
+    {
+      "from": "IncreasedAttackAndCastSpeedUber3_",
+      "to": "IncreasedAttackAndCastSpeedUberMaven"
+    },
+    {
+      "from": "IncreasedAttackSpeedUber3",
+      "to": "IncreasedAttackSpeedUberMaven"
+    },
+    {
+      "from": "IncreasedBurningDamageSupportedUber3",
+      "to": "IncreasedBurningDamageSupportedUberMaven"
+    },
+    {
+      "from": "IncreasedCastSpeedUber3",
+      "to": "IncreasedCastSpeedUberMaven_"
+    },
+    {
+      "from": "IncreasedChillEffectSupportedUber3",
+      "to": "IncreasedChillEffectSupportedUberMaven"
+    },
+    {
+      "from": "IncreasedCooldownRecoveryBootsUber1",
+      "to": "IncreasedCooldownRecoveryBootsUberMaven_"
+    },
+    {
+      "from": "IncreasedDurationBootsUber1",
+      "to": "IncreasedDurationBootsUberMaven"
+    },
+    {
+      "from": "IncreasedMeleeWeaponRangeAndMeleeDamageUber1",
+      "to": "IncreasedMeleeWeaponRangeAndMeleeDamageUberMaven_"
+    },
+    {
+      "from": "IncreasedShockEffectSupportedUber3_",
+      "to": "IncreasedShockEffectSupportedUberMaven"
+    },
+    {
+      "from": "LifeOnKillPercentInfluence2",
+      "to": "LifeOnKillPercentInfluenceMaven"
+    },
+    {
+      "from": "LifeRecoveryRateBodyInfluence2",
+      "to": "LifeRecoveryRateBodyInfluenceMaven"
+    },
+    {
+      "from": "LocalIncreaseSocketedActiveGemLevelUber1",
+      "to": "LocalIncreaseSocketedActiveGemLevelUberMaven"
+    },
+    {
+      "from": "LocalIncreaseSocketedSupportGemLevelUber1",
+      "to": "LocalIncreaseSocketedSupportGemLevelUberMaven___"
+    },
+    {
+      "from": "ManaGainPerTargetInfluence1",
+      "to": "ManaGainPerTargetInfluenceMaven"
+    },
+    {
+      "from": "ManaOnKillPercentInfluence2",
+      "to": "ManaOnKillPercentInfluenceMaven"
+    },
+    {
+      "from": "ManaRecoveryRateBodyInfluence2",
+      "to": "ManaRecoveryRateBodyInfluenceMaven"
+    },
+    {
+      "from": "ManaRegenerationInfluence2",
+      "to": "ManaRegenerationInfluenceMaven"
+    },
+    {
+      "from": "ManaRegenerationUber2",
+      "to": "ManaRegenerationUberMaven"
+    },
+    {
+      "from": "ManaReservationEfficiencyInfluence2",
+      "to": "ManaReservationEfficiencyInfluenceMaven"
+    },
+    {
+      "from": "MaximumColdResistanceInfluence2New",
+      "to": "MaximumColdResistanceInfluenceMavenNew"
+    },
+    {
+      "from": "MaximumEnduranceChargeInfluence1",
+      "to": "MaximumEnduranceChargeInfluenceMaven__"
+    },
+    {
+      "from": "MaximumEnergyShieldOnKillPercentUber2",
+      "to": "MaximumEnergyShieldOnKillPercentUberMaven"
+    },
+    {
+      "from": "MaximumFireResistanceInfluence2New_",
+      "to": "MaximumFireResistanceInfluenceMavenNew"
+    },
+    {
+      "from": "MaximumFrenzyChargeInfluence1",
+      "to": "MaximumFrenzyChargeInfluenceMaven"
+    },
+    {
+      "from": "MaximumLifeBodyInfluence2_",
+      "to": "MaximumLifeBodyInfluenceMaven__"
+    },
+    {
+      "from": "MaximumLifeLeechRateInfluence1",
+      "to": "MaximumLifeLeechRateInfluenceMaven"
+    },
+    {
+      "from": "MaximumLifeOnKillPercentUber2__",
+      "to": "MaximumLifeOnKillPercentUberMaven__"
+    },
+    {
+      "from": "MaximumLifeUber2",
+      "to": "MaximumLifeUberMaven"
+    },
+    {
+      "from": "MaximumLightningResistanceInfluence2New_",
+      "to": "MaximumLightningResistanceInfluenceMavenNew"
+    },
+    {
+      "from": "MaximumManaBodyUber2",
+      "to": "MaximumManaBodyUberMaven__"
+    },
+    {
+      "from": "MaximumManaInfluence2_",
+      "to": "MaximumManaInfluenceMaven"
+    },
+    {
+      "from": "MaximumManaOnKillPercentUber2",
+      "to": "MaximumManaOnKillPercentUberMaven_"
+    },
+    {
+      "from": "MaximumManaUber2_",
+      "to": "MaximumManaUberMaven"
+    },
+    {
+      "from": "MaximumPowerChargeInfluence1",
+      "to": "MaximumPowerChargeInfluenceMaven"
+    },
+    {
+      "from": "MeleeDamageInfluence3",
+      "to": "MeleeDamageInfluenceMaven__"
+    },
+    {
+      "from": "MeleeWeaponRangeInfluence1",
+      "to": "MeleeWeaponRangeInfluenceMaven"
+    },
+    {
+      "from": "MineDamageTrapUber3",
+      "to": "MineDamageTrapUberMaven"
+    },
+    {
+      "from": "MineDamageUber3",
+      "to": "MineDamageUberMaven"
+    },
+    {
+      "from": "MinionDamageInfluence3_",
+      "to": "MinionDamageInfluenceMaven"
+    },
+    {
+      "from": "MinionDamageSupportedUber3",
+      "to": "MinionDamageSupportedUberMaven___"
+    },
+    {
+      "from": "MinionLifeInfluence3",
+      "to": "MinionLifeInfluenceMaven"
+    },
+    {
+      "from": "MinionLifeSupportedUber3",
+      "to": "MinionLifeSupportedUberMaven_"
+    },
+    {
+      "from": "NearbyEnemiesAreBlindedInfluence1_",
+      "to": "NearbyEnemiesAreBlindedInfluenceMaven"
+    },
+    {
+      "from": "OfferingEffectInfluence2",
+      "to": "OfferingEffectInfluenceMaven"
+    },
+    {
+      "from": "OnslaughtOnKillInfluence2_",
+      "to": "OnslaughtOnKillInfluenceMaven"
+    },
+    {
+      "from": "PercentageDexterityBodyInfluence2",
+      "to": "PercentageDexterityBodyInfluenceMaven_"
+    },
+    {
+      "from": "PercentageDexterityInfluence2",
+      "to": "PercentageDexterityInfluenceMaven"
+    },
+    {
+      "from": "PercentageDexterityUber2",
+      "to": "PercentageDexterityUberMaven"
+    },
+    {
+      "from": "PercentageIntelligenceBodyInfluence2___",
+      "to": "PercentageIntelligenceBodyInfluenceMaven"
+    },
+    {
+      "from": "PercentageIntelligenceInfluence2",
+      "to": "PercentageIntelligenceInfluenceMaven_"
+    },
+    {
+      "from": "PercentageIntelligenceUber2",
+      "to": "PercentageIntelligenceUberMaven__"
+    },
+    {
+      "from": "PercentageStrengthBodyInfluence2_",
+      "to": "PercentageStrengthBodyInfluenceMaven_"
+    },
+    {
+      "from": "PercentageStrengthInfluence2_",
+      "to": "PercentageStrengthInfluenceMaven_"
+    },
+    {
+      "from": "PercentageStrengthUber2__",
+      "to": "PercentageStrengthUberMaven__"
+    },
+    {
+      "from": "PhysTakenAsChaosInfluence2",
+      "to": "PhysTakenAsChaosInfluenceMaven__"
+    },
+    {
+      "from": "PhysTakenAsColdHelmetInfluence2",
+      "to": "PhysTakenAsColdHelmetInfluenceMaven"
+    },
+    {
+      "from": "PhysTakenAsColdInfluence2",
+      "to": "PhysTakenAsColdInfluenceMaven"
+    },
+    {
+      "from": "PhysTakenAsFireHelmetInfluence2",
+      "to": "PhysTakenAsFireHelmetInfluenceMaven"
+    },
+    {
+      "from": "PhysTakenAsFireInfluence2",
+      "to": "PhysTakenAsFireInfluenceMaven"
+    },
+    {
+      "from": "PhysTakenAsLightningHelmInfluence2",
+      "to": "PhysTakenAsLightningHelmInfluenceMaven"
+    },
+    {
+      "from": "PhysTakenAsLightningInfluence2",
+      "to": "PhysTakenAsLightningInfluenceMaven"
+    },
+    {
+      "from": "PhysicalAddedAsExtraColdBootsInfluence2",
+      "to": "PhysicalAddedAsExtraColdBootsInfluenceMaven"
+    },
+    {
+      "from": "PhysicalAddedAsExtraFireBootsInfluence2",
+      "to": "PhysicalAddedAsExtraFireBootsInfluenceMaven___"
+    },
+    {
+      "from": "PhysicalAddedAsExtraLightningBootsInfluence2",
+      "to": "PhysicalAddedAsExtraLightningBootsInfluenceMaven"
+    },
+    {
+      "from": "PhysicalDamageCannotBeReflectedPercentInfluence1",
+      "to": "PhysicalDamageCannotBeReflectedPercentInfluenceMaven"
+    },
+    {
+      "from": "PhysicalDamageCannotBeReflectedPercentUber1",
+      "to": "PhysicalDamageCannotBeReflectedPercentUberMaven"
+    },
+    {
+      "from": "PhysicalDamageOverTimeMultiplierInfluence2",
+      "to": "PhysicalDamageOverTimeMultiplierInfluenceMaven"
+    },
+    {
+      "from": "PhysicalDamageOverTimeMultiplierUber2__",
+      "to": "PhysicalDamageOverTimeMultiplierUberMaven_"
+    },
+    {
+      "from": "PhysicalDamageTakenAsColdPercentUber2",
+      "to": "PhysicalDamageTakenAsColdPercentUberMaven"
+    },
+    {
+      "from": "PhysicalDamageTakenAsFirePercentUber2",
+      "to": "PhysicalDamageTakenAsFirePercentUberMaven"
+    },
+    {
+      "from": "PhysicalDamageTakenAsLightningPercentUber2___",
+      "to": "PhysicalDamageTakenAsLightningPercentUberMaven"
+    },
+    {
+      "from": "PoisonDamageSupportedUber3",
+      "to": "PoisonDamageSupportedUberMaven"
+    },
+    {
+      "from": "PowerChargeOnKillInfluence2",
+      "to": "PowerChargeOnKillInfluenceMaven"
+    },
+    {
+      "from": "ProjectileAttackDamageInfluence3",
+      "to": "ProjectileAttackDamageInfluenceMaven"
+    },
+    {
+      "from": "ProjectileDamageUber3",
+      "to": "ProjectileDamageUberMaven_"
+    },
+    {
+      "from": "ProjectileSpeedUber3_",
+      "to": "ProjectileSpeedUberMaven"
+    },
+    {
+      "from": "ReducedFreezeDurationInfluence3",
+      "to": "ReducedFreezeDurationInfluenceMaven__"
+    },
+    {
+      "from": "ReducedIgniteDurationInfluence3__",
+      "to": "ReducedIgniteDurationInfluenceMaven"
+    },
+    {
+      "from": "ReducedShockEffectInfluence3_",
+      "to": "ReducedShockEffectInfluenceMaven"
+    },
+    {
+      "from": "RegenerateLifeOver1SecondInfluence1",
+      "to": "RegenerateLifeOverMaven"
+    },
+    {
+      "from": "ShockChanceAndEffectInfluence2",
+      "to": "ShockChanceAndEffectInfluenceMaven"
+    },
+    {
+      "from": "ShockingConfluxInfluence1_",
+      "to": "ShockingConfluxInfluenceMaven_"
+    },
+    {
+      "from": "SocketedActiveGemLevelInfluence1",
+      "to": "SocketedActiveGemLevelInfluenceMaven"
+    },
+    {
+      "from": "SocketedAttackCriticalMultiplierUber3",
+      "to": "SocketedAttackCriticalMultiplierUberMaven"
+    },
+    {
+      "from": "SocketedAttackCriticalStrikeChanceUber3",
+      "to": "SocketedAttackCriticalStrikeChanceUberMaven"
+    },
+    {
+      "from": "SocketedAttacksManaCostInfluence1",
+      "to": "SocketedAttacksManaCostInfluenceMaven"
+    },
+    {
+      "from": "SocketedChaosGemLevelInfluence1",
+      "to": "SocketedChaosGemLevelInfluenceMaven"
+    },
+    {
+      "from": "SocketedColdGemLevelInfluence1",
+      "to": "SocketedColdGemLevelInfluenceMaven"
+    },
+    {
+      "from": "SocketedFireGemLevelInfluence1",
+      "to": "SocketedFireGemLevelInfluenceMaven"
+    },
+    {
+      "from": "SocketedLightningGemLevelInfluence1_",
+      "to": "SocketedLightningGemLevelInfluenceMaven"
+    },
+    {
+      "from": "SocketedSpellCriticalMultiplierUber3",
+      "to": "SocketedSpellCriticalMultiplierUberMaven"
+    },
+    {
+      "from": "SocketedSpellCriticalStrikeChanceUber3",
+      "to": "SocketedSpellCriticalStrikeChanceUberMaven"
+    },
+    {
+      "from": "SocketedSupportGemLevelInfluence1",
+      "to": "SocketedSupportGemLevelInfluenceMaven"
+    },
+    {
+      "from": "SpellAddedChaosDamageInfluence3",
+      "to": "SpellAddedChaosDamageInfluenceMaven_"
+    },
+    {
+      "from": "SpellAddedChaosDamageUber3",
+      "to": "SpellAddedChaosDamageUberMaven"
+    },
+    {
+      "from": "SpellAddedColdDamageInfluence3_",
+      "to": "SpellAddedColdDamageInfluenceMaven"
+    },
+    {
+      "from": "SpellAddedColdDamageUber3",
+      "to": "SpellAddedColdDamageUberMaven"
+    },
+    {
+      "from": "SpellAddedFireDamageInfluence3_",
+      "to": "SpellAddedFireDamageInfluenceMaven"
+    },
+    {
+      "from": "SpellAddedFireDamageUber3",
+      "to": "SpellAddedFireDamageUberMaven"
+    },
+    {
+      "from": "SpellAddedLightningDamageInfluence3",
+      "to": "SpellAddedLightningDamageInfluenceMaven_"
+    },
+    {
+      "from": "SpellAddedLightningDamageUber3",
+      "to": "SpellAddedLightningDamageUberMaven"
+    },
+    {
+      "from": "SpellAddedPhysicalDamageInfluence3",
+      "to": "SpellAddedPhysicalDamageInfluenceMaven"
+    },
+    {
+      "from": "SpellAddedPhysicalDamageUber3",
+      "to": "SpellAddedPhysicalDamageUberMaven"
+    },
+    {
+      "from": "SpellBlockPercentInfluence2",
+      "to": "SpellBlockPercentInfluenceMaven"
+    },
+    {
+      "from": "SpellDamageInfluence3",
+      "to": "SpellDamageInfluenceMaven"
+    },
+    {
+      "from": "SpellsAdditionalUnleashSealInfluence1",
+      "to": "SpellsAdditionalUnleashSealInfluenceMaven___"
+    },
+    {
+      "from": "StrikeSkillsAdditionalTargetInfluence1",
+      "to": "StrikeSkillsAdditionalTargetInfluenceMaven"
+    },
+    {
+      "from": "SupportedByFortifyUber1",
+      "to": "SupportedByFortifyUberMaven_"
+    },
+    {
+      "from": "SupportedByItemRarityUber2",
+      "to": "SupportedByItemRarityUberMaven__"
+    },
+    {
+      "from": "SupportedByLessDurationUber1",
+      "to": "SupportedByLessDurationUberMaven"
+    },
+    {
+      "from": "SupportedByLifeLeechUber1",
+      "to": "SupportedByLifeLeechUberMaven__"
+    },
+    {
+      "from": "SupportedByManaLeechUber1",
+      "to": "SupportedByManaLeechUberMaven__"
+    },
+    {
+      "from": "TailwindOnCriticalStrikeInfluence1",
+      "to": "TailwindOnCriticalStrikeInfluenceMaven_"
+    },
+    {
+      "from": "TotemDamageAttackUber3",
+      "to": "TotemDamageAttackUberMaven"
+    },
+    {
+      "from": "TotemDamageSpellUber3",
+      "to": "TotemDamageSpellUberMaven_"
+    },
+    {
+      "from": "TotemSpeedAttackUber3",
+      "to": "TotemSpeedAttackUberMaven"
+    },
+    {
+      "from": "TotemSpeedSpellUber3",
+      "to": "TotemSpeedSpellUberMaven"
+    },
+    {
+      "from": "TrapDamageCooldownUber3_",
+      "to": "TrapDamageCooldownUberMaven"
+    },
+    {
+      "from": "TrapDamageMineUber3",
+      "to": "TrapDamageMineUberMaven"
+    },
+    {
+      "from": "TrapDamageUber3",
+      "to": "TrapDamageUberMaven_"
+    },
+    {
+      "from": "TrapSpeedCooldownUber3",
+      "to": "TrapSpeedCooldownUberMaven_"
+    },
+    {
+      "from": "UnaffectedByBurningGroundInfluence1",
+      "to": "UnaffectedByBurningGroundInfluenceMaven"
+    },
+    {
+      "from": "UnaffectedByChilledGroundInfluence1",
+      "to": "UnaffectedByChilledGroundInfluenceMaven"
+    },
+    {
+      "from": "UnaffectedByDesecratedGroundInfluence1_",
+      "to": "UnaffectedByDesecratedGroundInfluenceMaven"
+    },
+    {
+      "from": "UnaffectedByShockedGroundInfluence1",
+      "to": "UnaffectedByShockedGroundInfluenceMaven"
+    },
+    {
+      "from": "WarcryAreaOfEffectInfluence2",
+      "to": "WarcryAreaOfEffectInfluenceMaven"
+    }
+  ]
+}

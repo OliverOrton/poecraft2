@@ -196,8 +196,18 @@ keeps its base, level, sockets, links, quality, implicits and enchantments. Sele
 and 4–6 affix refill use the existing structural engine. Possible additional
 non-group exclusions remain an evidence limitation, not a verified game claim.
 
-Dominance is recognized but unavailable: canonical data lacks explicit ordinary-T1
-to elevated relationships; multi-candidate pair probabilities are unresolved.
-Name and zero-weight selector metadata permit elevated retention only. They do
-not establish upgrade mappings. The [execution record](../active/2026-09-28-currency-expansion/README.md)
-owns the pinned sources, scope qualification and Pro handoff.
+Dominance is available in native execution, Emulator and authored Simulator.
+It requires magic/rare helmets, body armour, gloves or boots with at least two
+eligible influenced affixes. It chooses a uniform ordered pair of distinct
+unprotected, current modifiers, upgrades one and removes the other. Canonical
+mod type, side and influence identify lower-tier progression independently of
+item-level roll eligibility. The ingest-owned `influence_elevation` table carries
+220 explicit T1-to-elevated links from the current published data; an already
+elevated selection rerolls its numeric values. Locked/fractured/legacy modifiers
+are preserved. Insufficient candidates leave the item and cost unchanged.
+Unmapped current upgrades fail atomically; the Crusader gloves energy-shield
+leech suffix currently has no compatible elevated mapping. Retained enchantments
+are preserved. Exact evaluation and automatic Dominance search require Pro's
+representation/transition work and remain unavailable. The
+[execution record](../active/2026-09-28-currency-expansion/README.md#currency-follow-up-2026-09-29)
+owns source identities, qualification and the remaining scope.

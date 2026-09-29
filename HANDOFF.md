@@ -1,18 +1,20 @@
 # Handoff
 
-The [currency expansion execution record](docs/active/2026-09-28-currency-expansion/README.md#execution-receipt-and-remaining-holds)
-owns local implementation `52d5fc4`, the per-family capability table, validation and Pro
-handoff. Supported slices are implemented and qualified; the whole programme is
-not complete. Missing mechanics laws hold Dominance, Heist enchantment rolls,
-full corruption and memory stochastic actions. Structural Awakener/resource
-transactions and scoped Vaal sampling are delivered. Foulborn has checked magic
-policies in Current/Finder, zero lower only; the durable rare-root witness returns
-no executable policy in either lane. Memory search remains unavailable/default
-off. Legacy nonempty dense-only saves require original-runtime key migration.
-No push/deployment or previous research allowance was authorized or renewed.
-Work sequentially on main, preserve root `0`, and use the record to select a
-named remaining hold or Pro task. Existing release and IC receipts below remain
-unchanged.
+The [currency follow-up](docs/active/2026-09-28-currency-expansion/README.md#currency-follow-up-2026-09-29)
+owns the current local scope and validation. Dominance now has native/Emulator/
+authored Simulator execution using 220 explicit elevation links. Vaal covers
+ordinary equipment under Oliver's approved affix projection: ignore sockets but
+retain their 25% branch. Vaal is in Basic currency; enchantments have separate
+craft and mod-pool categories. Game data is refreshed to RePoE 3.29.3.3 with
+immutable source archives and compiler-derived runtime identity.
+
+Oliver explicitly held Tempering/Tailoring because random weights are not public.
+Double corruption, jewel/unique transformations and memory-law gaps remain held.
+Exact Dominance/Vaal evaluation and substantive solver integration remain for Pro;
+prior Foulborn and multi-item qualifications are unchanged. Work stays sequential
+on main, preserving root `0`. No push/deployment or old experiment allowance was
+requested. The execution record distinguishes remaining holds from delivered work.
+Existing release and IC receipts below remain historical and unchanged.
 
 Current release (2026-09-28): Oliver requested a Calculator layout closer
 to the familiar item editor, with crafting and modifiers always visible and only

@@ -1091,9 +1091,12 @@ EvalModel derive_model(
         throw std::invalid_argument("Exact multi-item strategy evaluation requires inventory/control identity and is reserved for Pro; donor resources cannot be projected into one item");
     }
 
-    for (const auto& node : strategy.nodes)
+    for (const auto& node : strategy.nodes) {
         if (node.kind == StrategyNodeKind::Operation && node.action.type == ActionType::Vaal)
             throw std::invalid_argument("Exact corruption strategy evaluation requires implicit and terminal-state modelling and is reserved for Pro; use the supported native sampler");
+        if (node.kind == StrategyNodeKind::Operation && node.action.type == ActionType::Dominance)
+            throw std::invalid_argument("Exact Dominance strategy evaluation requires elevated tier transitions and is reserved for Pro; use the native sampler");
+    }
     const auto session = strategy.session;
     ActionRegistryBuildOptions registry_options;
     registry_options.exhaustive_fossils = false;
