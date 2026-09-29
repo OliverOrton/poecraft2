@@ -140,6 +140,8 @@ Material artwork and hover/focus descriptions come from the Python-generated
 asset catalogue joined to the selected canonical data. Essence tooltips show
 the listed modifier for the current item class; Fossils show canonical game
 descriptions. These are presentation data, not a new mechanics authority.
+Tooltips follow visible material choices when their pane scrolls, including
+automatic scrolling on focus, and close when the choice is clipped out of view.
 
 Undo/Redo and clickable history rows restore native exported item snapshots,
 including Imprint checkpoints and pending unveil choices. Item creation and

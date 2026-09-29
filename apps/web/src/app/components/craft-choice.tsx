@@ -19,23 +19,36 @@ export function CraftChoice({name, value, label, assetKey, selected, blocked = f
     const details = Boolean(asset?.description || asset?.essence_mods);
     useLayoutEffect(() => {
         if (!open || !button.current || !tooltip.current) return;
-        const anchor = button.current.getBoundingClientRect();
-        const box = tooltip.current.getBoundingClientRect();
-        const below = anchor.bottom + 6;
-        setPosition({
-            left: Math.max(8, Math.min(anchor.left, window.innerWidth - box.width - 8)),
-            top: Math.max(8, below + box.height <= window.innerHeight - 8 ? below : anchor.top - box.height - 6),
-        });
+        const reposition = () => {
+            if (!button.current || !tooltip.current) return;
+            const anchor = button.current.getBoundingClientRect();
+            const box = tooltip.current.getBoundingClientRect();
+            const below = anchor.bottom + 6;
+            setPosition({
+                left: Math.max(8, Math.min(anchor.left, window.innerWidth - box.width - 8)),
+                top: Math.max(8, below + box.height <= window.innerHeight - 8 ? below : anchor.top - box.height - 6),
+            });
+        };
+        const scroll = () => {
+            const anchor = button.current?.getBoundingClientRect();
+            if (!anchor || !button.current?.contains(document.elementFromPoint(
+                anchor.left + anchor.width / 2, anchor.top + anchor.height / 2,
+            ))) { setOpen(false); return; }
+            // Focusing a selected tier can scroll its pane after pointer entry.
+            // Keep the visible choice's tooltip attached through that scroll.
+            reposition();
+        };
+        reposition();
+        window.addEventListener("scroll", scroll, true);
+        return () => window.removeEventListener("scroll", scroll, true);
     }, [open, asset, itemClass]);
     useEffect(() => {
         if (!open) return;
         const close = () => setOpen(false);
         const key = (event: KeyboardEvent) => { if (event.key === "Escape") close(); };
-        window.addEventListener("scroll", close, true);
         window.addEventListener("resize", close);
         window.addEventListener("keydown", key);
         return () => {
-            window.removeEventListener("scroll", close, true);
             window.removeEventListener("resize", close);
             window.removeEventListener("keydown", key);
         };

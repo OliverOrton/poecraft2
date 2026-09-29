@@ -887,3 +887,13 @@ Oliver's. No new Simulator qualification was required because strategies are unc
 Logs and the functional harness are under `out/currency-followup/editor-*`.
 Release WASM SHA-256:
 `c62ceb9ea0c4a3da74feeb201e49e74e80ede1e2799a30a86d2668eeacbbc413`.
+
+The first hosting attempt, run `36636768896` from `0fdb91d`, stopped before
+deployment on the material-tooltip check. Larger controls exposed a reproducible
+focus-scroll dismissal: the selected Essence tier remained visible but its tooltip
+closed after pointer entry. Visible anchors now reposition their tooltips on scroll;
+clipped anchors still close. The original failing browser check passes without
+weakening it, and the complete local Chromium static smoke passes after rebuilding.
+Local Firefox could not launch (`spawn UNKNOWN`); the required Linux hosting matrix
+must still pass both browsers and paths before publication. No native change or
+second WASM rebuild was needed for this presentation fix.
