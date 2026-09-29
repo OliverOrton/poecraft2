@@ -115,8 +115,8 @@ persisted acquisition-time offer set.
 
 ## Calculator Support
 
-The Calculator Veiled panel exposes all three primitives. Single-action odds
-for the registered actions use native exact calculation. A solver-generated
+The Calculator separates Veiled currency (Chaos and Exalt) from its Unveil action
+panel. Single-action odds for all three use native exact goal calculation. A solver-generated
 policy may also compile Unveil routing to ordinary strategy nodes.
 
 ## Explicitly Unsupported Behavior

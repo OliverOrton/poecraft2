@@ -4,6 +4,11 @@
 
 Parent: [Product](README.md)
 
+Currency/goal/editor follow-up: updated 2026-09-29. Joint single-action goals,
+modifier-driven item state and corrupted-input authoring are covered by native,
+release-WASM, controller and functional browser checks in the
+[execution record](../active/2026-09-28-currency-expansion/README.md).
+
 Current-scope audit: verified against source on 2026-08-25 @ `a1449fa` for
 goal-progress gating, economic Restart, automatic Imprint defaults, result
 scope disclosure, and the native finalization phases. No web suite or rendered
@@ -70,6 +75,17 @@ editor, which rejects incompatible influence/fracture/Eldritch state and excessi
 affix counts. Adding an Eldritch implicit keeps that side's tier when eligible,
 otherwise starts at its lowest admitted currency tier. Enchantments remain a
 separate retained-state section. Pending Unveil choices lock these editing paths.
+
+Select the pool's Implicits tab and click a modifier row, just as for an explicit
+modifier; there is no separate Add implicit button. Adding a Vaal implicit marks
+the input corrupted, and adding an influenced explicit sets its native influence.
+Eldritch additions set the corresponding native tier and item-header label.
+Calculator input authoring remains available on corrupted items, including crafted
+modifiers; actual currency calculations still enforce their normal legality.
+Goal selection likewise adds the Vaal corruption or ordinary influence requirement
+and displays selected Eldritch sources. Removing a modifier does not automatically
+clear an authored corruption or ordinary influence property; edit that property
+explicitly when desired. Removing an input Eldritch implicit clears its side's tier.
 
 Implicit and item-property goals are single-action Calculator requirements.
 Strategy finder and Solver Lab export refuse this extended goal; no search or

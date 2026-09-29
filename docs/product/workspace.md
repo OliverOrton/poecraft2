@@ -8,6 +8,11 @@ Verified against code: 2026-07-19 @ d5e38e3. Scope: workspace shell,
 document registry, IndexedDB/local-storage persistence, Stash, dirty-close
 flow, and economy selector. No rendered or visual review was performed.
 
+The 2026-09-29 currency/editor follow-ups update the Emulator column order,
+shared modifier selection, item-state indicators and read-only Calculator behavior
+below. Their scoped validation is in the
+[currency execution record](../active/2026-09-28-currency-expansion/README.md).
+
 ## Workspace Shell
 
 The 2026-09-27 continuity migration retains Vite, Dockview, saved document
@@ -111,8 +116,9 @@ controls, a draft, and a displayed craft history. The action list comes from
 the engine's Emulator-available catalog; applying an action mutates only that
 document's native item.
 
-The Emulator gives the item and modifier pool full-height columns. Crafting
-and cost/history share a third column with separate scrolling regions, so
+The Emulator places the item on the left, crafting and cost/history in the
+middle, and the modifier pool on the right. The middle column has separate
+scrolling regions, so
 long Essence or Harvest panels do not push the item and history below the
 window. Item rows retain their normal single-column layout.
 
@@ -127,6 +133,8 @@ type; Fossils toggle up to four materials. Harvest resistance conversion remains
 in the Harvest panel with Reforge/Augment. Selecting a material stages the choice; the separate
 text-only craft/Calculate button applies it. Calculator keeps staged Fossils
 separate from its currently evaluated loadout.
+Currency/category buttons and material rows use enlarged click targets and artwork
+in both workbenches.
 
 Material artwork and hover/focus descriptions come from the Python-generated
 asset catalogue joined to the selected canonical data. Essence tooltips show
@@ -201,8 +209,8 @@ replays the recorded result without sampling or charging again. Branch history
 carries the resource snapshots. Conflicting later edits refuse the entire
 transaction. A stale editor cannot save over a consumed/destroyed record.
 
-Calculator preview uses copies and opens a new Emulator result without consuming
-Stash originals. Saved identity excludes accidental self-donation. Memory state
+Calculator evaluates Input → Goal odds on copies without consuming Stash originals
+or creating an Emulator result. Saved identity excludes accidental self-donation. Memory state
 edits record history without currency cost. Consumed/destroyed Stash cards cannot
 be opened as live inputs. Stable-key import boundaries are documented in
 [Item state](../engine/items.md#export-import-and-cloning).
@@ -220,3 +228,10 @@ source, showing sources represented on the selected base. Families from differen
 sources remain separate even when they share an exclusion group. Concrete item
 cards and Stash rows show a red border and Corrupted label from the native item
 flag; refreshing or undoing the state updates both.
+
+Implicit rows are selected directly from the pool, with no separate Add implicit
+button on the item card. Native manual additions set ordinary influence, Eldritch
+tiers or corruption from the selected modifier. Calculator allows manual authoring
+of corrupted inputs; real crafts and action calculations retain their legality
+checks. Pending Unveil choices still lock all manual changes. The detailed editing
+contract is in [Item state](../engine/items.md#manual-item-authoring).

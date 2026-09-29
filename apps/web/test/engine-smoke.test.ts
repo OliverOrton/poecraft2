@@ -2693,8 +2693,14 @@ test("Calculator item goals and editors preserve native joint outcomes", async (
         assert.deepEqual(await client.exportItem(item, low), influenced);
         await client.editItem(item, low, {influence_bits: 0, corrupted: false, add_implicit: keys[0]});
         assert.equal(((await client.itemInfo(item)).implicit_mod_ids as number[]).length, 1);
+        assert.equal(Number((await client.itemInfo(item)).item_flags) & 1, 1);
+        await client.editItem(item, low, {add_explicit: "LocalIncreaseSocketedActiveGemLevelUber1"});
+        assert.equal((await client.itemInfo(item)).generic_influence_bits, 32);
+        const added = (await client.itemInfo(item)).prefix_mod_ids as number[];
+        await client.removeMod(item, {modId: added[0], side: "prefix"});
         await client.editItem(item, low, {remove_implicit: keys[0]});
         assert.equal(((await client.itemInfo(item)).implicit_mod_ids as number[]).length, 0);
+        await client.editItem(item, low, {corrupted: false, influence_bits: 0});
 
         // Every existing ordinary kernel agrees with the unified endpoint when
         // extra item requirements are absent. Use the same bounded low-ilvl base.

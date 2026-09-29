@@ -161,8 +161,10 @@ do not make a dependency free.
 ## Calculator Support
 
 The Calculator exposes the same Eldritch and Influenced panels as the Emulator
-and resolves each visible choice to its parameterized solver registry ID for
-exact calculation.
+and resolves each visible choice to its native action ID for exact calculation.
+The single-action result checks required implicit keys and selected ordinary
+influences together with the explicit goal. Eldritch draws use canonical native
+weights and preserve the other side's implicit requirements as appropriate.
 
 ## Explicitly Unsupported Behavior
 
@@ -208,7 +210,9 @@ are preserved. Insufficient candidates leave the item and cost unchanged.
 Unmapped current upgrades fail atomically; the Crusader gloves energy-shield
 leech suffix currently has no compatible elevated mapping. Retained enchantments
 are preserved. Calculator has exact single-action Dominance outcomes and
-Awakener retained-pair/refill odds over structural goals. The native preparation
+Awakener retained-pair/refill odds over the same Input → Goal requirements, including
+retained implicits, the combined ordinary influence set and corruption state.
+The native preparation
 is shared with execution; all pair mass is retained and uncovered collision or
 upgrade cases refuse. Multi-step exact evaluation and automatic Dominance/Awakener
 search still require separate representation/transition work. The

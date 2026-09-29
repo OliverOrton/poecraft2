@@ -429,7 +429,7 @@ export class PcEmulator extends HTMLElement {
             return;
         }
         if (side === "implicit") await this.client.editItem(this.item, this.session, {add_implicit: key});
-        else await this.client.addMod(this.item, this.session, {key, side, fractured});
+        else await this.client.editItem(this.item, this.session, {add_explicit: key, fractured});
         this.pendingHistoryEntry = {
             action: `${fractured ? "fracture" : "add"} ${side} ${key}`,
             applied: true,
@@ -755,6 +755,7 @@ export class PcEmulator extends HTMLElement {
 
         this.modPool.setModel({
             mods: this.modCache,
+            allowUnrollable: true,
             item: {
                 rarity: info.rarity as string,
                 prefixOnItem,

@@ -438,6 +438,10 @@ Suggested fresh-session prompt:
 
 ## Execution receipt and remaining holds
 
+This section is the initial implementation snapshot at `52d5fc4`. Later dated
+follow-ups below supersede its capability and deployment statements. The current
+surface matrix is maintained in [Mechanics](../../mechanics/README.md).
+
 The supported slices below are implemented on `main`; this is **not completion
 of every mandatory runtime family**. Source baseline was
 `7c3d408143e98734890ba5a3cc4be8066dd235e3`. Implementation commit: `52d5fc463c0e4d1b20db2b1d89330d02afc599bb`. No push, deployment, timed research campaign or
@@ -840,3 +844,46 @@ and validation. Its durable archive matches GitHub's digest and verifies all
 Previous known-good run `36603885756` and its archive remain available for rollback.
 No rollback rehearsal or rendered design acceptance is claimed. Only release-record
 prose follows the deployed source revision.
+
+## Modifier editing and layout follow-up (2026-09-29)
+
+Oliver requested direct implicit selection from the modifier pool, automatic item
+state, editable corrupted Calculator inputs, larger currency controls and an
+Emulator layout with crafting/history in the middle and modifiers on the right.
+The shared item card no longer has an Add implicit button. Pool rows remain the
+selection path, with existing source groups and separate enchantments retained.
+
+The native atomic editor now authors explicit modifiers by stable key and sets
+their canonical crafted/veiled flags and ordinary influence. It validates session
+affix capacities, all exclusion groups and incompatible influence/fracture/Eldritch
+state. Adding a Vaal implicit sets corruption; Eldritch additions/removal maintain
+their side's tier. Calculator uses this editor even for crafted modifiers on a
+corrupted fixture. Actual currency odds and Emulator bench actions keep their
+crafting legality. Pending Unveil continues to block manual edits.
+
+Goal-row selection adds the corresponding Vaal corruption or ordinary influence
+requirement, and selected Eldritch sources appear in the goal header. Removing a
+modifier leaves separately authored corruption/ordinary-influence properties in
+place. Extended requirements remain single-action only. No transition law, strategy
+vocabulary, solver programme or previously held mechanic was expanded.
+
+The documentation audit updates Calculator, workspace and native item contracts,
+the full 36-action surface matrix, Bestiary clone/goal behavior, separate Unveil
+controls and Awakener/Restart support. Initial execution snapshots are explicitly
+historical; dated receipts are preserved. All changed documentation's local link
+targets resolve.
+
+Validation passes: 21 focused Python tests; rebuilt release WASM; full `npm test`
+including 36/36 WASM smoke tests; TypeScript and production build. New checks cover
+native automatic state, atomic conflict refusal, corrupted fixture authoring,
+goal-row property updates and native editor dispatch. Fresh Chromium functional
+checks pass column order, enlarged currency targets, absence of Add implicit,
+Eldritch tier/header updates and removal, Vaal corruption, ordinary/influenced/
+crafted editing while corrupted, actual Chaos refusal, automatic goal properties
+and reload persistence. No browser errors occurred. Harness corrections used
+stable selectors, explicit search focus and CSS-case-insensitive labels; no
+product change was needed for those harness failures. Rendered review remains
+Oliver's. No new Simulator qualification was required because strategies are unchanged.
+Logs and the functional harness are under `out/currency-followup/editor-*`.
+Release WASM SHA-256:
+`c62ceb9ea0c4a3da74feeb201e49e74e80ede1e2799a30a86d2668eeacbbc413`.

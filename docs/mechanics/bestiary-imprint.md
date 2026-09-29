@@ -83,7 +83,7 @@ Bestiary companion state, so cloning does not duplicate a checkpoint.
   operation resolution, exact checkpoint-aware graph evaluation, and
   create/restore strategy execution and accounting.
 - `bindings/wasm/wasm_api.cpp` — Bestiary presentation/apply/calculate facade
-  and clone checkpoint reset.
+  and clone checkpoint preservation with identity rebinding.
 
 ## Emulator Support
 
@@ -118,9 +118,11 @@ ratio, and completes 10,000/10,000 sampled runs with zero off-policy failures.
 
 ## Calculator Support
 
-The Calculator Bestiary panel exposes both operations and uses the dedicated
-deterministic Bestiary calculation API, including checkpoint state, refusal
-reason, resource vector, and consumed-checkpoint count. Automatic Calculator
+The Calculator Bestiary panel exposes both operations. Its native compound-state
+adapter calculates the deterministic successor on copies and checks the complete
+Input → Goal predicate. A legal operation can therefore have zero goal success.
+The dedicated Bestiary API continues to own checkpoint legality, refusals and
+resource accounting. Automatic Calculator
 solves can also admit the Imprint option when state-local discovery finds a
 complete useful kernel.
 
@@ -130,7 +132,9 @@ complete useful kernel.
   unsupported recipe rows and have no action implementation.
 - User-authored `imprint_retry` solver options are rejected; Imprint retry is
   automatic-only.
-- A checkpoint does not transfer to another item or to a WASM item clone.
+- A checkpoint does not transfer to a different in-game item. A WASM fixture
+  clone preserves the compound state and rebinds its checkpoint identity for
+  read-only calculation; this is not an in-game checkpoint transfer.
 - No Bestiary recipe beyond the two Imprint operations is supported.
 
 ## Open Questions Requiring Oliver

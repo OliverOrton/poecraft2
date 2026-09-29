@@ -1452,14 +1452,14 @@ pc_result pc_item_edit_json(pc_session_handle session, pc_item_state* item,
             if (corrupted->boolean) next.item_flags |= PC_ITEM_CORRUPTED;
             else next.item_flags &= ~PC_ITEM_CORRUPTED;
         }
-        const auto resolve = [&](const poecraft::json::Value& key) {
-            if (key.type != Type::String) throw std::invalid_argument("Implicit modifier needs a stable key");
+        const auto resolve = [&](const poecraft::json::Value& key, bool implicit = true) {
+            if (key.type != Type::String) throw std::invalid_argument("Modifier needs a stable key");
             const auto pos = s.data->mod_pos_by_key.find(key.string);
-            if (pos == s.data->mod_pos_by_key.end()) throw std::invalid_argument("Unknown implicit modifier");
+            if (pos == s.data->mod_pos_by_key.end()) throw std::invalid_argument("Unknown modifier");
             const auto found = s.session_id_by_global_id.find(s.data->mod_global_ids[pos->second]);
             if (found == s.session_id_by_global_id.end()) throw std::invalid_argument("Implicit is not available in this session");
             const auto id = found->second;
-            if (!pc_bitset_test(s.implicit_mask.data(), id) && !pc_bitset_test(s.corrupted_implicit_mask.data(), id) && !pc_bitset_test(s.eldritch_implicit_mask.data(), id))
+            if (implicit && !pc_bitset_test(s.implicit_mask.data(), id) && !pc_bitset_test(s.corrupted_implicit_mask.data(), id) && !pc_bitset_test(s.eldritch_implicit_mask.data(), id))
                 throw std::invalid_argument("Modifier is not an implicit");
             return id;
         };
@@ -1509,8 +1509,39 @@ pc_result pc_item_edit_json(pc_session_handle session, pc_item_state* item,
                 slot.mod_id = id;
                 slot.group_id = static_cast<std::uint16_t>(s.primary_group[id]);
             }
+            if (pc_bitset_test(s.corrupted_implicit_mask.data(), id)) next.item_flags |= PC_ITEM_CORRUPTED;
+        }
+        if (const auto* key = root.find("add_explicit")) {
+            const auto id = resolve(*key, false);
+            const int side = s.gen_type[id];
+            if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX) throw std::invalid_argument("Modifier is not an explicit");
+            const unsigned cap = next.rarity == PC_RARITY_NORMAL ? 0 : next.rarity == PC_RARITY_MAGIC ? 1 : s.rare_affix_cap;
+            if ((side == PC_SIDE_PREFIX ? next.prefix_count : next.suffix_count) >= cap)
+                throw std::invalid_argument("No open explicit modifier slot");
+            for (int occupied_side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+                const auto* slots = occupied_side == PC_SIDE_PREFIX ? next.prefixes : next.suffixes;
+                const auto count = occupied_side == PC_SIDE_PREFIX ? next.prefix_count : next.suffix_count;
+                for (unsigned i = 0; i < count; ++i) {
+                    const auto old = slots[i].mod_id;
+                    for (auto a = s.group_offsets[id]; a < s.group_offsets[id + 1]; ++a)
+                        for (auto b = s.group_offsets[old]; b < s.group_offsets[old + 1]; ++b)
+                            if (s.group_ids[a] == s.group_ids[b]) throw std::invalid_argument("A conflicting explicit modifier is already present");
+                }
+            }
+            std::uint8_t flags = 0;
+            if (const auto* fractured = root.find("fractured")) {
+                if (fractured->type != Type::Bool) throw std::invalid_argument("Fractured must be boolean");
+                if (fractured->boolean) flags |= PC_MOD_SLOT_FRACTURED;
+            }
+            if (pc_bitset_test(s.crafted_mask.data(), id)) flags |= PC_MOD_SLOT_CRAFTED;
+            if (pc_bitset_test(s.veiled_template_mask.data(), id)) flags |= PC_MOD_SLOT_VEILED;
+            const int influence = s.influence_code[id];
+            if (influence > 0 && influence <= 6) next.generic_influence_bits |= 1u << (influence - 1);
+            if (pc_item_add_mod(&next, side, id, static_cast<std::uint16_t>(s.primary_group[id]), flags, nullptr) != PC_RESULT_OK)
+                throw std::invalid_argument("Could not add explicit modifier");
         }
         if (next.generic_influence_bits) {
+            if (std::popcount(next.generic_influence_bits) > 2) throw std::invalid_argument("An item can have at most two ordinary influences");
             if (next.searing_exarch_tier || next.eater_of_worlds_tier) throw std::invalid_argument("Ordinary and Eldritch influence cannot coexist");
             for (unsigned i = 0; i < next.prefix_count; ++i) if (next.prefixes[i].flags & PC_MOD_SLOT_FRACTURED) throw std::invalid_argument("Ordinary influence cannot coexist with fractured modifiers");
             for (unsigned i = 0; i < next.suffix_count; ++i) if (next.suffixes[i].flags & PC_MOD_SLOT_FRACTURED) throw std::invalid_argument("Ordinary influence cannot coexist with fractured modifiers");

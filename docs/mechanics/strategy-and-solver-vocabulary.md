@@ -219,7 +219,9 @@ vocabulary.
 
 ## Solver Support
 
-All 26 primitives and Restart have single-action exact-calculation support.
+The [mechanics matrix](README.md#complete-primitive-coverage) records exact
+single-action support for the current 36 primitive IDs and separate operations.
+Recognition of a held or single-action-only currency does not add solver support.
 The registry is session-dependent and may omit parameterized actions whose
 data/pool is unavailable. Relevance, legality, price, automatic-candidate, and
 solver-scope filters can further narrow a solve without changing the
@@ -231,8 +233,9 @@ Whole-graph exact strategy evaluation resolves `mod_count`,
 `mod_family_count` (including crafted/fractured requirements),
 `has_unveil_option`, and authored Unveil selection. Offer identity is carried
 from the sampled Veiled outcome through the selected Unveil operation.
-Bestiary operations continue to use their separate stateful calculation path
-rather than ordinary one-item evaluator actions.
+Bestiary operations resolve through native checkpoint-aware descriptors; evaluator
+identity carries the saved carrier and consuming restore transition. They remain
+distinct from flat one-item registry actions.
 
 ## Calculator Support
 
@@ -241,7 +244,7 @@ complete solver registry for action selection, but Solve excludes ordinary
 economic Restart by default. An unchecked control can explicitly allow
 abandoning the current item and buying a fresh base. Product Fracture retains
 its exact paid replacement branch regardless of that option. Calculator has a
-dedicated Bestiary calculation path and does not present
+native compound-state Bestiary goal calculation and does not present
 `condition_check_only` as a user action. Solver-generated strategies can
 contain explicitly enabled economic Restart, action-owned replacement Restart,
 and automatic compound-option expansions.
@@ -253,11 +256,9 @@ and automatic compound-option expansions.
 - User-authored `imprint_retry` is rejected.
 - The visual Strategy Builder cannot directly author every condition accepted
   by advanced JSON.
-- The visual operation dropdown omits `restart`, even though solver-generated
-  Restart compiles and simulates.
-- Whole-graph exact evaluation does not treat the two Bestiary operations as
-  ordinary one-item calculator actions; sampled support must not be described
-  as ordinary exact-evaluator support.
+- Single-action implicit and item-property goals do not extend Strategy finder
+  or whole-graph evaluation to those requirements. The native and product guards
+  reject them rather than silently dropping constraints.
 
 ## Open Questions Requiring Oliver
 

@@ -7,6 +7,10 @@ Parent: [Engine](README.md)
 
 Verified against code: 2026-07-19 @ d5e38e3
 
+Updated 2026-09-29 for ABI v3 transport, checkpoint-preserving clones and the
+session-aware manual editor; focused native and release-WASM checks cover this
+follow-up. Earlier storage and helper contracts retain their original scope.
+
 Mechanic behavior belongs in [Mechanics](../mechanics/README.md). Pool and
 weight construction are described in [Pools](pools.md) and
 [Weights](weights.md).
@@ -75,6 +79,28 @@ groups, fractured or crafted slots, affix availability, and active metamods.
 All group memberships for a mod come from the session catalog; the cached
 primary `group_id` in the slot is not a replacement for those session tables.
 Candidate masks and prefix sums stay in reusable action-context scratch.
+
+## Manual item authoring
+
+`pc_item_edit_json` authors a fixture without spending currency. Stable-key
+`add_explicit`, `add_implicit` and `remove_implicit` edits share one atomic native
+validation path with rarity, ordinary influence and corruption property changes.
+Explicit additions resolve their side and crafted/veiled flags from the session,
+accept an optional fracture flag, and enforce session affix caps and all exclusion
+groups. Ordinary influences are limited to two and cannot coexist with fractured
+affixes or Eldritch tiers. Failed edits leave the item unchanged.
+
+Adding an influenced explicit sets its ordinary influence bit; adding a Vaal
+implicit sets the corrupted flag. Eldritch additions set the corresponding side's
+tier, preserving its current tier when eligible or using the lowest admitted
+currency tier. Removing that implicit clears the side's tier. Removing a Vaal
+implicit or ordinary influenced explicit leaves the item property in place.
+Properties can be explicitly overridden while authoring a fixture.
+
+Corruption does not block manual authoring, including Calculator input editing.
+It still blocks real actions where the crafting contract requires it. The raw
+`pc_item_add_mod` helper remains a lower-level fixture API and does not infer these
+properties. The frontend adapts this editor; it does not duplicate crafting laws.
 
 ## Export, import, and cloning
 

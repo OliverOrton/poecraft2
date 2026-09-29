@@ -305,6 +305,8 @@ def test_awakener_goal_observes_receiver_implicits_and_union_of_influences():
         target_mod = session.calculate_currency(receiver, "vaal")["implicit_outcomes"][0]["mod"]
         key = session.mod_info(target_mod).key
         receiver.edit(add_implicit=key)
+        # Explicit fixture override isolates retained implicit observation.
+        receiver.edit(corrupted=False)
         before = bytes(donor._state), bytes(receiver._state)
         target = {**goal("LocalIncreaseSocketedActiveGemLevelUber1", "AdditionalCriticalStrikeChanceWithAttacksUber1"),
                   "implicit_mod_keys": [key], "influence_bits": 40, "corrupted": False}
@@ -341,3 +343,29 @@ def test_unmodeled_enchantment_effects_do_not_silently_enter_ordinary_odds():
         with pytest.raises(EngineError, match="retained enchantments"):
             session.calculate_currency(item, "chaos", goal())
         conserved(session.calculate_currency(item, "vaal", goal()))
+
+
+def test_modifier_authoring_sets_native_state_and_keeps_corrupted_fixtures_editable():
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session:
+        item = session.create_item("rare")
+        chosen = next(row for row in session.calculate_currency(item, "vaal")["implicit_outcomes"] if row["weight"])
+        key = session.mod_info(chosen["mod"]).key
+        item.edit(add_implicit=key)
+        assert item._state.item_flags & 1
+        item.edit(add_explicit="LocalIncreasedEnergyShield11")
+        assert item._state.prefix_count == 1 and item._state.item_flags & 1
+        item.edit(add_explicit="LocalIncreaseSocketedActiveGemLevelUber1")
+        assert item._state.generic_influence_bits == 32
+        assert item._state.prefix_count == 2 and item._state.item_flags & 1
+        before = bytes(item._state)
+        with pytest.raises(EngineError, match="conflicting explicit"):
+            item.edit(add_explicit="LocalIncreasedEnergyShield11")
+        assert bytes(item._state) == before
+        item.edit(remove_implicit=key)
+        assert item._state.implicit_count == 0 and item._state.item_flags & 1
+        assert not session.calculate_currency(item, "chaos", goal("LocalIncreasedEnergyShield11"))["legal"], "Editing must not weaken actual crafting legality"
+        fresh = session.create_item("rare")
+        before = bytes(fresh._state)
+        with pytest.raises(EngineError, match="cannot coexist"):
+            fresh.edit(add_explicit="LocalIncreaseSocketedActiveGemLevelUber1", fractured=True)
+        assert bytes(fresh._state) == before

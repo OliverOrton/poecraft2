@@ -111,7 +111,9 @@ pc_result pc_item_init(
     pc_error_info* out_error);
 
 /* Author an input fixture without spending currency. Atomic native validation.
- * JSON fields: rarity, influence_bits, corrupted, add_implicit, remove_implicit. */
+ * JSON fields: rarity, influence_bits, corrupted, add_implicit, remove_implicit,
+ * add_explicit and optional fractured. Modifier additions set native influence,
+ * Eldritch or corruption state. Corruption does not block fixture editing. */
 pc_result pc_item_edit_json(pc_session_handle session, pc_item_state* item,
     const char* json, size_t json_size, pc_error_info* out_error);
 

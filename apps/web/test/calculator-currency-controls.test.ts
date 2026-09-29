@@ -106,6 +106,35 @@ assert.deepEqual(copyAccess.goalImplicitKeys, ["vaal-implicit"]);
 assert.equal(copyAccess.goalInfluenceBits, 40);
 assert.equal(copyAccess.goalCorrupted, true);
 assert.equal(copyAccess.goalRarity, "rare");
+const editAccess = calculator as unknown as {
+    addGoalFromPool(key: string): void;
+    addInputMod(key: string, side: "prefix" | "implicit", fractured?: boolean): Promise<void>;
+    inputChanged(): Promise<void>;
+};
+Object.assign(access, {modCache: [
+    {key: "vaal-implicit", reach_kind: 8},
+    {key: "shaper-mod", reach_kind: 1, reach_influence: 6, family_tier_index: 2},
+]});
+Object.assign(copyAccess, {slots: [], goalImplicitKeys: [], goalInfluenceBits: undefined, goalCorrupted: false,
+    modKeyToFamily: new Map([["shaper-mod", "shaper-family"]])});
+editAccess.addGoalFromPool("vaal-implicit");
+await access.currentWork;
+assert.equal(copyAccess.goalCorrupted, true);
+assert.deepEqual(copyAccess.goalImplicitKeys, ["vaal-implicit"]);
+editAccess.addGoalFromPool("shaper-mod");
+await access.currentWork;
+assert.equal(copyAccess.goalInfluenceBits, 32);
+assert.deepEqual(copyAccess.slots, [{familyModKey: "shaper-family", minTier: 2}]);
+editAccess.addGoalFromPool("vaal-implicit");
+await access.currentWork;
+assert.deepEqual(copyAccess.goalImplicitKeys, []);
+assert.equal(copyAccess.goalCorrupted, true, "Removing a modifier does not undo an authored item property");
+calls.length = 0;
+access.client.editItem = async (...args) => { calls.push(args); };
+editAccess.inputChanged = async () => {};
+await editAccess.addInputMod("vaal-implicit", "implicit");
+await editAccess.addInputMod("shaper-mod", "prefix");
+assert.deepEqual(calls, [[1, 2, {add_implicit: "vaal-implicit"}], [1, 2, {add_explicit: "shaper-mod", fractured: false}]]);
 const {loadGameAssets} = await import("../src/app/game-assets");
 const {disposeReact} = await import("../src/app/react-host");
 await loadGameAssets();

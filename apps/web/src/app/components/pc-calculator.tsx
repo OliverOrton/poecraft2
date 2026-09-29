@@ -610,20 +610,10 @@ export class PcCalculator extends HTMLElement {
         side: "prefix" | "suffix" | "implicit",
         fractured = false,
     ): Promise<void> {
-        const info = this.modCache.find((mod) => mod.key === key);
         if (side === "implicit") {
             await this.client.editItem(this.item, this.session, {add_implicit: key});
-        } else if (info?.reach_kind === REACH_KIND_CRAFTED && !fractured) {
-            await this.client.apply(this.context, this.item, {
-                type: "bench",
-                mod_key: key,
-            });
         } else {
-            await this.client.addMod(this.item, this.session, {
-                key,
-                side,
-                fractured,
-            });
+            await this.client.editItem(this.item, this.session, {add_explicit: key, fractured});
         }
         await this.inputChanged();
     }
@@ -1330,6 +1320,7 @@ export class PcCalculator extends HTMLElement {
         }
         this.modPool.setModel({
             mods: this.modCache,
+            allowUnrollable: true,
             item: {
                 rarity: info.rarity as string,
                 prefixOnItem: new Set(prefixIds),
@@ -1461,6 +1452,7 @@ export class PcCalculator extends HTMLElement {
             } else {
                 if (this.goalImplicitKeys.length >= 8) { this.setStatus("Goals are limited to eight implicits."); return; }
                 this.goalImplicitKeys = [...this.goalImplicitKeys, modKey];
+                if (info.reach_kind === 8) this.goalCorrupted = true;
             }
             void this.guard(() => this.goalChanged());
             return;
@@ -1484,6 +1476,7 @@ export class PcCalculator extends HTMLElement {
             this.setStatus(`Goals are limited to ${MAX_GOAL_SLOTS} modifiers.`);
             return;
         }
+        if (info.reach_influence > 0) this.goalInfluenceBits = (this.goalInfluenceBits ?? 0) | (1 << (info.reach_influence - 1));
         this.normalizeSuccessThreshold(followedAll);
         void this.guard(() => this.goalChanged());
     }
@@ -1532,6 +1525,10 @@ export class PcCalculator extends HTMLElement {
                 },
             }),
             properties: {influences: this.catalog?.genericInfluences ?? [], influenceBits: this.goalInfluenceBits, corrupted: this.goalCorrupted},
+            implicitInfluences: [
+                ...(this.goalImplicitKeys.some(key => this.modCache.find(mod => mod.key === key)?.reach_via === "implicit:searing_exarch") ? ["Searing Exarch"] : []),
+                ...(this.goalImplicitKeys.some(key => this.modCache.find(mod => mod.key === key)?.reach_via === "implicit:eater_of_worlds") ? ["Eater of Worlds"] : []),
+            ],
             implicits: this.goalImplicitKeys.map((key, index) => ({key, textLines: this.modCache.find(mod => mod.key === key)?.text_lines ?? [key],
                 probabilityLabel: showOdds && this.calc?.implicit_satisfied?.[index] !== undefined ? formatProbabilityExact(this.calc.implicit_satisfied[index]) : undefined})),
         });

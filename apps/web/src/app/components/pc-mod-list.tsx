@@ -74,6 +74,7 @@ export interface TargetOtherRequirement {
 }
 
 export interface TargetModListModel {
+    implicitInfluences?: string[];
     properties?: ItemPropertyEditor;
     implicits?: Array<{key: string; textLines: string[]; sourceLabel?: string; probabilityLabel?: string}>;
     kind: "target";
@@ -160,6 +161,7 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
                     {model.kind === "concrete" && !!model.memoryStrands && <span>Memory strands: {model.memoryStrands}</span>}
                     {model.kind === "concrete" && !!model.lifecycle && <span>{model.lifecycle === 1 ? "Consumed" : "Destroyed"}</span>}
                     {target && <span className="pc-item-target-badge">TARGET</span>}
+                    {target && model.implicitInfluences?.map(name => <span className="pc-item-influence" key={name}>{name}</span>)}
                     {target && model.properties?.influenceBits !== undefined && <span className="pc-item-influences">
                         {model.properties.influenceBits === 0 ? "No ordinary influence" : model.properties.influences.filter(entry => model.properties!.influenceBits! & (1 << ((entry.code ?? 1) - 1))).map(entry => entry.name).join(" · ")}
                     </span>}
@@ -188,7 +190,7 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
             </fieldset>
         </details>}
         {(!!model.implicits?.length || model.properties) && <section className="pc-mod-group pc-mod-group-implicit">
-            <h4><span>Implicits</span><span>{model.implicits?.length ?? 0}</span>{editable && <button className="pc-item-add-mod" type="button" data-add-mod-side="implicit" onClick={() => onChooseMods?.("implicit")}>Add implicit</button>}</h4>
+            <h4><span>Implicits</span><span>{model.implicits?.length ?? 0}</span></h4>
             <ul className="pc-mod-slots">{model.kind === "concrete" ? model.implicits.map((mod, index) => <ConcreteSlot key={mod.key} mod={mod} side="implicit" index={index} onRemove={editable ? onRemoveMod : undefined} />)
                 : model.implicits?.map((mod, index) => <li className="pc-mod-slot pc-mod-implicit is-filled" key={mod.key} data-target-implicit={mod.key}>
                     <SlotMeta side="implicit" index={index} /><div className="pc-mod-slot-content"><ModLines lines={mod.textLines} />

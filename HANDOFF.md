@@ -1,6 +1,13 @@
 # Handoff
 
-Completed: Oliver's unified Input → Goal Calculator and item editing follow-up
+Current follow-up: Oliver's modifier selection, automatic item-state, larger
+currency controls and Emulator column changes are implemented and locally checked.
+The [editor follow-up record](docs/active/2026-09-28-currency-expansion/README.md#modifier-editing-and-layout-follow-up-2026-09-29)
+owns the exact scope and validation. The authorized live release is the remaining
+step. Work remains sequential on `main`, preserving root `0`; no strategy or
+mechanics hold has been expanded. Rendered design acceptance remains Oliver's.
+
+Previous release: Oliver's unified Input → Goal Calculator and item editing follow-up
 is live as Beta `1d1fe26c`, source `a468feb`. The
 [joint item-goal record](docs/active/2026-09-28-currency-expansion/README.md#joint-item-goal-calculator-follow-up-2026-09-29)
 owns scope and validation; its [hosted receipt](docs/active/2026-09-28-currency-expansion/hosted-item-goals-2026-09-29.json)

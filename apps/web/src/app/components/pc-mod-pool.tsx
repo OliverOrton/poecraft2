@@ -29,6 +29,8 @@ type Section = "base" | "influenced" | "crafted" | "essence" | "fossil" | "veile
 export type ModPoolMode = "inspect" | "direct" | "goal";
 
 interface PoolModel {
+    /** Manual fixture editing can use session modifiers outside the current roll pool. */
+    allowUnrollable?: boolean;
     mods: ModInfo[];           // session-mod metadata in session-mod-id order
     item: {
         rarity: string;
@@ -442,6 +444,7 @@ export class PcModPool extends HTMLElement {
                 !blockedReason &&
                 !tierOnItem &&
                 weight === undefined &&
+                !this.model.allowUnrollable &&
                 family.category !== "crafted"
             ) {
                 blockedReason = "Not currently rollable";

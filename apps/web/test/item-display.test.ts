@@ -203,7 +203,7 @@ console.log("  ok - modifier sources stay distinct and native corrupted flags re
 // keeps the same property values visible while disabling mutations.
 const editableCard = {...card, properties: {influences: [{key: "shaper", name: "Shaper", code: 6}], influenceBits: 32, corrupted: true}};
 const editableMarkup = renderToStaticMarkup(createElement(ItemCard, {model: editableCard}));
-assert.match(editableMarkup, /data-add-mod-side="implicit"/);
+assert.doesNotMatch(editableMarkup, /Add implicit|data-add-mod-side="implicit"/);
 assert.match(editableMarkup, /aria-label="Shaper" checked/);
 const lockedMarkup = renderToStaticMarkup(createElement(ItemCard, {model: {...editableCard, readOnly: true}}));
 assert.doesNotMatch(lockedMarkup, /data-add-mod-side|Remove modifier/);
@@ -212,11 +212,13 @@ const targetMarkup = renderToStaticMarkup(createElement(ItemCard, {model: {
     kind: "target", baseName: "Vaal Regalia", itemLevel: 86, rarity: "rare", maxPrefix: 3, maxSuffix: 3,
     prefixes: [], suffixes: [], otherRequirements: [], properties: {influences: [], corrupted: true},
     implicits: [{key: "chosen-implicit", textLines: ["Required corruption"], probabilityLabel: "2%"}],
+    implicitInfluences: ["Searing Exarch"],
 }}));
 assert.match(targetMarkup, /data-target-implicit="chosen-implicit"/);
 assert.match(targetMarkup, /Remove implicit requirement/);
 assert.match(targetMarkup, /aria-label="Any influence" checked/);
 assert.match(targetMarkup, /is-corrupted/);
+assert.match(targetMarkup, /Searing Exarch/);
 pool.setInteractionMode("goal");
 pool.setSelectedImplicits(["mod-1"]);
 pool.setActiveTab("implicit");

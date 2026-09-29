@@ -4,12 +4,11 @@
 
 Parent: [Documentation](../README.md)
 
-Vocabulary/index audit: verified against current source on 2026-08-25 @
-`a1449fa`. The 26-value primitive enum, native enum parity, WASM/simulator
-names, synthetic Restart/Bestiary/router vocabulary, fixed-option names, and
-open-ruling index were checked. Family transition-law pages retain their own
-verification stamps; this documentation-only audit did not infer or change a
-Path of Exile mechanic.
+Vocabulary/index updated on 2026-09-29 for the 36-value primitive enum and
+current currency, Calculator and editor surfaces. The earlier 2026-08-25 audit
+at `a1449fa` covered the original 26 actions and solver vocabulary. Family
+transition-law pages retain their own verification stamps; this documentation
+update does not infer or change a Path of Exile mechanic.
 
 The original full-matrix verification covered native mutation paths, C ABI
 request parsing, exact single-action calculation, solver
@@ -77,21 +76,33 @@ Surface labels:
 | 23 | `influence_exalt` | [Eldritch and influence](eldritch-and-influence.md) | yes | parameterized registry | panel | panel | dropdown |
 | 24 | `fracture` | [Fracture](fracture.md) | yes | registry | panel | panel | dropdown |
 | 25 | `remove_crafted_modifiers` | [Ordinary currency](ordinary-currency.md) | yes | registry | panel | panel | dropdown |
+| 26 | `foulborn_augment` | [Ordinary currency](ordinary-currency.md) | yes | registry | panel | panel | dropdown |
+| 27 | `foulborn_regal` | [Ordinary currency](ordinary-currency.md) | yes | registry | panel | panel | dropdown |
+| 28 | `foulborn_exalt` | [Ordinary currency](ordinary-currency.md) | yes | registry | panel | panel | dropdown |
+| 29 | `remembrance` | [Memory](memory-and-corruption.md) | held | no | unavailable control | unavailable control | no |
+| 30 | `unravelling` | [Memory](memory-and-corruption.md) | held | no | unavailable control | unavailable control | no |
+| 31 | `dominance` | [Influence](eldritch-and-influence.md) | yes, single action | no | panel | panel | dropdown |
+| 32 | `tempering` | [Enchantments](memory-and-corruption.md) | held: no public weights | no | unavailable control | unavailable control | no |
+| 33 | `tailoring` | [Enchantments](memory-and-corruption.md) | held: no public weights | no | unavailable control | unavailable control | no |
+| 34 | `vaal` | [Corruption](memory-and-corruption.md) | ordinary equipment | no | Basic panel | Basic panel | dropdown |
+| 35 | `double_corruption` | [Corruption](memory-and-corruption.md) | approved terminal goal projection | no | held Temple control | Temple panel | no |
 
-All 26 primitives first pass through the native craftability guard: corrupted
-or mirrored items refuse the action. Family files record the additional
-legality and transition rules.
+Enabled primitive crafts pass through the native craftability guard: corrupted
+or mirrored items refuse the action. Held laws remain explicit refusals. Manual
+item authoring is a separate editor operation. Family files record additional
+legality, transition rules and the supported subsets.
 
 ## Vocabulary Outside `pc_action_type`
 
-These implemented operations are intentionally outside the 26-value C enum:
+These implemented operations are intentionally outside the 36-value C enum:
 
 | Operation | Native/product role | Emulator | Solver | Calculator | Strategy Builder |
 | --- | --- | --- | --- | --- | --- |
-| `restart` | synthetic fresh-base transition priced by `base` | no | registered synthetic action | visible basic-panel action | compiler/simulator support; absent from visual operation dropdown |
+| `restart` | synthetic fresh-base transition priced by `base` | no | registered synthetic action | Basic panel | operation dropdown and simulator support |
 | `condition_check_only` | mutation-free router operation | no | emitted as routing structure, not a priced primitive | no direct action | operation dropdown and simulator support |
-| `bestiary:imprint` | deterministic checkpoint creation | panel | automatic Imprint option dependency, not an ordinary registry row | panel and dedicated exact Bestiary calculation | operation dropdown and simulator support |
-| `bestiary:restore_imprint` | deterministic checkpoint restore | panel | automatic Imprint option dependency, not an ordinary registry row | panel and dedicated exact Bestiary calculation | operation dropdown and simulator support |
+| `bestiary:imprint` | deterministic checkpoint creation | panel | automatic Imprint option dependency, not an ordinary registry row | panel and native compound-state goal calculation | operation dropdown and simulator support |
+| `bestiary:restore_imprint` | deterministic checkpoint restore | panel | automatic Imprint option dependency, not an ordinary registry row | panel and native compound-state goal calculation | operation dropdown and simulator support |
+| `awakener` | role-based donor/receiver transaction | Stash donor panel | no | read-only retained-pair/refill goal calculation | operation dropdown and simulator support |
 
 Bestiary details and its two explicitly unsupported recipe IDs are in
 [Bestiary Imprint](bestiary-imprint.md). Conditions, fixed options, and exact
@@ -104,8 +115,9 @@ The registry builds the following stable action IDs. Session filtering can omit
 an ID when its data is unavailable or the action cannot be legal for that
 session.
 
-- fixed IDs: all non-parameterized primitive IDs in the table above, plus
-  `restart`;
+- fixed IDs: non-parameterized primitive IDs marked **registry** in the table
+  above, plus `restart`; recognition alone does not register held or
+  single-action-only currencies;
 - `essence:<metadata-key>`;
 - `fossil:<key>` through `fossil:<key1>+<key2>+<key3>+<key4>`, with sorted
   unique fossil keys and cost keys for each fossil plus
@@ -149,6 +161,8 @@ are not additional crafting rules.
   dominance-sensitive explicit currency, and influence exalts.
 - [Fracture](fracture.md) — random explicit-mod fracture and its solver role.
 - [Bestiary Imprint](bestiary-imprint.md) — checkpoint creation and restore.
+- [Memory, enchantments and corruption](memory-and-corruption.md) — held memory
+  and enchantment laws, Vaal and the approved double-corruption projection.
 - [Strategy and solver vocabulary](strategy-and-solver-vocabulary.md) —
   synthetic operations, conditions, solver IDs, and compound option support.
 
@@ -159,19 +173,21 @@ are not additional crafting rules.
   obtaining/upgrading Essences from trapped monsters is outside this model.
 - The visual Strategy Builder exposes fewer condition leaf types than the JSON
   compiler/simulator accepts.
-- The exact single-action calculator supports every primitive. Whole-graph
-  exact strategy evaluation supports `mod_count`, `mod_family_count`,
-  `has_unveil_option`, and authored Unveil selection; the two Bestiary
-  operation IDs remain on their separate stateful calculation path rather
-  than ordinary evaluator actions.
+- Exact single-action support follows the table above. All supported Calculator
+  actions evaluate one native Input → Goal predicate, including explicit mods,
+  implicit keys and selected influence/corruption properties. Extended goals
+  remain outside Strategy finder. Whole-graph exact strategy evaluation supports
+  `mod_count`, `mod_family_count`, `has_unveil_option`, authored Unveil selection
+  and checkpoint-aware Bestiary descriptors within their documented grammar.
 - Bench is a real native action even though neither product surface has a
   dedicated bench craft-panel tab.
-- Solver-generated `restart` nodes compile and simulate, but `restart` is not
-  present in the visual Strategy Builder operation dropdown.
-- Veiled offer timing is inconsistent across engines: the Simulator persists
+- `restart` is present in the visual Strategy Builder operation dropdown and
+  retains its separate priced fresh-base transition.
+- Veiled offers have different internal representations: the Simulator persists
   offers at placeholder acquisition, while the exact solver samples them when
-  Unveil is observed. The automatic post-acquisition blocker program is paused
-  on Oliver's ruling in [Veiled crafting](veiled-crafting.md).
+  Unveil is observed. These are distribution-equivalent only within the admitted
+  immediate-observation grammar. Post-acquisition blockers remain unsupported
+  under Oliver's ruling in [Veiled crafting](veiled-crafting.md).
 
 Open mechanic questions are kept in the family files that own them. The
 current code-inspection audit found questions about double-side-lock Scour,
@@ -180,8 +196,8 @@ effects are the intended permanent contract.
 
 ## Currency expansion delta
 
-The historical 26-value audit above is superseded for appended IDs 26–35 by the
-[currency execution record](../active/2026-09-28-currency-expansion/README.md).
+The [currency execution record](../active/2026-09-28-currency-expansion/README.md)
+owns the dated validation and release evidence for appended IDs 26–35.
 Foulborn is documented in Ordinary currency; Shaper/Elder, Awakener and Dominance
 in Eldritch and influence; evidence-held operations and scoped Vaal sampling in
 [Memory, enchantments and corruption](memory-and-corruption.md). A recognized

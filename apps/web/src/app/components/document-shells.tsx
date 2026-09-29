@@ -21,11 +21,11 @@ export function EmulatorShell({baseName, itemLevel}: {baseName: string; itemLeve
         </div>
         <div className="pc-emu-body">
             <section className="pc-emu-item"><h3>Item</h3><Element tag="pc-mod-list" /></section>
-            <section className="pc-emu-pool"><Element tag="pc-mod-pool" allow-direct-craft="" /></section>
             <aside className="pc-emu-tools">
                 <Element tag="pc-craft-controls" className="pc-advanced-crafts" />
                 <section className="pc-emu-side"><Element tag="pc-craft-spend" /><h3>Craft history</h3><ul className="pc-emu-history" /></section>
             </aside>
+            <section className="pc-emu-pool"><Element tag="pc-mod-pool" allow-direct-craft="" /></section>
         </div>
     </div>;
 }

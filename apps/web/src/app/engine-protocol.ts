@@ -557,6 +557,8 @@ export interface CalculatorItemGoal extends SolverGoal {
 }
 
 export interface ItemEdit {
+    add_explicit?: string;
+    fractured?: boolean;
     rarity?: "normal" | "magic" | "rare";
     influence_bits?: number;
     corrupted?: boolean;
