@@ -16,7 +16,7 @@ export async function readItemCard(client: EngineClient, data: number, catalog: 
         const slots = async (ids: number[]) => Promise.all(ids.map(async id => {
             const mod = await client.modInfo(session, id);
             return {sessionModId: id, key: mod.key, tierIndex: mod.family_tier_index, textLines: mod.text_lines,
-                classificationTags: mod.classification_tags, fractured: fractured.has(id), crafted: mod.reach_kind === 2};
+                classificationTags: mod.classification_tags, fractured: fractured.has(id), crafted: mod.reach_kind === 2, veiled: mod.reach_kind === 6};
         }));
         return {kind: "concrete", baseKey: snapshot.base, baseName: name, itemLevel: snapshot.itemLevel,
             itemFlags: Number(info.item_flags ?? 0),

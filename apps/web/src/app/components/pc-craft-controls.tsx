@@ -8,13 +8,14 @@ import { GameIcon } from "./pc-game-icon";
 import { CraftChoice } from "./craft-choice";
 import { HarvestCost } from "./craft-cost";
 import type { ConcreteModListModel, PcModList } from "./pc-mod-list";
+import { UnveilPanel, type UnveilOption } from "./unveil-panel";
 
-export type CraftPanel = "basic" | "foulborn" | "essence" | "harvest" | "fossil" | "eldritch" | "influenced" | "veiled" | "bestiary" | "memory" | "awakener" | "enchantment" | "temple";
+export type CraftPanel = "basic" | "foulborn" | "essence" | "harvest" | "fossil" | "eldritch" | "influenced" | "veiled" | "unveil" | "bestiary" | "memory" | "awakener" | "enchantment" | "temple";
 const PANELS: Array<[CraftPanel, string, string]> = [
     ["basic", "Basic currency", "chaos"], ["foulborn", "Foulborn", "foulborn_exalt"],
     ["essence", "Essences", "essence"], ["harvest", "Harvest", "harvest_reforge"],
     ["fossil", "Fossil", "fossil"], ["eldritch", "Eldritch", "eldritch_ember"], ["influenced", "Influenced", "influence_exalt"],
-    ["veiled", "Veiled", "veiled_exalt"], ["bestiary", "Bestiary", "bestiary:imprint"],
+    ["veiled", "Veiled currency", "veiled_exalt"], ["unveil", "Unveil", "unveil"], ["bestiary", "Bestiary", "bestiary:imprint"],
     ["memory", "Memory", "remembrance"],
     ["awakener", "Awakener", "awakener"],
     ["enchantment", "Enchantments", "tempering"], ["temple", "Temple", "double_corruption"],
@@ -35,7 +36,9 @@ export interface CraftControlsModel {
     donors?: CatalogEntry[];
     donorModel?: ConcreteModListModel;
     onAwakener?: () => void;
-    unveils?: CatalogEntry[];
+    unveils?: UnveilOption[];
+    unveilRevealed?: boolean;
+    onRevealUnveil?: () => void;
     selectedAction?: string;
     selectedLabel?: string;
     onPanel: (panel: CraftPanel) => void;
@@ -159,8 +162,15 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
             onClick={() => m.onBestiary(entry.id)}><GameIcon assetKey={"action:" + entry.id} />{entry.display_name}</button>)}</div>
             {!calculator && <div className="pc-fracture-hint">Imprint checkpoint: {m.checkpoint ? "active" : "none"}.</div>}
             <div className="pc-fracture-hint">{m.bestiary.map(entry => `${entry.display_name}: ${entry.cost_keys.length ? entry.cost_keys.join(" + ") : "no beast cost"}`).join(" · ")}</div></>; break;
-        case "veiled": panel = <><div className="pc-craft-options">{action("veiled_chaos", "Veiled Chaos")}{action("veiled_exalt", "Veiled Exalt")}{calculator && action("unveil")}</div>
-            {!calculator && (m.unveils?.length ? <div className="pc-mechanic-row">{select("unveil", m.unveils, undefined, "Modifier")}{action("unveil", "Unveil", true)}</div> : <span className="pc-help">Apply a veiled modifier to choose an unveil.</span>)}</>; break;
+        case "veiled": panel = <><div className="pc-craft-options">{action("veiled_chaos", "Veiled Chaos")}{action("veiled_exalt", "Veiled Exalt")}</div>
+            {!calculator && !!m.unveils?.length && <button className="pc-unveil-pending" onClick={() => m.onPanel("unveil")}>Veiled modifier ready · Unveil</button>}</>; break;
+        case "unveil": panel = calculator ? <section className="pc-unveil-panel">
+            <header className="pc-unveil-heading"><span aria-hidden="true">◇</span><h3>Unveiling</h3><span aria-hidden="true">◇</span></header>
+            <p className="pc-unveil-instruction">Calculate unveiling outcomes for your target modifiers.</p>
+            <div className="pc-unveil-footer">{action("unveil", "Calculate Unveil")}</div>
+        </section> : <UnveilPanel options={m.unveils ?? []} revealed={Boolean(m.unveilRevealed)} selectedKey={value("unveil")}
+            onReveal={() => m.onRevealUnveil?.()} onSelect={key => m.onValue("unveil", key)}
+            onConfirm={() => m.onConfigured("unveil")} onVeiledCurrency={() => m.onPanel("veiled")} />; break;
     }
     return <><div className="pc-craft-panel-tabs">{PANELS.map(([key, label, icon]) => <button key={key} data-craft-panel={key}
         className={key === m.panel ? "is-active" : ""} onClick={() => m.onPanel(key)}><GameIcon assetKey={"action:" + icon} />{label}</button>)}

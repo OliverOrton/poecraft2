@@ -1328,6 +1328,7 @@ export class PcCalculator extends HTMLElement {
             classificationTags: info.classification_tags,
             fractured: fractured.has(id),
             crafted: info.reach_kind === REACH_KIND_CRAFTED,
+            veiled: info.reach_kind === 6,
         };
     }
 
@@ -2609,7 +2610,8 @@ function panelForAction(id: string): CraftPanel {
     if (id.startsWith("harvest_")) return "harvest";
     if (id.startsWith("eldritch_")) return "eldritch";
     if (id.startsWith("influence_exalt:")) return "influenced";
-    if (id.startsWith("veiled_") || id === "unveil") return "veiled";
+    if (id === "unveil") return "unveil";
+    if (id.startsWith("veiled_")) return "veiled";
     return "basic";
 }
 

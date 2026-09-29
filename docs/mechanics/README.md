@@ -65,7 +65,7 @@ Surface labels:
 | 11 | `bench` | [Bench and metamods](bench-and-metamods.md) | yes | parameterized registry | crafted pool | registry picker | dropdown |
 | 12 | `veiled_chaos` | [Veiled crafting](veiled-crafting.md) | yes | registry | panel | panel | dropdown |
 | 13 | `veiled_exalt` | [Veiled crafting](veiled-crafting.md) | yes | registry | panel | panel | dropdown |
-| 14 | `unveil` | [Veiled crafting](veiled-crafting.md) | yes | registry | panel | panel | dropdown |
+| 14 | `unveil` | [Veiled crafting](veiled-crafting.md) | yes | registry | panel | panel | modifier cards |
 | 15 | `harvest_reforge` | [Harvest](harvest.md) | yes | parameterized registry | panel | panel | dropdown |
 | 16 | `harvest_augment` | [Harvest](harvest.md) | yes | parameterized registry | panel | panel | dropdown |
 | 17 | `harvest_resist` | [Harvest](harvest.md) | yes | parameterized registry | panel | panel | dropdown |

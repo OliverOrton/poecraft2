@@ -6,6 +6,7 @@
  */
 
 import { isCorrupted, placeStableSlots, visibleModTags } from "../item-display";
+import { VeiledInscription } from "./unveil-panel";
 
 export interface SlotMod {
     sessionModId: number;
@@ -15,6 +16,7 @@ export interface SlotMod {
     classificationTags: string[];
     fractured: boolean;
     crafted: boolean;
+    veiled?: boolean;
 }
 
 export interface ConcreteModListModel {
@@ -191,7 +193,7 @@ function ConcreteSlot({ mod, side, index, onFracture }: {
         }}>
         <SlotMeta side={side} index={index} tier={mod.tierIndex ? `T${mod.tierIndex}` : mod.crafted ? "C" : "—"} />
         <div className="pc-mod-slot-content">
-            <ModLines lines={mod.textLines.length ? mod.textLines : [mod.key]} />
+            {mod.veiled ? <VeiledInscription index={index} /> : <ModLines lines={mod.textLines.length ? mod.textLines : [mod.key]} />}
             {(!!tags.length || mod.fractured || mod.crafted) && <div className="pc-mod-slot-tags">
                 {tags.map(tag => <span key={tag}>{tag}</span>)}
                 {mod.fractured && <span className="pc-mod-state is-fractured">Fractured</span>}

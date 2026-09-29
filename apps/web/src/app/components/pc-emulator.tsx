@@ -3,7 +3,6 @@ import { disposeReact, renderReact } from "../react-host";
 import { BaseSelectionShell, EmulatorShell } from "./document-shells";
 import { EditHistory, historyShortcut } from "../edit-history";
 import { resolveCraftValues } from "../craft-choices";
-import { modTextLabel } from "../mod-text";
 import { addCraftSpend, emptyCraftSpend, NativeCraftCosts } from "../craft-costs";
 import type { PcCraftSpend } from "./pc-craft-spend";
 import "./pc-craft-spend";
@@ -86,6 +85,8 @@ export class PcEmulator extends HTMLElement {
     private savedStateKey: string | null = null;
     private modCache: ModInfo[] = [];
     private veiledOptions: number[] = [];
+    private unveilOfferKey = "";
+    private unveilRevealed = false;
     private activeCraftPanel: CraftPanel = "basic";
     private selectedFossils: string[] = [];
     private mechanicValues = new Map<string, string>();
@@ -381,6 +382,7 @@ export class PcEmulator extends HTMLElement {
         // Pricing metadata must never prevent an otherwise supported craft.
         const keys = await this.craftCosts.forAction(this.client, this.session, action).catch(() => undefined);
         const outcome = await this.client.apply(this.context, this.item, action);
+        if (outcome.applied && (action.type === "veiled_chaos" || action.type === "veiled_exalt")) this.activeCraftPanel = "unveil";
         this.pendingHistoryEntry = {
             action: action.type,
             applied: outcome.applied,
@@ -786,6 +788,7 @@ export class PcEmulator extends HTMLElement {
             classificationTags: info.classification_tags,
             fractured: fractured.has(id),
             crafted: info.reach_kind === REACH_KIND_CRAFTED,
+            veiled: info.reach_kind === 6,
         };
     }
 
@@ -904,9 +907,15 @@ export class PcEmulator extends HTMLElement {
         const host = this.querySelector<PcCraftControls>(".pc-advanced-crafts");
         if (!host || !this.catalog) return;
         this.mechanicValues = resolveCraftValues(this.catalog, this.mechanicValues);
+        const offerKey = JSON.stringify([this.item, this.session, this.veiledOptions]);
+        if (offerKey !== this.unveilOfferKey) {
+            this.unveilOfferKey = offerKey;
+            this.unveilRevealed = false;
+            this.mechanicValues.delete("unveil");
+        }
         const unveils = this.veiledOptions.map(id => this.modCache[id]).filter((mod): mod is ModInfo => Boolean(mod))
-            .map(mod => ({key: mod.key, name: modTextLabel(mod.text_lines) || mod.key}));
-        if (!unveils.some(mod => mod.key === this.mechanicValues.get("unveil"))) this.mechanicValues.set("unveil", unveils[0]?.key ?? "");
+            .map(mod => ({key: mod.key, textLines: mod.text_lines.length ? mod.text_lines : [mod.key], side: mod.generation_type === 0 ? "prefix" as const : "suffix" as const}));
+        if (!unveils.some(mod => mod.key === this.mechanicValues.get("unveil"))) this.mechanicValues.delete("unveil");
         host.setModel({
             mode: "emulator", catalog: this.catalog, panel: this.activeCraftPanel,
             itemClass: this.bases.find(base => base.path === this.base)?.item_class_key,
@@ -917,6 +926,13 @@ export class PcEmulator extends HTMLElement {
             donors: this.donors.map(record => ({key: record.id, name: record.name})), donorModel: this.donorModel,
             onAwakener: () => { void this.guard(() => this.applyAwakener()); },
             unveils,
+            unveilRevealed: this.unveilRevealed,
+            onRevealUnveil: () => {
+                if (this.busy || !unveils.length) return;
+                this.unveilRevealed = true;
+                this.renderMechanicControls();
+                host.querySelector<HTMLInputElement>(".pc-unveil-choice input")?.focus();
+            },
             onPanel: panel => { this.activeCraftPanel = panel; this.renderMechanicControls(); if (panel === "awakener") void this.guard(() => this.loadDonors()); },
             onValue: (name, value) => {
                 this.mechanicValues.set(name, value);
@@ -939,7 +955,10 @@ export class PcEmulator extends HTMLElement {
                 else if (type === "harvest_resist") action = {type, source_tag: value("resist-from"), target_tag: value("resist-to")};
                 else if (type === "eldritch_ember" || type === "eldritch_ichor") action = {type, tier: Number(value("eldritch-tier"))};
                 else if (type === "influence_exalt") action = {type, influence: value("influence")};
-                else if (type === "unveil") action = {type, mod_key: value("unveil")};
+                else if (type === "unveil") {
+                    if (!this.unveilRevealed || !unveils.some(mod => mod.key === value("unveil"))) return;
+                    action = {type, mod_key: value("unveil")};
+                }
                 void this.guard(() => this.applyConfiguredAction(action));
             },
             onAddFossil: key => {

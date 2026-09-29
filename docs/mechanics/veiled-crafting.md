@@ -65,14 +65,19 @@ Roll Attack/Caster apply to its preservation and random filler pool.
 - `engine/src/solver_calc.cpp` — exact Veiled Exalt and Unveil distributions.
 - `engine/src/solver_compile.cpp` and `engine/src/solver_eval.cpp` — strategy
   compilation and whole-graph evaluation boundary.
-- `apps/web/src/app/components/pc-emulator.ts`, `pc-calculator.ts`, and
-  `pc-strategy-editor.ts` — product controls.
+- `apps/web/src/app/components/pc-emulator.tsx`, `pc-calculator.tsx`,
+  `unveil-panel.tsx`, and `pc-strategy-editor.tsx` — product controls.
 
 ## Emulator Support
 
-The Veiled panel exposes Veiled Chaos and Veiled Exalt. When the live item has
-stored unveil options, it shows each option and sends the chosen `mod_key` to
-the native Unveil action.
+Veiled currency exposes Veiled Chaos and Veiled Exalt. A successful acquisition
+opens the separate Unveil panel. Its Unveil button reveals the already-stored
+offers without sampling, charging currency or changing item state. The player
+explicitly selects a modifier card and confirms; only confirmation sends that
+`mod_key` to the native Unveil action. Panel navigation retains the revealed
+offers and selection; a changed offer set or restored/imported item clears stale
+selection. Veiled placeholders use decorative script in the shared item card.
+The Calculator has its own Unveil action panel for existing exact calculation.
 
 ## Solver Support
 
