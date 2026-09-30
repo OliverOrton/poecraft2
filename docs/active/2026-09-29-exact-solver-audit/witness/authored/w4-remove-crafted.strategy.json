@@ -1,0 +1,116 @@
+{
+ "version": "v1",
+ "name": "W4 remove crafted modifiers",
+ "description": "Audit witness (2026-09-29): hand-authored policy evaluated with the native strategy evaluator; not solver output.",
+ "base_state": {
+  "base_key": "Metadata/Items/Rings/Ring10",
+  "item_level": 86,
+  "rarity": "rare",
+  "item_flags": 0,
+  "generic_influence_bits": 0,
+  "searing_exarch_tier": 0,
+  "eater_of_worlds_tier": 0,
+  "prefixes": [
+   {
+    "mod_key": "IncreasedLife7"
+   },
+   {
+    "mod_key": "IncreasedMana13"
+   }
+  ],
+  "suffixes": [
+   {
+    "mod_key": "HelenaMasterFireResist1",
+    "crafted": true
+   }
+  ],
+  "implicits": []
+ },
+ "start_node_id": "start",
+ "nodes": [
+  {
+   "id": "start",
+   "kind": "start"
+  },
+  {
+   "id": "op0",
+   "kind": "operation",
+   "operation": {
+    "type": "remove_crafted_modifiers"
+   }
+  },
+  {
+   "id": "check",
+   "kind": "router"
+  },
+  {
+   "id": "goal",
+   "kind": "terminal",
+   "terminal": "success"
+  },
+  {
+   "id": "fail",
+   "kind": "terminal",
+   "terminal": "failure",
+   "reason": "not goal"
+  }
+ ],
+ "edges": [
+  {
+   "id": "e0",
+   "from": "start",
+   "to": "op0",
+   "priority": 0,
+   "is_default": true
+  },
+  {
+   "id": "e_check",
+   "from": "op0",
+   "to": "check",
+   "priority": 0,
+   "is_default": true
+  },
+  {
+   "id": "e_goal",
+   "from": "check",
+   "to": "goal",
+   "priority": 0,
+   "condition": {
+    "type": "all",
+    "conditions": [
+     {
+      "type": "rarity_is",
+      "rarity": "rare"
+     },
+     {
+      "type": "has_mod_family",
+      "family_mod_key": "IncreasedLife7",
+      "min_tier": 1
+     },
+     {
+      "type": "has_mod_family",
+      "family_mod_key": "IncreasedMana13",
+      "min_tier": 1
+     },
+     {
+      "type": "prefix_count_range",
+      "min": 2,
+      "max": 2
+     },
+     {
+      "type": "suffix_count_range",
+      "min": 0,
+      "max": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "e_fail",
+   "from": "check",
+   "to": "fail",
+   "priority": 1,
+   "is_default": true
+  }
+ ]
+}
