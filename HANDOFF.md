@@ -1,5 +1,27 @@
 # Handoff
 
+Oliver's selected [MM0–MM7 recovery](docs/active/2026-09-29-metamod-recovery/README.md)
+is locally retained with partial acceptance. Last coherent execution commit:
+`b6c8c4bdfb0d9663ce2db768fa081d31cceaccde`; this handoff update is documentation
+only. The living record and `qualification.json` own source/build identities,
+commands, checks and the unchanged historical audit disposition. W1/W4 recover
+checked C424.3741 / C0.3741; W4 closure is restricted grammar. W1's stop report,
+Bow's full-context setup/clean suffix tail, and real-data private Finder remain
+open. Finder's original-root finite native consumer passes, but real native and
+worker cases hit the state cap. Final native/WASM rebuild and focused checks
+pass; the final checkpoint-load-only WASM hash differs from the worker-tested
+build, so final-build worker replay is unrun.
+
+All **8 native + 2 worker slots are spent**; two saved-controller evaluations
+used. No selected process, survivor or handle remains; no relevant dirty work
+remains after this documentation commit. Bulk evidence is under
+`out/metamod-recovery/`. Work stayed sequential on `main`, preserving root `0`.
+Nothing was pushed or deployed; private Finder grammar was not promoted.
+If Oliver selects continuation: first reduce the W1 incomplete-envelope stop
+and Bow full-context setup against the passing cheap fixture; then qualify
+the real-data Finder state-cap dependency and final worker artifact under a new
+allowance. No P/IC allowance or held new-mechanics programme is resumed.
+
 Completed: Oliver's modifier selection, automatic item-state, larger currency
 controls and Emulator column changes are live as Beta `18dbec78`, source `f43d647`.
 The [editor follow-up record](docs/active/2026-09-28-currency-expansion/README.md#modifier-editing-and-layout-follow-up-2026-09-29)
