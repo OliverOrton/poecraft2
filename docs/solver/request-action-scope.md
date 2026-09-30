@@ -81,3 +81,9 @@ retire the corresponding family from the parent proof ledger.
 ## Source basis
 
 This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/request-action-scope.md). Claim IDs are registered in [the ledger](claims.md); each history states its acceptance basis. The [backbone integration](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) is complete. Remaining native correspondence is scoped in [research](research.md#open-obligations); an argument link does not confer runtime authority.
+
+### Existing-mechanic cleanup recovery (September 29)
+
+[Scope](../active/2026-09-29-metamod-recovery/README.md): ProtectedSide Scour is proposed independently of missing opposite goals. New initiation excludes either existing lock. TerminalCraftedCleanup admits one native remove-all craft operation only after exact terminal success, without global primitive promotion. Extras-allowed Multimod finish can leave unrequested Multimod when the native final predicate succeeds; clean restrictions remain.
+
+Private Finder `conditional-protected-scour` accepts paid lock→Scour only. Intended side names the held side; Eldritch still names the acted-on side. Compiled occurrence bytes and all positive exact reached entries are checked. One of eight existing attempts is reserved, with one live checker. Public Finder stays conditional. Exactness labels explicitly include candidate/generated grammar; dependencies and metadata do not imply unrestricted closure.

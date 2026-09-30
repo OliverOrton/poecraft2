@@ -368,7 +368,7 @@ def build_solver_case_command(
     if finder_ranking not in (None, "heuristic", "uninformed") or (
             finder_ranking is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder ranking requires strategy_finder mode")
-    if finder_grammar not in (None, "primitive", "conditional", "conditional-retention", "selective-retention") or (
+    if finder_grammar not in (None, "primitive", "conditional", "conditional-retention", "selective-retention", "conditional-protected-scour") or (
             finder_grammar is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder grammar requires strategy_finder mode")
     if finder_attempt_limit not in (None, 8, 24) or (

@@ -36,6 +36,7 @@
 
 #include "json.hpp"
 #include "solver_diagnostic_options.hpp"
+#include "solver_finder.hpp"
 
 namespace {
 
@@ -2767,6 +2768,18 @@ const char* pcw_solver_open(uint32_t session_id, const char* goal_json) {
     out += std::to_string(id);
     out.push_back('}');
     return respond(std::move(out));
+}
+
+// Test transport only; no Calculator control selects this private grammar.
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_protected_scour_diagnostic(uint32_t solver_id) {
+    auto* solver = find(g_solvers, solver_id);
+    if (!solver) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_error_info error = make_error();
+    const auto rc = poecraft::solver::configure_solver_finder_grammar(
+        *solver, poecraft::solver::FinderGrammarMode::ConditionalProtectedScour, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    return respond("{\"ok\":true}");
 }
 
 EMSCRIPTEN_KEEPALIVE

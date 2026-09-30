@@ -1918,6 +1918,10 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
         std::uint32_t remaining = std::max<std::uint32_t>(
             1, std::min(max_work_items, kMaxCooperativeUnitsPerStep));
         while (remaining > 0 && phase != SolvePhase::Done) {
+            // A complete cheap root row owns its checker before proof setup.
+            if (publication_pipeline.initial_candidate_task.has_value()) {
+                if (advance_initial_candidate_publication()) break;
+            }
             if (!advance_setup()) break;
             if (pending_constructive_certificate) {
                 const auto [state, row] = *pending_constructive_certificate;
@@ -2311,9 +2315,6 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
             }
         }
     } catch (const SolverResourceLimit& limit) {
-        if (!options.goal_progress_gated_reforges) {
-            throw;
-        }
         /*
          * Exact kernel construction can also be requested by focused
          * heuristics and automatic admission outside expand_one_unit's

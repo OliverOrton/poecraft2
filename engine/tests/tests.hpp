@@ -40,6 +40,7 @@ void run_simulator_tests(const char* artifact_dir);
 void run_solver_abstract_tests(const char* artifact_dir);
 void run_solver_action_family_contract_tests(const char* artifact_dir);
 void run_solver_calc_tests(const char* artifact_dir);
+void run_solver_metamod_recovery_tests(const char* artifact_dir);
 void run_solver_calc_gated_equivalence_tests();
 void run_solver_solve_tests(const char* artifact_dir);
 void run_solver_integrity_tests(const char* case_name);
@@ -60,6 +61,7 @@ void run_solver_return_bridge_tests();
 void run_solver_imprint_tests(const char* artifact_dir);
 void run_solver_eval_tests(const char* artifact_dir);
 void run_solver_api_tests(const char* artifact_dir);
+void run_solver_checkpoint_tests(const char* artifact_dir);
 void run_solver_native_continuation_api_tests(const char* artifact_dir);
 void run_solver_feasibility_tests(const char* artifact_dir);
 void run_solver_s8_3_tests(const char* case_name = nullptr);
@@ -77,3 +79,5 @@ void run_solver_protected_setup_tests();
 void run_solver_setup_service_tests();
 
 #endif
+
+void run_solver_protected_finder_tests();

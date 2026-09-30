@@ -77,7 +77,7 @@ std::vector<double> score_finder_sketch_batch(
 
 enum class FinderRankingMode : std::uint8_t { Heuristic, Uninformed };
 enum class FinderGrammarMode : std::uint8_t {
-    PrimitiveOnly, Conditional, ConditionalRetention, SelectiveRetention
+    PrimitiveOnly, Conditional, ConditionalRetention, SelectiveRetention, ConditionalProtectedScour
 };
 
 class SelectiveCompletionProducer;

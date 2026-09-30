@@ -707,3 +707,11 @@ The reference arguments are [CLM-0007](../claims.md#clm-0007),
 [CLM-0013](../claims.md#clm-0013), [CLM-0014](../claims.md#clm-0014), and
 [CLM-0023](../claims.md#clm-0023). The imported propositions reuse these identities;
 no immutable statement or open general obligation is rewritten.
+
+### Terminal crafted cleanup in the occupancy relaxation
+
+The September 29 [recovery](../../active/2026-09-29-metamod-recovery/README.md) adds a terminal-only RemoveCraftedModifiers programme. The clean projection forgets craft identity, so its optimistic relation grants removal of all unmatched affixes while retaining the satisfied mask and rarity, at the native cleanup price. Successor occupancy is the minimum goal-affix count on each side. Every real terminal cleanup is included: it removes only removable crafts and cannot erase required goals. The entire table and all missing-goal/rarity/occupancy predecessors are rederived; no root/display clamp is used.
+
+The generated primitive is included before automatic materialization. Universal and carrier acquisition already grant zero once goals/rarity are held. Terminal-debt includes cleanup in its priced first-step minimum. Identity-clean uses the rederived occupancy table; strict-clean inherits its optimistic escape floor. Refused preparation retains independently committed components, including zero. Foulborn scopes retain TargetNeutralZero.
+
+The native phase acquisition potential telescopes through this one-step production by its primitive inequality and monotonic acquired-goal coordinates. Protected Scour and Multimod remain paid primitive sequences; an enum alone supplies no proof. Refinement contract 3, phase identity 2 and abstract key 3 reject stale law/table identities. Historical exact results stay scoped to their original law and grammar.

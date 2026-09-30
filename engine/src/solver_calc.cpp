@@ -613,7 +613,7 @@ std::uint64_t CalcContext::dynamic_shallow_owned_bytes() const {
     bytes += candidate_operators_.capacity() * sizeof(std::uint32_t);
     bytes += state_local_automatic_operators_.bucket_count() * sizeof(void*);
     bytes += state_local_automatic_operators_.size() *
-             (sizeof(std::pair<const std::uint32_t,
+             (sizeof(std::pair<const std::uint64_t,
                                std::vector<std::uint32_t>>) +
               2 * sizeof(void*));
     bytes += automatic_admission_cursor_bytes();
@@ -1601,9 +1601,16 @@ bool CalcContext::materialize(
         for (auto it = needed_codes.begin();
              !desired_flags.empty() && it != needed_codes.end();) {
             bool found = false;
+            const auto metamod_flag = *it == data.metamod_multimod_code ? kFlagMultimod :
+                *it == data.metamod_no_attack_code ? kFlagNoAttack :
+                *it == data.metamod_no_caster_code ? kFlagNoCaster :
+                *it == data.metamod_prefixes_locked_code ? kFlagPrefixesLocked :
+                *it == data.metamod_suffixes_locked_code ? kFlagSuffixesLocked : 0u;
+            const bool requires_fracture = (target.fractured_metamod_flags & metamod_flag) != 0;
             std::size_t flag_index = desired_flags.size();
             for (std::size_t i = 0; i < desired_flags.size(); ++i) {
-                if ((desired_flags[i] & PC_MOD_SLOT_CRAFTED) != 0) {
+                if ((desired_flags[i] & PC_MOD_SLOT_CRAFTED) != 0 &&
+                    ((desired_flags[i] & PC_MOD_SLOT_FRACTURED) != 0) == requires_fracture) {
                     flag_index = i;
                     break;
                 }
@@ -2358,7 +2365,7 @@ std::uint64_t CalcContext::calculate_owned_bytes() const {
     }
     bytes += state_local_automatic_operators_.bucket_count() * sizeof(void*);
     bytes += state_local_automatic_operators_.size() *
-             (sizeof(std::pair<const std::uint32_t,
+             (sizeof(std::pair<const std::uint64_t,
                                std::vector<std::uint32_t>>) +
               2 * sizeof(void*));
     bytes += automatic_admission_cursor_bytes();

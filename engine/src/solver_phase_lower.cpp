@@ -11,7 +11,7 @@
 namespace poecraft::solver {
 using namespace quotient;
 namespace {
-constexpr std::uint64_t version = 0x5048415345000001ull;
+constexpr std::uint64_t version = 0x5048415345000002ull;
 constexpr std::uint64_t maximum = 16ull << 20;
 double down(double x) { return x == 0 ? 0 : std::max(0.0, std::nextafter(x, 0.0)); }
 double up(double x) { return std::nextafter(x, std::numeric_limits<double>::infinity()); }
@@ -90,7 +90,7 @@ std::uint32_t mask_for_item(const CalcContext& calc, const pc_item_state& item) 
 }
 StableKey context_key(const CalcContext& calc, const PhaseLowerPrices& prices) {
     const auto& session = calc.session();
-    StableKey result{version, session.base_index, session.item_level,
+    StableKey result{version, kActionRefinementContractVersion, session.base_index, session.item_level,
         static_cast<std::uint64_t>(calc.goal().rarity), calc.goal().required_satisfied_slots(),
         calc.goal().automatic_candidates, calc.goal().automatic_candidate_kind_mask,
         calc.goal().disabled_action_families, calc.layout().slots.size()};
@@ -139,14 +139,15 @@ bool monotone(const std::vector<double>& values) {
     return true;
 }
 void grammar_coverage(const CalcContext& calc) {
-    // These are the runtime's nine program productions, including conditional
+    // These are the runtime's ten program productions, including conditional
     // prefixes, arbitrary observed selections, retry and return-to-entry.
     // A monotone acquisition potential telescopes through every constituent.
     // Imprint's private restore only returns to the initial item; remembering
     // the union of goals ever acquired makes that edge free and non-increasing.
     // Nonnegative extra checkpoint costs may be dropped, never subtracted.
     static_assert(static_cast<unsigned>(FixedOptionKind::TemporaryBenchRepeat) == 8);
-    static_assert(static_cast<unsigned>(AutomaticCandidateKind::Veiled) == 10);
+    static_assert(static_cast<unsigned>(FixedOptionKind::TerminalCraftedCleanup) == 9);
+    static_assert(static_cast<unsigned>(AutomaticCandidateKind::CraftedCleanup) == 11);
     if (calc.goal().automatic_candidate_kind_mask & ~kAllAutomaticCandidateKindsMask)
         throw std::invalid_argument("phase lower uncovered generated family");
     for (auto index : calc.candidate_operators()) {
@@ -154,7 +155,7 @@ void grammar_coverage(const CalcContext& calc) {
         if (op.kind != PlannerOperatorKind::Primitive && op.kind != PlannerOperatorKind::FixedOption)
             throw std::invalid_argument("phase lower uncovered operator production");
         if (op.kind == PlannerOperatorKind::FixedOption &&
-            static_cast<unsigned>(op.option_kind) > 8)
+            static_cast<unsigned>(op.option_kind) > 9)
             throw std::invalid_argument("phase lower uncovered runtime production");
         const auto runtime = planner_operator_runtime_semantics(op, calc.registry());
         if (runtime.execution_paths.empty())

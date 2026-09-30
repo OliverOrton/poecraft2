@@ -522,12 +522,14 @@ bool CalcContext::is_candidate_operator_admitted_for_state(
         return true;
     }
 
-    const auto retained =
-        state_local_automatic_operators_.find(state_id);
-    return retained != state_local_automatic_operators_.end() &&
-           std::binary_search(
-               retained->second.begin(), retained->second.end(),
-               operator_index);
+    for (const std::uint64_t key : {static_cast<std::uint64_t>(state_id),
+            static_cast<std::uint64_t>(state_id) | (std::uint64_t{1} << 32)}) {
+        const auto retained = state_local_automatic_operators_.find(key);
+        if (retained != state_local_automatic_operators_.end() &&
+            std::binary_search(retained->second.begin(), retained->second.end(), operator_index))
+            return true;
+    }
+    return false;
 }
 
 } // namespace solver

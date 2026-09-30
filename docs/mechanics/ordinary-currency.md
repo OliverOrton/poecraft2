@@ -44,8 +44,9 @@ fractured affixes and every affix on a locked side.
   removes one. If both sides are locked or no eligible affix exists, it does
   nothing. The raw native dispatcher does not apply a rarity guard to this
   action.
-- `scour` refuses a normal item. With exactly one locked side, it keeps every
-  affix on that side and removes the other side. With neither side locked, it
+- `scour` refuses a normal item. With exactly one locked side, it keeps the
+  union of that side and every fractured affix on the other side. Locked
+  fractures count once. With neither side locked, it
   keeps only fractured affixes. Its post-action rarity is normal when nothing
   remains, magic when only fractures remain without a lock, and rare when a
   lock was active and at least one affix remains.
@@ -59,6 +60,14 @@ observed code behavior is not promoted here to an Oliver-approved mechanic
 rule; it is listed as an open confirmation below.
 
 ## Dated Oliver Rulings
+
+- **2026-09-29:** exactly one side lock also preserves fractures on the
+  unlocked side, including fractured crafts/metamods. A surviving unwanted
+  fracture remains nonterminal for a clean goal. Native execution, exact
+  calculation and refinement are checked in the
+  [metamod recovery](../active/2026-09-29-metamod-recovery/README.md).
+  Scour is a no-op when neither affix count nor rarity changes. The open
+  double-lock ruling below is not resolved by this repair.
 
 - **2026-07-15:** remove-crafted-modifiers is a real primitive and costs one
   Scour. This is recorded in the archived

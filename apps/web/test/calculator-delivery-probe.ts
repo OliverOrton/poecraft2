@@ -16,19 +16,23 @@ import { finishVerifiedCalculatorProbe } from "./calculator-delivery-probe-contr
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [caseId, output, control = "finish", repeatText = "1", workPolicy = "adaptive",
     transportPolicy = "compact", tracePolicy = "trace",
-    solverMode = "current"] = process.argv.slice(2);
+    solverMode = "current",
+    corpusManifest = "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json",
+    finderGrammar = "conditional"] = process.argv.slice(2);
 assert.ok(caseId && output && ["finish", "default_finish", "cancel_setup", "cancel_retention", "cancel_compile"].includes(control));
 assert.ok(workPolicy === "adaptive" || workPolicy === "fixed_eight");
 assert.ok(transportPolicy === "compact" || transportPolicy === "legacy_json");
 assert.ok(tracePolicy === "trace" || tracePolicy === "normal");
 assert.ok(solverMode === "current" || solverMode === "strategy_finder");
+assert.ok(finderGrammar === "conditional" ||
+    (finderGrammar === "conditional-protected-scour" && solverMode === "strategy_finder"));
 assert.ok(workPolicy === "adaptive" || control === "default_finish");
 const expectsDelivery = control === "finish" || control === "default_finish";
 const repetitions = Number(repeatText);
 assert.ok(repetitions === 1 || repetitions === 2);
 assert.ok(repetitions === 1 || output.endsWith(".json"));
 const corpus = loadSolverBenchmarkCorpus(resolve(root,
-    "docs/active/2026-09-09-cross-base-capability-recovery/core/manifest.json"));
+    corpusManifest));
 const spec = corpus.cases.find(c => c.id === caseId)!;
 assert.ok(spec?.session && spec.start && spec.goal && spec.product_action_envelope);
 const dom = parseHTML("<!doctype html><html><body></body></html>");
@@ -42,6 +46,8 @@ const client = new EngineClient({
         const dispatched = m.kind === "request" && m.method === "solverSolve"
             ? {...m, params: {...m.params,
                 ...(tracePolicy === "trace" ? {diagnosticTrace: true} : {}),
+                ...(finderGrammar === "conditional-protected-scour"
+                    ? {diagnosticFinderGrammar: finderGrammar} : {}),
                 ...(workPolicy === "fixed_eight" ? {diagnosticWorkPolicy: "fixed_eight"} : {}),
                 ...(transportPolicy === "legacy_json" ? {diagnosticStepTransport: "legacy_json"} : {})}}
             : m;

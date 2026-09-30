@@ -1,0 +1,3085 @@
+{
+  "scope": "Execution receipt, not a new comparison owner or universal qualification. Native reports and existing process ledgers retain full evidence.",
+  "baseline_revision": "96111477c27b09c9855147b3d3129f7570220b7d",
+  "allowance": {
+    "native_used": 8,
+    "native_remaining": 0,
+    "worker_used": 2,
+    "worker_remaining": 0,
+    "saved_controller_evaluations_used": 2,
+    "saved_controller_evaluations_limit": 6
+  },
+  "build_identity": {
+    "base": "96111477c27b09c9855147b3d3129f7570220b7d",
+    "control": "same corrected law and full new grammar; cheap_root_bootstrap_pending=false",
+    "treatment": "pre-proof cheap root bootstrap enabled",
+    "executables": {
+      "control": "fce21d58a10078309a8719627b59d2c45304e050385de7c1b6ba49f58d6bd243",
+      "treatment": "bb0eaac494376e3e9ae764b2ff43e7257941401a1bfc8b54b91c808714acfe8e"
+    },
+    "treatment_source": "3f47b87a06d3f5e37205a86fe36b05f0ae4679271eccdb49d1e2036aa7fc46c0"
+  },
+  "build_artifacts": [
+    {
+      "path": "out/metamod-recovery/builds/source.diff",
+      "sha256": "79a42f86c1d369d27e7bd2bb395e1f4236f4d2e20cbe4e02b596e8223fe258ce",
+      "bytes": 96109
+    },
+    {
+      "path": "out/metamod-recovery/builds/solver_solve.treatment.cpp",
+      "sha256": "3f47b87a06d3f5e37205a86fe36b05f0ae4679271eccdb49d1e2036aa7fc46c0",
+      "bytes": 37305
+    },
+    {
+      "path": "build/engine/poecraft_engine.dll",
+      "sha256": "e8d29976951989b089c0a9f454e47a7508b5b0f1ba2dbdf3a1bd944fca4b75a9",
+      "bytes": 13934609
+    },
+    {
+      "path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "sha256": "a8e40c2a1393e5124ecfdcfe39dd3ca7985fa17c9394bb46ca8b89b01eaead87",
+      "bytes": 8123297
+    },
+    {
+      "path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297",
+      "bytes": 21237
+    }
+  ],
+  "runtime_artifacts": [
+    {
+      "path": "data/compiled/current/manifest.json",
+      "sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "bytes": 5983
+    },
+    {
+      "path": "data/compiled/current/game-data.json",
+      "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+      "bytes": 16914460
+    },
+    {
+      "path": "data/compiled/current/strings.json",
+      "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+      "bytes": 6740473
+    }
+  ],
+  "economy": {
+    "snapshot_content_identity": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "raw_file": {
+      "path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+      "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "bytes": 141941
+    },
+    "base_price_override": 1.0,
+    "worker_transport": "Identical resolved prices supplied as manual overrides, not a live market fetch."
+  },
+  "native_runs": [
+    {
+      "arm": "current-control",
+      "case": "bow4-last-mile-two-junk-suffixes",
+      "report": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/current-control/cases/bow4-last-mile-two-junk-suffixes.json",
+        "sha256": "31f0fcafb60874134c21392449bcfed9184bdb72d688586f26008f389097a373",
+        "bytes": 5996111
+      },
+      "ledger": {
+        "path": "out/metamod-recovery/current-control/ledger.json",
+        "sha256": "f2a11d5b54e6fd6861909d02030fd16c6c8e1b4c35724805a69ea22176b808bb",
+        "bytes": 18492
+      },
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\builds\\control.exe",
+          "--artifact",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-control\\cases\\bow4-last-mile-two-junk-suffixes.json",
+          "--partial-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-control\\partials\\bow4-last-mile-two-junk-suffixes.1790739094575521000-64152.json",
+          "--strategy-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-control\\strategies",
+          "--case",
+          "bow4-last-mile-two-junk-suffixes",
+          "--skip-verification",
+          "--exact-strategy-evaluation",
+          "--goal-progress-gated-reforges",
+          "--native-retention-diagnostic",
+          "reuse",
+          "--solver-mode",
+          "current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+      },
+      "supervision": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "survivor": false,
+        "wall_ms": 126455.78660001047,
+        "failure_kind": null
+      },
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 164188.28212526618,
+        "expanded_states": 781,
+        "sweeps": 0,
+        "residual": 1.1175870895385742e-08,
+        "skipped_action_count": 7,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 180,
+          "candidate": 36,
+          "evaluator_supported": 36,
+          "supported_priced": 433,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 7
+        },
+        "lower_bound": 184.68222144324236,
+        "upper_bound": 160160.99567405932,
+        "evaluated_policy_cost": 160160.99567405932,
+        "absolute_optimality_gap": 159976.31345261607,
+        "relative_optimality_gap": 866.224762743505,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "reliability": "refused_unsupported_action",
+      "errors": [],
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 18379,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "independent_policy_check": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 5564.7161,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 160160.99567405932,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "phase_wall_ms": {
+        "registry_layout": 33.263,
+        "solve": 120157.9729,
+        "compile": 2.4642,
+        "verification": null,
+        "total": 125885.9573
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 36528128,
+        "process_working_set_after_bytes": 217702400,
+        "process_working_set_delta_bytes": 181174272,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 139562127,
+        "native_peak_owned_bytes": 730938584,
+        "native_serialized_output_bytes": 60,
+        "solver_telemetry_json_bytes": 782076
+      },
+      "optimization": {
+        "method": "policy_iteration_scc",
+        "policy_evaluation_calls": 24,
+        "largest_policy_component": 337,
+        "sparse_policy_iterations": 742,
+        "max_sparse_policy_iterations": 83,
+        "policy_kernel_groups": 3304,
+        "policy_states_collapsed": 3342,
+        "policy_evaluation_failure": "final_convergence_gate:focused_exact=1,optimization=1,reachable_policy=1,reachable_failure=none,state_in_range=1,finite_start=1",
+        "status": "bounded_feasible",
+        "converged": false,
+        "sweeps": 0,
+        "policy_improvement_rounds": 0,
+        "residual": 1.1175870895385742e-08,
+        "optimality_gap": null,
+        "state_cap_hit": false,
+        "resource_cap_hit": false,
+        "requested_bounded_finish": true,
+        "requested_bounded_finish_expanded_states": 781,
+        "requested_bounded_finish_rows": 4126,
+        "cap_hits": [],
+        "full_request_status": "incomplete_requested_bounded_finish"
+      },
+      "solution_scope": null,
+      "action_scope": {
+        "layout_primitives": 36,
+        "disabled_action_families": [
+          "foulborn"
+        ],
+        "family_restricted": true,
+        "goal_relevant_pruned": 90
+      },
+      "automatic_rows": {
+        "considered": 2944,
+        "eligible": 1556,
+        "rejected": 1388,
+        "collapsed": 50,
+        "selected": 7,
+        "deferred": 0
+      },
+      "automatic_admission_work": {
+        "discovered_states": 1031246,
+        "state_action_rows": 651864,
+        "transition_entries": 436930203,
+        "reforge_active_work": 232787132,
+        "reforge_logical_work_v1": 232787132
+      },
+      "root_programme_witnesses": [
+        {
+          "candidate_kind": "protected_metamod",
+          "candidate": "option:protected_side:prefix:scour:goal:7",
+          "carrier_identity": {
+            "state_id": 0,
+            "state_hash": 3291674056,
+            "rarity": 2,
+            "prefix_count": 3,
+            "suffix_count": 2,
+            "flags": 0,
+            "influence_bits": 0,
+            "crafted_goal_mask": 0,
+            "fractured_goal_mask": 0,
+            "active_protection_flags": 0
+          },
+          "relevant_goal_subset": 7,
+          "legality_result": "illegal",
+          "exact_kernel_change": {
+            "changed": false,
+            "baseline_hash": 0,
+            "candidate_hash": 0,
+            "mechanisms": [
+              "metamod_protection"
+            ]
+          },
+          "setup_operations": [],
+          "followup_operation": null,
+          "cleanup_operations": [],
+          "coverage": {
+            "setup_complete": false,
+            "cleanup_complete": false,
+            "recovery_complete": false,
+            "outer_exits_complete": false
+          },
+          "disposition": "rejected",
+          "reason": "exact_invalidity_legality_or_relevance",
+          "eligibility_reason": "setup_did_not_apply_exactly"
+        }
+      ],
+      "returned_graph": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/current-control/strategies/bow4-last-mile-two-junk-suffixes.strategy.json",
+        "sha256": "4ff6d0aa24a3686e39eb6aeeb9ae4315184bb957a9f3807b10aa971114f4682f",
+        "bytes": 237308
+      },
+      "case_spec": {
+        "path": "docs/active/2026-09-29-metamod-recovery/corpus/cases/bow4-last-mile-two-junk-suffixes.json",
+        "sha256": "e97d48549926bc24b0bec2fc35186c8981388d93af651dcf29243c0ab8579361"
+      },
+      "resolved_configuration": {
+        "native_goal_terminal": "legacy-clean",
+        "native_goal_proof": "ordinary-clean",
+        "native_retention_diagnostic": "reuse",
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "watchdog_seconds": 180,
+        "requested_bounded_finish_seconds": 120
+      }
+    },
+    {
+      "arm": "current-control",
+      "case": "w1-prefix-only-clean",
+      "report": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/current-control/cases/w1-prefix-only-clean.json",
+        "sha256": "7d83f5a0788f8b671a92ce67636bc0bb77ba8a1f9bf902f6c4fc043db8bd6ab8",
+        "bytes": 1541727
+      },
+      "ledger": {
+        "path": "out/metamod-recovery/current-control/ledger.json",
+        "sha256": "f2a11d5b54e6fd6861909d02030fd16c6c8e1b4c35724805a69ea22176b808bb",
+        "bytes": 18492
+      },
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\builds\\control.exe",
+          "--artifact",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-control\\cases\\w1-prefix-only-clean.json",
+          "--partial-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-control\\partials\\w1-prefix-only-clean.1790739221075168000-64152.json",
+          "--strategy-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-control\\strategies",
+          "--case",
+          "w1-prefix-only-clean",
+          "--skip-verification",
+          "--exact-strategy-evaluation",
+          "--goal-progress-gated-reforges",
+          "--native-retention-diagnostic",
+          "reuse",
+          "--solver-mode",
+          "current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+      },
+      "supervision": {
+        "exit_code": 2,
+        "timed_out": false,
+        "canceled": false,
+        "survivor": false,
+        "wall_ms": 6174.071300076321,
+        "failure_kind": null
+      },
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 424.3741,
+        "expanded_states": 143,
+        "sweeps": 0,
+        "residual": 0,
+        "skipped_action_count": 29,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "refused_resource_cap",
+        "stop_cause": "other_resource_cap",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 157,
+          "candidate": 23,
+          "evaluator_supported": 23,
+          "supported_priced": 345,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 29
+        },
+        "lower_bound": 2.1441000000000003,
+        "upper_bound": 424.3741,
+        "evaluated_policy_cost": 424.3741,
+        "absolute_optimality_gap": 422.23,
+        "relative_optimality_gap": 196.9264493260575,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "reliability": "refused_resource_cap",
+      "errors": [
+        "bounded best-policy contract failed: one or more bounded-result proof obligations failed"
+      ],
+      "bounded_contract": {
+        "checked": true,
+        "passed": false,
+        "path": "bounded",
+        "checks": {
+          "named_stop": false,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 2186,
+          "refinement_obligations": 0
+        },
+        "failure_reason": "one or more bounded-result proof obligations failed"
+      },
+      "independent_policy_check": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 1.7196,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 424.3741,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "phase_wall_ms": {
+        "registry_layout": 29.4209,
+        "solve": 5806.1678,
+        "compile": 0.5431,
+        "verification": null,
+        "total": 5875.6283
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 36519936,
+        "process_working_set_after_bytes": 55037952,
+        "process_working_set_delta_bytes": 18518016,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 15211251,
+        "native_peak_owned_bytes": 48103619,
+        "native_serialized_output_bytes": 60,
+        "solver_telemetry_json_bytes": 644340
+      },
+      "optimization": {
+        "method": "policy_iteration_scc",
+        "policy_evaluation_calls": 12,
+        "largest_policy_component": 45,
+        "sparse_policy_iterations": 0,
+        "max_sparse_policy_iterations": 0,
+        "policy_kernel_groups": 359,
+        "policy_states_collapsed": 617,
+        "policy_evaluation_failure": "final_convergence_gate:focused_exact=1,optimization=1,reachable_policy=1,reachable_failure=none,state_in_range=1,finite_start=1",
+        "status": "bounded_feasible",
+        "converged": false,
+        "sweeps": 0,
+        "policy_improvement_rounds": 0,
+        "residual": 0,
+        "optimality_gap": null,
+        "state_cap_hit": false,
+        "resource_cap_hit": false,
+        "requested_bounded_finish": false,
+        "requested_bounded_finish_expanded_states": 0,
+        "requested_bounded_finish_rows": 0,
+        "cap_hits": [],
+        "full_request_status": "incomplete_solve"
+      },
+      "solution_scope": null,
+      "action_scope": {
+        "layout_primitives": 23,
+        "disabled_action_families": [
+          "foulborn"
+        ],
+        "family_restricted": true,
+        "goal_relevant_pruned": 114
+      },
+      "automatic_rows": {
+        "considered": 872,
+        "eligible": 671,
+        "rejected": 201,
+        "collapsed": 0,
+        "selected": 1,
+        "deferred": 0
+      },
+      "automatic_admission_work": {
+        "discovered_states": 176695,
+        "state_action_rows": 194041,
+        "transition_entries": 494263,
+        "reforge_active_work": 0,
+        "reforge_logical_work_v1": 0
+      },
+      "root_programme_witnesses": [
+        {
+          "candidate_kind": "protected_metamod",
+          "candidate": "option:protected_side:prefix:scour:goal:3",
+          "carrier_identity": {
+            "state_id": 0,
+            "state_hash": 1583132111,
+            "rarity": 2,
+            "prefix_count": 2,
+            "suffix_count": 2,
+            "flags": 0,
+            "influence_bits": 0,
+            "crafted_goal_mask": 0,
+            "fractured_goal_mask": 0,
+            "active_protection_flags": 0
+          },
+          "relevant_goal_subset": 3,
+          "legality_result": "legal",
+          "exact_kernel_change": {
+            "changed": true,
+            "baseline_hash": 10769931452563281526,
+            "candidate_hash": 10770888027679635871,
+            "mechanisms": [
+              "metamod_protection"
+            ]
+          },
+          "setup_operations": [
+            "bench:StrMasterItemGenerationCannotChangePrefixes"
+          ],
+          "followup_operation": "scour",
+          "cleanup_operations": [],
+          "coverage": {
+            "setup_complete": true,
+            "cleanup_complete": true,
+            "recovery_complete": true,
+            "outer_exits_complete": true
+          },
+          "disposition": "selected",
+          "reason": "minimum_complete_expected_downstream_cost",
+          "eligibility_reason": "exact_protected_side_kernel_and_complete_exits"
+        }
+      ],
+      "returned_graph": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/current-control/strategies/w1-prefix-only-clean.strategy.json",
+        "sha256": "92124103ad94b1739306e43526c30aace23619fd8337a73899aaaca0f55daa78",
+        "bytes": 2544
+      },
+      "case_spec": {
+        "path": "docs/active/2026-09-29-metamod-recovery/corpus/cases/w1-prefix-only-clean.json",
+        "sha256": "63d571804956b9182d0c6ae5e2c29fa80c8b5c0cd124b1057d568b4e051618fc"
+      },
+      "resolved_configuration": {
+        "native_goal_terminal": "legacy-clean",
+        "native_goal_proof": "ordinary-clean",
+        "native_retention_diagnostic": "reuse",
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "watchdog_seconds": 150,
+        "requested_bounded_finish_seconds": 90
+      }
+    },
+    {
+      "arm": "current-control",
+      "case": "w4-prefix-only-crafted-junk",
+      "report": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/current-control/cases/w4-prefix-only-crafted-junk.json",
+        "sha256": "8e4dd0aecf34ef2d2a921bf5e85e114ed7e4a231b77bc103c2ccdaee005e3ac0",
+        "bytes": 2027581
+      },
+      "ledger": {
+        "path": "out/metamod-recovery/current-control/ledger.json",
+        "sha256": "f2a11d5b54e6fd6861909d02030fd16c6c8e1b4c35724805a69ea22176b808bb",
+        "bytes": 18492
+      },
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\builds\\control.exe",
+          "--artifact",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-control\\cases\\w4-prefix-only-crafted-junk.json",
+          "--partial-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-control\\partials\\w4-prefix-only-crafted-junk.1790739227260730800-64152.json",
+          "--strategy-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-control\\strategies",
+          "--case",
+          "w4-prefix-only-crafted-junk",
+          "--skip-verification",
+          "--exact-strategy-evaluation",
+          "--goal-progress-gated-reforges",
+          "--native-retention-diagnostic",
+          "reuse",
+          "--solver-mode",
+          "current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+      },
+      "supervision": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "survivor": false,
+        "wall_ms": 3270.599100040272,
+        "failure_kind": null
+      },
+      "summary": {
+        "converged": true,
+        "start_state": 0,
+        "start_value": 0.3741,
+        "expanded_states": 247,
+        "sweeps": 1,
+        "residual": 2.2737367544323206e-13,
+        "skipped_action_count": 16,
+        "policy_available": true,
+        "policy_status": "exact",
+        "termination": "exact_closed",
+        "stop_cause": "exact_closed",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 157,
+          "candidate": 23,
+          "evaluator_supported": 23,
+          "supported_priced": 25,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 16
+        },
+        "lower_bound": 0.3741,
+        "upper_bound": 0.3741,
+        "evaluated_policy_cost": 0.3741,
+        "absolute_optimality_gap": 0,
+        "relative_optimality_gap": 0,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "reliability": "refused_unsupported_action",
+      "errors": [],
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "exact",
+        "checks": {
+          "named_stop": null,
+          "strict_gap": null,
+          "open_obligations": null,
+          "evaluated_upper": null,
+          "cheapest_independently_evaluated_incumbent": null
+        },
+        "open_work": {
+          "incremental_actions": 0,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "independent_policy_check": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 1.6406,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 0.3741,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "phase_wall_ms": {
+        "registry_layout": 31.8394,
+        "solve": 2900.329,
+        "compile": 0.7166,
+        "verification": null,
+        "total": 2970.291
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 37064704,
+        "process_working_set_after_bytes": 49766400,
+        "process_working_set_delta_bytes": 12701696,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 14401866,
+        "native_peak_owned_bytes": 48103619,
+        "native_serialized_output_bytes": 60,
+        "solver_telemetry_json_bytes": 538141
+      },
+      "optimization": {
+        "method": "policy_iteration_scc",
+        "policy_evaluation_calls": 13,
+        "largest_policy_component": 57,
+        "sparse_policy_iterations": 0,
+        "max_sparse_policy_iterations": 0,
+        "policy_kernel_groups": 602,
+        "policy_states_collapsed": 1221,
+        "policy_evaluation_failure": null,
+        "status": "exact_supported_priced_subset",
+        "converged": true,
+        "sweeps": 1,
+        "policy_improvement_rounds": 1,
+        "residual": 2.2737367544323206e-13,
+        "optimality_gap": null,
+        "state_cap_hit": false,
+        "resource_cap_hit": false,
+        "requested_bounded_finish": false,
+        "requested_bounded_finish_expanded_states": 0,
+        "requested_bounded_finish_rows": 0,
+        "cap_hits": [],
+        "full_request_status": "incomplete_action_subset"
+      },
+      "solution_scope": null,
+      "action_scope": {
+        "layout_primitives": 23,
+        "disabled_action_families": [
+          "foulborn"
+        ],
+        "family_restricted": true,
+        "goal_relevant_pruned": 114
+      },
+      "automatic_rows": {
+        "considered": 320,
+        "eligible": 75,
+        "rejected": 245,
+        "collapsed": 0,
+        "selected": 3,
+        "deferred": 0
+      },
+      "automatic_admission_work": {
+        "discovered_states": 271,
+        "state_action_rows": 124,
+        "transition_entries": 114,
+        "reforge_active_work": 0,
+        "reforge_logical_work_v1": 0
+      },
+      "root_programme_witnesses": [
+        {
+          "candidate_kind": "protected_metamod",
+          "candidate": "option:protected_side:prefix:scour:goal:3",
+          "carrier_identity": {
+            "state_id": 0,
+            "state_hash": 3918056920,
+            "rarity": 2,
+            "prefix_count": 2,
+            "suffix_count": 1,
+            "flags": 32,
+            "influence_bits": 0,
+            "crafted_goal_mask": 0,
+            "fractured_goal_mask": 0,
+            "active_protection_flags": 0
+          },
+          "relevant_goal_subset": 3,
+          "legality_result": "illegal",
+          "exact_kernel_change": {
+            "changed": false,
+            "baseline_hash": 0,
+            "candidate_hash": 0,
+            "mechanisms": [
+              "metamod_protection"
+            ]
+          },
+          "setup_operations": [],
+          "followup_operation": null,
+          "cleanup_operations": [],
+          "coverage": {
+            "setup_complete": false,
+            "cleanup_complete": false,
+            "recovery_complete": false,
+            "outer_exits_complete": false
+          },
+          "disposition": "rejected",
+          "reason": "exact_invalidity_legality_or_relevance",
+          "eligibility_reason": "setup_did_not_apply_exactly"
+        }
+      ],
+      "returned_graph": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/current-control/strategies/w4-prefix-only-crafted-junk.strategy.json",
+        "sha256": "4fd7a5e82bbfce16ef8553f301941c7f56a701555e7a0cc3b8abc23970daf92a",
+        "bytes": 2332
+      },
+      "case_spec": {
+        "path": "docs/active/2026-09-29-metamod-recovery/corpus/cases/w4-prefix-only-crafted-junk.json",
+        "sha256": "3c84b3aefab624793d2d5946f529a44a14dde9a86759f8605902191382713ff5"
+      },
+      "resolved_configuration": {
+        "native_goal_terminal": "legacy-clean",
+        "native_goal_proof": "ordinary-clean",
+        "native_retention_diagnostic": "reuse",
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "watchdog_seconds": 120,
+        "requested_bounded_finish_seconds": 60
+      }
+    },
+    {
+      "arm": "current-treatment",
+      "case": "bow4-last-mile-two-junk-suffixes",
+      "report": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/current-treatment/cases/bow4-last-mile-two-junk-suffixes.json",
+        "sha256": "424429f6b8577a97be5046e22a9b4c66dbd1d2fbafb69b7619d57bc74d3c78fd",
+        "bytes": 5978767
+      },
+      "ledger": {
+        "path": "out/metamod-recovery/current-treatment/ledger.json",
+        "sha256": "1b2f3d1566e31a3d6ad84e2a6f24433ecc8f16f796f13d0e6c76aa496074039a",
+        "bytes": 19711
+      },
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\builds\\treatment.exe",
+          "--artifact",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-treatment\\cases\\bow4-last-mile-two-junk-suffixes.json",
+          "--partial-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-treatment\\partials\\bow4-last-mile-two-junk-suffixes.1790739430218439300-90680.json",
+          "--strategy-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-treatment\\strategies",
+          "--case",
+          "bow4-last-mile-two-junk-suffixes",
+          "--skip-verification",
+          "--exact-strategy-evaluation",
+          "--goal-progress-gated-reforges",
+          "--native-retention-diagnostic",
+          "reuse",
+          "--solver-mode",
+          "current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+      },
+      "supervision": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "survivor": false,
+        "wall_ms": 126331.50289999321,
+        "failure_kind": null
+      },
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 164188.28212526618,
+        "expanded_states": 781,
+        "sweeps": 0,
+        "residual": 1.1175870895385742e-08,
+        "skipped_action_count": 7,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 180,
+          "candidate": 36,
+          "evaluator_supported": 36,
+          "supported_priced": 433,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 7
+        },
+        "lower_bound": 184.68222144324236,
+        "upper_bound": 160160.99567405932,
+        "evaluated_policy_cost": 160160.99567405932,
+        "absolute_optimality_gap": 159976.31345261607,
+        "relative_optimality_gap": 866.224762743505,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "reliability": "refused_unsupported_action",
+      "errors": [],
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "bounded",
+        "checks": {
+          "named_stop": true,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 18379,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "independent_policy_check": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 5527.4461,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 160160.99567405932,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "phase_wall_ms": {
+        "registry_layout": 40.6097,
+        "solve": 120310.239,
+        "compile": 2.7493,
+        "verification": null,
+        "total": 125983.6699
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 36536320,
+        "process_working_set_after_bytes": 218976256,
+        "process_working_set_delta_bytes": 182439936,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 139562127,
+        "native_peak_owned_bytes": 730938584,
+        "native_serialized_output_bytes": 60,
+        "solver_telemetry_json_bytes": 782074
+      },
+      "optimization": {
+        "method": "policy_iteration_scc",
+        "policy_evaluation_calls": 24,
+        "largest_policy_component": 337,
+        "sparse_policy_iterations": 742,
+        "max_sparse_policy_iterations": 83,
+        "policy_kernel_groups": 3304,
+        "policy_states_collapsed": 3342,
+        "policy_evaluation_failure": "final_convergence_gate:focused_exact=1,optimization=1,reachable_policy=1,reachable_failure=none,state_in_range=1,finite_start=1",
+        "status": "bounded_feasible",
+        "converged": false,
+        "sweeps": 0,
+        "policy_improvement_rounds": 0,
+        "residual": 1.1175870895385742e-08,
+        "optimality_gap": null,
+        "state_cap_hit": false,
+        "resource_cap_hit": false,
+        "requested_bounded_finish": true,
+        "requested_bounded_finish_expanded_states": 781,
+        "requested_bounded_finish_rows": 4126,
+        "cap_hits": [],
+        "full_request_status": "incomplete_requested_bounded_finish"
+      },
+      "solution_scope": null,
+      "action_scope": {
+        "layout_primitives": 36,
+        "disabled_action_families": [
+          "foulborn"
+        ],
+        "family_restricted": true,
+        "goal_relevant_pruned": 90
+      },
+      "automatic_rows": {
+        "considered": 2944,
+        "eligible": 1556,
+        "rejected": 1388,
+        "collapsed": 50,
+        "selected": 7,
+        "deferred": 0
+      },
+      "automatic_admission_work": {
+        "discovered_states": 1031246,
+        "state_action_rows": 651864,
+        "transition_entries": 436930203,
+        "reforge_active_work": 232787132,
+        "reforge_logical_work_v1": 232787132
+      },
+      "root_programme_witnesses": [
+        {
+          "candidate_kind": "protected_metamod",
+          "candidate": "option:protected_side:prefix:scour:goal:7",
+          "carrier_identity": {
+            "state_id": 0,
+            "state_hash": 3291674056,
+            "rarity": 2,
+            "prefix_count": 3,
+            "suffix_count": 2,
+            "flags": 0,
+            "influence_bits": 0,
+            "crafted_goal_mask": 0,
+            "fractured_goal_mask": 0,
+            "active_protection_flags": 0
+          },
+          "relevant_goal_subset": 7,
+          "legality_result": "illegal",
+          "exact_kernel_change": {
+            "changed": false,
+            "baseline_hash": 0,
+            "candidate_hash": 0,
+            "mechanisms": [
+              "metamod_protection"
+            ]
+          },
+          "setup_operations": [],
+          "followup_operation": null,
+          "cleanup_operations": [],
+          "coverage": {
+            "setup_complete": false,
+            "cleanup_complete": false,
+            "recovery_complete": false,
+            "outer_exits_complete": false
+          },
+          "disposition": "rejected",
+          "reason": "exact_invalidity_legality_or_relevance",
+          "eligibility_reason": "setup_did_not_apply_exactly"
+        }
+      ],
+      "returned_graph": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/current-treatment/strategies/bow4-last-mile-two-junk-suffixes.strategy.json",
+        "sha256": "4ff6d0aa24a3686e39eb6aeeb9ae4315184bb957a9f3807b10aa971114f4682f",
+        "bytes": 237308
+      },
+      "case_spec": {
+        "path": "docs/active/2026-09-29-metamod-recovery/corpus/cases/bow4-last-mile-two-junk-suffixes.json",
+        "sha256": "e97d48549926bc24b0bec2fc35186c8981388d93af651dcf29243c0ab8579361"
+      },
+      "resolved_configuration": {
+        "native_goal_terminal": "legacy-clean",
+        "native_goal_proof": "ordinary-clean",
+        "native_retention_diagnostic": "reuse",
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "watchdog_seconds": 180,
+        "requested_bounded_finish_seconds": 120
+      }
+    },
+    {
+      "arm": "current-treatment",
+      "case": "w1-prefix-only-clean",
+      "report": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/current-treatment/cases/w1-prefix-only-clean.json",
+        "sha256": "fb5841b655584aecb3cfa049f3d9f5467641d8c2f46c7f27e6b4c1958c55e30e",
+        "bytes": 1539195
+      },
+      "ledger": {
+        "path": "out/metamod-recovery/current-treatment/ledger.json",
+        "sha256": "1b2f3d1566e31a3d6ad84e2a6f24433ecc8f16f796f13d0e6c76aa496074039a",
+        "bytes": 19711
+      },
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\builds\\treatment.exe",
+          "--artifact",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-treatment\\cases\\w1-prefix-only-clean.json",
+          "--partial-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-treatment\\partials\\w1-prefix-only-clean.1790739556594498400-90680.json",
+          "--strategy-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-treatment\\strategies",
+          "--case",
+          "w1-prefix-only-clean",
+          "--skip-verification",
+          "--exact-strategy-evaluation",
+          "--goal-progress-gated-reforges",
+          "--native-retention-diagnostic",
+          "reuse",
+          "--solver-mode",
+          "current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+      },
+      "supervision": {
+        "exit_code": 2,
+        "timed_out": false,
+        "canceled": false,
+        "survivor": false,
+        "wall_ms": 6015.980999916792,
+        "failure_kind": null
+      },
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 424.3741,
+        "expanded_states": 143,
+        "sweeps": 0,
+        "residual": 0,
+        "skipped_action_count": 29,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "refused_resource_cap",
+        "stop_cause": "other_resource_cap",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 157,
+          "candidate": 23,
+          "evaluator_supported": 23,
+          "supported_priced": 345,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 29
+        },
+        "lower_bound": 2.1441000000000003,
+        "upper_bound": 424.3741,
+        "evaluated_policy_cost": 424.3741,
+        "absolute_optimality_gap": 422.23,
+        "relative_optimality_gap": 196.9264493260575,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "reliability": "refused_resource_cap",
+      "errors": [
+        "bounded best-policy contract failed: one or more bounded-result proof obligations failed"
+      ],
+      "bounded_contract": {
+        "checked": true,
+        "passed": false,
+        "path": "bounded",
+        "checks": {
+          "named_stop": false,
+          "strict_gap": true,
+          "open_obligations": true,
+          "evaluated_upper": true,
+          "cheapest_independently_evaluated_incumbent": true
+        },
+        "open_work": {
+          "incremental_actions": 2186,
+          "refinement_obligations": 0
+        },
+        "failure_reason": "one or more bounded-result proof obligations failed"
+      },
+      "independent_policy_check": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 1.936,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 424.3741,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "phase_wall_ms": {
+        "registry_layout": 28.5452,
+        "solve": 5653.2177,
+        "compile": 0.5516,
+        "verification": null,
+        "total": 5720.2369
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 36519936,
+        "process_working_set_after_bytes": 55513088,
+        "process_working_set_delta_bytes": 18993152,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 15211251,
+        "native_peak_owned_bytes": 48206497,
+        "native_serialized_output_bytes": 60,
+        "solver_telemetry_json_bytes": 644332
+      },
+      "optimization": {
+        "method": "policy_iteration_scc",
+        "policy_evaluation_calls": 12,
+        "largest_policy_component": 45,
+        "sparse_policy_iterations": 0,
+        "max_sparse_policy_iterations": 0,
+        "policy_kernel_groups": 359,
+        "policy_states_collapsed": 617,
+        "policy_evaluation_failure": "final_convergence_gate:focused_exact=1,optimization=1,reachable_policy=1,reachable_failure=none,state_in_range=1,finite_start=1",
+        "status": "bounded_feasible",
+        "converged": false,
+        "sweeps": 0,
+        "policy_improvement_rounds": 0,
+        "residual": 0,
+        "optimality_gap": null,
+        "state_cap_hit": false,
+        "resource_cap_hit": false,
+        "requested_bounded_finish": false,
+        "requested_bounded_finish_expanded_states": 0,
+        "requested_bounded_finish_rows": 0,
+        "cap_hits": [],
+        "full_request_status": "incomplete_solve"
+      },
+      "solution_scope": null,
+      "action_scope": {
+        "layout_primitives": 23,
+        "disabled_action_families": [
+          "foulborn"
+        ],
+        "family_restricted": true,
+        "goal_relevant_pruned": 114
+      },
+      "automatic_rows": {
+        "considered": 872,
+        "eligible": 671,
+        "rejected": 201,
+        "collapsed": 0,
+        "selected": 1,
+        "deferred": 0
+      },
+      "automatic_admission_work": {
+        "discovered_states": 176695,
+        "state_action_rows": 194041,
+        "transition_entries": 494263,
+        "reforge_active_work": 0,
+        "reforge_logical_work_v1": 0
+      },
+      "root_programme_witnesses": [
+        {
+          "candidate_kind": "protected_metamod",
+          "candidate": "option:protected_side:prefix:scour:goal:3",
+          "carrier_identity": {
+            "state_id": 0,
+            "state_hash": 1583132111,
+            "rarity": 2,
+            "prefix_count": 2,
+            "suffix_count": 2,
+            "flags": 0,
+            "influence_bits": 0,
+            "crafted_goal_mask": 0,
+            "fractured_goal_mask": 0,
+            "active_protection_flags": 0
+          },
+          "relevant_goal_subset": 3,
+          "legality_result": "legal",
+          "exact_kernel_change": {
+            "changed": true,
+            "baseline_hash": 10769931452563281526,
+            "candidate_hash": 10770888027679635871,
+            "mechanisms": [
+              "metamod_protection"
+            ]
+          },
+          "setup_operations": [
+            "bench:StrMasterItemGenerationCannotChangePrefixes"
+          ],
+          "followup_operation": "scour",
+          "cleanup_operations": [],
+          "coverage": {
+            "setup_complete": true,
+            "cleanup_complete": true,
+            "recovery_complete": true,
+            "outer_exits_complete": true
+          },
+          "disposition": "selected",
+          "reason": "minimum_complete_expected_downstream_cost",
+          "eligibility_reason": "exact_protected_side_kernel_and_complete_exits"
+        }
+      ],
+      "returned_graph": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/current-treatment/strategies/w1-prefix-only-clean.strategy.json",
+        "sha256": "92124103ad94b1739306e43526c30aace23619fd8337a73899aaaca0f55daa78",
+        "bytes": 2544
+      },
+      "case_spec": {
+        "path": "docs/active/2026-09-29-metamod-recovery/corpus/cases/w1-prefix-only-clean.json",
+        "sha256": "63d571804956b9182d0c6ae5e2c29fa80c8b5c0cd124b1057d568b4e051618fc"
+      },
+      "resolved_configuration": {
+        "native_goal_terminal": "legacy-clean",
+        "native_goal_proof": "ordinary-clean",
+        "native_retention_diagnostic": "reuse",
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "watchdog_seconds": 150,
+        "requested_bounded_finish_seconds": 90
+      }
+    },
+    {
+      "arm": "current-treatment",
+      "case": "w4-prefix-only-crafted-junk",
+      "report": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/current-treatment/cases/w4-prefix-only-crafted-junk.json",
+        "sha256": "a5df9543223d7ab8b487749e6043141fc08ffa9fbac57d8ac4485d09df934b9f",
+        "bytes": 2021327
+      },
+      "ledger": {
+        "path": "out/metamod-recovery/current-treatment/ledger.json",
+        "sha256": "1b2f3d1566e31a3d6ad84e2a6f24433ecc8f16f796f13d0e6c76aa496074039a",
+        "bytes": 19711
+      },
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\builds\\treatment.exe",
+          "--artifact",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-treatment\\cases\\w4-prefix-only-crafted-junk.json",
+          "--partial-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-treatment\\partials\\w4-prefix-only-crafted-junk.1790739562621951900-90680.json",
+          "--strategy-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\current-treatment\\strategies",
+          "--case",
+          "w4-prefix-only-crafted-junk",
+          "--skip-verification",
+          "--exact-strategy-evaluation",
+          "--goal-progress-gated-reforges",
+          "--native-retention-diagnostic",
+          "reuse",
+          "--solver-mode",
+          "current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+      },
+      "supervision": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "survivor": false,
+        "wall_ms": 3141.9514000881463,
+        "failure_kind": null
+      },
+      "summary": {
+        "converged": true,
+        "start_state": 0,
+        "start_value": 0.3741,
+        "expanded_states": 247,
+        "sweeps": 1,
+        "residual": 2.2737367544323206e-13,
+        "skipped_action_count": 16,
+        "policy_available": true,
+        "policy_status": "exact",
+        "termination": "exact_closed",
+        "stop_cause": "exact_closed",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 157,
+          "candidate": 23,
+          "evaluator_supported": 23,
+          "supported_priced": 25,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 16
+        },
+        "lower_bound": 0.3741,
+        "upper_bound": 0.3741,
+        "evaluated_policy_cost": 0.3741,
+        "absolute_optimality_gap": 0,
+        "relative_optimality_gap": 0,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "reliability": "refused_unsupported_action",
+      "errors": [],
+      "bounded_contract": {
+        "checked": true,
+        "passed": true,
+        "path": "exact",
+        "checks": {
+          "named_stop": null,
+          "strict_gap": null,
+          "open_obligations": null,
+          "evaluated_upper": null,
+          "cheapest_independently_evaluated_incumbent": null
+        },
+        "open_work": {
+          "incremental_actions": 0,
+          "refinement_obligations": 0
+        },
+        "failure_reason": null
+      },
+      "independent_policy_check": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 1.6589,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 0.3741,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "phase_wall_ms": {
+        "registry_layout": 27.3941,
+        "solve": 2781.6641,
+        "compile": 0.5415,
+        "verification": null,
+        "total": 2847.7399
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 37036032,
+        "process_working_set_after_bytes": 49537024,
+        "process_working_set_delta_bytes": 12500992,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 14401866,
+        "native_peak_owned_bytes": 48205118,
+        "native_serialized_output_bytes": 60,
+        "solver_telemetry_json_bytes": 538141
+      },
+      "optimization": {
+        "method": "policy_iteration_scc",
+        "policy_evaluation_calls": 13,
+        "largest_policy_component": 57,
+        "sparse_policy_iterations": 0,
+        "max_sparse_policy_iterations": 0,
+        "policy_kernel_groups": 602,
+        "policy_states_collapsed": 1221,
+        "policy_evaluation_failure": null,
+        "status": "exact_supported_priced_subset",
+        "converged": true,
+        "sweeps": 1,
+        "policy_improvement_rounds": 1,
+        "residual": 2.2737367544323206e-13,
+        "optimality_gap": null,
+        "state_cap_hit": false,
+        "resource_cap_hit": false,
+        "requested_bounded_finish": false,
+        "requested_bounded_finish_expanded_states": 0,
+        "requested_bounded_finish_rows": 0,
+        "cap_hits": [],
+        "full_request_status": "incomplete_action_subset"
+      },
+      "solution_scope": null,
+      "action_scope": {
+        "layout_primitives": 23,
+        "disabled_action_families": [
+          "foulborn"
+        ],
+        "family_restricted": true,
+        "goal_relevant_pruned": 114
+      },
+      "automatic_rows": {
+        "considered": 320,
+        "eligible": 75,
+        "rejected": 245,
+        "collapsed": 0,
+        "selected": 3,
+        "deferred": 0
+      },
+      "automatic_admission_work": {
+        "discovered_states": 271,
+        "state_action_rows": 124,
+        "transition_entries": 114,
+        "reforge_active_work": 0,
+        "reforge_logical_work_v1": 0
+      },
+      "root_programme_witnesses": [
+        {
+          "candidate_kind": "protected_metamod",
+          "candidate": "option:protected_side:prefix:scour:goal:3",
+          "carrier_identity": {
+            "state_id": 0,
+            "state_hash": 3918056920,
+            "rarity": 2,
+            "prefix_count": 2,
+            "suffix_count": 1,
+            "flags": 32,
+            "influence_bits": 0,
+            "crafted_goal_mask": 0,
+            "fractured_goal_mask": 0,
+            "active_protection_flags": 0
+          },
+          "relevant_goal_subset": 3,
+          "legality_result": "illegal",
+          "exact_kernel_change": {
+            "changed": false,
+            "baseline_hash": 0,
+            "candidate_hash": 0,
+            "mechanisms": [
+              "metamod_protection"
+            ]
+          },
+          "setup_operations": [],
+          "followup_operation": null,
+          "cleanup_operations": [],
+          "coverage": {
+            "setup_complete": false,
+            "cleanup_complete": false,
+            "recovery_complete": false,
+            "outer_exits_complete": false
+          },
+          "disposition": "rejected",
+          "reason": "exact_invalidity_legality_or_relevance",
+          "eligibility_reason": "setup_did_not_apply_exactly"
+        }
+      ],
+      "returned_graph": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/current-treatment/strategies/w4-prefix-only-crafted-junk.strategy.json",
+        "sha256": "4fd7a5e82bbfce16ef8553f301941c7f56a701555e7a0cc3b8abc23970daf92a",
+        "bytes": 2332
+      },
+      "case_spec": {
+        "path": "docs/active/2026-09-29-metamod-recovery/corpus/cases/w4-prefix-only-crafted-junk.json",
+        "sha256": "3c84b3aefab624793d2d5946f529a44a14dde9a86759f8605902191382713ff5"
+      },
+      "resolved_configuration": {
+        "native_goal_terminal": "legacy-clean",
+        "native_goal_proof": "ordinary-clean",
+        "native_retention_diagnostic": "reuse",
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "watchdog_seconds": 120,
+        "requested_bounded_finish_seconds": 60
+      }
+    },
+    {
+      "arm": "finder-control",
+      "case": "finder-prefix-lock-from-root",
+      "report": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/finder-control/cases/finder-prefix-lock-from-root.json",
+        "sha256": "8c0946bfe1cb04c48cb0f30a3903044dec16deb9060bc684f278181d00256168",
+        "bytes": 28849
+      },
+      "ledger": {
+        "path": "out/metamod-recovery/finder-control/ledger.json",
+        "sha256": "f5040cd1a5b7421dcce8c804c9abc38cbd1a9f80b17208c68ae3736fa86b9ded",
+        "bytes": 12950
+      },
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\builds\\treatment.exe",
+          "--artifact",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\finder-control\\cases\\finder-prefix-lock-from-root.json",
+          "--partial-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\finder-control\\partials\\finder-prefix-lock-from-root.1790739806575975900-8512.json",
+          "--strategy-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\finder-control\\strategies",
+          "--case",
+          "finder-prefix-lock-from-root",
+          "--skip-verification",
+          "--exact-strategy-evaluation",
+          "--solver-mode",
+          "strategy_finder",
+          "--finder-grammar",
+          "conditional",
+          "--finder-attempt-limit",
+          "8"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+      },
+      "supervision": {
+        "exit_code": 2,
+        "timed_out": false,
+        "canceled": false,
+        "survivor": false,
+        "wall_ms": 8873.414700152352,
+        "failure_kind": null
+      },
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": null,
+        "expanded_states": 0,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 0,
+        "policy_available": false,
+        "policy_status": "none",
+        "termination": "refused_resource_cap",
+        "stop_cause": "other_resource_cap",
+        "cap_hit_mask": 2147483648,
+        "action_counts": {
+          "registry": 0,
+          "candidate": 0,
+          "evaluator_supported": 0,
+          "supported_priced": 0,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": null,
+        "upper_bound": null,
+        "evaluated_policy_cost": null,
+        "absolute_optimality_gap": null,
+        "relative_optimality_gap": null,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "reliability": "refused_resource_cap",
+      "errors": [],
+      "bounded_contract": null,
+      "independent_policy_check": {
+        "completed": false,
+        "time_limited": false,
+        "status": "not_applicable_no_policy",
+        "wall_ms": null
+      },
+      "phase_wall_ms": {
+        "registry_layout": 31.7847,
+        "solve": 8552.8857,
+        "compile": null,
+        "verification": null,
+        "total": 8587.1446
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 37072896,
+        "process_working_set_after_bytes": 43036672,
+        "process_working_set_delta_bytes": 5963776,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 561724,
+        "native_peak_owned_bytes": 99348303,
+        "native_serialized_output_bytes": 6317,
+        "solver_telemetry_json_bytes": 5087
+      },
+      "finder": {
+        "version": 1,
+        "lane": "strategy_finder",
+        "ranking": "heuristic",
+        "grammar": "conditional",
+        "considered": 7,
+        "attempt_limit": 8,
+        "checked": 3,
+        "generated": 7,
+        "duplicates": 0,
+        "pending_holes": 0,
+        "accepted": 0,
+        "refused": 3,
+        "censored": 4,
+        "logical_reforge_work": 29271604,
+        "search_ns": 85200,
+        "compile_ns": 10849900,
+        "check_ns": 8377304400,
+        "last_refusal_kind": "capacity",
+        "last_refusal": "solver exceeded max_discovered_states (200000)",
+        "retention_status": "not_requested",
+        "live_owned_bytes": 650039,
+        "peak_owned_bytes": 99332647,
+        "best_checked_cost": null,
+        "done": true,
+        "problem_identity": "12670362773864673432"
+      },
+      "finder_candidates": [
+        {
+          "status": "refused_check",
+          "refusal": "candidate failed native properness, mass or price check",
+          "graph_hash": "16248411958807568017",
+          "conditional": false,
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 48000,
+          "started_ns": 73100,
+          "finished_ns": 77076900,
+          "logical_reforge_work": 2302625,
+          "peak_owned_bytes": 1535082,
+          "score": 1,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "chaos"
+          ],
+          "identity_sha256": "39e9dffcca9a25b8f138997a9b651e8dea439f2c77d4acfc428b45953cab887d",
+          "source_parent": null
+        },
+        {
+          "status": "refused_check",
+          "refusal": "candidate failed native properness, mass or price check",
+          "graph_hash": "14417772141451534845",
+          "conditional": false,
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 48900,
+          "started_ns": 77186200,
+          "finished_ns": 78687200,
+          "logical_reforge_work": 0,
+          "peak_owned_bytes": 1061294,
+          "score": 0.3741,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "scour"
+          ],
+          "identity_sha256": "c266a87b856b5ee6a614eab3185b6acec230874708d8b301375b86d2dc2276df",
+          "source_parent": null
+        },
+        {
+          "status": "refused_check",
+          "refusal": "candidate failed native properness, mass or price check",
+          "graph_hash": "1620486568845169593",
+          "conditional": false,
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 49700,
+          "started_ns": 78760100,
+          "finished_ns": 176052600,
+          "logical_reforge_work": 3211151,
+          "peak_owned_bytes": 1535082,
+          "score": 1.4257499999999999,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "harvest_reforge:life"
+          ],
+          "identity_sha256": "4e4a92a257c5fe91590775cfe63af6ad91f2cf314f16af8623ed4bf3db842bc3",
+          "source_parent": null
+        },
+        {
+          "status": "censored_capacity",
+          "refusal": "solver exceeded max_discovered_states (200000)",
+          "graph_hash": "9211218668211777713",
+          "conditional": false,
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 50400,
+          "started_ns": 176148900,
+          "finished_ns": 2094761200,
+          "logical_reforge_work": 0,
+          "peak_owned_bytes": 98676906,
+          "score": 1.77,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "exalt"
+          ],
+          "identity_sha256": "be1acb82bd140277acbbb3fb40ecd6419131bc61a2d838d39e5f07858c51deb6",
+          "source_parent": null
+        },
+        {
+          "status": "censored_capacity",
+          "refusal": "solver exceeded max_discovered_states (200000)",
+          "graph_hash": "7061964826402091184",
+          "conditional": false,
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 2109276500,
+          "started_ns": 2109286900,
+          "finished_ns": 4240133600,
+          "logical_reforge_work": 7919276,
+          "peak_owned_bytes": 64366239,
+          "score": 10.709999999999999,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "chaos",
+            "annul"
+          ],
+          "identity_sha256": "9421a4f0364d99acafb7bb8fd7b6d7bffb41e989a7245c216eb60e42ffc073eb",
+          "source_parent": null
+        },
+        {
+          "status": "censored_capacity",
+          "refusal": "solver exceeded max_discovered_states (200000)",
+          "graph_hash": "6627178516120029594",
+          "conditional": true,
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 4251689200,
+          "started_ns": 4251722000,
+          "finished_ns": 6372450900,
+          "logical_reforge_work": 7919276,
+          "peak_owned_bytes": 64368090,
+          "score": 10.69,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "chaos",
+            "annul"
+          ],
+          "identity_sha256": "8c16698fd48e96285fcd0a93c1551c7489611f0342a8fde1cdbfb292e5ad348f",
+          "source_parent": null
+        },
+        {
+          "status": "censored_capacity",
+          "refusal": "solver exceeded max_discovered_states (200000)",
+          "graph_hash": "7834018669431603009",
+          "conditional": true,
+          "native_program": true,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 6384091700,
+          "started_ns": 6384124000,
+          "finished_ns": 8539583000,
+          "logical_reforge_work": 7919276,
+          "peak_owned_bytes": 64369883,
+          "score": 11.135729999999999,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "chaos",
+            "annul",
+            "scour",
+            "alchemy"
+          ],
+          "identity_sha256": "61f2e6b8dc23d58e18f43d2e5cbc21acaaed419d28ba47f316fc2b0da6656eb6",
+          "source_parent": null
+        }
+      ],
+      "case_spec": {
+        "path": "docs/active/2026-09-29-metamod-recovery/corpus/cases/finder-prefix-lock-from-root.json",
+        "sha256": "515292a5fb4d8fe0308a6327d9ffb19143d785223f5f5d9a472cedc196263fe9"
+      },
+      "resolved_configuration": {
+        "native_goal_terminal": "legacy-clean",
+        "native_goal_proof": "ordinary-clean",
+        "native_retention_diagnostic": null,
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "watchdog_seconds": 150,
+        "requested_bounded_finish_seconds": 90
+      }
+    },
+    {
+      "arm": "finder-treatment",
+      "case": "finder-prefix-lock-from-root",
+      "report": {
+        "path": "C:/Users/Oliver/Documents/poecraft2/out/metamod-recovery/finder-treatment/cases/finder-prefix-lock-from-root.json",
+        "sha256": "e0f061418ff2b687b2503981d53d9a83bb460e001704222c118241247c523a52",
+        "bytes": 31143
+      },
+      "ledger": {
+        "path": "out/metamod-recovery/finder-treatment/ledger.json",
+        "sha256": "17d6c3ab142bf81b1ba9c6eced093933abdb1f586deaf54b2990fa3c00b97d7d",
+        "bytes": 12998
+      },
+      "command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\builds\\treatment.exe",
+          "--artifact",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\finder-treatment\\cases\\finder-prefix-lock-from-root.json",
+          "--partial-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\finder-treatment\\partials\\finder-prefix-lock-from-root.1790739815824942000-66124.json",
+          "--strategy-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\finder-treatment\\strategies",
+          "--case",
+          "finder-prefix-lock-from-root",
+          "--skip-verification",
+          "--exact-strategy-evaluation",
+          "--solver-mode",
+          "strategy_finder",
+          "--finder-grammar",
+          "conditional-protected-scour",
+          "--finder-attempt-limit",
+          "8"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2"
+      },
+      "supervision": {
+        "exit_code": 2,
+        "timed_out": false,
+        "canceled": false,
+        "survivor": false,
+        "wall_ms": 11159.849400166422,
+        "failure_kind": null
+      },
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": null,
+        "expanded_states": 0,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 0,
+        "policy_available": false,
+        "policy_status": "none",
+        "termination": "refused_resource_cap",
+        "stop_cause": "other_resource_cap",
+        "cap_hit_mask": 2147483648,
+        "action_counts": {
+          "registry": 0,
+          "candidate": 0,
+          "evaluator_supported": 0,
+          "supported_priced": 0,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": null,
+        "upper_bound": null,
+        "evaluated_policy_cost": null,
+        "absolute_optimality_gap": null,
+        "relative_optimality_gap": null,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "reliability": "refused_resource_cap",
+      "errors": [],
+      "bounded_contract": null,
+      "independent_policy_check": {
+        "completed": false,
+        "time_limited": false,
+        "status": "not_applicable_no_policy",
+        "wall_ms": null
+      },
+      "phase_wall_ms": {
+        "registry_layout": 26.8739,
+        "solve": 10843.4808,
+        "compile": null,
+        "verification": null,
+        "total": 10873.0961
+      },
+      "memory": {
+        "measurement_kind": "working_set_snapshots_not_peak",
+        "process_working_set_before_bytes": 37052416,
+        "process_working_set_after_bytes": 46436352,
+        "process_working_set_delta_bytes": 9383936,
+        "process_working_set_peak_bytes": null,
+        "wasm_heap_before_bytes": null,
+        "wasm_heap_after_bytes": null,
+        "wasm_heap_growth_bytes": null,
+        "native_live_owned_bytes": 666031,
+        "native_peak_owned_bytes": 99451451,
+        "native_serialized_output_bytes": 12589,
+        "solver_telemetry_json_bytes": 6503
+      },
+      "finder": {
+        "version": 1,
+        "lane": "strategy_finder",
+        "ranking": "heuristic",
+        "grammar": "conditional-protected-scour",
+        "considered": 8,
+        "attempt_limit": 8,
+        "checked": 3,
+        "generated": 8,
+        "duplicates": 0,
+        "pending_holes": 0,
+        "accepted": 0,
+        "refused": 3,
+        "censored": 5,
+        "logical_reforge_work": 39493505,
+        "search_ns": 55512900,
+        "compile_ns": 12529100,
+        "check_ns": 10562291700,
+        "last_refusal_kind": "capacity",
+        "last_refusal": "solver exceeded max_discovered_states (200000)",
+        "retention_status": "generated_native_held_side:0",
+        "live_owned_bytes": 752131,
+        "peak_owned_bytes": 99435795,
+        "best_checked_cost": null,
+        "done": true,
+        "problem_identity": "12670362773864673432"
+      },
+      "finder_candidates": [
+        {
+          "status": "refused_check",
+          "refusal": "candidate failed native properness, mass or price check",
+          "graph_hash": "16248411958807568017",
+          "conditional": false,
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 51700,
+          "started_ns": 2173993100,
+          "finished_ns": 2253308200,
+          "logical_reforge_work": 2302625,
+          "peak_owned_bytes": 1535082,
+          "score": 1,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "chaos"
+          ],
+          "identity_sha256": "39e9dffcca9a25b8f138997a9b651e8dea439f2c77d4acfc428b45953cab887d",
+          "source_parent": null
+        },
+        {
+          "status": "refused_check",
+          "refusal": "candidate failed native properness, mass or price check",
+          "graph_hash": "14417772141451534845",
+          "conditional": false,
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 52600,
+          "started_ns": 2253413100,
+          "finished_ns": 2255059100,
+          "logical_reforge_work": 0,
+          "peak_owned_bytes": 1061294,
+          "score": 0.3741,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "scour"
+          ],
+          "identity_sha256": "c266a87b856b5ee6a614eab3185b6acec230874708d8b301375b86d2dc2276df",
+          "source_parent": null
+        },
+        {
+          "status": "refused_check",
+          "refusal": "candidate failed native properness, mass or price check",
+          "graph_hash": "1620486568845169593",
+          "conditional": false,
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 53300,
+          "started_ns": 2255140200,
+          "finished_ns": 2352928500,
+          "logical_reforge_work": 3211151,
+          "peak_owned_bytes": 1535082,
+          "score": 1.4257499999999999,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "harvest_reforge:life"
+          ],
+          "identity_sha256": "4e4a92a257c5fe91590775cfe63af6ad91f2cf314f16af8623ed4bf3db842bc3",
+          "source_parent": null
+        },
+        {
+          "status": "censored_capacity",
+          "refusal": "solver exceeded max_discovered_states (200000)",
+          "graph_hash": "9211218668211777713",
+          "conditional": false,
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 54200,
+          "started_ns": 2353037700,
+          "finished_ns": 4338635800,
+          "logical_reforge_work": 0,
+          "peak_owned_bytes": 98676906,
+          "score": 1.77,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "exalt"
+          ],
+          "identity_sha256": "be1acb82bd140277acbbb3fb40ecd6419131bc61a2d838d39e5f07858c51deb6",
+          "source_parent": null
+        },
+        {
+          "status": "censored_capacity",
+          "refusal": "solver exceeded max_discovered_states (200000)",
+          "graph_hash": "7500183381223503976",
+          "conditional": true,
+          "native_program": true,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 57258400,
+          "started_ns": 57275000,
+          "finished_ns": 2161325200,
+          "logical_reforge_work": 7919276,
+          "peak_owned_bytes": 64373461,
+          "score": 1,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "chaos"
+          ],
+          "identity_sha256": "d26fa76e24f83ada555137312f5ed5d782898f45ac5410651e668dfec7e246a1",
+          "source_parent": "native-held-side-acquisition"
+        },
+        {
+          "status": "censored_capacity",
+          "refusal": "solver exceeded max_discovered_states (200000)",
+          "graph_hash": "7061964826402091184",
+          "conditional": false,
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 4352844400,
+          "started_ns": 4352860900,
+          "finished_ns": 6480675800,
+          "logical_reforge_work": 7919276,
+          "peak_owned_bytes": 64366239,
+          "score": 10.709999999999999,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "chaos",
+            "annul"
+          ],
+          "identity_sha256": "9421a4f0364d99acafb7bb8fd7b6d7bffb41e989a7245c216eb60e42ffc073eb",
+          "source_parent": null
+        },
+        {
+          "status": "censored_capacity",
+          "refusal": "solver exceeded max_discovered_states (200000)",
+          "graph_hash": "6627178516120029594",
+          "conditional": true,
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 6492879900,
+          "started_ns": 6492919700,
+          "finished_ns": 8649601000,
+          "logical_reforge_work": 7919276,
+          "peak_owned_bytes": 64368090,
+          "score": 10.69,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "chaos",
+            "annul"
+          ],
+          "identity_sha256": "8c16698fd48e96285fcd0a93c1551c7489611f0342a8fde1cdbfb292e5ad348f",
+          "source_parent": null
+        },
+        {
+          "status": "censored_capacity",
+          "refusal": "solver exceeded max_discovered_states (200000)",
+          "graph_hash": "7834018669431603009",
+          "conditional": true,
+          "native_program": true,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "generated_ns": 8663830300,
+          "started_ns": 8663878000,
+          "finished_ns": 10830983300,
+          "logical_reforge_work": 7919276,
+          "peak_owned_bytes": 64369883,
+          "score": 11.135729999999999,
+          "checked_cost": null,
+          "best_after_checked_cost": null,
+          "actions": [
+            "chaos",
+            "annul",
+            "scour",
+            "alchemy"
+          ],
+          "identity_sha256": "61f2e6b8dc23d58e18f43d2e5cbc21acaaed419d28ba47f316fc2b0da6656eb6",
+          "source_parent": null
+        }
+      ],
+      "case_spec": {
+        "path": "docs/active/2026-09-29-metamod-recovery/corpus/cases/finder-prefix-lock-from-root.json",
+        "sha256": "515292a5fb4d8fe0308a6327d9ffb19143d785223f5f5d9a472cedc196263fe9"
+      },
+      "resolved_configuration": {
+        "native_goal_terminal": "legacy-clean",
+        "native_goal_proof": "ordinary-clean",
+        "native_retention_diagnostic": null,
+        "caps": {
+          "solve_profile": "calculator_product_v1",
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 8,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 50000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 64,
+          "max_telemetry_json_bytes": 2097152,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "worker_step_ms": 250,
+          "cancel_ack_ms": 250,
+          "full_evidence": true
+        },
+        "watchdog_seconds": 150,
+        "requested_bounded_finish_seconds": 90
+      }
+    }
+  ],
+  "finder_displacement": {
+    "control_considered": 7,
+    "treatment_considered": 8,
+    "reserved_attempts": 1,
+    "checker_concurrency": 1,
+    "displaced_control_identities": [],
+    "interpretation": "No baseline candidate displaced in this case; the generated protected controller uses the otherwise unused eighth attempt and is served first."
+  },
+  "workers": [
+    {
+      "mode": "current",
+      "report": {
+        "path": "out/metamod-recovery/workers/current.json",
+        "sha256": "e06b60be6b33bf3d0a3dfd2b999b94185b64a6345f9b4e0c89baf9a98fb65ccc",
+        "bytes": 4115447
+      },
+      "command": {
+        "command": [
+          "C:\\Program Files\\nodejs\\node.exe",
+          "--import",
+          "tsx",
+          "test/calculator-delivery-probe.ts",
+          "w1-prefix-only-clean",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\workers\\current.json",
+          "default_finish",
+          "1",
+          "fixed_eight",
+          "compact",
+          "trace",
+          "current",
+          "docs/active/2026-09-29-metamod-recovery/corpus/manifest.json",
+          "conditional"
+        ],
+        "watchdog_seconds": 330,
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web"
+      },
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 12184,
+        "process_identity_token": "12184:134352136080916238",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 11106.097999960184
+      },
+      "request": {
+        "run_id": "169d292c-6540-4dca-bd3a-27759846bdbe",
+        "submitted_at_utc": "2026-09-30T03:46:49.875Z",
+        "base_path": "Metadata/Items/Rings/Ring10",
+        "item_level": 86,
+        "goal_envelope": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 2,
+          "slots": [
+            {
+              "family_mod_key": "IncreasedLife7",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "IncreasedMana13",
+              "min_tier": 1
+            }
+          ],
+          "fossil_mode": "goal_relevant",
+          "requested_fossil_actions": []
+        },
+        "solve_options": {
+          "solve_profile": "calculator_product_v1"
+        },
+        "bounded_finish_after_ms": 240000,
+        "economy": {
+          "profile": "manual",
+          "sourceSnapshotId": "public-none",
+          "sourceContentSha256": null,
+          "sourceCutoffAtUtc": null,
+          "fallbackPrice": null,
+          "full_price_map": "Immutable worker report, pinned from the same corpus; preserved by report SHA-256."
+        },
+        "identity": {
+          "abi_version": 3,
+          "source_revision": "96111477c27b09c9855147b3d3129f7570220b7d",
+          "runtime_wasm_sha256": "c62ceb9ea0c4a3da74feeb201e49e74e80ede1e2799a30a86d2668eeacbbc413",
+          "data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+          "data_hash_source": "verified selected runtime manifest source.data_hash; engine source commit unknown"
+        }
+      },
+      "resolved": {
+        "start_item": {
+          "rarity": 2,
+          "item_state_version": 3,
+          "base_key": "Metadata/Items/Rings/Ring10",
+          "item_level": 86,
+          "quality": 0,
+          "memory_strands": 0,
+          "lifecycle": 0,
+          "item_flags": 0,
+          "generic_influence_bits": 0,
+          "searing_exarch_tier": 0,
+          "eater_of_worlds_tier": 0,
+          "link_mask": 0,
+          "socket_count": 0,
+          "socket_colors": [],
+          "prefixes": [
+            {
+              "mod_id": 193,
+              "mod_key": "IncreasedLife7",
+              "veiled_option_keys": [],
+              "group_id": 2963,
+              "flags": 0,
+              "rolls": [],
+              "veiled_option_mod_ids": [],
+              "veiled_chosen_mod_id": 4294967295
+            },
+            {
+              "mod_id": 201,
+              "mod_key": "IncreasedMana13",
+              "veiled_option_keys": [],
+              "group_id": 2972,
+              "flags": 0,
+              "rolls": [],
+              "veiled_option_mod_ids": [],
+              "veiled_chosen_mod_id": 4294967295
+            }
+          ],
+          "suffixes": [
+            {
+              "mod_id": 133,
+              "mod_key": "FireResist7",
+              "veiled_option_keys": [],
+              "group_id": 2209,
+              "flags": 0,
+              "rolls": [],
+              "veiled_option_mod_ids": [],
+              "veiled_chosen_mod_id": 4294967295
+            },
+            {
+              "mod_id": 83,
+              "mod_key": "ColdResist7",
+              "veiled_option_keys": [],
+              "group_id": 1395,
+              "flags": 0,
+              "rolls": [],
+              "veiled_option_mod_ids": [],
+              "veiled_chosen_mod_id": 4294967295
+            }
+          ],
+          "implicits": [],
+          "enchantments": [],
+          "bestiary": {
+            "checkpoint_present": false
+          }
+        },
+        "goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 2,
+          "slots": [
+            {
+              "family_mod_key": "IncreasedLife7",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "IncreasedMana13",
+              "min_tier": 1
+            }
+          ],
+          "actions": [
+            "transmute",
+            "augment",
+            "alteration",
+            "regal",
+            "alchemy",
+            "chaos",
+            "exalt",
+            "annul",
+            "scour",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLife",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "harvest_reforge:life",
+            "harvest_reforge:mana",
+            "harvest_augment:life",
+            "fracture",
+            "restart"
+          ]
+        }
+      },
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 424.3741,
+        "expanded_states": 143,
+        "sweeps": 0,
+        "residual": 0,
+        "skipped_actions": 29,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "refused_resource_cap",
+        "lower_bound": 2.1441000000000003,
+        "upper_bound": 424.3741,
+        "evaluated_policy_cost": 424.3741,
+        "absolute_optimality_gap": 422.23,
+        "relative_optimality_gap": 196.9264493260575,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "other_resource_cap",
+        "cap_hit_mask": 0,
+        "registry_actions": 157,
+        "candidate_actions": 23,
+        "evaluator_supported_actions": 23,
+        "supported_priced_actions": 345,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 29,
+        "cancelled": false
+      },
+      "graph_sha256": "bf70d221a45cb923c7a37e88e6e1c3d23369fbcd0a85eeddba50ba0442f59b62",
+      "usable_strategy": true,
+      "error": null,
+      "probe_error": null,
+      "delivery_status": "completed",
+      "ui_milestones": [
+        {
+          "stage": "worker_solve_requested",
+          "ui_elapsed_ms": 50.00849999999991
+        },
+        {
+          "stage": "worker_result_received",
+          "ui_elapsed_ms": 9057.105599999999
+        },
+        {
+          "stage": "strategy_export",
+          "ui_elapsed_ms": 9082.1868
+        },
+        {
+          "stage": "handle_cleanup",
+          "ui_elapsed_ms": 9087.6671
+        },
+        {
+          "stage": "ui_delivery_completed",
+          "ui_elapsed_ms": 9091.8641
+        }
+      ],
+      "action_scope": {
+        "layout_primitives": 23,
+        "disabled_action_families": [
+          "foulborn"
+        ],
+        "family_restricted": true
+      },
+      "identity_caveat": "The Calculator trace embeds stale generated build-info (pre-execution HEAD and old c62ceb9e WASM hash). Node EngineBindings imports bindings/wasm/dist/poecraft_engine.mjs directly, whose fresh WASM was built before both launches; actual file hashes are in build_artifacts. The embedded hash is not the executed file hash. Original reports remain unchanged.",
+      "loaded_module_path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "loaded_wasm_file_sha256": "a8e40c2a1393e5124ecfdcfe39dd3ca7985fa17c9394bb46ca8b89b01eaead87",
+      "loaded_artifact_evidence": "Release WASM build completed 2026-09-30 03:35:11 UTC, before worker requests at 03:46/03:47 UTC; loader path directly reads that file; private diagnostic export invoked successfully. No production-source/WASM mutation followed the build. This is launch/file provenance, not a worker-computed byte hash."
+    },
+    {
+      "mode": "strategy_finder",
+      "report": {
+        "path": "out/metamod-recovery/workers/strategy_finder.json",
+        "sha256": "170b0a04518be650af2da85efc31b76b89c6ae01f1efac792212051bfd8b6af8",
+        "bytes": 221301
+      },
+      "command": {
+        "command": [
+          "C:\\Program Files\\nodejs\\node.exe",
+          "--import",
+          "tsx",
+          "test/calculator-delivery-probe.ts",
+          "finder-prefix-lock-from-root",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\metamod-recovery\\workers\\strategy_finder.json",
+          "default_finish",
+          "1",
+          "fixed_eight",
+          "compact",
+          "trace",
+          "strategy_finder",
+          "docs/active/2026-09-29-metamod-recovery/corpus/manifest.json",
+          "conditional-protected-scour"
+        ],
+        "watchdog_seconds": 330,
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web"
+      },
+      "process": {
+        "exit_code": 1,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 7736,
+        "process_identity_token": "7736:134352136191995296",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 16871.567799942568
+      },
+      "request": {
+        "run_id": "5e686b8a-8742-4321-8ecc-c7c56f42f7a3",
+        "submitted_at_utc": "2026-09-30T03:47:00.944Z",
+        "base_path": "Metadata/Items/Rings/Ring10",
+        "item_level": 86,
+        "goal_envelope": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 2,
+          "slots": [
+            {
+              "family_mod_key": "IncreasedLife7",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "IncreasedMana13",
+              "min_tier": 1
+            }
+          ],
+          "fossil_mode": "goal_relevant",
+          "requested_fossil_actions": []
+        },
+        "solve_options": {
+          "solve_profile": "calculator_product_v1",
+          "solver_mode": "strategy_finder"
+        },
+        "bounded_finish_after_ms": 240000,
+        "economy": {
+          "profile": "manual",
+          "sourceSnapshotId": "public-none",
+          "sourceContentSha256": null,
+          "sourceCutoffAtUtc": null,
+          "fallbackPrice": null,
+          "full_price_map": "Immutable worker report, pinned from the same corpus; preserved by report SHA-256."
+        },
+        "identity": {
+          "abi_version": 3,
+          "source_revision": "96111477c27b09c9855147b3d3129f7570220b7d",
+          "runtime_wasm_sha256": "c62ceb9ea0c4a3da74feeb201e49e74e80ede1e2799a30a86d2668eeacbbc413",
+          "data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+          "data_hash_source": "verified selected runtime manifest source.data_hash; engine source commit unknown"
+        }
+      },
+      "resolved": {
+        "start_item": {
+          "rarity": 2,
+          "item_state_version": 3,
+          "base_key": "Metadata/Items/Rings/Ring10",
+          "item_level": 86,
+          "quality": 0,
+          "memory_strands": 0,
+          "lifecycle": 0,
+          "item_flags": 0,
+          "generic_influence_bits": 0,
+          "searing_exarch_tier": 0,
+          "eater_of_worlds_tier": 0,
+          "link_mask": 0,
+          "socket_count": 0,
+          "socket_colors": [],
+          "prefixes": [],
+          "suffixes": [],
+          "implicits": [],
+          "enchantments": [],
+          "bestiary": {
+            "checkpoint_present": false
+          }
+        },
+        "goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 2,
+          "slots": [
+            {
+              "family_mod_key": "IncreasedLife7",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "IncreasedMana13",
+              "min_tier": 1
+            }
+          ],
+          "actions": [
+            "transmute",
+            "augment",
+            "alteration",
+            "regal",
+            "alchemy",
+            "chaos",
+            "exalt",
+            "annul",
+            "scour",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLife",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "harvest_reforge:life",
+            "harvest_reforge:mana",
+            "harvest_augment:life",
+            "fracture",
+            "restart"
+          ]
+        }
+      },
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": null,
+        "expanded_states": 0,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_actions": 0,
+        "policy_available": false,
+        "policy_status": "none",
+        "termination": "refused_resource_cap",
+        "lower_bound": null,
+        "upper_bound": null,
+        "evaluated_policy_cost": null,
+        "absolute_optimality_gap": null,
+        "relative_optimality_gap": null,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "other_resource_cap",
+        "cap_hit_mask": 2147483648,
+        "registry_actions": 0,
+        "candidate_actions": 0,
+        "evaluator_supported_actions": 0,
+        "supported_priced_actions": 0,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 0,
+        "cancelled": false
+      },
+      "graph_sha256": null,
+      "usable_strategy": false,
+      "error": {
+        "heading": "No executable policy was returned.",
+        "detail": "The solve reached a resource cap before it could certify an executable policy."
+      },
+      "probe_error": null,
+      "delivery_status": "error",
+      "ui_milestones": [
+        {
+          "stage": "worker_solve_requested",
+          "ui_elapsed_ms": 53.249000000000024
+        },
+        {
+          "stage": "worker_result_received",
+          "ui_elapsed_ms": 15083.271200000001
+        },
+        {
+          "stage": "handle_cleanup",
+          "ui_elapsed_ms": 15087.218599999998
+        },
+        {
+          "stage": "ui_delivery_completed",
+          "ui_elapsed_ms": 15091.01
+        }
+      ],
+      "action_scope": {
+        "layout_primitives": null,
+        "disabled_action_families": null,
+        "family_restricted": null
+      },
+      "identity_caveat": "The Calculator trace embeds stale generated build-info (pre-execution HEAD and old c62ceb9e WASM hash). Node EngineBindings imports bindings/wasm/dist/poecraft_engine.mjs directly, whose fresh WASM was built before both launches; actual file hashes are in build_artifacts. The embedded hash is not the executed file hash. Original reports remain unchanged.",
+      "loaded_module_path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "loaded_wasm_file_sha256": "a8e40c2a1393e5124ecfdcfe39dd3ca7985fa17c9394bb46ca8b89b01eaead87",
+      "loaded_artifact_evidence": "Release WASM build completed 2026-09-30 03:35:11 UTC, before worker requests at 03:46/03:47 UTC; loader path directly reads that file; private diagnostic export invoked successfully. No production-source/WASM mutation followed the build. This is launch/file provenance, not a worker-computed byte hash."
+    }
+  ],
+  "oracles": [
+    {
+      "name": "w1-prefix-lock-then-scour",
+      "strategy_sha256": "6587681a332b06f3b191f61e207466542f4dbbb526044ccd8ba430f221639c15",
+      "totals": {
+        "expected_actions": 2,
+        "known_expected_cost": 424.3741,
+        "total_expected_cost": 424.3741,
+        "cost_complete": true
+      },
+      "terminals": {
+        "success": 1,
+        "failure": 0,
+        "stop": 0,
+        "action_not_applied": 0,
+        "no_matching_edge": 0,
+        "unresolved": 0,
+        "by_node": [
+          {
+            "node_id": "goal",
+            "kind": "success",
+            "p": 1
+          },
+          {
+            "node_id": "fail",
+            "kind": "failure",
+            "p": 0
+          }
+        ]
+      },
+      "consumption": [
+        {
+          "key": "bench:StrMasterItemGenerationCannotChangePrefixes",
+          "quantity": 1
+        },
+        {
+          "key": "scour",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "name": "w4-remove-crafted",
+      "strategy_sha256": "abfbf15b5f12cf1f9a3a93b3a7e440284e27d370769e8c437516cd1a0c2562f4",
+      "totals": {
+        "expected_actions": 1,
+        "known_expected_cost": 0.3741,
+        "total_expected_cost": 0.3741,
+        "cost_complete": true
+      },
+      "terminals": {
+        "success": 1,
+        "failure": 0,
+        "stop": 0,
+        "action_not_applied": 0,
+        "no_matching_edge": 0,
+        "unresolved": 0,
+        "by_node": [
+          {
+            "node_id": "goal",
+            "kind": "success",
+            "p": 1
+          },
+          {
+            "node_id": "fail",
+            "kind": "failure",
+            "p": 0
+          }
+        ]
+      },
+      "consumption": [
+        {
+          "key": "scour",
+          "quantity": 1
+        }
+      ]
+    }
+  ],
+  "finite_finder_fixture": {
+    "version": 1,
+    "lane": "strategy_finder",
+    "ranking": "heuristic",
+    "grammar": "conditional-protected-scour",
+    "considered": 2,
+    "attempt_limit": 8,
+    "checked": 2,
+    "generated": 2,
+    "duplicates": 0,
+    "pending_holes": 0,
+    "accepted": 1,
+    "refused": 1,
+    "censored": 0,
+    "logical_reforge_work": 2324,
+    "search_ns": 658800,
+    "compile_ns": 934600,
+    "check_ns": 2029800,
+    "last_refusal_kind": "failed_check",
+    "last_refusal": "candidate failed native properness, mass or price check",
+    "retention_status": "generated_native_held_side:0",
+    "live_owned_bytes": 72414,
+    "peak_owned_bytes": 1061373,
+    "best_checked_cost": 55.46,
+    "done": true,
+    "problem_identity": "10123662388266914692",
+    "accepted_programmes": [
+      {
+        "status": "accepted",
+        "refusal": "",
+        "graph_hash": "15893405659979016252",
+        "conditional": true,
+        "native_program": true,
+        "programme_entries": 3,
+        "positive_programme_entries": 3,
+        "validated_programme_entries": 3,
+        "generated_ns": 710300,
+        "started_ns": 717900,
+        "finished_ns": 2913300,
+        "logical_reforge_work": 768,
+        "peak_owned_bytes": 969487,
+        "score": 1,
+        "checked_cost": 55.460000000000164,
+        "best_after_checked_cost": 55.460000000000164,
+        "actions": [
+          "chaos"
+        ]
+      }
+    ]
+  },
+  "focused_checks": [
+    {
+      "path": "out/metamod-programmes-final.txt",
+      "sha256": "ed5db6b92892faf50cfee541a04f65a3792ef8cb6c0d7a0ae514141c880d7bcf",
+      "bytes": 419,
+      "last_lines": [
+        "Bow root mask=7 cheap=1",
+        "Bow proposal option:protected_side:prefix:scour:goal:7 exact_protected_side_kernel_and_complete_exits",
+        "solver metamod recovery tests: 190 checks, 0 failures"
+      ]
+    },
+    {
+      "path": "out/metamod-finder-final.txt",
+      "sha256": "50b68e2e7898727c21a15f54ca4267e450a4fa49914f929aa4bd8ff4692a172e",
+      "bytes": 54,
+      "last_lines": [
+        "solver protected Finder tests: 63 checks, 0 failures"
+      ]
+    },
+    {
+      "path": "out/metamod-phase-final.txt",
+      "sha256": "3d69ef3b9b50a295ee142c24e7a161e2763a49062cc8718379bd1dad1e6adaa9",
+      "bytes": 51,
+      "last_lines": [
+        "solver phase-lower tests: 5940 checks, 0 failures"
+      ]
+    },
+    {
+      "path": "out/metamod-abstract-final.txt",
+      "sha256": "73c14e5d767097c08b900ad3b53070b1ab29356b9203f646989d63dd8a13f503",
+      "bytes": 107,
+      "last_lines": [
+        "solver artifact registry: 15554 actions, 24 junk classes",
+        "solver abstract tests: 47173 checks, 0 failures"
+      ]
+    },
+    {
+      "path": "out/metamod-legacy-finder.txt",
+      "sha256": "02f2716ed4eb5246ab8ffe3212c9f43d9c6ec6829d4bb3a063e3e756f3ad6680",
+      "bytes": 48,
+      "last_lines": [
+        "solver integrity tests: 129 checks, 0 failures"
+      ]
+    },
+    {
+      "path": "out/metamod-integrity-final.txt",
+      "sha256": "6c0491dc97275b46b8f4918c0849b8ca3c9008ac9d6b9347e6d3874abe70fa72",
+      "bytes": 48,
+      "last_lines": [
+        "solver integrity tests: 140 checks, 0 failures"
+      ]
+    },
+    {
+      "path": "out/metamod-finish-final.txt",
+      "sha256": "478a8e290ce4988ca8ef4966d6939713886f8c7db8ba2d3ec47e5ac526785f21",
+      "bytes": 159,
+      "last_lines": [
+        "finish during finalization: requested=1 status=not_run steps=838 upper=64.4085544657 requested_upper=inf",
+        "solver bounded-finish tests: 202 checks, 0 failures"
+      ]
+    },
+    {
+      "path": "out/metamod-corpus-tests.txt",
+      "sha256": "63f887156857fc562bacfc8be590bc3dcf34d143efe1d6f0e30dbf1264854f7d",
+      "bytes": 101,
+      "last_lines": [
+        "....................................                                     [100%]",
+        "36 passed in 5.52s"
+      ]
+    },
+    {
+      "path": "out/metamod-web-tests.txt",
+      "sha256": "c2f7feaaca9f3253a43f6b8f747bb60beb6b9522bfce98f09419931225da20fd",
+      "bytes": 14917,
+      "last_lines": [
+        "# skipped 0",
+        "# todo 0",
+        "# duration_ms 82.5294"
+      ]
+    },
+    {
+      "path": "out/metamod-checkpoint-final.txt",
+      "sha256": "08a7a5110db3b85dbdf94ac4ae0da9d5a30ffe147123de0cf4957b17ee10c74d",
+      "bytes": 48,
+      "last_lines": [
+        "solver checkpoint tests: 42 checks, 0 failures"
+      ]
+    },
+    {
+      "path": "out/metamod-wasm-final-build.txt",
+      "sha256": "fb97f3199a494c3dc9043a912e4784f5499155d7246b34b52da510fe81e73da1",
+      "bytes": 3265,
+      "last_lines": [
+        "      |             ^~~~~~~~~~~~~~~~~~",
+        "1 warning generated.",
+        "WASM engine written to C:\\Users\\Oliver\\Documents\\poecraft2\\bindings\\wasm\\dist\\poecraft_engine.mjs"
+      ]
+    }
+  ],
+  "limitations": [
+    "All eight native and two worker invocations spent; failures count.",
+    "Current arms share corrected law and new programme grammar; the switch isolates early root proof bootstrap, not all prior delayed-admission repairs.",
+    "First control Bow invocation overlapped the release WASM build; no matched runtime improvement claim.",
+    "W1 policy passes full independent checking, but its summary says RefusedResourceCap with cap mask zero and no actual cap; bounded named-stop obligation fails.",
+    "Real-data protected Finder is censored before positive reached-entry completion in native and WASM; finite synthetic consumer fixture alone passes.",
+    "Bow full-context root protected setup is rejected; the cheap reduced fixture completes preparation but has no checked requested-suffix continuation.",
+    "W4 exact closure is within declared restricted candidate/generated grammar, with Foulborn disabled; no unrestricted crafting optimum.",
+    "No Simulator, full acceptance suite, public Finder promotion, push or deployment.",
+    "Calculator worker trace contains stale generated build-info; keep reported embedded identity separate from actual module/file provenance.",
+    "Final load-only checkpoint fix rebuilt WASM to a different hash; actual workers qualified the prior module, not the final module. No worker rerun authorized within the spent allowance."
+  ],
+  "build_artifacts_scope": "Artifacts used for the timed qualifications and oracle evaluations, before the final development-checkpoint load repair. Final build identities are recorded separately; paths may now hold rebuilt files.",
+  "post_qualification_fix": {
+    "owner": "engine/src/solver_development_checkpoint.cpp",
+    "scope": "Native development checkpoint load only; decode stage and carrier separately, reject unknown high-word stage tags. No search law, grammar, schedule or selected-policy evaluation change.",
+    "test": "One-step deterministic cleanup checkpoint, full and cheap stage cache round trip; failing before fix, passing after.",
+    "before_fixture_log": {
+      "path": "out/metamod-checkpoint-before.txt",
+      "sha256": "09c5ac7944d0edffea06ddec3d4c17fa8184d97b233a4a2541402754309e9d0f"
+    },
+    "final_metamod_checks": 190,
+    "timed_reruns": 0,
+    "wasm_byte_identical": false,
+    "original_checkpoint_replay_checks": 42,
+    "actual_worker_replay": "Unrun: both worker slots spent. Final loader identical, final WASM hash differs. Prior worker results retain their earlier build identity."
+  },
+  "knowledge_lint": {
+    "path": "out/metamod-knowledge-lint.json",
+    "base": "96111477c27b09c9855147b3d3129f7570220b7d",
+    "errors": 0,
+    "existing_open_claim_warnings": 18,
+    "authority": "Traceability only.",
+    "sha256": "29f196d98b6869be0d60bae3792a8e2dcf51c15bb9d27ff0e0f2b6041a40429b"
+  },
+  "final_build_artifacts": [
+    {
+      "path": "build/engine/poecraft_engine.dll",
+      "sha256": "456a253f0eeb97c00ceed95abc266db2fc0ba71df615f43ba18128ab495c0df2",
+      "bytes": 13934609
+    },
+    {
+      "path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "sha256": "89fc672181118b9bdec44978fef503942af895928a1ca168f7d029975a56378d",
+      "bytes": 8123297
+    },
+    {
+      "path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297",
+      "bytes": 21237
+    },
+    {
+      "path": "engine/src/solver_development_checkpoint.cpp",
+      "sha256": "2eeb809cb0121c54db35f76d25c22ece174edc0e8673dd31d6cd34e06b8ff86d",
+      "bytes": 44417
+    }
+  ],
+  "supervision_note": "Outer tool yielded at about 30 seconds during blocking waits; longest permitted empty-input 60-second waits were used without a polling proxy. Native deterministic supervision/cancellation stayed active.",
+  "final_diff_check": "passed"
+}

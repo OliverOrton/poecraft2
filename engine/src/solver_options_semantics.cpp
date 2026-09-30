@@ -75,13 +75,15 @@ std::vector<std::uint64_t> exact_abstract_state_key(
         const AbstractState& state,
         const std::uint32_t coarse_parent) {
     std::vector<std::uint64_t> key{
-        0x7063727374617432ull, /* "pcrstat2" */
+        0x7063727374617433ull, /* "pcrstat3": corrected Scour law */
         coarse_parent,
         state.fractured_goal_mask,
         state.crafted_goal_mask,
         state.blocked_mask,
         state.prefix_count,
         state.suffix_count,
+        state.fractured_side_counts[PC_SIDE_PREFIX],
+        state.fractured_side_counts[PC_SIDE_SUFFIX],
         state.rarity,
         state.influence_bits,
         static_cast<std::uint64_t>(state.veiled_side + 1),

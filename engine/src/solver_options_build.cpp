@@ -35,6 +35,9 @@ bool fixed_option_disabled(
         return solver_action_family_disabled(goal, family);
     };
     switch (spec.kind) {
+    case FixedOptionKind::TerminalCraftedCleanup:
+        if (disabled(SolverActionFamily::Cleanup)) return true;
+        break;
     case FixedOptionKind::ScourAlchemy:
         if (disabled(SolverActionFamily::Currency)) return true;
         break;
@@ -313,6 +316,15 @@ std::vector<PlannerOperator> build_planner_operators(
                 option.id += ":goal:" +
                              std::to_string(spec.relevant_goal_mask);
             }
+            break;
+        }
+        case FixedOptionKind::TerminalCraftedCleanup: {
+            std::uint32_t cleanup = kNoId;
+            require_action(registry, "remove_crafted_modifiers", cleanup);
+            option.id = "option:terminal_crafted_cleanup";
+            option.display_name = "Remove crafted modifiers to finish";
+            option.primitive_program = {cleanup};
+            option.cleanup_action = cleanup;
             break;
         }
         case FixedOptionKind::MultimodFinish: {

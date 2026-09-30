@@ -17,6 +17,30 @@ relevant code/runtime change, review the delta and refresh affected rows; do not
 transfer old qualification to a new build by editing the heading. Follow each
 record for its actual executable, scope and measured revision.
 
+## Existing metamod recovery delta (2026-09-29)
+
+The [MM execution receipt](../active/2026-09-29-metamod-recovery/README.md)
+qualifies this later source delta separately. Exactly-one-lock Scour preserves
+the union of the locked side and fractures. Current now generates and checks
+cleanup-only Scour, terminal crafted cleanup and coverage-compatible Multimod
+through bounded native programmes; lower tables include the new cleanup law.
+With Foulborn disabled in both frozen comparison arms, W1 returns the checked
+424.3741 upper, and W4 closes at 0.3741 within restricted candidate/generated
+grammar. W1's unnamed-stop report obligation fails despite a valid policy.
+Bow returns a checked 160160.995674 policy without the better historical tail.
+Its full-context root setup rejection remains unresolved.
+
+Private Finder ProtectedSide(Scour) has a checked original-root finite fixture
+with positive reached entries. The natural-T1 real-data native and actual-worker
+cases hit the 200,000-state cap with no policy; this is not economic or public
+grammar qualification. Release WASM builds and the measured Current worker
+recovers W1. A final native checkpoint-load fix produces a different WASM hash;
+its worker replay is unrun after the allowance is spent. The measured trace's
+stale embedded build-info is distinguished from actual module/file provenance
+in the receipt. No push, release or public default
+promotion occurred. Both timed allowances are spent; no runtime gain is claimed.
+The broader currency/Foulborn proof restrictions below remain in force.
+
 ## Currency expansion delta (2026-09-28)
 
 The [currency receipt](../active/2026-09-28-currency-expansion/README.md#execution-receipt-and-remaining-holds)

@@ -52,6 +52,12 @@ Cleanup and recrafting are separate actions.
 
 ## Dated Oliver Rulings
 
+- **2026-09-29:** Cannot Roll filters an ordinary reroll only when the
+  metamod survives that reroll; a side lock preserves existing affixes but
+  permits refill into that side's open slots. The
+  [audit](../active/2026-09-29-exact-solver-audit/README.md#2-binding-owner-rulings)
+  records these rulings. Essence/Fossil exceptions remain unchanged.
+
 - **2026-07-15:** remove-crafted-modifiers is a real primitive costing one
   Scour.
 - **2026-07-17:** Essence and Fossil ignore every metamod side lock and

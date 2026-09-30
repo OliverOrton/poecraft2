@@ -261,11 +261,18 @@ std::string compile_finder_control_json(
                 binding.admitted_state, binding.operator_index))
             throw std::invalid_argument("finder program is not admitted at its native source");
         const PlannerOperator& option = calc.operators()[binding.operator_index];
+        const bool eldritch = option.option_kind == FixedOptionKind::EldritchSideIntent &&
+            option.automatic_kind == AutomaticCandidateKind::EldritchSide;
+        const bool protected_scour = option.option_kind == FixedOptionKind::ProtectedSide &&
+            option.automatic_kind == AutomaticCandidateKind::ProtectedMetamod &&
+            option.followup_action != kNoId &&
+            calc.registry().actions.at(option.followup_action).params.type == ActionType::Scour &&
+            option.primitive_program.size() == 2 &&
+            option.primitive_program.front() == option.setup_action &&
+            option.primitive_program.back() == option.followup_action;
         if (option.kind != PlannerOperatorKind::FixedOption ||
-            option.option_kind != FixedOptionKind::EldritchSideIntent ||
-            option.automatic_kind != AutomaticCandidateKind::EldritchSide ||
-            option.primitive_program.empty())
-            throw std::invalid_argument("finder program is not a native Eldritch side intent");
+            (!eldritch && !protected_scour) || option.primitive_program.empty())
+            throw std::invalid_argument("finder program is not a supported native side programme");
         const std::uint32_t valid_mask =
             (1u << calc.goal().slots.size()) - 1u;
         if (binding.held_goal_mask == 0 ||
@@ -276,7 +283,8 @@ std::string compile_finder_control_json(
         for (std::uint32_t slot = 0; slot < calc.goal().slots.size(); ++slot)
             if ((binding.held_goal_mask & (1u << slot)) != 0 &&
                 goal_slot_side(calc.session(), calc.goal().slots[slot]) !=
-                    (option.intended_side == PC_SIDE_PREFIX
+                    (protected_scour ? option.intended_side :
+                     option.intended_side == PC_SIDE_PREFIX
                         ? PC_SIDE_SUFFIX : PC_SIDE_PREFIX))
                 throw std::invalid_argument(
                     "finder held goal is not on the preserved side");

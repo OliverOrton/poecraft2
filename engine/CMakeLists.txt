@@ -228,6 +228,7 @@ if(BUILD_TESTING)
         tests/test_simulator.cpp
         tests/test_solver_abstract.cpp
         tests/test_solver_calc.cpp
+        tests/test_solver_metamod_recovery.cpp
         tests/test_solver_solve.cpp
         tests/test_solver_compile.cpp
         tests/test_solver_s8_3.cpp

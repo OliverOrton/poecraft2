@@ -632,6 +632,7 @@ bool SolveWork::Impl::advance_setup() {
         goal_cover_stage = SetupStage::Disabled;
         return true;
     }
+    if (cheap_root_bootstrap_pending) return true;
     if (!goal_cover_requested) return true;
     if (goal_cover_stage == SetupStage::NotStarted) {
         setup_storage.owner = this;
@@ -977,6 +978,13 @@ CooperativeTask<bool> SolveWork::Impl::run_goal_cover_setup() {
                 ? kNoId
                 : found->second;
         };
+        // Generated terminal cleanup may not have been materialized yet.
+        // Its sole primitive belongs to every affected lower predecessor.
+        if (calc.goal().automatic_candidates &&
+            (calc.goal().automatic_candidate_kind_mask &
+             automatic_candidate_kind_bit(AutomaticCandidateKind::CraftedCleanup))) {
+            include_action(action_by_id("remove_crafted_modifiers"));
+        }
         const std::uint32_t eldritch_annul =
             action_by_id("eldritch_annul");
         const std::uint32_t eldritch_chaos =
@@ -2362,6 +2370,20 @@ CooperativeTask<bool> SolveWork::Impl::run_goal_cover_setup() {
                         // Acquisition above pays its first-exit floor; Unveil
                         // is legal only after that exit, never at a clean row.
                         if (descriptor.params.type == ActionType::Unveil) {
+                            continue;
+                        }
+                        if (descriptor.params.type == ActionType::RemoveCraftedModifiers) {
+                            // The occupancy projection forgets craft identity.
+                            // Grant removal of every unmatched affix while
+                            // retaining all goal affixes at the native cleanup
+                            // price. This includes the real terminal-only
+                            // programme and rederives all its predecessors.
+                            const auto successor = abstract_index(
+                                rarity, mask,
+                                minimum_goal_affixes[mask][PC_SIDE_PREFIX],
+                                minimum_goal_affixes[mask][PC_SIDE_SUFFIX]);
+                            if (successor != current)
+                                consider(cost + clean_goal_cover_cost[successor], action);
                             continue;
                         }
                         if (descriptor.params.type == ActionType::Scour) {

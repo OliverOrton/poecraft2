@@ -638,7 +638,7 @@ def run_corpus(
     if finder_ranking not in (None, "heuristic", "uninformed") or (
             finder_ranking is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder ranking requires strategy_finder mode")
-    if finder_grammar not in (None, "primitive", "conditional", "conditional-retention", "selective-retention") or (
+    if finder_grammar not in (None, "primitive", "conditional", "conditional-retention", "selective-retention", "conditional-protected-scour") or (
             finder_grammar is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder grammar requires strategy_finder mode")
     if finder_attempt_limit not in (None, 8, 24) or (
@@ -899,7 +899,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Solver lane treatment, separately recorded from request and capacity identity.")
     parser.add_argument("--finder-ranking", choices=("heuristic", "uninformed"),
         help="Native finder ranking ablation with unchanged candidate grammar and checker.")
-    parser.add_argument("--finder-grammar", choices=("primitive", "conditional", "conditional-retention", "selective-retention"),
+    parser.add_argument("--finder-grammar", choices=("primitive", "conditional", "conditional-retention", "selective-retention", "conditional-protected-scour"),
         help="Native finder grammar comparison with unchanged ranking and checker.")
     parser.add_argument("--finder-attempt-limit", type=int, choices=(8, 24),
         help="Native finder complete-candidate attempt ceiling; default is eight.")

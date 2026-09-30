@@ -1423,12 +1423,10 @@ ActionRefinementContract derive_refinement_contract(
             affixes(
                 kRefinementAffixOnLockedSide, 0,
                 kRefinementItemExactlyOneSideLocked),
-            affixes(
-                kRefinementAffixFractured, 0, 0,
-                kRefinementItemExactlyOneSideLocked)};
+            affixes(kRefinementAffixFractured)};
         contract.destroyed_affixes = {
             affixes(
-                0, kRefinementAffixOnLockedSide,
+                0, kRefinementAffixOnLockedSide | kRefinementAffixFractured,
                 kRefinementItemExactlyOneSideLocked),
             affixes(
                 0, kRefinementAffixFractured, 0,
@@ -1625,6 +1623,35 @@ ActionPreservationMetadata derive_preservation_metadata(
         facts.respects_metamod_pool_blocks;
     metadata.respects_cannot_roll_caster =
         facts.respects_metamod_pool_blocks;
+
+    /* The shared facts table owns renewal/refill mechanics. Nonrenewal
+     * metadata follows the native add/removal implementations independently;
+     * it does not broaden the approved renewal follow-up grammar. Eldritch
+     * dominance remains contextual and is described by refinement contracts. */
+    switch (ordinary_add_equivalent(action.params.type)) {
+    case ActionType::Augment:
+    case ActionType::Regal:
+    case ActionType::Exalt:
+    case ActionType::InfluenceExalt:
+    case ActionType::HarvestAugment:
+        metadata.respects_cannot_roll_attack = true;
+        metadata.respects_cannot_roll_caster = true;
+        metadata.preserves_fractured_affixes = true;
+        if (action.params.type != ActionType::HarvestAugment) break;
+        [[fallthrough]];
+    case ActionType::Annul:
+    case ActionType::Scour:
+    case ActionType::HarvestResist:
+        metadata.respects_prefix_lock = true;
+        metadata.respects_suffix_lock = true;
+        metadata.preserves_fractured_affixes = true;
+        break;
+    case ActionType::RemoveCraftedModifiers:
+        metadata.preserves_fractured_affixes = true;
+        break;
+    default:
+        break;
+    }
 
     if (facts.renewal) {
         metadata.can_preserve = kCarrierFracturedState;

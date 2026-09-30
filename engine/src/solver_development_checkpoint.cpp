@@ -16,7 +16,7 @@ namespace fs = std::filesystem;
 constexpr std::array<char, 16> kMagic{
     'P', 'C', 'S', 'O', 'L', 'V', 'E', 'G',
     'R', 'A', 'P', 'H', 'V', '1', '\r', '\n'};
-constexpr std::uint32_t kFormatVersion = 1;
+constexpr std::uint32_t kFormatVersion = 2;
 constexpr std::uint32_t kEndianMarker = 0x01020304u;
 constexpr std::uint64_t kFnvOffset = 14695981039346656037ull;
 constexpr std::uint64_t kFnvPrime = 1099511628211ull;
@@ -811,7 +811,7 @@ void CalcContext::save_development_solve_checkpoint(
         state_local_automatic_operator_indices_.end());
     std::sort(state_local_indices.begin(), state_local_indices.end());
     out.pod_vector(state_local_indices);
-    std::vector<std::uint32_t> carrier_ids;
+    std::vector<std::uint64_t> carrier_ids;
     carrier_ids.reserve(state_local_automatic_operators_.size());
     for (const auto& [state, unused] : state_local_automatic_operators_) {
         (void)unused;
@@ -819,7 +819,7 @@ void CalcContext::save_development_solve_checkpoint(
     }
     std::sort(carrier_ids.begin(), carrier_ids.end());
     out.pod(static_cast<std::uint64_t>(carrier_ids.size()));
-    for (const std::uint32_t state : carrier_ids) {
+    for (const std::uint64_t state : carrier_ids) {
         out.pod(state);
         out.pod_vector(state_local_automatic_operators_.at(state));
     }
@@ -936,11 +936,11 @@ void CalcContext::load_development_solve_checkpoint(
         throw std::runtime_error(
             "invalid carrier count in solver development checkpoint");
     }
-    std::vector<std::pair<std::uint32_t, std::vector<std::uint32_t>>>
+    std::vector<std::pair<std::uint64_t, std::vector<std::uint32_t>>>
         carrier_operators;
     carrier_operators.reserve(static_cast<std::size_t>(carrier_count));
     for (std::uint64_t i = 0; i < carrier_count; ++i) {
-        const std::uint32_t state = in.pod<std::uint32_t>();
+        const std::uint64_t state = in.pod<std::uint64_t>();
         std::vector<std::uint32_t> operators =
             in.pod_vector<std::uint32_t>();
         carrier_operators.emplace_back(
@@ -968,7 +968,11 @@ void CalcContext::load_development_solve_checkpoint(
             "solver development checkpoint planner index out of range");
     }
     for (const auto& [state, operators] : carrier_operators) {
-        if (state >= states.size() ||
+        // The low word is the carrier; the high word selects full (0) or
+        // cheap-only (1) admission. Validate both parts without interpreting
+        // the stage tag as a native state ID.
+        if ((state >> 32) > 1 ||
+            static_cast<std::uint32_t>(state) >= states.size() ||
             !std::all_of(operators.begin(), operators.end(), index_in_range)) {
             throw std::runtime_error(
                 "solver development checkpoint carrier admission mismatch");

@@ -2915,6 +2915,7 @@ void SolveWork::Impl::refresh_operator_lineage_diagnostics(
             return "eldritch_side_intent";
         case FixedOptionKind::ProtectedSide: return "protected_side";
         case FixedOptionKind::MultimodFinish: return "multimod_finish";
+        case FixedOptionKind::TerminalCraftedCleanup: return "terminal_crafted_cleanup";
         case FixedOptionKind::Renewal: return "renewal";
         case FixedOptionKind::ProtectedRepeat: return "protected_repeat";
         case FixedOptionKind::FracturePrepare: return "fracture_prepare";

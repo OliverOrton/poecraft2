@@ -43,7 +43,8 @@ std::uint64_t SelectiveCompletionProducer::estimated_owned_bytes() const {
 
 void SelectiveCompletionProducer::begin() {
     if (!problem_.goal().automatic_candidates ||
-        !problem_.session().eldritch_eligible ||
+        (variant_ != SelectiveCompletionVariant::ProtectedScour &&
+         !problem_.session().eldritch_eligible) ||
         original_start_.rarity != PC_RARITY_RARE) {
         refuse("native_family_not_requested_or_ineligible");
         return;
@@ -66,7 +67,13 @@ void SelectiveCompletionProducer::begin() {
         refuse("held_side_has_fewer_than_two_goals");
         return;
     }
-    if (variant_ != SelectiveCompletionVariant::RetentionControl &&
+    if (variant_ == SelectiveCompletionVariant::ProtectedScour &&
+        (!side_slots_[target_side_].empty() ||
+         problem_.goal().required_satisfied_slots() != problem_.goal().slots.size())) {
+        refuse("protected_scour_requires_single_side_all_goals");
+        return;
+    }
+    if (variant_ == SelectiveCompletionVariant::RerollVersusRepair &&
         (side_slots_[held_side_].size() != 3 ||
          side_slots_[target_side_].empty())) {
         refuse("family_requires_full_three_goal_held_side");
@@ -110,7 +117,9 @@ void SelectiveCompletionProducer::begin() {
         return;
     }
 
-    primary_.intended = variant_ ==
+    if (variant_ == SelectiveCompletionVariant::ProtectedScour) {
+        primary_.intended = ActionType::Scour;
+    } else primary_.intended = variant_ ==
             SelectiveCompletionVariant::RetentionControl
         ? (side_slots_[target_side_].empty()
             ? ActionType::EldritchAnnul : ActionType::EldritchChaos)
@@ -125,6 +134,10 @@ void SelectiveCompletionProducer::begin() {
         const AbstractState& state = problem_.state(exit.state);
         const std::uint32_t count = target_side_ == PC_SIDE_PREFIX
             ? state.prefix_count : state.suffix_count;
+        const std::uint32_t held_count = held_side_ == PC_SIDE_PREFIX
+            ? state.prefix_count : state.suffix_count;
+        if (variant_ == SelectiveCompletionVariant::ProtectedScour &&
+            (held_count != side_slots_[held_side_].size() || count >= 3)) continue;
         if ((satisfied_goal_mask(state) & held_mask_) != held_mask_ ||
             count == 0 || problem_.is_goal_state(state)) continue;
         pc_item_state exact;
@@ -166,6 +179,7 @@ void SelectiveCompletionProducer::begin() {
         limits_.max_imprint_program_work;
     admission_.consider_imprint_programs = limits_.consider_imprint_programs;
     admission_.prices = &prices_;
+    admission_.cheap_programs_only = variant_ == SelectiveCompletionVariant::ProtectedScour;
     phase_ = Phase::Primary;
 }
 
@@ -186,10 +200,11 @@ bool SelectiveCompletionProducer::advance_programme(
     std::uint32_t selected = kNoId;
     for (const std::uint32_t index : batch.admitted_operators) {
         const PlannerOperator& option = problem_.operators().at(index);
+        const bool protected_scour = variant_ == SelectiveCompletionVariant::ProtectedScour;
         if (option.kind != PlannerOperatorKind::FixedOption ||
-            option.option_kind != FixedOptionKind::EldritchSideIntent ||
-            option.automatic_kind != AutomaticCandidateKind::EldritchSide ||
-            option.intended_side != target_side_ ||
+            option.option_kind != (protected_scour ? FixedOptionKind::ProtectedSide : FixedOptionKind::EldritchSideIntent) ||
+            option.automatic_kind != (protected_scour ? AutomaticCandidateKind::ProtectedMetamod : AutomaticCandidateKind::EldritchSide) ||
+            option.intended_side != (protected_scour ? held_side_ : target_side_) ||
             option.primitive_program.empty() ||
             (direct && option.primitive_program.size() != 1) ||
             problem_.registry().actions.at(
@@ -203,8 +218,13 @@ bool SelectiveCompletionProducer::advance_programme(
         }
     }
     if (selected == kNoId) {
-        refuse(direct ? "no_admitted_direct_continuation" :
-            "no_admitted_held_side_program");
+        std::string detail;
+        for (const auto& decision : batch.decisions) {
+            if (detail.size() > 1024) break;
+            detail += ":" + decision.id + ":" + decision.evidence.reason;
+        }
+        refuse((direct ? std::string("no_admitted_direct_continuation") :
+            std::string("no_admitted_held_side_program")) + detail);
         return true;
     }
     if (direct) {
@@ -213,6 +233,10 @@ bool SelectiveCompletionProducer::advance_programme(
     }
     programme.initial = selected;
     programme.ready = state;
+    if (variant_ == SelectiveCompletionVariant::ProtectedScour) {
+        programme.direct = selected;
+        return true;
+    }
     const auto& steps = problem_.operators().at(selected).primitive_program;
     for (std::size_t step = 0; step + 1 < steps.size(); ++step) {
         const OutcomeDistribution& law =
@@ -249,6 +273,36 @@ void SelectiveCompletionProducer::build() {
         return first;
     };
     const std::uint32_t primary_binding = bind(primary_);
+    if (variant_ == SelectiveCompletionVariant::ProtectedScour) {
+        const auto goal = append(FinderControlKind::TestGoal);
+        const auto acquire = append(FinderControlKind::RunPrimitive, acquisition_action_);
+        const auto success = append(FinderControlKind::GoalTerminal);
+        const auto programme = append(FinderControlKind::RunNativeProgram, primary_binding);
+        const auto held_junk = append(FinderControlKind::TestSideCountAtLeast,
+            (held_side_ << 8u) | (side_slots_[held_side_].size() + 1));
+        const auto full_craft_side = append(FinderControlKind::TestSideCountAtLeast,
+            (target_side_ << 8u) | 3u);
+        graph.nodes[goal].on_true = success;
+        graph.nodes[goal].on_false = held_junk;
+        graph.nodes[held_junk].on_true = acquire;
+        graph.nodes[held_junk].on_false = full_craft_side;
+        graph.nodes[full_craft_side].on_true = acquire;
+        std::uint32_t previous = full_craft_side;
+        for (auto slot : side_slots_[held_side_]) {
+            const auto test = append(FinderControlKind::TestSlot,slot);
+            if (previous == full_craft_side) graph.nodes[previous].on_false = test;
+            else graph.nodes[previous].on_true = test;
+            graph.nodes[test].on_false = acquire;
+            previous = test;
+        }
+        graph.nodes[previous].on_true = programme;
+        graph.nodes[programme].next = goal;
+        graph.nodes[acquire].next = goal;
+        candidate_ = SelectiveCompletionCandidate{std::move(graph), acquisition_action_, acquisition_price_, variant_};
+        status_ = "complete";
+        phase_ = Phase::Done;
+        return;
+    }
     const bool repair = variant_ ==
         SelectiveCompletionVariant::RerollVersusRepair;
     const std::uint32_t secondary_binding = repair
@@ -460,6 +514,12 @@ bool SelectiveProgrammeEntryValidator::advance(
             control_.programs.at(bound_node->binding);
         const PlannerOperator& expected =
             problem_.operators().at(binding.operator_index);
+        const bool protected_scour = expected.option_kind == FixedOptionKind::ProtectedSide &&
+            expected.followup_action != kNoId &&
+            problem_.registry().actions.at(expected.followup_action).params.type == ActionType::Scour;
+        if (expected.option_kind != FixedOptionKind::EldritchSideIntent && !protected_scour)
+            throw StrategyEvalUnsupported("unsupported native programme occurrence");
+        admission_.cheap_programs_only = protected_scour;
         if (state_ == kNoId) {
             state_ = calc_->intern_item(entry.item);
             pc_item_state reproduced;

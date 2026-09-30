@@ -619,6 +619,8 @@ inline bool solver_action_disabled(
 inline SolverActionFamily solver_action_family_for_automatic_candidate(
     const AutomaticCandidateKind kind) {
     switch (kind) {
+    case AutomaticCandidateKind::CraftedCleanup:
+        return SolverActionFamily::Cleanup;
     case AutomaticCandidateKind::Fracture:
         return SolverActionFamily::Fracture;
     case AutomaticCandidateKind::PermanentBench:
@@ -1074,7 +1076,7 @@ inline constexpr ActionSupportPaths kNoAutomaticSupportPaths{
     ReleaseWasmCoveragePath::NotApplicable};
 
 inline constexpr std::size_t kAutomaticCandidateKindCount =
-    static_cast<std::size_t>(AutomaticCandidateKind::Veiled) + 1;
+    static_cast<std::size_t>(AutomaticCandidateKind::CraftedCleanup) + 1;
 
 inline constexpr std::array<AutomaticFamilyContract,
                             kAutomaticCandidateKindCount>
@@ -1113,6 +1115,9 @@ inline constexpr std::array<AutomaticFamilyContract,
         {AutomaticCandidateKind::Veiled,
          AutomaticTelemetryKind::Veiled, "veiled",
          automatic_support_paths(SelectedPolicyPath::PinnedVerified)},
+        {AutomaticCandidateKind::CraftedCleanup,
+         AutomaticTelemetryKind::CraftedCleanup, "crafted_cleanup",
+         automatic_support_paths(SelectedPolicyPath::AvailableUnpinned)},
     }};
 
 constexpr bool automatic_family_contract_is_exhaustive() {

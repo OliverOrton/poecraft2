@@ -3950,6 +3950,8 @@ CaseResult run_case(
                     handles.solver,
                     finder_grammar == "primitive"
                         ? poecraft::solver::FinderGrammarMode::PrimitiveOnly
+                        : finder_grammar == "conditional-protected-scour"
+                            ? poecraft::solver::FinderGrammarMode::ConditionalProtectedScour
                         : finder_grammar == "selective-retention"
                             ? poecraft::solver::FinderGrammarMode::SelectiveRetention
                             : poecraft::solver::FinderGrammarMode::ConditionalRetention,
@@ -6442,7 +6444,8 @@ Arguments parse_arguments(int argc, char** argv) {
     if (args.finder_grammar != "conditional" &&
         args.finder_grammar != "primitive" &&
         args.finder_grammar != "conditional-retention" &&
-        args.finder_grammar != "selective-retention")
+        args.finder_grammar != "selective-retention" &&
+        args.finder_grammar != "conditional-protected-scour")
         throw std::runtime_error("finder grammar must be conditional, conditional-retention, selective-retention or primitive");
     if ((args.finder_attempt_limit != 8 &&
          args.finder_attempt_limit != 24) ||

@@ -65,6 +65,7 @@ enum class FixedOptionKind : std::uint8_t {
     FracturePrepare = 6,
     ImprintRetry = 7,
     TemporaryBenchRepeat = 8,
+    TerminalCraftedCleanup = 9,
 };
 
 enum class AutomaticCandidateKind : std::uint8_t {
@@ -79,6 +80,7 @@ enum class AutomaticCandidateKind : std::uint8_t {
     EldritchSide = 8,
     CannotRoll = 9,
     Veiled = 10,
+    CraftedCleanup = 11,
 };
 
 inline constexpr std::uint32_t automatic_candidate_kind_bit(
@@ -87,7 +89,7 @@ inline constexpr std::uint32_t automatic_candidate_kind_bit(
 }
 
 inline constexpr std::uint32_t kAllAutomaticCandidateKindsMask =
-    (1u << (static_cast<std::uint32_t>(AutomaticCandidateKind::Veiled) + 1u)) -
+    (1u << (static_cast<std::uint32_t>(AutomaticCandidateKind::CraftedCleanup) + 1u)) -
     2u;
 
 /* R3A retention/accounting categories. These are deliberately independent
@@ -106,7 +108,8 @@ enum class AutomaticTelemetryKind : std::uint8_t {
     EldritchSide = 8,
     CannotRoll = 9,
     Veiled = 10,
-    Count = 11,
+    CraftedCleanup = 11,
+    Count = 12,
     None = 255,
 };
 
@@ -637,7 +640,7 @@ inline bool refinement_selectors_match(
         });
 }
 
-inline constexpr std::uint32_t kActionRefinementContractVersion = 2;
+inline constexpr std::uint32_t kActionRefinementContractVersion = 3;
 
 /*
  * A primitive may expose a sampled observation before the strategy chooses
@@ -1331,6 +1334,10 @@ struct AbstractState {
                                        explicit occupies a blocking group */
     std::uint8_t prefix_count = 0;
     std::uint8_t suffix_count = 0;
+    /* Redundant exact aggregate for layout-free single-lock Scour legality.
+     * Projection counts each physical fracture once, including goal/craft
+     * overlap and metamods outside the action-reachable junk partition. */
+    std::array<std::uint8_t, 2> fractured_side_counts{};
     std::uint8_t rarity = PC_RARITY_NORMAL;
     std::uint8_t influence_bits = 0;
     /* Exact mechanic routing state. Veiled side is -1/0/1 for none/prefix/

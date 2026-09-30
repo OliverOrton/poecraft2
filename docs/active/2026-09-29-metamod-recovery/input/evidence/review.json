@@ -1,0 +1,62 @@
+{
+  "kind": "read_only_planning_review",
+  "reviewed_main": "96111477c27b09c9855147b3d3129f7570220b7d",
+  "runtime_parent": "a1ba3fc62073af08c865e02a1baadd0efb09ee2e",
+  "previous_plan_source": "02fa1fe8759686110c9b5bbc475d866f6c7f3926",
+  "previous_packet_sha256": "3158bad71cb53cebce462bbb0d3f176776078f8379411ef22e70908b2fce6ca7",
+  "claude_pack": "docs/active/2026-09-29-exact-solver-audit/",
+  "claude_readme_blob": "21e06c3091cc16eeca39b6e7ff6073de0af518b3",
+  "claude_evidence_blob": "b30b47a71312135f694e62d9c693f1980a0723ba",
+  "native_runs_in_this_review": 0,
+  "repository_edits_in_this_review": false,
+  "native_checks_executed_in_this_review": false,
+  "ci": {
+    "head_skip_ci": true,
+    "same_head_workflows_returned": 0,
+    "same_head_green_claim": false
+  },
+  "recorded_not_remeasured": {
+    "W1_manual_cost": "424.3741",
+    "W1_current": "no_executable_policy_state_cap",
+    "W4_manual_cost": "0.3741",
+    "W4_current_rounded_cost": "2337.20",
+    "bow_dirty_root_current_rounded_cost": "223064.93",
+    "bow_authored_composition_rounded_cost": "51222.52",
+    "audit_native_execution_count": 13,
+    "audit_executable_hashes_available": false,
+    "audit_prices": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "timing_claim": "single-run attributed observations, not matched speedup",
+    "W4_current_rounded_lower": "84.16"
+  },
+  "witness_metadata_warning": {
+    "case": "w1-prefix-only-clean",
+    "actual_start_goal_modifiers": 2,
+    "declared_start_goal_modifier_count": 0,
+    "requested_finish_seconds": 90,
+    "watchdog_seconds": 150,
+    "native_step_work_items": 8
+  },
+  "proposed_allowance": {
+    "native_timed_invocations": 8,
+    "worker_invocations": 2,
+    "approval_record": null,
+    "old_budgets_reused": false
+  },
+  "selected_scope": [
+    "single_lock_scour_correctness",
+    "current_cheap_cleanup_generation_and_service",
+    "coverage_multimod",
+    "typed_expected_stops",
+    "bounded_bow_followthrough",
+    "finder_protected_scour_consumer"
+  ],
+  "deferred": [
+    "new_currency_strategy_integration",
+    "double_lock_ruling",
+    "unrestricted_metamod_bellman",
+    "general_protected_repeat_extension",
+    "global_admission_budget_redesign",
+    "ML",
+    "deployment"
+  ]
+}

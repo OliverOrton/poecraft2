@@ -303,3 +303,5 @@ Replay tokens and new concrete transition/absorption vectors overlap during
 conversion and are charged before allocation and across suspension. A cap during
 partial conversion cannot enter the ordinary identity-graph fallback. This
 replaces the former fixed 4096-pair refusal, not any numerical acceptance test.
+
+[Recovery admission](../active/2026-09-29-metamod-recovery/README.md) caches cheap-family completion separately from full admission using carrier-plus-stage keys. Other automatic families remain pending. Only complete laws enter caches; publication stays transactional and charges cumulative. The parent reforge cap still excludes automatic-admission work. Development checkpoint version 2 rejects older observation/stage layouts. Loading validates the low-word carrier ID separately from the high-word full/cheap stage tag; unknown tags are refused. A finite cleanup round trip preserves both stages.

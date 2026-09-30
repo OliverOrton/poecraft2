@@ -813,3 +813,7 @@ separate conclusion. The packet's [paid acquisition example](../../active/2026-0
 illustrates the same cost accounting; its toy numbers do not confer native
 admission. The older fixed-donor first-hit comparison remains unmeasured at
 its required compiler boundary.
+
+### Narrow cleanup correspondence
+
+[Recovery](../../active/2026-09-29-metamod-recovery/README.md) reuses complete-programme/first-exit correspondence: Protected Scour pays Bench then Scour, observing after both; terminal crafted cleanup pays native remove-all crafts once. Complete exit mass/resources are retained. A nonterminal Bow row needs its compatible tail before supplying a root upper. Finder re-enters acquisition with the persistent item, checks held goals and side occupancy/craft capacity, and independently re-admits every positive exact reached programme entry.

@@ -173,6 +173,8 @@ PolicyFinderWork::PolicyFinderWork(
     }
     if (attempt_limit_ != 8 && attempt_limit_ != 24)
         throw std::invalid_argument("finder attempt limit must be 8 or 24");
+    if (grammar_ == FinderGrammarMode::ConditionalProtectedScour && attempt_limit_ != 8)
+        throw std::invalid_argument("protected Scour grammar retains eight attempts");
     economy_->id = "finder-request";
     economy_->prices = std::move(prices);
     std::string request_key = compile_finder_goal_condition(problem_);
@@ -201,7 +203,8 @@ PolicyFinderWork::PolicyFinderWork(
         return;
     }
     retention_pending_ = grammar_ == FinderGrammarMode::ConditionalRetention ||
-        grammar_ == FinderGrammarMode::SelectiveRetention;
+        grammar_ == FinderGrammarMode::SelectiveRetention ||
+        grammar_ == FinderGrammarMode::ConditionalProtectedScour;
     if (retention_pending_) retention_status_ = "pending";
     for (const std::uint32_t index : problem_.candidates()) {
         if (index >= problem_.registry().actions.size()) continue;
@@ -509,8 +512,9 @@ void PolicyFinderWork::generate_retention_candidate() {
     }
     try {
         if (retention_producer_ == nullptr) {
-            const auto variant = static_cast<SelectiveCompletionVariant>(
-                retention_variant_cursor_);
+            const auto variant = grammar_ == FinderGrammarMode::ConditionalProtectedScour
+                ? SelectiveCompletionVariant::ProtectedScour
+                : static_cast<SelectiveCompletionVariant>(retention_variant_cursor_);
             retention_producer_ = std::make_unique<
                 SelectiveCompletionProducer>(
                     problem_, original_start_, economy_->prices,
@@ -743,6 +747,17 @@ void PolicyFinderWork::start_next_candidate() {
         counters_.logical_reforge_work >= limits_.max_reforge_work) {
         done_ = true;
         return;
+    }
+    // The private Scour family reserves one of the existing eight attempts.
+    // It must be serviced before the beam can consume that allowance.
+    if (grammar_ == FinderGrammarMode::ConditionalProtectedScour && retention_pending_) {
+        generate_retention_candidate();
+        if (retention_pending_ || done_) return;
+        if (!frontier_.empty() && frontier_.back().control.has_value()) {
+            Sketch reserved = std::move(frontier_.back());
+            frontier_.pop_back();
+            frontier_.push_front(std::move(reserved));
+        }
     }
     if (frontier_.empty() && retention_pending_)
         generate_retention_candidate();
@@ -1088,7 +1103,9 @@ std::string PolicyFinderWork::telemetry_json() const {
         "\"ranking\":\"") +
         (ranking_ == FinderRankingMode::Heuristic ? "heuristic" : "uninformed") +
         "\",\"grammar\":\"" +
-        (grammar_ == FinderGrammarMode::SelectiveRetention
+        (grammar_ == FinderGrammarMode::ConditionalProtectedScour
+            ? "conditional-protected-scour" :
+         grammar_ == FinderGrammarMode::SelectiveRetention
             ? "selective-retention" :
             grammar_ == FinderGrammarMode::ConditionalRetention
             ? "conditional-retention" :

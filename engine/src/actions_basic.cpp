@@ -688,13 +688,20 @@ ActionOutcome do_scour(
 
     std::vector<KeptSlot> kept;
     if (prefix_locked && !suffix_locked) {
-        // keep prefixes, drop suffixes
         for (std::uint8_t i = 0; i < item->prefix_count; ++i) {
             kept.push_back({PC_SIDE_PREFIX, item->prefixes[i]});
+        }
+        for (std::uint8_t i = 0; i < item->suffix_count; ++i) {
+            if (item->suffixes[i].flags & PC_MOD_SLOT_FRACTURED)
+                kept.push_back({PC_SIDE_SUFFIX, item->suffixes[i]});
         }
     } else if (suffix_locked && !prefix_locked) {
         for (std::uint8_t i = 0; i < item->suffix_count; ++i) {
             kept.push_back({PC_SIDE_SUFFIX, item->suffixes[i]});
+        }
+        for (std::uint8_t i = 0; i < item->prefix_count; ++i) {
+            if (item->prefixes[i].flags & PC_MOD_SLOT_FRACTURED)
+                kept.push_back({PC_SIDE_PREFIX, item->prefixes[i]});
         }
     } else {
         // keep only fractured slots

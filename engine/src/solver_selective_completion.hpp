@@ -14,6 +14,7 @@ namespace poecraft::solver {
 enum class SelectiveCompletionVariant : std::uint8_t {
     RetentionControl,
     RerollVersusRepair,
+    ProtectedScour,
 };
 
 struct SelectiveCompletionCandidate {

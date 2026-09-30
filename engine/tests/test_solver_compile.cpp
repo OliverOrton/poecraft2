@@ -4302,3 +4302,96 @@ void run_solver_compile_metadata_tests() {
 void run_solver_imprint_tests(const char* artifact_dir) {
     run_imprint_gate(artifact_dir);
 }
+
+
+namespace poecraft::solver {
+struct SolveWorkTestAccess {
+    using Impl = SolveWork::Impl;
+    static Impl& get(SolveWork& work) { return *work.impl_; }
+};
+}
+
+void run_solver_protected_finder_tests() {
+    auto session = make_compile_session();
+    auto data = std::const_pointer_cast<DataImpl>(session->data);
+    data->metamod_prefixes_locked_code = 3;
+    session->metamod_type[9] = 3;
+    session->special_kind[9] = -1;
+    session->bench_mod_ids = {9};
+    session->flags[9] = 1 << 1;
+    session->eldritch_eligible = false;
+    auto registry = build_action_registry(*session);
+    GoalSpec goal; goal.rarity = PC_RARITY_RARE; goal.automatic_candidates = true;
+    goal.automatic_candidate_kind_mask = automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod);
+    for (auto id : {3u,4u}) {
+        GoalSlot slot; slot.family_id = session->family_id[id]; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    const auto chaos = registry.index_by_id.at("chaos");
+    CalcContext calc(session,goal,registry,{chaos},false,false,true,
+        std::nullopt,std::vector<CountObservation>{},false,std::vector<std::uint64_t>{},true);
+    pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
+    std::unordered_map<std::string,double> prices{{"chaos",1},{"scour",0.01},{"bench:mod9",0.01}};
+    SolveOptions limits; limits.consider_imprint_programs = false;
+    limits.max_solver_owned_bytes = 256ull << 20;
+    limits.max_reforge_work = 1000000;
+    limits.max_discovered_states = 10000;
+    limits.max_state_action_rows = 100000;
+    limits.max_transitions = 1000000;
+    PolicyFinderWork finder(calc,session,root,prices,limits,FinderRankingMode::Heuristic,
+        FinderGrammarMode::ConditionalProtectedScour);
+    for (unsigned i=0; i<20000 && !finder.progress().done; ++i) finder.step(128);
+    std::ofstream("out/metamod-finder-fixture.json") << finder.telemetry_json();
+    PC_CHECK(finder.progress().done);
+    PC_CHECK(finder.progress().considered <= 8);
+    PC_CHECK(finder.best().has_value());
+    if (finder.best()) {
+        const auto& best = *finder.best();
+        PC_CHECK(best.native_control.has_value());
+        PC_CHECK(best.strategy_json.find("bench") != std::string::npos);
+        PC_CHECK(best.strategy_json.find("scour") != std::string::npos);
+        PC_CHECK(best.success_probability >= 1-1e-10);
+        if (best.native_control) {
+            PC_CHECK(prepare_finder_candidate(calc,session,root,best.strategy_json,&*best.native_control).ready());
+            auto altered = best.strategy_json;
+            const auto at = altered.find("scour");
+            if (at != std::string::npos) altered.replace(at,5,"annul");
+            PC_CHECK(!prepare_finder_candidate(calc,session,root,altered,&*best.native_control).ready());
+        }
+    }
+    // Check the rederived cleanup relation at every occupancy predecessor,
+    // including missing-goal carriers, rather than clamping the start value.
+    {
+        auto clean_goal = goal;
+        clean_goal.automatic_candidate_kind_mask = automatic_candidate_kind_bit(AutomaticCandidateKind::CraftedCleanup);
+        CalcContext lower_calc(session,clean_goal,registry,{chaos},false,false,true);
+        pc_item_state dirty = root;
+        for (auto id : {3u,4u}) PC_CHECK(pc_item_add_mod(&dirty,PC_SIDE_PREFIX,id,session->primary_group[id],0,nullptr)==PC_RESULT_OK);
+        PC_CHECK(pc_item_add_mod(&dirty,PC_SIDE_PREFIX,8,session->primary_group[8],PC_MOD_SLOT_CRAFTED,nullptr)==PC_RESULT_OK);
+        SolveOptions options = limits; options.high_impact_executable_uppers = false;
+        options.native_retention_lower = false;
+        SolveWorkTestAccess::Impl proof(lower_calc,dirty,prices,options);
+        proof.prepare_goal_cover_cost();
+        PC_CHECK(proof.goal_cover_clean_committed);
+        PC_CHECK(proof.completion_proof_lower_value(proof.result.start_state) <= prices.at("scour") + 1e-9);
+        const auto index = [](unsigned rarity,unsigned mask,unsigned p,unsigned s) {
+            return (((rarity*4+mask)*4+p)*4+s);
+        };
+        for (unsigned mask=0;mask<4;++mask) {
+            const auto count = std::popcount(mask);
+            for (unsigned p=count;p<=3;++p) for (unsigned suffixes=0;suffixes<=3;++suffixes) {
+                const auto current=index(PC_RARITY_RARE,mask,p,suffixes);
+                const auto successor=index(PC_RARITY_RARE,mask,count,0);
+                PC_CHECK(proof.clean_goal_cover_cost[current] <= prices.at("scour") + proof.clean_goal_cover_cost[successor] + 1e-9);
+            }
+        }
+    }
+    const auto telemetry = finder.telemetry_json();
+    const auto report = json::Parser(telemetry.data(),telemetry.size()).parse();
+    bool positive = false;
+    for (const auto& candidate : report.at("candidates").as_array())
+        if (candidate.at("native_program").boolean && candidate.at("status").string == "accepted")
+            positive |= candidate.at("positive_programme_entries").number > 0 &&
+                candidate.at("validated_programme_entries").number > 0;
+    PC_CHECK(positive);
+}

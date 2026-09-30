@@ -595,6 +595,8 @@ struct ActionControlSummary {
 };
 
 struct AutomaticAdmissionLimits {
+    /* Cheap and full families own distinct completion/cache obligations. */
+    bool cheap_programs_only = false;
     std::uint64_t max_state_action_rows = 0;
     std::uint64_t max_transitions = 0;
     std::uint64_t max_solver_owned_bytes = 0;
@@ -1060,7 +1062,7 @@ class CalcContext {
     /* Presence is a completeness certificate. Resource-deferred batches are
      * deliberately never inserted, so a later solve can safely retry the
      * carrier with a larger allowance. */
-    std::unordered_map<std::uint32_t, std::vector<std::uint32_t>>
+    std::unordered_map<std::uint64_t, std::vector<std::uint32_t>>
         state_local_automatic_operators_;
     struct AutomaticTemplateBucketCheckpoint {
         std::uint64_t key = 0;

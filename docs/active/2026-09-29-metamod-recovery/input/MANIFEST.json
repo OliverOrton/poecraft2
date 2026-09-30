@@ -1,0 +1,74 @@
+{
+  "package": "poecraft2_metamod_recovery_9611147",
+  "reviewed_main": "96111477c27b09c9855147b3d3129f7570220b7d",
+  "payload_count": 12,
+  "files": [
+    {
+      "path": "CODEX_PROMPT.md",
+      "bytes": 7919,
+      "sha256": "1bd892e7f8a56d18c1f9f13ce44dc0862da0231c7d86d758b4512a0106a2d806"
+    },
+    {
+      "path": "DOC_UPDATES.md",
+      "bytes": 3512,
+      "sha256": "018937ea30337ef7378035dba18e667c50b082b7934634475fcacd0da8668e14"
+    },
+    {
+      "path": "EVIDENCE_AND_RUNS.md",
+      "bytes": 6512,
+      "sha256": "c6dc1a8dafed49a32c03fa3f25ccf0d9e30c330efcdacf861d72443cd39147bb"
+    },
+    {
+      "path": "NATIVE_CONTRACTS.md",
+      "bytes": 9339,
+      "sha256": "3d6fb82643780668b29400c7c19f234df67d5cc582cef9f8166126ced8ed8753"
+    },
+    {
+      "path": "PLAN.md",
+      "bytes": 16021,
+      "sha256": "30c5179bb2edd650834a54ae6d4d35677f13702e37dd75bd4ac5505f1b3c37c7"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3516,
+      "sha256": "2ffd359f5d54c9265c4037f9a76f0650b418bff3443828ea01a134ddb55d6573"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 8123,
+      "sha256": "167ded7ed7de17f88f8a13eb94f1e2903e4e4a88d4d21721c35546d58b8eb755"
+    },
+    {
+      "path": "SOURCES.md",
+      "bytes": 7394,
+      "sha256": "35a473ca131c3787fc7cf5485a5196dc3b821a1262046516225c8bbb1dd7cdb1"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 6893,
+      "sha256": "5c78ee1a2ff81b1b80704a7d86c1b0d7dd97fb1fd22c46f06826023d25f8b4a8"
+    },
+    {
+      "path": "checks/abstract_checks.py",
+      "bytes": 6139,
+      "sha256": "c53c627c1904c33e033220488122cf95fe7438d121acf130e22fe9aa181fd573"
+    },
+    {
+      "path": "checks/results.json",
+      "bytes": 765,
+      "sha256": "9e94d0862a1a52a1a88128453a629207876757d5d5af9a39b5efc86ce6fc11fd"
+    },
+    {
+      "path": "evidence/review.json",
+      "bytes": 2266,
+      "sha256": "565df6316fc4e8242867583d83412dba8dd08da91fc54d2dd38e5d62a480265a"
+    }
+  ],
+  "manifest_excluded_from_own_hash": true,
+  "validation": {
+    "local_links_checked": 8,
+    "utf8_json_python_checks": true,
+    "abstract_tests_passed": 12,
+    "native_tests_run": false
+  }
+}

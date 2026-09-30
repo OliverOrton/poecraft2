@@ -445,18 +445,16 @@ void run_refinement_contract_tests(const SessionImpl& session) {
     const ActionDescriptor& scour = descriptor("scour");
     const std::uint8_t exactly_one_lock =
         kRefinementItemExactlyOneSideLocked;
-    /* With neither or both sides locked, Scour preserves only fractured
-     * affixes. With exactly one side locked, the lock takes authority:
-     * every affix on that side survives and every affix on the opposite
-     * side is removed, including fractured ones. */
+    /* Exactly one lock preserves the union of its side and all fractures.
+     * Neither/both locks retain the established fractured-only behavior. */
     PC_CHECK(preserves(scour, fractured_prefix, 0));
     PC_CHECK(!destroys(scour, fractured_prefix, 0));
     PC_CHECK(preserves(scour, locked_suffix, exactly_one_lock));
     PC_CHECK(!destroys(scour, locked_suffix, exactly_one_lock));
     PC_CHECK(!preserves(scour, locked_suffix, 0));
     PC_CHECK(destroys(scour, locked_suffix, 0));
-    PC_CHECK(!preserves(scour, fractured_prefix, exactly_one_lock));
-    PC_CHECK(destroys(scour, fractured_prefix, exactly_one_lock));
+    PC_CHECK(preserves(scour, fractured_prefix, exactly_one_lock));
+    PC_CHECK(!destroys(scour, fractured_prefix, exactly_one_lock));
     PC_CHECK(destroys(scour, ordinary_prefix, 0));
     PC_CHECK(refinement_contract_observes_item(
         scour.refinement, RefinementFeature::PrefixLock));
@@ -1591,6 +1589,74 @@ void run_exact_essence_relevance_test() {
         "essence:essence_same_family_t2"));
 }
 
+void run_single_lock_scour_tests() {
+    auto session = make_solver_session();
+    auto data = std::make_shared<DataImpl>(*session->data);
+    data->metamod_prefixes_locked_code = 1;
+    data->metamod_suffixes_locked_code = 2;
+    session->data = data;
+    session->metamod_type.assign(session->mod_count, -1);
+    session->metamod_type[7] = 1; // suffix protects prefixes
+    session->metamod_type[4] = 2; // prefix protects suffixes
+    const ActionRegistry registry = build_action_registry(*session);
+    const auto scour = registry.index_by_id.at("scour");
+    CalcContext calc(session, family_goal(100, 1), registry, basic_indices(registry));
+    for (const int held : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+        const int opposite = 1 - held;
+        const std::uint32_t held_mod = held == PC_SIDE_PREFIX ? 0 : 5;
+        const std::uint32_t fracture = held == PC_SIDE_PREFIX ? 6 : 3;
+        const std::uint32_t lock = held == PC_SIDE_PREFIX ? 7 : 4;
+        const std::uint32_t junk = held == PC_SIDE_PREFIX ? 5 : 0;
+        for (const bool held_fractured : {false, true}) {
+            for (const bool lock_fractured : {false, true}) {
+                pc_item_state item;
+                pc_item_clear(&item);
+                item.rarity = PC_RARITY_RARE;
+                place(&item, held, held_mod, session->primary_group[held_mod],
+                      held_fractured ? PC_MOD_SLOT_FRACTURED : 0);
+                place(&item, opposite, fracture, session->primary_group[fracture],
+                      PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED);
+                place(&item, opposite, lock, session->primary_group[lock],
+                      PC_MOD_SLOT_CRAFTED |
+                          (lock_fractured ? PC_MOD_SLOT_FRACTURED : 0));
+                place(&item, opposite, junk, session->primary_group[junk]);
+                const auto source = calc.intern_item(item);
+                PC_CHECK(action_legal(*session, registry.actions[scour], calc.state(source)));
+                ActionContextImpl context(1);
+                context.session = session;
+                ActionParameters action;
+                action.type = ActionType::Scour;
+                const auto applied = apply_action(context, &item, action);
+                PC_CHECK(applied.applied);
+                PC_CHECK(applied.removed == (lock_fractured ? 1 : 2));
+                PC_CHECK(item.rarity == PC_RARITY_RARE);
+                PC_CHECK((held == PC_SIDE_PREFIX ? item.prefix_count : item.suffix_count) == 1);
+                const auto* survivors = opposite == PC_SIDE_PREFIX ? item.prefixes : item.suffixes;
+                PC_CHECK((opposite == PC_SIDE_PREFIX ? item.prefix_count : item.suffix_count) ==
+                         (lock_fractured ? 2 : 1));
+                PC_CHECK(survivors[0].mod_id == fracture);
+                PC_CHECK(survivors[0].flags == (PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED));
+                const auto& row = calc.outcomes(source, scour);
+                if (!row.supported || !row.applicable || row.entries.size() != 1)
+                    std::printf("Scour differential held=%d fracture=%d lock_fracture=%d supported=%d applicable=%d exits=%zu\n",
+                        held, held_fractured, lock_fractured, row.supported, row.applicable, row.entries.size());
+                PC_CHECK(row.supported && row.applicable && row.entries.size() == 1);
+                if (row.entries.size() == 1) {
+                    PC_CHECK(row.entries[0].probability == 1.0);
+                    PC_CHECK(calc.state(row.entries[0].state) == project_item(*session, calc.layout(), item));
+                }
+                // A surviving fractured lock and opposite fracture form a
+                // native no-op, including the locked-side fractured overlap.
+                if (lock_fractured) {
+                    const auto after = calc.intern_item(item);
+                    PC_CHECK(!action_legal(*session, registry.actions[scour], calc.state(after)));
+                    PC_CHECK(!apply_action(context, &item, action).applied);
+                }
+            }
+        }
+    }
+}
+
 void run_legality_tests(const std::shared_ptr<SessionImpl>& session) {
     const ActionRegistry registry = build_action_registry(*session);
     const auto action = [&](const char* id) -> const ActionDescriptor& {
@@ -1785,5 +1851,6 @@ void run_solver_abstract_tests(const char* artifact_dir) {
     run_projection_tests(session);
     run_exact_essence_relevance_test();
     run_legality_tests(session);
+    run_single_lock_scour_tests();
     run_artifact_registry_tests(artifact_dir);
 }

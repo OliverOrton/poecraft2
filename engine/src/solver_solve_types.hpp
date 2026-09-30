@@ -777,6 +777,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     enum class SetupStage { NotStarted, Preparing, Committed, Refused, Disabled };
     SetupStage goal_cover_stage = SetupStage::NotStarted;
     bool goal_cover_requested = false;
+    bool cheap_root_bootstrap_pending = false;
     bool retention_setup_pending = false;
     bool goal_cover_carrier_committed = false;
     bool goal_cover_universal_committed = false;
@@ -942,11 +943,11 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     std::uint64_t incremental_anytime_policy_successes = 0;
     std::array<
         std::uint64_t,
-        static_cast<std::size_t>(AutomaticCandidateKind::Veiled) + 1>
+        static_cast<std::size_t>(AutomaticCandidateKind::CraftedCleanup) + 1>
         incremental_joint_policy_attempt_kinds{};
     std::array<
         std::uint64_t,
-        static_cast<std::size_t>(AutomaticCandidateKind::Veiled) + 1>
+        static_cast<std::size_t>(AutomaticCandidateKind::CraftedCleanup) + 1>
         incremental_joint_policy_success_kinds{};
     std::uint64_t incremental_anytime_policy_last_completed_rows = 0;
     double incremental_anytime_policy_best_upper = kInfinity;

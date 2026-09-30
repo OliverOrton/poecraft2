@@ -8,6 +8,16 @@ int g_failures = 0;
 } // namespace pctest
 
 int main(int argc, char** argv) {
+    if (argc > 1 && std::string(argv[1]) == "--solver-protected-finder-only") {
+        run_solver_protected_finder_tests();
+        std::printf("solver protected Finder tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--solver-metamod-recovery-only") {
+        run_solver_metamod_recovery_tests(argc > 2 ? argv[2] : nullptr);
+        std::printf("solver metamod recovery tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 2 && std::string(argv[1]) == "--currency-contracts-only") {
         run_foulborn_weight_tests(); run_foulborn_kernel_tests(); run_currency_contract_tests(argv[2]);
         std::printf("Currency contracts: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
@@ -247,6 +257,12 @@ int main(int argc, char** argv) {
         std::printf(
             "solver quotient-proof tests: %d checks, %d failures\n",
             pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 2 && std::string(argv[1]) == "--solver-checkpoint-only") {
+        run_solver_checkpoint_tests(argv[2]);
+        std::printf("solver checkpoint tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
     if (argc > 2 && std::string(argv[1]) == "--solver-api-only") {

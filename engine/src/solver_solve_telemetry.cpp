@@ -178,6 +178,8 @@ const char* automatic_telemetry_kind_name(
         return "cannot_roll";
     case AutomaticTelemetryKind::Veiled:
         return "veiled";
+    case AutomaticTelemetryKind::CraftedCleanup:
+        return "crafted_cleanup";
     case AutomaticTelemetryKind::Count:
     case AutomaticTelemetryKind::None:
         return "none";

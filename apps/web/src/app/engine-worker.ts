@@ -502,6 +502,11 @@ async function solveSolver(
             return acknowledgeCancellation();
         }
         milestone("native_begin_requested");
+        if (params.diagnosticFinderGrammar === "conditional-protected-scour") {
+            if (!finderMode)
+                throw new Error("protected Scour diagnostic requires Finder mode");
+            bindings.configureProtectedScourDiagnostic(solver);
+        }
         bindings.beginSolverSolve(
             solver,
             params.item as number,

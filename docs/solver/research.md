@@ -727,6 +727,23 @@ retained native repair with synthetic evidence; real A4/A5 timing and economics
 remain unrun, the proposed four-case allowance remains unapproved, and no new
 mathematical claim or public activation is established.
 
+The [existing metamod recovery](../active/2026-09-29-metamod-recovery/README.md)
+implements Oliver's selected MM0–MM7 packet while retaining Claude's audit and
+the unexecuted old M plan as historical inputs. The owner-approved single-lock
+Scour correction, narrow programme generation, complete cleanup-lower
+predecessor repair and early checked-root service recover W1/W4 at C424.3741 /
+C0.3741 under a declared legacy-mechanics scope. W4's closure is restricted to
+the candidate/generated grammar. The private Finder consumer is independently
+demonstrated from the original root on a finite native fixture, including every
+positive reached entry; real-data native/WASM qualification is censored at the
+state cap. Bow's full-context setup rejection and missing clean suffix tail,
+and W1's incomplete-envelope stop classification, remain open dependencies.
+Disposition: retain scoped engineering with partial acceptance; no unrestricted
+optimality, Finder economic win, public promotion or timing improvement follows.
+Eight native and two worker invocations are spent. The lower argument remains
+in its canonical chapter rather than duplicated here; old claims and P/IC
+allowances are not silently changed.
+
 <a id="knowledge"></a>
 ## 5. Knowledge outlives machinery
 

@@ -192,6 +192,8 @@ solver::ActionRegistryBuildOptions registry_build_options(
                 options.needs_suffix_lock |= side == "suffix";
             } else if (type == "multimod_finish") {
                 options.needs_multimod = true;
+            } else if (type == "terminal_crafted_cleanup") {
+                options.option_dependency_action_ids.push_back("remove_crafted_modifiers");
             } else if (type == "fracture_prepare") {
                 options.needs_fracture = true;
             }
@@ -516,6 +518,8 @@ solver::GoalSpec parse_goal(
                 option.kind = solver::FixedOptionKind::ProtectedSide;
             } else if (type == "multimod_finish") {
                 option.kind = solver::FixedOptionKind::MultimodFinish;
+            } else if (type == "terminal_crafted_cleanup") {
+                option.kind = solver::FixedOptionKind::TerminalCraftedCleanup;
             } else if (type == "renewal") {
                 option.kind = solver::FixedOptionKind::Renewal;
             } else if (type == "protected_repeat") {
@@ -1452,7 +1456,8 @@ pc_result solver::configure_solver_finder_grammar(
         (mode != FinderGrammarMode::PrimitiveOnly &&
          mode != FinderGrammarMode::Conditional &&
          mode != FinderGrammarMode::ConditionalRetention &&
-         mode != FinderGrammarMode::SelectiveRetention)) {
+         mode != FinderGrammarMode::SelectiveRetention &&
+         mode != FinderGrammarMode::ConditionalProtectedScour)) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
             "finder grammar requires an idle unsolved handle and known mode");
         return PC_RESULT_INVALID_ARGUMENT;

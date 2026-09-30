@@ -174,6 +174,12 @@ SolveWork::Impl::Impl(
                 result.diagnostics.solution_scope +=
                     "_without_automatic_imprint_programs";
         }
+        if (calc.registry().product_goal_filtering) {
+            if (result.diagnostics.solution_scope == "globally_optimal_unrestricted")
+                result.diagnostics.solution_scope = "exact_within_candidate_and_generated_programme_grammar";
+            else
+                result.diagnostics.solution_scope += "_within_candidate_and_generated_programme_grammar";
+        }
         if (options.max_policy_refinement_states != 0) {
             retain_action_reason(
                 "bounded:optional_policy_refinement_states:" +
@@ -621,6 +627,12 @@ SolveWork::Impl::Impl(
             }
             enqueue(result.start_state);
         }
+        // Complete already-held root goals through cheap programmes before
+        // stochastic proof setup consumes its resource allowance.
+        cheap_root_bootstrap_pending = options.high_impact_executable_uppers &&
+            calc.goal().automatic_candidates &&
+            !calc.is_goal_state(calc.state(result.start_state)) &&
+            satisfied_goal_mask_for_state(result.start_state) != 0;
         // Preserve the ordinary lazy proof dependency and early root caps.
         goal_cover_requested = proof_capabilities().positive_global_lower &&
             (options.high_impact_executable_uppers ||

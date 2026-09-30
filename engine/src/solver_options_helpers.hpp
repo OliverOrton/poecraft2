@@ -401,7 +401,8 @@ AutomaticOptionSynthesis synthesize_automatic_options(
     const std::uint32_t state_id,
     const pc_item_state& carrier,
     const std::unordered_map<std::string, double>* prices,
-    const GoalSpec* proof_selection = nullptr) {
+    const GoalSpec* proof_selection = nullptr,
+    const bool cheap_programs_only = false) {
     const SessionImpl& session = calc.session();
     const GoalSpec& goal = proof_selection ? *proof_selection : calc.goal();
     const ActionRegistry& registry = calc.registry();
@@ -737,7 +738,8 @@ AutomaticOptionSynthesis synthesize_automatic_options(
         !solver_action_family_disabled(
             goal, SolverActionFamily::Bench) &&
         multimod_entry != registry.index_by_id.end() &&
-        (multimod_goal_mask & ~satisfied) != 0 &&
+        ((multimod_goal_mask & ~satisfied) != 0 ||
+         goal.terminal.extras == ExtraExplicitPolicy::Allow) &&
         action_legal(
             session, registry.actions.at(multimod_entry->second), state)) {
         for (std::size_t a = 0; a < goal_bench.size(); ++a) {
@@ -768,6 +770,24 @@ AutomaticOptionSynthesis synthesize_automatic_options(
 
     const auto cleanup = registry.index_by_id.find(
         "remove_crafted_modifiers");
+    if (!solver_automatic_candidate_disabled(goal, AutomaticCandidateKind::CraftedCleanup) &&
+        cleanup != registry.index_by_id.end() &&
+        !solver_action_disabled(goal, registry.actions[cleanup->second]) &&
+        state_has_unfractured_crafted(state) && action_has_prices(cleanup->second)) {
+        // The native law removes every nonfractured craft. This production
+        // admits only a resolved terminal witness, including occupancy.
+        pc_item_state after = carrier;
+        ActionContextImpl context(0);
+        context.session = std::shared_ptr<const SessionImpl>(&session, [](const SessionImpl*) {});
+        if (apply_action(context, &after, registry.actions[cleanup->second].params).applied &&
+            calc.is_goal_state(project_item(session, calc.layout(), after))) {
+            FixedOptionSpec option;
+            option.kind = FixedOptionKind::TerminalCraftedCleanup;
+            option.automatic_kind = AutomaticCandidateKind::CraftedCleanup;
+            option.relevant_goal_mask = satisfied;
+            result.push_back(std::move(option));
+        }
+    }
     const bool cleanup_before_setup =
         state_has_unfractured_crafted(state) &&
         state.crafted_goal_mask == 0;
@@ -1067,7 +1087,7 @@ AutomaticOptionSynthesis synthesize_automatic_options(
         const std::uint32_t lock_flag =
             side == PC_SIDE_PREFIX ? kFlagPrefixesLocked
                                    : kFlagSuffixesLocked;
-        if ((state.flags & lock_flag) != 0 ||
+        if ((state.flags & (kFlagPrefixesLocked | kFlagSuffixesLocked)) != 0 ||
             !action_legal(
                 session, registry.actions.at(lock_action), state)) {
             continue;
@@ -1090,9 +1110,20 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                      ? followup.preservation.respects_prefix_lock
                      : followup.preservation.respects_suffix_lock);
             if (solver_action_disabled(goal, followup) ||
+                (cheap_programs_only && followup.params.type != ActionType::Scour) ||
                 !respects || !calc_supports(followup) ||
                 (followup.params.type != ActionType::Scour &&
                  !approved_renewal_roll(followup))) {
+                continue;
+            }
+            if (followup.params.type == ActionType::Scour) {
+                FixedOptionSpec option;
+                option.kind = FixedOptionKind::ProtectedSide;
+                option.side = side;
+                option.action_id = followup.id;
+                option.automatic_kind = AutomaticCandidateKind::ProtectedMetamod;
+                option.relevant_goal_mask = protected_mask;
+                result.push_back(std::move(option));
                 continue;
             }
             for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {

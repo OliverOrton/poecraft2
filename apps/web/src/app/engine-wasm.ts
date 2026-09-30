@@ -582,6 +582,10 @@ export class EngineBindings {
         return rest as unknown as SolveSummary;
     }
 
+    configureProtectedScourDiagnostic(solver: number): void {
+        this.callJson("pcw_solver_protected_scour_diagnostic", ["number"], [solver]);
+    }
+
     beginSolverSolve(
         solver: number,
         item: number,

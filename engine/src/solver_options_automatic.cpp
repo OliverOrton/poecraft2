@@ -23,7 +23,8 @@ namespace {
 bool same_automatic_admission_limits(
     const AutomaticAdmissionLimits& left,
     const AutomaticAdmissionLimits& right) {
-    return left.max_state_action_rows == right.max_state_action_rows &&
+    return left.cheap_programs_only == right.cheap_programs_only &&
+           left.max_state_action_rows == right.max_state_action_rows &&
            left.max_transitions == right.max_transitions &&
            left.max_solver_owned_bytes == right.max_solver_owned_bytes &&
            left.max_imprint_program_depth ==
@@ -335,12 +336,14 @@ CalcContext::build_state_local_automatic_candidates(
     const std::uint32_t state_id,
     AutomaticAdmissionLimits limits) {
     StateLocalAutomaticBatch batch;
+    const std::uint64_t carrier_admission_key = static_cast<std::uint64_t>(state_id) |
+        (static_cast<std::uint64_t>(limits.cheap_programs_only) << 32);
     struct PublicationStaging {
         std::vector<std::uint32_t> candidate_operators;
         std::unordered_set<std::uint32_t> state_local_indices;
         std::unordered_set<std::uint32_t> dependencies;
         std::unordered_map<
-            std::uint32_t, std::vector<std::uint32_t>> carrier_operators;
+            std::uint64_t, std::vector<std::uint32_t>> carrier_operators;
         std::size_t state_local_target_buckets = 0;
         std::size_t dependency_target_buckets = 0;
         std::size_t carrier_target_buckets = 0;
@@ -477,7 +480,7 @@ CalcContext::build_state_local_automatic_candidates(
         add_product(
             1,
             sizeof(std::pair<
-                const std::uint32_t, std::vector<std::uint32_t>>) +
+                const std::uint64_t, std::vector<std::uint32_t>>) +
                 2 * sizeof(void*));
         add_product(
             publication_vector_upper(admitted.size()),
@@ -593,7 +596,7 @@ CalcContext::build_state_local_automatic_candidates(
         carrier_copy.insert(
             carrier_copy.end(), admitted.begin(), admitted.end());
         staged.carrier_operators.emplace(
-            state_id, std::move(carrier_copy));
+            carrier_admission_key, std::move(carrier_copy));
         staged.carrier_target_buckets = std::max(
             state_local_automatic_operators_.bucket_count(),
             staged.carrier_operators.bucket_count());
@@ -672,7 +675,7 @@ CalcContext::build_state_local_automatic_candidates(
                 "automatic publication bucket projection was exceeded");
         }
         const auto carrier_entry =
-            staged.carrier_operators.find(state_id);
+            staged.carrier_operators.find(carrier_admission_key);
         if (carrier_entry == staged.carrier_operators.end() ||
             carrier_entry->second.capacity() >
                 publication_vector_upper(admitted.size())) {
@@ -706,7 +709,7 @@ CalcContext::build_state_local_automatic_candidates(
             staged.carrier_operators.bucket_count() * sizeof(void*) +
                 staged.carrier_operators.size() *
                     (sizeof(std::pair<
-                         const std::uint32_t,
+                         const std::uint64_t,
                          std::vector<std::uint32_t>>) +
                      2 * sizeof(void*)));
         for (const auto& [unused, indices] :
@@ -765,7 +768,7 @@ CalcContext::build_state_local_automatic_candidates(
                 "automatic publication node merge was not allocation-free");
         }
         const auto stored =
-            state_local_automatic_operators_.find(state_id);
+            state_local_automatic_operators_.find(carrier_admission_key);
         if (stored == state_local_automatic_operators_.end()) {
             throw std::logic_error(
                 "automatic publication omitted carrier cache entry");
@@ -773,7 +776,7 @@ CalcContext::build_state_local_automatic_candidates(
         account_state_local_operators(stored->second);
     };
     const std::vector<std::uint32_t> empty_publication_members;
-    const auto cached = state_local_automatic_operators_.find(state_id);
+    const auto cached = state_local_automatic_operators_.find(carrier_admission_key);
     if (cached != state_local_automatic_operators_.end()) {
         batch.cached = true;
         const std::size_t cached_capacity_upper =
@@ -873,9 +876,15 @@ CalcContext::build_state_local_automatic_candidates(
 
     const auto shared_started = std::chrono::steady_clock::now();
     const auto synthesis_started = std::chrono::steady_clock::now();
+    GoalSpec selected = goal_;
+    if (limits.cheap_programs_only)
+        selected.automatic_candidate_kind_mask &=
+            automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod) |
+            automatic_candidate_kind_bit(AutomaticCandidateKind::MultimodFinish) |
+            automatic_candidate_kind_bit(AutomaticCandidateKind::CraftedCleanup);
     AutomaticOptionSynthesis synthesis =
         synthesize_automatic_options(
-            *this, state_id, carrier, limits.prices);
+            *this, state_id, carrier, limits.prices, &selected, limits.cheap_programs_only);
     /*
      * Eldritch side intents operate on the parent carrier's exact preserved
      * side and can add parent-layout delta states. Do not reproject them

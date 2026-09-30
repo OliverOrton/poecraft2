@@ -1,0 +1,22 @@
+{
+  "scope": "exact-rational illustrative specifications, not native engine tests",
+  "native_modules_imported": false,
+  "tests_run": 12,
+  "failures": 0,
+  "errors": 0,
+  "successful": true,
+  "test_names": [
+    "test_clamping_destination_does_not_fix_predecessor",
+    "test_complete_prefix_tail",
+    "test_consumed_lock_paid_every_attempt",
+    "test_macro_lower_follows_each_internal_inequality",
+    "test_mirror_and_no_double_count",
+    "test_missing_mass_never_renormalized",
+    "test_multimod_target_modes",
+    "test_old_lower_not_portable_to_enlarged_scope",
+    "test_one_lock_keeps_opposite_fracture",
+    "test_remove_crafted_is_not_selective",
+    "test_surviving_fractured_junk_not_clean_goal",
+    "test_usage_is_not_any_use_probability"
+  ]
+}

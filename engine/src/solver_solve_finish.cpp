@@ -5385,8 +5385,12 @@ SolveWork::Impl::run_publication_pipeline() {
                     PolicyExactLiftStatus::RequestedBoundedFinish) {
                 if (!publish_certified_fallback(
                         SolveTermination::RequestedBoundedFinish)) {
-                    throw std::logic_error(
-                        "bounded strict finish lost its verified artifact");
+                    if (std::isfinite(incumbent_portfolio.verified_executable_upper()) ||
+                        publication_pipeline.private_verified_artifact_available) {
+                        throw std::logic_error(
+                            "bounded strict finish lost its verified artifact");
+                    }
+                    revoke_publication("requested_bounded_finish_without_verified_policy");
                 }
             } else if (!lift_complete) {
                 const std::string status =

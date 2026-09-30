@@ -1024,12 +1024,31 @@ const OptionKernel& CalcContext::option_kernel(
         option.option_kind == FixedOptionKind::ProtectedSide
             ? std::chrono::steady_clock::now()
             : std::chrono::steady_clock::time_point{};
+    if (option.option_kind == FixedOptionKind::TerminalCraftedCleanup &&
+        (result->exits.empty() || std::any_of(result->exits.begin(), result->exits.end(),
+            [&](const OutcomeEntry& exit) { return exit.state == kNoId || !is_goal_state(state(exit.state)); }))) {
+        result->legal = false;
+        result->terminates_almost_surely = false;
+    }
     if (result->automatic.candidate) {
         const AbstractState entry = state(state_id);
         result->automatic.exits_complete = !result->exits.empty();
         result->automatic.recovery_complete =
             result->automatic.exits_complete;
-        if (option.option_kind == FixedOptionKind::MultimodFinish) {
+        if (option.option_kind == FixedOptionKind::TerminalCraftedCleanup) {
+            const bool exact_finish = result->legal && result->supported &&
+                !result->exits.empty() && std::all_of(result->exits.begin(), result->exits.end(),
+                    [&](const OutcomeEntry& exit) { return exit.state != kNoId && is_goal_state(state(exit.state)); });
+            result->automatic.kernel_changed = exact_finish;
+            result->automatic.kernel_change_mechanisms = kAutomaticDeterministicFinish;
+            result->automatic.setup_complete = exact_finish;
+            result->automatic.cleanup_complete = exact_finish;
+            result->automatic.reason = exact_finish ? "legal_exact_crafted_cleanup_finish" : "crafted_cleanup_not_terminal";
+            if (!exact_finish) {
+                result->legal = false;
+                result->terminates_almost_surely = false;
+            }
+        } else if (option.option_kind == FixedOptionKind::MultimodFinish) {
             result->automatic.kernel_changed = true;
             result->automatic.kernel_change_mechanisms =
                 kAutomaticDeterministicFinish;

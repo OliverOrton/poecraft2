@@ -943,7 +943,10 @@ AbstractState project_item(
         const std::uint32_t mod = slot.mod_id;
         if (mod == PC_MOD_NONE || mod >= session.mod_count) return;
 
-        if (slot.flags & PC_MOD_SLOT_FRACTURED) state.flags |= kFlagFractured;
+        if (slot.flags & PC_MOD_SLOT_FRACTURED) {
+            state.flags |= kFlagFractured;
+            ++state.fractured_side_counts.at(side);
+        }
         if (slot.flags & PC_MOD_SLOT_CRAFTED) state.flags |= kFlagCraftedMod;
         if (slot.flags & PC_MOD_SLOT_VEILED) {
             state.flags |= kFlagVeiledMod;
@@ -1044,6 +1047,8 @@ std::size_t abstract_state_hash(const AbstractState& state) {
         }
     }
     mix(state.fractured_goal_mask);
+    mix(state.fractured_side_counts[PC_SIDE_PREFIX]);
+    mix(state.fractured_side_counts[PC_SIDE_SUFFIX]);
     mix(state.crafted_goal_mask);
     mix(state.blocked_mask);
     mix(state.prefix_count);
@@ -1110,8 +1115,9 @@ bool action_legal(
         std::uint32_t remaining = 0;
         std::uint8_t resulting_rarity = PC_RARITY_NORMAL;
         if (prefix_locked != suffix_locked) {
-            remaining = prefix_locked ? state.prefix_count
-                                      : state.suffix_count;
+            remaining = prefix_locked
+                ? state.prefix_count + state.fractured_side_counts[PC_SIDE_SUFFIX]
+                : state.suffix_count + state.fractured_side_counts[PC_SIDE_PREFIX];
             resulting_rarity =
                 remaining > 0 ? PC_RARITY_RARE : PC_RARITY_NORMAL;
         } else {
@@ -1121,8 +1127,9 @@ bool action_legal(
                  state.fractured_junk_counts) {
                 remaining += count;
             }
-            resulting_rarity =
-                remaining > 0 ? PC_RARITY_MAGIC : PC_RARITY_NORMAL;
+            resulting_rarity = remaining > 0
+                ? (prefix_locked || suffix_locked ? PC_RARITY_RARE : PC_RARITY_MAGIC)
+                : PC_RARITY_NORMAL;
         }
         /* Scour is an operation only when native execution would remove an
          * affix or change rarity. In particular, a magic carrier containing

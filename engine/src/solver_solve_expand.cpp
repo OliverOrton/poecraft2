@@ -32,6 +32,8 @@ AutomaticTelemetryKind automatic_telemetry_kind(
     }
     if (planner.kind == PlannerOperatorKind::FixedOption) {
         switch (planner.option_kind) {
+        case FixedOptionKind::TerminalCraftedCleanup:
+            return AutomaticTelemetryKind::CraftedCleanup;
         case FixedOptionKind::ImprintRetry:
             return AutomaticTelemetryKind::Imprint;
         case FixedOptionKind::Renewal:
@@ -58,6 +60,8 @@ AutomaticTelemetryKind automatic_telemetry_kind(
         }
     }
     switch (planner.automatic_kind) {
+    case AutomaticCandidateKind::CraftedCleanup:
+        return AutomaticTelemetryKind::CraftedCleanup;
     case AutomaticCandidateKind::PermanentBench:
         return AutomaticTelemetryKind::PermanentBench;
     case AutomaticCandidateKind::Fracture:
@@ -582,69 +586,9 @@ bool SolveWork::Impl::prepare_state_expansion(
                            restart_state != kNoId && state != restart_state;
                 }),
             expansion_operator_indices.end());
-        if (!include_state_local_automatic) {
-            /*
-             * Incremental mode publishes the exact primitive anchor graph
-             * before state-local compound candidates are synthesized. Those
-             * candidates are generated later for this carrier and enter the
-             * same delayed Q-value lifecycle; skipping them here is a
-             * schedule change, not an action-envelope reduction.
-             */
-            const auto priority = [&](const std::uint32_t index) {
-                const PlannerOperator& planner =
-                    calc.operators().at(index);
-                if (planner.automatic_kind ==
-                        AutomaticCandidateKind::PermanentBench ||
-                    (planner.kind == PlannerOperatorKind::Primitive &&
-                     calc.registry().actions.at(
-                         planner.primitive_action).params.type ==
-                         ActionType::Bench &&
-                     planner_goal_reach_mask(index) != 0)) {
-                    /* A deterministic goal finish is a complete executable
-                     * start policy. Publish that row before a broad renewal
-                     * can exhaust its transient kernel budget, so an honest
-                     * resource stop retains the cheapest proved incumbent. */
-                    return 0;
-                }
-                if (planner.kind == PlannerOperatorKind::Primitive &&
-                    calc.registry().actions.at(
-                        planner.primitive_action).params.type ==
-                        ActionType::Chaos) {
-                    return 1;
-                }
-                if (index == restart_operator_index) return 2;
-                return 3;
-            };
-            std::stable_sort(
-                expansion_operator_indices.begin(),
-                expansion_operator_indices.end(),
-                [&](const std::uint32_t left,
-                    const std::uint32_t right) {
-                    return priority(left) < priority(right);
-                });
-            if (options.high_impact_executable_uppers) {
-                SolveScheduler::Availability available{};
-                available[static_cast<std::size_t>(
-                    AnytimeSchedulerLane::LegacyFairness)] = true;
-                available[static_cast<std::size_t>(
-                    AnytimeSchedulerLane::HighProgress)] = true;
-                const AnytimeSchedulerLane lane =
-                    anytime_scheduler.select(available);
-                if (lane == AnytimeSchedulerLane::HighProgress &&
-                    cooperative_high_progress_ordering_enabled()) {
-                    prioritize_carrier_actions(
-                        state, expansion_operator_indices);
-                }
-            }
-            result.diagnostics.expansion_prepare_ns +=
-                static_cast<std::uint64_t>(
-                    std::chrono::duration_cast<std::chrono::nanoseconds>(
-                        std::chrono::steady_clock::now() -
-                        prepare_started)
-                        .count());
-            return true;
-        }
         AutomaticAdmissionLimits limits;
+        limits.cheap_programs_only = !include_state_local_automatic ||
+            (cheap_root_bootstrap_pending && state == result.start_state);
         const auto byte_audit_started = std::chrono::steady_clock::now();
         const std::uint64_t calc_bytes =
             calc.fast_estimated_owned_bytes();
@@ -1032,7 +976,12 @@ bool SolveWork::Impl::prepare_state_expansion(
                 const auto priority = [&](const std::uint32_t index) {
                     const PlannerOperator& planner =
                         calc.operators().at(index);
-                    if (planner.automatic_kind ==
+                    if (planner.automatic_kind == AutomaticCandidateKind::CraftedCleanup ||
+                        planner.automatic_kind == AutomaticCandidateKind::MultimodFinish ||
+                        (planner.option_kind == FixedOptionKind::ProtectedSide &&
+                         planner.followup_action != kNoId &&
+                         calc.registry().actions.at(planner.followup_action).params.type == ActionType::Scour) ||
+                        planner.automatic_kind ==
                             AutomaticCandidateKind::PermanentBench ||
                         (planner.kind == PlannerOperatorKind::Primitive &&
                          calc.registry().actions.at(
@@ -1041,11 +990,31 @@ bool SolveWork::Impl::prepare_state_expansion(
                          planner_goal_reach_mask(index) != 0)) {
                         return 0;
                     }
-                    if (index == restart_operator_index) return 1;
-                    return 2;
+                    if (!include_state_local_automatic && planner.kind == PlannerOperatorKind::Primitive &&
+                        calc.registry().actions.at(planner.primitive_action).params.type == ActionType::Chaos) return 1;
+                    if (index == restart_operator_index) return 2;
+                    return 3;
                 };
                 return priority(left) < priority(right);
             });
+        if (!include_state_local_automatic && options.high_impact_executable_uppers &&
+            !cheap_root_bootstrap_pending) {
+            SolveScheduler::Availability available{};
+            available[static_cast<std::size_t>(AnytimeSchedulerLane::LegacyFairness)] = true;
+            available[static_cast<std::size_t>(AnytimeSchedulerLane::HighProgress)] = true;
+            const auto lane = anytime_scheduler.select(available);
+            if (lane == AnytimeSchedulerLane::HighProgress && cooperative_high_progress_ordering_enabled()) {
+                prioritize_carrier_actions(state, expansion_operator_indices);
+                std::stable_partition(expansion_operator_indices.begin(), expansion_operator_indices.end(),
+                    [&](auto index) {
+                        const auto& p = calc.operators().at(index);
+                        return p.automatic_kind == AutomaticCandidateKind::CraftedCleanup ||
+                            p.automatic_kind == AutomaticCandidateKind::MultimodFinish ||
+                            (p.option_kind == FixedOptionKind::ProtectedSide && p.followup_action != kNoId &&
+                             calc.registry().actions.at(p.followup_action).params.type == ActionType::Scour);
+                    });
+            }
+        }
         result.diagnostics.expansion_prepare_pricing_ns +=
             static_cast<std::uint64_t>(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -1576,6 +1545,8 @@ std::string SolveWork::Impl::preservation_witness_json(
             return "cannot_roll";
         case AutomaticCandidateKind::Veiled:
             return "veiled";
+        case AutomaticCandidateKind::CraftedCleanup:
+            return "crafted_cleanup";
         case AutomaticCandidateKind::None:
             return "none";
         }
@@ -3163,6 +3134,19 @@ bool SolveWork::Impl::expand_one_unit() {
             }
             if (expansion_operator_cursor <
                 expansion_operator_indices.size()) {
+                const std::uint32_t next_operator =
+                    expansion_operator_indices[expansion_operator_cursor];
+                const PlannerOperator& next_planner = calc.operators().at(next_operator);
+                const bool next_cheap =
+                    next_planner.automatic_kind == AutomaticCandidateKind::CraftedCleanup ||
+                    next_planner.automatic_kind == AutomaticCandidateKind::MultimodFinish ||
+                    (next_planner.option_kind == FixedOptionKind::ProtectedSide &&
+                     next_planner.followup_action != kNoId &&
+                     calc.registry().actions.at(next_planner.followup_action).params.type == ActionType::Scour);
+                if (cheap_root_bootstrap_pending && state == result.start_state && !next_cheap) {
+                    cheap_root_bootstrap_pending = false;
+                    return false;
+                }
                 const std::uint32_t operator_index =
                     expansion_operator_indices[expansion_operator_cursor++];
                 const std::int32_t priced_position =
@@ -4060,7 +4044,32 @@ bool SolveWork::Impl::expand_one_unit() {
                     state, operator_index, lane, evidence);
             }
         }
-        if (completed) expansion_active = false;
+        // Check a completed cheap root row at the existing first-policy
+        // boundary before advancing to the expensive sibling. The expansion
+        // cursor remains owned and resumes after this immutable assertion.
+        if (!row_resource_limited && options.high_impact_executable_uppers &&
+            state == result.start_state && row_attempt_operator != kNoId &&
+            expansion_appended_row != std::numeric_limits<std::uint64_t>::max() &&
+            !output_incumbent && !publication_pipeline.initial_candidate_task &&
+            !requested_bounded_finish) {
+            const auto& planner = calc.operators().at(row_attempt_operator);
+            const bool cheap = planner.option_kind == FixedOptionKind::TerminalCraftedCleanup ||
+                planner.option_kind == FixedOptionKind::MultimodFinish ||
+                (planner.kind == PlannerOperatorKind::FixedOption &&
+                 planner.option_kind == FixedOptionKind::ProtectedSide &&
+                 planner.followup_action != kNoId &&
+                 calc.registry().actions.at(planner.followup_action).params.type == ActionType::Scour);
+            if (cheap && try_install_reachable_incumbent(false)) {
+                cheap_root_bootstrap_pending = false;
+                publication_pipeline.initial_candidate_resume_phase = phase;
+                publication_pipeline.initial_candidate_task.emplace(certify_initial_candidate());
+                record_progress_event("service_queued", "complete_cheap_root_programme", output_incumbent->portfolio_identity);
+            }
+        }
+        if (completed) {
+            expansion_active = false;
+            if (state == result.start_state) cheap_root_bootstrap_pending = false;
+        }
         if (completed && !result.diagnostics.resource_cap_hit &&
             expanded_count % 64 == 0) {
             const auto byte_audit_started =

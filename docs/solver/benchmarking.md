@@ -333,3 +333,5 @@ Current code: `solver_benchmark.cpp`, `solver_corpus_runner.py`,
 records the original observation semantics. Current mathematical status and gaps
 are owned by [claims](claims.md) and [research](research.md#open-obligations), not
 by the age of a verification stamp.
+
+[Recovery corpus](../active/2026-09-29-metamod-recovery/corpus/manifest.json) freezes data and bundled Allflame prices. Current arms share corrected mechanics/new grammar; pre-proof root bootstrap differs. Finder compares conditional and private protected Scour with eight attempts/one checker. Native arms both explicitly disable Foulborn and are legacy-mechanics scopes. Positive expected lock use establishes capability; economics/timing need separate receipts.

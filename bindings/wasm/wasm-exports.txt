@@ -71,3 +71,5 @@ _pcw_calc_inspector
 _pcw_calc_goal
 _pcw_bestiary_goal_calc
 _pcw_item_edit
+
+_pcw_solver_protected_scour_diagnostic

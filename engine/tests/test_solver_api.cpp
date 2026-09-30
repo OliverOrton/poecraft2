@@ -3449,6 +3449,11 @@ void run_solver_api_tests(const char* artifact_dir) {
     run_natural_t1_feasibility_gate(artifact_dir);
 }
 
+void run_solver_checkpoint_tests(const char* artifact_dir) {
+    if (artifact_dir == nullptr) throw std::invalid_argument("checkpoint tests require current artifact");
+    run_development_checkpoint_replay_gate(artifact_dir);
+}
+
 void run_solver_feasibility_tests(const char* artifact_dir) {
     if (artifact_dir == nullptr) {
         std::printf("solver feasibility suite skipped (missing path)\n");
