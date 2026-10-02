@@ -34,7 +34,8 @@ class SelectiveCompletionProducer {
     SelectiveCompletionProducer(
         CalcContext& problem, const pc_item_state& original_start,
         const std::unordered_map<std::string, double>& prices,
-        const SolveOptions& limits, SelectiveCompletionVariant variant);
+        const SolveOptions& limits, SelectiveCompletionVariant variant,
+        std::uint32_t acquisition_action = kNoId);
 
     bool advance(std::uint32_t max_work_items = 1);
     bool done() const { return phase_ == Phase::Done; }
@@ -62,6 +63,9 @@ class SelectiveCompletionProducer {
     const std::unordered_map<std::string, double>& prices_;
     SolveOptions limits_;
     SelectiveCompletionVariant variant_;
+    // A Finder proposal may bind one native acquisition descriptor. The
+    // shared Current consumer leaves this unset and retains Chaos discovery.
+    std::uint32_t requested_acquisition_ = kNoId;
     Phase phase_ = Phase::Begin;
     std::string status_ = "pending";
     std::optional<SelectiveCompletionCandidate> candidate_;

@@ -82,3 +82,5 @@ void run_solver_setup_service_tests();
 #endif
 
 void run_solver_protected_finder_tests();
+
+void run_solver_finder_essence_tests();

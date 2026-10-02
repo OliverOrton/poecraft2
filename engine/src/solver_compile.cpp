@@ -429,10 +429,13 @@ std::string compile_finder_control_json(
                 throw std::invalid_argument("finder goal slot is invalid");
             condition = vocabulary[node.binding].satisfied;
         } else if (node.kind == FinderControlKind::TestAffixCountAtLeast4) {
-            condition = any_of({
-                total_explicit_affix_count_condition(4),
-                total_explicit_affix_count_condition(5),
-                total_explicit_affix_count_condition(6)});
+            const auto threshold = node.binding == kNoId ? 4u : node.binding;
+            if (threshold == 0 || threshold > 7)
+                throw std::invalid_argument("finder affix count threshold is invalid");
+            std::vector<std::string> counts;
+            for (std::uint32_t count = threshold; count <= kMaxExplicitAffixes; ++count)
+                counts.push_back(total_explicit_affix_count_condition(count));
+            condition = any_of(counts);
         } else if (node.kind == FinderControlKind::TestEldritchTiers) {
             const std::uint32_t searing = node.binding & 0xffu;
             const std::uint32_t eater = (node.binding >> 8u) & 0xffu;

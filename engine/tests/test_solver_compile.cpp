@@ -7,6 +7,7 @@
 #include "../src/solver_solve_types.hpp"
 #include "../src/solver_compile_contracts.hpp"
 #include "../src/solver_finder.hpp"
+#include "../src/solver_selective_completion.hpp"
 #include "../src/json.hpp"
 #include "../src/solver_dirty_guidance.hpp"
 #include "poecraft/bitset.h"
@@ -4394,4 +4395,295 @@ void run_solver_protected_finder_tests() {
             positive |= candidate.at("positive_programme_entries").number > 0 &&
                 candidate.at("validated_programme_entries").number > 0;
     PC_CHECK(positive);
+}
+
+
+void run_solver_finder_essence_tests() {
+    // Reconstructed finite fixtures. These exercise descriptor selection and
+    // exact native checking; they are not reproductions of Oliver's phone run.
+    const auto make_session = [] {
+        auto session = make_compile_session();
+        auto data = std::const_pointer_cast<DataImpl>(session->data);
+        data->essence_count = 3;
+        for (const auto& key : {"finder_low", "finder_high", "finder_held"}) {
+            const auto sid = static_cast<std::uint32_t>(data->strings.size());
+            data->strings.push_back(key);
+            data->essence_key_sids.push_back(sid);
+            data->essence_by_key.emplace(key, data->essence_by_key.size());
+        }
+        data->essence_item_level_restrictions.assign(3, -1);
+        data->essence_is_corruption_only.assign(3, 0);
+        session->essence_guaranteed_mod_ids = {1, 0, 3};
+        return session;
+    };
+    auto session = make_session();
+    auto registry = build_action_registry(*session);
+    const auto low = registry.index_by_id.at("essence:finder_low");
+    const auto high = registry.index_by_id.at("essence:finder_high");
+    const auto chaos = registry.index_by_id.at("chaos");
+    const auto exalt = registry.index_by_id.at("exalt");
+    const auto annul = registry.index_by_id.at("annul");
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    goal.terminal.extras = ExtraExplicitPolicy::Allow;
+    GoalSlot slot; slot.family_id = session->family_id[0]; slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
+    SolveOptions limits;
+    limits.consider_imprint_programs = false;
+    limits.max_solver_owned_bytes = 256ull << 20;
+    limits.max_discovered_states = 10000;
+    limits.max_state_action_rows = 100000;
+    limits.max_transitions = 1000000;
+    limits.max_reforge_work = 1000000;
+    const std::unordered_map<std::string,double> prices{
+        {"essence:finder_low",0.01},{"essence:finder_high",0.2},
+        {"chaos",1.0},{"exalt",0.02},{"annul",0.03}};
+    const auto complete = [](PolicyFinderWork& finder) {
+        for (unsigned i = 0; i < 20000 && !finder.progress().done; ++i)
+            finder.step(256);
+        PC_CHECK(finder.progress().done);
+        PC_CHECK(finder.progress().considered <= 8);
+    };
+    {
+        CalcContext calc(session,goal,registry,{low,exalt,annul,chaos,high});
+        PolicyFinderWork finder(calc,session,root,prices,limits);
+        const auto queued = json::Parser(finder.telemetry_json().data(),finder.telemetry_json().size()).parse();
+        PC_CHECK(queued.at("attempt_limit").number == 8);
+        PC_CHECK(queued.at("candidates").as_array().size() == 4);
+        PC_CHECK(queued.at("candidates").as_array().front().at("actions").as_array().front().string == "essence:finder_high");
+        complete(finder);
+        PC_CHECK(finder.best().has_value());
+        if (finder.best()) {
+            PC_CHECK(std::abs(finder.best()->expected_cost - 0.2) < 1e-9);
+            PC_CHECK(prepare_finder_candidate(calc,session,root,finder.best()->strategy_json).ready());
+            const auto evaluated = evaluate_compiled(session,finder.best()->strategy_json,prices);
+            PC_CHECK(finder_evaluation_accepted(evaluated));
+            PC_CHECK(std::abs(evaluated.expected_actions - 1.0) < 1e-9);
+            PC_CHECK(std::abs(evaluated.expected_consumption.at("essence:finder_high") - 1.0) < 1e-9);
+        }
+    }
+    {
+        // Guarantee reservation remains a proposal. A cheaper checked controller
+        // must beat an expensive guaranteed action on full expected cost.
+        auto expensive = prices; expensive["essence:finder_high"] = 1000.0;
+        CalcContext calc(session,goal,registry,{chaos,high});
+        PolicyFinderWork finder(calc,session,root,expensive,limits);
+        complete(finder);
+        PC_CHECK(finder.best().has_value());
+        if (finder.best()) PC_CHECK(finder.best()->expected_cost < 1000.0);
+        const auto report = json::Parser(finder.telemetry_json().data(),finder.telemetry_json().size()).parse();
+        PC_CHECK(report.at("accepted").number == 2);
+    }
+    {
+        pc_item_state normal = root; normal.rarity = PC_RARITY_NORMAL;
+        CalcContext calc(session,goal,registry,{high});
+        PolicyFinderWork finder(calc,session,normal,prices,limits);
+        complete(finder);
+        PC_CHECK(finder.best().has_value());
+        if (finder.best()) PC_CHECK(std::abs(finder.best()->expected_cost - 0.2) < 1e-9);
+    }
+    {
+        auto unpriced = prices; unpriced.erase("essence:finder_high");
+        CalcContext calc(session,goal,registry,{high});
+        PolicyFinderWork finder(calc,session,root,unpriced,limits);
+        complete(finder);
+        PC_CHECK(!finder.best().has_value());
+        PC_CHECK(finder.progress().generated == 0);
+    }
+    {
+        // A fractured below-tier family blocker defeats the direct guarantee.
+        // Generic descriptor legality does not certify the realized native law.
+        pc_item_state conflict = root;
+        PC_CHECK(pc_item_add_mod(&conflict,PC_SIDE_PREFIX,1,session->primary_group[1],PC_MOD_SLOT_FRACTURED,nullptr) == PC_RESULT_OK);
+        CalcContext calc(session,goal,registry,{high});
+        PolicyFinderWork finder(calc,session,conflict,prices,limits);
+        complete(finder);
+        PC_CHECK(!finder.best().has_value());
+        PC_CHECK(finder.progress().refused == 1);
+    }
+    {
+        // Four-plus-affix Essence renewal cannot manufacture clean success.
+        auto clean = goal; clean.terminal.extras = ExtraExplicitPolicy::ForbidUnmatched;
+        CalcContext calc(session,clean,registry,{high});
+        PolicyFinderWork finder(calc,session,root,prices,limits);
+        complete(finder);
+        PC_CHECK(!finder.best().has_value());
+        PC_CHECK(finder.progress().refused == 1);
+    }
+    {
+        auto tiny = limits; tiny.max_discovered_states = 1;
+        CalcContext calc(session,goal,registry,{high});
+        PolicyFinderWork finder(calc,session,root,prices,tiny);
+        complete(finder);
+        PC_CHECK(!finder.best().has_value());
+        PC_CHECK(finder.progress().censored == 1);
+        PC_CHECK(finder.progress().refused == 0);
+    }
+    {
+        // The ordinary two-stage vocabulary can retry a Normal-root Alchemy
+        // by paying Scour on every miss. No Alchemy is executed on a Rare miss.
+        const auto alchemy = registry.index_by_id.at("alchemy");
+        const auto scour = registry.index_by_id.at("scour");
+        pc_item_state normal = root; normal.rarity = PC_RARITY_NORMAL;
+        const std::unordered_map<std::string,double> reset_prices{{"alchemy",0.05},{"scour",0.3741}};
+        CalcContext calc(session,goal,registry,{alchemy,scour});
+        const auto start = calc.intern_item(normal);
+        const auto outcomes = calc.outcomes(start,alchemy);
+        PC_CHECK(outcomes.supported && outcomes.applicable);
+        double success = 0;
+        for (const auto& exit : outcomes.entries) {
+            if (!(exit.probability > 0)) continue;
+            if (calc.is_goal_state(calc.state(exit.state))) success += exit.probability;
+            else {
+                const auto& reset = calc.outcomes(exit.state,scour);
+                PC_CHECK(reset.supported && reset.applicable && reset.entries.size() == 1);
+                if (reset.entries.size() == 1) {
+                    pc_item_state reset_item;
+                    PC_CHECK(calc.materialize(reset.entries[0].state,reset_item));
+                    PC_CHECK(exact_item_state_key(reset_item) == exact_item_state_key(normal));
+                    PC_CHECK(reset.entries[0].probability == 1.0);
+                }
+            }
+        }
+        PC_CHECK(success > 0 && success < 1);
+        PolicyFinderWork finder(calc,session,normal,reset_prices,limits);
+        complete(finder);
+        PC_CHECK(finder.best().has_value());
+        if (finder.best()) {
+            const auto& best = *finder.best();
+            PC_CHECK(best.strategy_json.find("scour") != std::string::npos);
+            PC_CHECK(best.strategy_json.find("alchemy") != std::string::npos);
+            PC_CHECK(prepare_finder_candidate(calc,session,normal,best.strategy_json).ready());
+            const auto evaluated = evaluate_compiled(session,best.strategy_json,reset_prices);
+            PC_CHECK(finder_evaluation_accepted(evaluated));
+            const double expected = (0.05 + (1-success)*0.3741)/success;
+            PC_CHECK(std::abs(best.expected_cost-expected) < 1e-9);
+            PC_CHECK(std::abs(evaluated.expected_consumption.at("alchemy")-1/success) < 1e-9);
+            PC_CHECK(std::abs(evaluated.expected_consumption.at("scour")-(1-success)/success) < 1e-9);
+            std::printf("reconstructed Alchemy/Scour success=%.12g checked_cost=%.12g\n",success,best.expected_cost);
+        }
+        CalcContext excluded(session,goal,registry,{alchemy});
+        PolicyFinderWork no_reset(excluded,session,normal,reset_prices,limits);
+        complete(no_reset);
+        PC_CHECK(!no_reset.best().has_value());
+    }
+    {
+        CalcContext calc(session,goal,registry,{high,chaos});
+        PolicyFinderWork finder(calc,session,root,prices,limits);
+        finder.request_bounded_finish(); finder.step(1);
+        const auto report = json::Parser(finder.telemetry_json().data(),finder.telemetry_json().size()).parse();
+        PC_CHECK(finder.progress().done && finder.progress().considered == 0);
+        for (const auto& candidate : report.at("candidates").as_array())
+            PC_CHECK(candidate.at("status").string == "unserved_finish");
+    }
+    {
+        // A full ordinary pool cannot reach clean two goals when Annul stops
+        // at three affixes. The corrected controller retains the Essence's
+        // semantic goal role and continues cleanup at three in either order.
+        const auto held = registry.index_by_id.at("essence:finder_held");
+        const std::unordered_map<std::string,double> clean_prices{
+            {"essence:finder_held",0.2},{"chaos",1.0},{"annul",0.03}};
+        double cost = -1;
+        for (const bool reverse : {false,true}) {
+            GoalSpec clean; clean.rarity = PC_RARITY_RARE;
+            for (const auto mod : (reverse ? std::vector<unsigned>{4,3} : std::vector<unsigned>{3,4})) {
+                GoalSlot wanted; wanted.family_id = session->family_id[mod]; wanted.min_tier = 1;
+                clean.slots.push_back(wanted);
+            }
+            CalcContext calc(session,clean,registry,{held,chaos,annul});
+            FinderControlGraph legacy{{
+                {FinderControlKind::TestGoal,kNoId,5,1},
+                {FinderControlKind::TestSlot,reverse ? 1u : 0u,2,4},
+                {FinderControlKind::TestAffixCountAtLeast4,kNoId,3,4},
+                {FinderControlKind::RunPrimitive,annul,kNoId,kNoId,0},
+                {FinderControlKind::RunPrimitive,held,kNoId,kNoId,0},
+                {FinderControlKind::GoalTerminal}},0};
+            const auto old_graph = compile_finder_control_json(calc,root,legacy,limits);
+            const auto old_result = evaluate_compiled(session,old_graph,clean_prices);
+            PC_CHECK(!finder_evaluation_accepted(old_result));
+            PC_CHECK(old_result.success_probability < 1e-12);
+            auto invalid = legacy; invalid.nodes[2].binding = 0;
+            bool refused = false;
+            try { (void)compile_finder_control_json(calc,root,invalid,limits); }
+            catch (const std::invalid_argument&) { refused = true; }
+            PC_CHECK(refused);
+            PolicyFinderWork finder(calc,session,root,clean_prices,limits);
+            complete(finder);
+            PC_CHECK(finder.best().has_value());
+            if (finder.best()) {
+                const auto& best = *finder.best();
+                PC_CHECK(!best.native_control.has_value());
+                const auto evaluated = evaluate_compiled(session,best.strategy_json,clean_prices);
+                PC_CHECK(finder_evaluation_accepted(evaluated));
+                PC_CHECK(evaluated.expected_consumption.at("annul") > 1);
+                PC_CHECK(evaluated.expected_consumption.at("essence:finder_held") > 1);
+                if (cost < 0) cost = best.expected_cost;
+                else PC_CHECK(std::abs(best.expected_cost-cost) < 1e-9);
+                std::printf("reconstructed ordinary clean Essence/Annul order=%d cost=%.12g essence=%.12g annul=%.12g\n",
+                    reverse,best.expected_cost,evaluated.expected_consumption.at("essence:finder_held"),
+                    evaluated.expected_consumption.at("annul"));
+            }
+        }
+    }
+    {
+        // Same two-goal clean problem in both goal orders; complete paid
+        // acquisition + lock + Scour, including all native retry outcomes.
+        auto held_session = make_session();
+        auto data = std::const_pointer_cast<DataImpl>(held_session->data);
+        data->metamod_prefixes_locked_code = 3;
+        held_session->metamod_type[9] = 3;
+        held_session->bench_mod_ids = {9};
+        held_session->flags[9] = 1 << 1;
+        held_session->eldritch_eligible = false;
+        auto held_registry = build_action_registry(*held_session);
+        const auto held = held_registry.index_by_id.at("essence:finder_held");
+        const auto held_chaos = held_registry.index_by_id.at("chaos");
+        const std::unordered_map<std::string,double> held_prices{
+            {"chaos",1.0},{"essence:finder_held",0.2},{"scour",0.01},{"bench:mod9",0.01}};
+        double checked_cost = -1;
+        for (const bool reverse : {false,true}) {
+            GoalSpec clean; clean.rarity = PC_RARITY_RARE; clean.automatic_candidates = true;
+            clean.automatic_candidate_kind_mask = automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod);
+            for (const auto mod : (reverse ? std::vector<unsigned>{4,3} : std::vector<unsigned>{3,4})) {
+                GoalSlot wanted; wanted.family_id = held_session->family_id[mod]; wanted.min_tier = 1;
+                clean.slots.push_back(wanted);
+            }
+            CalcContext calc(held_session,clean,held_registry,{held_chaos,held},false,false,true,
+                std::nullopt,std::vector<CountObservation>{},false,std::vector<std::uint64_t>{},true);
+            SelectiveCompletionProducer current_default(calc,root,held_prices,limits,SelectiveCompletionVariant::ProtectedScour);
+            for (unsigned i=0; i<20000 && !current_default.done(); ++i) current_default.advance();
+            PC_CHECK(current_default.candidate().has_value());
+            if (current_default.candidate()) PC_CHECK(current_default.candidate()->acquisition_action == held_chaos);
+            PolicyFinderWork finder(calc,held_session,root,held_prices,limits,FinderRankingMode::Heuristic,
+                FinderGrammarMode::ConditionalProtectedScour);
+            complete(finder);
+            PC_CHECK(finder.best().has_value());
+            if (finder.best()) {
+                const auto& best = *finder.best();
+                PC_CHECK(best.native_control.has_value());
+                PC_CHECK(best.strategy_json.find("finder_held") != std::string::npos);
+                PC_CHECK(best.strategy_json.find("scour") != std::string::npos);
+                PC_CHECK(best.strategy_json.find("bench") != std::string::npos);
+                const auto evaluated = evaluate_compiled(held_session,best.strategy_json,held_prices);
+                PC_CHECK(finder_evaluation_accepted(evaluated));
+                PC_CHECK(evaluated.expected_consumption.at("essence:finder_held") > 1);
+                PC_CHECK(evaluated.expected_consumption.at("scour") > 0);
+                PC_CHECK(evaluated.expected_consumption.at("bench:mod9") > 0);
+                PC_CHECK(std::abs(evaluated.total_expected_cost-best.expected_cost) < 1e-8);
+                if (checked_cost < 0) checked_cost = best.expected_cost;
+                else PC_CHECK(std::abs(best.expected_cost-checked_cost) < 1e-8);
+                const auto report = json::Parser(finder.telemetry_json().data(),finder.telemetry_json().size()).parse();
+                bool checked_entries = false;
+                for (const auto& c : report.at("candidates").as_array())
+                    if (c.at("native_program").boolean && c.at("status").string == "accepted")
+                        checked_entries |= c.at("positive_programme_entries").number > 0 &&
+                            c.at("positive_programme_entries").number == c.at("validated_programme_entries").number;
+                PC_CHECK(checked_entries);
+                std::printf("reconstructed clean Essence order=%d cost=%.12g essence=%.12g lock=%.12g scour=%.12g\n",
+                    reverse,best.expected_cost,evaluated.expected_consumption.at("essence:finder_held"),
+                    evaluated.expected_consumption.at("bench:mod9"),evaluated.expected_consumption.at("scour"));
+            }
+        }
+    }
 }

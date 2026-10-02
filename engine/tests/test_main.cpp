@@ -13,6 +13,11 @@ int main(int argc, char** argv) {
         std::printf("Calculator incoming tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-finder-essence-only") {
+        run_solver_finder_essence_tests();
+        std::printf("solver Finder Essence tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-protected-finder-only") {
         run_solver_protected_finder_tests();
         std::printf("solver protected Finder tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

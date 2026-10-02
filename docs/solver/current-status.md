@@ -17,6 +17,14 @@ relevant code/runtime change, review the delta and refresh affected rows; do not
 transfer old qualification to a new build by editing the heading. Follow each
 record for its actual executable, scope and measured revision.
 
+The [isolated Finder Essence follow-up](../active/2026-10-02-finder-essence/README.md)
+qualifies bounded native satisfying-tier acquisition, semantic goal roles,
+repeated clean-target Annul and Normal-root Alchemy/Scour retry on finite fixtures.
+Default native proposals use existing strategy vocabulary; protected Scour stays
+private and Current's producer default is unchanged. Real-data economics and
+WASM/worker acceptance remain unqualified; no exact checker quotient is retained
+at the grammar checkpoint.
+
 ## Existing metamod recovery delta (2026-09-29)
 
 The [MM execution receipt](../active/2026-09-29-metamod-recovery/README.md)

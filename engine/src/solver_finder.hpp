@@ -111,6 +111,7 @@ class PolicyFinderWork {
         std::uint32_t index = kNoId;
         double price = 0.0;
         bool root_legal = false;
+        std::uint32_t guaranteed_goal_mask = 0;
     };
     struct Sketch {
         std::vector<std::uint32_t> actions;
@@ -119,15 +120,19 @@ class PolicyFinderWork {
         std::optional<FinderControlGraph> control;
         bool feedback_parent = false;
         std::string parent_identity;
+        std::uint32_t held_goal_slot = kNoId;
+        std::uint32_t fallback_goal_slot = kNoId;
     };
     enum class HoleKind : std::uint8_t {
-        Renewal, Recovery, Progress, ProgressProgram
+        Renewal, Recovery, Reset, Progress, ProgressProgram
     };
     struct PartialSketch {
         std::uint32_t first = kNoId;
         double first_price = 0.0;
         HoleKind hole = HoleKind::Renewal;
         std::string parent_identity;
+        std::uint32_t held_goal_slot = kNoId;
+        std::uint32_t fallback_goal_slot = kNoId;
     };
     struct CandidateRecord {
         std::string identity;
@@ -141,6 +146,7 @@ class PolicyFinderWork {
         std::uint64_t finished_ns = 0;
         std::uint64_t work = 0;
         std::uint64_t peak_owned_bytes = 0;
+        StrategyEvalProgress check_progress;
         double checked_cost = 0.0;
         double best_after_checked_cost = 0.0;
         double score = 0.0;
@@ -160,6 +166,8 @@ class PolicyFinderWork {
     FinderRankingMode ranking_;
     FinderGrammarMode grammar_;
     std::uint32_t attempt_limit_ = 8;
+    std::uint32_t essence_acquisition_ = kNoId;
+    std::uint32_t held_essence_acquisition_ = kNoId;
     std::vector<RankedAction> ranked_;
     std::deque<Sketch> frontier_;
     std::unordered_set<std::string> seen_;

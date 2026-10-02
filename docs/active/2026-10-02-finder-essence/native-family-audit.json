@@ -1,0 +1,147 @@
+{
+  "scope": "Read-only native registry and family audit. No action odds, solve or saved strategy evaluation launched.",
+  "native_library": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_engine.dll",
+  "native_library_sha256": "456a253f0eeb97c00ceed95abc266db2fc0ba71df615f43ba18128ab495c0df2",
+  "runtime_source": "repoe-b458174874efbe64",
+  "base": "Metadata/Items/Amulets/Amulet7",
+  "item_level": 86,
+  "goals": [
+    {
+      "family_mod_key": "LightningDamagePercent5",
+      "family_id": 87,
+      "min_tier": 1,
+      "admitted_essences": [
+        "essence:Metadata/Items/Currency/CurrencyEssenceWrath3"
+      ]
+    },
+    {
+      "family_mod_key": "FireDamagePercent5",
+      "family_id": 45,
+      "min_tier": 1,
+      "admitted_essences": []
+    },
+    {
+      "family_mod_key": "FireDamagePercentEssence7",
+      "family_id": 314,
+      "min_tier": 1,
+      "admitted_essences": [
+        "essence:Metadata/Items/Currency/CurrencyEssenceAnger6"
+      ]
+    }
+  ],
+  "mods": [
+    {
+      "session_mod_id": 290,
+      "global_mod_id": 20255,
+      "key": "LightningDamagePercent5",
+      "generation_type": 1,
+      "reach_kind": 0,
+      "reach_influence": -1,
+      "reach_via": "base",
+      "primary_group_id": 3251,
+      "family_id": 87,
+      "required_level": 64,
+      "group_display_name": "of Static",
+      "family_tier_index": 1,
+      "text_lines": [
+        "(23-26)% increased Lightning Damage"
+      ],
+      "classification_tags": [
+        "damage",
+        "elemental",
+        "elemental_damage",
+        "lightning"
+      ]
+    },
+    {
+      "session_mod_id": 144,
+      "global_mod_id": 11387,
+      "key": "FireDamagePercent5",
+      "generation_type": 1,
+      "reach_kind": 0,
+      "reach_influence": -1,
+      "reach_via": "base",
+      "primary_group_id": 2195,
+      "family_id": 45,
+      "required_level": 64,
+      "group_display_name": "of the Essence",
+      "family_tier_index": 1,
+      "text_lines": [
+        "(23-26)% increased Fire Damage"
+      ],
+      "classification_tags": [
+        "damage",
+        "elemental",
+        "elemental_damage",
+        "fire"
+      ]
+    },
+    {
+      "session_mod_id": 667,
+      "global_mod_id": 11395,
+      "key": "FireDamagePercentEssence7",
+      "generation_type": 1,
+      "reach_kind": 3,
+      "reach_influence": -1,
+      "reach_via": "essence",
+      "primary_group_id": 2195,
+      "family_id": 314,
+      "required_level": 82,
+      "group_display_name": "of the Essence",
+      "family_tier_index": 1,
+      "text_lines": [
+        "(31-34)% increased Fire Damage"
+      ],
+      "classification_tags": [
+        "damage",
+        "elemental",
+        "elemental_damage",
+        "fire"
+      ]
+    },
+    {
+      "session_mod_id": 666,
+      "global_mod_id": 11394,
+      "key": "FireDamagePercentEssence6_",
+      "generation_type": 1,
+      "reach_kind": 3,
+      "reach_influence": -1,
+      "reach_via": "essence",
+      "primary_group_id": 2195,
+      "family_id": 314,
+      "required_level": 74,
+      "group_display_name": "of the Essence",
+      "family_tier_index": 2,
+      "text_lines": [
+        "(27-30)% increased Fire Damage"
+      ],
+      "classification_tags": [
+        "damage",
+        "elemental",
+        "elemental_damage",
+        "fire"
+      ]
+    },
+    {
+      "session_mod_id": 70,
+      "global_mod_id": 4760,
+      "key": "ChaosResist6",
+      "generation_type": 1,
+      "reach_kind": 0,
+      "reach_influence": -1,
+      "reach_via": "base",
+      "primary_group_id": 1145,
+      "family_id": 14,
+      "required_level": 81,
+      "group_display_name": "of Tacati",
+      "family_tier_index": 1,
+      "text_lines": [
+        "+(31-35)% to Chaos Resistance"
+      ],
+      "classification_tags": [
+        "chaos",
+        "resistance"
+      ]
+    }
+  ]
+}

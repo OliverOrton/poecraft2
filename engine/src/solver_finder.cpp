@@ -6,6 +6,7 @@
 #include "solver_selective_completion.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <chrono>
 #include <cmath>
 #include <iomanip>
@@ -13,6 +14,7 @@
 #include <sstream>
 #include <string_view>
 #include <stdexcept>
+#include <tuple>
 #include <unordered_set>
 
 namespace poecraft::solver {
@@ -223,8 +225,19 @@ PolicyFinderWork::PolicyFinderWork(
             }
             cost += it->second;
         }
+        std::uint32_t guaranteed = 0;
+        if (action.params.type == ActionType::Essence &&
+            action.params.essence_index < session_->essence_guaranteed_mod_ids.size()) {
+            const auto mod = session_->essence_guaranteed_mod_ids[action.params.essence_index];
+            for (std::size_t slot = 0; slot < problem_.layout().slots.size(); ++slot) {
+                const auto& mask = problem_.layout().slots[slot].satisfying_mask;
+                if (mod / 64 < mask.size() &&
+                    ((mask[mod / 64] >> (mod % 64)) & 1ull) != 0)
+                    guaranteed |= 1u << slot;
+            }
+        }
         if (priced && std::isfinite(cost))
-            ranked_.push_back({index, cost, root_legal});
+            ranked_.push_back({index, cost, root_legal, guaranteed});
     }
     std::stable_sort(ranked_.begin(), ranked_.end(),
         [&](const RankedAction& left, const RankedAction& right) {
@@ -233,6 +246,43 @@ PolicyFinderWork::PolicyFinderWork(
             return problem_.registry().actions[left.index].id <
                 problem_.registry().actions[right.index].id;
         });
+    // Descriptor guarantees order proposals only. Family membership includes
+    // below-tier blockers, so only the native satisfying masks qualify.
+    std::uint32_t side_masks[2]{};
+    for (std::size_t slot = 0; slot < problem_.goal().slots.size(); ++slot) {
+        const auto side = goal_slot_side(problem_.session(), problem_.goal().slots[slot]);
+        if (side == PC_SIDE_PREFIX || side == PC_SIDE_SUFFIX)
+            side_masks[side] |= 1u << slot;
+    }
+    const auto held_mask = std::popcount(side_masks[PC_SIDE_PREFIX]) >=
+        std::popcount(side_masks[PC_SIDE_SUFFIX])
+        ? side_masks[PC_SIDE_PREFIX] : side_masks[PC_SIDE_SUFFIX];
+    double essence_score = std::numeric_limits<double>::infinity();
+    double held_score = std::numeric_limits<double>::infinity();
+    for (const RankedAction& action : ranked_) {
+        if (!action.root_legal || action.guaranteed_goal_mask == 0) continue;
+        const double score = action.price / std::popcount(action.guaranteed_goal_mask);
+        const auto precedes = [&](std::uint32_t previous) {
+            return previous == kNoId ||
+                problem_.registry().actions[action.index].id <
+                    problem_.registry().actions[previous].id;
+        };
+        if (score < essence_score ||
+            (score == essence_score && precedes(essence_acquisition_))) {
+            essence_score = score;
+            essence_acquisition_ = action.index;
+        }
+        const auto held = action.guaranteed_goal_mask & held_mask;
+        const double held_candidate_score = held == 0
+            ? std::numeric_limits<double>::infinity()
+            : action.price / std::popcount(held);
+        if (held != 0 && (held_candidate_score < held_score ||
+            (held_candidate_score == held_score &&
+                precedes(held_essence_acquisition_)))) {
+            held_score = held_candidate_score;
+            held_essence_acquisition_ = action.index;
+        }
+    }
     std::unordered_set<std::uint32_t> selected;
     const auto add_single = [&](const RankedAction& action) {
         if (selected.insert(action.index).second) {
@@ -243,6 +293,11 @@ PolicyFinderWork::PolicyFinderWork(
             ++counters_.generated;
         }
     };
+    // Reserve one of the existing four complete seeds for guaranteed progress.
+    // The ordinary compiler and original-root checker still decide feasibility,
+    // retry cost, clean/coverage success and properness.
+    for (const RankedAction& action : ranked_)
+        if (action.index == essence_acquisition_) add_single(action);
     /* A renewal seed is useful even when a cheaper one-shot descriptor is
      * ranked first. Selection is by native descriptor identity, not a saved
      * strategy or a case name. */
@@ -262,11 +317,55 @@ PolicyFinderWork::PolicyFinderWork(
         const std::string seed_id = sketch_identity(seed);
         pending_.push_back({first.index, first.price,
             HoleKind::Recovery, seed_id});
-        if (grammar_ != FinderGrammarMode::PrimitiveOnly &&
-            problem_.goal().slots.size() >= 2)
-            pending_.push_back({first.index, first.price,
-                HoleKind::Progress, seed_id});
         break;
+    }
+    if (grammar_ != FinderGrammarMode::PrimitiveOnly &&
+        !problem_.goal().slots.empty()) {
+        const auto acquisition = std::find_if(ranked_.begin(), ranked_.end(),
+            [&](const RankedAction& action) {
+                return action.root_legal && (essence_acquisition_ != kNoId
+                    ? action.index == essence_acquisition_
+                    : problem_.registry().actions[action.index].params.type == ActionType::Chaos);
+            });
+        if (acquisition != ranked_.end()) {
+            std::vector<std::uint32_t> roles;
+            for (std::uint32_t i = 0; i < problem_.goal().slots.size(); ++i)
+                roles.push_back(i);
+            std::stable_sort(roles.begin(), roles.end(), [&](auto a, auto b) {
+                const auto& left = problem_.goal().slots[a];
+                const auto& right = problem_.goal().slots[b];
+                return std::tie(left.group_id,left.family_id,left.min_tier) <
+                    std::tie(right.group_id,right.family_id,right.min_tier);
+            });
+            auto held = roles.front();
+            for (auto role : roles)
+                if (acquisition->guaranteed_goal_mask & (1u << role)) {
+                    held = role;
+                    break;
+                }
+            const auto fallback = std::find_if(roles.begin(), roles.end(),
+                [&](auto role) { return role != held; });
+            const Sketch seed{{acquisition->index}, acquisition->price};
+            pending_.push_back({acquisition->index, acquisition->price,
+                HoleKind::Progress, sketch_identity(seed), held,
+                fallback == roles.end() ? kNoId : *fallback});
+        }
+    }
+    // An Alchemy miss leaves Rare rarity, where another Alchemy is illegal.
+    // Offer the scoped paid reset before binding the next renewal stage. The
+    // existing two-stage compiler checks the goal after each native operation;
+    // the exact evaluator checks every Scour exit before retrying acquisition.
+    if (original_start_.rarity == PC_RARITY_NORMAL) {
+        for (const RankedAction& setup : ranked_) {
+            if (pending_.size() >= 16) break;
+            if (setup.root_legal &&
+                problem_.registry().actions[setup.index].params.type ==
+                    ActionType::Alchemy) {
+                const Sketch seed{{setup.index}, setup.price};
+                pending_.push_back({setup.index, setup.price,
+                    HoleKind::Reset, sketch_identity(seed)});
+            }
+        }
     }
     /* These are unresolved second-stage holes, not checkable graphs. The
      * finite beam expands them only after servicing complete root seeds. */
@@ -478,7 +577,8 @@ void PolicyFinderWork::schedule_feedback_program() {
     if (first != ranked_.end())
         pending_.push_back({first->index, first->price,
             HoleKind::ProgressProgram,
-            sketch_identity(*active_sketch_)});
+            sketch_identity(*active_sketch_), active_sketch_->held_goal_slot,
+            active_sketch_->fallback_goal_slot});
 }
 
 void PolicyFinderWork::generate_retention_candidate() {
@@ -518,7 +618,7 @@ void PolicyFinderWork::generate_retention_candidate() {
             retention_producer_ = std::make_unique<
                 SelectiveCompletionProducer>(
                     problem_, original_start_, economy_->prices,
-                    limits_, variant);
+                    limits_, variant, held_essence_acquisition_);
         }
         if (!retention_producer_->advance(1)) {
             retention_status_ = "native_generation_incomplete";
@@ -583,29 +683,38 @@ void PolicyFinderWork::expand_next_partial() {
                     ActionType::Annul;
             });
         if (annul != ranked_.end()) {
-            const std::uint32_t slot =
-                partial.hole == HoleKind::Progress ? 0u : 1u;
+            const bool programme = partial.hole == HoleKind::ProgressProgram;
+            const std::uint32_t slot = partial.held_goal_slot;
+            // Clean two-goal requests need the third affix removed as well.
+            // Coverage keeps the historical proposal guard. These are routing
+            // choices only; the exact original goal remains the success test.
+            const std::uint32_t cleanup_threshold =
+                problem_.goal().terminal.extras == ExtraExplicitPolicy::ForbidUnmatched
+                ? std::min<std::uint32_t>(7, problem_.goal().required_satisfied_slots() + 1)
+                : 4u;
             if (slot < problem_.goal().slots.size() &&
                 frontier_.size() < 16 && seen_.size() < 256) {
                 Sketch child;
                 child.actions = {partial.first, annul->index};
                 child.score = partial.first_price + annul->price;
                 child.parent_identity = partial.parent_identity;
-                if (slot == 0) {
-                    child.feedback_parent = true;
+                child.held_goal_slot = slot;
+                child.fallback_goal_slot = partial.fallback_goal_slot;
+                if (!programme) {
+                    child.feedback_parent = partial.fallback_goal_slot != kNoId;
                     child.control = FinderControlGraph{
                         {
                             {FinderControlKind::TestGoal, kNoId, 5, 1},
-                            {FinderControlKind::TestSlot, 0, 2, 4},
+                            {FinderControlKind::TestSlot, slot, 2, 4},
                             {FinderControlKind::TestAffixCountAtLeast4,
-                                kNoId, 3, 4},
+                                cleanup_threshold, 3, 4},
                             {FinderControlKind::RunPrimitive, annul->index,
                                 kNoId, kNoId, 0},
                             {FinderControlKind::RunPrimitive, partial.first,
                                 kNoId, kNoId, 0},
                             {FinderControlKind::GoalTerminal},
                         }, 0};
-                } else {
+                } else if (partial.fallback_goal_slot < problem_.goal().slots.size()) {
                     std::vector<std::uint32_t> program;
                     try {
                         program = finder_scour_alchemy_program(
@@ -630,14 +739,14 @@ void PolicyFinderWork::expand_next_partial() {
                             child.control = FinderControlGraph{
                                 {
                                     {FinderControlKind::TestGoal, kNoId, 7, 1},
-                                    {FinderControlKind::TestSlot, 0, 2, 5},
+                                    {FinderControlKind::TestSlot, slot, 2, 5},
                                     {FinderControlKind::TestAffixCountAtLeast4,
-                                        kNoId, 3, 4},
+                                        cleanup_threshold, 3, 4},
                                     {FinderControlKind::RunPrimitive, annul->index,
                                         kNoId, kNoId, 0},
                                     {FinderControlKind::RunPrimitive, partial.first,
                                         kNoId, kNoId, 0},
-                                    {FinderControlKind::TestSlot, 1, 6, 4},
+                                    {FinderControlKind::TestSlot, partial.fallback_goal_slot, 6, 4},
                                     {FinderControlKind::RunScourAlchemy,
                                         kNoId, kNoId, kNoId, 0},
                                     {FinderControlKind::GoalTerminal},
@@ -664,7 +773,7 @@ void PolicyFinderWork::expand_next_partial() {
         problem_.registry().actions[partial.first].params.type;
     const pc_rarity reached_rarity = first_type == ActionType::Transmute
         ? PC_RARITY_MAGIC
-        : first_type == ActionType::Alchemy ||
+        : first_type == ActionType::Alchemy || first_type == ActionType::Chaos ||
               ordinary_add_equivalent(first_type) == ActionType::Regal
             ? PC_RARITY_RARE : PC_RARITY_NORMAL;
     std::vector<Sketch> children;
@@ -673,14 +782,20 @@ void PolicyFinderWork::expand_next_partial() {
         if (children.size() >= 16) break;
         const ActionDescriptor& action =
             problem_.registry().actions[second.index];
-        if (partial.hole == HoleKind::Recovery) {
-            if (action.params.type != ActionType::Annul) continue;
+        if (partial.hole == HoleKind::Recovery ||
+            partial.hole == HoleKind::Reset) {
+            const auto intended = partial.hole == HoleKind::Reset
+                ? ActionType::Scour : ActionType::Annul;
+            if (action.params.type != intended ||
+                (action.legality.rarity_mask & (1u << reached_rarity)) == 0)
+                continue;
         } else if (!action_transition_facts(action.params.type).renewal ||
                    (action.legality.rarity_mask &
                     (1u << reached_rarity)) == 0) {
             continue;
         }
-        const bool recovery = partial.hole == HoleKind::Recovery;
+        const bool recovery = partial.hole == HoleKind::Recovery ||
+            partial.hole == HoleKind::Reset;
         children.push_back({{partial.first, second.index},
             0.0, recovery});
         children.back().parent_identity = partial.parent_identity;
@@ -929,6 +1044,7 @@ void PolicyFinderWork::complete_active_candidate() {
     record.finished_ns = elapsed_ns();
     record.work = checker_->diagnostic_result().reforge_logical_work_v1;
     record.peak_owned_bytes = checker_->peak_owned_bytes();
+    record.check_progress = checker_->progress();
     record.status = finder_evaluation_accepted(result)
         ? "accepted" : "refused_check";
     ++counters_.checked;
@@ -990,6 +1106,7 @@ void PolicyFinderWork::step(const std::uint32_t max_work_items) {
                 record.work =
                     checker_->diagnostic_result().reforge_logical_work_v1;
                 record.peak_owned_bytes = checker_->peak_owned_bytes();
+            record.check_progress = checker_->progress();
             }
         }
         charge_active_work();
@@ -1033,6 +1150,7 @@ void PolicyFinderWork::step(const std::uint32_t max_work_items) {
             record.finished_ns = elapsed_ns();
             record.work = checker_->diagnostic_result().reforge_logical_work_v1;
             record.peak_owned_bytes = checker_->peak_owned_bytes();
+            record.check_progress = checker_->progress();
         }
         counters_.check_ns += static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -1055,6 +1173,7 @@ void PolicyFinderWork::step(const std::uint32_t max_work_items) {
             record.finished_ns = elapsed_ns();
             record.work = checker_->diagnostic_result().reforge_logical_work_v1;
             record.peak_owned_bytes = checker_->peak_owned_bytes();
+            record.check_progress = checker_->progress();
         }
         counters_.check_ns += static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -1140,9 +1259,13 @@ std::string PolicyFinderWork::telemetry_json() const {
     for (std::size_t i = 0; i < candidate_records_.size(); ++i) {
         const CandidateRecord& record = candidate_records_[i];
         if (i != 0) result += ',';
+        const std::string status = record.status == "queued" && state.done
+            ? (finish_requested_ ? "unserved_finish" :
+                state.considered >= attempt_limit_ ? "unserved_attempt_limit" :
+                "unserved_capacity") : record.status;
         result += "{\"identity\":" + json_string(record.identity) +
             ",\"parent\":" + json_string(record.parent_identity) +
-            ",\"status\":" + json_string(record.status) +
+            ",\"status\":" + json_string(status) +
             ",\"refusal\":" + json_string(record.refusal) +
             ",\"graph_hash\":" + json_string(record.graph_hash) +
             ",\"conditional\":" +
@@ -1164,7 +1287,17 @@ std::string PolicyFinderWork::telemetry_json() const {
                  std::to_string(record.finished_ns)) +
             ",\"logical_reforge_work\":" + std::to_string(record.work) +
             ",\"peak_owned_bytes\":" +
-                std::to_string(record.peak_owned_bytes);
+                std::to_string(record.peak_owned_bytes) +
+            ",\"check_subphase\":" + json_string(
+                strategy_eval_subphase_name(record.check_progress.subphase)) +
+            ",\"check_exact_states\":" +
+                std::to_string(record.check_progress.exact_states) +
+            ",\"check_discovered_pairs\":" +
+                std::to_string(record.check_progress.discovered_pairs) +
+            ",\"check_pending_pairs\":" +
+                std::to_string(record.check_progress.pending_pairs) +
+            ",\"check_stored_transitions\":" +
+                std::to_string(record.check_progress.stored_transitions);
         std::ostringstream numeric;
         numeric << std::setprecision(17) << record.score;
         result += ",\"score\":" + numeric.str();

@@ -50,6 +50,9 @@ struct FinderProgramBinding {
     std::uint32_t held_goal_mask = 0;
 };
 struct FinderControlNode {
+    // TestAffixCountAtLeast4 retains its legacy kind identity: an unset
+    // binding means four; an explicit binding supplies a threshold in [1,7].
+    // Seven is a never guard for ordinary equipment's six explicit affixes.
     FinderControlKind kind = FinderControlKind::Hole;
     std::uint32_t binding = kNoId;
     std::uint32_t on_true = kNoId;

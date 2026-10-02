@@ -1,31 +1,19 @@
 # Handoff
 
-Oliver's [CURRENT overnight continuation](docs/active/2026-10-02-current-overnight/README.md)
-is integrated through `6a24e99` with the parent's completed Mechanics chain
-through `bea5683` in isolated `dot/integration-20261002` (combined source
-`336c5b2`). Shared publication/tests/contracts were reviewed before the local
-build. W1's status/artifact checks and full carrier-universe repair coexist with
-explicit original-root paid-reset checking; lower authority stays separate.
-Finder's pinned `a04c045` quotient received read-only source review; no blocking
-mismatch was found within its narrow admitted domain, but it remains excluded.
-Integration build and focused checks pass: carrier/W1 516, paid reset 1082, assertion 384, bounded
-Finish 203, abstraction 47173, Python 10, release WASM, filtered npm and final
-typecheck. All own processes ended; the parent released the N5 CPU hold, with
-its deeper result pending. The living record pins integration binary/log hashes
-and Finder review limits. Later Finder and Mechanics Calculator edits are not
-selected; actual-worker/economic qualification of final bytes remains pending.
-
-Owner evidence remains scoped: CURRENT's N2/N3 checked Bow upper improves
-160160.995674c -> 51222.520820c (68.018%), with bounded Finish, success one and
-zero off-policy mass. Mechanics N4 is parent-reported at 4.656588642517449c for
-Alchemy/paid Scour, success effectively one, zero off-policy and lower zero
-`TargetNeutralZero`; Foulborn has zero rows/no use. Native exit 2 from stale expected
-status remains recorded despite runner exit 0. Full Breach/Foulborn qualification
-is not claimed. Mixed-tag finite controls pass 516 checks; later M12 Conquest
-empty-root evidence stays separate from older partial cb03 and retains its failed
-387.339ms worker-slice limit. No integration timed solve or worker ran. Remaining
-actual-worker slots belong to final bytes after Finder lands or is explicitly
-held. Main/root `0`, data/prices and deployment remain untouched.
+Oliver's overnight isolated integration is in progress on `dot/integration-20261002`.
+CURRENT is retained through `6a24e99`, Mechanics through `d326305`, and the parent
+selected Finder's pinned chain through `45611b9`. The native-group and terminal
+projection correction is checkpointed separately at `3c38872`: the independent
+native pool matrix passes 36,366 finite checks; checkpoint/assertion identities
+were advanced. Old Finder economic/native-law qualification remains held until
+fresh combined evidence; no historical measurement transfers to these bytes.
+The [CURRENT living record](docs/active/2026-10-02-current-overnight/README.md),
+[Finder record](docs/active/2026-10-02-finder-essence/README.md) and
+[Mechanics record](docs/active/2026-09-28-currency-expansion/README.md) retain
+owner strategy outcomes, commands, hashes and exclusions. Final combined build,
+focused checks and the two parent-owned actual-worker slots remain pending.
+All six global native timed slots are spent. No integration timed solve or worker
+has run. Main/root `0`, runtime/data/prices and deployment remain untouched.
 
 Oliver's selected [MM0–MM7 recovery](docs/active/2026-09-29-metamod-recovery/README.md)
 is locally retained with partial acceptance. Last coherent execution commit:

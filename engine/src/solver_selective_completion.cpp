@@ -19,9 +19,11 @@ std::uint32_t packed_tiers(const AbstractState& state) {
 SelectiveCompletionProducer::SelectiveCompletionProducer(
     CalcContext& problem, const pc_item_state& original_start,
     const std::unordered_map<std::string, double>& prices,
-    const SolveOptions& limits, const SelectiveCompletionVariant variant)
+    const SolveOptions& limits, const SelectiveCompletionVariant variant,
+    const std::uint32_t acquisition_action)
     : problem_(problem), original_start_(original_start), prices_(prices),
-      limits_(limits), variant_(variant) {}
+      limits_(limits), variant_(variant),
+      requested_acquisition_(acquisition_action) {}
 
 void SelectiveCompletionProducer::refuse(std::string reason) {
     status_ = std::move(reason);
@@ -87,9 +89,26 @@ void SelectiveCompletionProducer::begin() {
         if (index >= problem_.registry().actions.size()) continue;
         const ActionDescriptor& action = problem_.registry().actions[index];
         if (action.synthetic || action.uses_companion_state ||
-            action.params.type != ActionType::Chaos ||
+            (requested_acquisition_ == kNoId
+                ? action.params.type != ActionType::Chaos
+                : index != requested_acquisition_) ||
+            (action.params.type != ActionType::Chaos &&
+             action.params.type != ActionType::Essence) ||
             !action_legal(problem_.session(), action,
                 problem_.state(root))) continue;
+        if (action.params.type == ActionType::Essence) {
+            const auto essence = action.params.essence_index;
+            const auto& guarantees = problem_.session().essence_guaranteed_mod_ids;
+            if (essence >= guarantees.size()) continue;
+            const auto mod = guarantees[essence];
+            bool held_goal = false;
+            for (const auto slot : side_slots_[held_side_]) {
+                const auto& mask = problem_.layout().slots[slot].satisfying_mask;
+                held_goal |= mod / 64 < mask.size() &&
+                    ((mask[mod / 64] >> (mod % 64)) & 1ull) != 0;
+            }
+            if (!held_goal) continue;
+        }
         double price = 0.0;
         bool complete = true;
         for (const std::string& key : action.cost_keys) {

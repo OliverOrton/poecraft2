@@ -21,6 +21,16 @@ Finder output has no independent lower or exactness authority and does not
 enter the Current incumbent portfolio. An already-complete root still passes
   through a goal-guarded zero-operation graph and independent checking.
 
+The [Finder Essence follow-up](../active/2026-10-02-finder-essence/README.md)
+reserves a native satisfying-tier acquisition seed, binds conditional retention
+to its actual goal role, and continues clean-target Annul below four affixes.
+Normal-root Alchemy can pay scoped Scour before retrying. These are bounded
+proposal changes in the existing strategy vocabulary; the original-root exact
+checker retains full cost, mass and properness authority. Native finite fixtures
+qualify complete cleanup and goal-order controls; real-data and worker economics
+remain unqualified. The private protected Scour producer may receive an explicit
+Essence binding from Finder; Current's unset binding retains Chaos discovery.
+
   The benchmark-only retained-side grammar supplies one such original-root
   controller, with paid acquisition, native Eldritch programme and recovery.
   Its trusted occurrence check grants only the programme's emitted dependency
