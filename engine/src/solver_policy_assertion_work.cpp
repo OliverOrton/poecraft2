@@ -19,8 +19,8 @@ std::vector<std::uint64_t> compiled_assertion_request_identity(
         const bool request_root_upper,
         const bool request_policy_entries,
         const bool request_dependency_kernels) {
-    // Version 3 binds the corrected native-group renewal law.
-    std::vector<std::uint64_t> key{3, static_cast<std::uint64_t>(mode),
+    // Version 4 also binds the supplementary root controller grammar.
+    std::vector<std::uint64_t> key{4, static_cast<std::uint64_t>(mode),
         request_root_upper, request_policy_entries, request_dependency_kernels};
     const auto append_text = [&](const std::string_view value) {
         key.push_back(value.size());
@@ -51,6 +51,7 @@ std::vector<std::uint64_t> compiled_assertion_request_identity(
     key.push_back(calc.session().item_level);
     key.push_back(calc.action_control().explicit_envelope);
     key.push_back(options.goal_progress_gated_reforges);
+    key.push_back(options.paid_root_foulborn_salvage);
     key.push_back(options.allow_economic_restart);
     key.push_back(options.consider_imprint_programs);
     key.push_back(static_cast<std::uint64_t>(options.solve_profile));
@@ -395,6 +396,13 @@ struct CompiledPolicyAssertionWork::Impl {
             return;
         }
         if (mode == CompiledPolicyAssertionMode::OriginalRootController) {
+            if (emitted_strategy_json != nullptr &&
+                emitted_strategy_json->find("\"solver_controller_grammar\":\"paid_root_foulborn_salvage_v1\"") !=
+                    std::string::npos && !options.paid_root_foulborn_salvage) {
+                finish_failure(CompiledPolicyAssertionStatus::CompilationFailure,
+                    "supplementary original-root graph requires paid_root_foulborn_salvage_v1 scope");
+                return;
+            }
             // This is an explicit internal provenance contract, never inferred
             // from an accidentally empty or malformed statewise policy.
             const bool no_parent_decisions =

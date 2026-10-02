@@ -217,6 +217,9 @@ std::string compile_finder_candidate_json(
     const SessionImpl& session = calc.session();
     const std::string goal = compile_finder_goal_condition(calc);
     std::string json = finder_base_json(calc, start_item);
+    if (limits.paid_root_foulborn_salvage)
+        json += ",\"solver_controller_grammar\":\"paid_root_foulborn_salvage_v1\","
+            "\"solver_policy_scope\":\"gated_search_with_paid_root_foulborn_salvage_v1\"";
     json += ",\"start_node_id\":\"start\",\"nodes\":["
             "{\"id\":\"start\",\"kind\":\"start\"},"
             "{\"id\":\"goal\",\"kind\":\"terminal\","
@@ -265,6 +268,57 @@ std::string compile_finder_candidate_json(
         1 + 2 * primitive_sequence.size() > limits.max_compiled_edges) {
         throw std::length_error("finder candidate exceeds compiled-output cap");
     }
+    return json;
+}
+
+std::string compile_paid_root_foulborn_candidate_json(
+    const CalcContext& calc, const pc_item_state& start_item,
+    const std::uint32_t roll, const std::uint32_t add, const std::uint32_t reset,
+    const std::vector<std::uint32_t>& selected_misses, const SolveOptions& limits) {
+    if (!limits.paid_root_foulborn_salvage || selected_misses.empty() ||
+        roll >= calc.registry().actions.size() || add >= calc.registry().actions.size() ||
+        reset >= calc.registry().actions.size() ||
+        calc.registry().actions[roll].params.type != ActionType::Alchemy ||
+        calc.registry().actions[add].params.type != ActionType::FoulbornExalt ||
+        calc.registry().actions[reset].params.type != ActionType::Scour)
+        throw std::invalid_argument("invalid paid root Foulborn grammar");
+    if (limits.max_compiled_nodes < 5 || selected_misses.size() > limits.max_compiled_edges ||
+        6 > limits.max_compiled_edges - selected_misses.size())
+        throw std::length_error("paid root Foulborn candidate exceeds graph cap");
+    std::vector<SlotVocabulary> vocabulary;
+    for (std::size_t i = 0; i < calc.layout().slots.size(); ++i)
+        vocabulary.push_back(slot_vocabulary(calc.session(), calc.layout().slots[i], i));
+    std::string json = finder_base_json(calc, start_item);
+    json += ",\"solver_controller_grammar\":\"paid_root_foulborn_salvage_v1\","
+        "\"solver_policy_scope\":\"gated_search_with_paid_root_foulborn_salvage_v1\","
+        "\"start_node_id\":\"start\",\"nodes\":[{\"id\":\"start\",\"kind\":\"start\"},"
+        "{\"id\":\"goal\",\"kind\":\"terminal\",\"terminal\":\"success\"}";
+    const std::array<std::pair<const char*, std::uint32_t>, 3> stages{{
+        {"roll", roll}, {"add", add}, {"reset", reset}}};
+    for (const auto& [id, action] : stages)
+        json += ",{\"id\":\"" + std::string(id) + "\",\"kind\":\"operation\",\"operation\":" +
+            operation_json(calc.session(), calc.registry().actions[action]) + "}";
+    const auto goal = compile_finder_goal_condition(calc);
+    json += "],\"edges\":[{\"id\":\"begin\",\"from\":\"start\",\"to\":\"roll\",\"priority\":0,\"is_default\":true},"
+        "{\"id\":\"roll_goal\",\"from\":\"roll\",\"to\":\"goal\",\"priority\":0,\"condition\":" + goal + "}";
+    std::unordered_set<std::uint32_t> seen;
+    for (const auto state : selected_misses) {
+        if (state >= calc.state_count() || !seen.insert(state).second ||
+            calc.is_goal_state(calc.state(state)) || calc.state(state).goal_progress_retry_basin != 0)
+            throw std::invalid_argument("invalid paid root Foulborn selection");
+        const auto condition = abstract_state_condition(calc.session(), calc.layout(),
+            vocabulary, calc.state(state));
+        json += ",{\"id\":\"select" + std::to_string(state) + "\",\"from\":\"roll\",\"to\":\"add\","
+            "\"priority\":1,\"condition\":" + condition + "}";
+        if (json.size() > limits.max_strategy_json_bytes)
+            throw std::length_error("paid root Foulborn candidate exceeds JSON cap");
+    }
+    json += ",{\"id\":\"roll_reset\",\"from\":\"roll\",\"to\":\"reset\",\"priority\":2,\"is_default\":true},"
+        "{\"id\":\"add_goal\",\"from\":\"add\",\"to\":\"goal\",\"priority\":0,\"condition\":" + goal + "},"
+        "{\"id\":\"add_reset\",\"from\":\"add\",\"to\":\"reset\",\"priority\":1,\"is_default\":true},"
+        "{\"id\":\"retry\",\"from\":\"reset\",\"to\":\"roll\",\"priority\":0,\"is_default\":true}]}";
+    if (json.size() > limits.max_strategy_json_bytes)
+        throw std::length_error("paid root Foulborn candidate exceeds JSON cap");
     return json;
 }
 
@@ -3341,7 +3395,10 @@ std::string compile_policy_strategy_json(
     // can still publish a bounded result, so it cannot own artifact optimality.
     json += "\",\"description\":\"Compiled policy; compilation does not "
             "establish policy optimality";
-    if (result.options.goal_progress_gated_reforges) {
+    if (result.options.paid_root_foulborn_salvage) {
+        json += "; gated search with supplementary paid_root_foulborn_salvage_v1 controller grammar; "
+            "zero lower only and no optimality closure";
+    } else if (result.options.goal_progress_gated_reforges) {
         json +=
             "; zero-progress-reroll "
             "policy restriction; excluded zero-progress salvage routes are "
@@ -3365,7 +3422,9 @@ std::string compile_policy_strategy_json(
             "; action scope excludes "
             "automatic Imprint programs";
     }
-    if (result.options.goal_progress_gated_reforges &&
+    if (result.options.paid_root_foulborn_salvage) {
+        json += "\",\"solver_policy_scope\":\"gated_search_with_paid_root_foulborn_salvage_v1";
+    } else if (result.options.goal_progress_gated_reforges &&
         !result.options.allow_economic_restart) {
         json +=
             "\",\"solver_policy_scope\":\""

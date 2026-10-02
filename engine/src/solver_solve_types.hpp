@@ -514,6 +514,8 @@ struct SolveTransitionCache {
     bool full_evidence = false;
     bool kernel_reuse = true;
     bool goal_progress_gated_reforges = false;
+    // Native-private supplementary controller grammar; never a public preset.
+    bool paid_root_foulborn_salvage = false;
     bool consider_imprint_programs = true;
     bool allow_economic_restart = true;
     std::uint32_t discovered_states = 0;

@@ -73,6 +73,9 @@ pc_result configure_solver_native_retention_diagnostic(pc_solver_handle handle,
 /* Private proof-capability treatment, copied into each new Current work item. */
 pc_result configure_solver_goal_proof_profile_diagnostic(
     pc_solver_handle handle, GoalProofProfile profile, pc_error_info* out_error);
+// Explicit native-only supplementary grammar, no C ABI or WASM activation.
+pc_result configure_solver_paid_root_foulborn_salvage_diagnostic(
+    pc_solver_handle handle, bool enabled, pc_error_info* out_error);
 pc_result configure_solver_selective_completion_service_diagnostic(
     pc_solver_handle handle, bool enabled, pc_error_info* out_error);
 

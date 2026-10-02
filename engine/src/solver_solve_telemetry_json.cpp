@@ -4359,6 +4359,8 @@ std::string serialize_solver_telemetry(
     json += ",\"start_scope\":";
     if (result == nullptr || !result->policy_available) {
         json += "null";
+    } else if (result->options.paid_root_foulborn_salvage) {
+        json += "\"gated_search_with_paid_root_foulborn_salvage_v1\"";
     } else if (result->options.goal_progress_gated_reforges &&
                !result->options.allow_economic_restart) {
         json +=

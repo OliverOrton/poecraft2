@@ -1,3 +1,4 @@
+#include "poecraft/solver.h"
 #include "solver_solve_types.hpp"
 #include "solver_action_family_contract.hpp"
 
@@ -36,6 +37,18 @@ SolveWork::Impl::Impl(
         : calc(context), session(context.session()),
           exact_start_item(start_item), options(solve_options), prices(prices),
           reported_unsupported(context.operators().size(), false) {
+        if (options.paid_root_foulborn_salvage) {
+            // A profile's search gate is not an explicit caller policy restriction.
+            // Never silently widen a requested zero-progress-reroll-only scope.
+            if (!options.goal_progress_gated_reforges ||
+                !options.high_impact_executable_uppers ||
+                (options.solve_profile_override_mask &
+                    PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES) != 0)
+                throw std::invalid_argument(
+                    "paid_root_foulborn_salvage_v1 requires default search gating; "
+                    "explicit gated policy restriction cannot be widened");
+            options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+        }
         // Foulborn changes acquisition probabilities. Existing ordinary-clean
         // lower proofs have not been extended to this family. Retain the
         // existing checked-policy capability and zero global lower only.
@@ -174,6 +187,8 @@ SolveWork::Impl::Impl(
                 result.diagnostics.solution_scope +=
                     "_without_automatic_imprint_programs";
         }
+        if (options.paid_root_foulborn_salvage)
+            result.diagnostics.solution_scope = paid_root_foulborn_solution_scope(options);
         if (calc.registry().product_goal_filtering) {
             if (result.diagnostics.solution_scope == "globally_optimal_unrestricted")
                 result.diagnostics.solution_scope = "exact_within_candidate_and_generated_programme_grammar";
@@ -616,6 +631,7 @@ SolveWork::Impl::Impl(
                 options.max_diagnostic_samples;
             transition_cache->full_evidence = options.full_evidence;
             transition_cache->kernel_reuse = options.kernel_reuse;
+            transition_cache->paid_root_foulborn_salvage = options.paid_root_foulborn_salvage;
             transition_cache->goal_progress_gated_reforges =
                 options.goal_progress_gated_reforges;
             transition_cache->consider_imprint_programs =

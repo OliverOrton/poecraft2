@@ -623,6 +623,7 @@ struct pc_solver {
     solver::GoalProofProfile goal_proof_profile =
         solver::GoalProofProfile::OrdinaryClean;
     bool selective_completion_service = false;
+    bool paid_root_foulborn_salvage = false;
     double native_retention_checked_target = 0;
     solver::NativeContinuationSearchMode native_continuation_search =
         solver::NativeContinuationSearchMode::Ordinary;
@@ -973,6 +974,7 @@ solver::SolveOptions solve_options(
         const pc_solve_options* options) {
     solver::SolveOptions value = solve_options(options);
     value.goal_proof_profile = holder.goal_proof_profile;
+    value.paid_root_foulborn_salvage = holder.paid_root_foulborn_salvage;
     value.selective_completion_service =
         holder.selective_completion_service;
     value.native_retention_lower = holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::Off;
@@ -1419,6 +1421,20 @@ pc_result solver::configure_solver_goal_proof_profile_diagnostic(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     handle->goal_proof_profile = profile;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result solver::configure_solver_paid_root_foulborn_salvage_diagnostic(
+        pc_solver_handle handle, const bool enabled,
+        pc_error_info* out_error) {
+    if (!handle || handle->solve_work || handle->solved.has_value() ||
+        handle->finder_work || handle->finder_finished) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+            "paid root Foulborn grammar requires an idle unsolved handle");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    handle->paid_root_foulborn_salvage = enabled;
     clear_error(out_error);
     return PC_RESULT_OK;
 }

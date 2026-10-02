@@ -1,3 +1,15 @@
+# Foulborn sprint WIP handoff (2026-10-02)
+
+Parent requested a safe checkpoint to switch the fast task to a standard-tier
+replacement. Worktree `C:/Users/Oliver/Documents/poecraft2-foulborn-sprint`, branch
+`dot/foulborn-20261002`, baseline `f08facbb93204bf721048c21b94080ab582ee9f8`.
+The [living WIP record](docs/active/2026-10-02-foulborn-sprint/README.md#wip-checkpoint-for-standard-tier-replacement)
+owns exact changes, failed/intermediate-passed/interrupted builds, pending
+finite checks, review concerns, next command and frozen-source references.
+No own process remains; no timed or worker run started; no serial slot granted.
+Do not promote this untested native-private supplementary grammar. Continue
+on this branch without widening the explicit gated-policy restriction.
+
 # Handoff
 
 The parent-approved [KIDS configured cluster catalogue slice](docs/active/2026-10-02-clusters-sprint/README.md)

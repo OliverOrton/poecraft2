@@ -1,3 +1,4 @@
+#include "poecraft/solver.h"
 #include "tests.hpp"
 
 #include "../src/json.hpp"
@@ -15343,6 +15344,184 @@ void run_paid_root_reset_renewal_tests() {
     }
 }
 
+void run_paid_root_foulborn_salvage_tests() {
+    for (unsigned mode = 0; mode < 11; ++mode) {
+        auto session = make_solve_session();
+        std::const_pointer_cast<DataImpl>(session->data)->mod_type_key_sid = session->data->mod_key_sid;
+        auto registry = build_action_registry(*session);
+        const auto roll = registry.index_by_id.at("alchemy");
+        const auto reset = registry.index_by_id.at("scour");
+        const auto add = registry.index_by_id.at("foulborn_exalt");
+        GoalSpec goal;
+        goal.rarity = PC_RARITY_RARE;
+        goal.terminal.extras = ExtraExplicitPolicy::Allow;
+        goal.primitive_actions_explicit = true;
+        GoalSlot slot; slot.family_id = 100; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+        if (mode == 6)
+            goal.disabled_action_families = solver_action_family_bit(solver_action_family_for_action(registry.actions[add]));
+        pc_item_state start; pc_item_clear(&start);
+        std::vector<std::uint32_t> actions{roll, reset};
+        if (mode != 10) actions.push_back(add);
+        CalcContext calc(session, goal, registry, actions);
+        SolveOptions options;
+        options.goal_progress_gated_reforges = true;
+        options.high_impact_executable_uppers = true;
+        options.paid_root_foulborn_salvage = mode != 0;
+        options.allow_economic_restart = false;
+        options.state_certificate_control = false;
+        if (mode == 5)
+            options.solve_profile_override_mask |= PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES;
+        std::unordered_map<std::string, double> prices{{"alchemy", 2}, {"scour", .1}, {"foulborn_exalt", .01}};
+        if (mode == 2) prices["foulborn_exalt"] = 100;
+        if (mode == 3) prices["foulborn_exalt"] = 0;
+        if (mode == 4) prices.erase("foulborn_exalt");
+        if (mode == 5) {
+            bool refused = false;
+            try { SolveWorkTestAccess::Impl work(calc, start, prices, options); }
+            catch (const std::invalid_argument& error) {
+                refused = std::string(error.what()).find("explicit gated policy restriction") != std::string::npos;
+            }
+            PC_CHECK(refused);
+            continue;
+        }
+        // Independently tabulate the finite native controller equations. The
+        // emitted original-root graph then checks those equations and routes.
+        CalcContext proof(session, goal, registry, {roll, reset, add});
+        const auto root = proof.intern_item(start);
+        const auto roll_law = proof.outcomes(root, roll, false);
+        double p0 = 0;
+        std::vector<std::pair<OutcomeEntry, double>> misses;
+        for (const auto& outcome : roll_law.entries) {
+            if (!(outcome.probability > 0)) continue;
+            if (proof.is_goal_state(proof.state(outcome.state))) p0 += outcome.probability;
+            else {
+                const auto reset_law = proof.outcomes(outcome.state, reset, false);
+                PC_CHECK(reset_law.supported && reset_law.applicable && reset_law.entries.size() == 1);
+                PC_CHECK(reset_law.entries.front().state == root && reset_law.entries.front().probability == 1);
+                double p = 0;
+                if (action_legal(*session, registry.actions[add], proof.state(outcome.state))) {
+                    const auto law = proof.outcomes(outcome.state, add, false);
+                    PC_CHECK(law.supported && law.applicable && !law.goal_progress_gated);
+                    double mass = 0;
+                    for (const auto& exit : law.entries) {
+                        mass += exit.probability;
+                        if (proof.is_goal_state(proof.state(exit.state))) p += exit.probability;
+                        else if (exit.probability > 0) {
+                            const auto recovery = proof.outcomes(exit.state, reset, false);
+                            PC_CHECK(recovery.supported && recovery.applicable && recovery.entries.size() == 1);
+                            PC_CHECK(recovery.entries.front().state == root && recovery.entries.front().probability == 1);
+                        }
+                    }
+                    PC_CHECK(near(mass, 1, 1e-12));
+                }
+                misses.emplace_back(outcome, p);
+            }
+        }
+        PC_CHECK(p0 > 0 && p0 < 1);
+        const double baseline = (2 + (1-p0)*.1)/p0;
+        if (mode == 7) {
+            double lo = kInfinity, hi = 0;
+            for (const auto& [unused, p] : misses) if (p > 0) {
+                lo = std::min(lo, p*(.1+baseline)); hi = std::max(hi, p*(.1+baseline));
+            }
+            PC_CHECK(lo < hi);
+            prices["foulborn_exalt"] = (lo + hi)/2;
+        }
+        double cost = 2, success = p0;
+        unsigned selected = 0, skipped_positive = 0;
+        for (const auto& [miss, p] : misses) {
+            const bool choose = mode != 0 && mode != 4 && mode != 6 && mode != 8 && mode != 10 &&
+                prices.at("foulborn_exalt") < p*(.1+baseline);
+            if (choose) {
+                ++selected;
+                cost += miss.probability * (prices.at("foulborn_exalt") + (1-p)*.1);
+                success += miss.probability*p;
+            } else { cost += miss.probability*.1; skipped_positive += p > 0; }
+        }
+        if (mode == 7) PC_CHECK(selected > 0 && skipped_positive > 0);
+        const double expected = cost/success;
+        if (mode == 8) options.max_compiled_edges = 5; // Exact route graph refuses; baseline still fits.
+        SolveWorkTestAccess::Impl work(calc, start, prices, options);
+        const auto parent_states = calc.state_count();
+        const auto parent_scope = work.caller_scope_identity();
+        const auto ordinary_options = work.options;
+        work.options.paid_root_foulborn_salvage = !work.options.paid_root_foulborn_salvage;
+        PC_CHECK(parent_scope != work.caller_scope_identity());
+        work.options = ordinary_options;
+        PC_CHECK(work.transition_cache->compatibility_mismatch(work.result.start_state, work.operators, work.options).empty());
+        auto wrong_scope = work.options; wrong_scope.paid_root_foulborn_salvage = !wrong_scope.paid_root_foulborn_salvage;
+        PC_CHECK(work.transition_cache->compatibility_mismatch(work.result.start_state, work.operators, wrong_scope) ==
+            "paid_root_foulborn_salvage");
+        const auto priced = std::find_if(work.operators.begin(), work.operators.end(),
+            [&](const auto& value) { return value.index == roll; });
+        PC_CHECK(priced != work.operators.end());
+        if (priced == work.operators.end()) continue;
+        if (mode == 9) work.options.max_transitions = 2;
+        auto task = work.prepare_paid_root_reset_candidate(*priced);
+        bool done = false;
+        for (unsigned units = 0; units < 100000; ++units) if (task.resume()) { done = true; break; }
+        PC_CHECK(done);
+        if (!done) continue;
+        const bool installed = task.take_result();
+        PC_CHECK(calc.state_count() == parent_states);
+        if (mode == 9) { PC_CHECK(!installed && !work.output_incumbent); continue; }
+        PC_CHECK(installed && work.output_incumbent.has_value());
+        if (!work.output_incumbent) continue;
+        const auto& candidate = *work.output_incumbent;
+        PC_CHECK(candidate.independently_evaluated && candidate.proper && candidate.executable);
+        PC_CHECK(candidate.compiled_root_entry_only && candidate.compiled_artifact.policy_decision_bindings.empty());
+        PC_CHECK(near(candidate.evaluated_policy_cost, expected, 1e-9));
+        PC_CHECK(work.retained_incumbent_invalid_reason(candidate) == nullptr);
+        PC_CHECK(work.certified_global_lower_bound() == 0 && work.result.closure_unavailable_by_profile);
+        const bool used = candidate.compiled_artifact.strategy_json.find("\"type\":\"foulborn_exalt\"") != std::string::npos;
+        PC_CHECK(used == (selected != 0));
+        if (used) {
+            auto stale = candidate;
+            work.options.paid_root_foulborn_salvage = false;
+            PC_CHECK(work.retained_incumbent_invalid_reason(stale) != nullptr);
+            work.options.paid_root_foulborn_salvage = true;
+            SolveResult root_proof;
+            root_proof.policy_available = true;
+            root_proof.start_state = work.result.start_state;
+            root_proof.has_exact_start_item = true;
+            root_proof.exact_start_item = start;
+            root_proof.values = candidate.values;
+            root_proof.policy = candidate.policy;
+            root_proof.policy_reachable = candidate.policy_reachable;
+            auto restricted = work.options; restricted.paid_root_foulborn_salvage = false;
+            refinement::CompiledPolicyAssertionWork laundering(calc, root_proof, prices, restricted,
+                "supplementary scope refusal", nullptr, &candidate.compiled_artifact.strategy_json,
+                nullptr, true, false, false, refinement::CompiledPolicyAssertionMode::OriginalRootController);
+            while (!laundering.progress().done) laundering.step(1);
+            const auto refused = laundering.take_result();
+            PC_CHECK(!refused.executable && !refused.proper &&
+                refused.status == refinement::CompiledPolicyAssertionStatus::CompilationFailure);
+            PC_CHECK(candidate.compilation_provenance == "native_paid_root_foulborn_salvage_v1");
+            PC_CHECK(candidate.compiled_artifact.strategy_json.find("paid_root_foulborn_salvage_v1") != std::string::npos);
+            PC_CHECK(candidate.evaluated_policy_cost < baseline);
+            const auto graph = json::Parser(candidate.compiled_artifact.strategy_json.data(),
+                candidate.compiled_artifact.strategy_json.size()).parse();
+            unsigned post_add_edges = 0;
+            for (const auto& edge : graph.at("edges").array) if (edge.at("from").string == "add") {
+                ++post_add_edges;
+                PC_CHECK(edge.at("to").string == "goal" || edge.at("to").string == "reset");
+            }
+            PC_CHECK(post_add_edges == 2);
+        }
+        if (mode != 0) {
+            PC_CHECK(work.result.diagnostics.solution_scope.find("paid_root_foulborn_salvage_v1") != std::string::npos);
+            PC_CHECK(work.result.diagnostics.solution_scope.find("within_zero_progress_reroll") == std::string::npos);
+        }
+        for (std::size_t state = 0; state < candidate.values.size(); ++state) {
+            PC_CHECK(candidate.policy[state].index == kNoId && candidate.policy_reachable[state] == 0);
+            if (state != work.result.start_state) PC_CHECK(!std::isfinite(candidate.values[state]));
+        }
+        std::printf("paid root Foulborn mode=%u selected=%u baseline=%.12g checked=%.12g\n",
+            mode, selected, baseline, candidate.evaluated_policy_cost);
+    }
+}
+
 void run_solver_dirty_continuation_tests() {
     {
         solve_detail::DirtyGuidance guide;
@@ -15789,6 +15968,7 @@ void run_solver_integrity_tests(const char* case_name) {
     else if (name == "selective-target-count") run_selective_completion_target_count_tests();
     else if (name == "selective-cap-diagnosis") run_selective_completion_target_count_tests(true);
     else if (name == "paid-reset") run_paid_root_reset_renewal_tests();
+    else if (name == "foulborn-root") run_paid_root_foulborn_salvage_tests();
     else if (name == "finder-bindings") run_solver_finder_binding_tests();
     else if (name == "automatic-admission-contract") {
         run_resource_stop_reachable_policy_tests();
@@ -15834,6 +16014,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_primitive_destructive_renewal_upper_tests();
     run_goal_progress_gated_reforge_tests();
     run_paid_root_reset_renewal_tests();
+    run_paid_root_foulborn_salvage_tests();
     run_incremental_action_generation_tests();
     run_automatic_eldritch_side_tests();
     run_artifact_solve_tests(artifact_dir);

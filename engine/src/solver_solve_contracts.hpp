@@ -189,6 +189,8 @@ struct SolveOptions {
     bool strict_states = false;
     bool kernel_reuse = true;
     bool goal_progress_gated_reforges = false;
+    // Native-private supplementary controller grammar; never a public preset.
+    bool paid_root_foulborn_salvage = false;
     /* Caller-selected automatic-action scope. False excludes only generated
      * Imprint checkpoint/retry programs; all other automatic families retain
      * their normal admission authority. */
@@ -226,6 +228,13 @@ struct SolveOptions {
     std::uint32_t solve_profile_override_mask = 0;
     GoalProofProfile goal_proof_profile = GoalProofProfile::OrdinaryClean;
 };
+
+inline std::string paid_root_foulborn_solution_scope(const SolveOptions& options) {
+    std::string scope = "bounded_target_neutral_zero_proof_with_paid_root_foulborn_salvage_v1";
+    if (!options.allow_economic_restart) scope += "_without_economic_restart";
+    if (!options.consider_imprint_programs) scope += "_without_automatic_imprint_programs";
+    return scope;
+}
 
 inline CandidateEvaluationLimits resolved_candidate_evaluation_limits(
         const SolveOptions& options, const std::uint64_t remaining_owned_bytes,

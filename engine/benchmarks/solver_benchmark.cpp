@@ -4116,6 +4116,16 @@ CaseResult run_case(
                 throw std::runtime_error(api_error(
                     "configure goal proof profile", configured, error));
         }
+        if (optional_bool(caps, "paid_root_foulborn_salvage", false)) {
+            if (solver_mode != "current")
+                throw std::runtime_error("paid root Foulborn grammar is Current-only");
+            const auto configured = poecraft::solver::
+                configure_solver_paid_root_foulborn_salvage_diagnostic(
+                    handles.solver, true, &error);
+            if (configured != PC_RESULT_OK)
+                throw std::runtime_error(api_error(
+                    "configure paid root Foulborn grammar", configured, error));
+        }
         if (native_selective_completion_service) {
             const auto configured = poecraft::solver::
                 configure_solver_selective_completion_service_diagnostic(

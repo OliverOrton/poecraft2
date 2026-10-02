@@ -25,6 +25,15 @@ std::string compile_finder_candidate_json(
     const SolveOptions& limits,
     bool return_to_first = false);
 
+/* Supplementary finite original-root grammar. The supplied private context
+ * includes all three native actions; selected misses use its exact observable
+ * state predicates. All add failures unconditionally pay reset, so add never
+ * repeats within one renewal. The caller must prove every reset obligation. */
+std::string compile_paid_root_foulborn_candidate_json(
+    const CalcContext& private_calc, const pc_item_state& start_item,
+    std::uint32_t roll, std::uint32_t add, std::uint32_t reset,
+    const std::vector<std::uint32_t>& selected_misses, const SolveOptions& limits);
+
 std::string compile_finder_goal_condition(const CalcContext& calc);
 
 /* Conservative compiler-owned entailment for solver-produced graphs. Every

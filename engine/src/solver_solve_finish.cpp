@@ -3215,8 +3215,8 @@ SolveWork::Impl::run_publication_pipeline() {
                             } else {
                                 /* Direct graph evaluation can be too broad
                                  * even when the selected row policy is useful.
-                                 * Give that same immutable candidate—not the
-                                 * restored fallback—to strict quotient lift. */
+                                 * Give that same immutable candidateâ€”not the
+                                 * restored fallbackâ€”to strict quotient lift. */
                                 std::string{}.swap(assertion.strategy_json);
                                 assertion.evaluation = {};
                                 const bool defer_to_current_direct_candidate =
@@ -5902,6 +5902,13 @@ SolveWork::Impl::run_publication_pipeline() {
             result.global_lower_bound_certified = true;
             result.lower_bound_provenance =
                 SolveLowerBoundProvenance::TargetNeutralUniversalZero;
+        }
+        // Refinement classifiers may have replaced the initial scope label.
+        // The supplementary grammar remains part of the final request identity.
+        if (options.paid_root_foulborn_salvage) {
+            result.diagnostics.solution_scope = paid_root_foulborn_solution_scope(options);
+            if (calc.registry().product_goal_filtering)
+                result.diagnostics.solution_scope += "_within_candidate_and_generated_programme_grammar";
         }
         if (const char* invariant =
                 solve_detail::publication_invariant_invalid_reason(result)) {
