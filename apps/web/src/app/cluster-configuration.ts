@@ -25,3 +25,13 @@ export function validClusterSelection(catalog: ClusterBaseCatalog, config?: Clus
         config.passiveCount >= catalog.minPassiveCount && config.passiveCount <= catalog.maxPassiveCount &&
         catalog.passives.some(p => p.key === config.passiveKey && !p.tag.startsWith("old_do_not_use_")));
 }
+
+/** Present native fixed enchantments separately from explicit/implicit slots. */
+export function clusterEnchantmentText(value: unknown): string[] {
+    if (!value || typeof value !== "object") return [];
+    const c = value as {passive_count?: unknown; jewel_socket_count?: unknown; passive_text?: unknown};
+    if (typeof c.passive_count !== "number" || typeof c.jewel_socket_count !== "number") return [];
+    return [`Adds ${c.passive_count} Passive Skills`,
+        `${c.jewel_socket_count} Added Passive Skills are Jewel Sockets`,
+        ...(Array.isArray(c.passive_text) ? c.passive_text.filter((line): line is string => typeof line === "string") : [])];
+}

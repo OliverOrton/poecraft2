@@ -33,6 +33,7 @@ try {
             try {
                 const info = await client.itemInfo(item, session);
                 assert.equal(info.max_prefix, 2); assert.equal(info.max_suffix, 2);
+                assert.equal((info.cluster as {jewel_socket_count: number}).jewel_socket_count, size === "Large" ? 2 : size === "Medium" ? 1 : 0);
                 const initial = await client.debugPool(warm, item, {action: {type: "exalt"}});
                 assert.deepEqual(initial.entries, (await client.debugPool(fresh, item, {action: {type: "exalt"}})).entries);
                 assert.ok(admitted(initial.entries).length > 0);
@@ -56,8 +57,8 @@ try {
                 await client.apply(warm, item, {type: "scour"});
                 assert.deepEqual((await client.exportItem(item, session) as Record<string, unknown>).cluster, snapshot.cluster);
                 assert.deepEqual((await client.debugPool(warm, item, {action: {type: "exalt"}})).entries, initial.entries);
-                await assert.rejects(client.openSolver(session, {rarity: "rare", slots: [], allow_extra_modifiers: true}), /unqualified/);
-                await assert.rejects(client.apply(warm, item, {type: "alchemy"}), /not yet approved/);
+                await assert.rejects(client.openSolver(session, {rarity: "rare", slots: [{family_mod_key: admitted(initial.entries)[0].key, min_tier: 1}], allow_extra_modifiers: true}), /explicit qualified primitive scope/);
+                await assert.rejects(client.apply(warm, item, {type: "vaal"}), /not yet approved/);
             } finally {
                 await client.closeItem(item); await client.closeContext(warm); await client.closeContext(fresh); await client.closeSession(session);
             }
@@ -114,7 +115,30 @@ try {
     assert.equal(restart.outcomes[0].rarity, 0);
     assert.equal(restart.outcomes[0].prefixes + restart.outcomes[0].suffixes, 0);
     assert.equal((await client.exportItem(magic, session) as Record<string, any>).cluster.passive_key, configurations[0][1].passiveKey);
-    await assert.rejects(client.currencyCalc(calc, normal, "alchemy"), /not yet approved/);
+    await assert.rejects(client.currencyCalc(calc, normal, "vaal"), /not yet approved/);
+    const rareGoal = await client.openCalcGoal(session, {rarity: "rare", slots: [], allow_extra_modifiers: true});
+    const actions = await client.solverActions(rareGoal);
+    assert.equal(actions.find(a => a.id === "alchemy")?.cluster_support, 7);
+    assert.equal(actions.find(a => a.id === "foulborn_exalt")?.cluster_support, 7);
+    assert.equal(actions.find(a => a.id === "restart")?.cluster_support, 2);
+    const rare = await client.currencyCalc(rareGoal, normal, "alchemy");
+    near(rare.outcomes.filter(r => r.prefixes + r.suffixes === 3).reduce((p,r) => p+r.probability,0), .65);
+    near(rare.outcomes.filter(r => r.prefixes + r.suffixes === 4).reduce((p,r) => p+r.probability,0), .35);
+    await client.closeSolver(rareGoal);
+    const exactGoal = {...goal, automatic_candidates: false, actions: ["transmute", "alteration", "augment", "annul"]};
+    const exact = await client.openSolver(session, exactGoal);
+    const rows = await client.solverCalc(exact, normal, "transmute");
+    near(rows.success_probability, result.success_probability);
+    const document = {version: "v1", start_node_id: "s", base_state: {base_key: baseRoot+"Small", item_level:84,
+        rarity:"normal", with_implicits:false, cluster:{passive_key:configurations[0][1].passiveKey,passive_count:2}},
+        nodes:[{id:"s",kind:"start"},{id:"a",kind:"operation",operation:{type:"transmute"}},
+            {id:"yes",kind:"terminal",terminal:"success"},{id:"no",kind:"terminal",terminal:"failure"}],
+        edges:[{id:"e",from:"s",to:"a"},{id:"h",from:"a",to:"yes",priority:0,
+            condition:{type:"has_mod_family",family_mod_key:target.key,min_tier:1}},
+            {id:"f",from:"a",to:"no",priority:999,is_default:true}]};
+    const evaluated = await client.strategyEvaluate(session,document,{max_states:5000,max_pairs:10000,max_transitions:50000,max_owned_bytes:128*1024*1024});
+    near(evaluated.terminals.success, result.success_probability);
+    await client.closeSolver(exact);
     await client.closeSolver(calc); await client.closeItem(magic); await client.closeItem(normal); await client.closeContext(context); await client.closeSession(session);
     console.log("  ok - WASM Calculator matches independent native two-draw enumeration and preserves restart identity");
     await client.closeData(data);

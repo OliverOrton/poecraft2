@@ -274,11 +274,18 @@ export function calculatorSolveOptions(
     allowEconomicRestart = false,
     considerImprintPrograms = false,
     solverMode: "current" | "strategy_finder" = "current",
+    configuredCluster = false,
 ): SolveOptions {
     const options: SolveOptions = {
         solve_profile: "calculator_product_v1",
     };
     if (solverMode === "strategy_finder") options.solver_mode = solverMode;
+    if (configuredCluster) {
+        // Full concrete native rows; no ordinary gated retry quotient or
+        // automatic programmes. The engine retains zero-only lower authority.
+        return {...options, goal_progress_gated_reforges: false,
+            allow_economic_restart: false, consider_imprint_programs: false};
+    }
     if (allowEconomicRestart) {
         options.allow_economic_restart = true;
     }

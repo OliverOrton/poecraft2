@@ -1,0 +1,503 @@
+{
+  "kind": "cluster_completion_batch_qualification_v1",
+  "base_commit": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+  "source_parent": "28cbc42815947b198d0ece2e3f316c65f1a6b422",
+  "final_source_identity": "source_parent plus retained delta hashes; this receipt is committed with that delta",
+  "branch": "dot/clusters-completion-20261002",
+  "owner_decisions": {
+    "rare_model": "Owner-adopted community 65/35 three/four cluster rare-total model, not a disclosed GGG law",
+    "sockets": "Modern non-unique configured Large2 Medium1 Small0 passive-tree sockets, fixed native enchantment identity",
+    "pause": "Oliver selected finish this batch then pause at 2026-10-02 19:39 UTC; no new programme or timed allowance",
+    "promotion": "Integration owner only; no worker merge/push/deploy"
+  },
+  "qualification": {
+    "native_build": {
+      "jobs": 2,
+      "passed": true
+    },
+    "native_selectors": {
+      "clusters": 34956,
+      "incoming_calculator": 354,
+      "currency_contracts": 6246,
+      "failures": 0
+    },
+    "python_dll": {
+      "final_selection_passed": 91,
+      "later_added_rare_original_root_graphs_passed": 4,
+      "distinct_checks": 95,
+      "authored_cluster_checks_total": 25
+    },
+    "wasm_build": {
+      "jobs": 2,
+      "passed": true
+    },
+    "wasm_actual_worker": {
+      "groups_passed": 3,
+      "timed_long_case_replay": false
+    },
+    "web": {
+      "npm_test_passed": true,
+      "smoke_filter": "Calculator item goals and editors preserve native joint outcomes",
+      "selected_smoke_cases": 4,
+      "all_subsequent_tests_run": true,
+      "unchanged_simulator_and_timed_solver_smokes_excluded": true,
+      "final_tsc_passed": true,
+      "final_cluster_selection_check_passed": true
+    },
+    "rendered_ui_review": {
+      "run": false,
+      "owner": "Oliver"
+    },
+    "simulator": {
+      "run": false,
+      "no_claim": true
+    }
+  },
+  "frozen_artifact": {
+    "declared_files_verified": true,
+    "files": [
+      {
+        "path": "game-data.json",
+        "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+        "size_bytes": 16914460
+      },
+      {
+        "path": "strings.json",
+        "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+        "size_bytes": 6740473
+      }
+    ],
+    "identity": {
+      "artifact_schema_version": 4,
+      "game_data_sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+      "source_data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+      "strings_sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+    },
+    "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d\\manifest.json",
+    "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d"
+  },
+  "timed_runs": [
+    {
+      "id": "cluster-magic-fettle-current",
+      "source": {
+        "commit": "28cbc42815947b198d0ece2e3f316c65f1a6b422",
+        "dirty": true,
+        "dirty_paths": [
+          {
+            "path": "apps/web/src/app/components/pc-calculator.tsx",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/components/pc-emulator.tsx",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/components/pc-mod-list.tsx",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/components/pc-strategy-editor.tsx",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/engine-protocol.ts",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/item-preview.ts",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/solver-result-presentation.ts",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/strategy-model.ts",
+            "status": " M"
+          },
+          {
+            "path": "bindings/wasm/wasm_api.cpp",
+            "status": " M"
+          },
+          {
+            "path": "pps/web/src/app/cluster-configuration.ts",
+            "status": "M "
+          }
+        ]
+      },
+      "executable": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-clusters-completion\\build\\engine\\poecraft_solver_benchmark.exe",
+        "sha256": "e562e6e235d8372b5df7719db4c6f1cbc98d20d69ff0ddf2fe1717952e211f61"
+      },
+      "all_completed": true,
+      "survivors": [],
+      "status": "refused_resource_cap",
+      "expectation_met": true,
+      "workflow_status": {
+        "solve_result_class": "capped_without_policy",
+        "compile": "not_applicable_no_policy",
+        "exact_evaluation": "not_applicable_no_policy",
+        "simulation": "not_applicable_no_policy"
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true
+        }
+      },
+      "errors": [],
+      "solve_summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 57.10743007696224,
+        "expanded_states": 5,
+        "sweeps": 2,
+        "residual": 7.105427357601002e-15,
+        "skipped_action_count": 0,
+        "policy_available": false,
+        "policy_status": "none",
+        "termination": "no_executable_policy",
+        "stop_cause": "memory_cap",
+        "cap_hit_mask": 4,
+        "action_counts": {
+          "registry": 45,
+          "candidate": 3,
+          "evaluator_supported": 3,
+          "supported_priced": 3,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 0,
+        "upper_bound": null,
+        "evaluated_policy_cost": null,
+        "absolute_optimality_gap": null,
+        "relative_optimality_gap": null,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "original_root_check": {
+        "completed": false,
+        "time_limited": false,
+        "status": "not_applicable_no_policy",
+        "wall_ms": null
+      },
+      "observed_max_solve_step_ms": 4149.4627,
+      "responsiveness_qualified": false,
+      "strict_states": 1360,
+      "coarse_states": 5,
+      "outcome_entries": 3564413
+    },
+    {
+      "id": "cluster-magic-fettle-strategy_finder",
+      "source": {
+        "commit": "28cbc42815947b198d0ece2e3f316c65f1a6b422",
+        "dirty": true,
+        "dirty_paths": [
+          {
+            "path": "apps/web/src/app/components/pc-calculator.tsx",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/components/pc-emulator.tsx",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/components/pc-mod-list.tsx",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/components/pc-strategy-editor.tsx",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/engine-protocol.ts",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/item-preview.ts",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/solver-result-presentation.ts",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/src/app/strategy-model.ts",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/test/cluster-configuration.test.ts",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/test/engine-clusters.test.ts",
+            "status": " M"
+          },
+          {
+            "path": "apps/web/test/solver-result-presentation.test.ts",
+            "status": " M"
+          },
+          {
+            "path": "bindings/wasm/wasm_api.cpp",
+            "status": " M"
+          },
+          {
+            "path": "pps/web/src/app/cluster-configuration.ts",
+            "status": "M "
+          }
+        ]
+      },
+      "executable": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-clusters-completion\\build\\engine\\poecraft_solver_benchmark.exe",
+        "sha256": "e562e6e235d8372b5df7719db4c6f1cbc98d20d69ff0ddf2fe1717952e211f61"
+      },
+      "all_completed": true,
+      "survivors": [],
+      "status": "bounded_feasible",
+      "expectation_met": true,
+      "workflow_status": {
+        "solve_result_class": "bounded",
+        "compile": "compiled",
+        "exact_evaluation": "matched",
+        "simulation": "skipped"
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {}
+      },
+      "errors": [],
+      "solve_summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": null,
+        "expanded_states": 0,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "finder_complete",
+        "stop_cause": "finder_complete",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 0,
+          "candidate": 0,
+          "evaluator_supported": 0,
+          "supported_priced": 0,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": null,
+        "upper_bound": 66.66447957898569,
+        "evaluated_policy_cost": 66.66447957898569,
+        "absolute_optimality_gap": null,
+        "relative_optimality_gap": null,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "original_root_check": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 4981.4971,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1.0000000000033165,
+        "off_policy_mass": 0,
+        "total_expected_cost": 66.66447957898569,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0,
+        "terminals": {
+          "success": 1.0000000000033165,
+          "failure": 0,
+          "stop": 0,
+          "action_not_applied": 0,
+          "no_matching_edge": 0,
+          "unresolved": 0,
+          "by_node": [
+            {
+              "node_id": "goal",
+              "kind": "success",
+              "p": 1.0000000000033165
+            }
+          ]
+        },
+        "expected_actions": 370.35821988325387,
+        "expected_consumption": [
+          {
+            "key": "alteration",
+            "quantity": 370.35821988325387
+          }
+        ],
+        "operation_row_census": {
+          "materialized_rows": 1326,
+          "shared_row_reuses": 0,
+          "replayable_rows": 0,
+          "stable_shared_rows": 0,
+          "unique_stable_kernels": 0,
+          "state_local_rows": 1326,
+          "route_shapes": {
+            "direct_repeat_rows": 1326,
+            "local_gated_route_rows": 0,
+            "other_operation_rows": 0
+          },
+          "kernel_authority": {
+            "goal_progress_gated_rows": 0,
+            "full_physical_rows": 1326
+          },
+          "local_gated_route_proof": {
+            "proved_rows": 0,
+            "shape_rejections": 0,
+            "condition_rejections": 0,
+            "target_rejections": 0,
+            "root_rejections": 0
+          },
+          "local_gated_full_rows": {
+            "outcome_entries": 0,
+            "routed_transitions": 0,
+            "outcome_payload_bytes": 0,
+            "routed_payload_bytes": 0
+          },
+          "exact_outcome_entries": 1802034,
+          "routed_transitions": 1756950,
+          "absorptions": 45084,
+          "exact_outcome_payload_bytes": 43450368,
+          "unique_stable_kernel_payload_bytes": 0,
+          "routed_payload_bytes": 43609488,
+          "replay_route_token_bytes": 0,
+          "replay_route_result_authorities": 0,
+          "compact_attribution_rows": 0,
+          "compact_attribution_edges": 0,
+          "projected_u32_route_tokens_bytes": 7208136,
+          "source_edge_selections": 1802034,
+          "deterministic_route_resolutions": 0,
+          "sampled_source_edge_selections": 10608,
+          "sampled_source_edge_ns": 2408500,
+          "sampled_deterministic_routes": 0,
+          "sampled_deterministic_route_ns": 0,
+          "sampled_route_keys": 0,
+          "sampled_route_key_reuses": 0,
+          "sampled_row_completion_ns": 200000
+        },
+        "memory": {
+          "owned_bytes_estimate": 45368129,
+          "peak_owned_bytes_estimate": 45469571,
+          "retained_output_owned_bytes_estimate": 0,
+          "max_owned_bytes": 134217728,
+          "max_output_json_bytes": 67108864
+        },
+        "pricing": {
+          "status": "complete",
+          "economy_id": "cluster-qualification-fixed-v1",
+          "missing_price_keys": []
+        }
+      },
+      "observed_max_solve_step_ms": 371.8662,
+      "responsiveness_qualified": false,
+      "retained_strategy": "evidence/cluster-magic-fettle-finder.strategy.json"
+    }
+  ],
+  "source_delta_sha256": {
+    "HANDOFF.md": "1b13022f216e898914ef868a9e0a5e8514a1ae1dc5503fd36db9dae88c574593",
+    "apps/web/src/app/cluster-configuration.ts": "2140327238f41ac29123294e4e40643403b94e55c13c6edfad34b9aa8a73dcd0",
+    "apps/web/src/app/components/pc-calculator.tsx": "b793358d6be3d956e029116cf206ffaa6b7ce7133ef22706671b46e610d79b66",
+    "apps/web/src/app/components/pc-emulator.tsx": "6b232c5ec7bc2155bc88057b41990c6bd25f0305c4b08397d030287c5d3acca2",
+    "apps/web/src/app/components/pc-mod-list.tsx": "6fffc3ca295a5111471505cb4f79571bcab18a4625fccc28e8330ee23c9a3f2b",
+    "apps/web/src/app/components/pc-strategy-editor.tsx": "c3dd66e62b87851f8c852607984d29caaa210fa8ad00ef06ce01ad3ccdc36003",
+    "apps/web/src/app/engine-protocol.ts": "88a2ac4d37aa97b45a9b661c0deb11b91af909da99af713f4fcc3c8cee6ff838",
+    "apps/web/src/app/item-preview.ts": "bc98e1078ca0f46610aa29da8339c76d318bc132bf61dd57b5b659dc97c31030",
+    "apps/web/src/app/solver-result-presentation.ts": "85ce93b155d016d39726ac5176fb6942b850e55a0db26c94f673d0c40948080b",
+    "apps/web/src/app/strategy-model.ts": "0475854dc99d67032f424e49913ae897f21e0ac29b12d236346baafdd5dd1e51",
+    "apps/web/test/cluster-configuration.test.ts": "6c97ccf325d594518883f75ba137610c64207063acd78301a6ee7988f9cd88a1",
+    "apps/web/test/engine-clusters.test.ts": "bb546d1ab93c8207a552a686f6f50f92bd6758e4d8bcf2ebd49c7d0ee1beacb1",
+    "apps/web/test/solver-result-presentation.test.ts": "71cb39c4ed783ddd1d606500e88d508e0707676edc6a29830f672c61da2207e1",
+    "bindings/python/tests/test_cluster_continuation.py": "d3c02a668c4b353e02fc310e85ed90a096ce3584fe1b480082034b18a9f9fb16",
+    "bindings/python/tests/test_clusters.py": "3d446fa9452d0dc3f344e05c9212c55647b628cc24852b76744cd3fa54719449",
+    "bindings/wasm/dist/poecraft_engine.wasm": "442388ee51e74b3b4e6f1757a816fef2bbfb721d6f6bfe2b569a52fe03036bde",
+    "bindings/wasm/wasm_api.cpp": "13f5bcdaf12238bb52623df43ab3debfc1066aa60672cf66dc5bcd7952a35f03",
+    "docs/active/2026-10-02-clusters-completion/README.md": "5678a939184a0f01b89b619c6cd220150428801001b5e0299d3df9bac9ee2420",
+    "docs/engine/items.md": "9ebb832290c52d6ad98fdf428a158630b2747a703e3d8206f40ee5303bebe6ea",
+    "docs/mechanics/clusters.md": "56b8a4749761aaa3a7491f372f8b75b605eecabc129d44d0ba78fa256da7d3cf",
+    "docs/solver/current-status.md": "33675b054fde44115803fb260c13cfadf206d55b87af1de751621f788511826a",
+    "engine/src/actions_basic.cpp": "83de6fa140cd57b7e8e95d053d5e25c4719842564b33cd831c946e6e44186dda"
+  },
+  "sha256": {
+    "build/engine/poecraft_engine_tests.exe": "d0a9afa2e49fe916febd1bec0df832e57c5343bd91cb2bdc7ed2a205d0d41761",
+    "build/engine/poecraft_engine.dll": "d4b56fca45e7764540ad5ad7c4ef04eedf15e6dd4bbc304dc1a3b9acc179f56b",
+    "bindings/wasm/dist/poecraft_engine.wasm": "442388ee51e74b3b4e6f1757a816fef2bbfb721d6f6bfe2b569a52fe03036bde",
+    "data/compiled/current/manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "out/clusters-completion/native-expanded-final-build.log": "98816398c20aa73788f4486d24146fb074e55a0ef6f288b8cf51865bb408ff13",
+    "out/clusters-completion/native-clusters-expanded-final.log": "d77a98fb82def1fe64af26be491ecf73be7f369d41f4390efc0c894a517b8611",
+    "out/clusters-completion/native-incoming-expanded-final.log": "ede19fbf1ce8cc4b212c42ac41f2d4ff3bd3753c6b168fbd264fbbee366da50e",
+    "out/clusters-completion/native-currency-expanded-final.log": "159b58850bfa6e406fd59ccf683bf8007863e2c2a293ca0cb135c5964b8c88da",
+    "out/clusters-completion/python-expanded-final-2.log": "c0d7d1959d3a2560e4ae6801b19643812d63608703f64c599c4f5731efec4b20",
+    "out/clusters-completion/python-rare-graphs-2.log": "49ce32c6322eb8c107d5237cc2d0a1944622e2cd4ee54dc0d6f4ba75e9336d0e",
+    "out/clusters-completion/wasm-expanded-build.log": "ba948535ff2a4473f31a8ffe596ef58409593d9bc54f91f868fc2d5cefa12718",
+    "out/clusters-completion/worker-expanded-final-3.log": "7074110e33ebd599c63833e82c2fec0ba2d3c12ad460d0908ea07ef3b100dae4",
+    "out/clusters-completion/web-expanded-final.log": "2b4ef6930768f60c639ec415c73367511202a55d3f3a82725320104748b46c94",
+    "out/clusters-completion/ui-expanded-1.log": "34f2ac2e0b0aa63174d1bb00a60b387c7d6698402e4236dab6c4a255f02947cf",
+    "out/clusters-completion/solver-presentation-expanded.log": "dd4197b585a81160bb9efb2a7b24b2bef0fe627b0ae2b9996bb1709b6a46306d",
+    "out/clusters-completion/ui-cluster-selection-final.log": "34f2ac2e0b0aa63174d1bb00a60b387c7d6698402e4236dab6c4a255f02947cf",
+    "out/clusters-completion/tsc-expanded-final-2.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "out/clusters-completion/current-magic-qualification/ledger.json": "0b671a251c2033f91c663d20275b972e24d25f22b58addd5e6618d2c85d12853",
+    "out/clusters-completion/current-magic-qualification/cases/cluster-magic-fettle-current.json": "0256b304c1f417ea738dad3f04393721ac18538188559136cea491233864e667",
+    "out/clusters-completion/current-magic-qualification/logs/cluster-magic-fettle-current.log": "f4c04276754272ce0742c914b88943fa7d4382b6a65352686034813f8533242b",
+    "out/clusters-completion/finder-magic-qualification/ledger.json": "c7b8a81b4456f9c2d13ca324191f6849da02d84f9bdbfe4129b8ea64a2cbfdfe",
+    "out/clusters-completion/finder-magic-qualification/cases/cluster-magic-fettle-strategy_finder.json": "9b135b9c38fb413bde56042f955535c3dfa4969555a522c84e23615c5333d55e",
+    "out/clusters-completion/finder-magic-qualification/logs/cluster-magic-fettle-strategy_finder.log": "ec96cec60e9461c9bad09f177b2309520d96e1b8e227c5bc492e62718dc78dad",
+    "docs/active/2026-10-02-clusters-completion/evidence/cluster-magic-fettle-finder.strategy.json": "0ae43fb353b56c9964290dfac8e0d0e2d22552251dcd86a0affc6cec3d965f35"
+  },
+  "integration": {
+    "ordinary_owner_tip": "596e7cf40fdff97fa587345c919832e55135f7cb",
+    "ordinary_core_commit": "664e7003551e52d69461bf6351b01ca5b1b2e90d",
+    "shared_owner": "engine/src/reforge_count_law.hpp",
+    "required_versions": {
+      "rare_count_law": 2,
+      "current_refinement": 4,
+      "evaluator": 2,
+      "checkpoint_format": 5
+    },
+    "resolve": [
+      "configured cluster-first ClusterJewel count kind before Jewel/Abyss LegacyJewel",
+      "remove configured_rare_count wrapper; all sampler calls use shared owner",
+      "cluster visitor rare fill consumes shared positive weighted draws and denominator",
+      "retain law-version/kind checkpoint payload AND stable cluster configuration checkpoint identity",
+      "retain base_state.cluster strategy identity",
+      "rebuild and qualify combined runtime; no isolated receipts transferred"
+    ],
+    "merged_into_worker": false,
+    "combined_runtime_qualification": false
+  },
+  "remaining_acceptance": [
+    "Current memory cap without executable policy on selected high-ilvl Magic case",
+    "general cluster solver completion, positive lower and optimality closure",
+    "long actual-worker responsiveness qualification",
+    "automatic Imprint/fresh-base and external continuation/resource/provenance programmes",
+    "legacy inspection rows and ordinary gated retry quotients",
+    "unsupported retained implicit/enchantment/quality/equipment-socket/influence/strands context and dual locks",
+    "Fossil implicit successors outside full structural continuation carrier",
+    "Solver Lab cluster import/export",
+    "all unqualified currency types including corruption/unique and Memory stochastic laws",
+    "legacy passive inputs and allocation/pathing algorithms",
+    "shared ordinary law integration and combined build qualification"
+  ],
+  "processes": {
+    "both_reserved_runs_spent": true,
+    "all_owned_commands_complete": true,
+    "survivors": []
+  },
+  "no_qualification_transfer": "Timed benchmark identity differs from final scratch-bound native/DLL/WASM build; probabilities unchanged but historical timed receipt remains pinned to its own binary.",
+  "disposition": "Retained partial end-to-end completion; explicit boundaries, no unknown law guessed; paused per Oliver."
+}

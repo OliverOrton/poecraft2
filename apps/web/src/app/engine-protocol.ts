@@ -637,6 +637,8 @@ export interface SolverActionInfo {
     /** 0 deterministic, 1 single-slot, 2 reforge, 3 special. */
     transition_kind: number;
     synthetic: boolean;
+    /** Native cluster capability bits: 1 craft, 2 terminal odds, 4 continuation. */
+    cluster_support?: number;
     cost_keys: string[];
     preservation: {
         can_preserve: CarrierProperty[];

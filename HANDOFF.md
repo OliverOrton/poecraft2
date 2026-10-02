@@ -87,15 +87,22 @@ non-sampling Fracture selector repeats two assertion failures plus a lost-artifa
 abort on the preserved baseline and current integration; separate debt remains.
 The final matching WASM/DLL after this repair, new owner patches and full product
 acceptance remain pending. No owned process remains.
-# KIDS configured-cluster continuation (2026-10-02)
+# KIDS configured-cluster batch complete; paused (2026-10-02)
 
 Work is isolated on `dot/clusters-completion-20261002` from `b794e009` in
 `C:/Users/Oliver/Documents/poecraft2-clusters-completion`. The
-[living record](docs/active/2026-10-02-clusters-completion/README.md) owns the
-native/product pathway, qualification and remaining owner-law review. Full rare
-crafting and cluster solver support are pending explicit review; no continuation
-proof or inherited runtime qualification is promoted. Integration alone owns
-merge/push. No solver process is owned.
+[living record](docs/active/2026-10-02-clusters-completion/README.md#completion-batch-qualified-and-paused)
+owns the 17-type native crafting/Calculator envelope, full structural original-root
+checks, rebuilt WASM/product plumbing, remaining acceptance and integration notes.
+The Small-life/Fettle Magic Finder graph checks at 66.66447958c using disclosed
+fixed quotes; Current reaches its owned memory cap without an executable policy.
+No positive lower, optimality closure, Simulator or responsiveness qualification.
+
+Both reserved runs are spent; all owned commands completed without survivors.
+Oliver selected a pause after this batch. No new programme is selected. Integration
+alone owns combining the ordinary reforge helper, format/version identities,
+requalification and merge/push. Frozen data/prices and protected root `0` remain
+untouched; no independent promotion occurred.
 
 # Sprint integration native checkpoint (2026-10-02)
 

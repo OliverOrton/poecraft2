@@ -1,3 +1,4 @@
+import { clusterEnchantmentText } from "./cluster-configuration";
 import type { EngineClient } from "./engine-client";
 import type { Catalog } from "./engine-protocol";
 import { itemSnapshotCluster, type ItemSnapshot } from "./workspace/persistence";
@@ -20,7 +21,7 @@ export async function readItemCard(client: EngineClient, data: number, catalog: 
                 classificationTags: mod.classification_tags, fractured: fractured.has(id), crafted: mod.reach_kind === 2, veiled: mod.reach_kind === 6,
                 rollValues: stored?.[side]?.[index]?.rolls};
         }));
-        return {kind: "concrete", baseKey: snapshot.base, baseName: name, itemLevel: snapshot.itemLevel,
+        return {kind: "concrete", clusterEnchantmentText: clusterEnchantmentText(info.cluster), baseKey: snapshot.base, baseName: name, itemLevel: snapshot.itemLevel,
             itemFlags: Number(info.item_flags ?? 0),
             rarity: String(info.rarity), memoryStrands: Number(info.memory_strands ?? 0), lifecycle: Number(info.lifecycle ?? 0),
             influences: influenceLabels(Number(info.generic_influence_bits), Number(info.searing_exarch_tier), Number(info.eater_of_worlds_tier), catalog),

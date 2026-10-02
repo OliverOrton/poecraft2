@@ -1,3 +1,5 @@
+import { itemSnapshotCluster } from "../workspace/persistence";
+import { strategyClusterConfiguration } from "../strategy-model";
 import { disposeReact, renderReact } from "../react-host";
 import { StrategyShell } from "./document-shells";
 import { EditHistory, historyShortcut } from "../edit-history";
@@ -339,6 +341,7 @@ export class PcStrategyEditor extends HTMLElement {
                 this.dataId,
                 draft.sourceItem.base,
                 draft.sourceItem.itemLevel,
+                itemSnapshotCluster(draft.sourceItem),
             );
             try {
                 const count = await this.client.modCount(session);
@@ -384,9 +387,11 @@ export class PcStrategyEditor extends HTMLElement {
     private applyBaseSelection(selection: BasePickerSelection): void {
         const changed =
             selection.base !== this.strategy.base_state.base_key ||
-            selection.itemLevel !== this.strategy.base_state.item_level;
+            selection.itemLevel !== this.strategy.base_state.item_level ||
+            JSON.stringify(selection.cluster) !== JSON.stringify(strategyClusterConfiguration(this.strategy));
         this.strategy.base_state.base_key = selection.base;
         this.strategy.base_state.item_level = selection.itemLevel;
+        this.strategy.base_state.cluster = selection.cluster ? {passive_key: selection.cluster.passiveKey, passive_count: selection.cluster.passiveCount} : undefined;
         this.strategy.base_state.with_implicits = true;
         if (changed && this.hasChosenBase) {
             this.strategy.base_state.prefixes = [];
@@ -415,7 +420,7 @@ export class PcStrategyEditor extends HTMLElement {
         if (!this.engineReady || !this.catalog || this.modifierLoading) return;
         const base = this.strategy.base_state.base_key;
         const itemLevel = this.strategy.base_state.item_level;
-        const key = `${base}|${itemLevel}`;
+        const key = `${base}|${itemLevel}|${JSON.stringify(this.strategy.base_state.cluster ?? null)}`;
         if (key === this.modifierBaseKey && this.modifierOptions.length) return;
         this.modifierLoading = true;
         try {
@@ -423,6 +428,7 @@ export class PcStrategyEditor extends HTMLElement {
                 this.dataId,
                 base,
                 itemLevel,
+                strategyClusterConfiguration(this.strategy),
             );
             try {
                 const count = await this.client.modCount(session);
@@ -844,7 +850,7 @@ export class PcStrategyEditor extends HTMLElement {
             </label>`;
         if (node.kind === "start") {
             return `${common}
-                <pc-base-picker compact confirm-label="Apply base"></pc-base-picker>
+                <pc-base-picker allow-clusters compact confirm-label="Apply base"></pc-base-picker>
                 <label class="pc-field">
                     <span>Rarity</span>
                     <select data-field="start-rarity">
@@ -1003,7 +1009,7 @@ export class PcStrategyEditor extends HTMLElement {
     private async addDonorTemplate(stashId: string): Promise<void> {
         const record = this.resourceOptions.find(resource => resource.id === stashId);
         if (!record) return;
-        const session = await this.client.createSession(this.dataId, record.base, record.itemLevel);
+        const session = await this.client.createSession(this.dataId, record.base, record.itemLevel, itemSnapshotCluster(record));
         let item = 0;
         try {
             item = await this.client.importItem(record.state, session);
@@ -1069,6 +1075,7 @@ export class PcStrategyEditor extends HTMLElement {
             basePicker.setSelection(
                 this.strategy.base_state.base_key,
                 this.strategy.base_state.item_level,
+                strategyClusterConfiguration(this.strategy),
             );
             basePicker.addEventListener("confirm", (event) => {
                 this.applyBaseSelection(
@@ -1508,6 +1515,7 @@ export class PcStrategyEditor extends HTMLElement {
                 this.dataId,
                 submittedStrategy.base_state.base_key,
                 submittedStrategy.base_state.item_level,
+                strategyClusterConfiguration(submittedStrategy),
             );
             const result = await this.client.strategyEvaluate(
                 session,
@@ -1834,6 +1842,7 @@ export class PcStrategyEditor extends HTMLElement {
                 this.dataId,
                 submittedStrategy.base_state.base_key,
                 submittedStrategy.base_state.item_level,
+                strategyClusterConfiguration(submittedStrategy),
             );
             compiled = await this.client.compileStrategy(
                 session,

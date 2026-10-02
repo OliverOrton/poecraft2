@@ -630,3 +630,10 @@ function solveSummary(overrides: Partial<SolveSummary>): SolveSummary {
         ...overrides,
     };
 }
+
+{
+    const options=calculatorSolveOptions(10,5,true,true,"strategy_finder",true);
+    assert.deepEqual(options,{solve_profile:"calculator_product_v1",solver_mode:"strategy_finder",
+        goal_progress_gated_reforges:false,allow_economic_restart:false,consider_imprint_programs:false});
+    console.log("  ok - configured cluster search retains full primitive scope and open optimality authority");
+}

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {parseHTML} from "linkedom";
-import {readClusterCatalog, validClusterSelection} from "../src/app/cluster-configuration";
+import {readClusterCatalog, validClusterSelection, clusterEnchantmentText} from "../src/app/cluster-configuration";
 import {supportedBasePickerBases} from "../src/app/base-picker-model";
 import {itemSnapshotCluster} from "../src/app/workspace/persistence";
 import {readItemCard} from "../src/app/item-preview";
@@ -96,3 +96,12 @@ assert.equal(access.session, 10); assert.equal(access.item, 12);
 assert.equal(history.cursor, 0);
 setWorkspace(null);
 console.log("  ok - Emulator Undo recreates the saved cluster configuration of the same base");
+
+assert.deepEqual(clusterEnchantmentText({passive_count: 2, jewel_socket_count: 0, passive_text: ["Added Small Passive Skills grant: 4% increased maximum Life"]}),
+    ["Adds 2 Passive Skills", "0 Added Passive Skills are Jewel Sockets", "Added Small Passive Skills grant: 4% increased maximum Life"]);
+assert.deepEqual(clusterEnchantmentText(null), []);
+const {createStrategyFromItemSnapshot, strategyClusterConfiguration} = await import("../src/app/strategy-model");
+const document = createStrategyFromItemSnapshot({base:path,itemLevel:84,state}, () => undefined);
+assert.deepEqual(document.base_state.cluster,{passive_key:attack.key,passive_count:2});
+assert.deepEqual(strategyClusterConfiguration(JSON.parse(JSON.stringify(document))),configuration);
+console.log("  ok - native fixed enchantments and configured authored strategy transport");

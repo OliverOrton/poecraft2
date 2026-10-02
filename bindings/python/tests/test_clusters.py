@@ -189,3 +189,82 @@ def test_cluster_rare_target_is_not_clamped_ordinary_count(size):
             assert item._state.prefix_count <= 2 and item._state.suffix_count <= 2
             assert session.cluster_configuration == identity
         assert observed == {3, 4}
+
+
+@pytest.mark.parametrize("size", KEYS)
+@pytest.mark.parametrize("action", ["chaos", "fossil", "harvest_reforge"])
+def test_standard_rare_reforges_count_retained_affixes(size, action):
+    fossil="Metadata/Items/Currency/CurrencyDelveCraftingPhysical"
+    spec = {"type":"fossil", "fossils":[fossil]} if action=="fossil" else {"type":"harvest_reforge","target_tag":"life"} if action=="harvest_reforge" else "chaos"
+    action_id = "fossil:"+fossil if action=="fossil" else "harvest_reforge:life" if action=="harvest_reforge" else action
+    with load_data(ARTIFACT) as d,d.create_cluster_session(BASE+size,1,passive_key=KEYS[size],passive_count=COUNTS[size]) as session,session.create_action_context(29) as ctx:
+        original=session.create_item("rare")
+        retained=next(session.mod_info(r["session_mod_id"]) for r in ctx.debug_pool(original,"exalt") if session.mod_info(r["session_mod_id"]).side=="suffix")
+        original.add_mod(retained,fractured=True)
+        before=bytes(original._state)
+        result=session.calculate_currency(original,action_id,{"rarity":"rare","slots":[],"allow_extra_modifiers":True})
+        assert result["legal"] and result["supported"]
+        counts={3:0.,4:0.}
+        for row in result["outcomes"]: counts[row["prefixes"]+row["suffixes"]]+=row["probability"]
+        assert counts==pytest.approx({3:.65,4:.35},abs=1e-12)
+        assert bytes(original._state)==before
+        for _ in range(16):
+            child=original.copy();assert ctx.apply(child,spec).applied
+            assert child.fractured_mod_ids==(retained.session_mod_id,)
+            assert child.explicit_count in (3,4)
+            assert child._state.prefix_count<=2 and child._state.suffix_count<=2
+            assert session.cluster_configuration["passive_key"]==KEYS[size]
+
+
+@pytest.mark.parametrize("fractured",[False,True])
+def test_harvest_augment_uses_targeted_pool_before_native_removal(fractured):
+    with load_data(ARTIFACT) as d,d.create_cluster_session(BASE+"Small",75,passive_key=KEYS["Small"],passive_count=2) as s,s.create_action_context(17) as ctx:
+        original=s.create_item("rare")
+        retained=next(s.mod_info(r["session_mod_id"]) for r in ctx.debug_pool(original,"exalt") if s.mod_info(r["session_mod_id"]).side=="suffix" and "life" not in s.mod_info(r["session_mod_id"]).classification_tags)
+        original.add_mod(retained,fractured=fractured)
+        spec={"type":"harvest_augment","target_tag":"life"}
+        pool=list(ctx.debug_pool(original,spec));target=s.find_mod("AfflictionNotableFettle")
+        expected=sum(r["final_weight"] for r in pool if s.mod_info(r["session_mod_id"]).family_id==target.family_id)/sum(r["final_weight"] for r in pool)
+        goal={"rarity":"rare","slots":[{"family_mod_key":target.key,"min_tier":1}],"allow_extra_modifiers":True}
+        result=s.calculate_currency(original,"harvest_augment:life",goal)
+        assert result["legal"] and result["success_probability"]==pytest.approx(expected,abs=1e-12)
+        for _ in range(16):
+            child=original.copy();assert ctx.apply(child,spec).applied
+            assert child.explicit_count==(2 if fractured else 1)
+            assert (retained.session_mod_id in child.suffix_mod_ids)==fractured
+
+
+def test_harvest_resistance_conversion_preserves_native_level_and_fracture():
+    with load_data(ARTIFACT) as d,d.create_cluster_session(BASE+"Small",75,passive_key=KEYS["Small"],passive_count=2) as s,s.create_action_context(17) as ctx:
+        original=s.create_item("rare")
+        source=next(s.mod_info(r["session_mod_id"]) for r in ctx.debug_pool(original,"exalt") if {"resistance","fire"}<=set(s.mod_info(r["session_mod_id"]).classification_tags) and "cold" not in s.mod_info(r["session_mod_id"]).classification_tags)
+        original.add_mod(source)
+        empty=s.create_item("rare")
+        pool=[r for r in ctx.debug_pool(empty,{"type":"harvest_reforge","target_tag":"cold"},side=source.side) if s.mod_info(r["session_mod_id"]).required_level==source.required_level and "resistance" in s.mod_info(r["session_mod_id"]).classification_tags and "fire" not in s.mod_info(r["session_mod_id"]).classification_tags]
+        target=s.mod_info(pool[0]["session_mod_id"])
+        goal={"rarity":"rare","slots":[{"family_mod_key":target.key,"min_tier":target.family_tier_index}],"allow_extra_modifiers":True}
+        expected=sum(r["final_weight"] for r in pool if s.mod_info(r["session_mod_id"]).family_id==target.family_id)/sum(r["final_weight"] for r in pool)
+        result=s.calculate_currency(original,"harvest_resist:fire:cold",goal)
+        assert result["legal"] and result["success_probability"]==pytest.approx(expected,abs=1e-12)
+        assert ctx.apply(original,{"type":"harvest_resist","source_tag":"fire","target_tag":"cold"}).applied
+        changed=s.mod_info((original.prefix_mod_ids+original.suffix_mod_ids)[0])
+        assert changed.required_level==source.required_level and "cold" in changed.classification_tags and "fire" not in changed.classification_tags
+        protected=s.create_item("rare");protected.add_mod(source,fractured=True)
+        assert not s.calculate_currency(protected,"harvest_resist:fire:cold",goal)["legal"]
+        assert not ctx.apply(protected,{"type":"harvest_resist","source_tag":"fire","target_tag":"cold"}).applied
+
+
+@pytest.mark.parametrize("key",["Metadata/Items/Currency/CurrencyDelveCraftingMirror","Metadata/Items/Currency/CurrencyDelveCraftingSellPrice"])
+def test_fossil_specials_are_native_terminal_outcomes(key):
+    # The frozen record, not a legacy fossil name, owns its active flag.
+    strings=json.loads((ARTIFACT/"strings.json").read_text(encoding="utf8"))
+    fossils=json.loads((ARTIFACT/"game-data.json").read_text(encoding="utf8"))["fossils"]
+    names=[strings["strings"][sid-strings.get("string_id_base",0)] for sid in fossils["key_string_ids"]]
+    mirrors=bool(fossils["mirrors"][names.index(key)])
+    with load_data(ARTIFACT) as d,d.create_cluster_session(BASE+"Small",1,passive_key=KEYS["Small"],passive_count=2) as s,s.create_action_context(17) as ctx:
+        original=s.create_item("normal")
+        result=s.calculate_currency(original,"fossil:"+key,{"rarity":"rare","slots":[],"allow_extra_modifiers":True})
+        assert result["legal"] and sum(r["probability"] for r in result["outcomes"])==pytest.approx(1,abs=1e-12)
+        child=original.copy();assert ctx.apply(child,{"type":"fossil","fossils":[key]}).applied
+        assert bool(child._state.item_flags&2)==mirrors
+        assert child.explicit_count in (3,4) and original.explicit_count==0

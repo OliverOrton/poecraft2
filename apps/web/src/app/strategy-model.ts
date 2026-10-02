@@ -1,4 +1,4 @@
-import { ItemSnapshot, itemSnapshotRarity } from "./workspace/persistence";
+import { ItemSnapshot, itemSnapshotRarity, itemSnapshotCluster } from "./workspace/persistence";
 import type { Catalog, CatalogEntry, EconomyIdentity } from "./engine-protocol";
 import {
     canonicalInfluenceExaltKey,
@@ -31,6 +31,7 @@ export interface StrategyStartMod {
 export interface StrategyBaseState {
     base_key: string;
     item_level: number;
+    cluster?: {passive_key: string; passive_count: number};
     rarity: "normal" | "magic" | "rare";
     with_implicits?: boolean;
     quality?: number;
@@ -451,6 +452,7 @@ export function createStrategyFromItemSnapshot(
     modKeyForId: (modId: number) => string | undefined,
 ): StrategyDocument {
     const state = (snapshot.state ?? {}) as ExportedItemState;
+    const configuration = itemSnapshotCluster(snapshot);
     if (state.lifecycle) throw new Error("A consumed or destroyed resource cannot become a strategy input.");
     const toMods = (slots: ExportedSlot[] | undefined): StrategyStartMod[] =>
         (slots ?? []).flatMap((slot) => {
@@ -483,6 +485,7 @@ export function createStrategyFromItemSnapshot(
         base_state: {
             base_key: snapshot.base,
             item_level: snapshot.itemLevel,
+            ...(configuration ? {cluster: {passive_key: configuration.passiveKey, passive_count: configuration.passiveCount}} : {}),
             rarity: itemSnapshotRarity(snapshot) as StrategyBaseState["rarity"],
             with_implicits: true,
             quality: state.quality ?? 0,
@@ -1348,4 +1351,9 @@ function walkBackward(
         }
     }
     return visited;
+}
+
+export function strategyClusterConfiguration(strategy: Pick<StrategyDocument, "base_state">): import("./engine-protocol").ClusterConfiguration | undefined {
+    const c = strategy.base_state.cluster;
+    return c ? {passiveKey: c.passive_key, passiveCount: c.passive_count} : undefined;
 }

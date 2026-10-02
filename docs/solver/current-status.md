@@ -62,9 +62,13 @@ authored evaluation, including existing Foulborn laws. Oliver adopted the cluste
 65/35 three/four rare-count model and fixed modern non-unique passive sockets.
 Positive Current carrier admission passes with explicit qualified primitive scope;
 automatic programmes and ordinary gated retry quotients refuse. Current keeps a
-zero-only global lower; no positive lower or closure is extended. Finder/Current
-export/check/product qualification remains open pending the coordinated serial
-Magic cases. Inspection-only legacy continuation rows/projection still refuse.
+zero-only global lower; no positive lower or closure is extended. The selected
+Small-life/Fettle Magic Finder run exports an original-root checked bounded
+66.66447958c Alteration policy at disclosed fixed quotes. Current reaches the
+owned memory cap without a policy; its coarse working value is not an upper.
+Fresh WASM worker transport, capability/scope and finite authored checks pass.
+General cluster solver completion, latency and combined-integration qualification
+remain open. Inspection-only legacy continuation rows/projection still refuse.
 
 
 ## Private paid-root Foulborn finite delta (2026-10-02)

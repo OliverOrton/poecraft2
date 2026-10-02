@@ -1828,8 +1828,10 @@ ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl& context,
     const auto emit = [&](const pc_item_state& item, long double probability) {
         if (action.type == ActionType::Fossil) {
             const auto special = fossil_implicit_outcomes(s, item, action.fossil_indices);
-            require_memory(frontier_bytes + special.capacity() * sizeof(special.front()));
+            const auto saved_frontier = frontier_bytes;
+            require_memory(saved_frontier + special.capacity() * sizeof(special.front()));
             for (const auto& [child, conditional] : special) visit(child, probability * conditional);
+            require_memory(saved_frontier);
         } else visit(item, probability);
     };
     const auto fill = [&](const pc_item_state& base, int target, long double mass,
@@ -1864,6 +1866,9 @@ ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl& context,
             }
             return key;
         };
+        const auto per_node = sizeof(Entry) + sizeof(Key) + 128 +
+            2 * (4 + s.words + PC_MAX_PREFIXES + PC_MAX_SUFFIXES + 4) * sizeof(std::uint64_t);
+        require_memory(per_node);
         current.emplace(key_for(base), Entry{base, mass});
         bool applied = base.prefix_count + base.suffix_count >= target;
         while (!current.empty()) {
@@ -1893,8 +1898,6 @@ ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl& context,
                     }
                     auto child_key = key_for(child);
                     // Conservative node/key allocation bound checked before allocation.
-                    const auto per_node = sizeof(Entry) + sizeof(Key) + 128 +
-                        (4 + s.words + PC_MAX_PREFIXES + PC_MAX_SUFFIXES + 4) * sizeof(std::uint64_t);
                     require_memory((current.size() + next.size() + 1) * per_node +
                         rows.capacity() * sizeof(PoolEntry));
                     const auto [position, inserted] = next.try_emplace(std::move(child_key), Entry{child, 0});
@@ -1902,6 +1905,8 @@ ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl& context,
                 }
             }
             current.swap(next);
+            // next still owns the preceding frontier until the next clear.
+            require_memory((current.size() + next.size()) * per_node);
         }
         require_memory(0);
         return applied;

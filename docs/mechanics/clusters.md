@@ -59,10 +59,13 @@ A Fossil successor outside this carrier refuses the whole row. Calculator can
 observe native terminal Fossil implicit outcomes without claiming continuation.
 
 Current admits an explicit qualified primitive scope with automatic programmes
-off, and retains **zero-only global lower authority**. Finder/Current end-to-end
-qualification is still open in the [living record](../active/2026-10-02-clusters-completion/README.md).
-Finite graph evaluation and a positive carrier admission gate do not certify
-search, positive lowers or exact optimality closure. Legacy inspection-only
+off, and retains **zero-only global lower authority**. The selected Magic
+Small-life/Fettle Finder graph checks at 66.66447958 chaos using disclosed fixed
+quotes. Current hits its owned memory cap without an executable policy. Fresh
+WASM worker and finite authored checks qualify the recorded envelope; general
+cluster solver completion and exact optimality closure remain open in the
+[living record](../active/2026-10-02-clusters-completion/README.md).
+These results confer no positive lower or approximate-state proof authority. Legacy inspection-only
 continuation rows/projection remain refused. Unqualified corruption, unique and
 new stochastic mechanics remain explicit acceptance items; no unknown law is
 invented or omitted from the record.

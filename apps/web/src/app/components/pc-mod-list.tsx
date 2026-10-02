@@ -46,6 +46,7 @@ export interface ConcreteModListModel {
     influences: string[];
     implicits: SlotMod[];
     enchantments?: SlotMod[];
+    clusterEnchantmentText?: string[];
     prefixes: SlotMod[];
     suffixes: SlotMod[];
     maxPrefix: number;
@@ -199,6 +200,9 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
                         <div className="pc-mod-target-actions"><span>{mod.sourceLabel}</span>{mod.probabilityLabel && <span>{mod.probabilityLabel}</span>}
                             <button type="button" aria-label="Remove implicit requirement" onClick={() => onRemove?.({implicitKey: mod.key})}>×</button></div></div></li>)}</ul>
             {!model.implicits?.length && <p className="pc-help">{target ? "No implicit requirements" : "No implicits"}</p>}
+        </section>}
+        {model.kind === "concrete" && !!model.clusterEnchantmentText?.length && <section className="pc-mod-group pc-mod-group-implicit">
+            <h4>Cluster enchantments</h4><ModLines lines={model.clusterEnchantmentText} />
         </section>}
         {model.kind === "concrete" && !!model.enchantments?.length && <section className="pc-mod-group pc-mod-group-implicit">
             <h4>Enchantments · retained state; stat-total effects unavailable</h4>

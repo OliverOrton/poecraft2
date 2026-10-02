@@ -1,3 +1,4 @@
+import { clusterEnchantmentText } from "../cluster-configuration";
 import { itemSnapshotCluster } from "../workspace/persistence";
 import { PcCraftControls, type CraftPanel } from "./pc-craft-controls";
 import { disposeReact, renderReact } from "../react-host";
@@ -728,6 +729,7 @@ export class PcEmulator extends HTMLElement {
         this.modList.setModel({
             properties: {influences: this.catalog?.genericInfluences ?? [], influenceBits: Number(info.generic_influence_bits ?? 0), corrupted: Boolean(Number(info.item_flags ?? 0) & 1)},
             kind: "concrete",
+            clusterEnchantmentText: clusterEnchantmentText(info.cluster),
             baseKey: this.base,
             baseName: this.baseDisplayName(),
             itemLevel: this.itemLevel,

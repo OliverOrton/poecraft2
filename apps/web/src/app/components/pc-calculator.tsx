@@ -1,3 +1,4 @@
+import { clusterEnchantmentText } from "../cluster-configuration";
 import { itemSnapshotCluster } from "../workspace/persistence";
 import { PcCraftControls, type CraftPanel } from "./pc-craft-controls";
 import { disposeReact, renderReact } from "../react-host";
@@ -205,6 +206,7 @@ export class PcCalculator extends HTMLElement {
     private itemSuffixes: SlotMod[] = [];
     private itemImplicits: SlotMod[] = [];
     private itemEnchantments: SlotMod[] = [];
+    private itemClusterEnchantmentText: string[] = [];
     private itemLifecycle = 0;
     private itemFlags = 0;
     private itemInfluenceBits = 0;
@@ -470,13 +472,14 @@ export class PcCalculator extends HTMLElement {
         }
         // Goal-relevant fossil actions change with the target, so the displayed
         // price/action envelope is refreshed from this exact solver handle.
-        this.pickerActions = await this.client.solverActions(this.solver);
+        this.pickerActions = (await this.client.solverActions(this.solver)).filter(
+            action => !this.cluster || Boolean((action.cluster_support ?? 0) & 2));
     }
     private solverGoal(
         mode: "odds" | "product_envelope" | "scoped_solve",
         actions?: readonly string[],
     ): SolverGoal {
-        return buildCalculatorSolverGoal(
+        const goal = buildCalculatorSolverGoal(
             {
                 rarity: this.goalRarity,
                 allowExtraModifiers: this.allowExtraModifiers,
@@ -497,6 +500,13 @@ export class PcCalculator extends HTMLElement {
                 ? []
                 : Array.from(this.solveDisabledActionFamilies).sort(),
         );
+        if (this.cluster && mode !== "odds") {
+            const { action_mode: _actionMode, fossil_mode: _fossilMode,
+                requested_fossil_actions: _requestedFossils, ...nativeGoal } = goal;
+            return {...nativeGoal, automatic_candidates: false,
+                actions: [...(actions ?? this.enabledSolvePickerActions().map(action => action.id))]};
+        }
+        return goal;
     }
 
     private hasItemRequirements(): boolean {
@@ -651,6 +661,12 @@ export class PcCalculator extends HTMLElement {
         this.base = sel.base;
         this.itemLevel = sel.itemLevel;
         this.cluster = sel.cluster;
+        if (this.cluster) {
+            this.solveAllowEconomicRestart = false;
+            this.solveConsiderImprintPrograms = false;
+            this.solveAbsoluteGapTarget = 0;
+            this.solveRelativeGapPercentTarget = 0;
+        }
         this.hasBase = true;
         this.pickerOpen = false;
         this.renderShell();
@@ -716,11 +732,8 @@ export class PcCalculator extends HTMLElement {
     }
 
     private selectTool(tool: "odds" | "solve"): void {
-        if (this.cluster && tool === "solve") {
-            this.setStatus("Cluster strategy solving is awaiting qualification. Single-action Odds are available.");
-            return;
-        }
         this.activeTool = tool;
+        if (this.cluster && tool === "solve") this.setStatus("Cluster search uses priced native qualified primitives. Optimality remains open; automatic Imprint and fresh-base programmes are unavailable.");
         this.querySelectorAll<HTMLElement>("[data-calc-pane]").forEach(pane => {
             pane.hidden = pane.dataset.calcPane !== tool;
         });
@@ -766,7 +779,8 @@ export class PcCalculator extends HTMLElement {
     private enabledSolvePickerActions(): SolverActionInfo[] {
         return this.pickerActions.filter(
             (action) =>
-                !this.solveDisabledActionFamilies.has(action.family),
+                !this.solveDisabledActionFamilies.has(action.family) &&
+                (!this.cluster || Boolean((action.cluster_support ?? 0) & 4)),
         );
     }
 
@@ -831,6 +845,7 @@ export class PcCalculator extends HTMLElement {
                 this.solveAllowEconomicRestart,
                 this.solveConsiderImprintPrograms,
                 this.solveMode,
+                Boolean(this.cluster),
             ),
             bounded_finish_after_ms: 4 * 60 * 1000,
             economy: pinned,
@@ -1081,7 +1096,7 @@ export class PcCalculator extends HTMLElement {
                 "The current Native Solver Lab profile disables voluntary Restart and automatic Imprint programs. Turn both options off before exporting.",
             );
         }
-        if (this.cluster) throw new Error("Configured cluster Solver Lab export is awaiting exact continuation qualification.");
+        if (this.cluster) throw new Error("Configured cluster Solver Lab import/export is not yet qualified.");
         const base = this.bases.find((entry) => entry.path === this.base);
         if (!base) throw new Error("The selected base is not available.");
         const pinned = pinEconomy(
@@ -1218,7 +1233,8 @@ export class PcCalculator extends HTMLElement {
                 calculationItem = await this.client.cloneItem(submittedItem);
                 (report.request as {state: unknown}).state = await this.client.exportItem(calculationItem, this.session);
                 inspector = await this.client.openCalcGoal(this.session, this.itemGoal());
-                this.pickerActions = await this.client.solverActions(inspector);
+                this.pickerActions = (await this.client.solverActions(inspector)).filter(
+                    action => !this.cluster || Boolean((action.cluster_support ?? 0) & 2));
                 const bestiary = this.bestiaryActions.find(
                     (action) => action.id === actionId,
                 );
@@ -1287,6 +1303,7 @@ export class PcCalculator extends HTMLElement {
         const suffixIds = info.suffix_mod_ids as number[];
         const implicitIds = info.implicit_mod_ids as number[];
         this.itemRarity = info.rarity as string;
+        this.itemClusterEnchantmentText = clusterEnchantmentText(info.cluster);
         this.itemMemoryStrands = Number(info.memory_strands ?? 0);
         this.itemLifecycle = Number(info.lifecycle ?? 0);
         this.itemFlags = Number(info.item_flags ?? 0);
@@ -1391,6 +1408,7 @@ export class PcCalculator extends HTMLElement {
             influences: this.itemInfluences,
             implicits: this.itemImplicits,
             enchantments: this.itemEnchantments,
+            clusterEnchantmentText: this.itemClusterEnchantmentText,
             lifecycle: this.itemLifecycle,
             prefixes: this.itemPrefixes,
             suffixes: this.itemSuffixes,
@@ -1948,6 +1966,7 @@ export class PcCalculator extends HTMLElement {
                            </span>`
                 }
             </header>
+            ${this.cluster ? '<p class="pc-help pc-calc-goal-scope">Configured cluster search uses priced native qualified primitives. Optimality remains open; automatic Imprint and fresh-base programmes are unavailable. Large exact policies may reach the memory cap.</p>' : ""}
             ${this.allowExtraModifiers ? '<p class="pc-help pc-calc-goal-scope">Extra modifiers allowed. Strategies are checked for success; optimal cost is not certified.</p>' : ""}
             <div class="pc-calc-solve-targets">
                 <label>
@@ -1960,21 +1979,21 @@ export class PcCalculator extends HTMLElement {
                 <label>
                     <span>Absolute gap target <small>chaos</small></span>
                     <input type="number" min="0" step="any" data-solve-target="absolute"
-                        value="${this.solveAbsoluteGapTarget || ""}" placeholder="Disabled" ${this.solveMode === "strategy_finder" || this.allowExtraModifiers ? "disabled" : ""}>
+                        value="${this.solveAbsoluteGapTarget || ""}" placeholder="Disabled" ${this.solveMode === "strategy_finder" || this.allowExtraModifiers || this.cluster ? "disabled" : ""}>
                 </label>
                 <label>
                     <span>Relative gap target <small>%</small></span>
                     <input type="number" min="0" step="any" data-solve-target="relative"
-                        value="${this.solveRelativeGapPercentTarget || ""}" placeholder="Disabled" ${this.solveMode === "strategy_finder" || this.allowExtraModifiers ? "disabled" : ""}>
+                        value="${this.solveRelativeGapPercentTarget || ""}" placeholder="Disabled" ${this.solveMode === "strategy_finder" || this.allowExtraModifiers || this.cluster ? "disabled" : ""}>
                 </label>
                 <label class="pc-calc-solve-restart-option">
                     <input type="checkbox" data-solve-economic-restart
-                        ${this.solveAllowEconomicRestart ? "checked" : ""}>
+                        ${this.solveAllowEconomicRestart ? "checked" : ""} ${this.cluster ? "disabled" : ""}>
                     <span>Allow abandoning this item and buying a fresh base</span>
                 </label>
                 <label class="pc-calc-solve-restart-option">
                     <input type="checkbox" data-solve-consider-imprints
-                        ${this.solveConsiderImprintPrograms ? "checked" : ""}>
+                        ${this.solveConsiderImprintPrograms ? "checked" : ""} ${this.cluster ? "disabled" : ""}>
                     <span>Consider automatic Imprint checkpoint/retry programs</span>
                 </label>
                 <details class="pc-calc-solve-family-controls">

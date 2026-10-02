@@ -17,7 +17,7 @@ Calculator must retain concrete input identity through every draw before merging
 terminal observations. Current/Finder and authored exact continuation support are
 an explicit acceptance item; no existing quotient/proof certificate is promoted.
 
-## Owner review packet (research authorized; adoption pending)
+## Historical owner review packet (adopted below)
 
 1. Fixed ordinary non-unique inputs: canonical Large 8–12, Medium 4–6, Small 2–3,
    supplied passive key. Exclude preserved old_do_not_use variants pending a
@@ -222,3 +222,156 @@ preflight initially pinned archived ABI2 and now correctly pins available ABI3;
 
 UI continuation work is in progress and not covered by this native checkpoint.
 Frozen SQLite/runtime/prices remain unchanged; integration owns merges/pushes.
+
+
+## Completion batch: qualified and paused
+
+Oliver's 19:39 UTC steering selects finishing this batch and then pausing, with
+no new programme or mechanics expansion. The retained checkpoint `28cbc42815947b198d0ece2e3f316c65f1a6b422`
+owns the native continuation and approved-law implementation. This final delta
+adds product transport/capability plumbing, conservative visitor scratch bounds,
+rare authored checks and the completed qualification/disposition. The old receipts
+above retain their historical identities; [completion-batch-qualification.json](completion-batch-qualification.json)
+pins this delta, final native/DLL/WASM artifacts, logs and both reserved runs.
+
+### Retained pathway
+
+The qualified native action types are Transmute, Alteration, Augment, Regal,
+Exalt, Foulborn Augment/Regal/Exalt, Annul, Scour, Alchemy, Chaos, Fossil,
+Harvest Reforge, Harvest Augment, Harvest resistance conversion and remove-crafted.
+Existing deterministic Bestiary checkpoint copying remains its sampled owner;
+it does not widen exact continuation resources. All other cluster currency types
+retain explicit refusal. This is an admitted envelope, not a claim that every
+parameter/configuration/context has an applicable outcome or continuation carrier.
+
+The Calculator and authored continuation consume the same native completed-
+outcome visitor, including approved rare totals, retained/direct/guaranteed
+explicits, dynamic tags, Fossil specials and ordinary Harvest laws. A whole failed
+row exposes no partial probability. Scratch accounting now conservatively checks
+both physical frontiers before allocation and releases temporary special-outcome
+ownership after emission. Native probabilities and ordinary samplers are unchanged
+by this final scratch delta.
+
+Normal item cards show native passive count/type and passive-tree sockets as
+fixed cluster enchantments. Strategy pickers, item-to-strategy conversion, modifier
+catalog caches, evaluation and sampled compilation reopen the same stable cluster
+configuration. Native compiled/exported graphs bind it in `base_state.cluster`.
+Calculator Solve uses native capability metadata to retain only qualified explicit
+priced primitives. Its public options disable unqualified automatic programmes
+and the ordinary goal-progress gated quotient; gap targets are unavailable because
+lower authority is zero-only. Selecting a cluster clears previously selected
+programme/gap controls, so the displayed scope matches the native request. Single-
+action Odds uses the independent terminal capability bit. No UI crafting law is
+introduced. Solver Lab import/export retains an explicit qualification refusal.
+
+### Final finite checks
+
+Two-job final native Tests and WASM builds pass. Final native selectors pass
+**34,956 cluster**, **354 incoming Calculator** and **6,246 currency-contract**
+checks. Final DLL binding selection passes **91 tests**; four subsequently added
+Alchemy/Chaos/Fossil/Harvest original-root graphs also pass, giving **95 distinct
+binding checks** across these invocations. Authored tests now total 25. Rare graphs
+match terminal native probabilities and original pricing, including Fossil material
+plus resonator consumption. Frozen Fractured Fossil metadata declares no mirror
+flag; an initial name-based test expectation was corrected to that native data.
+
+Fresh WASM actual-worker checks pass all three groups, covering rare actions,
+positive Current rows, native capability metadata, explicit caller-scope refusal,
+original-root probability checks, and configuration mismatch refusal. The final
+existing `npm test` chain passes with
+`POECRAFT_SMOKE_TEST=Calculator item goals and editors preserve native joint outcomes`:
+four selected smoke cases and all later web tests, including the cluster worker.
+Unchanged Simulator and timed ordinary solver smoke cases are excluded. Final
+TypeScript passes. Focused cluster catalog/picker/persistence/Undo/strategy transport
+checks and solver-option tests pass; a final focused picker rerun and TypeScript
+follow the small scope-control repair. Rendered UI review remains Oliver's and was
+not requested. No fresh Simulator run or general performance gate is claimed.
+
+Earlier test iterations are retained in `out/clusters-completion/`: the first
+worker scope test had an empty goal rejected before action-scope parsing; the
+corrected nonempty goal tests the intended guard. Candidate metadata was first
+queried on an already scoped handle; the corrected unscoped handle tests native
+capability vocabulary. These are harness corrections, not relaxed native scope.
+
+### Two reserved Magic runs: spent
+
+Both runs use checkpoint `28cbc428`, benchmark SHA256
+`e562e6e235d8372b5df7719db4c6f1cbc98d20d69ff0ddf2fe1717952e211f61`,
+the frozen input identity, explicit Alteration/Augment/Annul scope and the shared
+existing corpus runner. Host/native cleanup reports completion, no timeout and
+no survivor. Both reliability expectations and recorded cap checks pass.
+
+Current returns `refused_resource_cap`, `stop_cause=memory_cap`, no policy or graph,
+lower zero and no upper. Its 57.10743008 working value is not an executable-policy
+upper or lower authority. The strict checker discovers 1,360 states while the
+coarse discovery has five. No approximate discovery state acquires exact authority.
+Bulk receipt: `out/clusters-completion/current-magic-qualification/`.
+
+Finder returns `bounded_feasible`; the exported three-node Alteration-repeat graph
+receives an independent original-root native check. Checked cost is
+**66.66447957898569 chaos**, success 1.0000000000033165 within the existing numerical
+tolerance, zero failure/off-policy/unresolved mass, complete costs and zero cost
+reconciliation delta. Expected consumption is 370.35821988325387 Alterations at
+.18 chaos. All 1,326 materialized operation rows are full physical rows; no gated
+row/kernel authority is used. The check accounts 1,802,034 outcomes, 1,756,950 routed
+transitions, 45,084 absorptions and 45,469,571 peak owned bytes under 128MiB.
+The [retained graph](evidence/cluster-magic-fettle-finder.strategy.json) is copied
+byte-for-byte from the completed run; bulk receipt stays under
+`out/clusters-completion/finder-magic-qualification/`. It proves bounded feasible
+cost in this input/action/price scope, not optimality or general search completion.
+
+Native maximum solve steps were 4,149.46ms Current and 371.87ms Finder. These are
+observations, not a responsiveness pass; actual-worker long-case latency remains
+unqualified. The final scratch/WASM build has a different artifact identity from
+the timed benchmark. The law/probability code is unchanged by that delta, but the
+historical solve receipt is not transferred to the final or combined runtime.
+
+### Ordinary reforge integration requirements
+
+The ordinary owner is complete at `596e7cf40fdff97fa587345c919832e55135f7cb`
+(core `664e7003551e52d69461bf6351b01ca5b1b2e90d`) in sibling
+`poecraft2-reforge-law`. Its `engine/src/reforge_count_law.hpp` is the single shared
+count owner: Equipment 8:3:1 on 4/5/6, LegacyJewel unchanged 1:1:1 on 4/5/6,
+ClusterJewel 65:35 on 3/4. Integration must select **ClusterJewel first** for a
+configured cluster, before the Jewel/Abyss legacy branch. Remove this worker's
+`configured_rare_count` wrapper and route all sampler calls through the shared
+helper. Replace the concrete visitor's equivalent hardcoded rare-total pair with
+that helper's positive weighted draws/denominator. Do not add a duplicate helper.
+
+Keep count law version **2**, Current refinement version **4**, evaluator version
+**2** and checkpoint format **5**, including that owner's law-version/kind payload
+and proof/cache identities. Retain this worker's appended stable cluster configuration
+identity on checkpoint write and read, plus strategy `base_state.cluster`; the
+local format-four code must not overwrite the owner upgrade. The overlapping
+`session_builder.cpp`, `engine_internal.hpp`, `actions_basic.cpp`, checkpoint,
+current-status and HANDOFF changes need an intentional combined resolution.
+Neither worker's isolated tests or WASM bytes qualify the combined build. The
+integration owner owns conflict resolution, combined qualification and promotion;
+this worker has not merged, pushed or deployed.
+
+### Remaining acceptance and disposition
+
+Full cluster mechanics/output completion is still **partial**, explicitly:
+
+- Current lacks an executable policy on the selected high-ilvl Magic case; exact
+  optimality/positive lower closure, broad cluster search and long-worker latency
+  remain unqualified. Finder qualifies only the retained bounded graph and finite
+  scope above, not all configured inputs or legal action parameters.
+- Automatic fresh-base/Imprint programmes, checkpoint/resource/provenance entries,
+  external continuation roots, legacy inspection rows and ordinary gated retry
+  quotients remain refused. Unsupported retained implicit/enchantment/quality/
+  equipment-socket/influence/strands context, dual locks and Fossil implicit successors
+  refuse the exact structural carrier as a whole. These restrictions do not silently
+  discard outcome mass or redefine the original goal/root.
+- Solver Lab cluster import/export is not qualified. Ordinary corruption/unique/
+  unqualified currency types, Memory stochastic laws, preserved legacy passive
+  inputs and allocation/pathing algorithms are not implemented here. No new outcome
+  law is guessed; any future expansion needs selection and owner-law review.
+- The shared ordinary reforge helper/version integration and combined runtime checks
+  remain integration-owned. Native ABI additions preserve ABI3 layout; fresh runtime
+  vocabulary/module artifacts were rebuilt locally, not published.
+
+No next work, timed allowance or process is retained. Frozen SQLite/runtime/economy
+and protected root `0` are unchanged. This living record preserves the argument,
+approved law provenance, compact evidence and disposition once; canonical cluster
+contracts and the short HANDOFF point here. Oliver's pause is respected.

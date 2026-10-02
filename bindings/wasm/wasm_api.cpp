@@ -1799,6 +1799,7 @@ const char* pcw_item_info(uint32_t item_id, uint32_t session_id) {
         pc_session_handle* session = find(g_sessions, session_id);
         if (session != nullptr) {
             append_item_max(out, *session, item);
+            out += ",\"cluster\":" + cluster_configuration(*session);
         }
     }
     out.push_back('}');
@@ -3072,6 +3073,10 @@ const char* pcw_solver_actions(uint32_t solver_id) {
                std::to_string(info.transition_kind);
         out += ",\"synthetic\":";
         out += info.synthetic ? "true" : "false";
+        uint32_t cluster_support = UINT32_MAX;
+        rc = pc_solver_cluster_action_support(*solver, info.action_index, &cluster_support, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
+        out += ",\"cluster_support\":" + std::to_string(cluster_support);
         out += ",\"cost_keys\":[";
         for (uint32_t k = 0; k < info.cost_key_count; ++k) {
             if (k != 0) out.push_back(',');

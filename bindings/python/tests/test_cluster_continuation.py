@@ -133,3 +133,39 @@ def test_physical_fettle_renewal_reports_transition_cap():
     with load_data(ARTIFACT) as d,d.create_cluster_session(BASE,75,passive_key=KEY,passive_count=2) as s,s.compile_strategy(graph(repeat=True)) as strategy:
         with pytest.raises(EngineError,match="max_transitions"):
             strategy.evaluate(max_states=5000,max_pairs=10000,max_transitions=100000,max_owned_bytes=128*1024*1024)
+
+
+@pytest.mark.parametrize("action,params,action_id,rarity",[
+    ("alchemy",{},"alchemy","normal"),
+    ("fossil",{"fossils":["Metadata/Items/Currency/CurrencyDelveCraftingPhysical"]},"fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical","normal"),
+    ("harvest_reforge",{"target_tag":"life"},"harvest_reforge:life","rare")])
+def test_approved_rare_original_root_graph_matches_terminal_calculator(action,params,action_id,rarity):
+    with load_data(ARTIFACT) as d,d.create_cluster_session(BASE,1,passive_key=KEY,passive_count=2) as s,s.create_action_context(0) as ctx:
+        item=s.create_item(rarity)
+        target=next(s.mod_info(r["session_mod_id"]) for r in ctx.debug_pool(s.create_item("rare"),"exalt") if s.mod_info(r["session_mod_id"]).side=="prefix")
+        goal={"rarity":"rare","slots":[{"family_mod_key":target.key,"min_tier":target.family_tier_index}],"allow_extra_modifiers":True}
+        expected=s.calculate_currency(item,action_id,goal)["success_probability"]
+        doc=graph(action,rarity=rarity);doc["base_state"]["item_level"]=1
+        doc["nodes"][1]["operation"]["params"]=params
+        doc["edges"][1]["condition"]={"type":"has_mod_family","family_mod_key":target.key,"min_tier":target.family_tier_index}
+        prices={action_id:3} if action!="fossil" else {action_id:2,"resonator:1":1}
+        with s.compile_strategy(doc) as strategy,load_economy({"version":"v1","prices":prices}) as economy:
+            result=strategy.evaluate(economy=economy,max_states=50000,max_pairs=100000,max_transitions=2000000,max_owned_bytes=128*1024*1024)
+            assert result["converged"]
+            assert result["terminals"]["success"]==pytest.approx(expected,abs=1e-12)
+            assert result["terminals"]["success"]+result["terminals"]["failure"]==pytest.approx(1,abs=1e-12)
+            assert result["accounting"]["totals"]["per_invocation"]["total_expected_cost"]==pytest.approx(3)
+
+
+def test_targeted_augment_original_root_graph_matches_calculator():
+    with load_data(ARTIFACT) as d,d.create_cluster_session(BASE,75,passive_key=KEY,passive_count=2) as s,s.create_action_context(0) as ctx:
+        original=s.create_item("rare")
+        retained=next(s.mod_info(r["session_mod_id"]) for r in ctx.debug_pool(original,"exalt") if s.mod_info(r["session_mod_id"]).side=="suffix" and "life" not in s.mod_info(r["session_mod_id"]).classification_tags)
+        original.add_mod(retained,fractured=True)
+        goal={"rarity":"rare","slots":[{"family_mod_key":TARGET,"min_tier":1}],"allow_extra_modifiers":True}
+        expected=s.calculate_currency(original,"harvest_augment:life",goal)["success_probability"]
+        doc=graph("harvest_augment",rarity="rare",suffixes=[{"mod_key":retained.key,"fractured":True}]);doc["nodes"][1]["operation"]["params"]={"target_tag":"life"}
+        with s.compile_strategy(doc) as strategy,load_economy({"version":"v1","prices":{"harvest_augment:life":3}}) as economy:
+            result=strategy.evaluate(economy=economy,max_states=5000,max_pairs=10000,max_transitions=50000,max_owned_bytes=128*1024*1024)
+            assert result["converged"] and result["terminals"]["success"]==pytest.approx(expected,abs=1e-12)
+            assert result["accounting"]["totals"]["per_invocation"]["total_expected_cost"]==pytest.approx(3)

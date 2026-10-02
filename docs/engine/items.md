@@ -37,9 +37,13 @@ no allocation/pathing algorithm or configuration-generation law is inferred.
 WASM exports bind the configuration in `cluster`; imports require the same
 base, level, passive key and integer count, then author imported explicits through
 the native editor to validate domain, caps, groups and dynamic eligibility.
-Emulator/Calculator selection, drafts, Stash previews and Undo reopen that
-configuration. [The cluster receipt](../active/2026-10-02-clusters-completion/README.md)
-owns admitted crafting laws and remaining owner review.
+Emulator/Calculator selection, drafts, Stash previews, Undo and authored strategy
+selection/evaluation reopen that configuration. Item-info exposes native fixed
+passive count/type and modern jewel-socket enchantments separately from mutable
+explicit, implicit and equipment-socket fields; UI text reads that native value.
+Strategy JSON binds the stable passive key and integer count in `base_state.cluster`.
+[The cluster receipt](../active/2026-10-02-clusters-completion/README.md)
+owns admitted crafting laws, qualification and remaining acceptance.
 
 The C ABI leaves a passed item unchanged when an action fails. Callers own the
 item's lifetime; session and action-context handles must remain valid while an
