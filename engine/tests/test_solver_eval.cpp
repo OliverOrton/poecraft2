@@ -2,6 +2,8 @@
 
 #include "../src/handles_internal.hpp"
 #include "../src/solver_internal.hpp"
+#include "../src/currency_outcomes.hpp"
+#include "../src/solver_dominance.hpp"
 #include "../src/solver_proof_pattern_manager.hpp"
 #include "../src/solver_refinement.hpp"
 #include "../src/solver_segmented_vector.hpp"
@@ -3590,6 +3592,298 @@ void run_solver_observation_layout_tests() {
     stage("downstream delayed split", run_observation_partition_delayed_split_tests);
 }
 
+
+namespace {
+std::shared_ptr<SessionImpl> dominance_session() {
+    auto s = make_eval_session();
+    auto d = std::make_shared<DataImpl>(*s->data); s->data = d;
+    d->strings.push_back("Body Armour");
+    d->base_item_class_id = {0}; d->item_class_index_by_id[0] = 0;
+    d->item_class_key_sid = {static_cast<std::uint32_t>(d->strings.size()-1)};
+    d->mod_required_level.assign(16, 1);
+    d->mod_type_key_sid = d->mod_key_sid;
+    d->spawn_offsets.resize(17);
+    for (std::uint32_t i=0; i<=16; ++i) d->spawn_offsets[i]=i;
+    d->spawn_tag_ids.assign(16, 0); d->spawn_weights.assign(16, 100);
+    s->selector_tag_by_influence = {-1,0};
+    s->influence_masks.resize(2, std::vector<std::uint64_t>(s->words,0));
+    s->gen_type[9] = 0;
+    for (const auto [a,b] : std::vector<std::pair<unsigned,unsigned>>{{0,1},{2,3},{5,7},{6,8},{4,9}}) {
+        s->primary_group[b]=s->primary_group[a];
+        s->gen_type[b]=s->gen_type[a];
+        d->influence_elevations[a]=b;
+        d->mod_type_key_sid[b]=d->mod_type_key_sid[a];
+        s->required_level[b]=68; d->mod_required_level[b]=68;
+    }
+    // Reflection-like pair: same side/groups/level/flags but distinct upgrade.
+    s->primary_group[4]=s->primary_group[9]=s->primary_group[0];
+    s->group_masks.assign(31,std::vector<std::uint64_t>(s->words,0));
+    s->prefix_mask.assign(s->words,0); s->suffix_mask.assign(s->words,0);
+    for (std::uint32_t i=0;i<16;++i) {
+        s->group_ids[i]=s->primary_group[i];
+        pc_bitset_set(s->group_masks[s->primary_group[i]].data(),i);
+        pc_bitset_set((s->gen_type[i]==0?s->prefix_mask:s->suffix_mask).data(),i);
+        if (i<10) { s->influence_code[i]=1; pc_bitset_set(s->influence_masks[1].data(),i); }
+    }
+    return s;
+}
+
+pc_item_state dominance_item(const SessionImpl& s, const std::vector<unsigned>& ids) {
+    pc_item_state item; pc_item_clear(&item); item.rarity=PC_RARITY_RARE;
+    item.generic_influence_bits=1;
+    for (const auto id:ids)
+        PC_CHECK(pc_item_add_mod(&item,s.gen_type[id],id,s.primary_group[id],0,nullptr)==PC_RESULT_OK);
+    return item;
+}
+
+std::unique_ptr<CalcContext> dominance_calc(const std::shared_ptr<SessionImpl>& s) {
+    ActionRegistryBuildOptions opts; opts.exhaustive_fossils=false; opts.authored_dominance=true;
+    auto registry=build_action_registry(*s,opts);
+    std::vector<unsigned> actions;
+    for (const auto* name:{"dominance","annul","scour","remove_crafted_modifiers"})
+        actions.push_back(registry.index_by_id.at(name));
+    std::vector<std::uint64_t> reachable(s->words,0);
+    for (unsigned i=0;i<s->mod_count;++i) pc_bitset_set(reachable.data(),i);
+    return std::make_unique<CalcContext>(s,GoalSpec{},std::move(registry),actions,
+        true,false,true,1000,std::vector<CountObservation>{},false,reachable,true);
+}
+
+// Finite independent oracle: the fixture's authored native upgrade map and
+// explicit slot-pair replacement are independent of production's choice/result
+// helpers, layout, row accumulator and terminal observation.
+using DominanceKey=decltype(authored_dominance_affixes(pc_item_state{}));
+std::map<DominanceKey,double> dominance_pair_oracle(const SessionImpl& s,const pc_item_state& item) {
+    const std::map<unsigned,unsigned> upgrades{{0,1},{1,1},{2,3},{3,3},{4,9},{9,9},{5,7},{7,7},{6,8},{8,8}};
+    struct Slot {int side; pc_mod_slot slot;};
+    std::vector<Slot> all; std::vector<unsigned> eligible;
+    bool lock_prefix=false,lock_suffix=false;
+    for (const auto& [side,id,group,flags]:authored_dominance_affixes(item)) {
+        (void)side;(void)group;(void)flags;
+        lock_prefix |= s.metamod_type[id]==s.data->metamod_prefixes_locked_code;
+        lock_suffix |= s.metamod_type[id]==s.data->metamod_suffixes_locked_code;
+    }
+    for(int side:{0,1}) {
+        const auto count=side==0?item.prefix_count:item.suffix_count;
+        const auto* slots=side==0?item.prefixes:item.suffixes;
+        for(unsigned i=0;i<count;++i) {
+            const auto& slot=slots[i];
+            if (!(side==0?lock_prefix:lock_suffix) && slot.flags==0 && upgrades.count(slot.mod_id))
+                eligible.push_back(static_cast<unsigned>(all.size()));
+            all.push_back({side,slot});
+        }
+    }
+    std::map<DominanceKey,double> expected;
+    if(eligible.size()<2) return expected;
+    const double mass=1.0/(eligible.size()*(eligible.size()-1));
+    for(const auto a:eligible) for(const auto b:eligible) if(a!=b) {
+        pc_item_state next;pc_item_clear(&next);next.rarity=item.rarity;
+        next.generic_influence_bits=item.generic_influence_bits;
+        for(unsigned i=0;i<all.size();++i) if(i!=b) {
+            const auto id=i==a?upgrades.at(all[i].slot.mod_id):all[i].slot.mod_id;
+            PC_CHECK(pc_item_add_mod(&next,all[i].side,id,s.primary_group[id],all[i].slot.flags,nullptr)==PC_RESULT_OK);
+        }
+        expected[authored_dominance_affixes(next)]+=mass;
+    }
+    return expected;
+}
+
+void dominance_row_matrix() {
+    auto s=dominance_session(); auto calc=dominance_calc(s);
+    const auto action=calc->registry().index_by_id.at("dominance");
+    for(const auto ids:std::vector<std::vector<unsigned>>{{0,5},{0,2,5},{0,2,5,6},{1,2,7,6},{4,5}})
+    for(unsigned variant=0;variant<6;++variant) {
+        auto item=dominance_item(*s,ids);
+        if(variant==1) item.prefixes[0].flags=PC_MOD_SLOT_FRACTURED;
+        if(variant==2) item.prefixes[0].flags=PC_MOD_SLOT_CRAFTED;
+        if(variant==3) item.prefixes[0].flags=PC_MOD_SLOT_FRACTURED|PC_MOD_SLOT_CRAFTED;
+        if(variant==4) PC_CHECK(pc_item_add_mod(&item,1,13,s->primary_group[13],PC_MOD_SLOT_CRAFTED,nullptr)==PC_RESULT_OK);
+        if(variant==5 && item.prefix_count>1) std::swap(item.prefixes[0],item.prefixes[1]);
+        const auto expected=dominance_pair_oracle(*s,item);
+        const auto root=calc->intern_item(item);
+        const auto row=calc->outcomes(root,action);
+        PC_CHECK(row.supported); PC_CHECK(row.applicable==!expected.empty());
+        std::map<DominanceKey,double> actual;
+        double mass=0;
+        for(const auto& e:row.entries) {
+            pc_item_state next;PC_CHECK(calc->materialize(e.state,next));
+            actual[authored_dominance_affixes(next)]+=e.probability;mass+=e.probability;
+            PC_CHECK(next.generic_influence_bits==item.generic_influence_bits);
+            // Every reached continuation has the same exact physical carrier.
+            for(const auto* tail:{"annul","scour","remove_crafted_modifiers"}) {
+                const auto& continuation=calc->outcomes(e.state,calc->registry().index_by_id.at(tail));
+                PC_CHECK(continuation.supported);
+                for(const auto& t:continuation.entries) {
+                    pc_item_state restored; PC_CHECK(calc->materialize(t.state,restored));
+                    PC_CHECK(calc->intern_item(restored)==t.state);
+                }
+            }
+        }
+        PC_CHECK(actual.size()==expected.size()); PC_CHECK(near(mass,expected.empty()?0.0:1.0));
+        for(const auto& [key,p]:expected) PC_CHECK(near(actual[key],p));
+        const auto cached=calc->outcomes(root,action); PC_CHECK(cached.entries.size()==row.entries.size());
+    }
+    auto a=dominance_item(*s,{0,5}), b=dominance_item(*s,{4,5});
+    PC_CHECK(calc->intern_item(a)!=calc->intern_item(b));
+}
+
+std::string dominance_graph(const std::string& fields,const std::string& tail="",
+                            const std::string& predicate=R"({"type":"mod_count","mod_keys":["mod1"],"min":1})") {
+    const std::string nodes=R"({"id":"start","kind":"start"},{"id":"dom","kind":"operation","operation":{"type":"dominance","params":{}}},)"+
+        (tail.empty()?std::string{}:std::string(R"({"id":"tail","kind":"operation","operation":{"type":")")+tail+R"(","params":{}}},)")+
+        R"({"id":"success","kind":"terminal","terminal":"success"},{"id":"failure","kind":"terminal","terminal":"failure"})";
+    const std::string from=tail.empty()?"dom":"tail";
+    const std::string edges=R"({"id":"begin","from":"start","to":"dom","priority":999,"is_default":true},)"+
+        (tail.empty()?std::string{}:std::string(R"({"id":"continue","from":"dom","to":"tail","priority":999,"is_default":true},)"))+
+        "{\"id\":\"hit\",\"from\":\""+from+"\",\"to\":\"success\",\"priority\":0,\"condition\":"+predicate+"},"+
+        "{\"id\":\"miss\",\"from\":\""+from+R"(","to":"failure","priority":999,"is_default":true})";
+    return shell("authored Dominance", "rare", nodes,edges,fields);
+}
+
+void dominance_continuations() {
+    auto s=dominance_session(); auto economy=std::make_shared<EconomyImpl>();
+    economy->id="dominance-fixture";economy->prices={{"dominance",7},{"annul",2},{"scour",3}};
+    StrategyEvalOptions options;options.economy=economy;
+    const std::string two=R"(,"prefixes":["mod0"],"suffixes":["mod5"])",
+                      three=R"(,"prefixes":["mod0","mod2"],"suffixes":["mod5"])",
+                      physical=R"(,"prefixes":["mod4"],"suffixes":["mod5"])",
+                      elevated=R"(,"prefixes":["mod1"],"suffixes":["mod5"])",
+                      crafted=R"(,"prefixes":["mod0"],"suffixes":["mod5",{"mod_key":"bench_blocker","crafted":true}])";
+    struct Case {std::string fields,tail,predicate;double success,failure,not_applied,cost;};
+    const std::string exact=R"({"type":"mod_count","mod_keys":["mod1"],"min":1})";
+    for(const auto& c:std::vector<Case>{{two,"",exact,.5,.5,0,7},{physical,"",exact,0,1,0,7},
+        {elevated,"",exact,.5,.5,0,7},{three,"dominance",exact,1.0/3,2.0/3,0,14},
+        {three,"annul",exact,1.0/6,5.0/6,0,9},{two,"dominance",exact,0,0,1,7},
+        {two,"scour",R"({"type":"rarity_is","rarity":"normal"})",1,0,0,10},
+        {crafted,"remove_crafted_modifiers",exact,.5,.5,0,10},
+        {two,"remove_crafted_modifiers",exact,0,0,1,7}}) {
+        const auto graph=dominance_graph(c.fields,c.tail,c.predicate);
+        const auto strategy=compile(s,graph);
+        const auto result=evaluate_strategy(*strategy,options);
+        PC_CHECK(result.converged);PC_CHECK(near(result.success_probability,c.success));
+        PC_CHECK(near(result.failure_probability,c.failure));PC_CHECK(near(result.action_not_applied_probability,c.not_applied));
+        PC_CHECK(near(result.total_expected_cost,c.cost));PC_CHECK(near(result.unresolved_probability,0));
+        PC_CHECK(near(result.no_matching_edge_probability,0));PC_CHECK(near(result.stop_probability,0));
+        PC_CHECK(near(result.expected_consumption.at("dominance"),c.tail=="dominance" && c.not_applied==0?2.0:1.0));
+        const auto repeated=evaluate_strategy(*compile(s,graph),options);
+        PC_CHECK(near(repeated.success_probability,result.success_probability));
+        PC_CHECK(near(repeated.total_expected_cost,result.total_expected_cost));
+        const auto json=serialize_strategy_eval(result);PC_CHECK(!json.empty());
+        PC_CHECK(strategy->source_json==compile(s,graph)->source_json);
+    }
+}
+
+void dominance_refusals() {
+    const auto refuses=[](const auto& fn,const char* part) {
+        bool refused=false;
+        try { fn(); } catch(const std::exception& ex) {
+            refused=std::string(ex.what()).find(part)!=std::string::npos;
+            if(!refused) std::printf("unexpected Dominance refusal: %s\n",ex.what());
+        }
+        PC_CHECK(refused);
+    };
+    auto s=dominance_session();
+    ActionRegistryBuildOptions opt;opt.exhaustive_fossils=false;
+    for(unsigned mode=0;mode<4;++mode) {
+        auto scope=opt; scope.goal_relevant_actions=mode==1;scope.automatic_candidates=mode==2;
+        if(mode==3) scope.option_dependency_action_ids={"dominance"};
+        PC_CHECK(!build_action_registry(*s,scope).index_by_id.count("dominance"));
+        scope.authored_dominance=true;
+        if(mode) refuses([&]{build_action_registry(*s,scope);},"envelopes");
+    }
+    auto calc=dominance_calc(s); const auto root=dominance_item(*s,{0,5});
+    for(unsigned kind=0;kind<9;++kind) {
+        auto bad=root;
+        switch(kind) {case 0:bad.memory_strands=1;break;case 1:bad.enchantment_count=1;break;
+        case 2:bad.implicit_count=1;break;case 3:bad.socket_count=1;break;case 4:bad.lifecycle=PC_ITEM_DESTROYED;break;
+        case 5:bad.prefixes[0].flags=PC_MOD_SLOT_VEILED;break;case 6:bad.prefixes[0].mod_id=4;break;
+        case 7:bad.prefixes[0].flags=PC_MOD_SLOT_SYNTH;break;case 8:bad.quality=20;break;}
+        // Changing 0 to 4 alone is valid identity. Wrong side is not.
+        if(kind==6) bad.prefixes[0].mod_id=5;
+        refuses([&]{calc->intern_item(bad);},kind==5||kind==6||kind==7?"explicit affix":"unsupported item");
+    }
+    const auto noapply=calc->outcomes(calc->intern_item(dominance_item(*s,{0})),calc->registry().index_by_id.at("dominance"));
+    PC_CHECK(noapply.supported && !noapply.applicable && noapply.entries.empty());
+    for(unsigned kind=0;kind<3;++kind) {
+        auto mutated=dominance_session();auto d=std::make_shared<DataImpl>(*mutated->data);mutated->data=d;
+        if(kind<2) {
+            d->influence_elevations.erase(0);
+            if(kind==0) d->spawn_weights[1]=0; // No reachable next tier or mapping.
+            else {d->mod_type_key_sid[4]=d->mod_type_key_sid[0];d->mod_required_level[4]=68;}
+        } else {
+            mutated->primary_group[1]=mutated->primary_group[2];mutated->group_ids[1]=mutated->primary_group[2];
+        }
+        auto badcalc=dominance_calc(mutated);const auto id=badcalc->intern_item(dominance_item(*mutated,{0,2,5}));
+        refuses([&]{badcalc->outcomes(id,badcalc->registry().index_by_id.at("dominance"));},kind==0?"mapping":kind==1?"ambiguous":"conflicts");
+    }
+
+    // Native tier progression is one step even above ilvl; retired sources
+    // contribute no eligible choice. Neither case consults random-roll masks.
+    {
+        auto tier=dominance_session(); auto d=std::make_shared<DataImpl>(*tier->data);tier->data=d;
+        d->influence_elevations.erase(0);
+        auto tiercalc=dominance_calc(tier); const auto item=dominance_item(*tier,{0,5});
+        const auto& row=tiercalc->outcomes(tiercalc->intern_item(item),tiercalc->registry().index_by_id.at("dominance"));
+        double target=0;
+        for(const auto& e:row.entries) {pc_item_state next;PC_CHECK(tiercalc->materialize(e.state,next));
+            if(next.prefix_count && next.prefixes[0].mod_id==1) target+=e.probability;}
+        PC_CHECK(near(target,.5));
+        d->spawn_weights[0]=0;
+        auto retired=dominance_calc(tier);
+        const auto& absent=retired->outcomes(retired->intern_item(item),retired->registry().index_by_id.at("dominance"));
+        PC_CHECK(absent.supported && !absent.applicable && absent.entries.empty());
+    }
+    // Scope cannot be activated through a caller-created coarse CalcContext.
+    {
+        auto authored=opt;authored.authored_dominance=true;
+        auto registry=build_action_registry(*s,authored);
+        refuses([&]{CalcContext wrong(s,GoalSpec{},registry,{},true);},"exact-identity carrier");
+    }
+    auto badgraph=compile(s,dominance_graph(R"(,"prefixes":["mod0"],"suffixes":["mod5"])" ,"exalt"));
+    refuses([&]{evaluate_strategy(*badgraph);},"continuations");
+}
+
+void dominance_real_runtime(const char* artifact_dir) {
+    if(artifact_dir==nullptr) return;
+    const auto base=load_artifact_session(artifact_dir);PC_CHECK(base!=nullptr);if(!base) return;
+    const std::string target="ElementalDamageCannotBeReflectedPercentUberMaven";
+    const std::string helper="AdditionalCriticalStrikeChanceWithSpellsUber2_";
+    for(const auto level:{1u,86u}) {
+        auto session=std::make_shared<SessionImpl>();session->data=base->data;
+        session->base_index=base->base_index;session->item_level=level;build_session(*session);
+        for(const auto physical:{false,true}) {
+            const std::string source=physical?"PhysicalDamageCannotBeReflectedPercentUber1":"ElementalDamageCannotBeReflectedPercentUber1";
+            const std::string fields=",\"generic_influence_bits\":40,\"prefixes\":[\""+source+"\"],\"suffixes\":[\""+helper+"\"]";
+            const std::string predicate="{\"type\":\"mod_count\",\"mod_keys\":[\""+target+"\"],\"min\":1}";
+            auto graph=dominance_graph(fields,"",predicate);
+            graph=replace_once(graph,"synthetic/base","Metadata/Items/Armours/BodyArmours/BodyInt17");
+            graph=replace_once(graph,"\"item_level\":1,","\"item_level\":"+std::to_string(level)+",");
+            const auto strategy=compile(session,graph);
+            const auto result=evaluate_strategy(*strategy);
+            PC_CHECK(result.converged);PC_CHECK(near(result.success_probability,physical?0:.5));
+            PC_CHECK(near(result.failure_probability,physical?1:.5));PC_CHECK(near(result.unresolved_probability,0));
+            PC_CHECK(!result.cost_complete);
+            // Original-root DOM -> Annul removes the only survivor. The full
+            // continuation is not the one-step .5 elevated terminal marginal.
+            auto continuation=dominance_graph(fields,"annul",predicate);
+            continuation=replace_once(continuation,"synthetic/base","Metadata/Items/Armours/BodyArmours/BodyInt17");
+            continuation=replace_once(continuation,"\"item_level\":1,","\"item_level\":"+std::to_string(level)+",");
+            const auto checked=evaluate_strategy(*compile(session,continuation));
+            PC_CHECK(checked.converged);PC_CHECK(near(checked.success_probability,0));
+            PC_CHECK(near(checked.failure_probability,1));PC_CHECK(near(checked.expected_actions,2));
+        }
+    }
+}
+} // namespace
+
+void run_solver_dominance_tests(const char* artifact_dir) {
+    for(const auto& [name,fn]:std::vector<std::pair<const char*,void(*)()>>{
+            {"pair matrix",dominance_row_matrix},{"continuations",dominance_continuations},{"refusals",dominance_refusals}}) {
+        try {fn();} catch(const std::exception& ex) {std::printf("Dominance %s: %s\n",name,ex.what());PC_CHECK(false);}
+    }
+    try {dominance_real_runtime(artifact_dir);}
+    catch(const std::exception& ex) {std::printf("Dominance real runtime: %s\n",ex.what());PC_CHECK(false);}
+}
+
 void run_solver_eval_tests(const char* artifact_dir) {
     const auto stage = [](const char* name, const auto& fn) {
         try {
@@ -3599,6 +3893,7 @@ void run_solver_eval_tests(const char* artifact_dir) {
             PC_CHECK(false);
         }
     };
+    stage("authored Dominance", [&] { run_solver_dominance_tests(artifact_dir); });
     stage("segmented vector", [&] { run_segmented_vector_tests(); });
     stage("occupancy stabilization", [&] { run_occupancy_stabilization_tests(); });
     stage("identity replay materialization", [&] {

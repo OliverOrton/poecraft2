@@ -834,6 +834,8 @@ struct ActionRegistryBuildOptions {
     bool automatic_candidates = false;
     std::uint32_t required_satisfied_slots = 0;
     std::vector<std::vector<std::uint32_t>> fossil_goal_mod_ids;
+    // Authored evaluator only; incompatible with product/automatic envelopes.
+    bool authored_dominance = false;
 };
 
 // --- solver-only planner operators -------------------------------------------

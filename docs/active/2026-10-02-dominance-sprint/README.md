@@ -1,7 +1,8 @@
 # Authored Dominance exact evaluator: parent review checkpoint
 
-Status: design only; production edits await the parent's explicit confirmation
-required by the delegation. No new solver authority is implemented or claimed.
+Status: parent confirmed the bounded authored-only design. Implementation and
+finite fixtures are present; qualification is pending. No automatic search or
+new solver authority is claimed.
 
 ## Baseline and ownership
 
@@ -145,3 +146,22 @@ All owned processes and checkpoints must be ready by 16:55 UTC. Stop on quota
 exhaustion; no model switch or 17:00 usage-reset action.
 
 Next gate: parent confirms/revises this bounded design before production edits.
+
+## Implementation checkpoint during parent CPU hold
+
+The parent approved the design and required explicit negative default/product/
+dependency registry tests, unchanged enum identities and original-root checking.
+The patch is confined to the declared calculator/model/evaluator-helper owners,
+plus the resolver's existing ActionType upper-bound gate, a separate authored
+family contract and a bounded structural-identity helper. No solver_eval.cpp
+scheduling region is edited. Stable native enum values are unchanged.
+
+The initial isolated `scripts/dev-engine.ps1 -Task Tests -Jobs 2` build passed
+(exit 0, session 68253 ended). Its log is `out/dominance-sprint/build-01.txt`.
+The parent then imposed a CPU hold for latency's serial measurements. Quiescence
+was reported immediately; no native test, solver, worker or second build was
+launched under that hold. Later source-only additions include bounded row scratch
+accounting, real-runtime ilvl1/86 reflection continuations and Python assertions.
+Thus the first build does not qualify those later bytes. All tests remain UNRUN
+at this checkpoint. The exactness argument is retained in the canonical
+[representation chapter](../../solver/mathematics/representations.md#bounded-authored-dominance-structural-identity).

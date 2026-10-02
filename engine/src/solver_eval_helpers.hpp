@@ -1,6 +1,7 @@
 #pragma once
 
 #include "solver_eval_types.hpp"
+#include "solver_dominance.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -1142,12 +1143,41 @@ EvalModel derive_model(
     for (const auto& node : strategy.nodes) {
         if (node.kind == StrategyNodeKind::Operation && node.action.type == ActionType::Vaal)
             throw std::invalid_argument("Exact corruption strategy evaluation requires implicit and terminal-state modelling and is reserved for Pro; use the supported native sampler");
-        if (node.kind == StrategyNodeKind::Operation && node.action.type == ActionType::Dominance)
-            throw std::invalid_argument("Exact Dominance strategy evaluation requires elevated tier transitions and is reserved for Pro; use the native sampler");
     }
     const auto session = strategy.session;
     ActionRegistryBuildOptions registry_options;
     registry_options.exhaustive_fossils = false;
+    const bool authored_dominance = std::any_of(strategy.nodes.begin(), strategy.nodes.end(),
+        [](const StrategyNode& node) {
+            return node.kind == StrategyNodeKind::Operation &&
+                   node.action.type == ActionType::Dominance;
+        });
+    if (authored_dominance) {
+        if (!options.continuation_entries.empty() ||
+            !options.policy_decision_entries.empty() ||
+            !options.graph_local_provenance.decisions.empty())
+            throw StrategyEvalUnsupported("Authored Dominance supports original-root graph evaluation only");
+        validate_authored_dominance_item(*session, strategy.start_item);
+        const std::function<bool(const CompiledCondition&)> condition_supported =
+            [&](const CompiledCondition& condition) {
+                if (condition.kind == ConditionKind::HasUnveilOption ||
+                    condition.kind == ConditionKind::ObservationSignature ||
+                    (condition.required_flags & ~(PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED)))
+                    return false;
+                return std::all_of(condition.children.begin(), condition.children.end(), condition_supported);
+            };
+        for (const auto& node : strategy.nodes) {
+            for (const auto& edge : node.edges)
+                if (!edge.is_default && !condition_supported(edge.condition))
+                    throw StrategyEvalUnsupported("Authored Dominance has unsupported offer/signature or affix-flag conditions");
+            if (node.kind == StrategyNodeKind::Operation &&
+                (node.action_type != static_cast<int>(node.action.type) ||
+                 node.bestiary_action_index != kNoId ||
+                 !authored_dominance_action(node.action.type)))
+                throw StrategyEvalUnsupported("Authored Dominance supports only Dominance, Annul, Scour and crafted cleanup continuations");
+        }
+    }
+    registry_options.authored_dominance = authored_dominance;
     for (const StrategyNode& node : strategy.nodes) {
         if (node.kind != StrategyNodeKind::Operation ||
             node.action_type != static_cast<int>(ActionType::Fossil)) {
@@ -1465,7 +1495,7 @@ EvalModel derive_model(
         all_conditions_admitted && uniform_removal_observations_admitted(node_observations) &&
         prove_uniform_removal_goals(*session, goal).has_value();
     const bool semantic_strict_carrier =
-        !clean_start_carrier ||
+        authored_dominance || !clean_start_carrier ||
         direct_router_observes_fresh_exclusion ||
         (operation_preserves_fresh_exclusion && !certified_uniform_removal);
     /* This flag selects an exact calculator implementation, not a solver-row
@@ -1496,6 +1526,14 @@ EvalModel derive_model(
     retain_start_mods(
         strategy.start_item.suffixes,
         strategy.start_item.suffix_count);
+    if (authored_dominance) {
+        // Session inventory includes upgrade destinations above item level.
+        // A safe superset avoids duplicating native progression/mapping law.
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod)
+            if (session->gen_type[mod] == PC_SIDE_PREFIX ||
+                session->gen_type[mod] == PC_SIDE_SUFFIX)
+                pc_bitset_set(exact_start_mods.data(), mod);
+    }
     try {
         model.calc = std::make_unique<CalcContext>(
             session, goal, std::move(registry), used_actions,
@@ -1506,7 +1544,7 @@ EvalModel derive_model(
             options.max_states, count_observations,
             product_exact_reforge_carrier,
             exact_start_mods,
-            false, /* observer-derived semantic strict carrier */
+            authored_dominance, /* singleton identity before every continuation */
             false, /* reforge attribution is reported by the evaluator */
             false, /* do not alter physical frontier enumeration */
             false, /* retain canonical bucket order */

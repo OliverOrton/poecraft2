@@ -1380,6 +1380,18 @@ ActionRefinementContract derive_refinement_contract(
             feature(Feature::EldritchDominance);
         break;
 
+    case ActionType::Dominance:
+        // A conservative observation/flow envelope, used only with the
+        // separately enforced singleton explicit-identity carrier. It is not
+        // a proof that these ordinary observations alone form a quotient.
+        contract.observed_item_features |= kAllRefinementItemFeatures;
+        observe_affixes(contract, kAllRefinementAffixFeatures &
+            ~feature(Feature::ModifierClassificationTags));
+        contract.preserved_affixes.push_back(affixes());
+        contract.destroyed_affixes.push_back(affixes());
+        may_rewrite_item_features(contract, kAffixCountFeatures);
+        break;
+
     case ActionType::Annul:
         contract.preserved_affixes.push_back(affixes());
         may_rewrite_item_features(
@@ -2847,6 +2859,10 @@ UnprotectedAffixLaw native_unprotected_affix_law(
 ActionRegistry build_action_registry(
     const SessionImpl& session,
     const ActionRegistryBuildOptions& options) {
+    if (options.authored_dominance &&
+        (options.goal_relevant_actions || options.goal_relevant_fossils ||
+         options.automatic_candidates || !options.option_dependency_action_ids.empty()))
+        throw std::invalid_argument("Authored Dominance cannot enter product or automatic dependency envelopes");
     ActionRegistry registry;
     add_basic_currency(session, registry);
     add_essences(session, registry, options);
@@ -2857,6 +2873,10 @@ ActionRegistry build_action_registry(
     add_eldritch(session, registry);
     add_influence_exalts(session, registry);
     add_structural(registry);
+    if (options.authored_dominance) {
+        add(registry, base_descriptor("dominance", ActionType::Dominance,
+            TransitionKind::Special, kRarityMagic | kRarityRare));
+    }
     for (ActionDescriptor& action : registry.actions) {
         action.refinement =
             derive_action_refinement_contract(session, action);

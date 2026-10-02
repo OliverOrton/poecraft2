@@ -338,7 +338,9 @@ def test_dominance_authored_strategy_costs_and_exact_boundary():
         "edges": [{"id": "a", "from": "s", "to": "d"}, {"id": "b", "from": "d", "to": "t"}]}
     with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.compile_strategy(graph) as strategy:
         with load_economy({"version": "v1", "prices": {"dominance": 7}}) as economy:
-            with pytest.raises(EngineError, match="Dominance.*Pro"): strategy.evaluate(economy=economy)
+            exact = strategy.evaluate(economy=economy)
+            assert exact["converged"] and exact["terminals"]["success"] == pytest.approx(1)
+            assert exact["accounting"]["totals"]["per_invocation"]["total_expected_cost"] == pytest.approx(7)
             with strategy.create_simulator(economy) as sim:
                 result = sim.run(SimulationOptions(target_runs=1000, seed=194))
                 assert result.summary["success_count"] == 1000

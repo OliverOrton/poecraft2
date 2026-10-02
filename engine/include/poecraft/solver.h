@@ -287,7 +287,9 @@ pc_result pc_calc_action_outcomes(
  * Its state IDs
  * are local to the response, not solver state handles. The returned string is
  * owned by the solver and valid until its next currency calculation/destruction.
- * This does not admit these actions to strategy search or policy evaluation. */
+ * This API does not admit actions to strategy search or policy evaluation.
+ * Separately, authored Dominance evaluation supports a bounded exact explicit-
+ * identity domain with Annul/Scour/crafted cleanup; automatic search is held. */
 pc_result pc_calc_currency_outcomes_json(
     pc_solver_handle solver, const pc_item_state* receiver, const char* action,
     pc_session_handle donor_session, const pc_item_state* donor,

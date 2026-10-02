@@ -1221,6 +1221,7 @@ class CalcContext {
     std::uint32_t uniform_removal_blocked_mask(const AbstractState&) const;
     void uniform_removal_renewal_source(std::uint32_t, pc_item_state&) const;
     bool distinguish_modifier_identity_ = false;
+    bool authored_dominance_ = false;
     bool capture_reforge_attribution_ = false;
     bool reforge_resource_accounting_ = true;
     bool use_projected_reforge_frontier_ = false;

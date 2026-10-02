@@ -1,6 +1,8 @@
 #include "solver_calc_types.hpp"
 
 #include "solver_action_family_contract.hpp"
+#include "solver_dominance.hpp"
+#include "currency_outcomes.hpp"
 
 #include <algorithm>
 #include <array>
@@ -470,6 +472,22 @@ CalcContext::CalcContext(
           reverse_reforge_bucket_enumeration),
       use_factored_terminal_reforge_(
           use_factored_terminal_reforge) {
+    authored_dominance_ = registry_.index_by_id.count("dominance") != 0;
+    if (authored_dominance_) {
+        if (!distinguish_modifier_identity || !distinguish_junk_exclusion_effects ||
+            product_solver_parent || goal.automatic_candidates || empty_actions_mean_all ||
+            candidates_.empty() || certified_uniform_removal)
+            throw std::invalid_argument("Dominance requires the bounded authored exact-identity carrier");
+        for (const auto index : candidates_)
+            if (index >= registry_.actions.size() || registry_.actions[index].synthetic ||
+                !authored_dominance_action(registry_.actions[index].params.type))
+                throw std::invalid_argument("Dominance cannot enter an automatic or wider action envelope");
+        for (std::uint32_t mod = 0; mod < session_->mod_count; ++mod)
+            if ((session_->gen_type[mod] == PC_SIDE_PREFIX || session_->gen_type[mod] == PC_SIDE_SUFFIX) &&
+                (required_reachable_mod_mask.size() != session_->words ||
+                 !pc_bitset_test(required_reachable_mod_mask.data(), mod)))
+                throw std::invalid_argument("Dominance requires all explicit upgrade destinations including above-ilvl members");
+    }
     /* Action registries are public construction inputs in native tests and
      * future integrations, not only products of build_action_registry().
      * Canonicalize and prove every contract at the CalcContext boundary so a
@@ -1319,6 +1337,7 @@ bool calc_supports(const ActionDescriptor& action) {
     case ActionType::EldritchAnnul:
     case ActionType::HarvestResist:
     case ActionType::Fracture:
+    case ActionType::Dominance: // Context construction enforces authored identity scope.
         return true;
     default:
         return false;
@@ -1484,6 +1503,7 @@ std::uint32_t CalcContext::state_count() const {
 }
 
 std::uint32_t CalcContext::intern_item(const pc_item_state& item) {
+    if (authored_dominance_) validate_authored_dominance_item(*session_, item);
     if (certified_uniform_removal_ &&
         (item.quality != 0 || item.implicit_count != 0 ||
          item.enchantment_count != 0 || item.memory_strands != 0 ||
@@ -1493,7 +1513,13 @@ std::uint32_t CalcContext::intern_item(const pc_item_state& item) {
     if (product_solver_parent_) {
         projected.flags &= ~(kFlagMirrored | kFlagSynthesised);
     }
-    return intern_state(projected);
+    const auto id = intern_state(projected);
+    if (authored_dominance_) {
+        pc_item_state restored;
+        if (!materialize(id, restored) || !same_authored_dominance_item(item, restored))
+            throw std::invalid_argument("Dominance explicit identity/flags/context did not round-trip exactly");
+    }
+    return id;
 }
 
 bool CalcContext::materialize(
@@ -2745,7 +2771,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
      * strategy runtime terminates as action_not_applied. Keep that refusal
      * carrier-local: the exact evaluator still exists for Scour. */
     if (!action_legal(session, action, states_.at(state_id))) {
-        if (!action.synthetic && action.params.type == ActionType::Scour) {
+        if (authored_dominance_ || (!action.synthetic && action.params.type == ActionType::Scour)) {
             result.supported = true;
             result.applicable = false;
         } else {
@@ -2809,7 +2835,33 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
         if (!materialize(state_id, item)) {
             return std::make_shared<OutcomeDistribution>(std::move(result));
         }
+        if (authored_dominance_) validate_authored_dominance_item(session, item);
         switch (action.params.type) {
+        case ActionType::Dominance: {
+            if (!authored_dominance_ || !distinguish_modifier_identity_)
+                throw std::invalid_argument("Dominance requires authored exact explicit identities");
+            const auto choices = dominance_choices(session, item);
+            result.supported = true;
+            if (choices.size() < 2) { result.applicable = false; break; }
+            // Construct every native pair before interning or publishing any
+            // successor. One refused pair refuses the entire row, no filtering.
+            const auto pair_count = choices.size() * (choices.size() - 1);
+            const auto scratch_bytes = pair_count * sizeof(pc_item_state) +
+                choices.capacity() * sizeof(DominanceChoice);
+            require_reforge_scratch_bytes(scratch_bytes);
+            std::vector<pc_item_state> successors;
+            successors.reserve(pair_count);
+            for (std::size_t a = 0; a < choices.size(); ++a)
+                for (std::size_t b = 0; b < choices.size(); ++b)
+                    if (a != b) successors.push_back(
+                        dominance_result(session, item, choices[a], choices[b]));
+            const double mass = 1.0 / static_cast<double>(choices.size() * (choices.size() - 1));
+            for (const auto& next : successors) {
+                add_successor(next, mass);
+                require_reforge_scratch_bytes(scratch_bytes);
+            }
+            break;
+        }
         case ActionType::Scour:
         case ActionType::RemoveCraftedModifiers:
         case ActionType::Bench: {
@@ -2820,7 +2872,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
             const ActionOutcome outcome =
                 apply_action(context_, &copy, action.params);
             const bool scour_not_applied =
-                action.params.type == ActionType::Scour && !outcome.applied;
+                (authored_dominance_ || action.params.type == ActionType::Scour) && !outcome.applied;
             result.supported = true;
             if (scour_not_applied) {
                 result.applicable = false;
@@ -3141,7 +3193,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
                 }
             }
             if (removable.empty()) {
-                self_loop();
+                if (authored_dominance_) result.applicable = false;
+                else self_loop();
                 break;
             }
             const double each = 1.0 / static_cast<double>(removable.size());

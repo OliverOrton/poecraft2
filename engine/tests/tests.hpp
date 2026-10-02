@@ -86,3 +86,5 @@ void run_solver_protected_finder_tests();
 void run_solver_finder_essence_tests();
 void run_solver_uniform_removal_tests();
 void run_solver_observation_layout_tests();
+
+void run_solver_dominance_tests(const char* artifact_dir = nullptr);

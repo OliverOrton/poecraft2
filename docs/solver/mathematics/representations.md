@@ -76,6 +76,53 @@ Thus Bellman evaluation on class-constant vectors commutes with the projection. 
 
 This is a **sufficient exact reduction theorem**, not evidence that the initial native projection satisfies it for every admitted action. The strict pipeline's obligation is to establish carrier-wide rows or refine when a counterexample violates uniformity. [Strict Closure](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/strict-closure.md); [CLM-0005](../claims.md#clm-0005).
 
+### Bounded authored Dominance structural identity
+
+Dominance is outside the ordinary observation quotient: elemental and physical
+reflection prefixes can agree in side, tags, required level, all native groups,
+flags and goal status, while their elevated-elemental successor probabilities
+are respectively 1/2 and 0. Equal native exclusion signatures do not determine
+an upgrade destination.
+
+The [authored slice](../../active/2026-10-02-dominance-sprint/README.md) instead
+requires singleton explicit modifier classes and exact per-affix side,
+crafted/fractured flags, native groups and fixed session context. Rarity, item
+flags and influence are retained. Every concrete root/successor must round-trip
+through projection and materialization with the same supported structural
+identity. This test refuses an unrepresentable item; it does not choose a member
+of a larger class. All explicit session members are retained, including native
+upgrade destinations above item level. Unsupported implicit/socket, Veiled,
+quality, strand, enchantment, absent/resource and external continuation-entry
+carriers are refused. Numeric rolls are integrated out only because admitted
+operations, structural predicates and prices cannot observe them.
+
+Native eligible-slot preparation determines n. Every distinct ordered
+(upgrade, remove) pair has mass 1/[n(n-1)], and native pair execution determines
+its complete successor. A missing/ambiguous mapping or a conflicting pair
+refuses the entire row, never removes mass. For n < 2, the action does not apply
+and consumes no currency. Already-elevated rerolls preserve structural identity.
+Only after every positive-mass successor is reconstructed exactly may identical
+structural successors be combined. Slot permutation preserves the complete
+ordered-pair multiset; it is not an approximate merging rule.
+
+The admitted graph operations are Dominance, Annul, Scour and crafted cleanup.
+All continuations use that same physical identity carrier, native protection
+law and compiled predicates. These actions add no affix; a successful Dominance
+or removal reduces occupancy. The finite session inventory therefore bounds
+the reachable structural item domain, although routing cycles can still be
+improper and remain subject to the existing graph/SCC acceptance. Graph
+conditions are not substituted for a different native requested goal.
+
+This supplies the exact class-transition premise of CLM-0005 only in the gated
+structural scope. Cache rows are keyed by state/action. Any later behavioral
+partition compares the complete discovered transition and absorption law with
+existing raw attribution; ordinary pre-transition observations alone are never
+used to select a Dominance representative. Whole-graph original-root evaluation
+retains success/failure/stop/nonapplication/unmatched/unresolved mass and cost.
+No automatic Current/Finder candidate, lower bound or optimality authority is
+conferred. Native/WASM qualification and remaining holds belong to the linked
+living record, not this argument.
+
 ### A minimal counterexample
 
 Two items have the same satisfied mask and occupancy. Under the same named action, one reaches the goal with probability one; the other cannot reach it. Merging them by mask/count alone either gives the second an impossible transition or loses the first's real one. The representation is not exact.

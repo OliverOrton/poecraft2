@@ -496,8 +496,28 @@ constexpr bool action_family_contract_is_exhaustive() {
 
 static_assert(action_family_contract_is_exhaustive());
 
+// Dominance already has native enum value 31. Keep the historical contiguous
+// solver table and every existing numeric identity unchanged. This separate
+// contract never enables registry admission or automatic search.
+inline constexpr ActionFamilyContract kAuthoredDominanceContract{
+    ActionType::Dominance, PrimitiveTelemetryFamily::Currency,
+    "dominance", RegistryIdentityShape::Exact,
+    ActionCostKeyShape::Identity, ExpectedPriceProvenance::Quote,
+    ProductReasonGroup::Currency,
+    {CarrierGenerationPath::SeparateOperation,
+     SchedulerAdmissionPath::ProductFilteredDeferred,
+     RowCompletionPath::AuthoredPrimitiveProductDeferred,
+     BellmanQPath::AuthoredPrimitiveProductDeferred,
+     SelectedPolicyPath::DeferredMechanic,
+     CompilerCoveragePath::GenericPrimitive,
+     ExactEvaluatorCoveragePath::FamilySpecificPrimitive,
+     SimulatorCoveragePath::NativePrimitive,
+     CApiCoveragePath::GenericStrategyFacade,
+     ReleaseWasmCoveragePath::ProductDeferredPendingRebuild}};
+
 inline const ActionFamilyContract& action_family_contract(
     const ActionType type) {
+    if (type == ActionType::Dominance) return kAuthoredDominanceContract;
     const int raw = static_cast<int>(type);
     if (raw < 0 || static_cast<std::size_t>(raw) >=
                        kActionFamilyContracts.size()) {
@@ -880,6 +900,10 @@ struct ResolvedRegistryIdentity {
 
 inline ResolvedRegistryIdentity resolve_registry_identity_contract(
     const std::string_view id) {
+    if (id == "dominance") {
+        return {PrimitiveTelemetryFamily::Currency, ProductReasonGroup::Currency,
+                ExpectedPriceProvenance::Quote, false};
+    }
     if (id == "restart") {
         return {PrimitiveTelemetryFamily::Currency,
                 ProductReasonGroup::Currency,
