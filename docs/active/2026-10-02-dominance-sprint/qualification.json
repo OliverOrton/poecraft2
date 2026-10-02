@@ -1,0 +1,267 @@
+{
+  "schema": "poecraft2.authored-dominance-qualification.v1",
+  "updated_utc": "2026-10-02T16:32:49.636932+00:00",
+  "worktree": "C:/Users/Oliver/Documents/poecraft2-dominance-sprint",
+  "branch": "dot/dominance-20261002",
+  "baseline": "f08facbb93204bf721048c21b94080ab582ee9f8",
+  "baseline_engine_source": "792b37e8e1d73a90c754087eda2332d7586db570",
+  "proposal_commit": "8448ba2dcd259622ed14a24ea979baf02325936f",
+  "implementation_commit": "cdf04b8cad322a93924d930527897a4c13faeb93",
+  "guarded_source_commit": "76bd62bc5852c3e75d313f6dbbbbc7d536d7cfa8",
+  "guarded_engine_tree": "ce2fe5d15f36ce901022fa9188a7ed6638585672",
+  "guarded_python_test_tree": "d821511b84917bbe9191afa41592a62e04230314",
+  "source_frozen_before_utc": "2026-10-02T16:25:00Z",
+  "scope": {
+    "consumer": "authored fixed original-root graph evaluation",
+    "operations": [
+      "dominance",
+      "annul",
+      "scour",
+      "remove_crafted_modifiers"
+    ],
+    "automatic_current_finder": false,
+    "new_lower_or_optimality_authority": false,
+    "pair_law": "native ordered distinct pairs, uniform 1/[n(n-1)], whole-row refusal",
+    "identity": "fixed session/base/ilvl/data plus exact explicit IDs, side, primary groups, crafted/fractured flags, rarity/influence/item flags; validated round-trip",
+    "above_ilvl": "all session explicit affix members retained",
+    "dual_lock": "refused throughout authored slice; ordinary API behavior unchanged",
+    "unsupported": [
+      "strands",
+      "enchantments",
+      "implicit/socket/link/quality/Eldritch carriers",
+      "absent state",
+      "Veiled/unknown affix flags",
+      "resources",
+      "external continuation/policy/provenance entries",
+      "observation signature predicates",
+      "broader action families"
+    ]
+  },
+  "runtime_files": [
+    {
+      "path": "C:/Users/Oliver/Documents/poecraft2/data/compiled/current/manifest.json",
+      "size_bytes": 5983,
+      "sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d"
+    },
+    {
+      "path": "C:/Users/Oliver/Documents/poecraft2/data/compiled/current/game-data.json",
+      "size_bytes": 16914460,
+      "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+    },
+    {
+      "path": "C:/Users/Oliver/Documents/poecraft2/data/compiled/current/strings.json",
+      "size_bytes": 6740473,
+      "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+    }
+  ],
+  "prices": {
+    "source": "inline fixed test fixtures at guarded source commit; no live refresh",
+    "python_per_action": {
+      "dominance": 7,
+      "annul": 2
+    }
+  },
+  "qualified_native_artifacts": [
+    {
+      "path": "C:/Users/Oliver/Documents/poecraft2-dominance-sprint/build/engine/poecraft_engine_tests.exe",
+      "size_bytes": 19013839,
+      "sha256": "a9e70df414fd7f0a563405ad4e0dbab37821ccf314e542b6533100051020a11e"
+    },
+    {
+      "path": "C:/Users/Oliver/Documents/poecraft2-dominance-sprint/build/engine/poecraft_engine.dll",
+      "size_bytes": 14030144,
+      "sha256": "7ff31c1f8cc77c3c7189aed5ef5297d0f6f1785f6cabc398bdd256348c9743d2"
+    }
+  ],
+  "qualified_checks": [
+    {
+      "name": "native_tests_build",
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+      "exit_code": 0,
+      "log": "build-dual-lock.txt"
+    },
+    {
+      "name": "independent_pair_oracle_and_original_root_continuations",
+      "command": "build/engine/poecraft_engine_tests.exe --solver-dominance-only C:/Users/Oliver/Documents/poecraft2/data/compiled/current",
+      "exit_code": 0,
+      "checks_passed": 2244,
+      "checks_failed": 0,
+      "log": "finite-dual-lock.txt"
+    },
+    {
+      "name": "shared_dll_build",
+      "command": ". ./scripts/engine-build-common.ps1; $dominanceCmake=Find-PoeCraftCMake; & $dominanceCmake --build build/engine --target poecraft_engine_shared --parallel 2",
+      "exit_code": 0,
+      "log": "dll-dual-lock.txt"
+    },
+    {
+      "name": "python_authored_dominance",
+      "command": "py -3 -m pytest -q bindings/python/tests/test_dominance_strategy.py",
+      "environment": {
+        "PYTHONPATH": "tools/ingest;bindings/python",
+        "POECRAFT_ENGINE_LIBRARY": "C:/Users/Oliver/Documents/poecraft2-dominance-sprint/build/engine/poecraft_engine.dll",
+        "POECRAFT_TEST_ARTIFACT": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current"
+      },
+      "exit_code": 0,
+      "tests_passed": 18,
+      "duration_seconds": 4.99,
+      "log": "python-dual-lock.txt"
+    }
+  ],
+  "earlier_evidence": [
+    {
+      "log": "finite-01.txt",
+      "checks_passed": 2178,
+      "qualification": "superseded"
+    },
+    {
+      "log": "finite-02.txt",
+      "checks_passed": 2238,
+      "qualification": "pre dual-lock guard"
+    },
+    {
+      "log": "python-dominance.txt",
+      "exit_code": 2,
+      "qualification": "failed collection: shared DLL absent; resolved by building existing shared target"
+    },
+    {
+      "log": "python-dominance-02.txt",
+      "tests_passed": 13,
+      "qualification": "pre dual-lock guard"
+    },
+    {
+      "log": "python-dominance-final.txt",
+      "tests_passed": 17,
+      "qualification": "pre dual-lock guard"
+    },
+    {
+      "log": "wasm-build.txt",
+      "exit_code": 0,
+      "qualification": "superseded preguard build; generated artifacts restored before guarded rebuild"
+    }
+  ],
+  "guarded_wasm": {
+    "status": "passed",
+    "command": "$env:EMCC_CORES='2'; $env:BINARYEN_CORES='2'; powershell -File scripts/build-wasm.ps1",
+    "log": "wasm-guarded.txt",
+    "browser_worker_qualification": "unrun",
+    "exit_code": 0,
+    "source_commit": "76bd62bc5852c3e75d313f6dbbbbc7d536d7cfa8",
+    "artifacts": [
+      {
+        "path": "bindings/wasm/dist/poecraft_engine.wasm",
+        "size_bytes": 8188560,
+        "sha256": "bd903eb97fcbb47314bad69c17bea222aed740401497fa08ea6fd58e433c11df"
+      },
+      {
+        "path": "bindings/wasm/dist/poecraft_engine.mjs",
+        "size_bytes": 21237,
+        "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297"
+      }
+    ],
+    "warnings": "compiler width comparison warnings and serializer enum-switch warnings; build succeeded; automatic strategy compiler remains outside authored scope"
+  },
+  "unrun": [
+    "full acceptance suite",
+    "actual browser worker",
+    "rendered UI",
+    "sampled Simulator",
+    "existing sampled currency-expansion test"
+  ],
+  "timed_native_solver_runs": 0,
+  "actual_worker_runs": 0,
+  "historical_6_native_2_worker_ledger": "exhausted and unchanged",
+  "processes": {
+    "remaining_owned_session_ids": [],
+    "max_build_jobs": 2,
+    "cpu_hold_respected": true,
+    "all_launched_sessions_completed": true,
+    "completed_before_utc": "2026-10-02T16:32:05Z"
+  },
+  "no_push_deploy_refresh_install_subagents": true,
+  "protected_root_0_untouched": true,
+  "original_checkout_heads": {
+    "main": "ebcd98cdda2c1828cd855f549831951e6ba7470a",
+    "integration": "f08facbb93204bf721048c21b94080ab582ee9f8"
+  },
+  "latency_solver_eval_cpp_unchanged": true,
+  "logs": {
+    "build-01.txt": {
+      "path": "out/dominance-sprint/build-01.txt",
+      "size_bytes": 10309,
+      "sha256": "de6af0d1146188403f04065018d884a99aa27b69b38247a0d836341d9ed333f8"
+    },
+    "build-02.txt": {
+      "path": "out/dominance-sprint/build-02.txt",
+      "size_bytes": 8149,
+      "sha256": "4a5c99b0fb0ead1583204cbdc6fc0ac53187e69cf4eea73d89ec759609c3efc5"
+    },
+    "build-dual-lock.txt": {
+      "path": "out/dominance-sprint/build-dual-lock.txt",
+      "size_bytes": 623,
+      "sha256": "dbf3d568f29c6a48e21e2de4b44b9b77fc0c76c34a7ac4fb1e1ae5a1df347388"
+    },
+    "dll-build-02.txt": {
+      "path": "out/dominance-sprint/dll-build-02.txt",
+      "size_bytes": 96,
+      "sha256": "29993a297ff49bc5657073e6f3b8d978fb0c90027da8b9bcbf4fd3c1401a3fec"
+    },
+    "dll-build.txt": {
+      "path": "out/dominance-sprint/dll-build.txt",
+      "size_bytes": 65,
+      "sha256": "7716162f3cd3b99cf3b8a8dd6decf324e08c7e941aae7e730baba5e4fc8c075b"
+    },
+    "dll-dual-lock.txt": {
+      "path": "out/dominance-sprint/dll-dual-lock.txt",
+      "size_bytes": 96,
+      "sha256": "29993a297ff49bc5657073e6f3b8d978fb0c90027da8b9bcbf4fd3c1401a3fec"
+    },
+    "finite-01.txt": {
+      "path": "out/dominance-sprint/finite-01.txt",
+      "size_bytes": 49,
+      "sha256": "c0275befd42d9474dbcf387a4bb800d4d0184c2fb4926e7961c091c46dede4d8"
+    },
+    "finite-02.txt": {
+      "path": "out/dominance-sprint/finite-02.txt",
+      "size_bytes": 49,
+      "sha256": "f8cd233306ae4071702a09c48c15e8d9dc195b4bb504cfdf652d54b316a577fa"
+    },
+    "finite-dual-lock.txt": {
+      "path": "out/dominance-sprint/finite-dual-lock.txt",
+      "size_bytes": 49,
+      "sha256": "d65f2ab541ee1e21096a0dce6e7e4044a091645a8b6c0a16fccd2861c698cf30"
+    },
+    "python-dominance-02.txt": {
+      "path": "out/dominance-sprint/python-dominance-02.txt",
+      "size_bytes": 101,
+      "sha256": "b1f27010c5922a185567452447fcdfa8fcad99cb428b6367932ac333ab7d07bd"
+    },
+    "python-dominance-final.txt": {
+      "path": "out/dominance-sprint/python-dominance-final.txt",
+      "size_bytes": 101,
+      "sha256": "f5cef193c67bf62ce5f517d9b73339028d2c6d9774a4a1ea82fcfbd59f251735"
+    },
+    "python-dominance.txt": {
+      "path": "out/dominance-sprint/python-dominance.txt",
+      "size_bytes": 3122,
+      "sha256": "36e8bc8555b4b9db89a645b9b899dfcc867dd28beb35b5e3fa303b15dcf5474f"
+    },
+    "python-dual-lock.txt": {
+      "path": "out/dominance-sprint/python-dual-lock.txt",
+      "size_bytes": 101,
+      "sha256": "11e3a132f416bb28b81a7af998af8616bb6d349f9bb7d3bfbf74e33f147951d4"
+    },
+    "wasm-build.txt": {
+      "path": "out/dominance-sprint/wasm-build.txt",
+      "size_bytes": 3401,
+      "sha256": "81f79a751628b41d718b74f7864b80388ba77d59f735a0a1c7910834c122c4fe"
+    },
+    "wasm-guarded.txt": {
+      "path": "out/dominance-sprint/wasm-guarded.txt",
+      "size_bytes": 3401,
+      "sha256": "81f79a751628b41d718b74f7864b80388ba77d59f735a0a1c7910834c122c4fe"
+    }
+  },
+  "remaining_blockers": [],
+  "remaining_owner_law_question": "Dual-lock Scour is owner-unapproved and explicitly excluded; does not block this bounded slice."
+}
