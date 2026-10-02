@@ -105,10 +105,17 @@ try {
     Object.assign(fields, {client, session, item, solver, pickerActions: actions,
         base: spec.session.base_metadata_path, itemLevel: spec.session.item_level,
         goalRarity: spec.goal.rarity, minSatisfiedSlots: spec.goal.min_satisfied_slots ?? spec.goal.slots.length,
+        allowExtraModifiers: spec.goal.allow_extra_modifiers ?? false,
+        solveDisabledActionFamilies: new Set(spec.goal.disabled_action_families ?? []),
         slots: spec.goal.slots.map(s => ({
             ...("family_mod_key" in s ? {familyModKey: s.family_mod_key} : {group: s.group}), minTier: s.min_tier ?? 1})),
         solveAllowEconomicRestart: false, solveConsiderImprintPrograms: false,
         solveMode: solverMode});
+    const submittedGoal = fields.solverGoal("product_envelope");
+    assert.deepEqual(submittedGoal.disabled_action_families ?? [],
+        [...(spec.goal.disabled_action_families ?? [])].sort());
+    assert.equal(submittedGoal.allow_extra_modifiers ?? false,
+        spec.goal.allow_extra_modifiers ?? false);
     client.solverCompileStrategy = async (...args) => { nativeGraph = await compile(...args); return nativeGraph as Awaited<ReturnType<typeof compile>>; };
     let intent = false;
     const render = fields.renderSolvePanel.bind(calculator);
