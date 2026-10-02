@@ -1,3 +1,14 @@
+# Sprint integration continuation checkpoint (2026-10-02)
+
+Oliver approved Sol 6.1 continuation, the full original backlog and qualified
+normal main integration/push; old cutoffs are historical. The
+[integration record](docs/active/2026-10-02-sprint-integration/README.md)
+owns the completion ledger and v3 receipt. Matching WASM from `b794e009` passes
+three bounded worker smokes, eleven finite web files and TypeScript. Main and
+origin/main were `ebcd98cd`; no push/deployment occurred. The reported narrow
+Fracture count repair and mixed-side refusal are under native qualification.
+New owner patches and final combined acceptance remain pending.
+
 # Sprint integration native checkpoint (2026-10-02)
 
 The local sprint integration is native-qualified on `dot/sprint-integration-20261002`

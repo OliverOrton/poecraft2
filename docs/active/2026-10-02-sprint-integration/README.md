@@ -1,4 +1,4 @@
-# Passing native sprint integration
+# Sprint integration and continuation
 
 Qualified native source: `5d11f6335c4207f2044d826aba7109175a6642a3` on `dot/sprint-integration-20261002`,
 worktree `C:/Users/Oliver/Documents/poecraft2-sprint-integration`. Baseline
@@ -14,7 +14,48 @@ containment; and private Foulborn with parsed-operation supplementary scope.
 Only HANDOFF conflicts needed manual reconciliation; production source merged
 cleanly and the combined guards were reviewed before validation.
 
-## Combined qualification
+## Authorized continuation — combined worker checkpoint
+
+Oliver approved Sol 6.1 continuation, the full original mechanics/solver backlog,
+and qualified normal main integration/push. Old cutoff limits are historical.
+Deployment remains unselected: the current workflow requires manual dispatch
+with a full commit input. Main and live origin/main were `ebcd98cd` at preflight.
+
+Combined WASM built from `b794e009` with two jobs, 17:10:58–17:17:24 UTC.
+SHA256: `4c0a79acfdf5d101cd197343da3341bfc40eea5221dbf3a2a28049313ba749be`.
+Three bounded real-worker smokes pass: root-policy contracts, Dominance/Vaal
+transport/costs, and incoming Calculator preservation (four tests each, including
+shared ABI/data/session setup). Eleven finite web transport/output/product files
+and TypeScript pass. Frozen runtime and existing dependencies are used through
+aliases in this isolated worktree; no installs or data/price refresh occurred.
+The pending native repair and future imports need a final matching WASM rebuild.
+
+The six historical fracture failures reproduce here. Product Fracture sets the
+hit's goal fracture and flag but omits `fractured_side_counts`; direct native
+projection increments that aggregate. The unsuccessful exclusion-partition
+experiment is recorded and removed. Concrete prefix/suffix hit witnesses now
+check the entire projected state. The reported local repair synchronizes the
+count and refuses mixed-side masks, preserving probability/pricing and the
+existing original-root authority. Its focused native qualification is pending.
+
+## Completion ledger against the parent-selected backlog
+
+| Original requested work | Current integration | Remaining acceptance |
+|---|---|---|
+| Both original solver complaints and output | Caller scope, bounded output and mismatch containment qualified; private Foulborn default-off | Output owner patch and original frozen-request acceptance |
+| Dominance solver availability | Authored finite slice qualified | Automatic admission patch and ordinary product checks |
+| Clusters | Read-only catalogue qualified; gameplay refuses | Cluster mechanics/product patch and approved unresolved laws |
+| Recombinator mechanics | No new outcome law integrated | Mechanics receipt, unresolved model approval and product checks; solver deferred |
+| Hinekora's Lock | No new foresight structure integrated | Lock owner patch, approved laws and product checks; no silent solver grant |
+| Memory strands outside solver | Nonzero solver refusal preserved | Strands mechanics/product patch and approved unresolved laws |
+| Full request completion and release | Ledger retained for the entire backlog | Applicable owner pins, matching artifacts, final acceptance and normal main push |
+
+Multi-goal and recombinator solver stay explicitly deferred. Tempering/Tailoring
+and Harvest more/less-likely remain held. Latency stays isolated. The parent owns
+unresolved mechanic approval packets and final original-request correspondence;
+this ledger does not mark incomplete mechanics complete.
+
+## Historical combined native qualification
 
 The final two-job native build and shared DLL link pass. Fourteen bounded serial
 selectors pass **1,147,469 checks, zero failures**, including scope/cache controls,
@@ -63,9 +104,8 @@ belongs to `448ef4a`, before the final capability guard. Final guarded/combined
 real replay and economic delta qualification are unrun. No new timed experiment
 was launched by this integration task.
 
-**Combined WASM and worker are unqualified.** The baseline generated module is
-unchanged, and the Dominance-only WASM was deliberately not imported. Rebuild
-from this combined source before browser parity or release acceptance. Full
-acceptance, Simulator and rendered UI are unrun. No push/deployment, data/prices
-refresh, dependency install or protected root `0` access occurred. Source froze
-before the final build; after 16:45 work is limited to recording this receipt.
+At the historical 16:49 checkpoint, matching WASM/worker were unqualified and
+the Dominance-only artifact was deliberately excluded. The continuation above
+qualifies `b794e009` worker bytes; later source changes need a matching rebuild.
+Whole product acceptance, Simulator and rendered UI remain unrun. No push,
+deployment, data/prices refresh, install or protected root `0` access occurred.

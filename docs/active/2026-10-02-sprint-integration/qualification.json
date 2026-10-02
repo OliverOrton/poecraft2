@@ -1,5 +1,5 @@
 {
-  "schema": "poecraft2.sprint-integration-qualification.v2",
+  "schema": "poecraft2.sprint-integration-qualification.v3",
   "recorded_utc": "2026-10-02T16:49:01.776548+00:00",
   "baseline": "f08facbb93204bf721048c21b94080ab582ee9f8",
   "worktree": "C:/Users/Oliver/Documents/poecraft2-sprint-integration",
@@ -412,5 +412,244 @@
     "filtered_native_process_inventory": "empty after completion",
     "new_long_commands_after_1645": false
   },
-  "isolation": "Main and overnight integration unchanged; protected root 0 untouched; no data/prices refresh, dependency install, push, deployment, or subagent."
+  "isolation": "Main and overnight integration unchanged; protected root 0 untouched; no data/prices refresh, dependency install, push, deployment, or subagent.",
+  "continuation": {
+    "authorization": "Oliver approved Sol 6.1 continuation, full original backlog and qualified main integration/normal push. Old cutoff limits are historical. Unresolved model selection still requires approval. Deployment is unselected.",
+    "recorded_utc": "2026-10-02T17:31:00.818132+00:00",
+    "wasm_source_commit": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+    "wasm_engine_tree": "da81b73d3afd0ea7660bfc046537761b354405a5",
+    "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "wasm": {
+      "status": "passed build and bounded worker qualification before pending Fracture source change",
+      "started_utc": "2026-10-02T17:10:58Z",
+      "finished_utc": "2026-10-02T17:17:24Z",
+      "command": "EMCC_CORES=2 BINARYEN_CORES=2 powershell -File scripts/build-wasm.ps1",
+      "max_jobs": 2,
+      "artifacts": [
+        {
+          "path": "bindings/wasm/dist/poecraft_engine.mjs",
+          "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297",
+          "bytes": 21237
+        },
+        {
+          "path": "bindings/wasm/dist/poecraft_engine.wasm",
+          "sha256": "4c0a79acfdf5d101cd197343da3341bfc40eea5221dbf3a2a28049313ba749be",
+          "bytes": 8214922
+        }
+      ],
+      "log": {
+        "path": "out/sprint-continuation/build-wasm.log",
+        "sha256": "ffb4a222833164800955a1a5b3585f1384d27e0bc325dc28cbb52854508164d2",
+        "bytes": 3417
+      }
+    },
+    "worker_smokes": [
+      {
+        "test": "currency expansion state and original-root policy contracts",
+        "command": "POECRAFT_SMOKE_TEST=\"currency expansion state and original-root policy contracts\" tsx test/engine-smoke.test.ts",
+        "exit_code": 0,
+        "tests_passed": 4,
+        "log": {
+          "path": "out/sprint-continuation/wasm-root-smoke.log",
+          "sha256": "2aa471d823af87195ed5ccf4dfa1fbdd3335028f0679af5adcef2213edacfad4",
+          "bytes": 1684
+        }
+      },
+      {
+        "test": "Dominance and Vaal native actions preserve transport and costs",
+        "command": "POECRAFT_SMOKE_TEST=\"Dominance and Vaal native actions preserve transport and costs\" tsx test/engine-smoke.test.ts",
+        "exit_code": 0,
+        "tests_passed": 4,
+        "log": {
+          "path": "out/sprint-continuation/wasm-dominance-smoke.log",
+          "sha256": "86bfdbb33792d97dadf0ccd330946fc55df8d74b39788fecb4ade6adc9153aeb",
+          "bytes": 213
+        }
+      },
+      {
+        "test": "Calculator item goals and editors preserve native joint outcomes",
+        "command": "POECRAFT_SMOKE_TEST=\"Calculator item goals and editors preserve native joint outcomes\" tsx test/engine-smoke.test.ts",
+        "exit_code": 0,
+        "tests_passed": 4,
+        "log": {
+          "path": "out/sprint-continuation/wasm-calculator-smoke.log",
+          "sha256": "0df66a66c4fd521aa4b78570fe31cd9221a0f40c50e50fc14197939abea47066",
+          "bytes": 215
+        }
+      }
+    ],
+    "web_focused": {
+      "cases": [
+        {
+          "name": "engine-client-transfer",
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/web-engine-client-transfer.log",
+            "sha256": "2f9a07a64c1b95b34ae100939a2cdb9d23f707a84dddd1ea3ad41e7b29b41c0e",
+            "bytes": 82
+          }
+        },
+        {
+          "name": "calculator-delivery",
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/web-calculator-delivery.log",
+            "sha256": "51ae4a61e59651ea72f56e22c06c3f5eed24b1887f1d37d0e845283b98c35bce",
+            "bytes": 82
+          }
+        },
+        {
+          "name": "worker-finish-control",
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/web-worker-finish-control.log",
+            "sha256": "5fc11a5e39e7cf90cd418a2ed08ffb21aec1970eb13abf879f1d242846ef9e64",
+            "bytes": 103
+          }
+        },
+        {
+          "name": "calculator-currency-controls",
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/web-calculator-currency-controls.log",
+            "sha256": "4eda8eddc52d35d0f27b1f65fe8b84ce1321debe12ab9174a25794aa9f36ca49",
+            "bytes": 88
+          }
+        },
+        {
+          "name": "calculator-goal-item",
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/web-calculator-goal-item.log",
+            "sha256": "768bea6e3f54bfba5815b91d276a65a56299da34f762a6f290790cf67fb56054",
+            "bytes": 66
+          }
+        },
+        {
+          "name": "odds-presentation",
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/web-odds-presentation.log",
+            "sha256": "33829f1db8ade182794696f0dea910f06ec3874881afc1dae6dbf3feb3ed4e72",
+            "bytes": 58
+          }
+        },
+        {
+          "name": "solve-workspace",
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/web-solve-workspace.log",
+            "sha256": "fccb4719810fa8ab2c8f74eb60aed95374fcb4d24fb30ec9ba4005a0380351d6",
+            "bytes": 377
+          }
+        },
+        {
+          "name": "solver-result-presentation",
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/web-solver-result-presentation.log",
+            "sha256": "b6ac6f5c9c77dbc48bb573bd1d828db848a5628cb138214ddf1c80d77c5ba60f",
+            "bytes": 866
+          }
+        },
+        {
+          "name": "strategy-model",
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/web-strategy-model.log",
+            "sha256": "e00596355812a439c2ae35107dec3d04d5a2ee265ab331ebf3dab82709a64737",
+            "bytes": 1180
+          }
+        },
+        {
+          "name": "strategy-calculator-mode",
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/web-strategy-calculator-mode.log",
+            "sha256": "d7249298ca6e8b79952e482490f547734074d3b5e9cefa1a089abc2eb1cfe082",
+            "bytes": 387
+          }
+        },
+        {
+          "name": "hosted-tester",
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/web-hosted-tester.log",
+            "sha256": "ffe4e5836dc464e013d072ebf5d30765bc65a70a93cb4955b5daecb751544817",
+            "bytes": 1194
+          }
+        }
+      ]
+    },
+    "typecheck": {
+      "command": "tsc --noEmit",
+      "exit_code": 0,
+      "log": {
+        "path": "out/sprint-continuation/typecheck.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    "baseline_fracture": {
+      "status": "reproduced; reported production repair now under local qualification",
+      "command": "poecraft_engine_tests.exe --solver-integrity-only joint-fracture",
+      "checks": 30,
+      "failures": 6,
+      "log": {
+        "path": "out/sprint-continuation/joint-fracture-before.log",
+        "sha256": "e3c50584d7631e6d5a8fe9e7078f9125b76bbb6950d7ea13b398cd5d8c66ac26",
+        "bytes": 1119
+      },
+      "failed_partition_attempt": {
+        "command": "poecraft_engine_tests.exe --solver-joint-policy-continuation-only",
+        "checks": 386,
+        "failures": 8,
+        "log": {
+          "path": "out/sprint-continuation/joint-continuation-after.log",
+          "sha256": "1bb5121f01610307fbe6ed70965556b29135f615e22a06b2fb6bc532265d108a",
+          "bytes": 1486
+        },
+        "disposition": "Partition attempt removed. Concrete native-hit witness replaces it."
+      },
+      "cause": "Product Fracture hit omitted fractured_side_counts, which native projection increments. Mixed-side goal masks also require conservative refusal."
+    },
+    "workflow_check": {
+      "deploy": "manual workflow_dispatch only with full commit input; not triggered",
+      "push": [
+        "Windows",
+        "Solver knowledge"
+      ],
+      "economy": "schedule/manual only; not triggered",
+      "files": [
+        {
+          "path": ".github/workflows/deploy-tester.yml",
+          "sha256": "403cb3c74d5d51e5d41914f1033a2619615811b9052d37718b3ad733b60e126d",
+          "bytes": 5827
+        },
+        {
+          "path": ".github/workflows/windows.yml",
+          "sha256": "e60d8fb0bd608e3a9394eb75854fa12d5c893e0ff29e9bd4db7b71e359712575",
+          "bytes": 3398
+        },
+        {
+          "path": ".github/workflows/solver-knowledge.yml",
+          "sha256": "20c08e2d54f505e8914a75a152507a478b6fb63d60d978fdae2f18910ee21f73",
+          "bytes": 1572
+        },
+        {
+          "path": ".github/workflows/economy-refresh.yml",
+          "sha256": "cbd8f6c1c70d801d26eb1a802cc8af473f3ab7be6f7203668e0504aacad63cd0",
+          "bytes": 5401
+        }
+      ]
+    },
+    "setup": "No installs or refresh. Own-worktree node_modules junction reads installed main dependencies; current runtime alias targets the frozen immutable snapshot.",
+    "unrun": [
+      "Matching WASM after new native source and incoming worker patches",
+      "Whole selected-backlog acceptance",
+      "Simulator and rendered UI"
+    ],
+    "push": "not performed; main/origin main checked at ebcd98cdda2c1828cd855f549831951e6ba7470a before continuation",
+    "deployment": "not selected or triggered"
+  }
 }
