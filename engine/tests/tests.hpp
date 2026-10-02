@@ -3,6 +3,7 @@
 void run_foulborn_weight_tests();
 void run_currency_contract_tests(const char* artifact_dir);
 void run_foulborn_kernel_tests();
+void run_calculator_incoming_tests(const char* artifact_dir);
 
 #include <cstdio>
 

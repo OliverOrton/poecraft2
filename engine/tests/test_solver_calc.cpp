@@ -1,6 +1,7 @@
 #include "tests.hpp"
 
 #include "../src/json.hpp"
+#include "../src/calculator_currency.hpp"
 #include "../src/solver_action_family_contract.hpp"
 #include "../src/solver_internal.hpp"
 #include "../src/solver_solve_types.hpp"
@@ -12,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <limits>
@@ -4103,6 +4105,188 @@ void run_foulborn_kernel_tests() {
     }
 }
 
+void run_calculator_incoming_tests(const char* artifact_dir) {
+    // The oracle builds the execution authority's pool from the concrete
+    // carrier and observes each concrete successor. It never reconstructs
+    // the incoming item through the Calculator's or the caller's layout.
+    const auto check_add = [](const std::shared_ptr<SessionImpl>& session,
+            GoalSpec goal, const pc_item_state& item, const char* action) {
+        const auto registry = build_action_registry(*session);
+        const auto index = registry.index_by_id.at(action);
+        goal.terminal.extras = ExtraExplicitPolicy::Allow;
+        goal.primitive_actions_explicit = true;
+        const auto before = item;
+        double oracle = 0;
+        auto upgraded = item;
+        if (ordinary_add_equivalent(registry.actions[index].params.type) == ActionType::Regal)
+            upgraded.rarity = PC_RARITY_RARE;
+        std::vector<std::uint64_t> reachable(session->words, 0);
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod)
+            if (session->gen_type[mod] <= 1) pc_bitset_set(reachable.data(), mod);
+        CalcContext observer(session, goal, registry, {}, true, false,
+            false, std::nullopt, {}, false, reachable);
+        ActionContextImpl context(0);
+        context.session = session;
+        const auto cap = rarity_affix_cap(*session, upgraded.rarity);
+        const bool prefix_open = upgraded.prefix_count < cap;
+        const bool suffix_open = upgraded.suffix_count < cap;
+        if (prefix_open || suffix_open) {
+            PoolBuildRequest request;
+            request.side_filter = prefix_open && suffix_open ? -1 : (prefix_open ? 0 : 1);
+            if (is_foulborn(registry.actions[index].params.type)) request.weight_kind = PoolWeightKind::Foulborn;
+            const auto& pool = get_weighted_pool(context, &upgraded, request);
+            for (const auto& row : pool.entries) {
+                auto next = upgraded;
+                PC_CHECK(pc_item_add_mod(&next, row.gen_type, row.session_mod_id,
+                    static_cast<std::uint16_t>(row.primary_group), 0, nullptr) == PC_RESULT_OK);
+                if (observer.is_goal_state(observer.state(observer.intern_item(next))))
+                    oracle += double(row.final_weight) / double(pool.total_weight);
+            }
+            if (!pool.total_weight && observer.is_goal_state(observer.state(observer.intern_item(upgraded)))) oracle = 1;
+        }
+        double actual = 0;
+        // Both an unrelated cleanup envelope and the inspector's Chaos
+        // envelope must give the same one-action answer.
+        for (const char* envelope : {"scour", "chaos"}) {
+            CalcContext caller(session, goal, registry, {registry.index_by_id.at(envelope)},
+                true, false, false);
+            pc_item_state empty{};
+            caller.intern_item(empty);
+            const auto state_count = caller.state_count();
+            const auto result_text = calculate_currency_json(caller, item, action);
+            const auto result = json::Parser(result_text.data(), result_text.size()).parse();
+            PC_CHECK(result.find("supported")->boolean && result.find("legal")->boolean);
+            actual = result.find("success_probability")->number;
+            PC_CHECK(near(actual, oracle, 1e-12));
+            double total = 0, success = 0;
+            for (const auto& row : result.find("outcomes")->array) {
+                const auto p = row.find("probability")->number;
+                total += p;
+                if (row.find("is_goal")->boolean) success += p;
+            }
+            PC_CHECK(near(total, 1, 1e-12) && near(success, actual, 1e-12));
+            PC_CHECK(std::memcmp(&item, &before, sizeof(item)) == 0);
+            PC_CHECK(caller.state_count() == state_count);
+        }
+        return actual;
+    };
+    const auto fixture = [] {
+        auto session = make_calc_session();
+        auto data = std::const_pointer_cast<DataImpl>(session->data);
+        data->strings = {"life", "hybrid", "attack", "caster", "fire", "cold", "speed", "veilP", "veilS"};
+        data->mod_type_key_sid = {0,0,1,2,3,4,5,6,7,8};
+        session->required_level[0] = 10;
+        session->item_level = 86;
+        data->spawn_weights[4] = session->base_spawn_weight[4] = session->base_roll_weight[4] = 300;
+        return session;
+    };
+    for (const char* action : {"augment", "regal", "exalt", "foulborn_augment", "foulborn_regal", "foulborn_exalt"}) {
+        auto session = fixture();
+        auto goal = family_goal_100();
+        pc_item_state item{};
+        const auto registry = build_action_registry(*session);
+        const auto type = ordinary_add_equivalent(registry.actions[registry.index_by_id.at(action)].params.type);
+        const bool exalt = type == ActionType::Exalt;
+        item.rarity = exalt ? PC_RARITY_RARE : PC_RARITY_MAGIC;
+        if (exalt) {
+            place(&item, 0, 4, 13);
+            for (unsigned mod = 5; mod <= 7; ++mod) place(&item, 1, mod, 20 + mod - 5);
+        } else place(&item, 1, 5, 20);
+        if (type == ActionType::Augment)
+            goal.rarity = PC_RARITY_MAGIC;
+        PC_CHECK(check_add(session, goal, item, action) > 0);
+        // A below-tier member blocks its entire physical group and must not
+        // become a satisfying member during carrier reconstruction.
+        item = {};
+        item.rarity = exalt ? PC_RARITY_RARE : PC_RARITY_MAGIC;
+        place(&item, 0, 1, 10, PC_MOD_SLOT_FRACTURED);
+        PC_CHECK(check_add(session, goal, item, action) == 0);
+    }
+    {
+        auto session = fixture();
+        // Secondary exclusion groups are as authoritative as primary ones.
+        session->group_ids[3] = 13;
+        pc_bitset_clear(session->group_masks[11].data(), 2);
+        pc_bitset_set(session->group_masks[13].data(), 2);
+        auto goal = family_goal_100(); goal.slots[0].family_id = 103;
+        pc_item_state item{}; item.rarity = PC_RARITY_RARE;
+        place(&item, 0, 2, 10);
+        for (unsigned mod = 5; mod <= 7; ++mod) place(&item, 1, mod, 20 + mod - 5);
+        PC_CHECK(check_add(session, goal, item, "exalt") == 0);
+        PC_CHECK(check_add(session, goal, item, "foulborn_exalt") == 0);
+    }
+    {
+        auto session = fixture();
+        // A retained above-level modifier remains an incoming blocker even
+        // when this session's random pool cannot place it.
+        session->item_level = 20; session->required_level[4] = 90;
+        pc_bitset_clear(session->normal_random_roll_mask.data(), 4);
+        pc_item_state item{}; item.rarity = PC_RARITY_RARE;
+        place(&item, 0, 4, 13, PC_MOD_SLOT_FRACTURED);
+        for (unsigned mod = 5; mod <= 7; ++mod) place(&item, 1, mod, 20 + mod - 5);
+        PC_CHECK(near(check_add(session, family_goal_100(), item, "exalt"), 0.25));
+        PC_CHECK(near(check_add(session, family_goal_100(), item, "foulborn_exalt"), 0.5));
+    }
+    for (unsigned role = 0; role < 2; ++role) {
+        auto session = fixture(); auto data = std::const_pointer_cast<DataImpl>(session->data);
+        data->metamod_prefixes_locked_code = 10; data->metamod_no_attack_code = 11;
+        data->tag_id_by_name["attack"] = 1;
+        session->metamod_type[7] = role ? 11 : 10;
+        pc_item_state item{}; item.rarity = PC_RARITY_RARE;
+        place(&item, 0, 4, 13, PC_MOD_SLOT_FRACTURED);
+        place(&item, 1, 7, 22, PC_MOD_SLOT_CRAFTED);
+        PC_CHECK(check_add(session, family_goal_100(), item, "exalt") > 0);
+        PC_CHECK(check_add(session, family_goal_100(), item, "foulborn_exalt") > 0);
+    }
+    {
+        auto session = fixture(); const auto registry = build_action_registry(*session);
+        auto goal = family_goal_100(); goal.terminal.extras = ExtraExplicitPolicy::Allow;
+        goal.disabled_action_families = solver_action_family_bit(SolverActionFamily::Foulborn);
+        CalcContext caller(session, goal, registry, {}, true, false);
+        pc_item_state item{}; item.rarity = PC_RARITY_RARE;
+        const auto rejects = [&](const pc_item_state& input, const char* action, const char* reason) {
+            bool rejected = false;
+            try { calculate_currency_json(caller, input, action); }
+            catch (const std::invalid_argument& ex) { rejected = std::strstr(ex.what(), reason) != nullptr; }
+            PC_CHECK(rejected);
+        };
+        rejects(item, "foulborn_exalt", "disabled family");
+        rejects(item, "not_a_currency", "Unknown Calculator action");
+        auto guarded = item; guarded.memory_strands = 1; rejects(guarded, "exalt", "memory strands");
+        guarded = item; guarded.lifecycle = PC_ITEM_DESTROYED; rejects(guarded, "exalt", "live item");
+        guarded = item; guarded.enchantment_count = 1; rejects(guarded, "exalt", "enchantment");
+        for (auto flag : {PC_ITEM_CORRUPTED, PC_ITEM_MIRRORED}) {
+            guarded = item; guarded.item_flags |= flag;
+            const auto text = calculate_currency_json(caller, guarded, "exalt");
+            const auto result = json::Parser(text.data(), text.size()).parse();
+            PC_CHECK(!result.find("legal")->boolean && result.find("success_probability")->number == 0);
+        }
+    }
+    if (!artifact_dir) return;
+    const std::string dir = artifact_dir;
+    std::string manifest, strings, game;
+    PC_CHECK(read_text_file(dir + "/manifest.json", manifest));
+    PC_CHECK(read_text_file(dir + "/strings.json", strings));
+    PC_CHECK(read_text_file(dir + "/game-data.json", game));
+    auto data = load_data_impl(manifest, strings, game);
+    auto session = std::make_shared<SessionImpl>(); session->data = data;
+    session->base_index = data->base_by_path.at("Metadata/Items/Armours/BodyArmours/BodyInt17");
+    session->item_level = 86; build_session(*session);
+    const auto mod_id = [&](const char* key) {
+        return session->session_id_by_global_id.at(data->mod_global_ids[data->mod_pos_by_key.at(key)]);
+    };
+    GoalSpec goal; goal.slots.push_back({}); goal.slots[0].family_id = session->family_id[mod_id("LocalIncreasedEnergyShield11")];
+    goal.slots[0].min_tier = 0;
+    pc_item_state item{}; item.rarity = PC_RARITY_RARE;
+    for (const char* key : {"LocalIncreasedEnergyShieldPercent8", "FireResist8", "ColdResist8", "LightningResist8"}) {
+        const auto mod = mod_id(key);
+        place(&item, session->gen_type[mod], mod, static_cast<std::uint16_t>(session->primary_group[mod]));
+    }
+    const auto p = check_add(session, goal, item, "foulborn_exalt");
+    PC_CHECK(near(p, 0.21153846153846154, 1e-12));
+    std::printf("Original Foulborn carrier Calculator probability: %.17g\n", p);
+}
+
 void run_solver_calc_tests(const char* artifact_dir) {
     // Compare concrete refill with independent ordered-draw enumeration. This
     // covers fixed-six Vaal, retained Awakener pairs, group overlap, empty-pool
@@ -4167,6 +4351,7 @@ void run_solver_calc_tests(const char* artifact_dir) {
     }
     run_reforge_cross_goal_projection_tests();
     run_foulborn_kernel_tests();
+    run_calculator_incoming_tests(artifact_dir);
     run_product_dead_feature_reduction_tests();
     run_exact_goal_member_materialization_test();
     run_goal_threshold_tests();

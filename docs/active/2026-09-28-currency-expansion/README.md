@@ -989,12 +989,9 @@ explicit root provenance, reject parent bindings/nonroot values, charge retained
 signature capacity, refuse a 64-byte private allowance, cancel live private
 generation without work leakage, and exercise unlimited-width caps. The existing
 assertion-owner suite passes 384 checks. Bulk logs and actual executable hashes are under
-`out/mechanics-overnight`. No timed solve or worker invocation has run; the frozen
-original-runtime Current request passes the native validate-only check and is
-frozen for the parent's serial slot.
-These fixtures qualify the native slice, not general Foulborn search or an
-original-request performance result. No Simulator or WASM qualification is
-claimed in this worktree.
+`out/mechanics-overnight`. These pre-qualification fixtures establish the native
+slice; the subsequent original-request results are recorded below. No Simulator
+or WASM qualification is claimed in this worktree.
 
 Subsequent parent-selected N4 qualification reports a checked original-request
 Alchemy/paid-Scour controller at 4.656588642517449c, success effectively one and
@@ -1029,3 +1026,87 @@ Dominance continuation must add a gated full affix-identity representation,
 propagate replacement/survivor identity through refinement and compilation,
 bind the upgrade-map representation in caches, and retain existing unsupported
 carrier and lower-proof guards. This overnight slice adds no Dominance support.
+
+
+### Original-request Current qualification and Calculator carrier repair
+
+Two authorized native invocations, N4 and N5, ran serially from source
+`bea568394ef8c507fa4a6fe4a7cdaf7943685ce5` against the unchanged witness runtime
+`ef06ad1171b10975fd56a43fb596e94f789e8c5bae5092b0617f5331a285db99`, normal empty
+BodyInt17 root, original goal, explicit Alchemy/Foulborn Exalt/Scour scope and
+prices `2/0.01/0.1`. N5 changes only `goal_progress_gated_reforges` from true to
+false. The original witness, requests, raw reports and pre-fix executable bytes
+remain frozen. Derived summaries are `out/mechanics-overnight/n4-result-summary.json`
+and `n5-result-summary.json`; frozen binaries and their hashes are in
+`out/mechanics-overnight/frozen-pre-calculator-fix/manifest.json`.
+
+N4 returns `bounded_feasible` and a compiled, original-root checked Alchemy/Scour
+controller at expected cost `4.656588642517449`, matching the complete-law oracle.
+Foulborn is admitted and priced but has no parent rows and is absent from this
+policy. Gated zero-progress exits do not supply physical misses on which to add
+Foulborn. N5 returns `bounded_feasible` with `bounded_discovery_complete`, five
+Foulborn parent rows and a checked policy containing Alchemy, Foulborn Exalt and
+Scour. Its expected cost is `3.8926614616672364`: a reduction of
+`0.7639271808502128` (`16.40529665590598%`) against N4. Expected consumption is
+`1.8978355406384988` Alchemy, `0.7206826326388818` Foulborn Exalt and
+`0.8978355406384995` Scour. Exact evaluation converges with success probability 1,
+complete reconciled costs, zero off-policy/failure/unresolved mass and zero cost
+difference from the solver. This qualifies this explicit native case only.
+
+Both outer runners exit 0 and finish without timeout, cancellation or survivors.
+Both native benchmarks exit 2 because the unchanged frozen expectation
+`baseline_cap_or_compile_refusal_allowed` omits the actual `bounded_feasible`
+status. The mismatch is retained in the reports and explained by the derived
+summaries; it is not silently reclassified as an expectation pass. N4 uses three
+parent states, one row and two transitions, 302,020 logical reforge work and
+14,165,109 selected-owned peak bytes; native solve time is 56.4294 ms. N5 uses eight
+parent states, twelve rows and seventeen transitions, 707,200 logical reforge work
+and 156,257,794 selected-owned peak bytes; native solve time is 6,934.44 ms.
+N5 refinement closes 2,320 exact states, 2,314 observation classes and 49,221 exact
+transitions. Every configured resource cap passes. Its 176.0289 ms maximum native
+Step is not a web-worker or browser-cancellation receipt. Both requests still
+resolve `TargetNeutralZero`, lower bound 0 and closure unavailable. No positive
+lower proof, exact optimality, general Foulborn qualification or gated-default
+Foulborn use follows. Mechanics' allowance is spent at two native invocations and
+zero actual worker invocations; no additional timed solve is authorized here.
+
+Inspection of a concrete positive Alchemy miss exposed a separate Calculator
+bug. With prefix `LocalIncreasedEnergyShieldPercent8` and suffixes `FireResist8`,
+`ColdResist8`, `LightningResist8`, the native Foulborn execution pool assigns the
+original target family weight 231,000 out of 1,092,000, giving
+`0.21153846153846154`. Authored single-action evaluation agrees. The old Calculator
+gave `0.19642857142857142` because its caller layout merged incoming junk with a
+representative carrying different physical exclusions. A second two-prefix,
+two-suffix miss similarly gave `0.11995637949836421` instead of the native
+`0.12471655328798185`. Pre-fix diagnostics remain separate in
+`out/mechanics-overnight/foulborn-pool-preflight.json`.
+
+Non-renewal currency queries now execute in a private native context for exactly
+the requested action, retaining the full incoming explicit-member universe and
+that action's existing refinement observations. Fixed programmes and automatic
+candidate synthesis do not widen this private query. Native goal-member tier,
+exclusion, tag, metamod and protection observations survive through execution;
+only completed successors merge into the terminal observation context. A failed
+materialization refuses the result rather than dropping mass. Renewal and
+expanded mechanics continue to consume concrete inputs through their existing
+terminal/refill owners, so final-only reforge outcomes do not gain a future-action
+identity partition. No transition law, registry action, ABI, lower proof or
+strategy compiler changes in this repair.
+
+
+Final isolated validation: native tests and DLL rebuild, and the focused
+`--calculator-incoming-only` run passes 354 checks against the original runtime.
+It covers six ordinary/Foulborn add actions under unrelated caller envelopes,
+secondary exclusion groups, below-tier and retained above-level modifiers,
+fractures, locks/pool metamods, input/caller immutability and all refusal guards.
+The original carrier now returns `0.21153846153846151`, agreeing with execution
+and authored evaluation to floating-point tolerance. Eleven public-binding
+regressions pass against the original runtime; the same eleven and five existing
+expanded/renewal checks pass against current runtime
+`82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d` (16 tests).
+An initial preserved-branch attempt against the original runtime passed three
+checks and failed two current-data Dominance fixtures on unavailable elevation
+mappings; both pass against the intended current runtime. That failed log is
+retained. No data refresh, timed rerun, Simulator or worker check was used for the
+Calculator repair. The preserved N4/N5 bytes therefore remain distinct from
+this repaired Calculator's build and receipt.

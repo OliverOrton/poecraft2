@@ -7,6 +7,7 @@
 #include <cmath>
 #include <iomanip>
 #include <map>
+#include <memory>
 #include <set>
 #include <sstream>
 
@@ -75,7 +76,7 @@ std::string calculate_currency_json(CalcContext& source,
     CalcContext terminal(source.shared_session(), source.goal(), source.registry(),
         {}, true, false, false, std::nullopt, {}, false, reachable,
         false, false, true, false, true);
-    auto& calc = expanded || renewal ? terminal : source;
+    auto& calc = terminal;
     // Oversized requests fail explicitly; never publish truncated mass.
     calc.set_solve_resource_caps(250000, 100000000, false, 512ull * 1024 * 1024);
     // Preserve implicit-goal observations until the final joint predicate;
@@ -131,8 +132,28 @@ std::string calculate_currency_json(CalcContext& source,
         const auto index = found_action->second;
         const auto& descriptor = calc.registry().actions[index];
         if (solver_action_disabled(calc.goal(), descriptor)) throw std::invalid_argument("Calculation action belongs to a disabled family");
-        const auto start = project(receiver);
-        legal = action_legal(session, descriptor, calc.state(start));
+        // The caller's layout may describe another action and may merge
+        // incoming junk with different physical pool exclusions. Preserve
+        // the requested action's continuation observations until execution;
+        // coarsen only its terminal results. Renewals already consume the
+        // concrete receiver through concrete_refill, and implicit-only
+        // actions below likewise consume the concrete receiver directly.
+        std::unique_ptr<CalcContext> incoming;
+        if (!renewal && descriptor.params.type != ActionType::EldritchEmber &&
+                descriptor.params.type != ActionType::EldritchIchor) {
+            auto action_goal = source.goal();
+            action_goal.fixed_options.clear();
+            action_goal.automatic_candidates = false;
+            incoming = std::make_unique<CalcContext>(source.shared_session(),
+                action_goal, source.registry(), std::vector<std::uint32_t>{index},
+                true, false, true, std::nullopt,
+                std::vector<CountObservation>{}, false, reachable);
+            incoming->set_solve_resource_caps(250000, 100000000, false,
+                512ull * 1024 * 1024);
+        }
+        auto& execution = incoming ? *incoming : calc;
+        const auto start = execution.intern_item(receiver);
+        legal = action_legal(session, descriptor, execution.state(start));
         if (!legal) add(receiver, 1);
         else if (descriptor.params.type == ActionType::EldritchEmber || descriptor.params.type == ActionType::EldritchIchor) {
             const bool searing = descriptor.params.type == ActionType::EldritchEmber;
@@ -151,7 +172,7 @@ std::string calculate_currency_json(CalcContext& source,
             prepared.enchantment_count = 0;
             const auto concrete = renewal ? calc.concrete_refill({prepared, 0,
                 action_transition_facts(descriptor.params.type).respects_metamod_pool_blocks, true, index, !omit_affixes}) : nullptr;
-            const auto& distribution = concrete ? *concrete : calc.outcomes(start, index);
+            const auto& distribution = concrete ? *concrete : execution.outcomes(start, index);
             if (!distribution.supported) throw std::invalid_argument("Exact outcomes are unavailable for this action");
             legal = distribution.applicable;
             auto implicits = receiver;
@@ -164,6 +185,12 @@ std::string calculate_currency_json(CalcContext& source,
                 : std::vector<std::pair<pc_item_state, long double>>{{implicits, 1.0L}};
             for (const auto& entry : distribution.entries) for (const auto& [implicit_item, p] : special) {
                 auto id = entry.state;
+                if (incoming) {
+                    pc_item_state next;
+                    if (!incoming->materialize(id, next))
+                        throw std::invalid_argument("Exact currency result cannot be materialized");
+                    id = project(next);
+                }
                 if (descriptor.params.type == ActionType::Fossil) {
                     auto state = calc.state(id);
                     state.flags &= ~(kFlagCorrupted | kFlagMirrored);

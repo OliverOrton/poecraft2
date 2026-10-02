@@ -77,10 +77,16 @@ existing structural carrier. Expanded Current scopes, including compound
 dependencies, use `TargetNeutralZero`; no old positive lower/closure certificate
 extends to these actions. A magic Augmentation goal produces compiled policies
 checked under the original root, goal, prices and scope in both Current and Finder.
-The [normal-root witness](../active/2026-09-28-currency-expansion/pro-witness.json)
-historically returns `no_executable_policy` in both lanes. The later scoped
-Current Alchemy/Scour recovery is recorded above; Finder and full Foulborn search
-remain separately unqualified. Registry admission is not general search qualification. Shaper/Elder extend existing Influence Exalt contracts,
+The frozen [normal-root witness](../active/2026-09-28-currency-expansion/pro-witness.json)
+historically returns `no_executable_policy` in both lanes. The
+[2026-10-02 native Current follow-up](../active/2026-09-28-currency-expansion/README.md#original-request-current-qualification-and-calculator-carrier-repair)
+checks an Alchemy/paid-Scour controller at cost `4.656588642517449` under the original
+runtime, root, goal, scope and prices. Changing only goal-progress gating to false
+produces a checked policy using Foulborn Exalt at cost `3.8926614616672364`.
+Both remain bounded upper policies with lower bound 0 and `TargetNeutralZero`;
+the frozen reports retain their stale expected-status mismatch. Finder and browser
+qualification are not promoted by these Current receipts. Registry admission is
+not general search qualification. Shaper/Elder extend existing Influence Exalt contracts,
 without adding automatic standalone Influence Exalt grammar.
 
 Native Current/Finder and exact projection reject strand-bearing, absent and
@@ -98,7 +104,11 @@ identity and full refill conflicts; the observation is only the final goal,
 counts/flags and corruption implicit marginals/pairs. Double corruption treats
 changed-affix brick and destruction as terminal failures under Oliver's ruling.
 It does not broaden the strategy
-carrier or promote any historical search/proof qualification.
+carrier or promote any historical search/proof qualification. The 2026-10-02
+Calculator repair preserves incoming non-renewal action observations until native
+execution, then merges terminal results. It corrects retained-modifier Foulborn
+pool odds while preserving expanded/renewal terminal optimization and all
+unsupported-carrier guards.
 
 ## Goal, authority and lane map
 

@@ -1,6 +1,7 @@
 """Exact single-action witnesses using the current canonical artifact."""
 import json
 import math
+import os
 from pathlib import Path
 import sqlite3
 
@@ -9,7 +10,8 @@ from poecraft_engine import EngineError, load_data
 from poecraft_ingest.engine_selection import resolve_base_selection
 
 ROOT = Path(__file__).resolve().parents[3]
-ARTIFACT = ROOT / json.loads((ROOT / "apps/web/runtime.lock.json").read_text())["runtime_directory"]
+ARTIFACT = Path(os.environ.get("POECRAFT_TEST_ARTIFACT", ROOT / json.loads(
+    (ROOT / "apps/web/runtime.lock.json").read_text())["runtime_directory"]))
 BASE = "Metadata/Items/Armours/BodyArmours/BodyInt17"
 PAIRS = [
     ("LocalIncreaseSocketedActiveGemLevelUber1", "LocalIncreaseSocketedActiveGemLevelUberMaven"),
