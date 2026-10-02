@@ -633,7 +633,9 @@ struct ActionTraceStage {
     std::int8_t chosen_side = -1;
 };
 
+struct HinekoraForesight;
 struct ActionContextImpl {
+    std::shared_ptr<HinekoraForesight> hinekora_foresight;
     std::shared_ptr<const SessionImpl> session;
     Rng rng;
     std::unordered_map<std::string, std::uint32_t> signature_by_key;

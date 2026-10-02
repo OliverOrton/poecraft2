@@ -1,0 +1,32 @@
+{
+  "baseline": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+  "stage": "fixed-currency structural checkpoint; not integration/public acceptance",
+  "source_files": {
+    "engine/src/hinekora.cpp": "7b4c567d20aafa0e472b355d572dcc823a7b1bcdf4c4eba1ead154e85d94b15c",
+    "engine/src/hinekora_internal.hpp": "6afad09a990309ae64b252d7d98d7dada26e78c219654d20eb20e017b3959fee",
+    "engine/include/poecraft/hinekora.h": "67b4f18bf68361d7a89e23ce764fa7b997c55cbef548f9a8215aca26b672a3b0",
+    "engine/src/api.cpp": "6735c387a00151e404aca6debf3f67445f9f51705cc3b4c954141a15be0b9475",
+    "engine/src/engine_internal.hpp": "91b21a244be0387879978b98a5df818742e56fc20f6ed4d5ad86698afa393da5",
+    "engine/engine-sources.txt": "2d486dd2edf5d468f6bc3d6d32589e5d115c8b7df07332f01dd26359724189f1",
+    "bindings/python/poecraft_engine/_binding.py": "42a536b14eeadda0258c476d4c1443112e74447f807f28b44d9748be16f50a67",
+    "bindings/python/tests/test_hinekora_lock.py": "ab9362ff49dc04628e0140578abc8a533e93d7c5b6375e33019dc93911fec4bc"
+  },
+  "dll_sha256": "ce01d3f45e7b233d23776bf0d4e29020dbf414b02d9cd3fdcf7ccf3f811f7e01",
+  "checks": {
+    "native_engine_build": "passed; two jobs",
+    "shared_library_build": "passed; two jobs",
+    "python_contract_tests": 104,
+    "python_command": "py -3 -m pytest -q -p no:cacheprovider bindings/python/tests/test_hinekora_lock.py bindings/python/tests/test_currency_expansion.py bindings/python/tests/test_currency_calculator.py",
+    "log": "out/lock-strands-completion/python-event-qualified.log",
+    "log_sha256": "57671fec31d7652a0a1bd40e25d1a72cb617cfc40bc8172c4b871c214da79feb"
+  },
+  "frozen_sqlite_sha256": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a",
+  "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "remaining": [
+    "foreseeing presence must refuse ordinary native solver/Calculator projection",
+    "parent review of supported Lock slice",
+    "memory stochastic laws require Oliver approval",
+    "WASM/worker and product transport not yet qualified",
+    "authored Simulator/exact Lock information-state grammar not admitted"
+  ]
+}

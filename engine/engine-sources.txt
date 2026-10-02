@@ -8,6 +8,7 @@ src/rng.cpp
 src/session_builder.cpp
 src/actions_basic.cpp
 src/memory_contract.cpp
+src/hinekora.cpp
 src/multi_item.cpp
 src/actions_bestiary.cpp
 src/bestiary_api.cpp

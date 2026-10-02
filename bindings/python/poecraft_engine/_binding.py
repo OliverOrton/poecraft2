@@ -776,6 +776,16 @@ _lib.pc_apply_action.argtypes = [
     ct.POINTER(_ErrorInfo),
 ]
 _lib.pc_apply_action.restype = ct.c_int32
+_lib.pc_hinekora_lock_create.argtypes = [_handle, ct.POINTER(_ItemState), ct.POINTER(_ActionRequest), ct.POINTER(_handle), ct.POINTER(_ErrorInfo)]
+_lib.pc_hinekora_lock_create.restype = ct.c_int32
+_lib.pc_hinekora_lock_preview.argtypes = [_handle, ct.POINTER(_ItemState), ct.POINTER(_ItemState), ct.POINTER(_ActionResult), ct.POINTER(_ErrorInfo)]
+_lib.pc_hinekora_lock_preview.restype = ct.c_int32
+_lib.pc_hinekora_lock_commit.argtypes = [_handle, ct.POINTER(_ItemState), ct.POINTER(_ActionResult), ct.POINTER(_ErrorInfo)]
+_lib.pc_hinekora_lock_commit.restype = ct.c_int32
+_lib.pc_hinekora_lock_status.argtypes = [_handle, ct.POINTER(_ItemState), ct.POINTER(ct.c_int32), ct.POINTER(_ErrorInfo)]
+_lib.pc_hinekora_lock_status.restype = ct.c_int32
+_lib.pc_hinekora_lock_invalidate.argtypes = [_handle]
+_lib.pc_hinekora_lock_destroy.argtypes = [_handle]
 _lib.pc_bestiary_state_init.argtypes = [
     ct.POINTER(_ItemState),
     ct.c_uint64,
@@ -2451,6 +2461,42 @@ class Simulator(_OwnedHandle):
         )
 
 
+class HinekoraLock(_OwnedHandle):
+    """Item-bound, fixed-currency foresight. Observation is free; commit is paid.
+
+    Invalidate before editing the raw item, Bestiary/multi-item mutation, or item
+    replacement. Destroying a handle does not authorize a fresh unchanged-item
+    Lock. Copies of the input cannot consume this item's foresight.
+    """
+    _destroy = _lib.pc_hinekora_lock_destroy
+
+    def __init__(self, handle: _handle, item: Item, context: ActionContext):
+        super().__init__(handle)
+        self._item, self._context = item, context
+
+    @property
+    def active(self) -> bool:
+        active, error = ct.c_int32(), _error()
+        _check(_lib.pc_hinekora_lock_status(self._handle, ct.byref(self._item._state),
+            ct.byref(active), ct.byref(error)), error)
+        return bool(active.value)
+
+    def preview(self) -> tuple[Item, ActionResult]:
+        state, result, error = _ItemState(), _ActionResult(), _error()
+        _check(_lib.pc_hinekora_lock_preview(self._handle, ct.byref(self._item._state),
+            ct.byref(state), ct.byref(result), ct.byref(error)), error)
+        return Item(self._item._session, state), ActionResult(bool(result.applied), result.added, result.removed)
+
+    def commit(self) -> ActionResult:
+        result, error = _ActionResult(), _error()
+        _check(_lib.pc_hinekora_lock_commit(self._handle, ct.byref(self._item._state),
+            ct.byref(result), ct.byref(error)), error)
+        return ActionResult(bool(result.applied), result.added, result.removed)
+
+    def invalidate(self) -> None:
+        _lib.pc_hinekora_lock_invalidate(self._handle)
+
+
 class ActionContext(_OwnedHandle):
     _destroy = _lib.pc_action_context_destroy
 
@@ -2461,6 +2507,19 @@ class ActionContext(_OwnedHandle):
     def _check_item(self, item: Item) -> None:
         if item._session is not self._session:
             raise ValueError("item belongs to a different session")
+
+    def hinekora_lock(self, item: Item, currency: str | Mapping[str, Any]) -> HinekoraLock:
+        """Spend one Lock to reserve one selected native currency outcome.
+
+        No cross-currency joint distribution or exact strategy value is implied.
+        """
+        self._check_item(item)
+        request, keepalive = _action_request(currency)
+        handle, error = _handle(), _error()
+        _check(_lib.pc_hinekora_lock_create(self._handle, ct.byref(item._state),
+            ct.byref(request), ct.byref(handle), ct.byref(error)), error)
+        del keepalive
+        return HinekoraLock(handle, item, self)
 
     def apply_multi(self, action: str, resources: list[tuple[str, str, Item]]) -> dict:
         """Apply one atomic craft to explicit (identity, role, item) resources.

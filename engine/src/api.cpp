@@ -7,6 +7,7 @@
 #include "harvest_crafts.generated.hpp"
 #include "handles_internal.hpp"
 #include "currency_outcomes.hpp"
+#include "hinekora_internal.hpp"
 #include "json.hpp"
 #include <bit>
 
@@ -288,6 +289,13 @@ pc_result parse_action_request(
 }
 
 } // namespace
+
+namespace poecraft {
+pc_result resolve_foresight_request(const ActionContextImpl& context,
+    const pc_action_request& request, ActionParameters& action, pc_error_info* error) {
+    return parse_action_request(context, request, action, nullptr, error);
+}
+}
 
 uint32_t pc_abi_version(void) {
     return PC_ABI_VERSION;
@@ -1258,13 +1266,9 @@ pc_result pc_apply_action(
     if (parse_result != PC_RESULT_OK) {
         return parse_result;
     }
-    // Apply to a private copy so a failed action leaves the caller's item intact.
-    pc_item_state working = *item;
-    const poecraft::ActionOutcome outcome = poecraft::apply_action(
-        *context->impl, &working, action);
-    if (outcome.applied) {
-        *item = working;
-    }
+    // The native wrapper preserves failed-call atomicity and any paid foresight.
+    const poecraft::ActionOutcome outcome = poecraft::apply_with_foresight(
+        *context->impl, item, action);
     out_result->struct_size = static_cast<uint32_t>(sizeof(pc_action_result));
     out_result->abi_version = PC_ABI_VERSION;
     out_result->applied = outcome.applied ? 1 : 0;
@@ -1304,13 +1308,9 @@ pc_result pc_apply_action_batch(
     summary.abi_version = PC_ABI_VERSION;
     summary.item_count = item_count;
     for (uint32_t i = 0; i < item_count; ++i) {
-        pc_item_state working = items[i];
-        const poecraft::ActionOutcome outcome = poecraft::apply_action(
-            *context->impl, &working, action);
-        if (outcome.applied) {
-            items[i] = working;
-            ++summary.applied_count;
-        }
+        const poecraft::ActionOutcome outcome = poecraft::apply_with_foresight(
+            *context->impl, &items[i], action);
+        if (outcome.applied) ++summary.applied_count;
         summary.total_added += static_cast<uint64_t>(outcome.added);
         summary.total_removed += static_cast<uint64_t>(outcome.removed);
         if (results != nullptr) {
