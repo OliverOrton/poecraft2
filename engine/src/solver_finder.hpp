@@ -8,6 +8,7 @@
 #include <deque>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -30,6 +31,9 @@ FinderCandidatePreparation prepare_finder_candidate(
     const pc_item_state& original_start,
     const std::string& strategy_json,
     const FinderControlGraph* native_control = nullptr);
+
+// Diagnostic digest only; complete graph bytes remain the identity authority.
+std::string finder_candidate_graph_hash(std::string_view graph);
 
 bool finder_evaluation_accepted(const StrategyEvalResult& result);
 

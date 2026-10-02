@@ -5,6 +5,8 @@
 #include "poecraft/solver.h"
 
 #include "json.hpp"
+#include "handles_internal.hpp"
+#include "solver_policy_refinement_helpers.hpp"
 #include "solver_diagnostic_options.hpp"
 #include "solver_calc_types.hpp"
 #include "solver_options_helpers.hpp"
@@ -61,6 +63,8 @@ struct Arguments {
     fs::path output;
     fs::path partial_output;
     fs::path strategy_output;
+    fs::path fixed_graph_check_pair;
+    std::string fixed_graph_hash;
     fs::path development_checkpoint_save;
     fs::path development_checkpoint_load;
     std::string case_id;
@@ -3202,6 +3206,144 @@ void create_case_objects(
     }
 }
 
+
+// Native-only fixed-graph checking through the same Finder binding and exact
+// evaluator owners. No solver search, policy import/seed, or sampled execution.
+int run_fixed_graph_check_pair(pc_data_handle data, const Value& specification,
+                              const Arguments& args) {
+    using namespace poecraft::solver;
+    const auto started = Clock::now();
+    const auto& caps = required(specification, "caps", Type::Object);
+    const auto total_cap = optional_u64(caps,"max_solver_owned_bytes",1073741824);
+    const auto graph_cap = optional_u64(caps,"max_strategy_json_bytes",67108864);
+    const auto input_path = fs::absolute(args.fixed_graph_check_pair);
+    const auto output_path = fs::absolute(args.output);
+    if (fs::exists(output_path))
+        throw std::runtime_error("fixed-graph diagnostic refuses an existing report");
+    if (fs::file_size(input_path)>graph_cap)
+        throw std::length_error("fixed graph exceeds original max_strategy_json_bytes");
+    const auto graph = read_file(input_path);
+    if (finder_candidate_graph_hash(graph)!=args.fixed_graph_hash)
+        throw std::runtime_error("fixed graph differs from the captured byte digest");
+    NativeHandles handles; pc_item_state start;
+    create_case_objects(data,specification,handles,start);
+    auto& calc=solver_lower_diagnostic_calculator(handles.solver);
+    auto prepared=prepare_finder_candidate(calc,calc.shared_session(),start,graph);
+    if (!prepared.ready())
+        throw std::runtime_error("fixed graph failed original Finder binding: "+prepared.refusal);
+    // The native Finder owns its compiled graph separately from the evaluator.
+    // Reuse that accounting owner and reserve bounded report construction scratch.
+    const auto report_cap=optional_u64(caps,"max_telemetry_json_bytes",2097152);
+    const auto outer_bytes=calc.estimated_owned_bytes()+graph.capacity()+1+
+        refinement::strategy_impl_owned_bytes(*prepared.strategy)+3*report_cap;
+    if (outer_bytes>=total_cap)
+        throw std::length_error("fixed graph has no checker owned-byte allowance");
+    StrategyEvalOptions options;
+    options.economy=handles.economy->impl;
+    options.max_states=optional_u32(caps,"max_discovered_states",200000);
+    options.max_pairs=static_cast<std::uint32_t>(std::min<std::uint64_t>(
+        optional_u64(caps,"max_state_action_rows",1215000),UINT32_MAX));
+    options.max_transitions=static_cast<std::uint32_t>(std::min<std::uint64_t>(
+        optional_u64(caps,"max_transitions",10000000),UINT32_MAX));
+    options.max_sweeps=optional_u32(caps,"max_sweeps",100000);
+    options.max_reforge_work=optional_u64(caps,"max_reforge_work",50000000);
+    options.max_owned_bytes=total_cap-outer_bytes;
+    options.max_output_json_bytes=graph_cap;
+    if (const Value* candidate=optional(caps,"candidate_evaluation",Type::Object)) {
+        options.max_states=std::min(options.max_states,optional_u32(*candidate,"max_states",options.max_states));
+        options.max_pairs=std::min(options.max_pairs,optional_u32(*candidate,"max_pairs",options.max_pairs));
+        options.max_transitions=std::min(options.max_transitions,optional_u32(*candidate,"max_transitions",options.max_transitions));
+        options.max_owned_bytes=std::min(options.max_owned_bytes,optional_u64(*candidate,"max_owned_bytes",options.max_owned_bytes));
+    }
+    const double watchdog=optional_nonnegative_double(specification,"watchdog_seconds",150);
+    const auto deadline=started+std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(watchdog));
+    const double arm_seconds=required(specification,"requested_bounded_finish_seconds",Type::Number).number;
+    std::string arms[2];
+    const auto publish=[&] {
+        std::ostringstream out; out<<std::setprecision(17)
+            <<"{\"kind\":\"native_fixed_graph_check_pair_v1\",\"case\":"
+            <<escape_json(required_string(specification,"id"))
+            <<",\"validation_only\":"<<(args.validate_only?"true":"false")
+            <<",\"solver_search_executed\":false,\"original_root_scope_goal_bound\":true"
+            <<",\"input_path\":"<<escape_json(input_path.string())
+            <<",\"graph_hash_algorithm\":\"fnv1a64_decimal\",\"graph_hash\":"<<escape_json(args.fixed_graph_hash)
+            <<",\"graph_bytes\":"<<graph.size()<<",\"case_request\":"<<json_of(specification)
+            <<",\"checker_limits\":{\"max_states\":"<<options.max_states
+            <<",\"max_pairs\":"<<options.max_pairs<<",\"max_transitions\":"<<options.max_transitions
+            <<",\"max_sweeps\":"<<options.max_sweeps<<",\"max_reforge_work\":"<<options.max_reforge_work
+            <<",\"total_owned_cap\":"<<total_cap<<",\"outer_owned_bytes\":"<<outer_bytes
+            <<",\"checker_owned_cap\":"<<options.max_owned_bytes<<",\"max_output_json_bytes\":"<<options.max_output_json_bytes
+            <<",\"per_arm_seconds\":"<<arm_seconds<<",\"case_watchdog_seconds\":"<<watchdog<<'}'
+            <<",\"physical\":"<<(arms[0].empty()?"null":arms[0])
+            <<",\"compact\":"<<(arms[1].empty()?"null":arms[1])<<"}\n";
+        const auto document=out.str();
+        if (document.size()>optional_u64(caps,"max_telemetry_json_bytes",2097152))
+            throw std::length_error("fixed-graph report exceeds original telemetry cap");
+        write_file_atomic(output_path,document);
+    };
+    for (unsigned arm=0;arm<2;++arm) {
+        const auto began=Clock::now();
+        const auto arm_deadline=std::min(deadline,began+std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(arm_seconds)));
+        options.use_exact_exchangeable_family_compression=arm!=0;
+        std::unique_ptr<StrategyEvalWork> work;
+        std::string status="unserved_watchdog",refusal,details_path;
+        bool admitted=false,accepted=false;
+        StrategyEvalProgress progress;
+        try {
+            if (Clock::now()<deadline) {
+                work=std::make_unique<StrategyEvalWork>(prepared.strategy,options);
+                admitted=work->diagnostic_result().observation_propagation.uniform_removal_carrier;
+                progress=work->progress();
+                status=args.validate_only?"validated_admission_only":"running";
+                if (args.validate_only && (progress.stored_transitions!=0 || work->diagnostic_result().reforge_logical_work_v1!=0))
+                    throw std::logic_error("fixed-graph validation unexpectedly enumerated transitions");
+                while (!args.validate_only && !progress.done) {
+                    if (Clock::now()>=arm_deadline) { status="censored_time"; break; }
+                    work->step(4096); progress=work->progress();
+                    if (args.emit_progress)
+                        std::cout<<(arm?"compact":"physical")<<": "<<strategy_eval_subphase_name(progress.subphase)
+                            <<" states="<<progress.exact_states<<" pairs="<<progress.discovered_pairs<<std::endl;
+                }
+                if (!args.validate_only && progress.done) {
+                    accepted=finder_evaluation_accepted(work->result());
+                    status=accepted?"checked":"rejected_check";
+                }
+            }
+        } catch (const std::length_error& ex) { status="censored_capacity"; refusal=ex.what(); }
+          catch (const StrategyEvalUnsupported& ex) { status="refused_unsupported"; refusal=ex.what(); }
+          catch (const std::exception& ex) { status="rejected_error"; refusal=ex.what(); }
+        if (work) {
+            progress=work->progress();
+            if (!args.validate_only) {
+                const auto detail=fs::path(output_path.string()+(arm?".compact.eval.json":".physical.eval.json"));
+                if (fs::exists(detail)) throw std::runtime_error("fixed-graph diagnostic refuses existing evaluation details");
+                const auto& result=progress.done?work->result():work->diagnostic_result();
+                // Refuse diagnostic serialization before its worst bounded
+                // string scratch could exceed the unchanged total owned cap.
+                try {
+                    if (work->live_owned_bytes()+outer_bytes+3*graph_cap>total_cap)
+                        throw std::length_error("fixed-graph diagnostic serialization exceeds owned cap");
+                    write_file_atomic(detail,serialize_strategy_eval(result));
+                    details_path=detail.string();
+                } catch (const std::length_error& ex) {
+                    status="censored_diagnostic_output"; refusal=ex.what();
+                }
+            }
+        }
+        std::ostringstream summary; summary<<std::setprecision(17)
+            <<"{\"status\":"<<escape_json(status)<<",\"refusal\":"<<escape_json(refusal)
+            <<",\"uniform_removal_carrier\":"<<(admitted?"true":"false")
+            <<",\"accepted\":"<<(accepted?"true":"false")<<",\"done\":"<<(progress.done?"true":"false")
+            <<",\"subphase\":"<<escape_json(strategy_eval_subphase_name(progress.subphase))
+            <<",\"exact_states\":"<<progress.exact_states<<",\"discovered_pairs\":"<<progress.discovered_pairs
+            <<",\"pending_pairs\":"<<progress.pending_pairs<<",\"stored_transitions\":"<<progress.stored_transitions
+            <<",\"wall_ms\":"<<milliseconds(began,Clock::now())<<",\"details_path\":"<<escape_json(details_path)<<'}';
+        arms[arm]=summary.str();
+        work.reset(); // serial cold checks; no row/certificate sharing between arms
+        publish();
+    }
+    return 0; // statuses retain censoring/refusal; exit zero does not certify a graph
+}
 
 // Native-only attribution through the real request constructor. This never
 // changes the caller handle's candidate set or transplants a layout namespace.
@@ -6380,6 +6522,8 @@ Arguments parse_arguments(int argc, char** argv) {
         if (argument == "--artifact") args.artifact = value("--artifact");
         else if (argument == "--corpus") args.corpus = value("--corpus");
         else if (argument == "--output") args.output = value("--output");
+        else if (argument == "--fixed-graph-check-pair") args.fixed_graph_check_pair=value("--fixed-graph-check-pair");
+        else if (argument == "--fixed-graph-hash") args.fixed_graph_hash=value("--fixed-graph-hash");
         else if (argument == "--partial-output") {
             args.partial_output = value("--partial-output");
         }
@@ -6580,6 +6724,18 @@ Arguments parse_arguments(int argc, char** argv) {
     if (!std::isfinite(args.native_retention_target_lower) || args.native_retention_target_lower<0 ||
         ((args.native_retention_diagnostic=="checked") != (args.native_retention_target_lower>0)))
         throw std::runtime_error("checked retention requires a finite positive --native-retention-target-lower; other modes require zero");
+    if (!args.fixed_graph_check_pair.empty() || !args.fixed_graph_hash.empty()) {
+        if (args.fixed_graph_check_pair.empty() || args.fixed_graph_hash.empty() ||
+            args.case_id.empty() || args.output.empty() || args.solver_mode!="strategy_finder" ||
+            args.action_layout_diagnostic || args.action_coverage_diagnostic || args.checked_potential_estimate!=0 ||
+            args.fragment_shadow_only || args.resumable_joint_policy_continuation_diagnostic ||
+            args.verified_policy_alternative_shadow_diagnostic || args.finder_candidate_graph_capture ||
+            !args.development_checkpoint_save.empty() || !args.development_checkpoint_load.empty() ||
+            !args.strategy_output.empty() || !args.partial_output.empty() || args.verification_runs!=0 ||
+            args.max_discovered_states_override!=0 || args.exact_strategy_evaluation ||
+            args.exact_strategy_evaluation_time_limit_seconds!=0 || args.goal_progress_gated_reforges)
+            throw std::runtime_error("fixed-graph pair requires one Finder case, input/hash/output and no solve/verification diagnostic alterations");
+    }
     if (args.artifact.empty()) throw std::runtime_error("--artifact is required");
     if (args.corpus.empty()) throw std::runtime_error("--corpus is required");
     if (!args.validate_only && args.output.empty()) {
@@ -6745,6 +6901,13 @@ int main(int argc, char** argv) {
             }
             if (!args.case_id.empty() && specifications.empty()) {
                 throw std::runtime_error("unknown corpus case: " + args.case_id);
+            }
+
+            if (!args.fixed_graph_check_pair.empty()) {
+                if (specifications.size()!=1) throw std::runtime_error("fixed-graph pair requires exactly one case");
+                const int result=run_fixed_graph_check_pair(data,specifications.front(),args);
+                pc_data_destroy(data);
+                return result;
             }
 
             if (args.fragment_shadow_only) {

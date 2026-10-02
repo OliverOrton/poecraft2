@@ -226,22 +226,23 @@ side, occupancy and junk-blocker counts. Structured identity, protection,
 additive actions, offers, external entries and other unsupported cases stay
 physical. Existing within-roll native exclusions and complete mass remain exact.
 
-Finite differential qualification passes **21,627 checks** over 128 legal
+Finite differential qualification passes **21,655 checks** over 128 legal
 physical carriers. Complete Chaos/Essence and Annul projected rows, expected
 operation/material/edge consumption, properness and synthetic controller cost
 match the physical path. Two goals plus two junk retain both after two Annuls
-with probability 1/6; synthetic C3.56715328467 matches on both paths. Independent
+with probability 1/6 on **both** independently enumerated two-step laws, whose
+complete projected distributions agree; synthetic C3.56715328467 also matches. Independent
 junk blocker multiplicities survive repeated Annul, and exhausted pools retain
 their actual complete law. All-member conflict negatives assert that the ordinary
 evaluator actually selects the physical carrier, including a conflict only
 between below-tier members. Log:
-`out/finder-overnight/uniform-removal-complete-member-gate.log`.
+`out/finder-overnight/uniform-removal-physical-two-annuls.log`.
 
 Existing focused checks pass: Essence/capture 293, bindings 129, protected routes
 63, attribution 516, and the shared observation layout 839. The latter exercises
 continuation certificates, selected policy kernels, offers and downstream delayed
 splits without Simulator or Monte Carlo stages. Total passing focused checks:
-23,467. No additional timed native invocation has started. N6 requires parent
+23,495. No additional timed native invocation has started. N6 requires parent
 review of this domain/evidence and a frozen identical-graph command.
 
 The earlier expanded suite exposed 15 physical-reference materialization failures
@@ -265,3 +266,60 @@ Simulator rerun was used. These are **baseline-reproduced defects**, remain unfi
 and do not establish full acceptance. Raw evidence and executable/source hashes:
 `out/finder-overnight/actual-main-failure-comparison.json` and
 `actual-main-test-snapshot-receipt.json`. Main checkout was not modified.
+
+## Frozen-graph admission preflight
+
+The existing benchmark now has a native-only fixed-graph pair diagnostic. It
+uses `prepare_finder_candidate` for original-root, native action-scope and exact
+success-ingress binding, then independently creates the existing exact evaluator
+for physical and compact paths, serially. It never invokes solver search or
+imports a policy into Finder. The shared capture hash remains diagnostic; the
+frozen input SHA and immutable actual graph bytes bind the comparison.
+
+Parent-requested validation-only preflight passes on the **unchanged** N1 graph6.
+The graph is admitted by the quotient with the original request and prices:
+physical carrier false, compact carrier true. Each check owns one root state,
+zero stored transitions and zero logical reforge work; no native timed invocation
+was spent. Receipt: `out/finder-overnight/N6-admission-validation.json`.
+The fixed graph has 3,390 bytes and unchanged SHA
+`1ef3998b6804d6245385d9b710f6d6c5c456d01f16e7bb0b2c625223beb9e9cb`.
+
+Both cold arms use the original checker ceiling: 200,000 states, 1,215,000 pairs,
+10,000,000 transitions, 100,000 sweeps, 50,000,000 logical reforge work and 1 GiB
+total owned bytes. Native compiled-graph accounting and bounded report scratch
+leave 1,066,868,380 bytes for each checker after 6,873,444 adapter/request bytes.
+Each arm has the original 90-second Finish limit within the case's shared
+150-second watchdog; the host deadline stays 165 seconds. Unlike N1's discovery
+portfolio, these are independent fresh checks with no prior candidate work.
+This distinction is explicit in the frozen identity, not a search cap increase.
+The capture's protected grammar/attempt8 metadata is retained; no attempts are
+executed in this checker-only diagnostic.
+
+The fifteen earlier failures are all `of->materialize(e.state,item)` on Chaos
+and forced-Essence rows of the secondary cross-goal-group fixture. They are not
+fifteen invalid physical items: adding a genuine shared secondary exclusion made
+some legally rolled goal members imply the other slot's blocker bit. The native
+roll recurrence prevented incompatible co-occurrence, but `commit_outcome` kept
+only `roll.blocked_mask` (junk effects), while `project_item` also reconstructs
+member effects on other slots. The resulting strict carrier could not round-trip.
+This unresolved physical projection defect is **excluded**, not repaired or
+baseline-cleared by the seventeen-assertion comparison. Positive differentials
+now use the admitted independent-junk-blocker domain; cross-goal negatives stay
+and assert physical evaluation, including below-tier-only native-group conflicts.
+
+Full renewal keeps the complete native rolling recurrence and all mass. The
+existing product symmetry reduction merges only junk-only isolated families
+with matching side, class/block observation and per-family weights; observed,
+below-tier, forced and externally conflicting families keep native group identity.
+The existing terminal-depth factor activates only for goal-progress-gated rows.
+The new certified carrier disables local gated routes, so **terminal-depth
+factoring is not active for this fixed graph's full output law**. This is not a
+new promise that arbitrary physical full-roll projections are supported; the
+cross-goal defect above remains outside the proved domain. No mass dropping,
+renormalization or virtual retry basin is introduced here.
+
+N6 remains ungranted. The command/provenance will be frozen under
+`out/finder-overnight/frozen-N6-identical-graph-command.json`; only the parent may
+release that one remaining native slot. The benchmark helper's initial build
+failure was corrected with the existing nonnegative numeric parser; the final
+local Tests and Benchmark builds pass. No WASM, Simulator, push or main edit.

@@ -50,6 +50,10 @@ std::string stable_finder_hash(const std::string_view value) {
 
 } // namespace
 
+std::string finder_candidate_graph_hash(const std::string_view graph) {
+    return stable_finder_hash(graph);
+}
+
 FinderCandidatePreparation prepare_finder_candidate(
     const CalcContext& problem,
     std::shared_ptr<const SessionImpl> session,

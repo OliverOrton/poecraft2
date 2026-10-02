@@ -115,11 +115,14 @@ each observed slot's absent/below-tier/satisfying status, and the multiplicity o
 each junk class, including its side and goal-blocking effect. Each slot's members
 must be on one side and share a native exclusion group. The shared group proves
 **at most one physical member per slot**; pairwise-disjoint slot masks alone do
-not prove this. This first admitted domain also requires no member of one observed slot to
-block another observed slot. The legacy physical roll projection does not yet
-reconstruct that cross-goal blocker bit, so those cases retain physical
-evaluation and are excluded from this quotient's qualification. Non-member blockers retain multiplicity, so deleting one blocker cannot
-clear a target's blocked state while another remains. Recomputing the redundant
+not prove this. This first admitted domain also requires no member of one
+observed slot to block another observed slot. Admission compares every native
+exclusion group against every slot member mask, including below-tier members;
+satisfying masks or a chosen representative cannot establish this gate. The
+legacy physical roll projection does not yet reconstruct that cross-goal blocker
+bit, so those cases retain physical evaluation and are excluded from this
+quotient's qualification. Non-member blockers retain multiplicity, so deleting
+one blocker cannot clear a target's blocked state while another remains. Recomputing the redundant
 blocked mask from these retained multiplicities changes no observed fact.
 
 For a carrier with \(N\) occupied affixes and \(n_c\) affixes in class \(c\),

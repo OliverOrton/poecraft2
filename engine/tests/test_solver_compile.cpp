@@ -4942,6 +4942,20 @@ void run_solver_uniform_removal_tests() {
     for (const auto& [state,p]:after_two)
         if (compact->state(state).slot_status[0]==2 && compact->state(state).slot_status[1]==2) retained_both+=p;
     PC_CHECK(std::abs(retained_both-1.0/6)<1e-12);
+    std::map<std::uint32_t,double> physical_after_two;
+    const auto physical_first=full->outcomes(full->intern_item(four),annul);
+    for (const auto& e:physical_first.entries) {
+        const auto physical_second=full->outcomes(e.state,annul);
+        for (const auto& z:physical_second.entries) {
+            pc_item_state item; PC_CHECK(full->materialize(z.state,item));
+            physical_after_two[compact->intern_item(item)]+=e.probability*z.probability;
+        }
+    }
+    compare_maps(physical_after_two,after_two);
+    double physical_retained_both=0;
+    for (const auto& [state,p]:physical_after_two)
+        if (compact->state(state).slot_status[0]==2 && compact->state(state).slot_status[1]==2) physical_retained_both+=p;
+    PC_CHECK(std::abs(physical_retained_both-1.0/6)<1e-12);
 
     pc_item_state root; pc_item_clear(&root); root.rarity=PC_RARITY_RARE;
     SolveOptions limits;
@@ -4976,8 +4990,8 @@ void run_solver_uniform_removal_tests() {
         PC_CHECK(compact_result.edges[i].id==physical_result.edges[i].id);
         PC_CHECK(std::abs(compact_result.edges[i].expected_traversals-physical_result.edges[i].expected_traversals)<1e-8);
     }
-    std::printf("finite uniform-removal carriers=%u two-Annul retain-both=%.12g checked cost=%.12g physical=%.12g\n",
-        carriers,retained_both,compact_result.total_expected_cost,physical_result.total_expected_cost);
+    std::printf("finite uniform-removal carriers=%u two-Annul retain-both=%.12g physical-retain=%.12g checked cost=%.12g physical=%.12g\n",
+        carriers,retained_both,physical_retained_both,compact_result.total_expected_cost,physical_result.total_expected_cost);
     options.use_exact_exchangeable_family_compression=true;
     // Nonempty and protected roots do not enter the quotient. Other tests
     // retain source-engine fracture/lock semantics; these verify admission.
