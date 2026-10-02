@@ -8,9 +8,12 @@ economics, private scope and remaining gates. No owned process remains.
 
 The supplementary grammar stays default-off. The separate review task owns the
 generic original-root operation-admission repair; integrate and requalify it
-before promotion. The frozen representative case is validated, but no new timed
-slot is granted or consumed. Request the parent serial slot using the completed
-source/binary/runtime/case/command freeze. No WASM/worker or public claim.
+before promotion. S-N1 retained the checked 4.11822156262245c supplementary graph with success 1,
+zero off-policy mass and all caps passed. Runner exit 0/native exit 2 reflects
+the unchanged historical expected solve-status label; no timeout or survivor.
+The [S-N1 record](docs/active/2026-10-02-foulborn-sprint/README.md#s-n1-functional-qualification-1624-utc)
+owns exact hashes and the qualification boundary. One native slot spent, no
+worker slot or remaining timed allowance. No latency, WASM/worker or public claim.
 
 # Handoff
 

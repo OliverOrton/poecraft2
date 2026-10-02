@@ -33,9 +33,11 @@ Exalt/paid Scour controller on finite fixtures. Its private context preserves
 exact native exclusion effects and its graph receives an original-root check.
 The old zero-progress-reroll-only scope is not reused: explicit caller gating
 overrides refuse activation, lower authority stays zero and closure unavailable.
-Parent statewise authority, real-data economics, WASM/worker and public activation
-remain unqualified. The independent generic caller-operation scope fix must be
-integrated before promotion.
+S-N1 subsequently retained a checked 4.11822156262245c graph on the frozen
+Normal-root ES witness, with success 1 and all caps passed. Native exit 2 records
+the preserved historical expectation-label mismatch. Parent statewise authority,
+WASM/worker, latency and public activation remain unqualified. The independent
+generic caller-operation scope fix must be integrated before promotion.
 
 ## Existing metamod recovery delta (2026-09-29)
 

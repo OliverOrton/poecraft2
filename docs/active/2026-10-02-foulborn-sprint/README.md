@@ -219,3 +219,35 @@ real-case usefulness remain open. Finder, WASM, worker, Simulator and full
 acceptance are unrun for this delta. The old 6+2 budget remains exhausted; no
 new timed slot has been consumed or granted. The preflight receipt will bind the
 checkpoint commit and final benchmark hash before parent slot approval.
+
+## S-N1 functional qualification (16:24 UTC)
+
+Parent granted exactly one real run on source `448ef4a754945bfe4356b17271303197a7c2feab`,
+benchmark SHA-256 `703812cd534d9d287d6efa4fdbaa593a71dd52793f96e08313b9b4543750e0d0`.
+`out/foulborn-sprint/s-n1-prelaunch.json` reverified all source, binary, original
+root/goal/action/economy, runtime-file and command identities before launch.
+The only request change was the explicit supplementary grammar activation.
+
+S-N1 retained a bounded original-root graph costing **4.11822156262245 Chaos**.
+Independent final graph evaluation matched exactly, success 1, off-policy 0,
+complete/reconciled cost. It emits five nodes: Alchemy, selected Foulborn Exalt,
+paid Scour, start and success; 2,304 exact miss routes, 2,310 total edges,
+18,476,286 JSON bytes. Strategy SHA-256:
+`4852705576817a8804ff46df5fdf4c2b889107bf151968ec7fbb30801399bfa8`.
+Graph: `out/foulborn-sprint/supplementary-run/strategies/foulborn-normal-root-current-original-20261002.strategy.json`.
+
+Scope is `paid_root_foulborn_salvage_v1`, TargetNeutralZero, lower 0, closure
+unavailable, no economic Restart or automatic Imprint. All cap checks passed;
+cap mask 0; native termination was numerical stability. Runner exit **0**, native
+benchmark exit **2**, no timeout and no survivor. Exit 2 preserves the unchanged
+historical expected solve status `baseline_cap_or_compile_refusal_allowed`,
+which does not match actual `bounded_feasible`; this is not a clean benchmark
+expectation pass. Errors array is empty. `s-n1-result.json` owns compact evidence
+and the actual resolved native command hash; the runner inserts its unique
+attempt ID into the partial-output path.
+
+This is functional/strategy qualification. Other bounded builds were permitted,
+so no latency comparison or responsiveness claim is made. Generic caller-scope
+repair remains an integration dependency. No Simulator, WASM or worker trial ran.
+S-N1 is spent: one new native run, zero workers, no remaining timed slot and no
+owned process. No retry is authorized.
