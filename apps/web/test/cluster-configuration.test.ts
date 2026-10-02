@@ -46,7 +46,7 @@ assert.deepEqual(calls, [[3, path, 84, configuration]]);
 const dom = parseHTML("<!doctype html><html><body></body></html>");
 Object.defineProperty(globalThis, "navigator", {value: {userAgent: "linkedom"}, configurable: true});
 Object.assign(globalThis, {window: dom.window, document: dom.document, HTMLElement: dom.HTMLElement,
-    customElements: dom.customElements, CustomEvent: dom.CustomEvent});
+    customElements: dom.customElements, CustomEvent: dom.CustomEvent, BroadcastChannel: undefined});
 globalThis.fetch = async () => new Response(readFileSync(new URL("../public/game-assets/catalog.json", import.meta.url)));
 const {PcBasePicker} = await import("../src/app/components/pc-base-picker");
 const picker = new PcBasePicker();

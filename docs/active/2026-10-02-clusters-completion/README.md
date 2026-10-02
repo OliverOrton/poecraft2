@@ -95,6 +95,10 @@ The first WASM build lost its executor connection; no survivor or fresh module
 was found, so it supplies no passing receipt. The coordinated retry is separate.
 Windows DLL tests retain the MinGW DLL search-directory cookie. A UI test append initially used the package-relative path from the wrong
 working directory; the corrected append passes its focused check and TypeScript.
+The added same-base Undo assertions initially completed but a Node
+BroadcastChannel kept the harness alive. Only the two verified owned Node
+processes were stopped; the test environment now disables BroadcastChannel,
+and the rerun exits 0 with both groups passing, followed by passing TypeScript.
 All failed and passing logs remain under `out/clusters-completion/`; they do not confer law
 adoption or qualification beyond their stated scope.
 
@@ -117,3 +121,13 @@ owns promotion of any qualified checkpoint. Canonical contracts are updated in
 `docs/mechanics/clusters.md`, `docs/engine/items.md`, `docs/engine/pools.md` and the
 scoped cluster boundary in `docs/solver/current-status.md`; this living record
 retains the research argument and disposition once.
+
+## Passing local checkpoint
+
+`e330389aef1d4b02b2b1f544501e4bb0808c2a3f` retains the native implementation,
+rebuilt WASM and product plumbing. The narrow follow-up repairs only the UI test
+harness and refreshes this receipt; engine/module bytes are unchanged. Runtime,
+source, input and log hashes are in [qualification.json](qualification.json).
+All owned selected commands have completed, with no solver/Simulator process
+or build survivor. Parent review of unresolved laws remains required before
+full completion; this checkpoint supplies no merge/push/deployment authority.

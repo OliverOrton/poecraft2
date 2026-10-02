@@ -1,11 +1,11 @@
 {
   "schema": "kids_configured_cluster_qualification_v1",
-  "recorded_utc": "2026-10-02T18:24:03.366557+00:00",
+  "recorded_utc": "2026-10-02T18:27:53.759157+00:00",
   "baseline": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
   "branch": "dot/clusters-completion-20261002",
   "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-clusters-completion",
   "scope": "Configured native cluster pools, seven basic currencies, terminal-only concrete Calculator and normal Emulator/Calculator configuration/persistence. Full mechanics and solver completion pending owner review.",
-  "source_state": "Uncommitted delta from baseline at receipt creation; implementation byte hashes bind built inputs.",
+  "source_state": "Committed engine/runtime checkpoint with a subsequent UI-test-only BroadcastChannel harness fix; no engine or WASM source delta.",
   "implementation_sha256": {
     "apps/web/package.json": "3a025a4fa1c650acbf41de361c25efcc3c4e59e64fb58dfc0b2328d2bc1f8717",
     "apps/web/src/app/base-picker-model.ts": "7894e5fa43f301bfd75571bcd762a637b5c99f4731b4752ea0d57cb2d0814e29",
@@ -20,7 +20,7 @@
     "apps/web/src/app/engine-worker.ts": "aa5d96c0a789f9b37782a93c5189004a1399c68f88320431e6fb6abab84ea076",
     "apps/web/src/app/item-preview.ts": "8c394d832e7feeeb77d927cf5dc00680c441377c197d0dccecc79d9a5272a9c4",
     "apps/web/src/app/workspace/persistence.ts": "cd91daddd2400d98c10673eea237db2f1c1e1fd7f5d8a70fd0e371e412d014ca",
-    "apps/web/test/cluster-configuration.test.ts": "69b103b08845da51bf3496a876e95e59ad25f3e5cd295a3a56f46c721c8a0170",
+    "apps/web/test/cluster-configuration.test.ts": "fef0d3bb22d61d5d28363a93ceeb695bebb20cb07a07b9f9a6a9dccb4859273e",
     "apps/web/test/engine-clusters.test.ts": "2af585014b012826937f1d2aa8d3300649dfea7b68a2924c580d1edfafda0574",
     "bindings/python/poecraft_engine/_binding.py": "a8ba3417fc1ac753117c8663a3f56afa1bbab9b137d57b7e2b5dc61017a99826",
     "bindings/python/tests/test_clusters.py": "c5869e040674437b82e36bd620d1ff1eba006585afec06b4eb8e5f9ac8ecd415",
@@ -91,7 +91,8 @@
     "ui_followup": {
       "command": "tsx test/cluster-configuration.test.ts",
       "passed_groups": 2,
-      "exit_code": 0
+      "exit_code": 0,
+      "earlier_harness": "Assertions passed, but Node BroadcastChannel retained the process; stopped only verified owned Node PIDs 71568 and 83424. Final harness disables BroadcastChannel and exits 0."
     },
     "typescript": {
       "command": "npx tsc --noEmit",
@@ -130,5 +131,6 @@
     "Parent-coordinated full Current/Finder/authored exact cluster support"
   ],
   "promotion": "Local only; integration owner owns merge/push; no deployment.",
-  "process_status": "All selected builds and tests completed; no solver or Simulator process owned."
+  "process_status": "All selected builds and tests completed; no solver or Simulator process owned.",
+  "engine_source_commit": "e330389aef1d4b02b2b1f544501e4bb0808c2a3f"
 }
