@@ -1311,9 +1311,10 @@
           "poecraft_solver_calc",
           "poecraft_solver_family_contract"
         ],
-        "cause": "Expected automatic identity array omits native Foulborn identity",
+        "cause": "Expected automatic identity array omits native CraftedCleanup/crafted_cleanup identity",
         "baseline": "182744 checks, 1 failure; identical assertion/source",
-        "production_fix": "none proposed; complete finite identity fixture only"
+        "production_fix": "none proposed; complete finite identity fixture only",
+        "label_correction": "Earlier Foulborn label was incorrect; direct f08/current enum and contract inspection confirms CraftedCleanup. Baseline reproduction remains valid."
       },
       {
         "targets": [
@@ -1396,7 +1397,7 @@
     ]
   },
   "current_fractured_fossil_guard": {
-    "status": "local native source checkpoint; WASM/worker unrun",
+    "status": "qualified locally; not yet promoted",
     "approval": "parent-authorized conservative containing-loadout refusal; no outcome law approval",
     "production_behavior": "central stable-key plus current mirrors0 guard before sampled mutation/RNG, exact row work, authored compile and selected Current/Finder admission; legacy mirrors1 retains existing behavior",
     "native_checks": 6476,
@@ -1404,8 +1405,8 @@
     "python_checks": 27,
     "python_failures": 0,
     "unrun": [
-      "matching WASM build",
-      "real worker smoke"
+      "rendered UI; not requested",
+      "complete random-fracture law; awaiting owner decisions"
     ],
     "failed": [
       "first native test build lacked currency_outcomes.hpp test include; corrected final build passed",
@@ -1418,11 +1419,85 @@
       "out/sprint-continuation/fossil-guard-native-tests.log",
       "out/sprint-continuation/fossil-guard-python-tests.log",
       "out/sprint-continuation/fossil-guard-python-ci-final.log",
-      "out/sprint-continuation/fossil-guard-typescript-corrected.log"
+      "out/sprint-continuation/fossil-guard-typescript-corrected.log",
+      "out/sprint-continuation/fossil-guard-wasm-build.log",
+      "out/sprint-continuation/fossil-guard-worker-smoke.log"
     ],
     "source_commit": "835a5a19c90bfa7ad0f4bc87d8ca33ec1b6c1d18",
     "python_ci_checks": 140,
     "python_ci_failures": 0,
-    "typescript": "passed"
+    "typescript": "passed",
+    "wasm_build_exit_code": 0,
+    "wasm_build_start_utc": "2026-10-02T19:19:56.3651323Z",
+    "wasm_build_end_utc": "2026-10-02T19:27:44.8520999Z",
+    "worker_filter": "current Fractured Fossil refuses without mutation, RNG draw or exact scope reduction",
+    "worker_checks": 4,
+    "worker_failures": 0,
+    "max_build_jobs": 2,
+    "artifacts": [
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\build\\engine\\poecraft_engine.dll",
+        "bytes": 14061346,
+        "sha256": "a1e66e6d289c65190eb618f9110e330b262c09c5f8a1fbdb040ed4a398659bdc"
+      },
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\bindings\\wasm\\dist\\poecraft_engine.wasm",
+        "bytes": 8222034,
+        "sha256": "5bd3050e182c4b19e90149b46630dfadef181c84b20ca86163695c0580b41efa"
+      },
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\bindings\\wasm\\dist\\poecraft_engine.mjs",
+        "bytes": 21237,
+        "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297"
+      }
+    ],
+    "process_coordination_note": "One finite test rebuild briefly overlapped the two-job WASM build. Each invocation used two jobs, but task aggregate was not bounded to two during that overlap; no timing claim was made. Subsequent rebuild waited for WASM completion."
+  },
+  "ci_native_fixture_repair": {
+    "status": "passed local test-only repair; not yet promoted",
+    "production_source_changed": false,
+    "automatic_identity": "crafted_cleanup",
+    "census_method": "direct physical named non-mirroring metadata tuple enumeration; independent of native registry/choose/telemetry",
+    "runtime_census": 15275,
+    "family_contract_checks": 182744,
+    "family_contract_failures": 0,
+    "api_checks": 3236,
+    "api_failures": 0,
+    "failed_runs": [
+      {
+        "log": "out/sprint-continuation/ci-fixture-family-contract.log",
+        "result": "182744 checks, 1 failure; initial erroneous Foulborn label corrected by direct enum/contract read"
+      },
+      {
+        "log": "out/sprint-continuation/ci-fixture-api.log",
+        "result": "abort during shared temp checkpoint copy; final serial rerun uses task-specific TEMP/TMP and passes"
+      }
+    ],
+    "logs": [
+      "out/sprint-continuation/ci-fixture-native-build-final.log",
+      "out/sprint-continuation/ci-fixture-family-contract-final.log",
+      "out/sprint-continuation/ci-fixture-api-final.log"
+    ],
+    "remaining_ci_debt": [
+      "S8.3 low.converged baseline failure",
+      "explicit-cap graph revocation versus historical verified scalar invariant baseline abort",
+      "four historical corpus ABI/data validation pins; migration held for current reforge-law owner"
+    ]
+  },
+  "dominance_final_patch_review": {
+    "owner": "230c6d06928f3f81e8343bcbc1597d4249dc7d8d",
+    "llvm_helper_commit": "149f96a8e9e9187e2a54937b760851c16d6b4c6c",
+    "llvm_review": "synchronous noninline helper keeps same auxiliary enumeration/invalid_argument refusal, no suspension/reference escape; scratch admission remains before call",
+    "scope_blockers": [
+      "native API accepts requested automatic_candidates:true then sets false on automatic Dominance carrier",
+      "native API accepts explicit Dominance+Foulborn primitive set but identity row whitelist excludes Foulborn"
+    ],
+    "read_only_native_proof": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\out\\sprint-continuation\\dominance-scope-open-review.json",
+      "bytes": 1876,
+      "sha256": "2650189243d1a18f093f928e9b14418087780d935fd18158730438f96563f30b"
+    },
+    "timed_solve": "unrun; no solve invoked",
+    "integration": "held pending parent/owner scope disposition and combined count-law qualification"
   }
 }

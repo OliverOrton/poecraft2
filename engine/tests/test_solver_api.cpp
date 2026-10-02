@@ -45,6 +45,45 @@ json::Value parse_solver_api_fixture(const std::string& text) {
     return json::Parser(text.data(), text.size()).parse();
 }
 
+// Count physical named, non-mirroring fossil subsets directly from frozen
+// artifact metadata. This does not call the production registry, its choose
+// formula or its telemetry; every legal 1-4 index tuple is counted once.
+std::string expected_fossil_census(const char* artifact_dir, const std::uint32_t generated) {
+    static std::map<std::string, std::uint32_t> census_by_artifact;
+    const std::string directory = artifact_dir;
+    auto found = census_by_artifact.find(directory);
+    if (found == census_by_artifact.end()) {
+        const auto game = parse_solver_api_fixture(read_solver_api_fixture(
+            std::filesystem::path(directory) / "game-data.json"));
+        const auto strings = parse_solver_api_fixture(read_solver_api_fixture(
+            std::filesystem::path(directory) / "strings.json"));
+        const auto& fossils = game.at("fossils");
+        const auto& names = fossils.at("name_string_ids").as_array();
+        const auto& mirrors = fossils.at("mirrors").as_array();
+        const auto& text = strings.at("strings").as_array();
+        std::vector<std::size_t> eligible;
+        for (std::size_t index = 0; index < names.size(); ++index)
+            if (!text.at(static_cast<std::size_t>(names[index].as_int())).as_string().empty() &&
+                mirrors.at(index).as_int() == 0) eligible.push_back(index);
+        std::uint32_t possible = 0;
+        for (std::size_t a = 0; a < eligible.size(); ++a) {
+            ++possible;
+            for (std::size_t b = a + 1; b < eligible.size(); ++b) {
+                ++possible;
+                for (std::size_t c = b + 1; c < eligible.size(); ++c) {
+                    ++possible;
+                    for (std::size_t d = c + 1; d < eligible.size(); ++d) ++possible;
+                }
+            }
+        }
+        found = census_by_artifact.emplace(directory, possible).first;
+    }
+    PC_CHECK(generated <= found->second);
+    return "\"fossil_loadouts\":{\"possible\":" + std::to_string(found->second) +
+        ",\"generated\":" + std::to_string(generated) +
+        ",\"deferred\":" + std::to_string(found->second - generated);
+}
+
 bool exact_evaluation_has_eventual_success(const std::string& text) {
     const json::Value report =
         json::Parser(text.data(), std::strlen(text.c_str())).parse();
@@ -847,8 +886,7 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     PC_CHECK(create_telemetry.find("\"layout_primitives\":22") !=
              std::string::npos);
     PC_CHECK(create_telemetry.find(
-                 "\"fossil_loadouts\":{\"possible\":12950,"
-                 "\"generated\":0,\"deferred\":12950") !=
+                 expected_fossil_census(artifact_dir, 0)) !=
              std::string::npos);
     PC_CHECK(create_telemetry.find(
                  "filtered_corruption_only_essence") ==
@@ -1504,8 +1542,7 @@ void run_public_product_reforge_family_gate(const char* artifact_dir) {
         PC_CHECK(telemetry.find("\"layout_primitives\":20") !=
                  std::string::npos);
         PC_CHECK(telemetry.find(
-                     "\"fossil_loadouts\":{\"possible\":12950,"
-                     "\"generated\":4,\"deferred\":12946") !=
+                     expected_fossil_census(artifact_dir, 4)) !=
                  std::string::npos);
         PC_CHECK(telemetry.find("filtered_corruption_only_essence") ==
                  std::string::npos);
@@ -1982,9 +2019,8 @@ void run_public_solver_gate(const char* artifact_dir) {
         const std::string multi_fossil_telemetry =
             solver_telemetry_json(multi_fossil_solver, &error);
         PC_CHECK(multi_fossil_telemetry.find(
-                     "\"fossil_loadouts\":{\"possible\":12950,"
-                     "\"generated\":1,\"deferred\":12949,"
-                     "\"lazy\":true,\"mode\":\"requested\"}") !=
+                     expected_fossil_census(artifact_dir, 1) +
+                     ",\"lazy\":true,\"mode\":\"requested\"}") !=
                  std::string::npos);
         pc_solver_destroy(multi_fossil_solver);
     }

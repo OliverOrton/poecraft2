@@ -2,8 +2,8 @@
 
 The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
 and receipt own the approved current Fractured Fossil guard at `835a5a1`: 6,476
-finite native checks, 140 complete binding tests and TypeScript pass. Matching
-WASM/worker remain pending. Containing loadouts refuse centrally with unchanged
+finite native checks, 140 complete binding tests and TypeScript pass. Source-matched WASM and its
+real guard worker filter pass **4/4**. Containing loadouts refuse centrally with unchanged
 item/RNG/action scope; unrelated Calculator and legacy mirrors1 remain available.
 Complete current outcome law stays held.
 
@@ -13,8 +13,10 @@ no blind migration is made during the count-law change. Temporary instrumentatio
 identifies continuity abort at fixture6/service_on: deliberate reduced final
 memory cap revokes the graph but leaves a finite historical verified scalar.
 Adjacent fixture3 CI output was not the abort identity. Production repair awaits
-parent review. Missing Foulborn identity and fossil census fixtures are separately
-being corrected with independent physical metadata enumeration.
+parent review. Missing CraftedCleanup identity and fossil census fixtures are separately
+corrected with independent physical metadata enumeration: **182,744** family
+and **3,236** API checks pass. Direct source corrected the earlier Foulborn
+label to CraftedCleanup. Separate S8.3/explicit-cap/corpus debt remains held.
 
 # CI fossil test contract checkpoint (2026-10-02)
 
