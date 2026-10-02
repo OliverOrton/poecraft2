@@ -85,3 +85,52 @@ admission and latency's evaluation cursor. Stable patch commits and approval for
 a separate sprint integration have not yet been supplied. Do not cherry-pick or
 build a new integration until the parent selects exact commits. Wrap-up deadlines
 remain 16:45/16:55 UTC; no reset/model switch is authorized.
+
+## Parent-pinned follow-up source review, 15:45 UTC
+
+All review processes were quiescent before the parent's latency performance
+window. No new build, test or timed command was started under that CPU hold.
+
+### Mismatch checkpoint 791b82e / production 3162ef7
+
+The frozen-scope first-row witness independently enumerates the concrete native
+weighted pool and compares complete projected strict-row mass. Its Mana-hit
+probability is a goal-slot hit, not clean terminal success. The reported
+0.0084745762711864406 coarse versus 0.010845986984815618 native probability is
+consistent with an intentionally coarser proposal/relaxation carrier: this is
+not by itself an execution-law bug or grounds for global strictness. The finite
+604-check run is owner evidence; this reviewer did not rerun that branch.
+
+The proposed sticky negative provenance preserves valid checked root costs and
+blocks several direct consumers. It does not supply positive certification of
+all remaining coarse state values. A concrete source-level bypass remains to
+qualify: `capture_resumable_joint_policy_candidate` checks the veto, but
+`resume_joint_policy_candidate_if_ready` (around line 4606) does not and returns
+Complete immediately for an already completed snapshot. The retained path in
+`try_install_reachable_incumbent` (around line 4802) copies cached certified
+boundary values without the new predicate. `current_joint_policy_continuation_context`
+does not include the veto in its identity and retains the captured boundary
+identity. Requested owner regression: capture -> mismatch veto -> resume, for
+both waiting and complete snapshots. This is source-only review, not a newly
+executed failure or a claim that the final root graph escaped checking.
+
+### Foulborn checkpoint 2e56421
+
+The private opt-in, target-neutral zero lower and unavailable closure remain
+explicit. The proposal uses admitted/priced Alchemy, Foulborn Exalt and Scour,
+checks full positive-mass resets, and emits a separate post-add node so one add
+cannot repeat within a renewal. No automatic public/Finder promotion is present
+in this pinned patch. Finite qualification and resource acceptance remain with
+the replacement owner; this reviewer ran no Foulborn tests.
+
+The new assertion guard in `solver_policy_assertion_work.cpp` searches for the
+literal compact JSON substring `"solver_controller_grammar":"paid_root_foulborn_salvage_v1"`.
+Equivalent whitespace-formatted JSON does not match. Therefore the guard's
+intended opt-in requirement depends on formatting. Request parsed semantic
+metadata validation plus a reformatted-graph negative control. Removing metadata
+also remains part of the wider original-root scope question R1; parsing alone
+does not establish complete programme scope. This finding was reported before
+any production edit; this branch still contains no production changes.
+
+Stable final commits, owner responses to these findings, Dominance/latency review
+pins, and a parent-selected sprint integration remain pending.
