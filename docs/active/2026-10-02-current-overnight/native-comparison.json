@@ -1,0 +1,146 @@
+[
+  {
+    "arm": "control",
+    "report_sha256": "d6553d5f27bbf0782a9756a0db3fc1c5bc5789b680f8db3093c06441302f8d2b",
+    "strategy_sha256": "4ff6d0aa24a3686e39eb6aeeb9ae4315184bb957a9f3807b10aa971114f4682f",
+    "lifecycle": {
+      "slot": "N2",
+      "native_pid": 71716,
+      "started_at_utc": "2026-10-02T07:44:34.417611+00:00",
+      "exited_at_utc": "2026-10-02T07:46:41.674633+00:00",
+      "executable_sha256": "846a5ea3e8af33ca15a48978cc35c33256f1944d2c28bf983b22b442cfd32dda",
+      "command_identity": "17ea270f5c5e700cf2c8354df232d247df5708527506e741f4c966e19fa05907"
+    },
+    "outcome": {
+      "status": "completed",
+      "exit_code": 0,
+      "timed_out": false,
+      "survivor": false,
+      "wall_ms": 127210.90919990093
+    },
+    "solve_summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 164188.28212526618,
+      "expanded_states": 781,
+      "sweeps": 0,
+      "residual": 1.1175870895385742e-08,
+      "skipped_action_count": 7,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 180,
+        "candidate": 36,
+        "evaluator_supported": 36,
+        "supported_priced": 433,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 7
+      },
+      "lower_bound": 184.68222144324236,
+      "upper_bound": 160160.99567405932,
+      "evaluated_policy_cost": 160160.99567405932,
+      "absolute_optimality_gap": 159976.31345261607,
+      "relative_optimality_gap": 866.224762743505,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "evaluation": {
+      "completed": true,
+      "time_limited": false,
+      "status": "matched",
+      "wall_ms": 6095.5961,
+      "converged": true,
+      "cost_complete": true,
+      "zero_off_policy_mass": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "total_expected_cost": 160160.99567405932,
+      "solver_cost_delta_absolute": 0,
+      "solver_cost_delta_relative": 0
+    },
+    "graph": {
+      "nodes": 89,
+      "edges": 275,
+      "strategy_json_bytes": 237308,
+      "strategy_output_path": "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\out\\overnight-current\\control\\strategies\\bow4-last-mile-two-junk-suffixes.strategy.json"
+    }
+  },
+  {
+    "arm": "treatment",
+    "report_sha256": "8643655207c5f506e96ba2a8e1b3265f38d71e009f2154f71b3efb039f3ec864",
+    "strategy_sha256": "023e99b532296bb663cb9886a7a41359cb899def2b22e9606279e0dc5ebe66af",
+    "lifecycle": {
+      "slot": "N3",
+      "native_pid": 23412,
+      "started_at_utc": "2026-10-02T07:47:53.938387+00:00",
+      "exited_at_utc": "2026-10-02T07:49:54.862140+00:00",
+      "executable_sha256": "3c7c9f5dccdd14da94fd201588ce43504585affd6fac41864937d6ca5744d82e",
+      "command_identity": "ceaf7853786a12a3262a485d0ab07b2ea587cc65a03c6469b711f3c2a60d2577"
+    },
+    "outcome": {
+      "status": "completed",
+      "exit_code": 0,
+      "timed_out": false,
+      "survivor": false,
+      "wall_ms": 120879.94330003858
+    },
+    "solve_summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 51222.52081999526,
+      "expanded_states": 781,
+      "sweeps": 0,
+      "residual": 1.1175870895385742e-08,
+      "skipped_action_count": 7,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 180,
+        "candidate": 36,
+        "evaluator_supported": 36,
+        "supported_priced": 433,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 7
+      },
+      "lower_bound": 184.68222144324236,
+      "upper_bound": 51222.5208199995,
+      "evaluated_policy_cost": 51222.5208199995,
+      "absolute_optimality_gap": 51037.83859855626,
+      "relative_optimality_gap": 276.354909528969,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "evaluation": {
+      "completed": true,
+      "time_limited": false,
+      "status": "matched",
+      "wall_ms": 3.1897,
+      "converged": true,
+      "cost_complete": true,
+      "zero_off_policy_mass": true,
+      "cost_reconciled": true,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "total_expected_cost": 51222.5208199995,
+      "solver_cost_delta_absolute": 0,
+      "solver_cost_delta_relative": 0
+    },
+    "graph": {
+      "nodes": 8,
+      "edges": 10,
+      "strategy_json_bytes": 40454,
+      "strategy_output_path": "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\out\\overnight-current\\treatment\\strategies\\bow4-last-mile-two-junk-suffixes.strategy.json"
+    }
+  }
+]

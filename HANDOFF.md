@@ -1,17 +1,18 @@
 # Handoff
 
 Oliver's independent [CURRENT overnight continuation](docs/active/2026-10-02-current-overnight/README.md)
-is ready for a parent-allocated native control/treatment slot in isolated branch
-`dot/current-20261002`. W1 reporting (`be034a5`, web `362404d`) and complete
-carrier-universe repair (`ca9daff`) are locally committed. Checks pass: metamod
-479, bounded Finish/artifact 203, abstraction 47173; release WASM, filtered
-`npm test` and typecheck pass. Native tail rows independently reproduce the
-51222.52082c diagnostic comparison, without importing an old policy. The
-matched native pair, inputs, binaries and commands are frozen in its receipt.
-All own processes ended; pause CPU-heavy work for the parent's fresh Finder
-hold. Two new timed native cases remain reserved, zero spent; no worker is
-allocated. Actual returned Bow gain and real W1 replay are still unrun.
-Historical MM receipts below remain unchanged.
+retains a matched checked Bow improvement in isolated `dot/current-20261002`:
+160160.995674c -> 51222.520820c (68.018% lower); eight nodes use native Exalt,
+prefix lock and Scour. Both independent compiled evaluations converge with
+success one, complete reconciled cost and zero off-policy mass. N2/N3 ran once
+serially and are spent; no worker or additional timed slot is allocated.
+W1 reporting (`be034a5`, web `362404d`) and carrier repair (`ca9daff`) are locally
+committed; native/WASM/focused web checks pass. Receipts and strategy hashes are
+committed in the living record. Both policies remain bounded Finish results;
+real W1 timed replay and worker qualification remain unrun. No own process is
+live. Parent-authorized Conquest source/finite review continues; integration is
+a plan pending final stable owner revisions. Historical MM receipts below stay
+unchanged, and main/root `0` are untouched.
 
 Oliver's selected [MM0–MM7 recovery](docs/active/2026-09-29-metamod-recovery/README.md)
 is locally retained with partial acceptance. Last coherent execution commit:

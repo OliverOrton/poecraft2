@@ -1,0 +1,250 @@
+{
+  "status": "frozen_native_pair_ready_for_parent_serial_slot_no_launch",
+  "selected_case": "bow4-last-mile-two-junk-suffixes",
+  "common": {
+    "requested_finish_seconds": 120,
+    "watchdog_seconds": 180,
+    "step": 8,
+    "solver_mode": "current",
+    "retention": "reuse",
+    "exact_compiled_evaluation": true,
+    "verification_runs": 0,
+    "foulborn": "disabled",
+    "imprint": false,
+    "economic_restart": false,
+    "timed_allowance_reserved": 2,
+    "timed_allowance_used": 0,
+    "correctness_checks_completed": true
+  },
+  "arms": {
+    "control": {
+      "build_source_commit": "ebcd98cdda2c1828cd855f549831951e6ba7470a",
+      "provenance": {
+        "corpus": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+          "sha256": "3661c9c14c5ed0ddb6bf9309770d7daec397def1713ea6a9361bebf7904f2f9d",
+          "corpus_id": "metamod-recovery-legacy-mechanics-v1",
+          "schema_version": "solver_benchmark_corpus_v1",
+          "generator_config_sha256": null,
+          "case_inputs": [
+            {
+              "path": "cases/w1-prefix-only-clean.json",
+              "sha256": "63d571804956b9182d0c6ae5e2c29fa80c8b5c0cd124b1057d568b4e051618fc",
+              "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+            },
+            {
+              "path": "cases/w4-prefix-only-crafted-junk.json",
+              "sha256": "3c84b3aefab624793d2d5946f529a44a14dde9a86759f8605902191382713ff5",
+              "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+            },
+            {
+              "path": "cases/bow4-last-mile-two-junk-suffixes.json",
+              "sha256": "e97d48549926bc24b0bec2fc35186c8981388d93af651dcf29243c0ab8579361",
+              "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+            },
+            {
+              "path": "cases/finder-prefix-lock-from-root.json",
+              "sha256": "515292a5fb4d8fe0308a6327d9ffb19143d785223f5f5d9a472cedc196263fe9",
+              "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+            }
+          ]
+        },
+        "artifact": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+          "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+          "declared_files_verified": true,
+          "files": [
+            {
+              "path": "game-data.json",
+              "size_bytes": 16914460,
+              "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+            },
+            {
+              "path": "strings.json",
+              "size_bytes": 6740473,
+              "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+            }
+          ],
+          "identity": {
+            "artifact_schema_version": 4,
+            "source_data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+            "game_data_sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+            "strings_sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+          }
+        },
+        "executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\build\\control\\poecraft_solver_benchmark.exe",
+          "sha256": "846a5ea3e8af33ca15a48978cc35c33256f1944d2c28bf983b22b442cfd32dda"
+        },
+        "source": {
+          "commit": "362404d91a4a73592c22c558459d447004809d0b",
+          "dirty": true,
+          "dirty_paths": [
+            {
+              "status": "M ",
+              "path": "indings/wasm/dist/poecraft_engine.wasm"
+            }
+          ]
+        }
+      },
+      "resolved_command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\build\\control\\poecraft_solver_benchmark.exe",
+          "--artifact",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\out\\overnight-current\\control\\cases\\bow4-last-mile-two-junk-suffixes.json",
+          "--partial-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\out\\overnight-current\\control\\partials\\bow4-last-mile-two-junk-suffixes.frozen-current-20261002-control.json",
+          "--strategy-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\out\\overnight-current\\control\\strategies",
+          "--case",
+          "bow4-last-mile-two-junk-suffixes",
+          "--skip-verification",
+          "--exact-strategy-evaluation",
+          "--goal-progress-gated-reforges",
+          "--native-retention-diagnostic",
+          "reuse",
+          "--solver-mode",
+          "current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight",
+        "host_watchdog_seconds": 180.0,
+        "host_reservation": {
+          "reserved_memory_bytes": 1073741824,
+          "solver_owned_cap_bytes": 1073741824,
+          "worker_headroom_bytes": 0,
+          "reservation_policy_version": "solver_lab_host_reservation_v2",
+          "reservation_source": "solver_cap_plus_explicit_worker_headroom",
+          "authority": "host_scheduler_only"
+        },
+        "identity_sha256": "17ea270f5c5e700cf2c8354df232d247df5708527506e741f4c966e19fa05907"
+      }
+    },
+    "treatment": {
+      "build_source_commit": "362404d",
+      "provenance": {
+        "corpus": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+          "sha256": "3661c9c14c5ed0ddb6bf9309770d7daec397def1713ea6a9361bebf7904f2f9d",
+          "corpus_id": "metamod-recovery-legacy-mechanics-v1",
+          "schema_version": "solver_benchmark_corpus_v1",
+          "generator_config_sha256": null,
+          "case_inputs": [
+            {
+              "path": "cases/w1-prefix-only-clean.json",
+              "sha256": "63d571804956b9182d0c6ae5e2c29fa80c8b5c0cd124b1057d568b4e051618fc",
+              "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+            },
+            {
+              "path": "cases/w4-prefix-only-crafted-junk.json",
+              "sha256": "3c84b3aefab624793d2d5946f529a44a14dde9a86759f8605902191382713ff5",
+              "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+            },
+            {
+              "path": "cases/bow4-last-mile-two-junk-suffixes.json",
+              "sha256": "e97d48549926bc24b0bec2fc35186c8981388d93af651dcf29243c0ab8579361",
+              "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+            },
+            {
+              "path": "cases/finder-prefix-lock-from-root.json",
+              "sha256": "515292a5fb4d8fe0308a6327d9ffb19143d785223f5f5d9a472cedc196263fe9",
+              "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+            }
+          ]
+        },
+        "artifact": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+          "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+          "declared_files_verified": true,
+          "files": [
+            {
+              "path": "game-data.json",
+              "size_bytes": 16914460,
+              "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+            },
+            {
+              "path": "strings.json",
+              "size_bytes": 6740473,
+              "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+            }
+          ],
+          "identity": {
+            "artifact_schema_version": 4,
+            "source_data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+            "game_data_sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+            "strings_sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+          }
+        },
+        "executable": {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\build\\engine\\poecraft_solver_benchmark.exe",
+          "sha256": "3c7c9f5dccdd14da94fd201588ce43504585affd6fac41864937d6ca5744d82e"
+        },
+        "source": {
+          "commit": "362404d91a4a73592c22c558459d447004809d0b",
+          "dirty": true,
+          "dirty_paths": [
+            {
+              "status": "M ",
+              "path": "indings/wasm/dist/poecraft_engine.wasm"
+            }
+          ]
+        }
+      },
+      "resolved_command": {
+        "argv": [
+          "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\build\\engine\\poecraft_solver_benchmark.exe",
+          "--artifact",
+          "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+          "--corpus",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+          "--output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\out\\overnight-current\\treatment\\cases\\bow4-last-mile-two-junk-suffixes.json",
+          "--partial-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\out\\overnight-current\\treatment\\partials\\bow4-last-mile-two-junk-suffixes.frozen-current-20261002-treatment.json",
+          "--strategy-output",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight\\out\\overnight-current\\treatment\\strategies",
+          "--case",
+          "bow4-last-mile-two-junk-suffixes",
+          "--skip-verification",
+          "--exact-strategy-evaluation",
+          "--goal-progress-gated-reforges",
+          "--native-retention-diagnostic",
+          "reuse",
+          "--solver-mode",
+          "current"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-current-overnight",
+        "host_watchdog_seconds": 180.0,
+        "host_reservation": {
+          "reserved_memory_bytes": 1073741824,
+          "solver_owned_cap_bytes": 1073741824,
+          "worker_headroom_bytes": 0,
+          "reservation_policy_version": "solver_lab_host_reservation_v2",
+          "reservation_source": "solver_cap_plus_explicit_worker_headroom",
+          "authority": "host_scheduler_only"
+        },
+        "identity_sha256": "ceaf7853786a12a3262a485d0ab07b2ea587cc65a03c6469b711f3c2a60d2577"
+      }
+    }
+  },
+  "test_evidence": {
+    "out\\overnight-current\\carrier-final-controls2.txt": "1dbdab0ff392b0ead65c6b7f310e72e47af196d64792099f7bc4b48652c04319",
+    "out\\overnight-current\\bounded-finish-final.txt": "b0b55e378d69d131157b98a709dbb886eca9f8848189ef7a520a8bfe851b3407",
+    "out\\overnight-current\\abstract-final.txt": "73c14e5d767097c08b900ad3b53070b1ab29356b9203f646989d63dd8a13f503",
+    "out\\overnight-current\\web-presentation2.txt": "b6ac6f5c9c77dbc48bb573bd1d828db848a5628cb138214ddf1c80d77c5ba60f",
+    "out\\overnight-current\\web-final2.txt": "d4b5b7b3ad6f26d71f48caa5aa289066b81ed62fbe95a399fbb4a47b78833f77",
+    "out\\overnight-current\\web-types.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "out\\overnight-current\\wasm-build.txt": "3b9b9e4fd248ab7e92cb615f73cbeb3e7189ec35f68abc02ae3fa0db56785eee"
+  },
+  "other_checked_artifacts": {
+    "build\\engine\\poecraft_engine_tests.exe": "af9ff3733e1daf5fa229ed530e4c07a9d5947290029785d1109bb06110a75d88",
+    "build\\engine\\poecraft_engine.dll": "6edc1f282c43fabc57f849015589edf5ba1f9039b1514e3419da62bda573b390",
+    "bindings\\wasm\\dist\\poecraft_engine.wasm": "0c7dbdbc10882fc44fc35231faa143ec6ab16abac754da73d56301e42b978d51",
+    "bindings\\wasm\\dist\\poecraft_engine.mjs": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297"
+  }
+}

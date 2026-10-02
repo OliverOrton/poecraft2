@@ -42,8 +42,8 @@ child construction. The constructive-renewal owner remains with mechanics.
 
 After repair, the coarse Bow parent admits the protected prefix-lock/Scour row
 and reaches a nonterminal clean carrier with all three wanted prefixes. The
-clean Mana suffix tail remains a separate obligation: no returned production
-policy gain has yet been measured.
+clean Mana suffix tail was a separate obligation. The matched treatment now
+returns the complete checked native tail described below.
 
 ## Native tail diagnostic, not a production answer
 
@@ -118,18 +118,53 @@ imprint/restart off, compiled exact evaluation on and verification off.
 Use existing `solver_corpus_runner._run_case` with the frozen `AttemptPaths`
 to preserve exact partial-output identities and deterministic supervision.
 
-## Current hold and continuation gate
+## Matched native strategy result
 
-All own commands have ended; no live process or handle remains. Parent imposed
-a fresh short CPU hold for Finder's one timed diagnostic. Source review may
-continue; no new CPU-heavy command or timed solve until release/allocation.
+N2 control and N3 treatment ran serially once each using the frozen receipt
+and existing corpus supervision. Both exited zero, with no timeout, cancellation,
+survivor or live handle. Slots are spent; no further timed launch is allocated.
+The compact committed `native-comparison.json` pins lifecycle/command identities,
+report and strategy hashes, full solve summaries and independent evaluation.
+Bulk graph/report/log/partial evidence remains under
+`out/overnight-current/control/` and `out/overnight-current/treatment/`.
+The prelaunch receipt is copied unchanged to `native-preflight.json`.
 
-Two new native timed cases are reserved, **zero used**; zero worker slots are
-used or allocated. The matched pair is ready for an explicit parent serial slot.
-Run control and treatment serially through the existing native owner, inspect
-actual selected/compiled strategies and compare checked costs/resources, setup
-admission and tail exits. No real W1 replay, new returned Bow improvement,
-worker qualification or final economic acceptance is claimed. If additional
-repair becomes necessary, coordinate the shared owner and re-freeze identities;
-do not spend an unallocated launch or start another programme. Stop new work
-before 2026-10-02 17:00 UTC and preserve a final handoff.
+| Matched result | Control | Treatment |
+| --- | ---: | ---: |
+| Checked executable upper, c | 160160.99567405932 | 51222.5208199995 |
+| Lower, c | 184.68222144324236 | 184.68222144324236 |
+| Graph nodes / edges | 89 / 275 | 8 / 10 |
+| Native supervised wall, ms | 127210.9092 | 120879.9433 |
+| Independent evaluation wall, ms | 6095.5961 | 3.1897 |
+
+Cost falls **68.0181054%**. The selected treatment routes a dirty suffix side
+through paid prefix lock + Scour, Exalts from the clean three-prefix carrier,
+and resets every wrong suffix through the same legal paid cleanup. Its eight
+nodes contain the goal/off-policy nodes and router plus exactly these three
+operation types. It is a newly produced native controller, not an imported old
+tail. Independent compiled evaluation reports success probability one, complete
+cost, converged evaluation, zero off-policy mass and zero reconciliation delta.
+
+Both solves remain `bounded_feasible` / `requested_bounded_finish`, cap mask zero,
+781 expanded states and the same residual, registry/candidate counts and seven
+unsupported exclusions. Corpus expectations pass with no comparison errors.
+The request-level unsupported-action diagnostic remains; checked policy authority
+is preserved. This is a qualified feasible upper improvement, not an optimality
+or complete-discovery claim. No real W1 timed replay or worker economic
+qualification was run. There was no Simulator qualification.
+
+## Continuation and integration gate
+
+The parent released the CPU hold after the completed pair. The same authorized
+session is reviewing saved Conquest strategies and a labelled representative
+mixed-tag goal through source/artifact inspection and finite native laws. No
+additional timed solve is permitted. The saved phone request is unavailable;
+a repository-derived variant must not be described as Oliver's exact case.
+Mechanics owns constructive renewal and Finder owns its integration. A source
+review finding about nested allocations in the new mechanics coroutine was
+sent to the parent for the owner to resolve; CURRENT did not edit that owner.
+
+Main remains untouched; local commits only. Plan an isolated integration branch
+from the initial main once the parent identifies all final stable revisions;
+do not cherry-pick unfinished shared evaluator work or merge main. Stop new
+work before 2026-10-02 17:00 UTC and preserve a final handoff.
