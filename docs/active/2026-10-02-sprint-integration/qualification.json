@@ -1,5 +1,5 @@
 {
-  "schema": "poecraft2.sprint-integration-qualification.v3",
+  "schema": "poecraft2.sprint-integration-qualification.v4",
   "recorded_utc": "2026-10-02T16:49:01.776548+00:00",
   "baseline": "f08facbb93204bf721048c21b94080ab582ee9f8",
   "worktree": "C:/Users/Oliver/Documents/poecraft2-sprint-integration",
@@ -733,5 +733,417 @@
         "disposition": "Separate unresolved baseline debt; neither a passing selector nor a regression caused by the Fracture side repair."
       }
     }
+  },
+  "first_promotion": {
+    "status": "qualified for first staged normal main promotion; no new feature branch imported",
+    "recorded_utc": "2026-10-02T17:54:18.542849+00:00",
+    "build_source_commit": "fcf361fdb8b13bbf9bdbdc2537595adda86fb1f4",
+    "engine_tree": "3afab9ef0728edaf5262fa53183b6925db0653f8",
+    "main_preflight": "ebcd98cdda2c1828cd855f549831951e6ba7470a",
+    "native": {
+      "checks_passed": 1147897,
+      "checks_failed": 0,
+      "cases": [
+        {
+          "arguments": [
+            "--solver-joint-policy-continuation-only"
+          ],
+          "finished_utc": "2026-10-02T17:47:10.3890477Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:10.2346810Z",
+          "name": "joint-continuation",
+          "checks_passed": 428,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/joint-continuation.log",
+            "sha256": "4a74ae0d1e8aa22d9bc240205f8ed2b398134c910f5d32aeb0589a201ddde00f",
+            "bytes": 132
+          }
+        },
+        {
+          "arguments": [
+            "--solver-integrity-only",
+            "paid-reset"
+          ],
+          "finished_utc": "2026-10-02T17:47:10.4480166Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:10.4016250Z",
+          "name": "paid-reset",
+          "checks_passed": 1146,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/paid-reset.log",
+            "sha256": "1b21b5be3126b745327e8b944f2ccf76fc13719220e0b500ca8a50861f941fce",
+            "bytes": 424
+          }
+        },
+        {
+          "arguments": [
+            "--solver-integrity-only",
+            "foulborn-root"
+          ],
+          "finished_utc": "2026-10-02T17:47:10.5212776Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:10.4496643Z",
+          "name": "foulborn-root",
+          "checks_passed": 3077,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/foulborn-root.log",
+            "sha256": "01b473e986c4b64142983a5416f4e6ddb7533d832de6b76bb96553c2122cab99",
+            "bytes": 1514
+          }
+        },
+        {
+          "arguments": [
+            "--solver-assertion-service-only"
+          ],
+          "finished_utc": "2026-10-02T17:47:10.5599683Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:10.5231476Z",
+          "name": "assertion",
+          "checks_passed": 424,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/assertion.log",
+            "sha256": "c7470532bd31bdb745278364c3afd84c255d6cebf8bf74ad65cf914763363310",
+            "bytes": 56
+          }
+        },
+        {
+          "arguments": [
+            "--solver-protected-finder-only"
+          ],
+          "finished_utc": "2026-10-02T17:47:10.5837856Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:10.5615529Z",
+          "name": "protected-finder",
+          "checks_passed": 66,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/protected-finder.log",
+            "sha256": "601e9dd3acdfc3c6c345c2da900cc8e863baf39287d2fa830f27c6233da7ae57",
+            "bytes": 54
+          }
+        },
+        {
+          "arguments": [
+            "--solver-integrity-only",
+            "finder-bindings"
+          ],
+          "finished_utc": "2026-10-02T17:47:10.6512805Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:10.5856015Z",
+          "name": "finder-bindings",
+          "checks_passed": 129,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/finder-bindings.log",
+            "sha256": "02f2716ed4eb5246ab8ffe3212c9f43d9c6ec6829d4bb3a063e3e756f3ad6680",
+            "bytes": 48
+          }
+        },
+        {
+          "arguments": [
+            "--solver-dominance-only",
+            "C:/Users/Oliver/Documents/poecraft2-sprint-integration/data/compiled/current"
+          ],
+          "finished_utc": "2026-10-02T17:47:10.9918351Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:10.6530592Z",
+          "name": "dominance",
+          "checks_passed": 2244,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/dominance.log",
+            "sha256": "d65f2ab541ee1e21096a0dce6e7e4044a091645a8b6c0a16fccd2861c698cf30",
+            "bytes": 49
+          }
+        },
+        {
+          "arguments": [
+            "--solver-bounded-finish-only"
+          ],
+          "finished_utc": "2026-10-02T17:47:11.1061865Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:10.9942596Z",
+          "name": "bounded-finish",
+          "checks_passed": 203,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/bounded-finish.log",
+            "sha256": "b0b55e378d69d131157b98a709dbb886eca9f8848189ef7a520a8bfe851b3407",
+            "bytes": 226
+          }
+        },
+        {
+          "arguments": [
+            "--solver-selected-fallback-only"
+          ],
+          "finished_utc": "2026-10-02T17:47:12.9865128Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:11.1080251Z",
+          "name": "selected-fallback",
+          "checks_passed": 2440,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/selected-fallback.log",
+            "sha256": "2bba95a2bd33ec6dcf93e778004de9c2be349656bfe4a5a1935b1a9f800944fc",
+            "bytes": 162
+          }
+        },
+        {
+          "arguments": [
+            "--solver-integrity-only",
+            "incremental"
+          ],
+          "finished_utc": "2026-10-02T17:47:13.4391977Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:12.9880534Z",
+          "name": "incremental",
+          "checks_passed": 1797,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/incremental.log",
+            "sha256": "ca60185dd75ce702c7195c3fff844fdae771244ac71e06e11dd868000aac588b",
+            "bytes": 544
+          }
+        },
+        {
+          "arguments": [
+            "--solver-metamod-recovery-only",
+            "C:/Users/Oliver/Documents/poecraft2-sprint-integration/data/compiled/current"
+          ],
+          "finished_utc": "2026-10-02T17:47:16.7334728Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:13.4407822Z",
+          "name": "metamod-row",
+          "checks_passed": 685,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/metamod-row.log",
+            "sha256": "e5aaabee417190e7463a907d60684ff56d9f284391252c2c09d1f689c8449fa9",
+            "bytes": 1562
+          }
+        },
+        {
+          "arguments": [
+            "--solver-checkpoint-only",
+            "C:/Users/Oliver/Documents/poecraft2-sprint-integration/data/compiled/current"
+          ],
+          "finished_utc": "2026-10-02T17:47:17.1102232Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:16.7359939Z",
+          "name": "checkpoint",
+          "checks_passed": 46,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/checkpoint.log",
+            "sha256": "b02c8abe6f2ef11c71b752ad4d915dcdca0303981eb60436246b737ac4b8ccfb",
+            "bytes": 48
+          }
+        },
+        {
+          "arguments": [
+            "--solver-calc-gated-equivalence-only"
+          ],
+          "finished_utc": "2026-10-02T17:47:17.4478595Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:17.1127185Z",
+          "name": "gated-oracle",
+          "checks_passed": 1111656,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/gated-oracle.log",
+            "sha256": "9cbf9ca9459aa652bd090ed6494ae353c4260d21048baed0c275d92545464762",
+            "bytes": 482
+          }
+        },
+        {
+          "arguments": [
+            "--solver-uniform-removal-only"
+          ],
+          "finished_utc": "2026-10-02T17:47:17.5124362Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:17.4514561Z",
+          "name": "uniform-removal",
+          "checks_passed": 23202,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/uniform-removal.log",
+            "sha256": "3f2b7156fcc95d0ffc627245abb2747b5ffbb5795c9bd6b2f40d7dcceeafcf90",
+            "bytes": 211
+          }
+        },
+        {
+          "arguments": [
+            "--calculator-incoming-only",
+            "C:/Users/Oliver/Documents/poecraft2-sprint-integration/data/compiled/current"
+          ],
+          "finished_utc": "2026-10-02T17:47:18.6251818Z",
+          "exit_code": 0,
+          "started_utc": "2026-10-02T17:47:17.5145896Z",
+          "name": "incoming",
+          "checks_passed": 354,
+          "checks_failed": 0,
+          "log": {
+            "path": "out/sprint-continuation/promotion-native/incoming.log",
+            "sha256": "ede19fbf1ce8cc4b212c42ac41f2d4ff3bd3753c6b168fbd264fbbee366da50e",
+            "bytes": 122
+          }
+        }
+      ],
+      "batch": {
+        "path": "out/sprint-continuation/run-promotion-native.ps1",
+        "sha256": "2d952ec948645937d3cc6acced1056574ca8d68c20140c639ee2cc3e2ff1e10d",
+        "bytes": 1946
+      },
+      "binary": {
+        "path": "build/engine/poecraft_engine_tests.exe",
+        "sha256": "445c4c0fc1b09de46a2cc4112a43a1320aca7c70bbc66933d3f538d9a582fd53",
+        "bytes": 19105294
+      }
+    },
+    "wasm": {
+      "started_utc": "2026-10-02T17:40:41Z",
+      "finished_utc": "2026-10-02T17:47:37Z",
+      "command": "EMCC_CORES=2 BINARYEN_CORES=2 powershell -File scripts/build-wasm.ps1",
+      "max_jobs": 2,
+      "exit_code": 0,
+      "log": {
+        "path": "out/sprint-continuation/build-wasm-fracture.log",
+        "sha256": "ffb4a222833164800955a1a5b3585f1384d27e0bc325dc28cbb52854508164d2",
+        "bytes": 3417
+      },
+      "artifacts": [
+        {
+          "path": "bindings/wasm/dist/poecraft_engine.mjs",
+          "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297",
+          "bytes": 21237
+        },
+        {
+          "path": "bindings/wasm/dist/poecraft_engine.wasm",
+          "sha256": "6fb7e9c90b728bbd4b942241631ad07dbf0f354586fec010458cba658686bc39",
+          "bytes": 8215259
+        }
+      ]
+    },
+    "shared_dll": {
+      "command": "cmake --build build/engine --target poecraft_engine_shared --parallel 2",
+      "exit_code": 0,
+      "log": {
+        "path": "out/sprint-continuation/promotion-shared-build.log",
+        "sha256": "29993a297ff49bc5657073e6f3b8d978fb0c90027da8b9bcbf4fd3c1401a3fec",
+        "bytes": 96
+      },
+      "binary": {
+        "path": "build/engine/poecraft_engine.dll",
+        "sha256": "22708f0a69db7bc11d4077c9b94a20cef8b3e0dcc92a55e4cb1a5a25699efa0b",
+        "bytes": 14062352
+      }
+    },
+    "python": {
+      "command": "py -3 -m pytest bindings/python/tests/test_dominance_strategy.py bindings/python/tests/test_calculator_incoming.py -q",
+      "tests_passed": 29,
+      "exit_code": 0,
+      "log": {
+        "path": "out/sprint-continuation/promotion-python.log",
+        "sha256": "3d2b9106012b3558495c0343528e3f0ee15fc94571334a3eb78a0ee74df70f46",
+        "bytes": 101
+      }
+    },
+    "worker": [
+      {
+        "filter": "currency expansion state and original-root policy contracts",
+        "command": "POECRAFT_SMOKE_TEST=\"currency expansion state and original-root policy contracts\" tsx test/engine-smoke.test.ts",
+        "tests_passed": 4,
+        "exit_code": 0,
+        "log": {
+          "path": "out/sprint-continuation/promotion-wasm-root.log",
+          "sha256": "2aa471d823af87195ed5ccf4dfa1fbdd3335028f0679af5adcef2213edacfad4",
+          "bytes": 1684
+        }
+      },
+      {
+        "filter": "Dominance and Vaal native actions preserve transport and costs",
+        "command": "POECRAFT_SMOKE_TEST=\"Dominance and Vaal native actions preserve transport and costs\" tsx test/engine-smoke.test.ts",
+        "tests_passed": 4,
+        "exit_code": 0,
+        "log": {
+          "path": "out/sprint-continuation/promotion-wasm-dominance.log",
+          "sha256": "86bfdbb33792d97dadf0ccd330946fc55df8d74b39788fecb4ade6adc9153aeb",
+          "bytes": 213
+        }
+      },
+      {
+        "filter": "Calculator item goals and editors preserve native joint outcomes",
+        "command": "POECRAFT_SMOKE_TEST=\"Calculator item goals and editors preserve native joint outcomes\" tsx test/engine-smoke.test.ts",
+        "tests_passed": 4,
+        "exit_code": 0,
+        "log": {
+          "path": "out/sprint-continuation/promotion-wasm-calculator.log",
+          "sha256": "0df66a66c4fd521aa4b78570fe31cd9221a0f40c50e50fc14197939abea47066",
+          "bytes": 215
+        }
+      },
+      {
+        "filter": "Fracturing Orb fractures one random explicit modifier",
+        "command": "POECRAFT_SMOKE_TEST=\"Fracturing Orb fractures one random explicit modifier\" tsx test/engine-smoke.test.ts",
+        "tests_passed": 4,
+        "exit_code": 0,
+        "log": {
+          "path": "out/sprint-continuation/promotion-wasm-fracture.log",
+          "sha256": "9f2475db30e3958ebb07ecccbfb5fd71f66b6f62afbd000224aedeb4212b9e4c",
+          "bytes": 204
+        }
+      }
+    ],
+    "worker_count_note": "Four independent filters; each repeats the three shared ABI/data/session setup tests.",
+    "build_data": {
+      "command": "node scripts/build-data-bundle.mjs",
+      "exit_code": 0,
+      "log": {
+        "path": "out/sprint-continuation/promotion-build-data.log",
+        "sha256": "98ecf6a7e1aea09a40b7d8652af1c0d9166333865793c3003929ddf73e4b43be",
+        "bytes": 185
+      },
+      "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d"
+    },
+    "typecheck": {
+      "command": "tsc --noEmit",
+      "exit_code": 0,
+      "scope": "Final matching artifact and unchanged web source; no output."
+    },
+    "compatible_reuse": {
+      "web_source_unchanged_since": "8123cff821e3ce15ea9bd9fa835743b389938881",
+      "finite_web_files": 11,
+      "catalogue_ingest_tests": 53,
+      "note": "Existing web/ingest evidence remains compatible; final matching worker filters and binding tests rerun."
+    },
+    "solver_knowledge": {
+      "command": "py -3 -m poecraft_ingest.solver_knowledge lint --base ebcd98cdda2c1828cd855f549831951e6ba7470a",
+      "exit_code": 0,
+      "errors": 0,
+      "warning_scope": "Existing open claims/premises only; traceability gate supplies no mathematical/runtime certificate.",
+      "log": {
+        "path": "out/sprint-continuation/promotion-knowledge.log",
+        "sha256": "29f196d98b6869be0d60bae3792a8e2dcf51c15bb9d27ff0e0f2b6041a40429b",
+        "bytes": 1864
+      }
+    },
+    "baseline_exclusion": "continuation.fracture_repair.broader_exclusion retains both current and preserved f08facbb failures/abort; assertions not weakened, no passing result claimed.",
+    "authority_disposition": "The known lost-artifact invariant aborts before returning a result; the C API maps the exception to PC_RESULT_INTERNAL_ERROR. No false returned root certificate was observed. Narrow tested output/proof boundaries are retained, without whole-product or global-closure acceptance.",
+    "excluded_features": [
+      "Latency experiment 87d3977",
+      "All five newer completion branches"
+    ],
+    "unrun": [
+      "Full acceptance suite",
+      "Rendered UI",
+      "Fresh Simulator",
+      "Newer mechanics/output feature acceptance"
+    ],
+    "delivery": "Normal fast-forward/main push selected after final local/live-remote preflight; exact outcome recorded in out/sprint-continuation/promotion.json and parent checkpoint.",
+    "deployment": "not selected; deploy workflow_dispatch only"
   }
 }

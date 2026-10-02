@@ -1,3 +1,17 @@
+# First staged main promotion qualification (2026-10-02)
+
+The existing integration plus `8ef8a67` Fracture side repair is frozen at source
+`fcf361f` for Oliver-approved normal main delivery, independent of the five new
+feature branches. The [v4 integration receipt](docs/active/2026-10-02-sprint-integration/qualification.json)
+pins matching WASM `6fb7e9c9…`, engine tree `3afab9ef…`, 1,147,897 passing native
+checks, 29 Python tests, four worker filters and TypeScript. Existing web/ingest
+checks are compatible. Separate f08facbb broader-selector failures remain failed;
+no assertion was weakened. The native publication invariant refuses that failed
+case without returning false certificate authority. Exact normal push outcome
+is recorded at `out/sprint-continuation/promotion.json` and the parent checkpoint.
+No deployment, install or data/price refresh is selected. Full backlog completion
+still awaits owner patches and their acceptance; no owned process remains.
+
 # Sprint integration continuation checkpoint (2026-10-02)
 
 Oliver approved Sol 6.1 continuation, the full original backlog and qualified

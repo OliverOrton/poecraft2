@@ -1,11 +1,12 @@
 # Sprint integration and continuation
 
-Qualified native source: `5d11f6335c4207f2044d826aba7109175a6642a3` on `dot/sprint-integration-20261002`,
-worktree `C:/Users/Oliver/Documents/poecraft2-sprint-integration`. Baseline
-`f08facbb` and main `ebcd98cd` are unchanged. Final documentation commits do not
-change the qualified engine tree `da81b73d3afd0ea7660bfc046537761b354405a5`.
-The [receipt](qualification.json) pins every selected source, artifact, command,
-log hash, exclusion and unrun check.
+The first staged promotion is qualified from `fcf361f` on
+`dot/sprint-integration-20261002`, worktree
+`C:/Users/Oliver/Documents/poecraft2-sprint-integration`.
+Engine tree: `3afab9ef0728edaf5262fa53183b6925db0653f8`.
+The [v4 receipt](qualification.json) separates the original native checkpoint,
+the earlier worker artifact and the final matching promotion qualification.
+Protected `0`, original integration and frozen data/prices remain untouched.
 
 Integrated: independent finite reforge and physical-removal regressions;
 original-root caller-scope and matching-identity stale-certificate rejection;
@@ -13,6 +14,35 @@ read-only cluster catalogue; guarded authored Dominance; mismatch statewise
 containment; and private Foulborn with parsed-operation supplementary scope.
 Only HANDOFF conflicts needed manual reconciliation; production source merged
 cleanly and the combined guards were reviewed before validation.
+
+## First staged promotion — final matching qualification
+
+The existing integration plus parent-approved Fracture repair is frozen for the
+first normal main promotion; none of the five newer feature branches is included.
+Final WASM built at two jobs from `fcf361f`, 17:40:41–17:47:37 UTC. SHA256:
+`6fb7e9c90b728bbd4b942241631ad07dbf0f354586fec010458cba658686bc39`.
+This artifact **does** include `8ef8a67`; the earlier `4c0a79…` artifact does not.
+
+The existing serial native batch plus repaired continuation selector passes
+**1,147,897 checks, zero failures**. Source-matched DLL link and **29 Python**
+Dominance/incoming tests pass. Four final real-worker filters pass root contracts,
+Dominance/Vaal transport/costs, incoming Calculator and native Fracture transport;
+each also repeats the three shared setup tests. Final TypeScript passes. The
+unchanged web/ingest source reuses eleven passing finite web files and 53 passing
+catalogue/ingest tests. Solver knowledge lint passes with existing open-claim
+warnings; it supplies traceability only. No owned process remains.
+
+The broader f08facbb baseline selector failures and abort remain explicitly
+failed/excluded in the receipt. The lost-artifact invariant stops publication
+before returning a result and the native API returns an internal error; no false
+returned root certificate was observed. This is bounded qualification of the
+retained mechanics/output/proof boundaries, without whole-product or global
+closure acceptance. Full suite, rendered UI and fresh Simulator remain unrun.
+
+Normal main push is selected after final local/live-remote preflight. Its exact
+outcome belongs to `out/sprint-continuation/promotion.json` and the parent
+checkpoint. No deployment is selected; its workflow is manual dispatch only.
+The original backlog ledger below remains open for subsequent feature batches.
 
 ## Authorized continuation — combined worker checkpoint
 
@@ -28,7 +58,7 @@ transport/costs, and incoming Calculator preservation (four tests each, includin
 shared ABI/data/session setup). Eleven finite web transport/output/product files
 and TypeScript pass. Frozen runtime and existing dependencies are used through
 aliases in this isolated worktree; no installs or data/price refresh occurred.
-The pending native repair and future imports need a final matching WASM rebuild.
+The final first-batch rebuild is recorded above; future feature imports need their own matching artifact qualification.
 
 The six historical fracture failures reproduce here. Product Fracture sets the
 hit's goal fracture and flag but omits `fractured_side_counts`; direct native
