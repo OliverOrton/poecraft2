@@ -10,6 +10,14 @@ and exact owner-law decisions. No process remains; ready for parent review.
 Native/UI crafting remains unsupported. Main/integration, protected root `0`,
 frozen data and pricing are untouched; no push/deployment or solver run.
 
+Mismatch sprint is a **WIP tier handoff**, not qualified production authority.
+Continue only in `C:/Users/Oliver/Documents/poecraft2-mismatch-sprint` on
+`dot/mismatch-20261002`; source checkpoint `3162ef791873b231c722265c41a650eb0d39e6b3`.
+The [handoff record](docs/active/2026-10-02-mismatch-sprint/README.md) owns the
+first-row native-pool witness, proposed statewise-authority veto, passed finite
+checks and interrupted build. All owned processes are stopped. Parent will
+start the standard-tier replacement; no new timed slot has been spent.
+
 Oliver's overnight isolated integration is complete on `dot/integration-20261002`.
 Engine bytes are from `792b37e`; approved test-only request adapter is `984c594`.
 CURRENT `6a24e99`, Mechanics `d326305`, Finder `45611b9` and parent/Astra-approved

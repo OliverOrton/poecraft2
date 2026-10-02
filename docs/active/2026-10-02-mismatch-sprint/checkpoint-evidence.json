@@ -1,0 +1,43 @@
+{
+  "wip_source": "3162ef791873b231c722265c41a650eb0d39e6b3",
+  "timed_runs": 0,
+  "safety_tests": "unrun; build deliberately interrupted",
+  "files": [
+    {
+      "path": "out/mismatch-sprint/build-baseline.log",
+      "bytes": 10308,
+      "sha256": "2afe96a4fbb0947254674714a8a9f70300ab0d2e1e0c9a2c78750d819fd6242a"
+    },
+    {
+      "path": "out/mismatch-sprint/build-row-diagnostic.log",
+      "bytes": 205,
+      "sha256": "94d7afa0514fb54925aa8c44d5577acfa2e0c3ca8b1f824ca463b8f746463e9f"
+    },
+    {
+      "path": "out/mismatch-sprint/row-diagnostic.log",
+      "bytes": 1198,
+      "sha256": "20d3bd26a4204ce5ff5442012127ee2a68bb53bfec79aa3b15a9896dfee49437"
+    },
+    {
+      "path": "out/mismatch-sprint/build-full-scope-row.log",
+      "bytes": 205,
+      "sha256": "94d7afa0514fb54925aa8c44d5577acfa2e0c3ca8b1f824ca463b8f746463e9f"
+    },
+    {
+      "path": "out/mismatch-sprint/full-scope-row.log",
+      "bytes": 1283,
+      "sha256": "52ec6061f2d4b7b9bd504539cf975a03cbe3da76bc702a21c4234e3287281553"
+    },
+    {
+      "path": "out/mismatch-sprint/build-authority.log",
+      "bytes": 4312,
+      "sha256": "5a0680d72bd6a9cb76ce23fbdbbbd08c19f79dc4aa93cd7ebf0fc13b05457797"
+    },
+    {
+      "path": "out/mismatch-sprint/stop-receipt.json",
+      "bytes": 262,
+      "sha256": "827a15f37bfbfaef8403bf9287de30e701e201b920766ae23c79d3f06b3a9899"
+    }
+  ],
+  "authority_test_log_exists": false
+}
