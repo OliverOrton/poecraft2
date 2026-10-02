@@ -183,3 +183,19 @@ Dominance `cdf04b8` remains authored-only with singleton explicit identities,
 above-ilvl inventory coverage and full native ordered-pair enumeration;
 expanded qualification was still pending when reviewed. Neither pin was
 silently promoted from its WIP/partial qualification status.
+
+### Stale-certificate addendum
+
+Parent requested a retained/checkpoint authority check after R1. The work object's
+cache reuse requires `Stage::Evaluating`; scope validation runs before that stage.
+A new negative control supplies a stale executable/proper certificate with the
+restricted request's **matching identity**, graph and paired flag. Both restricted
+scope cases reject before evaluation, refuse cache reuse, retain the unused cache,
+and publish zero certified upper states. This protects even same-version old
+acceptance, without racing another lane's semantic-version changes. Development
+checkpoints persist calculator states/operators/rows, not root assertion objects.
+
+The incremental two-job build and expanded paid-reset selector pass **1146 checks,
+zero failures** (`build-scope-reuse.log`, `scope-stale-reuse.log`). Only tests changed
+since the 1707-check production checkpoint; the other focused results remain
+compatible and were not redundantly rerun.

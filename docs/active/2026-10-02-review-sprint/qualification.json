@@ -301,5 +301,34 @@
       "2e5585dcce83b527c7b7d6a9def5f665f472e60b",
       "59b7f319b7dbce82f4284a82f4d7b110c49093a5"
     ]
+  },
+  "stale_certificate_addendum": {
+    "checks": 1146,
+    "failures": 0,
+    "build": "passed, two jobs",
+    "scope": "Same request identity and stale executable graph cannot bypass compile-time scope refusal through cached evaluation; both explicit candidate and disabled family controls covered. No version change needed for this gate.",
+    "source": {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "sha256": "fbe5ecd2b62eea4e8eae4bc11f5676b2052a61531d3f7dd8996524d8efe18cbd",
+      "bytes": 729614
+    },
+    "binary": {
+      "path": "build/engine/poecraft_engine_tests.exe",
+      "sha256": "76d7c965c5e5007f4af0bad771baece3cbf3c3fd0ea68b53f74acb890d013eeb",
+      "bytes": 18945301
+    },
+    "logs": [
+      {
+        "path": "out/review-sprint/build-scope-reuse.log",
+        "sha256": "c7b4bf04abbb629d64fb8c5fd9f216249acaaed4ea559921cb3379783fbe796a",
+        "bytes": 194
+      },
+      {
+        "path": "out/review-sprint/scope-stale-reuse.log",
+        "sha256": "1b21b5be3126b745327e8b944f2ccf76fc13719220e0b500ca8a50861f941fce",
+        "bytes": 424
+      }
+    ],
+    "processes": "Build and test exited; no owned process remains."
   }
 }

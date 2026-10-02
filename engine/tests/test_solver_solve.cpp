@@ -15068,6 +15068,7 @@ void run_paid_root_reset_renewal_tests() {
             root_proof.policy_reachable = work.output_incumbent->policy_reachable;
             const auto& graph = work.output_incumbent->compiled_artifact.strategy_json;
             std::vector<std::uint64_t> root_request_identity;
+            std::optional<refinement::CompiledPolicyAssertion> valid_root_assertion;
             for (unsigned provenance = 0; provenance < 17; ++provenance) {
                 auto requested = root_proof;
                 if (provenance == 2) requested.policy[root].index = alchemy;
@@ -15113,6 +15114,7 @@ void run_paid_root_reset_renewal_tests() {
                     if (checked.evaluation.continuation_upper.states.size() == 1)
                         PC_CHECK(checked.evaluation.continuation_upper.states.front().available());
                     root_request_identity = checked.request_identity;
+                    valid_root_assertion = checked;
                 } else {
                     if (checked.executable || checked.proper)
                         std::printf("unexpected original-root provenance acceptance: %u cost=%.17g candidates=%zu explicit=%u\n", provenance,
@@ -15129,6 +15131,32 @@ void run_paid_root_reset_renewal_tests() {
                         PC_CHECK(checked.failure_reason.find("violates caller scope") != std::string::npos);
                         PC_CHECK(checked.evaluation.raw_pairs_discovered == 0);
                         PC_CHECK(checked.evaluation.continuation_upper.certified_states == 0);
+                        // Model a pre-fix certificate accepted under this same
+                        // restricted request identity. Reuse must not rescue
+                        // a graph that fails today's compilation/scope gate.
+                        auto stale = valid_root_assertion;
+                        PC_CHECK(stale.has_value());
+                        if (stale) {
+                            stale->request_identity = checked.request_identity;
+                            stale->paired_default_only = true;
+                            PC_CHECK(stale->executable && stale->proper);
+                            refinement::CompiledPolicyAssertionWork replay(
+                                *changed_scope, requested, prices, scoped,
+                                "stale original-root scope certificate", nullptr,
+                                &graph, &emitted, true, false, false,
+                                refinement::CompiledPolicyAssertionMode::OriginalRootController);
+                            replay.step(1);
+                            PC_CHECK(replay.progress().done);
+                            PC_CHECK(!replay.try_reuse_completed_evaluation(stale));
+                            PC_CHECK(stale.has_value());
+                            if (replay.progress().done) {
+                                const auto refused = replay.take_result();
+                                PC_CHECK(!refused.executable && !refused.proper);
+                                PC_CHECK(refused.failure_reason.find("violates caller scope") != std::string::npos);
+                                PC_CHECK(refused.evaluation.raw_pairs_discovered == 0);
+                                PC_CHECK(refused.evaluation.continuation_upper.certified_states == 0);
+                            }
+                        }
                     }
                 }
             }
