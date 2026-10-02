@@ -251,3 +251,38 @@ so no latency comparison or responsiveness claim is made. Generic caller-scope
 repair remains an integration dependency. No Simulator, WASM or worker trial ran.
 S-N1 is spent: one new native run, zero workers, no remaining timed slot and no
 owned process. No retry is authorized.
+
+## Stripped-metadata guard repair (16:36 UTC)
+
+The review-requested negative control was reproduced on the passing checkpoint:
+removing both `solver_controller_grammar` and `solver_policy_scope` let the
+original-root checker accept a Foulborn graph under gated scope without the
+supplementary opt-in. `finite-stripped-before.log` records 3 failures out of
+3,044 checks. Optional graph labels were therefore insufficient authorization.
+
+The small fail-closed repair checks **parsed native operations**, independently
+of metadata. In OriginalRootController mode under a gated request, any native
+Foulborn operation requires the supplementary capability and absence of an
+explicit gated-policy override. This conservatively excludes Foulborn use from
+that root-only checker when authorization is absent; ordinary statewise checking
+and ungated caller scope are unchanged. No generic action-admission repair is
+duplicated here; the parent review task still owns that integration dependency.
+
+Final two-job Tests build and finite checks passed:
+`foulborn-root` 3,077, `paid-reset` 1,082, assertion service 384, all zero failures
+(4,543 checks on final bytes). Both stripped fields now refuse under gated scope.
+Positive controls accept opted-in and ungated stripped graphs, and refuse an
+explicit gated restriction even if the private option is set. Logs are
+`build-stripped-repair.log`, `finite-stripped-after.log`,
+`finite-paid-reset-stripped.log`, and `finite-assertion-stripped.log` under the
+existing output directory; `stripped-metadata-result.json` owns the compact
+receipt. `git diff --check` passes. No owned process remains.
+
+No additional full solve, timed slot, Simulator or worker run was launched.
+S-N1's real checked graph belongs to its frozen `448ef4a` executable; replay of
+that real graph on the post-guard executable is **unrun**. Finite positive controls
+qualify the narrow repair, not new real-case performance. The historical
+3.8927 result predates corrected laws and differs in grammar, so no economic
+improvement is claimed against it. No separate matched baseline graph was
+reevaluated in this continuation; the real-case economic delta remains
+unqualified. Wrap-up is complete ahead of the 16:45/16:55 limits.

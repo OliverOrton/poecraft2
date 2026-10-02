@@ -1,3 +1,4 @@
+#include "poecraft/solver.h"
 #include "solver_policy_refinement_helpers.hpp"
 #include "solver_compile_contracts.hpp"
 
@@ -649,6 +650,28 @@ struct CompiledPolicyAssertionWork::Impl {
                 session,
                 result.strategy_json.data(),
                 result.strategy_json.size());
+            // Optional graph labels are not a capability boundary. Under a
+            // gated original-root request, conservatively reject every native
+            // Foulborn operation unless the supplementary capability is granted.
+            // Positive-progress/statewise uses remain with their existing owner.
+            if (mode == CompiledPolicyAssertionMode::OriginalRootController &&
+                options.goal_progress_gated_reforges &&
+                (!options.paid_root_foulborn_salvage ||
+                 (options.solve_profile_override_mask &
+                    PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES) != 0) &&
+                std::any_of(parsed_strategy->nodes.begin(), parsed_strategy->nodes.end(),
+                    [](const auto& node) {
+                        return node.kind == StrategyNodeKind::Operation &&
+                            (node.action.type == ActionType::FoulbornAugment ||
+                             node.action.type == ActionType::FoulbornRegal ||
+                             node.action.type == ActionType::FoulbornExalt);
+                    })) {
+                finish_failure(CompiledPolicyAssertionStatus::CompilationFailure,
+                    "gated original-root Foulborn operations require the supplementary "
+                    "capability without an explicit gated policy restriction");
+                record_evaluation_time();
+                return;
+            }
             if (!solved.has_exact_start_item ||
                 exact_item_state_key(parsed_strategy->start_item) !=
                     exact_item_state_key(solved.exact_start_item)) {

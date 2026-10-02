@@ -114,3 +114,10 @@ only the retained graph's root upper, never parent statewise decisions or values
 The [sprint record](../active/2026-10-02-foulborn-sprint/README.md) owns current
 qualification; the [fixed-subset argument](mathematics/policies.md#paid-root-selective-add)
 owns the proposal equation and its complete reset-law premises.
+
+For OriginalRootController with gating enabled, the final assertion additionally
+checks parsed native operations: every Foulborn operation requires the private
+supplementary capability and no explicit gated-policy override. This conservative
+root-only guard applies even when both graph scope labels are removed. Graph
+metadata is descriptive identity, not authorization. Ungated and ordinary
+statewise checking retain their existing contracts.

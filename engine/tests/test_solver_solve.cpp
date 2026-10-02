@@ -15513,7 +15513,7 @@ void run_paid_root_foulborn_salvage_tests() {
             // unknown values remain unsupported even with the option enabled.
             const std::string grammar_key = "\"solver_controller_grammar\":";
             const std::string grammar_value = "\"paid_root_foulborn_salvage_v1\"";
-            for (unsigned variant = 0; variant < 5; ++variant) {
+            for (unsigned variant = 0; variant < 9; ++variant) {
                 auto guarded_graph = candidate.compiled_artifact.strategy_json;
                 const auto metadata = guarded_graph.find(grammar_key + grammar_value);
                 PC_CHECK(metadata != std::string::npos);
@@ -15523,18 +15523,34 @@ void run_paid_root_foulborn_salvage_tests() {
                     guarded_graph.erase(metadata, grammar_key.size() + grammar_value.size() + 1);
                     guarded_graph.insert(1, grammar_key + " \n " + grammar_value + ",");
                 }
-                if (variant >= 3)
+                if (variant == 3 || variant == 4)
                     guarded_graph.replace(metadata + grammar_key.size(), grammar_value.size(),
                         variant == 3 ? "\"unknown_grammar_v9\"" : "false");
+                if (variant >= 5) {
+                    guarded_graph.erase(metadata, grammar_key.size() + grammar_value.size() + 1);
+                    const std::string scope = "\"solver_policy_scope\":\"gated_search_with_paid_root_foulborn_salvage_v1\",";
+                    const auto scope_position = guarded_graph.find(scope);
+                    PC_CHECK(scope_position != std::string::npos);
+                    guarded_graph.erase(scope_position, scope.size());
+                }
                 auto restricted = work.options;
-                restricted.paid_root_foulborn_salvage = variant >= 3;
+                restricted.paid_root_foulborn_salvage =
+                    variant == 3 || variant == 4 || variant == 6 || variant == 8;
+                if (variant == 7) restricted.goal_progress_gated_reforges = false;
+                if (variant == 8) restricted.solve_profile_override_mask |=
+                    PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES;
                 refinement::CompiledPolicyAssertionWork laundering(calc, root_proof, prices, restricted,
                     "supplementary scope refusal", nullptr, &guarded_graph,
                     nullptr, true, false, false, refinement::CompiledPolicyAssertionMode::OriginalRootController);
                 while (!laundering.progress().done) laundering.step(1);
                 const auto refused = laundering.take_result();
-                PC_CHECK(!refused.executable && !refused.proper &&
-                    refused.status == refinement::CompiledPolicyAssertionStatus::CompilationFailure);
+                if (variant == 6 || variant == 7) {
+                    PC_CHECK(refused.executable && refused.proper && refused.zero_off_policy);
+                    PC_CHECK(near(refused.exact_cost, candidate.evaluated_policy_cost, 1e-9));
+                } else {
+                    PC_CHECK(!refused.executable && !refused.proper &&
+                        refused.status == refinement::CompiledPolicyAssertionStatus::CompilationFailure);
+                }
             }
             PC_CHECK(candidate.compilation_provenance == "initial_compiled_policy_assertion_v1");
             PC_CHECK(candidate.compiled_artifact.strategy_json.find("paid_root_foulborn_salvage_v1") != std::string::npos);

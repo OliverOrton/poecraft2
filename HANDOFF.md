@@ -15,6 +15,13 @@ The [S-N1 record](docs/active/2026-10-02-foulborn-sprint/README.md#s-n1-function
 owns exact hashes and the qualification boundary. One native slot spent, no
 worker slot or remaining timed allowance. No latency, WASM/worker or public claim.
 
+The final [stripped-metadata repair](docs/active/2026-10-02-foulborn-sprint/README.md#stripped-metadata-guard-repair-1636-utc)
+reproduced the optional-label bypass and now refuses it by checking parsed native
+Foulborn operations under gated original-root scope. Final bytes pass 4,543
+focused checks, including opted-in/ungated positive controls. S-N1 remains tied
+to its earlier frozen executable; no post-guard real replay or further timed
+run occurred. No economic comparison with historical 3.8927 is qualified.
+
 # Handoff
 
 The parent-approved [KIDS configured cluster catalogue slice](docs/active/2026-10-02-clusters-sprint/README.md)
