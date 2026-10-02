@@ -1,3 +1,15 @@
+# Current-batch promotion and cap repair checkpoint (2026-10-02)
+
+Main/origin main are `2805807`: qualified Fossil refusal, matching WASM and two
+separate CI test fixture corrections were normally pushed; no deployment. The
+[living record](docs/active/2026-10-02-sprint-integration/README.md) owns delivery.
+The narrow final-cap publication repair passes 50,550 ordinary-step continuity
+checks locally. Explicit reduced-cap refusal carries no graph, finite upper or
+convergence; all non-cap lost-artifact invariants remain unchanged. Combined
+WASM/worker and approved 8:3:1/ready feature integration remain this batch.
+Oliver selected no new work after this batch closes; preserve remaining debt
+and mechanic approvals in the handoff and pause.
+
 # Current Fossil guard and native CI checkpoint (2026-10-02)
 
 The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)

@@ -1397,7 +1397,7 @@
     ]
   },
   "current_fractured_fossil_guard": {
-    "status": "qualified locally; not yet promoted",
+    "status": "promoted to main/origin main 28058079f1ab95a9ab5846a6ce19f4068e742575",
     "approval": "parent-authorized conservative containing-loadout refusal; no outcome law approval",
     "production_behavior": "central stable-key plus current mirrors0 guard before sampled mutation/RNG, exact row work, authored compile and selected Current/Finder admission; legacy mirrors1 retains existing behavior",
     "native_checks": 6476,
@@ -1454,7 +1454,7 @@
     "process_coordination_note": "One finite test rebuild briefly overlapped the two-job WASM build. Each invocation used two jobs, but task aggregate was not bounded to two during that overlap; no timing claim was made. Subsequent rebuild waited for WASM completion."
   },
   "ci_native_fixture_repair": {
-    "status": "passed local test-only repair; not yet promoted",
+    "status": "promoted in main/origin main 28058079f1ab95a9ab5846a6ce19f4068e742575",
     "production_source_changed": false,
     "automatic_identity": "crafted_cleanup",
     "census_method": "direct physical named non-mirroring metadata tuple enumeration; independent of native registry/choose/telemetry",
@@ -1499,5 +1499,22 @@
     },
     "timed_solve": "unrun; no solve invoked",
     "integration": "held pending parent/owner scope disposition and combined count-law qualification"
+  },
+  "explicit_final_cap_publication_repair": {
+    "status": "local native-qualified; combined WASM/worker pending",
+    "cause": "Intentional explicit final-cap graph revocation retains historical verified scalar; final lost-artifact assertion treated that scalar as a live owner.",
+    "change": "Permit only the existing publication_revoked_at_final_cap disposition; every non-cap lost-artifact invariant remains unchanged; no proof flag, goal, mechanics or cost is altered.",
+    "continuity_checks": 50550,
+    "continuity_failures": 0,
+    "logs": [
+      "out/sprint-continuation/publication-cap-build.log",
+      "out/sprint-continuation/publication-cap-continuity.log",
+      "out/sprint-continuation/publication-cap-noncap-control.log"
+    ],
+    "production_diff": "six lines in solver_solve_finish.cpp; actual cap refusal contracts extended in existing nineteen ordinary-step fixtures",
+    "unrun": [
+      "matching combined WASM/worker",
+      "whole native CI suite"
+    ]
   }
 }

@@ -15,6 +15,23 @@ containment; and private Foulborn with parsed-operation supplementary scope.
 Only HANDOFF conflicts needed manual reconciliation; production source merged
 cleanly and the combined guards were reviewed before validation.
 
+## Current-batch delivery and explicit-cap repair
+
+Main and origin/main were normally fast-forwarded/pushed to `2805807` at
+19:40:40 UTC, delivering the qualified Fossil safety and separate test-only CI
+corrections. No deployment occurred. Original overnight remains `f08facbb`.
+The exact delivery record is `out/sprint-continuation/fossil-guard-promotion.json`.
+
+The proposed explicit final-cap repair is now local/native-qualified: only the
+existing deliberate final-cap revocation permits honest resource refusal despite
+a historical verified cost. No ordinary lost-graph invariant, proof flag,
+mechanic, goal or price is changed. All **50,550** ordinary-step continuity
+checks pass, including preserved checked output on Finish, cancel/service-phase
+controls and no graph/finite upper/convergence under reduced final caps. The
+separate non-cap fracture control remains failed, retaining its invariant and
+previous baseline debt. Combined source-matched WASM is pending. The approved
+count-law and ready feature integration remain this batch; pause after closure.
+
 ## Current Fossil refusal and native CI classification checkpoint
 
 The parent-approved native guard is committed at `835a5a1`. It refuses current

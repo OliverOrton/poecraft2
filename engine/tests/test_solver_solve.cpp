@@ -2596,6 +2596,16 @@ void run_current_incumbent_continuity_tests() {
                 PC_CHECK(fixture == 6 || fixture == 7 || fixture == 12);
                 PC_CHECK(published.diagnostics.policy_publication_failure_reason ==
                     "retained solve result reached max_solver_owned_bytes");
+                PC_CHECK(published.diagnostics.resource_cap_hit);
+                PC_CHECK(published.diagnostics.policy_refinement.resource_cap ==
+                    "max_solver_owned_bytes");
+                PC_CHECK(published.termination == SolveTermination::RefusedResourceCap);
+                PC_CHECK(!published.converged && !published.target_met);
+                PC_CHECK(published.policy_status == SolvePolicyStatus::None);
+                PC_CHECK(!std::isfinite(published.upper_bound));
+                PC_CHECK(!std::isfinite(published.evaluated_policy_cost));
+                PC_CHECK(published.refined_policy_artifact.strategy_json.empty());
+                PC_CHECK(solve_detail::publication_invariant_invalid_reason(published) == nullptr);
                 continue;
             }
             PC_CHECK(std::isfinite(published.evaluated_policy_cost));

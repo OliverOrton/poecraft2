@@ -5916,7 +5916,11 @@ SolveWork::Impl::run_publication_pipeline() {
         }
         record_progress_event("selection_sealed", "owned_graph_root_certificate_and_cost");
         consumed = true;
-        if (!result.policy_available &&
+        // A deliberately reduced final cap can revoke the owned graph and
+        // return an explicit resource refusal. Its historical verified cost
+        // remains telemetry, not a claim of live publication ownership.
+        // Every other loss of an available verified graph remains an error.
+        if (!result.policy_available && !publication_revoked_at_final_cap &&
             std::isfinite(incumbent_portfolio.verified_executable_upper())) {
             throw std::logic_error(
                 "publication lost its verified artifact");
