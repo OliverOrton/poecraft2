@@ -941,6 +941,24 @@ CalcContext::build_state_local_automatic_candidates(
         }
     }
 
+    // Every carrier-local layout and comparison has the same parent-owned
+    // member universe. Retain complete classes, not one representative. This
+    // invariant adds no carrier-dependent field to the parent-owned cache key.
+    std::vector<std::uint64_t> carrier_universe(session_->words, 0);
+    for (const auto& slot : layout_.slots)
+        pc_bitset_or(carrier_universe.data(), carrier_universe.data(),
+                     slot.member_mask.data(), session_->words);
+    for (const auto& junk : layout_.junk_classes)
+        pc_bitset_or(carrier_universe.data(), carrier_universe.data(),
+                     junk.member_mask.data(), session_->words);
+    co_await solve_detail::CooperativeCheckpoint{
+        automatic_cursor_add(
+            automatic_cursor_add(
+                automatic_cursor_add(automatic_batch_cursor_bytes(batch),
+                                     synthesis_cursor_bytes(synthesis)),
+                (local_candidates.capacity() + permanent_benches.capacity()) *
+                    sizeof(std::uint32_t)),
+            carrier_universe.capacity() * sizeof(std::uint64_t))};
     GoalSpec local_goal = goal_;
     local_goal.automatic_candidates = false;
     local_goal.fixed_options = std::move(synthesis.specs);
@@ -968,7 +986,9 @@ CalcContext::build_state_local_automatic_candidates(
     } else {
         auto created = std::make_unique<CalcContext>(
             session_, local_goal, registry_, local_candidates,
-            false, false, true);
+            false, false, true, std::nullopt,
+            std::vector<CountObservation>{}, false,
+            carrier_universe);
         created->set_defer_automatic_protected_baseline(true);
         admission_context_created = true;
         if (automatic_admission_contexts_.size() <
@@ -1158,6 +1178,8 @@ CalcContext::build_state_local_automatic_candidates(
         protected_kernel_comparisons;
     const auto retained_cursor_nested_bytes = [&]() {
         std::uint64_t bytes = automatic_batch_cursor_bytes(batch);
+        bytes = automatic_cursor_add(
+            bytes, carrier_universe.capacity() * sizeof(std::uint64_t));
         bytes = automatic_cursor_add(
             bytes, synthesis_cursor_bytes(synthesis));
         bytes = automatic_cursor_add(
@@ -1997,7 +2019,9 @@ CalcContext::build_state_local_automatic_candidates(
                         automatic_comparison_context_ =
                             std::make_unique<CalcContext>(
                                 session_, comparison_goal, registry_,
-                                candidates_, false, false, true);
+                                candidates_, false, false, true, std::nullopt,
+                                std::vector<CountObservation>{}, false,
+                                carrier_universe);
                     }
                     CalcContext& comparison_context =
                         *automatic_comparison_context_;

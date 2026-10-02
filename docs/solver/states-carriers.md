@@ -21,6 +21,17 @@ This page names the native representations and their current consumers. [Represe
 
 Primary owners are `solver_model.hpp`, `solver_abstract.cpp`, `solver_calc_types.hpp`, `solver_calc.cpp`, `solver_refinement_features.cpp`, and `solver_refinement_observation.cpp`.
 
+Carrier-local automatic admission and its cached baseline comparison retain the
+parent layout's complete goal-member and junk-member universe through
+`required_reachable_mod_mask`. Disabling recursive automatic generation in the
+child cannot discard an occupied modifier because its primitive scope cannot
+roll it. The stricter child still partitions native exclusion/observation
+features; retaining members does not establish class-wide kernel equality or
+an executable upper. Native materialization/reprojection, option admission,
+and independent policy checking keep their existing obligations. The universe
+is invariant within the parent context, so its local cache keys and resumed
+admission cursors do not depend on one chosen representative.
+
 ## Terminal Contract
 
 The implemented goal test requires the requested rarity and slot/tier threshold, and requires occupied explicit-affix count to equal satisfied goal count. Empty explicit slots are permitted. Junk, temporary metamods, below-tier goal members, and blockers may occur during planning but are not terminal success.

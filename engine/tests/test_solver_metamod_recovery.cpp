@@ -10,6 +10,13 @@
 using namespace poecraft;
 using namespace poecraft::solver;
 
+namespace poecraft::solver {
+struct SolveWorkTestAccess {
+    using Impl = SolveWork::Impl;
+    static Impl& get(SolveWork& work) { return *work.impl_; }
+};
+}
+
 namespace {
 std::string read(const std::string& path) {
     std::ifstream input(path, std::ios::binary);
@@ -221,6 +228,97 @@ void run_solver_metamod_recovery_tests(const char* artifact_dir) {
             PC_CHECK(result.policy_status != SolvePolicyStatus::Exact);
         }
     }
+    // Stop with a complete native cleanup candidate, then exercise the exact
+    // publication boundary with open obligations and each orthogonal stop.
+    // No stochastic continuation or timed search is run here.
+    for (unsigned control=0;control<4;++control) {
+        auto goal=target(*session,prefixes);
+        goal.automatic_candidate_kind_mask=automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod);
+        CalcContext calc(session,goal,registry,natural_candidates,false,false,true);
+        pc_item_state root; pc_item_clear(&root); root.rarity=PC_RARITY_RARE;
+        for (auto id : prefixes) put(root,*session,id);
+        for (auto id : suffixes) put(root,*session,id);
+        SolveOptions options; apply_solve_profile_defaults(options,SolveProfile::CalculatorProductV1);
+        options.consider_imprint_programs=false; options.max_reforge_work=1; options.max_solver_owned_bytes=64ull<<20;
+        SolveWork work(calc,root,prices,options);
+        auto& impl=SolveWorkTestAccess::get(work);
+        unsigned steps=0;
+        while (!work.progress().done && ++steps<2000 &&
+               !impl.output_incumbent) work.step(1);
+        PC_CHECK(impl.output_incumbent.has_value());
+        if (!impl.output_incumbent) continue;
+        impl.phase=SolvePhase::Done;
+        impl.incremental_action_generation=true;
+        impl.incremental_envelope_closed=false;
+        impl.incremental_unevaluated_actions=1;
+        impl.expansion_active=false;
+        impl.result.diagnostics.resource_cap_hit=false;
+        impl.result.diagnostics.state_cap_hit=false;
+        impl.result.diagnostics.cap_hits.clear();
+        impl.requested_bounded_finish=control==2;
+        impl.numerical_stability_stop=control==3;
+        if (control==1) impl.record_cap("max_reforge_work");
+        impl.publication_pipeline.initial_candidate_task.reset();
+        impl.finalization_task.reset();
+        impl.finalized_result.reset();
+        impl.options.high_impact_executable_uppers=false;
+        impl.begin_publication_pipeline();
+        while (!impl.finalized_result && ++steps<20000) impl.advance_publication_pipeline();
+        PC_CHECK(work.progress().done);
+        if (!work.progress().done) continue;
+        const auto result=work.finish();
+        const SolveTermination expected=control==0 ? SolveTermination::BoundedEnvelopeIncomplete :
+            control==1 ? SolveTermination::RefusedResourceCap : control==2 ? SolveTermination::RequestedBoundedFinish : SolveTermination::NumericalStability;
+        std::printf("W1 publication control=%u termination=%u steps=%u\n",control,static_cast<unsigned>(result.termination),steps);
+        PC_CHECK(result.termination==expected);
+        PC_CHECK(result.policy_available && result.policy_status==SolvePolicyStatus::BoundedFeasible);
+        PC_CHECK(std::abs(result.evaluated_policy_cost-424.3741)<1e-7);
+        PC_CHECK(!result.refined_policy_artifact.strategy_json.empty());
+        const auto graph=compile_strategy_json(session,result.refined_policy_artifact.strategy_json.data(),result.refined_policy_artifact.strategy_json.size());
+        auto economy=std::make_shared<EconomyImpl>(); economy->prices=prices;
+        StrategyEvalOptions evaluation; evaluation.economy=economy;
+        const auto checked=evaluate_strategy(*graph,evaluation);
+        PC_CHECK(checked.converged && checked.cost_complete && checked.success_probability>1-1e-10);
+        PC_CHECK(std::abs(checked.total_expected_cost-424.3741)<1e-7);
+    }
+    // A zero-proof profile with complete deterministic discovery keeps its
+    // distinct existing label. It has no unresolved ordinary envelope debt.
+    {
+        auto goal=target(*session,prefixes);
+        goal.automatic_candidate_kind_mask=automatic_candidate_kind_bit(AutomaticCandidateKind::CraftedCleanup);
+        CalcContext calc(session,goal,registry,{},false,false,true);
+        pc_item_state root; pc_item_clear(&root); root.rarity=PC_RARITY_RARE;
+        for (auto id : prefixes) put(root,*session,id);
+        put(root,*session,mod(*session,"HelenaMasterFireResist1"),PC_MOD_SLOT_CRAFTED);
+        SolveOptions options; apply_solve_profile_defaults(options,SolveProfile::CalculatorProductV1);
+        options.goal_proof_profile=GoalProofProfile::TargetNeutralZero;
+        options.consider_imprint_programs=false; options.max_solver_owned_bytes=64ull<<20;
+        SolveWork work(calc,root,prices,options);
+        unsigned steps=0; while (!work.progress().done && ++steps<2000) work.step(1);
+        PC_CHECK(work.progress().done);
+        const auto result=work.finish();
+        PC_CHECK(result.policy_available);
+        PC_CHECK(result.termination==SolveTermination::BoundedDiscoveryComplete);
+        PC_CHECK(!result.diagnostics.resource_cap_hit && result.lower_bound==0);
+    }
+    // An open envelope without a retained candidate cannot gain the new
+    // bounded-policy label at the same publication boundary.
+    {
+        auto goal=target(*session,prefixes); goal.automatic_candidates=false;
+        CalcContext calc(session,goal,registry,natural_candidates,false,false,true);
+        pc_item_state root; pc_item_clear(&root); root.rarity=PC_RARITY_RARE;
+        SolveWork work(calc,root,prices);
+        auto& impl=SolveWorkTestAccess::get(work);
+        impl.phase=SolvePhase::Done; impl.expansion_active=false;
+        impl.incremental_action_generation=true; impl.incremental_envelope_closed=false;
+        impl.incremental_unevaluated_actions=1;
+        impl.begin_publication_pipeline();
+        unsigned steps=0; while (!impl.finalized_result && ++steps<2000) impl.advance_publication_pipeline();
+        PC_CHECK(work.progress().done);
+        const auto result=work.finish();
+        PC_CHECK(!result.policy_available && result.refined_policy_artifact.strategy_json.empty());
+        PC_CHECK(result.termination==SolveTermination::NoExecutablePolicy);
+    }
     // A nonterminal protected preparation is a complete row, not a root upper.
     {
         auto bow = std::make_shared<SessionImpl>(); bow->data = data;
@@ -234,6 +332,10 @@ void run_solver_metamod_recovery_tests(const char* artifact_dir) {
         auto registry = build_action_registry(*bow,build);
         auto prices = std::unordered_map<std::string,double>{};
         for (const auto& a : registry.actions) for (const auto& key : a.cost_keys) prices[key] = 1;
+        prices["scour"]=0.3741; prices["exalt"]=1.77;
+        for (const auto& a : registry.actions)
+            if (a.params.type==ActionType::Bench && bow->metamod_type.at(a.params.mod_id)==data->metamod_prefixes_locked_code)
+                for (const auto& key : a.cost_keys) prices[key]=424;
         pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
         for (auto id : held) put(root,*bow,id);
         for (auto key : {"Dexterity7","LocalIncreasedAttackSpeed3"}) put(root,*bow,mod(*bow,key));
@@ -247,6 +349,83 @@ void run_solver_metamod_recovery_tests(const char* artifact_dir) {
             std::printf("Bow root mask=%u cheap=%zu\n", satisfied_goal_mask(diagnostic.state(state)),batch.admitted_operators.size());
             for (const auto& d : batch.decisions) std::printf("Bow proposal %s %s\n",d.id.c_str(),d.evidence.reason.c_str());
         }
+        // The product parent's broad class includes source-only modifiers.
+        // Refining it for admission must preserve the complete class universe.
+        CalcContext parent(bow,goal,registry,{registry.index_by_id.at("chaos")},false,false,false,std::nullopt,{},true);
+        const auto parent_state=parent.intern_item(root);
+        pc_item_state carrier;
+        PC_CHECK(parent.materialize(parent_state,carrier));
+        std::vector<std::uint64_t> universe(bow->words,0);
+        for (const auto& slot : parent.layout().slots) pc_bitset_or(universe.data(),universe.data(),slot.member_mask.data(),bow->words);
+        for (const auto& junk : parent.layout().junk_classes) pc_bitset_or(universe.data(),universe.data(),junk.member_mask.data(),bow->words);
+        auto local_goal=goal; local_goal.automatic_candidates=false;
+        FixedOptionSpec spec; spec.kind=FixedOptionKind::ProtectedSide; spec.side=PC_SIDE_PREFIX; spec.action_id="scour";
+        local_goal.fixed_options={spec};
+        CalcContext omitted(bow,local_goal,registry,{registry.index_by_id.at("chaos")},false,false,true);
+        const auto omitted_state=omitted.intern_item(carrier);
+        pc_item_state local_item;
+        PC_CHECK(!omitted.materialize(omitted_state,local_item));
+        for (unsigned i=0;i<carrier.suffix_count;++i) {
+            const auto id=carrier.suffixes[i].mod_id;
+            if (omitted.layout().junk_class_by_mod.at(id)==kNoId)
+                std::printf("Bow source-only suffix=%s spawn_positive=%d normal_roll=%d\n",data->string_at(data->mod_key_sid.at(bow->global_index.at(id))).c_str(),pc_bitset_test(bow->positive_spawn_weight_mask.data(),id),pc_bitset_test(bow->normal_random_roll_mask.data(),id));
+        }
+        CalcContext local(bow,local_goal,registry,{registry.index_by_id.at("chaos")},false,false,true,std::nullopt,{},false,universe);
+        const auto local_state=local.intern_item(carrier);
+        PC_CHECK(local.materialize(local_state,local_item));
+        PC_CHECK(project_item(*bow,parent.layout(),local_item)==parent.state(parent_state));
+        auto admission=limits; admission.prices=&prices;
+        StateLocalAutomaticBatch batch;
+        unsigned checkpoints=0;
+        while (!parent.advance_state_local_automatic_candidates(parent_state,admission,batch,1) && ++checkpoints<2000) {}
+        PC_CHECK(checkpoints<2000 && checkpoints>1);
+        bool cleanup=false;
+        for (auto index : batch.admitted_operators) {
+            const auto& op=parent.operators().at(index);
+            if (op.option_kind!=FixedOptionKind::ProtectedSide || op.followup_action_id!="scour" || op.intended_side!=PC_SIDE_PREFIX) continue;
+            cleanup=true;
+            const auto& law=parent.option_kernel(parent_state,index);
+            PC_CHECK(law.legal && law.supported && law.exits.size()==1);
+            if (law.exits.size()==1) {
+                const auto& exit=parent.state(law.exits.front().state);
+                PC_CHECK(exit.prefix_count==3 && exit.suffix_count==0 && satisfied_goal_mask(exit)==7);
+                PC_CHECK(!parent.is_goal_state(exit));
+            }
+        }
+        PC_CHECK(cleanup);
+        const auto cached=parent.admit_state_local_automatic_candidates(parent_state,admission);
+        PC_CHECK(cached.cached && cached.admitted_operators==batch.admitted_operators);
+
+        // Diagnostic native tail law only: every failed Exalt resets to the
+        // same sufficient carrier through the paid lock+Scour programme.
+        CalcContext cycle(bow,local_goal,registry,{registry.index_by_id.at("exalt")},false,false,true,std::nullopt,{},false,universe);
+        pc_item_state clean; pc_item_clear(&clean); clean.rarity=PC_RARITY_RARE;
+        for (auto id : held) put(clean,*bow,id);
+        const auto clean_state=cycle.intern_item(clean);
+        const auto& draws=cycle.outcomes(clean_state,registry.index_by_id.at("exalt"));
+        PC_CHECK(draws.supported && draws.applicable && draws.choice_groups.empty());
+        double p=0, mass=0;
+        unsigned retries=0;
+        double reset_cost=0;
+        for (const auto& draw : draws.entries) {
+            if (draw.probability<=0) continue;
+            mass+=draw.probability;
+            if (cycle.is_goal_state(cycle.state(draw.state))) { p+=draw.probability; continue; }
+            ++retries;
+            const auto& reset=cycle.option_kernel(draw.state,cycle.candidate_operators().back());
+            PC_CHECK(reset.legal && reset.supported && reset.exits.size()==1);
+            if (reset.exits.size()==1) PC_CHECK(reset.exits.front().state==clean_state && std::abs(reset.exits.front().probability-1)<1e-12);
+            PC_CHECK(reset.expected_primitive_actions==2);
+            reset_cost=0;
+            double resource_count=0;
+            for (const auto& [key,count] : reset.expected_resources) {
+                reset_cost+=prices.at(key)*count; resource_count+=count;
+                PC_CHECK(count==1);
+            }
+            PC_CHECK(resource_count==2 && std::abs(reset_cost-424.3741)<1e-10);
+        }
+        PC_CHECK(std::abs(mass-1)<1e-12 && p>0 && p<1);
+        std::printf("Bow native Exalt cycle p=%.17g wrong_classes=%u; diagnostic Allflame dirty-root cost=%.12g\n",p,retries,reset_cost+(prices.at("exalt")+(1-p)*reset_cost)/p);
         SolveOptions options; apply_solve_profile_defaults(options,SolveProfile::CalculatorProductV1);
         options.consider_imprint_programs = false;
         options.max_reforge_work = 1; options.max_solver_owned_bytes = 64ull << 20;
@@ -259,6 +438,69 @@ void run_solver_metamod_recovery_tests(const char* artifact_dir) {
         std::ofstream("out/metamod-bow-first-failure.json") << work.progress_trace_json(0);
     }
 
+    // Refinement conserves below-tier blockers, source-only crafted junk
+    // and crafted/fractured flags on both sides. Native craft refusal remains
+    // authoritative when a preexisting crafted modifier occupies the bench.
+    for (int side : {PC_SIDE_PREFIX,PC_SIDE_SUFFIX}) for (unsigned control=0;control<4;++control) {
+        const auto& held=side==PC_SIDE_PREFIX ? prefixes : suffixes;
+        const auto& other=side==PC_SIDE_PREFIX ? suffixes : prefixes;
+        auto wanted=held; wanted.push_back(other.front());
+        auto goal=target(*session,wanted);
+        goal.automatic_candidate_kind_mask=automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod);
+        std::uint32_t lower=kNoId;
+        for (std::uint32_t i=0;i<session->mod_count;++i)
+            if (session->family_id[i]==session->family_id[other.front()] && session->family_tier_index[i]>goal.slots.back().min_tier) { lower=i; break; }
+        PC_CHECK(lower!=kNoId); if (lower==kNoId) continue;
+        pc_item_state root; pc_item_clear(&root); root.rarity=PC_RARITY_RARE;
+        for (auto id : held) put(root,*session,id);
+        put(root,*session,lower,control==1 ? PC_MOD_SLOT_FRACTURED : 0);
+        std::uint32_t junk=other.back();
+        if (control>=2) {
+            junk=kNoId;
+            for (auto id : session->bench_mod_ids) {
+                if (session->gen_type[id]==side || session->metamod_type[id]>=0 || mods_conflict(*session,id,lower)) continue;
+                if (std::any_of(held.begin(),held.end(),[&](auto h){return mods_conflict(*session,id,h);})) continue;
+                junk=id; break;
+            }
+            PC_CHECK(junk!=kNoId); if (junk==kNoId) continue;
+        }
+        put(root,*session,junk,control>=2 ? PC_MOD_SLOT_CRAFTED | (control==3 ? PC_MOD_SLOT_FRACTURED : 0) : 0);
+        CalcContext parent(session,goal,registry,natural_candidates,false,false,false,std::nullopt,{},true);
+        const auto state=parent.intern_item(root);
+        PC_CHECK(parent.state(state).slot_status[2]==static_cast<std::uint8_t>(GoalSlotStatus::PresentBelowTier));
+        pc_item_state carrier; PC_CHECK(parent.materialize(state,carrier));
+        std::vector<std::uint64_t> universe(session->words,0);
+        for (const auto& slot : parent.layout().slots) pc_bitset_or(universe.data(),universe.data(),slot.member_mask.data(),session->words);
+        for (const auto& cls : parent.layout().junk_classes) pc_bitset_or(universe.data(),universe.data(),cls.member_mask.data(),session->words);
+        auto local_goal=goal; local_goal.automatic_candidates=false;
+        CalcContext local(session,local_goal,registry,{},false,false,true,std::nullopt,{},false,universe);
+        const auto entry=local.intern_item(carrier);
+        pc_item_state rebuilt; PC_CHECK(local.materialize(entry,rebuilt));
+        PC_CHECK(project_item(*session,parent.layout(),rebuilt)==parent.state(state));
+        auto admission=limits; admission.prices=&prices;
+        StateLocalAutomaticBatch batch;
+        PC_CHECK(!parent.advance_state_local_automatic_candidates(state,admission,batch,1));
+        parent.cancel_state_local_automatic_candidates(state);
+        PC_CHECK(parent.automatic_admission_cursor_bytes()==0);
+        batch=parent.admit_state_local_automatic_candidates(state,admission);
+        bool protected_cleanup=false;
+        for (auto index : batch.admitted_operators) {
+            const auto& op=parent.operators().at(index);
+            if (op.option_kind==FixedOptionKind::ProtectedSide && op.intended_side==side && op.followup_action_id=="scour") {
+                protected_cleanup=true;
+                const auto& law=parent.option_kernel(state,index);
+                PC_CHECK(law.legal && law.exits.size()==1);
+                if (law.exits.size()==1) {
+                    const auto& exit=parent.state(law.exits.front().state);
+                    PC_CHECK((satisfied_goal_mask(exit)&3)==3);
+                    PC_CHECK(control!=1 || (exit.fractured_goal_mask&4)!=0);
+                }
+            }
+        }
+        PC_CHECK(protected_cleanup==(control<2));
+        const auto repeated=parent.admit_state_local_automatic_candidates(state,admission);
+        PC_CHECK(repeated.cached && repeated.admitted_operators==batch.admitted_operators);
+    }
     for (unsigned control=0;control<5;++control) {
         auto goal = target(*session,prefixes);
         goal.automatic_candidate_kind_mask = automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod);
