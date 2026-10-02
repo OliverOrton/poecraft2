@@ -1,0 +1,43 @@
+{
+  "baseline": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+  "previous_checkpoint": "50a103b5d2384195b9cfefa096eeaa78987f6703",
+  "stage": "fixed-currency native ingress guards; product completion ongoing",
+  "source_files": {
+    "bindings/python/poecraft_engine/_binding.py": "8e739a11b46ee3f0f2a6ed6459a44bfe52e40f61e4a5cfdcee8a6166ecc4fc7f",
+    "bindings/python/tests/test_hinekora_lock.py": "8e229ab3882397581fcedbe004707f0f90e24a053fa3603a4e127d633d94c9da",
+    "docs/active/2026-10-02-lock-strands-completion/README.md": "8078d113628cb60d0df6561ba0b8544fe21d33624139826b8d31e21e575f5fab",
+    "engine/include/poecraft/bestiary.h": "ed6332fb26df1a4eecd31baada3a2defb1c4185f4a12d3a42024aec303b1a7d0",
+    "engine/include/poecraft/hinekora.h": "da8efa18ca093b5fa19378c891bfaf0c69c1f74152a44b939b3651c35762354c",
+    "engine/include/poecraft/item_state.h": "7675a08da36ad1752394d93cf218e14ae89a594f1a4383e977c429494f671483",
+    "engine/src/actions_basic.cpp": "83aa54e6140b171234e66b125074541ef6ac9d1063a01527df64a657fdc2872b",
+    "engine/src/actions_bestiary.cpp": "93ff95fe7560233baafc6e930d95382cce7234ec8b8921d17fa122a80f5755f3",
+    "engine/src/bestiary_api.cpp": "72bed577953347a1c452d0e51b0675ca30a1e4b8a0a4e61bd6369f569194448e",
+    "engine/src/calculator_currency.cpp": "54344d3944e8f2c0798cc026163e22998f656c5f7ac95b70b64e3fa870ee0365",
+    "engine/src/engine_internal.hpp": "f659694e1a88433d820ff59c077b54a577bd1657368e3f578e3cbfdfac25093b",
+    "engine/src/hinekora.cpp": "1c19be7d17933145a10e29df54019f107438665ccdc80b6c8e9ccc7444fc3cfd",
+    "engine/src/hinekora_internal.hpp": "ed0b0defdc34afd175d596ac69524124bb12cfc3a5bb3ae420bdb66bce707155",
+    "engine/src/multi_item.cpp": "cb9e3126e249ff17d769cadeb8d0e2f641c68583b5ab7120a01055d9120fbb8f",
+    "engine/src/session_builder.cpp": "b08eee649bdb645a3a5db5da160aca46c04f69bc61de19896ebded99773b7f07",
+    "engine/src/simulator.cpp": "51ea697d507f112e454fa1f45c03670c5e6e9a635cd1cfcc38674a2f2374e354",
+    "engine/src/solver_abstract.cpp": "6a8cb708a44fd684c59a3b2f5df602eb22f6587b14b370ce39534be962a9c2fd",
+    "engine/src/solver_api.cpp": "7d6ec9b754b513cc8f0e5fc69274b8b013e0309e0aa4c9646fe6fd8b44e8f7dd",
+    "engine/tests/header_smoke.cpp": "e6a99a06d942dae949c16b147b9ddfd6555f0519505981fb1867640ef902bd41"
+  },
+  "dll_sha256": "10f5f8671a3ba21a8af71521e30c763c25800b1dfc540d1f69511c8a6d825f75",
+  "checks": {
+    "engine_and_shared_build": "passed; two jobs",
+    "header_smoke": "passed; two jobs",
+    "python_tests": 48,
+    "command": "py -3 -m pytest -q -p no:cacheprovider bindings/python/tests/test_hinekora_lock.py bindings/python/tests/test_currency_calculator.py"
+  },
+  "logs": {
+    "out/lock-strands-completion/guard-build-qualified.log": "c604b8a81b1ee118bb0146757bc4fdf2202f7d53957abf6d97b15994c989c87b",
+    "out/lock-strands-completion/guard-tests-qualified.log": "b1d7ca8ea3a9597db039257a6d0842db9155063eb0ce3d1c47a55a3f47a75bb8",
+    "out/lock-strands-completion/guard-header.log": "60577e081001df43422b1cc9f37473a7ab87718da1f8394e522e30eba66abfe3"
+  },
+  "remaining": [
+    "native cached foresight persistence and product routes",
+    "full multicurrency Lock and adaptive solver value held",
+    "memory laws await Oliver approval"
+  ]
+}

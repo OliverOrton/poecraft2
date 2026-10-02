@@ -36,7 +36,7 @@ bool same(const pc_item_state& a, const pc_item_state& b) {
     // metadata. C/C++ padding bytes are not item state and may change on copies.
     return a.rarity == b.rarity && a.quality == b.quality &&
         a.memory_strands == b.memory_strands && a.lifecycle == b.lifecycle &&
-        a.item_flags == b.item_flags && a.prefix_count == b.prefix_count &&
+        (a.item_flags & ~PC_ITEM_FORESEEN) == (b.item_flags & ~PC_ITEM_FORESEEN) && a.prefix_count == b.prefix_count &&
         a.suffix_count == b.suffix_count && a.implicit_count == b.implicit_count &&
         a.enchantment_count == b.enchantment_count &&
         same_slots(a.prefixes, b.prefixes) && same_slots(a.suffixes, b.suffixes) &&
@@ -48,8 +48,15 @@ bool same(const pc_item_state& a, const pc_item_state& b) {
         std::equal(std::begin(a.socket_colors), std::end(a.socket_colors), std::begin(b.socket_colors));
 }
 bool current(poecraft::HinekoraForesight& f, const pc_item_state* item) {
-    if (f.identity != item) return false;
-    if (!same(f.input, *item)) { f.active = false; f.refresh_allowed = true; }
+    if (f.identity != item || !f.active) return false;
+    if (!same(f.input, *item)) {
+        f.active = false;
+        f.refresh_allowed = true;
+        f.identity->item_flags &= ~PC_ITEM_FORESEEN;
+    } else if (!(item->item_flags & PC_ITEM_FORESEEN)) {
+        // Merely clearing the marker cannot create a free fresh outcome.
+        f.active = false;
+    }
     return f.active;
 }
 bool same_action(const poecraft::ActionParameters& a,
@@ -94,13 +101,17 @@ namespace poecraft {
 ActionOutcome apply_with_foresight(ActionContextImpl& context,
     pc_item_state* item, const ActionParameters& action) {
     auto& f = context.hinekora_foresight;
-    if (f && current(*f, item) && same_action(f->action, action)) {
+    const bool active = f && current(*f, item);
+    if ((item->item_flags & PC_ITEM_FORESEEN) && !active)
+        throw std::invalid_argument("Foreseeing item requires its original native Lock context; copied/imported foresight cannot be dropped");
+    if (active && same_action(f->action, action)) {
         *item = f->preview;
         f->active = false;
         f->refresh_allowed = true;
         return f->outcome;
     }
     pc_item_state working = *item;
+    working.item_flags &= ~PC_ITEM_FORESEEN;
     auto outcome = apply_action(context, &working, action);
     if (outcome.applied) {
         *item = working;
@@ -117,7 +128,7 @@ int32_t pc_hinekora_lock_currency_supported(int32_t action_type) {
     return currency(static_cast<poecraft::ActionType>(action_type)) ? 1 : 0;
 }
 pc_result pc_hinekora_lock_create(pc_action_context_handle context,
-    const pc_item_state* item, const pc_action_request* request,
+    pc_item_state* item, const pc_action_request* request,
     pc_hinekora_lock_handle* out_lock, pc_error_info* out_error) {
     if (out_lock) *out_lock = nullptr;
     if (!context || !item || !request || !out_lock) {
@@ -135,6 +146,12 @@ pc_result pc_hinekora_lock_create(pc_action_context_handle context,
             return PC_RESULT_UNSUPPORTED_FEATURE;
         }
         const auto& previous = context->impl->hinekora_foresight;
+        if ((item->item_flags & PC_ITEM_FORESEEN) &&
+            (!previous || previous->identity != item || !current(*previous, item))) {
+            error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
+                "Foreseeing item requires its original native Lock context");
+            return PC_RESULT_UNSUPPORTED_FEATURE;
+        }
         if (previous) {
             if (previous->identity == item && same(previous->input, *item) &&
                 !previous->refresh_allowed) {
@@ -151,7 +168,8 @@ pc_result pc_hinekora_lock_create(pc_action_context_handle context,
         auto foresight = std::make_shared<poecraft::HinekoraForesight>();
         foresight->identity = item;
         foresight->input = *item;
-        foresight->preview = *item;
+        foresight->input.item_flags &= ~PC_ITEM_FORESEEN;
+        foresight->preview = foresight->input;
         foresight->action = action;
         // Fresh private caches avoid copying pointers into context pool caches.
         // Reserve exactly the same marginal law as the selected native action.
@@ -169,6 +187,7 @@ pc_result pc_hinekora_lock_create(pc_action_context_handle context,
         if (previous) previous->active = false;
         context->impl->rng = sampled.rng;
         context->impl->hinekora_foresight = std::move(foresight);
+        item->item_flags |= PC_ITEM_FORESEEN;
         *out_lock = holder.release();
         error(out_error, PC_RESULT_OK, "");
         return PC_RESULT_OK;
@@ -221,6 +240,9 @@ pc_result pc_hinekora_lock_status(pc_hinekora_lock_handle lock,
     return PC_RESULT_OK;
 }
 void pc_hinekora_lock_invalidate(pc_hinekora_lock_handle lock) {
-    if (lock) lock->impl->active = false;
+    if (lock && lock->impl->active) {
+        lock->impl->identity->item_flags &= ~PC_ITEM_FORESEEN;
+        lock->impl->active = false;
+    }
 }
 void pc_hinekora_lock_destroy(pc_hinekora_lock_handle lock) { delete lock; }

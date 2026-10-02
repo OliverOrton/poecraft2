@@ -13,14 +13,17 @@ int32_t pc_hinekora_lock_currency_supported(int32_t action_type);
 /* Fixed-currency foresight for the existing native item projection. One live
  * foresight per action context; it is bound to this caller-owned item address,
  * session and complete currency request. Creation spends one Lock and reserves
- * one native outcome without modifying the item. Inapplicable requests refuse
+ * one native outcome, marking only PC_ITEM_FORESEEN on the input. Ordinary
+ * Calculator/solver/strategy ingress refuses this information state; copies
+ * retain the marker without inheriting the original identity-bound Lock.
+ * Inapplicable requests refuse
  * before sampling/payment. No cross-currency joint law or solver model is claimed.
  * Keep the item alive until destroying the handle. Handle destruction is memory
  * cleanup, not an in-game decline/refresh. A second Lock refuses until an
  * item modification or successful currency use (including equal visible
  * output), even if the old handle was destroyed or merely invalidated. */
 pc_result pc_hinekora_lock_create(pc_action_context_handle context,
-    const pc_item_state* item, const pc_action_request* currency,
+    pc_item_state* item, const pc_action_request* currency,
     pc_hinekora_lock_handle* out_lock, pc_error_info* out_error);
 /* Inspection is free and idempotent. It never changes item or context RNG.
  * Ordinary pc_apply_action of the bound request commits this exact preview.

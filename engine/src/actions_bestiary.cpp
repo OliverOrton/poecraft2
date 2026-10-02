@@ -17,6 +17,9 @@ BestiaryActionOutcome refused(BestiaryRefusalReason reason,
 BestiaryRefusalReason common_refusal(
     const BestiaryActionDescriptor& action,
     const BestiaryCraftState& state) {
+    if ((state.item.item_flags & PC_ITEM_FORESEEN) ||
+        (state.checkpoint_active && (state.checkpoint.item_flags & PC_ITEM_FORESEEN)))
+        return BestiaryRefusalReason::ForeseeingItem;
     if (state.item.lifecycle != PC_ITEM_LIVE)
         return BestiaryRefusalReason::ItemAbsent;
     if ((action.forbidden_item_flags & PC_ITEM_CORRUPTED) != 0 &&

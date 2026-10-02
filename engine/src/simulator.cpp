@@ -360,6 +360,8 @@ pc_item_state parse_start_item(
         invalid("Strategy start item must be a live resource");
     item.item_flags =
         static_cast<std::uint8_t>(int_member(base_state, "item_flags", 0));
+    if ((item.item_flags & PC_ITEM_FORESEEN) || base_state.find("foresight"))
+        invalid("Hinekora's Lock information-state strategy grammar is unavailable; foresight cannot be dropped");
     if (bool_member(base_state, "corrupted", false)) {
         item.item_flags |= PC_ITEM_CORRUPTED;
     }

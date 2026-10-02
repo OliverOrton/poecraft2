@@ -2060,9 +2060,9 @@ pc_result pc_calc_action_outcomes(
                   "Calculation action belongs to a disabled family");
         return PC_RESULT_UNSUPPORTED_FEATURE;
     }
-    if (item->memory_strands || item->lifecycle != PC_ITEM_LIVE || item->enchantment_count) {
+    if ((item->item_flags & PC_ITEM_FORESEEN) || item->memory_strands || item->lifecycle != PC_ITEM_LIVE || item->enchantment_count) {
         set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
-                  "Exact calculation of memory, absent resources or enchantment effects requires Pro integration");
+                  "Exact calculation of foresight, memory, absent resources or enchantment effects requires information-state integration");
         return PC_RESULT_UNSUPPORTED_FEATURE;
     }
     try {
@@ -2151,9 +2151,9 @@ pc_result pc_solver_solve(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "Currency inspector cannot solve strategies; define an explicit goal");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    if (start_item->memory_strands || start_item->lifecycle != PC_ITEM_LIVE || start_item->enchantment_count) {
+    if ((start_item->item_flags & PC_ITEM_FORESEEN) || start_item->memory_strands || start_item->lifecycle != PC_ITEM_LIVE || start_item->enchantment_count) {
         set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
-            "Memory strands, absent resources and enchantment effects require Pro solver integration; state cannot be dropped");
+            "Foresight, memory strands, absent resources and enchantment effects require solver integration; state cannot be dropped");
         return PC_RESULT_UNSUPPORTED_FEATURE;
     }
     try {
@@ -2234,9 +2234,9 @@ pc_result pc_solver_solve_begin(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "Currency inspector cannot solve strategies; define an explicit goal");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    if (start_item->memory_strands || start_item->lifecycle != PC_ITEM_LIVE || start_item->enchantment_count) {
+    if ((start_item->item_flags & PC_ITEM_FORESEEN) || start_item->memory_strands || start_item->lifecycle != PC_ITEM_LIVE || start_item->enchantment_count) {
         set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
-            "Memory strands, absent resources and enchantment effects require Pro solver integration; state cannot be dropped");
+            "Foresight, memory strands, absent resources and enchantment effects require solver integration; state cannot be dropped");
         return PC_RESULT_UNSUPPORTED_FEATURE;
     }
     try {

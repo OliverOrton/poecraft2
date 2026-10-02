@@ -30,7 +30,9 @@ def test_lock_preserves_complete_native_marginal_and_numerical_preview(currency,
             with session.create_action_context(seed) as ctx, session.create_action_context(seed) as ordinary:
                 expected = ordinary.apply(control, currency)
                 with ctx.hinekora_lock(item, currency) as lock:
-                    assert bytes(item._state) == before
+                    assert item._state.item_flags & 16
+                    marked_copy = item.copy(); marked_copy._state.item_flags &= ~16
+                    assert bytes(marked_copy._state) == before
                     preview, observed = lock.preview()
                     assert lock.active and observed == expected
                     assert bytes(preview._state) == bytes(control._state)
@@ -71,7 +73,8 @@ def test_no_free_decline_refresh_or_aliasing():
         with ctx.hinekora_lock(item, "exalt") as lock:
             error, result = _error(), _ActionResult()
             assert _lib.pc_hinekora_lock_preview(lock._handle, ct.byref(item._state), ct.byref(item._state), ct.byref(result), ct.byref(error)) != 0
-            assert bytes(item._state) == before and lock.active
+            marked_copy = item.copy(); marked_copy._state.item_flags &= ~16
+            assert bytes(marked_copy._state) == before and lock.active
             lock.invalidate()
         with pytest.raises(EngineError, match="Modify the item"):
             ctx.hinekora_lock(item, "exalt")
@@ -170,3 +173,95 @@ def test_abi_padding_cannot_refresh_or_invalidate_native_foresight():
             with pytest.raises(EngineError, match="Modify the item"):
                 ctx.hinekora_lock(item, "exalt")
             assert lock.commit().applied
+
+
+def test_foreseeing_copy_and_ordinary_odds_cannot_drop_information_state():
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(7) as ctx, session.create_action_context(8) as other:
+        item = session.create_item("rare")
+        with ctx.hinekora_lock(item, "exalt") as lock:
+            assert item._state.item_flags & 16
+            clone = item.copy()
+            before = bytes(clone._state)
+            with pytest.raises(EngineError, match="Foreseeing"):
+                other.apply(clone, "exalt")
+            assert bytes(clone._state) == before and lock.active
+            with pytest.raises(EngineError, match="Foreseeing"):
+                other.hinekora_lock(clone, "exalt")
+            with pytest.raises(EngineError, match="foreseeing|Foreseeing|foresight"):
+                ctx.debug_pool(item, "exalt")
+            with pytest.raises(EngineError, match="foresight"):
+                session.calculate_currency(item, "exalt")
+            graph = {"version":"v1", "start_node_id":"s", "base_state":{"base_key":BASE,"item_level":86,"rarity":"rare","item_flags":16},
+                     "nodes":[{"id":"s","kind":"start"},{"id":"t","kind":"terminal","terminal":"success"}],
+                     "edges":[{"id":"e","from":"s","to":"t"}]}
+            with pytest.raises(EngineError, match="foresight"):
+                session.compile_strategy(graph)
+            assert lock.commit().applied
+            assert not item._state.item_flags & 16
+            assert clone._state.item_flags & 16
+
+
+def test_invalidation_clears_marker_without_authorizing_a_free_refresh():
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(7) as ctx:
+        item = session.create_item("rare")
+        with ctx.hinekora_lock(item, "exalt") as lock:
+            lock.invalidate()
+            assert not item._state.item_flags & 16
+            with pytest.raises(EngineError, match="Modify the item"):
+                ctx.hinekora_lock(item, "exalt")
+
+
+def test_bestiary_refuses_foreseeing_checkpoint_capture_atomically():
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(7) as ctx:
+        item = session.create_item("magic")
+        with ctx.hinekora_lock(item, "regal") as lock:
+            from poecraft_engine._binding import BestiaryCraftState, _BestiaryCraftState
+            with pytest.raises(EngineError, match="foresight"):
+                session.create_bestiary_state(item)
+            native, error = _BestiaryCraftState(), _error()
+            assert _lib.pc_bestiary_state_init(ct.byref(item._state), 1, ct.byref(native), ct.byref(error)) == 0
+            state = BestiaryCraftState(session, native)
+            before = bytes(state._state)
+            result = state.apply("bestiary:imprint")
+            assert not result.applied and result.refusal_key == "foreseeing_item"
+            assert bytes(state._state) == before
+            assert not state.calculate("bestiary:imprint").result.applied
+            assert lock.active
+
+
+def test_solver_root_ingress_refuses_known_foresight_before_work():
+    from poecraft_engine import load_economy
+    from poecraft_engine._binding import _ErrorInfo
+    _lib.pc_solver_project_item.argtypes = [_handle, ct.POINTER(_ItemState), ct.POINTER(ct.c_uint32), ct.POINTER(_ErrorInfo)]
+    _lib.pc_solver_project_item.restype = ct.c_int32
+    _lib.pc_solver_solve_begin.argtypes = [_handle, ct.POINTER(_ItemState), _handle, ct.c_void_p, ct.POINTER(_ErrorInfo)]
+    _lib.pc_solver_solve_begin.restype = ct.c_int32
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(7) as ctx, load_economy({"version":"v1","prices":{"exalt":1,"base":1}}) as economy:
+        item = session.create_item("rare")
+        goal = json.dumps({"rarity":"rare","slots":[{"family_mod_key":"Strength1"}],"actions":["exalt"]}).encode()
+        solver, error = _handle(), _error()
+        assert _lib.pc_solver_create(session._handle, goal, len(goal), ct.byref(solver), ct.byref(error)) == 0, bytes(error.message)
+        try:
+            with ctx.hinekora_lock(item, "exalt") as lock:
+                state_id = ct.c_uint32()
+                assert _lib.pc_solver_project_item(solver, ct.byref(item._state), ct.byref(state_id), ct.byref(error)) != 0
+                assert b"foresight" in bytes(error.message)
+                assert _lib.pc_solver_solve_begin(solver, ct.byref(item._state), economy._handle, None, ct.byref(error)) != 0
+                assert b"Foresight" in bytes(error.message)
+                assert lock.active
+        finally:
+            _lib.pc_solver_destroy(solver)
+
+
+def test_old_handle_cannot_clear_new_lock_and_marker_clearing_cannot_refresh():
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(7) as ctx:
+        item = session.create_item("rare")
+        with ctx.hinekora_lock(item, "exalt") as old:
+            old.commit()
+            with ctx.hinekora_lock(item, "annul") as new:
+                old.invalidate()
+                assert new.active and item._state.item_flags & 16
+                item._state.item_flags &= ~16
+                assert not new.active
+                with pytest.raises(EngineError, match="Modify the item"):
+                    ctx.hinekora_lock(item, "annul")

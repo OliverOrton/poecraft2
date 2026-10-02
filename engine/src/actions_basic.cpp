@@ -1470,6 +1470,8 @@ ActionOutcome apply_action(
     if (action.type == ActionType::Fossil)
         if (const char* reason = unavailable_fossil_reason(*session.data, action.fossil_indices))
             throw std::invalid_argument(reason);
+    if (item->item_flags & PC_ITEM_FORESEEN)
+        throw std::invalid_argument("Foreseeing item requires its original native Lock context; ordinary action sampling cannot drop foresight");
     if (item->enchantment_count && action.type != ActionType::Vaal && action.type != ActionType::Dominance)
         throw std::invalid_argument("Crafting on retained enchantments is unavailable until their effect and socket contracts are implemented");
     if (item->memory_strands > 100 || item->lifecycle > PC_ITEM_DESTROYED)

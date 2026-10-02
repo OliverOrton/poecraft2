@@ -1536,6 +1536,8 @@ class Session(_OwnedHandle):
     def create_bestiary_state(self, item: "Item") -> "BestiaryCraftState":
         if item._session is not self:
             raise ValueError("item belongs to a different session")
+        if item.item_flags & 16:
+            raise EngineError(4, "Lock foresight must be resolved before rebinding Bestiary item storage")
         native = _BestiaryCraftState()
         error = _error()
         identity = self._next_bestiary_identity

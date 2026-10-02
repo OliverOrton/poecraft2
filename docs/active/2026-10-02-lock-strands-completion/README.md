@@ -59,7 +59,7 @@ and Harvest more/less likely retain their separate existing owner holds.
 
 ## Qualification
 
-No build, timed solve or new Simulator run has started. Current-status reviewed
+No timed solve or new Simulator qualification has started. Current-status reviewed
 code `ae24e0b` is historical; this branch starts from the combined native sprint
 checkpoint, with its own scoped receipt. Initial combined WASM belongs to the
 integration owner and does not qualify this branch's future native changes.
@@ -92,3 +92,20 @@ Remembrance has 2255 counts, range 10-100, mean 41.5609756. Misc per-mod rows an
 large-consumption censoring are not independent/unbiased generating-law evidence.
 No empirical runtime model is approved or activated. The full scoped proposal
 was sent to the integration owner in commentary for Oliver's review.
+
+## Passing ingress-guard checkpoint
+
+Engine/shared-DLL/header-smoke builds pass at two jobs. 48 focused Python Lock
+and Calculator contracts pass against the completed DLL, including nine
+1000-seed primitive comparisons. PC_ITEM_FORESEEN refuses ordinary pool,
+Calculator, Current/Finder roots, abstraction, authored Simulator ingress,
+multi-item resources and Bestiary checkpoint operations. Python refuses
+Bestiary storage rebinding while foresight is present. Marker removal does not
+authorize a free draw; old inactive handles cannot clear a new marker.
+[Receipt](native-guard-checkpoint.json) pins changed sources, DLL and logs.
+One enum-collision build failure and one premature old-DLL test run are retained
+as failed checks in scratch output; the completed-DLL rerun passes.
+
+The integration owner accepted the constrained fixed-currency scope for staging.
+Persistence, WASM and product routes remain in progress. All empirical memory
+laws still require Oliver approval; none is activated.

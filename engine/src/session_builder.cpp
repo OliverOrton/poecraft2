@@ -1201,6 +1201,8 @@ const WeightedPool& get_weighted_pool(
     const PoolBuildHints* hints) {
     if (item != nullptr && item->lifecycle != PC_ITEM_LIVE)
         throw std::invalid_argument("An absent resource has no crafting pool");
+    if (item != nullptr && (item->item_flags & PC_ITEM_FORESEEN))
+        throw std::invalid_argument("Foreseeing odds require the retained Lock information state; ordinary pool odds are unavailable");
     if (item != nullptr && item->memory_strands > 0)
         throw std::invalid_argument("Memory-strand odds are unavailable: the tier and consumption laws are unresolved");
     const SessionImpl& session = *context.session;

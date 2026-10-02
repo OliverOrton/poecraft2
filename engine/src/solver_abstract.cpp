@@ -966,6 +966,8 @@ AbstractState project_item(
     const SessionImpl& session,
     const AbstractLayout& layout,
     const pc_item_state& item) {
+    if (item.item_flags & PC_ITEM_FORESEEN)
+        throw std::invalid_argument("Hinekora's Lock information-state solver integration is unavailable; foresight cannot be projected as an ordinary item");
     if (item.lifecycle != PC_ITEM_LIVE)
         throw std::invalid_argument("Consumed/destroyed resources require a resource-aware solver; an absent item cannot be projected as an empty item");
     if (item.enchantment_count > 0)

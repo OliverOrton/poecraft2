@@ -4,7 +4,7 @@
 #include "poecraft/hinekora.h"
 namespace poecraft {
 struct HinekoraForesight {
-    const pc_item_state* identity = nullptr;
+    pc_item_state* identity = nullptr;
     pc_item_state input{};
     pc_item_state preview{};
     ActionParameters action;

@@ -57,6 +57,8 @@ std::string calculate_currency_json(CalcContext& source,
         action_transition_facts(source.registry().actions[found_action->second].params.type).renewal;
     const bool omit_affixes = (renewal || action == "awakener" || action == "vaal") && source.goal().slots.empty() &&
         source.goal().terminal.extras == ExtraExplicitPolicy::Allow && !source.goal().terminal.prefixes && !source.goal().terminal.suffixes;
+    if ((receiver.item_flags & PC_ITEM_FORESEEN) || (donor && (donor->item_flags & PC_ITEM_FORESEEN)))
+        throw std::invalid_argument("Hinekora's Lock information-state calculation is unavailable; foresight cannot be dropped");
     if (receiver.memory_strands || receiver.lifecycle != PC_ITEM_LIVE)
         throw std::invalid_argument("Calculation requires a live item without memory strands");
     if (!expanded && receiver.enchantment_count)

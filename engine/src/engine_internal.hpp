@@ -91,6 +91,7 @@ enum class BestiaryRefusalReason : std::uint8_t {
     CheckpointAlreadyExists = 5,
     CheckpointMissing = 6,
     CheckpointBoundToDifferentItem = 7,
+    ForeseeingItem = 9,
     ItemAbsent = 8,
 };
 

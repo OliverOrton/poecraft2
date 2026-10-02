@@ -40,7 +40,8 @@ typedef enum pc_item_flags {
     PC_ITEM_CORRUPTED = 1 << 0,
     PC_ITEM_MIRRORED = 1 << 1,
     PC_ITEM_SPLIT = 1 << 2,
-    PC_ITEM_SYNTHESISED = 1 << 3
+    PC_ITEM_SYNTHESISED = 1 << 3,
+    PC_ITEM_FORESEEN = 1 << 4 /* information state; requires its native Lock */
 } pc_item_flags;
 
 typedef enum pc_rarity {

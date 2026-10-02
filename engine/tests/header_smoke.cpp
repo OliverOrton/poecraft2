@@ -1,4 +1,5 @@
 #include <poecraft/api.h>
+#include <poecraft/hinekora.h>
 #include <poecraft/bestiary.h>
 #include <poecraft/simulator.h>
 

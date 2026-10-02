@@ -16,6 +16,8 @@ void validate_resources(const std::vector<CraftResource>& resources) {
         require(!resource.identity.empty() && ids.insert(resource.identity).second,
                 "Multi-item resources require distinct nonempty identities; self-donation is invalid");
         require(resource.session != nullptr, "Resource session is missing");
+        require(!(resource.item.item_flags & PC_ITEM_FORESEEN),
+                "Multi-item foresight requires an approved information-state contract");
         require(resource.item.memory_strands <= 100 && resource.item.lifecycle <= PC_ITEM_DESTROYED,
                 "Resource has invalid memory or lifecycle state");
         if (!resource.role.empty()) require(roles.insert(resource.role).second, "Duplicate input role");
