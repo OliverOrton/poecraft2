@@ -461,3 +461,23 @@ same-class blocker multiplicity 2 to 1 to 0, remain evidence for uniform removal
 passing renewal comparisons and controller costs do not discharge the native-law
 obligation. The 23,513 passing checks remain historical counts, not blanket
 native-law acceptance. No native budget or gate expansion is authorized.
+
+
+## Subsequent isolated integration correction (2026-10-02)
+
+The parent's selected combined branch incorporates this owner chain through
+`45611b9`, Mechanics through `d326305`, and CURRENT through `6a24e99`.
+The separate native group correction at `3c38872` removes false-transitive
+observation-mask eligibility pruning and repairs terminal cross-slot blocker
+projection. The [argument](../../solver/mathematics/representations.md#native-reforge-group-eligibility)
+and [finite receipt](../2026-10-02-current-overnight/native-group-correction.json)
+record native support, common-group single-occupancy admission, corrected
+checkpoint/cache identities, and independent native rolling/Annul comparisons.
+After these changes are integrated, the unchanged conservative Finder quotient
+passes 21,696 focused finite checks. Its cross-goal admission gate is retained.
+
+These are subsequent corrected-source finite results. N6's captured graph,
+reported cost, build hashes and native-law hold remain historical, with no
+corrected-byte fixed-graph or full real-data search run. Final combined WASM
+build and actual-worker qualification remain separately pending; no extra
+native timed allowance is inferred.

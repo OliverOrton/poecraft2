@@ -1,7 +1,7 @@
 {
   "scope": "Parent/Astra approved finite native-group eligibility and terminal-projection correction; no Finder gate widening or economic qualification.",
   "base_commit": "04e1d7610be00a333d5428c2b0b8ad3d1929e13a",
-  "source_commit": "pending_code_checkpoint",
+  "source_commit": "3c38872138d6822d91646f905be1c5ef45dcb105",
   "source_files_sha256": {
     "engine/src/solver_reforge.cpp": "41ceeab61dca9516ecbc5ca42c781202bd6137d516a942e428915429da6922b1",
     "engine/src/solver_development_checkpoint.cpp": "58739e5d2ac66106b748974cda2f12f8c48ac23b0c4769a61a90e50dc3edf6b4",

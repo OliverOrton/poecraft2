@@ -939,10 +939,10 @@ std::optional<UniformRemovalGoalProof> prove_uniform_removal_goals(
                                 blocks |= 1u << target;
                     }
                 }
-                // The first certified domain excludes cross-goal blockers.
-                // Legacy physical rollout does not yet reproject that
-                // redundant effect from occupied goal members. Keep those
-                // strategies physical rather than inheriting that gap.
+                // Keep the first certified domain's conservative cross-goal
+                // exclusion gate. Native reforge now preserves those terminal
+                // observations, but admitting them to the uniform-removal
+                // quotient needs its own proof and qualification.
                 if (blocks != 0) valid = false;
                 if (first) {
                     proof.sides[s] = side;
