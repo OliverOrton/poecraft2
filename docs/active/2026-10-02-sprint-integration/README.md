@@ -360,3 +360,66 @@ Proposed later audit, not started: carrier transformations preserving every
 native identity/occupancy flag; independent complete native outcome enumeration;
 and paid setup/recovery graph provenance plus cached-artifact ownership. Mechanics
 requiring Oliver's decisions remain held.
+
+
+### Prepared resume runs (not executed)
+
+Resume from repair checkpoint `652c1fab913ea2d99e53bce740733e9bbda94359`
+on `dot/local-native-repair-20261002`. Worktree is clean. The built native test
+executable is SHA256
+`4fc179553f0218c9f6c644ca2e361ef37a421ca6f4f6fe75f2dbd0b9a1ce6d72`.
+It matches the current source/regression and needs no rebuild unless source
+changes. Frozen artifact input is the existing immutable main snapshot
+`82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d`;
+do not ingest, refresh prices, modify SQLite or substitute old-law evidence.
+
+Run A, after Oliver explicitly resumes: the final narrowed regression and price
+flip, serially. These are unrun on the committed repair.
+
+```powershell
+Set-Location 'C:\Users\Oliver\Documents\poecraft2-local-native-repair'
+Get-FileHash build/engine/poecraft_engine_tests.exe -Algorithm SHA256
+& .\build\engine\poecraft_engine_tests.exe --solver-integrity-only fracture
+# Record exit/log; stop and diagnose on failure before starting the next run.
+& .\build\engine\poecraft_engine_tests.exe --solver-s8-3-only run_fracture_price_flip
+```
+
+Run B, only after A passes: the two failed CI native targets, serially, and the
+specific selective-cap negative control. The full solver target already includes
+ordinary-step incumbent continuity, so do not rerun its separate selector by
+routine. Preserve native cancellation/watchdog and record exact exits, counts,
+logs and elapsed time. No benchmark/Simulator qualification is selected; any
+sampling built into these existing tests is test validation, not new strategy
+authority.
+
+```powershell
+Set-Location 'C:\Users\Oliver\Documents\poecraft2-local-native-repair'
+& .\build\engine\poecraft_engine_tests.exe --solver-solve-only 'C:\Users\Oliver\Documents\poecraft2\data\runtime-snapshots\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d'
+# Stop on failure. Full target includes the new fracture regression and continuity.
+& .\build\engine\poecraft_engine_tests.exe --solver-s8-3-only
+# Stop on failure.
+& .\build\engine\poecraft_engine_tests.exe --solver-integrity-only selective-cap-diagnosis
+```
+
+Run C, only after native qualification: source-matched WASM build with at most two
+jobs; never restart Oliver's server. Dependencies/SDK already exist; do not
+install. Source, engine tree and artifact hashes must be recorded before delivery.
+
+```powershell
+Set-Location 'C:\Users\Oliver\Documents\poecraft2-local-native-repair'
+$env:EMCC_CORES = '2'
+$env:CMAKE_BUILD_PARALLEL_LEVEL = '2'
+powershell -NoProfile -File scripts/build-wasm.ps1
+```
+
+Then reuse the repository's existing affected Calculator/worker finite checks
+and source-matched WASM loader. Native-only checkpoint is not web qualification.
+Do not promote until those results, final hashes and failure/authority review are
+recorded. Qualified normal main delivery has separate explicit user permission;
+no push is part of this pause checkpoint. Recheck main ancestry/unrelated changes
+without touching protected `0`. No architecture, mechanics guesses or new UI
+features are selected. The later three-boundary audit remains a proposal only.
+
+A second process check after the pause again found **zero tracked owned
+processes** and **zero visible native build/test processes**. No work is scheduled
+automatically; Oliver will choose the overnight resume. No owned process remains.
