@@ -1274,7 +1274,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
             statewise_values_rejected |= !reconciled;
         }
         bool has_statewise_upper_values() const {
-            return !statewise_values_rejected;
+            return !statewise_values_rejected && !compiled_root_entry_only;
         }
         bool strict_state_provenance = true;
         /* A fully evaluated ordinary graph with an exact root-entry witness,

@@ -1152,6 +1152,9 @@ void run_direct_certification_contract_tests() {
         incumbent.compiled_artifact.strategy_json="preserved_checked_graph_fixture";
         incumbent.record_root_cost_reconciliation(reconcile);
         PC_CHECK(incumbent.has_statewise_upper_values()==reconcile);
+        incumbent.compiled_root_entry_only = true;
+        PC_CHECK(!incumbent.has_statewise_upper_values());
+        incumbent.compiled_root_entry_only = false;
         // A later matching root scalar cannot repair an already rejected table.
         incumbent.record_root_cost_reconciliation(true);
         PC_CHECK(incumbent.has_statewise_upper_values()==reconcile);
