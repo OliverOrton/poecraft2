@@ -183,15 +183,18 @@ execution, then merges terminal results. It corrects retained-modifier Foulborn
 pool odds while preserving expanded/renewal terminal optimization and all
 unsupported-carrier guards.
 
-The [bounded authored Dominance slice](../active/2026-10-02-dominance-sprint/README.md)
-adds original-root exact graph evaluation for Dominance with Annul, Scour and
-crafted cleanup continuations. It requires singleton explicit identities,
-flags/context round-trip checks and complete native ordered-pair rows, including
-above-ilvl destinations. Unsupported carriers/wider operations and dual-lock
-carriers (Scour law awaits owner approval) are refused.
-Native finite and Python checks pass; artifact/remaining checks are owned by the
-slice receipt. Default/product/dependency automatic registry admission remains
-disabled. This adds no Current/Finder candidate, lower or optimality authority.
+The [Dominance automatic continuation](../active/2026-10-02-dominance-completion/README.md)
+selects the exact singleton explicit-identity carrier for explicitly requested
+Dominance or native elevation-only goal slots, including mixed ordinary/elevated
+goals. Current and Finder produce original-root independently checked graphs
+with structural acquisition, addition, bench protection, cleanup and paid
+fresh-base recovery. Complete native pair laws, above-ilvl destinations, caller
+scope, goal identity and prices remain authorities. Current keeps zero global
+lower; Finder makes no lower claim. Coarse generated programmes, unsupported
+carriers/operations, external continuation certificates and dual-lock states
+remain refused. No exact closure or hybrid handoff is added. Focused native
+qualification passes; binding, worker and artifact qualification are recorded
+separately in the continuation's living record.
 
 ## Goal, authority and lane map
 

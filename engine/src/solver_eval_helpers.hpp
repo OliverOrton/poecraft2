@@ -1154,8 +1154,8 @@ EvalModel derive_model(
         });
     if (authored_dominance) {
         if (!options.continuation_entries.empty() ||
-            !options.policy_decision_entries.empty() ||
-            !options.graph_local_provenance.decisions.empty())
+            std::any_of(options.policy_decision_entries.begin(), options.policy_decision_entries.end(),
+                [](const auto& entry) { return !entry.graph_local; }))
             throw StrategyEvalUnsupported("Authored Dominance supports original-root graph evaluation only");
         validate_authored_dominance_item(*session, strategy.start_item);
         const std::function<bool(const CompiledCondition&)> condition_supported =
@@ -1173,8 +1173,9 @@ EvalModel derive_model(
             if (node.kind == StrategyNodeKind::Operation &&
                 (node.action_type != static_cast<int>(node.action.type) ||
                  node.bestiary_action_index != kNoId ||
-                 !authored_dominance_action(node.action.type)))
-                throw StrategyEvalUnsupported("Authored Dominance supports only Dominance, Annul, Scour and crafted cleanup continuations");
+                 !authored_dominance_action(node.action.type)) &&
+                node.action_type != kStrategyRestartOperation)
+                throw StrategyEvalUnsupported("Dominance supports exact structural acquisition, protection, addition and cleanup continuations only");
         }
     }
     registry_options.authored_dominance = authored_dominance;

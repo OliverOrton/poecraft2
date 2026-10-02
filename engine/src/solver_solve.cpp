@@ -79,7 +79,8 @@ SolveWork::Impl::Impl(
         // existing checked-policy capability and zero global lower only.
         for (const auto action : calc.candidates()) {
             if (!solver_action_disabled(calc.goal(), calc.registry().actions.at(action)) &&
-                is_foulborn(calc.registry().actions.at(action).params.type))
+                (is_foulborn(calc.registry().actions.at(action).params.type) ||
+                 calc.registry().actions.at(action).params.type == ActionType::Dominance))
                 options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
         }
         for (const auto index : calc.candidate_operators()) {

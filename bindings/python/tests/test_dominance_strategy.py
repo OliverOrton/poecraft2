@@ -61,7 +61,7 @@ def test_exact_dominance_original_root_continuation(level, physical, tail):
 
 def test_dominance_wider_continuation_refused():
     with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session:
-        with session.compile_strategy(graph(86, tail="exalt")) as strategy:
+        with session.compile_strategy(graph(86, tail="veiled_exalt")) as strategy:
             with pytest.raises(EngineError, match="Dominance.*continuations"):
                 strategy.evaluate()
 

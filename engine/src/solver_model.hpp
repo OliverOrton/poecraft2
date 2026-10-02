@@ -798,6 +798,7 @@ inline bool action_observes_modifier_offer(
 }
 
 struct ActionRegistry {
+    bool automatic_dominance = false;
     std::vector<ActionDescriptor> actions;
     std::unordered_map<std::string, std::uint32_t> index_by_id;
     std::uint32_t goal_relevant_actions_pruned = 0;
@@ -836,6 +837,8 @@ struct ActionRegistryBuildOptions {
     std::vector<std::vector<std::uint32_t>> fossil_goal_mod_ids;
     // Authored evaluator only; incompatible with product/automatic envelopes.
     bool authored_dominance = false;
+    // Product admission requires a separately configured singleton identity carrier.
+    bool automatic_dominance = false;
 };
 
 // --- solver-only planner operators -------------------------------------------

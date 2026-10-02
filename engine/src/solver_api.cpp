@@ -21,6 +21,7 @@
 #include "solver_internal.hpp"
 #include "solver_diagnostic_options.hpp"
 #include "solver_finder.hpp"
+#include "solver_dominance.hpp"
 #include "solver_options_helpers.hpp"
 #include "calculator_currency.hpp"
 
@@ -96,6 +97,8 @@ solver::ActionRegistryBuildOptions registry_build_options(
         }
         options.exhaustive_fossils = false;
         for (const Value& entry : actions->array) {
+            if (entry.type == Type::String && entry.string == "dominance")
+                options.automatic_dominance = true;
             if (entry.type == Type::String &&
                 entry.string.starts_with("fossil:")) {
                 options.requested_fossil_action_ids.push_back(entry.string);
@@ -199,7 +202,8 @@ solver::ActionRegistryBuildOptions registry_build_options(
             }
         }
     }
-    if (options.goal_relevant_fossils || options.goal_relevant_actions) {
+    if (options.goal_relevant_fossils || options.goal_relevant_actions ||
+        (actions == nullptr && root.find("slots") != nullptr)) {
         const poecraft::DataImpl& data = *session.data;
         const Value* slots = root.find("slots");
         if (slots == nullptr || slots->type != Type::Array) {
@@ -277,6 +281,21 @@ solver::ActionRegistryBuildOptions registry_build_options(
                 ? static_cast<std::uint32_t>(minimum->number)
                 : static_cast<std::uint32_t>(
                       options.fossil_goal_mod_ids.size());
+    }
+    // Native elevation destinations, not a base name or saved fixture, select
+    // the expensive identity carrier only for goals needing non-rollable members.
+    if (actions == nullptr) {
+        for (const auto& slot : options.fossil_goal_mod_ids) {
+            if (slot.empty()) continue;
+            const bool requires_elevation = std::all_of(slot.begin(), slot.end(),
+                [&](const auto mod) {
+                    const auto global = session.data->mod_global_ids.at(session.global_index.at(mod));
+                    return std::any_of(session.data->influence_elevations.begin(),
+                        session.data->influence_elevations.end(),
+                        [&](const auto& pair) { return pair.second == global; });
+                });
+            options.automatic_dominance |= requires_elevation;
+        }
     }
     return options;
 }
@@ -760,11 +779,26 @@ pc_result create_solver(
             goal.automatic_candidate_kind_mask =
                 *automatic_candidate_kind_mask;
         }
+        std::vector<std::uint64_t> dominance_members;
+        if (registry_options.automatic_dominance) {
+            if (!goal.fixed_options.empty())
+                throw std::invalid_argument("Dominance identity scope does not import coarse fixed programmes");
+            holder->goal_proof_profile = solver::GoalProofProfile::TargetNeutralZero;
+            dominance_members.assign(holder->session->words, 0);
+            for (std::uint32_t mod = 0; mod < holder->session->mod_count; ++mod)
+                if (holder->session->gen_type[mod] == PC_SIDE_PREFIX ||
+                    holder->session->gen_type[mod] == PC_SIDE_SUFFIX)
+                    poecraft::pc_bitset_set(dominance_members.data(), mod);
+            // Existing generated coarse programmes have no identity-carrier
+            // import contract. Keep primitive scope and checked output authority.
+            goal.automatic_candidates = false;
+        }
         holder->calc = std::make_unique<solver::CalcContext>(
             holder->session, goal, std::move(registry), candidates, calculator_only,
-            !goal.primitive_actions_explicit, false, std::nullopt,
+            !goal.primitive_actions_explicit, registry_options.automatic_dominance, std::nullopt,
             std::vector<solver::CountObservation>{},
-            goal.automatic_candidates);
+            goal.automatic_candidates, dominance_members,
+            registry_options.automatic_dominance);
         *out_solver = holder.release();
         clear_error(out_error);
         return PC_RESULT_OK;

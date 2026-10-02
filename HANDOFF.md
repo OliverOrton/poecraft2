@@ -90,6 +90,11 @@ acceptance remain pending. No owned process remains.
 
 # Sprint integration native checkpoint (2026-10-02)
 
+Dominance automatic continuation is isolated on
+`dot/dominance-completion-20261002` from b794e00960bc9bb83ae3919c16fbc2aede52f67c.
+Its [living record](docs/active/2026-10-02-dominance-completion/README.md) owns
+qualification and remaining product checks; parent integration owns promotion.
+
 The local sprint integration is native-qualified on `dot/sprint-integration-20261002`
 in `C:/Users/Oliver/Documents/poecraft2-sprint-integration`; source `5d11f633`.
 The [integration receipt](docs/active/2026-10-02-sprint-integration/qualification.json)

@@ -475,12 +475,14 @@ CalcContext::CalcContext(
     authored_dominance_ = registry_.index_by_id.count("dominance") != 0;
     if (authored_dominance_) {
         if (!distinguish_modifier_identity || !distinguish_junk_exclusion_effects ||
-            product_solver_parent || goal.automatic_candidates || empty_actions_mean_all ||
-            candidates_.empty() || certified_uniform_removal)
+            product_solver_parent || (goal.automatic_candidates && !registry_.automatic_dominance) ||
+            (!registry_.automatic_dominance && empty_actions_mean_all) ||
+            (!registry_.automatic_dominance && candidates_.empty()) || certified_uniform_removal)
             throw std::invalid_argument("Dominance requires the bounded authored exact-identity carrier");
         for (const auto index : candidates_)
-            if (index >= registry_.actions.size() || registry_.actions[index].synthetic ||
-                !authored_dominance_action(registry_.actions[index].params.type))
+            if (index >= registry_.actions.size() ||
+                (!registry_.automatic_dominance && !registry_.actions[index].synthetic &&
+                 !authored_dominance_action(registry_.actions[index].params.type)))
                 throw std::invalid_argument("Dominance cannot enter an automatic or wider action envelope");
         for (std::uint32_t mod = 0; mod < session_->mod_count; ++mod)
             if ((session_->gen_type[mod] == PC_SIDE_PREFIX || session_->gen_type[mod] == PC_SIDE_SUFFIX) &&
@@ -2784,6 +2786,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
             result.supported = true;
             self_loop();
         }
+    } else if (authored_dominance_ && !action.synthetic &&
+               !authored_dominance_action(action.params.type)) {
+        result.supported = false;
     } else if (action.synthetic) {
         /* restart: a fresh base with probability 1. */
         pc_item_state fresh;
@@ -2884,6 +2889,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
                 result.applicable = false;
                 break;
             }
+            if (authored_dominance_) {
+                try { validate_authored_dominance_item(session, copy); }
+                catch (const std::invalid_argument&) { result.supported = false; break; }
+            }
             add_successor(copy, 1.0);
             break;
         }
@@ -2895,7 +2904,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
             PoolBuildRequest request;
             if (is_foulborn(action.params.type)) request.weight_kind = PoolWeightKind::Foulborn;
             if (!evaluate_pool_add(item, request, accumulated)) {
-                self_loop();
+                if (authored_dominance_) result.applicable = false;
+                else self_loop();
             }
             break;
         }
@@ -2925,7 +2935,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
             /* The engine reverts the influence bit when no mod can be
              * added, leaving the item unchanged. */
             if (!evaluate_pool_add(influenced, request, accumulated)) {
-                self_loop();
+                if (authored_dominance_) result.applicable = false;
+                else self_loop();
             }
             break;
         }

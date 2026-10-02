@@ -3,6 +3,7 @@
 #include "solver_solve_types.hpp"
 #include "solver_options_helpers.hpp"
 #include "json.hpp"
+#include "currency_outcomes.hpp"
 #include <unordered_set>
 
 /*
@@ -213,6 +214,33 @@ static std::string finder_base_json(
     return json + '}';
 }
 
+// A proposal guard for unprotected renewal/elevation controllers. Native
+// single-affix preparation determines eligible identities; full reached rows
+// still check every mapping/pair. Flags and locks are observed explicitly.
+std::string dominance_eligibility_condition(const SessionImpl& session) {
+    std::string eligible="[", members="[", locks="[";
+    for (std::uint32_t mod=0; mod<session.mod_count; ++mod) {
+        if (session.gen_type[mod]!=PC_SIDE_PREFIX && session.gen_type[mod]!=PC_SIDE_SUFFIX) continue;
+        const auto key="\""+json_escape(mod_key_of(session,mod))+"\"";
+        const auto append=[&](std::string& out) { if(out.size()>1) out+=','; out+=key; };
+        append(members);
+        const auto metamod=session.metamod_type[mod];
+        if (metamod>=0 && (metamod==session.data->metamod_prefixes_locked_code ||
+                          metamod==session.data->metamod_suffixes_locked_code)) append(locks);
+        pc_item_state item; pc_item_clear(&item); item.rarity=PC_RARITY_RARE;
+        pc_item_add_mod(&item,session.gen_type[mod],mod,session.primary_group[mod],0,nullptr);
+        try { if(!dominance_choices(session,item).empty()) append(eligible); }
+        catch(const std::invalid_argument&) { /* Never infer an unavailable mapping. */ }
+    }
+    if(eligible.size()==1) throw std::invalid_argument("no native Dominance eligibility members");
+    eligible+=']'; members+=']';
+    auto guard="{\"type\":\"all\",\"conditions\":[{\"type\":\"mod_count\",\"mod_keys\":"+eligible+",\"min\":2},"+
+        "{\"type\":\"mod_count\",\"mod_keys\":"+members+",\"fractured\":true,\"max\":0},"+
+        "{\"type\":\"mod_count\",\"mod_keys\":"+members+",\"crafted\":true,\"max\":0}";
+    if(locks.size()>1) guard+=",{\"type\":\"mod_count\",\"mod_keys\":"+locks+"],\"max\":0}";
+    return guard+"]}";
+}
+
 std::string compile_finder_candidate_json(
     const CalcContext& calc,
     const pc_item_state& start_item,
@@ -227,6 +255,7 @@ std::string compile_finder_candidate_json(
             throw std::invalid_argument("finder primitive index is out of range");
     const SessionImpl& session = calc.session();
     const std::string goal = compile_finder_goal_condition(calc);
+    std::uint32_t eligibility_edges=0;
     std::string json = finder_base_json(calc, start_item);
     json += ",\"start_node_id\":\"start\",\"nodes\":["
             "{\"id\":\"start\",\"kind\":\"start\"},"
@@ -262,6 +291,16 @@ std::string compile_finder_candidate_json(
             "\",\"from\":\"stage" + suffix +
             "\",\"to\":\"goal\",\"priority\":0,"
             "\"condition\":" + goal + "}";
+        if (i+1 < primitive_sequence.size() &&
+            calc.registry().actions[primitive_sequence[i+1]].params.type == ActionType::Dominance) {
+            json += ",{\"id\":\"eligible"+suffix+"\",\"from\":\"stage"+suffix+
+                "\",\"to\":\"stage"+std::to_string(i+1)+"\",\"priority\":1,\"condition\":"+
+                dominance_eligibility_condition(session)+"}";
+            json += ",{\"id\":\"retry_acquisition"+suffix+"\",\"from\":\"stage"+suffix+
+                "\",\"to\":\"stage"+suffix+"\",\"priority\":2,\"is_default\":true}";
+            ++eligibility_edges;
+            continue;
+        }
         json += ",{\"id\":\"advance" + suffix +
             "\",\"from\":\"stage" + suffix +
             "\",\"to\":\"stage" +
@@ -273,7 +312,7 @@ std::string compile_finder_candidate_json(
     json += "]}";
     if (json.size() > limits.max_strategy_json_bytes ||
         2 + primitive_sequence.size() > limits.max_compiled_nodes ||
-        1 + 2 * primitive_sequence.size() > limits.max_compiled_edges) {
+        1 + 2 * primitive_sequence.size() + eligibility_edges > limits.max_compiled_edges) {
         throw std::length_error("finder candidate exceeds compiled-output cap");
     }
     return json;

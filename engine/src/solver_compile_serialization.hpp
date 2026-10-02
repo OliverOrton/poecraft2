@@ -297,6 +297,8 @@ std::string operation_json(const SessionImpl& session,
         return "{\"type\":\"chaos\"}";
     case ActionType::Exalt:
         return "{\"type\":\"exalt\"}";
+    case ActionType::Dominance:
+        return "{\"type\":\"dominance\"}";
     case ActionType::Annul:
         return "{\"type\":\"annul\"}";
     case ActionType::Scour:

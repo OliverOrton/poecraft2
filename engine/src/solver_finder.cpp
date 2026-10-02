@@ -328,6 +328,22 @@ PolicyFinderWork::PolicyFinderWork(
             ++counters_.generated;
         }
     };
+    if (grammar_ != FinderGrammarMode::PrimitiveOnly) {
+        const auto dom = std::find_if(ranked_.begin(), ranked_.end(), [&](const auto& action) {
+            return problem_.registry().actions[action.index].params.type == ActionType::Dominance;
+        });
+        if (dom != ranked_.end()) {
+            for (const auto& roll : ranked_) {
+                if (!roll.root_legal || !action_transition_facts(problem_.registry().actions[roll.index].params.type).renewal) continue;
+                Sketch candidate{{roll.index, dom->index}, dom->price + roll.price, true};
+                if (!seen_.insert(sketch_identity(candidate)).second) continue;
+                record_generated(candidate);
+                frontier_.push_back(std::move(candidate));
+                ++counters_.generated;
+                if (frontier_.size() >= 2) break;
+            }
+        }
+    }
     // Reserve one of the existing four complete seeds for guaranteed progress.
     // The ordinary compiler and original-root checker still decide feasibility,
     // retry cost, clean/coverage success and properness.

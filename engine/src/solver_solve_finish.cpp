@@ -3769,7 +3769,9 @@ SolveWork::Impl::run_publication_pipeline() {
                 refinement::CompiledPolicyAssertionWork assertion_work(
                     calc, result, prices, scoped_assertion_options,
                     "selected core policy", nullptr, nullptr, nullptr,
-                    true,
+                    // Dominance owns complete original-root graph checking,
+                    // not imported continuation/statewise upper certificates.
+                    !calc.registry().automatic_dominance,
                     options
                         .verified_policy_alternative_shadow_diagnostic);
                 while (!assertion_work.progress().done &&

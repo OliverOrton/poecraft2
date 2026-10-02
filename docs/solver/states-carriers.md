@@ -46,9 +46,12 @@ members, including above-ilvl upgrade destinations. Every original root and
 native successor must round-trip with exact side, supported flags and item
 context. Veiled/implicit/socket/strand/enchantment/absent and dual-lock carriers
 remain refused;
-continuations are limited to Dominance, Annul, Scour and crafted cleanup. The
+the [automatic continuation](../active/2026-10-02-dominance-completion/README.md)
+adds structural acquisition, addition, bench protection, cleanup and paid
+fresh-base recovery on the same identity carrier. The
 [argument](mathematics/representations.md#bounded-authored-dominance-structural-identity)
-does not promote the ordinary observation quotient or automatic search.
+explains scoped Current/Finder admission without promoting the ordinary
+observation quotient, global lower, closure or a hybrid handoff.
 
 ## Terminal Contract
 

@@ -498,22 +498,23 @@ static_assert(action_family_contract_is_exhaustive());
 
 // Dominance already has native enum value 31. Keep the historical contiguous
 // solver table and every existing numeric identity unchanged. This separate
-// contract never enables registry admission or automatic search.
+// contract records the scoped identity-carrier path; it does not itself
+// enable registry admission or extend closure/proof authority.
 inline constexpr ActionFamilyContract kAuthoredDominanceContract{
     ActionType::Dominance, PrimitiveTelemetryFamily::Currency,
     "dominance", RegistryIdentityShape::Exact,
     ActionCostKeyShape::Identity, ExpectedPriceProvenance::Quote,
     ProductReasonGroup::Currency,
-    {CarrierGenerationPath::SeparateOperation,
-     SchedulerAdmissionPath::ProductFilteredDeferred,
-     RowCompletionPath::AuthoredPrimitiveProductDeferred,
-     BellmanQPath::AuthoredPrimitiveProductDeferred,
-     SelectedPolicyPath::DeferredMechanic,
+    {CarrierGenerationPath::RegistryPrimitive,
+     SchedulerAdmissionPath::GoalFilteredCandidate,
+     RowCompletionPath::SharedPrimitive,
+     BellmanQPath::SharedPrimitive,
+     SelectedPolicyPath::PinnedVerified,
      CompilerCoveragePath::GenericPrimitive,
      ExactEvaluatorCoveragePath::FamilySpecificPrimitive,
      SimulatorCoveragePath::NativePrimitive,
-     CApiCoveragePath::GenericStrategyFacade,
-     ReleaseWasmCoveragePath::ProductDeferredPendingRebuild}};
+     CApiCoveragePath::SolverAndStrategyFacade,
+     ReleaseWasmCoveragePath::GenericFacadePendingRebuild}};
 
 inline const ActionFamilyContract& action_family_contract(
     const ActionType type) {
@@ -778,8 +779,10 @@ struct ProductReasonContract {
     std::string_view reason;
 };
 
-inline constexpr std::array<ProductReasonContract, 25>
+inline constexpr std::array<ProductReasonContract, 26>
     kProductReasonContracts{{
+        {ProductReasonGroup::Bench, ProductActionRole::Candidate,
+         "candidate_dominance_identity_bench"},
         {ProductReasonGroup::Currency, ProductActionRole::Candidate,
          "candidate_general_currency"},
         {ProductReasonGroup::Essence, ProductActionRole::Candidate,

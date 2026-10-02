@@ -209,18 +209,24 @@ scoped input cannot inherit that certificate.
 
 ## Bounded authored Dominance
 
-Authored Dominance graphs use the separately gated exact explicit-identity
-carrier and complete native ordered-pair rows. Only Dominance, Annul, Scour and
-crafted cleanup operations are admitted together. Evaluation begins at the
-original compiled root, with unchanged predicates, prices and all absorption
-categories. Whole-row mapping/conflict refusal cannot publish partial mass.
-External continuation-entry certificates, broader operations and unsupported
-item/control state remain refused. Dual-lock carriers are rejected throughout
-this slice while their Scour law remains owner-unapproved. Ordinary Scour
-behavior is unchanged. Default/product/automatic dependency
-registries do not acquire Dominance. This is fixed-graph evaluation, without
-search, lower-bound or optimality authority. The [slice receipt](../active/2026-10-02-dominance-sprint/README.md)
-owns actual native, binding and WASM qualification separately.
+Dominance graphs use the separately gated exact explicit-identity carrier and
+complete native ordered-pair rows. The [automatic continuation](../active/2026-10-02-dominance-completion/README.md)
+admits structural acquisition, addition, bench protection, cleanup and paid
+fresh-base recovery. Evaluation begins at the original compiled root with
+unchanged requested goal, scope, predicates, prices and all absorption categories.
+Whole-row mapping/conflict refusal cannot publish partial mass. Graph-local
+policy census is checked by existing provenance validators; external continuation
+entries and non-graph-local policy entries remain refused. Dual-lock carriers
+remain rejected while their Scour law is owner-unapproved.
+
+Default/goal-relevant input selects this carrier for an elevation-only target
+slot, including mixed ordinary/elevated goals; explicit Dominance also selects
+it. Explicit omissions and disabled families cannot add it back. Generated
+coarse programmes have no identity import contract and are excluded. Current
+publishes only original-root checked upper policies with zero global lower;
+Finder publishes checked policies without global lower or optimality authority.
+Neither extends exact closure or establishes a hybrid handoff. The living
+record owns native, binding, worker and artifact qualification separately.
 
 ## Sampled validation is separate
 

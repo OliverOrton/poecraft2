@@ -105,13 +105,19 @@ Only after every positive-mass successor is reconstructed exactly may identical
 structural successors be combined. Slot permutation preserves the complete
 ordered-pair multiset; it is not an approximate merging rule.
 
-The admitted graph operations are Dominance, Annul, Scour and crafted cleanup.
-All continuations use that same physical identity carrier, native protection
-law and compiled predicates. These actions add no affix; a successful Dominance
-or removal reduces occupancy. The finite session inventory therefore bounds
-the reachable structural item domain, although routing cycles can still be
-improper and remain subject to the existing graph/SCC acceptance. Graph
-conditions are not substituted for a different native requested goal.
+The [automatic continuation](../../active/2026-10-02-dominance-completion/README.md)
+also admits structural acquisition, addition, bench protection and paid fresh-base
+recovery. Its operation whitelist is native, in `solver_dominance.hpp`; Veiled,
+Eldritch, Foulborn and inventory/control operations remain outside this carrier.
+Every pool member has a singleton identity and its complete native exclusion
+effect; pool weights and native legality use the retained influence, rarity,
+flags and affixes. Bench rows that create both locks are refused before
+interning. Numeric rolls remain unobservable in these operations and predicates.
+Renewal may increase occupancy, but the finite session inventory and native
+affix capacities still bound the structural domain. Paid restart reconstructs
+a clean normal base, never the prepared original item. Routing cycles still
+require existing graph/SCC acceptance. Graph conditions are not substituted
+for a different native requested goal.
 
 This supplies the exact class-transition premise of CLM-0005 only in the gated
 structural scope. Cache rows are keyed by state/action. Any later behavioral
@@ -119,9 +125,14 @@ partition compares the complete discovered transition and absorption law with
 existing raw attribution; ordinary pre-transition observations alone are never
 used to select a Dominance representative. Whole-graph original-root evaluation
 retains success/failure/stop/nonapplication/unmatched/unresolved mass and cost.
-No automatic Current/Finder candidate, lower bound or optimality authority is
-conferred. Native/WASM qualification and remaining holds belong to the linked
-living record, not this argument.
+Automatic Current/Finder admission selects this carrier only for explicitly
+requested Dominance or a slot whose satisfying identities all require native
+elevation. Mixed ordinary/elevated goals retain this rule per slot. Explicit
+action scope and disabled families still control candidates. Current keeps
+zero global lower and no closure authority; Finder publishes checked policies
+without a lower claim. Whole-root checking does not import continuation-entry
+or statewise upper certificates. No hybrid handoff is established. Native/WASM
+qualification and remaining holds belong to the living record, not this argument.
 
 ### A minimal counterexample
 

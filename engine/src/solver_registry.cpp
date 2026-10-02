@@ -298,6 +298,9 @@ ProductAdmissionDecision classify_goal_relevant_action(
             }
             const int metamod = session.metamod_type[action.params.mod_id];
             const DataImpl& data = *session.data;
+            if (options.automatic_dominance && metamod >= 0) {
+                return {ProductActionRole::Candidate, "candidate_dominance_identity_bench"};
+            }
             if ((options.needs_prefix_lock &&
                  metamod == data.metamod_prefixes_locked_code) ||
                 (options.needs_suffix_lock &&
@@ -2864,6 +2867,7 @@ ActionRegistry build_action_registry(
          options.automatic_candidates || !options.option_dependency_action_ids.empty()))
         throw std::invalid_argument("Authored Dominance cannot enter product or automatic dependency envelopes");
     ActionRegistry registry;
+    registry.automatic_dominance = options.automatic_dominance;
     add_basic_currency(session, registry);
     add_essences(session, registry, options);
     add_fossils(session, registry, options);
@@ -2873,7 +2877,7 @@ ActionRegistry build_action_registry(
     add_eldritch(session, registry);
     add_influence_exalts(session, registry);
     add_structural(registry);
-    if (options.authored_dominance) {
+    if (options.authored_dominance || options.automatic_dominance) {
         add(registry, base_descriptor("dominance", ActionType::Dominance,
             TransitionKind::Special, kRarityMagic | kRarityRare));
     }

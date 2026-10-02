@@ -3847,8 +3847,174 @@ void dominance_refusals() {
         auto registry=build_action_registry(*s,authored);
         refuses([&]{CalcContext wrong(s,GoalSpec{},registry,{},true);},"exact-identity carrier");
     }
-    auto badgraph=compile(s,dominance_graph(R"(,"prefixes":["mod0"],"suffixes":["mod5"])" ,"exalt"));
+    auto badgraph=compile(s,dominance_graph(R"(,"prefixes":["mod0"],"suffixes":["mod5"])" ,"veiled_exalt"));
     refuses([&]{evaluate_strategy(*badgraph);},"continuations");
+}
+
+void dominance_automatic_discovery() {
+    auto session = dominance_session();
+    session->family_id[1] = 900;
+    session->effective_base_tag_ids = {0};
+    auto fixture_data = std::make_shared<DataImpl>(*session->data);
+    fixture_data->gen_offsets.assign(17, 0);
+    fixture_data->spawn_weights.assign(16, 0);
+    fixture_data->spawn_weights[0] = fixture_data->spawn_weights[5] = 100;
+    session->data = fixture_data;
+    session->base_spawn_weight.assign(16, 0);
+    session->base_roll_weight.assign(16, 0);
+    session->normal_random_roll_mask.assign(session->words, 0);
+    session->positive_base_weight_mask.assign(session->words, 0);
+    session->positive_spawn_weight_mask.assign(session->words, 0);
+    for (const auto mod : {0u, 5u}) {
+        session->base_spawn_weight[mod] = session->base_roll_weight[mod] = 100;
+        pc_bitset_set(session->normal_random_roll_mask.data(), mod);
+        pc_bitset_set(session->positive_base_weight_mask.data(), mod);
+        pc_bitset_set(session->positive_spawn_weight_mask.data(), mod);
+    }
+    auto root = dominance_item(*session, {0, 5});
+    pc_session handle{session};
+    auto economy = std::make_shared<EconomyImpl>();
+    economy->id = "dominance-finite-independent-prices";
+    economy->prices = {{"dominance",7},{"chaos",3}};
+    pc_economy prices{economy};
+    for (const auto mode : {PC_SOLVER_MODE_CURRENT, PC_SOLVER_MODE_STRATEGY_FINDER}) {
+        pc_solver_handle solver = nullptr;
+        pc_error_info error{};
+        const std::string goal = R"({"version":"v1","rarity":"rare","slots":[{"family_mod_key":"mod1"}],"actions":["dominance","chaos"]})";
+        auto rc = pc_solver_create(&handle, goal.data(), goal.size(), &solver, &error);
+        std::printf("Dominance automatic mode=%d create=%d %s\n",mode,rc,error.message);
+        PC_CHECK(rc == PC_RESULT_OK); if (!solver) continue;
+        pc_solve_options options{}; options.struct_size=sizeof(options); options.abi_version=PC_ABI_VERSION;
+        options.solver_mode=mode; options.max_states=1000; options.max_sweeps=10000;
+        options.solver_flags=PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS;
+        pc_solve_summary summary{}; summary.struct_size=sizeof(summary); summary.abi_version=PC_ABI_VERSION;
+        rc=pc_solver_solve(solver,&root,&prices,&options,&summary,&error);
+        std::printf("Dominance automatic mode=%d solve=%d status=%d U=%.12g L=%.12g %s\n",mode,rc,summary.policy_status,summary.upper_bound,summary.lower_bound,error.message);
+        std::size_t telemetry_size=0;
+        if (pc_solver_telemetry(solver,nullptr,0,&telemetry_size,&error)==PC_RESULT_OK) {
+            std::string telemetry(telemetry_size+1,'\0');
+            if (pc_solver_telemetry(solver,telemetry.data(),telemetry.size(),&telemetry_size,&error)==PC_RESULT_OK)
+                std::ofstream("out/dominance-completion/finite-mode-"+std::to_string(mode)+"-telemetry.json") << telemetry;
+        }
+        PC_CHECK(rc == PC_RESULT_OK); PC_CHECK(summary.policy_available);
+        PC_CHECK(mode==PC_SOLVER_MODE_CURRENT ? near(summary.lower_bound,0) : std::isnan(summary.lower_bound));
+        std::size_t size=0;
+        rc=pc_solver_compile_strategy(solver,nullptr,0,&size,&error);
+        if (rc != PC_RESULT_OK) std::printf("Dominance compile refusal: %s\n",error.message);
+        PC_CHECK(rc == PC_RESULT_OK);
+        if (rc==PC_RESULT_OK) {
+            std::string graph(size+1,'\0');
+            PC_CHECK(pc_solver_compile_strategy(solver,graph.data(),graph.size(),&size,&error)==PC_RESULT_OK);
+            graph.resize(size);
+            PC_CHECK(graph.find("dominance")!=std::string::npos);
+            auto strategy=compile(session,graph);
+            StrategyEvalOptions check; check.economy=economy;
+            auto exact=evaluate_strategy(*strategy,check);
+            PC_CHECK(exact.converged && exact.cost_complete);
+            PC_CHECK(near(exact.success_probability,1));
+            // Independent two-pair renewal oracle. Current first attempts the
+            // prepared root: 7 + .5*(3+7)/.5 = 17. Finder reacquires: (3+7)/.5=20.
+            PC_CHECK(near(exact.total_expected_cost,mode==PC_SOLVER_MODE_CURRENT?17:20));
+            PC_CHECK(near(summary.upper_bound,exact.total_expected_cost));
+            PC_CHECK(near(exact.action_not_applied_probability,0));
+            PC_CHECK(near(exact.failure_probability,0));
+            PC_CHECK(near(exact.unresolved_probability,0));
+        }
+        pc_solver_destroy(solver);
+    }
+    // Default admission observes elevation identity, while explicit primitive
+    // scope and disabled families remain caller authority.
+    for (const auto& [suffix, expected] : std::vector<std::pair<std::string,bool>>{
+        {"",true}, {R"(,"actions":["chaos"])",false},
+        {R"(,"actions":[])",false},
+        {R"(,"actions":["dominance"],"disabled_action_families":["currency"])",false}}) {
+        const auto goal=std::string(R"({"version":"v1","slots":[{"family_mod_key":"mod1"}])")+suffix+"}";
+        pc_solver_handle solver=nullptr; pc_error_info error{};
+        PC_CHECK(pc_solver_create(&handle,goal.data(),goal.size(),&solver,&error)==PC_RESULT_OK);
+        if(!solver) continue;
+        std::uint32_t count=0;
+        PC_CHECK(pc_solver_candidates(solver,nullptr,0,&count,&error)==PC_RESULT_OK);
+        std::vector<std::uint32_t> candidates(count);
+        PC_CHECK(pc_solver_candidates(solver,candidates.data(),count,&count,&error)==PC_RESULT_OK);
+        bool found=false;
+        for(const auto index:candidates) {
+            pc_solver_action_info info{};
+            PC_CHECK(pc_solver_get_action_info(solver,index,&info,&error)==PC_RESULT_OK);
+            found|=std::string(info.id)=="dominance";
+        }
+        PC_CHECK(found==expected);
+        pc_solver_destroy(solver);
+    }
+    // One eligible affix is not a free success/reset. Missing Dominance price
+    // likewise cannot become a priced executable policy.
+    for(const bool missing_price:{false,true}) {
+        const auto goal=std::string(R"({"version":"v1","rarity":"rare","slots":[{"family_mod_key":"mod1"}],"actions":["dominance"]})");
+        pc_solver_handle solver=nullptr; pc_error_info error{};
+        PC_CHECK(pc_solver_create(&handle,goal.data(),goal.size(),&solver,&error)==PC_RESULT_OK);
+        if(!solver) continue;
+        auto start=missing_price?root:dominance_item(*session,{0});
+        auto absent=std::make_shared<EconomyImpl>(); absent->id="dominance-unpriced";
+        pc_economy absent_prices{absent};
+        pc_solve_options options{};options.struct_size=sizeof(options);options.abi_version=PC_ABI_VERSION;
+        options.max_states=100;options.max_sweeps=1000;
+        pc_solve_summary summary{};summary.struct_size=sizeof(summary);summary.abi_version=PC_ABI_VERSION;
+        PC_CHECK(pc_solver_solve(solver,&start,missing_price?&absent_prices:&prices,&options,&summary,&error)==PC_RESULT_OK);
+        PC_CHECK(!summary.policy_available && !std::isfinite(summary.upper_bound));
+        pc_solver_destroy(solver);
+    }
+
+}
+
+std::uint32_t dominance_local_id(const SessionImpl& session,const std::string& key) {
+    const auto pos=session.data->mod_pos_by_key.at(key);
+    return session.session_id_by_global_id.at(session.data->mod_global_ids[pos]);
+}
+
+void dominance_real_product(const std::shared_ptr<SessionImpl>& session) {
+    const auto precursor=dominance_local_id(*session,"ElementalDamageCannotBeReflectedPercentUber1");
+    const auto helper=dominance_local_id(*session,"AdditionalCriticalStrikeChanceWithSpellsUber2_");
+    const auto elevated=dominance_local_id(*session,"ElementalDamageCannotBeReflectedPercentUberMaven");
+    const auto global=session->data->mod_global_ids[session->global_index[helper]];
+    const auto other=session->session_id_by_global_id.at(session->data->influence_elevations.at(global));
+    auto root=dominance_item(*session,{precursor,helper}); root.generic_influence_bits=40;
+    std::uint32_t ordinary=kNoId;
+    for (std::uint32_t mod=0;mod<session->mod_count;++mod)
+        if(session->base_roll_weight[mod]>0 && session->influence_code[mod]<=0 &&
+           session->primary_group[mod]!=session->primary_group[precursor] &&
+           session->primary_group[mod]!=session->primary_group[helper]) { ordinary=mod; break; }
+    PC_CHECK(ordinary!=kNoId); if(ordinary==kNoId) return;
+    const auto key=[&](auto mod){ return session->data->string_at(session->data->mod_key_sid[session->global_index[mod]]); };
+    auto economy=std::make_shared<EconomyImpl>(); economy->id="frozen-product-dominance-prices"; economy->prices={{"dominance",7}};
+    pc_economy prices{economy}; pc_session handle{session};
+    for(const bool mixed:{false,true}) {
+        auto input=root;
+        if(mixed) PC_CHECK(pc_item_add_mod(&input,session->gen_type[ordinary],ordinary,session->primary_group[ordinary],0,nullptr)==PC_RESULT_OK);
+        std::string goal="{\"version\":\"v1\",\"action_mode\":\"goal_relevant\",\"rarity\":\"rare\",\"min_satisfied_slots\":"+
+            std::to_string(mixed?2:1)+",\"slots\":[{\"family_mod_key\":\""+key(elevated)+"\"},{\"family_mod_key\":\""+key(other)+"\"}";
+        if(mixed) goal+=",{\"family_mod_key\":\""+key(ordinary)+"\",\"min_tier\":"+std::to_string(session->family_tier_index[ordinary])+"}";
+        goal+="]}";
+        for(const auto mode:{PC_SOLVER_MODE_CURRENT,PC_SOLVER_MODE_STRATEGY_FINDER}) {
+            pc_error_info error{}; pc_solver_handle solver=nullptr;
+            auto rc=pc_solver_create(&handle,goal.data(),goal.size(),&solver,&error);
+            std::printf("Dominance product mixed=%d mode=%d create=%d %s\n",mixed,mode,rc,error.message);
+            PC_CHECK(rc==PC_RESULT_OK); if(!solver) continue;
+            pc_solve_options options{}; options.struct_size=sizeof(options);options.abi_version=PC_ABI_VERSION;
+            options.solver_mode=mode;options.max_states=1000;options.max_sweeps=10000;options.solver_flags=PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS;
+            pc_solve_summary summary{};summary.struct_size=sizeof(summary);summary.abi_version=PC_ABI_VERSION;
+            rc=pc_solver_solve(solver,&input,&prices,&options,&summary,&error);
+            std::printf("Dominance product mixed=%d mode=%d solve=%d policy=%d U=%.12g %s\n",mixed,mode,rc,summary.policy_available,summary.upper_bound,error.message);
+            PC_CHECK(rc==PC_RESULT_OK);PC_CHECK(summary.policy_available);PC_CHECK(mode==PC_SOLVER_MODE_CURRENT ? near(summary.lower_bound,0) : std::isnan(summary.lower_bound));
+            std::size_t size=0;rc=pc_solver_compile_strategy(solver,nullptr,0,&size,&error);PC_CHECK(rc==PC_RESULT_OK);
+            if(rc==PC_RESULT_OK) {
+                std::string graph(size+1,'\0');PC_CHECK(pc_solver_compile_strategy(solver,graph.data(),graph.size(),&size,&error)==PC_RESULT_OK);graph.resize(size);
+                auto strategy=compile(session,graph);StrategyEvalOptions check;check.economy=economy;auto exact=evaluate_strategy(*strategy,check);
+                PC_CHECK(exact.converged && exact.cost_complete);PC_CHECK(near(exact.success_probability,1));PC_CHECK(near(exact.total_expected_cost,7));
+                PC_CHECK(near(summary.upper_bound,7));PC_CHECK(near(exact.action_not_applied_probability+exact.failure_probability+exact.unresolved_probability,0));
+                std::ofstream("out/dominance-completion/real-mixed-"+std::to_string(mixed)+"-mode-"+std::to_string(mode)+"-graph.json")<<graph;
+            }
+            pc_solver_destroy(solver);
+        }
+    }
 }
 
 void dominance_real_runtime(const char* artifact_dir) {
@@ -3859,6 +4025,7 @@ void dominance_real_runtime(const char* artifact_dir) {
     for(const auto level:{1u,86u}) {
         auto session=std::make_shared<SessionImpl>();session->data=base->data;
         session->base_index=base->base_index;session->item_level=level;build_session(*session);
+        dominance_real_product(session);
         for(const auto physical:{false,true}) {
             const std::string source=physical?"PhysicalDamageCannotBeReflectedPercentUber1":"ElementalDamageCannotBeReflectedPercentUber1";
             const std::string fields=",\"generic_influence_bits\":40,\"prefixes\":[\""+source+"\"],\"suffixes\":[\""+helper+"\"]";
@@ -3889,6 +4056,8 @@ void run_solver_dominance_tests(const char* artifact_dir) {
             {"pair matrix",dominance_row_matrix},{"continuations",dominance_continuations},{"refusals",dominance_refusals}}) {
         try {fn();} catch(const std::exception& ex) {std::printf("Dominance %s: %s\n",name,ex.what());PC_CHECK(false);}
     }
+    try {dominance_automatic_discovery();}
+    catch(const std::exception& ex) {std::printf("Dominance automatic: %s\n",ex.what());PC_CHECK(false);}
     try {dominance_real_runtime(artifact_dir);}
     catch(const std::exception& ex) {std::printf("Dominance real runtime: %s\n",ex.what());PC_CHECK(false);}
 }

@@ -10,8 +10,18 @@
 namespace poecraft::solver {
 
 inline bool authored_dominance_action(const ActionType type) {
-    return type == ActionType::Dominance || type == ActionType::Annul ||
-           type == ActionType::Scour || type == ActionType::RemoveCraftedModifiers;
+    switch (type) {
+    case ActionType::Dominance: case ActionType::Annul: case ActionType::Scour:
+    case ActionType::RemoveCraftedModifiers: case ActionType::Bench:
+    case ActionType::Transmute: case ActionType::Alteration: case ActionType::Augment:
+    case ActionType::Regal: case ActionType::Alchemy: case ActionType::Chaos:
+    case ActionType::Exalt: case ActionType::Essence: case ActionType::Fossil:
+    case ActionType::HarvestReforge: case ActionType::HarvestAugment:
+    case ActionType::HarvestResist: case ActionType::InfluenceExalt:
+    case ActionType::Fracture:
+        return true;
+    default: return false;
+    }
 }
 
 // Exact structural scope. Numeric rolls cannot be observed by this graph

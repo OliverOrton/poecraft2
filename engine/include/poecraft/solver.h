@@ -289,7 +289,9 @@ pc_result pc_calc_action_outcomes(
  * owned by the solver and valid until its next currency calculation/destruction.
  * This API does not admit actions to strategy search or policy evaluation.
  * Separately, authored Dominance evaluation supports a bounded exact explicit-
- * identity domain with Annul/Scour/crafted cleanup; automatic search is held. */
+ * identity domain with structural acquisition/addition/protection/cleanup.
+ * Explicit Dominance or native elevation-only goal slots select this carrier
+ * for Current/Finder checked policies, without lower/optimality authority. */
 pc_result pc_calc_currency_outcomes_json(
     pc_solver_handle solver, const pc_item_state* receiver, const char* action,
     pc_session_handle donor_session, const pc_item_state* donor,
