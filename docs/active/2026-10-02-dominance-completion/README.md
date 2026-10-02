@@ -55,3 +55,29 @@ The shared solver hunks are registry_build_options/create_solver,
 classify_goal_relevant_action/build_action_registry, Finder candidate generation
 and serialization, and the selected core-policy checker request. UI sources are
 unchanged at this checkpoint. Parent integration owns merges and pushes.
+
+## Prepared-item product checkpoint
+
+Standalone WASM for e049be1 built at two jobs. Four serial actual Calculator,
+client, worker and WASM witnesses pass using ordinary adaptive compact transport,
+normal trace, default finish and conditional Finder grammar. Prepared and mixed
+ordinary/elevated goals each return a usable graph in Current and Finder.
+Independent native evaluation of each delivered graph gives success 1, cost 7,
+zero failure/nonapplication/unresolved mass and operations exactly [dominance].
+Each sampled native execution passes 1,000/1,000 successes. Current remains
+bounded-feasible with lower 0; Finder lower is absent. Source/artifact hashes,
+requests, graph hashes and exclusions are in qualification-prepared.json.
+
+Python: 18 passed. Native compiler: 1,500 checks passed. Broader API regression
+has three unchanged fossil-census assertions (12,950 expected versus 15,275 in
+the selected frozen dataset). Family-contract has one unchanged missing final
+Foulborn identity fixture. Their original failures are retained, not counted as
+passes. An initial no-artifact family invocation performed zero checks; corrected
+invocation exposes the fixture failure. Early worker setup failures (missing
+local generated build info; copied ABI 2/data pin) were resolved using the native
+product build-data generator and exact ABI 3/frozen runtime pins before solving.
+
+Probe changes are generic: use corpus artifact selection and restore declared
+ordinary/Eldritch influence through native item export/import. No UI behavior or
+mechanics is duplicated. Current/Finder recovery expansion is the next finite
+qualification, not included in this prepared-item receipt.

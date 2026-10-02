@@ -1,0 +1,160 @@
+{
+  "schema": "poecraft2.dominance-completion-qualification.v1",
+  "source_commit": "e049be14003d171f937fd3fe499aa18eb89542da",
+  "engine_tree": "1cde848b0d9e06571930448000ec5474515d5d10",
+  "baseline": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+  "recorded_utc": "2026-10-02T18:04:02.817493+00:00",
+  "native_dominance": {
+    "checks": 2416,
+    "failures": 0,
+    "log": {
+      "path": "out/dominance-completion/native-admission.log",
+      "sha256": "a1d18926a8d0243a36cb1c2858b9424bfe36bd55b4cbff5fdd4a566e044d9f03",
+      "bytes": 1037
+    }
+  },
+  "python": {
+    "passed": 18,
+    "failed": 0,
+    "log": {
+      "path": "out/dominance-completion/python-adapter.log",
+      "sha256": "75fb4ea7f3a2b06e7f720aaed5ead4a3c8c89be5e788b059e8853ac004940476",
+      "bytes": 101
+    }
+  },
+  "compile": {
+    "checks": 1500,
+    "failures": 0,
+    "log": {
+      "path": "out/dominance-completion/native-compile.log",
+      "sha256": "93ea0c11c3defe11c58c0063a1954deed118754ea7ac3cb7c88e201a32aeb30f",
+      "bytes": 1184
+    }
+  },
+  "regression_exclusions": [
+    {
+      "name": "solver-api",
+      "checks": 3233,
+      "failures": 3,
+      "reason": "Unchanged fixture expects 12950 fossil loadouts; frozen selected dataset/native census gives 15275. Native fossil powerset implementation unchanged from baseline.",
+      "log": {
+        "path": "out/dominance-completion/native-api.log",
+        "sha256": "d005f3f2b599a74e162c916238fcb5e64ac3ad2aa242730829e5636c7b0db990",
+        "bytes": 1188
+      }
+    },
+    {
+      "name": "family-contract",
+      "checks": 182744,
+      "failures": 1,
+      "reason": "Unchanged expected automatic identities initializer omits final baseline Foulborn identity. Automatic contract unchanged here.",
+      "log": {
+        "path": "out/dominance-completion/native-family-contract.log",
+        "sha256": "295a496f0718b7179e39b9ff74de8c8d9dd469f337c45e288cdb913f878e5cee",
+        "bytes": 228
+      }
+    }
+  ],
+  "wasm": {
+    "build_exit_code": 0,
+    "max_jobs": 2,
+    "abi_version": 3,
+    "artifacts": [
+      {
+        "path": "bindings/wasm/dist/poecraft_engine.wasm",
+        "sha256": "930435e95b3b85cbc8964624720dd0951877ee03547cfd4b636830837a64378a",
+        "bytes": 8231438
+      },
+      {
+        "path": "bindings/wasm/dist/poecraft_engine.mjs",
+        "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297",
+        "bytes": 21237
+      }
+    ],
+    "log": {
+      "path": "out/dominance-completion/wasm-build.log",
+      "sha256": "511d41d41d20c90939a0ae17a42292776f61e3116bf4c8048f4ca09e9c6f569b",
+      "bytes": 3433
+    }
+  },
+  "worker": {
+    "cases": [
+      {
+        "case": "dominance-prepared",
+        "mode": "current",
+        "operations": [
+          "dominance"
+        ],
+        "success": 1,
+        "cost": 7,
+        "solver_upper": 7,
+        "solver_lower": 0,
+        "simulator_trials": 1000,
+        "simulator_successes": 1000,
+        "graph_sha256": "f7cda1da2894f945573095f2f1816444fcd2cc09ea35a137d4fa802fa7bd03c0"
+      },
+      {
+        "case": "dominance-prepared",
+        "mode": "strategy_finder",
+        "operations": [
+          "dominance"
+        ],
+        "success": 1,
+        "cost": 7,
+        "solver_upper": 7,
+        "solver_lower": null,
+        "simulator_trials": 1000,
+        "simulator_successes": 1000,
+        "graph_sha256": "1d355fb1a0e70df9d0f794330e0d48205914eea53412532e0a942af166ce1ae7"
+      },
+      {
+        "case": "dominance-prepared-mixed",
+        "mode": "current",
+        "operations": [
+          "dominance"
+        ],
+        "success": 1,
+        "cost": 7,
+        "solver_upper": 7,
+        "solver_lower": 0,
+        "simulator_trials": 1000,
+        "simulator_successes": 1000,
+        "graph_sha256": "0549c7744215df93f2855b09b0a8e75d95ffaa24d01e56c11f680bbbd40b6f83"
+      },
+      {
+        "case": "dominance-prepared-mixed",
+        "mode": "strategy_finder",
+        "operations": [
+          "dominance"
+        ],
+        "success": 1,
+        "cost": 7,
+        "solver_upper": 7,
+        "solver_lower": null,
+        "simulator_trials": 1000,
+        "simulator_successes": 1000,
+        "graph_sha256": "f62c6719fecd6d0ff7d469cb6fbf99197461895bfc64e365980e56dc68f295c0"
+      }
+    ],
+    "batch": {
+      "path": "out/dominance-completion/worker-batch.json",
+      "sha256": "8a77f83ba24a6092857502a896a55d6a5a40c1491d6d75c5994984e41c212b6f",
+      "bytes": 589
+    },
+    "native_evaluation": {
+      "path": "out/dominance-completion/worker-native-qualification.json",
+      "sha256": "b0ad6521313bf718efb537f8014509cb99ef9d65af7b4c4730ab3326f849acae",
+      "bytes": 1455
+    },
+    "supervisor": "existing solver_worker.run_isolated_process, serial 60-second watchdog",
+    "timeouts": 0,
+    "survivors": 0,
+    "rendered_visual_review": "not requested/performed"
+  },
+  "holds": [
+    "dual-lock Scour owner law",
+    "hybrid checked-artifact handoff",
+    "protected/acquisition grammar expansion qualification"
+  ],
+  "disposition": "Prepared-item Current/Finder product path qualified, without lower/closure/optimality promotion."
+}

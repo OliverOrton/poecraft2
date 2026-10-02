@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Worker, type TransferListItem } from "node:worker_threads";
 import { parseHTML } from "linkedom";
@@ -80,7 +80,7 @@ client.solverSolve = async (...args) => {
 };
 try {
     await client.whenReady();
-    const artifact = resolve(root, "data/compiled/current");
+    const artifact = dirname(resolve(root, corpus.manifest.artifact.manifest_relative_path));
     const manifest = JSON.parse(readFileSync(resolve(artifact, "manifest.json"), "utf8"));
     validateCorpusArtifactPins(corpus.manifest, manifest, client.getAbiVersion());
     const bundle = {manifest, strings: JSON.parse(readFileSync(resolve(artifact, "strings.json"), "utf8")),
@@ -91,7 +91,15 @@ try {
     for (const mod of spec.start.mods) await client.addMod(item, session, {
         key: mod.key, fractured: mod.flags.includes("fractured") || undefined,
         crafted: mod.flags.includes("crafted") || undefined, veiled: mod.flags.includes("veiled") || undefined});
-    assert.ok(!spec.start.generic_influence_bits && !spec.start.searing_exarch_tier && !spec.start.eater_of_worlds_tier);
+    if (spec.start.generic_influence_bits || spec.start.searing_exarch_tier || spec.start.eater_of_worlds_tier) {
+        const state = await client.exportItem(item, session) as Record<string, unknown>;
+        const restored = await client.importItem({...state,
+            generic_influence_bits: spec.start.generic_influence_bits ?? 0,
+            searing_exarch_tier: spec.start.searing_exarch_tier ?? 0,
+            eater_of_worlds_tier: spec.start.eater_of_worlds_tier ?? 0}, session);
+        await client.closeItem(item);
+        item = restored;
+    }
     solver = await client.openSolver(session, spec.product_action_envelope.envelope_goal);
     const actions = await client.solverActions(solver);
     setFallbackPrice(null);
