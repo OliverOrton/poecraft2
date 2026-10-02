@@ -3,7 +3,7 @@
 Oliver selected the global ordinary 4/5/6 count correction to 8:3:1 in isolated
 `dot/reforge-law-20261002` from `dce3271`. The
 [living record](docs/active/2026-10-02-reforge-law/README.md) owns shared-file
-coordination, law identity migration, 1,351,679 passing finite checks and the
+coordination, law identity migration, 1,352,300 passing finite checks and the
 unrun bounded native/WASM requalification proposal.
 Cluster sessions must select the shared approved 65/35 interface in their own
 branch; ordinary/Abyss jewels retain their unresolved prior behavior. Integrator

@@ -33,7 +33,7 @@ All historical cost/proof measurements below retain their old-law identities;
 they do not qualify this source. Shared sampling/exact kernels serve Calculator,
 Current, Finder, authored evaluation and compound/retained rows. Graph structure
 may be reusable because ordinary support is unchanged, while law-bound values,
-certificates and checkpoints must be independently rebuilt. Its 1,351,679 finite native checks qualify this correction separately;
+certificates and checkpoints must be independently rebuilt. Its 1,352,300 finite native checks qualify this correction separately;
 WASM/worker and timed real-data qualification remain unrun. Cluster activation
 and unresolved ordinary/Abyss jewel laws remain separate owner boundaries.
 
