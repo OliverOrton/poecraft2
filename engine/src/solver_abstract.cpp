@@ -906,6 +906,62 @@ std::uint32_t modifier_metamod_flag(const SessionImpl& session, std::uint32_t mo
     return 0;
 }
 
+std::optional<UniformRemovalGoalProof> prove_uniform_removal_goals(
+        const SessionImpl& session, const GoalSpec& goal) {
+    if (goal.slots.size() > kMaxGoalSlots) return std::nullopt;
+    std::vector<ResolvedGoalSlot> slots;
+    for (std::size_t i = 0; i < goal.slots.size(); ++i)
+        slots.push_back(resolve_slot(session, goal.slots[i], i));
+    UniformRemovalGoalProof proof;
+    for (std::size_t s = 0; s < slots.size(); ++s) {
+        bool first = true, valid = true;
+        std::vector<std::uint32_t> common_groups;
+        pc_bitset_for_each(slots[s].member_mask.data(), session.words,
+            [&](const std::size_t bit) {
+                const auto mod = static_cast<std::uint32_t>(bit);
+                const auto side = session.gen_type[mod];
+                std::vector<std::uint32_t> member_groups;
+                mod_groups(session, mod, member_groups);
+                std::uint32_t blocks = 0;
+                for (std::size_t target = 0; target < slots.size(); ++target) {
+                    if (target == s) continue;
+                    if (pc_bitset_test(slots[target].member_mask.data(), mod)) {
+                        valid = false; // physical member belongs to two slots
+                        continue;
+                    }
+                    // Compare every native group against all target members,
+                    // including below-tier members. The ordinary slot's
+                    // satisfying-only blocker groups are too weak for this gate.
+                    for (const auto group : member_groups) {
+                        const auto& members = session.group_masks[group];
+                        for (std::size_t word = 0; word < session.words; ++word)
+                            if ((members[word] & slots[target].member_mask[word]) != 0)
+                                blocks |= 1u << target;
+                    }
+                }
+                // The first certified domain excludes cross-goal blockers.
+                // Legacy physical rollout does not yet reproject that
+                // redundant effect from occupied goal members. Keep those
+                // strategies physical rather than inheriting that gap.
+                if (blocks != 0) valid = false;
+                if (first) {
+                    proof.sides[s] = side;
+                    proof.member_block_masks[s] = blocks;
+                    common_groups = std::move(member_groups);
+                    first = false;
+                } else {
+                    if (side != proof.sides[s] ||
+                        blocks != proof.member_block_masks[s]) valid = false;
+                    std::erase_if(common_groups, [&](const auto group) {
+                        return !pc_bitset_test(session.group_masks[group].data(), mod);
+                    });
+                }
+            });
+        if (first || !valid || common_groups.empty()) return std::nullopt;
+    }
+    return proof;
+}
+
 AbstractState project_item(
     const SessionImpl& session,
     const AbstractLayout& layout,

@@ -751,6 +751,7 @@ struct StrategyEvalResult {
      * raw discovery and pair refinement. */
     std::uint64_t transition_via_owned_bytes = 0;
     struct ObservationPropagationTelemetry {
+        bool uniform_removal_carrier = false;
         std::uint32_t nodes = 0;
         std::uint32_t groups = 0;
         std::uint32_t rounds = 0;

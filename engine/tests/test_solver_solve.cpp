@@ -15609,6 +15609,7 @@ void run_solver_integrity_tests(const char* case_name) {
     else if (name == "automatic-ledger") run_automatic_eldritch_side_tests(false, false);
     else if (name == "incremental") run_incremental_action_generation_tests();
     else if (name == "fracture") run_primitive_destructive_renewal_upper_tests(false);
+    else if (name == "joint-fracture") run_joint_product_fracture_publication_tests();
     else throw std::invalid_argument("unknown solver integrity subcase");
 }
 

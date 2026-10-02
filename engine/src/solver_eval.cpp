@@ -437,7 +437,10 @@ struct StrategyEvalWork::Impl {
 
     LocalGatedRouteProof classify_local_gated_route(
             const std::uint32_t operation) const {
-        if (operation >= strategy->nodes.size()) {
+        if (operation >= strategy->nodes.size() ||
+            model.calc->uses_certified_uniform_removal()) {
+            // This narrow quotient uses complete renewal output laws. Do not
+            // introduce a virtual zero-progress basin into its state domain.
             return LocalGatedRouteProof::NotCandidate;
         }
         const StrategyNode& source = strategy->nodes[operation];
@@ -1328,12 +1331,7 @@ struct StrategyEvalWork::Impl {
         std::shared_ptr<const StrategyImpl> strategy_in,
         const StrategyEvalOptions& options_in)
         : strategy(std::move(strategy_in)),
-          options(options_in),
-          model(derive_checked_model(
-              strategy, options_in.max_states,
-              options_in.use_exact_exchangeable_family_compression)),
-          review_sections(parse_review_sections(
-              *strategy, options_in.review_projection_json)) {
+          options(options_in) {
         if (strategy == nullptr || strategy->session == nullptr ||
             strategy->start_node >= strategy->nodes.size()) {
             throw std::invalid_argument("invalid compiled strategy");
@@ -1345,11 +1343,43 @@ struct StrategyEvalWork::Impl {
             options.max_output_json_bytes == 0) {
             throw std::invalid_argument("invalid strategy evaluation options");
         }
+        review_sections = parse_review_sections(*strategy, options.review_projection_json);
+        for (const ReviewSectionSpec& section : review_sections) {
+            review_payload_owned_bytes +=
+                section.id.capacity() + section.label.capacity() +
+                section.role.capacity() + 3;
+            review_payload_owned_bytes +=
+                section.nodes.capacity() * sizeof(std::uint32_t);
+            review_payload_owned_bytes += string_vector_bytes(section.edges);
+        }
+        subphase = StrategyEvalSubphase::ObservationPreparation;
+        model = derive_checked_model(
+            strategy, options, node_observation_requirements,
+            &output.observation_propagation,
+            [&](const std::uint64_t transient_bytes, const char* stage,
+                const std::uint64_t units, const std::uint64_t unit_bytes) {
+                memory_probe_stage = stage;
+                memory_probe_units = units;
+                memory_probe_unit_bytes = unit_bytes;
+                check_owned_cap(transient_bytes);
+            });
+        for (const auto& requirement : node_observation_requirements)
+            observation_requirement_owned_bytes +=
+                observation_requirement_nested_bytes(requirement);
+        output.stage_timings.observation_preparation_ns =
+            output.observation_propagation.duration_ns;
+        memory_probe_stage = "steady_state";
+        memory_probe_units = memory_probe_unit_bytes = 0;
         output.stage_timings.model_setup_ns =
             static_cast<std::uint64_t>(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
                     Clock::now() - construction_started)
                     .count());
+        output.stage_timings.model_setup_ns -= std::min(
+            output.stage_timings.model_setup_ns,
+            output.stage_timings.observation_preparation_ns);
+        output.observation_propagation.uniform_removal_carrier =
+            model.calc->uses_certified_uniform_removal();
         output.refined_pair_limit = options.max_pairs;
         output.max_owned_bytes = options.max_owned_bytes;
         output.max_output_json_bytes = options.max_output_json_bytes;
@@ -1363,48 +1393,8 @@ struct StrategyEvalWork::Impl {
         operation_row_census_by_action.resize(
             model.calc->registry().actions.size());
         output.targets = model.targets;
-        for (const ReviewSectionSpec& section : review_sections) {
-            review_payload_owned_bytes +=
-                section.id.capacity() + section.label.capacity() +
-                section.role.capacity() + 3;
-            review_payload_owned_bytes +=
-                section.nodes.capacity() * sizeof(std::uint32_t);
-            review_payload_owned_bytes += string_vector_bytes(section.edges);
-        }
         const std::size_t node_count = strategy->nodes.size();
         check_owned_cap();
-        subphase = StrategyEvalSubphase::ObservationPreparation;
-        const auto observation_started =
-            Clock::now();
-        node_observation_requirements =
-            derive_node_observation_requirements(
-                *strategy, model, options.max_sweeps,
-                &output.observation_propagation,
-                [&](const std::uint64_t transient_bytes,
-                    const char* stage,
-                    const std::uint64_t units,
-                    const std::uint64_t unit_bytes) {
-                    memory_probe_stage = stage;
-                    memory_probe_units = units;
-                    memory_probe_unit_bytes = unit_bytes;
-                    check_owned_cap(transient_bytes);
-                });
-        output.observation_propagation.duration_ns =
-            static_cast<std::uint64_t>(
-                std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    Clock::now() -
-                    observation_started)
-                    .count());
-        output.stage_timings.observation_preparation_ns =
-            output.observation_propagation.duration_ns;
-        memory_probe_stage = "steady_state";
-        memory_probe_units = 0;
-        memory_probe_unit_bytes = 0;
-        for (const ObservationRequirement& requirement :
-             node_observation_requirements) {
-            observation_requirement_owned_bytes +=
-                observation_requirement_nested_bytes(requirement);
-        }
         std::vector<std::uint32_t> policy_roots;
         for (std::uint32_t source = 0; source < node_count; ++source) {
             if (is_policy_route_node(source)) continue;

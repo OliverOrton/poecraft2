@@ -451,7 +451,8 @@ template <typename MemoryCheck>
 std::vector<ObservationRequirement>
 derive_node_observation_requirements(
     const StrategyImpl& strategy,
-    const EvalModel& model,
+    const ActionRegistry& registry,
+    const std::vector<ResolvedStrategyOperation>& operation_by_node,
     const std::uint32_t max_rounds,
     StrategyEvalResult::ObservationPropagationTelemetry* telemetry,
     MemoryCheck&& check_memory) {
@@ -531,7 +532,7 @@ derive_node_observation_requirements(
         if (strategy.nodes[node].kind ==
             StrategyNodeKind::Operation) {
             const ResolvedStrategyOperation& operation =
-                model.operation_by_node.at(node);
+                operation_by_node.at(node);
             if (operation.kind ==
                 ResolvedStrategyOperationKind::Bestiary) {
                 /* Companion-state flow is represented explicitly in EvalPair.
@@ -552,8 +553,7 @@ derive_node_observation_requirements(
                     "operation observation fixed point has no action");
             }
             const ActionRefinementContract& contract =
-                model.calc->registry().actions.at(action_index)
-                    .refinement;
+                registry.actions.at(action_index).refinement;
             refinement::SelectedAction selected;
             selected.action_id = action_index;
             selected.semantic_key = {
@@ -1083,10 +1083,58 @@ bool contract_preserves_fresh_exclusion_identity(
         });
 }
 
+std::uint64_t prelayout_string_vector_bytes(const std::vector<std::string>& values) {
+    auto bytes = capped_product(values.capacity(), sizeof(std::string));
+    for (const auto& value : values)
+        bytes = capped_add(bytes, value.capacity() + 1);
+    return bytes;
+}
+
+bool uniform_removal_observations_admitted(
+        const std::vector<ObservationRequirement>& requirements) {
+    constexpr auto allowed =
+        refinement_feature(RefinementFeature::GoalStatusTierClass) |
+        refinement_feature(RefinementFeature::ModifierSide) |
+        refinement_feature(RefinementFeature::ModifierCrafted) |
+        refinement_feature(RefinementFeature::ModifierFractured) |
+        refinement_feature(RefinementFeature::ModifierVeiled) |
+        refinement_feature(RefinementFeature::ModifierMetamodRole);
+    for (const auto& requirement : requirements) {
+        if (!requirement.modifier_tag_ids.empty()) return false;
+        for (const auto& observation : requirement.affix_observations) {
+            // A trait-scoped read of fractured/locked/veiled affixes is
+            // impossible under the separately proved invariant. Test both
+            // physical sides; a prefix-only exclusion read is still a read.
+            const auto& selector = observation.selector;
+            const bool matches =
+                refinement_selector_matches(selector, kRefinementAffixPrefix, 0, {}) ||
+                refinement_selector_matches(selector, kRefinementAffixSuffix, 0, {});
+            if (matches && (observation.features & ~allowed) != 0) return false;
+            if (!selector.required_tag_ids.empty()) return false;
+        }
+    }
+    return true;
+}
+
+bool uniform_removal_condition_admitted(const CompiledCondition& condition) {
+    // Structured signatures and offer/checkpoint reads retain physical
+    // evaluation even when an individual authored condition is dead today.
+    if (condition.kind == ConditionKind::ObservationSignature ||
+        condition.kind == ConditionKind::HasUnveilOption ||
+        condition.kind == ConditionKind::ModCount ||
+        condition.kind == ConditionKind::ModFamilyCount ||
+        condition.required_flags != 0) return false;
+    return std::all_of(condition.children.begin(), condition.children.end(),
+        uniform_removal_condition_admitted);
+}
+
+template <typename MemoryCheck>
 EvalModel derive_model(
     const StrategyImpl& strategy,
-    std::optional<std::uint32_t> state_cap,
-    const bool use_exact_exchangeable_family_compression) {
+    const StrategyEvalOptions& options,
+    std::vector<ObservationRequirement>& node_observations,
+    StrategyEvalResult::ObservationPropagationTelemetry* observation_telemetry,
+    MemoryCheck&& check_memory) {
     if (!strategy.resources.empty()) {
         throw std::invalid_argument("Exact multi-item strategy evaluation requires inventory/control identity and is reserved for Pro; donor resources cannot be projected into one item");
     }
@@ -1263,6 +1311,86 @@ EvalModel derive_model(
     goal.min_satisfied_slots =
         static_cast<std::uint32_t>(goal.slots.size());
 
+    // Run the existing backward observation fixed point before selecting a
+    // calculator layout. Reads seed requirements; survivor flows only carry
+    // downstream requirements. Do not create a second propagation owner.
+    std::uint64_t prelayout_bytes = capped_product(
+        registry.actions.capacity(), sizeof(ActionDescriptor));
+    for (const auto& descriptor : registry.actions) {
+        prelayout_bytes = capped_add(prelayout_bytes,
+            descriptor.id.capacity() + descriptor.display_name.capacity() + 2);
+        prelayout_bytes = capped_add(prelayout_bytes,
+            prelayout_string_vector_bytes(descriptor.cost_keys));
+        prelayout_bytes = capped_add(prelayout_bytes,
+            capped_product(descriptor.discriminating_tag_ids.capacity() +
+                descriptor.params.fossil_indices.capacity(), sizeof(std::uint32_t)));
+        prelayout_bytes = capped_add(prelayout_bytes,
+            refinement_contract_payload_bytes(descriptor.refinement));
+    }
+    prelayout_bytes = capped_add(prelayout_bytes,
+        capped_product(registry.index_by_id.bucket_count(), sizeof(void*)));
+    prelayout_bytes = capped_add(prelayout_bytes,
+        capped_product(registry.index_by_id.size(),
+            sizeof(typename decltype(registry.index_by_id)::value_type) + 3 * sizeof(void*)));
+    for (const auto& [id, index] : registry.index_by_id) {
+        (void)index;
+        prelayout_bytes = capped_add(prelayout_bytes, id.capacity() + 1);
+    }
+    prelayout_bytes = capped_add(prelayout_bytes,
+        capped_product(operation_by_node.capacity(), sizeof(ResolvedStrategyOperation)));
+    prelayout_bytes = capped_add(prelayout_bytes,
+        capped_product(action_by_node.capacity() + used_actions.capacity(), sizeof(std::uint32_t)));
+    prelayout_bytes = capped_add(prelayout_bytes,
+        capped_product(target_entries.capacity(), sizeof(TargetEntry)));
+    for (const auto& target : target_entries)
+        prelayout_bytes = capped_add(prelayout_bytes, target.origin.capacity() + 1);
+    prelayout_bytes = capped_add(prelayout_bytes,
+        capped_product(goal.slots.capacity(), sizeof(GoalSlot)));
+    prelayout_bytes = capped_add(prelayout_bytes,
+        capped_product(count_observations.capacity(), sizeof(CountObservation)));
+    for (const auto& observation : count_observations) {
+        prelayout_bytes = capped_add(prelayout_bytes,
+            capped_product(observation.ids.capacity() + observation.memo_slots.capacity(),
+                sizeof(std::uint32_t)));
+    }
+    prelayout_bytes = capped_add(prelayout_bytes,
+        prelayout_string_vector_bytes(registry_options.requested_fossil_action_ids));
+    const auto observation_started = std::chrono::steady_clock::now();
+    node_observations = derive_node_observation_requirements(
+        strategy, registry, operation_by_node, options.max_sweeps,
+        observation_telemetry,
+        [&](const std::uint64_t transient, const char* stage,
+            const std::uint64_t units, const std::uint64_t unit_bytes) {
+            check_memory(capped_add(prelayout_bytes, transient), stage, units, unit_bytes);
+        });
+    if (observation_telemetry != nullptr)
+        observation_telemetry->duration_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - observation_started).count());
+    std::uint64_t observation_bytes = capped_product(
+        node_observations.capacity(), sizeof(ObservationRequirement));
+    for (const auto& requirement : node_observations)
+        observation_bytes = capped_add(observation_bytes,
+            observation_requirement_payload_bytes(requirement));
+    // Native capability/slot proofs own only bounded session masks and at
+    // most kMaxGoalSlots resolved member masks/group lists, never state rows.
+    std::uint64_t max_contract_scratch = 0;
+    for (const auto action : used_actions)
+        max_contract_scratch = std::max(max_contract_scratch,
+            capped_product(capped_add(sizeof(ActionRefinementContract),
+                refinement_contract_payload_bytes(registry.actions[action].refinement)), 4));
+    // Each resolved slot owns two masks plus a group vector. Resolution's
+    // temporary dedup vector and the common-group intersection can retain
+    // geometric capacity. Bound all of them together with the registry's
+    // native-contract derivation scratch, before invoking either proof.
+    const auto proof_scratch = capped_add(max_contract_scratch, capped_add(
+        capped_product(kMaxGoalSlots, sizeof(ResolvedGoalSlot)), capped_add(
+        capped_product(session->words, (2 * kMaxGoalSlots + 3) * sizeof(std::uint64_t)),
+        capped_product(session->group_ids.size(),
+            (2 * kMaxGoalSlots + 4) * sizeof(std::uint32_t)))));
+    check_memory(capped_add(prelayout_bytes, capped_add(observation_bytes, proof_scratch)),
+        "uniform_removal_native_admission", session->words, sizeof(std::uint64_t));
+
     /*
      * Choose the evaluator carrier from the same scoped semantic contracts
      * used by policy refinement. A clean graph whose operations destroy every
@@ -1306,15 +1434,45 @@ EvalModel derive_model(
                        contract_preserves_fresh_exclusion_identity(
                            registry.actions[action].refinement);
             });
+    bool all_unprotected_laws = !used_actions.empty();
+    bool has_uniform_removal = false;
+    for (const auto action : used_actions) {
+        const auto law = native_unprotected_affix_law(*session, registry.actions[action]);
+        all_unprotected_laws &= law != UnprotectedAffixLaw::Unsupported;
+        has_uniform_removal |= law == UnprotectedAffixLaw::UniformRemoval;
+    }
+    bool all_conditions_admitted = true;
+    for (const auto& node : strategy.nodes) {
+        if (node.kind == StrategyNodeKind::Operation &&
+            operation_by_node[&node - strategy.nodes.data()].kind ==
+                ResolvedStrategyOperationKind::Bestiary) all_unprotected_laws = false;
+        for (const auto& edge : node.edges)
+            if (!edge.is_default)
+                all_conditions_admitted &= uniform_removal_condition_admitted(edge.condition);
+    }
+    const bool certified_uniform_removal =
+        options.use_exact_exchangeable_family_compression &&
+        clean_start_carrier && strategy.start_item.implicit_count == 0 &&
+        strategy.start_item.quality == 0 &&
+        strategy.start_item.lifecycle == PC_ITEM_LIVE &&
+        strategy.start_item.enchantment_count == 0 &&
+        strategy.start_item.memory_strands == 0 &&
+        strategy.start_item.socket_count == 0 && strategy.start_item.link_mask == 0 &&
+        options.continuation_entries.empty() &&
+        options.policy_decision_entries.empty() &&
+        options.graph_local_provenance.decisions.empty() &&
+        count_observations.empty() && all_unprotected_laws && has_uniform_removal &&
+        all_conditions_admitted && uniform_removal_observations_admitted(node_observations) &&
+        prove_uniform_removal_goals(*session, goal).has_value();
     const bool semantic_strict_carrier =
         !clean_start_carrier ||
         direct_router_observes_fresh_exclusion ||
-        operation_preserves_fresh_exclusion;
+        (operation_preserves_fresh_exclusion && !certified_uniform_removal);
     /* This flag selects an exact calculator implementation, not a solver-row
      * reuse path. Keep strict/identity-observing strategies on physical
      * families even when the focused evaluator compression is enabled. */
     const bool product_exact_reforge_carrier =
-        use_exact_exchangeable_family_compression &&
+        options.use_exact_exchangeable_family_compression &&
         !semantic_strict_carrier;
 
     EvalModel model;
@@ -1345,7 +1503,7 @@ EvalModel derive_model(
             false, /* no operations must not mean the full registry */
             semantic_strict_carrier,
             /* observer-conditioned exact carrier when required */
-            state_cap, count_observations,
+            options.max_states, count_observations,
             product_exact_reforge_carrier,
             exact_start_mods,
             false, /* observer-derived semantic strict carrier */
@@ -1358,7 +1516,7 @@ EvalModel derive_model(
              * refinement contract before returning. Exact evaluation owns
              * that freshly built registry, so repeating the full registry
              * proof in CalcContext only delays the first cooperative step. */
-            true);
+            true, certified_uniform_removal);
     } catch (const std::exception& ex) {
         std::string origin;
         for (const TargetEntry& target : target_entries) {
@@ -1373,16 +1531,19 @@ EvalModel derive_model(
     return model;
 }
 
+template <typename MemoryCheck>
 EvalModel derive_checked_model(
     const std::shared_ptr<const StrategyImpl>& strategy,
-    std::uint32_t max_states,
-    const bool use_exact_exchangeable_family_compression) {
+    const StrategyEvalOptions& options,
+    std::vector<ObservationRequirement>& node_observations,
+    StrategyEvalResult::ObservationPropagationTelemetry* observation_telemetry,
+    MemoryCheck&& check_memory) {
     if (strategy == nullptr) {
         throw std::invalid_argument("invalid compiled strategy");
     }
     return derive_model(
-        *strategy, max_states,
-        use_exact_exchangeable_family_compression);
+        *strategy, options, node_observations, observation_telemetry,
+        std::forward<MemoryCheck>(check_memory));
 }
 
 std::size_t layout_slot_for(

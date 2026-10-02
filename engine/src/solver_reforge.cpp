@@ -711,7 +711,10 @@ bool CalcContext::exact_reforge_kernel_signature(
         return false;
     }
     pc_item_state item;
-    if (!materialize(state_id, item)) return false;
+    if (certified_uniform_removal_ &&
+        unprotected_affix_laws_.at(action_index) == UnprotectedAffixLaw::FullRenewal)
+        uniform_removal_renewal_source(state_id, item);
+    else if (!materialize(state_id, item)) return false;
     out_signature = reforge_base_observation(
         preserved_reforge_base(*session_, action, item));
     out_signature.insert(out_signature.begin(), action_index);
@@ -743,6 +746,9 @@ CalcContext::evaluate_reforge_cooperatively(
 
     pc_item_state item;
     if (concrete) item = concrete->base;
+    else if (certified_uniform_removal_ &&
+             unprotected_affix_laws_.at(action_index) == UnprotectedAffixLaw::FullRenewal)
+        uniform_removal_renewal_source(state_id, item);
     else if (!materialize(state_id, item)) {
         ++telemetry_.reforge_misses;
         telemetry_timer.miss = true;

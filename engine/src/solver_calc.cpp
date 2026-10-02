@@ -451,7 +451,8 @@ CalcContext::CalcContext(
     const bool reverse_reforge_bucket_enumeration,
     const bool use_factored_terminal_reforge,
     const AbstractLayout* refinement_parent_layout,
-    const bool registry_contracts_validated)
+    const bool registry_contracts_validated,
+    const bool certified_uniform_removal)
     : session_(std::move(session)),
       goal_(goal),
       registry_(std::move(registry)),
@@ -459,6 +460,7 @@ CalcContext::CalcContext(
       context_(0),
       state_cap_(state_cap),
       product_solver_parent_(product_solver_parent),
+      certified_uniform_removal_(certified_uniform_removal),
       distinguish_modifier_identity_(distinguish_modifier_identity),
       capture_reforge_attribution_(capture_reforge_attribution),
       use_projected_reforge_frontier_(
@@ -494,6 +496,28 @@ CalcContext::CalcContext(
             return index >= registry_.actions.size() ||
                 solver_action_disabled(goal_, registry_.actions[index]);
         });
+    if (certified_uniform_removal_) {
+        const auto proof = prove_uniform_removal_goals(*session_, goal_);
+        if (distinguish_junk_exclusion_effects ||
+            distinguish_modifier_identity_ || !proof ||
+            !count_observations.empty() || goal_.automatic_candidates) {
+            throw std::invalid_argument("uniform removal carrier has no native slot proof");
+        }
+        uniform_removal_goals_ = *proof;
+        unprotected_affix_laws_.assign(registry_.actions.size(),
+            UnprotectedAffixLaw::Unsupported);
+        bool has_removal = false;
+        for (const auto index : candidates_) {
+            const auto law = native_unprotected_affix_law(
+                *session_, registry_.actions[index]);
+            if (law == UnprotectedAffixLaw::Unsupported)
+                throw std::invalid_argument("uniform removal carrier has an unsupported native action");
+            unprotected_affix_laws_[index] = law;
+            has_removal |= law == UnprotectedAffixLaw::UniformRemoval;
+        }
+        if (!has_removal)
+            throw std::invalid_argument("uniform removal carrier has no native removal action");
+    }
     const auto planner_started = std::chrono::steady_clock::now();
     operators_ = build_planner_operators(
         *session_, goal_, registry_, candidates_);
@@ -1351,7 +1375,67 @@ bool CalcContext::is_goal_state(const AbstractState& state) const {
     return assess_goal_state(state).final_success;
 }
 
-std::uint32_t CalcContext::intern_state(const AbstractState& state) {
+std::uint32_t CalcContext::uniform_removal_blocked_mask(
+        const AbstractState& value) const {
+    std::uint32_t blocked = 0;
+    for (std::size_t s = 0; s < layout_.slots.size(); ++s)
+        if (value.slot_status[s] != 0)
+            blocked |= uniform_removal_goals_.member_block_masks[s];
+    for (std::size_t c = 0; c < layout_.junk_classes.size(); ++c)
+        if (value.junk_counts[c] != 0)
+            blocked |= layout_.junk_classes[c].goal_block_mask;
+    return blocked;
+}
+
+void CalcContext::validate_uniform_removal_state(
+        const AbstractState& value) const {
+    if (value.flags != 0 || value.influence_bits != 0 ||
+        value.searing_exarch_tier != 0 || value.eater_of_worlds_tier != 0 ||
+        value.veiled_side != -1 || value.fractured_goal_mask != 0 ||
+        value.crafted_goal_mask != 0 || value.fractured_metamod_flags != 0 ||
+        value.fractured_side_counts[0] != 0 || value.fractured_side_counts[1] != 0 ||
+        value.goal_progress_retry_basin != 0) {
+        throw std::logic_error("uniform removal carrier escaped its unprotected invariant");
+    }
+    std::array<std::uint32_t, 2> occupied{};
+    for (std::size_t s = 0; s < layout_.slots.size(); ++s) {
+        if (value.slot_status[s] > static_cast<std::uint8_t>(GoalSlotStatus::Satisfied) ||
+            value.goal_member_class_tokens[s] != 0)
+            throw std::logic_error("uniform removal carrier has invalid goal status");
+        if (value.slot_status[s] != 0)
+            ++occupied.at(uniform_removal_goals_.sides[s]);
+    }
+    if (value.junk_counts.size() != layout_.junk_classes.size())
+        throw std::logic_error("uniform removal carrier has incompatible junk classes");
+    for (std::size_t c = 0; c < layout_.junk_classes.size(); ++c) {
+        occupied.at(layout_.junk_classes[c].gen_type) += value.junk_counts[c];
+        if (value.fractured_junk_counts[c] != 0 ||
+            value.crafted_junk_counts[c] != 0 ||
+            value.fractured_crafted_junk_counts[c] != 0)
+            throw std::logic_error("uniform removal carrier has protected junk");
+    }
+    if (occupied[0] != value.prefix_count || occupied[1] != value.suffix_count)
+        throw std::logic_error("uniform removal carrier has unrepresented physical multiplicity");
+}
+
+void CalcContext::uniform_removal_renewal_source(
+        const std::uint32_t state_id, pc_item_state& item) const {
+    const auto& value = states_.at(state_id);
+    validate_uniform_removal_state(value);
+    // Every admitted renewal destroys all these unprotected explicits before
+    // any pool read. Construct that exact wiped input, never a greedy member.
+    pc_item_clear(&item);
+    item.rarity = value.rarity;
+}
+
+std::uint32_t CalcContext::intern_state(const AbstractState& input) {
+    AbstractState normalized;
+    if (certified_uniform_removal_) {
+        validate_uniform_removal_state(input);
+        normalized = input;
+        normalized.blocked_mask = uniform_removal_blocked_mask(input);
+    }
+    const AbstractState& state = certified_uniform_removal_ ? normalized : input;
     const std::size_t hash = abstract_state_hash(state);
     const auto found = state_ids_by_hash_.find(hash);
     if (found != state_ids_by_hash_.end()) {
@@ -1400,6 +1484,11 @@ std::uint32_t CalcContext::state_count() const {
 }
 
 std::uint32_t CalcContext::intern_item(const pc_item_state& item) {
+    if (certified_uniform_removal_ &&
+        (item.quality != 0 || item.implicit_count != 0 ||
+         item.enchantment_count != 0 || item.memory_strands != 0 ||
+         item.socket_count != 0 || item.link_mask != 0))
+        throw std::logic_error("uniform removal carrier has unrepresented item facts");
     AbstractState projected = project_item(*session_, layout_, item);
     if (product_solver_parent_) {
         projected.flags &= ~(kFlagMirrored | kFlagSynthesised);
@@ -2331,6 +2420,7 @@ std::uint64_t CalcContext::calculate_owned_bytes() const {
     const auto string_bytes = [](const std::string& value) {
         return static_cast<std::uint64_t>(value.capacity() + 1);
     };
+    bytes += unprotected_affix_laws_.capacity() * sizeof(UnprotectedAffixLaw);
     bytes += registry_.actions.capacity() * sizeof(ActionDescriptor);
     for (const ActionDescriptor& action : registry_.actions) {
         bytes += string_bytes(action.id) + string_bytes(action.display_name);
@@ -2683,6 +2773,37 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
             state_id, action_index, goal_progress_gated);
     } else if (action.params.type == ActionType::Unveil) {
         return evaluate_unveil(state_id);
+    } else if (certified_uniform_removal_ &&
+               unprotected_affix_laws_.at(action_index) ==
+                   UnprotectedAffixLaw::UniformRemoval) {
+        const AbstractState source = states_.at(state_id);
+        validate_uniform_removal_state(source);
+        result.supported = true;
+        const auto total = static_cast<std::uint32_t>(
+            source.prefix_count + source.suffix_count);
+        if (total == 0) self_loop();
+        else {
+            for (std::size_t s = 0; s < layout_.slots.size(); ++s) {
+                if (source.slot_status[s] == 0) continue;
+                AbstractState next = source;
+                next.slot_status[s] = 0;
+                if (uniform_removal_goals_.sides[s] == PC_SIDE_PREFIX)
+                    --next.prefix_count;
+                else --next.suffix_count;
+                accumulated[intern_state(next)] += 1.0 / total;
+            }
+            for (std::size_t c = 0; c < layout_.junk_classes.size(); ++c) {
+                const auto count = source.junk_counts[c];
+                if (count == 0) continue;
+                AbstractState next = source;
+                next.junk_counts[c] = static_cast<std::uint8_t>(count - 1);
+                if (layout_.junk_classes[c].gen_type == PC_SIDE_PREFIX)
+                    --next.prefix_count;
+                else --next.suffix_count;
+                accumulated[intern_state(next)] +=
+                    static_cast<double>(count) / total;
+            }
+        }
     } else {
         pc_item_state item;
         if (!materialize(state_id, item)) {

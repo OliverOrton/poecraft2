@@ -4843,3 +4843,331 @@ void run_solver_finder_essence_tests() {
         }
     }
 }
+
+void run_solver_uniform_removal_tests() {
+    // Exhaustive finite native differential fixtures, never real-data timed
+    // benchmarks. Unequal weights and overlapping exclusion groups are retained.
+    auto session = make_compile_session();
+    auto data = std::const_pointer_cast<DataImpl>(session->data);
+    data->essence_count = 1;
+    data->strings.push_back("removal_guarantee");
+    data->essence_key_sids = {static_cast<std::uint32_t>(data->strings.size()-1)};
+    data->essence_by_key = {{"removal_guarantee",0}};
+    data->essence_item_level_restrictions = {-1};
+    data->essence_is_corruption_only = {0};
+    session->essence_guaranteed_mod_ids = {0};
+    auto registry = build_action_registry(*session);
+    const auto chaos = registry.index_by_id.at("chaos");
+    const auto annul = registry.index_by_id.at("annul");
+    const auto essence = registry.index_by_id.at("essence:removal_guarantee");
+    GoalSpec goal; goal.rarity = PC_RARITY_RARE;
+    for (const auto mod : {0u,5u}) {
+        GoalSlot slot; slot.family_id = session->family_id[mod]; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    const std::vector<std::uint32_t> actions{chaos,essence,annul};
+    const auto make_calc = [&](const bool compact, const GoalSpec& request) {
+        return std::make_unique<CalcContext>(session,request,registry,actions,
+            false,false,!compact,std::nullopt,std::vector<CountObservation>{},
+            compact,std::vector<std::uint64_t>{},!compact,false,false,false,
+            compact,nullptr,true,compact);
+    };
+    auto full = make_calc(false,goal), compact = make_calc(true,goal);
+    PC_CHECK(compact->uses_certified_uniform_removal());
+    PC_CHECK(!full->uses_certified_uniform_removal());
+    PC_CHECK(native_unprotected_affix_law(*session,registry.actions[essence]) == UnprotectedAffixLaw::FullRenewal);
+    PC_CHECK(native_unprotected_affix_law(*session,registry.actions[annul]) == UnprotectedAffixLaw::UniformRemoval);
+    for (const auto id : {"exalt","augment","regal","fracture","scour","restart","eldritch_annul"})
+        PC_CHECK(native_unprotected_affix_law(*session,registry.actions.at(registry.index_by_id.at(id))) == UnprotectedAffixLaw::Unsupported);
+    auto spoof = registry.actions[annul];
+    spoof.refinement.affix_observations.push_back({refinement_feature(RefinementFeature::ModifierExclusionSignature),{}});
+    PC_CHECK(native_unprotected_affix_law(*session,spoof) == UnprotectedAffixLaw::Unsupported);
+    const auto compare_maps = [](const std::map<std::uint32_t,double>& a,const std::map<std::uint32_t,double>& b) {
+        PC_CHECK(a.size() == b.size());
+        double mass_a=0,mass_b=0;
+        for (const auto& [state,p] : a) {
+            mass_a+=p;
+            const auto at=b.find(state);
+            PC_CHECK(at!=b.end());
+            if (at!=b.end()) PC_CHECK(std::abs(p-at->second)<1e-11);
+        }
+        for (const auto& [state,p] : b) { (void)state; mass_b+=p; }
+        PC_CHECK(std::abs(mass_a-1)<1e-11);
+        PC_CHECK(std::abs(mass_b-1)<1e-11);
+    };
+    const auto full_projected = [&](const OutcomeDistribution& row) {
+        std::map<std::uint32_t,double> result;
+        for (const auto& e : row.entries) {
+            pc_item_state item; PC_CHECK(full->materialize(e.state,item));
+            result[compact->intern_item(item)] += e.probability;
+        }
+        return result;
+    };
+    const auto compact_map = [](const OutcomeDistribution& row) {
+        std::map<std::uint32_t,double> result;
+        for (const auto& e : row.entries) result[e.state]+=e.probability;
+        return result;
+    };
+    std::uint32_t carriers=0;
+    for (std::uint32_t mask=0;mask<256;++mask) {
+        pc_item_state item; pc_item_clear(&item); item.rarity=PC_RARITY_RARE;
+        bool legal=true; std::set<std::uint32_t> groups;
+        for (std::uint32_t mod=0;mod<8;++mod) if ((mask>>mod)&1u) {
+            for (auto i=session->group_offsets[mod];i<session->group_offsets[mod+1];++i)
+                if (!groups.insert(session->group_ids[i]).second) legal=false;
+            if (pc_item_add_mod(&item,session->gen_type[mod],mod,session->primary_group[mod],0,nullptr)!=PC_RESULT_OK) legal=false;
+        }
+        if (!legal) continue;
+        ++carriers;
+        const auto f=full->intern_item(item), q=compact->intern_item(item);
+        compare_maps(full_projected(full->outcomes(f,annul)),compact_map(compact->outcomes(q,annul)));
+        // All prior unprotected group identity is wiped by either native
+        // renewal. Forced Essence mods, within-roll collisions and exhaustion
+        // remain in the same exact native roll DP, independently rebuilt.
+        for (const auto action : {chaos,essence})
+            compare_maps(full_projected(full->outcomes(f,action)),compact_map(compact->outcomes(q,action)));
+    }
+    PC_CHECK(carriers>50);
+    pc_item_state four; pc_item_clear(&four); four.rarity=PC_RARITY_RARE;
+    for (const auto mod : {0u,5u,3u,6u})
+        PC_CHECK(pc_item_add_mod(&four,session->gen_type[mod],mod,session->primary_group[mod],0,nullptr)==PC_RESULT_OK);
+    const auto qfour=compact->intern_item(four);
+    std::map<std::uint32_t,double> after_two;
+    const auto first=compact->outcomes(qfour,annul);
+    for (const auto& e:first.entries) {
+        const auto second=compact->outcomes(e.state,annul);
+        for (const auto& z:second.entries) after_two[z.state]+=e.probability*z.probability;
+    }
+    double retained_both=0;
+    for (const auto& [state,p]:after_two)
+        if (compact->state(state).slot_status[0]==2 && compact->state(state).slot_status[1]==2) retained_both+=p;
+    PC_CHECK(std::abs(retained_both-1.0/6)<1e-12);
+
+    pc_item_state root; pc_item_clear(&root); root.rarity=PC_RARITY_RARE;
+    SolveOptions limits;
+    FinderControlGraph controller{{
+        {FinderControlKind::TestGoal,kNoId,5,1},
+        {FinderControlKind::TestSlot,0,2,4},
+        {FinderControlKind::TestAffixCountAtLeast4,3,3,4},
+        {FinderControlKind::RunPrimitive,annul,kNoId,kNoId,0},
+        {FinderControlKind::RunPrimitive,essence,kNoId,kNoId,0},
+        {FinderControlKind::GoalTerminal}},0};
+    const auto graph=compile_finder_control_json(*full,root,controller,limits);
+    PC_CHECK(compiled_success_ingress_matches_request(*full,graph));
+    const auto compiled=compile_strategy_json(session,graph.data(),graph.size());
+    auto economy=std::make_shared<EconomyImpl>(); economy->id="finite-native-removal";
+    economy->prices={{"chaos",1},{"annul",0.03},{"essence:removal_guarantee",0.2}};
+    StrategyEvalOptions options; options.economy=economy;
+    const auto compact_result=evaluate_strategy(*compiled,options);
+    options.use_exact_exchangeable_family_compression=false;
+    const auto physical_result=evaluate_strategy(*compiled,options);
+    PC_CHECK(compact_result.observation_propagation.uniform_removal_carrier);
+    PC_CHECK(!physical_result.observation_propagation.uniform_removal_carrier);
+    PC_CHECK(finder_evaluation_accepted(compact_result));
+    PC_CHECK(finder_evaluation_accepted(physical_result));
+    PC_CHECK(std::abs(compact_result.success_probability-physical_result.success_probability)<1e-10);
+    PC_CHECK(std::abs(compact_result.total_expected_cost-physical_result.total_expected_cost)<1e-9);
+    PC_CHECK(std::abs(compact_result.expected_actions-physical_result.expected_actions)<1e-8);
+    PC_CHECK(compact_result.expected_consumption.size()==physical_result.expected_consumption.size());
+    for (const auto& [key,quantity]:physical_result.expected_consumption)
+        PC_CHECK(std::abs(compact_result.expected_consumption.at(key)-quantity)<1e-8);
+    PC_CHECK(compact_result.edges.size()==physical_result.edges.size());
+    for (std::size_t i=0;i<compact_result.edges.size();++i) {
+        PC_CHECK(compact_result.edges[i].id==physical_result.edges[i].id);
+        PC_CHECK(std::abs(compact_result.edges[i].expected_traversals-physical_result.edges[i].expected_traversals)<1e-8);
+    }
+    std::printf("finite uniform-removal carriers=%u two-Annul retain-both=%.12g checked cost=%.12g physical=%.12g\n",
+        carriers,retained_both,compact_result.total_expected_cost,physical_result.total_expected_cost);
+    options.use_exact_exchangeable_family_compression=true;
+    // Nonempty and protected roots do not enter the quotient. Other tests
+    // retain source-engine fracture/lock semantics; these verify admission.
+    for (const auto flag : {0u,static_cast<unsigned>(PC_MOD_SLOT_FRACTURED),static_cast<unsigned>(PC_MOD_SLOT_CRAFTED)}) {
+        auto variant=std::make_shared<StrategyImpl>(*compiled);
+        PC_CHECK(pc_item_add_mod(&variant->start_item,PC_SIDE_PREFIX,0,session->primary_group[0],flag,nullptr)==PC_RESULT_OK);
+        const auto evaluated=evaluate_strategy(*variant,options);
+        PC_CHECK(!evaluated.observation_propagation.uniform_removal_carrier);
+    }
+    // An extra discovery seed retains physical entry identities/certification.
+    auto seeded=options; StrategyContinuationEntryRequest entry;
+    entry.complete_member_count=1; entry.item=root; seeded.continuation_entries.push_back(entry);
+    const auto seeded_result=evaluate_strategy(*compiled,seeded);
+    PC_CHECK(!seeded_result.observation_propagation.uniform_removal_carrier);
+
+    {
+        auto legacy=controller; legacy.nodes[2].binding=kNoId;
+        const auto bytes=compile_finder_control_json(*full,root,legacy,limits);
+        const auto compiled_legacy=compile_strategy_json(session,bytes.data(),bytes.size());
+        options.use_exact_exchangeable_family_compression=true;
+        const auto q=evaluate_strategy(*compiled_legacy,options);
+        options.use_exact_exchangeable_family_compression=false;
+        const auto f=evaluate_strategy(*compiled_legacy,options);
+        PC_CHECK(q.observation_propagation.uniform_removal_carrier);
+        PC_CHECK(!finder_evaluation_accepted(q) && !finder_evaluation_accepted(f));
+        PC_CHECK(q.success_probability<1e-12 && f.success_probability<1e-12);
+    }
+    options.use_exact_exchangeable_family_compression=true;
+    {
+        // Actual structured exclusion read, even on a dead graph edge, must
+        // prevent admission. No unreachability theorem is supplied for it.
+        auto variant=std::make_shared<StrategyImpl>(*compiled);
+        auto program=std::make_shared<refinement::CompiledObservationProgram>();
+        program->requirement=exclusion_requirement();
+        StrategyNode dead; dead.id="dead_identity_read"; dead.kind=StrategyNodeKind::Router;
+        StrategyEdge edge; edge.id="dead_identity_edge"; edge.target=variant->node_by_id.at("c5");
+        edge.condition.kind=ConditionKind::ObservationSignature;
+        edge.condition.observation_program=program;
+        dead.edges.push_back(edge);
+        variant->node_by_id[dead.id]=static_cast<std::uint32_t>(variant->nodes.size());
+        variant->nodes.push_back(dead);
+        const auto evaluated=evaluate_strategy(*variant,options);
+        PC_CHECK(!evaluated.observation_propagation.uniform_removal_carrier);
+        PC_CHECK(std::abs(evaluated.total_expected_cost-physical_result.total_expected_cost)<1e-9);
+    }
+    {
+        auto variant=std::make_shared<StrategyImpl>(*compiled);
+        auto& op=variant->nodes.at(variant->node_by_id.at("c4"));
+        op.action={}; op.action.type=ActionType::Exalt;
+        op.action_type=static_cast<int>(ActionType::Exalt); op.price_keys={"exalt"};
+        const auto evaluated=evaluate_strategy(*variant,options);
+        PC_CHECK(!evaluated.observation_propagation.uniform_removal_carrier);
+    }
+    {
+        // An any-two goal still uses the original threshold; observing all
+        // three slots is not permission to promote it to all-three success.
+        auto any_goal=goal; GoalSlot third; third.family_id=session->family_id[3]; third.min_tier=1;
+        any_goal.slots.push_back(third); any_goal.min_satisfied_slots=2;
+        auto any_full=make_calc(false,any_goal);
+        const auto bytes=compile_finder_control_json(*any_full,root,controller,limits);
+        PC_CHECK(compiled_success_ingress_matches_request(*any_full,bytes));
+        const auto any_strategy=compile_strategy_json(session,bytes.data(),bytes.size());
+        auto qoptions=options; qoptions.use_exact_exchangeable_family_compression=true;
+        auto foptions=qoptions; foptions.use_exact_exchangeable_family_compression=false;
+        const auto q=evaluate_strategy(*any_strategy,qoptions), f=evaluate_strategy(*any_strategy,foptions);
+        PC_CHECK(q.observation_propagation.uniform_removal_carrier);
+        PC_CHECK(finder_evaluation_accepted(q) && finder_evaluation_accepted(f));
+        PC_CHECK(std::abs(q.total_expected_cost-f.total_expected_cost)<1e-9);
+        PC_CHECK(std::abs(q.success_probability-f.success_probability)<1e-10);
+    }
+    {
+        auto tiny=options; tiny.max_owned_bytes=1024;
+        bool refused=false;
+        try { StrategyEvalWork work(compiled,tiny); }
+        catch (const std::length_error& ex) { refused=std::string(ex.what()).find("max_owned_bytes")!=std::string::npos; }
+        PC_CHECK(refused);
+    }
+    {
+        // Two independent non-member exclusions block the same goal: their
+        // multiplicities survive one removal and disappear only after both.
+        auto overlap=std::make_shared<SessionImpl>(*session);
+        std::vector<std::vector<std::uint32_t>> groups(overlap->mod_count);
+        for (std::uint32_t mod=0;mod<overlap->mod_count;++mod)
+            groups[mod].assign(overlap->group_ids.begin()+overlap->group_offsets[mod],
+                overlap->group_ids.begin()+overlap->group_offsets[mod+1]);
+        groups[0].push_back(20);
+        const auto rebuild_groups=[&] {
+            overlap->group_offsets={0}; overlap->group_ids.clear();
+            overlap->group_masks.assign(32,std::vector<std::uint64_t>(overlap->words,0));
+            for (std::uint32_t mod=0;mod<overlap->mod_count;++mod) {
+                for (const auto group:groups[mod]) {
+                    overlap->group_ids.push_back(group);
+                    pc_bitset_set(overlap->group_masks[group].data(),mod);
+                }
+                overlap->group_offsets.push_back(static_cast<std::uint32_t>(overlap->group_ids.size()));
+            }
+        };
+        rebuild_groups();
+        GoalSpec single=goal; single.slots.resize(1);
+        auto oregistry=build_action_registry(*overlap);
+        const auto make_overlap=[&](const bool q,const GoalSpec& g) {
+            return std::make_unique<CalcContext>(overlap,g,oregistry,actions,false,false,!q,
+                std::nullopt,std::vector<CountObservation>{},q,std::vector<std::uint64_t>{},
+                !q,false,false,false,q,nullptr,true,q);
+        };
+        auto oq=make_overlap(true,single), of=make_overlap(false,single);
+        pc_item_state blockers=root;
+        for (const auto mod:{2u,5u}) PC_CHECK(pc_item_add_mod(&blockers,overlap->gen_type[mod],mod,overlap->primary_group[mod],0,nullptr)==PC_RESULT_OK);
+        const auto input=oq->intern_item(blockers); PC_CHECK(oq->state(input).blocked_mask==1);
+        const auto first=oq->outcomes(input,annul); PC_CHECK(first.entries.size()==2);
+        for (const auto& e:first.entries) {
+            PC_CHECK(oq->state(e.state).blocked_mask==1);
+            const auto second=oq->outcomes(e.state,annul);
+            PC_CHECK(second.entries.size()==1);
+            if (second.entries.size()==1) PC_CHECK(oq->state(second.entries[0].state).blocked_mask==0);
+        }
+        // Existing common group plus an additional cross-goal group: all
+        // members must have uniform effects, independently of tier status.
+        PC_CHECK(!prove_uniform_removal_goals(*overlap,goal).has_value());
+        groups[1].push_back(20); rebuild_groups();
+        PC_CHECK(!prove_uniform_removal_goals(*overlap,goal).has_value());
+        bool refused=false;
+        try { auto inadmissible=make_overlap(true,goal); }
+        catch (const std::invalid_argument&) { refused=true; }
+        PC_CHECK(refused);
+        const auto rejected_graph=compile_strategy_json(overlap,graph.data(),graph.size());
+        StrategyEvalWork rejected_work(rejected_graph,options);
+        PC_CHECK(!rejected_work.diagnostic_result().observation_propagation.uniform_removal_carrier);
+        // A conflict only between two below-tier goal members is still a
+        // native exclusion. Neither satisfying mask mentions this group.
+        auto below_overlap=std::make_shared<SessionImpl>(*session);
+        below_overlap->family_id[6]=below_overlap->family_id[5];
+        below_overlap->family_tier_index[6]=2;
+        auto below_groups=groups;
+        below_groups[0]={10}; below_groups[1]={10,21}; below_groups[6]={20,21};
+        below_overlap->group_offsets={0}; below_overlap->group_ids.clear();
+        below_overlap->group_masks.assign(32,std::vector<std::uint64_t>(below_overlap->words,0));
+        for (std::uint32_t mod=0;mod<below_overlap->mod_count;++mod) {
+            for (const auto group:below_groups[mod]) {
+                below_overlap->group_ids.push_back(group);
+                pc_bitset_set(below_overlap->group_masks[group].data(),mod);
+            }
+            below_overlap->group_offsets.push_back(static_cast<std::uint32_t>(below_overlap->group_ids.size()));
+        }
+        PC_CHECK(!prove_uniform_removal_goals(*below_overlap,goal).has_value());
+        const auto below_graph=compile_strategy_json(below_overlap,graph.data(),graph.size());
+        StrategyEvalWork below_work(below_graph,options);
+        PC_CHECK(!below_work.diagnostic_result().observation_propagation.uniform_removal_carrier);
+        // Preserve a complete differential in the admitted one-goal domain,
+        // including the two independent blocker groups. No mass is dropped.
+        oq=make_overlap(true,single); of=make_overlap(false,single);
+        for (const auto action:{chaos,essence}) {
+            const auto frow=of->outcomes(of->intern_item(root),action);
+            const auto qrow=oq->outcomes(oq->intern_item(root),action);
+            std::map<std::uint32_t,double> fm,qm;
+            for (const auto& e:frow.entries) {
+                pc_item_state item; PC_CHECK(of->materialize(e.state,item));
+                fm[oq->intern_item(item)]+=e.probability;
+            }
+            for (const auto& e:qrow.entries) qm[e.state]+=e.probability;
+            compare_maps(fm,qm);
+        }
+    }
+    {
+        // Exhausted pool: three candidates share one group, so a forced
+        // Essence consumes the only selectable family. Keep the one-affix
+        // outcome with full mass; do not invent missing affixes or renormalize.
+        auto exhausted=std::make_shared<SessionImpl>(*session);
+        exhausted->normal_random_roll_mask.assign(exhausted->words,0);
+        for (const auto mod:{0u,1u,2u}) pc_bitset_set(exhausted->normal_random_roll_mask.data(),mod);
+        auto eregistry=build_action_registry(*exhausted);
+        auto make_exhausted=[&](const bool q) {
+            return std::make_unique<CalcContext>(exhausted,goal,eregistry,actions,false,false,!q,
+                std::nullopt,std::vector<CountObservation>{},q,std::vector<std::uint64_t>{},
+                !q,false,false,false,q,nullptr,true,q);
+        };
+        auto eq=make_exhausted(true), ef=make_exhausted(false);
+        const auto qrow=eq->outcomes(eq->intern_item(root),essence);
+        const auto frow=ef->outcomes(ef->intern_item(root),essence);
+        PC_CHECK(qrow.entries.size()==1 && frow.entries.size()==1);
+        if (qrow.entries.size()==1 && frow.entries.size()==1) {
+            const auto& q=eq->state(qrow.entries[0].state); const auto& f=ef->state(frow.entries[0].state);
+            PC_CHECK(q.prefix_count==1 && q.suffix_count==0 && q.slot_status[0]==2);
+            PC_CHECK(f.prefix_count==1 && f.suffix_count==0 && f.slot_status[0]==2);
+            PC_CHECK(qrow.entries[0].probability==1 && frow.entries[0].probability==1);
+        }
+    }
+    // Native single-occupancy proof rejects a synthetic family spanning two
+    // simultaneously legal groups, even with otherwise disjoint slot masks.
+    auto nonexclusive=std::make_shared<SessionImpl>(*session);
+    nonexclusive->family_id[3]=nonexclusive->family_id[0];
+    PC_CHECK(!prove_uniform_removal_goals(*nonexclusive,goal).has_value());
+}

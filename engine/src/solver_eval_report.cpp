@@ -359,6 +359,8 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result) {
     out += ']';
 
     const auto& observation = result.observation_propagation;
+    out += ",\"native_uniform_removal_carrier\":" +
+        std::string(observation.uniform_removal_carrier ? "true" : "false");
     out += ",\"observation_propagation\":{\"nodes\":" +
            std::to_string(observation.nodes);
     out += ",\"groups\":" + std::to_string(observation.groups);

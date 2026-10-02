@@ -756,7 +756,8 @@ class CalcContext {
         bool reverse_reforge_bucket_enumeration = false,
         bool use_factored_terminal_reforge = false,
         const AbstractLayout* refinement_parent_layout = nullptr,
-        bool registry_contracts_validated = false);
+        bool registry_contracts_validated = false,
+        bool certified_uniform_removal = false);
 
     const SessionImpl& session() const { return *session_; }
     const std::shared_ptr<const SessionImpl>& shared_session() const {
@@ -769,6 +770,9 @@ class CalcContext {
     }
     const GoalSpec& goal() const { return goal_; }
     bool product_solver_parent() const { return product_solver_parent_; }
+    bool uses_certified_uniform_removal() const {
+        return certified_uniform_removal_;
+    }
     bool distinguishes_modifier_identity() const {
         return distinguish_modifier_identity_;
     }
@@ -1208,6 +1212,14 @@ class CalcContext {
     std::uint64_t retained_reforge_distribution_bytes_ = 0;
     bool owned_bytes_ledger_initialized_ = false;
     bool product_solver_parent_ = false;
+    bool certified_uniform_removal_ = false;
+    UniformRemovalGoalProof uniform_removal_goals_{};
+    // Native capability results for the admitted descriptors only. Dense
+    // registry indices remain in this one CalcContext identity namespace.
+    std::vector<UnprotectedAffixLaw> unprotected_affix_laws_;
+    void validate_uniform_removal_state(const AbstractState&) const;
+    std::uint32_t uniform_removal_blocked_mask(const AbstractState&) const;
+    void uniform_removal_renewal_source(std::uint32_t, pc_item_state&) const;
     bool distinguish_modifier_identity_ = false;
     bool capture_reforge_attribution_ = false;
     bool reforge_resource_accounting_ = true;

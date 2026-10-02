@@ -89,6 +89,74 @@ omit later draws when their conditional continuation value is already proved
 uniform. A changed potential, hidden conditional law or moved decision can
 invalidate that query even though its prefix key is unchanged.
 
+<a id="unprotected-uniform-removal"></a>
+### Scoped quotient between full renewals and uniform removal
+
+For a **fixed compiled graph**, consider an empty unmodified root and a closed
+native action domain containing only full unprotected renewals and uniform
+removal of one occupied explicit affix. Every renewal must destroy all current
+explicit affixes before its pool reads and must produce no crafted, fractured,
+veiled, locked, metamod, checkpoint or observed-offer state. All used descriptors
+must have validated native capabilities; an action's calculator-kind label is
+insufficient. Exalt/add, targeted or weighted removal, protected cleanup and
+identity-sensitive operations are outside this domain.
+
+Every graph edge is inspected. The existing backward observation fixed point is
+computed before layout selection: actual action/router reads seed requirements;
+survivor flows propagate downstream requirements and do not by themselves create
+an exclusion-identity read. The admitted observation basis is native item facts,
+side occupancy and selected family/group tier status. Additional structured
+identity, classification, required-level, offer or checkpoint reads retain the
+physical carrier. This implementation also conservatively excludes modifier
+count queries and requests for physical continuation-entry certificates.
+
+Let the carrier retain the compiled control node, native rarity/item facts,
+each observed slot's absent/below-tier/satisfying status, and the multiplicity of
+each junk class, including its side and goal-blocking effect. Each slot's members
+must be on one side and share a native exclusion group. The shared group proves
+**at most one physical member per slot**; pairwise-disjoint slot masks alone do
+not prove this. This first admitted domain also requires no member of one observed slot to
+block another observed slot. The legacy physical roll projection does not yet
+reconstruct that cross-goal blocker bit, so those cases retain physical
+evaluation and are excluded from this quotient's qualification. Non-member blockers retain multiplicity, so deleting one blocker cannot
+clear a target's blocked state while another remains. Recomputing the redundant
+blocked mask from these retained multiplicities changes no observed fact.
+
+For a carrier with \(N\) occupied affixes and \(n_c\) affixes in class \(c\),
+unprotected native Annul has class-decrement probability \(n_c/N\). Deleting a
+goal member clears precisely its retained tier-status slot and decrements its
+proved side. Deleting junk decrements its class and side occupancy. Thus all
+physical members of one carrier have identical probability into every successor
+carrier under removal, regardless of their original generation weights. With two
+goals and two junk, retaining both goals through two removals has probability
+\((2/4)(1/3)=1/6\). A held goal is not physically protected and its loss remains
+an ordinary paid reacquisition route in the graph.
+
+For renewal, the source affixes are all wiped before any pool read. Members of
+one carrier therefore have the same native prepared base and complete output
+law. The existing within-roll native exclusion/forced-mod/side-cap/exhaustion law
+must remain exact; forgetting prior identity is no permission to merge
+incompatible roll-frontier states, drop small mass or renormalize. The removal
+kernel decrements class counts directly, and the renewal kernel constructs the
+proved wiped input; neither relies on a favorable greedy physical representative.
+
+All routers and terminal tests are class-constant under these premises, and the
+chosen native operation and all its price keys are unchanged at each control
+node. Class-transition equality therefore gives the same projected path law,
+terminal absorption, operation consumption and expected cost. In particular,
+properness and closed retry classes are preserved; this argument does not permit
+fabricating terminal success for an exhausted or censored check. An any-k request
+keeps its original success predicate: collecting extra graph observations never
+promotes it to an all-observed-slots objective.
+
+This is a scoped application of [CLM-0005](../claims.md#clm-0005) to fixed-graph
+checking, **not a new lower or optimality issuer**. The native prototype and its
+finite differential evidence are tracked in the
+[Finder Essence record](../../active/2026-10-02-finder-essence/README.md).
+Admission/propagation scratch uses the existing owned-byte and round caps; failure
+of any gate retains physical evaluation. Real-data qualification and the general
+claim's native coverage remain separate obligations.
+
 <a id="optimism"></a>
 <a id="native-reforge-group-eligibility"></a>
 ### Native reforge eligibility and blocker observations

@@ -2794,6 +2794,56 @@ void canonicalize_and_validate_action_refinement_contract(
     }
 }
 
+UnprotectedAffixLaw native_unprotected_affix_law(
+        const SessionImpl& session, const ActionDescriptor& action) {
+    if (action.synthetic || action.uses_companion_state ||
+        !action.refinement.complete() ||
+        action.refinement.outcome_observation !=
+            RefinementOutcomeObservation::None) {
+        return UnprotectedAffixLaw::Unsupported;
+    }
+    UnprotectedAffixLaw law = UnprotectedAffixLaw::Unsupported;
+    switch (action.params.type) {
+    case ActionType::Annul:
+        law = UnprotectedAffixLaw::UniformRemoval;
+        break;
+    case ActionType::Transmute:
+    case ActionType::Alteration:
+    case ActionType::Alchemy:
+    case ActionType::Chaos:
+    case ActionType::Essence:
+    case ActionType::HarvestReforge:
+        law = UnprotectedAffixLaw::FullRenewal;
+        break;
+    default:
+        return law;
+    }
+    // Native capabilities may not be inferred from an authored/fabricated
+    // contract with the same schema or calculator-kind label.
+    auto native = derive_action_refinement_contract(session, action);
+    canonicalize_contract(native);
+    if (native != action.refinement) return UnprotectedAffixLaw::Unsupported;
+    if (law == UnprotectedAffixLaw::FullRenewal) {
+        const auto reachable = action_explicit_affix_reachable_mask(
+            session, action, true);
+        bool closes_unprotected_invariant = true;
+        pc_bitset_for_each(reachable.data(), session.words,
+            [&](const std::size_t mod) {
+                if ((mod / 64 < session.crafted_mask.size() &&
+                     pc_bitset_test(session.crafted_mask.data(), mod)) ||
+                    modifier_is_veiled_template(session,
+                        static_cast<std::uint32_t>(mod)) ||
+                    modifier_metamod_flag(session,
+                        static_cast<std::uint32_t>(mod)) != 0) {
+                    closes_unprotected_invariant = false;
+                }
+            });
+        if (!closes_unprotected_invariant)
+            return UnprotectedAffixLaw::Unsupported;
+    }
+    return law;
+}
+
 ActionRegistry build_action_registry(
     const SessionImpl& session,
     const ActionRegistryBuildOptions& options) {

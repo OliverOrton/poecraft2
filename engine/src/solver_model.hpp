@@ -690,6 +690,7 @@ struct ActionRefinementContract {
     bool complete() const {
         return schema_version == kActionRefinementContractVersion;
     }
+    bool operator==(const ActionRefinementContract&) const = default;
 };
 
 inline bool refinement_contract_observes_modifier_offer(
@@ -1008,6 +1009,18 @@ void canonicalize_and_validate_action_refinement_contract(
 void canonicalize_and_validate_action_refinement_contract(
     const SessionImpl& session,
     ActionDescriptor& action);
+
+/* Narrow native transition capabilities under the empty, unprotected carrier
+ * invariant. This is derived and checked by the registry owner against the
+ * native refinement contract; evaluator code cannot opt a descriptor in by
+ * changing its evaluator-kind label. Unsupported actions stay physical. */
+enum class UnprotectedAffixLaw : std::uint8_t {
+    Unsupported = 0,
+    FullRenewal,
+    UniformRemoval,
+};
+UnprotectedAffixLaw native_unprotected_affix_law(
+    const SessionImpl&, const ActionDescriptor&);
 
 /* Resolve the goal's explicitly selected fixed options. The returned vector
  * begins with one primitive wrapper per registry action at the same index. */
@@ -1365,6 +1378,17 @@ struct AbstractState {
 
     bool operator==(const AbstractState& other) const = default;
 };
+
+/* Proof for the removal-only carrier: every slot has one physical member at
+ * most, on one side, and its members have the same effect on other observed
+ * slots. A shared native exclusion group proves single occupancy; disjoint
+ * member masks alone do not. Junk blocker multiplicities remain in the layout. */
+struct UniformRemovalGoalProof {
+    std::array<std::int8_t, kMaxGoalSlots> sides{};
+    std::array<std::uint32_t, kMaxGoalSlots> member_block_masks{};
+};
+std::optional<UniformRemovalGoalProof> prove_uniform_removal_goals(
+    const SessionImpl&, const GoalSpec&);
 
 /* Project a concrete item onto the layout's abstract features. */
 // The modifier contribution used by project_item, including zero for unknown

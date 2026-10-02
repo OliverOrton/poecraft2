@@ -13,6 +13,16 @@ int main(int argc, char** argv) {
         std::printf("Calculator incoming tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-observation-layout-only") {
+        run_solver_observation_layout_tests();
+        std::printf("solver observation layout tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--solver-uniform-removal-only") {
+        run_solver_uniform_removal_tests();
+        std::printf("solver uniform removal tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-finder-essence-only") {
         run_solver_finder_essence_tests();
         std::printf("solver Finder Essence tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

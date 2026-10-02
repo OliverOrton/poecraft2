@@ -3576,6 +3576,20 @@ void run_solver_attribution_recovery_tests() {
     }
 }
 
+void run_solver_observation_layout_tests() {
+    const auto stage = [](const char* name, const auto& fn) {
+        try { fn(); }
+        catch (const std::exception& ex) {
+            std::printf("solver observation layout %s: %s\n", name, ex.what());
+            PC_CHECK(false);
+        }
+    };
+    stage("continuation certificates", run_continuation_upper_certificate_tests);
+    stage("selected policy kernels", run_selected_policy_kernel_tests);
+    stage("modifier offers", run_modifier_offer_resolution_tests);
+    stage("downstream delayed split", run_observation_partition_delayed_split_tests);
+}
+
 void run_solver_eval_tests(const char* artifact_dir) {
     const auto stage = [](const char* name, const auto& fn) {
         try {

@@ -181,7 +181,8 @@ The approved argv, cwd and watchdog match the supervised invocation exactly;
 the supervisor normalizes reservation metadata and therefore produces a distinct
 command-object digest. Both command objects are preserved in the receipts.
 
-One of the two reserved native invocations is spent. N2 remains ungranted.
+One of the two reserved native invocations is spent. The remaining global N6
+slot remains ungranted.
 The next approved investigation is the narrow native capability proof and finite
 differential tests for full renewals plus unprotected uniform removal. A later
 full-versus-compact comparison must bind the same captured graph bytes and use
@@ -197,7 +198,70 @@ S8.3 price-flip convergence check. Exact assertion failures were not found in
 are not declared baseline-known. Relevant tests and their native owners are
 byte-identical to actual main. These cases call CalcContext/SolveWork directly,
 without Finder/capture, and the modified selective service defaults off there.
-No direct changed-code path was identified, but an actual-main binary comparison
-was not performed; patch regression is not experimentally ruled out.
+At that initial triage, no direct changed-code path was identified and no
+actual-main binary comparison had been performed. The later focused comparison
+below now supplies the experimental baseline disposition.
 Read-only triage: `out/finder-overnight/default-suite-failure-triage.json`.
 No broad rerun was used to dismiss or repair these failures.
+
+
+## Removal quotient qualification checkpoint
+
+The parent approved implementation after N1 established pair-discovery censoring
+for the unchanged captured unprotected graph. The canonical scoped argument is
+[between full renewals and uniform removal](../../solver/mathematics/representations.md#unprotected-uniform-removal).
+Registry-owned native capabilities, the shared native slot proof, pre-layout
+observation propagation and direct class-count Annul are implemented. Outside
+the proved root/action/observation/slot domain, physical evaluation stays selected.
+Additional entry certificates and count queries are outside this first domain.
+No lower issuer changes; no release WASM or Simulator qualification is claimed.
+
+The admitted domain starts from an empty unmodified item and contains only
+native full renewals and unprotected uniform Annul. Each observed goal family
+has one side, disjoint membership and a common native exclusion group proving
+single occupancy. The gate compares **every member including below-tier members,
+and every native exclusion group**, and rejects all cross-goal member conflicts.
+All graph observations and native contracts must admit the retained status,
+side, occupancy and junk-blocker counts. Structured identity, protection,
+additive actions, offers, external entries and other unsupported cases stay
+physical. Existing within-roll native exclusions and complete mass remain exact.
+
+Finite differential qualification passes **21,627 checks** over 128 legal
+physical carriers. Complete Chaos/Essence and Annul projected rows, expected
+operation/material/edge consumption, properness and synthetic controller cost
+match the physical path. Two goals plus two junk retain both after two Annuls
+with probability 1/6; synthetic C3.56715328467 matches on both paths. Independent
+junk blocker multiplicities survive repeated Annul, and exhausted pools retain
+their actual complete law. All-member conflict negatives assert that the ordinary
+evaluator actually selects the physical carrier, including a conflict only
+between below-tier members. Log:
+`out/finder-overnight/uniform-removal-complete-member-gate.log`.
+
+Existing focused checks pass: Essence/capture 293, bindings 129, protected routes
+63, attribution 516, and the shared observation layout 839. The latter exercises
+continuation certificates, selected policy kernels, offers and downstream delayed
+splits without Simulator or Monte Carlo stages. Total passing focused checks:
+23,467. No additional timed native invocation has started. N6 requires parent
+review of this domain/evidence and a frozen identical-graph command.
+
+The earlier expanded suite exposed 15 physical-reference materialization failures
+on a new synthetic cross-goal blocker case: occupied goal-member identity implies
+another observed slot's blocker bit, but the legacy roll terminal writes only
+junk blocker bits. Raw failure log:
+`out/finder-overnight/uniform-removal-boundaries.log`. This is separate from the
+17 broad-suite failures. The first quotient rejects those cases; the new physical
+fallback regression preserves that disposition. No broader Current/strict-carrier
+repair is included here. Initial and narrowed intermediate logs remain preserved.
+
+## Actual-main failure comparison
+
+The 17 formerly unresolved broad-suite synthetic failures now reproduce on
+actual main `ebcd98cdda2c1828cd855f549831951e6ba7470a`, built from an explicit-path
+local `git archive` snapshot. Native sources and assertions are unchanged; a
+one-line dispatch exposes the existing private joint-Fracture test. The focused
+comparison has the same assertions and 6/10/1 failure split: joint publication,
+destructive/Fracture integrity, and S8.3 Fracture price flip. No whole-suite or
+Simulator rerun was used. These are **baseline-reproduced defects**, remain unfixed,
+and do not establish full acceptance. Raw evidence and executable/source hashes:
+`out/finder-overnight/actual-main-failure-comparison.json` and
+`actual-main-test-snapshot-receipt.json`. Main checkout was not modified.
