@@ -6105,7 +6105,10 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
             candidate.compiled_root_entry_only
                 ? &candidate.compiled_artifact.strategy_json : nullptr,
             candidate.compiled_root_entry_only ? &emitted : nullptr,
-            candidate.compiled_root_entry_only);
+            candidate.compiled_root_entry_only, false, false,
+            candidate.compiled_root_entry_only
+                ? refinement::CompiledPolicyAssertionMode::OriginalRootController
+                : refinement::CompiledPolicyAssertionMode::StatewisePolicy);
         std::uint64_t checker_active = 0, checker_logical = 0;
         update_lineage([](auto& lineage) {
             lineage.compilation_attempted = true;

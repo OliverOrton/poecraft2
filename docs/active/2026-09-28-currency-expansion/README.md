@@ -966,19 +966,32 @@ paid operations and exact original goal; the existing graph checker must verify
 original-root execution, properness, scope and complete accounting before
 retention. A supplied root-only controller keeps its checked graph unchanged;
 ordinary statewise policies still use the existing paired product-graph compiler.
+The checker requires an explicit internal original-root mode, a supplied graph
+and root-check request, with no parent decisions, nonroot values or compiler
+bindings. Empty statewise policy arrays cannot select that mode. Mode and entry
+requests bind evaluation reuse identity. Private generation releases its copied
+goal before suspension and borrows the stable parent-priced operator; each
+checkpoint charges the private calculator, nested frame and signature capacity.
+The checker reserves its own retained object and both graph copies within the
+remaining parent memory. Zero candidate limits inherit; public zero resource
+options select ordinary defaults. Exhausted internal capacities refuse work.
 The retained root-only certificate supplies no parent statewise continuation
 values or new lower/exactness authority. Socket/link, strand, absent-resource and
 retained-enchantment carriers remain outside this proposal's representation.
 
 The isolated native test target, benchmark and DLL build successfully. The
-focused recovery case passes 883 checks, including full-context differential
+focused recovery case passes 1,082 checks, including full-context differential
 probabilities on a complete pool, partial protected miss refusal, explicit scope
 exclusion, disabled families, missing prices, zero success, changed root flags,
 quality/split preservation, costly cleanup, exhausted state/transition/work
-capacities, cancellation and stale authority. The existing assertion-owner suite
-passes 384 checks. Bulk logs and actual executable hashes are under
+capacities, cancellation and stale authority. The follow-up controls require
+explicit root provenance, reject parent bindings/nonroot values, charge retained
+signature capacity, refuse a 64-byte private allowance, cancel live private
+generation without work leakage, and exercise unlimited-width caps. The existing
+assertion-owner suite passes 384 checks. Bulk logs and actual executable hashes are under
 `out/mechanics-overnight`. No timed solve or worker invocation has run; the frozen
-original-runtime Current request is prepared for the parent's serial slot.
+original-runtime Current request passes the native validate-only check and is
+frozen for the parent's serial slot.
 These fixtures qualify the native slice, not general Foulborn search or an
 original-request performance result. No Simulator or WASM qualification is
 claimed in this worktree.

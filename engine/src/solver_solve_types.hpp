@@ -2786,8 +2786,9 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         CalcContext& proof_calc,
         std::uint32_t proof_root,
         const OutcomeDistribution& complete_kernel);
+    // Parent operator vocabulary is immutable while this child is selected.
     solve_detail::CooperativeTask<bool> prepare_paid_root_reset_candidate(
-        PricedOperator priced);
+        const PricedOperator& priced);
 
     double certified_global_lower_bound() const;
 

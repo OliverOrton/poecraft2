@@ -14,8 +14,13 @@ namespace {
 std::vector<std::uint64_t> compiled_assertion_request_identity(
         const CalcContext& calc, const SolveResult& solved,
         const std::unordered_map<std::string, double>& prices,
-        const SolveOptions& options) {
-    std::vector<std::uint64_t> key{1};
+        const SolveOptions& options,
+        const CompiledPolicyAssertionMode mode,
+        const bool request_root_upper,
+        const bool request_policy_entries,
+        const bool request_dependency_kernels) {
+    std::vector<std::uint64_t> key{2, static_cast<std::uint64_t>(mode),
+        request_root_upper, request_policy_entries, request_dependency_kernels};
     const auto append_text = [&](const std::string_view value) {
         key.push_back(value.size());
         for (std::size_t offset = 0; offset < value.size(); offset += 8) {
@@ -277,6 +282,7 @@ struct CompiledPolicyAssertionWork::Impl {
     bool request_root_continuation_upper = false;
     bool request_policy_decision_entries = false;
     bool request_policy_dependency_kernels = false;
+    CompiledPolicyAssertionMode mode = CompiledPolicyAssertionMode::StatewisePolicy;
     CompiledPolicyAssertion result;
     Stage stage = Stage::Compiling;
     std::shared_ptr<StrategyImpl> parsed_strategy;
@@ -296,7 +302,8 @@ struct CompiledPolicyAssertionWork::Impl {
             const PolicyCompilationTelemetry* emitted_telemetry,
             const bool request_root_upper,
             const bool request_policy_entries,
-            const bool request_dependency_kernels)
+            const bool request_dependency_kernels,
+            const CompiledPolicyAssertionMode mode_value)
         : coarse(coarse_value),
           solved(solved_value),
           prices(prices_value),
@@ -307,10 +314,12 @@ struct CompiledPolicyAssertionWork::Impl {
           emitted_compilation(emitted_telemetry),
           request_root_continuation_upper(request_root_upper),
           request_policy_decision_entries(request_policy_entries),
-          request_policy_dependency_kernels(request_dependency_kernels) {
+          request_policy_dependency_kernels(request_dependency_kernels),
+          mode(mode_value) {
         result.solver_cost = solved.evaluated_policy_cost;
         result.request_identity = compiled_assertion_request_identity(
-            coarse, solved, prices, options);
+            coarse, solved, prices, options, mode, request_root_continuation_upper,
+            request_policy_decision_entries, request_policy_dependency_kernels);
     }
 
     void finish_failure(
@@ -378,8 +387,44 @@ struct CompiledPolicyAssertionWork::Impl {
                 "solve did not publish a policy");
             return;
         }
+        if (mode != CompiledPolicyAssertionMode::StatewisePolicy &&
+            mode != CompiledPolicyAssertionMode::OriginalRootController) {
+            finish_failure(CompiledPolicyAssertionStatus::CompilationFailure,
+                "unknown compiled-policy assertion mode");
+            return;
+        }
+        if (mode == CompiledPolicyAssertionMode::OriginalRootController) {
+            // This is an explicit internal provenance contract, never inferred
+            // from an accidentally empty or malformed statewise policy.
+            const bool no_parent_decisions =
+                solved.policy.size() == solved.values.size() &&
+                solved.policy_reachable.size() == solved.values.size() &&
+                std::none_of(solved.policy.begin(), solved.policy.end(),
+                    [](const auto& op) { return op.index != kNoId; }) &&
+                std::none_of(solved.policy_reachable.begin(), solved.policy_reachable.end(),
+                    [](const auto reached) { return reached != 0; });
+            bool no_nonroot_values = solved.start_state < solved.values.size();
+            for (std::size_t state = 0; state < solved.values.size(); ++state)
+                if (state != solved.start_state && std::isfinite(solved.values[state]))
+                    no_nonroot_values = false;
+            if (emitted_strategy_json == nullptr || !request_root_continuation_upper ||
+                request_policy_decision_entries || request_policy_dependency_kernels ||
+                refined_routing != nullptr || !solved.has_exact_start_item ||
+                (emitted_compilation != nullptr &&
+                    !emitted_compilation->policy_decision_bindings.empty()) ||
+                !no_parent_decisions || !no_nonroot_values) {
+                finish_failure(CompiledPolicyAssertionStatus::CompilationFailure,
+                    "original-root controller requires explicit supplied graph, "
+                    "root checking and no parent statewise authority");
+                return;
+            }
+        }
         result.retained_solver_bytes =
             estimated_retained_solver_bytes(coarse, &solved);
+        if (mode == CompiledPolicyAssertionMode::OriginalRootController) {
+            saturating_add(result.retained_solver_bytes, sizeof(*this));
+            saturating_add(result.retained_solver_bytes, strategy_name.capacity() + 1);
+        }
         saturating_add(result.retained_solver_bytes,
             result.request_identity.capacity() * sizeof(std::uint64_t));
         std::uint64_t paired_certification_bytes = 0;
@@ -793,17 +838,37 @@ struct CompiledPolicyAssertionWork::Impl {
                 // A supplied whole-root controller has no parent decisions
                 // from which to synthesize a second product policy. Preserve
                 // the exact graph whose original-root entry was checked.
-                if (emitted_strategy_json != nullptr && request_root_continuation_upper &&
-                    std::none_of(solved.policy.begin(), solved.policy.end(),
-                        [](const auto& op) { return op.index != kNoId; }) &&
-                    std::none_of(solved.policy_reachable.begin(), solved.policy_reachable.end(),
-                        [](const auto reached) { return reached != 0; })) {
-                    result.certification_strategy_json = result.strategy_json;
-                    result.certification_compilation = result.compilation;
-                    result.paired_default_only = true;
+                if (mode == CompiledPolicyAssertionMode::OriginalRootController) {
                     evaluation_work.reset();
                     parsed_strategy.reset();
                     economy.reset();
+                    std::uint64_t paired_retained = result.retained_solver_bytes;
+                    saturating_add(paired_retained, result.strategy_json.capacity() + 1);
+                    saturating_add(paired_retained,
+                        result.evaluation.retained_output_owned_bytes_estimate);
+                    saturating_add(paired_retained, result.strategy_json.size() + 1);
+                    if (paired_retained >= options.max_solver_owned_bytes) {
+                        finish_failure(CompiledPolicyAssertionStatus::ResourceCap,
+                            "original-root certification graph exceeds remaining memory",
+                            "max_solver_owned_bytes");
+                        return;
+                    }
+                    result.certification_strategy_json = result.strategy_json;
+                    result.certification_compilation = result.compilation;
+                    paired_retained = result.retained_solver_bytes;
+                    saturating_add(paired_retained, result.strategy_json.capacity() + 1);
+                    saturating_add(paired_retained, result.certification_strategy_json.capacity() + 1);
+                    saturating_add(paired_retained,
+                        result.evaluation.retained_output_owned_bytes_estimate);
+                    result.publication_peak_owned_bytes = std::max(
+                        result.publication_peak_owned_bytes, paired_retained);
+                    if (paired_retained >= options.max_solver_owned_bytes) {
+                        finish_failure(CompiledPolicyAssertionStatus::ResourceCap,
+                            "original-root certification graph exceeds remaining memory",
+                            "max_solver_owned_bytes");
+                        return;
+                    }
+                    result.paired_default_only = true;
                     stage = Stage::Done;
                     return;
                 }
@@ -1019,13 +1084,14 @@ CompiledPolicyAssertionWork::CompiledPolicyAssertionWork(
         const PolicyCompilationTelemetry* emitted_compilation,
         const bool request_root_continuation_upper,
         const bool request_policy_decision_entries,
-        const bool request_policy_dependency_kernels)
+        const bool request_policy_dependency_kernels,
+        const CompiledPolicyAssertionMode mode)
     : impl_(std::make_unique<Impl>(
           coarse, solved, prices, options, std::move(strategy_name),
           refined_routing, emitted_strategy_json,
           emitted_compilation, request_root_continuation_upper,
           request_policy_decision_entries,
-          request_policy_dependency_kernels)) {}
+          request_policy_dependency_kernels, mode)) {}
 
 CompiledPolicyAssertionWork::~CompiledPolicyAssertionWork() = default;
 CompiledPolicyAssertionWork::CompiledPolicyAssertionWork(

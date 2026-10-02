@@ -6320,7 +6320,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset
             if (!std::isfinite(outcome.probability) || outcome.probability < 0.0 ||
                 outcome.state >= proof_calc.state_count()) { complete_reset = false; break; }
             if (!(outcome.probability > 0.0)) continue;
-            co_await solve_detail::CooperativeCheckpoint{};
+            co_await solve_detail::CooperativeCheckpoint{
+                root_signature.capacity() * sizeof(std::uint64_t)};
             mass += WideFloat{outcome.probability};
             if (proof_calc.is_goal_state(proof_calc.state(outcome.state))) {
                 success += WideFloat{outcome.probability};
@@ -6409,7 +6410,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset
 }
 
 solve_detail::CooperativeTask<bool> SolveWork::Impl::prepare_paid_root_reset_candidate(
-        PricedOperator priced) {
+        const PricedOperator& priced) {
     const auto& roll = calc.operators().at(priced.index);
     const auto reset = std::find_if(operators.begin(), operators.end(), [&](const auto& op) {
         const auto& planner = calc.operators().at(op.index);
@@ -6442,29 +6443,38 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::prepare_paid_root_reset_can
     if (state_allowance == 0) co_return false;
     // The immutable two-operation controller needs only its own native
     // observation closure. Never intern its misses in the parent namespace.
-    GoalSpec proof_goal = calc.goal();
-    proof_goal.fixed_options.clear();
-    proof_goal.automatic_candidates = false;
-    auto proof_calc = std::make_unique<CalcContext>(
-        calc.shared_session(), proof_goal, calc.registry(),
-        std::vector<std::uint32_t>{roll.primitive_action, reset_action},
-        false, false, false, std::nullopt, std::vector<CountObservation>{},
-        false, std::vector<std::uint64_t>{}, false, false, false, false, true);
+    auto proof_calc = [&] {
+        GoalSpec proof_goal = calc.goal();
+        proof_goal.fixed_options.clear();
+        proof_goal.automatic_candidates = false;
+        return std::make_unique<CalcContext>(
+            calc.shared_session(), proof_goal, calc.registry(),
+            std::vector<std::uint32_t>{roll.primitive_action, reset_action},
+            false, false, false, std::nullopt, std::vector<CountObservation>{},
+            false, std::vector<std::uint64_t>{}, false, false, false, false, true);
+    }(); // Release the redundant goal copy before any suspension.
     proof_calc->set_reforge_work_budget_owner(&calc);
     proof_calc->set_solve_resource_caps(state_allowance,
         options.max_reforge_work - calc.telemetry().reforge_logical_work_v1,
         false, allowance);
+    if (proof_calc->estimated_owned_bytes() >= allowance) co_return false;
     const auto root = proof_calc->intern_item(result.exact_start_item);
     std::shared_ptr<const OutcomeDistribution> complete;
-    while (!proof_calc->advance_outcomes(root, roll.primitive_action, false, complete, 1))
-        co_await solve_detail::CooperativeCheckpoint{proof_calc->estimated_owned_bytes()};
-    if (!complete || complete->entries.size() > options.max_transitions) co_return false;
+    while (!proof_calc->advance_outcomes(root, roll.primitive_action, false, complete, 1)) {
+        const auto private_bytes = proof_calc->estimated_owned_bytes();
+        if (private_bytes >= allowance) co_return false;
+        co_await solve_detail::CooperativeCheckpoint{private_bytes};
+    }
+    if (!complete || proof_calc->estimated_owned_bytes() >= allowance ||
+        complete->entries.size() > options.max_transitions) co_return false;
     auto capture = try_install_paid_root_reset_incumbent(
         result.start_state, priced, *proof_calc, root, *complete);
     while (!capture.resume()) {
-        if (proof_calc->estimated_owned_bytes() >= allowance) co_return false;
-        co_await solve_detail::CooperativeCheckpoint{
-            proof_calc->estimated_owned_bytes() + capture.retained_bytes()};
+        const auto private_bytes = proof_calc->estimated_owned_bytes();
+        const auto capture_bytes = capture.retained_bytes();
+        if (private_bytes >= allowance || capture_bytes >= allowance - private_bytes)
+            co_return false;
+        co_await solve_detail::CooperativeCheckpoint{private_bytes + capture_bytes};
     }
     const bool installed = capture.take_result();
     capture.reset();

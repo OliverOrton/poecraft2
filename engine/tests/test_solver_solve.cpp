@@ -14837,7 +14837,7 @@ void run_paid_root_reset_renewal_tests() {
             full_law.entries.size(), narrow_law.entries.size(),
             full.layout().junk_classes.size(), narrow.layout().junk_classes.size());
     }
-    for (unsigned mode = 0; mode < 18; ++mode) {
+    for (unsigned mode = 0; mode < 21; ++mode) {
         auto session = make_paid_session();
         auto registry = build_action_registry(*session);
         const auto alchemy = registry.index_by_id.at("alchemy");
@@ -14931,7 +14931,8 @@ void run_paid_root_reset_renewal_tests() {
         }
         bool installed = false;
         const auto parent_states = calc.state_count();
-        if (mode == 7 || mode == 9 || mode == 10 || mode == 11 || mode == 16) {
+        if (mode == 7 || mode == 9 || mode == 10 || mode == 11 || mode == 16 ||
+            mode == 18 || mode == 19 || mode == 20) {
             solve_detail::SparsePolicyRowInput row;
             row.owner_state = root; row.operator_index = alchemy; row.cost = 2;
             for (const auto& exit : gated.entries)
@@ -14944,7 +14945,52 @@ void run_paid_root_reset_renewal_tests() {
             if (mode == 9) work.options.max_discovered_states = calc.state_count();
             if (mode == 10) work.options.max_transitions = work.transition_cache->successors.size();
             if (mode == 16) work.options.max_reforge_work = calc.telemetry().reforge_logical_work_v1;
+            if (mode == 20) {
+                // Unlimited-width row/work caps still inherit finite state
+                // limits without overflow or a zero/unlimited reinterpretation.
+                work.options.max_state_action_rows = std::numeric_limits<std::uint64_t>::max();
+                work.options.max_transitions = std::numeric_limits<std::uint64_t>::max();
+                work.options.max_reforge_work = std::numeric_limits<std::uint64_t>::max();
+            }
             PC_CHECK(work.try_begin_renewal_candidate_publication(true));
+            if (mode == 18) {
+                // Only 64 bytes remain beyond the retained parent and admitted
+                // outer frame. Private generation must refuse and release.
+                work.options.max_solver_owned_bytes = work.estimated_owned_bytes() + 64;
+                bool refused = false;
+                try {
+                    const bool done = work.publication_pipeline.initial_candidate_task->resume();
+                    refused = done && !work.publication_pipeline.initial_candidate_task->take_result();
+                } catch (const SolverResourceLimit& error) {
+                    refused = error.cap_name() == "max_solver_owned_bytes";
+                }
+                PC_CHECK(refused);
+                work.publication_pipeline.initial_candidate_task.reset();
+                PC_CHECK(!work.output_incumbent);
+                PC_CHECK(calc.state_count() == parent_states);
+                PC_CHECK(calc.outcome_cursor_bytes() == 0);
+                PC_CHECK(!work.try_begin_renewal_candidate_publication(true));
+                continue;
+            }
+            if (mode == 19) {
+                const auto before = work.estimated_owned_bytes();
+                PC_CHECK(!work.publication_pipeline.initial_candidate_task->resume());
+                const auto& task = *work.publication_pipeline.initial_candidate_task;
+                PC_CHECK(task.retained_bytes() > task.frame_bytes());
+                PC_CHECK(work.estimated_owned_bytes() > before);
+                const auto spent = calc.telemetry().reforge_logical_work_v1;
+                work.requested_bounded_finish = true;
+                PC_CHECK(!work.advance_initial_candidate_publication());
+                PC_CHECK(!work.publication_pipeline.initial_candidate_task);
+                PC_CHECK(!work.output_incumbent);
+                PC_CHECK(work.estimated_owned_bytes() < before);
+                PC_CHECK(calc.state_count() == parent_states);
+                PC_CHECK(calc.outcome_cursor_bytes() == 0);
+                PC_CHECK(calc.telemetry().reforge_logical_work_v1 == spent);
+                work.requested_bounded_finish = false;
+                PC_CHECK(!work.try_begin_renewal_candidate_publication(true));
+                continue;
+            }
             if (mode == 9 || mode == 10 || mode == 16) {
                 const auto spent = calc.telemetry().reforge_logical_work_v1;
                 PC_CHECK(work.publication_pipeline.initial_candidate_task->resume());
@@ -14981,6 +15027,18 @@ void run_paid_root_reset_renewal_tests() {
         } else {
             auto capture = work.try_install_paid_root_reset_incumbent(
                 root, *priced, proof_calc, proof_root, full);
+            if (mode == 0) {
+                std::vector<std::uint64_t> signature;
+                PC_CHECK(proof_calc.exact_reforge_kernel_signature(proof_root, alchemy, signature));
+                PC_CHECK(!signature.empty());
+                PC_CHECK(!capture.resume());
+                PC_CHECK(capture.retained_bytes() >= capture.frame_bytes() +
+                    signature.size() * sizeof(std::uint64_t));
+                capture.reset(); // Cancel while the charged signature is live.
+                PC_CHECK(!work.output_incumbent);
+                capture = work.try_install_paid_root_reset_incumbent(
+                    root, *priced, proof_calc, proof_root, full);
+            }
             bool complete = false;
             for (unsigned units = 0; units < 10000; ++units)
                 if (capture.resume()) { complete = true; break; }
@@ -14988,7 +15046,7 @@ void run_paid_root_reset_renewal_tests() {
             if (!complete) continue;
             installed = capture.take_result();
         }
-        if (mode != 0 && mode != 7 && mode != 15 && mode != 17) {
+        if (mode != 0 && mode != 7 && mode != 15 && mode != 17 && mode != 20) {
             PC_CHECK(!installed);
             PC_CHECK(!work.output_incumbent || work.output_incumbent->portfolio_identity == 123);
             continue;
@@ -14998,6 +15056,61 @@ void run_paid_root_reset_renewal_tests() {
         const double expected = (2 + (1-success)*prices.at("scour"))/success;
         PC_CHECK(near(work.output_incumbent->certified_upper_bound, expected, 1e-10));
         PC_CHECK(work.output_incumbent->compiled_root_entry_only);
+        if (mode == 0) {
+            SolveResult root_proof;
+            root_proof.policy_available = true;
+            root_proof.start_state = root;
+            root_proof.has_exact_start_item = true;
+            root_proof.exact_start_item = start;
+            root_proof.evaluated_policy_cost = expected;
+            root_proof.values = work.output_incumbent->values;
+            root_proof.policy = work.output_incumbent->policy;
+            root_proof.policy_reachable = work.output_incumbent->policy_reachable;
+            const auto& graph = work.output_incumbent->compiled_artifact.strategy_json;
+            std::vector<std::uint64_t> root_request_identity;
+            for (unsigned provenance = 0; provenance < 8; ++provenance) {
+                auto requested = root_proof;
+                if (provenance == 2) requested.policy[root].index = alchemy;
+                if (provenance == 3) requested.values[root == 0 ? 1 : 0] = expected;
+                auto scoped = options;
+                if (provenance == 6)
+                    scoped.max_solver_owned_bytes =
+                        estimated_retained_solver_bytes(calc, &requested) + graph.size();
+                PolicyCompilationTelemetry emitted;
+                if (provenance == 7) emitted.policy_decision_bindings.resize(1);
+                refinement::CompiledPolicyAssertionWork assertion(
+                    calc, requested, prices, scoped, "original-root provenance control",
+                    nullptr, provenance == 5 ? nullptr : &graph, &emitted,
+                    provenance != 4, false, false,
+                    provenance == 1 ? refinement::CompiledPolicyAssertionMode::StatewisePolicy :
+                        refinement::CompiledPolicyAssertionMode::OriginalRootController);
+                for (unsigned units = 0; !assertion.progress().done && units < 10000; ++units)
+                    assertion.step(256);
+                PC_CHECK(assertion.progress().done);
+                if (!assertion.progress().done) continue;
+                const auto checked = assertion.take_result();
+                if (provenance == 0) {
+                    PC_CHECK(checked.executable && checked.proper && checked.zero_off_policy);
+                    PC_CHECK(checked.strategy_json == graph);
+                    PC_CHECK(checked.certification_strategy_json == graph);
+                    PC_CHECK(checked.evaluation.continuation_upper.certified_states == 1);
+                    PC_CHECK(checked.evaluation.continuation_upper.states.size() == 1);
+                    if (checked.evaluation.continuation_upper.states.size() == 1)
+                        PC_CHECK(checked.evaluation.continuation_upper.states.front().available());
+                    root_request_identity = checked.request_identity;
+                } else {
+                    if (checked.executable || checked.proper)
+                        std::printf("unexpected original-root provenance acceptance: %u\n", provenance);
+                    PC_CHECK(!checked.executable && !checked.proper);
+                    PC_CHECK(!std::isfinite(checked.exact_cost));
+                    PC_CHECK(checked.status == (provenance == 6
+                        ? refinement::CompiledPolicyAssertionStatus::ResourceCap
+                        : refinement::CompiledPolicyAssertionStatus::CompilationFailure));
+                    if (provenance == 1 || provenance == 4)
+                        PC_CHECK(checked.request_identity != root_request_identity);
+                }
+            }
+        }
         if (mode == 0 || mode == 15 || mode == 17) {
             PC_CHECK(!work.output_incumbent->independently_evaluated);
             PC_CHECK(!std::isfinite(work.incumbent_portfolio.verified_executable_upper()));

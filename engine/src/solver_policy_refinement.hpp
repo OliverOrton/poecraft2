@@ -862,6 +862,12 @@ audit_verified_policy_alternative_shadow(
     VerifiedPolicyExactRowSelector exact_row_selector = {},
     VerifiedPolicyEntrySelector entry_selector = {});
 
+// Internal provenance: absence of parent decisions cannot imply this mode.
+enum class CompiledPolicyAssertionMode : std::uint8_t {
+    StatewisePolicy = 0,
+    OriginalRootController,
+};
+
 /* Retained counterpart of assert_compiled_policy_exact(). Compilation and
  * parsing are bounded stages; exact graph evaluation advances through the
  * evaluator's existing one-work-item continuation. Borrowed inputs must
@@ -879,7 +885,8 @@ class CompiledPolicyAssertionWork {
         const PolicyCompilationTelemetry* emitted_compilation = nullptr,
         bool request_root_continuation_upper = false,
         bool request_policy_decision_entries = false,
-        bool request_policy_dependency_kernels = false);
+        bool request_policy_dependency_kernels = false,
+        CompiledPolicyAssertionMode mode = CompiledPolicyAssertionMode::StatewisePolicy);
     ~CompiledPolicyAssertionWork();
     CompiledPolicyAssertionWork(CompiledPolicyAssertionWork&&) noexcept;
     CompiledPolicyAssertionWork& operator=(
