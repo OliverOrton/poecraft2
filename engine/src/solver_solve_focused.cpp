@@ -806,7 +806,8 @@ void SolveWork::Impl::schedule_next_focused_expansion(
 bool SolveWork::Impl::begin_focused_upper_solve() {
         const bool from_incremental_incumbent =
             incremental_upper_policy_pass &&
-            output_incumbent.has_value();
+            output_incumbent.has_value() &&
+            output_incumbent->has_statewise_upper_values();
         if ((!focused_fallback_policy && !from_incremental_incumbent) ||
             focused_strict_transition_cache != nullptr ||
             (!from_incremental_incumbent &&

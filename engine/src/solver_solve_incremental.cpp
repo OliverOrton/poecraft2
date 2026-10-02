@@ -1223,7 +1223,8 @@ SolveWork::Impl::certified_incremental_lower_values() {
 }
 
 void SolveWork::Impl::refresh_incremental_upper_incumbent() {
-    if (!output_incumbent.has_value()) return;
+    if (!output_incumbent.has_value() ||
+        !output_incumbent->has_statewise_upper_values()) return;
     if (!retain_current_certified_incumbent()) return;
     BoundedPolicyIncumbent& incumbent = *output_incumbent;
     const std::uint64_t no_row =
@@ -2156,7 +2157,8 @@ bool SolveWork::Impl::advance_incremental_classification() {
         upper_values = &result.values;
     } else if (incremental_classification_upper ==
                    IncrementalClassificationUpper::OutputIncumbent &&
-               output_incumbent.has_value()) {
+               output_incumbent.has_value() &&
+               output_incumbent->has_statewise_upper_values()) {
         upper_values = &output_incumbent->values;
     }
 

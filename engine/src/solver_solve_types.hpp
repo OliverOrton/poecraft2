@@ -1261,6 +1261,16 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::string final_graph_verification_failure;
         double reconciliation_absolute_delta = kInfinity;
         double reconciliation_relative_delta = kInfinity;
+        // A checked root cost does not certify this copied coarse value table.
+        // A mismatch is a sticky veto on scalar continuation/pruning reuse;
+        // graph ownership and independently checked entry certificates survive.
+        bool statewise_values_rejected = false;
+        void record_root_cost_reconciliation(const bool reconciled) {
+            statewise_values_rejected |= !reconciled;
+        }
+        bool has_statewise_upper_values() const {
+            return !statewise_values_rejected;
+        }
         bool strict_state_provenance = true;
         /* A fully evaluated ordinary graph with an exact root-entry witness,
          * constructed in a private namespace. It has no parent statewise

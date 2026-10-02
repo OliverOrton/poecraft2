@@ -1,11 +1,14 @@
 #include "tests.hpp"
 #include "../src/solver_internal.hpp"
+#include "../src/solver_diagnostic_options.hpp"
+#include "../src/handles_internal.hpp"
 #include "../src/solver_options_helpers.hpp"
 #include "../src/solver_solve_types.hpp"
 #include "poecraft/item_state.h"
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <map>
 
 using namespace poecraft;
 using namespace poecraft::solver;
@@ -353,6 +356,84 @@ void run_solver_metamod_recovery_tests(const char* artifact_dir) {
         // Refining it for admission must preserve the complete class universe.
         CalcContext parent(bow,goal,registry,{registry.index_by_id.at("chaos")},false,false,false,std::nullopt,{},true);
         const auto parent_state=parent.intern_item(root);
+        // Finite first-row witness for the retained Bow coarse-cost mismatch.
+        // Compare the broad parent row with the native exclusion-sensitive row
+        // at the original physical root; no policy search or sampling is used.
+        {
+            const std::string frozen_goal=R"json({"version":"v1","rarity":"rare","action_mode":"goal_relevant","min_satisfied_slots":4,"slots":[{"family_mod_key":"LocalIncreaseSocketedGemLevel1","min_tier":1},{"family_mod_key":"LocalAddedPhysicalDamageTwoHand9","min_tier":1},{"family_mod_key":"LocalAddedColdDamageTwoHand10","min_tier":1},{"family_mod_key":"ManaGainedFromEnemyDeath6","min_tier":1}],"disabled_action_families":["foulborn"],"actions":["transmute","augment","alteration","regal","alchemy","chaos","exalt","annul","scour","fossil:Metadata/Items/Currency/CurrencyDelveCraftingGemLevel","fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical","fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold","fossil:Metadata/Items/Currency/CurrencyDelveCraftingMana","fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel","fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical","fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental","fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingMana","fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel","fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical+Metadata/Items/Currency/CurrencyDelveCraftingQuality","fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental","fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingMana","fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingSpeed","fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical+Metadata/Items/Currency/CurrencyDelveCraftingQuality+Metadata/Items/Currency/CurrencyDelveCraftingRandom","fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning","fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingMinionsAuras","fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingPhysical","harvest_reforge:attack","harvest_reforge:cold","harvest_reforge:elemental","harvest_reforge:mana","harvest_reforge:physical","harvest_augment:attack","harvest_augment:cold","harvest_augment:physical","fracture","restart"]})json";
+            pc_session handle{bow}; pc_solver_handle raw=nullptr; pc_error_info error{};
+            PC_CHECK(pc_solver_create(&handle,frozen_goal.data(),frozen_goal.size(),&raw,&error)==PC_RESULT_OK);
+            if (!raw) throw std::runtime_error("frozen Bow scope failed native parsing");
+            std::unique_ptr<pc_solver,decltype(&pc_solver_destroy)> owner(raw,&pc_solver_destroy);
+            auto& row_parent=solver_lower_diagnostic_calculator(raw);
+            PC_CHECK(row_parent.candidate_operators().size()==36);
+            auto row_goal=row_parent.goal(); row_goal.automatic_candidates=false;
+            const auto& row_registry=row_parent.registry();
+            const auto exalt=row_registry.index_by_id.at("exalt");
+            CalcContext row_native(bow,row_goal,row_registry,{exalt},false,false,true);
+            const auto broad_root=row_parent.intern_item(root);
+            const auto exact_root=row_native.intern_item(root);
+            const auto& broad=row_parent.outcomes(broad_root,exalt);
+            const auto& native=row_native.outcomes(exact_root,exalt);
+            PC_CHECK(broad.supported && broad.applicable && broad.choice_groups.empty());
+            PC_CHECK(native.supported && native.applicable && native.choice_groups.empty());
+            std::map<std::vector<std::uint64_t>,double> broad_law,native_law;
+            double broad_hit=0,native_hit=0,broad_mass=0,native_mass=0;
+            for (const auto& exit : broad.entries) {
+                broad_law[exact_abstract_state_key(row_parent.state(exit.state),0)]+=exit.probability;
+                broad_mass+=exit.probability;
+                if (satisfied_goal_mask(row_parent.state(exit.state))==15) broad_hit+=exit.probability;
+            }
+            for (const auto& exit : native.entries) {
+                pc_item_state item;
+                PC_CHECK(row_native.materialize(exit.state,item));
+                const auto projected=project_item(*bow,row_parent.layout(),item);
+                native_law[exact_abstract_state_key(projected,0)]+=exit.probability;
+                native_mass+=exit.probability;
+                if (satisfied_goal_mask(projected)==15) native_hit+=exit.probability;
+            }
+            // Execution's weighted pool is independent of the solver kernel.
+            ActionContextImpl context(0); context.session=bow;
+            PoolBuildRequest request; request.side_filter=PC_SIDE_SUFFIX;
+            const auto& pool=get_weighted_pool(context,&root,request);
+            std::map<std::vector<std::uint64_t>,double> oracle_law;
+            double oracle_hit=0;
+            for (const auto& entry : pool.entries) {
+                auto next=root;
+                PC_CHECK(pc_item_add_mod(&next,entry.gen_type,entry.session_mod_id,
+                    static_cast<std::uint16_t>(entry.primary_group),0,nullptr)==PC_RESULT_OK);
+                const auto projected=project_item(*bow,row_parent.layout(),next);
+                const double probability=double(entry.final_weight)/double(pool.total_weight);
+                oracle_law[exact_abstract_state_key(projected,0)]+=probability;
+                if (satisfied_goal_mask(projected)==15) oracle_hit+=probability;
+            }
+            PC_CHECK(oracle_law.size()==native_law.size());
+            for (const auto& [key,mass] : oracle_law) PC_CHECK(std::abs(mass-native_law[key])<1e-12);
+            PC_CHECK(std::abs(oracle_hit-native_hit)<1e-12);
+            PC_CHECK(std::abs(broad_hit-native_hit)>1e-4);
+            std::printf("Bow original-root execution pool total_weight=%llu oracle_hit=%.17g\n",static_cast<unsigned long long>(pool.total_weight),oracle_hit);
+            pc_item_state representative;
+            PC_CHECK(row_parent.materialize(broad_root,representative));
+            const auto& representative_pool=get_weighted_pool(context,&representative,request);
+            double representative_hit=0;
+            for (const auto& entry : representative_pool.entries) {
+                auto next=representative;
+                PC_CHECK(pc_item_add_mod(&next,entry.gen_type,entry.session_mod_id,
+                    static_cast<std::uint16_t>(entry.primary_group),0,nullptr)==PC_RESULT_OK);
+                if (satisfied_goal_mask(project_item(*bow,row_parent.layout(),next))==15)
+                    representative_hit+=double(entry.final_weight)/double(representative_pool.total_weight);
+            }
+            std::printf("Bow broad representative execution pool total_weight=%llu hit=%.17g suffixes=",static_cast<unsigned long long>(representative_pool.total_weight),representative_hit);
+            for (unsigned i=0;i<representative.suffix_count;++i)
+                std::printf("%s%s",i ? "," : "",data->string_at(data->mod_key_sid.at(bow->global_index.at(representative.suffixes[i].mod_id))).c_str());
+            std::printf("\n");
+
+            double l1=0;
+            for (const auto& [key,mass] : broad_law) l1+=std::abs(mass-native_law[key]);
+            for (const auto& [key,mass] : native_law) if (!broad_law.count(key)) l1+=mass;
+            PC_CHECK(std::abs(broad_mass-1)<1e-12 && std::abs(native_mass-1)<1e-12);
+            std::printf("Bow first selected Exalt: coarse_hit=%.17g native_hit=%.17g projected_L1=%.17g coarse_classes=%zu native_classes=%zu; primitive_price=1.77\n",broad_hit,native_hit,l1,broad_law.size(),native_law.size());
+        }
         pc_item_state carrier;
         PC_CHECK(parent.materialize(parent_state,carrier));
         std::vector<std::uint64_t> universe(bow->words,0);

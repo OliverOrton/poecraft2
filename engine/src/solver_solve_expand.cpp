@@ -658,7 +658,8 @@ bool SolveWork::Impl::prepare_state_expansion(
         if (output_incumbent.has_value() &&
             output_incumbent->independently_certified &&
             output_incumbent->independently_evaluated &&
-            output_incumbent->proper && output_incumbent->executable) {
+            output_incumbent->proper && output_incumbent->executable &&
+            output_incumbent->has_statewise_upper_values()) {
             const BoundedPolicyIncumbent& incumbent = *output_incumbent;
             if (state < incumbent.values.size() &&
                 state < incumbent.policy_reachable.size() &&

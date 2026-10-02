@@ -1114,6 +1114,73 @@ void run_direct_certification_contract_tests() {
         mismatch.failure_classification ==
         "solver_exact_cost_mismatch");
 
+    // Root checking preserves a valid graph, but a rejected source value
+    // table cannot retire an alternative or seed a statewise improvement.
+    // This fixture controls classification only; it does not issue a native
+    // graph certificate by assigning flags.
+    for (const bool reconcile : {true,false}) {
+        using Impl = SolveWorkTestAccess::Impl;
+        auto session=make_solve_session();
+        const auto registry=build_action_registry(*session);
+        const auto exalt=registry.index_by_id.at("exalt");
+        GoalSpec goal; goal.rarity=PC_RARITY_RARE;
+        GoalSlot slot; slot.family_id=100; slot.min_tier=1; goal.slots.push_back(slot);
+        CalcContext calc(session,goal,registry,{exalt});
+        pc_item_state root; pc_item_clear(&root); root.rarity=PC_RARITY_RARE;
+        Impl work(calc,root,{{"exalt",20}},SolveOptions{});
+        auto terminal=root;
+        PC_CHECK(pc_item_add_mod(&terminal,PC_SIDE_PREFIX,0,10,0,nullptr)==PC_RESULT_OK);
+        const auto success=calc.intern_item(terminal);
+        PC_CHECK(calc.is_goal_state(calc.state(success)));
+        solve_detail::SparseRow row; row.owner_state=work.result.start_state;
+        row.transition_offset=work.transition_cache->successors.size();
+        row.transition_count=1; row.admitted=false;
+        const auto row_id=work.transition_cache->rows.size();
+        work.transition_cache->rows.push_back(row);
+        work.transition_cache->successors.push_back(success);
+        work.transition_cache->probabilities.push_back(1);
+        work.priced_rows.resize(row_id+1);
+        work.priced_rows[row_id].operator_index=exalt;
+        work.priced_rows[row_id].cost=20;
+        Impl::BoundedPolicyIncumbent incumbent;
+        incumbent.values.assign(calc.state_count(),5);
+        incumbent.values[success]=0;
+        incumbent.certified_upper_bound=10;
+        incumbent.evaluated_policy_cost=10;
+        incumbent.independently_certified=incumbent.independently_evaluated=true;
+        incumbent.proper=incumbent.executable=true;
+        incumbent.compiled_artifact.strategy_json="preserved_checked_graph_fixture";
+        incumbent.record_root_cost_reconciliation(reconcile);
+        PC_CHECK(incumbent.has_statewise_upper_values()==reconcile);
+        // A later matching root scalar cannot repair an already rejected table.
+        incumbent.record_root_cost_reconciliation(true);
+        PC_CHECK(incumbent.has_statewise_upper_values()==reconcile);
+        work.output_incumbent=incumbent;
+        work.incumbent_portfolio.observe_verified(incumbent);
+        PC_CHECK(work.incumbent_portfolio.verified_executable_upper()==10);
+        if (!reconcile) {
+            work.refresh_incremental_upper_incumbent();
+            PC_CHECK(work.output_incumbent->values==incumbent.values);
+            PC_CHECK(work.output_incumbent->compiled_artifact.strategy_json==incumbent.compiled_artifact.strategy_json);
+            PC_CHECK(work.output_incumbent->independently_evaluated);
+            work.incremental_upper_policy_pass=true;
+            PC_CHECK(!work.begin_focused_upper_solve());
+        }
+        Impl::IncrementalAlternativeRow alternative;
+        alternative.state=work.result.start_state; alternative.operator_index=exalt;
+        alternative.row_index=row_id;
+        work.incremental_alternative_rows={alternative};
+        work.incremental_classification_active=true;
+        work.incremental_classification_reclassify_all=true;
+        work.incremental_classification_upper=Impl::IncrementalClassificationUpper::OutputIncumbent;
+        work.incremental_classification_certified_lower.assign(calc.state_count(),0);
+        PC_CHECK(!work.advance_incremental_classification());
+        PC_CHECK(work.incremental_alternative_rows.front().status==
+            (reconcile ? Impl::IncrementalAlternativeRow::Status::NonImproving
+                       : Impl::IncrementalAlternativeRow::Status::Admitted));
+        PC_CHECK(work.output_incumbent->evaluated_policy_cost==10);
+    }
+
     const refinement::CompiledPolicyAssertion off_policy =
         evaluated(10.0, 10.0, 0.9, 0.1);
     PC_CHECK(

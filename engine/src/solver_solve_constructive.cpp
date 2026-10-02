@@ -1906,7 +1906,8 @@ void SolveWork::Impl::capture_carrier_ladder_exact_boundary(
         output_incumbent.has_value() &&
         output_incumbent->independently_certified &&
         output_incumbent->independently_evaluated &&
-        output_incumbent->proper && output_incumbent->executable;
+        output_incumbent->proper && output_incumbent->executable &&
+        output_incumbent->has_statewise_upper_values();
     for (CarrierLadderBoundaryCapture::Stop& stop : capture.stops) {
         if (stop.state >= calc.state_count()) {
             capture.status = "refused_invalid_prefix";
@@ -4543,6 +4544,7 @@ bool SolveWork::Impl::capture_resumable_joint_policy_candidate(
         resumable_joint_policy_candidate.has_value() ||
         !output_incumbent.has_value() ||
         !std::isfinite(output_incumbent->certified_upper_bound) ||
+        !output_incumbent->has_statewise_upper_values() ||
         output_incumbent->values.empty() ||
         output_incumbent->frontier_operators.empty() ||
         expected_missing_state >= calc.state_count() ||
@@ -4807,7 +4809,8 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
             certified_boundary_reachable.resize(state_count, 0);
             certified_fallback = retained.certified_fallback;
             certified_renewal = retained.certified_renewal;
-        } else if (output_incumbent.has_value()) {
+        } else if (output_incumbent.has_value() &&
+                   output_incumbent->has_statewise_upper_values()) {
             certified_boundary_values = output_incumbent->values;
             certified_boundary_values.resize(state_count, kInfinity);
             certified_frontier_operators =

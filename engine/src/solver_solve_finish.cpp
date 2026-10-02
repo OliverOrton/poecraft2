@@ -2409,6 +2409,8 @@ SolveWork::Impl::run_publication_pipeline() {
                             result.diagnostics.reforge_logical_work_v1,
                             assertion.evaluation
                                 .reforge_logical_work_v1));
+                candidate.record_root_cost_reconciliation(
+                    assertion.cost_reconciled);
                 candidate.reconciliation_absolute_delta =
                     assertion.absolute_cost_delta;
                 candidate.reconciliation_relative_delta =
@@ -3152,6 +3154,8 @@ SolveWork::Impl::run_publication_pipeline() {
                                 candidate.independently_evaluated = true;
                                 candidate.proper = true;
                                 candidate.executable = true;
+                                candidate.record_root_cost_reconciliation(
+                                    assertion.cost_reconciled);
                                 candidate.reconciliation_absolute_delta =
                                     assertion.absolute_cost_delta;
                                 candidate.reconciliation_relative_delta =
@@ -3499,6 +3503,9 @@ SolveWork::Impl::run_publication_pipeline() {
                                     candidate.independently_evaluated = true;
                                     candidate.proper = true;
                                     candidate.executable = true;
+                                    candidate.record_root_cost_reconciliation(
+                                        certificate.compiled.cost_reconciled &&
+                                        certificate.coarse_value_reconciled);
                                     candidate
                                         .reconciliation_absolute_delta =
                                         certificate.compiled
@@ -4124,6 +4131,8 @@ SolveWork::Impl::run_publication_pipeline() {
                 candidate.independently_evaluated = true;
                 candidate.proper = true;
                 candidate.executable = true;
+                candidate.record_root_cost_reconciliation(
+                    assertion.cost_reconciled);
                 candidate.reconciliation_absolute_delta =
                     assertion.absolute_cost_delta;
                 candidate.reconciliation_relative_delta =
@@ -5225,6 +5234,9 @@ SolveWork::Impl::run_publication_pipeline() {
                     strict_candidate_record.independently_evaluated = true;
                     strict_candidate_record.proper = true;
                     strict_candidate_record.executable = true;
+                    strict_candidate_record.record_root_cost_reconciliation(
+                        certificate.compiled.cost_reconciled &&
+                        certificate.coarse_value_reconciled);
                     strict_candidate_record
                         .reconciliation_absolute_delta =
                         certificate.compiled.absolute_cost_delta;
@@ -6168,6 +6180,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
         candidate.independently_evaluated = true;
         candidate.proper = true;
         candidate.executable = true;
+        candidate.record_root_cost_reconciliation(
+            assertion.cost_reconciled);
         candidate.reconciliation_absolute_delta = assertion.absolute_cost_delta;
         candidate.reconciliation_relative_delta = assertion.relative_cost_delta;
         identity_mix(candidate.portfolio_identity,

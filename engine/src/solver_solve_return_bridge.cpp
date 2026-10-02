@@ -653,6 +653,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_initial_return_bridges(
             improved.compilation_provenance = "independent_current_run_return_bridge_v1";
             improved.independently_certified = improved.independently_evaluated = true;
             improved.proper = improved.executable = true;
+            improved.record_root_cost_reconciliation(checked.cost_reconciled);
             improved.reconciliation_absolute_delta = checked.absolute_cost_delta;
             improved.reconciliation_relative_delta = checked.relative_cost_delta;
             identity_mix_string(improved.portfolio_identity, improved.compiled_artifact.strategy_json);
