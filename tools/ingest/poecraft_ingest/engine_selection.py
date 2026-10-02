@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
 import json
 import re
@@ -40,6 +40,110 @@ class BaseSelection:
             digest.update(tag.encode("utf-8"))
             digest.update(b"\0")
         return digest.hexdigest()
+
+
+@dataclass(frozen=True)
+class ClusterCatalogConfiguration:
+    """Resolved source metadata, never permission to create a crafting session.
+
+    Persist base_metadata_path, passive_key and passive_count together. A tag
+    can belong to distinct passive configurations. Layout arrays are copied
+    without assigning socket/notable placement or configuration-generation laws.
+    """
+
+    base_metadata_path: str
+    passive_key: str
+    passive_count: int
+    size: str
+    min_skills: int
+    max_skills: int
+    total_indices: int
+    notable_indices: tuple[int, ...]
+    socket_indices: tuple[int, ...]
+    small_indices: tuple[int, ...]
+    passive_tag: str
+    passive_name: str | None
+    passive_stats: tuple[tuple[str, int | float], ...]
+    passive_stat_text: tuple[str, ...]
+    session_support: str = field(default="cluster_unsupported", init=False)
+
+
+def resolve_cluster_catalog_configuration(
+    connection: sqlite3.Connection,
+    base_metadata_path: str,
+    passive_key: str,
+    passive_count: int,
+) -> ClusterCatalogConfiguration:
+    """Resolve an exact configuration against canonical source records, read-only.
+
+    Bounds and passive membership validate catalogue shape only, not current
+    gameplay eligibility. Preserved legacy tags are not silently reclassified.
+    This does not select modifiers, interpret notable catalogues, define item-
+    level/currency laws or bypass resolve_base_selection's cluster refusal.
+    """
+    if not isinstance(base_metadata_path, str) or not base_metadata_path:
+        raise ValueError("base metadata path must be a nonempty stable key")
+    if not isinstance(passive_key, str) or not passive_key:
+        raise ValueError("passive key must be a nonempty stable key")
+    if type(passive_count) is not int:
+        raise ValueError("passive count must be an integer")
+
+    # Exact source keys only: labels, selector tags and dense IDs are not keys.
+    cursor = connection.execute(
+        """
+        SELECT c.cluster_jewel_id, c.key, c.size, c.min_skills, c.max_skills,
+               c.total_indices, c.notable_indices_json, c.socket_indices_json,
+               c.small_indices_json
+        FROM cluster_jewel AS c
+        JOIN base_item AS b ON b.metadata_path = c.key
+        WHERE b.metadata_path = ?
+        """,
+        (base_metadata_path,),
+    )
+    cursor.row_factory = sqlite3.Row
+    cluster = cursor.fetchone()
+    if cluster is None:
+        raise ValueError(f"cluster catalogue base not found: {base_metadata_path}")
+    minimum, maximum = cluster["min_skills"], cluster["max_skills"]
+    if (
+        type(minimum) is not int or type(maximum) is not int
+        or minimum < 1 or maximum < minimum
+    ):
+        raise ValueError("cluster catalogue has invalid passive count bounds")
+    if not minimum <= passive_count <= maximum:
+        raise ValueError(f"passive count must be between {minimum} and {maximum}")
+
+    cursor = connection.execute(
+        """
+        SELECT p.passive_key, p.name, p.stats_json, p.stat_text_json,
+               t.name AS tag_name
+        FROM cluster_jewel_passive AS p
+        JOIN tag AS t ON t.tag_id = p.tag_id
+        WHERE p.cluster_jewel_id = ? AND p.passive_key = ?
+        """,
+        (cluster["cluster_jewel_id"], passive_key),
+    )
+    cursor.row_factory = sqlite3.Row
+    passive = cursor.fetchone()
+    if passive is None:
+        raise ValueError(f"passive key not found for cluster base: {passive_key}")
+
+    return ClusterCatalogConfiguration(
+        base_metadata_path=str(cluster["key"]),
+        passive_key=str(passive["passive_key"]),
+        passive_count=passive_count,
+        size=str(cluster["size"]),
+        min_skills=minimum,
+        max_skills=maximum,
+        total_indices=int(cluster["total_indices"]),
+        notable_indices=tuple(json.loads(cluster["notable_indices_json"])),
+        socket_indices=tuple(json.loads(cluster["socket_indices_json"])),
+        small_indices=tuple(json.loads(cluster["small_indices_json"])),
+        passive_tag=str(passive["tag_name"]),
+        passive_name=passive["name"],
+        passive_stats=tuple(sorted(json.loads(passive["stats_json"]).items())),
+        passive_stat_text=tuple(json.loads(passive["stat_text_json"])),
+    )
 
 
 @dataclass(frozen=True)

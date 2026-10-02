@@ -230,6 +230,27 @@ This presentation catalogue does not confer native mechanic support. Current
 modifier text remains a tier range, not a newly simulated numeric roll; the
 shared browser formatter removes markup without inventing roll values.
 
+### Configured cluster catalogue lookup
+
+`poecraft_ingest.engine_selection.resolve_cluster_catalog_configuration` resolves
+an exact `(base_metadata_path, passive_key, passive_count)` against canonical
+SQLite. It requires an integer count within that size record's stored bounds
+and a passive key owned by the same cluster record. Base labels, selector tags,
+dense IDs and notable catalogue keys are not configuration identities. Distinct
+passive keys may share a selector tag and must remain distinct.
+
+The immutable result copies size, count bounds, passive tag/stats/text and the
+uninterpreted layout index lists. It always carries
+`session_support="cluster_unsupported"`. Legacy source records remain available
+as catalogue facts; resolving them does not certify current gameplay eligibility.
+The lookup neither selects a mod pool nor defines socket placement, random
+configuration generation, item-level or currency laws. Item level remains a
+separate session input; future full-session identity must include it as well as
+the configured cluster tuple. Existing Python and native session creation still
+refuse every cluster base. This is ingest/backend groundwork, not runtime crafting
+support; the [cluster readiness record](../active/2026-10-02-clusters-sprint/README.md)
+owns its scoped qualification and remaining decisions.
+
 ### Runtime data limits
 
 - There is no implemented binary runtime artifact.

@@ -1,0 +1,94 @@
+{
+  "schema": "kids_cluster_catalog_qualification_v1",
+  "recorded_utc": "2026-10-02T16:05:04.500424+00:00",
+  "baseline": "f08facbb93204bf721048c21b94080ab582ee9f8",
+  "engine_source_unchanged": "792b37e8e1d73a90c754087eda2332d7586db570",
+  "branch": "dot/clusters-20261002",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-clusters-sprint",
+  "scope": "Read-only configured cluster catalogue resolver; cluster crafting/session support remains refused.",
+  "implementation_hashes": {
+    "tools\\ingest\\poecraft_ingest\\engine_selection.py": "27d481ac37ff5d37e2e72ba64be18057bdb55a50389d54258f95b0296d0f7b49",
+    "tools\\ingest\\tests\\test_cluster_configuration.py": "fdeaffe30775090eb145643d587774334442affa801d4281144c4a6ff7ed42f6"
+  },
+  "pytest": {
+    "command": "py -3 -B -m pytest -q -p no:cacheprovider tools/ingest/tests/test_cluster_configuration.py tools/ingest/tests/test_compiled_data.py tools/ingest/tests/test_ingest.py",
+    "environment": {
+      "PYTHONPATH": "tools/ingest;bindings/python",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "passed": 53,
+    "failed": 0,
+    "exit_code": 0,
+    "reported_seconds": 2.4,
+    "log": "out/clusters-sprint/pytest.log",
+    "log_sha256": "c06b1f21864624815e06f585ff601870d0ee37da102ca448e3e6416ac9c98bf0"
+  },
+  "frozen_catalog": {
+    "command": "py -3 -B out/clusters-sprint/verify_frozen_catalog.py",
+    "probe_sha256": "dd847d4a28e3ac54b88172672b08aa3aa53fb9f1f7d0a81b6c67a4c216a1b741",
+    "exit_code": 0,
+    "log": "out/clusters-sprint/frozen-catalog.log",
+    "log_sha256": "13ce5f773ab411b2a7e9433ffaeedb5a590519b3b22cd94484e9595111960c64",
+    "result": {
+      "checked_at_utc": "2026-10-02T16:03:15.738818+00:00",
+      "source_sha256": "27d481ac37ff5d37e2e72ba64be18057bdb55a50389d54258f95b0296d0f7b49",
+      "frozen_artifacts": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\data\\sqlite\\poecraft.db",
+          "sha256": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a"
+        },
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\data\\compiled\\current\\manifest.json",
+          "sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d"
+        },
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\data\\compiled\\current\\game-data.json",
+          "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+        },
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\data\\compiled\\current\\strings.json",
+          "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+        }
+      ],
+      "unchanged_after": true,
+      "passive_records": 55,
+      "resolved_catalogue_tuples": 182,
+      "count_refusals": 110,
+      "unlinked_notable_refusals": 1,
+      "session_refusals": [
+        {
+          "base": "Metadata/Items/Jewels/JewelPassiveTreeExpansionLarge",
+          "error": "cluster_jewel_session is not supported before cluster runtime rules"
+        },
+        {
+          "base": "Metadata/Items/Jewels/JewelPassiveTreeExpansionMedium",
+          "error": "cluster_jewel_session is not supported before cluster runtime rules"
+        },
+        {
+          "base": "Metadata/Items/Jewels/JewelPassiveTreeExpansionSmall",
+          "error": "cluster_jewel_session is not supported before cluster runtime rules"
+        }
+      ],
+      "scope": "Source catalogue shape and unchanged Python session refusal only; no crafting or runtime activation."
+    }
+  },
+  "reused_preimplementation_evidence": {
+    "path": "C:\\Users\\Oliver\\Documents\\Codex\\2026-10-02\\task-6\\cluster-readiness-evidence.json",
+    "sha256": "88cc2a24f11766c9e728884fc2fdfa9d0b85734940a5d8d35766a318fd92b699",
+    "passed": 48,
+    "failed": 0,
+    "scope": "Baseline/engine hash and complete canonical-to-compiled equality; 18 Python and 18 native refusals across three sizes and six levels; native level-zero refusal; original hashes unchanged.",
+    "native_DLL_sha256": "10b0a4d81d015b2f06183513d8d91fc52d7df5da0f36256bb6000746993ea039",
+    "compatibility": "No native source, DLL, compiled data or existing Python selection logic changed. Not a fresh DLL build or gameplay qualification."
+  },
+  "failed_checks": [],
+  "corrected_non_test_issue": "Initial edit introduced CRLF in a tracked LF source file; corrected before testing. Final review also corrected a documentation encoding issue while preserving baseline HANDOFF history verbatim. Final diff check passes.",
+  "unrun": [
+    "Fresh native and WASM builds: their source/ABI layers are unchanged.",
+    "Solver benchmarks and Simulator: no strategy or gameplay support changed.",
+    "Full acceptance and UI checks: no activation or UI change."
+  ],
+  "processes": "All owned commands exited; no surviving process.",
+  "coordination": "Parent CPU hold honored; tests started only after explicit release at the 16:02 UTC checkpoint. No build jobs or heavy timed solver slots used.",
+  "isolation": "Only the approved sibling branch changed. Original data/runtime, main/integration and protected root 0 untouched. No push, deployment, install or refresh."
+}

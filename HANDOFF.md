@@ -1,5 +1,15 @@
 # Handoff
 
+The parent-approved [KIDS configured cluster catalogue slice](docs/active/2026-10-02-clusters-sprint/README.md)
+is complete in isolated `dot/clusters-20261002` from `f08facbb`. The read-only
+resolver validates stable base/passive keys and count bounds, always returning
+`cluster_unsupported`. All 53 focused tests pass; frozen-data checks cover 182
+catalogue tuples, 110 bad counts and unchanged session refusals/hashes. The
+living record and qualification receipt own evidence, dynamic-tag/domain gaps
+and exact owner-law decisions. No process remains; ready for parent review.
+Native/UI crafting remains unsupported. Main/integration, protected root `0`,
+frozen data and pricing are untouched; no push/deployment or solver run.
+
 Oliver's overnight isolated integration is complete on `dot/integration-20261002`.
 Engine bytes are from `792b37e`; approved test-only request adapter is `984c594`.
 CURRENT `6a24e99`, Mechanics `d326305`, Finder `45611b9` and parent/Astra-approved
