@@ -1,15 +1,17 @@
 # Handoff
 
 Oliver's independent [CURRENT overnight continuation](docs/active/2026-10-02-current-overnight/README.md)
-is paused for the parent's serial CPU hold in isolated branch
-`dot/current-20261002`. W1 code checkpoint is `be034a5`; the carrier-universe
-repair and expanded native controls remain local pending a rebuild. Passing
-checks: metamod 277, bounded Finish/artifact loss 203. All own processes ended.
-Two new timed native cases are reserved, zero spent; no worker is allocated.
-Resume only after the parent releases the CPU hold, then freeze binaries and
-comparison before requesting a timed slot. Historical MM receipts below remain
-unchanged; no returned Bow improvement or final WASM acceptance is claimed.
-
+is ready for a parent-allocated native control/treatment slot in isolated branch
+`dot/current-20261002`. W1 reporting (`be034a5`, web `362404d`) and complete
+carrier-universe repair (`ca9daff`) are locally committed. Checks pass: metamod
+479, bounded Finish/artifact 203, abstraction 47173; release WASM, filtered
+`npm test` and typecheck pass. Native tail rows independently reproduce the
+51222.52082c diagnostic comparison, without importing an old policy. The
+matched native pair, inputs, binaries and commands are frozen in its receipt.
+All own processes ended; pause CPU-heavy work for the parent's fresh Finder
+hold. Two new timed native cases remain reserved, zero spent; no worker is
+allocated. Actual returned Bow gain and real W1 replay are still unrun.
+Historical MM receipts below remain unchanged.
 
 Oliver's selected [MM0–MM7 recovery](docs/active/2026-09-29-metamod-recovery/README.md)
 is locally retained with partial acceptance. Last coherent execution commit:
