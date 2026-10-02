@@ -51,6 +51,28 @@ def test_disabled_action_family_identity_is_validated_and_order_independent() ->
         )
 
 
+@pytest.mark.parametrize("family", ["foulborn", "memory"])
+def test_expanded_disabled_family_keeps_canonical_identity(family: str) -> None:
+    canonical = canonical_disabled_action_families(
+        {"disabled_action_families": [family, "currency", family]}
+    )
+    assert canonical == ["currency", family]
+    assert canonical_sha256(canonical) == canonical_sha256(
+        canonical_disabled_action_families(
+            {"disabled_action_families": ["currency", family]}
+        )
+    )
+    assert canonical_sha256(canonical) != canonical_sha256(["currency"])
+    with pytest.raises(ValueError, match="unknown disabled action family"):
+        canonical_disabled_action_families(
+            {"disabled_action_families": [family, family.upper()]}
+        )
+    with pytest.raises(ValueError, match="must be strings"):
+        canonical_disabled_action_families(
+            {"disabled_action_families": [family, 1]}
+        )
+
+
 def test_lab_family_vocabulary_matches_native_contract() -> None:
     contract = (
         REPO_ROOT / "engine" / "src" / "solver_action_family_contract.hpp"

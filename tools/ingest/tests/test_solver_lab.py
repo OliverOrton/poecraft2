@@ -140,6 +140,12 @@ def test_action_envelope_identity_components_are_truthful_and_stable(
     no_metamod = preview_revision(
         source_case_id=broad_case, key="no-metamod", disabled=["metamod"]
     )
+    no_foulborn = preview_revision(
+        source_case_id=broad_case, key="no-foulborn", disabled=["foulborn"]
+    )
+    no_memory = preview_revision(
+        source_case_id=broad_case, key="no-memory", disabled=["memory"]
+    )
     currency_only = service.submit_job(
         case_id="fragment-clean-one-goal-renewal-control-v1",
         idempotency_key="identity-preview-currency-only",
@@ -169,6 +175,8 @@ def test_action_envelope_identity_components_are_truthful_and_stable(
             unrestricted,
             no_temporary_bench,
             no_metamod,
+            no_foulborn,
+            no_memory,
             currency_only,
         )
     ]
@@ -180,7 +188,7 @@ def test_action_envelope_identity_components_are_truthful_and_stable(
         for components in component_sets
     }
     assert len(imprint_identities) == 1
-    assert len(disabled_identities) == 3
+    assert len(disabled_identities) == 5
     assert unrestricted["core_solve_component_identities_v1"][
         "effective_disabled_action_families"
     ] == currency_only["core_solve_component_identities_v1"][
@@ -194,10 +202,12 @@ def test_action_envelope_identity_components_are_truthful_and_stable(
                 unrestricted,
                 no_temporary_bench,
                 no_metamod,
+                no_foulborn,
+                no_memory,
                 currency_only,
             )
         }
-    ) == 4
+    ) == 6
     assert len(
         {
             request["full_request_identity"]
@@ -205,10 +215,12 @@ def test_action_envelope_identity_components_are_truthful_and_stable(
                 unrestricted,
                 no_temporary_bench,
                 no_metamod,
+                no_foulborn,
+                no_memory,
                 currency_only,
             )
         }
-    ) == 4
+    ) == 6
     for name in ("allowed_mechanic_families", "goal_action_list"):
         assert unrestricted["core_solve_component_identities_v1"][name] == (
             no_temporary_bench["core_solve_component_identities_v1"][name]

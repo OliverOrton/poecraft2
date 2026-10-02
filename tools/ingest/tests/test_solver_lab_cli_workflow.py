@@ -105,6 +105,30 @@ def _wait_for(predicate, timeout: float = 5.0) -> None:
     raise AssertionError("condition did not become true")
 
 
+def test_expanded_disabled_family_patch_preserves_request_identity() -> None:
+    source = {"goal": {"actions": ["chaos"]}}
+    path = "/goal/disabled_action_families"
+    first = apply_case_patches(
+        source, [{"path": path, "value": ["memory", "foulborn", "memory"]}]
+    )
+    replay = apply_case_patches(
+        source, [{"path": path, "value": ["foulborn", "memory"]}]
+    )
+    assert first == replay == {
+        "goal": {
+            "actions": ["chaos"],
+            "disabled_action_families": ["foulborn", "memory"],
+        }
+    }
+    assert canonical_sha256(first) == canonical_sha256(replay)
+    assert canonical_sha256(first) != canonical_sha256(source)
+    assert source == {"goal": {"actions": ["chaos"]}}
+    with pytest.raises(ValueError, match="unknown disabled action family"):
+        normalize_case_patches(
+            [{"path": path, "value": ["foulborn", "not_a_native_family"]}]
+        )
+
+
 def test_candidate_evaluator_resource_patch_keeps_native_widths() -> None:
     value = {"max_states": 2_000_000, "max_pairs": 10_000_000,
              "max_transitions": 40_000_000, "max_owned_bytes": 4 << 30}

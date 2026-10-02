@@ -68,6 +68,8 @@ NATIVE_SOLVER_ACTION_FAMILIES_V1 = (
     "metamod",
     "imprint",
     "restart",
+    "foulborn",
+    "memory",
 )
 
 
