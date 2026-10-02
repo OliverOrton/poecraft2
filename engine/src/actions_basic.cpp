@@ -10,6 +10,7 @@
 #include <chrono>
 #include <cstdint>
 #include <limits>
+#include <map>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -624,6 +625,14 @@ int rare_count(ActionContextImpl& context) {
     return law.select(context.rng.next_below(law.denominator));
 }
 
+// Ordinary rare_count is owned by the separate 8:3:1 correction. A configured
+// cluster samples its approved total directly; clamping a six-mod law is wrong.
+int configured_rare_count(ActionContextImpl& context) {
+    if (context.session->is_cluster())
+        return context.rng.next_below(100) < 65 ? 3 : 4;
+    return rare_count(context);
+}
+
 ActionOutcome do_add_one(ActionContextImpl& context, pc_item_state* item,
                          bool foulborn = false) {
     ActionOutcome out;
@@ -939,7 +948,7 @@ ActionOutcome do_harvest_reforge(
     guaranteed.weight_kind = PoolWeightKind::TargetedNatural;
     guaranteed.target_tag_id = tag_id;
     if (!add_random_mod(context, guaranteed, item)) return {};
-    int target = std::min<int>(rare_count(context), session.rare_affix_cap * 2);
+    int target = std::min<int>(configured_rare_count(context), session.rare_affix_cap * 2);
     fill_random_mods(context, PoolBuildRequest{}, item, target);
     const int after = item->prefix_count + item->suffix_count;
     return {true, after - static_cast<int>(kept.size()),
@@ -1095,7 +1104,7 @@ ActionOutcome do_eldritch_chaos(
     pc_item_state* item) {
     const int side = dominant_eldritch(item);
     if (side < 0)
-        return reforge(context, item, PC_RARITY_RARE, rare_count(context),
+        return reforge(context, item, PC_RARITY_RARE, configured_rare_count(context),
                        PoolBuildRequest{});
     pc_mod_slot fractured{};
     bool has_fractured = false;
@@ -1473,16 +1482,8 @@ ActionOutcome apply_action(
             throw std::invalid_argument(reason);
     if (item->item_flags & PC_ITEM_FORESEEN)
         throw std::invalid_argument("Foreseeing item requires its original native Lock context; ordinary action sampling cannot drop foresight");
-    if (session.is_cluster()) {
-        switch (action.type) {
-        case ActionType::Transmute: case ActionType::Alteration:
-        case ActionType::Augment: case ActionType::Regal: case ActionType::Exalt:
-        case ActionType::Annul: case ActionType::Scour:
-            break;
-        default:
-            throw std::invalid_argument("This cluster action law is not yet approved and qualified");
-        }
-    }
+    if (session.is_cluster() && !cluster_currency_qualified(action.type))
+        throw std::invalid_argument("This cluster action law is not yet approved and qualified");
     if (item->enchantment_count && action.type != ActionType::Vaal && action.type != ActionType::Dominance)
         throw std::invalid_argument("Crafting on retained enchantments is unavailable until their effect and socket contracts are implemented");
     if (item->memory_strands > 100 || item->lifecycle > PC_ITEM_DESTROYED)
@@ -1545,13 +1546,13 @@ ActionOutcome apply_action(
         if (item->rarity != PC_RARITY_NORMAL) {
             return {};
         }
-        return reforge(context, item, PC_RARITY_RARE, rare_count(context),
+        return reforge(context, item, PC_RARITY_RARE, configured_rare_count(context),
                        PoolBuildRequest{});
     case ActionType::Chaos:
         if (item->rarity != PC_RARITY_RARE) {
             return {};
         }
-        return reforge(context, item, PC_RARITY_RARE, rare_count(context),
+        return reforge(context, item, PC_RARITY_RARE, configured_rare_count(context),
                        PoolBuildRequest{});
     case ActionType::Exalt:
     case ActionType::FoulbornExalt:
@@ -1580,7 +1581,7 @@ ActionOutcome apply_action(
         const std::uint32_t guaranteed =
             session.essence_guaranteed_mod_ids[action.essence_index];
         if (guaranteed == std::numeric_limits<std::uint32_t>::max()) return {};
-        const int target = rare_count(context);
+        const int target = configured_rare_count(context);
         const ActionTransitionFacts facts =
             action_transition_facts(ActionType::Essence);
         PoolBuildRequest pool_request;
@@ -1611,7 +1612,7 @@ ActionOutcome apply_action(
             facts.respects_metamod_pool_blocks;
         ActionOutcome out = reforge(
             context, item, PC_RARITY_RARE,
-            std::min<int>(rare_count(context), session.rare_affix_cap * 2),
+            std::min<int>(configured_rare_count(context), session.rare_affix_cap * 2),
             pool_request, forced, facts.respects_metamod_side_locks);
         if (out.applied)
             apply_fossil_specials(context, item, action.fossil_indices);
@@ -1628,7 +1629,7 @@ ActionOutcome apply_action(
         const std::vector<KeptSlot> kept = collect_preserved(session, item);
         restore_slots(item, kept);
         const int target = std::min<int>(
-            rare_count(context), session.rare_affix_cap * 2);
+            configured_rare_count(context), session.rare_affix_cap * 2);
         fill_random_mods(
             context, PoolBuildRequest{}, item, target - 1);
         if (!add_veiled_mod(context, item)) return {};
@@ -1799,40 +1800,115 @@ pc_item_state awaken_item(ActionContextImpl& context,
     auto result = awakener_base(*context.session, donor, receiver, a, b);
     PoolBuildRequest request;
     request.respects_metamod_pool_blocks = false;
-    fill_random_mods(context, request, &result, rare_count(context));
+    fill_random_mods(context, request, &result, configured_rare_count(context));
     return result;
 }
 
 ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl& context,
     const pc_item_state& original, const ActionParameters& action,
     const std::function<void(const pc_item_state&, long double)>& visit,
-    std::uint64_t max_work) {
+    std::uint64_t max_work,
+    const std::function<std::uint32_t(const pc_item_state&)>& terminal_observation,
+    const std::function<void(std::uint64_t)>& require_scratch_bytes) {
     const auto& s = *context.session;
     if (!s.is_cluster()) throw std::invalid_argument("Concrete cluster outcomes require a configured session");
+    if (!cluster_currency_qualified(action.type))
+        throw std::invalid_argument("This cluster action law is not yet approved and qualified");
     if (!item_craftable(&original)) { visit(original, 1); return {}; }
     if (original.memory_strands || original.enchantment_count)
         throw std::invalid_argument("Unsupported cluster input carrier");
     std::uint64_t work = 0;
+    std::uint64_t frontier_bytes = 0;
+    const auto require_memory = [&](std::uint64_t bytes) {
+        frontier_bytes = bytes;
+        if (require_scratch_bytes) require_scratch_bytes(bytes);
+        else if (bytes > 128ull * 1024 * 1024)
+            throw std::length_error("Concrete cluster outcome scratch byte limit exceeded");
+    };
+    const auto emit = [&](const pc_item_state& item, long double probability) {
+        if (action.type == ActionType::Fossil) {
+            const auto special = fossil_implicit_outcomes(s, item, action.fossil_indices);
+            require_memory(frontier_bytes + special.capacity() * sizeof(special.front()));
+            for (const auto& [child, conditional] : special) visit(child, probability * conditional);
+        } else visit(item, probability);
+    };
     const auto fill = [&](const pc_item_state& base, int target, long double mass,
-                          const auto& self) -> bool {
-        if (++work > max_work) throw std::length_error("Concrete cluster outcome work limit exceeded");
-        if (base.prefix_count + base.suffix_count >= target) { visit(base, mass); return true; }
-        PoolBuildRequest request;
-        const auto side = open_side_filter(s, &base, request);
-        if (side == -2) { visit(base, mass); return false; }
-        request.side_filter = side;
-        const auto& pool = get_weighted_pool(context, &base, request);
-        if (!pool.total_weight) { visit(base, mass); return false; }
-        // Recursion can add a new tag signature/table. Preserve this row by value.
-        const auto entries = pool.entries;
-        const auto total = pool.total_weight;
-        for (const auto& row : entries) {
-            auto next = base;
-            if (!add_direct_mod(s, &next, row.session_mod_id))
-                throw std::logic_error("Native cluster pool contains an illegal addition");
-            self(next, target, mass * static_cast<long double>(row.final_weight) / total, self);
+                          const PoolBuildRequest& request) -> bool {
+        using Key = std::vector<std::uint64_t>;
+        struct Entry { pc_item_state item; long double mass; };
+        std::map<Key, Entry> current, next;
+        const auto key_for = [&](const pc_item_state& item) {
+            Key key{item.rarity, item.prefix_count, item.suffix_count, item.item_flags};
+            if (terminal_observation) {
+                // This within-addition equivalence retains the COMPLETE native
+                // blocker mask and installed added-tag signature. Its separate
+                // observation token is used only by the terminal Calculator.
+                // No removals or continuations consume a chosen representative.
+                build_refill_group_block_mask(s, &item, context.block_mask_scratch);
+                key.insert(key.end(), context.block_mask_scratch.begin(), context.block_mask_scratch.end());
+                key.push_back(intern_item_tag_signature(context, &item));
+                key.push_back(item_has_metamod(s, &item, s.data->metamod_no_attack_code));
+                key.push_back(item_has_metamod(s, &item, s.data->metamod_no_caster_code));
+                key.push_back(terminal_observation(item));
+            } else {
+                // Authored continuation uses exact physical IDs and flags.
+                for (int side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+                    const auto* slots = side == PC_SIDE_PREFIX ? item.prefixes : item.suffixes;
+                    const auto count = side == PC_SIDE_PREFIX ? item.prefix_count : item.suffix_count;
+                    std::vector<std::uint64_t> values;
+                    for (unsigned i = 0; i < count; ++i)
+                        values.push_back((std::uint64_t(slots[i].mod_id) << 32) | (std::uint64_t(slots[i].group_id) << 16) | slots[i].flags);
+                    std::sort(values.begin(), values.end());
+                    key.insert(key.end(), values.begin(), values.end());
+                }
+            }
+            return key;
+        };
+        current.emplace(key_for(base), Entry{base, mass});
+        bool applied = base.prefix_count + base.suffix_count >= target;
+        while (!current.empty()) {
+            next.clear();
+            for (const auto& [key, entry] : current) {
+                (void)key;
+                const auto& item = entry.item;
+                if (item.prefix_count + item.suffix_count >= target) { emit(item, entry.mass); continue; }
+                auto prepared = request;
+                const auto side = open_side_filter(s, &item, prepared);
+                if (side == -2) { emit(item, entry.mass); continue; }
+                prepared.side_filter = side;
+                const auto& pool = get_weighted_pool(context, &item, prepared);
+                if (!pool.total_weight) { emit(item, entry.mass); continue; }
+                applied = true;
+                const auto rows = pool.entries;
+                const auto total = pool.total_weight;
+                for (const auto& row : rows) {
+                    if (++work > max_work) throw std::length_error("Concrete cluster outcome work limit exceeded");
+                    auto child = item;
+                    if (!add_direct_mod(s, &child, row.session_mod_id))
+                        throw std::logic_error("Native cluster pool contains an illegal addition");
+                    const auto p = entry.mass * static_cast<long double>(row.final_weight) / total;
+                    if (child.prefix_count + child.suffix_count >= target) {
+                        emit(child, p);
+                        continue;
+                    }
+                    auto child_key = key_for(child);
+                    // Conservative node/key allocation bound checked before allocation.
+                    const auto per_node = sizeof(Entry) + sizeof(Key) + 128 +
+                        (4 + s.words + PC_MAX_PREFIXES + PC_MAX_SUFFIXES + 4) * sizeof(std::uint64_t);
+                    require_memory((current.size() + next.size() + 1) * per_node +
+                        rows.capacity() * sizeof(PoolEntry));
+                    const auto [position, inserted] = next.try_emplace(std::move(child_key), Entry{child, 0});
+                    position->second.mass += p;
+                }
+            }
+            current.swap(next);
         }
-        return true;
+        require_memory(0);
+        return applied;
+    };
+    const auto rare_fill = [&](const pc_item_state& base, long double mass, const PoolBuildRequest& request) {
+        fill(base, 3, mass * 0.65L, request);
+        fill(base, 4, mass * 0.35L, request);
     };
     switch (action.type) {
     case ActionType::Transmute: case ActionType::Alteration: {
@@ -1840,21 +1916,144 @@ ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl& context,
             visit(original, 1); return {};
         }
         auto base = original;
-        const auto kept = collect_preserved(s, &original, true);
-        restore_slots(&base, kept);
+        restore_slots(&base, collect_preserved(s, &original, true));
         base.rarity = PC_RARITY_MAGIC;
-        fill(base, 1, 0.5L, fill);
-        fill(base, 2, 0.5L, fill);
+        fill(base, 1, 0.5L, {}); fill(base, 2, 0.5L, {});
         return {true, 0, 0};
     }
-    case ActionType::Augment: case ActionType::Regal: case ActionType::Exalt: {
-        if (original.rarity != (action.type == ActionType::Exalt ? PC_RARITY_RARE : PC_RARITY_MAGIC)) {
+    case ActionType::Augment: case ActionType::Regal: case ActionType::Exalt:
+    case ActionType::FoulbornAugment: case ActionType::FoulbornRegal: case ActionType::FoulbornExalt: {
+        const auto ordinary = ordinary_add_equivalent(action.type);
+        if (original.rarity != (ordinary == ActionType::Exalt ? PC_RARITY_RARE : PC_RARITY_MAGIC)) {
             visit(original, 1); return {};
         }
         auto base = original;
-        if (action.type == ActionType::Regal) base.rarity = PC_RARITY_RARE;
-        const auto applied = fill(base, base.prefix_count + base.suffix_count + 1, 1, fill);
-        return {applied || action.type == ActionType::Regal, 0, 0};
+        if (ordinary == ActionType::Regal) base.rarity = PC_RARITY_RARE;
+        PoolBuildRequest request;
+        if (is_foulborn(action.type)) request.weight_kind = PoolWeightKind::Foulborn;
+        const auto applied = fill(base, base.prefix_count + base.suffix_count + 1, 1, request);
+        return {applied || ordinary == ActionType::Regal, 0, 0};
+    }
+    case ActionType::Alchemy: case ActionType::Chaos: case ActionType::Fossil: case ActionType::HarvestReforge: {
+        if ((action.type == ActionType::Alchemy && original.rarity != PC_RARITY_NORMAL) ||
+            ((action.type == ActionType::Chaos || action.type == ActionType::HarvestReforge) && original.rarity != PC_RARITY_RARE)) {
+            visit(original, 1); return {};
+        }
+        auto base = original;
+        const bool fossil = action.type == ActionType::Fossil;
+        restore_slots(&base, collect_preserved(s, &original, !fossil));
+        base.rarity = PC_RARITY_RARE;
+        PoolBuildRequest request;
+        if (fossil) {
+            if (action.fossil_indices.empty()) { visit(original, 1); return {}; }
+            request.weight_kind = PoolWeightKind::Fossil;
+            request.fossil_indices = action.fossil_indices;
+            request.respects_metamod_pool_blocks = false;
+            std::vector<std::uint32_t> forced;
+            for (const auto f : action.fossil_indices) {
+                if (f >= s.fossil_forced_mod_ids.size()) { visit(original, 1); return {}; }
+                forced.insert(forced.end(), s.fossil_forced_mod_ids[f].begin(), s.fossil_forced_mod_ids[f].end());
+            }
+            std::sort(forced.begin(), forced.end());
+            forced.erase(std::unique(forced.begin(), forced.end()), forced.end());
+            for (const auto id : forced)
+                if (!add_direct_mod(s, &base, id)) { visit(original, 1); return {}; }
+        }
+        if (action.type == ActionType::HarvestReforge) {
+            if (action.target_tag_id == kNoTag) { visit(original, 1); return {}; }
+            auto guaranteed = request;
+            guaranteed.weight_kind = PoolWeightKind::TargetedNatural;
+            guaranteed.target_tag_id = action.target_tag_id;
+            guaranteed.side_filter = open_side_filter(s, &base, guaranteed);
+            if (guaranteed.side_filter == -2) { visit(original, 1); return {}; }
+            const auto& pool = get_weighted_pool(context, &base, guaranteed);
+            const auto rows = pool.entries; const auto total = pool.total_weight;
+            if (!total) { visit(original, 1); return {}; }
+            for (const auto& row : rows) {
+                auto child = base;
+                if (!add_direct_mod(s, &child, row.session_mod_id)) throw std::logic_error("Harvest guaranteed pool has an illegal addition");
+                rare_fill(child, static_cast<long double>(row.final_weight) / total, request);
+            }
+        } else rare_fill(base, 1, request);
+        return {true, 0, 0};
+    }
+    case ActionType::HarvestAugment: {
+        if ((original.rarity != PC_RARITY_MAGIC && original.rarity != PC_RARITY_RARE) ||
+            original.generic_influence_bits || original.searing_exarch_tier || original.eater_of_worlds_tier ||
+            action.target_tag_id == kNoTag) { visit(original, 1); return {}; }
+        PoolBuildRequest request;
+        request.weight_kind = PoolWeightKind::TargetedNatural;
+        request.target_tag_id = action.target_tag_id;
+        request.side_filter = open_side_filter(s, &original, request);
+        if (request.side_filter == -2) { visit(original, 1); return {}; }
+        const auto& pool = get_weighted_pool(context, &original, request);
+        const auto rows = pool.entries; const auto total = pool.total_weight;
+        if (!total) { visit(original, 1); return {}; }
+        for (const auto& row : rows) {
+            if (++work > max_work) throw std::length_error("Concrete cluster outcome work limit exceeded");
+            auto child = original;
+            if (!add_direct_mod(s, &child, row.session_mod_id)) throw std::logic_error("Harvest augment pool has an illegal addition");
+            std::vector<std::pair<int, std::uint8_t>> removable;
+            for (int side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+                if (side_locked(s, &child, side)) continue;
+                const auto* slots = side == PC_SIDE_PREFIX ? child.prefixes : child.suffixes;
+                const auto count = side == PC_SIDE_PREFIX ? child.prefix_count : child.suffix_count;
+                for (std::uint8_t i = 0; i < count; ++i)
+                    if (!(slots[i].flags & PC_MOD_SLOT_FRACTURED) && slots[i].mod_id != row.session_mod_id)
+                        removable.emplace_back(side, i);
+            }
+            const auto mass = static_cast<long double>(row.final_weight) / total;
+            if (removable.empty()) visit(child, mass);
+            else for (const auto& [side, index] : removable) {
+                auto next = child; pc_item_remove_at(&next, side, index);
+                visit(next, mass / removable.size());
+            }
+        }
+        return {true, 1, 1};
+    }
+    case ActionType::HarvestResist: {
+        if ((original.rarity != PC_RARITY_MAGIC && original.rarity != PC_RARITY_RARE) ||
+            action.source_tag_id == kNoTag || action.target_tag_id == kNoTag ||
+            action.source_tag_id == action.target_tag_id) { visit(original, 1); return {}; }
+        const auto resistance = s.data->tag_id_by_name.find("resistance");
+        if (resistance == s.data->tag_id_by_name.end()) { visit(original, 1); return {}; }
+        struct Source { pc_item_state base; std::vector<PoolEntry> rows; std::uint64_t total = 0; };
+        std::vector<Source> viable;
+        for (int side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+            if (side_locked(s, &original, side)) continue;
+            const auto* slots = side == PC_SIDE_PREFIX ? original.prefixes : original.suffixes;
+            const auto count = side == PC_SIDE_PREFIX ? original.prefix_count : original.suffix_count;
+            for (std::uint8_t i = 0; i < count; ++i) {
+                const auto id = slots[i].mod_id;
+                if ((slots[i].flags & PC_MOD_SLOT_FRACTURED) || !has_class_tag(s, id, resistance->second) ||
+                    !has_class_tag(s, id, action.source_tag_id)) continue;
+                Source source{original, {}, 0}; pc_item_remove_at(&source.base, side, i);
+                PoolBuildRequest request;
+                request.weight_kind = PoolWeightKind::TargetedNatural;
+                request.target_tag_id = action.target_tag_id; request.side_filter = side;
+                const auto& pool = get_weighted_pool(context, &source.base, request);
+                for (const auto& row : pool.entries) {
+                    if (row.required_level != s.required_level[id] || !has_class_tag(s, row.session_mod_id, resistance->second) ||
+                        has_class_tag(s, row.session_mod_id, action.source_tag_id)) continue;
+                    source.rows.push_back(row); source.total += row.final_weight;
+                }
+                if (source.total) viable.push_back(std::move(source));
+            }
+        }
+        if (viable.empty()) { visit(original, 1); return {}; }
+        // Native retries impossible sources without replacement and restores all
+        // physical facts. The first viable source is uniform over viable sources.
+        for (const auto& source : viable) for (const auto& row : source.rows) {
+            if (++work > max_work) throw std::length_error("Concrete cluster outcome work limit exceeded");
+            auto next = source.base;
+            if (!add_direct_mod(s, &next, row.session_mod_id)) throw std::logic_error("Harvest resistance pool has an illegal replacement");
+            visit(next, static_cast<long double>(row.final_weight) / source.total / viable.size());
+        }
+        return {true, 1, 1};
+    }
+    case ActionType::RemoveCraftedModifiers: {
+        auto next = original; const auto result = do_remove_crafted_modifiers(&next);
+        visit(next, 1); return result;
     }
     case ActionType::Annul: {
         std::vector<std::pair<int, std::uint8_t>> removable;
@@ -1867,17 +2066,14 @@ ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl& context,
         }
         if (removable.empty()) { visit(original, 1); return {}; }
         for (const auto& [side, index] : removable) {
-            auto next = original;
-            pc_item_remove_at(&next, side, index);
+            auto next = original; pc_item_remove_at(&next, side, index);
             visit(next, 1.0L / removable.size());
         }
         return {true, 0, 1};
     }
     case ActionType::Scour: {
-        auto next = original;
-        const auto result = do_scour(s, &next);
-        visit(next, 1);
-        return result;
+        auto next = original; const auto result = do_scour(s, &next);
+        visit(next, 1); return result;
     }
     default: throw std::invalid_argument("This cluster action law is not yet approved and qualified");
     }

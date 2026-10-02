@@ -1,4 +1,5 @@
 #include "solver_solve_types.hpp"
+#include "solver_clusters.hpp"
 
 #include <array>
 #include <bit>
@@ -800,7 +801,7 @@ void CalcContext::save_development_solve_checkpoint(
     write_plain_header(stream, std::uint64_t{0});
 
     PayloadWriter out(stream);
-    out.string(caller_identity);
+    out.string(std::string(caller_identity) + cluster_strategy_identity_fields(session()));
     out.pod(kRareReforgeCountLawVersion);
     out.pod(static_cast<std::uint64_t>(session().rare_reforge_count_kind));
     out.pod(static_cast<std::uint64_t>(initial_operator_count_));
@@ -913,7 +914,7 @@ void CalcContext::load_development_solve_checkpoint(
     }
     stream.seekg(payload_start);
     PayloadReader in(stream, payload_size);
-    if (in.string() != expected_caller_identity) {
+    if (in.string() != std::string(expected_caller_identity) + cluster_strategy_identity_fields(session())) {
         throw std::runtime_error(
             "solver development checkpoint caller identity mismatch");
     }

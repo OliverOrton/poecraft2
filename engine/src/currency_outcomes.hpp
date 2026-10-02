@@ -3,12 +3,28 @@
 #include <functional>
 
 namespace poecraft {
+// Qualified configured-cluster actions; unrelated mechanics remain explicit.
+inline bool cluster_currency_qualified(ActionType type) {
+    switch (type) {
+    case ActionType::Transmute: case ActionType::Alteration:
+    case ActionType::Augment: case ActionType::Regal: case ActionType::Exalt:
+    case ActionType::FoulbornAugment: case ActionType::FoulbornRegal:
+    case ActionType::FoulbornExalt: case ActionType::Annul: case ActionType::Scour:
+    case ActionType::Alchemy: case ActionType::Chaos: case ActionType::Fossil:
+    case ActionType::HarvestReforge: case ActionType::HarvestAugment:
+    case ActionType::HarvestResist: case ActionType::RemoveCraftedModifiers: return true;
+    default: return false;
+    }
+}
+
 // Concrete cluster outcomes rebuild the native pool after every draw; only
 // completed outcomes may be projected into Calculator terminal observations.
 ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl&,
     const pc_item_state&, const ActionParameters&,
     const std::function<void(const pc_item_state&, long double)>&,
-    std::uint64_t max_work = 2000000);
+    std::uint64_t max_work = 2000000,
+    const std::function<std::uint32_t(const pc_item_state&)>& terminal_observation = {},
+    const std::function<void(std::uint64_t)>& require_scratch_bytes = {});
 
 // Shared preparation for sampled execution and single-action calculation.
 struct DominanceChoice {

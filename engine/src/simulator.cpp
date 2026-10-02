@@ -4,6 +4,7 @@
 #include "json.hpp"
 #include "poecraft/session.h"
 #include "solver_eval_types.hpp"
+#include "solver_clusters.hpp"
 #include "solver_refinement.hpp"
 
 #include <algorithm>
@@ -292,6 +293,16 @@ pc_item_state parse_start_item(
     if (item_level != static_cast<int>(session.item_level)) {
         invalid("base_state.item_level does not match the compile session");
     }
+
+    const auto* cluster = base_state.find("cluster");
+    if (session.is_cluster()) {
+        if (!cluster || cluster->type != Type::Object) invalid("Configured cluster strategy requires fixed cluster identity");
+        const auto& canonical = data.clusters[session.cluster_index].passives[session.cluster_passive_index];
+        const auto* count = cluster->find("passive_count");
+        if (string_member(*cluster, "passive_key") != data.string_at(canonical.key_sid) ||
+            !count || count->type != Type::Number || count->number != session.cluster_passive_count)
+            invalid("Configured cluster strategy identity does not match its session");
+    } else if (cluster && cluster->type != Type::Null) invalid("Cluster strategy identity cannot enter an ordinary session");
 
     pc_item_state item;
     pc_item_clear(&item);

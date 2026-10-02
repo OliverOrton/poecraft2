@@ -3138,8 +3138,14 @@ void create_case_objects(
     session_options.item_level = optional_u32(session_spec, "item_level", 86);
     pc_error_info error;
     pc_error_info_init(&error);
-    pc_result result = pc_session_create(
-        data, &session_options, &handles.session, &error);
+    pc_result result;
+    if (const auto* cluster = optional(session_spec, "cluster", Type::Object)) {
+        const auto passive = required_string(*cluster, "passive_key");
+        const auto count = optional_u32(*cluster, "passive_count", 0);
+        const pc_cluster_session_options options{sizeof(options), PC_ABI_VERSION, base.c_str(),
+            session_options.item_level, passive.c_str(), count};
+        result = pc_session_create_cluster(data, &options, &handles.session, &error);
+    } else result = pc_session_create(data, &session_options, &handles.session, &error);
     if (result != PC_RESULT_OK) {
         throw std::runtime_error(api_error("pc_session_create", result, error));
     }

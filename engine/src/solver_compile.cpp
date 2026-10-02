@@ -4,6 +4,7 @@
 #include "solver_options_helpers.hpp"
 #include "json.hpp"
 #include "currency_outcomes.hpp"
+#include "solver_clusters.hpp"
 #include <unordered_set>
 
 /*
@@ -179,6 +180,7 @@ static std::string finder_base_json(
         "{\"version\":\"v1\",\"name\":\"strategy finder candidate\","
         "\"base_state\":{\"base_key\":\"" + json_escape(base_key) +
         "\",\"item_level\":" + std::to_string(session.item_level) +
+        cluster_strategy_identity_fields(session) +
         ",\"rarity\":\"" + rarity_name(start_item.rarity) +
         "\",\"with_implicits\":" +
         (start_item.implicit_count == 0 ? "false" : "true") +
@@ -1165,6 +1167,7 @@ std::string compile_policy_strategy_json(
                     data.base_metadata_path_sid[session.base_index])) +
             "\",\"item_level\":" +
             std::to_string(session.item_level) +
+            cluster_strategy_identity_fields(session) +
             ",\"rarity\":\"" + rarity_name(start_item.rarity) + "\"";
         std::uint32_t item_flags = 0;
         if (start_item.item_flags & PC_ITEM_CORRUPTED) {
@@ -3536,6 +3539,7 @@ std::string compile_policy_strategy_json(
         data.string_at(data.base_metadata_path_sid[session.base_index]));
     json += "\",\"item_level\":";
     json += std::to_string(session.item_level);
+    json += cluster_strategy_identity_fields(session);
     json += ",\"rarity\":\"";
     json += rarity_name(start.rarity);
     std::uint32_t item_flags = 0;

@@ -1219,10 +1219,11 @@ void run_cluster_configuration_tests(const char* artifact_dir) {
                 const auto config = json::Parser(buffer.data(), length).parse();
                 PC_CHECK(config.at("passive_key").as_string() == key);
                 PC_CHECK(config.at("passive_count").as_int() == count);
+                PC_CHECK(config.at("jewel_socket_count").as_int() == (d.string_at(cluster.size_sid) == "Large" ? 2 : d.string_at(cluster.size_sid) == "Medium" ? 1 : 0));
                 if (admitted == 1) {
                     const char* goal = "{\"rarity\":\"rare\",\"slots\":[],\"allow_extra_modifiers\":true}";
                     pc_solver_handle solver = nullptr;
-                    PC_CHECK(pc_solver_create(handle, goal, std::strlen(goal), &solver, &error) == PC_RESULT_UNSUPPORTED_FEATURE);
+                    PC_CHECK(pc_solver_create(handle, goal, std::strlen(goal), &solver, &error) == PC_RESULT_INVALID_ARGUMENT);
                     PC_CHECK(solver == nullptr);
                     PC_CHECK(pc_calc_create_goal(handle, goal, std::strlen(goal), &solver, &error) == PC_RESULT_OK);
                     if (solver) {
@@ -1242,6 +1243,35 @@ void run_cluster_configuration_tests(const char* artifact_dir) {
                 PC_CHECK(handle == nullptr);
             }
         }
+    }
+    // Positive Current carrier admission and whole-row native outcomes. This is
+    // finite transport qualification, not a search/optimality claim.
+    pc_cluster_session_options small{sizeof(small), PC_ABI_VERSION,
+        "Metadata/Items/Jewels/JewelPassiveTreeExpansionSmall", 75, "affliction_maximum_life", 2};
+    pc_session_handle configured = nullptr;
+    PC_CHECK(pc_session_create_cluster(data, &small, &configured, &error) == PC_RESULT_OK);
+    if (configured) {
+        const char* goal = "{\"rarity\":\"magic\",\"slots\":[{\"family_mod_key\":\"AfflictionNotableFettle\",\"min_tier\":1}],\"allow_extra_modifiers\":true,\"automatic_candidates\":false,\"actions\":[\"alteration\",\"augment\",\"annul\"]}";
+        pc_solver_handle exact = nullptr;
+        PC_CHECK(pc_solver_create(configured, goal, std::strlen(goal), &exact, &error) == PC_RESULT_OK);
+        if (exact) {
+            pc_item_state item; pc_item_clear(&item); item.rarity = PC_RARITY_MAGIC;
+            std::uint32_t state = 0, action = 0, count = 0, support = 0;
+            PC_CHECK(pc_solver_project_item(exact, &item, &state, &error) == PC_RESULT_OK);
+            PC_CHECK(pc_solver_find_action(exact, "alteration", &action, &error) == PC_RESULT_OK);
+            PC_CHECK(pc_solver_cluster_action_support(exact, action, &support, &error) == PC_RESULT_OK && support == 7);
+            pc_calc_summary summary{};
+            PC_CHECK(pc_calc_action_outcomes(exact, &item, action, nullptr, 0, &count, &summary, &error) == PC_RESULT_OK);
+            std::vector<pc_calc_outcome> entries(count);
+            PC_CHECK(pc_calc_action_outcomes(exact, &item, action, entries.data(), count, &count, &summary, &error) == PC_RESULT_OK);
+            PC_CHECK(summary.supported && summary.legal && summary.success_probability > 0);
+            double total = 0; for (const auto& entry : entries) total += entry.probability;
+            PC_CHECK(std::abs(total - 1) < 1e-12);
+            PC_CHECK(pc_solver_find_action(exact, "restart", &action, &error) == PC_RESULT_OK);
+            PC_CHECK(pc_solver_cluster_action_support(exact, action, &support, &error) == PC_RESULT_OK && support == 2);
+            pc_solver_destroy(exact);
+        }
+        pc_session_destroy(configured);
     }
     PC_CHECK(admitted > 0);
     std::printf("Configured cluster catalogue: %zu admitted tuples, %zu legacy refusals\n", admitted, legacy);

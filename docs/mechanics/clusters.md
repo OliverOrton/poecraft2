@@ -35,12 +35,34 @@ validated through the native editor. Passive count, raw notable/socket/small
 index metadata, installed notable affixes and equipment socket fields remain
 separate. No allocation or notable-placement algorithm is inferred.
 
-Full cluster completion is pending the [owner review packet and qualification
-receipt](../active/2026-10-02-clusters-completion/README.md). Alchemy/Chaos,
-Fossil/Harvest and other unqualified currency laws fail explicitly. The proposed
-65% three-affix / 35% four-affix rare community model has not been adopted.
-Fixed passive-tree socket counts also await the selected owner law; raw canonical
-socket indices are metadata, not a count law. Current/Finder, authored exact
-strategy evaluation and legacy continuation-row calculation refuse configured
-clusters until a compatible exact state and proof contract is qualified.
-No old lower/upper/ordering/closure certificate is promoted by these pool changes.
+Oliver adopted the cluster rare model on October 2: Alchemy/Chaos and the
+standard rare portions of Fossil/Harvest Reforge choose **three total explicits
+with probability .65 and four with .35**. Preserved, direct and guaranteed
+explicits count toward that total; fixed-count operations keep their own law.
+This is the explicitly selected Craft of Exile community model, not a disclosed
+GGG probability or empirical error bound. The ordinary six-affix reforge law is
+owned separately; the configured wrapper delegates outside cluster sessions.
+
+Modern non-unique configured clusters have fixed passive-tree socket counts:
+Large two, Medium one, Small zero. They are native configuration enchantments,
+distinct from equipment sockets and the raw catalogue's possible socket positions.
+Foulborn additions use the existing eligible-pool culling owner. Harvest Augment,
+resistance conversion and remove-crafted cleanup use their existing native laws.
+
+The exact structural continuation carrier retains every explicit ID, side,
+full native exclusion groups and crafted/fractured flags. It validates original
+root and every projected/materialized successor. Numeric rolls are unobserved
+by this envelope. Authored evaluation accepts original-root graphs only;
+continuation/provenance entries, resources, Imprint/Restart programmes, strands,
+retained implicit/enchantment context and ordinary gated retry quotients refuse.
+A Fossil successor outside this carrier refuses the whole row. Calculator can
+observe native terminal Fossil implicit outcomes without claiming continuation.
+
+Current admits an explicit qualified primitive scope with automatic programmes
+off, and retains **zero-only global lower authority**. Finder/Current end-to-end
+qualification is still open in the [living record](../active/2026-10-02-clusters-completion/README.md).
+Finite graph evaluation and a positive carrier admission gate do not certify
+search, positive lowers or exact optimality closure. Legacy inspection-only
+continuation rows/projection remain refused. Unqualified corruption, unique and
+new stochastic mechanics remain explicit acceptance items; no unknown law is
+invented or omitted from the record.

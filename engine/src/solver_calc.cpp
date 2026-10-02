@@ -2,6 +2,7 @@
 
 #include "solver_action_family_contract.hpp"
 #include "solver_dominance.hpp"
+#include "solver_clusters.hpp"
 #include "currency_outcomes.hpp"
 
 #include <algorithm>
@@ -467,7 +468,8 @@ CalcContext::CalcContext(
     const bool use_factored_terminal_reforge,
     const AbstractLayout* refinement_parent_layout,
     const bool registry_contracts_validated,
-    const bool certified_uniform_removal)
+    const bool certified_uniform_removal,
+    const bool cluster_terminal_only)
     : session_(std::move(session)),
       goal_(goal),
       registry_(std::move(registry)),
@@ -485,6 +487,22 @@ CalcContext::CalcContext(
           reverse_reforge_bucket_enumeration),
       use_factored_terminal_reforge_(
           use_factored_terminal_reforge) {
+    cluster_exact_ = session_->is_cluster() && !cluster_terminal_only;
+    std::vector<std::uint64_t> cluster_members;
+    if (cluster_exact_) {
+        if (goal.automatic_candidates || !goal.fixed_options.empty() || empty_actions_mean_all ||
+            product_solver_parent || certified_uniform_removal)
+            throw std::invalid_argument("Configured cluster exact continuation requires explicit primitive scope without automatic programmes");
+        for (const auto index : candidates_)
+            if (index >= registry_.actions.size() || registry_.actions[index].synthetic ||
+                !cluster_currency_qualified(registry_.actions[index].params.type))
+                throw std::invalid_argument("Configured cluster continuation action law is not qualified");
+        distinguish_modifier_identity_ = true;
+        cluster_members.assign(session_->words, 0);
+        for (std::uint32_t mod = 0; mod < session_->mod_count; ++mod)
+            if (session_->gen_type[mod] == PC_SIDE_PREFIX || session_->gen_type[mod] == PC_SIDE_SUFFIX)
+                pc_bitset_set(cluster_members.data(), mod);
+    }
     authored_dominance_ = registry_.index_by_id.count("dominance") != 0;
     if (authored_dominance_) {
         if (!distinguish_modifier_identity || !distinguish_junk_exclusion_effects ||
@@ -632,7 +650,7 @@ CalcContext::CalcContext(
     initial_operator_count_ = operators_.size();
     static_candidate_operator_count_ = candidate_operators_.size();
     const bool exact_group_effects =
-        distinguish_junk_exclusion_effects ||
+        cluster_exact_ || distinguish_junk_exclusion_effects ||
         (!product_solver_parent_ &&
          std::any_of(
              layout_actions.begin(), layout_actions.end(),
@@ -644,8 +662,8 @@ CalcContext::CalcContext(
     layout_ = build_abstract_layout(
         *session_, goal_, registry_, layout_actions, allow_empty_goal,
         false, exact_group_effects, count_observations,
-        required_reachable_mod_mask,
-        distinguish_modifier_identity,
+        cluster_exact_ ? cluster_members : required_reachable_mod_mask,
+        distinguish_modifier_identity_,
         refinement_parent_layout);
     layout_build_ns_ = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -1524,6 +1542,7 @@ std::uint32_t CalcContext::state_count() const {
 
 std::uint32_t CalcContext::intern_item(const pc_item_state& item) {
     if (authored_dominance_) validate_authored_dominance_item(*session_, item);
+    if (cluster_exact_) validate_cluster_exact_item(*session_, item);
     if (certified_uniform_removal_ &&
         (item.quality != 0 || item.implicit_count != 0 ||
          item.enchantment_count != 0 || item.memory_strands != 0 ||
@@ -1538,6 +1557,11 @@ std::uint32_t CalcContext::intern_item(const pc_item_state& item) {
         pc_item_state restored;
         if (!materialize(id, restored) || !same_authored_dominance_item(item, restored))
             throw std::invalid_argument("Dominance explicit identity/flags/context did not round-trip exactly");
+    }
+    if (cluster_exact_) {
+        pc_item_state restored;
+        if (!materialize(id, restored) || !same_cluster_exact_item(item, restored))
+            throw std::invalid_argument("Configured cluster physical identity did not round-trip exactly");
     }
     return id;
 }
@@ -1863,7 +1887,7 @@ const OutcomeDistribution& CalcContext::outcomes(
         action_transition_facts(action.params.type).renewal;
     goal_progress_gated =
         goal_progress_gated && ordinary_renewal;
-    if (use_factored_terminal_reforge_ && ordinary_renewal) {
+    if (!cluster_exact_ && use_factored_terminal_reforge_ && ordinary_renewal) {
         std::shared_ptr<const OutcomeDistribution> completed;
         while (!advance_outcomes(
             state_id, action_index, goal_progress_gated, completed,
@@ -1954,7 +1978,7 @@ bool CalcContext::advance_outcomes(
         action_transition_facts(action.params.type);
     const bool ordinary_renewal = !action.synthetic && facts.renewal;
     goal_progress_gated = goal_progress_gated && ordinary_renewal;
-    if (!ordinary_renewal || !use_factored_terminal_reforge_) {
+    if (cluster_exact_ || !ordinary_renewal || !use_factored_terminal_reforge_) {
         const OutcomeDistribution& value =
             outcomes(state_id, action_index, goal_progress_gated);
         const std::uint64_t key = distribution_cache_key(
@@ -2796,7 +2820,25 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
      * where skipping an illegal primitive would compile a policy that the
      * strategy runtime terminates as action_not_applied. Keep that refusal
      * carrier-local: the exact evaluator still exists for Scour. */
-    if (!action_legal(session, action, states_.at(state_id))) {
+    if (cluster_exact_) {
+        if (goal_progress_gated)
+            throw std::invalid_argument("Configured cluster goal-progress retry quotient is not qualified; use the full native primitive scope");
+        pc_item_state item;
+        if (!materialize(state_id, item)) throw std::invalid_argument("Configured cluster exact source did not materialize");
+        validate_cluster_exact_item(session, item);
+        if (action.synthetic || !cluster_currency_qualified(action.params.type))
+            throw std::invalid_argument("Configured cluster continuation action law is not qualified");
+        const auto outcome = visit_cluster_currency_outcomes(context_, item, action.params,
+            [&](const pc_item_state& next, long double mass) {
+                require_reforge_scratch_bytes((accumulated.size() + 1) * (sizeof(pc_item_state) + 128));
+                add_successor(next, static_cast<double>(mass));
+            }, 2000000, {}, [&](std::uint64_t bytes) {
+                require_reforge_scratch_bytes(bytes + (accumulated.size() + 1) * (sizeof(pc_item_state) + 128));
+            });
+        result.supported = true;
+        result.applicable = outcome.applied;
+        if (!result.applicable) accumulated.clear();
+    } else if (!action_legal(session, action, states_.at(state_id))) {
         if (authored_dominance_ || (!action.synthetic && action.params.type == ActionType::Scour)) {
             result.supported = true;
             result.applicable = false;
@@ -3011,7 +3053,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
         case ActionType::HarvestAugment: {
             /* Add one tag-targeted naturally rollable mod, then
              * remove one uniform other non-fractured mod on an unlocked
-             * side — the add-then-remove semantics are intentional. */
+             * side â€” the add-then-remove semantics are intentional. */
             result.supported = true;
             PoolBuildRequest request;
             request.weight_kind = PoolWeightKind::TargetedNatural;
@@ -3405,7 +3447,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_unveil(
 /*
  * Exact single-add distribution: enumerate the same weighted pool the
  * engine's add_random_mod samples (open_side_filter semantics: caps and the
- * request's side filter only — metamod locks never close a side for adds)
+ * request's side filter only â€” metamod locks never close a side for adds)
  * and accumulate each candidate's projected successor at weight/total.
  * Returns false when no side is open or the pool is empty, which the engine
  * reports as an unapplied action.

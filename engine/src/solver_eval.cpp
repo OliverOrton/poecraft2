@@ -3124,7 +3124,7 @@ struct StrategyEvalWork::Impl {
                      * gated routers remain structural telemetry: the real
                      * five-goal control proved that substituting the compact
                      * normalization there does not preserve exact cost bits. */
-                    if (proved_goal_progress_repeat) {
+                    if (proved_goal_progress_repeat && !model.calc->session().is_cluster()) {
                         const OutcomeDistribution& gated_candidate =
                             exact_outcomes(
                                 state_id, action_index, true);

@@ -682,6 +682,7 @@ pc_result pc_session_cluster_configuration_json(pc_session_handle session,
         ",\"item_level\":" + std::to_string(s.item_level) +
         ",\"size\":" + quoted(size) + ",\"passive_key\":" + quoted(d.string_at(p.key_sid)) +
         ",\"passive_count\":" + std::to_string(s.cluster_passive_count) +
+        ",\"jewel_socket_count\":" + std::to_string(size == "Large" ? 2 : size == "Medium" ? 1 : 0) +
         ",\"passive_tag\":" + quoted(d.tag_name_by_id.at(p.tag_id)) +
         ",\"passive_stats\":" + d.string_at(p.stats_sid) +
         ",\"passive_text\":" + d.string_at(p.text_sid) +

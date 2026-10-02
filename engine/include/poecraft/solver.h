@@ -150,6 +150,13 @@ pc_result pc_solver_get_action_info(
     pc_solver_action_info* out_info,
     pc_error_info* out_error);
 
+/* Native configured-cluster action envelope: bit 0 sampled crafting, bit 1
+ * single-action Calculator, bit 2 exact structural continuation. Ordinary
+ * sessions return UINT32_MAX (use their existing contracts). Admission does
+ * not confer positive-lower or optimality authority, or override item legality. */
+pc_result pc_solver_cluster_action_support(pc_solver_handle solver,
+    uint32_t action_index, uint32_t* out_support, pc_error_info* out_error);
+
 /* Resolve a canonical action id. Returns PC_RESULT_NOT_FOUND when absent. */
 pc_result pc_solver_find_action(
     pc_solver_handle solver,

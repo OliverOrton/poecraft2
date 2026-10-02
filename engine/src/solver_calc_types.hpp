@@ -757,7 +757,8 @@ class CalcContext {
         bool use_factored_terminal_reforge = false,
         const AbstractLayout* refinement_parent_layout = nullptr,
         bool registry_contracts_validated = false,
-        bool certified_uniform_removal = false);
+        bool certified_uniform_removal = false,
+        bool cluster_terminal_only = false);
 
     const SessionImpl& session() const { return *session_; }
     const std::shared_ptr<const SessionImpl>& shared_session() const {
@@ -1222,6 +1223,7 @@ class CalcContext {
     void uniform_removal_renewal_source(std::uint32_t, pc_item_state&) const;
     bool distinguish_modifier_identity_ = false;
     bool authored_dominance_ = false;
+    bool cluster_exact_ = false;
     bool capture_reforge_attribution_ = false;
     bool reforge_resource_accounting_ = true;
     bool use_projected_reforge_frontier_ = false;

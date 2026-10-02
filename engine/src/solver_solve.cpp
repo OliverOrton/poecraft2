@@ -74,6 +74,7 @@ SolveWork::Impl::Impl(
             options.selective_completion_service = true;
             options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
         }
+        if (session.is_cluster()) options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
         // Foulborn changes acquisition probabilities. Existing ordinary-clean
         // lower proofs have not been extended to this family. Retain the
         // existing checked-policy capability and zero global lower only.

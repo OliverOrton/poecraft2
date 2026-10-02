@@ -89,7 +89,7 @@ std::string calculate_currency_json(CalcContext& source,
     observation_registry.automatic_dominance = false;
     CalcContext terminal(source.shared_session(), source.goal(), observation_registry,
         {}, true, false, false, std::nullopt, {}, false, reachable,
-        false, false, true, false, true);
+        false, false, true, false, true, nullptr, false, false, true);
     auto& calc = terminal;
     // Oversized requests fail explicitly; never publish truncated mass.
     calc.set_solve_resource_caps(250000, 100000000, false, 512ull * 1024 * 1024);
@@ -156,7 +156,11 @@ std::string calculate_currency_json(CalcContext& source,
         } else {
             ActionContextImpl context(0);
             context.session = source.shared_session();
-            const auto result = visit_cluster_currency_outcomes(context, receiver, descriptor.params, add);
+            const auto result = visit_cluster_currency_outcomes(context, receiver, descriptor.params,
+                [&](const pc_item_state& item, long double probability) {
+                    observe_implicits(item, probability);
+                    add(item, probability);
+                }, 2000000, [&](const pc_item_state& item) { return project(item); });
             legal = result.applied;
         }
     } else if (!expanded) {

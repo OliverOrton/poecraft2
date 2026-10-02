@@ -2,6 +2,7 @@
 
 #include "solver_eval_types.hpp"
 #include "solver_dominance.hpp"
+#include "solver_clusters.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -1178,6 +1179,28 @@ EvalModel derive_model(
                 throw StrategyEvalUnsupported("Dominance supports exact structural acquisition, protection, addition and cleanup continuations only");
         }
     }
+    const bool configured_cluster = session->is_cluster();
+    if (configured_cluster) {
+        if (!options.continuation_entries.empty() || !options.policy_decision_entries.empty() ||
+            !options.graph_local_provenance.decisions.empty())
+            throw StrategyEvalUnsupported("Configured cluster evaluation supports original-root graphs only");
+        validate_cluster_exact_item(*session, strategy.start_item);
+        const std::function<bool(const CompiledCondition&)> supported_condition =
+            [&](const CompiledCondition& condition) {
+                return condition.kind != ConditionKind::HasUnveilOption &&
+                    !(condition.required_flags & ~(PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED)) &&
+                    std::all_of(condition.children.begin(), condition.children.end(), supported_condition);
+            };
+        for (const auto& node : strategy.nodes) {
+            for (const auto& edge : node.edges)
+                if (!edge.is_default && !supported_condition(edge.condition))
+                    throw StrategyEvalUnsupported("Configured cluster graph has an unsupported condition");
+            if (node.kind == StrategyNodeKind::Operation &&
+                (node.action_type != static_cast<int>(node.action.type) || node.bestiary_action_index != kNoId ||
+                 !cluster_currency_qualified(node.action.type)))
+                throw StrategyEvalUnsupported("Configured cluster graph action law is not qualified");
+        }
+    }
     registry_options.authored_dominance = authored_dominance;
     for (const StrategyNode& node : strategy.nodes) {
         if (node.kind != StrategyNodeKind::Operation ||
@@ -1482,7 +1505,7 @@ EvalModel derive_model(
                 all_conditions_admitted &= uniform_removal_condition_admitted(edge.condition);
     }
     const bool certified_uniform_removal =
-        options.use_exact_exchangeable_family_compression &&
+        !configured_cluster && options.use_exact_exchangeable_family_compression &&
         clean_start_carrier && strategy.start_item.implicit_count == 0 &&
         strategy.start_item.quality == 0 &&
         strategy.start_item.lifecycle == PC_ITEM_LIVE &&
@@ -1496,7 +1519,7 @@ EvalModel derive_model(
         all_conditions_admitted && uniform_removal_observations_admitted(node_observations) &&
         prove_uniform_removal_goals(*session, goal).has_value();
     const bool semantic_strict_carrier =
-        authored_dominance || !clean_start_carrier ||
+        configured_cluster || authored_dominance || !clean_start_carrier ||
         direct_router_observes_fresh_exclusion ||
         (operation_preserves_fresh_exclusion && !certified_uniform_removal);
     /* This flag selects an exact calculator implementation, not a solver-row

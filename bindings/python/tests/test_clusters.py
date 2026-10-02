@@ -25,6 +25,7 @@ def test_configured_native_pool_domain_level_and_cache_parity(size, level):
     with load_data(ARTIFACT) as data, data.create_cluster_session(BASE + size, level, passive_key=KEYS[size], passive_count=COUNTS[size]) as session:
         conf = session.cluster_configuration
         assert (conf["passive_key"], conf["passive_count"], conf["item_level"]) == (KEYS[size], COUNTS[size], level)
+        assert conf["jewel_socket_count"] == {"Small": 0, "Medium": 1, "Large": 2}[size]
         item = session.create_item("rare")
         with session.create_action_context(1) as warm, session.create_action_context(1) as fresh:
             initial = list(warm.debug_pool(item, "exalt"))
@@ -103,9 +104,9 @@ def test_unconfigured_unknown_and_unapproved_actions_are_explicit():
         with data.create_cluster_session(BASE + "Small", 84, passive_key=KEYS["Small"], passive_count=2) as session, session.create_action_context(0) as ctx:
             item = session.create_item("normal")
             with pytest.raises(EngineError, match="not yet approved"):
-                ctx.apply(item, "alchemy")
+                ctx.apply(item, "vaal")
             with pytest.raises(EngineError, match="not yet approved"):
-                session.calculate_currency(item, "alchemy")
+                session.calculate_currency(item, "vaal")
 
 
 @pytest.mark.parametrize("size", KEYS)
@@ -142,3 +143,49 @@ def test_small_second_notable_and_full_side_are_refused_by_native_editor():
         assert item._state.prefix_count == 2
         with pytest.raises(EngineError):
             item.add_mod(notables[1])
+
+
+@pytest.mark.parametrize("size", KEYS)
+@pytest.mark.parametrize("action,rarity,ordinary", [("foulborn_augment", "magic", "augment"), ("foulborn_regal", "magic", "regal"), ("foulborn_exalt", "rare", "exalt")])
+def test_foulborn_uses_current_native_culling_pool(size, action, rarity, ordinary):
+    with load_data(ARTIFACT) as data, data.create_cluster_session(BASE + size, 84, passive_key=KEYS[size], passive_count=COUNTS[size]) as session, session.create_action_context(23) as ctx:
+        item = session.create_item(rarity)
+        # Occupied native identities alter available tiers/groups before culling.
+        mod = next(session.mod_info(r["session_mod_id"]) for r in ctx.debug_pool(item, ordinary) if session.mod_info(r["session_mod_id"]).side == "suffix")
+        item.add_mod(mod, fractured=True)
+        prepared = item.copy()
+        if ordinary == "regal": prepared._state.rarity = 2
+        pool = list(ctx.debug_pool(prepared, action, side="prefix" if rarity == "magic" and ordinary != "regal" else None))
+        target = session.mod_info(pool[0]["session_mod_id"])
+        goal = {"rarity": "rare" if ordinary != "augment" else "magic", "allow_extra_modifiers": True,
+                "slots": [{"family_mod_key": target.key, "min_tier": max(session.mod_info(r["session_mod_id"]).family_tier_index for r in pool if session.mod_info(r["session_mod_id"]).family_id == target.family_id)}], "actions": ["scour"], "automatic_candidates": False}
+        total = sum(r["final_weight"] for r in pool)
+        expected = sum(r["final_weight"] for r in pool if session.mod_info(r["session_mod_id"]).family_id == target.family_id) / total
+        before = bytes(item._state)
+        result = session.calculate_currency(item, action, goal)
+        assert result["supported"] and result["legal"]
+        assert result["success_probability"] == pytest.approx(expected, abs=1e-12)
+        assert bytes(item._state) == before
+        assert ctx.apply(item, action).applied
+        assert item.fractured_mod_ids == (mod.session_mod_id,)
+        with pytest.raises(EngineError, match="disabled family"):
+            session.calculate_currency(prepared, action, {**goal, "disabled_action_families": ["foulborn"]})
+
+
+@pytest.mark.parametrize("size", KEYS)
+def test_cluster_rare_target_is_not_clamped_ordinary_count(size):
+    with load_data(ARTIFACT) as data, data.create_cluster_session(BASE + size, 75, passive_key=KEYS[size], passive_count=COUNTS[size]) as session, session.create_action_context(37) as ctx:
+        normal = session.create_item("normal")
+        identity = session.cluster_configuration
+        result = session.calculate_currency(normal, "alchemy", {"rarity": "rare", "slots": [], "allow_extra_modifiers": True})
+        counts = {3: 0.0, 4: 0.0}
+        for row in result["outcomes"]: counts[row["prefixes"] + row["suffixes"]] += row["probability"]
+        assert counts == pytest.approx({3: .65, 4: .35}, abs=1e-12)
+        observed = set()
+        for _ in range(64):
+            item = normal.copy()
+            assert ctx.apply(item, "alchemy").applied
+            observed.add(item.explicit_count)
+            assert item._state.prefix_count <= 2 and item._state.suffix_count <= 2
+            assert session.cluster_configuration == identity
+        assert observed == {3, 4}

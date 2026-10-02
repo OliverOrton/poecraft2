@@ -1,0 +1,18 @@
+{
+  "kind": "cluster_native_continuation_finite_qualification_v1",
+  "base_commit": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+  "source_parent": "106ab114fc811c32d115ebd0b7e874446517ea70",
+  "native_checks": 34956,
+  "authored_binding_tests": 21,
+  "timed_cases_started": false,
+  "sha256": {
+    "build/engine/poecraft_solver_benchmark.exe": "e562e6e235d8372b5df7719db4c6f1cbc98d20d69ff0ddf2fe1717952e211f61",
+    "build/engine/poecraft_engine.dll": "11da8da342535dfcd382486b5cc70af7f600f20a18d1c2c11ddd94b574ed26a2",
+    "data/compiled/current/manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "out/clusters-completion/native-expanded-build-6.log": "72f4028fdae864468f54918f39c22e9f4e91f4950d0d6c6dc414188612e65f11",
+    "out/clusters-completion/benchmark-expanded-build.log": "7ebdd03fb2f024cf5deab47a9b07d67d3ba85d0113c471b220c787d4b4e42415",
+    "out/clusters-completion/native-clusters-expanded.log": "d77a98fb82def1fe64af26be491ecf73be7f369d41f4390efc0c894a517b8611",
+    "out/clusters-completion/python-continuation-3.log": "1d272668548ca1f180926bcaab3322fdbed281ccbc2bbfb06c0738273fc8840c",
+    "out/clusters-completion/qualification-case-preflight-2.log": "fc9de65803cfd1b7cf75c0979942c0eac0ef8bab63de09f0ad654575a15e95b7"
+  }
+}

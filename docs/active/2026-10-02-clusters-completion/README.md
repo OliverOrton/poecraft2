@@ -47,7 +47,7 @@ Downloaded source evidence is `out/clusters-completion/coe-package.js`, raw
 SHA256 `faa6a774f71e32ec261b754a22544826459309e0f894d95db717d6bbaa40f639`.
 Only compact cited facts are retained here; no external game data are imported.
 
-## Retained implementation and qualification
+## Historical seven-action checkpoint: implementation and qualification
 
 The additive C ABI creates an immutable configured session from the frozen
 artifact; the old unconfigured entry point remains refused. Python and WASM use
@@ -102,7 +102,7 @@ and the rerun exits 0 with both groups passing, followed by passing TypeScript.
 All failed and passing logs remain under `out/clusters-completion/`; they do not confer law
 adoption or qualification beyond their stated scope.
 
-## Remaining acceptance and review
+## Historical seven-action checkpoint: remaining acceptance and review
 
 Full end-to-end cluster mechanics are **not complete**. Owner review must select
 the socket/count model and rare outcome law/scope in the packet above. Then
@@ -131,3 +131,94 @@ source, input and log hashes are in [qualification.json](qualification.json).
 All owned selected commands have completed, with no solver/Simulator process
 or build survivor. Parent review of unresolved laws remains required before
 full completion; this checkpoint supplies no merge/push/deployment authority.
+
+
+## Coordinated continuation: approved laws and exact carrier
+
+Oliver approved continuation, full mechanics/output completion and local tests.
+At 18:43 UTC on October 2 the parent relayed Oliver's approval of the CoE cluster
+65% three / 35% four rare-total model for Alchemy/Chaos and standard Fossil/Harvest
+rare portions, plus modern non-unique sockets Large two / Medium one / Small zero.
+Oliver separately selected ordinary reforges 8:3:1; that owner edits the original
+`rare_count(ActionContextImpl&)` in `actions_basic.cpp`. Cluster code wraps it with
+`configured_rare_count`, sampling cluster totals directly and delegating outside.
+Fixed-count laws stay fixed. Memory stochastic laws remain unapproved.
+
+The parent released two serial Magic-only Small-life/Fettle qualification runs:
+ilvl75, two passives, empty Magic original root, extras allowed Magic target,
+only Alteration/Augment/Annul, fixed disclosed prices, no private flags. Each has
+60s requested Finish, 90s native watchdog, 105s host cleanup; 50,000 states,
+250,000 rows, 2,000,000 transitions and 128MiB owned solver/evaluator caps.
+The existing corpus runner/worker owns supervision, cancellation and telemetry.
+Qualification inputs are in `qualification-cases/`; quotes are Alteration .18,
+Augment .10, Annul 3 chaos, explicitly not refreshed market data. No Simulator
+or timing claim is requested. Each exported original-root graph must receive
+independent native cost/distribution/properness evaluation.
+
+### Sufficient-state argument and boundaries
+
+An installed notable's canonical added tag changes later pools. Thus arbitrary
+junk members cannot represent one another in a continuation. The existing
+CalcContext singleton-identity layout is the selected owner: every explicit ID,
+side and crafted/fractured flag is retained, along with supported item flags.
+The native full exclusion relation and installed added-tag union are deterministic
+functions of that identity. Immutable base/ilvl/passive key/count bind the context
+and strategy/checkpoint transport. Roots and every successor are validated and
+projected/materialized with an exact structural round trip. Numeric roll values
+are unobserved by these actions, predicates, legality and prices; permutations
+of slots are unobserved and native removal is uniform over eligible slots.
+Therefore equal retained states give equal legality, cost, terminal observations
+and weighted successor-class laws for the admitted operations. This argument
+extends neither allocation/pathing nor an approximate ordinary quotient.
+
+Single-action Calculator may additionally merge **within addition stages only**
+when rarity/counts/flags, the complete native blocker bitset, installed-tag
+signature, pool-blocking metamods and exact terminal observation agree. The next
+pool and each resulting equivalence token agree. No removal/continuation reads a
+chosen representative; final rows emit before physical frontier allocation.
+Fossil specials are inside the native completed-outcome visitor for every
+consumer. Whole-row resource/unsupported failure exposes no partial probability.
+Visitor frontier allocations are conservatively checked before allocation,
+including against the continuation caller's owned-byte limit.
+
+Authored evaluation admits supported original-root structural graphs only;
+external continuation/provenance entries, resource/Bestiary/Restart programmes,
+strands, retained implicit/enchantment/quality/equipment-socket/influence context,
+invalid rarity capacity and owner-unapproved dual locks refuse. Fossil-created
+implicit context refuses continuation of the entire row. Gated direct-repeat
+optimization is disabled for clusters. Current retains TargetNeutralZero authority
+and refuses positive gap requests; automatic programmes and goal-progress gated
+quotients remain unqualified. Native carrier admission is not a checked upper or
+an optimality claim. Finder and full product acceptance remain open until tested.
+
+The existing Foulborn contract shares ordinary legality/side selection and has
+no cluster-class exclusion. Its culling follows native current-pool filtering.
+Harvest Augment, resistance conversion and remove-crafted laws are read directly
+from their existing native owners. Resistance retries restore impossible sources;
+the first viable source is uniform among viable sources, with the native
+same-required-level, target-classification and exclusion checks. No new law is
+introduced. Corruption/unique/new currency operations are explicit remaining
+acceptance items, not guessed outcomes.
+
+### Native finite qualification checkpoint
+
+Two-job native Tests and Benchmark builds pass. Configured native tests pass
+**34,956 checks** including **176 admitted tuples**, six legacy refusals, fixed
+sockets and positive Current carrier/row admission. Focused authored binding
+checks pass **21 tests**: original-root Fettle one-action probabilities against
+independent native pools, retained flags/identity, proper low-ilvl renewal cost,
+nonapplication/currency accounting, scope/context/configuration refusals and an
+explicit high-ilvl physical-renewal transition cap. The earlier expanded binding
+run passed 61 with four test-harness/cap issues; corrected continuation checks
+retain the cap outcome. New rare-count sampled/Calculator and Foulborn checks
+passed in that run; broader final binding qualification remains due.
+
+Build iterations exposed missing `<map>` and typed `make_unique` vector arguments;
+those were repaired before the passing builds. Evaluator direct-repeat probing
+also attempted the ordinary gated kernel; cluster evaluation now explicitly uses
+the complete native row. Logs remain under `out/clusters-completion/`. Corpus
+preflight initially pinned archived ABI2 and now correctly pins available ABI3;
+**two specifications validate**. No timed case has run at this checkpoint.
+
+UI continuation work is in progress and not covered by this native checkpoint.
+Frozen SQLite/runtime/prices remain unchanged; integration owns merges/pushes.

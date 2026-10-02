@@ -19,6 +19,7 @@
 #include "json.hpp"
 #include "solver_action_family_contract.hpp"
 #include "solver_internal.hpp"
+#include "currency_outcomes.hpp"
 #include "solver_diagnostic_options.hpp"
 #include "solver_finder.hpp"
 #include "solver_dominance.hpp"
@@ -702,11 +703,6 @@ pc_result create_solver(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     *out_solver = nullptr;
-    if (session->impl->is_cluster() && !calculator_only) {
-        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
-            "Configured clusters have single-action Calculator support; Current/Finder continuation is unqualified");
-        return PC_RESULT_UNSUPPORTED_FEATURE;
-    }
     try {
         auto holder = std::make_unique<pc_solver>();
         holder->session = session->impl;
@@ -728,6 +724,14 @@ pc_result create_solver(
         solver::GoalSpec goal = parse_goal(
             *holder->session, goal_json, goal_json_size, candidates,
             registry, calculator_only);
+        if (holder->session->is_cluster() && !calculator_only) {
+            if (!goal.primitive_actions_explicit || goal.automatic_candidates || !goal.fixed_options.empty())
+                throw std::invalid_argument("Configured cluster solving requires an explicit qualified primitive scope and no automatic programmes");
+            for (const auto action : candidates)
+                if (registry.actions.at(action).synthetic || !poecraft::cluster_currency_qualified(registry.actions.at(action).params.type))
+                    throw std::invalid_argument("Configured cluster solver action law is not qualified");
+            holder->goal_proof_profile = solver::GoalProofProfile::TargetNeutralZero;
+        }
         for (const auto action : candidates) {
             if (!solver::solver_action_disabled(goal, registry.actions.at(action)) &&
                 poecraft::is_foulborn(registry.actions.at(action).params.type))
@@ -810,7 +814,8 @@ pc_result create_solver(
             !goal.primitive_actions_explicit, registry_options.automatic_dominance, std::nullopt,
             std::vector<solver::CountObservation>{},
             goal.automatic_candidates, dominance_members,
-            registry_options.automatic_dominance);
+            registry_options.automatic_dominance, false, false, false, false,
+            nullptr, false, false, calculator_only);
         *out_solver = holder.release();
         clear_error(out_error);
         return PC_RESULT_OK;
@@ -1747,6 +1752,18 @@ pc_result pc_solver_get_action_info(
     return PC_RESULT_OK;
 }
 
+pc_result pc_solver_cluster_action_support(pc_solver_handle solver,
+    uint32_t action_index, uint32_t* out_support, pc_error_info* out_error) {
+    if (!solver || !out_support) { set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument"); return PC_RESULT_INVALID_ARGUMENT; }
+    const auto& actions = solver->calc->registry().actions;
+    if (action_index >= actions.size()) { set_error(out_error, PC_RESULT_NOT_FOUND, "action index out of range"); return PC_RESULT_NOT_FOUND; }
+    const auto& action = actions[action_index];
+    *out_support = !solver->session->is_cluster() ? UINT32_MAX :
+        action.synthetic ? (action.id == "restart" ? 2u : 0u) :
+        poecraft::cluster_currency_qualified(action.params.type) ? 7u : 0u;
+    clear_error(out_error); return PC_RESULT_OK;
+}
+
 pc_result pc_solver_find_action(
     pc_solver_handle solver,
     const char* action_id,
@@ -2071,7 +2088,9 @@ pc_result pc_calc_create_inspector(pc_session_handle session,
         auto registry = solver::build_action_registry(*holder->session, options);
         const auto chaos = registry.index_by_id.at("chaos");
         holder->calc = std::make_unique<solver::CalcContext>(holder->session,
-            solver::GoalSpec{}, std::move(registry), std::vector<std::uint32_t>{chaos}, true);
+            solver::GoalSpec{}, std::move(registry), std::vector<std::uint32_t>{chaos},
+            true, true, false, std::nullopt, std::vector<solver::CountObservation>{}, false,
+            std::vector<std::uint64_t>{}, false, false, false, false, false, nullptr, false, false, true);
         holder->goal_proof_profile = solver::GoalProofProfile::TargetNeutralZero;
         *out_solver = holder.release();
         clear_error(out_error);
@@ -2096,7 +2115,7 @@ pc_result pc_calc_action_outcomes(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     *out_count = 0;
-    if (solver->session->is_cluster()) {
+    if (solver->session->is_cluster() && solver->inspection_only) {
         set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
             "Configured cluster odds require the concrete currency Calculator endpoint; legacy continuation rows are unqualified");
         return PC_RESULT_UNSUPPORTED_FEATURE;
@@ -2612,9 +2631,9 @@ pc_result pc_solver_project_item(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    if (solver->session->is_cluster()) {
+    if (solver->session->is_cluster() && solver->inspection_only) {
         set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
-            "Configured cluster continuation-state projection is unqualified");
+            "Configured cluster terminal-only Calculator cannot project continuation states");
         return PC_RESULT_UNSUPPORTED_FEATURE;
     }
     try {
@@ -3045,8 +3064,6 @@ pc_result pc_strategy_evaluate(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     try {
-        if (strategy->impl->session->is_cluster())
-            throw solver::StrategyEvalUnsupported("Configured cluster exact strategy continuation is unqualified");
         solver::StrategyEvalWork work(
             strategy->impl, strategy_eval_options(options));
         while (!work.progress().done) work.step(4096);
@@ -3079,8 +3096,6 @@ pc_result pc_strategy_eval_begin(
     }
     *out_work = nullptr;
     try {
-        if (strategy->impl->session->is_cluster())
-            throw solver::StrategyEvalUnsupported("Configured cluster exact strategy continuation is unqualified");
         auto work = std::make_unique<pc_strategy_eval_work>();
         work->impl = std::make_unique<solver::StrategyEvalWork>(
             strategy->impl, strategy_eval_options(options));

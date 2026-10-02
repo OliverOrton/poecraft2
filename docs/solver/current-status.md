@@ -57,12 +57,15 @@ Pause after the current batch; no fresh programme or deployment is selected.
 ## Configured cluster boundary (2026-10-02)
 
 The [cluster continuation](../active/2026-10-02-clusters-completion/README.md)
-adds native configured affliction pools and concrete single-action Calculator
-enumeration. Configured cluster Current/Finder creation, authored exact
-strategy evaluation, legacy continuation rows and state projection are explicitly
-refused. Native modifier-added tags are not added to an existing solver quotient;
-terminal-only observation merging asserts no subsequent continuation or proof.
-Full cluster solver support remains an acceptance item for parent coordination.
+now qualifies a native full explicit-identity structural carrier and original-root
+authored evaluation, including existing Foulborn laws. Oliver adopted the cluster
+65/35 three/four rare-count model and fixed modern non-unique passive sockets.
+Positive Current carrier admission passes with explicit qualified primitive scope;
+automatic programmes and ordinary gated retry quotients refuse. Current keeps a
+zero-only global lower; no positive lower or closure is extended. Finder/Current
+export/check/product qualification remains open pending the coordinated serial
+Magic cases. Inspection-only legacy continuation rows/projection still refuse.
+
 
 ## Private paid-root Foulborn finite delta (2026-10-02)
 

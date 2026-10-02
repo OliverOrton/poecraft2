@@ -1,0 +1,34 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "cluster-magic-fettle-qualification-20261002",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 3,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-b458174874efbe64",
+    "source_data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+    "game_data_sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+    "strings_sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+  },
+  "comparison_profile": {
+    "id": "native-wasm-solver-v1",
+    "status": "must_match",
+    "structural_counts": "must_match",
+    "v_start_absolute_tolerance": 1e-07,
+    "phase_timings": "reported_not_machine_gated",
+    "memory": "reported_not_owner_ceiling",
+    "directional_large_pass_geometric_mean_speedup": 5.0,
+    "directional_peak_memory_reduction": 2.0,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250
+  },
+  "owner_decisions": [
+    "Oliver approved this configured cluster continuation and the parent released two serial Magic-only qualification runs: 60s Finish, 90s native watchdog,105s host; no private flags; independent original-root evaluation, no Simulator or timing claim.",
+    "Qualification prices are fixed disclosed quotes (Alteration 0.18, Augment 0.10, Annul 3.0 chaos), not market or refreshed frozen-economy claims."
+  ],
+  "cases": [
+    "cluster-magic-fettle-current.json",
+    "cluster-magic-fettle-strategy_finder.json"
+  ]
+}
