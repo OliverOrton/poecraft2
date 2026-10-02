@@ -73,3 +73,5 @@ _pcw_bestiary_goal_calc
 _pcw_item_edit
 
 _pcw_solver_protected_scour_diagnostic
+
+_pcw_hinekora

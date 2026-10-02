@@ -96,6 +96,13 @@ export interface CraftAction {
     tier?: number;
 }
 
+export interface HinekoraInfo {
+    active: boolean;
+    currency?: CraftAction;
+    preview?: unknown;
+    cost_keys: string[];
+}
+
 export type AffixSide = "both" | "prefix" | "suffix";
 
 export interface ActionOutcome {
@@ -557,6 +564,7 @@ export interface CalculatorItemGoal extends SolverGoal {
 }
 
 export interface ItemEdit {
+    memory_strands?: number;
     add_explicit?: string;
     fractured?: boolean;
     rarity?: "normal" | "magic" | "rare";

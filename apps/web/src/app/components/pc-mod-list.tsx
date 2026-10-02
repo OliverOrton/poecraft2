@@ -29,6 +29,7 @@ export interface SlotMod {
     fractured: boolean;
     crafted: boolean;
     veiled?: boolean;
+    rollValues?: number[];
 }
 
 export interface ConcreteModListModel {
@@ -158,6 +159,7 @@ export function ItemCard({ model, slotHistory, onFracture, onTierChange, onRemov
                 <span className="pc-item-heading">
                     <span className={`pc-rarity pc-rarity-${model.rarity}`}>{model.rarity}</span>
                     {corrupted && <span className="pc-item-corrupted">Corrupted</span>}
+                    {model.kind === "concrete" && !!(model.itemFlags & 16) && <span>Foreseeing</span>}
                     {model.kind === "concrete" && !!model.memoryStrands && <span>Memory strands: {model.memoryStrands}</span>}
                     {model.kind === "concrete" && !!model.lifecycle && <span>{model.lifecycle === 1 ? "Consumed" : "Destroyed"}</span>}
                     {target && <span className="pc-item-target-badge">TARGET</span>}
@@ -242,6 +244,7 @@ function ConcreteSlot({ mod, side, index, onFracture, onRemove }: {
         <SlotMeta side={side} index={index} tier={mod.tierIndex ? `T${mod.tierIndex}` : mod.crafted ? "C" : "—"} />
         <div className="pc-mod-slot-content">
             {mod.veiled ? <VeiledInscription index={index} /> : <ModLines lines={mod.textLines.length ? mod.textLines : [mod.key]} />}
+            {!!mod.rollValues?.length && <div className="pc-mod-slot-tags">Roll values: {mod.rollValues.join(", ")}</div>}
             {(!!tags.length || mod.fractured || mod.crafted) && <div className="pc-mod-slot-tags">
                 {tags.map(tag => <span key={tag}>{tag}</span>)}
                 {mod.fractured && <span className="pc-mod-state is-fractured">Fractured</span>}

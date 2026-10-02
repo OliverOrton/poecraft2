@@ -357,9 +357,9 @@ export class EngineClient {
         return this.call("multiItemApply", {context, request});
     }
 
-    async importItem(state: unknown, session = 0): Promise<number> {
+    async importItem(state: unknown, session = 0, context = 0): Promise<number> {
         const { item } = await this.call<{ item: number }>("importItem", {
-            state, session,
+            state, session, context,
         });
         return item;
     }
@@ -390,6 +390,14 @@ export class EngineClient {
         spec: { modId: number; side: "prefix" | "suffix" },
     ): Promise<void> {
         return this.call<void>("setModFractured", { item, ...spec });
+    }
+
+    hinekoraInfo(context: number, item: number, session: number): Promise<import("./engine-protocol").HinekoraInfo> {
+        return this.call("hinekora", {context, item, session, operation: "inspect"});
+    }
+
+    createHinekoraLock(context: number, item: number, session: number, currency: CraftAction): Promise<import("./engine-protocol").HinekoraInfo> {
+        return this.call("hinekora", {context, item, session, operation: "create", currency});
     }
 
     async apply(

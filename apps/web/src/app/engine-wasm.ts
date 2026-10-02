@@ -270,9 +270,9 @@ export class EngineBindings {
         return this.callJson("pcw_multi_item_apply", ["number", "string"], [context, JSON.stringify(request)]) as unknown as import("./engine-protocol").MultiItemResult;
     }
 
-    importItem(state: unknown, session = 0): number {
-        return this.callJson("pcw_item_import", ["string", "number"], [
-            JSON.stringify(state), session,
+    importItem(state: unknown, session = 0, context = 0): number {
+        return this.callJson("pcw_item_import", ["string", "number", "number"], [
+            JSON.stringify(state), session, context,
         ]).item as number;
     }
 
@@ -314,6 +314,11 @@ export class EngineBindings {
             ["number", "string"],
             [item, JSON.stringify({ mod_id: spec.modId, side: spec.side })],
         );
+    }
+
+    hinekora(context: number, item: number, session: number, operation: "create" | "inspect", currency?: CraftAction): import("./engine-protocol").HinekoraInfo {
+        return this.callJson("pcw_hinekora", ["number", "number", "number", "string"],
+            [context, item, session, JSON.stringify({operation, currency_json: currency && JSON.stringify(currency)})]) as unknown as import("./engine-protocol").HinekoraInfo;
     }
 
     apply(context: number, item: number, action: CraftAction): ActionOutcome {

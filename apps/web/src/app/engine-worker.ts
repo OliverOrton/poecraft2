@@ -913,7 +913,7 @@ async function dispatch(
         case "multiItemApply":
             return bindings.multiItemApply(params.context as number, params.request);
         case "importItem":
-            return { item: bindings.importItem(params.state, params.session as number ?? 0) };
+            return { item: bindings.importItem(params.state, params.session as number ?? 0, params.context as number ?? 0) };
         case "addMod":
             bindings.addMod(params.item as number, params.session as number, {
                 key: params.key as string,
@@ -935,6 +935,9 @@ async function dispatch(
                 side: params.side as "prefix" | "suffix",
             });
             return {};
+        case "hinekora":
+            return bindings.hinekora(params.context as number, params.item as number, params.session as number,
+                params.operation as "create" | "inspect", params.currency as CraftAction | undefined);
         case "apply":
             return {
                 result: bindings.apply(

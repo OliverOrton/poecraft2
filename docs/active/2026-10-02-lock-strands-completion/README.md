@@ -1,5 +1,12 @@
 # Lock and memory-strand completion
 
+Current batch is complete for the supported fixed-request Emulator slice.
+[Final product receipt](product-checkpoint.json) pins source/WASM/input identities
+and passing checks. Ordinary Lock solver/strategy admission, multicurrency and
+veiled disclosure remain held; memory stochastic completion awaits explicit
+Oliver approval. No new programme starts after this batch. Earlier checkpoints
+below are historical stages and must not be integrated without the final chain.
+
 Selected explicitly by Oliver through the integration owner. Baseline:
 `b794e00960bc9bb83ae3919c16fbc2aede52f67c`; branch
 `dot/lock-strands-completion-20261002`; sibling worktree
@@ -163,3 +170,34 @@ projection and opaque portable checkpoint; no guessed probability law is needed
 or approved. [Receipt](native-disclosure-checkpoint.json) pins this native stage.
 Matching WASM and final web qualification are the remaining current-batch steps.
 No new research or mechanics expansion will start after closure.
+
+## Qualified product closure
+
+Engine/shared/header builds pass at two jobs; 64 focused Python contracts pass
+on the completed DLL. Matching WASM passes at two compiler/linker jobs with all
+178 scoped source hashes unchanged. Normal web `build:data` validates the frozen
+runtime and ABI 3; `tsc --noEmit` and all nine `npm run test:lock` contract files
+pass. Real worker round trips cover paid preview persistence and inspection,
+exact selected commit, no free resampling, stale session/item failures, atomic
+failed imports, Undo/Redo counts, consumed-versus-refused events including
+identical visible results, context cleanup/recovery, native lifetime release,
+strand edits and veiled disclosure refusal. UI contracts keep the original
+complete selected request when controls change, show read-only numerical values,
+charge one Lock separately from the actual currency, and keep missing prices
+visibly unpriced. No cosmetic redesign or frozen data/prices change is included.
+
+The fixed-request foresight is an Emulator information-state API, not ordinary
+Calculator/solver/authored Simulator action admission. Native guards preserve
+that boundary. Strand count authoring is operational; Remembrance, stochastic
+consumption/bias and Unravelling destination/upgrade laws remain unavailable.
+The [empirical observations](empirical-observations.json), existing source notes
+and earlier proposal are approval evidence, not activated distributions. No new
+research pass or guessed joint law is added. Veiled reserve mechanics could use
+the existing law, but a portable visible/hidden disclosure contract remains held
+as described in the [review](veiled-disclosure-review.md).
+
+Full acceptance, full npm test, long solver runs and rendered UI review were not
+run; the focused changed-layer checks resolve this batch's acceptance criteria.
+Earlier failed scratch logs are retained and identified in the receipt. Parent
+owns integration merges/push and shared-file reconciliation. This branch makes
+no independent merge, push or deployment and pauses after local closure.

@@ -33,6 +33,12 @@ export interface CraftControlsModel {
     checkpoint?: boolean;
     memoryStrands?: number;
     onMemoryStrands?: (count: number) => void;
+    lockNext?: boolean;
+    lockActive?: boolean;
+    lockCurrency?: string;
+    lockPreview?: ConcreteModListModel;
+    onLockNext?: (enabled: boolean) => void;
+    onLockCommit?: () => void;
     donors?: CatalogEntry[];
     donorModel?: ConcreteModListModel;
     onAwakener?: () => void;
@@ -174,7 +180,17 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
             onReveal={() => m.onRevealUnveil?.()} onSelect={key => m.onValue("unveil", key)}
             onConfirm={() => m.onConfigured("unveil")} onVeiledCurrency={() => m.onPanel("veiled")} />; break;
     }
-    return <><div className="pc-craft-panel-tabs">{PANELS.map(([key, label, icon]) => <button key={key} data-craft-panel={key}
+    return <>{!calculator && m.onLockNext && <section aria-label="Hinekora's Lock" className="pc-material-panel">
+        <label><input type="checkbox" checked={Boolean(m.lockNext)} disabled={m.lockActive}
+            onChange={event => m.onLockNext?.(event.target.checked)} />Use one Hinekora's Lock before the next currency</label>
+        <span className="pc-help">Choose a supported currency and its settings below to reserve a fixed preview. Inspection does not spend that currency. Veiled currencies and items awaiting Unveil are unavailable for Lock previews.</span>
+        {m.lockActive && <>
+            <span>Foreseen: {m.lockCurrency}</span>
+            {m.lockPreview && createElement("pc-mod-list", {ref: (element: PcModList | null) => { if (element && m.lockPreview) element.setModel({...m.lockPreview, readOnly: true}); }})}
+            <button data-lock-commit onClick={m.onLockCommit}>Apply foreseen currency</button>
+            <span className="pc-help">Decline by leaving the preview open. Another stochastic currency is unavailable while this preview is live; commit it or change the item. Cross-currency previews and Lock strategies are unavailable.</span>
+        </>}
+    </section>}<div className="pc-craft-panel-tabs">{PANELS.map(([key, label, icon]) => <button key={key} data-craft-panel={key}
         className={key === m.panel ? "is-active" : ""} onClick={() => m.onPanel(key)}><GameIcon assetKey={"action:" + icon} />{label}</button>)}
         {calculator && <span className="pc-calc-selected">{m.selectedAction ? "Selected: " + m.selectedLabel : "No action selected"}</span>}
     </div><div className="pc-craft-panel-body">{panel}</div></>;

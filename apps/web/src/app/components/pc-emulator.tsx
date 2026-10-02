@@ -2,7 +2,7 @@ import { PcCraftControls, type CraftPanel } from "./pc-craft-controls";
 import { disposeReact, renderReact } from "../react-host";
 import { BaseSelectionShell, EmulatorShell } from "./document-shells";
 import { EditHistory, historyShortcut } from "../edit-history";
-import { resolveCraftValues } from "../craft-choices";
+import { resolveCraftValues, craftActionLabel } from "../craft-choices";
 import { addCraftSpend, emptyCraftSpend, NativeCraftCosts } from "../craft-costs";
 import type { PcCraftSpend } from "./pc-craft-spend";
 import "./pc-craft-spend";
@@ -66,6 +66,9 @@ export class PcEmulator extends HTMLElement {
     private bestiaryActions: BestiaryActionInfo[] = [];
     private checkpointPresent = false;
     private memoryStrands = 0;
+    private lockNext = false;
+    private lockInfo: import("../engine-protocol").HinekoraInfo | null = null;
+    private lockPreview: ConcreteModListModel | undefined;
     private donors: ItemStashRecord[] = [];
     private donorModel: ConcreteModListModel | undefined;
 
@@ -174,7 +177,7 @@ export class PcEmulator extends HTMLElement {
             return;
         }
         const item = draft?.state
-            ? await this.client.importItem(draft.state, this.session)
+            ? await this.client.importItem(draft.state, this.session, this.context)
             : await this.client.createItem(this.session, {
                 rarity: this.rarity,
                 withImplicits: true,
@@ -370,16 +373,20 @@ export class PcEmulator extends HTMLElement {
     }
 
     private async setMemoryStrands(count: number): Promise<void> {
-        const state = await this.client.exportItem(this.item, this.session) as Record<string, unknown>;
-        const replacement = await this.client.importItem({...state, memory_strands: count}, this.session);
-        const old = this.item;
-        this.item = replacement;
-        await this.client.closeItem(old);
+        await this.client.editItem(this.item, this.session, {memory_strands: count});
         this.pendingHistoryEntry = {action: "Set memory strands", applied: true, added: 0, removed: 0, costKeys: [], detail: String(count)};
         await this.markChanged();
     }
 
     private async applyConfiguredAction(action: CraftAction): Promise<void> {
+        if (this.lockNext && !this.lockInfo?.active) {
+            const locked = await this.client.createHinekoraLock(this.context, this.item, this.session, action);
+            this.lockNext = false;
+            this.pendingHistoryEntry = {action: "Hinekora's Lock", applied: true, added: 0, removed: 0,
+                costKeys: locked.cost_keys, detail: `Foresee ${action.type}; currency not spent`};
+            await this.markChanged();
+            return;
+        }
         // Pricing metadata must never prevent an otherwise supported craft.
         const keys = await this.craftCosts.forAction(this.client, this.session, action).catch(() => undefined);
         const outcome = await this.client.apply(this.context, this.item, action);
@@ -506,11 +513,13 @@ export class PcEmulator extends HTMLElement {
         try {
             if (differentBase) {
                 session = await this.client.createSession(this.dataId, snapshot.base, snapshot.itemLevel);
-                context = await this.client.createContext(session, 0);
                 const count = await this.client.modCount(session);
                 mods = await Promise.all(Array.from({length: count}, (_, id) => this.client.modInfo(session, id)));
             }
-            item = await this.client.importItem(snapshot.state, session || this.session);
+            // Prepare foresight in a separate context so failed resource/history
+            // commits cannot retire the current paid preview.
+            context = await this.client.createContext(session || this.session, 0);
+            item = await this.client.importItem(snapshot.state, session || this.session, context);
             await this.client.itemInfo(item, session || this.session);
             if (this.disposed) return;
             const oldResources = this.undoHistory.at(this.undoHistory.cursor)?.resources ?? [];
@@ -523,18 +532,18 @@ export class PcEmulator extends HTMLElement {
             item = 0;
             if (differentBase) {
                 this.session = session;
-                this.context = context;
-                session = context = 0;
+                session = 0;
                 this.modCache = mods;
             }
+            this.context = context; context = 0;
             this.base = snapshot.base;
             this.itemLevel = snapshot.itemLevel;
             this.undoHistory.go(index);
             this.spend = frame.spend ?? {counts: {}, untracked: index > 0};
             this.dirty = this.savedStateKey !== JSON.stringify(snapshot);
             await this.client.closeItem(previous.item);
+            await this.client.closeContext(previous.context);
             if (differentBase) {
-                await this.client.closeContext(previous.context);
                 await this.client.closeSession(previous.session);
             }
             this.syncControls();
@@ -689,6 +698,11 @@ export class PcEmulator extends HTMLElement {
 
     private async refresh(): Promise<void> {
         const info = await this.client.itemInfo(this.item, this.session);
+        this.lockInfo = await this.client.hinekoraInfo(this.context, this.item, this.session);
+        this.lockPreview = this.lockInfo.active && this.lockInfo.preview
+            ? {...await readItemCard(this.client, this.dataId, this.catalog,
+                {base: this.base, itemLevel: this.itemLevel, state: this.lockInfo.preview}, "Foreseen currency result"), readOnly: true}
+            : undefined;
         this.checkpointPresent = Boolean(info.checkpoint_present);
         this.memoryStrands = Number(info.memory_strands ?? 0);
         this.rarity = info.rarity as string;
@@ -732,7 +746,7 @@ export class PcEmulator extends HTMLElement {
         const poolAction: CraftAction["type"] =
             tab === "implicit" ? "chaos" : tab === "prefix" ? "chaos" : "chaos";
         const pool =
-            (tab === "implicit" || tab === "enchantment") || Number(info.memory_strands ?? 0) > 0 || Number(info.lifecycle ?? 0) !== 0 || ((info.enchantment_mod_ids as number[]) ?? []).length > 0
+            (tab === "implicit" || tab === "enchantment") || Number(info.memory_strands ?? 0) > 0 || (Number(info.item_flags ?? 0) & 16) !== 0 || Number(info.lifecycle ?? 0) !== 0 || ((info.enchantment_mod_ids as number[]) ?? []).length > 0
                 ? null
                 : await this.client.debugPool(this.context, this.item, {
                       action: { type: poolAction },
@@ -833,7 +847,7 @@ export class PcEmulator extends HTMLElement {
         this.querySelector<PcModPool>("pc-mod-pool")?.setInteractionMode(this.awaitingUnveilChoice ? "inspect" : "direct");
         this.querySelector<PcModList>("pc-mod-list")?.setReadOnly(this.awaitingUnveilChoice);
         this.querySelectorAll<HTMLButtonElement>(
-            "button[data-cmd], button[data-craft-panel], button[data-simple-action], button[data-config-action], button[data-bestiary-action], button[data-fossil-add], button[data-fossil-remove]",
+            "button[data-lock-commit], button[data-cmd], button[data-craft-panel], button[data-simple-action], button[data-config-action], button[data-bestiary-action], button[data-fossil-add], button[data-fossil-remove]",
         ).forEach((button) => {
             const locked = this.awaitingUnveilChoice &&
                 button.dataset.configAction !== "unveil" && button.dataset.craftPanel !== "unveil";
@@ -942,6 +956,16 @@ export class PcEmulator extends HTMLElement {
             checkpoint: this.checkpointPresent,
             memoryStrands: this.memoryStrands,
             onMemoryStrands: count => { void this.guard(() => this.setMemoryStrands(count)); },
+            lockNext: this.lockNext, lockActive: this.lockInfo?.active,
+            lockCurrency: this.lockInfo?.currency && [craftActionLabel(this.lockInfo.currency.type),
+                this.lockInfo.currency.essence && (this.catalog.essences.find(entry => entry.key === this.lockInfo?.currency?.essence)?.name ?? this.lockInfo.currency.essence),
+                this.lockInfo.currency.influence, this.lockInfo.currency.tier && `Tier ${this.lockInfo.currency.tier}`].filter(Boolean).join(" / "),
+            lockPreview: this.lockPreview,
+            onLockNext: enabled => { this.lockNext = enabled; this.renderMechanicControls(); },
+            onLockCommit: () => {
+                const currency = this.lockInfo?.currency;
+                if (currency) void this.guard(() => this.applyConfiguredAction(currency));
+            },
             donors: this.donors.map(record => ({key: record.id, name: record.name})), donorModel: this.donorModel,
             onAwakener: () => { void this.guard(() => this.applyAwakener()); },
             unveils,

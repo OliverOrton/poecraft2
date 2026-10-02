@@ -1301,7 +1301,7 @@ export class PcCalculator extends HTMLElement {
         // Feed the goal-selection pool exactly like the Emulator feeds its
         // browser: live chaos-pool weights for the active tab.
         const pool =
-            ["implicit", "enchantment"].includes(this.modPool.getActiveTab()) || this.itemMemoryStrands > 0 || this.itemLifecycle !== 0 || this.itemEnchantments.length > 0
+            ["implicit", "enchantment"].includes(this.modPool.getActiveTab()) || this.itemMemoryStrands > 0 || (this.itemFlags & 16) !== 0 || this.itemLifecycle !== 0 || this.itemEnchantments.length > 0
                 ? null
                 : await this.client.debugPool(this.context, this.item, {
                       action: { type: "chaos" },
