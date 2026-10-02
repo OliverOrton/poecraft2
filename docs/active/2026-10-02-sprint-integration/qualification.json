@@ -1527,7 +1527,7 @@
     }
   },
   "combined_completion_batch": {
-    "status": "qualified product batch; preserved-graph comparison stopped at scope preflight; normal promotion pending",
+    "status": "product batch qualified and normally promoted; comparison stopped at finite scope preflight; paused",
     "first_build_source": "2af46a96553da64b4720ea41dec3c2ea8738dbc2",
     "admission_repair_source": "0f9dbd85",
     "checkpoint_format": 7,
@@ -1553,8 +1553,8 @@
     "excluded_first_pass": "family-contract selector omitted artifact and skipped0checks",
     "heavy_invocations_started": 0,
     "remaining": [
-      "normal main fast-forward/push and exact remote/CI status",
-      "retained S8 convergence and separate non-cap fracture artifact debt; no full-CI-green claim"
+      "remote CI pending at delivery; retain S8 convergence and separate non-cap fracture artifact debt",
+      "rendered Lock review and stopped scope-constrained strategy comparison unrun; no new programme selected"
     ],
     "qualified_native_source": "0f9dbd85a1aac7cd188695010f336e176ba0204c",
     "qualified_engine_tree": "cf7a3fb174f0c083744bb073d4d79db37bac8007",
@@ -1658,6 +1658,41 @@
       },
       "disposition": "No original request widened. Same-law control/candidate search and occupancy/recovery metrics unrun. Separate Conquest evaluation requires parent disposition of this stopped batch. No new programme or mechanics inferred. All worker process receipts survivor=false."
     },
-    "rendered_lock_review": "unrun: computer-use skill read; required node_repl/@oai/sky entry point unavailable in this execution environment. DOM/worker/native tests passed; rendered review remains Oliver/parent."
+    "rendered_lock_review": "unrun: computer-use skill read; required node_repl/@oai/sky entry point unavailable in this execution environment. DOM/worker/native tests passed; rendered review remains Oliver/parent.",
+    "delivery": {
+      "promoted_product_commit": "9730c3b731b69296850a4467df56e2baaeba1237",
+      "native_source": "0f9dbd85a1aac7cd188695010f336e176ba0204c",
+      "promoted_at_utc": "2026-10-02T21:03:28Z",
+      "remote_main_verified": "9730c3b731b69296850a4467df56e2baaeba1237",
+      "method": "normal main fast-forward and normal push",
+      "deployment": false,
+      "main_status_excluding_protected_0": "clean",
+      "overnight_head": "f08facbb93204bf721048c21b94080ab582ee9f8",
+      "owned_processes": "all build/test/preflight processes exited; no survivors",
+      "heavy_invocations_started": 0,
+      "pause_after_current_batch": true,
+      "ci_as_of_utc": "2026-10-02T21:06:02.008345+00:00",
+      "ci": [
+        {
+          "id": 37064503466,
+          "name": "Windows",
+          "status": "in_progress",
+          "conclusion": null,
+          "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37064503466"
+        },
+        {
+          "id": 37064503770,
+          "name": "Solver knowledge",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37064503770"
+        }
+      ]
+    },
+    "knowledge_lint": {
+      "status": "passed",
+      "base": "28058079f1ab95a9ab5846a6ce19f4068e742575",
+      "log": "out/sprint-continuation/final-combined-knowledge-lint.log"
+    }
   }
 }

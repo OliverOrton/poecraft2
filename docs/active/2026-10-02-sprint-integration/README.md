@@ -17,6 +17,12 @@ cleanly and the combined guards were reviewed before validation.
 
 ## Selected combined completion batch
 
+The qualified product checkpoint `9730c3b731b69296850a4467df56e2baaeba1237`
+was normally fast-forwarded and pushed to main at **21:03:28 UTC**. Remote main
+was verified equal; no deployment. Windows/solver-knowledge CI were running at
+delivery. Local qualification and inherited failures are recorded below. Owned
+processes exited; this selected batch is closed and paused.
+
 All parent-selected owner chains are integrated on this isolated branch. Source
 `2af46a96` combines approved Equipment 8:3:1, configured ClusterJewel 65:35,
 Foulborn original-root continuations, Dominance admission corrections, configured
@@ -139,13 +145,13 @@ refusal under this reduced cap. Production ownership/invariant changes await
 parent review; no convergence or proof flag is relaxed. Exact logs and the
 compact baseline classification remain in the receipt and `out/sprint-continuation`.
 
-## First staged promotion — final matching qualification
+## First staged promotion â€” final matching qualification
 
 The existing integration plus parent-approved Fracture repair is frozen for the
 first normal main promotion; none of the five newer feature branches is included.
-Final WASM built at two jobs from `fcf361f`, 17:40:41–17:47:37 UTC. SHA256:
+Final WASM built at two jobs from `fcf361f`, 17:40:41â€“17:47:37 UTC. SHA256:
 `6fb7e9c90b728bbd4b942241631ad07dbf0f354586fec010458cba658686bc39`.
-This artifact **does** include `8ef8a67`; the earlier `4c0a79…` artifact does not.
+This artifact **does** include `8ef8a67`; the earlier `4c0a79â€¦` artifact does not.
 
 The existing serial native batch plus repaired continuation selector passes
 **1,147,897 checks, zero failures**. Source-matched DLL link and **29 Python**
@@ -195,14 +201,14 @@ all satisfying masks are nonempty and contain only explicit prefix/suffix mods.
 Checkpoint loading restores into a fresh validated context without replacing
 its layout. No speculative production guard/rebuild was added.
 
-## Authorized continuation — combined worker checkpoint
+## Authorized continuation â€” combined worker checkpoint
 
 Oliver approved Sol 6.1 continuation, the full original mechanics/solver backlog,
 and qualified normal main integration/push. Old cutoff limits are historical.
 Deployment remains unselected: the current workflow requires manual dispatch
 with a full commit input. Main and live origin/main were `ebcd98cd` at preflight.
 
-Combined WASM built from `b794e009` with two jobs, 17:10:58–17:17:24 UTC.
+Combined WASM built from `b794e009` with two jobs, 17:10:58â€“17:17:24 UTC.
 SHA256: `4c0a79acfdf5d101cd197343da3341bfc40eea5221dbf3a2a28049313ba749be`.
 Three bounded real-worker smokes pass: root-policy contracts, Dominance/Vaal
 transport/costs, and incoming Calculator preservation (four tests each, including
