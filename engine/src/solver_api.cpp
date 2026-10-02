@@ -91,6 +91,7 @@ solver::ActionRegistryBuildOptions registry_build_options(
     }
     solver::ActionRegistryBuildOptions options;
     const Value* actions = root.find("actions");
+    options.dominance_explicit_actions = actions != nullptr;
     if (actions != nullptr) {
         if (actions->type != Type::Array) {
             throw std::runtime_error("goal: actions must be an array");
@@ -297,6 +298,13 @@ solver::ActionRegistryBuildOptions registry_build_options(
             options.automatic_dominance |= requires_elevation;
         }
     }
+    if (options.automatic_dominance) {
+        if (automatic_candidates != nullptr && automatic_candidates->boolean)
+            throw std::invalid_argument("Dominance identity scope does not support explicitly requested automatic programmes");
+        // Goal-relevant primitive discovery remains available. Its ordinary
+        // generated programmes have no identity-carrier import contract.
+        options.automatic_candidates = false;
+    }
     return options;
 }
 
@@ -333,9 +341,9 @@ solver::GoalSpec parse_goal(
         throw std::runtime_error(
             "goal: automatic_candidates must be a boolean");
     }
-    goal.automatic_candidates =
-        string_member(root, "action_mode") == "goal_relevant" ||
-        (automatic_candidates != nullptr && automatic_candidates->boolean);
+    goal.automatic_candidates = !registry.automatic_dominance &&
+        (string_member(root, "action_mode") == "goal_relevant" ||
+         (automatic_candidates != nullptr && automatic_candidates->boolean));
     const std::string rarity = string_member(root, "rarity");
     if (rarity == "normal") {
         goal.rarity = PC_RARITY_NORMAL;
@@ -789,9 +797,8 @@ pc_result create_solver(
                 if (holder->session->gen_type[mod] == PC_SIDE_PREFIX ||
                     holder->session->gen_type[mod] == PC_SIDE_SUFFIX)
                     poecraft::pc_bitset_set(dominance_members.data(), mod);
-            // Existing generated coarse programmes have no identity-carrier
-            // import contract. Keep primitive scope and checked output authority.
-            goal.automatic_candidates = false;
+            if (automatic_candidate_kind_mask.value_or(0) != 0)
+                throw std::invalid_argument("Dominance identity scope does not support requested automatic programme kinds");
         }
         holder->calc = std::make_unique<solver::CalcContext>(
             holder->session, goal, std::move(registry), candidates, calculator_only,

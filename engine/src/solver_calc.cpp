@@ -488,15 +488,13 @@ CalcContext::CalcContext(
     authored_dominance_ = registry_.index_by_id.count("dominance") != 0;
     if (authored_dominance_) {
         if (!distinguish_modifier_identity || !distinguish_junk_exclusion_effects ||
-            product_solver_parent || (goal.automatic_candidates && !registry_.automatic_dominance) ||
+            product_solver_parent || goal.automatic_candidates ||
             (!registry_.automatic_dominance && empty_actions_mean_all) ||
             (!registry_.automatic_dominance && candidates_.empty()) || certified_uniform_removal)
             throw std::invalid_argument("Dominance requires the bounded authored exact-identity carrier");
         for (const auto index : candidates_)
-            if (index >= registry_.actions.size() ||
-                (!registry_.automatic_dominance && !registry_.actions[index].synthetic &&
-                 !authored_dominance_action(registry_.actions[index].params.type)))
-                throw std::invalid_argument("Dominance cannot enter an automatic or wider action envelope");
+            if (index >= registry_.actions.size())
+                throw std::invalid_argument("Dominance action index is out of range");
         for (std::uint32_t mod = 0; mod < session_->mod_count; ++mod)
             if ((session_->gen_type[mod] == PC_SIDE_PREFIX || session_->gen_type[mod] == PC_SIDE_SUFFIX) &&
                 (required_reachable_mod_mask.size() != session_->words ||
@@ -529,6 +527,13 @@ CalcContext::CalcContext(
             return index >= registry_.actions.size() ||
                 solver_action_disabled(goal_, registry_.actions[index]);
         });
+    if (authored_dominance_) {
+        for (const auto index : candidates_)
+            if (!registry_.actions[index].synthetic &&
+                !authored_dominance_action(registry_.actions[index].params.type))
+                throw std::invalid_argument("Dominance identity scope does not support action: " +
+                    registry_.actions[index].id);
+    }
     if (certified_uniform_removal_) {
         const auto proof = prove_uniform_removal_goals(*session_, goal_);
         if (distinguish_junk_exclusion_effects ||

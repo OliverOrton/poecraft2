@@ -839,6 +839,9 @@ struct ActionRegistryBuildOptions {
     bool authored_dominance = false;
     // Product admission requires a separately configured singleton identity carrier.
     bool automatic_dominance = false;
+    // Explicit primitive lists are validated at the carrier boundary rather
+    // than silently reduced by its default discovery capability filter.
+    bool dominance_explicit_actions = false;
 };
 
 // --- solver-only planner operators -------------------------------------------

@@ -1,6 +1,7 @@
 #include "solver_calc_types.hpp"
 
 #include "solver_action_family_contract.hpp"
+#include "solver_dominance.hpp"
 
 #include "harvest_crafts.generated.hpp"
 
@@ -262,6 +263,9 @@ ProductAdmissionDecision classify_goal_relevant_action(
     const ActionRegistryBuildOptions& options,
     const ActionRegistry& registry,
     const ActionDescriptor& action) {
+    if (options.automatic_dominance && !options.dominance_explicit_actions &&
+        !action.synthetic && !authored_dominance_action(action.params.type))
+        return {ProductActionRole::Filtered, "filtered_dominance_identity_unsupported"};
     if (std::find(
             options.option_dependency_action_ids.begin(),
             options.option_dependency_action_ids.end(), action.id) !=
@@ -456,7 +460,7 @@ void retain_goal_relevant_actions(
     const SessionImpl& session,
     const ActionRegistryBuildOptions& options,
     ActionRegistry& registry) {
-    if (!options.goal_relevant_actions) {
+    if (!options.goal_relevant_actions && !options.automatic_dominance) {
         registry.product_role_counts[
             static_cast<std::size_t>(ProductActionRole::Candidate)] =
             static_cast<std::uint32_t>(registry.actions.size());
@@ -471,13 +475,17 @@ void retain_goal_relevant_actions(
             static_cast<std::uint32_t>(registry.actions.size());
         return;
     }
-    registry.product_goal_filtering = true;
+    registry.product_goal_filtering = options.goal_relevant_actions;
     const std::size_t before = registry.actions.size();
     std::vector<ProductAdmissionDecision> decisions;
     decisions.reserve(before);
     for (const ActionDescriptor& action : registry.actions) {
-        decisions.push_back(
-            classify_goal_relevant_action(session, options, registry, action));
+        const bool unsupported_identity = options.automatic_dominance &&
+            !options.dominance_explicit_actions && !action.synthetic &&
+            !authored_dominance_action(action.params.type);
+        decisions.push_back(options.goal_relevant_actions || unsupported_identity
+            ? classify_goal_relevant_action(session, options, registry, action)
+            : ProductAdmissionDecision{ProductActionRole::Candidate, "candidate_unfiltered"});
     }
     std::vector<ActionDescriptor> retained;
     retained.reserve(before);

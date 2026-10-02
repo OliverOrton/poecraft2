@@ -171,3 +171,30 @@ failures remain failures; source/data diagnosis is not a fresh baseline-binary
 comparison. All standalone evidence uses the baseline ordinary reforge law;
 combined promotion requires the separately approved reforge-law implementation
 and integration-owned rebuild/qualification. No pushes or merges were made.
+
+## Integration review admission correction
+
+Review found that explicit automatic_candidates:true was accepted then erased,
+and automatic Dominance bypassed the native unsupported-action guard. The
+correction refuses explicit automatic-programme requests and nonzero diagnostic
+programme-kind masks. Implicit goal-relevant primitive discovery remains
+available, with unsupported native operation types recorded as
+filtered_dominance_identity_unsupported. Explicit primitive lists are checked
+after disabled-family removal at the native carrier boundary: enabled
+Dominance+Foulborn is refused with its action identity, while explicitly disabled
+Foulborn remains outside effective scope. The existing whitelist is the
+capability authority; no Foulborn transition law is added.
+
+Finite controls cover all three Foulborn primitives, manual/product envelopes,
+enabled/disabled combined scope, explicit automatic true/false, zero/nonzero
+programme-kind diagnostics and unchanged ordinary Foulborn admission. Existing
+Current/Finder output/cost controls remain in the focused suite. The corrected
+source passes 2,743 focused native checks with zero failures; the two-job test
+build passes. Logs are build-admission-fix.log and native-admission-fix.log under
+out/dominance-completion. The old 149f96a test executable is preserved under
+out/dominance-completion/frozen-149f96a; new native evidence uses a separate
+admission-fix-run working directory. Previously qualified WASM/shared-library
+bytes and receipts remain frozen and do not qualify this corrected source.
+No new real acquisition solve or WASM build is planned for this correction.
+
+Correction evidence SHA-256: native-admission-fix.log 26ea0b58c249a251b23b35421c0a4f8ba1596d12a10d0f095dfa3017f1de6b91.

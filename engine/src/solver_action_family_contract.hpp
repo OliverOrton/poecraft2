@@ -847,6 +847,9 @@ inline bool product_reason_matches_contract(
     if (reason == "candidate_unfiltered") {
         return role == ProductActionRole::Candidate;
     }
+    if (reason == "filtered_dominance_identity_unsupported") {
+        return role == ProductActionRole::Filtered;
+    }
     if (reason == "authored_option_dependency") {
         return role == ProductActionRole::AutomaticDependency;
     }

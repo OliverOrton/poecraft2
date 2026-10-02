@@ -131,8 +131,14 @@ retains success/failure/stop/nonapplication/unmatched/unresolved mass and cost.
 Automatic Current/Finder admission selects this carrier only for explicitly
 requested Dominance or a slot whose satisfying identities all require native
 elevation. Mixed ordinary/elevated goals retain this rule per slot. Explicit
-action scope and disabled families still control candidates. Current keeps
-zero global lower and no closure authority; Finder publishes checked policies
+action scope and disabled families still control candidates. Default primitive
+discovery filters operations outside the identity whitelist with an explicit
+capability reason. Explicit unsupported enabled primitives are refused at the
+native carrier boundary; disabled primitives are outside effective scope.
+Explicit automatic-programme requests and nonzero programme-kind diagnostics
+are refused because generated coarse programmes have no identity import law.
+Goal-relevant primitive discovery remains available. Current keeps zero global
+lower and no closure authority; Finder publishes checked policies
 without a lower claim. Whole-root checking does not import continuation-entry
 or statewise upper certificates. No hybrid handoff is established. Native/WASM
 qualification and remaining holds belong to the living record, not this argument.

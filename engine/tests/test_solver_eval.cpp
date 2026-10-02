@@ -2,6 +2,7 @@
 
 #include "../src/handles_internal.hpp"
 #include "../src/solver_internal.hpp"
+#include "../src/solver_diagnostic_options.hpp"
 #include "../src/currency_outcomes.hpp"
 #include "../src/json.hpp"
 #include "../src/solver_dominance.hpp"
@@ -3879,6 +3880,73 @@ void dominance_automatic_discovery() {
     economy->id = "dominance-finite-independent-prices";
     economy->prices = {{"dominance",7},{"chaos",3},{"alchemy",3},{"scour",1}};
     pc_economy prices{economy};
+    // Explicit programme requests cannot be accepted and then erased. Implicit
+    // goal-relevant discovery is a capability-filtered primitive envelope.
+    for (const bool product : {false,true}) {
+        const auto base = std::string(R"({"version":"v1","slots":[{"family_mod_key":"mod1"}])") +
+            (product ? R"(,"action_mode":"goal_relevant")" : "");
+        for (const bool automatic : {false,true}) {
+            const auto goal=base+(automatic?R"(,"automatic_candidates":true})":R"(,"automatic_candidates":false})");
+            pc_solver_handle solver=nullptr;pc_error_info error{};
+            const auto rc=pc_solver_create(&handle,goal.data(),goal.size(),&solver,&error);
+            PC_CHECK(rc==(automatic?PC_RESULT_INVALID_ARGUMENT:PC_RESULT_OK));
+            PC_CHECK((solver!=nullptr)==!automatic);
+            if(automatic) PC_CHECK(std::string(error.message).find("automatic programmes")!=std::string::npos);
+            if(solver) {
+                std::uint32_t count=0;PC_CHECK(pc_solver_candidates(solver,nullptr,0,&count,&error)==PC_RESULT_OK);
+                std::vector<std::uint32_t> candidates(count);
+                PC_CHECK(pc_solver_candidates(solver,candidates.data(),count,&count,&error)==PC_RESULT_OK);
+                for(const auto index:candidates) {
+                    pc_solver_action_info info{};PC_CHECK(pc_solver_get_action_info(solver,index,&info,&error)==PC_RESULT_OK);
+                    PC_CHECK(std::string(info.id).find("foulborn")==std::string::npos);
+                }
+                for(const auto* id:{"foulborn_augment","foulborn_regal","foulborn_exalt"}) {
+                    std::uint32_t index=0;PC_CHECK(pc_solver_find_action(solver,id,&index,&error)==PC_RESULT_NOT_FOUND);
+                }
+                pc_solver_destroy(solver);
+            }
+        }
+        // Disabled Foulborn is outside the effective caller scope; enabled
+        // combined scope is refused before any price or solve can hide it.
+        for(const auto* id:{"foulborn_augment","foulborn_regal","foulborn_exalt"})
+        for(const bool disabled:{false,true}) {
+            const auto goal=base+",\"actions\":[\"dominance\",\""+id+"\"]"+
+                (disabled?R"(,"disabled_action_families":["foulborn"]})":"}");
+            pc_solver_handle solver=nullptr;pc_error_info error{};
+            const auto rc=pc_solver_create(&handle,goal.data(),goal.size(),&solver,&error);
+            PC_CHECK(rc==(disabled?PC_RESULT_OK:PC_RESULT_INVALID_ARGUMENT));
+            PC_CHECK((solver!=nullptr)==disabled);
+            if(!disabled) {
+                PC_CHECK(std::string(error.message).find("Dominance identity scope does not support action")!=std::string::npos);
+                PC_CHECK(std::string(error.message).find(id)!=std::string::npos);
+            }
+            if(solver) {
+                std::uint32_t count=0;PC_CHECK(pc_solver_candidates(solver,nullptr,0,&count,&error)==PC_RESULT_OK);PC_CHECK(count==1);
+                std::uint32_t candidate=0;PC_CHECK(pc_solver_candidates(solver,&candidate,1,&count,&error)==PC_RESULT_OK);
+                pc_solver_action_info info{};PC_CHECK(pc_solver_get_action_info(solver,candidate,&info,&error)==PC_RESULT_OK);
+                PC_CHECK(std::string(info.id)=="dominance");pc_solver_destroy(solver);
+            }
+        }
+    }
+    for(const std::uint32_t mask:{0u,kAllAutomaticCandidateKindsMask}) {
+        const auto goal=std::string(R"({"version":"v1","slots":[{"family_mod_key":"mod1"}],"actions":["dominance"]})");
+        pc_solver_handle solver=nullptr;pc_error_info error{};
+        const auto rc=create_solver_with_automatic_candidate_diagnostic(&handle,goal.data(),goal.size(),mask,&solver,&error);
+        PC_CHECK(rc==(mask?PC_RESULT_INVALID_ARGUMENT:PC_RESULT_OK));PC_CHECK((solver!=nullptr)==(mask==0));
+        if(mask) PC_CHECK(std::string(error.message).find("automatic programme kinds")!=std::string::npos);
+        if(solver)pc_solver_destroy(solver);
+    }
+    // Ordinary Foulborn admission is unaffected when no Dominance carrier is
+    // selected. These controls do not adopt a new Foulborn transition law.
+    for(const auto* id:{"foulborn_augment","foulborn_regal","foulborn_exalt"}) {
+        const auto goal=std::string(R"({"version":"v1","slots":[{"family_mod_key":"mod0"}],"actions":[")")+id+R"("]})";
+        pc_solver_handle solver=nullptr;pc_error_info error{};
+        PC_CHECK(pc_solver_create(&handle,goal.data(),goal.size(),&solver,&error)==PC_RESULT_OK);
+        PC_CHECK(solver!=nullptr);if(!solver)continue;
+        std::uint32_t count=0;PC_CHECK(pc_solver_candidates(solver,nullptr,0,&count,&error)==PC_RESULT_OK);PC_CHECK(count==1);
+        std::uint32_t index=0;PC_CHECK(pc_solver_find_action(solver,id,&index,&error)==PC_RESULT_OK);
+        pc_solver_destroy(solver);
+    }
     for (const bool acquire : {false,true})
     for (const auto mode : {PC_SOLVER_MODE_CURRENT, PC_SOLVER_MODE_STRATEGY_FINDER}) {
         auto start=root;
