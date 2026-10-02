@@ -1,3 +1,20 @@
+# CI fossil test contract checkpoint (2026-10-02)
+
+The CI failure on promoted `dce3271` reproduces in isolation with current and
+pre-promotion DLLs: pinned Fractured Fossil now declares `mirrors=0`, while the
+test assumed its historical flag. Metadata-aware transport plus paired native
+both-values regressions pass 6,318 native checks and the full 129-test CI binding
+lane; the repaired binding case also passes a frozen `mirrors=1` snapshot.
+Production source/DLL/WASM are unchanged. The living integration receipt retains
+failed setup/reproduction runs and exact source/artifact identities.
+
+This is a test-contract correction only. Official 3.29 and current metadata
+agree on random fracture; native still performs ordinary reforge and accepts
+Fractured/Influenced input. A separate central fail-closed guard is proposed;
+Oliver's application order, eligible modifiers/probabilities, minimum-count and
+influence-boundary decisions remain held. Historical split/copy is not current.
+No newer feature branch is imported and no complete Fossil support is claimed.
+
 # First staged main promotion qualification (2026-10-02)
 
 The existing integration plus `8ef8a67` Fracture side repair is frozen at source

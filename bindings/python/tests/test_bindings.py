@@ -543,6 +543,20 @@ class BindingTests(unittest.TestCase):
             "bloodstained": "CurrencyDelveCraftingVaal",
             "fractured": "CurrencyDelveCraftingMirror",
         }
+        # Currency keys survive metadata changes; the current pinned Fractured
+        # Fossil no longer declares the historical mirroring special effect.
+        # Check the native compiled-flag contract for this artifact, rather than
+        # selecting a new fracture/copy law from the key or display name.
+        compiled_fossils = json.loads(
+            (ARTIFACT / "game-data.json").read_text(encoding="utf-8")
+        )["fossils"]
+        strings = json.loads(
+            (ARTIFACT / "strings.json").read_text(encoding="utf-8")
+        )["strings"]
+        mirror_by_key = {
+            strings[key_sid]: bool(compiled_fossils["mirrors"][index])
+            for index, key_sid in enumerate(compiled_fossils["key_string_ids"])
+        }
         with self.session.create_action_context(seed=99) as context:
             for name, suffix in fossils.items():
                 item = self.session.create_item()
@@ -562,7 +576,10 @@ class BindingTests(unittest.TestCase):
                     self.assertTrue(item.item_flags & 1)
                     self.assertTrue(item.implicit_mod_ids)
                 elif name == "fractured":
-                    self.assertTrue(item.item_flags & 2)
+                    self.assertEqual(
+                        bool(item.item_flags & 2),
+                        mirror_by_key[f"Metadata/Items/Currency/{suffix}"],
+                    )
 
     def test_fossil_and_essence_ignore_metamods(self):
         fossil = "Metadata/Items/Currency/CurrencyDelveCraftingRandom"

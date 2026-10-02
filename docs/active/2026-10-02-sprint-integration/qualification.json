@@ -1145,5 +1145,158 @@
     ],
     "delivery": "Normal fast-forward/main push selected after final local/live-remote preflight; exact outcome recorded in out/sprint-continuation/promotion.json and parent checkpoint.",
     "deployment": "not selected; deploy workflow_dispatch only"
+  },
+  "ci_fossil_test_repair": {
+    "source_parent": "dce327101d73117146b09908baea3cb0690c046f",
+    "disposition": "Test/contract correction only. No production mechanics or complete Fractured Fossil support is qualified.",
+    "ci_failure": {
+      "run": 37044038599,
+      "job": 110960898455,
+      "test": "BindingTests.test_phase13_special_fossils",
+      "result": "1 failed, 128 passed; unconditional historical mirrored flag assertion"
+    },
+    "isolated_reproduction": [
+      {
+        "dll_sha256": "22708f0a69db7bc11d4077c9b94a20cef8b3e0dcc92a55e4cb1a5a25699efa0b",
+        "exit_code": 1,
+        "log": {
+          "path": "out/sprint-continuation/ci-special-fossils-before.log",
+          "sha256": "5915da07e363172c2634d6f8c54dafb55fa545daa3882444b852b6a1a295fb5a",
+          "bytes": 1845
+        }
+      },
+      {
+        "dll_sha256": "456a253f0eeb97c00ceed95abc266db2fc0ba71df615f43ba18128ab495c0df2",
+        "provenance": "Existing pre-promotion main DLL; fossil production source blob matches, full source provenance not claimed.",
+        "exit_code": 1,
+        "log": {
+          "path": "out/sprint-continuation/ci-special-fossils-old-dll.log",
+          "sha256": "8b4b2a7dcee94c9a8eebef915ea0ca30e629e419b3a7b87568801436e982ea30",
+          "bytes": 1845
+        }
+      }
+    ],
+    "current_metadata": {
+      "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "mirrors": 0,
+      "description": "Fracture a random modifier",
+      "canonical_source_pins_verified": 12,
+      "projection": {
+        "path": "out/sprint-continuation/ci-fossil-metadata.json",
+        "sha256": "2e011d9fd146feb846fa92328feb46a5884614769bf55e661c5fc8fa26bc85da",
+        "bytes": 895
+      }
+    },
+    "test_changes": "Binding assertion follows compiled mirrors flag; eight paired synthetic native seeds require both literal flags and byte-identical carriers apart from mirrored bit.",
+    "native": {
+      "command": "poecraft_engine_tests.exe --currency-contracts-only data/compiled/current",
+      "checks_passed": 6318,
+      "failures": 0,
+      "exit_code": 0,
+      "log": {
+        "path": "out/sprint-continuation/ci-fossil-native.log",
+        "sha256": "e70bc533193369c816ac45559b83ac12c6168d47802ecc41af0119ec8e4cafb5",
+        "bytes": 45
+      },
+      "build": {
+        "path": "out/sprint-continuation/ci-fossil-test-build.log",
+        "sha256": "ba550f5b75696407203494a9d8fe206af1563f53de3468d8fb78f98216cf1903",
+        "bytes": 189
+      }
+    },
+    "bindings": {
+      "command": "py -3 -m pytest bindings/python/tests --import-mode=importlib -q",
+      "pythonpath": "bindings/python/tests;bindings/python;tools/ingest;tools/economy",
+      "tests_passed": 129,
+      "exit_code": 0,
+      "elapsed_seconds": 65.69,
+      "log": {
+        "path": "out/sprint-continuation/ci-fossil-bindings-qualified.log",
+        "sha256": "9b5d863521ca0aa80c9ab921a330aae3cbf7e22e071943139b33e0b52eb5c37d",
+        "bytes": 194
+      },
+      "fixtures": "Existing database byte-copied after every locked source hash/size matched; no refresh or hand edits."
+    },
+    "legacy_positive_binding": {
+      "runtime_manifest_sha256": "852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb",
+      "mirrors": 1,
+      "tests_passed": 1,
+      "exit_code": 0,
+      "log": {
+        "path": "out/sprint-continuation/ci-fossil-bindings-legacy-positive.log",
+        "sha256": "8d2febae70ba94a0e3c00ab086bdf3c5fbbd9204b4f068ff9c5e876ced905ea4",
+        "bytes": 100
+      }
+    },
+    "setup_exclusions": [
+      {
+        "reason": "Initial command omitted CI fixture import root; collection error, not passing evidence.",
+        "exit_code": 2,
+        "log": {
+          "path": "out/sprint-continuation/ci-fossil-bindings.log",
+          "sha256": "f5a4e60d308d20a94e428afe480e9b067bc7e7efba68ba70d8721fd3520fad72",
+          "bytes": 762
+        }
+      },
+      {
+        "reason": "Full lane before fixture database reuse: 40 canonical SQLite prerequisite failures, 89 passed. All failures no such table: base_item; not passing full-lane evidence.",
+        "exit_code": 1,
+        "log": {
+          "path": "out/sprint-continuation/ci-fossil-bindings-exact.log",
+          "sha256": "7a9b427082f04c6b3c5eff9e1b6ca43f68782379845ae94a9728a0bebb101424",
+          "bytes": 78928
+        }
+      }
+    ],
+    "production_unchanged": {
+      "paths": [
+        "engine/src",
+        "engine/include",
+        "bindings/python/poecraft_engine",
+        "tools/ingest"
+      ],
+      "dll_sha256": "22708f0a69db7bc11d4077c9b94a20cef8b3e0dcc92a55e4cb1a5a25699efa0b",
+      "wasm_sha256": "6fb7e9c90b728bbd4b942241631ad07dbf0f354586fec010458cba658686bc39",
+      "note": "Only native test source changed; matching production WASM/DLL reused, no ABI or strategy vocabulary change."
+    },
+    "mechanic_gap": {
+      "official_3_29": "https://www.pathofexile.com/forum/view-thread/3985332",
+      "counterexamples": {
+        "path": "out/sprint-continuation/ci-fossil-mechanic-gap.json",
+        "sha256": "4d98a9447540dde65c00de9d70d3cfd7814d221b12bf39adf148c09449375d76",
+        "bytes": 1234
+      },
+      "finding": "Ordinary reforge yields no fracture; native accepts an already-fractured input and a native-created crusader-influenced input. Current complete special effect/input restrictions missing.",
+      "proposed_guard": "Central native refusal for any loadout with current Fractured Fossil before mutation/RNG/exact outcomes; propagate to Calculator/solver/worker support. Not implemented.",
+      "owner_decisions": [
+        "reforge/fracture application order",
+        "eligible modifier set and probabilities",
+        "minimum modifier count",
+        "generic/Eldritch influence eligibility"
+      ],
+      "historical_split_copy": "Not the current 3.29 mechanic; no implementation selected."
+    },
+    "fracture_front_invariant_review": {
+      "finding": "No new guard needed within validated CalcContext contract.",
+      "owners": [
+        "engine/src/solver_abstract.cpp:99 resolve_slot filters gen_type to 0/1 and rejects empty satisfying mask",
+        "engine/src/solver_abstract.cpp:377 build_abstract_layout resolves every slot",
+        "engine/src/solver_calc.cpp:624 constructor always builds validated layout",
+        "engine/src/solver_calc_types.hpp:766 only const public layout access",
+        "engine/src/solver_development_checkpoint.cpp:857 fresh-context checkpoint loader restores states/operators/cache, not layout"
+      ],
+      "synthetic_contexts": "Constructors share the same validation; manually corrupting SessionImpl/layout is outside their valid contract."
+    },
+    "knowledge_lint": {
+      "exit_code": 0,
+      "errors": 0,
+      "scope": "Traceability only; unchanged existing open-claim warnings",
+      "log": {
+        "path": "out/sprint-continuation/ci-fossil-knowledge.log",
+        "sha256": "29f196d98b6869be0d60bae3792a8e2dcf51c15bb9d27ff0e0f2b6041a40429b",
+        "bytes": 1864
+      }
+    },
+    "promotion": "Local checkpoint ready; no newer feature patch imported."
   }
 }

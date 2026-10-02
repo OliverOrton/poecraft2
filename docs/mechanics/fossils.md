@@ -110,6 +110,14 @@ probabilities and prices the loadout by its component Fossils and resonator.
   have no action behavior.
 - The `mirrors` special marks the one output item mirrored; it does not produce
   a second item or copy.
+- In the pinned runtime `82fb60a2...`, Fractured Fossil's stable currency key
+  ends in `CurrencyDelveCraftingMirror`, but its compiled `mirrors` flag is zero
+  and its retained description says `Fracture a random modifier`. Neither a
+  description-driven fracture effect nor a Split-tag/second-output effect is
+  implemented by the Fossil action. It currently performs the base Fossil
+  reforge only for that row. Binding tests of compiled flag transport do not
+  qualify Fractured Fossil's complete game mechanic. Historical snapshots with
+  `mirrors=1` exercised the partial single-item abstraction above.
 - Exact reforge calculation tracks the implemented corruption/mirroring item
   flags but does not preserve the sampled special-implicit identity as an exact
   outcome dimension. Its Bloodstained flag projection checks only that the
@@ -127,6 +135,16 @@ probabilities and prices the loadout by its component Fossils and resonator.
 - Is marking the single live result mirrored the intended one-item abstraction
   for a mirroring Fossil, or should the mechanic be unsupported until a
   multi-output contract exists?
+- The [official 3.29 Item Changes](https://www.pathofexile.com/forum/view-thread/3985332)
+  confirm Fractured Fossil's random fracture effect and disallow Fractured and
+  Influenced inputs; the same section retains the Synthesised-input exclusion.
+  The historical split/copy effect is not the current selected runtime law.
+  Oliver still needs to select the implementation's application order, eligible
+  modifier set/probabilities, any minimum modifier count, and the exact input
+  influence boundary. Current sampled application performs only the reforge
+  and accepts Fractured/Influenced carriers; complete support is unqualified.
+  A native fail-closed loadout guard is proposed separately from the metadata
+  flag test repair, until those details are approved.
 - Should Bloodstained and sell-price implicit effects remain supported while
   quality, white-socket, and corrupted-Essence effects are unsupported, or is a
   different explicit partial-support boundary required?

@@ -163,6 +163,39 @@ bool contains_mod(const pc_item_state& item, const std::uint32_t mod_id) {
     return false;
 }
 
+// Pin both branches independently of the production artifact's fossil flags.
+// Identical seeds and pools must yield identical one-item carriers, with only
+// the declared mirroring flag differing. This tests the existing abstraction;
+// it does not approve a Fractured Fossil fracture or copy-output mechanic.
+void run_fossil_mirror_flag_tests() {
+    for (std::uint64_t seed = 0; seed < 8; ++seed) {
+        pc_item_state results[2]{};
+        for (int mirrors = 0; mirrors <= 1; ++mirrors) {
+            auto session = std::make_shared<SessionImpl>(
+                make_metamod_renewal_session());
+            auto data = std::make_shared<DataImpl>(*session->data);
+            data->strings[1] = "Fractured Fossil";
+            data->fossil_mirrors[0] = mirrors;
+            session->data = data;
+            ActionContextImpl context(seed);
+            context.session = session;
+            ActionParameters action;
+            action.type = ActionType::Fossil;
+            action.fossil_indices = {0};
+            pc_item_clear(&results[mirrors]);
+            PC_CHECK(apply_action(context, &results[mirrors], action).applied);
+            PC_CHECK(results[mirrors].rarity == PC_RARITY_RARE);
+            PC_CHECK(results[mirrors].prefix_count +
+                         results[mirrors].suffix_count > 0);
+            PC_CHECK(results[mirrors].item_flags ==
+                     (mirrors ? PC_ITEM_MIRRORED : 0));
+        }
+        results[1].item_flags &= ~PC_ITEM_MIRRORED;
+        PC_CHECK(std::memcmp(&results[0], &results[1],
+                             sizeof(pc_item_state)) == 0);
+    }
+}
+
 void run_metamod_renewal_unit_tests() {
     auto session =
         std::make_shared<SessionImpl>(make_metamod_renewal_session());
@@ -1038,6 +1071,7 @@ void run_foulborn_weight_tests() {
 }
 
 void run_currency_contract_tests(const char* artifact_dir) {
+    run_fossil_mirror_flag_tests();
     // Role-neutral foundation: consume both sources and create a third identity.
     auto session = std::make_shared<SessionImpl>(make_synth_session());
     CraftResource a{"a", "left", session, {}}, b{"b", "right", session, {}};

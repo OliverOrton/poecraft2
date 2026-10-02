@@ -44,6 +44,33 @@ outcome belongs to `out/sprint-continuation/promotion.json` and the parent
 checkpoint. No deployment is selected; its workflow is manual dispatch only.
 The original backlog ledger below remains open for subsequent feature batches.
 
+## CI fossil test contract repair
+
+Windows CI on `dce3271` failed the historical Fractured Fossil mirrored-bit
+assertion. The same single test fails alone with the promoted and pre-promotion
+DLLs on pinned runtime `82fb60a2`; all fossil production source is unchanged.
+Current canonical/compiled metadata has `mirrors=0` and a random-fracture
+special description. The repaired binding check follows that artifact flag;
+eight paired native synthetic seeds retain literal positive/negative flag
+coverage and identical complete carriers apart from that flag. Native currency
+contracts pass **6,318 checks**, the exact CI binding lane passes **129 tests**,
+and the same repaired binding case passes an existing `mirrors=1` snapshot.
+The receipt retains failed setup/reproduction runs separately from qualification.
+
+This repairs CI's old flag expectation only. Official 3.29 confirms the current
+random-fracture effect, while native counterexamples show no fracture and
+acceptance of Fractured/Influenced inputs. Complete Fractured Fossil support
+remains a concrete mechanic gap. A central fail-closed loadout guard is proposed,
+with implementation order, eligible modifiers/probabilities, minimum count and
+precise influence boundary held for Oliver. Historical split/copy behavior is
+not the current law. Production source, DLL and WASM remain unchanged; no new
+feature branch is imported and no broader fossil qualification is claimed.
+
+The Fracture `members.front()` concern is closed by goal-layout construction:
+all satisfying masks are nonempty and contain only explicit prefix/suffix mods.
+Checkpoint loading restores into a fresh validated context without replacing
+its layout. No speculative production guard/rebuild was added.
+
 ## Authorized continuation — combined worker checkpoint
 
 Oliver approved Sol 6.1 continuation, the full original mechanics/solver backlog,
