@@ -152,5 +152,52 @@ also does not qualify for the proved direct-self-loop gated kernel. These are
 source-level bottleneck premises, not measured recovery. Parent-selected exact
 removal-only-between-renewals investigation must preserve all within-roll native
 exclusions and verify its narrow domain before any representation change.
-Native stage confirmation and full-versus-compact identical-graph comparison
-require the parent serial slot. No timed economic result exists at this checkpoint.
+N1 was granted and consumed once at 2026-10-02 07:29:54.898 UTC. PID 31224
+completed after 13.751 seconds, exit 2, with no timeout or surviving process.
+The original 200,000-state cap censored all three cleanup graphs during pair
+discovery; four pure loops were checked and refused. All seven complete
+generated graphs were served and captured. Eight attempts remain configured;
+the finite grammar exhausted after seven candidates. No real-data policy,
+expected acquisition/cleanup cost, lower bound or optimality claim is available.
+
+Checking consumed 13.101 seconds, 99.34% of search + compile + check time.
+The unprotected Essence/Annul graph reached 200,000 discovered states,
+12,842 processed pairs, 187,159 pending pairs and 243,016 transitions.
+Its native router first tests original clean success, reacquires on held-family
+loss, and otherwise repeats uniform Annul while at least three affixes remain.
+Capture took 3.379 ms and served byte verification 14.107 ms, with an 81,790-byte
+peak scratch bound. The private protected proposal failed native setup admission
+(`setup_did_not_apply_exactly`), separately from checker censoring.
+
+Frozen executable SHA256:
+`e34f08a11341e095761a0280ca14e86517cb8168d3cefd10d56aa8232e519263`.
+The exact unprotected graph is captured as
+`6-16532417057234384386.strategy.json`, SHA256
+`1ef3998b6804d6245385d9b710f6d6c5c456d01f16e7bb0b2c625223beb9e9cb`.
+The graph is an unaccepted diagnostic artifact, not a policy seed. Evidence:
+`out/finder-overnight/N1-summary.json`, `N1-worker-receipt.json`,
+`N1-process-start.json`, and `capture-stage-confirmation/`.
+The approved argv, cwd and watchdog match the supervised invocation exactly;
+the supervisor normalizes reservation metadata and therefore produces a distinct
+command-object digest. Both command objects are preserved in the receipts.
+
+One of the two reserved native invocations is spent. N2 remains ungranted.
+The next approved investigation is the narrow native capability proof and finite
+differential tests for full renewals plus unprotected uniform removal. A later
+full-versus-compact comparison must bind the same captured graph bytes and use
+a new parent serial slot; no new native invocation is authorized by this record.
+
+## Broad-suite failure disposition
+
+The accidental invalid-selector run has 14 confirmed artifact/fixture setup
+failures and 17 unresolved synthetic Current/Fracture failures: six joint
+publication checks, two dead-carrier checks, eight lift/compiler checks and one
+S8.3 price-flip convergence check. Exact assertion failures were not found in
+265 relevant historical logs; an older fracture suite passed, so these failures
+are not declared baseline-known. Relevant tests and their native owners are
+byte-identical to actual main. These cases call CalcContext/SolveWork directly,
+without Finder/capture, and the modified selective service defaults off there.
+No direct changed-code path was identified, but an actual-main binary comparison
+was not performed; patch regression is not experimentally ruled out.
+Read-only triage: `out/finder-overnight/default-suite-failure-triage.json`.
+No broad rerun was used to dismiss or repair these failures.
