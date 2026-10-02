@@ -226,23 +226,24 @@ side, occupancy and junk-blocker counts. Structured identity, protection,
 additive actions, offers, external entries and other unsupported cases stay
 physical. Existing within-roll native exclusions and complete mass remain exact.
 
-Finite differential qualification passes **21,655 checks** over 128 legal
+Finite differential qualification passes **21,673 checks** over 128 legal
 physical carriers. Complete Chaos/Essence and Annul projected rows, expected
 operation/material/edge consumption, properness and synthetic controller cost
 match the physical path. Two goals plus two junk retain both after two Annuls
 with probability 1/6 on **both** independently enumerated two-step laws, whose
 complete projected distributions agree; synthetic C3.56715328467 also matches. Independent
-junk blocker multiplicities survive repeated Annul, and exhausted pools retain
+junk blocker multiplicities survive repeated Annul, including two same-side
+blockers in one carrier class (count 2 → 1 → 0), and exhausted pools retain
 their actual complete law. All-member conflict negatives assert that the ordinary
 evaluator actually selects the physical carrier, including a conflict only
 between below-tier members. Log:
-`out/finder-overnight/uniform-removal-physical-two-annuls.log`.
+`out/finder-overnight/uniform-removal-multiplicity-final.log`.
 
 Existing focused checks pass: Essence/capture 293, bindings 129, protected routes
 63, attribution 516, and the shared observation layout 839. The latter exercises
 continuation certificates, selected policy kernels, offers and downstream delayed
 splits without Simulator or Monte Carlo stages. Total passing focused checks:
-23,495. No additional timed native invocation has started. N6 requires parent
+23,513. No additional timed native invocation has started. N6 requires parent
 review of this domain/evidence and a frozen identical-graph command.
 
 The earlier expanded suite exposed 15 physical-reference materialization failures
@@ -318,8 +319,20 @@ new promise that arbitrary physical full-roll projections are supported; the
 cross-goal defect above remains outside the proved domain. No mass dropping,
 renormalization or virtual retry basin is introduced here.
 
-N6 remains ungranted. The command/provenance will be frozen under
+N6 remains ungranted. The command/provenance is frozen under
 `out/finder-overnight/frozen-N6-identical-graph-command.json`; only the parent may
 release that one remaining native slot. The benchmark helper's initial build
 failure was corrected with the existing nonnegative numeric parser; the final
 local Tests and Benchmark builds pass. No WASM, Simulator, push or main edit.
+
+The frozen executable is source `05a8f99c6c476d4400778d819d3ce572e9b2c1c0`,
+SHA `aaf73824f7e407472d37a9fa843c2b4c8b15ca2e18bd314c9251775fb244f969`.
+The latest additional multiplicity check changes tests only; native executable
+sources remain that frozen build. Command identity:
+`86e48f797409e831e3856e92fcf90d0dad5e35289a197790fe35103799ebd330`.
+Validation-only used the same binary bytes; final frozen command omits only
+validation mode and selects a new immutable output. Parent review excerpts:
+`out/finder-overnight/parent-review-implementation.md` (8,220 characters) and
+`parent-review-finite-checks.md` (5,791 characters). These are source projections,
+not a second mathematical argument or qualification authority. No timed native
+process is running and N6 remains ungranted.

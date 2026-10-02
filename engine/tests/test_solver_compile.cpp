@@ -5140,6 +5140,45 @@ void run_solver_uniform_removal_tests() {
         const auto below_graph=compile_strategy_json(below_overlap,graph.data(),graph.size());
         StrategyEvalWork below_work(below_graph,options);
         PC_CHECK(!below_work.diagnostic_result().observation_propagation.uniform_removal_carrier);
+        // Same-side independent blockers share one quotient class. Native
+        // removal is 2/2 into count one, then 1/1 into count zero; clearing
+        // the blocker bit after the first removal would change future truth.
+        auto same_side=std::make_shared<SessionImpl>(*overlap);
+        same_side->gen_type[5]=PC_SIDE_PREFIX;
+        auto side_registry=build_action_registry(*same_side);
+        const auto make_side=[&](const bool q) {
+            return std::make_unique<CalcContext>(same_side,single,side_registry,actions,false,false,!q,
+                std::nullopt,std::vector<CountObservation>{},q,std::vector<std::uint64_t>{},
+                !q,false,false,false,q,nullptr,true,q);
+        };
+        auto sq=make_side(true), sf=make_side(false);
+        pc_item_state side_blockers=root;
+        for (const auto mod:{2u,5u}) PC_CHECK(pc_item_add_mod(&side_blockers,PC_SIDE_PREFIX,mod,same_side->primary_group[mod],0,nullptr)==PC_RESULT_OK);
+        const auto side_input=sq->intern_item(side_blockers);
+        const auto blocker_class=sq->layout().junk_class_by_mod[2];
+        PC_CHECK(blocker_class==sq->layout().junk_class_by_mod[5]);
+        PC_CHECK(sq->state(side_input).junk_counts[blocker_class]==2);
+        const auto side_first=sq->outcomes(side_input,annul);
+        PC_CHECK(side_first.entries.size()==1);
+        std::map<std::uint32_t,double> qfirst,ffirst;
+        for (const auto& e:side_first.entries) {
+            qfirst[e.state]+=e.probability;
+            PC_CHECK(e.probability==1 && sq->state(e.state).blocked_mask==1);
+            PC_CHECK(sq->state(e.state).junk_counts[blocker_class]==1);
+            const auto side_second=sq->outcomes(e.state,annul);
+            PC_CHECK(side_second.entries.size()==1);
+            if (side_second.entries.size()==1) {
+                PC_CHECK(side_second.entries[0].probability==1);
+                PC_CHECK(sq->state(side_second.entries[0].state).blocked_mask==0);
+                PC_CHECK(sq->state(side_second.entries[0].state).junk_counts[blocker_class]==0);
+            }
+        }
+        const auto full_side_first=sf->outcomes(sf->intern_item(side_blockers),annul);
+        for (const auto& e:full_side_first.entries) {
+            pc_item_state item; PC_CHECK(sf->materialize(e.state,item));
+            ffirst[sq->intern_item(item)]+=e.probability;
+        }
+        compare_maps(ffirst,qfirst);
         // Preserve a complete differential in the admitted one-goal domain,
         // including the two independent blocker groups. No mass is dropped.
         oq=make_overlap(true,single); of=make_overlap(false,single);
