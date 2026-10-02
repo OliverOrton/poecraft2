@@ -619,7 +619,8 @@ int magic_count(ActionContextImpl& context) {
 }
 
 int rare_count(ActionContextImpl& context) {
-    return 4 + static_cast<int>(context.rng.next_below(3)); // 4, 5, or 6
+    const auto law = rare_reforge_count_law(context.session->rare_reforge_count_kind);
+    return law.select(context.rng.next_below(law.denominator));
 }
 
 ActionOutcome do_add_one(ActionContextImpl& context, pc_item_state* item,

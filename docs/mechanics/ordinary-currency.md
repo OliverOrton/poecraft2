@@ -61,6 +61,18 @@ rule; it is listed as an open confirmation below.
 
 ## Dated Oliver Rulings
 
+- **2026-10-02, 18:43 UTC:** ordinary variable rare reforges selecting four,
+  five or six explicit modifiers use **8:3:1** weights, or 8/12, 3/12 and 1/12.
+  This includes Alchemy, Chaos, Essence, Fossil, Harvest Reforge, Veiled Chaos,
+  ordinary Eldritch fallback and Awakener refill. Explicit fixed-count crafts
+  keep their count. The native shared [count law](../../engine/src/reforge_count_law.hpp)
+  supplies sampling and exact mixtures. Capacity/retention clamps merge mass;
+  exhausted pools stop with full probability. This is Oliver's approved model,
+  not empirical verification of game frequencies. Configured clusters have the
+  separately approved 3/4 law (65/35); ordinary/Abyss jewel probabilities remain
+  unresolved and retain their prior effective behavior. The isolated
+  [execution record](../active/2026-10-02-reforge-law/README.md) owns qualification.
+
 - **2026-09-29:** exactly one side lock also preserves fractures on the
   unlocked side, including fractured crafts/metamods. A surviving unwanted
   fracture remains nonterminal for a clean goal. Native execution, exact

@@ -640,7 +640,7 @@ inline bool refinement_selectors_match(
         });
 }
 
-inline constexpr std::uint32_t kActionRefinementContractVersion = 3;
+inline constexpr std::uint32_t kActionRefinementContractVersion = 4; // Includes the approved rare count law.
 
 /*
  * A primitive may expose a sampled observation before the strategy chooses

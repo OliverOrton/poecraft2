@@ -335,6 +335,7 @@ pc_item_state preserved_reforge_base(
 
 std::vector<std::uint64_t> reforge_base_observation(
     const pc_item_state& base,
+    const RareReforgeCountKind count_kind,
     std::uint64_t* out_hash = nullptr) {
     std::vector<std::uint64_t> observation;
     std::uint64_t hash = 1469598103934665603ull;
@@ -346,6 +347,8 @@ std::vector<std::uint64_t> reforge_base_observation(
     // Native-group eligibility law version: memo and externally compared
     // kernel signatures must not identify observation-pruned rows as equal.
     mix(2);
+    mix(kRareReforgeCountLawVersion);
+    mix(static_cast<std::uint64_t>(count_kind));
     mix(base.rarity);
     mix(base.item_flags);
     mix(base.generic_influence_bits);
@@ -716,7 +719,7 @@ bool CalcContext::exact_reforge_kernel_signature(
         uniform_removal_renewal_source(state_id, item);
     else if (!materialize(state_id, item)) return false;
     out_signature = reforge_base_observation(
-        preserved_reforge_base(*session_, action, item));
+        preserved_reforge_base(*session_, action, item), session_->rare_reforge_count_kind);
     out_signature.insert(out_signature.begin(), action_index);
     return true;
 }
@@ -781,7 +784,7 @@ CalcContext::evaluate_reforge_cooperatively(
      * states differing only in wiped mods share one roll DP. */
     std::uint64_t base_hash = 0;
     std::vector<std::uint64_t> base_observation =
-        reforge_base_observation(base, &base_hash);
+        reforge_base_observation(base, session.rare_reforge_count_kind, &base_hash);
     const std::tuple<std::uint32_t, std::uint64_t, bool> memo_key{
         action_index, base_hash, goal_progress_gated};
     const auto memo = reforge_cache_.find(memo_key);
@@ -1980,8 +1983,13 @@ CalcContext::evaluate_reforge_cooperatively(
         add_target(other_count + 2, 0.5);
         add_target(other_count + 3, 0.5);
     } else {
-        for (int t = 4; t <= 6; ++t) {
-            add_target(t - (veiled_reforge ? 1 : 0), 1.0 / 3.0);
+        const auto law = rare_reforge_count_law(session.rare_reforge_count_kind);
+        for (const auto& draw : law.draws) {
+            if (draw.weight == 0) continue;
+            // Native Veiled Chaos clamps the total before reserving its veil.
+            const int total = std::min<int>(draw.count, cap * 2);
+            add_target(total - (veiled_reforge ? 1 : 0),
+                       static_cast<double>(draw.weight) / law.denominator);
         }
     }
     const int max_target = targets.rbegin()->first;

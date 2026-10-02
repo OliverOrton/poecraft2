@@ -532,6 +532,9 @@ void build_session(SessionImpl& session) {
     }
     session.rare_affix_cap =
         (item_class_key == "Jewel" || item_class_key == "AbyssJewel") ? 2 : 3;
+    session.rare_reforge_count_kind =
+        (item_class_key == "Jewel" || item_class_key == "AbyssJewel")
+            ? RareReforgeCountKind::LegacyJewel : RareReforgeCountKind::Equipment;
     session.eldritch_eligible =
         item_class_key == "Helmet" || item_class_key == "Body Armour" ||
         item_class_key == "Gloves" || item_class_key == "Boots";

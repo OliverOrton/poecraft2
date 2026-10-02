@@ -1,0 +1,194 @@
+{
+  "schema": "poecraft2.reforge-law-finite-qualification.v1",
+  "base": "dce327101d73117146b09908baea3cb0690c046f",
+  "branch": "dot/reforge-law-20261002",
+  "source_state": "Final production correction plus independently tested retained-occupancy extension; unaffected production checks reused after test-only changes.",
+  "native_test_executable": {
+    "path": "build/engine/poecraft_engine_tests.exe",
+    "sha256": "0f67d6472c5eab027fdbdb5612a7630fe5ed32bc5c1bfead1aaf5d79f163d0c1"
+  },
+  "engine_and_test_source_sha256": {
+    "engine/src/actions_basic.cpp": "349549bb53ccf6d460dc6581f9127ee7dcf7a111da3398353e68f540675c8fd2",
+    "engine/src/engine_internal.hpp": "2841b683301c94442722620ca472bbf553aa2e19b9007bc1d72bce0dd4d9d660",
+    "engine/src/session_builder.cpp": "abb3d0dbdfd93e4d3079861aa11209b8be83e9475de2bd717e7b7894fd1f5c9c",
+    "engine/src/solver_development_checkpoint.cpp": "48c5eb0e1198e699858e9544b0821e9fe39538759770ed656b25642fa4d7d35b",
+    "engine/src/solver_eval_types.hpp": "c9a3202e80a458d348b3ae40205a28e3828c03a09407fbfb6f2fab27e604509c",
+    "engine/src/solver_model.hpp": "e5bf1302b7cd043b325314eba52cc5eec9114916cfb7e27d9a0805601b506f2c",
+    "engine/src/solver_phase_lower.cpp": "3d72eece488716a96773dcd9c74031cfd3682100a8ea0318b8b0a6d1c02ed648",
+    "engine/src/solver_policy_oracle_setup.inc": "e202d7d025361bd8f7c11006aca820f951d7f6e09e909cf2561d40b78d9e5168",
+    "engine/src/solver_reforge.cpp": "331b003c24030291a29715837ec8c7e2a5f455173646d85cc21bf3eab5d5b5f2",
+    "engine/src/solver_solve_constructive.cpp": "a08b8e604338b311167e1edfb0cf91040e5ef1832aa05ff92876f2f7f4e85b57",
+    "engine/tests/test_main.cpp": "fc6106d723c4575afb9464063943a86f798ce336bcd9d5d64f58817f703d2c8a",
+    "engine/tests/test_solver_api.cpp": "6f0dfddbea150c36c8c6213f49ed3cf779b9db4984f102ec7789a46399f5b458",
+    "engine/tests/test_solver_calc.cpp": "f8167095165dce830248e44a59a374bd2f57d982e527322da2d160de863a9276",
+    "engine/tests/test_solver_eval.cpp": "fb66906d3a0b29e542bcbd7eb31087ed8760c82b3b95fe2e4f1f02bb9d42ea06",
+    "engine/tests/tests.hpp": "68c0ee4e749b5acf76a7e1929e617104a31dfb794be929a7b691412329d5ebe1",
+    "engine/src/reforge_count_law.hpp": "ac901436d3faf757361a644ac4e427dc61c985ed191485258813d11bfc0955c5"
+  },
+  "law_versions": {
+    "count": 2,
+    "refinement": 4,
+    "certificate_evaluator": 2,
+    "development_checkpoint": 5,
+    "public_abi": 3,
+    "authored_graph": "v1"
+  },
+  "frozen_read_only_artifact": {
+    "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+    "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+  },
+  "passed_checks": 1352300,
+  "passed": [
+    {
+      "name": "count-law",
+      "exit": 0,
+      "args": [
+        "--reforge-count-law-only"
+      ],
+      "log": "out/reforge-law/validation/count-law-final.log",
+      "checks": 209934
+    },
+    {
+      "elapsed_seconds": 0.42189709999999997,
+      "name": "gated-rows",
+      "exit": 0,
+      "started_utc": "2026-10-02T19:18:56.4643874Z",
+      "args": [
+        "--solver-calc-gated-equivalence-only"
+      ],
+      "log": "out/reforge-law/validation/gated-rows.log",
+      "checks": 1111656
+    },
+    {
+      "elapsed_seconds": 1.3008967,
+      "name": "phase-lower",
+      "exit": 0,
+      "started_utc": "2026-10-02T19:23:22.1145102Z",
+      "args": [
+        "--solver-phase-lower-only"
+      ],
+      "log": "out/reforge-law/validation/phase-lower.log",
+      "checks": 5940
+    },
+    {
+      "elapsed_seconds": 4.4249668,
+      "name": "metamod",
+      "exit": 0,
+      "started_utc": "2026-10-02T19:23:23.4660391Z",
+      "args": [
+        "--solver-metamod-recovery-only",
+        "C:/Users/Oliver/Documents/poecraft2/data/compiled/current"
+      ],
+      "log": "out/reforge-law/validation/metamod.log",
+      "checks": 685
+    },
+    {
+      "elapsed_seconds": 0.0632776,
+      "name": "uniform-removal",
+      "exit": 0,
+      "started_utc": "2026-10-02T19:23:27.8950035Z",
+      "args": [
+        "--solver-uniform-removal-only"
+      ],
+      "log": "out/reforge-law/validation/uniform-removal.log",
+      "checks": 23202
+    },
+    {
+      "elapsed_seconds": 0.026410399999999997,
+      "name": "protected-finder",
+      "exit": 0,
+      "started_utc": "2026-10-02T19:23:27.9632827Z",
+      "args": [
+        "--solver-protected-finder-only"
+      ],
+      "log": "out/reforge-law/validation/protected-finder.log",
+      "checks": 66
+    },
+    {
+      "elapsed_seconds": 0.082395,
+      "name": "finder-essence",
+      "exit": 0,
+      "started_utc": "2026-10-02T19:23:27.9936965Z",
+      "args": [
+        "--solver-finder-essence-only"
+      ],
+      "log": "out/reforge-law/validation/finder-essence.log",
+      "checks": 293
+    },
+    {
+      "elapsed_seconds": 0.0456337,
+      "name": "assertions",
+      "exit": 0,
+      "started_utc": "2026-10-02T19:23:28.0816101Z",
+      "args": [
+        "--solver-assertion-service-only"
+      ],
+      "log": "out/reforge-law/validation/assertions.log",
+      "checks": 424
+    },
+    {
+      "elapsed_seconds": 0.6320515999999999,
+      "name": "proof-handoff",
+      "exit": 0,
+      "started_utc": "2026-10-02T19:23:28.1322500Z",
+      "args": [
+        "--solver-proof-handoff-only"
+      ],
+      "log": "out/reforge-law/validation/proof-handoff.log",
+      "checks": 49
+    },
+    {
+      "name": "checkpoint",
+      "exit": 0,
+      "checks": 51,
+      "args": [
+        "--solver-checkpoint-only",
+        "C:/Users/Oliver/Documents/poecraft2/data/compiled/current"
+      ],
+      "log": "out/reforge-law/validation/reforge-checkpoint-v6.log"
+    }
+  ],
+  "failed_and_resolved": [
+    "Fixture ActionParams/veiled-flag/session-accessor compile anchors corrected.",
+    "Initial synthetic carrier and authored condition setup corrected.",
+    "Synthetic bench catalogue lacked key metadata; unnecessary entry removed after reproduced startup access violation.",
+    "Fresh worktree compiled artifact absent; used frozen main artifact read-only.",
+    "Windows repeated checkpoint copy returned File exists; remove the fixture-owned prior copy before second control."
+  ],
+  "failed_logs": "out/reforge-law/validation",
+  "unrun": [
+    "Full acceptance",
+    "Fresh shared-library/Python qualification",
+    "WASM rebuild/worker qualification",
+    "Real-data timed search and independent historical-policy evaluation"
+  ],
+  "timed_invocations": 0,
+  "subagents": 0,
+  "push_merge_deploy": false,
+  "remaining_owner_boundaries": [
+    "Cluster owner selects ClusterJewel in configured sessions with cap 2.",
+    "Ordinary/Abyss jewel probabilities unresolved; legacy behavior preserved.",
+    "Integrator owns four existing ABI2 corpus runtime-pin migrations and fresh law-bound qualification."
+  ],
+  "retained_occupancy": {
+    "full_pool_total_probabilities": {
+      "4": "8/12",
+      "5": "3/12",
+      "6": "1/12"
+    },
+    "three_held_prefix_suffix_full": {
+      "old": "1/3",
+      "new": "1/12"
+    },
+    "synthetic_two_held_prefix_suffix_full_no_guarantee": {
+      "old": "139/315",
+      "new": "23/140"
+    },
+    "synthetic_two_held_prefix_suffix_full_with_harvest_suffix_guarantee": {
+      "old": "22/45",
+      "new": "1/5"
+    },
+    "real_item_cost_comparison": "unrun"
+  }
+}

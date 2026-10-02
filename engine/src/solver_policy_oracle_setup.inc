@@ -1680,7 +1680,9 @@
         identity.artifact_identity = {
             0x7063716172746631ull,
             address(strict_->session().data.get()),
-            strict_->session().data->artifact_schema_version};
+            strict_->session().data->artifact_schema_version,
+            kRareReforgeCountLawVersion,
+            static_cast<std::uint64_t>(strict_->session().rare_reforge_count_kind)};
         identity.start_identity = root_key_;
         identity.solver_options_identity = {
             0x7063716f70747331ull,

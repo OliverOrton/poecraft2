@@ -1,3 +1,15 @@
+# Ordinary reforge law execution (2026-10-02)
+
+Oliver selected the global ordinary 4/5/6 count correction to 8:3:1 in isolated
+`dot/reforge-law-20261002` from `dce3271`. The
+[living record](docs/active/2026-10-02-reforge-law/README.md) owns shared-file
+coordination, law identity migration, 1,351,679 passing finite checks and the
+unrun bounded native/WASM requalification proposal.
+Cluster sessions must select the shared approved 65/35 interface in their own
+branch; ordinary/Abyss jewels retain their unresolved prior behavior. Integrator
+01a0fd2f-7f88-7588-a1ea-bfe1e6991036 owns staged review and qualified push.
+No timed solve, push, merge, deployment, data/economy refresh or subagent work.
+
 # Current-batch promotion and cap repair checkpoint (2026-10-02)
 
 Main/origin main are `2805807`: qualified Fossil refusal, matching WASM and two

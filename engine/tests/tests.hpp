@@ -41,6 +41,8 @@ void run_simulator_tests(const char* artifact_dir);
 /* Solver phase S1-S5 suites. */
 void run_solver_abstract_tests(const char* artifact_dir);
 void run_solver_action_family_contract_tests(const char* artifact_dir);
+void run_reforge_count_law_tests();
+void run_reforge_saved_graph_law_tests();
 void run_solver_calc_tests(const char* artifact_dir);
 void run_solver_metamod_recovery_tests(const char* artifact_dir);
 void run_solver_calc_gated_equivalence_tests();

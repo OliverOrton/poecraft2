@@ -20,6 +20,32 @@ Broad row work can suspend during predecessor indexing, expansion, canonicalizat
 
 The synchronous `outcomes()` interface is a completion wrapper for callers that do not schedule the cooperative cursor.
 
+## Rare count-law identity
+
+Ordinary equipment rare reforges use the native shared integer 4/5/6 law,
+weights 8/3/1 over 12, approved by Oliver on 2026-10-02. Exact raw, projected
+and factored rows use this same mixture, including retained and forced-mod
+refill. Fixed-count refill overrides the mixture. Capacity and preserved-count
+clamps coalesce probabilities; native pool exhaustion absorbs all remaining
+mass. Veiled Chaos clamps the total before subtracting its reserved placeholder.
+The shared interface also contains the separately approved configured-cluster
+3/4 law (65/35); ordinary/Abyss jewel probabilities are unresolved.
+
+All three ordinary count masses remain positive. For a fixed finite graph and
+unchanged conditional kernels, its positive transition support therefore stays
+unchanged. Legal graph routes and finite-state properness may be reused as
+structure, but its probabilities, expected cost, lower/upper certificates and
+proof relations must be reconstructed and checked. Authored graph vocabulary
+stays v1. Historical benchmark receipts retain their original law and costs;
+new costs are not pure search-improvement comparisons.
+
+Native count-law version 2 binds memo/kernel signatures and lower, quotient and
+continuation identities. Action refinement contract 4 and evaluator certificate
+version 2 invalidate old assertions/values. Development checkpoint format 5
+rejects old-law rows and additionally checks the law version and session kind.
+The [execution record](../active/2026-10-02-reforge-law/README.md) owns tests and
+remaining native/WASM qualification; this reference alone confers no acceptance.
+
 ## Completion is an authority boundary
 
 While suspended, the cursor owns scratch only. It cannot populate the ordinary row cache, seed Bellman values as a completed row, satisfy an action obligation, or certify a proof row. Cancellation discards the unpublished work. Completion installs the immutable distribution transactionally.

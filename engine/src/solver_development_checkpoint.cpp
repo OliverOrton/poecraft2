@@ -16,8 +16,8 @@ namespace fs = std::filesystem;
 constexpr std::array<char, 16> kMagic{
     'P', 'C', 'S', 'O', 'L', 'V', 'E', 'G',
     'R', 'A', 'P', 'H', 'V', '1', '\r', '\n'};
-// Version 4 additionally binds the explicit supplementary root grammar.
-constexpr std::uint32_t kFormatVersion = 4;
+// Version 5 refuses transition payloads built under the old rare count law.
+constexpr std::uint32_t kFormatVersion = 5;
 constexpr std::uint32_t kEndianMarker = 0x01020304u;
 constexpr std::uint64_t kFnvOffset = 14695981039346656037ull;
 constexpr std::uint64_t kFnvPrime = 1099511628211ull;
@@ -797,6 +797,8 @@ void CalcContext::save_development_solve_checkpoint(
 
     PayloadWriter out(stream);
     out.string(caller_identity);
+    out.pod(kRareReforgeCountLawVersion);
+    out.pod(static_cast<std::uint64_t>(session().rare_reforge_count_kind));
     out.pod(static_cast<std::uint64_t>(initial_operator_count_));
     out.pod(static_cast<std::uint64_t>(static_candidate_operator_count_));
     out.pod(static_cast<std::uint64_t>(operators_.size()));
@@ -910,6 +912,10 @@ void CalcContext::load_development_solve_checkpoint(
     if (in.string() != expected_caller_identity) {
         throw std::runtime_error(
             "solver development checkpoint caller identity mismatch");
+    }
+    if (in.pod<std::uint64_t>() != kRareReforgeCountLawVersion ||
+        in.pod<std::uint64_t>() != static_cast<std::uint64_t>(session().rare_reforge_count_kind)) {
+        throw std::runtime_error("solver development checkpoint rare count law mismatch");
     }
     const std::uint64_t saved_initial_operators = in.pod<std::uint64_t>();
     const std::uint64_t saved_static_candidates = in.pod<std::uint64_t>();

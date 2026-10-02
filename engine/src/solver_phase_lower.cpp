@@ -90,7 +90,8 @@ std::uint32_t mask_for_item(const CalcContext& calc, const pc_item_state& item) 
 }
 StableKey context_key(const CalcContext& calc, const PhaseLowerPrices& prices) {
     const auto& session = calc.session();
-    StableKey result{version, kActionRefinementContractVersion, session.base_index, session.item_level,
+    StableKey result{version, kActionRefinementContractVersion, kRareReforgeCountLawVersion,
+        static_cast<std::uint64_t>(session.rare_reforge_count_kind), session.base_index, session.item_level,
         static_cast<std::uint64_t>(calc.goal().rarity), calc.goal().required_satisfied_slots(),
         calc.goal().automatic_candidates, calc.goal().automatic_candidate_kind_mask,
         calc.goal().disabled_action_families, calc.layout().slots.size()};

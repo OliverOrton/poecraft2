@@ -8,6 +8,12 @@ int g_failures = 0;
 } // namespace pctest
 
 int main(int argc, char** argv) {
+    if (argc > 1 && std::string(argv[1]) == "--reforge-count-law-only") {
+        run_reforge_count_law_tests();
+        run_reforge_saved_graph_law_tests();
+        std::printf("reforge count-law tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-dominance-only") {
         run_solver_dominance_tests(argc > 2 ? argv[2] : nullptr);
         std::printf("solver Dominance tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);

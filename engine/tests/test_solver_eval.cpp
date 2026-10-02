@@ -3893,7 +3893,33 @@ void run_solver_dominance_tests(const char* artifact_dir) {
     catch(const std::exception& ex) {std::printf("Dominance real runtime: %s\n",ex.what());PC_CHECK(false);}
 }
 
+void run_reforge_saved_graph_law_tests() {
+    // Identical authored v1 graph; only the synthetic mechanics law changes.
+    // It retries Chaos until all six independent modifiers are present.
+    auto current=make_eval_session();
+    current->normal_random_roll_mask.assign(current->words,0);
+    for (const auto mod : {0u,2u,3u,5u,6u,7u}) pc_bitset_set(current->normal_random_roll_mask.data(),mod);
+    auto historical=std::make_shared<SessionImpl>(*current);
+    historical->rare_reforge_count_kind=RareReforgeCountKind::LegacyJewel; // synthetic old-uniform control
+    const auto graph=shell("saved ordinary Chaos graph", "rare",
+        R"JSON({"id":"start","kind":"start"},{"id":"roll","kind":"operation","operation":{"type":"chaos","params":{}}},{"id":"success","kind":"terminal","terminal":"success"})JSON",
+        R"JSON({"id":"begin","from":"start","to":"roll","priority":0,"condition":{"type":"always"}},
+{"id":"hit","from":"roll","to":"success","priority":0,"condition":{"type":"all","conditions":[{"type":"prefix_count_range","min":3,"max":3},{"type":"suffix_count_range","min":3,"max":3}]}},
+{"id":"retry","from":"roll","to":"roll","priority":999,"is_default":true})JSON");
+    StrategyEvalOptions options;
+    auto prices=std::make_shared<EconomyImpl>(); prices->prices={{"chaos",1}}; options.economy=prices;
+    const auto old=evaluate_strategy(*compile(historical,graph),options);
+    const auto fresh=evaluate_strategy(*compile(current,graph),options);
+    PC_CHECK(old.converged && fresh.converged && old.cost_complete && fresh.cost_complete);
+    PC_CHECK(near(old.success_probability,1) && near(fresh.success_probability,1));
+    PC_CHECK(near(old.total_expected_cost,3,1e-10));
+    PC_CHECK(near(fresh.total_expected_cost,12,1e-10));
+    PC_CHECK(old.failure_probability==0 && fresh.failure_probability==0);
+    std::printf("Saved graph freshly evaluated: historical uniform %.12gc; approved 8:3:1 %.12gc\n",old.total_expected_cost,fresh.total_expected_cost);
+}
+
 void run_solver_eval_tests(const char* artifact_dir) {
+    run_reforge_saved_graph_law_tests();
     const auto stage = [](const char* name, const auto& fn) {
         try {
             fn();

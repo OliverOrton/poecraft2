@@ -309,7 +309,9 @@ SolveWork::Impl::executable_continuation_authority_context(
 
         const DataImpl& data = *calc.session().data;
         context.mechanics_artifact = {
-            1, /* compiled artifact/session identity schema */
+            2, /* compiled artifact/session and native count-law identity */
+            kRareReforgeCountLawVersion,
+            static_cast<std::uint64_t>(calc.session().rare_reforge_count_kind),
             data.artifact_schema_version,
         };
         append_string(
@@ -382,6 +384,8 @@ std::uint64_t SolveWork::Impl::graph_identity() const {
 std::uint64_t SolveWork::Impl::artifact_identity() const {
         std::uint64_t hash = 1469598103934665603ULL;
         const DataImpl& data = *calc.session().data;
+        identity_mix(hash, kRareReforgeCountLawVersion);
+        identity_mix(hash, static_cast<std::uint64_t>(calc.session().rare_reforge_count_kind));
         identity_mix(hash, data.artifact_schema_version);
         identity_mix_string(hash, data.artifact_data_hash);
         identity_mix_string(hash, data.artifact_source_hash);
@@ -3824,6 +3828,8 @@ void SolveWork::Impl::install_output_incumbent(
         /* The artifact owner address is an invalidation dependency, not a
          * deterministic portfolio tie-break. Schema/base/item identities
          * are stable semantic inputs and are mixed separately below. */
+        identity_mix(identity, kRareReforgeCountLawVersion);
+        identity_mix(identity, static_cast<std::uint64_t>(calc.session().rare_reforge_count_kind));
         identity_mix(
             identity, calc.session().data->artifact_schema_version);
         identity_mix(identity, calc.session().base_index);

@@ -3136,7 +3136,7 @@ void run_development_checkpoint_replay_gate(const char* artifact_dir) {
     {
         std::fstream stream(legacy, std::ios::in | std::ios::out | std::ios::binary);
         stream.seekp(16); // version follows the fixed 16-byte magic
-        const std::uint32_t old_observation_pruned_law_version = 2;
+        const std::uint32_t old_observation_pruned_law_version = 4; // Old uniform rare count payload.
         stream.write(reinterpret_cast<const char*>(&old_observation_pruned_law_version),
             sizeof(old_observation_pruned_law_version));
         PC_CHECK(static_cast<bool>(stream));
@@ -3147,6 +3147,27 @@ void run_development_checkpoint_replay_gate(const char* artifact_dir) {
         &error) == PC_RESULT_INTERNAL_ERROR);
     PC_CHECK(std::string(error.message).find("unsupported solver development checkpoint version")
         != std::string::npos);
+    pc_solver_destroy(stale);
+    fs::remove(legacy, remove_error);
+    fs::copy_file(checkpoint, legacy, fs::copy_options::overwrite_existing);
+    {
+        // Law version/kind follow the length-prefixed caller identity. A fresh
+        // format cannot import a different class law even with the same caller.
+        std::fstream stream(legacy,std::ios::in|std::ios::out|std::ios::binary);
+        stream.seekg(0,std::ios::end);
+        // Locate the exact caller bytes, independently of platform layout sizes.
+        const auto size=static_cast<std::size_t>(stream.tellg());
+        std::string bytes(size,'\0'); stream.seekg(0); stream.read(bytes.data(),size);
+        const auto at=bytes.find(identity); PC_CHECK(at!=std::string::npos);
+        const std::uint64_t wrong_kind=2;
+        stream.seekp(at+std::strlen(identity)+sizeof(std::uint64_t));
+        stream.write(reinterpret_cast<const char*>(&wrong_kind),sizeof(wrong_kind));
+        PC_CHECK(static_cast<bool>(stream));
+    }
+    stale=nullptr;
+    PC_CHECK(pc_solver_create(session,goal.c_str(),goal.size(),&stale,&error)==PC_RESULT_OK);
+    PC_CHECK(pc_solver_development_checkpoint_load(stale,legacy.string().c_str(),identity,&error)==PC_RESULT_INTERNAL_ERROR);
+    PC_CHECK(std::string(error.message).find("rare count law mismatch")!=std::string::npos);
     pc_solver_destroy(stale);
     fs::remove(legacy, remove_error);
     const std::string original_strategy =

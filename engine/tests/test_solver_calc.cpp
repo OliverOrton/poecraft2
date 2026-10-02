@@ -875,6 +875,7 @@ void run_reforge_cross_goal_projection_tests() {
                 }
             };
             for (unsigned target = 4; target <= 6; ++target) {
+                const double count_probability = target == 4 ? 8.0/12 : target == 5 ? 3.0/12 : 1.0/12;
                 const auto count = std::min<unsigned>(target, session->rare_affix_cap * 2);
                 if (registry.actions[action].params.type == ActionType::HarvestReforge) {
                     // Independently enumerate the native targeted first draw,
@@ -890,9 +891,9 @@ void run_reforge_cross_goal_projection_tests() {
                             static_cast<std::uint16_t>(row.primary_group), 0, nullptr) == PC_RESULT_OK);
                         const auto first = first_base_blocker != 0 ? first_base_blocker :
                             row.session_mod_id == 2 || row.session_mod_id == 5 ? row.session_mod_id : 0u;
-                        visit(visit, next, count, row.final_weight / (3.0 * pool.total_weight), first);
+                        visit(visit, next, count, count_probability * row.final_weight / pool.total_weight, first);
                     }
-                } else visit(visit, base, count, 1.0 / 3, first_base_blocker);
+                } else visit(visit, base, count, count_probability, first_base_blocker);
             }
             const auto input = calc.intern_item(source);
             const auto actual = calc.outcomes(input, action);
@@ -945,7 +946,7 @@ void run_reforge_cross_goal_projection_tests() {
                 }
                 // Native exhaustion may stop the 5/6 targets early. Four,
                 // five and six must nevertheless each carry positive mass.
-                PC_CHECK(count_mass[4] >= 1.0 / 3 - 1e-12);
+                PC_CHECK(count_mass[4] >= 8.0 / 12 - 1e-12);
                 PC_CHECK(count_mass[5] > 0 && count_mass[6] > 0);
             }
             if (profile == 0) {
@@ -4322,7 +4323,288 @@ void run_calculator_incoming_tests(const char* artifact_dir) {
     std::printf("Original Foulborn carrier Calculator probability: %.17g\n", p);
 }
 
+void run_reforge_count_law_tests() {
+    // Independent finite native ordered draws, with literal mixture constants.
+    // No production count helper or cached DP row constructs the reference.
+    for (unsigned scenario = 0; scenario < 8; ++scenario) {
+        auto session = make_calc_session();
+        auto data = std::const_pointer_cast<DataImpl>(session->data);
+        session->normal_random_roll_mask.assign(session->words, 0);
+        for (const unsigned mod : {0u,3u,4u,5u,6u,7u})
+            if (scenario != 3 && (scenario != 2 || mod == 0 || mod == 5 || mod == 6))
+                pc_bitset_set(session->normal_random_roll_mask.data(), mod);
+        if (scenario == 1) session->rare_affix_cap = 2;
+        if (scenario == 7) {
+            // Preserve the existing ordinary-jewel law pending its owner ruling.
+            session->rare_affix_cap = 2;
+            session->rare_reforge_count_kind = RareReforgeCountKind::LegacyJewel;
+        }
+        data->metamod_prefixes_locked_code = 20;
+        session->metamod_type[8] = 20;
+        session->flags[8] |= 1u << 1;
+        session->crafted_mask.assign(session->words,0);
+        pc_bitset_set(session->crafted_mask.data(),8);
+        auto carrier_mask=session->normal_random_roll_mask;
+        pc_bitset_set(carrier_mask.data(),8);
+        session->veiled_prefix_mod_id = session->veiled_suffix_mod_id = kNoId;
+        data->essence_count = 1;
+        data->essence_item_level_restrictions = {-1};
+        data->essence_is_corruption_only = {0};
+        data->essence_key_sids = {static_cast<unsigned>(data->strings.size())};
+        data->strings.push_back("count_forced");
+        session->essence_guaranteed_mod_ids = {0};
+        data->fossil_count = 1;
+        data->fossil_key_sids = data->fossil_name_sids = {static_cast<unsigned>(data->strings.size())};
+        data->strings.push_back("count_fossil");
+        data->fossil_weight_offsets = data->fossil_mod_offsets = {0,0};
+        data->fossil_rolls_lucky = data->fossil_mirrors = {0};
+        session->fossil_added_mod_ids = {{}};
+        session->fossil_forced_mod_ids = {{3,5}};
+        session->fossil_sell_price_mod_ids = {{}};
+        auto registry = build_action_registry(*session);
+        const auto chaos = registry.index_by_id.at("chaos");
+        auto fossil = registry.actions[chaos];
+        fossil.id = "fossil:count_forced";
+        fossil.params.type = ActionType::Fossil;
+        fossil.params.fossil_indices = {0};
+        fossil.refinement = derive_action_refinement_contract(*session, fossil);
+        const auto fossil_id = static_cast<unsigned>(registry.actions.size());
+        registry.actions.push_back(fossil);
+        for (unsigned extra = 0; extra < 2; ++extra) for (unsigned implementation = 0; implementation < 3; ++implementation) {
+            auto goal = family_goal_100();
+            if (extra) goal.terminal.extras = ExtraExplicitPolicy::Allow;
+            CalcContext calc(session, goal, registry, {}, false, false, false,
+                std::nullopt, {}, false, carrier_mask, false,
+                false, implementation != 0, false, implementation == 2);
+            ActionContextImpl context(112233);
+            context.session = session;
+            for (const unsigned action : {chaos, registry.index_by_id.at("alchemy"),
+                    registry.index_by_id.at("essence:count_forced"),
+                    registry.index_by_id.at("harvest_reforge:fire"),
+                    registry.index_by_id.at("eldritch_chaos"), fossil_id}) {
+                pc_item_state source;
+                pc_item_clear(&source);
+                source.rarity = action == registry.index_by_id.at("alchemy") ? PC_RARITY_NORMAL : PC_RARITY_RARE;
+                if (scenario == 4) place(&source, 1, 5, 20, PC_MOD_SLOT_FRACTURED);
+                if (scenario == 5) {
+                    place(&source, 0, 8, 30, PC_MOD_SLOT_CRAFTED);
+                    place(&source, 0, 0, 10);
+                    place(&source, 1, 5, 20, PC_MOD_SLOT_FRACTURED);
+                    place(&source, 1, 6, 21); // Wiped unless independently fractured.
+                }
+                if (scenario == 6) for (const auto mod : {0u,3u,4u,5u,6u})
+                    place(&source, session->gen_type[mod], mod, session->primary_group[mod], PC_MOD_SLOT_FRACTURED);
+                const auto type = registry.actions[action].params.type;
+                const bool locks = type != ActionType::Essence && type != ActionType::Fossil;
+                pc_item_state base = source;
+                pc_item_clear_side(&base, 0); pc_item_clear_side(&base, 1);
+                base.rarity = PC_RARITY_RARE;
+                for (const int side : {0,1}) {
+                    const auto* slots = side == 0 ? source.prefixes : source.suffixes;
+                    const auto n = side == 0 ? source.prefix_count : source.suffix_count;
+                    for (unsigned i=0;i<n;++i) if ((slots[i].flags & PC_MOD_SLOT_FRACTURED) || (scenario == 5 && locks && side == 0))
+                        place(&base, side, slots[i].mod_id, slots[i].group_id, slots[i].flags);
+                }
+                for (const auto mod : type == ActionType::Essence ? std::vector<unsigned>{0} : type == ActionType::Fossil ? std::vector<unsigned>{3,5} : std::vector<unsigned>{}) {
+                    bool same = false;
+                    for (const int side : {0,1}) {
+                        const auto* slots = side == 0 ? base.prefixes : base.suffixes;
+                        const auto n = side == 0 ? base.prefix_count : base.suffix_count;
+                        for (unsigned i=0;i<n;++i) same |= slots[i].mod_id == mod;
+                    }
+                    // These fixtures have no conflicting distinct forced groups.
+                    if (!same && (session->gen_type[mod] == 0 ? base.prefix_count : base.suffix_count) < session->rare_affix_cap)
+                        place(&base, session->gen_type[mod], mod, session->primary_group[mod]);
+                }
+                bool direct_failure = false;
+                for (const auto mod : type == ActionType::Essence ? std::vector<unsigned>{0} : type == ActionType::Fossil ? std::vector<unsigned>{3,5} : std::vector<unsigned>{}) {
+                    for (const int side : {0,1}) {
+                        const auto* slots = side == 0 ? source.prefixes : source.suffixes;
+                        const auto n = side == 0 ? source.prefix_count : source.suffix_count;
+                        for (unsigned i=0;i<n;++i) if ((slots[i].flags & PC_MOD_SLOT_FRACTURED) && slots[i].mod_id == mod) direct_failure = true;
+                    }
+                }
+                if (direct_failure) {
+                    const auto input = calc.intern_item(source);
+                    const auto& row = calc.outcomes(input,action);
+                    if (!row.supported || row.entries.size()!=1 || row.entries.front().state!=input)
+                        std::printf("direct-refusal case=%u extra=%u evaluator=%u action=%s supported=%u entries=%zu\n",scenario,extra,implementation,registry.actions[action].id.c_str(),row.supported,row.entries.size());
+                    PC_CHECK(row.supported && row.entries.size()==1 && row.entries.front().state==input && row.entries.front().probability==1);
+                    continue;
+                }
+                std::map<unsigned,double> expected;
+                const auto visit = [&](auto&& self, pc_item_state item, unsigned target, double p) -> void {
+                    if (item.prefix_count+item.suffix_count >= target) { expected[calc.intern_item(item)]+=p; return; }
+                    const bool prefix = item.prefix_count < session->rare_affix_cap;
+                    const bool suffix = item.suffix_count < session->rare_affix_cap;
+                    PoolBuildRequest request;
+                    request.respects_metamod_pool_blocks = locks;
+                    request.side_filter = prefix && suffix ? -1 : prefix ? 0 : 1;
+                    const auto pool = get_weighted_pool(context, &item, request);
+                    if ((!prefix && !suffix) || !pool.total_weight) { expected[calc.intern_item(item)]+=p; return; }
+                    for (const auto& row : pool.entries) if (row.final_weight) {
+                        auto next = item;
+                        PC_CHECK(pc_item_add_mod(&next,row.gen_type,row.session_mod_id,row.primary_group,0,nullptr)==PC_RESULT_OK);
+                        self(self,next,target,p*row.final_weight/pool.total_weight);
+                    }
+                };
+                for (unsigned t=4;t<=6;++t) {
+                    const double p = scenario == 7 ? 1.0/3 : t == 4 ? 8.0/12 : t == 5 ? 3.0/12 : 1.0/12;
+                    if (type == ActionType::HarvestReforge) {
+                        PoolBuildRequest request;
+                        request.weight_kind = PoolWeightKind::TargetedNatural;
+                        request.target_tag_id = kTagFire;
+                        const auto pool = get_weighted_pool(context,&base,request);
+                        if (!pool.total_weight) expected[calc.intern_item(source)]+=p;
+                        for (const auto& row : pool.entries) if (row.final_weight) {
+                            auto next=base;
+                            PC_CHECK(pc_item_add_mod(&next,row.gen_type,row.session_mod_id,row.primary_group,0,nullptr)==PC_RESULT_OK);
+                            visit(visit,next,t,p*row.final_weight/pool.total_weight);
+                        }
+                    } else visit(visit,base,t,p);
+                }
+                const auto& actual = calc.outcomes(calc.intern_item(source), action);
+                if (!actual.supported || actual.entries.size()!=expected.size())
+                    std::printf("count case=%u extra=%u evaluator=%u action=%s supported=%u actual=%zu expected=%zu\n",scenario,extra,implementation,registry.actions[action].id.c_str(),actual.supported,actual.entries.size(),expected.size());
+                PC_CHECK(actual.supported && sums_to_one(actual));
+                PC_CHECK(actual.entries.size()==expected.size());
+                for (const auto& row : actual.entries) PC_CHECK(near(row.probability,expected[row.state],1e-12));
+                if (scenario == 0 && action == chaos) {
+                    double counts[7]{};
+                    for (const auto& row : actual.entries) {
+                        const auto& s=calc.state(row.state); counts[s.prefix_count+s.suffix_count]+=row.probability;
+                    }
+                    PC_CHECK(near(counts[4],8.0/12) && near(counts[5],3.0/12) && near(counts[6],1.0/12));
+                    // Concrete fixed-six must not pollute the ordinary row cache.
+                    const auto copy = actual;
+                    const auto fixed=calc.concrete_refill({base,6,true,false});
+                    PC_CHECK(fixed->supported && sums_to_one(*fixed));
+                    for (const auto& row:fixed->entries) {
+                        const auto& s=calc.state(row.state); PC_CHECK(s.prefix_count+s.suffix_count==6);
+                    }
+                    PC_CHECK(same_distribution(copy,calc.outcomes(calc.intern_item(source),chaos)));
+                }
+            }
+        }
+        if (scenario == 0) {
+            ActionContextImpl context(20261002); context.session=session;
+            for (const auto type : {ActionType::Alchemy,ActionType::Chaos,ActionType::Essence,ActionType::Fossil,ActionType::HarvestReforge,ActionType::EldritchChaos}) {
+                unsigned counts[7]{};
+                ActionParameters params; params.type=type; params.essence_index=0; params.fossil_indices={0}; params.target_tag_id=kTagFire;
+                for (unsigned i=0;i<12000;++i) {
+                    pc_item_state item; pc_item_clear(&item); item.rarity=type==ActionType::Alchemy ? PC_RARITY_NORMAL : PC_RARITY_RARE;
+                    PC_CHECK(apply_action(context,&item,params).applied);
+                    ++counts[item.prefix_count+item.suffix_count];
+                }
+                PC_CHECK(std::abs(counts[4]/12000.0-8.0/12)<.02);
+                PC_CHECK(std::abs(counts[5]/12000.0-3.0/12)<.02);
+                PC_CHECK(std::abs(counts[6]/12000.0-1.0/12)<.02);
+                std::printf("count frequencies action=%u: %u/%u/%u of 12000\n",static_cast<unsigned>(type),counts[4],counts[5],counts[6]);
+            }
+        }
+    }
+    // Native clamps rare total to four before reserving its veil slot on a
+    // two-per-side carrier. All count draws therefore leave three fillers and
+    // one placeholder; clamping after reservation would fill both sides first.
+    {
+        auto session=make_calc_session(); session->rare_affix_cap=2;
+        auto registry=build_action_registry(*session);
+        const auto action=registry.index_by_id.at("veiled_chaos");
+        CalcContext calc(session,family_goal_100(),registry,{},false,false,false,
+            std::nullopt,{},false,session->normal_random_roll_mask,false,false,true,false,true);
+        pc_item_state rare;pc_item_clear(&rare);rare.rarity=PC_RARITY_RARE;
+        const auto& row=calc.outcomes(calc.intern_item(rare),action);
+        PC_CHECK(row.supported && sums_to_one(row));
+        for(const auto& e:row.entries) {
+            const auto& item=calc.state(e.state);
+            PC_CHECK(item.prefix_count+item.suffix_count==4 && (item.flags & kFlagVeiledMod));
+        }
+        ActionContextImpl context(20261003); context.session=session;
+        ActionParameters params;params.type=ActionType::VeiledChaos;
+        for(unsigned i=0;i<1000;++i) {
+            auto item=rare; PC_CHECK(apply_action(context,&item,params).applied);
+            PC_CHECK(item.prefix_count+item.suffix_count==4);
+            PC_CHECK(pc_item_find_veiled(&item,nullptr,nullptr)==PC_RESULT_OK);
+        }
+    }
+    // Retained occupancy/recovery witness: a suffix metamod preserves 2/3
+    // prefixes, then is wiped itself. Harvest guarantees the other-side Fire
+    // modifier before drawing a TARGET TOTAL. Its guarantee is not extra to
+    // 4/5/6, nor is the mixture conditioned on the retained count.
+    for (unsigned held : {2u,3u}) for (unsigned forced : {0u,1u}) for (unsigned pool_case : {0u,1u,2u}) {
+        auto session=make_calc_session();
+        auto data=std::const_pointer_cast<DataImpl>(session->data);
+        data->metamod_prefixes_locked_code=20;
+        session->metamod_type[9]=20; session->flags[9]|=1u<<1;
+        session->crafted_mask.assign(session->words,0); pc_bitset_set(session->crafted_mask.data(),9);
+        session->veiled_prefix_mod_id=session->veiled_suffix_mod_id=kNoId;
+        session->normal_random_roll_mask.assign(session->words,0);
+        for(const auto mod : pool_case==0 ? std::vector<unsigned>{0,3,4,5,6,7} :
+                pool_case==1 ? std::vector<unsigned>{5,6} : std::vector<unsigned>{5})
+            pc_bitset_set(session->normal_random_roll_mask.data(),mod);
+        std::vector<std::uint64_t> carrier(session->words,0);
+        for(const auto mod : {0u,3u,4u,5u,6u,7u,9u}) pc_bitset_set(carrier.data(),mod);
+        const auto registry=build_action_registry(*session);
+        const auto action=registry.index_by_id.at(forced ? "harvest_reforge:fire" : "chaos");
+        auto goal=family_goal_100(); goal.terminal.extras=ExtraExplicitPolicy::Allow;
+        CalcContext calc(session,goal,registry,{},false,false,false,std::nullopt,{},false,carrier,false,false,true,false,true);
+        pc_item_state source;pc_item_clear(&source);source.rarity=PC_RARITY_RARE;
+        for(const auto mod : held==2 ? std::vector<unsigned>{0,3} : std::vector<unsigned>{0,3,4})
+            place(&source,0,mod,session->primary_group[mod]);
+        place(&source,1,9,31,PC_MOD_SLOT_CRAFTED);
+        auto base=source;pc_item_clear_side(&base,1); // lock itself is wiped
+        if(forced) place(&base,1,5,20);
+        ActionContextImpl context(20261004);context.session=session;
+        std::map<unsigned,double> expected;
+        const auto visit=[&](auto&& self,pc_item_state item,unsigned total,double mass)->void {
+            if(item.prefix_count+item.suffix_count>=total) {expected[calc.intern_item(item)]+=mass;return;}
+            const bool pre=item.prefix_count<3,suf=item.suffix_count<3;
+            PoolBuildRequest request;request.side_filter=pre&&suf ? -1 : pre ? 0 : 1;
+            const auto pool=get_weighted_pool(context,&item,request);
+            if((!pre&&!suf)||!pool.total_weight) {expected[calc.intern_item(item)]+=mass;return;}
+            for(const auto& entry:pool.entries) if(entry.final_weight) {
+                auto next=item;PC_CHECK(pc_item_add_mod(&next,entry.gen_type,entry.session_mod_id,entry.primary_group,0,nullptr)==PC_RESULT_OK);
+                self(self,next,total,mass*entry.final_weight/pool.total_weight);
+            }
+        };
+        visit(visit,base,4,8.0/12);visit(visit,base,5,3.0/12);visit(visit,base,6,1.0/12);
+        const auto& actual=calc.outcomes(calc.intern_item(source),action);
+        PC_CHECK(actual.supported && sums_to_one(actual));PC_CHECK(actual.entries.size()==expected.size());
+        double counts[7]{}, suffix_full=0;
+        for(const auto& entry:actual.entries) {
+            PC_CHECK(near(entry.probability,expected[entry.state],1e-12));
+            const auto& out=calc.state(entry.state);counts[out.prefix_count+out.suffix_count]+=entry.probability;
+            if(out.suffix_count==3) suffix_full+=entry.probability;
+            pc_item_state item;PC_CHECK(calc.materialize(entry.state,item));
+            for(unsigned i=0;i<source.prefix_count;++i) PC_CHECK(item_contains_mod(item,source.prefixes[i].mod_id));
+            PC_CHECK(!item_contains_mod(item,9));
+            if(forced) PC_CHECK(item_contains_mod(item,5));
+        }
+        if(pool_case==0) PC_CHECK(near(counts[4],8.0/12)&&near(counts[5],3.0/12)&&near(counts[6],1.0/12));
+        if(pool_case==1 && held==3) PC_CHECK(near(counts[4],8.0/12)&&near(counts[5],4.0/12)&&near(counts[6],0));
+        if(pool_case==1 && held==2) PC_CHECK(near(counts[4],1));
+        if(pool_case==2) PC_CHECK(near(counts[held+1],1));
+        // The recovery event is a full suffix side: no room for another
+        // suffix metamod even when a prefix slot is still open. Reprice the
+        // same ordered native paths with the historical uniform mixture.
+        expected.clear();visit(visit,base,4,1.0/3);visit(visit,base,5,1.0/3);visit(visit,base,6,1.0/3);
+        double old_suffix_full=0;
+        for(const auto& [id,mass]:expected) if(calc.state(id).suffix_count==3) old_suffix_full+=mass;
+        if(pool_case==0 && held==3) PC_CHECK(near(suffix_full,1.0/12)&&near(old_suffix_full,1.0/3));
+        if(pool_case==0 && held==2 && forced) PC_CHECK(near(suffix_full,1.0/5)&&near(old_suffix_full,22.0/45));
+        if(pool_case==0 && held==2 && !forced) PC_CHECK(near(suffix_full,23.0/140)&&near(old_suffix_full,139.0/315));
+        std::printf("retained occupancy held=%u forced=%u pool=%u: total3=%.12g total4=%.12g total5=%.12g total6=%.12g; suffix-full old=%.12g new=%.12g\n",held,forced,pool_case,counts[3],counts[4],counts[5],counts[6],old_suffix_full,suffix_full);
+    }
+    // The shared cluster interface selects the approved law without activating
+    // or changing cluster session construction in this ordinary-law branch.
+    unsigned counts[7]{};
+    const auto law=rare_reforge_count_law(RareReforgeCountKind::ClusterJewel);
+    for(unsigned draw=0;draw<100;++draw) ++counts[law.select(draw)];
+    PC_CHECK(counts[3]==65 && counts[4]==35);
+}
+
 void run_solver_calc_tests(const char* artifact_dir) {
+    run_reforge_count_law_tests();
     // Compare concrete refill with independent ordered-draw enumeration. This
     // covers fixed-six Vaal, retained Awakener pairs, group overlap, empty-pool
     // stopping, side caps and separation from ordinary cached Chaos rows.
@@ -4377,7 +4659,7 @@ void run_solver_calc_tests(const char* artifact_dir) {
                     visit(next, target, p * row.final_weight / pool.total_weight);
                 }
             };
-            if (variant == 1) for (unsigned t = 4; t <= 6; ++t) visit(expected_base, t, 1.0 / 3);
+            if (variant == 1) for (unsigned t = 4; t <= 6; ++t) visit(expected_base, t, t == 4 ? 8.0/12 : t == 5 ? 3.0/12 : 1.0/12);
             else visit(expected_base, 6, 1);
             PC_CHECK(expected.size() == actual->entries.size());
             for (const auto& row : actual->entries) PC_CHECK(near(row.probability, expected[row.state], 1e-12));

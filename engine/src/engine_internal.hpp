@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "reforge_count_law.hpp"
 #include "poecraft/item_state.h"
 #include "poecraft/rng.h"
 #include "poecraft/simulator.h"
@@ -413,6 +414,7 @@ struct SessionImpl {
 
     // max affixes per side for a rare item: 2 for (abyss) jewels, else 3.
     std::uint8_t rare_affix_cap = 3;
+    RareReforgeCountKind rare_reforge_count_kind = RareReforgeCountKind::Equipment;
     bool eldritch_eligible = false;
 
     // Display-family identity is primary exclusion group + ordered stat
