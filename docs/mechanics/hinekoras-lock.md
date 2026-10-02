@@ -36,6 +36,14 @@ checkpoint storage additionally restores exact unused slot fields. Such imported
 editor/history state is not a reachability, probability or exact-policy
 certificate. Ordinary solver ingress continues to refuse the information state.
 
+Veiled Chaos/Exalt previews and items with a pending veiled modifier refuse.
+The [Unveil contract](veiled-crafting.md) fixes hidden offers at acquisition and
+reveals them separately; a full native item preview would disclose those offers
+early. Active Lock checkpoint imports refuse that state too. An ended Lock history
+record does not prevent later ordinary veiled acquisition or its persistence. Completed Unveil history is
+ordinary item metadata and does not alone block Lock. A visible/hidden preview
+model requires owner review before this scope can expand.
+
 Multicurrency previews, donor-dependent previews and adaptive Lock valuation
 remain held. The old free-decline Bellman sketch is not an accepted model.
 [Current execution and qualification](../active/2026-10-02-lock-strands-completion/README.md)

@@ -51,6 +51,14 @@ bool same(const pc_item_state& a, const pc_item_state& b) {
         a.socket_count == b.socket_count && a.link_mask == b.link_mask &&
         std::equal(std::begin(a.socket_colors), std::end(a.socket_colors), std::begin(b.socket_colors));
 }
+bool pending_veil(const pc_item_state& item) {
+    const auto pending = [](const pc_mod_slot* slots, unsigned count) {
+        for (unsigned i = 0; i < count; ++i)
+            if (slots[i].flags & PC_MOD_SLOT_VEILED) return true;
+        return false;
+    };
+    return pending(item.prefixes, item.prefix_count) || pending(item.suffixes, item.suffix_count);
+}
 bool current(poecraft::HinekoraForesight& f, const pc_item_state* item) {
     if (f.identity != item || !f.active) return false;
     if (!same(f.input, *item)) {
@@ -191,7 +199,7 @@ bool currency(poecraft::ActionType type) {
     switch (type) {
     case T::Transmute: case T::Augment: case T::Alteration: case T::Regal:
     case T::Alchemy: case T::Chaos: case T::Exalt: case T::Annul: case T::Scour:
-    case T::Essence: case T::VeiledChaos: case T::VeiledExalt:
+    case T::Essence:
     case T::EldritchEmber: case T::EldritchIchor: case T::EldritchExalt:
     case T::EldritchChaos: case T::EldritchAnnul: case T::InfluenceExalt:
     case T::Fracture: case T::FoulbornAugment: case T::FoulbornRegal:
@@ -275,6 +283,11 @@ pc_result pc_hinekora_lock_create(pc_action_context_handle context,
         if (!currency(action.type)) {
             error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
                 "Lock fixed-currency preview does not support this operation");
+            return PC_RESULT_UNSUPPORTED_FEATURE;
+        }
+        if (pending_veil(*item)) {
+            error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
+                "Lock preview with pending Unveil offers requires an approved disclosure model");
             return PC_RESULT_UNSUPPORTED_FEATURE;
         }
         const auto& previous = context->impl->hinekora_foresight;
@@ -430,6 +443,8 @@ pc_result pc_hinekora_lock_snapshot_item(pc_action_context_handle context,
     try {
         const auto root = read_snapshot(*context->impl->session, text, size);
         const auto item = read_item(root.at("current"), *context->impl->session);
+        if (root.at("active").as_bool() && pending_veil(item))
+            throw std::invalid_argument("Active Lock checkpoints with pending Unveil offers require an approved disclosure model");
         *out_item = item;
         error(out_error, PC_RESULT_OK, ""); return PC_RESULT_OK;
     } catch (const std::exception& ex) {
@@ -465,10 +480,14 @@ pc_result pc_hinekora_lock_restore(pc_action_context_handle context,
         f->refresh_allowed = root.at("refresh_allowed").as_bool();
         if (f->input.item_flags & PC_ITEM_FORESEEN)
             throw std::invalid_argument("Lock checkpoint input has an invalid foresight marker");
+        if (pending_veil(f->input) || (f->active && pending_veil(*item)))
+            throw std::invalid_argument("Lock checkpoints with pending Unveil offers require an approved disclosure model");
         if (f->active) {
             if (f->refresh_allowed || !(item->item_flags & PC_ITEM_FORESEEN) || !same(f->input, *item))
                 throw std::invalid_argument("Lock checkpoint active item identity/state mismatch");
             f->preview = read_item(root.at("preview"), session);
+            if (pending_veil(f->preview))
+                throw std::invalid_argument("Lock preview with pending Unveil offers requires an approved disclosure model");
             const auto outcome = integers(root.at("outcome"));
             if ((f->preview.item_flags & PC_ITEM_FORESEEN) || outcome.size() != 3 || outcome[0] != 1 ||
                 outcome[1] < 0 || outcome[1] > PC_MAX_PREFIXES + PC_MAX_SUFFIXES ||

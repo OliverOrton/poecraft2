@@ -84,7 +84,7 @@ def test_no_free_decline_refresh_or_aliasing():
 
 
 @pytest.mark.parametrize("currency,rarity", [("exalt", "normal"), ("harvest_reforge", "rare"),
-    ("unravelling", "rare"), ("remembrance", "normal"), ("double_corruption", "rare")])
+    ("unravelling", "rare"), ("remembrance", "normal"), ("double_corruption", "rare"), ("veiled_chaos", "rare"), ("veiled_exalt", "rare")])
 def test_refused_creation_is_atomic(currency, rarity):
     with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(21) as ctx, session.create_action_context(21) as control:
         item = session.create_item(rarity)
@@ -161,7 +161,7 @@ def test_native_lock_metadata_does_not_admit_non_currency_operations():
     _lib.pc_hinekora_lock_currency_supported.restype = ct.c_int32
     assert _lib.pc_hinekora_lock_cost_key() == b"hinekora_lock"
     assert _lib.pc_hinekora_lock_currency_supported(6) == 1
-    for code in [-1, 10, 11, 14, 15, 16, 17, 29, 30, 32, 33, 35, 36]:
+    for code in [-1, 10, 11, 12, 13, 14, 15, 16, 17, 29, 30, 32, 33, 35, 36]:
         assert _lib.pc_hinekora_lock_currency_supported(code) == 0
 
 
@@ -270,7 +270,7 @@ def test_old_handle_cannot_clear_new_lock_and_marker_clearing_cannot_refresh():
                     ctx.hinekora_lock(item, "annul")
 
 
-@pytest.mark.parametrize("currency,rarity", [("exalt","rare"),("alchemy","normal"),("veiled_chaos","rare")])
+@pytest.mark.parametrize("currency,rarity", [("exalt","rare"),("alchemy","normal")])
 def test_cached_snapshot_rebind_preserves_preview_without_rng_draw(currency, rarity):
     with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(12) as ctx, session.create_action_context(41) as restored, session.create_action_context(41) as control:
         item = session.create_item(rarity)
@@ -377,3 +377,44 @@ def test_ended_lifetime_cannot_transfer_foresight_to_reused_item_storage():
             ct.memmove(ct.byref(item._state),ct.byref(fresh._state),ct.sizeof(item._state))
             with ctx.hinekora_lock(item,"exalt") as paid:
                 assert paid.active and paid.commit().applied
+
+
+def test_pending_unveil_offers_refuse_lock_without_exposing_or_resampling_them():
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(8) as acquisition, session.create_action_context(21) as ctx, session.create_action_context(21) as control:
+        item = session.create_item("rare")
+        assert acquisition.apply(item, "veiled_exalt").applied
+        assert any(slot.flags & 4 for slots in [item._state.prefixes, item._state.suffixes] for slot in slots)
+        before = _fields(item._state)
+        with pytest.raises(EngineError, match="pending Unveil offers"):
+            ctx.hinekora_lock(item, "exalt")
+        assert _fields(item._state) == before
+        comparison = item.copy()
+        assert ctx.apply(item,"exalt").applied == control.apply(comparison,"exalt").applied
+        assert _fields(item._state) == _fields(comparison._state)
+
+
+def test_consumed_lock_history_does_not_block_later_ordinary_veiled_crafting():
+    with load_data(ARTIFACT) as data, data.create_session(BASE,86) as session, session.create_action_context(8) as ctx, session.create_action_context(41) as replay:
+        item = session.create_item("rare")
+        with ctx.hinekora_lock(item,"exalt") as lock:
+            assert lock.commit().applied
+            assert ctx.apply(item,"veiled_exalt").applied
+            checkpoint = lock.export()
+            assert not checkpoint["active"] and "preview" not in checkpoint
+            with replay.restore_hinekora_lock(item.copy(),"exalt",checkpoint) as restored:
+                assert not restored.active
+
+
+def test_imported_lock_preview_cannot_introduce_pending_hidden_unveil_offers():
+    with load_data(ARTIFACT) as data, data.create_session(BASE,86) as session, session.create_action_context(8) as ctx, session.create_action_context(41) as replay:
+        item = session.create_item("rare")
+        with ctx.hinekora_lock(item,"exalt") as lock:
+            checkpoint = lock.export()
+            # Native checkpoint vector: nine scalar fields then 17 fields per
+            # slot. Negative transport fixture, not a reachable-item claim.
+            side_start = 9 if checkpoint["preview"][5] else 9 + 3 * 17
+            checkpoint["preview"][side_start + 2] |= 4
+            before = _fields(item._state)
+            with pytest.raises(EngineError, match="pending Unveil offers"):
+                replay.restore_hinekora_lock(item.copy(),"exalt",checkpoint)
+            assert _fields(item._state) == before and lock.active

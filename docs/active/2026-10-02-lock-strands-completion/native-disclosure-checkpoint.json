@@ -1,0 +1,23 @@
+{
+  "previous_checkpoint": "3d19dc9be7d90c98adee1191b78ba6912d4f22ea",
+  "stage": "native Lock hidden-Unveil disclosure guard; matching WASM in progress",
+  "source_files": {
+    "engine/include/poecraft/hinekora.h": "fefa304fb08601cabcb36796cd0771bd4d2a9e236a62b8313a9d1d35211d0824",
+    "engine/src/hinekora.cpp": "3974bdc49fb6a51d684351bc6d82509d35fa736e0e6c6af26fb5b4bd435b9196",
+    "bindings/python/tests/test_hinekora_lock.py": "55c807005605743875ee537ee8a78b08d17e22eed3553f0514f82c1c0fe5f50f"
+  },
+  "dll_sha256": "b7812f133bffd8759763ec18e67d61ca442a2643ee922c38d5f5cf80866e1c53",
+  "checks": {
+    "engine_shared_header": "passed; two jobs",
+    "python_tests": 64
+  },
+  "logs": {
+    "out/lock-strands-completion/disclosure-native-final-build.log": "64e6d29dd5e0faefe73e4d8860df7d9fb9f9d0ef8564b5477c6fffad55620829",
+    "out/lock-strands-completion/disclosure-native-qualified64.log": "1d2f3fb822c5c0fabf26e3a75e7f5c8c2b59b8b615861100dd51d4ff3231ad83"
+  },
+  "remaining": [
+    "matching WASM and final worker/web contracts",
+    "memory laws unapproved",
+    "multicurrency, veiled disclosure expansion and authored Lock strategies unavailable"
+  ]
+}

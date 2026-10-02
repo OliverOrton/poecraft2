@@ -149,3 +149,17 @@ spending, failed import and context recovery. Its expanded fixture found the
 lifetime bug; that failed WASM run is retained. Worker dispatch omission and a
 UI-test invocation/quantity-glyph mismatch are corrected, with logs retained.
 The final browser/module qualification is still in progress.
+
+## Passing native disclosure checkpoint
+
+Two-job Engine/shared/header builds and 64 focused Python contracts pass.
+Veiled currencies and original items with pending Unveil modifiers refuse Lock
+before sampling/payment; active imported previews cannot introduce hidden
+Unveil offers. An ended Lock record permits ordinary later veiled acquisition
+and history restoration. This preserves acquisition and reveal semantics while
+holding the new disclosure path. [Review boundary](veiled-disclosure-review.md)
+distinguishes existing reserved-outcome mechanics from a future visible-only
+projection and opaque portable checkpoint; no guessed probability law is needed
+or approved. [Receipt](native-disclosure-checkpoint.json) pins this native stage.
+Matching WASM and final web qualification are the remaining current-batch steps.
+No new research or mechanics expansion will start after closure.
