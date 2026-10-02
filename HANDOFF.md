@@ -10,8 +10,10 @@ W1 reporting (`be034a5`, web `362404d`) and carrier repair (`ca9daff`) are local
 committed; native/WASM/focused web checks pass. Receipts and strategy hashes are
 committed in the living record. Both policies remain bounded Finish results;
 real W1 timed replay and worker qualification remain unrun. No own process is
-live. Parent-authorized Conquest source/finite review continues; integration is
-a plan pending final stable owner revisions. Historical MM receipts below stay
+live. Parent-authorized Conquest review retains actual destructive recovery findings
+and a labelled mixed-tag native control (516 checks, zero failures). CURRENT is
+quiescent for the parent's Mechanics qualification hold; integration remains a
+plan pending final stable owner revisions. Historical MM receipts below stay
 unchanged, and main/root `0` are untouched.
 
 Oliver's selected [MM0–MM7 recovery](docs/active/2026-09-29-metamod-recovery/README.md)

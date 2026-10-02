@@ -1,0 +1,1444 @@
+{
+  "kind": "source_and_saved_artifact_review_not_matched_qualification",
+  "source": "481f712",
+  "saved_cases": [
+    {
+      "report_path": "out/current-goal-audit/E3/a4-legacy-clean/cases/cb02-cross-base-product8-long240.json",
+      "report_sha256": "51bd36f12f74db3cb810ca26e414a891cf228b450e7549bc13b840e10d298aca",
+      "strategy_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\current-goal-audit\\E3\\a4-legacy-clean\\strategies\\cb02-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "a7a4a54bad1dfb8c4e9e85ac0060a2cc73943648d0bd69541b47eaa36eb3fe02",
+      "saved_environment": {
+        "abi_version": 2,
+        "compiler": "gcc-14.2.0",
+        "process_working_set_bytes": 34652160
+      },
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 4,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+            "min_tier": 1
+          }
+        ]
+      },
+      "root": {
+        "rarity": "rare",
+        "with_implicits": false,
+        "mods": []
+      },
+      "solve_summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 3746.1319409485764,
+        "expanded_states": 7213,
+        "sweeps": 16,
+        "residual": 1.8189894035458565e-12,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 180,
+          "candidate": 21,
+          "evaluator_supported": 21,
+          "supported_priced": 302,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 198.8334996747695,
+        "upper_bound": 3746.1319409485764,
+        "evaluated_policy_cost": 3746.1319409485764,
+        "absolute_optimality_gap": 3547.298441273807,
+        "relative_optimality_gap": 17.840547227082443,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "graph_nodes": 811,
+      "graph_edges": 2200,
+      "checked_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 2851.3923,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 3746.1319409485764,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "positive_actions": [
+        {
+          "id": "alteration",
+          "visits": 5027.968272553488,
+          "spend": 769.2791457006836,
+          "expected_visits_by_goal_progress": {
+            "0": 634.0950939841044,
+            "1": 4393.873178569384
+          }
+        },
+        {
+          "id": "annul",
+          "visits": 32.59456755083028,
+          "spend": 315.8413595675454,
+          "expected_visits_by_goal_progress": {
+            "3": 32.594567550830206
+          }
+        },
+        {
+          "id": "augment",
+          "visits": 2513.0039393427555,
+          "spend": 165.85825999662188,
+          "expected_visits_by_goal_progress": {
+            "1": 2513.003939342755
+          }
+        },
+        {
+          "id": "eldritch_annul",
+          "visits": 0.8662857225453229,
+          "spend": 35.110560334761935,
+          "expected_visits_by_goal_progress": {
+            "4": 0.8662857225453234
+          }
+        },
+        {
+          "id": "eldritch_ember:1",
+          "visits": 1.1243076913912464,
+          "spend": 0.17572929216445182,
+          "expected_visits_by_goal_progress": {
+            "2": 0.18760976309879762,
+            "3": 0.9366640978158056,
+            "4": 3.3830476643644414e-05
+          }
+        },
+        {
+          "id": "eldritch_ember:2",
+          "visits": 6.1226300251244e-05,
+          "spend": 7.959419032661722e-05,
+          "expected_visits_by_goal_progress": {
+            "3": 6.122630025124402e-05
+          }
+        },
+        {
+          "id": "eldritch_exalt",
+          "visits": 19.69423161292368,
+          "spend": 70.70229149039601,
+          "expected_visits_by_goal_progress": {
+            "2": 0.19715249149332115,
+            "3": 19.497079121430364
+          }
+        },
+        {
+          "id": "eldritch_ichor:1",
+          "visits": 0.021082204907172934,
+          "spend": 0.0017359087520566194,
+          "expected_visits_by_goal_progress": {
+            "3": 6.122630025124402e-05,
+            "4": 0.02102097860692169
+          }
+        },
+        {
+          "id": "eldritch_ichor:2",
+          "visits": 0.5465198677143372,
+          "spend": 0.2434199490799658,
+          "expected_visits_by_goal_progress": {
+            "4": 0.5465198677143376
+          }
+        },
+        {
+          "id": "exalt",
+          "visits": 333.0663466006782,
+          "spend": 589.5274334832004,
+          "expected_visits_by_goal_progress": {
+            "1": 4.115035893344966,
+            "2": 320.6524798655067,
+            "3": 8.29883084182695
+          }
+        },
+        {
+          "id": "fracture",
+          "visits": 3.9975210114420374,
+          "spend": 1619.3957617351693,
+          "expected_visits_by_goal_progress": {
+            "1": 3.9975210114420374
+          }
+        },
+        {
+          "id": "regal",
+          "visits": 335.7212447768727,
+          "spend": 52.473230558625204,
+          "expected_visits_by_goal_progress": {
+            "1": 4.234556808330726,
+            "2": 331.48668796854207
+          }
+        },
+        {
+          "id": "restart",
+          "visits": 2.9981407585815365,
+          "spend": 2.9981407585815365,
+          "expected_visits_by_goal_progress": {
+            "1": 2.9981407585815294
+          }
+        },
+        {
+          "id": "scour",
+          "visits": 332.7231040182889,
+          "spend": 124.47171321324187,
+          "expected_visits_by_goal_progress": {
+            "0": 1.0,
+            "1": 0.9993802528605094,
+            "2": 330.7234756815837,
+            "3": 0.00024808384612402785
+          }
+        },
+        {
+          "id": "transmute",
+          "visits": 4.556168717824165,
+          "spend": 0.053079365562651526,
+          "expected_visits_by_goal_progress": {
+            "0": 4.556168717824165
+          }
+        }
+      ],
+      "top_materials": [
+        {
+          "price_key": "fracture",
+          "expected_quantity": 3.9975210114420374,
+          "price_status": "priced",
+          "unit_price": 405.1,
+          "cost_contribution": 1619.3957617351693
+        },
+        {
+          "price_key": "alteration",
+          "expected_quantity": 5027.968272553485,
+          "price_status": "priced",
+          "unit_price": 0.153,
+          "cost_contribution": 769.2791457006832
+        },
+        {
+          "price_key": "exalt",
+          "expected_quantity": 333.0663466006782,
+          "price_status": "priced",
+          "unit_price": 1.77,
+          "cost_contribution": 589.5274334832004
+        },
+        {
+          "price_key": "annul",
+          "expected_quantity": 32.59456755083028,
+          "price_status": "priced",
+          "unit_price": 9.69,
+          "cost_contribution": 315.8413595675454
+        },
+        {
+          "price_key": "augment",
+          "expected_quantity": 2513.0039393427555,
+          "price_status": "priced",
+          "unit_price": 0.066,
+          "cost_contribution": 165.85825999662188
+        },
+        {
+          "price_key": "scour",
+          "expected_quantity": 332.7231040182889,
+          "price_status": "priced",
+          "unit_price": 0.3741,
+          "cost_contribution": 124.47171321324187
+        },
+        {
+          "price_key": "eldritch_exalt",
+          "expected_quantity": 19.69423161292369,
+          "price_status": "priced",
+          "unit_price": 3.59,
+          "cost_contribution": 70.70229149039605
+        },
+        {
+          "price_key": "regal",
+          "expected_quantity": 335.7212447768727,
+          "price_status": "priced",
+          "unit_price": 0.1563,
+          "cost_contribution": 52.473230558625204
+        }
+      ]
+    },
+    {
+      "report_path": "out/current-goal-audit/E3/a5-legacy-clean/cases/cb01-cross-base-product8-long240.json",
+      "report_sha256": "846bad496ac257605c70fc17dbdda1ee48c679f742ed7176f56878256787c3bb",
+      "strategy_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\current-goal-audit\\E3\\a5-legacy-clean\\strategies\\cb01-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+      "saved_environment": {
+        "abi_version": 2,
+        "compiler": "gcc-14.2.0",
+        "process_working_set_bytes": 34652160
+      },
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 5,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+            "min_tier": 1
+          }
+        ]
+      },
+      "root": {
+        "rarity": "rare",
+        "with_implicits": false,
+        "mods": []
+      },
+      "solve_summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 358209179.6640102,
+        "expanded_states": 3274,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 1,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 187,
+          "candidate": 28,
+          "evaluator_supported": 28,
+          "supported_priced": 252,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 1
+        },
+        "lower_bound": 405.3694021063399,
+        "upper_bound": 85558.70618560436,
+        "evaluated_policy_cost": 85558.70618560436,
+        "absolute_optimality_gap": 85153.33678349802,
+        "relative_optimality_gap": 210.06355275221262,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "graph_nodes": 469,
+      "graph_edges": 1117,
+      "checked_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 2704.3478,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 85558.70618560436,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "positive_actions": [
+        {
+          "id": "annul",
+          "visits": 4.550699243748757,
+          "spend": 44.096275671925454,
+          "expected_visits_by_goal_progress": {
+            "2": 3.703891178190587,
+            "3": 0.7746416417974552,
+            "4": 0.0720410125409617,
+            "5": 0.000125411219752991
+          }
+        },
+        {
+          "id": "bench:HelenaMasterFireResist1",
+          "visits": 247.32290069184734,
+          "spend": 2.881311793060022,
+          "expected_visits_by_goal_progress": {
+            "2": 0.08997319295271837,
+            "3": 221.8454676882965,
+            "4": 25.387459810598042
+          }
+        },
+        {
+          "id": "bench:JunMaster2StrengthAndDexterity2",
+          "visits": 0.2823678644181755,
+          "spend": 0.04045202025654782,
+          "expected_visits_by_goal_progress": {
+            "1": 0.15774951004999704,
+            "2": 0.08348177204071705,
+            "3": 0.03670110967058589,
+            "4": 0.004435472656875548
+          }
+        },
+        {
+          "id": "chaos",
+          "visits": 5114.567148807499,
+          "spend": 5114.567148807499,
+          "expected_visits_by_goal_progress": {
+            "0": 4067.0602769606257,
+            "1": 968.9205657230328,
+            "2": 76.35516265498408,
+            "3": 2.230889752769407,
+            "4": 0.0002528043529913513,
+            "5": 9.117930258490782e-07
+          }
+        },
+        {
+          "id": "eldritch_annul",
+          "visits": 753.3333381799832,
+          "spend": 30532.60019643472,
+          "expected_visits_by_goal_progress": {
+            "3": 684.445044444847,
+            "4": 68.88829373513646
+          }
+        },
+        {
+          "id": "eldritch_chaos",
+          "visits": 1206.2084153587016,
+          "spend": 47295.43196621469,
+          "expected_visits_by_goal_progress": {
+            "1": 0.5092084990688224,
+            "2": 1205.6992068596326
+          }
+        },
+        {
+          "id": "eldritch_ember:1",
+          "visits": 0.999999921534868,
+          "spend": 0.15629998773589987,
+          "expected_visits_by_goal_progress": {
+            "1": 0.9426162983068411,
+            "2": 0.053649907813135146,
+            "3": 0.0037207097725439745,
+            "4": 1.3005642345766286e-05
+          }
+        },
+        {
+          "id": "eldritch_exalt",
+          "visits": 523.863785781158,
+          "spend": 1880.670990954357,
+          "expected_visits_by_goal_progress": {
+            "1": 0.43340779923802064,
+            "2": 160.42023809338937,
+            "3": 363.0101268828882,
+            "4": 1.3005642345766286e-05
+          }
+        },
+        {
+          "id": "exalt",
+          "visits": 308.403556055081,
+          "spend": 545.8742942174935,
+          "expected_visits_by_goal_progress": {
+            "1": 48.325214845540515,
+            "2": 11.804293121914935,
+            "3": 222.88215280437052,
+            "4": 25.391895283254918
+          }
+        },
+        {
+          "id": "harvest_augment:defences",
+          "visits": 0.0113730713236002,
+          "spend": 7.385274460049643,
+          "expected_visits_by_goal_progress": {
+            "2": 0.0113730713236002
+          }
+        },
+        {
+          "id": "harvest_augment:physical",
+          "visits": 0.053461239828525624,
+          "spend": 42.37284407569113,
+          "expected_visits_by_goal_progress": {
+            "2": 0.05272139438394407,
+            "3": 0.000737504819722493,
+            "4": 2.3406248590736963e-06
+          }
+        },
+        {
+          "id": "remove_crafted_modifiers",
+          "visits": 247.6052685562655,
+          "spend": 92.62913096689891,
+          "expected_visits_by_goal_progress": {
+            "1": 0.15606054313297352,
+            "2": 0.17100626771414446,
+            "3": 213.8878899419402,
+            "4": 32.477498661914545,
+            "5": 0.9128131415636572
+          }
+        }
+      ],
+      "top_materials": [
+        {
+          "price_key": "eldritch_chaos",
+          "expected_quantity": 1206.2084153587014,
+          "price_status": "priced",
+          "unit_price": 39.21,
+          "cost_contribution": 47295.43196621468
+        },
+        {
+          "price_key": "eldritch_annul",
+          "expected_quantity": 753.3333381799832,
+          "price_status": "priced",
+          "unit_price": 40.53,
+          "cost_contribution": 30532.60019643472
+        },
+        {
+          "price_key": "chaos",
+          "expected_quantity": 5114.567148807499,
+          "price_status": "priced",
+          "unit_price": 1,
+          "cost_contribution": 5114.567148807499
+        },
+        {
+          "price_key": "eldritch_exalt",
+          "expected_quantity": 523.863785781158,
+          "price_status": "priced",
+          "unit_price": 3.59,
+          "cost_contribution": 1880.670990954357
+        },
+        {
+          "price_key": "exalt",
+          "expected_quantity": 308.4035560550811,
+          "price_status": "priced",
+          "unit_price": 1.77,
+          "cost_contribution": 545.8742942174936
+        },
+        {
+          "price_key": "scour",
+          "expected_quantity": 247.60526855626543,
+          "price_status": "priced",
+          "unit_price": 0.3741,
+          "cost_contribution": 92.6291309668989
+        },
+        {
+          "price_key": "annul",
+          "expected_quantity": 4.550699243748757,
+          "price_status": "priced",
+          "unit_price": 9.69,
+          "cost_contribution": 44.096275671925454
+        },
+        {
+          "price_key": "harvest_augment:physical",
+          "expected_quantity": 0.053461239828525624,
+          "price_status": "priced",
+          "unit_price": 792.59,
+          "cost_contribution": 42.37284407569113
+        }
+      ]
+    },
+    {
+      "report_path": "out/2026-09-09-cross-base-capability-recovery/A3-ordinary-baseline/cases/cb03-cross-base-product8-long240.json",
+      "report_sha256": "4f5029307be97ece32c505f943316ddfe86c20726c3bcf8cabddfe7310fa425d",
+      "strategy_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\2026-09-09-cross-base-capability-recovery\\A3-ordinary-baseline\\strategies\\cb03-cross-base-product8-long240.strategy.json",
+      "strategy_sha256": "db4b4e6698b47251bdf3c48e81da4f47892aaaee0dd7063775fa731d7c03f248",
+      "saved_environment": {
+        "abi_version": 2,
+        "compiler": "gcc-14.2.0",
+        "process_working_set_bytes": 33316864
+      },
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 5,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+            "min_tier": 1
+          }
+        ]
+      },
+      "root": {
+        "rarity": "rare",
+        "with_implicits": false,
+        "mods": [
+          {
+            "key": "LocalIncreasedArmourAndEvasion8",
+            "flags": []
+          },
+          {
+            "key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+            "flags": []
+          },
+          {
+            "key": "LocalBaseArmourAndEvasionRating8",
+            "flags": []
+          }
+        ]
+      },
+      "solve_summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 794067.4530398862,
+        "expanded_states": 3889,
+        "sweeps": 0,
+        "residual": 5.960464477539063e-08,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 186,
+          "candidate": 28,
+          "evaluator_supported": 28,
+          "supported_priced": 236,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 405.11164995948883,
+        "upper_bound": 794067.4530398862,
+        "evaluated_policy_cost": 794067.4530398862,
+        "absolute_optimality_gap": 793662.3413899267,
+        "relative_optimality_gap": 1959.120014122756,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "graph_nodes": 766,
+      "graph_edges": 1552,
+      "checked_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 3387.5848,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 794067.4530398862,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "positive_actions": [
+        {
+          "id": "annul",
+          "visits": 2.7812912148746896,
+          "spend": 26.95071187213574,
+          "expected_visits_by_goal_progress": {
+            "5": 2.7812912148746896
+          }
+        },
+        {
+          "id": "bench:HelenaMasterFireResist1",
+          "visits": 293.6115361883846,
+          "spend": 3.420574396594681,
+          "expected_visits_by_goal_progress": {
+            "1": 0.7743950881846022,
+            "2": 217.90484232762506,
+            "3": 69.4552884776013,
+            "4": 5.477010294973509
+          }
+        },
+        {
+          "id": "bench:JunMaster2StrengthAndDexterity2",
+          "visits": 0.15718007537142228,
+          "spend": 0.022517617597709955,
+          "expected_visits_by_goal_progress": {
+            "4": 0.15718007537142228
+          }
+        },
+        {
+          "id": "bench:StrMasterItemGenerationCannotChangePrefixes",
+          "visits": 2.2209822292986665,
+          "spend": 941.6964652226346,
+          "expected_visits_by_goal_progress": {
+            "3": 2.2156656949376883,
+            "4": 0.005316534360978257
+          }
+        },
+        {
+          "id": "chaos",
+          "visits": 18582.521949426155,
+          "spend": 18582.521949426155,
+          "expected_visits_by_goal_progress": {
+            "0": 14773.030081719353,
+            "1": 3487.513534925602,
+            "2": 310.3134527055517,
+            "3": 11.073811411467846,
+            "4": 0.587813387445898,
+            "5": 0.0032552759900354865
+          }
+        },
+        {
+          "id": "eldritch_chaos",
+          "visits": 19235.366321463767,
+          "spend": 754218.7134645943,
+          "expected_visits_by_goal_progress": {
+            "2": 13991.548632382213,
+            "3": 4935.209296615353,
+            "4": 308.60839246620503
+          }
+        },
+        {
+          "id": "eldritch_ember:1",
+          "visits": 1.6349808447611847,
+          "spend": 0.25554750603617316,
+          "expected_visits_by_goal_progress": {
+            "1": 0.4513654955337587,
+            "2": 0.5136638657445819,
+            "3": 0.03186593329752531,
+            "4": 0.6380855501853187
+          }
+        },
+        {
+          "id": "eldritch_ember:2",
+          "visits": 1.0620159684724864,
+          "spend": 1.3806207590142323,
+          "expected_visits_by_goal_progress": {
+            "4": 1.0620159684724864
+          }
+        },
+        {
+          "id": "eldritch_exalt",
+          "visits": 1071.5719672941193,
+          "spend": 3846.9433625858883,
+          "expected_visits_by_goal_progress": {
+            "1": 0.6000851709421565,
+            "2": 953.7877084157806,
+            "3": 117.18417370739608
+          }
+        },
+        {
+          "id": "eldritch_ichor:1",
+          "visits": 1.0620159684724864,
+          "spend": 0.08744639484402453,
+          "expected_visits_by_goal_progress": {
+            "4": 1.0620159684724864
+          }
+        },
+        {
+          "id": "eldritch_ichor:2",
+          "visits": 1.335175670774377,
+          "spend": 0.5946872437629075,
+          "expected_visits_by_goal_progress": {
+            "2": 0.6148617639330078,
+            "3": 0.06745238882457422,
+            "4": 0.6528615180167946
+          }
+        },
+        {
+          "id": "exalt",
+          "visits": 9165.076940231516,
+          "spend": 16222.186184209784,
+          "expected_visits_by_goal_progress": {
+            "1": 571.2374483665159,
+            "2": 6650.5445478061565,
+            "3": 1877.3441424976797,
+            "4": 65.95080156116248
+          }
+        },
+        {
+          "id": "harvest_augment:physical",
+          "visits": 0.13530514089762252,
+          "spend": 107.24150162404663,
+          "expected_visits_by_goal_progress": {
+            "3": 0.13530514089762252
+          }
+        },
+        {
+          "id": "harvest_reforge:physical",
+          "visits": 2.2209822292986665,
+          "spend": 5.539129679870875,
+          "expected_visits_by_goal_progress": {
+            "3": 2.2156656949376883,
+            "4": 0.005316534360978257
+          }
+        },
+        {
+          "id": "remove_crafted_modifiers",
+          "visits": 293.768716263756,
+          "spend": 109.89887675427111,
+          "expected_visits_by_goal_progress": {
+            "1": 0.7463963193962695,
+            "2": 210.04558167173113,
+            "3": 74.83656559975145,
+            "4": 7.941389438849868,
+            "5": 0.19878323402709924
+          }
+        }
+      ],
+      "top_materials": [
+        {
+          "price_key": "eldritch_chaos",
+          "expected_quantity": 19235.36632146375,
+          "price_status": "priced",
+          "unit_price": 39.21,
+          "cost_contribution": 754218.7134645936
+        },
+        {
+          "price_key": "chaos",
+          "expected_quantity": 18582.521949426155,
+          "price_status": "priced",
+          "unit_price": 1,
+          "cost_contribution": 18582.521949426155
+        },
+        {
+          "price_key": "exalt",
+          "expected_quantity": 9165.076940231509,
+          "price_status": "priced",
+          "unit_price": 1.77,
+          "cost_contribution": 16222.186184209771
+        },
+        {
+          "price_key": "eldritch_exalt",
+          "expected_quantity": 1071.5719672941193,
+          "price_status": "priced",
+          "unit_price": 3.59,
+          "cost_contribution": 3846.9433625858883
+        },
+        {
+          "price_key": "bench:StrMasterItemGenerationCannotChangePrefixes",
+          "expected_quantity": 2.2209822292986665,
+          "price_status": "priced",
+          "unit_price": 424,
+          "cost_contribution": 941.6964652226346
+        },
+        {
+          "price_key": "scour",
+          "expected_quantity": 293.76871626375583,
+          "price_status": "priced",
+          "unit_price": 0.3741,
+          "cost_contribution": 109.89887675427106
+        },
+        {
+          "price_key": "harvest_augment:physical",
+          "expected_quantity": 0.13530514089762252,
+          "price_status": "priced",
+          "unit_price": 792.59,
+          "cost_contribution": 107.24150162404663
+        },
+        {
+          "price_key": "annul",
+          "expected_quantity": 2.7812912148746896,
+          "price_status": "priced",
+          "unit_price": 9.69,
+          "cost_contribution": 26.95071187213574
+        }
+      ],
+      "representative_paid_recovery_nodes": [
+        {
+          "node": {
+            "id": "s941",
+            "kind": "operation",
+            "expected_cost": 1000000000000.0,
+            "operation": {
+              "type": "eldritch_chaos"
+            }
+          },
+          "expected_visits": 16112.104517880902,
+          "classes_truncated_share": 0.7955372727104424,
+          "reported_class_summary": [
+            {
+              "slots": [
+                1,
+                0,
+                1,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.07743548294583055
+            },
+            {
+              "slots": [
+                1,
+                0,
+                1,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 2,
+              "share": 0.01513232421356168
+            },
+            {
+              "slots": [
+                1,
+                1,
+                0,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.03468059287249293
+            },
+            {
+              "slots": [
+                0,
+                1,
+                1,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.03468059287249293
+            },
+            {
+              "slots": [
+                1,
+                0,
+                0,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.011165102699791932
+            },
+            {
+              "slots": [
+                0,
+                0,
+                1,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.011165102699791932
+            },
+            {
+              "slots": [
+                1,
+                1,
+                0,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 2,
+              "share": 0.010101764492798114
+            },
+            {
+              "slots": [
+                0,
+                1,
+                1,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 2,
+              "share": 0.010101764492798114
+            }
+          ]
+        },
+        {
+          "node": {
+            "id": "s1066",
+            "kind": "operation",
+            "expected_cost": 1000000000000.0,
+            "operation": {
+              "type": "eldritch_chaos"
+            }
+          },
+          "expected_visits": 3120.864611943618,
+          "classes_truncated_share": 0.7780984391498327,
+          "reported_class_summary": [
+            {
+              "slots": [
+                2,
+                2,
+                2,
+                0,
+                0
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.22190156085016707
+            }
+          ]
+        },
+        {
+          "node": {
+            "id": "s1078_o1",
+            "kind": "operation",
+            "operation": {
+              "type": "eldritch_ember",
+              "tier": 2
+            }
+          },
+          "expected_visits": 1.0620159684724864,
+          "classes_truncated_share": 0.5979969184226368,
+          "reported_class_summary": [
+            {
+              "slots": [
+                2,
+                0,
+                2,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.1336681112850927
+            },
+            {
+              "slots": [
+                2,
+                2,
+                0,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.10708059725841208
+            },
+            {
+              "slots": [
+                0,
+                2,
+                2,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.10708059725841208
+            },
+            {
+              "slots": [
+                2,
+                0,
+                2,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 2,
+              "share": 0.018976628012329584
+            },
+            {
+              "slots": [
+                2,
+                2,
+                0,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 2,
+              "share": 0.0175985738815582
+            },
+            {
+              "slots": [
+                0,
+                2,
+                2,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 2,
+              "share": 0.0175985738815582
+            }
+          ]
+        },
+        {
+          "node": {
+            "id": "s1078_o2",
+            "kind": "operation",
+            "operation": {
+              "type": "eldritch_chaos"
+            }
+          },
+          "expected_visits": 1.0620159684724864,
+          "classes_truncated_share": 0.5979969184226368,
+          "reported_class_summary": [
+            {
+              "slots": [
+                2,
+                0,
+                2,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.1336681112850927
+            },
+            {
+              "slots": [
+                2,
+                2,
+                0,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.10708059725841208
+            },
+            {
+              "slots": [
+                0,
+                2,
+                2,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.10708059725841208
+            },
+            {
+              "slots": [
+                2,
+                0,
+                2,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 2,
+              "share": 0.018976628012329584
+            },
+            {
+              "slots": [
+                2,
+                2,
+                0,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 2,
+              "share": 0.0175985738815582
+            },
+            {
+              "slots": [
+                0,
+                2,
+                2,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 2,
+              "share": 0.0175985738815582
+            }
+          ]
+        },
+        {
+          "node": {
+            "id": "s1935_o1",
+            "kind": "operation",
+            "operation": {
+              "type": "eldritch_ichor",
+              "tier": 2
+            }
+          },
+          "expected_visits": 0.6380855501853187,
+          "classes_truncated_share": 0.5210691091850805,
+          "reported_class_summary": [
+            {
+              "slots": [
+                2,
+                2,
+                2,
+                0,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.2394654454074594
+            },
+            {
+              "slots": [
+                2,
+                2,
+                2,
+                2,
+                0
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.2394654454074594
+            }
+          ]
+        },
+        {
+          "node": {
+            "id": "s1935_o2",
+            "kind": "operation",
+            "operation": {
+              "type": "eldritch_chaos"
+            }
+          },
+          "expected_visits": 0.6380855501853187,
+          "classes_truncated_share": 0.5210691091850805,
+          "reported_class_summary": [
+            {
+              "slots": [
+                2,
+                2,
+                2,
+                2,
+                0
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.25950940895339625
+            },
+            {
+              "slots": [
+                2,
+                2,
+                2,
+                0,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.21942148186152255
+            }
+          ]
+        },
+        {
+          "node": {
+            "id": "s1955",
+            "kind": "operation",
+            "expected_cost": 1000000000000.0,
+            "operation": {
+              "type": "annul"
+            }
+          },
+          "expected_visits": 2.7812912148746896,
+          "classes_truncated_share": 0.030700924155738562,
+          "reported_class_summary": [
+            {
+              "slots": [
+                2,
+                2,
+                2,
+                2,
+                2
+              ],
+              "prefixes": 3,
+              "suffixes": 3,
+              "share": 0.9692990758442614
+            }
+          ]
+        }
+      ],
+      "goal_terminal_guard": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "rarity_is",
+            "rarity": "rare"
+          },
+          {
+            "type": "all",
+            "conditions": [
+              {
+                "type": "all",
+                "conditions": [
+                  {
+                    "type": "has_mod_family",
+                    "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+                    "min_tier": 1
+                  },
+                  {
+                    "type": "has_mod_family",
+                    "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+                    "min_tier": 1
+                  },
+                  {
+                    "type": "has_mod_family",
+                    "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+                    "min_tier": 1
+                  },
+                  {
+                    "type": "has_mod_family",
+                    "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+                    "min_tier": 1
+                  },
+                  {
+                    "type": "has_mod_family",
+                    "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+                    "min_tier": 1
+                  }
+                ]
+              },
+              {
+                "type": "any",
+                "conditions": [
+                  {
+                    "type": "all",
+                    "conditions": [
+                      {
+                        "type": "prefix_count_range",
+                        "min": 2,
+                        "max": 2
+                      },
+                      {
+                        "type": "suffix_count_range",
+                        "min": 3,
+                        "max": 3
+                      }
+                    ]
+                  },
+                  {
+                    "type": "all",
+                    "conditions": [
+                      {
+                        "type": "prefix_count_range",
+                        "min": 3,
+                        "max": 3
+                      },
+                      {
+                        "type": "suffix_count_range",
+                        "min": 2,
+                        "max": 2
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "representative_route_guards": [
+        {
+          "id": "e168",
+          "from": "policy_route_53",
+          "to": "s941",
+          "priority": 2,
+          "condition": {
+            "type": "eldritch_tier",
+            "side": "searing",
+            "min": 2,
+            "max": 2
+          }
+        },
+        {
+          "id": "e774",
+          "from": "policy_route_231",
+          "to": "s1955",
+          "priority": 1,
+          "condition": {
+            "type": "any",
+            "conditions": [
+              {
+                "type": "eldritch_tier",
+                "side": "searing",
+                "min": 1,
+                "max": 1
+              },
+              {
+                "type": "eldritch_tier",
+                "side": "searing",
+                "min": 2,
+                "max": 2
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "mixed_tag_variant": {
+    "exact_phone_request": false,
+    "source_cases": [
+      "fixtures/solver-quality-ladder/v1/cases/conquest-lamellar-allflame-partial-3-to-5-product8.json",
+      "fixtures/solver-natural-t1/v1/cases/natural-t1-smoke-dire-pelt-three.json"
+    ],
+    "base": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+    "item_level": 86,
+    "held_prefixes": [
+      "IncreasedLife12",
+      "LocalIncreasedArmourAndEvasion8",
+      "LocalBaseArmourAndEvasionRating8"
+    ],
+    "wanted_suffixes": [
+      "ChanceToSuppressSpellsHigh5___",
+      "AdditionalPhysicalDamageReduction5_"
+    ],
+    "tag_roles": [
+      "life/resource",
+      "defences/armour/evasion",
+      "tagless",
+      "physical"
+    ],
+    "native_t1_life_family_resolved": true,
+    "benchmark_enabled": false
+  },
+  "finite_controls": {
+    "log": "out/overnight-current/conquest-controls.txt",
+    "log_sha256": "07d636d02335c3d07835b24bce50a2bfec4619139b6828752009498aa53936c7",
+    "checks": 516,
+    "failures": 0,
+    "new_checks": 37,
+    "economic_solve": false,
+    "suppression_first_exalt_probability": 0.00859106529209622,
+    "physical_first_exalt_probability": 0.00859106529209622,
+    "ordinary_annul_held_prefix_loss_probability": 0.6,
+    "eater_dominant_eldritch_annul_held_prefix_loss_probability": 0,
+    "eater_dominant_wanted_suffix_loss_probability": 0.5,
+    "eater_dominant_junk_suffix_loss_probability": 0.5,
+    "prefix_lock_scour_erases_wanted_suffix": true,
+    "test_binary_sha256": "8d1789edc4fbe1b78f5465fb6968be26b153ebfaa97da1e5969dc27fd8bf8acb",
+    "test_source_sha256": "6d3be7af396b11b9eb293e1a646ce90ca7e6a8da9825eabb8cc063371389190c",
+    "command": "build/engine/poecraft_engine_tests.exe --solver-metamod-recovery-only C:/Users/Oliver/Documents/poecraft2/data/compiled/current"
+  }
+}

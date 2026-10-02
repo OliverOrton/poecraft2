@@ -153,12 +153,90 @@ is preserved. This is a qualified feasible upper improvement, not an optimality
 or complete-discovery claim. No real W1 timed replay or worker economic
 qualification was run. There was no Simulator qualification.
 
+## Conquest saved strategy and mixed-tag review
+
+`conquest-review.json` retains report/graph hashes and compact actual occupancy,
+spend and progress evidence from saved cb01/cb02/cb03 controllers. These are
+historical observations with their own inputs and budgets, not tonight's
+matched economic qualification. Costs are cb02 empty-four 3746.131941c,
+cb01 empty-five 85558.706186c and cb03 held-three-to-five 794067.453040c.
+The saved goals use Defence prefixes, tagless Suppression and Physical Reduction;
+none establishes Oliver's unavailable mixed-tag phone request.
+
+The concrete cb03 branch is ordinary Annul at `s1955`: 2.781291 expected visits,
+with reported occupancy share 0.969299 at three prefixes/three suffixes and all
+five wanted slots satisfied (remaining reported class mass is truncated).
+The compiled terminal correctly requires exactly the five wanted affixes for
+this legacy-clean fixture. One junk suffix must therefore be removed. Losing
+a held prefix can trigger reacquisition: 19235.366321 expected Eldritch Chaos
+visits spend 754218.713465c, **94.981693%** of the checked cost. Its biggest node,
+`s941` (16112.104518 visits), reports both wanted suffixes held while prefixes
+are below-tier or absent. This is expensive prefix recovery, not evidence that
+all Eldritch Chaos spending erases suffix progress. A separate `s1935_o1/o2`
+Ichor-2 + Eldritch Chaos route does erase one held wanted suffix while retaining
+the three wanted prefixes (0.638086 expected visits). Other rows do preserve
+valuable progress; operation presence alone is not evidence of selected spend.
+
+A clearly labelled finite variant uses native T1 Life (`IncreasedLife12`, same
+Life family referenced in the repository's natural-T1 fixture), two Defence
+prefixes, tagless Suppression and Physical Reduction on ilvl86 Conquest. Its
+dirty root adds ordinary Dexterity and Fire Resistance suffixes. The full-class
+repair admits protected Scour and preserves all three mixed-tag prefixes. Both
+wanted suffixes have first-Exalt probability 0.0085910652920962206. Native laws
+on a wanted-Suppression-plus-junk carrier show ordinary Annul prefix loss 0.6;
+Eater-dominant Eldritch Annul prefix loss zero with wanted/junk suffix loss 0.5
+apiece. Prefix lock + Scour erases the wanted Suppression. The focused suite
+passes **516 checks, zero failures**; this is finite law/control evidence, not an
+economic solve. Its log is `out/overnight-current/conquest-controls.txt`, SHA256
+`07d636d02335c3d07835b24bce50a2bfec4619139b6828752009498aa53936c7`.
+The test-only addition leaves the frozen native pair binaries and WASM unchanged.
+
+The Bow repair is class/member preservation in local admission, independent of
+tags or base. It helps dirty held-progress setup when the child previously lost
+a parent class. An empty root has no occupied source-only class to lose; this
+repair alone does not promise an empty-root mixed-tag improvement. It also does
+not promote a cheaper suffix-preserving Eldritch tail or change multi-target
+exit semantics. Current protected-repeat synthesis still enumerates one missing
+slot per exit (`solver_options_helpers.hpp`, protected family); the multi-slot
+constructive renewal family is a different owner. No shared grammar, terminal
+mechanic, cap or historical policy was imported or changed in this review.
+
+## Isolated integration plan - no merge performed
+
+After the parent names all final stable revisions, use a new worktree/branch
+(e.g. `poecraft2-integration-overnight`, `dot/integration-20261002`) from the initial
+main and a distinct native build directory. Keep main/root `0` untouched.
+Apply owners' complete stable changes, preserve individual qualification receipts,
+then regenerate release WASM once for the combined native source. Do not retain
+an intermediate owner's binary as combined-build authority.
+
+Review the overlap explicitly: CURRENT/Mechanics `solver_solve_finish.cpp` and
+`test_solver_solve.cpp`; Finder/Mechanics `solver_compile_contracts.hpp`;
+CURRENT/Finder API and benchmark reporting; canonical upper-authority/current
+status and the short top-level handoff. The new W1 incomplete-envelope status,
+actual cap precedence and lost-artifact invariant must coexist with Mechanics'
+explicit original-root assertion mode, root-only provenance and bounded memory.
+Finder's stable acquisition/reset change `a42e971` and diagnostic `d4637b0` still
+have owner-reported broad-suite failures/censored qualification; parent review
+must establish the accepted boundary rather than blindly picking branch HEAD.
+Mechanics' correction `bea5683` resolves the reviewed goal-copy/root-signature
+memory findings, but its real qualification is owned by that session.
+
+Combined validation should exercise the actual overlaps: finite metamod/W1
+publication, bounded Finish/artifact integrity, paid-reset original-root mode,
+Finder native controls and its known failing cases, then required WASM build,
+focused web transport/presentation and typecheck. Broaden only for unresolved
+failures or changed authority; new timed or worker economic qualification needs
+parent allocation. No integration branch, cherry-pick, main merge or push has
+been performed by CURRENT.
+
 ## Continuation and integration gate
 
-The parent released the CPU hold after the completed pair. The same authorized
-session is reviewing saved Conquest strategies and a labelled representative
-mixed-tag goal through source/artifact inspection and finite native laws. No
-additional timed solve is permitted. The saved phone request is unavailable;
+The parent released the earlier CPU hold after the completed pair, then
+requested a fresh short hold for Mechanics qualification. CURRENT is quiescent:
+all own commands have ended and no own process or handle remains. The same
+authorized session completed saved Conquest source/artifact review and finite
+mixed-tag controls. No additional timed solve is permitted. The saved phone request is unavailable;
 a repository-derived variant must not be described as Oliver's exact case.
 Mechanics owns constructive renewal and Finder owns its integration. A source
 review finding about nested allocations in the new mechanics coroutine was

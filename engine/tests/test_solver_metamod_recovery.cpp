@@ -438,6 +438,94 @@ void run_solver_metamod_recovery_tests(const char* artifact_dir) {
         std::ofstream("out/metamod-bow-first-failure.json") << work.progress_trace_json(0);
     }
 
+    // Repository-derived Conquest variant, not Oliver's unavailable phone
+    // request: held Life + two Defence prefixes, wanted tagless Suppression
+    // and Physical Reduction suffixes. These controls exercise finite native
+    // rows only; they neither run an economic solve nor import an old policy.
+    {
+        auto body=std::make_shared<SessionImpl>(); body->data=data;
+        body->base_index=data->base_by_path.at("Metadata/Items/Armours/BodyArmours/BodyStrDex20");
+        body->item_level=86; build_session(*body);
+        const auto registry=build_action_registry(*body,build);
+        const std::vector<std::uint32_t> held{mod(*body,"IncreasedLife12"),
+            mod(*body,"LocalIncreasedArmourAndEvasion8"),mod(*body,"LocalBaseArmourAndEvasionRating8")};
+        const auto suppression=mod(*body,"ChanceToSuppressSpellsHigh5___");
+        const auto physical=mod(*body,"AdditionalPhysicalDamageReduction5_");
+        auto wanted=held; wanted.push_back(suppression); wanted.push_back(physical);
+        auto goal=target(*body,wanted);
+        goal.automatic_candidate_kind_mask=automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod);
+        pc_item_state dirty; pc_item_clear(&dirty); dirty.rarity=PC_RARITY_RARE;
+        for (auto id:held) put(dirty,*body,id);
+        put(dirty,*body,mod(*body,"Dexterity7")); put(dirty,*body,mod(*body,"FireResist8"));
+        CalcContext parent(body,goal,registry,{registry.index_by_id.at("chaos")},false,false,false,std::nullopt,{},true);
+        const auto entry=parent.intern_item(dirty);
+        auto prices=std::unordered_map<std::string,double>{};
+        for (const auto& action:registry.actions) for (const auto& key:action.cost_keys) prices[key]=1;
+        auto admission=limits; admission.prices=&prices;
+        const auto batch=parent.admit_state_local_automatic_candidates(entry,admission);
+        PC_CHECK(batch.status==StateLocalAutomaticBatchStatus::Complete);
+        bool cleanup=false;
+        for (auto index:batch.admitted_operators) {
+            const auto& op=parent.operators().at(index);
+            if (op.option_kind!=FixedOptionKind::ProtectedSide || op.intended_side!=PC_SIDE_PREFIX || op.followup_action_id!="scour") continue;
+            const auto& law=parent.option_kernel(entry,index);
+            PC_CHECK(law.legal && law.supported && law.exits.size()==1);
+            if (law.exits.size()==1) {
+                const auto& exit=parent.state(law.exits.front().state);
+                cleanup=exit.prefix_count==3 && exit.suffix_count==0 && satisfied_goal_mask(exit)==7;
+                PC_CHECK(!parent.is_goal_state(exit));
+            }
+        }
+        PC_CHECK(cleanup);
+        std::vector<std::uint64_t> universe(body->words,0);
+        for (const auto& slot:parent.layout().slots) pc_bitset_or(universe.data(),universe.data(),slot.member_mask.data(),body->words);
+        for (const auto& junk:parent.layout().junk_classes) pc_bitset_or(universe.data(),universe.data(),junk.member_mask.data(),body->words);
+        goal.automatic_candidates=false;
+        FixedOptionSpec reset; reset.kind=FixedOptionKind::ProtectedSide;
+        reset.side=PC_SIDE_PREFIX; reset.action_id="scour"; goal.fixed_options={reset};
+        const std::vector<std::uint32_t> primitives{registry.index_by_id.at("exalt"),registry.index_by_id.at("annul"),registry.index_by_id.at("eldritch_annul")};
+        CalcContext finite(body,goal,registry,primitives,false,false,true,std::nullopt,{},false,universe);
+        pc_item_state clean; pc_item_clear(&clean); clean.rarity=PC_RARITY_RARE;
+        for (auto id:held) put(clean,*body,id);
+        const auto clean_state=finite.intern_item(clean);
+        const auto& draw=finite.outcomes(clean_state,registry.index_by_id.at("exalt"));
+        PC_CHECK(draw.applicable && draw.supported && draw.choice_groups.empty());
+        double mass=0,suppression_hit=0,physical_hit=0;
+        for (const auto& e:draw.entries) {
+            mass+=e.probability; const auto mask=satisfied_goal_mask(finite.state(e.state));
+            PC_CHECK((mask&7)==7 && !finite.is_goal_state(finite.state(e.state)));
+            if (mask&8) suppression_hit+=e.probability;
+            if (mask&16) physical_hit+=e.probability;
+        }
+        PC_CHECK(std::abs(mass-1)<1e-12 && suppression_hit>0 && physical_hit>0);
+        auto progress=clean; put(progress,*body,suppression); put(progress,*body,mod(*body,"Dexterity7"));
+        progress.eater_of_worlds_tier=2; progress.searing_exarch_tier=1;
+        const auto progress_state=finite.intern_item(progress);
+        double ordinary_prefix_loss=0,eldritch_prefix_loss=0,eldritch_good_loss=0,eldritch_junk_loss=0;
+        for (const char* action:{"annul","eldritch_annul"}) {
+            const auto& law=finite.outcomes(progress_state,registry.index_by_id.at(action));
+            PC_CHECK(law.applicable && law.supported && law.choice_groups.empty());
+            mass=0;
+            for (const auto& e:law.entries) {
+                mass+=e.probability; const auto mask=satisfied_goal_mask(finite.state(e.state));
+                if (std::string(action)=="annul") { if ((mask&7)!=7) ordinary_prefix_loss+=e.probability; }
+                else {
+                    if ((mask&7)!=7) eldritch_prefix_loss+=e.probability;
+                    if (!(mask&8)) eldritch_good_loss+=e.probability;
+                    else eldritch_junk_loss+=e.probability;
+                }
+            }
+            PC_CHECK(std::abs(mass-1)<1e-12);
+        }
+        PC_CHECK(std::abs(ordinary_prefix_loss-0.6)<1e-12 && eldritch_prefix_loss==0);
+        PC_CHECK(std::abs(eldritch_good_loss-0.5)<1e-12 && std::abs(eldritch_junk_loss-0.5)<1e-12);
+        const auto& wipe=finite.option_kernel(progress_state,finite.candidate_operators().back());
+        PC_CHECK(wipe.legal && wipe.supported && wipe.exits.size()==1);
+        if (wipe.exits.size()==1) PC_CHECK(satisfied_goal_mask(finite.state(wipe.exits.front().state))==7);
+        std::printf("Conquest mixed-tag finite: cleanup=%d first Supp=%.17g Physical=%.17g; ordinary prefix loss=%.12g eldritch prefix loss=%.12g good/junk suffix loss=%.12g/%.12g; lock+Scour erases held Supp\n",
+            cleanup,suppression_hit,physical_hit,ordinary_prefix_loss,eldritch_prefix_loss,eldritch_good_loss,eldritch_junk_loss);
+    }
+
     // Refinement conserves below-tier blockers, source-only crafted junk
     // and crafted/fractured flags on both sides. Native craft refusal remains
     // authoritative when a preexisting crafted modifier occupies the bench.
