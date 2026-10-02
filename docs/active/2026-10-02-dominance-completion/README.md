@@ -133,3 +133,41 @@ Oliver's newly approved global reforge-law correction is owned by the separate
 reforge-law worker. This branch does not change count helpers or evaluator/cache
 versions. Combined qualification must use that owner's implementation after
 integration; these preserved receipts are not evidence of the new law.
+
+## Final standalone product qualification
+
+Source 149f96a and its matching repaired WASM pass the full web test command,
+18 Python adapter tests and 2,572 focused native checks. Compatible completed
+TypeScript checks remain passing; no TypeScript source changed after that check.
+The helper extraction resolved the repeated LLVM verifier failure at the same
+two-job limit. The original build failures remain preserved; no verifier bypass
+or reduced-linker-parallelism experiment was needed.
+
+Six serial actual Calculator/client/worker/WASM witnesses pass: prepared,
+mixed ordinary/elevated and protected-cleanup goals in Current and Finder.
+Independent native evaluation of every delivered graph reports success 1,
+zero failure/nonapplication/unmatched/unresolved mass, cost 7 for prepared/mixed
+and 8 for protected cleanup, agreeing with each solver upper. Original roots,
+crafted flags and influences are checked, and all actual operations stay in the
+priced caller envelope. Protected outputs use Dominance and Remove Crafted
+Modifiers. Each delivered graph passes the approved 1,000/1,000 sampled successes
+with complete cost accounting. These are synthetic mechanism prices.
+
+[The final receipt](qualification-final.json) pins source, engine tree, native
+library, WASM, frozen data, corpus, output hashes, failed build evidence and
+remaining boundaries. Bulk reports remain under out/dominance-completion.
+One scratch qualification assertion included a failure-reason list among scalar
+probabilities; its failure was preserved, its projection corrected, and the
+compatible completed first worker output reused. No product behavior changed.
+
+The finite paid normal-acquisition graph still has independent cost 21 in both
+modes. The proposed real large-pool acquisition case is isolated in
+acquisition-corpus.json and remains unlaunched pending the parent's heavy-test
+slot. It must use the existing benchmark owner to enforce its declared caps;
+the actual Calculator probe intentionally keeps normal product defaults.
+No large-pool performance, hybrid, global closure or blanket feature-complete
+claim follows. Dual-lock Scour remains refused. Broader fossil/Foulborn fixture
+failures remain failures; source/data diagnosis is not a fresh baseline-binary
+comparison. All standalone evidence uses the baseline ordinary reforge law;
+combined promotion requires the separately approved reforge-law implementation
+and integration-owned rebuild/qualification. No pushes or merges were made.

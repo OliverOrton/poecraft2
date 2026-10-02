@@ -1,6 +1,6 @@
 {
   "schema_version": "solver_benchmark_corpus_v1",
-  "corpus_id": "dominance-finite-product-v1",
+  "corpus_id": "dominance-proposed-acquisition-v1",
   "artifact": {
     "manifest_relative_path": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/manifest.json",
     "canonical_source": "data/sqlite/poecraft.db",
@@ -12,8 +12,6 @@
     "strings_sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
   },
   "cases": [
-    "cases/dominance-prepared.json",
-    "cases/dominance-prepared-mixed.json",
-    "cases/dominance-prepared-protected.json"
+    "cases/dominance-normal-acquisition-bounded.json"
   ]
 }

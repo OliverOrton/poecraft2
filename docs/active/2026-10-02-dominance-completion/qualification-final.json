@@ -1,0 +1,325 @@
+{
+  "schema": "poecraft2.dominance-completion-qualification.v1",
+  "source_commit": "149f96a8e9e9187e2a54937b760851c16d6b4c6c",
+  "engine_tree": "dbc85f7ff9aed30badae9fcae28d0c548dd9b48c",
+  "baseline": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+  "recorded_utc": "2026-10-02T19:21:54.254924+00:00",
+  "reforge_law": {
+    "identity": "baseline-b794e009",
+    "new_approved_law_qualified": false,
+    "integration_requirement": "Integrate the separate reforge-law owner and rebuild/requalify combined source; preserve these old-law receipts."
+  },
+  "native_dominance": {
+    "checks": 2572,
+    "failures": 0,
+    "max_build_jobs": 2,
+    "log": {
+      "path": "out/dominance-completion/native-helper.log",
+      "sha256": "3425f1bc0fc34d9396ca81a9167f2d3d986a9d694c0cced4042125c476c2a76a",
+      "bytes": 1623
+    },
+    "build_log": {
+      "path": "out/dominance-completion/build-helper.log",
+      "sha256": "793e115a0c284c5e290e7fa0ca561caf556c804dab7ac6771f792f336f41ddac",
+      "bytes": 814
+    }
+  },
+  "python": {
+    "passed": 18,
+    "failed": 0,
+    "log": {
+      "path": "out/dominance-completion/python-final.log",
+      "sha256": "28093e69b768cd05e3d7262bcccdeed0b7fbe34610e6d37520ae5a32178e6c6e",
+      "bytes": 101
+    },
+    "shared_library": {
+      "path": "build/engine/poecraft_engine.dll",
+      "sha256": "3b35775b687edefb97db21843f87d8bb6454576730cef931640127331efcb007",
+      "bytes": 14080513
+    }
+  },
+  "web": {
+    "npm_test_exit_code": 0,
+    "log": {
+      "path": "out/dominance-completion/web-final.log",
+      "sha256": "2bcb5aa651a382e473f74e056c03ea3cc8eda346b9a65484f5c01d4d832fcf81",
+      "bytes": 15327
+    },
+    "typescript_exit_code": 0,
+    "typescript_log": {
+      "path": "out/dominance-completion/web-typecheck-qualified.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "typescript_reuse": "Compatible completed npx tsc --noEmit evidence; TypeScript source is unchanged since 5e4f496."
+  },
+  "wasm": {
+    "build_exit_code": 0,
+    "max_jobs": 2,
+    "abi_version": 3,
+    "artifacts": [
+      {
+        "path": "bindings/wasm/dist/poecraft_engine.wasm",
+        "sha256": "54432aedce7ddf5801ebe8aed62120a750037b9bb5aeb7b35d62d5e4bd2725e6",
+        "bytes": 8233630
+      },
+      {
+        "path": "bindings/wasm/dist/poecraft_engine.mjs",
+        "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297",
+        "bytes": 21237
+      }
+    ],
+    "log": {
+      "path": "out/dominance-completion/wasm-repaired.log",
+      "sha256": "511d41d41d20c90939a0ae17a42292776f61e3116bf4c8048f4ca09e9c6f569b",
+      "bytes": 3433
+    },
+    "prior_failed_builds": [
+      {
+        "path": "out/dominance-completion/wasm-final.log",
+        "sha256": "d0586a6af87c682b2b1739716eb95168c59641badcd594cd9d5cfb69ab11f664",
+        "bytes": 5903
+      },
+      {
+        "path": "out/dominance-completion/wasm-final-retry.log",
+        "sha256": "0852dc899e6f46fd4f25339d09050aa476f43a3442a00acb057f34bd7612987a",
+        "bytes": 5903
+      }
+    ],
+    "repair": "Out-of-line non-inlined native fossil auxiliary validation removes the coroutine exception/destructor path. No reduced-parallelism experiment or IR-verifier bypass was used."
+  },
+  "worker": {
+    "cases": [
+      {
+        "case": "dominance-prepared",
+        "mode": "current",
+        "operations": [
+          "dominance"
+        ],
+        "success": 1,
+        "cost": 7,
+        "solver_upper": 7,
+        "solver_lower": 0,
+        "solver_converged": false,
+        "simulator_trials": 1000,
+        "simulator_successes": 1000,
+        "graph_sha256": "f7cda1da2894f945573095f2f1816444fcd2cc09ea35a137d4fa802fa7bd03c0",
+        "report_sha256": "03ddc0fd0fb223e5560f8dfebcce2574b9f7b3136e2105a6ef15b5364018997e",
+        "exit_code": 0,
+        "timed_out": false,
+        "survivor": false,
+        "wall_ms": 2820.807100040838,
+        "root_identity_checked": true,
+        "caller_scope_checked": true
+      },
+      {
+        "case": "dominance-prepared",
+        "mode": "strategy_finder",
+        "operations": [
+          "dominance"
+        ],
+        "success": 1,
+        "cost": 7,
+        "solver_upper": 7,
+        "solver_lower": null,
+        "solver_converged": false,
+        "simulator_trials": 1000,
+        "simulator_successes": 1000,
+        "graph_sha256": "1d355fb1a0e70df9d0f794330e0d48205914eea53412532e0a942af166ce1ae7",
+        "report_sha256": "7b8cee1ac714523809335a99bade7335d986d05fb9e1a42bf54247a6a36955c5",
+        "exit_code": 0,
+        "timed_out": false,
+        "survivor": false,
+        "wall_ms": 2428.697600029409,
+        "root_identity_checked": true,
+        "caller_scope_checked": true
+      },
+      {
+        "case": "dominance-prepared-mixed",
+        "mode": "current",
+        "operations": [
+          "dominance"
+        ],
+        "success": 1,
+        "cost": 7,
+        "solver_upper": 7,
+        "solver_lower": 0,
+        "solver_converged": false,
+        "simulator_trials": 1000,
+        "simulator_successes": 1000,
+        "graph_sha256": "0549c7744215df93f2855b09b0a8e75d95ffaa24d01e56c11f680bbbd40b6f83",
+        "report_sha256": "22ae80654245ac5568fc8b4f866438f4de571bc600317028562bea986f42a8db",
+        "exit_code": 0,
+        "timed_out": false,
+        "survivor": false,
+        "wall_ms": 2699.3152000941336,
+        "root_identity_checked": true,
+        "caller_scope_checked": true
+      },
+      {
+        "case": "dominance-prepared-mixed",
+        "mode": "strategy_finder",
+        "operations": [
+          "dominance"
+        ],
+        "success": 1,
+        "cost": 7,
+        "solver_upper": 7,
+        "solver_lower": null,
+        "solver_converged": false,
+        "simulator_trials": 1000,
+        "simulator_successes": 1000,
+        "graph_sha256": "f62c6719fecd6d0ff7d469cb6fbf99197461895bfc64e365980e56dc68f295c0",
+        "report_sha256": "d0da06d0225f85b6c25c577a242d58295aa68928702d836b9c54f3ee7868a0b5",
+        "exit_code": 0,
+        "timed_out": false,
+        "survivor": false,
+        "wall_ms": 2433.3689000923187,
+        "root_identity_checked": true,
+        "caller_scope_checked": true
+      },
+      {
+        "case": "dominance-prepared-protected",
+        "mode": "current",
+        "operations": [
+          "dominance",
+          "remove_crafted_modifiers"
+        ],
+        "success": 1,
+        "cost": 8,
+        "solver_upper": 8,
+        "solver_lower": 0,
+        "solver_converged": false,
+        "simulator_trials": 1000,
+        "simulator_successes": 1000,
+        "graph_sha256": "3c2dcad23c83a36974ab22d404c4e01f4dcd9891c1d2b39661e250309bfb6584",
+        "report_sha256": "61ee06d78da12a87c7b6eb1f8a5653fcd21444d730aab7c11daf994b0797ee08",
+        "exit_code": 0,
+        "timed_out": false,
+        "survivor": false,
+        "wall_ms": 2759.58830001764,
+        "root_identity_checked": true,
+        "caller_scope_checked": true
+      },
+      {
+        "case": "dominance-prepared-protected",
+        "mode": "strategy_finder",
+        "operations": [
+          "dominance",
+          "remove_crafted_modifiers"
+        ],
+        "success": 1,
+        "cost": 8,
+        "solver_upper": 8,
+        "solver_lower": null,
+        "solver_converged": false,
+        "simulator_trials": 1000,
+        "simulator_successes": 1000,
+        "graph_sha256": "834f849e6e5787c66da6fdb1f32d7071b429756f137aebfa5e409eb1bf5bb4aa",
+        "report_sha256": "7e138893ec3d6bc1a7f7eada3e3b3e48a7f888f7f0b41104305ac7273fe73458",
+        "exit_code": 0,
+        "timed_out": false,
+        "survivor": false,
+        "wall_ms": 2489.529399899766,
+        "root_identity_checked": true,
+        "caller_scope_checked": true
+      }
+    ],
+    "supervisor": "existing solver_worker.run_isolated_process, six serial 60-second watchdogs",
+    "batch_log": {
+      "path": "out/dominance-completion/final-worker-batch.log",
+      "sha256": "947ced62d536a2f25c3077977b69ff304744c2cace2dc619058aef2a7d45ad1a",
+      "bytes": 3362
+    },
+    "native_evaluation": {
+      "path": "out/dominance-completion/final-worker-native-qualification.json",
+      "sha256": "35f7dded3b30d3ea3656146dc019037fe26577c039d69f46ee76d8ae7f1f9641",
+      "bytes": 4051
+    },
+    "timeouts": 0,
+    "survivors": 0,
+    "rendered_visual_review": "not requested/performed",
+    "scratch_harness_failure": {
+      "log": {
+        "path": "out/dominance-completion/final-worker-batch-harness-failure.log",
+        "sha256": "ffbde8336ec28b9bccf2df837863b52401e5cca75df8e1c0be8823e2df427f11",
+        "bytes": 567
+      },
+      "reason": "The scratch assertion treated failure-reason lists as probabilities; corrected to explicit terminal probability keys and reused the compatible completed first worker output."
+    }
+  },
+  "native_oracles": {
+    "prices": "Synthetic qualification inputs, not frozen market improvement evidence.",
+    "normal_acquisition_current_and_finder": {
+      "success": 1,
+      "cost": 21,
+      "formula": "(3 + 7 + 0.5 * 1) / 0.5",
+      "operations": [
+        "alchemy",
+        "dominance",
+        "scour"
+      ],
+      "actual_output_graphs_independently_evaluated": true
+    },
+    "prepared_renewal_current": 17,
+    "prepared_renewal_finder": 20,
+    "ordinary_explicit_chaos_control": {
+      "lower": 3,
+      "upper": 3,
+      "converged": true
+    },
+    "protected_current_and_finder": 8
+  },
+  "regression_failures_retained": [
+    {
+      "name": "solver-api",
+      "checks": 3233,
+      "failures": 3,
+      "reason": "Unchanged fixture expects 12950 fossil loadouts; frozen selected dataset/native census gives 15275. Native fossil powerset implementation unchanged from baseline.",
+      "log": {
+        "path": "out/dominance-completion/native-api.log",
+        "sha256": "d005f3f2b599a74e162c916238fcb5e64ac3ad2aa242730829e5636c7b0db990",
+        "bytes": 1188
+      }
+    },
+    {
+      "name": "family-contract",
+      "checks": 182744,
+      "failures": 1,
+      "reason": "Unchanged expected automatic identities initializer omits final baseline Foulborn identity. Automatic contract unchanged here.",
+      "log": {
+        "path": "out/dominance-completion/native-family-contract.log",
+        "sha256": "295a496f0718b7179e39b9ff74de8c8d9dd469f337c45e288cdb913f878e5cee",
+        "bytes": 228
+      }
+    }
+  ],
+  "regression_failure_disposition": "These remain recorded failures, not passes. Source/test equality and frozen-data evidence support the census diagnosis, but no fresh preserved-baseline executable comparison was run.",
+  "frozen_census_evidence": {
+    "named_nonmirror_fossils": 25,
+    "ordinary_loadouts_one_to_four": 15275,
+    "expected_fixture_loadouts": 12950,
+    "excluding_one_fossil_gives": 24,
+    "fractured_fossil_native_mirrors": 0,
+    "fractured_fossil_key": "Metadata/Items/Currency/CurrencyDelveCraftingMirror",
+    "data_pin": {
+      "manifest_relative_path": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/manifest.json",
+      "canonical_source": "data/sqlite/poecraft.db",
+      "engine_abi_version": 3,
+      "artifact_schema_version": 4,
+      "source_version": "repoe-b458174874efbe64",
+      "source_data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+      "game_data_sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+      "strings_sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+    }
+  },
+  "remaining_boundaries": [
+    "Dual-lock Scour remains refused pending owner-law resolution and parent agreement.",
+    "No hybrid mode or external continuation certificate is added.",
+    "No positive global lower, exact closure or optimality promotion.",
+    "Implicit/socket/quality/enchantment/strand/Veiled and inventory carriers remain outside this slice.",
+    "Real large-pool acquisition diagnostic remains proposed and unlaunched pending the parent-coordinated heavy-test slot; the finite oracle does not establish large-pool performance.",
+    "Combined qualification under the newly approved reforge law remains the integration owner responsibility."
+  ],
+  "disposition": "Automatic Current/Finder identity-carrier admission and prepared/mixed/protected normal product paths qualified on source-matched native/WASM bytes. Finite paid acquisition output is native-qualified. No blanket feature-complete or general acquisition-performance claim."
+}
