@@ -1,0 +1,860 @@
+{
+  "schema": "overnight_actual_worker_qualification_v1",
+  "source_checkpoint": "984c5949def2abdbf02c4cdbed7554a932dd55db",
+  "engine_build_source": "792b37e8e1d73a90c754087eda2332d7586db570",
+  "probe": {
+    "path": "apps/web/test/calculator-delivery-probe.ts",
+    "sha256": "aa105c9fcc16dd674a3087a0e159af3a509a77d57c50d6524e70041920aa5609",
+    "bytes": 12758
+  },
+  "WASM": {
+    "path": "bindings/wasm/dist/poecraft_engine.wasm",
+    "sha256": "091305fb659ed2b917be00d97734c99901c50d1410fc01ec9f8f13182aea6767",
+    "bytes": 8171056
+  },
+  "frozen_packet": {
+    "path": "docs/active/2026-10-02-current-overnight/final-worker-preflight.json",
+    "sha256": "f97ec82f1e7e1176144c66c58903adf10bf307d25fde443fc989b783b035f6e5",
+    "bytes": 21867
+  },
+  "grant": {
+    "path": "out/integration-current-mechanics/workers/launch-authority.json",
+    "sha256": "825a572c651c43675a9fa81fb9dc2c39ff8199aab13ee62a21887e04bfd639ac",
+    "bytes": 2460
+  },
+  "serial": true,
+  "budget": {
+    "global_native_timed_spent": 6,
+    "workers_granted": 2,
+    "workers_spent": 2,
+    "retries": 0,
+    "remaining": 0
+  },
+  "profile": {
+    "control": "default_finish",
+    "bounded_finish_after_ms": 240000,
+    "manual_finish_intent": false,
+    "repetitions": 1,
+    "work_policy": "fixed_eight",
+    "transport": "compact",
+    "trace": "trace",
+    "solve_profile": "calculator_product_v1",
+    "goal_progress_gated_reforges": true,
+    "retention": "WASM facade reuse on fresh handle",
+    "disabled_families": [
+      "foulborn"
+    ],
+    "imprint": false,
+    "economic_restart": false,
+    "Monte_Carlo_runs": 0,
+    "original_root_native_graph_acceptance": "required by selected solver; compiled graph/native telemetry retained",
+    "saved_policy_seed": false,
+    "rendered_review": false,
+    "core_native_caps": {
+      "max_states": 200000,
+      "max_sweeps": 100000,
+      "max_discovered_states": 200000,
+      "max_expanded_states": 200000,
+      "max_state_action_rows": 1215000,
+      "max_transitions": 10000000,
+      "max_reforge_work": 50000000,
+      "max_solver_owned_bytes": 1073741824,
+      "max_compiled_nodes": 100000,
+      "max_compiled_edges": 400000,
+      "max_strategy_json_bytes": 67108864,
+      "max_policy_refinement_states": 200000
+    },
+    "diagnostic_caps_transport_limit": "DOM probe forwards calculatorSolveOptions/product defaults; case diagnostic caps are not automatically forwarded",
+    "delivery_thresholds": {
+      "worker_step_ms": 250,
+      "cancel_ack_ms": 250
+    }
+  },
+  "provenance_limit": "Calculator metadata is Custom/manual/public-none because the probe installs frozen values as overrides; all864 prices equal the materialized pinned Allflame snapshot. No data/price refresh.792b37e owns engine bytes;984c594 changes only approved probe.",
+  "production_correction": {
+    "commit": "3c38872138d6822d91646f905be1c5ef45dcb105",
+    "diff": {
+      "path": "out/integration-current-mechanics/native-group-production-diff.patch",
+      "sha256": "24f5b0bae665567b86ad2d4b85795777b3fe5d4026072729ae282f9389653bbb",
+      "bytes": 14960
+    },
+    "law": "Prepared native pool and complete fresh native-group intersections determine eligibility; goal-blocker observation masks never prune draws. Common native group across all slot members including below tiers proves single occupancy, otherwise unsupported. Reconstruct cross-slot terminal blockers only at absorption; preserve capacities/weights/multiplicity/exhaustion.",
+    "identities": {
+      "memo_kernel_law": 2,
+      "compiled_assertion_request": 3,
+      "checkpoint": 3
+    },
+    "oracle": "36366 finite checks:126 cases/450 materialized successors/450 native Annul rows/69 actual V3 commits; no new counterexample"
+  },
+  "qualification": "Both actual workers deliver usable native-checked bounded policies; BOTH FAIL unchanged250ms responsiveness. No full product acceptance or optimality.",
+  "limits": [
+    "Real MM W1 prefix-only reporting replay remains unrun; W1 here denotes Bow worker slot.",
+    "Ungated N5 Foulborn has no actual-worker replay.",
+    "Finder protected-Scour grammar stays private.",
+    "Native N2/N3 Finish120s versus workers240s: no matched timing claim.",
+    "Old N6 native-law hold stays historical; fresh W2 checks its generated Annul candidate on corrected bytes.",
+    "No extra timed run, Simulator/Monte Carlo, push/deployment or main/root0 mutation."
+  ],
+  "workers": [
+    {
+      "slot": "W1",
+      "case_id": "bow4-last-mile-two-junk-suffixes",
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "survivor": false,
+        "wall_ms": 243084.56149999984,
+        "process_id": 91336
+      },
+      "raw": {
+        "path": "out/integration-current-mechanics/workers/current-bow.json",
+        "sha256": "5dd40286144efc360a526fdbada4ed2511002ddcd10ccf5cf7e6b890a172df74",
+        "bytes": 21653987
+      },
+      "supervision": {
+        "path": "out/integration-current-mechanics/workers/W1-supervision.json",
+        "sha256": "ce343631859908d0e487e010e505a6d06d214ac372b3b1129950003fdb85c911",
+        "bytes": 855
+      },
+      "compact": {
+        "path": "out/integration-current-mechanics/workers/W1-compact.json",
+        "sha256": "da7bd2d8eeddcc0c62cc6ee00a3a9b75b5071c8b4855adc66a332fb536a8321a",
+        "bytes": 4062
+      },
+      "identity": "goal/envelope/options/work/transport/WASM/all pinned prices match",
+      "embedded_identity": {
+        "abi_version": 3,
+        "source_revision": "792b37e8e1d73a90c754087eda2332d7586db570",
+        "runtime_wasm_sha256": "091305fb659ed2b917be00d97734c99901c50d1410fc01ec9f8f13182aea6767",
+        "data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+        "data_hash_source": "verified selected runtime manifest source.data_hash; engine source commit unknown"
+      },
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 51222.52081999526,
+        "expanded_states": 781,
+        "sweeps": 0,
+        "residual": 1.1175870895385742e-08,
+        "skipped_actions": 7,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "lower_bound": 184.68222144324236,
+        "upper_bound": 51222.5208199995,
+        "evaluated_policy_cost": 51222.5208199995,
+        "absolute_optimality_gap": 51037.83859855626,
+        "relative_optimality_gap": 276.354909528969,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "registry_actions": 180,
+        "candidate_actions": 36,
+        "evaluator_supported_actions": 36,
+        "supported_priced_actions": 433,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 7,
+        "cancelled": false
+      },
+      "graph": {
+        "sha256": "f2f319d849081a8c32c0fe40bba1a2e504a354c8c988d6eaca86ceb4842b562b",
+        "nodes": 8,
+        "edges": 10
+      },
+      "timing": {
+        "max_step_ms": 8636.412800000006,
+        "max_setup_step_ms": 31.082099999999855,
+        "max_ordinary_step_ms": 8636.412800000006,
+        "step_count": 35776,
+        "max_step_context": {
+          "input_owner": "policy_assembly",
+          "output_owner": "policy_assembly",
+          "quantum": 8,
+          "duration_ms": 8636.412800000006
+        },
+        "finish_ack_ms": null
+      },
+      "250ms_responsiveness": "failed",
+      "caps": {
+        "max_states": 200000,
+        "max_sweeps": 100000,
+        "max_discovered_states": 200000,
+        "max_expanded_states": 200000,
+        "max_state_action_rows": 1215000,
+        "max_transitions": 10000000,
+        "max_reforge_work": 50000000,
+        "max_solver_owned_bytes": 1073741824,
+        "max_compiled_nodes": 100000,
+        "max_compiled_edges": 400000,
+        "max_strategy_json_bytes": 67108864,
+        "max_policy_refinement_states": 200000
+      },
+      "peak_owned_bytes": 657023643,
+      "priced_actions": 36,
+      "artifact": {
+        "selected_policy_candidate": {
+          "capture_attempted": true,
+          "captured": true,
+          "memory_rejected": false,
+          "identity_valid": true,
+          "certification_attempted": true,
+          "independently_evaluated": true,
+          "retained": true,
+          "estimated_cost": 51222.52081999526,
+          "exact_cost": 51222.5208199995,
+          "owned_bytes": 45770,
+          "identity": "991baa7b17f85b07",
+          "capture_ns": 8081300,
+          "certification_ns": 111596300,
+          "status": "verified_retained",
+          "failure_reason": null
+        },
+        "fallback_publication": {
+          "candidates": 0,
+          "invalidations": 0,
+          "compilation_failures": 0,
+          "memory_rejections": 0,
+          "owned_bytes": 0,
+          "publication_attempts": 1,
+          "publication_successes": 1,
+          "cheapest_independently_evaluated_selected": true,
+          "preferred_candidate_upper": 32066887.22089472,
+          "published_upper": 51222.5208199995,
+          "published_evaluated_cost": 51222.5208199995,
+          "published_witness_hash": "0000000000000000",
+          "published_kind": "selected_coarse_policy",
+          "preferred_failure_reason": null
+        },
+        "coarse_diagnostic_limit": "32,066,887.22 estimate and 28,280,720.17 direct-certification cost mismatch concern the larger coarse candidate; publication selected the separately independently evaluated 51,222.52 candidate. No claimed reconciliation of that coarse diagnostic.",
+        "prices": {
+          "exalt": 1.77,
+          "bench:StrMasterItemGenerationCannotChangePrefixes": 424,
+          "scour": 0.3741
+        },
+        "operations": [
+          {
+            "type": "exalt"
+          },
+          {
+            "type": "bench",
+            "mod_key": "StrMasterItemGenerationCannotChangePrefixes"
+          },
+          {
+            "type": "scour"
+          }
+        ]
+      },
+      "strategy": "Dirty root pays prefix lock+Scour; clean3-prefix Exalt; wrong suffix pays lock+Scour and retries. No imported policy.",
+      "certificate_limit": "Selected native status verified_retained and independently_evaluated=true passed the production executable/proper/cost_complete/zero_off_policy/finite-nonnegative-exact-cost guard in solver_solve_finish.cpp. Exact success/off-policy mass scalars are not separately serialized for this candidate; N3 explicit1/0 remains separate evidence.",
+      "selected_acceptance_gate": {
+        "production_source": "engine/src/solver_solve_finish.cpp:3134",
+        "requires": [
+          "assertion.executable",
+          "assertion.proper",
+          "assertion.evaluation.cost_complete",
+          "assertion.zero_off_policy",
+          "finite assertion.exact_cost>=0"
+        ],
+        "observed_status": "verified_retained"
+      },
+      "command": {
+        "argv": [
+          "C:\\Program Files\\nodejs\\node.EXE",
+          "--import",
+          "tsx",
+          "test/calculator-delivery-probe.ts",
+          "bow4-last-mile-two-junk-suffixes",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\out\\integration-current-mechanics\\workers\\current-bow.json",
+          "default_finish",
+          "1",
+          "fixed_eight",
+          "compact",
+          "trace",
+          "current",
+          "docs/active/2026-09-29-metamod-recovery/corpus/manifest.json",
+          "conditional"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\apps\\web",
+        "host_watchdog_seconds": 330.0
+      },
+      "frozen_request": {
+        "session": {
+          "base_metadata_path": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+          "base_name": "Spine Bow",
+          "item_class_key": "Bow",
+          "item_level": 86,
+          "minimum_item_level": 86
+        },
+        "start": {
+          "rarity": "rare",
+          "with_implicits": false,
+          "mods": [
+            {
+              "key": "LocalIncreaseSocketedGemLevel1",
+              "flags": []
+            },
+            {
+              "key": "LocalAddedPhysicalDamageTwoHand9",
+              "flags": []
+            },
+            {
+              "key": "LocalAddedColdDamageTwoHand10",
+              "flags": []
+            },
+            {
+              "key": "Dexterity7",
+              "flags": []
+            },
+            {
+              "key": "LocalIncreasedAttackSpeed3",
+              "flags": []
+            }
+          ]
+        },
+        "goal_envelope": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 4,
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreaseSocketedGemLevel1",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalAddedPhysicalDamageTwoHand9",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalAddedColdDamageTwoHand10",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ManaGainedFromEnemyDeath6",
+              "min_tier": 1
+            }
+          ],
+          "fossil_mode": "goal_relevant",
+          "requested_fossil_actions": [],
+          "disabled_action_families": [
+            "foulborn"
+          ]
+        },
+        "scoped_goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 4,
+          "slots": [
+            {
+              "family_mod_key": "LocalIncreaseSocketedGemLevel1",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalAddedPhysicalDamageTwoHand9",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "LocalAddedColdDamageTwoHand10",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ManaGainedFromEnemyDeath6",
+              "min_tier": 1
+            }
+          ],
+          "disabled_action_families": [
+            "foulborn"
+          ],
+          "actions": [
+            "transmute",
+            "augment",
+            "alteration",
+            "regal",
+            "alchemy",
+            "chaos",
+            "exalt",
+            "annul",
+            "scour",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical+Metadata/Items/Currency/CurrencyDelveCraftingQuality",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical+Metadata/Items/Currency/CurrencyDelveCraftingQuality+Metadata/Items/Currency/CurrencyDelveCraftingRandom",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingMinionsAuras",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "harvest_reforge:attack",
+            "harvest_reforge:cold",
+            "harvest_reforge:elemental",
+            "harvest_reforge:mana",
+            "harvest_reforge:physical",
+            "harvest_augment:attack",
+            "harvest_augment:cold",
+            "harvest_augment:physical",
+            "fracture",
+            "restart"
+          ]
+        },
+        "raw_solve_options": {
+          "solve_profile": "calculator_product_v1"
+        },
+        "materialized_economy_sha256": "a4b9bbc75dc1f44e6f177472e70feabca6c7d0efaae977bceafe680491376c6f",
+        "grammar": "conditional"
+      }
+    },
+    {
+      "slot": "W2",
+      "case_id": "finder-reconstructed-amulet-wrath-chaos-clean",
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "survivor": false,
+        "wall_ms": 28988.41860005632,
+        "process_id": 47660
+      },
+      "raw": {
+        "path": "out/integration-current-mechanics/workers/finder-amulet.json",
+        "sha256": "c63b21a74a172d8c815696c08ae75b08802eafc81908ff7501bf5aadff9d9205",
+        "bytes": 326955
+      },
+      "supervision": {
+        "path": "out/integration-current-mechanics/workers/W2-supervision.json",
+        "sha256": "e0a7d17a19195b45a33a72e83bd49b39d7bc0fb1d7f371d18b970418d7ab47a5",
+        "bytes": 856
+      },
+      "compact": {
+        "path": "out/integration-current-mechanics/workers/W2-compact.json",
+        "sha256": "166e798db29d08be6e2721594d483f55fe9489a9556a2229157665fe567d9723",
+        "bytes": 2848
+      },
+      "identity": "goal/envelope/options/work/transport/WASM/all pinned prices match",
+      "embedded_identity": {
+        "abi_version": 3,
+        "source_revision": "792b37e8e1d73a90c754087eda2332d7586db570",
+        "runtime_wasm_sha256": "091305fb659ed2b917be00d97734c99901c50d1410fc01ec9f8f13182aea6767",
+        "data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+        "data_hash_source": "verified selected runtime manifest source.data_hash; engine source commit unknown"
+      },
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": null,
+        "expanded_states": 0,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_actions": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "finder_complete",
+        "lower_bound": null,
+        "upper_bound": 2365.2701452478236,
+        "evaluated_policy_cost": 2365.2701452478236,
+        "absolute_optimality_gap": null,
+        "relative_optimality_gap": null,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none",
+        "stop_cause": "finder_complete",
+        "cap_hit_mask": 2147483648,
+        "registry_actions": 0,
+        "candidate_actions": 0,
+        "evaluator_supported_actions": 0,
+        "supported_priced_actions": 0,
+        "skipped_missing_price_actions": 0,
+        "skipped_unsupported_actions": 0,
+        "cancelled": false
+      },
+      "graph": {
+        "sha256": "7687156c51e72e2c8173f6c5fb8f61ab227f76ed2c44532970b44ae06515fb1b",
+        "nodes": 10,
+        "edges": 14
+      },
+      "timing": {
+        "max_step_ms": 18708.7478,
+        "max_setup_step_ms": 88.4186000000002,
+        "max_ordinary_step_ms": 18708.7478,
+        "step_count": 25891,
+        "max_step_context": {
+          "input_owner": "strategy_finder",
+          "output_owner": "strategy_finder",
+          "quantum": 8,
+          "duration_ms": 18708.7478
+        }
+      },
+      "250ms_responsiveness": "failed",
+      "caps": {
+        "max_states": 200000,
+        "max_sweeps": 100000,
+        "max_discovered_states": 200000,
+        "max_expanded_states": 200000,
+        "max_state_action_rows": 1215000,
+        "max_transitions": 10000000,
+        "max_reforge_work": 50000000,
+        "max_solver_owned_bytes": 1073741824,
+        "max_compiled_nodes": 100000,
+        "max_compiled_edges": 400000,
+        "max_strategy_json_bytes": 67108864,
+        "max_policy_refinement_states": 200000
+      },
+      "peak_owned_bytes": 207915727,
+      "priced_actions": 28,
+      "strategy": "Wrath3 until both naturalT1 suffixes hold, suffix count below3 and prefix count below3; suffix lock+Scour once deletes prefixes. Wrong/full-side rolls retry Essence. No selected Annul.",
+      "search": {
+        "grammar": "conditional-protected-scour",
+        "considered": 8,
+        "attempt_limit": 8,
+        "checked": 6,
+        "generated": 8,
+        "accepted": 2,
+        "refused": 4,
+        "censored": 2,
+        "logical_reforge_work": 35809911,
+        "peak_owned_bytes": 207915727,
+        "best_checked_cost": 2365.270145,
+        "done": true
+      },
+      "candidates": [
+        {
+          "ordinal": 0,
+          "status": "refused_check",
+          "graph_hash": "3079775420626543339",
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "checked_cost": null,
+          "refusal": "candidate failed native properness, mass or price check",
+          "check_exact_states": 17,
+          "check_discovered_pairs": 8,
+          "check_pending_pairs": 0,
+          "check_stored_transitions": 113
+        },
+        {
+          "ordinal": 1,
+          "status": "refused_check",
+          "graph_hash": "8297648834339597620",
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "checked_cost": null,
+          "refusal": "candidate failed native properness, mass or price check",
+          "check_exact_states": 51,
+          "check_discovered_pairs": 8,
+          "check_pending_pairs": 0,
+          "check_stored_transitions": 351
+        },
+        {
+          "ordinal": 2,
+          "status": "refused_check",
+          "graph_hash": "71359355525772192",
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "checked_cost": null,
+          "refusal": "candidate failed native properness, mass or price check",
+          "check_exact_states": 2,
+          "check_discovered_pairs": 3,
+          "check_pending_pairs": 0,
+          "check_stored_transitions": 3
+        },
+        {
+          "ordinal": 3,
+          "status": "refused_check",
+          "graph_hash": "10223621068481177908",
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "checked_cost": null,
+          "refusal": "candidate failed native properness, mass or price check",
+          "check_exact_states": 51,
+          "check_discovered_pairs": 8,
+          "check_pending_pairs": 0,
+          "check_stored_transitions": 351
+        },
+        {
+          "ordinal": 4,
+          "status": "accepted",
+          "graph_hash": "280371935112947546",
+          "native_program": true,
+          "programme_entries": 105,
+          "positive_programme_entries": 105,
+          "validated_programme_entries": 105,
+          "checked_cost": 2365.2701452478236,
+          "refusal": "",
+          "check_exact_states": 186487,
+          "check_discovered_pairs": 114,
+          "check_pending_pairs": 0,
+          "check_stored_transitions": 1304767
+        },
+        {
+          "ordinal": 5,
+          "status": "censored_capacity",
+          "graph_hash": "17814393246947654840",
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "checked_cost": null,
+          "refusal": "solver exceeded max_discovered_states (200000)",
+          "check_exact_states": 200000,
+          "check_discovered_pairs": 1,
+          "check_pending_pairs": 1,
+          "check_stored_transitions": 1
+        },
+        {
+          "ordinal": 6,
+          "status": "accepted",
+          "graph_hash": "16532417057234384386",
+          "native_program": false,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "checked_cost": 59229.75038359062,
+          "refusal": "",
+          "check_exact_states": 51,
+          "check_discovered_pairs": 34,
+          "check_pending_pairs": 0,
+          "check_stored_transitions": 233
+        },
+        {
+          "ordinal": 7,
+          "status": "censored_capacity",
+          "graph_hash": "3969357183986714986",
+          "native_program": true,
+          "programme_entries": 0,
+          "positive_programme_entries": 0,
+          "validated_programme_entries": 0,
+          "checked_cost": null,
+          "refusal": "solver exceeded max_discovered_states (200000)",
+          "check_exact_states": 200000,
+          "check_discovered_pairs": 12842,
+          "check_pending_pairs": 187159,
+          "check_stored_transitions": 243016
+        }
+      ],
+      "economics": {
+        "selected_paid_prices": {
+          "essence:Metadata/Items/Currency/CurrencyEssenceWrath3": 0.3947,
+          "bench:DexMasterItemGenerationCannotChangeSuffixes": 424,
+          "scour": 0.3741
+        },
+        "accepted_same_run_annul_cost": 59229.75038359062,
+        "selected_cost": 2365.2701452478236,
+        "within_run_cost_reduction_percent": 96.00661807633902,
+        "derived_expected_Essence_count": 4917.395604884276,
+        "derivation_limit": "Computed from returned graph with exactly one successful lock/Scour and the native reported complete cost; not a separate independently replayed consumption ledger."
+      },
+      "acceptance": "Native requires convergence, complete finite nonnegative cost/prices, success>=1-1e-9, failure/stop/action-not-applied/no-match/unresolved<=1e-9.105 positive programme entries all validated.",
+      "cap_scope": "Generic mask2147483648: two other candidates censored at max_discovered_states200000. Selected protected candidate186487 exact states accepted. Eight attempts complete; no lower/optimality.",
+      "max_step_scope": "18708.7478ms call aligns with censored Chaos+Annul candidate5 physical discovery interval18.697s; attribution only, no rerun.",
+      "command": {
+        "argv": [
+          "C:\\Program Files\\nodejs\\node.EXE",
+          "--import",
+          "tsx",
+          "test/calculator-delivery-probe.ts",
+          "finder-reconstructed-amulet-wrath-chaos-clean",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\out\\integration-current-mechanics\\workers\\finder-amulet.json",
+          "default_finish",
+          "1",
+          "fixed_eight",
+          "compact",
+          "trace",
+          "strategy_finder",
+          "docs/active/2026-10-02-finder-essence/corpus/manifest.json",
+          "conditional-protected-scour"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\apps\\web",
+        "host_watchdog_seconds": 330.0
+      },
+      "frozen_request": {
+        "session": {
+          "base_metadata_path": "Metadata/Items/Amulets/Amulet7",
+          "base_name": "Onyx Amulet",
+          "item_class_key": "Amulet",
+          "item_level": 86,
+          "minimum_item_level": 86
+        },
+        "start": {
+          "rarity": "rare",
+          "with_implicits": false,
+          "mods": []
+        },
+        "goal_envelope": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 2,
+          "slots": [
+            {
+              "family_mod_key": "LightningDamagePercent5",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChaosResist6",
+              "min_tier": 1
+            }
+          ],
+          "disabled_action_families": [
+            "foulborn"
+          ],
+          "fossil_mode": "goal_relevant",
+          "requested_fossil_actions": []
+        },
+        "scoped_goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 2,
+          "slots": [
+            {
+              "family_mod_key": "LightningDamagePercent5",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "ChaosResist6",
+              "min_tier": 1
+            }
+          ],
+          "disabled_action_families": [
+            "foulborn"
+          ],
+          "actions": [
+            "transmute",
+            "augment",
+            "alteration",
+            "regal",
+            "alchemy",
+            "chaos",
+            "exalt",
+            "annul",
+            "scour",
+            "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+            "harvest_reforge:chaos",
+            "harvest_reforge:elemental",
+            "harvest_reforge:lightning",
+            "harvest_augment:chaos",
+            "harvest_augment:lightning",
+            "harvest_resist:fire:lightning",
+            "harvest_resist:cold:lightning",
+            "fracture",
+            "restart"
+          ]
+        },
+        "raw_solve_options": {
+          "solve_profile": "calculator_product_v1",
+          "solver_mode": "strategy_finder"
+        },
+        "materialized_economy_sha256": "a4b9bbc75dc1f44e6f177472e70feabca6c7d0efaae977bceafe680491376c6f",
+        "grammar": "conditional-protected-scour"
+      }
+    }
+  ],
+  "process_status": "All owned processes ended; both supervisors report no survivor; W2 launched after W1 returned.",
+  "remaining_defects": [
+    "Both fixed-eight actual workers exceed250ms responsiveness: Bow policy_assembly8636.4128ms, Finder18708.7478ms associated with censored physical Chaos+Annul checker. No cooperative repair is claimed.",
+    "Larger Bow coarse candidate still has solver/exact cost mismatch32066887.22089472 versus28280720.16724688; preserved diagnostic is separate from final independently evaluated51222.5208199995 artifact.",
+    "Finder two other candidates still hit200000-state cap; private protected winner does not prove cheapest controller outside8 attempted sketches.",
+    "Selected candidate exact mass scalars are not exposed in delivery JSON; native guard acceptance and original root/programme evidence are reported, not invented scalar values.",
+    "Real MM W1 prefix-only and ungated N5 Foulborn worker replay remain unrun."
+  ],
+  "runtime_artifact": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\data\\compiled\\current",
+    "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+    "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "declared_files_verified": true,
+    "files": [
+      {
+        "path": "game-data.json",
+        "size_bytes": 16914460,
+        "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+      },
+      {
+        "path": "strings.json",
+        "size_bytes": 6740473,
+        "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+      }
+    ],
+    "identity": {
+      "artifact_schema_version": 4,
+      "source_data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+      "game_data_sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+      "strings_sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+    }
+  },
+  "native_binaries": {
+    "build/engine/poecraft_engine_tests.exe": {
+      "path": "build/engine/poecraft_engine_tests.exe",
+      "sha256": "0d12cec456f81e8943fbb9774c96b1149ff85b96357e10c8309c313059b79c75",
+      "bytes": 18933709
+    },
+    "build/engine/poecraft_engine.dll": {
+      "path": "build/engine/poecraft_engine.dll",
+      "sha256": "10b0a4d81d015b2f06183513d8d91fc52d7df5da0f36256bb6000746993ea039",
+      "bytes": 14018829
+    },
+    "build/engine/poecraft_solver_benchmark.exe": {
+      "path": "build/engine/poecraft_solver_benchmark.exe",
+      "sha256": "b9e95530e191fccfd19f3329ba9f09c8b088c3a4f25c5f708bbd9fab55568a5c",
+      "bytes": 14608552
+    },
+    "bindings/wasm/dist/poecraft_engine.wasm": {
+      "path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "sha256": "091305fb659ed2b917be00d97734c99901c50d1410fc01ec9f8f13182aea6767",
+      "bytes": 8171056
+    },
+    "bindings/wasm/dist/poecraft_engine.mjs": {
+      "path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297",
+      "bytes": 21237
+    }
+  },
+  "finite_qualification": {
+    "path": "docs/active/2026-10-02-current-overnight/combined-finite-qualification.json",
+    "native_checks": 109015,
+    "native_failures": 0,
+    "native_group_oracle_checks": 36366,
+    "final_DLL_incoming_Python_checks": 11,
+    "earlier_broader_Calculator_Python_checks": 93,
+    "filtered_npm": "passed",
+    "TypeScript": "passed",
+    "native_and_WASM_builds": "passed",
+    "full_acceptance": "not run"
+  },
+  "isolation": {
+    "original_main": "ebcd98cdda2c1828cd855f549831951e6ba7470a",
+    "CURRENT_branch": "dot/current-20261002",
+    "CURRENT_head": "6a24e995c0cbafcb6cb7c33ccbb928bcf7b9fb03",
+    "integration_branch": "dot/integration-20261002",
+    "root_0": "never inspected, staged, modified or deleted",
+    "original_and_read_only_copy_SQLite_sha256": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a"
+  }
+}

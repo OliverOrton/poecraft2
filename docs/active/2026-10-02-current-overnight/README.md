@@ -407,3 +407,72 @@ spent. Patch review and parent serial allocation are the remaining blockers.
 No fresh economic, real W1, general Finder/Breach/Foulborn or final-worker
 qualification is claimed. Main/root `0`, original data/runtime/prices, push and
 deployment are untouched.
+
+
+## Granted final workers: actual returned strategies and remaining defects
+
+Parent approved the exact seven-line test-only adapter and granted W1 Bow then
+W2 full Finder. Adapter commit `984c5949def2abdbf02c4cdbed7554a932dd55db` has probe
+SHA `aa105c9fcc16dd674a3087a0e159af3a509a77d57c50d6524e70041920aa5609`;
+WASM remains the frozen `091305fb...aea6767`, engine source `792b37e`.
+The [actual-worker receipt](actual-worker-qualification.json) pins complete
+commands, request fields, prices, graphs and process receipts. Both goals,
+scoped actions, options, work/transport and module identity match the frozen
+packet. The probe reports Custom/manual economy metadata because it installs
+the frozen snapshot as overrides; all 864 values match pinned Allflame prices.
+The preflight above remains immutable prelaunch chronology.
+
+| Actual worker | Bow CURRENT | Full reconstructed Amulet Finder |
+|---|---:|---:|
+| Outer exit / survivor |0 / false|0 / false|
+| Outer wall |243.085s|28.988s|
+| Usable policy cost,c |51222.5208199995|2365.2701452478236|
+| Termination |requested_bounded_finish|finder_complete|
+| Cap mask |0|2147483648|
+| Graph nodes/edges |8/10|10/14|
+| Largest fixed-eight call |8636.413ms|18708.748ms|
+|250ms responsiveness |**FAIL**|**FAIL**|
+
+Bow's actual graph pays prefix lock+Scour at the dirty root, Exalts the clean
+three-prefix carrier, and pays the same legal cleanup after a wrong suffix.
+Prices are Exalt 1.77c, prefix lock 424c and Scour 0.3741c. Its selected artifact is
+`verified_retained`, independently evaluated at 51222.520820c. Production admission
+requires executable/proper/complete cost/zero-off-policy and finite nonnegative
+exact cost. Exact selected mass scalars are not separately exposed by delivery
+JSON; N3's explicit success 1/off-policy 0 remains separate native evidence. The
+larger coarse candidate still reports 32066887.220895 solver cost versus
+28280720.167247 exact cost; that mismatch is preserved, not silently reconciled
+or attributed to the different final selected graph.
+
+Finder completes 8 attempts: 2 accepted, 4 refused and 2 censored. Its selected
+native held-suffix acquisition graph repeatedly pays Wrath3 until both natural
+T1 suffix goals hold with room for the prefix craft: prefix count below 3 and
+suffix count below 3. It then pays suffix lock+Scour once, deletes the unwanted
+prefixes and preserves the two target suffixes. Full-side/wrong-goal rolls pay
+another Essence. The graph contains no Annul; no old graph was supplied.
+All 105 positive programme entries validate from the original request; accepted
+checking uses 186487 exact states under the unchanged 200000 ceiling. Native
+acceptance requires convergence, complete finite pricing, success>=1-1e-9 and
+failure/stop/nonapplication/no-match/unresolved<=1e-9. Exact mass scalars are not
+serialized in this telemetry, so none are invented here.
+
+The same full search also accepts the generated old Annul controller at
+59229.75038359062c on corrected bytes. The paid protected controller is
+**96.006618% cheaper within this run**. Wrath3 costs 0.3947c, suffix lock 424c and
+Scour 0.3741c. The returned graph and cost imply 4917.395605 expected Essence uses
+plus one lock/Scour; this is an algebraic derivation, not a separate consumption
+replay. Two other candidates hit 200000 states, explaining the generic cap mask;
+the selected protected candidate is not capped. No global lower/optimality or
+public protected-grammar promotion follows from the eight-attempt search.
+
+Both successful deliveries fail the unchanged responsiveness limit. Bow's
+8636.413ms call is attributed to policy_assembly. Finder's 18708.748ms call aligns
+with censored Chaos+Annul physical discovery, whose check interval is 18.697s.
+No cooperation/scheduling repair or relaxed limit is claimed. All 6 native+2
+worker slots are spent, with no retry, timeout, cancellation or survivor. Real
+MM W1 reporting and ungated N5 Foulborn worker replay remain unrun. The receipt
+includes the exact production correction diff: observation-mask eligibility is
+removed consistently from dense/projected root and Harvest paths, actual group
+conflicts remain, common-group single occupancy is required, and terminal
+blocker observations plus cache/checkpoint identities are repaired. Main/root
+`0`, canonical runtime/data/prices, push and deployment remain untouched.

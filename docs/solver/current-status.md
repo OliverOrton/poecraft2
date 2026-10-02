@@ -78,9 +78,15 @@ isolated integration includes Finder through `45611b9` plus the parent/Astra-
 approved native-group eligibility and terminal-projection repair. Its
 [combined finite receipt](../active/2026-10-02-current-overnight/combined-finite-qualification.json)
 qualifies native/WASM builds separately from owner benchmarks. Finder's
-conservative gate and historical N6 native-law hold remain. Full reconstructed
-search and final-byte worker economics await parent allocation and the reviewed
-frozen-request adapter repair.
+conservative gate and historical N6 native-law hold remain. The subsequent
+[actual-worker receipt](../active/2026-10-02-current-overnight/actual-worker-qualification.json)
+records final-byte Bow 51222.520820c and full reconstructed Finder 2365.270145c.
+Finder selects paid Wrath3/suffix-lock/Scour over its same-run checked Annul
+59229.750384c, validates 105 positive native programme entries, and retains two
+other 200000-state censored candidates. Both workers exit 0/no survivor but fail
+250ms responsiveness at 8636.413/18708.748ms. No full product or optimality
+qualification follows; the larger Bow coarse cost-mismatch diagnostic remains
+separate from its verified selected artifact.
 
 ## Currency expansion delta (2026-09-28)
 

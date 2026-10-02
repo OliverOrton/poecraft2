@@ -1,23 +1,26 @@
 # Handoff
 
-Oliver's overnight isolated integration is built and finite-validated on
-`dot/integration-20261002`, engine source `792b37e`. CURRENT `6a24e99`, Mechanics
-`d326305` and Finder `45611b9` are retained with the parent/Astra-approved native
-group and terminal correction `3c38872`. The [living record](docs/active/2026-10-02-current-overnight/README.md)
-and [combined receipt](docs/active/2026-10-02-current-overnight/combined-finite-qualification.json)
-pin final bytes: 109,015 finite native checks, 11 incoming Python checks on the
-final DLL, earlier 93 broader Calculator checks, filtered npm and TypeScript pass.
-Historical economic and N6 native-law receipts retain their own bytes and limits.
+Oliver's overnight isolated integration is complete on `dot/integration-20261002`.
+Engine bytes are from `792b37e`; approved test-only request adapter is `984c594`.
+CURRENT `6a24e99`, Mechanics `d326305`, Finder `45611b9` and parent/Astra-approved
+native-group/terminal repair `3c38872` are retained. The [living record](docs/active/2026-10-02-current-overnight/README.md)
+and [worker receipt](docs/active/2026-10-02-current-overnight/actual-worker-qualification.json)
+own exact source/request/runtime/WASM identities, graphs, negative results and
+qualification limits. Final finite checks: 109,015 native, 11 incoming Python on
+final DLL, earlier 93 broader Calculator, filtered npm and TypeScript pass.
 
-The [worker preflight](docs/active/2026-10-02-current-overnight/final-worker-preflight.json)
-freezes Bow CURRENT and full reconstructed Amulet Finder on final WASM
+Both final actual workers exited 0/no survivor, serially on WASM
 `091305fb659ed2b917be00d97734c99901c50d1410fc01ec9f8f13182aea6767`.
-Read-only native scope is 36/28 priced actions; zero Solve starts or workers.
-The existing DOM probe loses frozen disabled-family restrictions. Its concrete
-seven-line test-only repair is prepared, unapplied, pending parent shared-file
-review. Both actual-worker slots remain ungranted. All six global native timed
-slots are spent; no integration timed solver or worker ran. All owned processes
-ended. Main/root `0`, original database/runtime/prices and deployment are untouched.
+Bow returns checked bounded 51222.520820c; full reconstructed Amulet Finder returns
+2365.270145c via Wrath3/suffix lock/Scour, with 105 positive programme entries
+validated. Its same-run Annul alternative checks 59229.750384c; two other
+candidates hit 200000 states. Both workers FAIL 250 ms responsiveness: 8636.413ms
+Bow policy_assembly and 18708.748ms Finder. Larger Bow coarse cost mismatch stays
+preserved and separate from its verified selected artifact. No full product,
+optimality/public private-grammar promotion or general Breach/Foulborn acceptance.
+All 6 native+2 worker slots spent, no retry or process remains. Real MM W1 replay
+and ungated Foulborn worker replay remain unrun. Main/root `0`, original data/
+runtime/prices, push and deployment are untouched. No next programme is selected.
 
 Oliver's selected [MM0–MM7 recovery](docs/active/2026-09-29-metamod-recovery/README.md)
 is locally retained with partial acceptance. Last coherent execution commit:

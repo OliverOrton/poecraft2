@@ -481,3 +481,23 @@ reported cost, build hashes and native-law hold remain historical, with no
 corrected-byte fixed-graph or full real-data search run. Final combined WASM
 build and actual-worker qualification remain separately pending; no extra
 native timed allowance is inferred.
+
+
+## Subsequent corrected-byte full Calculator search
+
+The parent's final W2 grant ran the full reconstructed Amulet request on combined
+WASM `091305fb...aea6767`, including the separate native-group correction and
+approved frozen-goal probe adapter. It completed 8 attempts with 2 accepted,
+4 refused and2 censored, selecting native Wrath3/suffix-lock/Scour at
+2365.2701452478236c. All 105 positive programme entries validate; selected checking
+uses 186487 exact states. The generated Annul alternative checks the same
+59229.75038359062c in this fresh run. This is a 96.006618% within-run cost reduction,
+not a retroactive promotion of N6 bytes or a global optimality claim.
+
+[Combined actual-worker qualification](../2026-10-02-current-overnight/actual-worker-qualification.json)
+owns complete identities and negatives: exit 0/no survivor but18708.748ms maximum
+fixed-eight call fails 250 ms responsiveness. Two other candidates remain censored
+at 200000 states. Private grammar remains private; no full product qualification,
+Simulator or further allowance is inferred. All six native and two actual-worker
+slots are spent. This later receipt supersedes the earlier pending full-search
+status while preserving N6's historical native-law hold.
