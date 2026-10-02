@@ -23,7 +23,7 @@
     "engine/tests/test_solver_calc.cpp": "f8167095165dce830248e44a59a374bd2f57d982e527322da2d160de863a9276",
     "engine/tests/test_solver_eval.cpp": "fb66906d3a0b29e542bcbd7eb31087ed8760c82b3b95fe2e4f1f02bb9d42ea06",
     "engine/tests/tests.hpp": "68c0ee4e749b5acf76a7e1929e617104a31dfb794be929a7b691412329d5ebe1",
-    "engine/src/reforge_count_law.hpp": "ac901436d3faf757361a644ac4e427dc61c985ed191485258813d11bfc0955c5"
+    "engine/src/reforge_count_law.hpp": "fb6b8a378f5d6cfa112d4f041e472e74c8026b63800ee4a9f746fdbbf6b0dca1"
   },
   "law_versions": {
     "count": 2,
@@ -190,5 +190,13 @@
       "new": "1/5"
     },
     "real_item_cost_comparison": "unrun"
+  },
+  "post_validation_formatting": {
+    "path": "engine/src/reforge_count_law.hpp",
+    "tested_sha256": "ac901436d3faf757361a644ac4e427dc61c985ed191485258813d11bfc0955c5",
+    "normalized_sha256": "fb6b8a378f5d6cfa112d4f041e472e74c8026b63800ee4a9f746fdbbf6b0dca1",
+    "change": "CRLF to LF only",
+    "semantic_change": false,
+    "finite_checks_reused": true
   }
 }

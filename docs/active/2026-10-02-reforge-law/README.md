@@ -56,6 +56,8 @@ count law 209,934; independent gated rows 1,111,656; checkpoint 51; phase/lower
 Finder Essence 293; assertion service 424; Current proof handoff 49.
 The final two-job Tests build passes. Engine/test file hashes and the actual
 executable hash identify the checked source independently of its local commit.
+The receipt also records a subsequent header-only CRLF-to-LF normalization;
+the checked header hash is retained and semantic validation is reused.
 The final checkpoint and occupancy fixture changes are test-only; preceding compatible tests
 are reused without repeating unchanged production checks.
 
