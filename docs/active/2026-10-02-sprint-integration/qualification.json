@@ -1694,5 +1694,79 @@
       "base": "28058079f1ab95a9ab5846a6ce19f4068e742575",
       "log": "out/sprint-continuation/final-combined-knowledge-lint.log"
     }
+  },
+  "native_ci_repair_checkpoint": {
+    "recorded_utc": "2026-10-02T21:53:01Z",
+    "baseline": "dbc142a26f7060c6114453d85f7b4c776077dc2b",
+    "worktree": "C:/Users/Oliver/Documents/poecraft2-local-native-repair",
+    "branch": "dot/local-native-repair-20261002",
+    "ci_run": 37064817767,
+    "ci_job": 111029911509,
+    "production_changes": [
+      "Preserve fractured_side_counts in strict-to-coarse projection",
+      "Transfer previously checked feasible graph on RefinementFailure only, preserving failure diagnosis and discarding statewise/global proof authority",
+      "Record retained-artifact refinement failure in publication diagnostics"
+    ],
+    "baseline_failures": [
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-integrity-only fracture",
+        "result": "two assertions then non-cap publication lost its verified artifact abort",
+        "log": "out/local-native-repair/baseline-fracture.log"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-s8-3-only run_fracture_price_flip",
+        "result": "22 checks, one low.converged failure",
+        "log": "out/local-native-repair/baseline-s8.log"
+      }
+    ],
+    "preliminary_variant_checks": [
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-integrity-only fracture",
+        "passed": 621,
+        "failed": 0,
+        "log": "out/local-native-repair/fallback-fix-fracture.log"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-s8-3-only run_fracture_price_flip",
+        "passed": 36,
+        "failed": 0,
+        "log": "out/local-native-repair/fallback-fix-s8.log"
+      }
+    ],
+    "preliminary_variant_limit": "Earlier artifact retention covered all failed lift statuses. Current final variant narrows to RefinementFailure, clears proof adapter flags and adds independent graph reevaluation. Preliminary passes are not final qualification.",
+    "current_build": {
+      "command": "powershell -NoProfile -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+      "exit": 0,
+      "log": "out/local-native-repair/final-build.log",
+      "tests_exe_sha256": "4fc179553f0218c9f6c644ca2e361ef37a421ca6f4f6fe75f2dbd0b9a1ce6d72"
+    },
+    "unrun": [
+      "current narrowed repair and added regression tests",
+      "full affected solver_solve and solver_s8_3 targets",
+      "publication continuity and selective-cap negative controls",
+      "matching WASM and affected worker checks",
+      "normal main integration/push and CI verification"
+    ],
+    "pause": {
+      "reason": "Oliver gaming/frame drops; explicit resume required for heavy work",
+      "owned_processes_remaining": 0,
+      "visible_native_build_test_processes": 0,
+      "system_cpu_percent_snapshot": 10,
+      "system_memory_used_gib": 33.97,
+      "system_memory_total_gib": 63.71,
+      "termination_review": "Stop rejected because PID ownership was not established; build completed naturally, tracked processes then verified absent; no unrelated process stopped"
+    },
+    "authority": {
+      "native_laws_unchanged": true,
+      "root_goal_scope_prices_unchanged": true,
+      "publication_loss_invariant_unchanged": true,
+      "no_false_exactness": "fresh feasible certificate with statewise/reconciliation/global closure defaults unset"
+    },
+    "main_unchanged": true,
+    "overnight_unchanged": true,
+    "no_push": true,
+    "no_deployment": true,
+    "no_refresh": true,
+    "no_extra_agents": true
   }
 }

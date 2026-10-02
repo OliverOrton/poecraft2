@@ -1,3 +1,16 @@
+# Native CI repair continuation; heavy work paused (2026-10-02)
+
+Oliver selected remaining Windows native CI repair on delivered `dbc142a2`, then
+paused heavy work for gaming at 21:52 UTC. Isolated
+`dot/local-native-repair-20261002` preserves fracture carrier counts and retains a
+checked feasible graph after optional refinement failure without exact authority.
+Current build passes; final narrowed source/regression tests, matching WASM and
+promotion remain unrun. All owned heavy processes exited. Do not resume heavy
+work or restart his server without explicit resume. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `native_ci_repair_checkpoint` receipt own evidence and remaining checks.
+Main/overnight checkout are unchanged; no mechanics/design work is selected.
+
 # Combined completion batch delivered; paused (2026-10-02)
 
 The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)

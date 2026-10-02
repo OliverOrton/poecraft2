@@ -171,6 +171,7 @@
         result.blocked_mask = strict_state.blocked_mask;
         result.prefix_count = strict_state.prefix_count;
         result.suffix_count = strict_state.suffix_count;
+        result.fractured_side_counts = strict_state.fractured_side_counts;
         result.rarity = strict_state.rarity;
         result.influence_bits = strict_state.influence_bits;
         result.veiled_side = strict_state.veiled_side;

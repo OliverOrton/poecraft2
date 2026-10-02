@@ -308,3 +308,55 @@ the Dominance-only artifact was deliberately excluded. The continuation above
 qualifies `b794e009` worker bytes; later source changes need a matching rebuild.
 Whole product acceptance, Simulator and rendered UI remain unrun. No push,
 deployment, data/prices refresh, install or protected root `0` access occurred.
+
+
+## Native CI repair continuation; paused for gaming
+
+The parent selected repair of Windows run **37064817767**, job
+**111029911509**, on delivered `dbc142a26f7060c6114453d85f7b4c776077dc2b`.
+Work is isolated in `C:/Users/Oliver/Documents/poecraft2-local-native-repair`,
+branch `dot/local-native-repair-20261002`; main and the overnight checkout are
+unchanged. Normal main's delivered WASM was verified matching its qualified
+hash. Oliver owns the existing dev-server restart.
+
+Two concrete defects were reproduced. Strict-to-coarse projection omitted
+`fractured_side_counts`, changing exact carrier identity after a fracture; the
+one-line preservation restores valid fractured-root closure and S8's price-flip
+while retaining the stale-group root rejection. Separately, strict refinement
+advertised an already checked feasible graph's upper cost, then discarded its
+owned assertion when later optional refinement failed. The non-cap publication
+invariant correctly rejected that scalar without its graph.
+
+The local repair transfers an eligible graph from the same immutable
+root/law/price owner only on `RefinementFailure`, keeps the failure reason, and
+seals a fresh feasible certificate without statewise, reconciliation or global
+proof authority. Resource-cap, root-mapping and other failure classifications
+remain unchanged. The publication-loss invariant is unchanged. A finite
+regression now independently parses/evaluates the returned graph, checks proper
+success/zero off-policy/cost, and rejects false convergence/global closure.
+
+Evidence is recorded in `qualification.json` under
+`native_ci_repair_checkpoint`. Delivered baseline reproductions failed:
+fracture integrity had two assertions followed by the non-cap abort; S8 had
+one convergence failure. The preliminary projection plus retained-graph version
+passed **621 fracture integrity** and **36 S8 price-flip** checks. That preliminary
+version retained every failed status; it is not the final qualification. The
+current narrowed failure-only version plus stronger regression **builds**, but
+its tests are **unrun**. No final native target, matching WASM or push has run.
+Logs and temporary diagnostic patch are under `out/local-native-repair`;
+diagnostic instrumentation was removed from retained source.
+
+At **21:52 UTC** Oliver requested pausing heavy work to play games. The active
+two-job build completed before termination; all tracked processes were confirmed
+exited, and no native build/test process remained visible. Automatic approval
+review had rejected a process-tree stop because PID ownership was not established;
+no unrelated process was stopped. Snapshot: 10% system CPU, 33.97/63.71 GiB RAM.
+Do not start builds, tests, benchmarks, WASM compilation or server restarts until
+explicit resume. On resume: run affected native targets and publication continuity,
+then matching WASM and bounded affected worker checks; qualify before the newly
+authorized normal main delivery. No heavy solver experiment is selected.
+
+Proposed later audit, not started: carrier transformations preserving every
+native identity/occupancy flag; independent complete native outcome enumeration;
+and paid setup/recovery graph provenance plus cached-artifact ownership. Mechanics
+requiring Oliver's decisions remain held.

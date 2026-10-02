@@ -4658,6 +4658,11 @@ SolveWork::Impl::run_publication_pipeline() {
                 if (lift_work.progress().done) {
                     certificate = lift_work.take_result();
                 }
+                if (certificate.status == refinement::PolicyExactLiftStatus::Complete &&
+                    !certificate.failure_reason.empty())
+                    record_refinement_refusal(
+                        "verified_artifact_retained_after_refinement_failure: " +
+                        certificate.failure_reason);
             } else {
                 certificate.status =
                     refinement::PolicyExactLiftStatus::ResourceCap;
