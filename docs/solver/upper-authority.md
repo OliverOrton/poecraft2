@@ -102,6 +102,16 @@ an integrity error instead of returning a normal no-policy result.
 
 The early-closure archive demonstrates this distinction. Its numerical values are historical evidence under their pinned requests, not current constants or a default search seed. See [publication](publication.md#direct-assertion-and-closed-domain-routing).
 
+The [Bow mismatch containment](../active/2026-10-02-mismatch-sprint/README.md#containment-and-limits)
+records failed cost reconciliation as sticky negative provenance on copied
+incumbent values. It blocks their scalar continuation/pruning reuse and follows
+restoration and recapture. Retained scalar boundary snapshots also require their
+unchanged source incumbent identity. An explicitly root-entry-only certificate
+cannot provide parent statewise values. Root graphs and independently checked
+entry certificates keep their separate authority. The absence of a rejection bit is
+not a newly issued statewise certificate, and no reset rule is introduced for
+an old rejected vector.
+
 ## Entry-scoped and class-scoped evidence
 
 Compiler-authored graph-local declarations identify genuine native decisions in

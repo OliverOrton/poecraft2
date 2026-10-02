@@ -129,6 +129,23 @@ Two items have the same satisfied mask and occupancy. Under the same named actio
 
 A hidden blocker can create precisely this *kind* of discrepancy. Whether a particular native blocker does so is a source/model fact to inspect, not a rule to infer from a generic example.
 
+<a id="bow-proposal-row-witness"></a>
+### Native Bow proposal-row witness (2026-10-02)
+
+The [frozen Bow witness](../../active/2026-10-02-mismatch-sprint/README.md#smallest-mathematical-cause)
+has the same broad carrier for the original Dexterity/attack-speed suffixes and
+a materialized additional-arrow representative. Native Exalt uses satisfying
+weight 500 in pools of weight 46100 and 59000 respectively. Their projected
+success probabilities differ, violating condition 4 above. Independent execution
+pools match the strict original row and broad representative row respectively.
+This is intentional proposal compression, not an execution-law contradiction.
+
+A fixed emitted graph independently checked from the original root can still
+supply a proper priced upper. Root scalar reconciliation does not establish
+statewise class-wide correspondence; rejection must survive copied-value reuse.
+The witness neither invalidates separately derived optimistic lower relations
+nor decomposes the whole larger policy's cost difference.
+
 Preserving one frozen continuation expectation has weaker requirements than
 this universal quotient contract. The [stopping-line argument and label
 counterexample](lower-bounds.md#stopping-line) show how a probability query can

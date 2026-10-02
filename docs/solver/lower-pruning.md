@@ -227,6 +227,14 @@ A local action retirement requires a valid action lower and a compatible proper 
 
 Public lower fallback for an open incremental graph uses independently valid patterns, including an eligible ordinary retention contribution. It never republishes the restricted graph value merely because that value is larger.
 
+A working vector restored from a cost-unreconciled incumbent retains its
+rejection provenance. Envelope closure or numerical convergence cannot promote
+that vector into incremental lower evidence, a cached upper or coarse exact
+closure. Its global-lower fallback retains independently certified completion
+patterns. The [Bow witness](../active/2026-10-02-mismatch-sprint/README.md#containment-and-limits)
+demonstrates a lossy proposal row; it does not refute those independent lower
+relations or confer authority on other unreviewed broad-row uses.
+
 Inspect lower provenance, eligibility/refusal reasons, complete action coverage, preparation cost, consumer selections, and actual retired obligations. Keep component gain, whole-model gain, portfolio gain, ordinary consumption, and end-to-end exact-closure outcome separate. See [benchmarking](benchmarking.md).
 
 ## Source basis

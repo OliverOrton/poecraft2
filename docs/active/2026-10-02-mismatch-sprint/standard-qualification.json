@@ -1,0 +1,206 @@
+{
+  "source_commit": "0231e465fa4022a6b8c7399420a64666287ce27c",
+  "prerequisite_source_commit": "3162ef791873b231c722265c41a650eb0d39e6b3",
+  "baseline_revision": "f08facbb93204bf721048c21b94080ab582ee9f8",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-mismatch-sprint",
+  "branch": "dot/mismatch-20261002",
+  "created_utc": "2026-10-02T16:33:29.325490+00:00",
+  "build_command": "powershell -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+  "build_evidence": {
+    "path": "out/mismatch-sprint/build-root-only.log",
+    "bytes": 5285,
+    "sha256": "32ba6c7dacae56f576cf332f867e9fc2526c9e9c5ea2d25867be38289540fefa"
+  },
+  "executable": {
+    "path": "C:/Users/Oliver/Documents/poecraft2-mismatch-sprint/build/engine/poecraft_engine_tests.exe",
+    "bytes": 18959639,
+    "sha256": "0a45c1aaca276e228882ee1606c29d73e304f77688a8ebe703990ed46f505799"
+  },
+  "focused_checks": 6631,
+  "focused_failures": 0,
+  "tests": [
+    {
+      "exit_code": 0,
+      "log": "out/mismatch-sprint/final-assertion.log",
+      "arguments": [
+        "--solver-assertion-service-only"
+      ],
+      "name": "assertion",
+      "checks": 424,
+      "failures": 0,
+      "evidence": {
+        "path": "out/mismatch-sprint/final-assertion.log",
+        "bytes": 56,
+        "sha256": "c7470532bd31bdb745278364c3afd84c255d6cebf8bf74ad65cf914763363310"
+      }
+    },
+    {
+      "exit_code": 0,
+      "log": "out/mismatch-sprint/final-bounded-finish.log",
+      "arguments": [
+        "--solver-bounded-finish-only"
+      ],
+      "name": "bounded-finish",
+      "checks": 203,
+      "failures": 0,
+      "evidence": {
+        "path": "out/mismatch-sprint/final-bounded-finish.log",
+        "bytes": 226,
+        "sha256": "b0b55e378d69d131157b98a709dbb886eca9f8848189ef7a520a8bfe851b3407"
+      }
+    },
+    {
+      "exit_code": 0,
+      "log": "out/mismatch-sprint/final-selected-fallback.log",
+      "arguments": [
+        "--solver-selected-fallback-only"
+      ],
+      "name": "selected-fallback",
+      "checks": 2440,
+      "failures": 0,
+      "evidence": {
+        "path": "out/mismatch-sprint/final-selected-fallback.log",
+        "bytes": 162,
+        "sha256": "2bba95a2bd33ec6dcf93e778004de9c2be349656bfe4a5a1935b1a9f800944fc"
+      }
+    },
+    {
+      "exit_code": 0,
+      "log": "out/mismatch-sprint/final-metamod-row.log",
+      "arguments": [
+        "--solver-metamod-recovery-only",
+        "C:/Users/Oliver/Documents/poecraft2/data/compiled/current"
+      ],
+      "name": "metamod-row",
+      "checks": 685,
+      "failures": 0,
+      "evidence": {
+        "path": "out/mismatch-sprint/final-metamod-row.log",
+        "bytes": 1562,
+        "sha256": "e5aaabee417190e7463a907d60684ff56d9f284391252c2c09d1f689c8449fa9"
+      }
+    },
+    {
+      "exit_code": 0,
+      "log": "out/mismatch-sprint/final-incremental.log",
+      "arguments": [
+        "--solver-integrity-only",
+        "incremental"
+      ],
+      "name": "incremental",
+      "checks": 1797,
+      "failures": 0,
+      "evidence": {
+        "path": "out/mismatch-sprint/final-incremental.log",
+        "bytes": 544,
+        "sha256": "ca60185dd75ce702c7195c3fff844fdae771244ac71e06e11dd868000aac588b"
+      }
+    },
+    {
+      "exit_code": 0,
+      "log": "out/mismatch-sprint/final-paid-root.log",
+      "arguments": [
+        "--solver-integrity-only",
+        "paid-reset"
+      ],
+      "name": "paid-root",
+      "checks": 1082,
+      "failures": 0,
+      "evidence": {
+        "path": "out/mismatch-sprint/final-paid-root.log",
+        "bytes": 424,
+        "sha256": "af7dec7618a8aa44517aecc61aa651dadc551f2326709c3378cdf1b32991d502"
+      }
+    }
+  ],
+  "baseline_exclusion_controls": [
+    {
+      "exit_code": 1,
+      "log": "out/mismatch-sprint/final-joint-continuation.log",
+      "arguments": [
+        "--solver-joint-policy-continuation-only"
+      ],
+      "name": "joint-continuation",
+      "checks": 382,
+      "failures": 6,
+      "evidence": {
+        "path": "out/mismatch-sprint/final-joint-continuation.log",
+        "bytes": 1186,
+        "sha256": "fe8cc82d2a6bb7d8211b23646b6d7ce06879790d87d9d5a9d35e25228bac0c2c"
+      }
+    },
+    {
+      "exit_code": 1,
+      "name": "joint-continuation-baseline",
+      "arguments": [
+        "--solver-joint-policy-continuation-only"
+      ],
+      "log": "out/mismatch-sprint/standard-joint-continuation-baseline.log",
+      "executable_sha256": "0d12cec456f81e8943fbb9774c96b1149ff85b96357e10c8309c313059b79c75",
+      "executable": "C:/Users/Oliver/Documents/poecraft2-integration-overnight/build/engine/poecraft_engine_tests.exe",
+      "evidence": {
+        "path": "out/mismatch-sprint/standard-joint-continuation-baseline.log",
+        "bytes": 1222,
+        "sha256": "a79dec61ceaa37be8fd88c741df77209de76ae7ef8c19c002618586f0822cebf"
+      }
+    }
+  ],
+  "baseline_exclusion": "Joint continuation: 382 checks, same 6 native fracture-row availability failures on final source build and untouched f08facbb integration executable; broad selector not qualified.",
+  "row_witness": {
+    "scope_actions": 36,
+    "original_suffixes": [
+      "Dexterity7",
+      "LocalIncreasedAttackSpeed3"
+    ],
+    "representative_suffixes": [
+      "AdditionalArrowBow1_",
+      "AdditionalArrowsUber1"
+    ],
+    "original_pool_weight": 46100,
+    "representative_pool_weight": 59000,
+    "target_weight": 500,
+    "representative_minus_original_group_weights": {
+      "Dexterity": 9000,
+      "IncreasedAttackSpeed": 5000,
+      "AdditionalArrows": -1100
+    },
+    "original_probability": 0.010845986984815618,
+    "representative_probability": 0.00847457627118644,
+    "projected_L1": 0.028456928563549002,
+    "original_matches_strict": true,
+    "representative_matches_broad": true
+  },
+  "new_timed_runs": 0,
+  "new_workers": 0,
+  "new_simulator_runs": 0,
+  "owned_processes_remaining": [],
+  "unrun": [
+    "final WASM and actual worker",
+    "full acceptance suite",
+    "entire larger graph re-evaluation/cost decomposition",
+    "fresh economic or simulation qualification"
+  ],
+  "limits": [
+    "negative provenance only; no positive statewise certificate issued",
+    "no automatic authority reset for independently recomputed values",
+    "not a general audit certification of all coarse-row proof consumers"
+  ],
+  "prior_checkpoint_evidence": {
+    "path": "C:/Users/Oliver/Documents/poecraft2-mismatch-sprint/out/mismatch-sprint/pre-root-only-qualification.json",
+    "bytes": 6023,
+    "sha256": "aa334c6b1b308faac992c8e7b74dbf7e0a5f6ceccd5b040e829a539131840596"
+  },
+  "source_commit_chain": [
+    "3162ef791873b231c722265c41a650eb0d39e6b3",
+    "02cff7c200cfd1e20d10eaae25666e6f1152bc8d",
+    "0231e465fa4022a6b8c7399420a64666287ce27c"
+  ],
+  "matched_baseline_failure_conditions": [
+    "native.supported && native.applicable",
+    "installed",
+    "work.output_incumbent.has_value()",
+    "native.supported && native.applicable",
+    "installed",
+    "work.output_incumbent.has_value()"
+  ]
+}

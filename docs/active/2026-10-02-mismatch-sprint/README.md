@@ -1,7 +1,9 @@
-# Bow cost mismatch sprint — WIP tier handoff
+# Bow proposal-row mismatch and statewise containment
 
-Stopped at Oliver's explicit request to replace this fast turn with standard tier.
-Do not treat this checkpoint as reviewed or qualified production authority.
+The standard-tier continuation and final scoped qualification are recorded
+[below](#standard-tier-continuation-2026-10-02). The original fast-tier handoff
+is preserved here as historical process evidence; its WIP qualification limits
+are superseded only where the later receipt explicitly says so.
 
 - Worktree: `C:/Users/Oliver/Documents/poecraft2-mismatch-sprint`
 - Branch: `dot/mismatch-20261002`
@@ -121,3 +123,104 @@ returned exit -1 (deliberate termination). Earlier build/test sessions 85126,
 Hard times are unchanged: checkpoint by 16:25 UTC, wrap at 16:45 UTC, all owned
 processes stopped and handoff ready by 16:55 UTC on 2026-10-02. Never use 17:00
 reset or switch/retry on quota exhaustion. Parent owns the tier replacement.
+
+
+## Standard-tier continuation (2026-10-02)
+
+The continuation preserves the original worktree, branch and spent allowances.
+The parent held new CPU-heavy commands until its serial latency pair completed;
+no process was running here during that hold. All builds used two jobs. Blocking waits requested 60 seconds; the outer client
+sometimes yielded at 31 seconds, preserving the same build session. No solver
+polling proxy or additional supervisor was introduced. No timed
+solve, worker, Simulator, data refresh or additional agent was started.
+
+### Smallest mathematical cause
+
+The frozen 36-action input and first selected Exalt row now have an independent
+execution-pool comparison for both the original item and the broad representative.
+The original suffixes are `Dexterity7` and `LocalIncreasedAttackSpeed3`.
+Materialization of their broad class substitutes `AdditionalArrowBow1_` and
+`AdditionalArrowsUber1`. Both items project to the same broad carrier, but their
+complete native group-exclusion observations differ.
+
+The original native pool has weight 46100; the representative has weight 59000.
+The latter restores 9000 Dexterity and 5000 IncreasedAttackSpeed weight and
+excludes 1100 AdditionalArrows weight: net +12900. Satisfying Mana weight remains
+500. Thus the first-row hits are exactly the normalized native weights
+500/46100 and 500/59000. Every projected broad-row probability matches the
+representative's execution pool, while every projected strict-row probability
+matches the original item's pool. The representative includes a source-only
+AdditionalArrowsUber1 member with zero positive spawn weight; the full carrier
+universe deliberately retains source modifiers, so this is not a data refresh
+or modifier-admission defect.
+
+This establishes nonuniformity of that broad class, not a native execution-law
+bug. The broad discovery contract intentionally omits exclusion signatures;
+strict evaluation restores them. The exact-quotient equality premise therefore
+does not apply to this proposal row. The argument is preserved in
+[representations](../../solver/mathematics/representations.md#bow-proposal-row-witness).
+It does not reconstruct every row or apportion the entire 3786167.0536478423c
+policy-cost discrepancy. The missing large graph/value snapshot remains missing.
+
+### Containment and limits
+
+Qualified source chain, in order: `3162ef791873b231c722265c41a650eb0d39e6b3`,
+`02cff7c200cfd1e20d10eaae25666e6f1152bc8d`, and `0231e465fa4022a6b8c7399420a64666287ce27c`.
+All three source commits are required for integration; the intervening tier-handoff
+commit is documentation only. The last commit explicitly excludes root-entry-only
+certificates from parent statewise reuse.
+
+The retained WIP veto now has focused native qualification. Failed root or
+coarse-value reconciliation permanently rejects that incumbent's copied
+statewise values. A matching later root scalar cannot clear it. An explicitly
+root-entry-only certificate also cannot authorize a parent statewise table.
+Consumers of scalar continuations/pruning refuse these tables while the independent
+proper root graph and its checked cost remain selectable.
+
+Additional closure of copy/reuse paths:
+
+- Waiting and completed resumable joint candidates reject copied scalar
+  boundaries after source rejection or incumbent identity replacement. Released
+  snapshots drop their owned value payload. A boundary-free completed proposal
+  is unaffected.
+- Restoring an incumbent/fallback carries a sticky working-value rejection and
+  clears its cached incremental upper vector. Snapshot/direct recapture carries
+  the same bit, including copies that bypass the ordinary capture helper.
+- Rejected working values cannot seed incremental closed-envelope lowers,
+  converged-result upper tables, or coarse exact closure. Global lower fallback
+  keeps the independent completion lower. Separate goal-cover/retention producers
+  and physical-entry graph certificates are not invalidated by this veto.
+
+No positive statewise certificate is introduced. Absence of the veto is not a
+new proof of native class equivalence. The patch does not globally strictify
+search or assert that every pre-existing broad-row lower/pruning route is
+certified. Independently recomputed strict generations retain their existing
+checker contract and independent root-graph authority. The working-value veto
+is conservative for the lifetime of this solve; no in-place reset rule or new
+certified-generation replacement mechanism is introduced late in the sprint.
+
+### Focused qualification
+
+Final two-job build and six exact selectors pass: assertion authority 424,
+bounded Finish 203, selected fallback 2440, metamod/Bow row 685, incremental
+integrity 1797, paid-root integrity 1082; total 6631 checks, zero failures. All owned build/test sessions
+have completed and no owned process remains.
+
+Final commands and immutable executable/log hashes are recorded in
+`standard-qualification.json`; bulk logs remain in `out/mismatch-sprint/`.
+The initial assertion fixture lacked an executable row when testing recapture;
+that test-only defect was corrected and its failed log is retained. The complete
+joint-continuation selector reports six fracture-fixture failures in 382 checks,
+identically on the untouched f08facbb integration executable and this branch.
+The failure is native row availability before the changed snapshot path. This
+selector is a baseline exclusion, not a passing qualification claim.
+
+No final WASM/worker, full acceptance suite, large-graph re-evaluation, fresh
+1,000-trial qualification or economic improvement is claimed. Native internal
+provenance changes add no ABI or strategy vocabulary. The separately checked
+51222.520820c selected policy remains distinct from the larger mismatching
+candidate; neither this witness nor the veto claims optimality closure.
+
+Disposition: incorporate the finite nonuniform-class witness and scoped negative
+provenance repair; preserve independent lower/root/entry authorities; leave
+whole-candidate cost attribution and general broad-class authority audit open.

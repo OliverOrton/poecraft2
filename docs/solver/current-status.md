@@ -88,6 +88,15 @@ other 200000-state censored candidates. Both workers exit 0/no survivor but fail
 qualification follows; the larger Bow coarse cost-mismatch diagnostic remains
 separate from its verified selected artifact.
 
+The later isolated [Bow mismatch containment](../active/2026-10-02-mismatch-sprint/README.md#standard-tier-continuation-2026-10-02)
+identifies intentional broad representative substitution in the first Exalt row.
+It adds sticky negative provenance for cost-unreconciled statewise values,
+including restored and retained-boundary consumers, while preserving independently
+checked root graphs and completion lowers. Native finite checks qualify the
+scoped repair; matched baseline fracture-fixture failures and unrun whole-graph/
+WASM qualification remain explicit. This adds no positive statewise or exactness
+authority and does not promote the larger candidate over the selected policy.
+
 ## Currency expansion delta (2026-09-28)
 
 The [currency receipt](../active/2026-09-28-currency-expansion/README.md#execution-receipt-and-remaining-holds)
