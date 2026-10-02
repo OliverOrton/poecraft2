@@ -11,9 +11,11 @@ committed; native/WASM/focused web checks pass. Receipts and strategy hashes are
 committed in the living record. Both policies remain bounded Finish results;
 real W1 timed replay and worker qualification remain unrun. No own process is
 live. Parent-authorized Conquest review retains actual destructive recovery findings
-and a labelled mixed-tag native control (516 checks, zero failures). CURRENT is
-quiescent for the parent's Mechanics qualification hold; integration remains a
-plan pending final stable owner revisions. Historical MM receipts below stay
+and a labelled mixed-tag native control (516 checks, zero failures). Later M12 empty-root review keeps its
+85558.706186c checked policy and failed 387.339 ms worker-slice limit separate
+from older partial cb03. Empty integration checkout `dot/integration-20261002`
+is prepared at initial main; no owner commits applied. All own processes ended;
+final stable owner revisions remain pending. Historical MM receipts below stay
 unchanged, and main/root `0` are untouched.
 
 Oliver's selected [MM0–MM7 recovery](docs/active/2026-09-29-metamod-recovery/README.md)

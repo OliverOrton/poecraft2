@@ -155,27 +155,61 @@ qualification was run. There was no Simulator qualification.
 
 ## Conquest saved strategy and mixed-tag review
 
-`conquest-review.json` retains report/graph hashes and compact actual occupancy,
-spend and progress evidence from saved cb01/cb02/cb03 controllers. These are
-historical observations with their own inputs and budgets, not tonight's
-matched economic qualification. Costs are cb02 empty-four 3746.131941c,
-cb01 empty-five 85558.706186c and cb03 held-three-to-five 794067.453040c.
-The saved goals use Defence prefixes, tagless Suppression and Physical Reduction;
-none establishes Oliver's unavailable mixed-tag phone request.
+`conquest-review.json` retains report/graph hashes and actual occupancy, spend,
+request identity and chronology. The parent requested an additional comparison
+against the later M12 saved worker qualification; source/artifact review completed
+without a new solve or build. None of these saved requests establishes Oliver's
+unavailable mixed-tag phone request, and no saved cost is labelled as tonight's
+representative performance.
 
-The concrete cb03 branch is ordinary Annul at `s1955`: 2.781291 expected visits,
-with reported occupancy share 0.969299 at three prefixes/three suffixes and all
-five wanted slots satisfied (remaining reported class mass is truncated).
-The compiled terminal correctly requires exactly the five wanted affixes for
-this legacy-clean fixture. One junk suffix must therefore be removed. Losing
-a held prefix can trigger reacquisition: 19235.366321 expected Eldritch Chaos
-visits spend 754218.713465c, **94.981693%** of the checked cost. Its biggest node,
-`s941` (16112.104518 visits), reports both wanted suffixes held while prefixes
-are below-tier or absent. This is expensive prefix recovery, not evidence that
-all Eldritch Chaos spending erases suffix progress. A separate `s1935_o1/o2`
-Ichor-2 + Eldritch Chaos route does erase one held wanted suffix while retaining
-the three wanted prefixes (0.638086 expected visits). Other rows do preserve
-valuable progress; operation presence alone is not evidence of selected spend.
+| Saved request | Root | Checked cost, c | Scope |
+| --- | --- | ---: | --- |
+| cb03, Sep 9/10 capability study | three wanted Defence prefixes | 794067.453040 | older partial-three-to-five observation |
+| cb01, later M12 worker (admitted Sep 15 04:26 UTC) | empty Rare | 85558.706186 | complete policy delivery; worker-slice qualification failed |
+| cb02 saved empty-four | empty Rare | 3746.131941 | separate four-goal observation |
+
+M12 requests all five natural T1 families on ilvl86 Conquest: three Defence
+prefixes, tagless Suppression and Physical Reduction. Its saved graph is
+**JSON-identical** to the cb01 `E3/a5-legacy-clean` graph already in this census;
+selected request fields and all 28 resolved product action IDs also equal that
+report and the retained M3v2 native request. M12 and older cb03 share the same
+goal, prices, scope, caps, verification and product IDs, but their explicit roots
+differ. Their costs are not a matched improvement/regression comparison.
+M12's build baseline is `fe5bdcb`; the older capability-study record was retained
+before it. Current main remains `ebcd98c`; neither saved result is a fresh run
+of the overnight treatment.
+
+M12 independently checks 85558.70618560436c, success one, complete reconciled
+cost and zero off-policy mass. It remains bounded Finish with cap mask zero.
+The worker's **387.339 ms** maximum slice exceeds the unchanged **250 ms** limit,
+so overall worker qualification failed despite complete policy delivery.
+Qualification/report/retained graph identities are preserved in the receipt;
+retained graph SHA256 is
+`7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02`.
+
+The later decisive recovery mix differs from cb03. Ordinary Annul `s392` has
+4.550699 expected visits, spends 44.096276c (**0.051539%**), and runs mostly at
+two-goal progress (3.703891 visits). Five-goal visits are only 0.000125411.
+Reported classes include two prefixes/three suffixes with both wanted suffixes
+held; ordinary Annul can destroy those suffix hits. This is a concrete risk,
+but the older all-five-plus-junk Annul bottleneck is not the later main cost
+driver. Eldritch Annul `s928` already receives **753.333338** expected visits,
+spending 30532.600196c (**35.686141%**), at three/four-goal progress. Its reported
+classes include three occupied prefixes and both wanted suffixes held. Starting
+with no implicits, the graph's only dominance setup is Ember-1, so its Eldritch
+rows recover prefixes while retaining suffix hits. Eldritch Chaos spends
+47295.431966c (**55.278339%**, 1206.208415 visits), predominantly at two-goal
+progress. Eldritch prefix recovery is present and substantially used.
+
+For the **older partial cb03 only**, ordinary Annul `s1955` has 2.781291 expected
+visits; reported share 0.969299 has all five wanted affixes plus a junk suffix.
+Legacy clean terminal truth requires its removal. Prefix loss can trigger
+expensive reacquisition: its Eldritch Chaos spends 754218.713465c (**94.981693%**).
+Node `s941` (16112.104518 visits) reports both wanted suffixes held while prefixes
+are below-tier or absent. A separate Ichor-2 + Eldritch Chaos route erases one
+wanted suffix while retaining the three prefixes (0.638086 visits). These old
+branches remain historical leads, not claims about M12 or today's performance.
+Operation presence alone is not evidence of selected spend.
 
 A clearly labelled finite variant uses native T1 Life (`IncreasedLife12`, same
 Life family referenced in the repository's natural-T1 fixture), two Defence
@@ -201,11 +235,15 @@ slot per exit (`solver_options_helpers.hpp`, protected family); the multi-slot
 constructive renewal family is a different owner. No shared grammar, terminal
 mechanic, cap or historical policy was imported or changed in this review.
 
-## Isolated integration plan - no merge performed
+## Isolated integration preparation - no owner changes applied
 
-After the parent names all final stable revisions, use a new worktree/branch
-(e.g. `poecraft2-integration-overnight`, `dot/integration-20261002`) from the initial
-main and a distinct native build directory. Keep main/root `0` untouched.
+The parent requested integration preparation after releasing the Mechanics CPU
+hold. Fresh worktree `C:/Users/Oliver/Documents/poecraft2-integration-overnight`,
+branch `dot/integration-20261002`, is created at initial main `ebcd98c`. No owner
+commit is applied and no build or test is launched there. Its future native
+output must stay under that worktree, separate from all three owner outputs.
+After the parent identifies final stable revisions, apply those boundaries.
+Main/root `0` remain untouched.
 Apply owners' complete stable changes, preserve individual qualification receipts,
 then regenerate release WASM once for the combined native source. Do not retain
 an intermediate owner's binary as combined-build authority.
@@ -227,22 +265,22 @@ publication, bounded Finish/artifact integrity, paid-reset original-root mode,
 Finder native controls and its known failing cases, then required WASM build,
 focused web transport/presentation and typecheck. Broaden only for unresolved
 failures or changed authority; new timed or worker economic qualification needs
-parent allocation. No integration branch, cherry-pick, main merge or push has
-been performed by CURRENT.
+parent allocation. The empty integration checkout is prepared; no cherry-pick, owner merge, main
+merge or push has been performed by CURRENT.
 
 ## Continuation and integration gate
 
-The parent released the earlier CPU hold after the completed pair, then
-requested a fresh short hold for Mechanics qualification. CURRENT is quiescent:
-all own commands have ended and no own process or handle remains. The same
-authorized session completed saved Conquest source/artifact review and finite
-mixed-tag controls. No additional timed solve is permitted. The saved phone request is unavailable;
+The parent released the Mechanics qualification hold after N4 exited zero with
+no survivors. CURRENT completed later-M12 source/artifact review and prepared
+the empty integration checkout. All own commands ended; no own process or
+handle remains. Finite mixed-tag controls remain at their original passing
+identity, and no additional test, build or solver run was launched. No additional timed solve is permitted. The saved phone request is unavailable;
 a repository-derived variant must not be described as Oliver's exact case.
 Mechanics owns constructive renewal and Finder owns its integration. A source
 review finding about nested allocations in the new mechanics coroutine was
 sent to the parent for the owner to resolve; CURRENT did not edit that owner.
 
-Main remains untouched; local commits only. Plan an isolated integration branch
-from the initial main once the parent identifies all final stable revisions;
+Main remains untouched; local commits only. The isolated integration branch
+is prepared at initial main; wait for the parent's final stable owner revisions;
 do not cherry-pick unfinished shared evaluator work or merge main. Stop new
 work before 2026-10-02 17:00 UTC and preserve a final handoff.

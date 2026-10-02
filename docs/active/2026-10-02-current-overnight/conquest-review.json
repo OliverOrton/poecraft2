@@ -1440,5 +1440,672 @@
     "test_binary_sha256": "8d1789edc4fbe1b78f5465fb6968be26b153ebfaa97da1e5969dc27fd8bf8acb",
     "test_source_sha256": "6d3be7af396b11b9eb293e1a646ce90ca7e6a8da9825eabb8cc063371389190c",
     "command": "build/engine/poecraft_engine_tests.exe --solver-metamod-recovery-only C:/Users/Oliver/Documents/poecraft2/data/compiled/current"
+  },
+  "later_M12_empty_root_review": {
+    "role": "later_empty_root_saved_qualification_not_a_new_tonight_run",
+    "qualification_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-14-progress-and-delivery\\worker-conquest-M12-qualification.json",
+    "qualification_sha256": "e6c284ecc0531affb4779937074f7eccb3383675eb5ee6bf9c9a67aa0c612997",
+    "report_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\out\\progress-delivery\\M12-worker-conquest.json",
+    "report_sha256": "5c7b0e9ed1a2bf04d86975c6cf6af5b771eb7577c349c8dc958b48e9ca28596f",
+    "strategy_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\docs\\active\\2026-09-14-progress-and-delivery\\strategies\\conquest-five.strategy.json",
+    "strategy_sha256": "7df8b8be00a5c4513d6d5fb761605b5c399957c714079d8c39a103add036dc02",
+    "worker_admission_utc": "2026-09-15T04:26:14.907295+00:00",
+    "build_baseline": "fe5bdcb4111fa6785c5615896b993a6fc713d1a1",
+    "goal": {
+      "version": "v1",
+      "rarity": "rare",
+      "action_mode": "goal_relevant",
+      "min_satisfied_slots": 5,
+      "slots": [
+        {
+          "family_mod_key": "LocalIncreasedArmourAndEvasion8",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "LocalIncreasedArmourAndEvasionAndStunRecovery6",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "LocalBaseArmourAndEvasionRating8",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "ChanceToSuppressSpellsHigh5___",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "AdditionalPhysicalDamageReduction5_",
+          "min_tier": 1
+        }
+      ]
+    },
+    "root": {
+      "rarity": "rare",
+      "with_implicits": false,
+      "mods": []
+    },
+    "graph_nodes": 469,
+    "graph_edges": 1117,
+    "exact_evaluation": {
+      "converged": true,
+      "cost_complete": true,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "total_expected_cost": 85558.70618560436,
+      "solver_policy_cost": 85558.70618560436,
+      "cost_delta_absolute": 0,
+      "cost_delta_relative": 0,
+      "cost_reconciled": true
+    },
+    "execution": {
+      "solve_steps": 6855642,
+      "max_solve_step_ms": 387.339,
+      "worker_max_slice_ms": 387.339,
+      "finalization_ms": 38.791,
+      "cancellation_ack_ms": null,
+      "cancellation_mode": null,
+      "cooperative_abandon_ms": null,
+      "watchdog_seconds": 300,
+      "watchdog_mode": "cooperative_abort_signal",
+      "watchdog_expired": false
+    },
+    "cap_checks": {
+      "all_passed": false,
+      "checks": {
+        "max_discovered_states": true,
+        "max_expanded_states": true,
+        "max_state_action_rows": true,
+        "max_transitions": true,
+        "max_reforge_work": true,
+        "max_solver_owned_bytes": true,
+        "max_compiled_nodes": true,
+        "max_compiled_edges": true,
+        "max_strategy_json_bytes": true,
+        "worker_step_ms": false,
+        "watchdog_seconds": true,
+        "watchdog_not_expired": true
+      }
+    },
+    "all_expectations_met": false,
+    "dominance_operations": [
+      {
+        "type": "eldritch_ember",
+        "tier": 1
+      }
+    ],
+    "selected_input_projection_keys": [
+      "session",
+      "start",
+      "goal",
+      "product_action_envelope",
+      "economy",
+      "caps",
+      "verification",
+      "comparison_profile"
+    ],
+    "selected_input_projection_sha256": "ec3bc24255c9302f816bfd6b7f46842c72f7576a67e28a52c2f176732ca09551",
+    "root_difference_from_cb03": "M12 has zero explicit mods; cb03 starts with three wanted Defence prefixes",
+    "same_goal_economy_scope_caps_and_verification_as_cb03": true,
+    "same_resolved_product_action_ids_as_cb03": true,
+    "same_json_graph_as_saved_a5": true,
+    "same_selected_input_projection_and_resolved_product_actions_as_a5_and_M3v2": true,
+    "actions": [
+      {
+        "id": "annul",
+        "expected_visits": 4.550699243748757,
+        "spend": 44.096275671925454,
+        "cost_share": 0.0005153920347540839,
+        "visits_by_goal_progress": {
+          "2": 3.703891178190587,
+          "3": 0.7746416417974552,
+          "4": 0.0720410125409617,
+          "5": 0.000125411219752991
+        },
+        "raw_nodes": [
+          {
+            "node_id": "s392",
+            "expected_visits": 4.550699243748757,
+            "expected_applied": 4.550699243748757
+          }
+        ]
+      },
+      {
+        "id": "chaos",
+        "expected_visits": 5114.567148807499,
+        "spend": 5114.567148807499,
+        "cost_share": 0.059778453611866886,
+        "visits_by_goal_progress": {
+          "0": 4067.0602769606257,
+          "1": 968.9205657230328,
+          "2": 76.35516265498408,
+          "3": 2.230889752769407,
+          "4": 0.0002528043529913513,
+          "5": 9.117930258490782e-07
+        },
+        "raw_nodes": [
+          {
+            "node_id": "s0",
+            "expected_visits": 5114.567148807499,
+            "expected_applied": 5114.567148807499
+          }
+        ]
+      },
+      {
+        "id": "eldritch_annul",
+        "expected_visits": 753.3333381799832,
+        "spend": 30532.60019643472,
+        "cost_share": 0.35686140613439954,
+        "visits_by_goal_progress": {
+          "3": 684.445044444847,
+          "4": 68.88829373513646
+        },
+        "raw_nodes": [
+          {
+            "node_id": "s928",
+            "expected_visits": 753.3333381799832,
+            "expected_applied": 753.3333381799832
+          }
+        ]
+      },
+      {
+        "id": "eldritch_chaos",
+        "expected_visits": 1206.2084153587016,
+        "spend": 47295.43196621469,
+        "cost_share": 0.5527833937041507,
+        "visits_by_goal_progress": {
+          "1": 0.5092084990688224,
+          "2": 1205.6992068596326
+        },
+        "raw_nodes": [
+          {
+            "node_id": "s115_o1",
+            "expected_visits": 0.5098378074282077,
+            "expected_applied": 0.5098378074282077
+          },
+          {
+            "node_id": "s116",
+            "expected_visits": 1205.6985775512733,
+            "expected_applied": 1205.6985775512733
+          }
+        ]
+      }
+    ],
+    "representative_nodes": [
+      {
+        "node": {
+          "id": "s392",
+          "kind": "operation",
+          "operation": {
+            "type": "annul"
+          }
+        },
+        "expected_visits": 4.550699243748757,
+        "classes_truncated_share": 0.80571027812809,
+        "reported_class_summary": [
+          {
+            "slots": [
+              0,
+              0,
+              1,
+              2,
+              2
+            ],
+            "prefixes": 2,
+            "suffixes": 3,
+            "share": 0.06666315038186585
+          },
+          {
+            "slots": [
+              1,
+              0,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 2,
+            "suffixes": 3,
+            "share": 0.06666315038186585
+          },
+          {
+            "slots": [
+              0,
+              1,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 2,
+            "suffixes": 3,
+            "share": 0.031435652056279906
+          },
+          {
+            "slots": [
+              0,
+              0,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 2,
+            "suffixes": 3,
+            "share": 0.019680868981843458
+          },
+          {
+            "slots": [
+              1,
+              0,
+              1,
+              2,
+              2
+            ],
+            "prefixes": 2,
+            "suffixes": 3,
+            "share": 0.009846900070058314
+          }
+        ]
+      },
+      {
+        "node": {
+          "id": "s928",
+          "kind": "operation",
+          "operation": {
+            "type": "eldritch_annul"
+          }
+        },
+        "expected_visits": 753.3333381799832,
+        "classes_truncated_share": 0.2928345108474678,
+        "reported_class_summary": [
+          {
+            "slots": [
+              2,
+              0,
+              1,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.08964626994663438
+          },
+          {
+            "slots": [
+              1,
+              0,
+              2,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.07025223768822593
+          },
+          {
+            "slots": [
+              1,
+              2,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.0654721315934937
+          },
+          {
+            "slots": [
+              0,
+              2,
+              1,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.0654721315934937
+          },
+          {
+            "slots": [
+              2,
+              1,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.048918866642257135
+          },
+          {
+            "slots": [
+              0,
+              1,
+              2,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.048918866642257135
+          },
+          {
+            "slots": [
+              0,
+              0,
+              2,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.08115968166077546
+          },
+          {
+            "slots": [
+              2,
+              0,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.08115968166077546
+          },
+          {
+            "slots": [
+              0,
+              2,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.07617308622679778
+          },
+          {
+            "slots": [
+              1,
+              2,
+              1,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.032068459161535424
+          },
+          {
+            "slots": [
+              2,
+              1,
+              1,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.023962038168143247
+          },
+          {
+            "slots": [
+              1,
+              1,
+              2,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.023962038168143247
+          }
+        ]
+      },
+      {
+        "node": {
+          "id": "s116",
+          "kind": "operation",
+          "expected_cost": 93202.210048,
+          "operation": {
+            "type": "eldritch_chaos"
+          }
+        },
+        "expected_visits": 1205.6985775512733,
+        "classes_truncated_share": 0.23045559825421177,
+        "reported_class_summary": [
+          {
+            "slots": [
+              1,
+              0,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 2,
+            "suffixes": 2,
+            "share": 0.09566541682875872
+          },
+          {
+            "slots": [
+              0,
+              0,
+              1,
+              2,
+              2
+            ],
+            "prefixes": 2,
+            "suffixes": 2,
+            "share": 0.09566541682875872
+          },
+          {
+            "slots": [
+              0,
+              1,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 2,
+            "suffixes": 2,
+            "share": 0.06730274370919563
+          },
+          {
+            "slots": [
+              1,
+              0,
+              1,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.06026118171944913
+          },
+          {
+            "slots": [
+              0,
+              0,
+              1,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.08863758610509667
+          },
+          {
+            "slots": [
+              1,
+              0,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.08863758610509667
+          },
+          {
+            "slots": [
+              1,
+              1,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.0402283802536891
+          },
+          {
+            "slots": [
+              0,
+              1,
+              1,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.0402283802536891
+          },
+          {
+            "slots": [
+              1,
+              0,
+              1,
+              2,
+              2
+            ],
+            "prefixes": 2,
+            "suffixes": 2,
+            "share": 0.04013639002940609
+          },
+          {
+            "slots": [
+              0,
+              0,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.03571979123204947
+          },
+          {
+            "slots": [
+              0,
+              1,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 3,
+            "suffixes": 2,
+            "share": 0.06059298073145797
+          },
+          {
+            "slots": [
+              1,
+              1,
+              0,
+              2,
+              2
+            ],
+            "prefixes": 2,
+            "suffixes": 2,
+            "share": 0.028234273974570498
+          },
+          {
+            "slots": [
+              0,
+              1,
+              1,
+              2,
+              2
+            ],
+            "prefixes": 2,
+            "suffixes": 2,
+            "share": 0.028234273974570498
+          }
+        ]
+      }
+    ],
+    "representative_route_guards": [
+      {
+        "id": "e127",
+        "from": "policy_route_40",
+        "to": "s0",
+        "priority": 0,
+        "condition": {
+          "type": "not",
+          "conditions": [
+            {
+              "type": "item_flag",
+              "flag": "eldritch_implicit"
+            }
+          ]
+        }
+      },
+      {
+        "id": "e128",
+        "from": "policy_route_40",
+        "to": "s392",
+        "priority": 1,
+        "condition": {
+          "type": "item_flag",
+          "flag": "eldritch_implicit"
+        }
+      },
+      {
+        "id": "e129",
+        "from": "policy_route_40",
+        "to": "offpolicy",
+        "priority": 2,
+        "is_default": true
+      },
+      {
+        "id": "e136",
+        "from": "policy_route_43",
+        "to": "s0",
+        "priority": 0,
+        "condition": {
+          "type": "not",
+          "conditions": [
+            {
+              "type": "item_flag",
+              "flag": "eldritch_implicit"
+            }
+          ]
+        }
+      },
+      {
+        "id": "e137",
+        "from": "policy_route_43",
+        "to": "s928",
+        "priority": 1,
+        "condition": {
+          "type": "item_flag",
+          "flag": "eldritch_implicit"
+        }
+      },
+      {
+        "id": "e138",
+        "from": "policy_route_43",
+        "to": "offpolicy",
+        "priority": 2,
+        "is_default": true
+      }
+    ]
+  },
+  "conclusions": {
+    "cb03_cost_is_older_partial_root_only": true,
+    "cb03_cost_is_not_todays_representative_performance": true,
+    "M12_and_cb03_are_not_a_matched_cost_comparison": true,
+    "M12_ordinary_annul_is_minor_spend_and_mostly_lower_progress": true,
+    "M12_already_uses_suffix_preserving_eldritch_prefix_recovery": true,
+    "M12_worker_slice_qualification_failed": true,
+    "no_new_economic_qualification": true
   }
 }
