@@ -3801,6 +3801,15 @@ void dominance_refusals() {
         if(kind==6) bad.prefixes[0].mod_id=5;
         refuses([&]{calc->intern_item(bad);},kind==5||kind==6||kind==7?"explicit affix":"unsupported item");
     }
+    const auto dual_lock=dominance_item(*s,{0,5,10,13});
+    refuses([&]{calc->intern_item(dual_lock);},"dual-lock");
+    // This guard is slice-local: the ordinary calculator retains its existing
+    // two-lock carrier behavior without promoting its unresolved mechanic.
+    ActionRegistryBuildOptions ordinary_options; ordinary_options.exhaustive_fossils=false;
+    auto ordinary_registry=build_action_registry(*s,ordinary_options);
+    CalcContext ordinary(s,GoalSpec{},ordinary_registry,{ordinary_registry.index_by_id.at("scour")},
+        true,false,true,std::nullopt,{},false,std::vector<std::uint64_t>(s->words,0xffff),true);
+    PC_CHECK(ordinary.intern_item(dual_lock)<ordinary.state_count());
     const auto noapply=calc->outcomes(calc->intern_item(dominance_item(*s,{0})),calc->registry().index_by_id.at("dominance"));
     PC_CHECK(noapply.supported && !noapply.applicable && noapply.entries.empty());
     for(unsigned kind=0;kind<3;++kind) {

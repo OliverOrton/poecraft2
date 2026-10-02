@@ -40,6 +40,16 @@ including below-tier members, or its reforge row is unsupported. Terminal
 projection retains cross-slot blockers from new goal members and the preserved
 base. [Native group argument](mathematics/representations.md#native-reforge-group-eligibility).
 
+The bounded [authored Dominance carrier](../active/2026-10-02-dominance-sprint/README.md)
+forces singleton goal/junk modifier identities and retains all explicit session
+members, including above-ilvl upgrade destinations. Every original root and
+native successor must round-trip with exact side, supported flags and item
+context. Veiled/implicit/socket/strand/enchantment/absent and dual-lock carriers
+remain refused;
+continuations are limited to Dominance, Annul, Scour and crafted cleanup. The
+[argument](mathematics/representations.md#bounded-authored-dominance-structural-identity)
+does not promote the ordinary observation quotient or automatic search.
+
 ## Terminal Contract
 
 The implemented goal test requires the requested rarity and slot/tier threshold, and requires occupied explicit-affix count to equal satisfied goal count. Empty explicit slots are permitted. Junk, temporary metamods, below-tier goal members, and blockers may occur during planning but are not terminal success.

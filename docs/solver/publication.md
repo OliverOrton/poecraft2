@@ -207,6 +207,21 @@ correspondence for the named graph, not general program-grammar correspondence
 or a retained publication mode. An abstract representative or a differently
 scoped input cannot inherit that certificate.
 
+## Bounded authored Dominance
+
+Authored Dominance graphs use the separately gated exact explicit-identity
+carrier and complete native ordered-pair rows. Only Dominance, Annul, Scour and
+crafted cleanup operations are admitted together. Evaluation begins at the
+original compiled root, with unchanged predicates, prices and all absorption
+categories. Whole-row mapping/conflict refusal cannot publish partial mass.
+External continuation-entry certificates, broader operations and unsupported
+item/control state remain refused. Dual-lock carriers are rejected throughout
+this slice while their Scour law remains owner-unapproved. Ordinary Scour
+behavior is unchanged. Default/product/automatic dependency
+registries do not acquire Dominance. This is fixed-graph evaluation, without
+search, lower-bound or optimality authority. The [slice receipt](../active/2026-10-02-dominance-sprint/README.md)
+owns actual native, binding and WASM qualification separately.
+
 ## Sampled validation is separate
 
 Simulator executes the ordinary strategy through native sampled actions. It can expose behavioral defects but does not replace the graph evaluator or prove optimality. The owner-approved engineering validation cadence lives in `AGENTS.md`; this page does not duplicate a mandatory sample count.

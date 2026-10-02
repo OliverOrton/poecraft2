@@ -64,3 +64,41 @@ def test_dominance_wider_continuation_refused():
         with session.compile_strategy(graph(86, tail="exalt")) as strategy:
             with pytest.raises(EngineError, match="Dominance.*continuations"):
                 strategy.evaluate()
+
+
+@pytest.mark.parametrize("case", ["stop", "unmatched", "corrupted", "mirrored"])
+def test_dominance_complete_absorption_and_no_apply_cost(case):
+    document = graph(86)
+    if case == "stop":
+        next(node for node in document["nodes"] if node["id"] == "no")["terminal"] = "stop"
+    elif case == "unmatched":
+        document["edges"] = [edge for edge in document["edges"] if edge["id"] != "miss"]
+    else:
+        document["base_state"][case] = True
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session:
+        with session.compile_strategy(document) as strategy, load_economy(
+                {"version": "v1", "prices": {"dominance": 7}}) as economy:
+            result = strategy.evaluate(economy=economy)
+            assert result["converged"]
+            terminal = result["terminals"]
+            expected = {key: 0 for key in ("success", "failure", "stop", "action_not_applied", "no_matching_edge", "unresolved")}
+            if case in ("corrupted", "mirrored"):
+                expected["action_not_applied"] = 1
+            else:
+                expected["success"] = 0.5
+                expected["stop" if case == "stop" else "no_matching_edge"] = 0.5
+            for key, probability in expected.items():
+                assert terminal[key] == pytest.approx(probability)
+            assert result["accounting"]["totals"]["per_invocation"]["total_expected_cost"] == pytest.approx(0 if case in ("corrupted", "mirrored") else 7)
+
+
+def test_dominance_refuses_owner_unapproved_dual_lock_carrier():
+    document = graph(86, tail="scour")
+    document["base_state"]["prefixes"].append({
+        "mod_key": "DexMasterItemGenerationCannotChangeSuffixes", "crafted": True})
+    document["base_state"]["suffixes"].append({
+        "mod_key": "StrMasterItemGenerationCannotChangePrefixes", "crafted": True})
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session:
+        with session.compile_strategy(document) as strategy:
+            with pytest.raises(EngineError, match="Dominance.*dual-lock"):
+                strategy.evaluate()

@@ -92,7 +92,7 @@ through projection and materialization with the same supported structural
 identity. This test refuses an unrepresentable item; it does not choose a member
 of a larger class. All explicit session members are retained, including native
 upgrade destinations above item level. Unsupported implicit/socket, Veiled,
-quality, strand, enchantment, absent/resource and external continuation-entry
+quality, strand, enchantment, dual-lock, absent/resource and external continuation-entry
 carriers are refused. Numeric rolls are integrated out only because admitted
 operations, structural predicates and prices cannot observe them.
 

@@ -130,6 +130,16 @@ execution, then merges terminal results. It corrects retained-modifier Foulborn
 pool odds while preserving expanded/renewal terminal optimization and all
 unsupported-carrier guards.
 
+The [bounded authored Dominance slice](../active/2026-10-02-dominance-sprint/README.md)
+adds original-root exact graph evaluation for Dominance with Annul, Scour and
+crafted cleanup continuations. It requires singleton explicit identities,
+flags/context round-trip checks and complete native ordered-pair rows, including
+above-ilvl destinations. Unsupported carriers/wider operations and dual-lock
+carriers (Scour law awaits owner approval) are refused.
+Native finite and Python checks pass; artifact/remaining checks are owned by the
+slice receipt. Default/product/dependency automatic registry admission remains
+disabled. This adds no Current/Finder candidate, lower or optimality authority.
+
 ## Goal, authority and lane map
 
 Public v1 defaults to a clean final explicit-affix target. The later

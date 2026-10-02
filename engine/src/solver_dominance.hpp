@@ -26,6 +26,7 @@ inline void validate_authored_dominance_item(
                             PC_ITEM_SPLIT | PC_ITEM_SYNTHESISED)) ||
         item.prefix_count > PC_MAX_PREFIXES || item.suffix_count > PC_MAX_SUFFIXES)
         throw std::invalid_argument("Authored Dominance has unsupported item context (strands, enchantment, implicit, socket, quality or absent state)");
+    bool prefix_lock = false, suffix_lock = false;
     for (int side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
         const auto* slots = side == PC_SIDE_PREFIX ? item.prefixes : item.suffixes;
         const auto count = side == PC_SIDE_PREFIX ? item.prefix_count : item.suffix_count;
@@ -37,8 +38,15 @@ inline void validate_authored_dominance_item(
                 (slot.flags & ~(PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED)) ||
                 slot.veiled_option_count)
                 throw std::invalid_argument("Authored Dominance requires exact explicit affix side, identity and supported flags; Veiled is unsupported");
+            const auto metamod = session.metamod_type[slot.mod_id];
+            prefix_lock |= metamod >= 0 && metamod == session.data->metamod_prefixes_locked_code;
+            suffix_lock |= metamod >= 0 && metamod == session.data->metamod_suffixes_locked_code;
         }
     }
+    // The existing ordinary Scour fallback for two locks is not owner-approved.
+    // Do not promote it through this new slice, even at a later continuation.
+    if (prefix_lock && suffix_lock)
+        throw std::invalid_argument("Authored Dominance refuses dual-lock carriers pending owner-approved Scour law");
 }
 
 inline auto authored_dominance_affixes(const pc_item_state& item) {
