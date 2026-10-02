@@ -330,17 +330,18 @@
         }
       ],
       "local_gated_route_rows": 0,
-      "interpretation": "Original-root native fixed-graph acceptance; absorption success 1 and finite expected actions/cost support properness. No explicit properness boolean is reported."
+      "interpretation": "Observed original-root native acceptance, absorption success 1 and finite expected actions/cost under the implemented recurrence. Native-law qualification and transfer of properness/cost to actual native mechanics are held; no explicit properness boolean is reported."
     }
   },
   "causal_disposition": [
     "N1 generated and served the Essence/Annul candidate: tier identity and legality were admitted; no unserved candidate displacement explains its censor.",
     "Same unchanged graph and original ceilings: physical path censored at 200000 states, compact path accepted at 51; this demonstrates the checker expansion bottleneck for this graph.",
-    "Cheap Wrath3 acquisition is not cheap total crafting: Annul retry costs contribute 98.31965328746828 percent of C59229.75038359062.",
-    "Physical evaluation did not complete, so no completed real-data cost equality comparison is claimed. Finite physical/compact distributions and controller accounting match in the focused evidence.",
+    "Under the reported recurrence, Annul retry costs contribute 98.31965328746828 percent of C59229.75038359062. The reported numerical cost is preserved and is not shown wrong by the new witness.",
+    "Physical evaluation did not complete. Finite physical/compact renewal distributions and controller accounting match, but share a recurrence now shown faulty in an admitted synthetic domain; these comparisons do not independently validate native rolling law.",
     "N6 cold arms have fresh work allowances. N1 used cumulative prior candidate debits; their portfolio timings are not matched-arm measurements."
   ],
   "unqualified": [
+    "Native-law qualification of N6 is held pending the narrow false-transitive-exclusion review. Observed acceptance, metrics and reported cost are unchanged; no claim that its numerical cost is disproved.",
     "Full real-data Finder search after quotient; remaining candidates, ordering, incumbent competition, finish completion and global optimality.",
     "Private protected programme setup rejection remains separate.",
     "Fifteen cross-goal physical projection failures remain outside the conservative quotient gate; Current owns a separate integration-branch repair on later bytes.",
@@ -368,7 +369,8 @@
       "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\uniform-removal-boundaries.log",
       "sha256": "a427364546e6ac7e93fe44dfa16c8ca990b96498446e39b8e7406bd9b5a0a5ae",
       "size_bytes": 2161
-    }
+    },
+    "disposition": "Passing counts remain historical observations. Independent explicit-carrier Annul laws and multiplicity checks remain evidence. Renewal comparisons and controller costs using the shared recurrence are not independent native-law validation."
   },
   "budget": {
     "this_session_native_spent": 2,
@@ -377,5 +379,36 @@
     "workers_spent_this_session": 0,
     "active_processes": 0
   },
-  "preservation": "No main edit, canonical/compiled data write, price refresh, push, deployment, child agents or protected root-file access."
+  "preservation": "No main edit, canonical/compiled data write, price refresh, push, deployment, child agents or protected root-file access.",
+  "native_law_qualification": {
+    "status": "held",
+    "reason": "False-transitive-exclusion counterexample in the shared renewal recurrence also lies inside the admitted independent-junk-blocker domain.",
+    "witness": {
+      "observed_goal_mod": 0,
+      "observed_goal_native_groups": [
+        10,
+        20
+      ],
+      "compatible_junk_mods": {
+        "2": [
+          10,
+          11
+        ],
+        "5": [
+          20
+        ]
+      },
+      "source": "engine/tests/test_solver_compile.cpp:5073"
+    },
+    "shared_recurrence_sites": [
+      "engine/src/solver_reforge.cpp:2792",
+      "engine/src/solver_reforge.cpp:2991"
+    ],
+    "gate_disposition": "Unchanged. Observed-goal independence does not establish mutual exclusion of all nonmember blockers.",
+    "review_owner": "Parent coordinating Current and the already-running Astra narrow review; no recurrence or gate edits in Finder.",
+    "numeric_cost_disproved": false,
+    "raw_observations_preserved": true,
+    "independent_annul_evidence_retained": true,
+    "renewal_comparison_limitation": "Physical and compact paths share the renewal recurrence; their agreement is not independent validation of native rolling law."
+  }
 }

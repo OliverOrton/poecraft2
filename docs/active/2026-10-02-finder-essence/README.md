@@ -7,8 +7,11 @@ No main-checkout changes, pushes, deployment, data/price refresh or child agents
 Both reserved native invocations were granted and consumed once (N1 and N6).
 All six global native slots are now spent; no further native invocation is
 authorized tonight. No process or survivor remains. The parent approved the
-scoped exact renewal/removal checker after the N1 causal witness; N6 accepts the
-unchanged graph, with expensive paid retries. [Final receipt](qualification.json)
+scoped renewal/removal checker after the N1 causal witness; N6 reports acceptance
+of the unchanged graph, with expensive paid retries. **Native-law qualification
+is now held** following an admitted false-transitive-exclusion witness in the
+shared renewal recurrence. The reported numerical cost is not disproved.
+[Final receipt](qualification.json)
 owns source/build/data/graph identities, outcomes and exclusions. Old MM/P/IC
 budgets remain spent.
 
@@ -63,7 +66,9 @@ lower authority. The later parent-approved quotient is described below.
 ## Focused qualification
 
 All cases below are **reconstructed finite native fixtures**, not Oliver's phone
-run and not Allflame economics. Fresh exact reevaluation matches each winner.
+run and not Allflame economics. Fresh reevaluation matches each winner under
+the implemented recurrence; the later native-law hold below limits conclusions
+from shared renewal-law checks.
 
 | Fixture | Checked outcome |
 |---|---|
@@ -229,10 +234,13 @@ side, occupancy and junk-blocker counts. Structured identity, protection,
 additive actions, offers, external entries and other unsupported cases stay
 physical. Existing within-roll native exclusions and complete mass remain exact.
 
-Finite differential qualification passes **21,673 checks** over 128 legal
-physical carriers. Complete Chaos/Essence and Annul projected rows, expected
-operation/material/edge consumption, properness and synthetic controller cost
-match the physical path. Two goals plus two junk retain both after two Annuls
+Reported differential checks pass **21,673 checks** over 128 legal physical
+carriers. Chaos/Essence and Annul projected rows, expected operation/material/edge
+consumption, implemented-law properness and synthetic controller cost match the
+physical path. Physical and compact renewal paths share the recurrence; the
+later admitted counterexample means those comparisons do not independently
+validate native rolling law. Explicit-carrier uniform Annul checks remain
+independent evidence. Two goals plus two junk retain both after two Annuls
 with probability 1/6 on **both** independently enumerated two-step laws, whose
 complete projected distributions agree; synthetic C3.56715328467 also matches. Independent
 junk blocker multiplicities survive repeated Annul, including two same-side
@@ -354,7 +362,7 @@ slots and all six global native slots are spent.
 
 | Unchanged graph6, original ceilings | Physical | Compact |
 |---|---:|---:|
-| Outcome | Capacity censored | Native checked and accepted |
+| Observed outcome | Capacity censored | Native accepted; native-law qualification held |
 | States | 200,000 | 51 |
 | Processed/discovered pairs | 12,842 | 34 |
 | Pending pairs | 187,159 | 0 |
@@ -371,10 +379,11 @@ residual mass zero and original-goal success mass one; all failure, stop,
 action-not-applied, no-matching-edge and unresolved masses are zero. The existing
 native Finder acceptance owner checks the immutable compiled graph from the
 original request root, action scope and exact CLEAN predicate. Complete absorption
-and finite expected actions/cost establish a proper checked controller within
-this admitted domain; no separate properness boolean is present in the report.
+and finite expected actions/cost support properness under the implemented
+recurrence; transfer to actual native mechanics is **held** pending the shared
+renewal-law review below. No separate properness boolean is present in the report.
 
-The checked expected total is **C59,229.75038359062**, with complete frozen prices
+The reported expected total is **C59,229.75038359062**, with complete frozen prices
 and no missing keys, over 8,531.324557576028 expected actions. Its actual paid
 consumption is:
 
@@ -385,20 +394,23 @@ consumption is:
 
 Material quantity differences and the cost dot-product difference are zero;
 action/node visit reconciliation differs only by 1.82e-12. Wrath3 is an affordable
-native guarantee, but this reconstructed two-goal CLEAN controller is expensive
-because Annul often destroys a goal and pays reacquisition. No claim of an
+native guarantee. Under the reported recurrence, this reconstructed two-goal
+CLEAN controller is expensive because Annul destroys goals and pays reacquisition.
+The new witness does not establish that this numerical cost is wrong. No claim of an
 affordable total strategy or advantage over a competing checked policy is made.
 
 The same graph was generated and served at N1, so its missed acceptance was
 checker censoring, not an unserved proposal or a satisfying-tier mismatch.
 The quotient demonstrates native checking of that previously censored graph
 under unchanged ceilings. A completed real-data physical cost equality is not
-available because that arm remains censored; finite complete projected laws and
-controller accounting supply the independent physical/compact comparisons.
-No local gated row or terminal-depth factor activates here; all native full-roll
-mass and within-roll exclusions are retained.
+available because that arm remains censored. Finite projected renewal rows and
+controller accounting agree between physical and compact paths, but share the
+recurrence; that agreement cannot validate the native rolling law independently.
+No local gated row or terminal-depth factor activates here; this observation
+does not cure the shared within-roll exclusion defect.
 
-This is **fixed-graph qualification**, not a full real-data Finder rerun. The
+This is **observed fixed-graph acceptance with native-law qualification held**,
+not a full real-data Finder rerun. The
 remaining candidates, their order and incumbent competition, Finish completion,
 global cheapest strategy and lower/optimality authority remain unqualified.
 Eight attempts and original-root checking remain in source and focused fixtures.
@@ -417,3 +429,35 @@ request/economy and graph identities plus SHA-bound reports. Raw outputs stay
 under `out/finder-overnight/N6-identical-graph/`; launch and completion receipts
 are `N6-launch-authority.json`, `N6-process-start.json` and
 `N6-worker-receipt.json`. The frozen command identity is unchanged.
+
+
+## Native-law qualification hold after independent counterexample
+
+Parent supplied Current's independent native-oracle counterexample during the
+separate terminal-projection repair: Life `{10,20}`, observed Fire `{20,21}`,
+and Cold junk `{21}`. Life and Cold are compatible, but the DP removes Cold
+through their common effect on the Fire observation. The oracle rolls four
+affixes while the DP stops at three; the supplied narrow comparison has 24 law
+failures. The raw evidence and repair/review remain owned by Current and the
+parent's existing Astra session, not by the frozen N6 run.
+
+Finder source review found the same failure inside its admitted independent-
+junk-blocker fixture. The [canonical implementation boundary](../../solver/mathematics/representations.md#unprotected-uniform-removal)
+records that witness and the shared recurrence sites. The observed-goal conflict
+gate does not exclude compatible junk families which both block one observed
+goal. Both physical and compact renewal evaluators share the faulty recurrence;
+matching projected rows are therefore not independent native-law validation.
+The quotient argument requires the actual native renewal law, a premise not
+established by those comparisons. The conservative gate and recurrence remain
+unchanged here pending the narrowly scoped review.
+
+**N6 native-law qualification is held.** Its immutable graph/build/data identities,
+reported acceptance, 51 states, success mass one, and reported
+C59,229.75038359062 remain preserved observations under the implemented law.
+This counterexample does not prove that N6's numerical cost is wrong. No new
+benchmark, rerun or corrected-byte qualification has been performed. Independent
+explicit-carrier Annul probabilities, including two-goal retention 1/6 and
+same-class blocker multiplicity 2 to 1 to 0, remain evidence for uniform removal;
+passing renewal comparisons and controller costs do not discharge the native-law
+obligation. The 23,513 passing checks remain historical counts, not blanket
+native-law acceptance. No native budget or gate expansion is authorized.

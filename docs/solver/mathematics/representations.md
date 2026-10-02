@@ -153,16 +153,31 @@ keeps its original success predicate: collecting extra graph observations never
 promotes it to an all-observed-slots objective.
 
 This is a scoped application of [CLM-0005](../claims.md#clm-0005) to fixed-graph
-checking, **not a new lower or optimality issuer**. The native implementation,
-finite physical/compact differential evidence and N6 unchanged real-data
-fixed-graph acceptance are tracked in the
-[Finder Essence record](../../active/2026-10-02-finder-essence/README.md#n6-unchanged-graph-result-and-final-disposition).
+checking, **not a new lower or optimality issuer**. Its mathematical premise is
+the actual complete native renewal law. The native implementation, finite
+physical/compact comparisons and observed N6 original-root acceptance are tracked
+in the [Finder Essence record](../../active/2026-10-02-finder-essence/README.md#native-law-qualification-hold-after-independent-counterexample).
 Admission/propagation scratch uses the existing owned-byte and round caps; failure
-of any gate retains physical evaluation. N6 qualifies one original-root fixed
-controller under the stated domain; full Finder search and the general claim's
-native coverage remain separate obligations. Cross-goal physical projection
-failures stay excluded by the conservative gate; a later separate repair is not
-qualified by the frozen N6 bytes.
+of any gate retains physical evaluation. Full Finder search and the general
+claim's native coverage remain separate obligations.
+
+**Implementation qualification held (2026-10-02):** the admitted one-goal
+independent-junk fixture has observed mod0 groups `{10,20}`, junk mod2 groups
+`{10,11}` and junk mod5 group `{20}`. Mod2 and mod5 are compatible, but picking
+mod2 sets the goal's blocked observation bit, and the shared renewal recurrence
+then excludes mod5 through that bit. Dense `bucket_remaining` rejects
+`bucket.block_mask & occupied`; the projected frontier clears all junk buckets
+which block a newly blocked slot. Neither step follows from native pairwise
+exclusion. The observed-goal conflict gate does not reject this witness. The
+fixture and recurrence sites are `engine/tests/test_solver_compile.cpp:5073`,
+`engine/src/solver_reforge.cpp:2792` and `:2991`. Physical/compact renewal agreement
+shares this defect and does not independently validate native law. Independent
+explicit-carrier uniform Annul evidence remains valid. N6's acceptance, metrics
+and reported cost remain observations under the implemented law; native-law
+qualification is held without claiming its numerical cost is disproved. The
+parent's narrow review owns resolution; the recurrence and conservative gate are
+unchanged at this checkpoint. Separate cross-goal terminal-projection failures
+remain excluded, and later repair bytes are not qualified by frozen N6 evidence.
 
 <a id="optimism"></a>
 <a id="native-reforge-group-eligibility"></a>
