@@ -36,7 +36,19 @@ projection increments that aggregate. The unsuccessful exclusion-partition
 experiment is recorded and removed. Concrete prefix/suffix hit witnesses now
 check the entire projected state. The reported local repair synchronizes the
 count and refuses mixed-side masks, preserving probability/pricing and the
-existing original-root authority. Its focused native qualification is pending.
+existing original-root authority. Parent approved the narrow production repair,
+committed as `8ef8a67`. Final focused checks pass: **428** continuation checks,
+**685** physical-side/metamod checks and **1,146** caller-scope checks. Both sides
+round-trip and independently evaluate to **58c**; missing paid replacement still
+refuses. Mixed-side masks refuse without publishing a successor. The original
+six failures and failed fixture-only attempt remain in the receipt.
+
+The additional non-sampling `fracture` authority selector fails two assertions
+(stale-root diagnostic, dead-root convergence), then aborts at `publication lost
+its verified artifact`. The preserved baseline executable repeats both failures
+and the same abort. This is separate unresolved baseline debt, explicitly
+excluded from passing acceptance. The receipt pins both binaries and logs; no
+final total exists for the aborted selector. No owned acceptance process remains.
 
 ## Completion ledger against the parent-selected backlog
 

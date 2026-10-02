@@ -415,7 +415,7 @@
   "isolation": "Main and overnight integration unchanged; protected root 0 untouched; no data/prices refresh, dependency install, push, deployment, or subagent.",
   "continuation": {
     "authorization": "Oliver approved Sol 6.1 continuation, full original backlog and qualified main integration/normal push. Old cutoff limits are historical. Unresolved model selection still requires approval. Deployment is unselected.",
-    "recorded_utc": "2026-10-02T17:31:00.818132+00:00",
+    "recorded_utc": "2026-10-02T17:38:45.561013+00:00",
     "wasm_source_commit": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
     "wasm_engine_tree": "da81b73d3afd0ea7660bfc046537761b354405a5",
     "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
@@ -591,7 +591,7 @@
       }
     },
     "baseline_fracture": {
-      "status": "reproduced; reported production repair now under local qualification",
+      "status": "parent-approved narrow production repair committed and finite-qualified",
       "command": "poecraft_engine_tests.exe --solver-integrity-only joint-fracture",
       "checks": 30,
       "failures": 6,
@@ -650,6 +650,88 @@
       "Simulator and rendered UI"
     ],
     "push": "not performed; main/origin main checked at ebcd98cdda2c1828cd855f549831951e6ba7470a before continuation",
-    "deployment": "not selected or triggered"
+    "deployment": "not selected or triggered",
+    "fracture_repair": {
+      "source_commit": "8ef8a674c18a6d1e84d51dc597e41388bec89e52",
+      "engine_tree": "3afab9ef0728edaf5262fa53183b6925db0653f8",
+      "classification": "production carrier correctness gap, not stale fixture cleanup",
+      "law": "Preserve the full projected native hit including one physical fracture on its uniquely proved side; refuse mixed-side satisfying masks. No probability/pricing or original-root scope change.",
+      "checks_passed": 2259,
+      "checks_failed": 0,
+      "cases": [
+        {
+          "name": "joint continuation",
+          "command": "poecraft_engine_tests.exe --solver-joint-policy-continuation-only",
+          "checks": 428,
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/joint-continuation-final.log",
+            "sha256": "4a74ae0d1e8aa22d9bc240205f8ed2b398134c910f5d32aeb0589a201ddde00f",
+            "bytes": 132
+          }
+        },
+        {
+          "name": "metamod row",
+          "command": "poecraft_engine_tests.exe --solver-metamod-recovery-only data/compiled/current",
+          "checks": 685,
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/metamod-row-final.log",
+            "sha256": "e5aaabee417190e7463a907d60684ff56d9f284391252c2c09d1f689c8449fa9",
+            "bytes": 1562
+          }
+        },
+        {
+          "name": "caller scope",
+          "command": "poecraft_engine_tests.exe --solver-integrity-only paid-reset",
+          "checks": 1146,
+          "exit_code": 0,
+          "log": {
+            "path": "out/sprint-continuation/paid-reset-final.log",
+            "sha256": "1b21b5be3126b745327e8b944f2ccf76fc13719220e0b500ca8a50861f941fce",
+            "bytes": 424
+          }
+        }
+      ],
+      "build": {
+        "command": "powershell -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+        "exit_code": 0,
+        "max_jobs": 2,
+        "log": {
+          "path": "out/sprint-continuation/build-fracture-final.log",
+          "sha256": "c7b4bf04abbb629d64fb8c5fd9f216249acaaed4ea559921cb3379783fbe796a",
+          "bytes": 194
+        }
+      },
+      "native_binary": {
+        "path": "build/engine/poecraft_engine_tests.exe",
+        "sha256": "445c4c0fc1b09de46a2cc4112a43a1320aca7c70bbc66933d3f538d9a582fd53",
+        "bytes": 19105294
+      },
+      "unrun": [
+        "Matching WASM and shared DLL after this source change",
+        "Final integrated product acceptance"
+      ],
+      "broader_exclusion": {
+        "command": "poecraft_engine_tests.exe --solver-integrity-only fracture",
+        "current_exit_code": -1073740791,
+        "baseline_exit_code": -1073740791,
+        "observed": "Both binaries fail stale-root diagnostic and dead-root convergence assertions, then abort with publication lost its verified artifact. No final check total is available.",
+        "current_log": {
+          "path": "out/sprint-continuation/fracture-authority-final.log",
+          "sha256": "85f7651cc39a9f9ec2307045012cb80e69b247fa589ee5dd7ea01ea24fcb36ae",
+          "bytes": 487
+        },
+        "baseline_log": {
+          "path": "out/sprint-continuation/fracture-authority-baseline.log",
+          "sha256": "760d73092e4036d6cd453175c8f8778e7e6ef936d741f0d39840698b5e23e9e0",
+          "bytes": 493
+        },
+        "preserved_baseline_checkout": "f08facbb93204bf721048c21b94080ab582ee9f8",
+        "preserved_baseline_engine_build_source": "792b37e8e1d73a90c754087eda2332d7586db570",
+        "preserved_baseline_binary_sha256": "0d12cec456f81e8943fbb9774c96b1149ff85b96357e10c8309c313059b79c75",
+        "disposition": "Separate unresolved baseline debt; neither a passing selector nor a regression caused by the Fracture side repair."
+      }
+    }
   }
 }

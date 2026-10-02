@@ -6,8 +6,12 @@ normal main integration/push; old cutoffs are historical. The
 owns the completion ledger and v3 receipt. Matching WASM from `b794e009` passes
 three bounded worker smokes, eleven finite web files and TypeScript. Main and
 origin/main were `ebcd98cd`; no push/deployment occurred. The reported narrow
-Fracture count repair and mixed-side refusal are under native qualification.
-New owner patches and final combined acceptance remain pending.
+production Fracture count repair and mixed-side refusal are committed as
+`8ef8a67`: 428 continuation, 685 metamod and 1,146 scope checks pass. The broader
+non-sampling Fracture selector repeats two assertion failures plus a lost-artifact
+abort on the preserved baseline and current integration; separate debt remains.
+The final matching WASM/DLL after this repair, new owner patches and full product
+acceptance remain pending. No owned process remains.
 
 # Sprint integration native checkpoint (2026-10-02)
 
