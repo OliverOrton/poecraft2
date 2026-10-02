@@ -3,6 +3,7 @@
 #include "../src/handles_internal.hpp"
 #include "../src/solver_internal.hpp"
 #include "../src/currency_outcomes.hpp"
+#include "../src/json.hpp"
 #include "../src/solver_dominance.hpp"
 #include "../src/solver_proof_pattern_manager.hpp"
 #include "../src/solver_refinement.hpp"
@@ -14,6 +15,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <cstdio>
 #include <fstream>
 #include <map>
@@ -3875,26 +3877,29 @@ void dominance_automatic_discovery() {
     pc_session handle{session};
     auto economy = std::make_shared<EconomyImpl>();
     economy->id = "dominance-finite-independent-prices";
-    economy->prices = {{"dominance",7},{"chaos",3}};
+    economy->prices = {{"dominance",7},{"chaos",3},{"alchemy",3},{"scour",1}};
     pc_economy prices{economy};
+    for (const bool acquire : {false,true})
     for (const auto mode : {PC_SOLVER_MODE_CURRENT, PC_SOLVER_MODE_STRATEGY_FINDER}) {
+        auto start=root;
+        if(acquire) {pc_item_clear(&start);start.generic_influence_bits=1;}
         pc_solver_handle solver = nullptr;
         pc_error_info error{};
-        const std::string goal = R"({"version":"v1","rarity":"rare","slots":[{"family_mod_key":"mod1"}],"actions":["dominance","chaos"]})";
+        const std::string goal = acquire ? R"({"version":"v1","rarity":"rare","slots":[{"family_mod_key":"mod1"}],"actions":["dominance","alchemy","scour"]})" : R"({"version":"v1","rarity":"rare","slots":[{"family_mod_key":"mod1"}],"actions":["dominance","chaos"]})";
         auto rc = pc_solver_create(&handle, goal.data(), goal.size(), &solver, &error);
-        std::printf("Dominance automatic mode=%d create=%d %s\n",mode,rc,error.message);
+        std::printf("Dominance automatic acquire=%d mode=%d create=%d %s\n",acquire,mode,rc,error.message);
         PC_CHECK(rc == PC_RESULT_OK); if (!solver) continue;
         pc_solve_options options{}; options.struct_size=sizeof(options); options.abi_version=PC_ABI_VERSION;
         options.solver_mode=mode; options.max_states=1000; options.max_sweeps=10000;
-        options.solver_flags=PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS;
+        options.solver_flags=PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS|PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
         pc_solve_summary summary{}; summary.struct_size=sizeof(summary); summary.abi_version=PC_ABI_VERSION;
-        rc=pc_solver_solve(solver,&root,&prices,&options,&summary,&error);
-        std::printf("Dominance automatic mode=%d solve=%d status=%d U=%.12g L=%.12g %s\n",mode,rc,summary.policy_status,summary.upper_bound,summary.lower_bound,error.message);
+        rc=pc_solver_solve(solver,&start,&prices,&options,&summary,&error);
+        std::printf("Dominance automatic acquire=%d mode=%d solve=%d status=%d U=%.12g L=%.12g %s\n",acquire,mode,rc,summary.policy_status,summary.upper_bound,summary.lower_bound,error.message);
         std::size_t telemetry_size=0;
         if (pc_solver_telemetry(solver,nullptr,0,&telemetry_size,&error)==PC_RESULT_OK) {
             std::string telemetry(telemetry_size+1,'\0');
             if (pc_solver_telemetry(solver,telemetry.data(),telemetry.size(),&telemetry_size,&error)==PC_RESULT_OK)
-                std::ofstream("out/dominance-completion/finite-mode-"+std::to_string(mode)+"-telemetry.json") << telemetry;
+                std::ofstream("out/dominance-completion/finite-acquire-"+std::to_string(acquire)+"-mode-"+std::to_string(mode)+"-telemetry.json") << telemetry;
         }
         PC_CHECK(rc == PC_RESULT_OK); PC_CHECK(summary.policy_available);
         PC_CHECK(mode==PC_SOLVER_MODE_CURRENT ? near(summary.lower_bound,0) : std::isnan(summary.lower_bound));
@@ -3914,11 +3919,72 @@ void dominance_automatic_discovery() {
             PC_CHECK(near(exact.success_probability,1));
             // Independent two-pair renewal oracle. Current first attempts the
             // prepared root: 7 + .5*(3+7)/.5 = 17. Finder reacquires: (3+7)/.5=20.
-            PC_CHECK(near(exact.total_expected_cost,mode==PC_SOLVER_MODE_CURRENT?17:20));
+            // Normal acquisition independently costs (3+7+.5*1)/.5=21.
+            PC_CHECK(near(exact.total_expected_cost,acquire?21:mode==PC_SOLVER_MODE_CURRENT?17:20));
+            const auto parsed=json::Parser(graph.data(),graph.size()).parse();
+            for(const auto& node:parsed.find("nodes")->array) {
+                if(const auto* operation=node.find("operation")) {
+                    const auto type=operation->find("type")->string;
+                    PC_CHECK(type=="dominance" || (acquire?(type=="alchemy"||type=="scour"):type=="chaos"));
+                }
+            }
             PC_CHECK(near(summary.upper_bound,exact.total_expected_cost));
             PC_CHECK(near(exact.action_not_applied_probability,0));
             PC_CHECK(near(exact.failure_probability,0));
             PC_CHECK(near(exact.unresolved_probability,0));
+        }
+        pc_solver_destroy(solver);
+    }
+
+    // A prepared protected carrier needs Dominance before crafted cleanup.
+    // Both suffix pair outcomes satisfy one native elevated alternative while
+    // the protected prefix remains. Independent cost is one 7c D + 1c cleanup.
+    auto protected_session=std::make_shared<SessionImpl>(*session);
+    auto protected_data=std::make_shared<DataImpl>(*session->data);
+    protected_data->spawn_weights[6]=100; protected_session->data=protected_data;
+    protected_session->family_id[7]=907;protected_session->family_id[8]=908;
+    auto protected_root=dominance_item(*protected_session,{0,5,6});
+    PC_CHECK(pc_item_add_mod(&protected_root,PC_SIDE_PREFIX,10,protected_session->primary_group[10],PC_MOD_SLOT_CRAFTED,nullptr)==PC_RESULT_OK);
+    pc_session protected_handle{protected_session};
+    for(const auto mode:{PC_SOLVER_MODE_CURRENT,PC_SOLVER_MODE_STRATEGY_FINDER}) {
+        const auto goal=std::string(R"({"version":"v1","rarity":"rare","min_satisfied_slots":2,"slots":[{"family_mod_key":"mod0"},{"family_mod_key":"mod7"},{"family_mod_key":"mod8"}],"action_mode":"goal_relevant"})");
+        pc_solver_handle solver=nullptr;pc_error_info error{};
+        PC_CHECK(pc_solver_create(&protected_handle,goal.data(),goal.size(),&solver,&error)==PC_RESULT_OK);if(!solver)continue;
+        pc_solve_options options{};options.struct_size=sizeof(options);options.abi_version=PC_ABI_VERSION;
+        options.solver_mode=mode;options.max_states=1000;options.max_sweeps=10000;
+        options.solver_flags=PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
+        pc_solve_summary summary{};summary.struct_size=sizeof(summary);summary.abi_version=PC_ABI_VERSION;
+        PC_CHECK(pc_solver_solve(solver,&protected_root,&prices,&options,&summary,&error)==PC_RESULT_OK);
+        std::printf("Dominance protected mode=%d policy=%d U=%.12g %s\n",mode,summary.policy_available,summary.upper_bound,error.message);
+        PC_CHECK(summary.policy_available);std::size_t size=0;
+        const auto rc=pc_solver_compile_strategy(solver,nullptr,0,&size,&error);PC_CHECK(rc==PC_RESULT_OK);
+        if(rc==PC_RESULT_OK) {
+            std::string graph(size+1,'\0');PC_CHECK(pc_solver_compile_strategy(solver,graph.data(),graph.size(),&size,&error)==PC_RESULT_OK);graph.resize(size);
+            auto strategy=compile(protected_session,graph);StrategyEvalOptions options;options.economy=economy;
+            const auto exact=evaluate_strategy(*strategy,options);
+            PC_CHECK(exact.converged&&exact.cost_complete&&near(exact.success_probability,1));
+            PC_CHECK(near(exact.total_expected_cost,8)&&near(summary.upper_bound,8));
+            PC_CHECK(near(exact.action_not_applied_probability,0)&&near(exact.unresolved_probability,0));
+        }
+        pc_solver_destroy(solver);
+    }
+
+    // Ordinary product input neither registers Dominance nor selects its
+    // singleton/zero-proof carrier. Existing ordinary closure remains valid.
+    for(const bool explicit_scope:{false,true}) {
+        const auto goal=std::string(R"({"version":"v1","action_mode":"goal_relevant","rarity":"rare","slots":[{"family_mod_key":"mod0"},{"family_mod_key":"mod5"}])")+
+            (explicit_scope?R"(,"actions":["chaos"]})":"}");
+        pc_solver_handle solver=nullptr;pc_error_info error{};
+        PC_CHECK(pc_solver_create(&handle,goal.data(),goal.size(),&solver,&error)==PC_RESULT_OK);if(!solver)continue;
+        std::uint32_t index=0;PC_CHECK(pc_solver_find_action(solver,"dominance",&index,&error)==PC_RESULT_NOT_FOUND);
+        if(explicit_scope) {
+            const auto start=dominance_item(*session,{4,6});
+            pc_solve_options options{};options.struct_size=sizeof(options);options.abi_version=PC_ABI_VERSION;
+            options.max_states=1000;options.max_sweeps=10000;options.solver_flags=PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
+            pc_solve_summary summary{};summary.struct_size=sizeof(summary);summary.abi_version=PC_ABI_VERSION;
+            PC_CHECK(pc_solver_solve(solver,&start,&prices,&options,&summary,&error)==PC_RESULT_OK);
+            std::printf("Dominance ordinary negative policy=%d L=%.12g U=%.12g\n",summary.policy_available,summary.lower_bound,summary.upper_bound);
+            PC_CHECK(summary.policy_available&&summary.converged&&near(summary.lower_bound,3)&&near(summary.upper_bound,3));
         }
         pc_solver_destroy(solver);
     }
@@ -3986,6 +4052,26 @@ void dominance_real_product(const std::shared_ptr<SessionImpl>& session) {
     const auto key=[&](auto mod){ return session->data->string_at(session->data->mod_key_sid[session->global_index[mod]]); };
     auto economy=std::make_shared<EconomyImpl>(); economy->id="frozen-product-dominance-prices"; economy->prices={{"dominance",7}};
     pc_economy prices{economy}; pc_session handle{session};
+
+    // Parameterized Fossils that add native auxiliary implicit state must not
+    // borrow the structural Dominance carrier's exactness authority.
+    bool checked_auxiliary=false;
+    for(std::uint32_t fossil=0;fossil<session->data->fossil_count;++fossil) {
+        if(fossil>=session->fossil_sell_price_mod_ids.size()||session->fossil_sell_price_mod_ids[fossil].empty()||
+           session->data->string_at(session->data->fossil_name_sids[fossil]).empty()||session->data->fossil_mirrors[fossil])continue;
+        const auto auxiliary=fossil_implicit_outcomes(*session,root,{fossil});
+        if(std::none_of(auxiliary.begin(),auxiliary.end(),[](const auto& row){return row.first.implicit_count!=0&&row.second>0;}))continue;
+        const auto id="fossil:"+session->data->string_at(session->data->fossil_key_sids[fossil]);
+        ActionRegistryBuildOptions options;options.exhaustive_fossils=false;options.authored_dominance=true;options.requested_fossil_action_ids={id};
+        auto registry=build_action_registry(*session,options);
+        const auto index=registry.index_by_id.at(id);const auto dom=registry.index_by_id.at("dominance");
+        std::vector<std::uint64_t> reachable(session->words,0);
+        for(std::uint32_t mod=0;mod<session->mod_count;++mod)if(session->gen_type[mod]<=1)pc_bitset_set(reachable.data(),mod);
+        CalcContext calc(session,GoalSpec{},std::move(registry),{dom,index},true,false,true,1000,std::vector<CountObservation>{},false,reachable,true);
+        const auto row=calc.outcomes(calc.intern_item(root),index);
+        PC_CHECK(!row.supported);PC_CHECK(row.entries.empty());checked_auxiliary=true;break;
+    }
+    PC_CHECK(checked_auxiliary);
     for(const bool mixed:{false,true}) {
         auto input=root;
         if(mixed) PC_CHECK(pc_item_add_mod(&input,session->gen_type[ordinary],ordinary,session->primary_group[ordinary],0,nullptr)==PC_RESULT_OK);
@@ -3998,8 +4084,15 @@ void dominance_real_product(const std::shared_ptr<SessionImpl>& session) {
             auto rc=pc_solver_create(&handle,goal.data(),goal.size(),&solver,&error);
             std::printf("Dominance product mixed=%d mode=%d create=%d %s\n",mixed,mode,rc,error.message);
             PC_CHECK(rc==PC_RESULT_OK); if(!solver) continue;
+            const char* odds=nullptr;const auto before=input;
+            PC_CHECK(pc_calc_currency_outcomes_json(solver,&input,"dominance",nullptr,nullptr,&odds,&error)==PC_RESULT_OK);
+            PC_CHECK(authored_dominance_affixes(input)==authored_dominance_affixes(before));
+            if(odds) {
+                const auto parsed=json::Parser(odds,std::strlen(odds)).parse();
+                PC_CHECK(near(parsed.find("success_probability")->number,1));
+            }
             pc_solve_options options{}; options.struct_size=sizeof(options);options.abi_version=PC_ABI_VERSION;
-            options.solver_mode=mode;options.max_states=1000;options.max_sweeps=10000;options.solver_flags=PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS;
+            options.solver_mode=mode;options.max_states=1000;options.max_sweeps=10000;options.solver_flags=PC_SOLVER_FLAG_HIGH_IMPACT_EXECUTABLE_UPPERS|PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
             pc_solve_summary summary{};summary.struct_size=sizeof(summary);summary.abi_version=PC_ABI_VERSION;
             rc=pc_solver_solve(solver,&input,&prices,&options,&summary,&error);
             std::printf("Dominance product mixed=%d mode=%d solve=%d policy=%d U=%.12g %s\n",mixed,mode,rc,summary.policy_available,summary.upper_bound,error.message);
@@ -4017,6 +4110,59 @@ void dominance_real_product(const std::shared_ptr<SessionImpl>& session) {
     }
 }
 
+
+void dominance_real_protected(const std::shared_ptr<SessionImpl>& session) {
+    const auto first=dominance_local_id(*session,"AdditionalCriticalStrikeChanceWithSpellsUber2_");
+    const auto ordinary=dominance_local_id(*session,"AttackerTakesDamage1");
+    std::uint32_t lock=kNoId,second=kNoId,destination=kNoId;
+    for(const auto mod:session->bench_mod_ids)
+        if(session->metamod_type[mod]==session->data->metamod_prefixes_locked_code && session->gen_type[mod]==PC_SIDE_SUFFIX) {lock=mod;break;}
+    PC_CHECK(lock!=kNoId);if(lock==kNoId)return;
+    for(const auto& [global,elevated]:session->data->influence_elevations) {
+        const auto candidate=session->session_id_by_global_id.find(global);
+        const auto target=session->session_id_by_global_id.find(elevated);
+        if(candidate==session->session_id_by_global_id.end()||target==session->session_id_by_global_id.end())continue;
+        const auto mod=candidate->second;
+        const auto influence=session->influence_code[mod];
+        if(session->gen_type[mod]!=PC_SIDE_SUFFIX || influence<=0 || !(40&(1u<<(influence-1))) ||
+           session->primary_group[mod]==session->primary_group[first] || session->primary_group[mod]==session->primary_group[lock])continue;
+        auto probe=dominance_item(*session,{mod});probe.generic_influence_bits=40;
+        try {if(dominance_choices(*session,probe).size()!=1)continue;}catch(const std::invalid_argument&){continue;}
+        if(second==kNoId || mod<second) {second=mod;destination=target->second;}
+    }
+    PC_CHECK(second!=kNoId);if(second==kNoId)return;
+    const auto first_global=session->data->mod_global_ids[session->global_index[first]];
+    const auto first_dest=session->session_id_by_global_id.at(session->data->influence_elevations.at(first_global));
+    auto root=dominance_item(*session,{ordinary,first,second});root.generic_influence_bits=40;
+    PC_CHECK(pc_item_add_mod(&root,PC_SIDE_SUFFIX,lock,session->primary_group[lock],PC_MOD_SLOT_CRAFTED,nullptr)==PC_RESULT_OK);
+    const auto key=[&](auto mod){return session->data->string_at(session->data->mod_key_sid[session->global_index[mod]]);};
+    const auto goal="{\"version\":\"v1\",\"action_mode\":\"goal_relevant\",\"rarity\":\"rare\",\"min_satisfied_slots\":2,\"slots\":[{\"family_mod_key\":\""+key(ordinary)+"\",\"min_tier\":"+std::to_string(session->family_tier_index[ordinary])+"},{\"family_mod_key\":\""+key(first_dest)+"\"},{\"family_mod_key\":\""+key(destination)+"\"}]}";
+    auto economy=std::make_shared<EconomyImpl>();economy->id="dominance-protected-finite";economy->prices={{"dominance",7},{"scour",1}};
+    pc_economy prices{economy};pc_session handle{session};
+    for(const auto mode:{PC_SOLVER_MODE_CURRENT,PC_SOLVER_MODE_STRATEGY_FINDER}) {
+        pc_solver_handle solver=nullptr;pc_error_info error{};
+        PC_CHECK(pc_solver_create(&handle,goal.data(),goal.size(),&solver,&error)==PC_RESULT_OK);if(!solver)continue;
+        pc_solve_options options{};options.struct_size=sizeof(options);options.abi_version=PC_ABI_VERSION;
+        options.solver_mode=mode;options.max_states=1000;options.max_sweeps=10000;
+        options.solver_flags=PC_SOLVER_FLAG_DISABLE_ECONOMIC_RESTART;
+        pc_solve_summary summary{};summary.struct_size=sizeof(summary);summary.abi_version=PC_ABI_VERSION;
+        PC_CHECK(pc_solver_solve(solver,&root,&prices,&options,&summary,&error)==PC_RESULT_OK);
+        std::printf("Dominance real protected mode=%d policy=%d U=%.12g %s\n",mode,summary.policy_available,summary.upper_bound,error.message);
+        PC_CHECK(summary.policy_available);std::size_t size=0;
+        const auto rc=pc_solver_compile_strategy(solver,nullptr,0,&size,&error);PC_CHECK(rc==PC_RESULT_OK);
+        if(rc==PC_RESULT_OK) {
+            std::string graph(size+1,'\0');PC_CHECK(pc_solver_compile_strategy(solver,graph.data(),graph.size(),&size,&error)==PC_RESULT_OK);graph.resize(size);
+            auto strategy=compile(session,graph);StrategyEvalOptions check;check.economy=economy;
+            const auto exact=evaluate_strategy(*strategy,check);
+            PC_CHECK(exact.converged&&exact.cost_complete&&near(exact.success_probability,1));
+            PC_CHECK(near(exact.total_expected_cost,8)&&near(summary.upper_bound,8));
+            PC_CHECK(near(exact.action_not_applied_probability,0)&&near(exact.unresolved_probability,0));
+            std::ofstream("out/dominance-completion/real-protected-mode-"+std::to_string(mode)+"-graph.json")<<graph;
+        }
+        pc_solver_destroy(solver);
+    }
+}
+
 void dominance_real_runtime(const char* artifact_dir) {
     if(artifact_dir==nullptr) return;
     const auto base=load_artifact_session(artifact_dir);PC_CHECK(base!=nullptr);if(!base) return;
@@ -4026,6 +4172,7 @@ void dominance_real_runtime(const char* artifact_dir) {
         auto session=std::make_shared<SessionImpl>();session->data=base->data;
         session->base_index=base->base_index;session->item_level=level;build_session(*session);
         dominance_real_product(session);
+        dominance_real_protected(session);
         for(const auto physical:{false,true}) {
             const std::string source=physical?"PhysicalDamageCannotBeReflectedPercentUber1":"ElementalDamageCannotBeReflectedPercentUber1";
             const std::string fields=",\"generic_influence_bits\":40,\"prefixes\":[\""+source+"\"],\"suffixes\":[\""+helper+"\"]";

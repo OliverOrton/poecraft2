@@ -81,3 +81,38 @@ Probe changes are generic: use corpus artifact selection and restore declared
 ordinary/Eldritch influence through native item export/import. No UI behavior or
 mechanics is duplicated. Current/Finder recovery expansion is the next finite
 qualification, not included in this prepared-item receipt.
+
+## Recovery and boundary source checkpoint
+
+Final focused native qualification passes 2,572 checks. The independent finite
+normal acquisition oracle is (3+7+0.5*1)/0.5 = 21 in both Current and Finder.
+Finder's three-stage exception is typed normal-only renewal -> Dominance ->
+Scour on this carrier; failed eligibility routes to paid recovery. Prepared
+protected Dominance -> crafted cleanup costs 8, with success 1, in both modes.
+The same default goal-relevant workflow passes real frozen data at ilvl 1/86:
+one ordinary prefix, two native eligible suffixes and native prefix protection.
+Cleanup is a primitive candidate in this identity envelope, rather than a
+coarse-programme dependency. All source and actual graph costs remain synthetic
+qualification inputs, not market improvement evidence.
+
+Ordinary no-elevated-goal controls do not register Dominance. The explicit Chaos
+control retains ordinary conditional closure: lower = upper = 3. This verifies
+that descriptor admission does not select singleton/zero-proof behavior for
+ordinary goals. Native one-shot currency odds stay separate from continuation
+search by removing the unused Dominance lookup in their copied observation
+registry, without shifting action indices or changing native expanded laws.
+
+Parameterized Fossils are checked against native auxiliary effects before
+refill. Any positive-mass auxiliary result that leaves the supported structural
+carrier refuses the complete row; no implicit state is projected into a
+continuation proof. The real-data vendor-implicit control passes this refusal.
+Numeric rollout, mapping, scope and dual-lock boundaries remain unchanged.
+
+This source checkpoint supersedes the prepared receipt's source for recovery;
+matching final WASM/worker checks are still pending. Large-pool acquisition
+performance is not inferred from the finite oracle. Exact closure and a hybrid
+handoff remain outside the approved boundary. Final source ownership additionally
+includes calculator_currency.cpp observation cloning and solver_reforge.cpp
+parameter support. No native crafting law, frozen data or frozen market price
+has changed. Broader fixture failures remain recorded as failures pending a
+preserved baseline-binary/data comparison, not silently relabelled as passes.

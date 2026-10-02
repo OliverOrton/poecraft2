@@ -1,5 +1,7 @@
 #include "solver_calc_types.hpp"
 #include "solver_solve_types.hpp"
+#include "solver_dominance.hpp"
+#include "currency_outcomes.hpp"
 
 #include <algorithm>
 #include <array>
@@ -759,6 +761,28 @@ CalcContext::evaluate_reforge_cooperatively(
         ++telemetry_.reforge_misses;
         telemetry_timer.miss = true;
         co_return std::make_shared<OutcomeDistribution>(std::move(result));
+    }
+
+    if (authored_dominance_ && action.params.type == ActionType::Fossil) {
+        // The ordinary refill quotient does not carry auxiliary implicit state.
+        // Query native effects per parameter and refuse the complete identity
+        // row if any positive-mass auxiliary result leaves this carrier.
+        for (const auto fossil : action.params.fossil_indices) {
+            std::uint64_t implicit_members = 0;
+            for (const auto word : session.corrupted_implicit_mask)
+                implicit_members += std::popcount(word);
+            const auto vendors = fossil < session.fossil_sell_price_mod_ids.size()
+                ? session.fossil_sell_price_mod_ids[fossil].size() : 0;
+            require_reforge_scratch_bytes(2 * std::max<std::uint64_t>(1,implicit_members) *
+                std::max<std::uint64_t>(1,vendors) * sizeof(std::pair<pc_item_state,long double>));
+            try {
+                const auto auxiliary = fossil_implicit_outcomes(session,item,{fossil});
+                for (const auto& [next,mass] : auxiliary)
+                    if (mass > 0) validate_authored_dominance_item(session,next);
+            } catch (const std::invalid_argument&) {
+                co_return std::make_shared<OutcomeDistribution>(std::move(result));
+            }
+        }
     }
 
     /* --- preserved base: fractured slots and locked sides ----------------- */

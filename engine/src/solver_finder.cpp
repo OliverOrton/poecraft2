@@ -333,9 +333,36 @@ PolicyFinderWork::PolicyFinderWork(
             return problem_.registry().actions[action.index].params.type == ActionType::Dominance;
         });
         if (dom != ranked_.end()) {
+            const auto cleanup = std::find_if(ranked_.begin(), ranked_.end(), [&](const auto& action) {
+                return problem_.registry().actions[action.index].params.type == ActionType::RemoveCraftedModifiers;
+            });
+            const auto crafted = [](const auto* slots, auto count) {
+                return std::any_of(slots,slots+count,[](const auto& slot) { return (slot.flags&PC_MOD_SLOT_CRAFTED)!=0; });
+            };
+            if (dom->root_legal && cleanup != ranked_.end() &&
+                (crafted(original_start_.prefixes,original_start_.prefix_count) ||
+                 crafted(original_start_.suffixes,original_start_.suffix_count))) {
+                Sketch candidate{{dom->index,cleanup->index},dom->price+cleanup->price,true};
+                if (seen_.insert(sketch_identity(candidate)).second) {
+                    record_generated(candidate);
+                    frontier_.push_back(std::move(candidate));
+                    ++counters_.generated;
+                }
+            }
             for (const auto& roll : ranked_) {
                 if (!roll.root_legal || !action_transition_facts(problem_.registry().actions[roll.index].params.type).renewal) continue;
                 Sketch candidate{{roll.index, dom->index}, dom->price + roll.price, true};
+                // Normal-only renewals need paid recovery after every miss;
+                // their operation cannot be repeated on the reached rare/magic item.
+                if (problem_.registry().actions[roll.index].legality.rarity_mask ==
+                        (1u << PC_RARITY_NORMAL)) {
+                    const auto reset = std::find_if(ranked_.begin(), ranked_.end(), [&](const auto& action) {
+                        return problem_.registry().actions[action.index].params.type == ActionType::Scour;
+                    });
+                    if (reset == ranked_.end()) continue;
+                    candidate.actions.push_back(reset->index);
+                    candidate.score += reset->price;
+                }
                 if (!seen_.insert(sketch_identity(candidate)).second) continue;
                 record_generated(candidate);
                 frontier_.push_back(std::move(candidate));

@@ -412,6 +412,8 @@ ProductAdmissionDecision classify_goal_relevant_action(
                          ProductActionRole::Filtered,
                          "filtered_fracture_without_option"};
     case ActionType::RemoveCraftedModifiers:
+        if (options.automatic_dominance)
+            return {ProductActionRole::Candidate, "candidate_dominance_identity_cleanup"};
         if (!options.automatic_candidates) {
             return {ProductActionRole::Filtered,
                     "filtered_cleanup_without_automatic_options"};

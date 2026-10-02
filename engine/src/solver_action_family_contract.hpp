@@ -779,10 +779,12 @@ struct ProductReasonContract {
     std::string_view reason;
 };
 
-inline constexpr std::array<ProductReasonContract, 26>
+inline constexpr std::array<ProductReasonContract, 27>
     kProductReasonContracts{{
         {ProductReasonGroup::Bench, ProductActionRole::Candidate,
          "candidate_dominance_identity_bench"},
+        {ProductReasonGroup::Cleanup, ProductActionRole::Candidate,
+         "candidate_dominance_identity_cleanup"},
         {ProductReasonGroup::Currency, ProductActionRole::Candidate,
          "candidate_general_currency"},
         {ProductReasonGroup::Essence, ProductActionRole::Candidate,

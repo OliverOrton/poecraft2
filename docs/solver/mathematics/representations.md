@@ -109,6 +109,9 @@ The [automatic continuation](../../active/2026-10-02-dominance-completion/README
 also admits structural acquisition, addition, bench protection and paid fresh-base
 recovery. Its operation whitelist is native, in `solver_dominance.hpp`; Veiled,
 Eldritch, Foulborn and inventory/control operations remain outside this carrier.
+Parameterized Fossils first query the native auxiliary law; any positive-mass
+implicit/context result outside the carrier refuses the whole row. Operation
+type admission alone does not certify its parameter set.
 Every pool member has a singleton identity and its complete native exclusion
 effect; pool weights and native legality use the retained influence, rarity,
 flags and affixes. Bench rows that create both locks are refused before

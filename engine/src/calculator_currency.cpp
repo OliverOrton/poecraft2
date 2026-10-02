@@ -81,7 +81,13 @@ std::string calculate_currency_json(CalcContext& source,
     // terminal rows merge junk that has identical goal/count/flag observations.
     // Admitting Chaos as a future action here would unnecessarily distinguish
     // hundreds of thousands of final junk configurations on jewellery.
-    CalcContext terminal(source.shared_session(), source.goal(), source.registry(),
+    // One-shot terminal observations never execute a Dominance search row.
+    // Keep descriptor indices for the requested action but exclude the search
+    // carrier lookup; expanded Dominance below uses complete native pairs.
+    auto observation_registry = source.registry();
+    observation_registry.index_by_id.erase("dominance");
+    observation_registry.automatic_dominance = false;
+    CalcContext terminal(source.shared_session(), source.goal(), observation_registry,
         {}, true, false, false, std::nullopt, {}, false, reachable,
         false, false, true, false, true);
     auto& calc = terminal;
@@ -153,7 +159,7 @@ std::string calculate_currency_json(CalcContext& source,
             action_goal.fixed_options.clear();
             action_goal.automatic_candidates = false;
             incoming = std::make_unique<CalcContext>(source.shared_session(),
-                action_goal, source.registry(), std::vector<std::uint32_t>{index},
+                action_goal, observation_registry, std::vector<std::uint32_t>{index},
                 true, false, true, std::nullopt,
                 std::vector<CountObservation>{}, false, reachable);
             incoming->set_solve_resource_caps(250000, 100000000, false,

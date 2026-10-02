@@ -247,12 +247,17 @@ std::string compile_finder_candidate_json(
     const std::vector<std::uint32_t>& primitive_sequence,
     const SolveOptions& limits,
     const bool return_to_first) {
-    if (primitive_sequence.size() > 2) {
-        throw std::invalid_argument("finder supports at most two native stages");
-    }
     for (const std::uint32_t action : primitive_sequence)
         if (action >= calc.registry().actions.size())
             throw std::invalid_argument("finder primitive index is out of range");
+    const bool dominance_recovery = calc.registry().automatic_dominance &&
+        primitive_sequence.size() == 3 &&
+        action_transition_facts(calc.registry().actions[primitive_sequence[0]].params.type).renewal &&
+        calc.registry().actions[primitive_sequence[0]].legality.rarity_mask == (1u << PC_RARITY_NORMAL) &&
+        calc.registry().actions[primitive_sequence[1]].params.type == ActionType::Dominance &&
+        calc.registry().actions[primitive_sequence[2]].params.type == ActionType::Scour;
+    if (primitive_sequence.size() > 2 && !dominance_recovery)
+        throw std::invalid_argument("finder supports two native stages or scoped Dominance paid recovery");
     const SessionImpl& session = calc.session();
     const std::string goal = compile_finder_goal_condition(calc);
     std::uint32_t eligibility_edges=0;
@@ -296,8 +301,14 @@ std::string compile_finder_candidate_json(
             json += ",{\"id\":\"eligible"+suffix+"\",\"from\":\"stage"+suffix+
                 "\",\"to\":\"stage"+std::to_string(i+1)+"\",\"priority\":1,\"condition\":"+
                 dominance_eligibility_condition(session)+"}";
+            const auto recovery = std::find_if(primitive_sequence.begin()+i+2,
+                primitive_sequence.end(), [&](auto index) {
+                    return calc.registry().actions[index].params.type == ActionType::Scour;
+                });
+            const auto retry = recovery == primitive_sequence.end() ? i :
+                static_cast<std::size_t>(recovery-primitive_sequence.begin());
             json += ",{\"id\":\"retry_acquisition"+suffix+"\",\"from\":\"stage"+suffix+
-                "\",\"to\":\"stage"+suffix+"\",\"priority\":2,\"is_default\":true}";
+                "\",\"to\":\"stage"+std::to_string(retry)+"\",\"priority\":2,\"is_default\":true}";
             ++eligibility_edges;
             continue;
         }
