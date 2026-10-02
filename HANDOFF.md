@@ -6,12 +6,14 @@ through `bea5683` in isolated `dot/integration-20261002` (combined source
 `336c5b2`). Shared publication/tests/contracts were reviewed before the local
 build. W1's status/artifact checks and full carrier-universe repair coexist with
 explicit original-root paid-reset checking; lower authority stays separate.
-Finder's unfinished exact-checker work is excluded. Integration build and
-focused checks pass: carrier/W1 516, paid reset 1082, assertion 384, bounded
+Finder's pinned `a04c045` quotient received read-only source review; no blocking
+mismatch was found within its narrow admitted domain, but it remains excluded.
+Integration build and focused checks pass: carrier/W1 516, paid reset 1082, assertion 384, bounded
 Finish 203, abstraction 47173, Python 10, release WASM, filtered npm and final
-typecheck. All own processes ended; CPU hold for Mechanics N5 is active. The
-living record's integration receipt pins binary/log hashes. Actual-worker and
-economic qualification of combined bytes remains pending.
+typecheck. All own processes ended; the parent released the N5 CPU hold, with
+its deeper result pending. The living record pins integration binary/log hashes
+and Finder review limits. Later Finder and Mechanics Calculator edits are not
+selected; actual-worker/economic qualification of final bytes remains pending.
 
 Owner evidence remains scoped: CURRENT's N2/N3 checked Bow upper improves
 160160.995674c -> 51222.520820c (68.018%), with bounded Finish, success one and

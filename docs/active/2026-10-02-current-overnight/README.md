@@ -295,9 +295,28 @@ unchanged; all commits are local. Do not cherry-pick Finder's unfinished checker
 
 ## Continuation and integration gate
 
-The parent selected this integration slice after Mechanics N4 completed. Finder
-exact-checker work remains pending. All authorized integration builds/checks have ended; no own process or handle
-remains. Parent requested a fresh CPU hold for Mechanics N5. Stay quiescent for
-new heavy commands until release; source work may continue. No further
-native timed solve or worker launch is allocated to CURRENT. Stop new work
-before 2026-10-02 17:00 UTC and leave an honest final handoff.
+The parent selected this integration slice after Mechanics N4 completed. All
+authorized integration builds/checks have ended; no own process or handle remains.
+The parent released the N5 CPU hold after that Mechanics invocation exited; its
+deeper result is pending. No further native timed solve or worker launch is
+allocated to CURRENT. Stop new work before 2026-10-02 17:00 UTC.
+
+Parent-requested read-only review of pinned Finder
+`a04c0455a80ac5342baab193c58fc331e4c3ce09` found no blocking mismatch within its
+explicitly admitted fixed-graph quotient domain. `finder-source-review.json`
+pins the reviewed source bytes, gate/law findings, captured graph and evidence
+limits. The gate retains side/status/occupancy and junk blocker multiplicities;
+Annul uses exact `n_c/N` removal and full renewal wipes the source before the
+native roll DP. All-member slot proof rejects cross-goal blockers, including
+below-tier conflicts. Original any-k routing remains unchanged. The captured N1
+graph uses admitted prefix/suffix occupancy ranges rather than modifier-count
+queries. This does not certify its real-data gate or economic result.
+
+Finder's owner reports 23,467 focused passing checks; this reviewer ran no new
+Finder build or test. Its 15 physical-reference cross-goal blocker failures stay
+outside the first compact domain and remain unrepaired; the separate 17 failures
+reproduce on actual main and remain defects. Broader pre-layout preparation and
+final combined bytes still require their own qualification. Finder is not
+integrated, and later dirty Finder changes plus Mechanics' incoming-junk
+Calculator repair are not selected by this checkpoint. Both actual-worker slots
+remain unused and parent-controlled.

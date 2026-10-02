@@ -1,0 +1,89 @@
+{
+  "review_kind": "read_only_pinned_source_review",
+  "reviewed_commit": "a04c0455a80ac5342baab193c58fc331e4c3ce09",
+  "integration_source_commit": "336c5b2dff85691f5b509915e75d8a105e7a4c20",
+  "integration_checkpoint_before_review": "8264f2d3ffc38dccf97ad3cf0ad2ac204e1be933",
+  "disposition": "No blocking mismatch found within the explicitly admitted quotient domain; not integrated and not runtime qualification.",
+  "reviewed_files": [
+    {
+      "path": "engine/src/solver_registry.cpp",
+      "git_blob_sha256": "a6666a29cdc5baf5015da3d8354a7af8aa03158c6965100b744159e63dc3cbd5"
+    },
+    {
+      "path": "engine/src/solver_abstract.cpp",
+      "git_blob_sha256": "5aa4356c732256b0c4b4414dc10d210ab30e5662b855f4bf9eac16213324e00b"
+    },
+    {
+      "path": "engine/src/solver_calc.cpp",
+      "git_blob_sha256": "710bc9bca157a4089648508a66a829df6697524b6274ce0d26b4f96c1ef1ed38"
+    },
+    {
+      "path": "engine/src/solver_reforge.cpp",
+      "git_blob_sha256": "2b12a4cb6545ec0d1d8190cf71204ed145f7aeed999da995a16c8e0da07cd2aa"
+    },
+    {
+      "path": "engine/src/solver_eval.cpp",
+      "git_blob_sha256": "36f353f777853be2b9e057224514b33a8563804004be963570f2dcf0a9ce5d4b"
+    },
+    {
+      "path": "engine/src/solver_eval_helpers.hpp",
+      "git_blob_sha256": "75103fec537ad897cbef237f33c287090475bb1e5095ff7f662ba6044ac692a2"
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "git_blob_sha256": "f8efcb9970f2d3390725a0122486390d4acd11e734f957373462871a223c48cb"
+    },
+    {
+      "path": "docs/solver/mathematics/representations.md",
+      "git_blob_sha256": "b740021cd2b853194d9097da8e2ef3370627d10910852e65bbb4dfe837f5379d"
+    },
+    {
+      "path": "docs/active/2026-10-02-finder-essence/README.md",
+      "git_blob_sha256": "372f2b80808fab54229ecb114933c11db509df04e32cb108e3bbbbcb8da1b2b8"
+    }
+  ],
+  "authority": "Fixed compiled graph upper/evaluation only; no lower, optimality, or broader physical-reference repair.",
+  "gates": [
+    "Empty live unmodified carrier; no influences, eldritch tiers, implicit/quality/enchantment/memory/socket/link facts.",
+    "Only recomputed canonical native FullRenewal or UniformRemoval capabilities; require at least one Annul. Forced renewal reachability must preserve the unprotected invariant.",
+    "No continuation entries, policy-decision entries, or graph-local decisions. All graph edges and pre-layout backward observations are checked, including dead reads.",
+    "Reject structured identity, offers, modifier-count/family-count queries, required flags, tags, protected/additive/targeted actions. Prefix/suffix scalar occupancy ranges remain exact and admitted.",
+    "Every goal member including below-tier members has one explicit side, disjoint slot membership, and a common native exclusion group proving at most one occupant; any cross-goal member conflict rejects compact admission."
+  ],
+  "laws": [
+    "Direct Annul decrements goal slot with probability 1/N or junk class with multiplicity n_c/N; side occupancy and remaining blocker multiplicities are retained.",
+    "Renewal source is wiped with retained rarity; action legality is checked on the actual abstract source, then the same native forced-mod/exclusion/cap/exhaustion DP supplies complete mass.",
+    "Factored terminal depth remains conditional on goal_progress_gated; ordinary compiled rows explicitly request the full ungated law unless a separate existing local route proof applies.",
+    "Original any-k terminal/router conditions are preserved; deriving all observed slots for the carrier does not promote the success predicate to all-k."
+  ],
+  "capture_checked_read_only": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\capture-stage-confirmation\\strategies\\finder-reconstructed-amulet-wrath-chaos-clean.candidates\\6-16532417057234384386.strategy.json",
+    "sha256": "1ef3998b6804d6245385d9b710f6d6c5c456d01f16e7bb0b2c625223beb9e9cb",
+    "condition_types": [
+      "all",
+      "any",
+      "has_mod_family",
+      "prefix_count_range",
+      "rarity_is",
+      "suffix_count_range"
+    ],
+    "note": "Captured N1 graph uses exact prefix/suffix occupancy ranges, not rejected modifier-count queries. This source review does not execute or certify its real-data slot/action gates."
+  },
+  "owner_reported_finite_evidence": {
+    "uniform_removal_checks": 21627,
+    "legal_physical_carriers": 128,
+    "other_focused_checks": 1840,
+    "total_checks": 23467,
+    "synthetic_checked_cost": 3.56715328467,
+    "two_annuls_retain_two_of_four_probability": "1/6",
+    "reviewer_reran": false
+  },
+  "remaining_limits": [
+    "15 newly exposed physical-reference cross-goal blocker materialization failures are excluded by the compact gate and remain a separate unrepaired physical-reference gap.",
+    "17 synthetic failures reproduce on actual main ebcd98c; owner receipts retain the 6/10/1 split. Baseline reproduction does not establish full acceptance.",
+    "Pre-layout observation preparation and proof-scratch admission now run more broadly; focused source/owner checks are not final combined-byte worker or workload qualification.",
+    "No N6 allocation, timed solve, worker, build, or test was run for this review. Later dirty Finder edits and later Mechanics Calculator repair are not reviewed or selected here."
+  ],
+  "process_state": "All integration and CURRENT own processes ended; parent released N5 CPU hold. Deeper N5 result remains pending.",
+  "budget": "CURRENT N2/N3 spent; integration zero timed and zero actual-worker invocations; both remaining final-byte actual-worker slots remain unused and parent-controlled."
+}
