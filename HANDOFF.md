@@ -353,3 +353,16 @@ The next IC decision is whether to authorize that bounded timed comparison after
 freezing its real request and verifying the relevant native boundary is plausible.
 Do not repeat W, widen limits or assume the synthetic improvement transfers to A4/A5.
 Preserve root `0`; commits remain local unless Oliver requests a push.
+
+
+Oliver selected [ordinary Foulborn/output-quality completion](docs/active/2026-10-02-foulborn-completion/README.md)
+from sprint integration b794e009, in sibling poecraft2-foulborn-completion.
+Normal native Current/Finder now exercise all three Foulborn continuations,
+including paid recovery from empty Normal roots; 5920 focused checks pass.
+The original real Current witness replays at 4.11822156262245c. Frozen Finder F2
+failed before graph output, is preserved, and has a passing finite API repair.
+Grammar v2 extends the complete-cycle proposal to zero direct roll success;
+independent original-root checking and zero global lower remain authoritative.
+The living record owns the argument/evidence and parent-coordinated remaining
+comparative arms, final real Finder replay and WASM/worker qualification.
+Local commits only; integration owner handles review, qualified merges and push.

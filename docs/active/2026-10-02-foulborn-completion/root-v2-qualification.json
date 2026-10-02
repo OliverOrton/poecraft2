@@ -1,0 +1,44 @@
+{
+  "scope": "finite native and ordinary public API root grammar v2; independent upper checks; no final real Finder or browser claim",
+  "base_checkpoint": "3bbedc14369662df42a8fc22a40c559990ecd6f5",
+  "checks": 5920,
+  "failures": 0,
+  "logs": [
+    {
+      "path": "out/foulborn-completion/root-v2-finder-essence-final.log",
+      "sha256": "7652e1cdd79e3b7f3c67340ac55da1633e5e891f1ea10813307eb4ec62965165"
+    },
+    {
+      "path": "out/foulborn-completion/root-v2-foulborn-root.log",
+      "sha256": "99d9fd579fe47e6819e79be9dce08b5e505ec54d440eaa8c409b96c4a4cfc619"
+    },
+    {
+      "path": "out/foulborn-completion/root-v2-paid-reset.log",
+      "sha256": "1b21b5be3126b745327e8b944f2ccf76fc13719220e0b500ca8a50861f941fce"
+    },
+    {
+      "path": "out/foulborn-completion/root-v2-protected-finder.log",
+      "sha256": "601e9dd3acdfc3c6c345c2da900cc8e863baf39287d2fa830f27c6233da7ae57"
+    },
+    {
+      "path": "out/foulborn-completion/root-v2-assertion.log",
+      "sha256": "c7470532bd31bdb745278364c3afd84c255d6cebf8bf74ad65cf914763363310"
+    },
+    {
+      "path": "out/foulborn-completion/root-v2-checkpoint.log",
+      "sha256": "b02c8abe6f2ef11c71b752ad4d915dcdca0303981eb60436246b737ac4b8ccfb"
+    }
+  ],
+  "frozen_replays": {
+    "F1": "passed Current4.11822156262245c",
+    "F2": "internal_error; no policy; frozen failure preserved"
+  },
+  "unrun": [
+    "eight comparative quality arms",
+    "final real Finder replay",
+    "WASM/worker qualification",
+    "fresh Simulator",
+    "full acceptance"
+  ],
+  "residual": "mixed-side continuation discovery and hybrid handoff not implemented"
+}

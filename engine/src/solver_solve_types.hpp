@@ -516,6 +516,7 @@ struct SolveTransitionCache {
     bool goal_progress_gated_reforges = false;
     // Native-private supplementary controller grammar; never a public preset.
     bool paid_root_foulborn_salvage = false;
+    std::uint32_t paid_root_foulborn_grammar_version = 2;
     bool consider_imprint_programs = true;
     bool allow_economic_restart = true;
     std::uint32_t discovered_states = 0;

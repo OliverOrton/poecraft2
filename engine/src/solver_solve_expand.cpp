@@ -426,6 +426,7 @@ std::string SolveTransitionCache::compatibility_mismatch(
         PC_CACHE_MISMATCH(kernel_reuse);
         PC_CACHE_MISMATCH(goal_progress_gated_reforges);
         PC_CACHE_MISMATCH(paid_root_foulborn_salvage);
+        PC_CACHE_MISMATCH(paid_root_foulborn_grammar_version);
         PC_CACHE_MISMATCH(consider_imprint_programs);
         PC_CACHE_MISMATCH(allow_economic_restart);
 #undef PC_CACHE_MISMATCH

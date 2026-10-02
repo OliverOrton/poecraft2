@@ -15615,7 +15615,7 @@ void run_paid_root_foulborn_salvage_tests() {
             // Formatting and key order cannot erase capability metadata;
             // unknown values remain unsupported even with the option enabled.
             const std::string grammar_key = "\"solver_controller_grammar\":";
-            const std::string grammar_value = "\"paid_root_foulborn_salvage_v1\"";
+            const std::string grammar_value = "\"paid_root_foulborn_salvage_v2\"";
             for (unsigned variant = 0; variant < 9; ++variant) {
                 auto guarded_graph = candidate.compiled_artifact.strategy_json;
                 const auto metadata = guarded_graph.find(grammar_key + grammar_value);
@@ -15631,7 +15631,7 @@ void run_paid_root_foulborn_salvage_tests() {
                         variant == 3 ? "\"unknown_grammar_v9\"" : "false");
                 if (variant >= 5) {
                     guarded_graph.erase(metadata, grammar_key.size() + grammar_value.size() + 1);
-                    const std::string scope = "\"solver_policy_scope\":\"gated_search_with_paid_root_foulborn_salvage_v1\",";
+                    const std::string scope = "\"solver_policy_scope\":\"gated_search_with_paid_root_foulborn_salvage_v2\",";
                     const auto scope_position = guarded_graph.find(scope);
                     PC_CHECK(scope_position != std::string::npos);
                     guarded_graph.erase(scope_position, scope.size());
@@ -15656,7 +15656,7 @@ void run_paid_root_foulborn_salvage_tests() {
                 }
             }
             PC_CHECK(candidate.compilation_provenance == "initial_compiled_policy_assertion_v1");
-            PC_CHECK(candidate.compiled_artifact.strategy_json.find("paid_root_foulborn_salvage_v1") != std::string::npos);
+            PC_CHECK(candidate.compiled_artifact.strategy_json.find("paid_root_foulborn_salvage_v2") != std::string::npos);
             PC_CHECK(candidate.evaluated_policy_cost < baseline);
             const auto graph = json::Parser(candidate.compiled_artifact.strategy_json.data(),
                 candidate.compiled_artifact.strategy_json.size()).parse();
@@ -15668,7 +15668,7 @@ void run_paid_root_foulborn_salvage_tests() {
             PC_CHECK(post_add_edges == 2);
         }
         if (work.options.paid_root_foulborn_salvage) {
-            PC_CHECK(work.result.diagnostics.solution_scope.find("paid_root_foulborn_salvage_v1") != std::string::npos);
+            PC_CHECK(work.result.diagnostics.solution_scope.find("paid_root_foulborn_salvage_v2") != std::string::npos);
             PC_CHECK(work.result.diagnostics.solution_scope.find("within_zero_progress_reroll") == std::string::npos);
         }
         for (std::size_t state = 0; state < candidate.values.size(); ++state) {

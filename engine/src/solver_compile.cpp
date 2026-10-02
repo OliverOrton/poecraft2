@@ -70,14 +70,14 @@ bool compiled_success_ingress_matches_request(
         const auto* declared_grammar = graph.find("solver_controller_grammar");
         if (declared_grammar != nullptr &&
             (declared_grammar->type != json::Type::String ||
-             declared_grammar->string != "paid_root_foulborn_salvage_v1"))
+             declared_grammar->string != "paid_root_foulborn_salvage_v2"))
             return refuse("unknown supplementary controller grammar");
         const auto grammar = condition_text_member(graph, "solver_controller_grammar");
         const auto scope = condition_text_member(graph, "solver_policy_scope");
         if (!allow_paid_root_foulborn &&
-            (grammar == "paid_root_foulborn_salvage_v1" ||
-             scope == "gated_search_with_paid_root_foulborn_salvage_v1"))
-            return refuse("supplementary original-root graph requires paid_root_foulborn_salvage_v1 scope");
+            (grammar == "paid_root_foulborn_salvage_v2" ||
+             scope == "gated_search_with_paid_root_foulborn_salvage_v2"))
+            return refuse("supplementary original-root graph requires paid_root_foulborn_salvage_v2 scope");
         const std::string goal_text = compile_finder_goal_condition(calc);
         const json::Value goal = json::Parser(
             goal_text.data(), goal_text.size()).parse();
@@ -228,9 +228,6 @@ std::string compile_finder_candidate_json(
     const SessionImpl& session = calc.session();
     const std::string goal = compile_finder_goal_condition(calc);
     std::string json = finder_base_json(calc, start_item);
-    if (limits.paid_root_foulborn_salvage)
-        json += ",\"solver_controller_grammar\":\"paid_root_foulborn_salvage_v1\","
-            "\"solver_policy_scope\":\"gated_search_with_paid_root_foulborn_salvage_v1\"";
     json += ",\"start_node_id\":\"start\",\"nodes\":["
             "{\"id\":\"start\",\"kind\":\"start\"},"
             "{\"id\":\"goal\",\"kind\":\"terminal\","
@@ -289,8 +286,8 @@ std::string compile_paid_root_foulborn_candidate_json(
     if (!limits.paid_root_foulborn_salvage || selected_misses.empty() ||
         roll >= calc.registry().actions.size() || add >= calc.registry().actions.size() ||
         reset >= calc.registry().actions.size() ||
-        calc.registry().actions[roll].params.type != ActionType::Alchemy ||
-        calc.registry().actions[add].params.type != ActionType::FoulbornExalt ||
+        !paid_root_foulborn_pair(calc.registry().actions[roll].params.type,
+            calc.registry().actions[add].params.type) ||
         calc.registry().actions[reset].params.type != ActionType::Scour)
         throw std::invalid_argument("invalid paid root Foulborn grammar");
     if (limits.max_compiled_nodes < 5 || selected_misses.size() > limits.max_compiled_edges ||
@@ -324,8 +321,8 @@ std::string compile_paid_root_foulborn_candidate_json(
     }
     json = finder_base_json(calc, start_item);
     check_compiler_memory();
-    json += ",\"solver_controller_grammar\":\"paid_root_foulborn_salvage_v1\","
-        "\"solver_policy_scope\":\"gated_search_with_paid_root_foulborn_salvage_v1\","
+    json += ",\"solver_controller_grammar\":\"paid_root_foulborn_salvage_v2\","
+        "\"solver_policy_scope\":\"gated_search_with_paid_root_foulborn_salvage_v2\","
         "\"start_node_id\":\"start\",\"nodes\":[{\"id\":\"start\",\"kind\":\"start\"},"
         "{\"id\":\"goal\",\"kind\":\"terminal\",\"terminal\":\"success\"}";
     const std::array<std::pair<const char*, std::uint32_t>, 3> stages{{
@@ -3434,7 +3431,7 @@ std::string compile_policy_strategy_json(
     json += "\",\"description\":\"Compiled policy; compilation does not "
             "establish policy optimality";
     if (result.options.paid_root_foulborn_salvage) {
-        json += "; gated search with supplementary paid_root_foulborn_salvage_v1 controller grammar; "
+        json += "; gated search with supplementary paid_root_foulborn_salvage_v2 controller grammar; "
             "zero lower only and no optimality closure";
     } else if (result.options.goal_progress_gated_reforges) {
         json +=
@@ -3461,7 +3458,7 @@ std::string compile_policy_strategy_json(
             "automatic Imprint programs";
     }
     if (result.options.paid_root_foulborn_salvage) {
-        json += "\",\"solver_policy_scope\":\"gated_search_with_paid_root_foulborn_salvage_v1";
+        json += "\",\"solver_policy_scope\":\"gated_search_with_paid_root_foulborn_salvage_v2";
     } else if (result.options.goal_progress_gated_reforges &&
         !result.options.allow_economic_restart) {
         json +=

@@ -55,6 +55,8 @@ SolveWork::Impl::Impl(
         options.paid_root_foulborn_salvage = options.paid_root_foulborn_salvage ||
             product_paid_root_foulborn_scope(calc, options);
         if (options.paid_root_foulborn_salvage) {
+            if (options.paid_root_foulborn_grammar_version != 2)
+                throw std::invalid_argument("unsupported paid root Foulborn grammar version");
             // A profile's search gate is not an explicit caller policy restriction.
             // Never silently widen a requested zero-progress-reroll-only scope.
             if (!options.goal_progress_gated_reforges ||
@@ -62,7 +64,7 @@ SolveWork::Impl::Impl(
                 (options.solve_profile_override_mask &
                     PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES) != 0)
                 throw std::invalid_argument(
-                    "paid_root_foulborn_salvage_v1 requires default search gating; "
+                    "paid_root_foulborn_salvage_v2 requires default search gating; "
                     "explicit gated policy restriction cannot be widened");
             options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
         }
@@ -649,6 +651,7 @@ SolveWork::Impl::Impl(
             transition_cache->full_evidence = options.full_evidence;
             transition_cache->kernel_reuse = options.kernel_reuse;
             transition_cache->paid_root_foulborn_salvage = options.paid_root_foulborn_salvage;
+            transition_cache->paid_root_foulborn_grammar_version = options.paid_root_foulborn_grammar_version;
             transition_cache->goal_progress_gated_reforges =
                 options.goal_progress_gated_reforges;
             transition_cache->consider_imprint_programs =

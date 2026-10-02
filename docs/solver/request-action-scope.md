@@ -125,8 +125,9 @@ statewise checking retain their existing contracts.
 ### Ordinary product Foulborn/Finder continuation (October 2)
 
 The [completion checkpoint](../active/2026-10-02-foulborn-completion/README.md)
-supersedes private-only activation for the selected Alchemy/Foulborn Exalt/Scour
-controller. CalculatorProductV1 derives this capability from all three original
+supersedes private-only activation with grammar v2 for selected Alchemy/Foulborn
+Exalt/Scour and Transmute/Foulborn Augment-or-Regal/Scour controllers.
+CalculatorProductV1 derives this capability from all three original
 caller candidates, enabled families and absence of an explicit gating override.
 Native pricing, legality, exact miss/reset laws and original-root assertion remain
 authoritative. Diagnostic/default compatibility scope stays unchanged. Expanded
@@ -140,5 +141,11 @@ capacity. All operations remain caller-admitted and fully priced; the checker
 can refuse unsupported or improper graphs. Distinct guaranteed-goal masks receive
 up to three of the existing four initial seeds, with the Chaos seed preserved.
 Proposal features never supply probability, state merging, cost or lower proof.
-Normal-root Current Augmentation/Regal completeness and wider mixed-side
-continuations remain unqualified; the checkpoint records concrete outcomes.
+Finite public API checks exercise empty Normal Augmentation/Regal/Exalted in
+both lanes with positive native add consumption. The original real Current
+witness is replayed; the frozen Finder replay exposed accidental supplementary
+labels on ordinary primitive sketches, now removed with a direct API regression.
+The v2 complete-cycle proposal requires positive aggregate success even when
+the first roll has no direct success. The independent checker owns publication;
+checkpoint format 5 and typed grammar identity exclude v1 cache reuse. Wider
+mixed-side continuations and final real/WASM Finder qualification remain pending.

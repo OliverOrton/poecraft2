@@ -4904,24 +4904,9 @@ void run_solver_finder_foulborn_product_tests() {
         pc_item_state root; pc_item_clear(&root);
         const std::unordered_map<std::string,double> prices{
             {registry.actions[roll].id,2.0},{"scour",0.1},{add_id,0.01}};
-        {
-            auto incoming = root;
-            incoming.rarity = type == ActionType::FoulbornExalt ? PC_RARITY_RARE : PC_RARITY_MAGIC;
-            const auto held = type == ActionType::FoulbornRegal ? 0u : 7u;
-            PC_CHECK(pc_item_add_mod(&incoming,static_cast<pc_affix_side>(session->gen_type[held]),
-                held,session->primary_group[held],0,nullptr)==PC_RESULT_OK);
-            const auto renewal = registry.index_by_id.at(type == ActionType::FoulbornExalt ? "chaos" : "alteration");
-            const auto transmute = registry.index_by_id.at("transmute");
-            std::vector<std::uint32_t> scope{add};
-            std::unordered_map<std::string,double> incoming_prices{{add_id,0.01}};
-            if (type != ActionType::FoulbornRegal) {
-                scope.push_back(renewal); incoming_prices[registry.actions[renewal].id]=2.0;
-            } else {
-                scope.push_back(transmute); scope.push_back(reset);
-                incoming_prices["transmute"]=2.0; incoming_prices["scour"]=0.1;
-            }
-            // Exercise the ordinary public request path, including product
-            // options resolution and returned graph transport, in both lanes.
+        const auto run_product_api = [&](const pc_item_state& api_root,
+                const std::vector<std::uint32_t>& scope,
+                const std::unordered_map<std::string,double>& api_prices) {
             pc_session public_session; public_session.impl = session;
             std::string goal_json = "{\"version\":\"v1\",\"rarity\":\"" +
                 std::string(goal.rarity == PC_RARITY_MAGIC ? "magic" : "rare") +
@@ -4932,7 +4917,7 @@ void run_solver_finder_foulborn_product_tests() {
             }
             goal_json += "]}";
             std::string economy_json = "{\"version\":\"v1\",\"prices\":{";
-            for (const auto& [key,price] : incoming_prices) {
+            for (const auto& [key,price] : api_prices) {
                 if (economy_json.back() != '{') economy_json += ',';
                 economy_json += '"'+key+"\":"+std::to_string(price);
             }
@@ -4951,7 +4936,7 @@ void run_solver_finder_foulborn_product_tests() {
                 options.max_state_action_rows=100000; options.max_transitions=1000000;
                 options.max_reforge_work=1000000; options.max_solver_owned_bytes=256ull<<20;
                 pc_solve_summary summary{};
-                const auto code = pc_solver_solve(solver,&incoming,economy,&options,&summary,&error);
+                const auto code = pc_solver_solve(solver,&api_root,economy,&options,&summary,&error);
                 if (code!=PC_RESULT_OK) std::printf("product API %s mode=%u error=%s\n",add_id.c_str(),mode,error.message);
                 PC_CHECK(code==PC_RESULT_OK && summary.policy_available);
                 if (code==PC_RESULT_OK && summary.policy_available) {
@@ -4961,7 +4946,7 @@ void run_solver_finder_foulborn_product_tests() {
                     PC_CHECK(pc_solver_compile_strategy(solver,graph.data(),graph.size(),&length,&error)==PC_RESULT_OK);
                     graph.resize(length);
                     PC_CHECK(graph.find(add_id)!=std::string::npos);
-                    const auto checked = evaluate_compiled(session,graph,incoming_prices);
+                    const auto checked = evaluate_compiled(session,graph,api_prices);
                     PC_CHECK(finder_evaluation_accepted(checked));
                     PC_CHECK(checked.expected_consumption.contains(add_id) && checked.expected_consumption.at(add_id)>0);
                     PC_CHECK(std::abs(summary.evaluated_policy_cost-checked.total_expected_cost)<1e-8);
@@ -4970,6 +4955,26 @@ void run_solver_finder_foulborn_product_tests() {
                 pc_solver_destroy(solver);
             }
             pc_economy_destroy(economy);
+        };
+        {
+            auto incoming = root;
+            incoming.rarity = type == ActionType::FoulbornExalt ? PC_RARITY_RARE : PC_RARITY_MAGIC;
+            const auto held = type == ActionType::FoulbornRegal ? 0u : 7u;
+            PC_CHECK(pc_item_add_mod(&incoming,static_cast<pc_affix_side>(session->gen_type[held]),
+                held,session->primary_group[held],0,nullptr)==PC_RESULT_OK);
+            const auto renewal = registry.index_by_id.at(type == ActionType::FoulbornExalt ? "chaos" : "alteration");
+            const auto transmute = registry.index_by_id.at("transmute");
+            std::vector<std::uint32_t> scope{add};
+            std::unordered_map<std::string,double> incoming_prices{{add_id,0.01}};
+            if (type != ActionType::FoulbornRegal) {
+                scope.push_back(renewal); incoming_prices[registry.actions[renewal].id]=2.0;
+            } else {
+                scope.push_back(transmute); scope.push_back(reset);
+                incoming_prices["transmute"]=2.0; incoming_prices["scour"]=0.1;
+            }
+            // Exercise the ordinary public request path, including product
+            // options resolution and returned graph transport, in both lanes.
+            run_product_api(incoming,scope,incoming_prices);
             CalcContext current_calc(session,goal,registry,scope);
             const auto current = solve(current_calc,incoming,incoming_prices,limits);
             PC_CHECK(current.policy_available);
@@ -5026,10 +5031,14 @@ void run_solver_finder_foulborn_product_tests() {
             }
             PC_CHECK(served == (control == 0));
             if (control == 0) {
+                // Empty-Normal API replay catches Current capability leaking
+                // into ordinary Finder primitive compilation.
+                run_product_api(root,actions,cost);
                 CalcContext current_calc(session,request,registry,actions);
                 const auto current = solve(current_calc,root,cost,caps);
                 std::printf("product Current %s available=%d cost=%.12g lower=%.12g scope=%s\n",add_id.c_str(),
                     current.policy_available,current.evaluated_policy_cost,current.lower_bound,current.diagnostics.solution_scope.c_str());
+                PC_CHECK(current.policy_available);
                 if (current.policy_available) {
                     const auto graph = !current.refined_policy_artifact.strategy_json.empty()
                         ? current.refined_policy_artifact.strategy_json
@@ -5038,6 +5047,11 @@ void run_solver_finder_foulborn_product_tests() {
                     PC_CHECK(finder_evaluation_accepted(checked));
                     PC_CHECK(current.lower_bound == 0 && current.closure_unavailable_by_profile);
                     PC_CHECK(std::abs(current.evaluated_policy_cost-checked.total_expected_cost)<1e-8);
+                    PC_CHECK(graph.find(add_id)!=std::string::npos);
+                    PC_CHECK(checked.expected_consumption.contains(add_id) &&
+                        checked.expected_consumption.at(add_id)>0);
+                    PC_CHECK(checked.expected_consumption.contains("scour") &&
+                        checked.expected_consumption.at("scour")>0);
                     std::printf("product Current %s graph_add=%d\n",add_id.c_str(),graph.find(add_id)!=std::string::npos);
                 }
                 PC_CHECK(finder.best().has_value());
@@ -5056,6 +5070,31 @@ void run_solver_finder_foulborn_product_tests() {
             }
         }
     }
+    {
+        // Transmute plus one Regal can never supply three distinct prefixes.
+        // The p0=0 extension must refuse q=0, including a free add.
+        GoalSpec unreachable; unreachable.rarity = PC_RARITY_RARE;
+        unreachable.terminal.extras = ExtraExplicitPolicy::Allow;
+        for (const auto mod : {0u,3u,4u}) {
+            GoalSlot wanted; wanted.family_id = session->family_id[mod]; wanted.min_tier = 1;
+            unreachable.slots.push_back(wanted);
+        }
+        const auto roll = registry.index_by_id.at("transmute");
+        const auto add = registry.index_by_id.at("foulborn_regal");
+        const auto reset = registry.index_by_id.at("scour");
+        CalcContext calc(session,unreachable,registry,{roll,add,reset});
+        pc_item_state root; pc_item_clear(&root);
+        const auto no_cycle = solve(calc,root,{{"transmute",2},{"foulborn_regal",0},{"scour",0.1}},limits);
+        PC_CHECK(!no_cycle.policy_available);
+        PC_CHECK(no_cycle.lower_bound == 0 && no_cycle.closure_unavailable_by_profile);
+        auto legacy = limits; legacy.paid_root_foulborn_salvage = true;
+        legacy.paid_root_foulborn_grammar_version = 1;
+        bool refused = false;
+        try { SolveWork work(calc,root,{},legacy); }
+        catch (const std::invalid_argument&) { refused = true; }
+        PC_CHECK(refused);
+    }
+
 }
 
 void run_solver_uniform_removal_tests() {

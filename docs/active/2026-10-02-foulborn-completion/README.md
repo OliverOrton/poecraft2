@@ -6,7 +6,7 @@ Oliver selected this continuation from integration `b794e00960bc9bb83ae3919c16fb
 
 Expose useful native-supported Foulborn controllers in ordinary Current/Finder calls, separately audit Augmentation, Regal and Exalted, and diagnose Essence/diverse-tag Conquest outputs through actual candidate admission, graph actions and fully checked costs. Native laws, original-root/goal identity, caller actions, paid recovery, complete mass and executable upper checks remain mandatory. Expanded scope receives no old positive lower or exactness authority. No base/fixture dispatch or approximate-state proof is admitted.
 
-Shared touchpoints: solver API profile resolution, SolveWork setup, Finder proposal generation and focused fixtures. Registry/UI mechanics remain unchanged. The normal product profile derives the existing paid-root Exalt capability only when Alchemy/Exalt/Scour are all original caller candidates and no explicit gating override is present. Default Finder product Conditional selects the existing protected Scour grammar with its eight-attempt reservation and reached-entry validation. Finite native renewal/add/reset proposals use existing control vocabulary, price/scope/disabled checks and the independent original-root evaluator.
+Shared touchpoints: solver API profile resolution, SolveWork setup, Finder proposal generation and focused fixtures. Registry/UI mechanics remain unchanged. The normal product profile derives paid-root capability only when a native Alchemy/Exalt or Transmute/Augment-or-Regal pair and Scour are all original caller candidates and no explicit gating override is present. Default Finder product Conditional selects the existing protected Scour grammar with its eight-attempt reservation and reached-entry validation. Finite native renewal/add/reset proposals use existing control vocabulary, price/scope/disabled checks and the independent original-root evaluator.
 
 ## Fixture and admission identity
 
@@ -16,22 +16,49 @@ Read-only native admission evidence is under `out/foulborn-completion/native-adm
 
 ## Process and evidence
 
-Final focused checks pass: Finder Essence/product API459, paid-root3710, paid-reset1146, protected Finder66 and assertion424 (**5805 checks**, zero failures). Tests, DLL and Benchmark builds pass at two jobs. Both normal public solver API lanes return actually executed Augmentation/Regal/Exalted graphs on appropriate incoming Magic/Rare roots, and fresh evaluation binds the original item, goal and full prices. Current Normal-root Augmentation selects a Transmute/Scour baseline and Normal-root Regal has no policy in this finite scope; Finder checks both continuations. The Normal-root Exalted Current graph uses the selected add. No unrestricted family-search completion or exact closure is claimed.
+Follow-up focused checks pass: Finder Essence/product API528, paid-root3710, paid-reset1146, protected Finder66, assertion424 and checkpoint46 (**5920 checks**, zero failures). The original 5805-check receipt remains committed at 3bbedc1. Tests, DLL and Benchmark builds pass at two jobs. Both normal public solver API lanes return actually executed Augmentation/Regal/Exalted graphs on appropriate incoming Magic/Rare roots, and fresh evaluation binds the original item, goal and full prices. Both ordinary public lanes now check all three empty-Normal continuations with positive add consumption. The earlier Augmentation baseline and missing Regal policy are preserved at 3bbedc1, then fixed by grammar v2. The Normal-root Exalted Current graph uses the selected add. No unrestricted family-search completion or exact closure is claimed.
 
 Two stale scope assertions were corrected after the explicit-gating control correctly retained the old scope. A test initially called the statewise compiler on a retained root artifact and aborted; it now uses the product retained-artifact output path. Failed logs remain on disk. No production acceptance tolerance was weakened.
 
-Parent approved eight serial output-quality solves plus one ordinary Current/Finder Foulborn pair (at most ten). Full input validation passes for both corpora. Preflight caught a runtime mismatch and copied comparison-profile label before any solve. The selected integration checkout has no Benchmark executable, so an explicit b794e009 source archive is building the control at two jobs; its first configure lacked the checked-in Harvest recipe file, now supplied from that same revision. No archived implementation is selected beyond this declared control. Full solves, WASM, worker, and fresh Simulator qualification remain unrun. Build contention/time censoring will be recorded; this is output quality, not a speed benchmark.
+Parent approved eight serial output-quality solves plus one ordinary Current/Finder Foulborn pair (at most ten). Full input validation passes for both corpora. Preflight caught a runtime mismatch and copied comparison-profile label before any solve. The selected integration checkout has no Benchmark executable, so an explicit b794e009 source archive is building the control at two jobs; its first configure lacked the checked-in Harvest recipe file, now supplied from that same revision. No archived implementation is selected beyond this declared control. F1 real Current passes and F2 Finder fails as recorded below; comparative quality solves, WASM, worker, and fresh Simulator qualification remain unrun. Build contention/time censoring will be recorded; this is output quality, not a speed benchmark.
 
 ## Consumer and currency inventory
 
 | Family/path | Current | Finder | Execution / proof boundary |
 | --- | --- | --- | --- |
-| Foulborn Augmentation | Checked incoming Magic graph; Normal Transmute/Scour baseline in finite witness omits add | Incoming Magic renewal/add and empty Normal Transmute/add/Scour checked | Native tier law unchanged; Current zero global lower, unavailable closure; Finder no lower |
-| Foulborn Regal | Checked incoming Magic-to-Rare graph; empty Normal Transmute/Regal/Scour remains without Current policy | Checked incoming Magic and empty Normal paid-recovery graphs | Exact original-root/native goals and all prices; no free reset |
+| Foulborn Augmentation | Checked incoming Magic and empty Normal Transmute/add/paid Scour graphs | Incoming Magic renewal/add and empty Normal Transmute/add/Scour checked | Native tier law unchanged; Current zero global lower, unavailable closure; Finder no lower |
+| Foulborn Regal | Checked incoming Magic-to-Rare and empty Normal Transmute/Regal/paid Scour graphs | Checked incoming Magic and empty Normal paid-recovery graphs | Exact original-root/native goals and all prices; no free reset |
 | Foulborn Exalted | Checked incoming Rare graph; existing selected Alchemy/add/Scour capability derives ordinary product activation | Checked incoming Rare Chaos/add and empty Normal Alchemy/add/Scour proposals | Capacity from native rare_affix_cap; physical native checker, no approximate proof |
 | Protected Scour / Essence | Existing automatic programme owner, unchanged by this slice | Product Conditional now reaches the existing reserved protected Scour proposal | Every positive reached programme entry remains validated; supports single-side all-goal domain |
 | Shaper/Elder Exalt | Existing InfluenceExalt kernel/product goal-influence candidate; no new standalone programme grammar | Generic primitive seeds, no purpose-built influence-acquisition continuation | Native exclusions retain Eldritch/influenced/fractured/synthesised/corrupted/mirrored guards; suitability/pricing can refuse |
 | Dominance | Separate worker owns automatic integration | Separate worker owns integration | This slice does not modify registry/model/calc or Dominance admission |
 | Awakener / memory / enchantment / corruption | Held automatic multi-item/control/representation work | Held | Sampled authored execution and terminal Calculator odds do not authorize automatic search |
 
-Hybrid handoff is not added: Current and Finder have separate native consumers/checkers. Existing product mode switching is not a compatible checked-artifact handoff. Normal-root gaps and general mixed-side continuation search remain explicit residuals, not invented mechanics.
+Hybrid handoff is not added: Current and Finder have separate native consumers/checkers. Existing product mode switching is not a compatible checked-artifact handoff. The finite Normal-root gaps are repaired. General mixed-side continuation search remains an explicit residual, not invented mechanics.
+
+## Frozen replay and root completion follow-up
+
+Frozen checkpoint 3bbedc14369662df42a8fc22a40c559990ecd6f5 has ten approved
+serial arms pinned in `out/foulborn-completion/prelaunch.json`. F1 ordinary
+Current passed at 4.11822156262245c on the original ef06ad synthetic-priced
+root. Its returned graph contains Alchemy, Foulborn Exalt and paid Scour;
+lower = 0, no closure, all caps pass. Graph SHA-256 is
+4852705576817a8804ff46df5fdf4c2b889107bf151968ec7fbb30801399bfa8.
+F2 ordinary Finder stopped the batch with an internal error before producing a
+policy: the Current capability caused ordinary primitive sketches to inherit
+supplementary labels, and Finder preparation correctly refused that scope.
+Both attempt receipts/results remain immutable. Eight output-quality arms have
+not launched. No silent replay, whole-policy quality comparison or speed claim
+follows from these two attempts.
+
+The follow-up removes supplementary labels from generic Finder primitive
+sketches and extends Current's exact selected-add controller to the native
+Transmute/Augment and Transmute/Regal pairs. The p0=0 proper-cycle argument is
+owned once in [policies](../../solver/mathematics/policies.md#paid-root-selective-add).
+Private observations retain all native exclusions, each miss and failed add
+requires deterministic paid Scour to the same original root, and exact native
+success must have positive aggregate probability. v2 grammar, assertion and
+caller-scope identities and development checkpoint format 5 prevent borrowing
+v1 proof/cache authority. Public API tests now require actually executed
+Foulborn additions in both lanes from empty Normal roots, in addition to the
+previous incoming-root tests. All 5920 focused checks pass, including q=0 with a free Regal and a legacy-grammar refusal. Empty Normal Current costs are Augment 10.4136363636c, Regal 9.51088635366c and Exalt 6.25913499345c; Finder costs are 10.4227272727c, 9.52415533129c and 6.27169943207c. These are finite native fixtures, not real market optimization. Integration-owner review and final real/browsing-consumer qualification remain pending.

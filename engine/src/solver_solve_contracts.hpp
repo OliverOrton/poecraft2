@@ -194,6 +194,7 @@ struct SolveOptions {
     // Supplementary controller grammar: product scope derives activation;
     // native diagnostics may also explicitly request it.
     bool paid_root_foulborn_salvage = false;
+    std::uint32_t paid_root_foulborn_grammar_version = 2;
     /* Caller-selected automatic-action scope. False excludes only generated
      * Imprint checkpoint/retry programs; all other automatic families retain
      * their normal admission authority. */
@@ -242,19 +243,29 @@ inline bool product_paid_root_foulborn_scope(
         (options.solve_profile_override_mask &
             PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES) != 0)
         return false;
-    bool roll = false, add = false, reset = false;
+    bool alchemy = false, transmute = false, exalt = false;
+    bool augment = false, regal = false, reset = false;
     for (const auto index : calc.candidates()) {
         const auto& action = calc.registry().actions.at(index);
         if (action.synthetic || solver_action_disabled(calc.goal(), action)) continue;
-        roll |= action.params.type == ActionType::Alchemy;
-        add |= action.params.type == ActionType::FoulbornExalt;
+        alchemy |= action.params.type == ActionType::Alchemy;
+        transmute |= action.params.type == ActionType::Transmute;
+        exalt |= action.params.type == ActionType::FoulbornExalt;
+        augment |= action.params.type == ActionType::FoulbornAugment;
+        regal |= action.params.type == ActionType::FoulbornRegal;
         reset |= action.params.type == ActionType::Scour;
     }
-    return roll && add && reset;
+    return reset && ((alchemy && exalt) || (transmute && (augment || regal)));
+}
+
+inline bool paid_root_foulborn_pair(const ActionType roll, const ActionType add) {
+    return (roll == ActionType::Alchemy && add == ActionType::FoulbornExalt) ||
+        (roll == ActionType::Transmute &&
+         (add == ActionType::FoulbornAugment || add == ActionType::FoulbornRegal));
 }
 
 inline std::string paid_root_foulborn_solution_scope(const SolveOptions& options) {
-    std::string scope = "bounded_target_neutral_zero_proof_with_paid_root_foulborn_salvage_v1";
+    std::string scope = "bounded_target_neutral_zero_proof_with_paid_root_foulborn_salvage_v2";
     if (!options.allow_economic_restart) scope += "_without_economic_restart";
     if (!options.consider_imprint_programs) scope += "_without_automatic_imprint_programs";
     return scope;

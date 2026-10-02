@@ -39,15 +39,17 @@ and unresolved ordinary/Abyss jewel laws remain separate owner boundaries.
 ## Ordinary product Foulborn/Finder finite delta (2026-10-02)
 
 The [completion checkpoint](../active/2026-10-02-foulborn-completion/README.md)
-qualifies 5805 focused native checks, including both public product API lanes
-returning actual Foulborn Augmentation/Regal/Exalted graphs on incoming Magic/Rare
-roots. Product Current derives the existing selected paid-root Exalt capability
-from admitted scope without an explicit gating override. Product Finder reaches
-protected Scour and adds bounded native renewal/add/recovery proposals plus
-distinct-guarantee seed diversity. Zero-lower/unavailable closure is retained.
-Normal-root Current Augmentation omits the add in its tested baseline and Regal
-has no policy; Finder checks both. Real-case, WASM/worker, hybrid and wider
-continuation qualification remain pending in the living record.
+qualifies 5,920 focused native checks, including actual Foulborn Augment/Regal/
+Exalted graphs in both public lanes from incoming and empty Normal roots.
+Product Current derives the versioned selected-add/paid-root capability from
+admitted scope without an explicit gating override, including positive aggregate
+success when Transmute has no direct Rare success. Product Finder reaches
+protected Scour, native renewal/add/recovery and distinct-guarantee seed proposals.
+Zero lower and unavailable closure remain. Checkpoint format 5 separates v1 caches.
+Real Current replays the original witness at 4.11822156262245c. Frozen F2 Finder
+failed before output; its scope-label fix passes direct finite API regressions.
+Comparative quality, final real/WASM Finder and wider continuation/hybrid
+qualification remain pending in the living record.
 
 ## Private paid-root Foulborn finite delta (2026-10-02)
 

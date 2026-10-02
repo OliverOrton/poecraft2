@@ -226,10 +226,11 @@ std::uint64_t SolveWork::Impl::economy_identity() const {
 
 std::uint64_t SolveWork::Impl::caller_scope_identity() const {
         std::uint64_t hash = 1469598103934665603ULL;
-        identity_mix(hash, 2); /* caller-scope identity schema */
+        identity_mix(hash, 3); /* caller-scope identity schema */
         identity_mix(hash, calc.action_control().explicit_envelope);
         identity_mix(hash, options.goal_progress_gated_reforges);
         identity_mix(hash, options.paid_root_foulborn_salvage);
+        identity_mix(hash, options.paid_root_foulborn_grammar_version);
         identity_mix(hash, options.consider_imprint_programs);
         identity_mix(hash, options.allow_economic_restart);
         identity_mix(hash, calc.candidates().size());
@@ -326,10 +327,11 @@ SolveWork::Impl::executable_continuation_authority_context(
         context.mechanics_artifact.push_back(calc.session().item_level);
 
         context.caller_scope = {
-            2, /* exact caller action-scope identity schema */
+            3, /* exact caller action-scope identity schema */
             calc.action_control().explicit_envelope,
             options.goal_progress_gated_reforges,
             options.paid_root_foulborn_salvage,
+            options.paid_root_foulborn_grammar_version,
             options.consider_imprint_programs,
             options.allow_economic_restart,
             calc.candidates().size(),
@@ -6111,7 +6113,8 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
             !kernel.goal_progress_gated ||
             !kernel.choice_groups.empty() ||
             !kernel.choice_options.empty() ||
-            !(kernel.gated_terminal_probability > 0.0) ||
+            (!(kernel.gated_terminal_probability > 0.0) &&
+             !options.paid_root_foulborn_salvage) ||
             !std::isfinite(priced.cost) || priced.cost < 0.0) {
             return;
         }
@@ -6371,14 +6374,16 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset
             }
             recovery_cost += WideFloat{outcome.probability} * WideFloat{reset.cost};
         }
-        if (!complete_reset || std::abs(mass.value() - 1.0) > 1e-12 ||
-            !(success.value() > 0.0)) continue;
-        const double baseline_value = ((WideFloat{priced.cost} + recovery_cost) / success).value();
-        if (!std::isfinite(baseline_value) || baseline_value < 0.0 || baseline_value >= kValueCeiling)
-            continue;
+        if (!complete_reset || std::abs(mass.value() - 1.0) > 1e-12) continue;
+        const bool direct_success = success.value() > 0.0;
+        const double baseline_value = direct_success
+            ? ((WideFloat{priced.cost} + recovery_cost) / success).value() : kInfinity;
+        if (direct_success && (!std::isfinite(baseline_value) || baseline_value < 0.0 ||
+                baseline_value >= kValueCeiling)) continue;
         double value = baseline_value;
         std::uint32_t graph_nodes = 4, graph_edges = 5;
-        std::string graph = compile_finder_candidate_json(calc, result.exact_start_item,
+        std::string graph;
+        if (direct_success) graph = compile_finder_candidate_json(calc, result.exact_start_item,
             {roll.primitive_action, reset_op.primitive_action}, options, true);
         bool supplementary = false;
         const auto within_private_caps = [&] {
@@ -6391,13 +6396,14 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset
                 used.transition_entries <= options.max_transitions - transitions;
         };
         if (!within_private_caps()) co_return false;
-        if (options.paid_root_foulborn_salvage && roll_action.params.type == ActionType::Alchemy) {
+        if (options.paid_root_foulborn_salvage) {
             for (const auto& add : operators) {
                 const auto& add_op = calc.operators().at(add.index);
                 if (add_op.kind != PlannerOperatorKind::Primitive ||
                     !std::isfinite(add.cost) || add.cost < 0.0) continue;
                 const auto& add_action = calc.registry().actions.at(add_op.primitive_action);
-                if (add_action.synthetic || add_action.params.type != ActionType::FoulbornExalt ||
+                if (add_action.synthetic ||
+                    !paid_root_foulborn_pair(roll_action.params.type, add_action.params.type) ||
                     solver_action_disabled(calc.goal(), add_action) ||
                     std::find(proof_calc.candidates().begin(), proof_calc.candidates().end(),
                         add_op.primitive_action) == proof_calc.candidates().end()) continue;
@@ -6445,17 +6451,21 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset
                             reset_law.entries.size() != 1 || reset_law.entries.front().probability != 1.0 ||
                             reset_law.entries.front().state != proof_root) { resets = false; break; }
                     }
-                    // One-step improvement against the proved reset baseline.
-                    // This is proposal ordering only; original-root checking owns U.
+                    // With p0>0, select a sufficient improvement over the proved
+                    // baseline. With p0=0, use all complete positive-success adds;
+                    // the aggregate cycle probability, not a nonexistent baseline,
+                    // establishes this proposal's properness. The independent
+                    // original-root checker still owns its executable upper.
                     if (!resets || std::abs(add_mass.value() - 1.0) > 1e-12 ||
                         !(add_success.value() > 0.0) ||
-                        !(add.cost < add_success.value() * (reset.cost + baseline_value))) continue;
+                        (direct_success &&
+                         !(add.cost < add_success.value() * (reset.cost + baseline_value)))) continue;
                     selected.push_back(miss.state);
                     selected_success += WideFloat{miss.probability} * add_success;
                     selected_cost += WideFloat{miss.probability} *
                         (WideFloat{add.cost} - add_success * WideFloat{reset.cost});
                 }
-                if (selected.empty()) continue;
+                if (selected.empty() || !(selected_success.value() > 0.0)) continue;
                 const double improved = (selected_cost / selected_success).value();
                 if (!std::isfinite(improved) || improved < 0.0 || !(improved < value)) continue;
                 try {
@@ -6475,24 +6485,25 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset
                             root_signature.capacity() * sizeof(std::uint64_t))) co_return false;
                     graph = std::move(proposed);
                 } catch (const SolverResourceLimit&) {
-                    retain_action_reason("rejected:paid_root_foulborn_salvage_v1:compiled_memory_cap");
+                    retain_action_reason("rejected:paid_root_foulborn_salvage_v2:compiled_memory_cap");
                     continue;
                 } catch (const std::runtime_error&) {
-                    retain_action_reason("rejected:paid_root_foulborn_salvage_v1:unrepresentable_exact_routes");
+                    retain_action_reason("rejected:paid_root_foulborn_salvage_v2:unrepresentable_exact_routes");
                     continue;
                 } catch (const std::length_error&) {
-                    retain_action_reason("rejected:paid_root_foulborn_salvage_v1:compiled_output_cap");
+                    retain_action_reason("rejected:paid_root_foulborn_salvage_v2:compiled_output_cap");
                     continue;
                 }
                 value = improved;
                 supplementary = true;
                 graph_nodes = 5;
                 graph_edges = 6 + static_cast<std::uint32_t>(selected.size());
-                retain_action_reason("proposed:paid_root_foulborn_salvage_v1:selected=" +
+                retain_action_reason("proposed:paid_root_foulborn_salvage_v2:selected=" +
                     std::to_string(selected.size()) + ":baseline=" + finite_json(baseline_value) +
                     ":value=" + finite_json(value));
             }
         }
+        if (graph.empty() || !std::isfinite(value) || value < 0.0 || value >= kValueCeiling) continue;
         if ((output_incumbent && !(value < output_incumbent->certified_upper_bound)) ||
             !(value < incumbent_portfolio.verified_executable_upper())) continue;
         BoundedPolicyIncumbent candidate;
@@ -6514,7 +6525,7 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset
         candidate.evaluated_policy_cost = value;
         candidate.kind = "paid_root_reset_renewal";
         candidate.compilation_provenance = supplementary
-            ? "native_paid_root_foulborn_salvage_v1" : "native_paid_reset_proposal_v1";
+            ? "native_paid_root_foulborn_salvage_v2" : "native_paid_reset_proposal_v1";
         candidate.goal_identity = goal_identity();
         candidate.economy_identity = economy_identity();
         candidate.action_vocabulary_identity = action_vocabulary_identity();
@@ -6591,12 +6602,13 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::prepare_paid_root_reset_can
         proof_goal.fixed_options.clear();
         proof_goal.automatic_candidates = false;
         std::vector<std::uint32_t> proof_actions{roll.primitive_action, reset_action};
-        if (options.paid_root_foulborn_salvage &&
-            calc.registry().actions.at(roll.primitive_action).params.type == ActionType::Alchemy) {
+        if (options.paid_root_foulborn_salvage) {
             for (const auto& priced_add : operators) {
                 const auto& add_op = calc.operators().at(priced_add.index);
                 if (add_op.kind == PlannerOperatorKind::Primitive &&
-                    calc.registry().actions.at(add_op.primitive_action).params.type == ActionType::FoulbornExalt &&
+                    paid_root_foulborn_pair(
+                        calc.registry().actions.at(roll.primitive_action).params.type,
+                        calc.registry().actions.at(add_op.primitive_action).params.type) &&
                     !solver_action_disabled(calc.goal(), calc.registry().actions.at(add_op.primitive_action)))
                     proof_actions.push_back(add_op.primitive_action);
             }

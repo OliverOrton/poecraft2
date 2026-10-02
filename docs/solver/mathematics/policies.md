@@ -191,6 +191,33 @@ native execution, original-goal success, properness and reconciled cost. It
 supplies no non-root statewise value or lower authority. Its supplementary
 grammar lies outside the old zero-progress-reroll-only policy restriction.
 
+#### No direct roll success
+
+The same fixed-subset equation remains valid with p0 = 0 when the complete
+selected cycle has q = p0 + sum(i in S, wi*pi) > 0. Keep all the exact-root,
+observable-selection, complete native law and paid-recovery premises above.
+Each failed cycle returns to the identical root and phase, so the probability
+of surviving k cycles is (1-q)^k and the expected number of cycles is 1/q.
+The controller is proper and its cost is the displayed cycle numerator divided
+by q. A roll that cannot directly meet the requested rarity can therefore have
+a valid paid-root controller whose add supplies the positive success mass.
+
+There is no finite reset-only baseline when p0 = 0. Do not divide by p0 or apply
+the improvement comparison to a fictional U0. The v2 proposal selects all legal
+positive-success add classes with verified paid recovery in this case, and
+refuses an empty selection or q = 0. This constructs one proper proposal; it
+asserts neither the best subset nor an unrestricted optimum. When p0 > 0 the
+original sufficient improvement test above remains unchanged.
+
+The [ordinary completion](../../active/2026-10-02-foulborn-completion/README.md)
+applies this extension to descriptor-selected Transmute/Foulborn Augment or
+Regal/Scour controllers, alongside Alchemy/Foulborn Exalt/Scour. It versions the
+grammar, cache and checkpoint identity. The independent original-root checker
+still verifies the executable graph, complete law, original goal and reconciled
+cost before publication; the equation supplies no lower or non-root statewise
+authority. Native correspondence and the extension are subject to integration
+owner review of the passing checkpoint.
+
 <a id="primitive-execution-reward"></a>
 ### Primitive execution count is a separate reward
 
