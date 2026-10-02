@@ -396,13 +396,6 @@ struct CompiledPolicyAssertionWork::Impl {
             return;
         }
         if (mode == CompiledPolicyAssertionMode::OriginalRootController) {
-            if (emitted_strategy_json != nullptr &&
-                emitted_strategy_json->find("\"solver_controller_grammar\":\"paid_root_foulborn_salvage_v1\"") !=
-                    std::string::npos && !options.paid_root_foulborn_salvage) {
-                finish_failure(CompiledPolicyAssertionStatus::CompilationFailure,
-                    "supplementary original-root graph requires paid_root_foulborn_salvage_v1 scope");
-                return;
-            }
             // This is an explicit internal provenance contract, never inferred
             // from an accidentally empty or malformed statewise policy.
             const bool no_parent_decisions =
@@ -606,11 +599,11 @@ struct CompiledPolicyAssertionWork::Impl {
 
         std::string target_refusal;
         if (!compiled_success_ingress_matches_request(
-                coarse, result.strategy_json, &target_refusal) ||
+                coarse, result.strategy_json, &target_refusal, options.paid_root_foulborn_salvage) ||
             (evaluating_product_restart_recovery &&
              !compiled_success_ingress_matches_request(
                  coarse, result.certification_strategy_json,
-                 &target_refusal))) {
+                 &target_refusal, options.paid_root_foulborn_salvage))) {
             finish_failure(
                 CompiledPolicyAssertionStatus::CompilationFailure,
                 "compiled policy does not prove original request success: " +
@@ -1078,9 +1071,9 @@ struct CompiledPolicyAssertionWork::Impl {
         // both graph roles before the existing paired-graph reuse contract.
         if (cached.has_value() &&
             (!compiled_success_ingress_matches_request(
-                coarse, result.strategy_json) ||
+                coarse, result.strategy_json, nullptr, options.paid_root_foulborn_salvage) ||
              !compiled_success_ingress_matches_request(
-                coarse, cached->certification_strategy_json)))
+                coarse, cached->certification_strategy_json, nullptr, options.paid_root_foulborn_salvage)))
             return false;
         if (stage != Stage::Evaluating ||
             !reuse_compiled_policy_assertion_evaluation(

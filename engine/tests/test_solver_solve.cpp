@@ -15387,7 +15387,8 @@ void run_paid_root_foulborn_salvage_tests() {
         }
         // Independently tabulate the finite native controller equations. The
         // emitted original-root graph then checks those equations and routes.
-        CalcContext proof(session, goal, registry, {roll, reset, add});
+        CalcContext proof(session, goal, registry, {roll, reset, add},
+            false, false, true); // Preserve every native exclusion effect.
         const auto root = proof.intern_item(start);
         const auto roll_law = proof.outcomes(root, roll, false);
         double p0 = 0;
@@ -15440,6 +15441,18 @@ void run_paid_root_foulborn_salvage_tests() {
             } else { cost += miss.probability*.1; skipped_positive += p > 0; }
         }
         if (mode == 7) PC_CHECK(selected > 0 && skipped_positive > 0);
+        if (mode == 1 && !misses.empty()) {
+            auto tiny_compiler = options;
+            tiny_compiler.max_solver_owned_bytes = 1;
+            bool refused = false;
+            try {
+                (void)compile_paid_root_foulborn_candidate_json(proof, start,
+                    roll, add, reset, {misses.front().first.state}, tiny_compiler);
+            } catch (const SolverResourceLimit& error) {
+                refused = error.cap_name() == "max_solver_owned_bytes";
+            }
+            PC_CHECK(refused);
+        }
         const double expected = cost/success;
         if (mode == 8) options.max_compiled_edges = 5; // Exact route graph refuses; baseline still fits.
         SolveWorkTestAccess::Impl work(calc, start, prices, options);
@@ -15459,11 +15472,16 @@ void run_paid_root_foulborn_salvage_tests() {
         if (priced == work.operators.end()) continue;
         if (mode == 9) work.options.max_transitions = 2;
         auto task = work.prepare_paid_root_reset_candidate(*priced);
-        bool done = false;
-        for (unsigned units = 0; units < 100000; ++units) if (task.resume()) { done = true; break; }
+        bool done = false, installed = false;
+        try {
+            for (unsigned units = 0; units < 100000; ++units) if (task.resume()) { done = true; break; }
+            if (done) installed = task.take_result();
+        } catch (const SolverResourceLimit& error) {
+            PC_CHECK(mode == 9 && error.cap_name() == "max_discovered_states");
+            done = true;
+        }
         PC_CHECK(done);
         if (!done) continue;
-        const bool installed = task.take_result();
         PC_CHECK(calc.state_count() == parent_states);
         if (mode == 9) { PC_CHECK(!installed && !work.output_incumbent); continue; }
         PC_CHECK(installed && work.output_incumbent.has_value());
@@ -15471,6 +15489,8 @@ void run_paid_root_foulborn_salvage_tests() {
         const auto& candidate = *work.output_incumbent;
         PC_CHECK(candidate.independently_evaluated && candidate.proper && candidate.executable);
         PC_CHECK(candidate.compiled_root_entry_only && candidate.compiled_artifact.policy_decision_bindings.empty());
+        std::printf("formula mode=%u expected=%.15g checked=%.15g delta=%.15g\n",
+            mode, expected, candidate.evaluated_policy_cost, candidate.reconciliation_absolute_delta);
         PC_CHECK(near(candidate.evaluated_policy_cost, expected, 1e-9));
         PC_CHECK(work.retained_incumbent_invalid_reason(candidate) == nullptr);
         PC_CHECK(work.certified_global_lower_bound() == 0 && work.result.closure_unavailable_by_profile);
@@ -15489,15 +15509,34 @@ void run_paid_root_foulborn_salvage_tests() {
             root_proof.values = candidate.values;
             root_proof.policy = candidate.policy;
             root_proof.policy_reachable = candidate.policy_reachable;
-            auto restricted = work.options; restricted.paid_root_foulborn_salvage = false;
-            refinement::CompiledPolicyAssertionWork laundering(calc, root_proof, prices, restricted,
-                "supplementary scope refusal", nullptr, &candidate.compiled_artifact.strategy_json,
-                nullptr, true, false, false, refinement::CompiledPolicyAssertionMode::OriginalRootController);
-            while (!laundering.progress().done) laundering.step(1);
-            const auto refused = laundering.take_result();
-            PC_CHECK(!refused.executable && !refused.proper &&
-                refused.status == refinement::CompiledPolicyAssertionStatus::CompilationFailure);
-            PC_CHECK(candidate.compilation_provenance == "native_paid_root_foulborn_salvage_v1");
+            // Formatting and key order cannot erase capability metadata;
+            // unknown values remain unsupported even with the option enabled.
+            const std::string grammar_key = "\"solver_controller_grammar\":";
+            const std::string grammar_value = "\"paid_root_foulborn_salvage_v1\"";
+            for (unsigned variant = 0; variant < 5; ++variant) {
+                auto guarded_graph = candidate.compiled_artifact.strategy_json;
+                const auto metadata = guarded_graph.find(grammar_key + grammar_value);
+                PC_CHECK(metadata != std::string::npos);
+                if (variant == 1)
+                    guarded_graph.insert(metadata + grammar_key.size() - 1, " \n ");
+                if (variant == 2) {
+                    guarded_graph.erase(metadata, grammar_key.size() + grammar_value.size() + 1);
+                    guarded_graph.insert(1, grammar_key + " \n " + grammar_value + ",");
+                }
+                if (variant >= 3)
+                    guarded_graph.replace(metadata + grammar_key.size(), grammar_value.size(),
+                        variant == 3 ? "\"unknown_grammar_v9\"" : "false");
+                auto restricted = work.options;
+                restricted.paid_root_foulborn_salvage = variant >= 3;
+                refinement::CompiledPolicyAssertionWork laundering(calc, root_proof, prices, restricted,
+                    "supplementary scope refusal", nullptr, &guarded_graph,
+                    nullptr, true, false, false, refinement::CompiledPolicyAssertionMode::OriginalRootController);
+                while (!laundering.progress().done) laundering.step(1);
+                const auto refused = laundering.take_result();
+                PC_CHECK(!refused.executable && !refused.proper &&
+                    refused.status == refinement::CompiledPolicyAssertionStatus::CompilationFailure);
+            }
+            PC_CHECK(candidate.compilation_provenance == "initial_compiled_policy_assertion_v1");
             PC_CHECK(candidate.compiled_artifact.strategy_json.find("paid_root_foulborn_salvage_v1") != std::string::npos);
             PC_CHECK(candidate.evaluated_policy_cost < baseline);
             const auto graph = json::Parser(candidate.compiled_artifact.strategy_json.data(),

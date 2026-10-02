@@ -41,7 +41,7 @@ std::string compile_finder_goal_condition(const CalcContext& calc);
  * graph conditions used only for routing remain evaluator observations. */
 bool compiled_success_ingress_matches_request(
     const CalcContext& calc, const std::string& strategy_json,
-    std::string* refusal = nullptr);
+    std::string* refusal = nullptr, bool allow_paid_root_foulborn = false);
 
 /* Parsed operations must be caller primitives or individual dependency steps
  * bound by an existing trusted native programme owner. Registry membership or

@@ -48,9 +48,10 @@ failure. A distinct post-add phase prevents repeated adds. Unsupported laws,
 non-unit mass, illegal/non-deterministic/wrong-root reset and unrepresentable
 routes cannot authorize the selective controller.
 
-The canonical fixed-subset argument write is PENDING: the documentation edit
-stopped on a Windows cp1252 decode error before writing policies.md. Use explicit
-UTF-8 when continuing. The equation is preserved in the checkpoint below.
+The canonical [fixed-subset argument](../../solver/mathematics/policies.md#paid-root-selective-add)
+now preserves the complete reset premises, first-cycle equation and sufficient
+strict-improvement criterion. The historical WIP checkpoint below records its
+previous pending state.
 The geometric baseline is native-law proved during construction; the formula
 only proposes a graph. Only its independent OriginalRootController check can
 retain an upper. No parent statewise decision/value is granted; all non-root
@@ -144,3 +145,77 @@ Original root/goal/prices remain unchanged; source law is corrected baseline.
 N4/N5 are pre-correction historical comparisons only. Request a parent serial
 slot AFTER freezing command/runtime/data/prices/binary hashes; do not time
 without the grant. Preserve the 16:45 wrap / 16:55 quiescence limits.
+
+## Standard-tier continuation checkpoint (15:57 UTC)
+
+Local main remains `ebcd98cdda2c1828cd855f549831951e6ba7470a`; HEAD is the original
+WIP `2e56421a74100627879e3d5d94d12c64a597a964`. No applicable nested AGENTS or
+`.agents` skills directory was found in this worktree or the main checkout.
+The two-job Tests rebuild passed (`build-tests-standard-1.log`, session 35995,
+exit 0), after which parent requested CPU quiescence for the latency pair.
+No own process remains; new builds/tests are held until parent release. The
+outer Windows restricted-token sandbox could not initialize with split writable
+roots, so authorized worktree commands use the reviewed escalation path.
+
+Source edits made during the hold are not yet compiled or tested:
+
+- Capability metadata now uses the already parsed graph at the compiler-owned
+  request check, including assertion reuse; no literal substring test remains.
+  Finite cases cover whitespace, key order, unknown grammar values and types.
+- The supplementary compiler receives the remaining memory allowance after
+  parent/private/proposal retention, checks its buffers and conservative condition
+  assembly headroom, and has a tiny-budget refusal fixture. Add-law construction
+  and positive-exit checks yield through the existing cooperative owner.
+- Canonical policy mathematics and action-scope documentation are updated.
+- The parent review task independently found an existing original-root checker
+  action-admission gap and owns its generic parsed-operation fix. This branch
+  deliberately does not duplicate that fix; integration and requalification
+  remain required before promotion.
+
+The frozen supplementary case differs from the original Mechanics case only by
+`caps.paid_root_foulborn_salvage=true`; root, goal, action list, prices, caps and
+expectations otherwise compare equal. `out/foulborn-sprint/qualification-preflight.json`
+owns hashes. Binary/command freeze, finite tests and timed qualification remain
+pending. No serial slot has been granted.
+
+## Passing native checkpoint (16:15 UTC)
+
+The replacement found and repaired a substantive WIP miss-law gap: its private
+renewal/add context had retained coarse exclusion classes. The independently
+checked graph differed from the proposed equation by 0.03531855075 in the cheap
+finite case. Supplementary construction now explicitly retains exact native
+exclusion effects, matching the strict evaluator's carrier requirements. Parent
+search remains unchanged. The corrected native equation and checked graph agree
+to floating-point rounding; this is a finite qualification, not real-data economics.
+
+- Two-job final Tests build: PASS (`build-tests-standard-4.log`).
+- `--solver-integrity-only foulborn-root`: 3,035 checks, 0 failures
+  (`finite-foulborn-standard-3.log`). Baseline 6.49103260869565; cheap add
+  6.25913499344692; zero-cost add 6.25779816513761; selective heterogeneous
+  case 6.46565504807692. All numbers are synthetic under the fixture's prices.
+- `--solver-integrity-only paid-reset`: 1,082 checks, 0 failures.
+- `--solver-assertion-service-only`: 384 checks, 0 failures.
+- `--solver-checkpoint-only` on the frozen original runtime: 46 checks, 0 failures.
+- Two-job Benchmark build: PASS. Frozen supplementary case `--validate-only`: PASS.
+- Final `git diff --check`: PASS. All completed sessions exited; no owned process remains.
+
+The first focused run failed two cost comparisons plus stale proposal-provenance
+expectations and aborted on an expected cap exception. The second isolated the
+two real cost discrepancies. Tests now expect the existing independent-checker
+provenance and permit the native cap refusal; production's exact-carrier repair
+resolves the cost discrepancy. Failed logs remain on disk. No test was weakened
+to accept mismatched cost.
+
+The parsed supplementary capability check, whitespace/key-order/unknown-value
+refusals, exact reset laws, paid fallback, caller restriction, disabled/missing/
+non-admitted add, root-only authority, cache/scope identity, route/output caps
+and compilation-memory refusal are covered. The generic original-root
+operation-admission fix belongs to the separate review task and is still an
+integration prerequisite. No public activation or merge recommendation is made.
+
+Disposition: fixed-subset argument incorporated in canonical policies; WIP's
+coarse miss-law premise contradicted and repaired; generic guard integration and
+real-case usefulness remain open. Finder, WASM, worker, Simulator and full
+acceptance are unrun for this delta. The old 6+2 budget remains exhausted; no
+new timed slot has been consumed or granted. The preflight receipt will bind the
+checkpoint commit and final benchmark hash before parent slot approval.

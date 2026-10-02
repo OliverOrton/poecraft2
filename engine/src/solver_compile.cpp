@@ -59,7 +59,7 @@ std::string condition_text_member(const json::Value& value, const char* key) {
 
 bool compiled_success_ingress_matches_request(
     const CalcContext& calc, const std::string& strategy_json,
-    std::string* refusal) {
+    std::string* refusal, const bool allow_paid_root_foulborn) {
     const auto refuse = [&](const char* reason) {
         if (refusal != nullptr) *refusal = reason;
         return false;
@@ -67,6 +67,17 @@ bool compiled_success_ingress_matches_request(
     try {
         const json::Value graph = json::Parser(
             strategy_json.data(), strategy_json.size()).parse();
+        const auto* declared_grammar = graph.find("solver_controller_grammar");
+        if (declared_grammar != nullptr &&
+            (declared_grammar->type != json::Type::String ||
+             declared_grammar->string != "paid_root_foulborn_salvage_v1"))
+            return refuse("unknown supplementary controller grammar");
+        const auto grammar = condition_text_member(graph, "solver_controller_grammar");
+        const auto scope = condition_text_member(graph, "solver_policy_scope");
+        if (!allow_paid_root_foulborn &&
+            (grammar == "paid_root_foulborn_salvage_v1" ||
+             scope == "gated_search_with_paid_root_foulborn_salvage_v1"))
+            return refuse("supplementary original-root graph requires paid_root_foulborn_salvage_v1 scope");
         const std::string goal_text = compile_finder_goal_condition(calc);
         const json::Value goal = json::Parser(
             goal_text.data(), goal_text.size()).parse();
@@ -286,9 +297,33 @@ std::string compile_paid_root_foulborn_candidate_json(
         6 > limits.max_compiled_edges - selected_misses.size())
         throw std::length_error("paid root Foulborn candidate exceeds graph cap");
     std::vector<SlotVocabulary> vocabulary;
-    for (std::size_t i = 0; i < calc.layout().slots.size(); ++i)
+    std::unordered_set<std::uint32_t> seen;
+    std::string json;
+    // limits.max_solver_owned_bytes is the caller's remaining compilation
+    // allowance, after its private native law and proposal buffers. Observe
+    // all retained compiler buffers and reserve conservative string/condition
+    // assembly headroom, as for the other bounded composition helpers.
+    const auto check_compiler_memory = [&](const std::uint64_t scratch = 0) {
+        std::uint64_t owned = sizeof(vocabulary) + sizeof(seen) + sizeof(json);
+        add_owned_bytes(owned, vocabulary.capacity() * sizeof(SlotVocabulary));
+        for (const auto& slot : vocabulary) {
+            add_owned_bytes(owned, owned_string_bytes(slot.member));
+            add_owned_bytes(owned, owned_string_bytes(slot.satisfied));
+        }
+        add_owned_bytes(owned, seen.bucket_count() * sizeof(void*));
+        add_owned_bytes(owned, seen.size() * (sizeof(std::uint32_t) + 3 * sizeof(void*)));
+        add_owned_bytes(owned, owned_string_bytes(json));
+        add_owned_bytes(owned, scratch);
+        if (owned > limits.max_solver_owned_bytes)
+            throw SolverResourceLimit("max_solver_owned_bytes", limits.max_solver_owned_bytes);
+    };
+    check_compiler_memory();
+    for (std::size_t i = 0; i < calc.layout().slots.size(); ++i) {
         vocabulary.push_back(slot_vocabulary(calc.session(), calc.layout().slots[i], i));
-    std::string json = finder_base_json(calc, start_item);
+        check_compiler_memory();
+    }
+    json = finder_base_json(calc, start_item);
+    check_compiler_memory();
     json += ",\"solver_controller_grammar\":\"paid_root_foulborn_salvage_v1\","
         "\"solver_policy_scope\":\"gated_search_with_paid_root_foulborn_salvage_v1\","
         "\"start_node_id\":\"start\",\"nodes\":[{\"id\":\"start\",\"kind\":\"start\"},"
@@ -298,18 +333,20 @@ std::string compile_paid_root_foulborn_candidate_json(
     for (const auto& [id, action] : stages)
         json += ",{\"id\":\"" + std::string(id) + "\",\"kind\":\"operation\",\"operation\":" +
             operation_json(calc.session(), calc.registry().actions[action]) + "}";
-    const auto goal = compile_finder_goal_condition(calc);
+    const auto goal = exact_goal_condition(calc, vocabulary);
+    check_compiler_memory(owned_string_bytes(goal));
     json += "],\"edges\":[{\"id\":\"begin\",\"from\":\"start\",\"to\":\"roll\",\"priority\":0,\"is_default\":true},"
         "{\"id\":\"roll_goal\",\"from\":\"roll\",\"to\":\"goal\",\"priority\":0,\"condition\":" + goal + "}";
-    std::unordered_set<std::uint32_t> seen;
     for (const auto state : selected_misses) {
         if (state >= calc.state_count() || !seen.insert(state).second ||
             calc.is_goal_state(calc.state(state)) || calc.state(state).goal_progress_retry_basin != 0)
             throw std::invalid_argument("invalid paid root Foulborn selection");
         const auto condition = abstract_state_condition(calc.session(), calc.layout(),
             vocabulary, calc.state(state));
+        check_compiler_memory(owned_string_bytes(goal) + 128 * owned_string_bytes(condition));
         json += ",{\"id\":\"select" + std::to_string(state) + "\",\"from\":\"roll\",\"to\":\"add\","
             "\"priority\":1,\"condition\":" + condition + "}";
+        check_compiler_memory(owned_string_bytes(goal) + 128 * owned_string_bytes(condition));
         if (json.size() > limits.max_strategy_json_bytes)
             throw std::length_error("paid root Foulborn candidate exceeds JSON cap");
     }
@@ -317,6 +354,7 @@ std::string compile_paid_root_foulborn_candidate_json(
         "{\"id\":\"add_goal\",\"from\":\"add\",\"to\":\"goal\",\"priority\":0,\"condition\":" + goal + "},"
         "{\"id\":\"add_reset\",\"from\":\"add\",\"to\":\"reset\",\"priority\":1,\"is_default\":true},"
         "{\"id\":\"retry\",\"from\":\"reset\",\"to\":\"roll\",\"priority\":0,\"is_default\":true}]}";
+    check_compiler_memory(owned_string_bytes(goal));
     if (json.size() > limits.max_strategy_json_bytes)
         throw std::length_error("paid root Foulborn candidate exceeds JSON cap");
     return json;

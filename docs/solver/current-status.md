@@ -25,6 +25,18 @@ private and Current's producer default is unchanged. Real-data economics and
 WASM/worker acceptance remain unqualified; no exact checker quotient is retained
 at the grammar checkpoint.
 
+## Private paid-root Foulborn finite delta (2026-10-02)
+
+The [sprint checkpoint](../active/2026-10-02-foulborn-sprint/README.md#passing-native-checkpoint-1615-utc)
+qualifies a native-only, default-off supplementary Alchemy/selected Foulborn
+Exalt/paid Scour controller on finite fixtures. Its private context preserves
+exact native exclusion effects and its graph receives an original-root check.
+The old zero-progress-reroll-only scope is not reused: explicit caller gating
+overrides refuse activation, lower authority stays zero and closure unavailable.
+Parent statewise authority, real-data economics, WASM/worker and public activation
+remain unqualified. The independent generic caller-operation scope fix must be
+integrated before promotion.
+
 ## Existing metamod recovery delta (2026-09-29)
 
 The [MM execution receipt](../active/2026-09-29-metamod-recovery/README.md)

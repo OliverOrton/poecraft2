@@ -6403,13 +6403,24 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset
                     co_await solve_detail::CooperativeCheckpoint{
                         root_signature.capacity() * sizeof(std::uint64_t) +
                         selected.capacity() * sizeof(std::uint32_t) + graph.capacity() + 1};
-                    const auto& add_law = proof_calc.outcomes(miss.state, add_op.primitive_action, false);
-                    if (!within_private_caps()) co_return false;
+                    std::shared_ptr<const OutcomeDistribution> complete_add;
+                    while (!proof_calc.advance_outcomes(miss.state, add_op.primitive_action,
+                            false, complete_add, 1)) {
+                        if (!within_private_caps()) co_return false;
+                        co_await solve_detail::CooperativeCheckpoint{
+                            root_signature.capacity() * sizeof(std::uint64_t) +
+                            selected.capacity() * sizeof(std::uint32_t) + graph.capacity() + 1};
+                    }
+                    if (!complete_add || !within_private_caps()) co_return false;
+                    const auto& add_law = *complete_add;
                     if (!add_law.supported || !add_law.applicable || add_law.goal_progress_gated ||
                         !add_law.choice_groups.empty() || !add_law.choice_options.empty()) continue;
                     WideFloat add_mass{0.0}, add_success{0.0};
                     bool resets = true;
                     for (const auto& exit : add_law.entries) {
+                        co_await solve_detail::CooperativeCheckpoint{
+                            root_signature.capacity() * sizeof(std::uint64_t) +
+                            selected.capacity() * sizeof(std::uint32_t) + graph.capacity() + 1};
                         if (!std::isfinite(exit.probability) || exit.probability < 0.0 ||
                             exit.state >= proof_calc.state_count()) { resets = false; break; }
                         if (!(exit.probability > 0.0)) continue;
@@ -6442,13 +6453,24 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset
                 const double improved = (selected_cost / selected_success).value();
                 if (!std::isfinite(improved) || improved < 0.0 || !(improved < value)) continue;
                 try {
+                    const auto live = estimated_owned_bytes();
+                    const auto local = proof_calc.estimated_owned_bytes() + graph.capacity() + 1 +
+                        selected.capacity() * sizeof(std::uint32_t) +
+                        root_signature.capacity() * sizeof(std::uint64_t);
+                    if (live >= options.max_solver_owned_bytes ||
+                        local >= options.max_solver_owned_bytes - live) co_return false;
+                    SolveOptions compilation_limits = options;
+                    compilation_limits.max_solver_owned_bytes = options.max_solver_owned_bytes - live - local;
                     auto proposed = compile_paid_root_foulborn_candidate_json(proof_calc,
                         result.exact_start_item, roll.primitive_action, add_op.primitive_action,
-                        reset_op.primitive_action, selected, options);
+                        reset_op.primitive_action, selected, compilation_limits);
                     if (check_solver_byte_cap_fast(proposed.capacity() + graph.capacity() +
                             selected.capacity() * sizeof(std::uint32_t) +
                             root_signature.capacity() * sizeof(std::uint64_t))) co_return false;
                     graph = std::move(proposed);
+                } catch (const SolverResourceLimit&) {
+                    retain_action_reason("rejected:paid_root_foulborn_salvage_v1:compiled_memory_cap");
+                    continue;
                 } catch (const std::runtime_error&) {
                     retain_action_reason("rejected:paid_root_foulborn_salvage_v1:unrepresentable_exact_routes");
                     continue;
@@ -6575,7 +6597,11 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::prepare_paid_root_reset_can
         }
         return std::make_unique<CalcContext>(
             calc.shared_session(), proof_goal, calc.registry(), std::move(proof_actions),
-            false, false, false, std::nullopt, std::vector<CountObservation>{},
+            false, false,
+            // The add preserves incoming exclusions. A renewal-only coarse
+            // layout cannot prove its complete post-add law.
+            options.paid_root_foulborn_salvage,
+            std::nullopt, std::vector<CountObservation>{},
             false, std::vector<std::uint64_t>{}, false, false, false, false, true);
     }(); // Release the redundant goal copy before any suspension.
     proof_calc->set_reforge_work_budget_owner(&calc);

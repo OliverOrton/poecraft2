@@ -145,6 +145,52 @@ under [properness](#properness), then complete original-root evaluation. The
 The imported [exact toy checks](../../active/2026-09-22-ordinary-capability/research-inputs/package/checks/check_concepts.py)
 illustrate the argument; they establish no native crafting correspondence.
 
+<a id="paid-root-selective-add"></a>
+### A fixed selective add before paid root renewal
+
+Fix one exact original root and a complete legal renewal law. The roll costs c,
+succeeds with probability p0 > 0, and otherwise reaches observable miss classes
+with positive masses wi, where p0 + sum(wi) = 1. From every miss, a legal paid
+reset of finite cost r returns deterministically to the **same exact root**.
+For a selected class i, one legal add costs ai and has a complete native law:
+it succeeds with probability pi, and every positive failure legally resets to
+that same root for r. Costs are finite and nonnegative. Selection is fixed before
+execution, uses exact observable classes, and permits at most one add per roll.
+Root identity includes persistent item context and controller phase; returning
+to a similar goal mask or borrowing the old root scalar is insufficient.
+
+The baseline satisfies U0 = c + (1-p0)(r+U0), hence
+U0 = [c+(1-p0)r]/p0. For a fixed subset S, first-cycle conditioning gives
+
+\[
+U(S)=\frac{c+\sum_{i\notin S}w_i r+
+                 \sum_{i\in S}w_i[a_i+(1-p_i)r]}
+                {p_0+\sum_{i\in S}w_i p_i}.
+\]
+
+Every cycle succeeds with probability at least p0, so this finite controller is
+proper under the stated reset laws, including when an add costs zero. Comparing
+its numerator with U0 times its denominator yields
+
+\[
+U(S)-U_0=
+\frac{\sum_{i\in S}w_i[a_i-p_i(r+U_0)]}
+     {p_0+\sum_{i\in S}w_i p_i}.
+\]
+
+Selecting only positive-mass classes satisfying ai < pi(r+U0) therefore strictly
+improves the baseline whenever the selected subset is nonempty. This sufficient
+fixed-subset rule does not assert the optimal subset or the unrestricted MDP
+optimum. Incomplete laws, hidden observations, unpaid or wrong-root recovery,
+and repeated adds invalidate this derivation.
+
+The [private Foulborn application](../../active/2026-10-02-foulborn-sprint/README.md)
+uses Alchemy, one selected Foulborn Exalt, and paid Scour. The equation proposes
+a graph; the independent original-root checker must still establish complete
+native execution, original-goal success, properness and reconciled cost. It
+supplies no non-root statewise value or lower authority. Its supplementary
+grammar lies outside the old zero-progress-reroll-only policy restriction.
+
 <a id="primitive-execution-reward"></a>
 ### Primitive execution count is a separate reward
 

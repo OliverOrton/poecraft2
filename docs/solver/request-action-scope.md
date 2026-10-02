@@ -95,3 +95,22 @@ This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecr
 [Scope](../active/2026-09-29-metamod-recovery/README.md): ProtectedSide Scour is proposed independently of missing opposite goals. New initiation excludes either existing lock. TerminalCraftedCleanup admits one native remove-all craft operation only after exact terminal success, without global primitive promotion. Extras-allowed Multimod finish can leave unrequested Multimod when the native final predicate succeeds; clean restrictions remain.
 
 Private Finder `conditional-protected-scour` accepts paid lock→Scour only. Intended side names the held side; Eldritch still names the acted-on side. Compiled occurrence bytes and all positive exact reached entries are checked. One of eight existing attempts is reserved, with one live checker. Public Finder stays conditional. Exactness labels explicitly include candidate/generated grammar; dependencies and metadata do not imply unrestricted closure.
+
+### Private paid-root Foulborn scope (October 2)
+
+The native-only, default-off `paid_root_foulborn_salvage` option declares
+`paid_root_foulborn_salvage_v1`: gated ordinary search plus one selected native
+Foulborn add after an Alchemy miss, with paid Scour recovery to the exact original
+root. This is a supplementary policy grammar, outside the old
+zero-progress-reroll-only restriction. An explicit gating override refuses this
+activation. Caller action admission, disabled families and complete pricing
+continue to constrain all three operations. No C ABI, WASM or UI default enables
+it; Finder is unchanged.
+
+The option forces TargetNeutralZero, zero lower and unavailable closure. Caller
+scope, transition cache, assertion and continuation identities bind activation;
+development checkpoints advance to format 4. Original-root checking supplies
+only the retained graph's root upper, never parent statewise decisions or values.
+The [sprint record](../active/2026-10-02-foulborn-sprint/README.md) owns current
+qualification; the [fixed-subset argument](mathematics/policies.md#paid-root-selective-add)
+owns the proposal equation and its complete reset-law premises.

@@ -1,14 +1,16 @@
-# Foulborn sprint WIP handoff (2026-10-02)
+# Foulborn sprint native checkpoint (2026-10-02)
 
-Parent requested a safe checkpoint to switch the fast task to a standard-tier
-replacement. Worktree `C:/Users/Oliver/Documents/poecraft2-foulborn-sprint`, branch
-`dot/foulborn-20261002`, baseline `f08facbb93204bf721048c21b94080ab582ee9f8`.
-The [living WIP record](docs/active/2026-10-02-foulborn-sprint/README.md#wip-checkpoint-for-standard-tier-replacement)
-owns exact changes, failed/intermediate-passed/interrupted builds, pending
-finite checks, review concerns, next command and frozen-source references.
-No own process remains; no timed or worker run started; no serial slot granted.
-Do not promote this untested native-private supplementary grammar. Continue
-on this branch without widening the explicit gated-policy restriction.
+The standard-tier replacement has 4,547 passing focused native checks and passing
+two-job Tests/Benchmark builds on `dot/foulborn-20261002` in the existing sibling
+worktree. The [living record](docs/active/2026-10-02-foulborn-sprint/README.md#passing-native-checkpoint-1615-utc)
+owns the repaired exact miss-law premise, failed and passing logs, synthetic
+economics, private scope and remaining gates. No owned process remains.
+
+The supplementary grammar stays default-off. The separate review task owns the
+generic original-root operation-admission repair; integrate and requalify it
+before promotion. The frozen representative case is validated, but no new timed
+slot is granted or consumed. Request the parent serial slot using the completed
+source/binary/runtime/case/command freeze. No WASM/worker or public claim.
 
 # Handoff
 
