@@ -323,6 +323,23 @@ const char* solve_detail::publication_invariant_invalid_reason(
     return nullptr;
 }
 
+const char* solve_detail::verified_publication_loss_invalid_reason(
+        const SolveResult& result, const double historical_verified_upper,
+        const FinalMemoryCapPublicationRevocation* final_cap_revocation) {
+    if (result.policy_available || !std::isfinite(historical_verified_upper))
+        return nullptr;
+    const bool explicit_cap_refusal = final_cap_revocation != nullptr &&
+        final_cap_revocation->owned_bytes_before_revocation > final_cap_revocation->cap_bytes &&
+        result.diagnostics.resource_cap_hit &&
+        result.diagnostics.policy_refinement.resource_cap == "max_solver_owned_bytes" &&
+        result.termination == SolveTermination::RefusedResourceCap &&
+        result.policy_status == SolvePolicyStatus::None &&
+        !result.converged && !result.target_met &&
+        !std::isfinite(result.upper_bound) && !std::isfinite(result.evaluated_policy_cost) &&
+        result.refined_policy_artifact.strategy_json.empty();
+    return explicit_cap_refusal ? nullptr : "publication lost its verified artifact";
+}
+
 void solve_detail::normalize_publication_result(SolveResult& result) {
     if (result.closure_unavailable_by_profile) {
         result.lower_bound = 0.0;
@@ -5618,7 +5635,7 @@ SolveWork::Impl::run_publication_pipeline() {
         (void)carrier_attribution_task.take_result();
         std::uint64_t final_live_bytes = fast_estimated_owned_bytes();
         peak_owned_bytes = std::max(peak_owned_bytes, final_live_bytes);
-        bool publication_revoked_at_final_cap = false;
+        std::optional<solve_detail::FinalMemoryCapPublicationRevocation> publication_final_cap_revocation;
         if (final_live_bytes > options.max_solver_owned_bytes) {
             if (result.policy_available) {
                 result.diagnostics.policy_refinement.status =
@@ -5629,13 +5646,14 @@ SolveWork::Impl::run_publication_pipeline() {
                     "retained solve result reached "
                     "max_solver_owned_bytes",
                     "max_solver_owned_bytes");
-                publication_revoked_at_final_cap = true;
+                publication_final_cap_revocation = solve_detail::FinalMemoryCapPublicationRevocation{
+                    final_live_bytes, options.max_solver_owned_bytes};
             } else {
                 record_cap("max_solver_owned_bytes");
                 result.converged = false;
             }
         }
-        if (publication_revoked_at_final_cap) {
+        if (publication_final_cap_revocation) {
             finalize_automatic_candidate_diagnostics();
             final_live_bytes = fast_estimated_owned_bytes();
             peak_owned_bytes =
@@ -5916,15 +5934,10 @@ SolveWork::Impl::run_publication_pipeline() {
         }
         record_progress_event("selection_sealed", "owned_graph_root_certificate_and_cost");
         consumed = true;
-        // A deliberately reduced final cap can revoke the owned graph and
-        // return an explicit resource refusal. Its historical verified cost
-        // remains telemetry, not a claim of live publication ownership.
-        // Every other loss of an available verified graph remains an error.
-        if (!result.policy_available && !publication_revoked_at_final_cap &&
-            std::isfinite(incumbent_portfolio.verified_executable_upper())) {
-            throw std::logic_error(
-                "publication lost its verified artifact");
-        }
+        if (const char* loss = solve_detail::verified_publication_loss_invalid_reason(
+                result, incumbent_portfolio.verified_executable_upper(),
+                publication_final_cap_revocation ? &*publication_final_cap_revocation : nullptr))
+            throw std::logic_error(loss);
         co_return std::move(result);
     }
 

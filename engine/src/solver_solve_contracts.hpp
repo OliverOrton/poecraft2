@@ -1504,6 +1504,16 @@ void normalize_publication_result(SolveResult& result);
 const char* publication_invariant_invalid_reason(
     const SolveResult& result);
 
+// Only this measured final-owner decision revokes publication authority while
+// retaining the historical verified cost. A generic cap flag is insufficient.
+struct FinalMemoryCapPublicationRevocation {
+    std::uint64_t owned_bytes_before_revocation = 0;
+    std::uint64_t cap_bytes = 0;
+};
+const char* verified_publication_loss_invalid_reason(
+    const SolveResult& result, double historical_verified_upper,
+    const FinalMemoryCapPublicationRevocation* final_cap_revocation = nullptr);
+
 } // namespace solve_detail
 
 enum class SolvePhase : std::uint8_t {

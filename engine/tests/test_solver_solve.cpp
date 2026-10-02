@@ -2358,6 +2358,36 @@ void run_initial_terminal_debt_continuation_tests() {
 
 void run_current_incumbent_continuity_tests() {
     using Impl = SolveWorkTestAccess::Impl;
+    // A cap label or finite historical scalar cannot excuse actual graph loss.
+    SolveResult refused;
+    refused.termination = SolveTermination::RefusedResourceCap;
+    refused.policy_status = SolvePolicyStatus::None;
+    refused.diagnostics.resource_cap_hit = true;
+    refused.diagnostics.policy_refinement.resource_cap = "max_solver_owned_bytes";
+    const solve_detail::FinalMemoryCapPublicationRevocation over_cap{101, 100};
+    const solve_detail::FinalMemoryCapPublicationRevocation at_cap{100, 100};
+    const auto loss = [&](const auto* revocation) {
+        return solve_detail::verified_publication_loss_invalid_reason(refused, 5, revocation);
+    };
+    PC_CHECK(loss(static_cast<const solve_detail::FinalMemoryCapPublicationRevocation*>(nullptr)) != nullptr);
+    PC_CHECK(loss(&at_cap) != nullptr);
+    PC_CHECK(loss(&over_cap) == nullptr);
+    refused.diagnostics.policy_refinement.resource_cap = "max_reforge_work";
+    PC_CHECK(loss(&over_cap) != nullptr);
+    refused.diagnostics.policy_refinement.resource_cap = "max_solver_owned_bytes";
+    refused.converged = true;
+    PC_CHECK(loss(&over_cap) != nullptr);
+    refused.converged = false;
+    refused.upper_bound = 5;
+    PC_CHECK(loss(&over_cap) != nullptr);
+    refused.upper_bound = kInfinity;
+    refused.evaluated_policy_cost = 5;
+    PC_CHECK(loss(&over_cap) != nullptr);
+    refused.evaluated_policy_cost = kInfinity;
+    refused.refined_policy_artifact.strategy_json = "retained";
+    PC_CHECK(loss(&over_cap) != nullptr);
+    refused.policy_available = true;
+    PC_CHECK(loss(static_cast<const solve_detail::FinalMemoryCapPublicationRevocation*>(nullptr)) == nullptr);
     // IC0: all rows, candidates and certificates must come from ordinary step.
     // No retained graph, scalar value or certification flag is injected.
     // 0: no early candidate; 1: ineligible service; 2/3: cheaper adoption
