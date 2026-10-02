@@ -785,6 +785,12 @@ _lib.pc_hinekora_lock_commit.restype = ct.c_int32
 _lib.pc_hinekora_lock_status.argtypes = [_handle, ct.POINTER(_ItemState), ct.POINTER(ct.c_int32), ct.POINTER(_ErrorInfo)]
 _lib.pc_hinekora_lock_status.restype = ct.c_int32
 _lib.pc_hinekora_lock_invalidate.argtypes = [_handle]
+_lib.pc_hinekora_lock_export.argtypes = [_handle, ct.POINTER(_ItemState), ct.c_char_p, ct.c_size_t, ct.POINTER(ct.c_size_t), ct.POINTER(_ErrorInfo)]
+_lib.pc_hinekora_lock_export.restype = ct.c_int32
+_lib.pc_hinekora_lock_snapshot_item.argtypes = [_handle, ct.c_char_p, ct.c_size_t, ct.POINTER(_ItemState), ct.POINTER(_ErrorInfo)]
+_lib.pc_hinekora_lock_snapshot_item.restype = ct.c_int32
+_lib.pc_hinekora_lock_restore.argtypes = [_handle, ct.POINTER(_ItemState), ct.POINTER(_ActionRequest), ct.c_char_p, ct.c_size_t, ct.POINTER(_handle), ct.POINTER(_ErrorInfo)]
+_lib.pc_hinekora_lock_restore.restype = ct.c_int32
 _lib.pc_hinekora_lock_destroy.argtypes = [_handle]
 _lib.pc_bestiary_state_init.argtypes = [
     ct.POINTER(_ItemState),
@@ -2495,6 +2501,13 @@ class HinekoraLock(_OwnedHandle):
             ct.byref(result), ct.byref(error)), error)
         return ActionResult(bool(result.applied), result.added, result.removed)
 
+    def export(self) -> dict[str, Any]:
+        length, error = ct.c_size_t(), _error()
+        _check(_lib.pc_hinekora_lock_export(self._handle, ct.byref(self._item._state), None, 0, ct.byref(length), ct.byref(error)), error)
+        buffer = ct.create_string_buffer(length.value + 1)
+        _check(_lib.pc_hinekora_lock_export(self._handle, ct.byref(self._item._state), buffer, len(buffer), ct.byref(length), ct.byref(error)), error)
+        return json.loads(buffer.value)
+
     def invalidate(self) -> None:
         _lib.pc_hinekora_lock_invalidate(self._handle)
 
@@ -2521,6 +2534,17 @@ class ActionContext(_OwnedHandle):
         _check(_lib.pc_hinekora_lock_create(self._handle, ct.byref(item._state),
             ct.byref(request), ct.byref(handle), ct.byref(error)), error)
         del keepalive
+        self._retained_foresight_item = item
+        return HinekoraLock(handle, item, self)
+
+    def restore_hinekora_lock(self, item: Item, currency: str | Mapping[str, Any], snapshot: Mapping[str, Any]) -> HinekoraLock:
+        """Restore a paid emulator checkpoint without drawing another outcome."""
+        self._check_item(item)
+        request, keepalive = _action_request(currency)
+        encoded, handle, error = _json_bytes(snapshot), _handle(), _error()
+        _check(_lib.pc_hinekora_lock_restore(self._handle, ct.byref(item._state), ct.byref(request), encoded, len(encoded), ct.byref(handle), ct.byref(error)), error)
+        del keepalive
+        self._retained_foresight_item = item
         return HinekoraLock(handle, item, self)
 
     def apply_multi(self, action: str, resources: list[tuple[str, str, Item]]) -> dict:

@@ -4,6 +4,7 @@
 #include "poecraft/hinekora.h"
 namespace poecraft {
 struct HinekoraForesight {
+    std::shared_ptr<const SessionImpl> session;
     pc_item_state* identity = nullptr;
     pc_item_state input{};
     pc_item_state preview{};

@@ -57,11 +57,14 @@ def test_item_identity_decline_and_intervening_actions():
             assert lock.active
             assert not ctx.apply(item, "transmute").applied
             assert lock.active and bytes(lock.preview()[0]._state) == predicted
-            assert ctx.apply(item, "chaos").applied
+            with pytest.raises(EngineError, match="cross-currency correlations"):
+                ctx.apply(item, "chaos")
+            assert lock.active
+            assert ctx.apply(item, "scour").applied
             assert not lock.active
             with pytest.raises(EngineError, match="consumed or invalidated"):
                 lock.preview()
-            with ctx.hinekora_lock(item, "annul") as next_lock:
+            with ctx.hinekora_lock(item, "alchemy") as next_lock:
                 assert next_lock.commit().applied
                 assert not next_lock.active
 
@@ -265,3 +268,78 @@ def test_old_handle_cannot_clear_new_lock_and_marker_clearing_cannot_refresh():
                 assert not new.active
                 with pytest.raises(EngineError, match="Modify the item"):
                     ctx.hinekora_lock(item, "annul")
+
+
+@pytest.mark.parametrize("currency,rarity", [("exalt","rare"),("alchemy","normal"),("veiled_chaos","rare")])
+def test_cached_snapshot_rebind_preserves_preview_without_rng_draw(currency, rarity):
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(12) as ctx, session.create_action_context(41) as restored, session.create_action_context(41) as control:
+        item = session.create_item(rarity)
+        with ctx.hinekora_lock(item, currency) as original:
+            preview, result = original.preview()
+            checkpoint = original.export()
+            assert "rng" not in json.dumps(checkpoint) and "seed" not in json.dumps(checkpoint)
+            copy = item.copy()
+            with restored.restore_hinekora_lock(copy, currency, checkpoint) as lock:
+                assert lock.active and _fields(lock.preview()[0]._state) == _fields(preview._state)
+                unrelated = session.create_item("normal"); comparison = unrelated.copy()
+                restored.apply(unrelated, "alchemy"); control.apply(comparison, "alchemy")
+                assert _fields(unrelated._state) == _fields(comparison._state)
+                assert lock.commit() == result
+                assert _fields(copy._state) == _fields(preview._state)
+                assert not lock.active
+
+
+def test_snapshot_failure_is_atomic_and_pins_runtime_request_and_all_fields():
+    import copy
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, data.create_session(BASE, 85) as other_session, session.create_action_context(9) as ctx, session.create_action_context(7) as restored, other_session.create_action_context(7) as other:
+        item = session.create_item("rare")
+        with ctx.hinekora_lock(item, "exalt") as original:
+            checkpoint = original.export()
+            candidate = item.copy(); before = _fields(candidate._state)
+            bad = copy.deepcopy(checkpoint); bad["session"][1] = "different-runtime"
+            for record, currency in [(bad,"exalt"),(checkpoint,"annul")]:
+                with pytest.raises(EngineError, match="identity mismatch"):
+                    restored.restore_hinekora_lock(candidate, currency, record)
+                assert _fields(candidate._state) == before and original.active
+            candidate._state.quality = 1
+            with pytest.raises(EngineError, match="item identity mismatch"):
+                restored.restore_hinekora_lock(candidate,"exalt",checkpoint)
+            foreign = other_session.create_item("rare")
+            foreign._state.item_flags = 16
+            with pytest.raises(EngineError, match="identity mismatch"):
+                other.restore_hinekora_lock(foreign,"exalt",checkpoint)
+            assert original.active
+
+
+def test_declined_snapshot_retains_no_refresh_after_reload_and_history_replacement():
+    with load_data(ARTIFACT) as data, data.create_session(BASE,86) as session, session.create_action_context(9) as ctx, session.create_action_context(7) as restored:
+        item = session.create_item("rare")
+        with ctx.hinekora_lock(item,"exalt") as original:
+            original.invalidate()
+            with pytest.raises(EngineError, match="information cannot be dropped"):
+                ctx.apply(item,"exalt")
+            checkpoint = original.export()
+            assert not checkpoint["active"] and not checkpoint["refresh_allowed"]
+            assert "preview" not in checkpoint
+            candidate = item.copy()
+            with restored.restore_hinekora_lock(candidate,"exalt",checkpoint) as lock:
+                assert not lock.active
+                with pytest.raises(EngineError, match="Modify the item"):
+                    restored.hinekora_lock(candidate,"exalt")
+                with pytest.raises(EngineError, match="information cannot be dropped"):
+                    restored.apply(candidate,"exalt")
+                candidate._state.quality = 1
+                with restored.hinekora_lock(candidate,"exalt") as paid:
+                    assert paid.active
+
+
+def test_same_context_history_rebind_retires_old_handle_atomically():
+    with load_data(ARTIFACT) as data, data.create_session(BASE,86) as session, session.create_action_context(9) as ctx:
+        item = session.create_item("rare")
+        with ctx.hinekora_lock(item,"exalt") as original:
+            checkpoint = original.export(); replacement = item.copy()
+            with ctx.restore_hinekora_lock(replacement,"exalt",checkpoint) as restored:
+                assert not original.active and not item._state.item_flags & 16
+                original.invalidate()
+                assert restored.active and replacement._state.item_flags & 16
+                assert restored.commit().applied

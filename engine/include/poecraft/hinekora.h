@@ -41,6 +41,26 @@ pc_result pc_hinekora_lock_status(pc_hinekora_lock_handle lock,
  * Invalidation is permanent, even if the previous item bytes are restored. */
 void pc_hinekora_lock_invalidate(pc_hinekora_lock_handle lock);
 void pc_hinekora_lock_destroy(pc_hinekora_lock_handle lock);
+/* Versioned emulator checkpoint, not a probability/reachability certificate.
+ * Contains only the selected cached outcome, never an RNG seed/state. Snapshot
+ * identity pins runtime hashes, base/level, full real item fields and request.
+ * Export retains a declined/inactivated no-refresh tombstone. Restore is an
+ * explicit history/import replacement: it rebinds this paid state without
+ * sampling or payment, atomically replacing any previous context foresight.
+ * Callers must keep the old item alive until replacement completes.
+ * snapshot_item validates runtime/session identity and returns exact stored
+ * current storage for transport reconstruction; ordinary crafting still needs
+ * restore. A marker without a matching checkpoint remains unavailable. */
+pc_result pc_hinekora_lock_export(pc_hinekora_lock_handle lock,
+    const pc_item_state* item, char* buffer, size_t capacity,
+    size_t* out_length, pc_error_info* out_error);
+pc_result pc_hinekora_lock_snapshot_item(pc_action_context_handle context,
+    const char* snapshot_json, size_t size, pc_item_state* out_item,
+    pc_error_info* out_error);
+pc_result pc_hinekora_lock_restore(pc_action_context_handle context,
+    pc_item_state* item, const pc_action_request* currency,
+    const char* snapshot_json, size_t size,
+    pc_hinekora_lock_handle* out_lock, pc_error_info* out_error);
 #ifdef __cplusplus
 }
 #endif

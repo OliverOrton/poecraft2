@@ -109,3 +109,27 @@ as failed checks in scratch output; the completed-DLL rerun passes.
 The integration owner accepted the constrained fixed-currency scope for staging.
 Persistence, WASM and product routes remain in progress. All empirical memory
 laws still require Oliver approval; none is activated.
+
+## Passing cached-replay native checkpoint
+
+Engine/shared-DLL builds pass at two jobs and 54 focused Python contracts pass.
+Native cached export/restore pins runtime/base/level, full item fields and the
+resolved currency request. It preserves selected numerical outcomes without RNG
+advance or payment, retires old identities atomically on history replacement,
+and retains no-refresh tombstones. Bad runtime/request/item snapshots refuse
+without changing the existing forecast. The marker and original-root refusals
+remain intact. [Receipt](native-replay-checkpoint.json) pins the tested files.
+
+A necessary scope restriction closes the prior different-currency sampling path:
+while foresight is live, another applicable stochastic request now refuses
+because the observed outcome makes its conditional law depend on unresolved
+cross-currency correlations. No-op/refused requests preserve foresight; selected
+requests commit; Scour/remove-crafted deterministic changes remain supported.
+This narrowing is sent explicitly for parent review. The original 50a103b5 and
+a5e94c6 checkpoints remain available but do not qualify this later behavior.
+
+[Canonical Lock boundary](../../mechanics/hinekoras-lock.md) and
+[optional multicurrency review](multicurrency-review.md) retain the contract and
+held choices without activating a guessed joint law. WASM transport and product
+plumbing are in progress and not yet qualified. All empirical memory laws remain
+held for Oliver approval.

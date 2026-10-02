@@ -1,0 +1,28 @@
+{
+  "baseline": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+  "previous_checkpoint": "a5e94c6080062b1785fb92190f8a43d3f4d4e57e",
+  "stage": "fixed-request native cached replay; WASM and product ongoing",
+  "source_files": {
+    "engine/src/hinekora.cpp": "e08befee96e2371a1dbaa382a7a4f706b9fddf0232a1b69eb473d646b77db47e",
+    "engine/src/hinekora_internal.hpp": "13718207180ed8fbecca379a8528b4f1f012375687a521cf31d5c6e99bb02b84",
+    "engine/include/poecraft/hinekora.h": "27131c5747810bac1738cfe1ba3b8c59ea053390010080936523d28ba7555574",
+    "bindings/python/poecraft_engine/_binding.py": "1ff7a140d8d76c2c3f1541e6dde875fc7680daa410c65ea60fffbcea0fb5dd0d",
+    "bindings/python/tests/test_hinekora_lock.py": "ad365d5d47befc51c56fd64632e530d19ea7a824bdf9750a684f4a7145cbe2fc"
+  },
+  "dll_sha256": "681bbdf6cb729bce7d6d099f3fedc8412da120bf818f5c92839688313e8737f1",
+  "checks": {
+    "native_engine_and_shared_build": "passed; two jobs",
+    "python_tests": 54,
+    "command": "py -3 -m pytest -q -p no:cacheprovider bindings/python/tests/test_hinekora_lock.py bindings/python/tests/test_currency_calculator.py"
+  },
+  "logs": {
+    "out/lock-strands-completion/replay-build-qualified.log": "64e6d29dd5e0faefe73e4d8860df7d9fb9f9d0ef8564b5477c6fffad55620829",
+    "out/lock-strands-completion/replay-tests.log": "ef9d1ad7c5893909af6092aa6b1e8181112850eae5e2488c9c14afca2f06b522"
+  },
+  "scope_review": "Different applicable stochastic requests refuse while fixed-request foresight is live; a joint conditional law is unapproved. Selected commit, refusal preservation and deterministic invalidation pass.",
+  "remaining": [
+    "WASM/client/UI and persistent Undo/import qualification",
+    "memory laws await Oliver approval",
+    "multicurrency and adaptive solver value held"
+  ]
+}
