@@ -1,43 +1,416 @@
 {
+  "schema": "poecraft2.sprint-integration-qualification.v2",
+  "recorded_utc": "2026-10-02T16:49:01.776548+00:00",
   "baseline": "f08facbb93204bf721048c21b94080ab582ee9f8",
-  "branch": "dot/sprint-integration-20261002",
   "worktree": "C:/Users/Oliver/Documents/poecraft2-sprint-integration",
-  "source_head": "cf0c45e72a28855e0945d40cb471ebe525d77808",
-  "native_tree": "96cdc54e0611b32e2001448ab5afdcfce053f3ec",
-  "compatible_review_head": "1566719f52be848a7ec54d807e5638ade50cf21c",
-  "native_tree_matches_tested_review": true,
-  "selected_source_pins": [
-    "2e5585dcce83b527c7b7d6a9def5f665f472e60b",
-    "59b7f319b7dbce82f4284a82f4d7b110c49093a5",
-    "3056198df6edc275f69f6aa6735fcfc56be52486",
-    "54e65a18c0e69c93650f66f2b9b032d5ecc8a844",
-    "1566719f52be848a7ec54d807e5638ade50cf21c"
-  ],
-  "checks": {
-    "native": "Compatible review evidence: build plus 1707 focused checks; test-only stale-certificate addendum build plus 1146 paid-reset checks. The earlier reforge/uniform finite laws also passed; see review receipt.",
-    "integration_configure": "passed",
-    "integration_python": "53 passed, 0 failures, 2.23 seconds",
-    "combined_native_rebuild": "unrun; engine tree matches tested review exactly",
-    "combined_wasm": "unrun; inherited module is not the repaired source"
+  "branch": "dot/sprint-integration-20261002",
+  "qualified_source_commit": "5d11f6335c4207f2044d826aba7109175a6642a3",
+  "engine_tree": "da81b73d3afd0ea7660bfc046537761b354405a5",
+  "main_unchanged": "ebcd98cdda2c1828cd855f549831951e6ba7470a",
+  "overnight_integration_unchanged": "f08facbb93204bf721048c21b94080ab582ee9f8",
+  "source_pins": {
+    "independent_review": [
+      "2e5585dcce83b527c7b7d6a9def5f665f472e60b",
+      "59b7f319b7dbce82f4284a82f4d7b110c49093a5",
+      "3056198df6edc275f69f6aa6735fcfc56be52486",
+      "1566719f52be848a7ec54d807e5638ade50cf21c"
+    ],
+    "catalogue": [
+      "54e65a18c0e69c93650f66f2b9b032d5ecc8a844"
+    ],
+    "dominance": [
+      "8448ba2dcd259622ed14a24ea979baf02325936f",
+      "cdf04b8cad322a93924d930527897a4c13faeb93",
+      "76bd62bc5852c3e75d313f6dbbbbc7d536d7cfa8"
+    ],
+    "mismatch": [
+      "3162ef791873b231c722265c41a650eb0d39e6b3",
+      "791b82efbd1dfc50171d7ce372de7ea067be3cbe",
+      "02cff7c200cfd1e20d10eaae25666e6f1152bc8d",
+      "0231e465fa4022a6b8c7399420a64666287ce27c",
+      "21d83092e98a2faa7f93d92e1f02ea087433ab57"
+    ],
+    "foulborn": [
+      "2e56421a74100627879e3d5d94d12c64a597a964",
+      "448ef4a754945bfe4356b17271303197a7c2feab",
+      "b2a1a8d88034621be9d943fed7021709349b1c34",
+      "9f54c5ab42140337487d5e02188035739fa333a4"
+    ]
   },
-  "isolated": {
-    "latency": "87d39775a66a48a38039324deef9fe7318c91069; automatic approval rejected cherry-pick over failed 250ms/increased memory; parent explicitly confirmed keep isolated. No retry.",
-    "foulborn": "448ef4a754945bfe4356b17271303197a7c2feab; owner functional run pending; stripped supplementary metadata control remains a source-review gap.",
-    "dominance": "cdf04b8cad322a93924d930527897a4c13faeb93; bounded authored source reviewed; expanded final qualification pin pending.",
-    "mismatch": "791b82efbd1dfc50171d7ce372de7ea067be3cbe; capture/veto/resume bypass qualification and final pin pending."
+  "partial_import": {
+    "source": "56cedadcb5d3271eb8938e6f203981fea24ff879",
+    "paths": [
+      "docs/active/2026-10-02-dominance-sprint/README.md",
+      "docs/active/2026-10-02-dominance-sprint/qualification.json"
+    ],
+    "excluded": "Dominance-only WASM does not match combined source."
   },
-  "owned_processes": "All own build, configure, and test commands have exited; no live tool session.",
-  "isolation": "Main and overnight integration unchanged; no protected 0 access, data/prices refresh, install, push or deployment.",
-  "logs": [
+  "merge_resolution": "Only HANDOFF.md conflicts required manual resolution: retain catalogue, replace obsolete mismatch WIP with final qualified lane handoff. Native source merged automatically and was reviewed.",
+  "build": {
+    "native": "passed",
+    "shared_dll": "passed",
+    "max_jobs": 2,
+    "source_frozen_before_final_build": true,
+    "logs": [
+      {
+        "path": "out/sprint-integration/build-native-final.log",
+        "sha256": "f7374dc5d93231b5bd7f1b4d7392f7622e428e12dcb5f1d6cca8dc4556b49deb",
+        "bytes": 5903
+      },
+      {
+        "path": "out/sprint-integration/build-shared-final.log",
+        "sha256": "29993a297ff49bc5657073e6f3b8d978fb0c90027da8b9bcbf4fd3c1401a3fec",
+        "bytes": 96
+      }
+    ]
+  },
+  "native_checks": {
+    "passed": 1147469,
+    "failed": 0,
+    "cases": [
+      {
+        "arguments": [
+          "--solver-integrity-only",
+          "paid-reset"
+        ],
+        "exit_code": 0,
+        "name": "paid-reset",
+        "started_utc": "2026-10-02T16:44:40.6554091Z",
+        "finished_utc": "2026-10-02T16:44:41.1009072Z",
+        "checks_passed": 1146,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/paid-reset.log",
+          "sha256": "1b21b5be3126b745327e8b944f2ccf76fc13719220e0b500ca8a50861f941fce",
+          "bytes": 424
+        }
+      },
+      {
+        "arguments": [
+          "--solver-integrity-only",
+          "foulborn-root"
+        ],
+        "exit_code": 0,
+        "name": "foulborn-root",
+        "started_utc": "2026-10-02T16:44:41.1146217Z",
+        "finished_utc": "2026-10-02T16:44:41.1926143Z",
+        "checks_passed": 3077,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/foulborn-root.log",
+          "sha256": "01b473e986c4b64142983a5416f4e6ddb7533d832de6b76bb96553c2122cab99",
+          "bytes": 1514
+        }
+      },
+      {
+        "arguments": [
+          "--solver-assertion-service-only"
+        ],
+        "exit_code": 0,
+        "name": "assertion",
+        "started_utc": "2026-10-02T16:44:41.1943051Z",
+        "finished_utc": "2026-10-02T16:44:41.2389855Z",
+        "checks_passed": 424,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/assertion.log",
+          "sha256": "c7470532bd31bdb745278364c3afd84c255d6cebf8bf74ad65cf914763363310",
+          "bytes": 56
+        }
+      },
+      {
+        "arguments": [
+          "--solver-protected-finder-only"
+        ],
+        "exit_code": 0,
+        "name": "protected-finder",
+        "started_utc": "2026-10-02T16:44:41.2406097Z",
+        "finished_utc": "2026-10-02T16:44:41.2659276Z",
+        "checks_passed": 66,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/protected-finder.log",
+          "sha256": "601e9dd3acdfc3c6c345c2da900cc8e863baf39287d2fa830f27c6233da7ae57",
+          "bytes": 54
+        }
+      },
+      {
+        "arguments": [
+          "--solver-integrity-only",
+          "finder-bindings"
+        ],
+        "exit_code": 0,
+        "name": "finder-bindings",
+        "started_utc": "2026-10-02T16:44:41.2674435Z",
+        "finished_utc": "2026-10-02T16:44:41.3366365Z",
+        "checks_passed": 129,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/finder-bindings.log",
+          "sha256": "02f2716ed4eb5246ab8ffe3212c9f43d9c6ec6829d4bb3a063e3e756f3ad6680",
+          "bytes": 48
+        }
+      },
+      {
+        "arguments": [
+          "--solver-dominance-only",
+          "C:/Users/Oliver/Documents/poecraft2-integration-overnight/data/compiled/current"
+        ],
+        "exit_code": 0,
+        "name": "dominance",
+        "started_utc": "2026-10-02T16:44:41.3390220Z",
+        "finished_utc": "2026-10-02T16:44:41.6658946Z",
+        "checks_passed": 2244,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/dominance.log",
+          "sha256": "d65f2ab541ee1e21096a0dce6e7e4044a091645a8b6c0a16fccd2861c698cf30",
+          "bytes": 49
+        }
+      },
+      {
+        "arguments": [
+          "--solver-bounded-finish-only"
+        ],
+        "exit_code": 0,
+        "name": "bounded-finish",
+        "started_utc": "2026-10-02T16:44:41.6675788Z",
+        "finished_utc": "2026-10-02T16:44:41.7805794Z",
+        "checks_passed": 203,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/bounded-finish.log",
+          "sha256": "b0b55e378d69d131157b98a709dbb886eca9f8848189ef7a520a8bfe851b3407",
+          "bytes": 226
+        }
+      },
+      {
+        "arguments": [
+          "--solver-selected-fallback-only"
+        ],
+        "exit_code": 0,
+        "name": "selected-fallback",
+        "started_utc": "2026-10-02T16:44:41.7821018Z",
+        "finished_utc": "2026-10-02T16:44:43.6648817Z",
+        "checks_passed": 2440,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/selected-fallback.log",
+          "sha256": "2bba95a2bd33ec6dcf93e778004de9c2be349656bfe4a5a1935b1a9f800944fc",
+          "bytes": 162
+        }
+      },
+      {
+        "arguments": [
+          "--solver-integrity-only",
+          "incremental"
+        ],
+        "exit_code": 0,
+        "name": "incremental",
+        "started_utc": "2026-10-02T16:44:43.6663695Z",
+        "finished_utc": "2026-10-02T16:44:44.1299505Z",
+        "checks_passed": 1797,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/incremental.log",
+          "sha256": "ca60185dd75ce702c7195c3fff844fdae771244ac71e06e11dd868000aac588b",
+          "bytes": 544
+        }
+      },
+      {
+        "arguments": [
+          "--solver-metamod-recovery-only",
+          "C:/Users/Oliver/Documents/poecraft2-integration-overnight/data/compiled/current"
+        ],
+        "exit_code": 0,
+        "name": "metamod-row",
+        "started_utc": "2026-10-02T16:44:44.1314338Z",
+        "finished_utc": "2026-10-02T16:44:47.2684573Z",
+        "checks_passed": 685,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/metamod-row.log",
+          "sha256": "e5aaabee417190e7463a907d60684ff56d9f284391252c2c09d1f689c8449fa9",
+          "bytes": 1562
+        }
+      },
+      {
+        "arguments": [
+          "--solver-checkpoint-only",
+          "C:/Users/Oliver/Documents/poecraft2-integration-overnight/data/compiled/current"
+        ],
+        "exit_code": 0,
+        "name": "checkpoint",
+        "started_utc": "2026-10-02T16:44:47.2699492Z",
+        "finished_utc": "2026-10-02T16:44:47.6290373Z",
+        "checks_passed": 46,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/checkpoint.log",
+          "sha256": "b02c8abe6f2ef11c71b752ad4d915dcdca0303981eb60436246b737ac4b8ccfb",
+          "bytes": 48
+        }
+      },
+      {
+        "arguments": [
+          "--solver-calc-gated-equivalence-only"
+        ],
+        "exit_code": 0,
+        "name": "gated-oracle",
+        "started_utc": "2026-10-02T16:44:47.6305191Z",
+        "finished_utc": "2026-10-02T16:44:47.9828820Z",
+        "checks_passed": 1111656,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/gated-oracle.log",
+          "sha256": "9cbf9ca9459aa652bd090ed6494ae353c4260d21048baed0c275d92545464762",
+          "bytes": 482
+        }
+      },
+      {
+        "arguments": [
+          "--solver-uniform-removal-only"
+        ],
+        "exit_code": 0,
+        "name": "uniform-removal",
+        "started_utc": "2026-10-02T16:44:47.9843396Z",
+        "finished_utc": "2026-10-02T16:44:48.0361425Z",
+        "checks_passed": 23202,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/uniform-removal.log",
+          "sha256": "3f2b7156fcc95d0ffc627245abb2747b5ffbb5795c9bd6b2f40d7dcceeafcf90",
+          "bytes": 211
+        }
+      },
+      {
+        "arguments": [
+          "--calculator-incoming-only",
+          "C:/Users/Oliver/Documents/poecraft2-integration-overnight/data/compiled/current"
+        ],
+        "exit_code": 0,
+        "name": "incoming",
+        "started_utc": "2026-10-02T16:44:48.0374065Z",
+        "finished_utc": "2026-10-02T16:44:49.1348811Z",
+        "checks_passed": 354,
+        "checks_failed": 0,
+        "log": {
+          "path": "out/sprint-integration/incoming.log",
+          "sha256": "ede19fbf1ce8cc4b212c42ac41f2d4ff3bd3753c6b168fbd264fbbee366da50e",
+          "bytes": 122
+        }
+      }
+    ],
+    "batch": {
+      "path": "out/sprint-integration/run-native-focused.ps1",
+      "sha256": "6bd1bdbaf58058863329b42b2643d4ca28f319278519953bc4b69d6f922790a9",
+      "bytes": 1847
+    },
+    "receipt": {
+      "path": "out/sprint-integration/native-tests.json",
+      "sha256": "86d5afa3f8b7a25d52e3b27651c28e8a54e8d3ee72b77a5c839019024063a3ee",
+      "bytes": 3682
+    }
+  },
+  "python": [
     {
-      "path": "out\\sprint-integration\\configure.log",
-      "sha256": "412c40c31b12d63e7aee73476d9461cd02b7c4ba1eaf54aace68f8e1eb5043c9",
-      "bytes": 894
+      "suite": "catalogue plus ingest/compiled neighbors",
+      "passed": 53,
+      "failed": 0,
+      "seconds": 2.23,
+      "command": "py -3 -B -m pytest -q -p no:cacheprovider tools/ingest/tests/test_cluster_configuration.py tools/ingest/tests/test_compiled_data.py tools/ingest/tests/test_ingest.py",
+      "log": {
+        "path": "out/sprint-integration/cluster-pytest.log",
+        "sha256": "5630321ad7104da5e7636fdd36d3791284065e3a3af22e340ade18ff762a251a",
+        "bytes": 101
+      }
     },
     {
-      "path": "out\\sprint-integration\\cluster-pytest.log",
-      "sha256": "5630321ad7104da5e7636fdd36d3791284065e3a3af22e340ade18ff762a251a",
-      "bytes": 101
+      "suite": "authored Dominance on combined DLL",
+      "passed": 18,
+      "failed": 0,
+      "seconds": 4.97,
+      "command": "py -3 -B -m pytest -q -p no:cacheprovider bindings/python/tests/test_dominance_strategy.py",
+      "log": {
+        "path": "out/sprint-integration/python-dominance.log",
+        "sha256": "0b0a0fd8277386d96c1c991b4fa02df77e7b346b19d0e1ff296bf455a61a94e1",
+        "bytes": 101
+      }
     }
-  ]
+  ],
+  "qualified_native_artifacts": [
+    {
+      "path": "build/engine/poecraft_engine_tests.exe",
+      "sha256": "34530d6534881b0da39b703410632fcc04963299ee8b5f280f1deabaf669c892",
+      "bytes": 19101664
+    },
+    {
+      "path": "build/engine/poecraft_engine.dll",
+      "sha256": "332dfa0690bb7e77453b7e9a930a2b982c05199cd307c2ca33b3f6a019e8c40d",
+      "bytes": 14062352
+    }
+  ],
+  "runtime_manifest": {
+    "path": "C:/Users/Oliver/Documents/poecraft2-integration-overnight/data/compiled/current/manifest.json",
+    "sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "bytes": 5983
+  },
+  "wasm": {
+    "status": "UNQUALIFIED for combined source; inherited baseline artifact unchanged",
+    "artifact": {
+      "path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "sha256": "091305fb659ed2b917be00d97734c99901c50d1410fc01ec9f8f13182aea6767",
+      "bytes": 8171056
+    },
+    "module": {
+      "path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297",
+      "bytes": 21237
+    },
+    "combined_rebuild": "unrun",
+    "actual_worker": "unrun"
+  },
+  "authority": {
+    "caller_scope": "Every parsed operation must be caller primitive or trusted compiler-bound dependency and must not have a disabled family. Root-only supplied graphs provide no trusted bindings; scope validation precedes evaluation/cache reuse.",
+    "stale_root": "Matching-identity old certificates cannot bypass a failed scope check; both candidate restriction and disabled family cases pass.",
+    "foulborn": "Gated root-only Foulborn operation requires supplementary opt-in without explicit gated override. Stripped metadata refusal and opted-in/ungated positives pass on combined binary.",
+    "mismatch": "Per-incumbent rejection follows copied statewise values. Working-result veto is sticky for the solve lifetime, not generation-indexed. Checked root policy/cost and independent completion lower remain available; absence of veto is not a new positive statewise proof.",
+    "dominance": "Bounded authored-only exact identities, native full ordered-pair law, dual-lock refusal; no automatic Current/Finder admission.",
+    "catalogue": "Read-only stable configured metadata, always cluster_unsupported; no crafting activation."
+  },
+  "baseline_exclusion": {
+    "selector": "--solver-joint-policy-continuation-only",
+    "checks": 382,
+    "failures": 6,
+    "status": "Owner reproduced identical fracture-fixture failures on untouched f08facbb; not a pass and not rerun for ceremony on combined source. Relevant capture/veto/resume controls passed in assertion suite.",
+    "receipt": "docs/active/2026-10-02-mismatch-sprint/standard-qualification.json"
+  },
+  "latency_isolated": {
+    "head": "87d39775a66a48a38039324deef9fe7318c91069",
+    "reason": "Automatic approval rejected merge for failed 250ms qualification and increased memory. Parent explicitly chose isolation; no retry and no latency source/web changes integrated."
+  },
+  "real_foulborn_result": {
+    "cost": 4.11822156262245,
+    "success": 1,
+    "off_policy": 0,
+    "source": "448ef4a754945bfe4356b17271303197a7c2feab",
+    "scope": "Owner S-N1 functional witness only; final guarded or combined replay unrun, no economic delta claim."
+  },
+  "unrun": [
+    "combined WASM rebuild and actual worker",
+    "full acceptance suite",
+    "Simulator",
+    "rendered UI",
+    "combined timing/performance benchmarks",
+    "post-guard real Foulborn replay",
+    "whole large Bow policy-cost decomposition"
+  ],
+  "processes": {
+    "owned_sessions_remaining": [],
+    "native_batch_finished_utc": "2026-10-02T16:44:49.1348811Z",
+    "python_finished_before_utc": "2026-10-02T16:45:20Z",
+    "filtered_native_process_inventory": "empty after completion",
+    "new_long_commands_after_1645": false
+  },
+  "isolation": "Main and overnight integration unchanged; protected root 0 untouched; no data/prices refresh, dependency install, push, deployment, or subagent."
 }

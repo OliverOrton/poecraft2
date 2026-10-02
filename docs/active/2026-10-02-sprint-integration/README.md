@@ -1,36 +1,71 @@
-# Sprint integration checkpoint
+# Passing native sprint integration
 
-This separate worktree/branch starts at `f08facbb` and leaves main and the
-previous overnight integration untouched. Only reviewed passing pins are
-selected. The [receipt](qualification.json) binds source pins, native tree,
-compatible test evidence, isolated candidates and explicit unrun checks.
+Qualified native source: `5d11f6335c4207f2044d826aba7109175a6642a3` on `dot/sprint-integration-20261002`,
+worktree `C:/Users/Oliver/Documents/poecraft2-sprint-integration`. Baseline
+`f08facbb` and main `ebcd98cd` are unchanged. Final documentation commits do not
+change the qualified engine tree `da81b73d3afd0ea7660bfc046537761b354405a5`.
+The [receipt](qualification.json) pins every selected source, artifact, command,
+log hash, exclusion and unrun check.
 
-Integrated: independent finite reforge/uniform-removal safety regressions,
-original-root caller-operation scope repair, matching-identity stale-certificate
-refusal tests, and the read-only cluster catalogue resolver. Native source is
-identical to tested review `1566719`; no combined native rebuild was needed to
-reuse that evidence. The integration configuration succeeds and its 53 focused
-Python tests pass. The inherited release WASM is not qualified for the repaired
-source; no browser-parity claim is made.
+Integrated: independent finite reforge and physical-removal regressions;
+original-root caller-scope and matching-identity stale-certificate rejection;
+read-only cluster catalogue; guarded authored Dominance; mismatch statewise
+containment; and private Foulborn with parsed-operation supplementary scope.
+Only HANDOFF conflicts needed manual reconciliation; production source merged
+cleanly and the combined guards were reviewed before validation.
 
-Latency `87d3977` remains isolated after automatic approval rejected its merge
-for failed 250 ms qualification and increased memory. Parent explicitly chose
-isolation; do not retry. Its measured improvement and unchanged selected policies
-remain valid experimental evidence, with the receipt's limitations intact.
+## Combined qualification
 
-Foulborn `448ef4a` has passing finite owner evidence, but its functional run is
-pending. Parsed optional grammar metadata fixes whitespace laundering; removing
-both grammar/scope fields still appears to bypass the private supplementary
-opt-in when all three primitives are caller-admitted. The generic operation gate
-cannot infer controller grammar from primitive membership. Require the bounded
-stripped-metadata negative control and parent disposition before promotion.
-This is a source-review finding, not a newly demonstrated runtime failure.
+The final two-job native build and shared DLL link pass. Fourteen bounded serial
+selectors pass **1,147,469 checks, zero failures**, including scope/cache controls,
+Foulborn stripped metadata, protected programmes, authored Dominance, mismatch
+assertion/restoration paths, bounded Finish, fallback, incremental/checkpoint
+compatibility, the 378-case independent reforge oracle, 128 physical-removal
+carriers and incoming Calculator laws. The batch finished at 16:44:49 UTC.
+The combined DLL passes **18 Python authored-Dominance tests**. Integrated cluster
+and neighboring ingest checks pass **53 Python tests**. No owned process remains.
 
-Dominance's bounded authored identity gate was reviewed; await its final expanded
-qualification pin. Mismatch's proposal-versus-native difference alone is not an
-execution-law defect; await its retained capture/veto/resume authority controls.
-Do not merge untested WIP to meet the clock. Target source freeze 16:25 UTC,
-wrap substantive work 16:45, all processes stopped by 16:55. No usage reset.
+## Exact authority boundaries
 
-All owned commands have exited at this checkpoint. New native candidate merges
-would require fresh combined validation; this receipt does not prequalify them.
+Caller-operation validation rejects disabled families and operations that are
+neither caller primitives nor individually trusted compiler-bound dependencies.
+Supplied root graphs carry no trusted bindings. Both this gate and the native
+Foulborn capability gate run before evaluation/cache reuse. Foulborn metadata
+cannot authorize a stripped graph: gated root-only Foulborn needs explicit
+supplementary capability, and explicit gated-policy restriction still refuses.
+Opted-in and genuinely ungated positive controls pass.
+
+Mismatch rejects copied unreconciled statewise values and root-entry-only values
+for statewise reuse. It preserves independently checked root graphs/costs and
+independent completion lowers. The working-result veto is conservative for the
+solve lifetime; it is not a generation-indexed replacement protocol. Absence of
+veto adds no positive native-class equivalence or optimality proof.
+
+Dominance remains a bounded authored identity slice with native complete ordered
+pairs and dual-lock refusal. It does not enter automatic Current/Finder. Cluster
+catalogue lookup always returns `cluster_unsupported`; gameplay laws are not
+inferred from source metadata.
+
+## Exclusions and remaining qualification
+
+Latency `87d3977` remains isolated. Automatic approval rejected its merge for
+failed 250 ms qualification and increased memory; parent confirmed isolation.
+No retry occurred. The measured partial improvement remains on its own branch.
+
+The mismatch owner reproduced six fracture-fixture failures in 382 broader
+joint-continuation checks on untouched `f08facbb` and its final branch. This is
+explicit baseline debt, not a passing selector. The focused authority controls
+pass in this combined receipt. The complete large Bow cost discrepancy remains
+unapportioned; the finite witness establishes representative-pool nonuniformity.
+
+Foulborn S-N1's checked 4.11822156262245c, success-one, off-policy-zero result
+belongs to `448ef4a`, before the final capability guard. Final guarded/combined
+real replay and economic delta qualification are unrun. No new timed experiment
+was launched by this integration task.
+
+**Combined WASM and worker are unqualified.** The baseline generated module is
+unchanged, and the Dominance-only WASM was deliberately not imported. Rebuild
+from this combined source before browser parity or release acceptance. Full
+acceptance, Simulator and rendered UI are unrun. No push/deployment, data/prices
+refresh, dependency install or protected root `0` access occurred. Source froze
+before the final build; after 16:45 work is limited to recording this receipt.
