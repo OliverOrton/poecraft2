@@ -724,7 +724,8 @@ export interface SolveSummary {
         | "no_executable_policy"
         | "numerical_stability"
         | "requested_bounded_finish"
-        | "finder_complete";
+        | "finder_complete"
+        | "bounded_envelope_incomplete";
     cap_hit_mask: number;
     registry_actions: number;
     candidate_actions: number;
@@ -746,7 +747,8 @@ export interface SolveSummary {
         | "no_executable_policy"
         | "numerical_stability"
         | "requested_bounded_finish"
-        | "finder_complete";
+        | "finder_complete"
+        | "bounded_envelope_incomplete";
     lower_bound: number | null;
     upper_bound: number | null;
     evaluated_policy_cost: number | null;

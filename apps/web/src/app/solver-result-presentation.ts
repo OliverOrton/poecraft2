@@ -178,6 +178,8 @@ function terminationLabel(
             return exactExecutablePolicy
                 ? "Exact proof closed"
                 : "Coarse discovery closed";
+        case "bounded_envelope_incomplete":
+            return "Action discovery incomplete";
         case "target_gap":
             return "Requested gap target met";
         case "refused_resource_cap":
@@ -317,6 +319,9 @@ export function solveTerminationDetail(
             : retainedCoreDetail ??
                   `The solve reached a resource cap${cap} before it could certify an executable policy.`;
     }
+    if (summary.termination === "bounded_envelope_incomplete") {
+        return "Action discovery stopped with unresolved actions. The independently evaluated executable policy remains bounded, with open optimality obligations.";
+    }
     if (summary.termination === "target_gap") {
         return "The solve stopped after a completed lower/upper round satisfied the requested certificate target.";
     }
@@ -375,6 +380,8 @@ function stopCauseLabel(
             return exactExecutablePolicy
                 ? "Exact proof closed"
                 : "Coarse discovery closed";
+        case "bounded_envelope_incomplete":
+            return "Action discovery incomplete";
         case "target_gap":
             return "Requested gap target met";
         case "state_cap":

@@ -571,6 +571,33 @@ import {
     console.log("  ok - finder mode presents checked cost without proof authority");
 }
 
+{
+    const summary = solveSummary({
+        policy_available: true, policy_status: "bounded_feasible",
+        termination: "bounded_envelope_incomplete", stop_cause: "bounded_envelope_incomplete",
+        lower_bound: 0, upper_bound: 424.3741, evaluated_policy_cost: 424.3741,
+        absolute_optimality_gap: 424.3741,
+    });
+    const telemetry = {incremental_action_envelope: {
+        enabled: true, closed: false, remaining_action_envelope: 1,
+        actions: {unevaluated: 1, evaluating: 0, unresolved: 0},
+    }};
+    const detail = solveTerminationDetail(summary, telemetry);
+    assert.match(detail, /unresolved actions/);
+    const markup = solveResultMarkup({
+        summary, admittedActionIds: ["scour"], excludedActions: 0,
+        missingPriceKeys: [], economyLabel: "Pinned economy", terminationDetail: detail,
+        productActionScope: "goal_relevant", goalProgressGatedReforges: true,
+        hasCompiledStrategy: true, compiledOperationTypes: ["bench", "scour"],
+        busy: false, verification: null, telemetry,
+    });
+    assert.equal(shouldCompileSolvePolicy(summary), true);
+    assert.match(markup, /Action discovery incomplete/);
+    assert.match(markup, /data-exact-authority="false"/);
+    assert.doesNotMatch(markup, /Other resource cap|Exact optimal policy|No stopping cause reported/);
+    console.log("  ok - incomplete action discovery retains its bounded policy without a false cap");
+}
+
 function solveSummary(overrides: Partial<SolveSummary>): SolveSummary {
     return {
         converged: false,
