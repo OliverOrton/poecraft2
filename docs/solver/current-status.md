@@ -26,9 +26,10 @@ cleanup-only Scour, terminal crafted cleanup and coverage-compatible Multimod
 through bounded native programmes; lower tables include the new cleanup law.
 With Foulborn disabled in both frozen comparison arms, W1 returns the checked
 424.3741 upper, and W4 closes at 0.3741 within restricted candidate/generated
-grammar. W1's unnamed-stop report obligation fails despite a valid policy.
-Bow returns a checked 160160.995674 policy without the better historical tail.
-Its full-context root setup rejection remains unresolved.
+grammar. In that receipt, W1's unnamed-stop report obligation fails despite a
+valid policy. Its Bow result is a checked 160160.995674 policy without the better
+historical tail; full-context root setup rejection was unresolved at that
+checkpoint. The later overnight delta below owns the subsequent repair.
 
 Private Finder ProtectedSide(Scour) has a checked original-root finite fixture
 with positive reached entries. The natural-T1 real-data native and actual-worker
@@ -41,6 +42,32 @@ in the receipt. No push, release or public default
 promotion occurred. Both timed allowances are spent; no runtime gain is claimed.
 The broader currency/Foulborn proof restrictions below remain in force.
 
+## CURRENT overnight delta and isolated integration (2026-10-02)
+
+The [overnight record](../active/2026-10-02-current-overnight/README.md) owns the
+new CURRENT source, actual strategies and serial native pair. Complete parent
+carrier classes now survive local automatic admission; dirty Bow setup and its
+native paid Exalt/lock/Scour tail return a checked 51222.520820c upper versus
+160160.995674c in the matched control. Both remain bounded Finish, with success
+one, complete reconciled cost and zero off-policy mass. No exactness or fresh
+worker qualification is inferred. W1's restored-incumbent reporting now names
+unresolved discovery `bounded_envelope_incomplete`, preserving actual cap
+precedence and verified-artifact integrity; focused native/transport checks pass,
+while a real W1 timed replay remains unrun.
+
+The selected isolated integration combines that completed CURRENT chain and the
+[paid-root recovery slice](../active/2026-09-28-currency-expansion/README.md#overnight-integration-repair-2026-10-02).
+An empty normal-root proposal requires complete native renewal/miss laws, legal
+paid Scour to the same root, explicit original-root graph checking and bounded
+owned memory. It supplies no parent statewise or positive lower authority.
+Parent-reported Mechanics N4 checks Alchemy/Scour at 4.656588642517449c with
+success effectively one, zero off-policy mass and `TargetNeutralZero`; Foulborn
+has zero rows/no use. Native exit 2 from a stale expected-status field remains
+recorded alongside runner exit 0. This is scoped original-request recovery,
+not general Breach/Foulborn qualification. Finder's unfinished exact-checker
+work is excluded. Combined compile/focused evidence and eventual final-byte
+worker qualification retain separate identities in the overnight record.
+
 ## Currency expansion delta (2026-09-28)
 
 The [currency receipt](../active/2026-09-28-currency-expansion/README.md#execution-receipt-and-remaining-holds)
@@ -51,8 +78,9 @@ dependencies, use `TargetNeutralZero`; no old positive lower/closure certificate
 extends to these actions. A magic Augmentation goal produces compiled policies
 checked under the original root, goal, prices and scope in both Current and Finder.
 The [normal-root witness](../active/2026-09-28-currency-expansion/pro-witness.json)
-returns `no_executable_policy` in both lanes. Registry admission is not general
-search qualification. Shaper/Elder extend existing Influence Exalt contracts,
+historically returns `no_executable_policy` in both lanes. The later scoped
+Current Alchemy/Scour recovery is recorded above; Finder and full Foulborn search
+remain separately unqualified. Registry admission is not general search qualification. Shaper/Elder extend existing Influence Exalt contracts,
 without adding automatic standalone Influence Exalt grammar.
 
 Native Current/Finder and exact projection reject strand-bearing, absent and

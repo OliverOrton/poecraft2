@@ -1,0 +1,208 @@
+{
+  "scope": "completed_CURRENT_plus_pinned_Mechanics_only; Finder_pending",
+  "branch": "dot/integration-20261002",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight",
+  "base_source": "ebcd98cdda2c1828cd855f549831951e6ba7470a",
+  "native_and_WASM_build_source": "336c5b2dff85691f5b509915e75d8a105e7a4c20",
+  "owner_revisions": {
+    "CURRENT": "6a24e995c0cbafcb6cb7c33ccbb928bcf7b9fb03",
+    "Mechanics": [
+      "67d8475d5488d7dc8b4d9af7de2fcc7b5eb66b8c",
+      "514f7ff8c8314b44ffd194909ea1e8034d08891c",
+      "9ab18a7ddd57a179d2be9bf4774827e72d34c5b0",
+      "bea568394ef8c507fa4a6fe4a7cdaf7943685ce5"
+    ]
+  },
+  "integration_picks": [
+    "ae38c3c7d89c6c9408be932d6fd7d2d8a4199807",
+    "2e11423b4d6ef9cb9c363e0a97bde8053d424932",
+    "3fbe7d48dd2613c13290fe1c42181e60171819fb",
+    "336c5b2dff85691f5b509915e75d8a105e7a4c20"
+  ],
+  "review": {
+    "textual_conflicts": 0,
+    "publication_diffs_against_both_owners_reviewed": true,
+    "W1_status_cap_precedence_and_artifact_guard_preserved": true,
+    "explicit_original_root_mode_and_provenance_preserved": true,
+    "parent_statewise_and_positive_lower_authority_not_added": true,
+    "private_and_checker_owned_memory_guards_preserved": true
+  },
+  "native_source_files_sha256": {
+    "bindings/wasm/wasm_api.cpp": "10f0b5d8a6d31cb02729726ff8959841e01141fe75ecc48fd2db17af30f1a90d",
+    "engine/benchmarks/solver_benchmark.cpp": "52d460b64da6d7f512b61d7e58e9988c4f85f7fa98e88cd11b539019580d4f5b",
+    "engine/include/poecraft/solver.h": "6e42950368b6e30c21729715efb1eab3e52d0c4b5e5568e1de7cf0c0e0a943df",
+    "engine/src/solver_api.cpp": "5063f73805cf1c2dcb3b72d39bf9d2689f07a5ab8daf8a39b464a00fc03d19c4",
+    "engine/src/solver_compile_contracts.hpp": "8bf104a151cc0c2db132311855476c336b58bc6241e754d7d12625bb882f7c62",
+    "engine/src/solver_options_automatic.cpp": "39e0ac274ec8630f9ba4b0afc4c4e2d497df370b56d28413187cf8320c82633c",
+    "engine/src/solver_policy_assertion_work.cpp": "5735fd97fc912530f6697f56ae7fcf651358196f763d5a19ac3e0e9438037fa8",
+    "engine/src/solver_policy_refinement.hpp": "c028668dc66c3bc0d8577012c43ca7bbb5a968124ab4d0f2f3c37c068bd535de",
+    "engine/src/solver_solve_bellman.cpp": "883c473a220abe21befbd6d61dab7886728a31de791b9f6bb56d616ad922b28a",
+    "engine/src/solver_solve_constructive.cpp": "89261316f56fd223097f5c0d615e1feddb1eccf782688be256611a350606d02b",
+    "engine/src/solver_solve_contracts.hpp": "60b3fabd3475a8f5a7d39692d1318a4268549769f7e996d04fcdf0648bc83a38",
+    "engine/src/solver_solve_finish.cpp": "5e25ac5bc2bcea16bdcb2df48f397c4be1e39be4a3125db059e9e23dbabff3d6",
+    "engine/src/solver_solve_incremental.cpp": "a18db411baa93cc74e4459afa64d9743c112bfe7315e649318be8d91ff9502fb",
+    "engine/src/solver_solve_telemetry_json.cpp": "9026830c22c82ae5400262b088ac1ed6041880755d12084a674691993da9282d",
+    "engine/src/solver_solve_types.hpp": "d459cd3491b93ef7a26b7c88837b074cb0632e751972c5cc0720c8a16c1e8efa",
+    "engine/tests/test_solver_metamod_recovery.cpp": "6d3be7af396b11b9eb293e1a646ce90ca7e6a8da9825eabb8cc063371389190c",
+    "engine/tests/test_solver_solve.cpp": "e5c621b668e81f499f3ef161a075b2a11962dc105bf279d1d55999d51c8883c8"
+  },
+  "binaries": {
+    "build/engine/poecraft_engine_tests.exe": {
+      "sha256": "755c34f9336433ef01c6d21d64a51040a3e075bc27829a8b7f75d66cd6aa2fd1",
+      "bytes": 18712305
+    },
+    "build/engine/poecraft_engine.dll": {
+      "sha256": "26b2e87e78e4f2907e22026c434bd475b8fa07ed09e7a69515e2d365bf0e1cfc",
+      "bytes": 13962317
+    },
+    "build/engine/poecraft_solver_benchmark.exe": {
+      "sha256": "a1465c290e4565c034a33d330cef337728ca5d71bc5af12d749a081f3c6e8495",
+      "bytes": 14530124
+    },
+    "bindings/wasm/dist/poecraft_engine.wasm": {
+      "sha256": "f2ed469747643cbc7ac3ca0f8e6cceda109b66e93bad0aa737f09b40a56d6b9f",
+      "bytes": 8139716
+    },
+    "bindings/wasm/dist/poecraft_engine.mjs": {
+      "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297",
+      "bytes": 21237
+    }
+  },
+  "validation": {
+    "native_build": "passed",
+    "metamod_carrier_W1_Conquest": {
+      "checks": 516,
+      "failures": 0
+    },
+    "paid_reset": {
+      "checks": 1082,
+      "failures": 0
+    },
+    "assertion_service": {
+      "checks": 384,
+      "failures": 0
+    },
+    "bounded_finish_artifact_integrity": {
+      "checks": 203,
+      "failures": 0
+    },
+    "abstraction": {
+      "checks": 47173,
+      "failures": 0
+    },
+    "python_contracts_and_patch": {
+      "passed": 9
+    },
+    "python_service_request_identity": {
+      "passed": 1,
+      "dry_run_only": true
+    },
+    "release_WASM": "passed",
+    "WASM_warnings": "existing 32-bit-width and unsupported-action switch warnings retained",
+    "npm_test": {
+      "passed": true,
+      "native_smoke_filter": "coverage goals use native terminal truth and neutral proof authority",
+      "finite_smoke_checks": 4,
+      "other_package_tests": "all passed",
+      "long_solver_simulation_smoke": "excluded",
+      "worker_dispatch_unit_native_boundary": "mocked; no actual-worker benchmark"
+    },
+    "typecheck": {
+      "final": "passed",
+      "initial": "missing generated build-info.json; superseded after normal pretest generation"
+    },
+    "whitespace": "git diff --check passed"
+  },
+  "logs": {
+    "native-build.txt": {
+      "path": "out/integration-current-mechanics/native-build.txt",
+      "sha256": "42d9f32df49a9846347e2317f9ef2ee64a070a9ef809eab0823949d1f71b1f35"
+    },
+    "metamod.txt": {
+      "path": "out/integration-current-mechanics/metamod.txt",
+      "sha256": "07d636d02335c3d07835b24bce50a2bfec4619139b6828752009498aa53936c7"
+    },
+    "paid-reset.txt": {
+      "path": "out/integration-current-mechanics/paid-reset.txt",
+      "sha256": "af7dec7618a8aa44517aecc61aa651dadc551f2326709c3378cdf1b32991d502"
+    },
+    "assertion.txt": {
+      "path": "out/integration-current-mechanics/assertion.txt",
+      "sha256": "ac7649385adeebee429821fa2f378902a987abec5a36822f76e7629def2dffee"
+    },
+    "bounded-finish.txt": {
+      "path": "out/integration-current-mechanics/bounded-finish.txt",
+      "sha256": "b0b55e378d69d131157b98a709dbb886eca9f8848189ef7a520a8bfe851b3407"
+    },
+    "abstract.txt": {
+      "path": "out/integration-current-mechanics/abstract.txt",
+      "sha256": "73c14e5d767097c08b900ad3b53070b1ab29356b9203f646989d63dd8a13f503"
+    },
+    "python-contracts.txt": {
+      "path": "out/integration-current-mechanics/python-contracts.txt",
+      "sha256": "b3e572fd3d8a3f4c975146505d679b9462022453130a665332651bb74a69fff5"
+    },
+    "python-service-identity.txt": {
+      "path": "out/integration-current-mechanics/python-service-identity.txt",
+      "sha256": "6da1d9f6315cdd5685886f9428675ca88e0bdb00f262afeabeba56f738f2814b"
+    },
+    "wasm-build.txt": {
+      "path": "out/integration-current-mechanics/wasm-build.txt",
+      "sha256": "f19197569771a7cb13d7d7f294eafa74cae197ae8c7b5b14cd8afcb46d6ee956"
+    },
+    "web-tests.txt": {
+      "path": "out/integration-current-mechanics/web-tests.txt",
+      "sha256": "88e7b9c7f57d150847b8845d32a7220923ca19f15db20827a2c05b85d4e0ec08"
+    },
+    "web-types.txt": {
+      "path": "out/integration-current-mechanics/web-types.txt",
+      "sha256": "fb4393b69391611ad04249f794c334a40faab0701e2cee4eb8b21cfbe2146d40"
+    },
+    "web-types-final.txt": {
+      "path": "out/integration-current-mechanics/web-types-final.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "command_summary": {
+    "native_build": "powershell -File scripts/build.ps1; CMAKE_BUILD_PARALLEL_LEVEL=4",
+    "native_test_flags": [
+      "--solver-metamod-recovery-only C:/Users/Oliver/Documents/poecraft2/data/compiled/current",
+      "--solver-integrity-only paid-reset",
+      "--solver-assertion-service-only",
+      "--solver-bounded-finish-only",
+      "--solver-abstract-only C:/Users/Oliver/Documents/poecraft2/data/compiled/current"
+    ],
+    "WASM": "powershell -File scripts/build-wasm.ps1",
+    "web": "POECRAFT_SMOKE_TEST filter; npm test; npx tsc --noEmit"
+  },
+  "owner_qualification_boundaries": {
+    "Bow_native_pair": "original CURRENT owner binaries and native-comparison.json; not rerun on combined bytes",
+    "Mechanics_N4": {
+      "evidence_source": "parent-reported; raw report/lifecycle paths requested and pending",
+      "checked_cost": 4.656588642517449,
+      "success": "effectively 1",
+      "off_policy_mass": 0,
+      "lower": 0,
+      "lower_authority": "TargetNeutralZero",
+      "selected_operations": [
+        "alchemy",
+        "scour"
+      ],
+      "Foulborn_rows": 0,
+      "Foulborn_selected_use": false,
+      "native_exit_code": 2,
+      "runner_exit_code": 0,
+      "complete_cases": 1,
+      "survivors": 0,
+      "native_exit_reason": "stale expected-status field",
+      "full_Breach_Foulborn_qualification": false
+    }
+  },
+  "new_integration_timed_native_invocations": 0,
+  "new_actual_worker_invocations": 0,
+  "Simulator_qualification": false,
+  "remaining_actual_workers": "parent reserves both for final combined bytes after Finder lands or is explicitly held",
+  "main_data_prices_root_0_and_hosting": "untouched",
+  "publication": "local commits only",
+  "current_hold": "CPU quiescent for parent Mechanics N5; no new heavy commands until release"
+}

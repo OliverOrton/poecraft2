@@ -235,52 +235,69 @@ slot per exit (`solver_options_helpers.hpp`, protected family); the multi-slot
 constructive renewal family is a different owner. No shared grammar, terminal
 mechanic, cap or historical policy was imported or changed in this review.
 
-## Isolated integration preparation - no owner changes applied
+## Isolated CURRENT + Mechanics integration
 
-The parent requested integration preparation after releasing the Mechanics CPU
-hold. Fresh worktree `C:/Users/Oliver/Documents/poecraft2-integration-overnight`,
-branch `dot/integration-20261002`, is created at initial main `ebcd98c`. No owner
-commit is applied and no build or test is launched there. Its future native
-output must stay under that worktree, separate from all three owner outputs.
-After the parent identifies final stable revisions, apply those boundaries.
-Main/root `0` remain untouched.
-Apply owners' complete stable changes, preserve individual qualification receipts,
-then regenerate release WASM once for the combined native source. Do not retain
-an intermediate owner's binary as combined-build authority.
+The parent selected CURRENT through `6a24e995c0cbafcb6cb7c33ccbb928bcf7b9fb03`
+and Mechanics `67d8475`, `514f7ff`, `9ab18a7`,
+`bea568394ef8c507fa4a6fe4a7cdaf7943685ce5`. Worktree
+`C:/Users/Oliver/Documents/poecraft2-integration-overnight`, branch
+`dot/integration-20261002`, starts from unchanged main `ebcd98c` and retains the
+CURRENT lineage. Cherry-picked Mechanics revisions are `ae38c3c`, `2e11423`,
+`3fbe7d4`, `336c5b2`. Finder is explicitly pending and absent from this slice.
+Native outputs stay under this integration worktree's `build/engine`; no owner's
+binary is reused as combined-build authority.
 
-Review the overlap explicitly: CURRENT/Mechanics `solver_solve_finish.cpp` and
-`test_solver_solve.cpp`; Finder/Mechanics `solver_compile_contracts.hpp`;
-CURRENT/Finder API and benchmark reporting; canonical upper-authority/current
-status and the short top-level handoff. The new W1 incomplete-envelope status,
-actual cap precedence and lost-artifact invariant must coexist with Mechanics'
-explicit original-root assertion mode, root-only provenance and bounded memory.
-Finder's stable acquisition/reset change `a42e971` and diagnostic `d4637b0` still
-have owner-reported broad-suite failures/censored qualification; parent review
-must establish the accepted boundary rather than blindly picking branch HEAD.
-Mechanics' correction `bea5683` resolves the reviewed goal-copy/root-signature
-memory findings, but its real qualification is owned by that session.
+Git applied the shared publication/tests/upper-authority edits without textual
+conflicts. Before building, direct diffs against each owner confirmed that W1's
+incomplete-envelope predicate, real cap precedence and lost-artifact invariant
+coexist with the paid-reset checker. Original-root checking requires its explicit
+mode, exact start item, supplied graph, empty parent decisions/bindings and no
+finite nonroot values. Its identity binds mode/entry requests, memory reserves
+both graph copies, and private generation charges nested signature/frame bytes
+and releases the copied goal before suspension. The root-only certificate skips
+statewise return bridging and adds no positive lower authority.
 
-Combined validation should exercise the actual overlaps: finite metamod/W1
-publication, bounded Finish/artifact integrity, paid-reset original-root mode,
-Finder native controls and its known failing cases, then required WASM build,
-focused web transport/presentation and typecheck. Broaden only for unresolved
-failures or changed authority; new timed or worker economic qualification needs
-parent allocation. The empty integration checkout is prepared; no cherry-pick, owner merge, main
-merge or push has been performed by CURRENT.
+Mechanics N4 is a **parent-reported original-request qualification**, not a run
+of combined bytes: checked Alchemy/paid-Scour upper `4.656588642517449c`, success
+effectively one, zero off-policy mass, lower zero (`TargetNeutralZero`). Foulborn
+has zero rows and no selected use; this does not qualify full Breach/Foulborn
+search. Native exit **2** from a stale expected-status field survives in the
+record alongside runner exit **0**, one complete case and zero survivors. The
+owner's frozen preflight and qualification limits are retained separately;
+full N4 report/lifecycle paths were requested for hash-preserving reconciliation.
+No new timed solve or worker was launched by integration.
+
+The CURRENT owner receipt continues to qualify its original Bow pair only.
+Mechanics fixtures and N4 retain their own build/input identities. Combined
+native build and final focused checks pass: carrier/W1/Conquest **516**, paid
+reset **1082**, assertion service **384**, bounded Finish/artifact **203**,
+abstraction **47173**, all zero failures; **10** Python family/patch/request
+identity checks pass. Required release WASM rebuild succeeds with existing
+width/switch warnings. Filtered `npm test` passes **4/4** finite native smoke
+checks plus all other package tests (worker dispatch has its native boundary
+mocked). Initial typecheck lacked generated build-info; normal pretest generation
+resolved it and final typecheck passes. Both logs remain on disk. No long solver,
+simulation or actual-worker economic benchmark was run.
+
+`integration-qualification.json` pins exact owner/pick/source identities, changed
+native file hashes, commands, all log hashes and final binaries. Native/WASM
+build source is `336c5b2`; subsequent edits are documentation and the regenerated
+WASM only. Combined WASM SHA256 is
+`f2ed469747643cbc7ac3ca0f8e6cceda109b66e93bad0aa737f09b40a56d6b9f`;
+DLL `26b2e87e78e4f2907e22026c434bd475b8fa07ed09e7a69515e2d365bf0e1cfc`.
+The wrapper remains unchanged. Bulk logs are under
+`out/integration-current-mechanics/`.
+
+Both remaining actual-worker slots are reserved by the parent for final combined
+bytes after Finder lands or is explicitly held. No intermediate build receives
+worker/economic acceptance. Main/root `0`, data/prices and hosting remain
+unchanged; all commits are local. Do not cherry-pick Finder's unfinished checker.
 
 ## Continuation and integration gate
 
-The parent released the Mechanics qualification hold after N4 exited zero with
-no survivors. CURRENT completed later-M12 source/artifact review and prepared
-the empty integration checkout. All own commands ended; no own process or
-handle remains. Finite mixed-tag controls remain at their original passing
-identity, and no additional test, build or solver run was launched. No additional timed solve is permitted. The saved phone request is unavailable;
-a repository-derived variant must not be described as Oliver's exact case.
-Mechanics owns constructive renewal and Finder owns its integration. A source
-review finding about nested allocations in the new mechanics coroutine was
-sent to the parent for the owner to resolve; CURRENT did not edit that owner.
-
-Main remains untouched; local commits only. The isolated integration branch
-is prepared at initial main; wait for the parent's final stable owner revisions;
-do not cherry-pick unfinished shared evaluator work or merge main. Stop new
-work before 2026-10-02 17:00 UTC and preserve a final handoff.
+The parent selected this integration slice after Mechanics N4 completed. Finder
+exact-checker work remains pending. All authorized integration builds/checks have ended; no own process or handle
+remains. Parent requested a fresh CPU hold for Mechanics N5. Stay quiescent for
+new heavy commands until release; source work may continue. No further
+native timed solve or worker launch is allocated to CURRENT. Stop new work
+before 2026-10-02 17:00 UTC and leave an honest final handoff.

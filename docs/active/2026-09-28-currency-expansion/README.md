@@ -996,6 +996,16 @@ These fixtures qualify the native slice, not general Foulborn search or an
 original-request performance result. No Simulator or WASM qualification is
 claimed in this worktree.
 
+Subsequent parent-selected N4 qualification reports a checked original-request
+Alchemy/paid-Scour controller at 4.656588642517449c, success effectively one and
+zero off-policy mass. Lower remains zero `TargetNeutralZero`; Foulborn has zero
+rows/no selected use. Native exit 2 from a stale expected-status field remains
+recorded alongside runner exit 0, one complete case and zero survivors. The
+[combined overnight record](../2026-10-02-current-overnight/README.md#isolated-current--mechanics-integration)
+retains this parent-reported disposition while full report/lifecycle paths are
+pending. This updates the earlier preflight-only state without promoting full
+Breach/Foulborn, Simulator or final combined-byte worker qualification.
+
 The compact [Dominance assessment](dominance-assessment.json) preserves the
 verified baseline identities and fixtures. Dominance remains held. Its existing single-action kernel retains ordered
 upgrade/removal pair probabilities and explicit elevation mappings, but the

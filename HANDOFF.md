@@ -1,22 +1,29 @@
 # Handoff
 
-Oliver's independent [CURRENT overnight continuation](docs/active/2026-10-02-current-overnight/README.md)
-retains a matched checked Bow improvement in isolated `dot/current-20261002`:
-160160.995674c -> 51222.520820c (68.018% lower); eight nodes use native Exalt,
-prefix lock and Scour. Both independent compiled evaluations converge with
-success one, complete reconciled cost and zero off-policy mass. N2/N3 ran once
-serially and are spent; no worker or additional timed slot is allocated.
-W1 reporting (`be034a5`, web `362404d`) and carrier repair (`ca9daff`) are locally
-committed; native/WASM/focused web checks pass. Receipts and strategy hashes are
-committed in the living record. Both policies remain bounded Finish results;
-real W1 timed replay and worker qualification remain unrun. No own process is
-live. Parent-authorized Conquest review retains actual destructive recovery findings
-and a labelled mixed-tag native control (516 checks, zero failures). Later M12 empty-root review keeps its
-85558.706186c checked policy and failed 387.339 ms worker-slice limit separate
-from older partial cb03. Empty integration checkout `dot/integration-20261002`
-is prepared at initial main; no owner commits applied. All own processes ended;
-final stable owner revisions remain pending. Historical MM receipts below stay
-unchanged, and main/root `0` are untouched.
+Oliver's [CURRENT overnight continuation](docs/active/2026-10-02-current-overnight/README.md)
+is integrated through `6a24e99` with the parent's completed Mechanics chain
+through `bea5683` in isolated `dot/integration-20261002` (combined source
+`336c5b2`). Shared publication/tests/contracts were reviewed before the local
+build. W1's status/artifact checks and full carrier-universe repair coexist with
+explicit original-root paid-reset checking; lower authority stays separate.
+Finder's unfinished exact-checker work is excluded. Integration build and
+focused checks pass: carrier/W1 516, paid reset 1082, assertion 384, bounded
+Finish 203, abstraction 47173, Python 10, release WASM, filtered npm and final
+typecheck. All own processes ended; CPU hold for Mechanics N5 is active. The
+living record's integration receipt pins binary/log hashes. Actual-worker and
+economic qualification of combined bytes remains pending.
+
+Owner evidence remains scoped: CURRENT's N2/N3 checked Bow upper improves
+160160.995674c -> 51222.520820c (68.018%), with bounded Finish, success one and
+zero off-policy mass. Mechanics N4 is parent-reported at 4.656588642517449c for
+Alchemy/paid Scour, success effectively one, zero off-policy and lower zero
+`TargetNeutralZero`; Foulborn has zero rows/no use. Native exit 2 from stale expected
+status remains recorded despite runner exit 0. Full Breach/Foulborn qualification
+is not claimed. Mixed-tag finite controls pass 516 checks; later M12 Conquest
+empty-root evidence stays separate from older partial cb03 and retains its failed
+387.339ms worker-slice limit. No integration timed solve or worker ran. Remaining
+actual-worker slots belong to final bytes after Finder lands or is explicitly
+held. Main/root `0`, data/prices and deployment remain untouched.
 
 Oliver's selected [MM0–MM7 recovery](docs/active/2026-09-29-metamod-recovery/README.md)
 is locally retained with partial acceptance. Last coherent execution commit:
