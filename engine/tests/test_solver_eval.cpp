@@ -3928,6 +3928,17 @@ void dominance_automatic_discovery() {
             }
         }
     }
+    // Exact requests supplied by integration review: neither may create a
+    // handle whose allowed programme/action scope is silently reduced.
+    for(const auto& [suffix,reason]:std::vector<std::pair<std::string,std::string>>{
+        {R"(,"actions":["dominance","annul"],"automatic_candidates":true)","automatic programmes"},
+        {R"(,"actions":["dominance","foulborn_exalt","annul"])","foulborn_exalt"}}) {
+        const auto goal=std::string(R"({"version":"v1","slots":[{"family_mod_key":"mod1"}])")+suffix+"}";
+        pc_solver_handle solver=nullptr;pc_error_info error{};
+        PC_CHECK(pc_solver_create(&handle,goal.data(),goal.size(),&solver,&error)==PC_RESULT_INVALID_ARGUMENT);
+        PC_CHECK(solver==nullptr);PC_CHECK(std::string(error.message).find(reason)!=std::string::npos);
+        if(solver)pc_solver_destroy(solver);
+    }
     for(const std::uint32_t mask:{0u,kAllAutomaticCandidateKindsMask}) {
         const auto goal=std::string(R"({"version":"v1","slots":[{"family_mod_key":"mod1"}],"actions":["dominance"]})");
         pc_solver_handle solver=nullptr;pc_error_info error{};

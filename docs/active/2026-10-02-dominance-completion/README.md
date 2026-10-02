@@ -198,3 +198,11 @@ bytes and receipts remain frozen and do not qualify this corrected source.
 No new real acquisition solve or WASM build is planned for this correction.
 
 Correction evidence SHA-256: native-admission-fix.log 26ea0b58c249a251b23b35421c0a4f8ba1596d12a10d0f095dfa3017f1de6b91.
+
+The exact integrator requests [dominance, annul] with automatic_candidates:true,
+and [dominance, foulborn_exalt, annul], now also have explicit refusal controls.
+The final finite suite passes 2,749 checks with zero failures; its two-job test
+build passes. New logs are build-admission-repros.log and
+native-admission-repros.log, with bulk native outputs in admission-repros-run.
+The earlier 2,743-check log remains preserved. No new artifact or real solve ran.
+Final correction log SHA-256: 992bc4a9024db2bd53be636742372a2ccc360d2ca6219c56e60799d80ce56eaa.
