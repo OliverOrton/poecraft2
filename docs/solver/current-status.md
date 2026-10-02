@@ -50,7 +50,7 @@ existing structural carrier. Expanded Current scopes, including compound
 dependencies, use `TargetNeutralZero`; no old positive lower/closure certificate
 extends to these actions. A magic Augmentation goal produces compiled policies
 checked under the original root, goal, prices and scope in both Current and Finder.
-The [rare-root witness](../active/2026-09-28-currency-expansion/pro-witness.json)
+The [normal-root witness](../active/2026-09-28-currency-expansion/pro-witness.json)
 returns `no_executable_policy` in both lanes. Registry admission is not general
 search qualification. Shaper/Elder extend existing Influence Exalt contracts,
 without adding automatic standalone Influence Exalt grammar.

@@ -133,8 +133,9 @@ not duplicated here.
 - Ordinary non-cluster bases supported by the artifact can create sessions.
 - Cluster records are preserved in canonical and compiled data, but cluster
   session construction returns `PC_RESULT_UNSUPPORTED_FEATURE`.
-- Current action state is one-item. Recombinator/two-item state and transfer
-  masks are not implemented.
+- Ordinary action state is one-item. Native Awakener transactions bind target
+  and sacrificial roles by stable keys; authored Simulator inventories retain
+  those roles. Recombinator mechanics and transfer masks remain unimplemented.
 - Item fields can preserve quality, sockets, links, enchantments, and numeric
   slot rolls, but current crafting actions do not implement those mutation
   systems or populate numeric stat rolls.

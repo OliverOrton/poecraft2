@@ -150,8 +150,10 @@ and cache behavior. The WASM facade exposes the pool-debug result as JSON.
 
 ## Current boundaries
 
-- The supported universe is for ordinary one-item crafting. Cluster-specific
-  eligibility and two-item/recombinator transfer pools are not implemented.
+- Ordinary affix pools support one-item crafting. Native Awakener transactions
+  retain an influenced pair from their bound item roles and refill through
+  ordinary pools. Cluster-specific eligibility and recombinator transfer pools
+  remain unimplemented.
 - The engine has no separate runtime domain-mask inventory; the session
   compiler produces the concrete masks listed above.
 - Dynamic item facts are scanned into context scratch rather than stored as

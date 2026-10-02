@@ -86,8 +86,9 @@ pool-debug rows rather than exposing raw bitset memory to TypeScript.
 
 ## Current boundaries
 
-- No recombinator, two-item transfer, cluster-specific, or general domain
-  masks exist in the current runtime inventory.
+- No recombinator-specific transfer, cluster-specific, or general domain masks
+  exist in the current runtime inventory. Awakener uses native stable-key role
+  transactions and retained influence pairs, rather than a transfer-mask system.
 - Mask memory is ordinary C++ allocation inside session/context objects; it is
   not a stable serialized artifact format or a public ABI layout.
 - The engine uses direct cumulative weighted pools, not bitset-rank or alias
