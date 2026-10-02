@@ -2984,6 +2984,18 @@ void run_joint_product_fracture_publication_tests() {
         const auto local = work.product_fracture_kernel(root, 1);
         PC_CHECK(local.eligible);
         PC_CHECK(near(local.miss_probability, .75, 1e-12));
+        // Independently project the concrete native hit. The paid replacement
+        // kernel must retain every physical fact, including the fractured side.
+        pc_item_state native_hit = start;
+        (goal_mod < 5 ? native_hit.prefixes[0] : native_hit.suffixes[0]).flags |=
+            PC_MOD_SLOT_FRACTURED;
+        const auto expected_hit = project_item(*session, calc.layout(), native_hit);
+        for (const auto& exit : local.exits) {
+            pc_item_state physical;
+            PC_CHECK(calc.materialize(exit.state, physical));
+            if (exit.state != local.restart_state)
+                PC_CHECK(calc.state(exit.state) == expected_hit);
+        }
         const auto append = [&](std::uint32_t state, std::uint32_t op,
                                 double cost, const auto& exits) {
             solve_detail::SparsePolicyRowInput row;
@@ -3048,6 +3060,46 @@ void run_joint_product_fracture_publication_tests() {
             PC_CHECK(work.output_incumbent->portfolio_identity == identity);
         }
     }
+
+    // A mutually exclusive family can still span both affix sides. The coarse
+    // slot status does not identify that side, so it cannot assign a fracture
+    // aggregate by choosing a representative modifier.
+    auto session = make_solve_session();
+    session->family_id[5] = session->family_id[0];
+    session->primary_group[5] = session->primary_group[0];
+    session->group_ids[session->group_offsets[5]] = session->primary_group[0];
+    pc_bitset_clear(session->group_masks[20].data(), 5);
+    pc_bitset_set(session->group_masks[10].data(), 5);
+    auto registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = session->family_id[0];
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    CalcContext calc(session, goal, registry,
+        {registry.index_by_id.at("alchemy"), registry.index_by_id.at("annul"),
+         registry.index_by_id.at("fracture"), registry.index_by_id.at("restart")},
+        false, true, false, std::nullopt, {}, true);
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    for (const auto mod : {0u, 3u, 6u, 7u}) {
+        PC_CHECK(pc_item_add_mod(&start,
+            mod < 5 ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX,
+            mod, session->primary_group[mod], 0, nullptr) == PC_RESULT_OK);
+    }
+    const auto root = calc.intern_item(start);
+    const auto states_before = calc.state_count();
+    bool refused = false;
+    try {
+        (void)solve_detail::build_product_fracture_kernel(calc, root, 1);
+    } catch (const std::runtime_error& error) {
+        refused = std::string(error.what()).find("loses affix side") !=
+            std::string::npos;
+    }
+    PC_CHECK(refused);
+    PC_CHECK(calc.state_count() == states_before);
 }
 
 void run_target_neutral_proof_consumer_tests() {

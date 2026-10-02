@@ -2882,6 +2882,7 @@ ProductFractureKernel solve_detail::build_product_fracture_kernel(
     if (kernel.raw_affix_count == 0) return kernel;
 
     std::array<std::uint32_t, kMaxGoalSlots> slot_metamod_flags{};
+    std::array<std::int8_t, kMaxGoalSlots> slot_sides{};
     std::vector<std::uint32_t> accepted_slots;
     for (std::uint32_t slot = 0; slot < calc.layout().slots.size(); ++slot) {
         const std::uint32_t bit = 1u << slot;
@@ -2942,9 +2943,18 @@ ProductFractureKernel solve_detail::build_product_fracture_kernel(
             }
         }
 
+        // The redundant physical fracture aggregate participates in state
+        // identity and Scour legality. A coarse goal hit must prove its side
+        // rather than choose a representative from a mixed-side mask.
+        const auto side = session.gen_type[members.front()];
         bool first_metamod = true;
         std::uint32_t uniform_metamod = 0;
         for (const std::uint32_t mod : members) {
+            if (session.gen_type[mod] != side) {
+                throw std::runtime_error(
+                    "coarse product Fracture observer loses affix side "
+                    "for goal slot " + std::to_string(slot));
+            }
             const std::uint32_t flag = modifier_metamod_flag(session, mod);
             if (first_metamod) {
                 first_metamod = false;
@@ -2957,6 +2967,7 @@ ProductFractureKernel solve_detail::build_product_fracture_kernel(
             }
         }
         slot_metamod_flags[slot] = uniform_metamod;
+        slot_sides[slot] = side;
         kernel.acceptable_goal_mask |= bit;
         ++kernel.acceptable_affix_count;
         accepted_slots.push_back(slot);
@@ -2984,6 +2995,7 @@ ProductFractureKernel solve_detail::build_product_fracture_kernel(
         if ((kernel.acceptable_goal_mask & bit) == 0) continue;
         AbstractState success = source;
         success.fractured_goal_mask |= bit;
+        ++success.fractured_side_counts.at(slot_sides[slot]);
         success.flags |= kFlagFractured;
         success.fractured_metamod_flags |= slot_metamod_flags[slot];
         kernel.exits.push_back(

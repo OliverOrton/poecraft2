@@ -188,6 +188,16 @@ operations, and independent whole-root evaluation checks their costs and routing
 The [scoped repair](../active/2026-09-22-ordinary-capability/README.md#resumed-work--product-fracture-publication)
 does not grant raw Fracture this recovery or permit an unknown replacement tail.
 
+Every positive product hit must retain the concrete fractured successor's full
+represented identity, including its physical `fractured_side_counts` aggregate.
+The coarse satisfying mask must prove a single affix side before adding that
+count; mutually exclusive members spanning both sides do not supply this proof
+and the kernel refuses. A same-side hit adds one physical fracture exactly once,
+without changing `k/n`, paid replacement probabilities or programme costs. The
+[prefix/suffix regressions](../active/2026-10-02-sprint-integration/README.md)
+check concrete projection, Annul continuation and the independently evaluated
+C58 policy. This correspondence repair adds no global closure authority.
+
 The first no-incumbent joint candidate now reaches the existing cooperative
 compiled-graph assertion before cost improvement. Successful independent
 evaluation stores its actual graph and cost in the same bounded portfolio used
