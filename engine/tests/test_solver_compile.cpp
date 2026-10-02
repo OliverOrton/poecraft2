@@ -1,6 +1,7 @@
 #include "tests.hpp"
 
 #include "../src/solver_internal.hpp"
+#include "../src/handles_internal.hpp"
 #include "../src/solver_condition_expr.hpp"
 #include "../src/solver_policy_refinement.hpp"
 #include "../src/solver_policy_route.hpp"
@@ -4404,7 +4405,10 @@ void run_solver_protected_finder_tests() {
 }
 
 
+void run_solver_finder_foulborn_product_tests();
+
 void run_solver_finder_essence_tests() {
+    run_solver_finder_foulborn_product_tests();
     // Reconstructed finite fixtures. These exercise descriptor selection and
     // exact native checking; they are not reproductions of Oliver's phone run.
     const auto make_session = [] {
@@ -4480,6 +4484,27 @@ void run_solver_finder_essence_tests() {
         if (finder.best()) PC_CHECK(finder.best()->expected_cost < 1000.0);
         const auto report = json::Parser(finder.telemetry_json().data(),finder.telemetry_json().size()).parse();
         PC_CHECK(report.at("accepted").number == 2);
+    }
+    {
+        auto diverse = goal;
+        GoalSlot other; other.family_id = session->family_id[3]; other.min_tier = 1;
+        diverse.slots.push_back(other);
+        const auto held = registry.index_by_id.at("essence:finder_held");
+        auto portfolio_prices = prices; portfolio_prices["essence:finder_held"] = 0.3;
+        CalcContext calc(session,diverse,registry,{high,held,chaos});
+        PolicyFinderWork finder(calc,session,root,portfolio_prices,limits);
+        complete(finder);
+        PC_CHECK(finder.best().has_value());
+        const auto text = finder.telemetry_json();
+        const auto report = json::Parser(text.data(),text.size()).parse();
+        unsigned accepted_guarantees = 0;
+        for (const auto& candidate : report.at("candidates").as_array()) {
+            const auto& ids = candidate.at("actions").as_array();
+            if (ids.size() == 1 && candidate.at("status").string == "accepted" &&
+                (ids.front().string == "essence:finder_high" || ids.front().string == "essence:finder_held"))
+                ++accepted_guarantees;
+        }
+        PC_CHECK(accepted_guarantees == 2);
     }
     {
         pc_item_state normal = root; normal.rarity = PC_RARITY_NORMAL;
@@ -4817,8 +4842,9 @@ void run_solver_finder_essence_tests() {
             for (unsigned i=0; i<20000 && !current_default.done(); ++i) current_default.advance();
             PC_CHECK(current_default.candidate().has_value());
             if (current_default.candidate()) PC_CHECK(current_default.candidate()->acquisition_action == held_chaos);
-            PolicyFinderWork finder(calc,held_session,root,held_prices,limits,FinderRankingMode::Heuristic,
-                FinderGrammarMode::ConditionalProtectedScour);
+            auto product_limits = limits;
+            apply_solve_profile_defaults(product_limits, SolveProfile::CalculatorProductV1);
+            PolicyFinderWork finder(calc,held_session,root,held_prices,product_limits);
             complete(finder);
             PC_CHECK(finder.best().has_value());
             if (finder.best()) {
@@ -4845,6 +4871,188 @@ void run_solver_finder_essence_tests() {
                 std::printf("reconstructed clean Essence order=%d cost=%.12g essence=%.12g lock=%.12g scour=%.12g\n",
                     reverse,best.expected_cost,evaluated.expected_consumption.at("essence:finder_held"),
                     evaluated.expected_consumption.at("bench:mod9"),evaluated.expected_consumption.at("scour"));
+            }
+        }
+    }
+}
+
+void run_solver_finder_foulborn_product_tests() {
+    auto session = make_compile_session();
+    auto data = std::const_pointer_cast<DataImpl>(session->data);
+    data->mod_type_key_sid = data->mod_key_sid;
+    const auto registry = build_action_registry(*session);
+    SolveOptions limits;
+    apply_solve_profile_defaults(limits, SolveProfile::CalculatorProductV1);
+    limits.max_solver_owned_bytes = 256ull << 20;
+    limits.max_discovered_states = 10000;
+    limits.max_state_action_rows = 100000;
+    limits.max_transitions = 1000000;
+    limits.max_reforge_work = 1000000;
+    for (const auto type : {ActionType::FoulbornAugment, ActionType::FoulbornRegal,
+                           ActionType::FoulbornExalt}) {
+        const std::string add_id = type == ActionType::FoulbornAugment
+            ? "foulborn_augment" : type == ActionType::FoulbornRegal
+            ? "foulborn_regal" : "foulborn_exalt";
+        const auto add = registry.index_by_id.at(add_id);
+        const auto roll = registry.index_by_id.at(type == ActionType::FoulbornExalt ? "alchemy" : "transmute");
+        const auto reset = registry.index_by_id.at("scour");
+        GoalSpec goal;
+        goal.rarity = type == ActionType::FoulbornAugment ? PC_RARITY_MAGIC : PC_RARITY_RARE;
+        goal.terminal.extras = ExtraExplicitPolicy::Allow;
+        GoalSlot slot; slot.family_id = session->family_id[0]; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+        pc_item_state root; pc_item_clear(&root);
+        const std::unordered_map<std::string,double> prices{
+            {registry.actions[roll].id,2.0},{"scour",0.1},{add_id,0.01}};
+        {
+            auto incoming = root;
+            incoming.rarity = type == ActionType::FoulbornExalt ? PC_RARITY_RARE : PC_RARITY_MAGIC;
+            const auto held = type == ActionType::FoulbornRegal ? 0u : 7u;
+            PC_CHECK(pc_item_add_mod(&incoming,static_cast<pc_affix_side>(session->gen_type[held]),
+                held,session->primary_group[held],0,nullptr)==PC_RESULT_OK);
+            const auto renewal = registry.index_by_id.at(type == ActionType::FoulbornExalt ? "chaos" : "alteration");
+            const auto transmute = registry.index_by_id.at("transmute");
+            std::vector<std::uint32_t> scope{add};
+            std::unordered_map<std::string,double> incoming_prices{{add_id,0.01}};
+            if (type != ActionType::FoulbornRegal) {
+                scope.push_back(renewal); incoming_prices[registry.actions[renewal].id]=2.0;
+            } else {
+                scope.push_back(transmute); scope.push_back(reset);
+                incoming_prices["transmute"]=2.0; incoming_prices["scour"]=0.1;
+            }
+            // Exercise the ordinary public request path, including product
+            // options resolution and returned graph transport, in both lanes.
+            pc_session public_session; public_session.impl = session;
+            std::string goal_json = "{\"version\":\"v1\",\"rarity\":\"" +
+                std::string(goal.rarity == PC_RARITY_MAGIC ? "magic" : "rare") +
+                "\",\"allow_extra_modifiers\":true,\"slots\":[{\"family_mod_key\":\"mod0\",\"min_tier\":1}],\"actions\":[";
+            for (const auto index : scope) {
+                if (goal_json.back() != '[') goal_json += ',';
+                goal_json += '"' + registry.actions[index].id + '"';
+            }
+            goal_json += "]}";
+            std::string economy_json = "{\"version\":\"v1\",\"prices\":{";
+            for (const auto& [key,price] : incoming_prices) {
+                if (economy_json.back() != '{') economy_json += ',';
+                economy_json += '"'+key+"\":"+std::to_string(price);
+            }
+            economy_json += "}}";
+            pc_error_info error{};
+            pc_economy_handle economy = nullptr;
+            PC_CHECK(pc_economy_load_json(economy_json.data(),economy_json.size(),&economy,&error)==PC_RESULT_OK);
+            for (const auto mode : {PC_SOLVER_MODE_CURRENT,PC_SOLVER_MODE_STRATEGY_FINDER}) {
+                pc_solver_handle solver = nullptr;
+                PC_CHECK(pc_solver_create(&public_session,goal_json.data(),goal_json.size(),&solver,&error)==PC_RESULT_OK);
+                if (!solver) continue;
+                pc_solve_options options{};
+                options.struct_size=sizeof(options); options.abi_version=PC_ABI_VERSION;
+                options.solver_mode=mode; options.solve_profile=PC_SOLVE_PROFILE_CALCULATOR_PRODUCT_V1;
+                options.max_states=10000; options.max_discovered_states=10000; options.max_expanded_states=10000;
+                options.max_state_action_rows=100000; options.max_transitions=1000000;
+                options.max_reforge_work=1000000; options.max_solver_owned_bytes=256ull<<20;
+                pc_solve_summary summary{};
+                const auto code = pc_solver_solve(solver,&incoming,economy,&options,&summary,&error);
+                if (code!=PC_RESULT_OK) std::printf("product API %s mode=%u error=%s\n",add_id.c_str(),mode,error.message);
+                PC_CHECK(code==PC_RESULT_OK && summary.policy_available);
+                if (code==PC_RESULT_OK && summary.policy_available) {
+                    size_t length=0;
+                    PC_CHECK(pc_solver_compile_strategy(solver,nullptr,0,&length,&error)==PC_RESULT_OK);
+                    std::string graph(length+1,'\0');
+                    PC_CHECK(pc_solver_compile_strategy(solver,graph.data(),graph.size(),&length,&error)==PC_RESULT_OK);
+                    graph.resize(length);
+                    PC_CHECK(graph.find(add_id)!=std::string::npos);
+                    const auto checked = evaluate_compiled(session,graph,incoming_prices);
+                    PC_CHECK(finder_evaluation_accepted(checked));
+                    PC_CHECK(checked.expected_consumption.contains(add_id) && checked.expected_consumption.at(add_id)>0);
+                    PC_CHECK(std::abs(summary.evaluated_policy_cost-checked.total_expected_cost)<1e-8);
+                    std::printf("product API %s mode=%u checked=%.12g\n",add_id.c_str(),mode,checked.total_expected_cost);
+                }
+                pc_solver_destroy(solver);
+            }
+            pc_economy_destroy(economy);
+            CalcContext current_calc(session,goal,registry,scope);
+            const auto current = solve(current_calc,incoming,incoming_prices,limits);
+            PC_CHECK(current.policy_available);
+            if (current.policy_available) {
+                const auto graph = !current.refined_policy_artifact.strategy_json.empty()
+                    ? current.refined_policy_artifact.strategy_json
+                    : compile_policy_strategy_json(current_calc,current,"incoming product Foulborn fixture");
+                const auto checked = evaluate_compiled(session,graph,incoming_prices);
+                PC_CHECK(finder_evaluation_accepted(checked));
+                PC_CHECK(graph.find(add_id)!=std::string::npos);
+                PC_CHECK(checked.expected_consumption.contains(add_id) && checked.expected_consumption.at(add_id)>0);
+                PC_CHECK(current.lower_bound == 0 && current.closure_unavailable_by_profile);
+                PC_CHECK(std::abs(current.evaluated_policy_cost-checked.total_expected_cost)<1e-8);
+                std::printf("incoming product Current %s cost=%.12g\n",add_id.c_str(),current.evaluated_policy_cost);
+            }
+            CalcContext finder_calc(session,goal,registry,scope);
+            PolicyFinderWork finder(finder_calc,session,incoming,incoming_prices,limits);
+            for (unsigned i=0;i<20000 && !finder.progress().done;++i) finder.step(256);
+            PC_CHECK(finder.progress().done && finder.progress().considered<=8);
+            PC_CHECK(finder.best().has_value());
+            if (finder.best()) {
+                const auto checked = evaluate_compiled(session,finder.best()->strategy_json,incoming_prices);
+                PC_CHECK(finder_evaluation_accepted(checked));
+                PC_CHECK(finder.best()->strategy_json.find(add_id)!=std::string::npos);
+                PC_CHECK(checked.expected_consumption.contains(add_id) && checked.expected_consumption.at(add_id)>0);
+                PC_CHECK(prepare_finder_candidate(finder_calc,session,incoming,finder.best()->strategy_json).ready());
+                std::printf("incoming product Finder %s cost=%.12g\n",add_id.c_str(),finder.best()->expected_cost);
+            }
+        }
+        for (unsigned control = 0; control < 5; ++control) {
+            auto request = goal;
+            auto actions = std::vector<std::uint32_t>{roll,reset};
+            if (control != 1) actions.push_back(add);
+            if (control == 2)
+                request.disabled_action_families = solver_action_family_bit(solver_action_family_for_action(registry.actions[add]));
+            auto cost = prices;
+            if (control == 3) cost.erase(add_id);
+            auto caps = limits;
+            if (control == 4)
+                caps.solve_profile_override_mask |= PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES;
+            CalcContext calc(session,request,registry,actions);
+            PolicyFinderWork finder(calc,session,root,cost,caps);
+            for (unsigned i=0;i<20000 && !finder.progress().done;++i) finder.step(256);
+            PC_CHECK(finder.progress().done);
+            PC_CHECK(finder.progress().considered <= 8);
+            bool served = false;
+            const auto telemetry = finder.telemetry_json();
+            const auto report = json::Parser(telemetry.data(),telemetry.size()).parse();
+            for (const auto& candidate : report.at("candidates").as_array()) {
+                const auto& a = candidate.at("actions").as_array();
+                const bool uses_add = std::any_of(a.begin(),a.end(),[&](const auto& id){return id.string==add_id;});
+                if (uses_add && candidate.at("conditional").boolean)
+                    served |= candidate.at("status").string == "accepted";
+            }
+            PC_CHECK(served == (control == 0));
+            if (control == 0) {
+                CalcContext current_calc(session,request,registry,actions);
+                const auto current = solve(current_calc,root,cost,caps);
+                std::printf("product Current %s available=%d cost=%.12g lower=%.12g scope=%s\n",add_id.c_str(),
+                    current.policy_available,current.evaluated_policy_cost,current.lower_bound,current.diagnostics.solution_scope.c_str());
+                if (current.policy_available) {
+                    const auto graph = !current.refined_policy_artifact.strategy_json.empty()
+                        ? current.refined_policy_artifact.strategy_json
+                        : compile_policy_strategy_json(current_calc,current,"product Foulborn fixture");
+                    const auto checked = evaluate_compiled(session,graph,cost);
+                    PC_CHECK(finder_evaluation_accepted(checked));
+                    PC_CHECK(current.lower_bound == 0 && current.closure_unavailable_by_profile);
+                    PC_CHECK(std::abs(current.evaluated_policy_cost-checked.total_expected_cost)<1e-8);
+                    std::printf("product Current %s graph_add=%d\n",add_id.c_str(),graph.find(add_id)!=std::string::npos);
+                }
+                PC_CHECK(finder.best().has_value());
+                if (finder.best()) {
+                    const auto& best = *finder.best();
+                    PC_CHECK(best.strategy_json.find(add_id) != std::string::npos);
+                    PC_CHECK(prepare_finder_candidate(calc,session,root,best.strategy_json).ready());
+                    const auto evaluated = evaluate_compiled(session,best.strategy_json,cost);
+                    PC_CHECK(finder_evaluation_accepted(evaluated));
+                    PC_CHECK(evaluated.expected_consumption.at(add_id)>0);
+                    PC_CHECK(evaluated.expected_consumption.at("scour")>0);
+                    PC_CHECK(std::abs(best.expected_cost-evaluated.total_expected_cost)<1e-9);
+                    std::printf("product Finder %s cost=%.12g add=%.12g reset=%.12g\n",add_id.c_str(),best.expected_cost,
+                        evaluated.expected_consumption.at(add_id),evaluated.expected_consumption.at("scour"));
+                }
             }
         }
     }

@@ -974,7 +974,8 @@ solver::SolveOptions solve_options(
         const pc_solve_options* options) {
     solver::SolveOptions value = solve_options(options);
     value.goal_proof_profile = holder.goal_proof_profile;
-    value.paid_root_foulborn_salvage = holder.paid_root_foulborn_salvage;
+    value.paid_root_foulborn_salvage = holder.paid_root_foulborn_salvage ||
+        solver::product_paid_root_foulborn_scope(*holder.calc, value);
     value.selective_completion_service =
         holder.selective_completion_service;
     value.native_retention_lower = holder.native_retention_diagnostic != solver::NativeRetentionDiagnosticMode::Off;

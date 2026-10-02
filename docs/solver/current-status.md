@@ -36,6 +36,18 @@ may be reusable because ordinary support is unchanged, while law-bound values,
 certificates and checkpoints must be independently rebuilt. Its 1,352,300 finite native checks qualify this correction separately;
 WASM/worker and timed real-data qualification remain unrun. Cluster activation
 and unresolved ordinary/Abyss jewel laws remain separate owner boundaries.
+## Ordinary product Foulborn/Finder finite delta (2026-10-02)
+
+The [completion checkpoint](../active/2026-10-02-foulborn-completion/README.md)
+qualifies 5805 focused native checks, including both public product API lanes
+returning actual Foulborn Augmentation/Regal/Exalted graphs on incoming Magic/Rare
+roots. Product Current derives the existing selected paid-root Exalt capability
+from admitted scope without an explicit gating override. Product Finder reaches
+protected Scour and adds bounded native renewal/add/recovery proposals plus
+distinct-guarantee seed diversity. Zero-lower/unavailable closure is retained.
+Normal-root Current Augmentation omits the add in its tested baseline and Regal
+has no policy; Finder checks both. Real-case, WASM/worker, hybrid and wider
+continuation qualification remain pending in the living record.
 
 ## Private paid-root Foulborn finite delta (2026-10-02)
 

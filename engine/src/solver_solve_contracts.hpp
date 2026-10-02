@@ -1,6 +1,8 @@
 #pragma once
 
 #include "solver_eval_types.hpp"
+#include "solver_action_family_contract.hpp"
+#include "poecraft/solver.h"
 
 namespace poecraft {
 namespace solver {
@@ -189,7 +191,8 @@ struct SolveOptions {
     bool strict_states = false;
     bool kernel_reuse = true;
     bool goal_progress_gated_reforges = false;
-    // Native-private supplementary controller grammar; never a public preset.
+    // Supplementary controller grammar: product scope derives activation;
+    // native diagnostics may also explicitly request it.
     bool paid_root_foulborn_salvage = false;
     /* Caller-selected automatic-action scope. False excludes only generated
      * Imprint checkpoint/retry programs; all other automatic families retain
@@ -228,6 +231,27 @@ struct SolveOptions {
     std::uint32_t solve_profile_override_mask = 0;
     GoalProofProfile goal_proof_profile = GoalProofProfile::OrdinaryClean;
 };
+
+// Product activation is derived from the original native caller scope. Explicit
+// gating overrides retain their historical restricted policy contract.
+inline bool product_paid_root_foulborn_scope(
+        const CalcContext& calc, const SolveOptions& options) {
+    if (options.solve_profile != SolveProfile::CalculatorProductV1 ||
+        !options.goal_progress_gated_reforges ||
+        !options.high_impact_executable_uppers ||
+        (options.solve_profile_override_mask &
+            PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES) != 0)
+        return false;
+    bool roll = false, add = false, reset = false;
+    for (const auto index : calc.candidates()) {
+        const auto& action = calc.registry().actions.at(index);
+        if (action.synthetic || solver_action_disabled(calc.goal(), action)) continue;
+        roll |= action.params.type == ActionType::Alchemy;
+        add |= action.params.type == ActionType::FoulbornExalt;
+        reset |= action.params.type == ActionType::Scour;
+    }
+    return roll && add && reset;
+}
 
 inline std::string paid_root_foulborn_solution_scope(const SolveOptions& options) {
     std::string scope = "bounded_target_neutral_zero_proof_with_paid_root_foulborn_salvage_v1";

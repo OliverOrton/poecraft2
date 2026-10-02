@@ -160,7 +160,11 @@ PolicyFinderWork::PolicyFinderWork(
     : problem_(problem), session_(std::move(session)),
       original_start_(original_start),
       economy_(std::make_shared<EconomyImpl>()), limits_(limits),
-      ranking_(ranking), grammar_(grammar),
+      ranking_(ranking), grammar_(
+          grammar == FinderGrammarMode::Conditional &&
+          limits.solve_profile == SolveProfile::CalculatorProductV1 &&
+          attempt_limit == 8
+              ? FinderGrammarMode::ConditionalProtectedScour : grammar),
       attempt_limit_(attempt_limit), diagnostic_capture_(diagnostic_capture) {
     if (session_ == nullptr) {
         throw std::invalid_argument("finder requires a session");
@@ -223,7 +227,8 @@ PolicyFinderWork::PolicyFinderWork(
     for (const std::uint32_t index : problem_.candidates()) {
         if (index >= problem_.registry().actions.size()) continue;
         const ActionDescriptor& action = problem_.registry().actions[index];
-        if (action.synthetic || action.uses_companion_state) continue;
+        if (action.synthetic || action.uses_companion_state ||
+            solver_action_disabled(problem_.goal(), action)) continue;
         const bool root_legal =
             action_legal(*session_, action, problem_.state(start_state));
         double cost = 0.0;
@@ -310,6 +315,20 @@ PolicyFinderWork::PolicyFinderWork(
     // retry cost, clean/coverage success and properness.
     for (const RankedAction& action : ranked_)
         if (action.index == essence_acquisition_) add_single(action);
+    // Different guaranteed goals leave different native continuations. Preserve
+    // one seed per guarantee mask within the existing four-seed beam; cost is
+    // still decided by complete native checking, never by this descriptor score.
+    std::unordered_set<std::uint32_t> guaranteed_masks;
+    if (essence_acquisition_ != kNoId)
+        for (const auto& action : ranked_)
+            if (action.index == essence_acquisition_)
+                guaranteed_masks.insert(action.guaranteed_goal_mask);
+    for (const auto& action : ranked_) {
+        if (frontier_.size() >= 3) break; // Keep the native Chaos seed slot.
+        if (action.root_legal && action.guaranteed_goal_mask != 0 &&
+            guaranteed_masks.insert(action.guaranteed_goal_mask).second)
+            add_single(action);
+    }
     /* A renewal seed is useful even when a cheaper one-shot descriptor is
      * ranked first. Selection is by native descriptor identity, not a saved
      * strategy or a case name. */
@@ -376,6 +395,85 @@ PolicyFinderWork::PolicyFinderWork(
                 const Sketch seed{{setup.index}, setup.price};
                 pending_.push_back({setup.index, setup.price,
                     HoleKind::Reset, sketch_identity(seed)});
+            }
+        }
+    }
+    // Renewal/add/recovery proposals use real native primitives and the original
+    // goal after each stage. A separate post-add port permits exactly one add.
+    // Scope/disabled/pricing filters above and the original-root checker below
+    // remain authoritative; descriptor legality is only proposal admission.
+    if (grammar_ != FinderGrammarMode::PrimitiveOnly &&
+        (limits_.solve_profile_override_mask &
+            PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES) == 0 &&
+        original_start_.lifecycle == PC_ITEM_LIVE &&
+        original_start_.memory_strands == 0 && original_start_.enchantment_count == 0 &&
+        original_start_.socket_count == 0 && original_start_.link_mask == 0) {
+        const auto find_type = [&](ActionType type) -> const RankedAction* {
+            for (const auto& action : ranked_)
+                if (problem_.registry().actions[action.index].params.type == type)
+                    return &action;
+            return nullptr;
+        };
+        for (const auto add_type : {ActionType::FoulbornAugment,
+                ActionType::FoulbornRegal, ActionType::FoulbornExalt}) {
+            const bool rare_add = add_type == ActionType::FoulbornExalt;
+            const bool normal = original_start_.rarity == PC_RARITY_NORMAL;
+            if ((!normal && original_start_.rarity !=
+                    (rare_add ? PC_RARITY_RARE : PC_RARITY_MAGIC)) ||
+                (normal && (original_start_.prefix_count != 0 || original_start_.suffix_count != 0)) ||
+                problem_.goal().rarity != (add_type == ActionType::FoulbornAugment
+                    ? PC_RARITY_MAGIC : PC_RARITY_RARE)) continue;
+            if (!normal && add_type == ActionType::FoulbornRegal) {
+                const auto* add = find_type(add_type);
+                const auto* reset = find_type(ActionType::Scour);
+                const auto* transmute = find_type(ActionType::Transmute);
+                if (!add || !reset || !transmute || !add->root_legal ||
+                    frontier_.size()>=16 || seen_.size()>=256) continue;
+                Sketch child;
+                child.actions = {add->index,reset->index,transmute->index};
+                child.score = add->price+reset->price+transmute->price;
+                child.control = FinderControlGraph{{
+                    {FinderControlKind::TestGoal,kNoId,5,1},
+                    {FinderControlKind::RunPrimitive,add->index,kNoId,kNoId,2},
+                    {FinderControlKind::TestGoal,kNoId,5,3},
+                    {FinderControlKind::RunPrimitive,reset->index,kNoId,kNoId,4},
+                    {FinderControlKind::RunPrimitive,transmute->index,kNoId,kNoId,1},
+                    {FinderControlKind::GoalTerminal}},0};
+                if (seen_.insert(sketch_identity(child)).second) {
+                    record_generated(child);
+                    frontier_.push_front(std::move(child));
+                    ++counters_.generated;
+                }
+                continue;
+            }
+            const auto* renewal = find_type(normal
+                ? (rare_add ? ActionType::Alchemy : ActionType::Transmute)
+                : rare_add ? ActionType::Chaos : ActionType::Alteration);
+            const auto* add = find_type(add_type);
+            const auto* reset = normal ? find_type(ActionType::Scour) : renewal;
+            if (!renewal || !add || !reset || !renewal->root_legal ||
+                frontier_.size() >= 16 || seen_.size() >= 256) continue;
+            Sketch child;
+            child.actions = {renewal->index, add->index};
+            if (normal) child.actions.push_back(reset->index);
+            child.score = renewal->price + add->price + (normal ? reset->price : 0);
+            child.control = FinderControlGraph{{
+                {FinderControlKind::TestGoal, kNoId, 6, 1},
+                {FinderControlKind::RunPrimitive, renewal->index, kNoId, kNoId, 2},
+                {FinderControlKind::TestGoal, kNoId, 6, 3},
+                {FinderControlKind::TestAffixCountAtLeast4,
+                    add_type == ActionType::FoulbornRegal ? 7u : rare_add
+                        ? 2u * session_->rare_affix_cap : 2u,
+                    5, 4},
+                {FinderControlKind::RunPrimitive, add->index, kNoId, kNoId, 7},
+                {FinderControlKind::RunPrimitive, reset->index, kNoId, kNoId,
+                    normal ? 0u : 2u},
+                {FinderControlKind::GoalTerminal},
+                {FinderControlKind::TestGoal, kNoId, 6, 5}}, 0};
+            if (seen_.insert(sketch_identity(child)).second) {
+                record_generated(child);
+                frontier_.push_back(std::move(child));
+                ++counters_.generated;
             }
         }
     }

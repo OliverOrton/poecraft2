@@ -52,6 +52,8 @@ SolveWork::Impl::Impl(
             for (const auto action : semantics.action_dependencies)
                 require_available(action);
         }
+        options.paid_root_foulborn_salvage = options.paid_root_foulborn_salvage ||
+            product_paid_root_foulborn_scope(calc, options);
         if (options.paid_root_foulborn_salvage) {
             // A profile's search gate is not an explicit caller policy restriction.
             // Never silently widen a requested zero-progress-reroll-only scope.

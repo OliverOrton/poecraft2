@@ -1,0 +1,17 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "foulborn-ordinary-product-original-replay",
+  "artifact": {
+    "manifest_relative_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\runtime-snapshots\\ef06ad1171b10975fd56a43fb596e94f789e8c5bae5092b0617f5331a285db99\\manifest.json",
+    "canonical_source": "read-only original runtime snapshot",
+    "engine_abi_version": 3,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+    "game_data_sha256": "83aa2ba6e4d69b596a284d3917f1d76a30d96b79c3986e38d9589c2d9cd6e126",
+    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+  },
+  "cases": [
+    "cases/original-root.json"
+  ]
+}

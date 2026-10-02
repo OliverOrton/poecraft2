@@ -15437,7 +15437,7 @@ void run_paid_root_reset_renewal_tests() {
 }
 
 void run_paid_root_foulborn_salvage_tests() {
-    for (unsigned mode = 0; mode < 11; ++mode) {
+    for (unsigned mode = 0; mode < 13; ++mode) {
         auto session = make_solve_session();
         std::const_pointer_cast<DataImpl>(session->data)->mod_type_key_sid = session->data->mod_key_sid;
         auto registry = build_action_registry(*session);
@@ -15462,6 +15462,12 @@ void run_paid_root_foulborn_salvage_tests() {
         options.paid_root_foulborn_salvage = mode != 0;
         options.allow_economic_restart = false;
         options.state_certificate_control = false;
+        if (mode >= 11) {
+            apply_solve_profile_defaults(options, SolveProfile::CalculatorProductV1);
+            options.paid_root_foulborn_salvage = false; // Ordinary activation.
+        }
+        if (mode == 12)
+            options.solve_profile_override_mask |= PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES;
         if (mode == 5)
             options.solve_profile_override_mask |= PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES;
         std::unordered_map<std::string, double> prices{{"alchemy", 2}, {"scour", .1}, {"foulborn_exalt", .01}};
@@ -15524,7 +15530,7 @@ void run_paid_root_foulborn_salvage_tests() {
         double cost = 2, success = p0;
         unsigned selected = 0, skipped_positive = 0;
         for (const auto& [miss, p] : misses) {
-            const bool choose = mode != 0 && mode != 4 && mode != 6 && mode != 8 && mode != 10 &&
+            const bool choose = mode != 0 && mode != 4 && mode != 6 && mode != 8 && mode != 10 && mode != 12 &&
                 prices.at("foulborn_exalt") < p*(.1+baseline);
             if (choose) {
                 ++selected;
@@ -15548,6 +15554,11 @@ void run_paid_root_foulborn_salvage_tests() {
         const double expected = cost/success;
         if (mode == 8) options.max_compiled_edges = 5; // Exact route graph refuses; baseline still fits.
         SolveWorkTestAccess::Impl work(calc, start, prices, options);
+        if (mode >= 11) {
+            PC_CHECK(work.options.paid_root_foulborn_salvage == (mode == 11));
+            PC_CHECK(work.options.goal_proof_profile == GoalProofProfile::TargetNeutralZero);
+            PC_CHECK(work.result.closure_unavailable_by_profile);
+        }
         const auto parent_states = calc.state_count();
         const auto parent_scope = work.caller_scope_identity();
         const auto ordinary_options = work.options;
@@ -15656,7 +15667,7 @@ void run_paid_root_foulborn_salvage_tests() {
             }
             PC_CHECK(post_add_edges == 2);
         }
-        if (mode != 0) {
+        if (work.options.paid_root_foulborn_salvage) {
             PC_CHECK(work.result.diagnostics.solution_scope.find("paid_root_foulborn_salvage_v1") != std::string::npos);
             PC_CHECK(work.result.diagnostics.solution_scope.find("within_zero_progress_reroll") == std::string::npos);
         }

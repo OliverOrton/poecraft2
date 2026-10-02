@@ -121,3 +121,24 @@ supplementary capability and no explicit gated-policy override. This conservativ
 root-only guard applies even when both graph scope labels are removed. Graph
 metadata is descriptive identity, not authorization. Ungated and ordinary
 statewise checking retain their existing contracts.
+
+### Ordinary product Foulborn/Finder continuation (October 2)
+
+The [completion checkpoint](../active/2026-10-02-foulborn-completion/README.md)
+supersedes private-only activation for the selected Alchemy/Foulborn Exalt/Scour
+controller. CalculatorProductV1 derives this capability from all three original
+caller candidates, enabled families and absence of an explicit gating override.
+Native pricing, legality, exact miss/reset laws and original-root assertion remain
+authoritative. Diagnostic/default compatibility scope stays unchanged. Expanded
+Foulborn requests retain TargetNeutralZero and unavailable exact closure.
+
+Ordinary product Finder Conditional (eight attempts) reaches the existing
+reserved ProtectedSide Scour producer and validates every positive native
+programme entry. It also proposes bounded Foulborn renewal/add/paid recovery
+graphs for Magic/Rare/empty Normal roots using existing conditions and native
+capacity. All operations remain caller-admitted and fully priced; the checker
+can refuse unsupported or improper graphs. Distinct guaranteed-goal masks receive
+up to three of the existing four initial seeds, with the Chaos seed preserved.
+Proposal features never supply probability, state merging, cost or lower proof.
+Normal-root Current Augmentation/Regal completeness and wider mixed-side
+continuations remain unqualified; the checkpoint records concrete outcomes.

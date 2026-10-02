@@ -1,0 +1,44 @@
+{
+  "scope": "finite native/public product API, no real economics/worker promotion",
+  "base": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+  "checks": 5805,
+  "failures": 0,
+  "logs": [
+    {
+      "path": "out/foulborn-completion/solver-finder-essence-api.log",
+      "sha256": "a5129bf7ce985fb79f7a43be7bdfb5ba4529e7d024b0f41ab47e1a04ceb38a77"
+    },
+    {
+      "path": "out/foulborn-completion/foulborn-root-final.log",
+      "sha256": "99d9fd579fe47e6819e79be9dce08b5e505ec54d440eaa8c409b96c4a4cfc619"
+    },
+    {
+      "path": "out/foulborn-completion/paid-reset-final.log",
+      "sha256": "1b21b5be3126b745327e8b944f2ccf76fc13719220e0b500ca8a50861f941fce"
+    },
+    {
+      "path": "out/foulborn-completion/solver-protected-finder-only-final.log",
+      "sha256": "601e9dd3acdfc3c6c345c2da900cc8e863baf39287d2fa830f27c6233da7ae57"
+    },
+    {
+      "path": "out/foulborn-completion/solver-assertion-service-only-final.log",
+      "sha256": "c7470532bd31bdb745278364c3afd84c255d6cebf8bf74ad65cf914763363310"
+    },
+    {
+      "path": "out/foulborn-completion/corpus-validation-2.log",
+      "sha256": "fc9de65803cfd1b7cf75c0979942c0eac0ef8bab63de09f0ad654575a15e95b7"
+    },
+    {
+      "path": "out/foulborn-completion/foulborn-validation-2.log",
+      "sha256": "c3b29d4a3f644c54e4c62fef066fa2afa719bc44a1368c26e15df66267ec8e29"
+    }
+  ],
+  "unrun": [
+    "real-case batch",
+    "WASM",
+    "actual worker",
+    "fresh Simulator",
+    "full acceptance"
+  ],
+  "residual": "Current empty Normal Regal missing policy; Augmentation baseline omits add; no hybrid"
+}
