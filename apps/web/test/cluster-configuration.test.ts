@@ -90,7 +90,7 @@ Object.assign(access, {base: path, itemLevel: 84, cluster: selectedConfig, dataI
         importItem: async (...args: unknown[]) => {undoCalls.push(["import", ...args]); return 12;}, itemInfo: async () => ({}),
         closeItem: async () => {}, closeSession: async () => {}, closeContext: async () => {}}});
 await access.restoreHistory(0);
-assert.deepEqual(undoCalls, [["session", 1, path, 84, configuration], ["import", state, 10]]);
+assert.deepEqual(undoCalls, [["session", 1, path, 84, configuration], ["import", state, 10, 11]]);
 assert.deepEqual(access.cluster, configuration);
 assert.equal(access.session, 10); assert.equal(access.item, 12);
 assert.equal(history.cursor, 0);

@@ -1,14 +1,16 @@
-# Combined completion batch qualification in progress (2026-10-02)
+# Combined completion batch qualified; promotion pending (2026-10-02)
 
-All selected owner chains are combined on `dot/sprint-integration-20261002`.
 The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
-owns source `0f9dbd85`, first-pass results, bounded admission repair and remaining
-matching native/WASM/worker/corpus checks. Count version 2/kind and full configured
-identity remain native owners; combined checkpoint 7/Lock transport v2 reject stale
-payloads. Measured cap repair passes 51,511 continuity/63 diagnosis controls.
-Explicit unsupported laws still refuse; default discovery discloses exclusions.
-Main/origin remain `2805807`. No heavy run started. Current-batch qualification and
-normal qualified promotion remain selected; no new programme follows closure.
+owns combined native source `0f9dbd85`, matching WASM, 275 binding tests, affected
+native/corpus and complete filtered web chain passes. Checkpoint7 and Lock v2 bind
+count law and configured identity. Exact native/scope/bounds authorities remain
+separate. S8 convergence and separate non-cap fracture artifact debt remain held.
+Preserved graph scope preflight stops the dependent comparison: Amulet out-of-scope
+bench, F3 missing supplementary scope; Conquest admission passes without evaluation.
+No heavy invocation started; repricing/occupancy/control comparisons stay unrun.
+Main/origin remain `2805807` until normal qualified promotion; rendered Lock review
+remains Oliver/parent because required node_repl computer-use entry point is absent.
+Finish normal main delivery and report CI honestly, then pause; no new programme.
 
 # Ordinary reforge law execution (2026-10-02)
 

@@ -1527,7 +1527,7 @@
     }
   },
   "combined_completion_batch": {
-    "status": "combined native source frozen; admission repair rebuild and matching final checks pending",
+    "status": "qualified product batch; preserved-graph comparison stopped at scope preflight; normal promotion pending",
     "first_build_source": "2af46a96553da64b4720ea41dec3c2ea8738dbc2",
     "admission_repair_source": "0f9dbd85",
     "checkpoint_format": 7,
@@ -1553,10 +1553,111 @@
     "excluded_first_pass": "family-contract selector omitted artifact and skipped0checks",
     "heavy_invocations_started": 0,
     "remaining": [
-      "correct final native/bindings/corpus checks",
-      "source-matched WASM/product checks",
-      "parent-released bounded graph repricing/comparison",
-      "qualified normal promotion and pause"
-    ]
+      "normal main fast-forward/push and exact remote/CI status",
+      "retained S8 convergence and separate non-cap fracture artifact debt; no full-CI-green claim"
+    ],
+    "qualified_native_source": "0f9dbd85a1aac7cd188695010f336e176ba0204c",
+    "qualified_engine_tree": "cf7a3fb174f0c083744bb073d4d79db37bac8007",
+    "qualified_at_utc": "2026-10-02T21:02:02.823920+00:00",
+    "final_artifacts": [
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\bindings\\wasm\\dist\\poecraft_engine.wasm",
+        "bytes": 8369097,
+        "sha256": "734f8495ee53de8a866f9099cd662e26ffb323e01b359eb161a04212184c59ad"
+      },
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\bindings\\wasm\\dist\\poecraft_engine.mjs",
+        "bytes": 21307,
+        "sha256": "c3f63141397c06cf966487c0ad5787a338000401dc46f707bba522c959296e9c"
+      },
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\build\\engine\\poecraft_engine.dll",
+        "bytes": 14241970,
+        "sha256": "d10323fcc7cbdf3e798e040f1f829f4d6ddb77b04c9d705a5480ffef72420eed"
+      },
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\build\\engine\\poecraft_engine_tests.exe",
+        "bytes": 19501733,
+        "sha256": "48de95cf0c56dbd4b0c297c90cac7a9b44ada6280919ad4ceeb841f433e0dffa"
+      },
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\build\\engine\\poecraft_solver_benchmark.exe",
+        "bytes": 14826920,
+        "sha256": "b77639cee7bb08ea198523646730f4b5c51325dc9b71d9e310d652242cbf2ded"
+      }
+    ],
+    "final_native": {
+      "receipt": "out/sprint-continuation/final-native-checks.json",
+      "passed": {
+        "dominance": 2749,
+        "currency": 6484,
+        "api": 3255,
+        "family_contract": 182744
+      },
+      "retained_failure": {
+        "s8_run_fracture_price_flip": "22 checks, 1 failure low.converged at test_solver_s8_3.cpp:2091; inherited baseline debt"
+      }
+    },
+    "other_finite_passes": {
+      "count_law": 209934,
+      "independent_physical_oracle": 1111656,
+      "uniform_removal": 23202,
+      "incoming_calculator": 354,
+      "clusters": 34956,
+      "finder_essence": 815,
+      "protected_finder": 66,
+      "foulborn_root": 3710,
+      "paid_reset": 1146,
+      "continuity": 51511,
+      "selective_target": 50,
+      "selective_cap": 63,
+      "checkpoint": 59,
+      "assertion": 424,
+      "native_continuation": 138
+    },
+    "finite_source_compatibility": "first-build2af46a96 finite kernels retained unchanged through0f9dbd85 admission-only correction; admission-related selectors rerun at0f9dbd85",
+    "final_bindings": {
+      "passed": 275,
+      "failed": 0,
+      "seconds": 90.9,
+      "log": "out/sprint-continuation/final-bindings.log"
+    },
+    "final_corpus_validate_only": {
+      "status": "all four migrated corpora pass",
+      "receipt": "out/sprint-continuation/final-corpus-validations.json"
+    },
+    "wasm": {
+      "status": "build passed",
+      "source_head": "351dc64da5e90233a6ada80a50f95d162ac7d075",
+      "engine_source": "0f9dbd85a1aac7cd188695010f336e176ba0204c",
+      "max_parallel_jobs": 2,
+      "receipt": "out/sprint-continuation/final-combined-wasm-build.json"
+    },
+    "web": {
+      "typescript": "passed",
+      "full_test_chain": "passed with focused engine-smoke selection; remaining test files all executed",
+      "smoke_filter": "Calculator item goals and editors preserve native joint outcomes",
+      "log": "out/sprint-continuation/final-combined-web-tests-qualified.log",
+      "current_fractured_fossil_refusal": "4/4 passed against matching WASM",
+      "guard_log": "out/sprint-continuation/final-wasm-fractured-refusal.log",
+      "fixture_corrections": "corpus tests bind explicitly selected ABI/runtime and preserve old-data/ABI rejection; configured-cluster Undo imports into new native context11"
+    },
+    "comparison": {
+      "status": "stopped at finite preflight; dependent heavy comparison unrun",
+      "recorded_at_utc": "2026-10-02T21:02:02.823920+00:00",
+      "frozen_inputs": "out/sprint-continuation/selected-law-batch/freeze.json",
+      "freeze_sha256": "5fd3e085a870b3fb6dee3fa37e41f2f4b81bedbd022e9f1a79795ae0e0e50925",
+      "heavy_invocations_started": 0,
+      "native_evaluations": 0,
+      "native_solver_invocations": 0,
+      "preflight_receipts": "out/sprint-continuation/selected-law-batch/preflight-receipts.json",
+      "cases": {
+        "amulet-finder-effc": "original Finder scope refuses bench:DexMasterItemGenerationCannotChangeSuffixes at c3",
+        "conquest-anger6-baseline": "both cold admission arms pass; zero stored transitions and no repricing",
+        "F3-current-effc-product": "supplementary original-root graph requires paid_root_foulborn_salvage_v2 scope; existing ordinary Finder checker owner refuses"
+      },
+      "disposition": "No original request widened. Same-law control/candidate search and occupancy/recovery metrics unrun. Separate Conquest evaluation requires parent disposition of this stopped batch. No new programme or mechanics inferred. All worker process receipts survivor=false."
+    },
+    "rendered_lock_review": "unrun: computer-use skill read; required node_repl/@oai/sky entry point unavailable in this execution environment. DOM/worker/native tests passed; rendered review remains Oliver/parent."
   }
 }

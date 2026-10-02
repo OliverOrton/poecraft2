@@ -27,33 +27,52 @@ version/kind and product grammar plus configured-session identity, rejecting bot
 standalone formats 5/6. Lock portable format **v2** also binds the count law and
 immutable cluster/passive/count identity before replay mutation or RNG work.
 
-Matching two-job native Tests/DLL/Benchmark/Header build passes. Its first-pass
-finite oracle, uniform removal, incoming Calculator, cluster, Finder/Foulborn,
-protected continuation, assertion and checkpoint checks pass. The strengthened
-measured final-cap disposition passes **51,511** continuity checks and **63**
-selective-cap checks; genuine finite-history artifact loss remains refused.
-Native source `0f9dbd85` repairs a discovered default-admission conflict: implicitly
-discovered unavailable Fossil laws are explicitly recorded as filtered. Explicit
-primitive lists, requested fossil signatures (including reordered keys) and fixed
-option dependencies retain their original guard; unpriced requests still refuse.
+Qualified native source `0f9dbd85` and engine tree `cf7a3fb174f0c083744bb073d4d79db37bac8007` have
+matching two-job Tests/DLL/Benchmark/Header and WASM builds. Independent physical
+oracle **1,111,656**, count-law **209,934**, uniform removal **23,202**, incoming
+Calculator **354**, cluster **34,956**, checkpoint **59**, strengthened continuity
+**51,511** and selective-cap **63** checks pass. The oracle still enumerates ordered
+physical native draws independently of production compression/group recurrence;
+non-transitive overlap and retained occupancy are adversarial inputs.
 
-First-pass Dominance default product tests failed because implicit Fractured
-Fossil blocked the entire selected scope. Full bindings recorded **274 passed,
-1 failed**, the failed cluster fixture expecting unavailable current Fractured
-Fossil acceptance. Six currency assertions pinned an obsolete error prefix;
-one API assertion pinned the historical count-law transition hash. Their
-corrections retain refusal and blocking/stepped equality, with an explicit old-law
-hash negative control. First-pass logs stay under `out/sprint-continuation/`.
-The accidentally path-less family-contract selector skipped all checks; it is
-not passing qualification. Correct final build/checks and matching WASM/worker
-are pending. No timed evaluation or new solve has started.
+Final affected native checks pass: Dominance **2,749**, currency **6,484**, API
+**3,255**, family contracts **182,744**. Full Python bindings pass **275 tests**.
+All four migrated corpora pass native validate-only. TypeScript and the complete
+web test chain pass with the focused Calculator engine-smoke selection; all later
+Lock/cluster/history/strategy files execute. Matching-WASM current Fractured
+Fossil refusal passes **4/4**, preserving item/RNG/requested scope. Web fixture
+repairs retain old ABI/data negative controls and assert Undo's new context handle.
+Artifact hashes and exact commands live in [qualification.json](qualification.json)
+and `out/sprint-continuation/final-qualified-artifacts.json`.
 
-The four historical CI corpus manifests now bind ABI3 and the frozen current
-runtime/source hashes. Their old artifact identities are preserved in
-[historical-corpus-identities.json](historical-corpus-identities.json); historical
-costs and proof receipts remain old-law evidence. Fresh validate-only receipts
-are pending. Preserved-graph new-law evaluation and newly searched policies
-will receive separate receipts through the existing bounded worker owners.
+Default native discovery now records unavailable Fossil laws as filtered. Explicit
+primitive lists, requested signatures (including reordered keys), and fixed option
+dependencies preserve their refusal, even unpriced. Ordinary/Abyss jewels retain
+LegacyJewel; the four selected CI corpus input pins move to ABI3/current frozen
+runtime, with old identities in [historical-corpus-identities.json](historical-corpus-identities.json).
+Historical costs and proof receipts remain old-law evidence.
+
+The approved comparison froze graph bytes, source/control executable hashes,
+original root/goal, immutable runtime and economy, caps and commands before finite
+preflight. Amulet refuses the out-of-scope suffix-protection bench at `c3`; F3
+refuses its missing supplementary `paid_root_foulborn_salvage_v2` scope. Conquest
+Anger passes both cold admission arms with zero transitions. The dependent batch
+stops here without widening requests: **zero heavy evaluations or searches**.
+Repricing, same-law control/candidate searches, complete occupancy/recovery metrics
+remain unrun; no cost, speed or broader closure authority follows these preflights.
+Receipts and bounded-worker no-survivor evidence are under
+`out/sprint-continuation/selected-law-batch/`. Control `a02bb504` is isolated and
+reverts only the selected final continuation delta; its diagnostic checkpoint8
+never interchanges with production7.
+
+S8 `run_fracture_price_flip` still fails `low.converged` (22 checks, one failure),
+matching inherited baseline debt. Separate non-cap lost-artifact debt remains
+held; the full native solver suite was not rerun. First-pass failures and the
+accidentally artifact-less family selector stay recorded as failures/exclusion.
+No full CI success is claimed. Rendered Lock review remains unrun because this
+execution environment lacks the computer-use skill's required node_repl entry
+point; native/worker/DOM checks pass. Product promotion is independent of the
+inconclusive strategy comparison; then pause after this selected batch.
 
 Cluster Current's high-ilvl Fettle resource refusal and Finder's historical
 66.66447958c bounded graph remain owner evidence, not combined runtime claims.

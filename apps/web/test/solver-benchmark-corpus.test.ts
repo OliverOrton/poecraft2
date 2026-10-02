@@ -119,14 +119,27 @@ test("Gate 1 solver-anytime controls disclose exact mechanic-family proofs", () 
     }
 });
 
-// Historical research cases keep their original runtime pins when product data refreshes.
+// Current cases follow the selected runtime; preserved research cases retain their pins.
 test("corpus artifact pins reject stale WASM/data combinations", () => {
     const corpus = loadSolverBenchmarkCorpus(fileURLToPath(MANIFEST));
     const artifactPath = fileURLToPath(
-        new URL("../../../data/runtime-snapshots/852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb/manifest.json", import.meta.url),
+        new URL("../../../data/compiled/current/manifest.json", import.meta.url),
     );
     const artifact = JSON.parse(readFileSync(artifactPath, "utf8")) as unknown;
-    validateCorpusArtifactPins(corpus.manifest, artifact, 2);
+    validateCorpusArtifactPins(corpus.manifest, artifact, 3);
+    assert.throws(
+        () => validateCorpusArtifactPins(corpus.manifest, artifact, 2),
+        /engine ABI mismatch/,
+    );
+    const historicalArtifactPath = fileURLToPath(new URL(
+        "../../../data/runtime-snapshots/852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb/manifest.json",
+        import.meta.url,
+    ));
+    const historicalArtifact = JSON.parse(readFileSync(historicalArtifactPath, "utf8")) as unknown;
+    assert.throws(
+        () => validateCorpusArtifactPins(corpus.manifest, historicalArtifact, 3),
+        /source version mismatch/,
+    );
     assert.throws(
         () => validateCorpusArtifactPins(corpus.manifest, artifact, 999),
         /engine ABI mismatch/,
@@ -165,6 +178,9 @@ test("goal-realignment corpora validate every current case and economy", () => {
         new URL("../../../data/runtime-snapshots/852279f870be4b822187c42eb6fe62d42b09f388fddae0e389f8c3ae1f0a46eb/manifest.json", import.meta.url),
     );
     const artifact = JSON.parse(readFileSync(artifactPath, "utf8")) as unknown;
+    const currentArtifact = JSON.parse(readFileSync(fileURLToPath(new URL(
+        "../../../data/compiled/current/manifest.json", import.meta.url,
+    )), "utf8")) as unknown;
     const loaded = GOAL_REALIGNMENT_MANIFESTS.map((manifestUrl) =>
         loadSolverBenchmarkCorpus(fileURLToPath(manifestUrl)));
 
@@ -180,7 +196,13 @@ test("goal-realignment corpora validate every current case and economy", () => {
     assert.deepEqual(loaded.map((corpus) => corpus.cases.length), [5, 3, 1, 2]);
 
     const cases = loaded.flatMap((corpus) => {
-        validateCorpusArtifactPins(corpus.manifest, artifact, 2);
+        const historical = corpus.manifest.corpus_id ===
+            "poecraft2-solver-goal-realignment-five-natural-t1-v1";
+        const expectedAbi = historical ? 2 : 3;
+        assert.equal(corpus.manifest.artifact.engine_abi_version, expectedAbi);
+        validateCorpusArtifactPins(
+            corpus.manifest, historical ? artifact : currentArtifact, expectedAbi,
+        );
         const profile = corpus.manifest.comparison_profile;
         assert.ok(profile);
         assert.equal(typeof profile.maximum_wall_seconds, "number");
