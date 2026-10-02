@@ -36,6 +36,19 @@
 namespace poecraft {
 namespace solver {
 
+[[gnu::noinline]] bool dominance_fossil_effects_supported(
+        const SessionImpl& session, const pc_item_state& item,
+        const std::uint32_t fossil) {
+    try {
+        const auto auxiliary = fossil_implicit_outcomes(session, item, {fossil});
+        for (const auto& [next, mass] : auxiliary)
+            if (mass > 0) validate_authored_dominance_item(session, next);
+        return true;
+    } catch (const std::invalid_argument&) {
+        return false;
+    }
+}
+
 namespace {
 
 constexpr std::uint32_t kGoalProgressGatedCacheBit = 1u << 31;

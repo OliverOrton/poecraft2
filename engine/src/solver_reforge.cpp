@@ -775,13 +775,8 @@ CalcContext::evaluate_reforge_cooperatively(
                 ? session.fossil_sell_price_mod_ids[fossil].size() : 0;
             require_reforge_scratch_bytes(2 * std::max<std::uint64_t>(1,implicit_members) *
                 std::max<std::uint64_t>(1,vendors) * sizeof(std::pair<pc_item_state,long double>));
-            try {
-                const auto auxiliary = fossil_implicit_outcomes(session,item,{fossil});
-                for (const auto& [next,mass] : auxiliary)
-                    if (mass > 0) validate_authored_dominance_item(session,next);
-            } catch (const std::invalid_argument&) {
+            if (!dominance_fossil_effects_supported(session, item, fossil))
                 co_return std::make_shared<OutcomeDistribution>(std::move(result));
-            }
         }
     }
 

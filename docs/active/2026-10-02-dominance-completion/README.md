@@ -116,3 +116,20 @@ includes calculator_currency.cpp observation cloning and solver_reforge.cpp
 parameter support. No native crafting law, frozen data or frozen market price
 has changed. Broader fixture failures remain recorded as failures pending a
 preserved baseline-binary/data comparison, not silently relabelled as passes.
+
+## WASM compiler repair checkpoint
+
+Two final-source WASM attempts failed LLVM 23's LTO IR verifier with the same
+non-dominating phi use. Auxiliary fossil enumeration and its exception/destructor
+path now live in an out-of-line, non-inlined helper rather than the refill
+coroutine. Structural validation and scratch-budget accounting are unchanged.
+The focused native suite still passes 2,572 checks; the matching shared library
+links successfully. Matching repaired WASM and final product qualification remain
+pending. Failure logs are wasm-final.log and wasm-final-retry.log; the native
+repair log is native-helper.log under out/dominance-completion.
+
+All receipts in this worktree use the baseline ordinary reforge count law.
+Oliver's newly approved global reforge-law correction is owned by the separate
+reforge-law worker. This branch does not change count helpers or evaluator/cache
+versions. Combined qualification must use that owner's implementation after
+integration; these preserved receipts are not evidence of the new law.

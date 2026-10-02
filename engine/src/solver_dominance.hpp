@@ -59,6 +59,11 @@ inline void validate_authored_dominance_item(
         throw std::invalid_argument("Authored Dominance refuses dual-lock carriers pending owner-approved Scour law");
 }
 
+// Keep auxiliary enumeration outside the refill coroutine. LLVM 23's WASM
+// LTO verifier miscompiles the local exception/destructor path in that coroutine.
+[[gnu::noinline]] bool dominance_fossil_effects_supported(
+    const SessionImpl& session, const pc_item_state& item, std::uint32_t fossil);
+
 inline auto authored_dominance_affixes(const pc_item_state& item) {
     std::vector<std::tuple<int, std::uint32_t, std::uint16_t, std::uint8_t>> result;
     for (int side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
