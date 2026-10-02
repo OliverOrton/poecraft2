@@ -1,3 +1,15 @@
+# Combined completion batch qualification in progress (2026-10-02)
+
+All selected owner chains are combined on `dot/sprint-integration-20261002`.
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+owns source `0f9dbd85`, first-pass results, bounded admission repair and remaining
+matching native/WASM/worker/corpus checks. Count version 2/kind and full configured
+identity remain native owners; combined checkpoint 7/Lock transport v2 reject stale
+payloads. Measured cap repair passes 51,511 continuity/63 diagnosis controls.
+Explicit unsupported laws still refuse; default discovery discloses exclusions.
+Main/origin remain `2805807`. No heavy run started. Current-batch qualification and
+normal qualified promotion remain selected; no new programme follows closure.
+
 # Ordinary reforge law execution (2026-10-02)
 
 Oliver selected the global ordinary 4/5/6 count correction to 8:3:1 in isolated

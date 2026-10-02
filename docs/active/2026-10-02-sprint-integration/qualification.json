@@ -1515,6 +1515,48 @@
     "unrun": [
       "matching combined WASM/worker",
       "whole native CI suite"
+    ],
+    "strengthened_disposition": {
+      "source": "e09d0fe",
+      "measurement": "owned_bytes_before_revocation > exact cap; resource/maxowned/RefusedResourceCap/None/nonconverged/no public upper/no graph all required",
+      "combined_continuity_checks": 51511,
+      "combined_continuity_failures": 0,
+      "selective_cap_checks": 63,
+      "selective_cap_failures": 0,
+      "final_wasm": "pending"
+    }
+  },
+  "combined_completion_batch": {
+    "status": "combined native source frozen; admission repair rebuild and matching final checks pending",
+    "first_build_source": "2af46a96553da64b4720ea41dec3c2ea8738dbc2",
+    "admission_repair_source": "0f9dbd85",
+    "checkpoint_format": 7,
+    "lock_portable_format": "fixed-currency-lock-v2",
+    "law_version": 2,
+    "law_kinds": {
+      "equipment": "8:3:1 total4/5/6",
+      "legacy_jewel": "unresolved prior behavior retained",
+      "configured_cluster": "65:35 total3/4"
+    },
+    "native_build": "out/sprint-continuation/combined-native-build.json",
+    "first_pass_native": "out/sprint-continuation/combined-native-checks.json",
+    "first_pass_bindings": {
+      "passed": 274,
+      "failed": 1,
+      "log": "out/sprint-continuation/combined-bindings.log"
+    },
+    "failed_first_pass": {
+      "dominance": "default implicit unavailable Fossil blocks solve; repair0f9dbd85",
+      "currency": "six obsolete error-prefix fixtures",
+      "api": "one obsolete transition hash fixture"
+    },
+    "excluded_first_pass": "family-contract selector omitted artifact and skipped0checks",
+    "heavy_invocations_started": 0,
+    "remaining": [
+      "correct final native/bindings/corpus checks",
+      "source-matched WASM/product checks",
+      "parent-released bounded graph repricing/comparison",
+      "qualified normal promotion and pause"
     ]
   }
 }

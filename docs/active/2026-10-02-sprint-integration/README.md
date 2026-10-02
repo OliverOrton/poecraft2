@@ -15,6 +15,54 @@ containment; and private Foulborn with parsed-operation supplementary scope.
 Only HANDOFF conflicts needed manual reconciliation; production source merged
 cleanly and the combined guards were reviewed before validation.
 
+## Selected combined completion batch
+
+All parent-selected owner chains are integrated on this isolated branch. Source
+`2af46a96` combines approved Equipment 8:3:1, configured ClusterJewel 65:35,
+Foulborn original-root continuations, Dominance admission corrections, configured
+cluster finite/native product support and fixed-request paid Lock. Unresolved
+ordinary/Abyss jewel behavior remains LegacyJewel. Both sampling and exact cluster
+rare rows use the shared count owner. Combined checkpoint format **7** binds count
+version/kind and product grammar plus configured-session identity, rejecting both
+standalone formats 5/6. Lock portable format **v2** also binds the count law and
+immutable cluster/passive/count identity before replay mutation or RNG work.
+
+Matching two-job native Tests/DLL/Benchmark/Header build passes. Its first-pass
+finite oracle, uniform removal, incoming Calculator, cluster, Finder/Foulborn,
+protected continuation, assertion and checkpoint checks pass. The strengthened
+measured final-cap disposition passes **51,511** continuity checks and **63**
+selective-cap checks; genuine finite-history artifact loss remains refused.
+Native source `0f9dbd85` repairs a discovered default-admission conflict: implicitly
+discovered unavailable Fossil laws are explicitly recorded as filtered. Explicit
+primitive lists, requested fossil signatures (including reordered keys) and fixed
+option dependencies retain their original guard; unpriced requests still refuse.
+
+First-pass Dominance default product tests failed because implicit Fractured
+Fossil blocked the entire selected scope. Full bindings recorded **274 passed,
+1 failed**, the failed cluster fixture expecting unavailable current Fractured
+Fossil acceptance. Six currency assertions pinned an obsolete error prefix;
+one API assertion pinned the historical count-law transition hash. Their
+corrections retain refusal and blocking/stepped equality, with an explicit old-law
+hash negative control. First-pass logs stay under `out/sprint-continuation/`.
+The accidentally path-less family-contract selector skipped all checks; it is
+not passing qualification. Correct final build/checks and matching WASM/worker
+are pending. No timed evaluation or new solve has started.
+
+The four historical CI corpus manifests now bind ABI3 and the frozen current
+runtime/source hashes. Their old artifact identities are preserved in
+[historical-corpus-identities.json](historical-corpus-identities.json); historical
+costs and proof receipts remain old-law evidence. Fresh validate-only receipts
+are pending. Preserved-graph new-law evaluation and newly searched policies
+will receive separate receipts through the existing bounded worker owners.
+
+Cluster Current's high-ilvl Fettle resource refusal and Finder's historical
+66.66447958c bounded graph remain owner evidence, not combined runtime claims.
+General cluster closure, automatic programmes, unsupported contexts and Solver Lab
+transport stay open. Lock solver/Simulator, wider preview requests, current
+Fractured Fossil's complete law, Memory stochastic laws and recombinator outcome
+law remain held. No new programme follows this batch; qualify a coherent subset
+if an unfinished feature blocks promotion, then pause.
+
 ## Current-batch delivery and explicit-cap repair
 
 Main and origin/main were normally fast-forwarded/pushed to `2805807` at

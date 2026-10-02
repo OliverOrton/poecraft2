@@ -317,3 +317,15 @@ to its existing owner. Do not hand-edit [generated research state](research-stat
 Keep the reconciliation's checked sources and outstanding evidence explicit.
 Live CI and local process status must be read
 at the next task, not inferred from this snapshot.
+
+
+## Combined current-batch identity checkpoint (2026-10-02)
+
+The [integration record](../active/2026-10-02-sprint-integration/README.md) owns
+combined qualification. Its checkpoint format 7 contains both standalone count
+and original-root grammar changes plus immutable cluster identity; standalone
+5/6 are refused. Fixed-currency Lock transport v2 likewise binds law/configuration.
+Default capability discovery discloses unavailable current Fossil laws as filtered;
+explicit selected primitives/loadouts/dependencies retain their refusal. Matching
+combined product acceptance remains pending; historical owner cost receipts are
+not transferred across the approved rare-count law. Pause after this batch.
