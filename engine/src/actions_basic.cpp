@@ -1251,6 +1251,8 @@ bool set_eldritch_implicit(const SessionImpl& session, pc_item_state& item,
 
 std::vector<std::pair<pc_item_state, long double>> fossil_implicit_outcomes(
         const SessionImpl& session, const pc_item_state& item, const std::vector<std::uint32_t>& fossils) {
+    if (const char* reason = unavailable_fossil_reason(*session.data, fossils))
+        throw std::invalid_argument(reason);
     std::vector<std::pair<pc_item_state, long double>> results{{item, 1.0L}};
     const auto append_choices = [&](const std::vector<std::pair<std::uint32_t, std::uint64_t>>& weights, bool corrupts) {
         std::uint64_t total = 0;
@@ -1464,6 +1466,9 @@ ActionOutcome apply_action(
     pc_item_state* item,
     const ActionParameters& action) {
     const SessionImpl& session = *context.session;
+    if (action.type == ActionType::Fossil)
+        if (const char* reason = unavailable_fossil_reason(*session.data, action.fossil_indices))
+            throw std::invalid_argument(reason);
     if (item->enchantment_count && action.type != ActionType::Vaal && action.type != ActionType::Dominance)
         throw std::invalid_argument("Crafting on retained enchantments is unavailable until their effect and socket contracts are implemented");
     if (item->memory_strands > 100 || item->lifecycle > PC_ITEM_DESTROYED)

@@ -2,9 +2,11 @@
 
 #include "../src/json.hpp"
 #include "../src/calculator_currency.hpp"
+#include "../src/currency_outcomes.hpp"
 #include "../src/solver_action_family_contract.hpp"
 #include "../src/solver_internal.hpp"
 #include "../src/solver_solve_types.hpp"
+#include "../src/solver_finder.hpp"
 #include "../src/solver_phase_lower.hpp"
 #include "../src/solver_quotient_bellman.hpp"
 #include "poecraft/bitset.h"
@@ -5274,4 +5276,84 @@ void run_solver_phase_lower_tests() {
     static_assert(!std::is_default_constructible_v<PhaseProgramLowerWitness>);
     static_assert(!std::is_constructible_v<PreparedPhaseLowerView, QuotientLowerCertificate>);
     static_assert(!std::is_move_constructible_v<PhaseProgramLowerWitness>);
+}
+
+void run_fossil_guard_exact_tests() {
+    auto session = make_calc_session();
+    auto data = std::make_shared<DataImpl>(*session->data);
+    data->strings = {"ordinary_fossil", "Ordinary Fossil",
+        "Metadata/Items/Currency/CurrencyDelveCraftingMirror", "Fractured Fossil"};
+    data->fossil_count = 2;
+    data->fossil_key_sids = {0, 2};
+    data->fossil_name_sids = {1, 3};
+    data->fossil_rolls_lucky = {0, 0};
+    data->fossil_mirrors = {0, 0};
+    data->fossil_weight_offsets = {0, 0, 0};
+    session->data = data;
+    session->fossil_added_mod_ids.resize(2);
+    session->fossil_forced_mod_ids.resize(2);
+    session->fossil_sell_price_mod_ids.resize(2);
+    const auto registry = build_action_registry(*session);
+    const auto alchemy = registry.index_by_id.at("alchemy");
+    auto goal = family_goal_100();
+    pc_item_state item{};
+    pc_item_clear(&item);
+    std::vector<std::uint32_t> guarded;
+    for (std::uint32_t i = 0; i < registry.actions.size(); ++i) {
+        const auto& action = registry.actions[i];
+        if (action.params.type == ActionType::Fossil &&
+            unavailable_fossil_reason(*data, action.params.fossil_indices)) guarded.push_back(i);
+    }
+    PC_CHECK(guarded.size() == 2); // retain the singleton and mixed scope identities
+    for (const bool factored : {false, true}) {
+        CalcContext calc(session, goal, registry, {alchemy}, false, false,
+            false, std::nullopt, {}, false, {}, false, false, false, false, factored);
+        const auto start = calc.intern_item(item);
+        const auto states = calc.state_count();
+        for (const auto action : guarded) {
+            const auto rejects = [&](const auto& request) {
+                bool rejected = false;
+                try { request(); } catch (const std::invalid_argument& e) {
+                    rejected = std::strstr(e.what(), "Fractured Fossil is unavailable") != nullptr;
+                }
+                PC_CHECK(rejected);
+                PC_CHECK(calc.state_count() == states);
+                PC_CHECK(calc.telemetry().distribution_requests == 0);
+            };
+            rejects([&] { calc.outcomes(start, action); });
+            std::shared_ptr<const OutcomeDistribution> completed;
+            rejects([&] { calc.advance_outcomes(start, action, false, completed, 1); });
+            PC_CHECK(!completed);
+            rejects([&] { calc.concrete_refill({item, 0, false, true, action, true}); });
+            rejects([&] { fossil_implicit_outcomes(*session, item,
+                registry.actions[action].params.fossil_indices); });
+        }
+    }
+    // Reject the original complete caller request before setup, including when
+    // the missing law has no price. Do not turn this into subset exactness.
+    for (const auto action : guarded) {
+        CalcContext calc(session, goal, registry, {alchemy, action});
+        for (const bool priced : {false, true}) {
+            std::unordered_map<std::string, double> prices{{"alchemy", 1}};
+            if (priced) for (const auto& key : registry.actions[action].cost_keys) prices[key] = 1;
+            bool rejected = false;
+            try { SolveWorkTestAccess::Impl solve(calc, item, prices, SolveOptions{}); }
+            catch (const std::invalid_argument& e) {
+                rejected = std::strstr(e.what(), "Fractured Fossil is unavailable") != nullptr;
+            }
+            PC_CHECK(rejected);
+            PC_CHECK(calc.state_count() == 0);
+            rejected = false;
+            try { PolicyFinderWork finder(calc, session, item, prices, SolveOptions{}); }
+            catch (const std::invalid_argument& e) {
+                rejected = std::strstr(e.what(), "Fractured Fossil is unavailable") != nullptr;
+            }
+            PC_CHECK(rejected);
+            PC_CHECK(calc.state_count() == 0);
+        }
+    }
+    data->fossil_mirrors[1] = 1;
+    const auto legacy = fossil_implicit_outcomes(*session, item, {1});
+    PC_CHECK(legacy.size() == 1 && legacy[0].second == 1);
+    PC_CHECK((legacy[0].first.item_flags & PC_ITEM_MIRRORED) != 0);
 }

@@ -196,6 +196,62 @@ void run_fossil_mirror_flag_tests() {
     }
 }
 
+void run_current_fossil_refusal_tests() {
+    auto session = std::make_shared<SessionImpl>(make_metamod_renewal_session());
+    auto data = std::make_shared<DataImpl>(*session->data);
+    data->strings.push_back("Metadata/Items/Currency/CurrencyDelveCraftingMirror");
+    data->fossil_count = 2;
+    data->fossil_key_sids = {1, 2};
+    data->fossil_name_sids = {1, 1};
+    data->fossil_mirrors = {0, 0};
+    data->fossil_rolls_lucky = {0, 0};
+    data->fossil_weight_offsets = {0, 0, 0};
+    session->data = data;
+    session->fossil_added_mod_ids.resize(2);
+    session->fossil_forced_mod_ids.resize(2);
+    session->fossil_sell_price_mod_ids.resize(2);
+    for (const auto loadout : {std::vector<std::uint32_t>{1}, {0, 1}, {1, 0}}) {
+        for (int carrier = 0; carrier < 4; ++carrier) {
+            pc_item_state item{};
+            pc_item_clear(&item);
+            item.rarity = PC_RARITY_RARE;
+            if (carrier == 1) place(&item, PC_SIDE_PREFIX, 0, 10, PC_MOD_SLOT_FRACTURED);
+            if (carrier == 2) item.generic_influence_bits = 1;
+            if (carrier == 3) item.item_flags = PC_ITEM_CORRUPTED;
+            const auto before = item;
+            ActionContextImpl context(99);
+            context.session = session;
+            auto expected_rng = context.rng;
+            ActionParameters action;
+            action.type = ActionType::Fossil;
+            action.fossil_indices = loadout;
+            bool rejected = false;
+            try { apply_action(context, &item, action); }
+            catch (const std::invalid_argument& e) {
+                rejected = std::strstr(e.what(), "Fractured Fossil is unavailable") != nullptr;
+            }
+            PC_CHECK(rejected);
+            PC_CHECK(std::memcmp(&before, &item, sizeof(item)) == 0);
+            auto actual_rng = context.rng;
+            for (int draw = 0; draw < 4; ++draw)
+                PC_CHECK(actual_rng.next_u64() == expected_rng.next_u64());
+            PC_CHECK(context.pool_cache_hits == 0 && context.pool_cache_misses == 0);
+        }
+    }
+    // The stable-key guard must not disable an explicit historical mirror law.
+    data->fossil_mirrors[1] = 1;
+    ActionContextImpl legacy(99);
+    legacy.session = session;
+    pc_item_state old_result{};
+    pc_item_clear(&old_result);
+    ActionParameters old_action;
+    old_action.type = ActionType::Fossil;
+    old_action.fossil_indices = {1};
+    PC_CHECK(apply_action(legacy, &old_result, old_action).applied);
+    PC_CHECK((old_result.item_flags & PC_ITEM_MIRRORED) != 0);
+    PC_CHECK(unavailable_fossil_reason(*data, {0}) == nullptr);
+}
+
 void run_metamod_renewal_unit_tests() {
     auto session =
         std::make_shared<SessionImpl>(make_metamod_renewal_session());
@@ -1072,6 +1128,8 @@ void run_foulborn_weight_tests() {
 
 void run_currency_contract_tests(const char* artifact_dir) {
     run_fossil_mirror_flag_tests();
+    run_current_fossil_refusal_tests();
+    run_fossil_guard_exact_tests();
     // Role-neutral foundation: consume both sources and create a third identity.
     auto session = std::make_shared<SessionImpl>(make_synth_session());
     CraftResource a{"a", "left", session, {}}, b{"b", "right", session, {}};

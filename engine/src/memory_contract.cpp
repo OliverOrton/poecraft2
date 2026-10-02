@@ -2,6 +2,18 @@
 #include "engine_internal.hpp"
 
 namespace poecraft {
+const char* unavailable_fossil_reason(const DataImpl& data,
+        const std::vector<std::uint32_t>& fossils) {
+    for (const auto fossil : fossils) {
+        if (fossil < data.fossil_key_sids.size() &&
+            data.string_at(data.fossil_key_sids[fossil]) ==
+                "Metadata/Items/Currency/CurrencyDelveCraftingMirror" &&
+            (fossil >= data.fossil_mirrors.size() || !data.fossil_mirrors[fossil])) {
+            return "Fractured Fossil is unavailable: the current random-fracture law and input restrictions are not implemented; no reforge is performed";
+        }
+    }
+    return nullptr;
+}
 const char* unavailable_currency_reason(ActionType type) {
     switch (type) {
     case ActionType::Tempering:

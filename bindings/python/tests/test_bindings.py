@@ -560,6 +560,16 @@ class BindingTests(unittest.TestCase):
         with self.session.create_action_context(seed=99) as context:
             for name, suffix in fossils.items():
                 item = self.session.create_item()
+                if name == "fractured" and not mirror_by_key[
+                    f"Metadata/Items/Currency/{suffix}"
+                ]:
+                    before = bytes(item._state)
+                    with self.assertRaisesRegex(RuntimeError, "Fractured Fossil is unavailable"):
+                        context.apply(item, {"type": "fossil", "fossils": [
+                            f"Metadata/Items/Currency/{suffix}"
+                        ]})
+                    self.assertEqual(bytes(item._state), before)
+                    continue
                 result = context.apply(
                     item,
                     {

@@ -165,6 +165,21 @@ PolicyFinderWork::PolicyFinderWork(
     if (session_ == nullptr) {
         throw std::invalid_argument("finder requires a session");
     }
+    // Keep original caller scope intact: an unavailable primitive or fixed
+    // option dependency cannot be silently omitted from a Finder certificate.
+    const auto require_available = [&](const std::uint32_t index) {
+        const auto& action = problem_.registry().actions.at(index);
+        if (!action.synthetic && action.params.type == ActionType::Fossil)
+            if (const char* reason = unavailable_fossil_reason(*session_->data, action.params.fossil_indices))
+                throw std::invalid_argument(reason);
+    };
+    for (const auto index : problem_.candidates()) require_available(index);
+    for (const auto index : problem_.candidate_operators()) {
+        const auto semantics = planner_operator_runtime_semantics(
+            problem_.operators().at(index), problem_.registry());
+        for (const auto action : semantics.action_dependencies)
+            require_available(action);
+    }
     if (attempt_limit_ != 8 && attempt_limit_ != 24)
         throw std::invalid_argument("finder attempt limit must be 8 or 24");
     if (grammar_ == FinderGrammarMode::ConditionalProtectedScour && attempt_limit_ != 8)

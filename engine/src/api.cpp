@@ -181,6 +181,10 @@ pc_result parse_action_request(
             std::unique(out_action.fossil_indices.begin(),
                         out_action.fossil_indices.end()),
             out_action.fossil_indices.end());
+        if (const char* reason = poecraft::unavailable_fossil_reason(d, out_action.fossil_indices)) {
+            set_error(error, PC_RESULT_UNSUPPORTED_FEATURE, reason);
+            return PC_RESULT_UNSUPPORTED_FEATURE;
+        }
         if (out_pool != nullptr) {
             out_pool->weight_kind = poecraft::PoolWeightKind::Fossil;
             out_pool->fossil_indices = out_action.fossil_indices;

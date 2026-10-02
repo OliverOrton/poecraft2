@@ -62,6 +62,12 @@ std::string calculate_currency_json(CalcContext& source,
     if (!expanded && receiver.enchantment_count)
         throw std::invalid_argument("Crafting on retained enchantments is unavailable until their effect and socket contracts are implemented");
     const auto& session = source.session();
+    if (!expanded) {
+        const auto& descriptor = source.registry().actions.at(found_action->second);
+        if (!descriptor.synthetic && descriptor.params.type == ActionType::Fossil)
+            if (const char* reason = unavailable_fossil_reason(*session.data, descriptor.params.fossil_indices))
+                throw std::invalid_argument(reason);
+    }
     // Include concrete retained/upgrade tiers and all influence signatures.
     // The refill kernel builds its pool from the concrete item, so no donor
     // identity or retained conflict group is reconstructed from coarse junk.

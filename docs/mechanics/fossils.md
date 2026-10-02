@@ -114,8 +114,10 @@ probabilities and prices the loadout by its component Fossils and resonator.
   ends in `CurrencyDelveCraftingMirror`, but its compiled `mirrors` flag is zero
   and its retained description says `Fracture a random modifier`. Neither a
   description-driven fracture effect nor a Split-tag/second-output effect is
-  implemented by the Fossil action. It currently performs the base Fossil
-  reforge only for that row. Binding tests of compiled flag transport do not
+  implemented by the Fossil action. Any current loadout containing that row
+  now refuses before mutation or RNG consumption. Calculator, authored graph
+  compilation and Current/Finder admission use the same native refusal, retaining
+  the selected action scope. Binding tests of compiled flag transport do not
   qualify Fractured Fossil's complete game mechanic. Historical snapshots with
   `mirrors=1` exercised the partial single-item abstraction above.
 - Exact reforge calculation tracks the implemented corruption/mirroring item
@@ -141,10 +143,10 @@ probabilities and prices the loadout by its component Fossils and resonator.
   The historical split/copy effect is not the current selected runtime law.
   Oliver still needs to select the implementation's application order, eligible
   modifier set/probabilities, any minimum modifier count, and the exact input
-  influence boundary. Current sampled application performs only the reforge
-  and accepts Fractured/Influenced carriers; complete support is unqualified.
-  A native fail-closed loadout guard is proposed separately from the metadata
-  flag test repair, until those details are approved.
+  influence boundary. Current sampled and exact requests now refuse the entire
+  containing loadout; complete support remains unqualified. The native guard is
+  separate from the metadata flag test repair. Legacy `mirrors=1` artifacts
+  retain their existing partial flag behavior until those details are approved.
 - Should Bloodstained and sell-price implicit effects remain supported while
   quality, white-socket, and corrupted-Essence effects are unsupported, or is a
   different explicit partial-support boundary required?

@@ -37,6 +37,21 @@ SolveWork::Impl::Impl(
         : calc(context), session(context.session()),
           exact_start_item(start_item), options(solve_options), prices(prices),
           reported_unsupported(context.operators().size(), false) {
+        // An unimplemented requested law cannot be silently omitted from the
+        // original scope, even if unpriced or inside a fixed-option dependency.
+        const auto require_available = [&](const std::uint32_t index) {
+            const auto& action = calc.registry().actions.at(index);
+            if (!action.synthetic && action.params.type == ActionType::Fossil)
+                if (const char* reason = unavailable_fossil_reason(*session.data, action.params.fossil_indices))
+                    throw std::invalid_argument(reason);
+        };
+        for (const auto index : calc.candidates()) require_available(index);
+        for (const auto index : calc.candidate_operators()) {
+            const auto semantics = planner_operator_runtime_semantics(
+                calc.operators().at(index), calc.registry());
+            for (const auto action : semantics.action_dependencies)
+                require_available(action);
+        }
         if (options.paid_root_foulborn_salvage) {
             // A profile's search gate is not an explicit caller policy restriction.
             // Never silently widen a requested zero-progress-reroll-only scope.

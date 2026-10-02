@@ -1835,6 +1835,9 @@ const OutcomeDistribution& CalcContext::outcomes(
     bool goal_progress_gated) {
     const ActionDescriptor& action =
         registry_.actions.at(action_index);
+    if (!action.synthetic && action.params.type == ActionType::Fossil)
+        if (const char* reason = unavailable_fossil_reason(*session_->data, action.params.fossil_indices))
+            throw std::invalid_argument(reason);
     const bool ordinary_renewal =
         !action.synthetic &&
         action_transition_facts(action.params.type).renewal;
@@ -1924,6 +1927,9 @@ bool CalcContext::advance_outcomes(
     const std::uint32_t max_checkpoints) {
     completed.reset();
     const ActionDescriptor& action = registry_.actions.at(action_index);
+    if (!action.synthetic && action.params.type == ActionType::Fossil)
+        if (const char* reason = unavailable_fossil_reason(*session_->data, action.params.fossil_indices))
+            throw std::invalid_argument(reason);
     const ActionTransitionFacts facts =
         action_transition_facts(action.params.type);
     const bool ordinary_renewal = !action.synthetic && facts.renewal;

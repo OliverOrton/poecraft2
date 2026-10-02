@@ -2736,6 +2736,57 @@ test("Calculator item goals and editors preserve native joint outcomes", async (
     }
 });
 
+test("current Fractured Fossil refuses without mutation, RNG draw or exact scope reduction", async () => {
+    const fractured = "Metadata/Items/Currency/CurrencyDelveCraftingMirror";
+    const ordinary = "Metadata/Items/Currency/CurrencyDelveCraftingRandom";
+    const fossils = JSON.parse(readText(new URL("game-data.json", ARTIFACT_DIR))).fossils;
+    const strings = JSON.parse(readText(new URL("strings.json", ARTIFACT_DIR))).strings;
+    const index = fossils.key_string_ids.findIndex((key: number) => strings[key] === fractured);
+    assert.ok(index >= 0 && fossils.mirrors[index] === 0, "qualification needs the pinned current fossil metadata");
+    const items: number[] = [];
+    const contexts: number[] = [];
+    const solvers: number[] = [];
+    const economy = await client.loadEconomy({version: "v1", prices: {alchemy: 1}});
+    const reason = /Fractured Fossil is unavailable/;
+    try {
+        for (const loadout of [[fractured], [ordinary, fractured], [fractured, ordinary]]) {
+            const item = await client.createItem(sessionId, {rarity: "rare", with_implicits: false}); items.push(item);
+            const control = await client.createItem(sessionId, {rarity: "rare", with_implicits: false}); items.push(control);
+            const context = await client.createContext(sessionId, 99); contexts.push(context);
+            const controlContext = await client.createContext(sessionId, 99); contexts.push(controlContext);
+            const before = await client.exportItem(item, sessionId);
+            const action = {type: "fossil" as const, fossils: loadout};
+            await assert.rejects(client.apply(context, item, action), reason);
+            await assert.rejects(client.debugPool(context, item, {action}), reason);
+            assert.deepEqual(await client.exportItem(item, sessionId), before);
+            assert.equal((await client.apply(context, item, {type: "fossil", fossils: [ordinary]})).applied, true);
+            assert.equal((await client.apply(controlContext, control, {type: "fossil", fossils: [ordinary]})).applied, true);
+            assert.deepEqual(await client.exportItem(item, sessionId), await client.exportItem(control, sessionId));
+            await assert.rejects(client.compileStrategy(sessionId,
+                evaluatorStrategy({type: "fossil", params: {fossils: loadout}})), reason);
+        }
+        const root = await client.createItem(sessionId, {rarity: "normal", with_implicits: false}); items.push(root);
+        const action = "fossil:" + [ordinary, fractured].sort().join("+");
+        const goal = {version: "v1" as const, rarity: "rare" as const,
+            slots: [{family_mod_key: "LocalIncreasedEnergyShield11", min_tier: 0}], actions: ["alchemy", action]};
+        const calculator = await client.openCalcGoal(sessionId, goal); solvers.push(calculator);
+        const before = await client.exportItem(root, sessionId);
+        await assert.rejects(client.currencyCalc(calculator, root, action), reason);
+        const allowed = await client.currencyCalc(calculator, root, "alchemy");
+        assert.equal(allowed.legal, true);
+        assert.deepEqual(await client.exportItem(root, sessionId), before);
+        const solver = await client.openSolver(sessionId, goal); solvers.push(solver);
+        for (const mode of ["current", "strategy_finder"] as const)
+            await assert.rejects(client.solverSolve(solver, root, economy, {solver_mode: mode}), reason);
+        assert.deepEqual(await client.exportItem(root, sessionId), before);
+    } finally {
+        for (const solver of solvers) await client.closeSolver(solver);
+        for (const context of contexts) await client.closeContext(context);
+        for (const item of items) await client.closeItem(item);
+        await client.closeEconomy(economy);
+    }
+});
+
 // Wire the shared client into the runner before executing.
 {
     const spawned = spawnClient();

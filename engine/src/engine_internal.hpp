@@ -763,6 +763,10 @@ enum class ActionType : int {
 
 // A non-null reason means no stochastic implementation is admitted.
 const char* unavailable_currency_reason(ActionType type);
+// Guard the current Fractured Fossil law by stable currency identity and its
+// explicit non-mirroring metadata; legacy mirrors=1 snapshots retain their law.
+const char* unavailable_fossil_reason(const DataImpl& data,
+    const std::vector<std::uint32_t>& fossils);
 
 inline bool is_foulborn(ActionType type) {
     return type == ActionType::FoulbornAugment || type == ActionType::FoulbornRegal ||

@@ -1644,6 +1644,8 @@ void compile_operation(
             std::unique(node.action.fossil_indices.begin(),
                         node.action.fossil_indices.end()),
             node.action.fossil_indices.end());
+        if (const char* reason = unavailable_fossil_reason(data, node.action.fossil_indices))
+            invalid(reason);
         std::sort(keys.begin(), keys.end());
         keys.erase(std::unique(keys.begin(), keys.end()), keys.end());
         node.price_keys.clear();

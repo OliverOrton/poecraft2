@@ -731,6 +731,9 @@ CalcContext::evaluate_reforge_cooperatively(
     ++telemetry_.reforge_requests;
     ReforgeBuildTimer telemetry_timer{telemetry_};
     const ActionDescriptor& action = registry_.actions.at(action_index);
+    if (!action.synthetic && action.params.type == ActionType::Fossil)
+        if (const char* reason = unavailable_fossil_reason(*session_->data, action.params.fossil_indices))
+            throw std::invalid_argument(reason);
     const ReforgeRowFamily row_family =
         reforge_row_family_override_.value_or(
             reforge_row_family(action.params.type));
@@ -3813,6 +3816,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
 std::shared_ptr<const OutcomeDistribution> CalcContext::concrete_refill(
         const ConcreteRefill& concrete) {
     const auto action = concrete.action_index == kNoId ? registry_.index_by_id.at("chaos") : concrete.action_index;
+    const auto& descriptor = registry_.actions.at(action);
+    if (!descriptor.synthetic && descriptor.params.type == ActionType::Fossil)
+        if (const char* reason = unavailable_fossil_reason(*session_->data, descriptor.params.fossil_indices))
+            throw std::invalid_argument(reason);
     auto task = evaluate_reforge_cooperatively(
         intern_item(concrete.base), action, false, &concrete);
     while (!task.resume()) {}

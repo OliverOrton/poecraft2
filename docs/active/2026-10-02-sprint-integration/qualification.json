@@ -1298,5 +1298,124 @@
       }
     },
     "promotion": "Local checkpoint ready; no newer feature patch imported."
+  },
+  "ci_native_baseline_classification": {
+    "schema": "native_ci_baseline_classification_v1",
+    "ci_source": "b04f35974cb739acf8fa305e19b9ece87ca2a6b3",
+    "baseline": "f08facbb93204bf721048c21b94080ab582ee9f8",
+    "baseline_engine_source": "792b37e8e1d73a90c754087eda2332d7586db570",
+    "baseline_test_sha256": "0d12cec456f81e8943fbb9774c96b1149ff85b96357e10c8309c313059b79c75",
+    "categories": [
+      {
+        "targets": [
+          "poecraft_solver_calc",
+          "poecraft_solver_family_contract"
+        ],
+        "cause": "Expected automatic identity array omits native Foulborn identity",
+        "baseline": "182744 checks, 1 failure; identical assertion/source",
+        "production_fix": "none proposed; complete finite identity fixture only"
+      },
+      {
+        "targets": [
+          "poecraft_solver_api"
+        ],
+        "cause": "Three fixed 12950 fossil census expectations disagree with pinned current metadata",
+        "baseline": "3233 checks, 3 identical failures",
+        "production_fix": "none proposed; derive independent combinatorial fixture census from compiled eligible metadata"
+      },
+      {
+        "targets": [
+          "poecraft_solver_s8_3"
+        ],
+        "cause": "run_fracture_price_flip low.converged assertion",
+        "baseline": "1069 checks, 1 identical failure",
+        "production_fix": "unresolved; do not weaken convergence assertion"
+      },
+      {
+        "targets": [
+          "poecraft_solver_solve"
+        ],
+        "cause": "Precise continuity selector abort; temporary instrumentation identifies fixture6 service_on deliberate final memory-cap revocation",
+        "baseline": "precise continuity selector repeats invariant abort 0xc0000409; no completed count",
+        "production_fix": "unresolved graph ownership/selection trace; invariant preserved",
+        "diagnostic": {
+          "fixture": 6,
+          "step": 39,
+          "owner": "service_on",
+          "policy_available": false,
+          "artifact_bytes": 0,
+          "retained": 0,
+          "verified_executable_upper": 63969.230769229565,
+          "global_exact_closure": true,
+          "statewise_values_rejected": false,
+          "live_bytes": 13245013,
+          "cap_bytes": 13180956,
+          "reason": "retained solve result reached max_solver_owned_bytes",
+          "production_fix": "not implemented; explicit cap ownership/refusal contract needs parent decision"
+        },
+        "adjacent_trace_correction": "CI last printed fixture3 because trace printing only covers fixtures0-3; it does not identify the abort fixture."
+      },
+      {
+        "targets": [
+          "poecraft_solver_benchmark_validate",
+          "poecraft_solver_goal_realignment_validate",
+          "poecraft_solver_goal_realignment_five_mod_validate",
+          "poecraft_solver_goal_realignment_gate6_validate"
+        ],
+        "cause": "Archived corpus manifests pin ABI2 while baseline and CI production header ABI3",
+        "baseline": "same manifest/header identities by source; standalone corpus execution unrun",
+        "production_fix": "no blind corpus repin; current compatible corpus receipt requires ownership review"
+      }
+    ],
+    "logs": [
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\out\\sprint-continuation\\ci-baseline-family-contract.log",
+        "bytes": 229,
+        "sha256": "18ad6350472eb84f37b51d7f022bfb68b3c50df622b37b1b5618936281a5dc1d"
+      },
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\out\\sprint-continuation\\ci-baseline-api.log",
+        "bytes": 1191,
+        "sha256": "451d3a42659fde5b78586589a4fdf9b0caeecba78d397cc867370aa8c6785814"
+      },
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\out\\sprint-continuation\\ci-baseline-s8-3-final.log",
+        "bytes": 1232,
+        "sha256": "0f1a8517ea4bde91aa55c08f58f3e307c893aec5e15e5f30f2efb615ee8941c5"
+      },
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\out\\sprint-continuation\\ci-baseline-continuity.log",
+        "bytes": 102562,
+        "sha256": "63626c3068b011d3203d39e6920d0ea454f1d9cfd93e9cba9f5b105a26ee3261"
+      },
+      {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-sprint-integration\\out\\sprint-continuation\\fossil-guard-native-tests.log",
+        "bytes": 45,
+        "sha256": "d316c5610db5338027d1ba3b4f16531184b7163eaa17c50bc8ad55673783f482"
+      }
+    ]
+  },
+  "current_fractured_fossil_guard": {
+    "status": "local native source checkpoint; WASM/worker unrun",
+    "approval": "parent-authorized conservative containing-loadout refusal; no outcome law approval",
+    "production_behavior": "central stable-key plus current mirrors0 guard before sampled mutation/RNG, exact row work, authored compile and selected Current/Finder admission; legacy mirrors1 retains existing behavior",
+    "native_checks": 6476,
+    "native_failures": 0,
+    "python_checks": 27,
+    "python_failures": 0,
+    "unrun": [
+      "full CI binding lane",
+      "matching WASM build",
+      "real worker smoke"
+    ],
+    "failed": [
+      "first native test build lacked currency_outcomes.hpp test include; corrected final build passed",
+      "TypeScript invoked from repository root rather than apps/web; command returned missing compiler message; app-directory rerun pending"
+    ],
+    "logs": [
+      "out/sprint-continuation/fossil-guard-native-build-final.log",
+      "out/sprint-continuation/fossil-guard-native-tests.log",
+      "out/sprint-continuation/fossil-guard-python-tests.log"
+    ]
   }
 }
