@@ -1,0 +1,498 @@
+{
+  "schema": "overnight_actual_worker_preflight_v1",
+  "status": "frozen proposal pending test-only adapter review and parent serial allocation; no worker launch",
+  "engine_build_source": "792b37e8e1d73a90c754087eda2332d7586db570",
+  "binaries": {
+    "build/engine/poecraft_engine_tests.exe": {
+      "path": "build/engine/poecraft_engine_tests.exe",
+      "sha256": "0d12cec456f81e8943fbb9774c96b1149ff85b96357e10c8309c313059b79c75",
+      "bytes": 18933709
+    },
+    "build/engine/poecraft_engine.dll": {
+      "path": "build/engine/poecraft_engine.dll",
+      "sha256": "10b0a4d81d015b2f06183513d8d91fc52d7df5da0f36256bb6000746993ea039",
+      "bytes": 14018829
+    },
+    "build/engine/poecraft_solver_benchmark.exe": {
+      "path": "build/engine/poecraft_solver_benchmark.exe",
+      "sha256": "b9e95530e191fccfd19f3329ba9f09c8b088c3a4f25c5f708bbd9fab55568a5c",
+      "bytes": 14608552
+    },
+    "bindings/wasm/dist/poecraft_engine.wasm": {
+      "path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "sha256": "091305fb659ed2b917be00d97734c99901c50d1410fc01ec9f8f13182aea6767",
+      "bytes": 8171056
+    },
+    "bindings/wasm/dist/poecraft_engine.mjs": {
+      "path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297",
+      "bytes": 21237
+    }
+  },
+  "artifact": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\data\\compiled\\current",
+    "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+    "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "declared_files_verified": true,
+    "files": [
+      {
+        "path": "game-data.json",
+        "size_bytes": 16914460,
+        "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+      },
+      {
+        "path": "strings.json",
+        "size_bytes": 6740473,
+        "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+      }
+    ],
+    "identity": {
+      "artifact_schema_version": 4,
+      "source_data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+      "game_data_sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+      "strings_sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+    }
+  },
+  "budget": {
+    "global_native_timed_spent": 6,
+    "final_worker_slots": 2,
+    "worker_slots_granted": 0,
+    "worker_launches": 0
+  },
+  "scope_preflight": {
+    "path": "out/integration-current-mechanics/final-worker-read-only-scope.json",
+    "sha256": "0522096c25cfa4193604939f391346a83a029e6b9ea084243f9c3ef38a360ed4",
+    "bytes": 326083
+  },
+  "supervision": {
+    "owner": "tools/ingest/poecraft_ingest/solver_worker.py:run_isolated_process",
+    "owner_sha256": "d6ad4e455b15908873465327d6a9c36eddc1b32b83abce216bcb91926efee1b6",
+    "serial": true,
+    "watchdog_seconds": 330.0,
+    "native_cancellation_and_telemetry_polling": "unchanged",
+    "start_identity_and_survivor_receipt": "existing on_started/result fields",
+    "reservation": {
+      "reserved_memory_bytes": 1610612736,
+      "solver_owned_cap_bytes": 1073741824,
+      "worker_headroom_bytes": 536870912,
+      "reservation_policy_version": "solver_lab_host_reservation_v2",
+      "reservation_source": "solver_cap_plus_explicit_worker_headroom",
+      "authority": "host_scheduler_only"
+    }
+  },
+  "test_only_adapter": {
+    "target": "apps/web/test/calculator-delivery-probe.ts",
+    "current_sha256": "ce24d6c75104e377469a857bc484ce19f5eadfedde73b3829fdf004496bbc457",
+    "proposed_sha256": "aa105c9fcc16dd674a3087a0e159af3a509a77d57c50d6524e70041920aa5609",
+    "patch": {
+      "path": "out/integration-current-mechanics/probe-fixture-request.patch",
+      "sha256": "b9e0bb66b497ee3119a83b2425e8a8774719ede3c3c6231f846468528295912a",
+      "bytes": 1405
+    },
+    "applied": false,
+    "reason": "Probe leaves Calculator disabled-family set empty; its rebuilt request loses the frozen Foulborn restriction",
+    "change": "Initialize allowExtraModifiers and solveDisabledActionFamilies from fixture; assert submitted envelope restrictions before Solve",
+    "finite_DOM_assertions": {
+      "path": "out/integration-current-mechanics/probe-goal-finite-preflight.log",
+      "sha256": "0fb44308d7d7caa9ad5ffe555a8347f1f514981ff26f251e66233090d1870a87",
+      "bytes": 1693
+    },
+    "DOM_cleanup_limit": {
+      "path": "out/integration-current-mechanics/probe-goal-finite-cleanup.json",
+      "sha256": "0b020c5f9f2445d8788c05b6361f8c4553b07eb6748e7552be02a70e342ac17a",
+      "bytes": 311
+    }
+  },
+  "common": {
+    "control": "default_finish",
+    "bounded_finish_after_ms": 240000,
+    "manual_finish_intent": false,
+    "repetitions": 1,
+    "work_policy": "fixed_eight",
+    "transport": "compact",
+    "trace": "trace",
+    "solve_profile": "calculator_product_v1",
+    "goal_progress_gated_reforges": true,
+    "retention": "WASM facade reuse on fresh handle",
+    "disabled_families": [
+      "foulborn"
+    ],
+    "imprint": false,
+    "economic_restart": false,
+    "Monte_Carlo_runs": 0,
+    "original_root_native_graph_acceptance": "required by selected solver; compiled graph/native telemetry retained",
+    "saved_policy_seed": false,
+    "rendered_review": false,
+    "core_native_caps": {
+      "max_states": 200000,
+      "max_sweeps": 100000,
+      "max_discovered_states": 200000,
+      "max_expanded_states": 200000,
+      "max_state_action_rows": 1215000,
+      "max_transitions": 10000000,
+      "max_reforge_work": 50000000,
+      "max_solver_owned_bytes": 1073741824,
+      "max_compiled_nodes": 100000,
+      "max_compiled_edges": 400000,
+      "max_strategy_json_bytes": 67108864,
+      "max_policy_refinement_states": 200000
+    },
+    "diagnostic_caps_transport_limit": "DOM probe forwards calculatorSolveOptions/product defaults; case diagnostic caps are not automatically forwarded",
+    "delivery_thresholds": {
+      "worker_step_ms": 250,
+      "cancel_ack_ms": 250
+    }
+  },
+  "comparison_limits": {
+    "Bow": "Fresh final-byte Current returned strategy: inspect paid setup/native Exalt retry/lock-Scour tail and cost/success/off-policy. Native N2/N3 Finish120s versus proposed worker240s; no matched timing claim.",
+    "Finder": "Full reconstructed empty-Rare Onyx Amulet Finder, eight attempts/private conditional-protected-scour, no graph import. Record competition/original-root acceptance/cost. Old N6 fixed-graph/pre-correction result stays historical.",
+    "Foulborn": "Ungated N5 real Foulborn Current policy has no actual-worker replay in this pair; default gating is unchanged."
+  },
+  "cases": [
+    {
+      "id": "bow4-last-mile-two-junk-suffixes",
+      "session": {
+        "base_metadata_path": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+        "base_name": "Spine Bow",
+        "item_class_key": "Bow",
+        "item_level": 86,
+        "minimum_item_level": 86
+      },
+      "start": {
+        "rarity": "rare",
+        "with_implicits": false,
+        "mods": [
+          {
+            "key": "LocalIncreaseSocketedGemLevel1",
+            "flags": []
+          },
+          {
+            "key": "LocalAddedPhysicalDamageTwoHand9",
+            "flags": []
+          },
+          {
+            "key": "LocalAddedColdDamageTwoHand10",
+            "flags": []
+          },
+          {
+            "key": "Dexterity7",
+            "flags": []
+          },
+          {
+            "key": "LocalIncreasedAttackSpeed3",
+            "flags": []
+          }
+        ]
+      },
+      "goal_envelope": {
+        "version": "v1",
+        "rarity": "rare",
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 4,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreaseSocketedGemLevel1",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalAddedPhysicalDamageTwoHand9",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalAddedColdDamageTwoHand10",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ManaGainedFromEnemyDeath6",
+            "min_tier": 1
+          }
+        ],
+        "fossil_mode": "goal_relevant",
+        "requested_fossil_actions": [],
+        "disabled_action_families": [
+          "foulborn"
+        ]
+      },
+      "scoped_goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 4,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreaseSocketedGemLevel1",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalAddedPhysicalDamageTwoHand9",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LocalAddedColdDamageTwoHand10",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ManaGainedFromEnemyDeath6",
+            "min_tier": 1
+          }
+        ],
+        "disabled_action_families": [
+          "foulborn"
+        ],
+        "actions": [
+          "transmute",
+          "augment",
+          "alteration",
+          "regal",
+          "alchemy",
+          "chaos",
+          "exalt",
+          "annul",
+          "scour",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMana",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical+Metadata/Items/Currency/CurrencyDelveCraftingQuality",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingMana",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingPhysical+Metadata/Items/Currency/CurrencyDelveCraftingQuality+Metadata/Items/Currency/CurrencyDelveCraftingRandom",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingMinionsAuras",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingGemLevel+Metadata/Items/Currency/CurrencyDelveCraftingMana+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+          "harvest_reforge:attack",
+          "harvest_reforge:cold",
+          "harvest_reforge:elemental",
+          "harvest_reforge:mana",
+          "harvest_reforge:physical",
+          "harvest_augment:attack",
+          "harvest_augment:cold",
+          "harvest_augment:physical",
+          "fracture",
+          "restart"
+        ]
+      },
+      "raw_solve_options": {
+        "solve_profile": "calculator_product_v1"
+      },
+      "priced_action_count": 36,
+      "materialized_economy_sha256": "a4b9bbc75dc1f44e6f177472e70feabca6c7d0efaae977bceafe680491376c6f",
+      "economy": {
+        "version": "v1",
+        "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+        "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+        "league_key": "allflame",
+        "league_name": "Allflame",
+        "manual_overrides": {
+          "base": 1.0
+        },
+        "fallback_price": null,
+        "missing_price_decisions": {
+          "base": "quality_ladder_fixture_input_1_chaos"
+        }
+      },
+      "corpus_provenance": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\docs\\active\\2026-09-29-metamod-recovery\\corpus\\manifest.json",
+        "sha256": "3661c9c14c5ed0ddb6bf9309770d7daec397def1713ea6a9361bebf7904f2f9d",
+        "corpus_id": "metamod-recovery-legacy-mechanics-v1",
+        "schema_version": "solver_benchmark_corpus_v1",
+        "generator_config_sha256": null,
+        "case_inputs": [
+          {
+            "path": "cases/w1-prefix-only-clean.json",
+            "sha256": "63d571804956b9182d0c6ae5e2c29fa80c8b5c0cd124b1057d568b4e051618fc",
+            "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+          },
+          {
+            "path": "cases/w4-prefix-only-crafted-junk.json",
+            "sha256": "3c84b3aefab624793d2d5946f529a44a14dde9a86759f8605902191382713ff5",
+            "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+          },
+          {
+            "path": "cases/bow4-last-mile-two-junk-suffixes.json",
+            "sha256": "e97d48549926bc24b0bec2fc35186c8981388d93af651dcf29243c0ab8579361",
+            "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+          },
+          {
+            "path": "cases/finder-prefix-lock-from-root.json",
+            "sha256": "515292a5fb4d8fe0308a6327d9ffb19143d785223f5f5d9a472cedc196263fe9",
+            "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+          }
+        ]
+      },
+      "command": {
+        "argv": [
+          "C:\\Program Files\\nodejs\\node.EXE",
+          "--import",
+          "tsx",
+          "test/calculator-delivery-probe.ts",
+          "bow4-last-mile-two-junk-suffixes",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\out\\integration-current-mechanics\\workers\\current-bow.json",
+          "default_finish",
+          "1",
+          "fixed_eight",
+          "compact",
+          "trace",
+          "current",
+          "docs/active/2026-09-29-metamod-recovery/corpus/manifest.json",
+          "conditional"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\apps\\web",
+        "host_watchdog_seconds": 330.0
+      },
+      "grammar": "conditional",
+      "output": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\out\\integration-current-mechanics\\workers\\current-bow.json"
+    },
+    {
+      "id": "finder-reconstructed-amulet-wrath-chaos-clean",
+      "session": {
+        "base_metadata_path": "Metadata/Items/Amulets/Amulet7",
+        "base_name": "Onyx Amulet",
+        "item_class_key": "Amulet",
+        "item_level": 86,
+        "minimum_item_level": 86
+      },
+      "start": {
+        "rarity": "rare",
+        "with_implicits": false,
+        "mods": []
+      },
+      "goal_envelope": {
+        "version": "v1",
+        "rarity": "rare",
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 2,
+        "slots": [
+          {
+            "family_mod_key": "LightningDamagePercent5",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ChaosResist6",
+            "min_tier": 1
+          }
+        ],
+        "disabled_action_families": [
+          "foulborn"
+        ],
+        "fossil_mode": "goal_relevant",
+        "requested_fossil_actions": []
+      },
+      "scoped_goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "action_mode": "goal_relevant",
+        "min_satisfied_slots": 2,
+        "slots": [
+          {
+            "family_mod_key": "LightningDamagePercent5",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "ChaosResist6",
+            "min_tier": 1
+          }
+        ],
+        "disabled_action_families": [
+          "foulborn"
+        ],
+        "actions": [
+          "transmute",
+          "augment",
+          "alteration",
+          "regal",
+          "alchemy",
+          "chaos",
+          "exalt",
+          "annul",
+          "scour",
+          "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingElemental+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+          "fossil:Metadata/Items/Currency/CurrencyDelveCraftingChaos+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+          "harvest_reforge:chaos",
+          "harvest_reforge:elemental",
+          "harvest_reforge:lightning",
+          "harvest_augment:chaos",
+          "harvest_augment:lightning",
+          "harvest_resist:fire:lightning",
+          "harvest_resist:cold:lightning",
+          "fracture",
+          "restart"
+        ]
+      },
+      "raw_solve_options": {
+        "solve_profile": "calculator_product_v1",
+        "solver_mode": "strategy_finder"
+      },
+      "priced_action_count": 28,
+      "materialized_economy_sha256": "a4b9bbc75dc1f44e6f177472e70feabca6c7d0efaae977bceafe680491376c6f",
+      "economy": {
+        "version": "v1",
+        "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+        "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+        "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+        "league_key": "allflame",
+        "league_name": "Allflame",
+        "manual_overrides": {
+          "base": 1.0
+        },
+        "fallback_price": null,
+        "missing_price_decisions": {
+          "base": "quality_ladder_fixture_input_1_chaos"
+        }
+      },
+      "corpus_provenance": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\docs\\active\\2026-10-02-finder-essence\\corpus\\manifest.json",
+        "sha256": "af72cc428f6d3f9a4bf6b8002ac059427ef160a07a270929f7127c21cfa45682",
+        "corpus_id": "finder-essence-reconstructed-clean-v1",
+        "schema_version": "solver_benchmark_corpus_v1",
+        "generator_config_sha256": null,
+        "case_inputs": [
+          {
+            "path": "cases/finder-reconstructed-amulet-wrath-chaos-clean.json",
+            "sha256": "24270a8bf378dadf0287fbf4adbbc1292a241b400b012f26944367785b212920",
+            "economy_snapshot_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92"
+          }
+        ]
+      },
+      "command": {
+        "argv": [
+          "C:\\Program Files\\nodejs\\node.EXE",
+          "--import",
+          "tsx",
+          "test/calculator-delivery-probe.ts",
+          "finder-reconstructed-amulet-wrath-chaos-clean",
+          "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\out\\integration-current-mechanics\\workers\\finder-amulet.json",
+          "default_finish",
+          "1",
+          "fixed_eight",
+          "compact",
+          "trace",
+          "strategy_finder",
+          "docs/active/2026-10-02-finder-essence/corpus/manifest.json",
+          "conditional-protected-scour"
+        ],
+        "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\apps\\web",
+        "host_watchdog_seconds": 330.0
+      },
+      "grammar": "conditional-protected-scour",
+      "output": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\out\\integration-current-mechanics\\workers\\finder-amulet.json"
+    }
+  ]
+}

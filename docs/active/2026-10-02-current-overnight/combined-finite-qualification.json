@@ -1,0 +1,300 @@
+{
+  "schema": "overnight_combined_finite_qualification_v1",
+  "scope": "CURRENT, pinned Mechanics Calculator and Finder plus parent/Astra-approved native group correction; finite validation only",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight",
+  "branch": "dot/integration-20261002",
+  "base_source": "ebcd98cdda2c1828cd855f549831951e6ba7470a",
+  "engine_native_and_WASM_build_source": "792b37e8e1d73a90c754087eda2332d7586db570",
+  "owner_revisions": {
+    "CURRENT": "6a24e995c0cbafcb6cb7c33ccbb928bcf7b9fb03",
+    "Mechanics": "d3263050260bf72616ce7bfd1ac85f95c9efa3dd",
+    "Finder": "45611b9de2a57a05f8275ac609340b2ab634ccdd",
+    "native_group_correction": "3c38872138d6822d91646f905be1c5ef45dcb105"
+  },
+  "binaries": {
+    "build/engine/poecraft_engine_tests.exe": {
+      "path": "build/engine/poecraft_engine_tests.exe",
+      "sha256": "0d12cec456f81e8943fbb9774c96b1149ff85b96357e10c8309c313059b79c75",
+      "bytes": 18933709
+    },
+    "build/engine/poecraft_engine.dll": {
+      "path": "build/engine/poecraft_engine.dll",
+      "sha256": "10b0a4d81d015b2f06183513d8d91fc52d7df5da0f36256bb6000746993ea039",
+      "bytes": 14018829
+    },
+    "build/engine/poecraft_solver_benchmark.exe": {
+      "path": "build/engine/poecraft_solver_benchmark.exe",
+      "sha256": "b9e95530e191fccfd19f3329ba9f09c8b088c3a4f25c5f708bbd9fab55568a5c",
+      "bytes": 14608552
+    },
+    "bindings/wasm/dist/poecraft_engine.wasm": {
+      "path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "sha256": "091305fb659ed2b917be00d97734c99901c50d1410fc01ec9f8f13182aea6767",
+      "bytes": 8171056
+    },
+    "bindings/wasm/dist/poecraft_engine.mjs": {
+      "path": "bindings/wasm/dist/poecraft_engine.mjs",
+      "sha256": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297",
+      "bytes": 21237
+    }
+  },
+  "artifact": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\data\\compiled\\current",
+    "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+    "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "declared_files_verified": true,
+    "files": [
+      {
+        "path": "game-data.json",
+        "size_bytes": 16914460,
+        "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+      },
+      {
+        "path": "strings.json",
+        "size_bytes": 6740473,
+        "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+      }
+    ],
+    "identity": {
+      "artifact_schema_version": 4,
+      "source_data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+      "game_data_sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+      "strings_sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+    }
+  },
+  "machine": {
+    "system": "Windows",
+    "release": "11",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "processor_identifier": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "logical_cpu_count": 24,
+    "python": "3.14.2"
+  },
+  "native_finite_checks": {
+    "native-law": {
+      "checks": 36366,
+      "failures": 0,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-native-law.log",
+        "sha256": "a791314c9049a0c99bc8d748ca786080b5b170c507d1f40024ee08c095ce70ce",
+        "bytes": 189
+      }
+    },
+    "uniform-removal": {
+      "checks": 21696,
+      "failures": 0,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-uniform-removal.log",
+        "sha256": "dffebbd9f1601e1de7d5be1398ce8e8de122ccc2c62c81d411fdf6ee226e0173",
+        "bytes": 211
+      }
+    },
+    "calculator-incoming": {
+      "checks": 354,
+      "failures": 0,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-calculator-incoming.log",
+        "sha256": "ede19fbf1ce8cc4b212c42ac41f2d4ff3bd3753c6b168fbd264fbbee366da50e",
+        "bytes": 122
+      }
+    },
+    "metamod": {
+      "checks": 516,
+      "failures": 0,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-metamod.log",
+        "sha256": "07d636d02335c3d07835b24bce50a2bfec4619139b6828752009498aa53936c7",
+        "bytes": 1016
+      }
+    },
+    "paid-reset": {
+      "checks": 1082,
+      "failures": 0,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-paid-reset.log",
+        "sha256": "af7dec7618a8aa44517aecc61aa651dadc551f2326709c3378cdf1b32991d502",
+        "bytes": 424
+      }
+    },
+    "assertion": {
+      "checks": 384,
+      "failures": 0,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-assertion.log",
+        "sha256": "ac7649385adeebee429821fa2f378902a987abec5a36822f76e7629def2dffee",
+        "bytes": 56
+      }
+    },
+    "bounded": {
+      "checks": 203,
+      "failures": 0,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-bounded.log",
+        "sha256": "b0b55e378d69d131157b98a709dbb886eca9f8848189ef7a520a8bfe851b3407",
+        "bytes": 226
+      }
+    },
+    "checkpoint": {
+      "checks": 46,
+      "failures": 0,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-checkpoint.log",
+        "sha256": "b02c8abe6f2ef11c71b752ad4d915dcdca0303981eb60436246b737ac4b8ccfb",
+        "bytes": 48
+      }
+    },
+    "abstraction": {
+      "checks": 47173,
+      "failures": 0,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-abstraction.log",
+        "sha256": "73c14e5d767097c08b900ad3b53070b1ab29356b9203f646989d63dd8a13f503",
+        "bytes": 107
+      }
+    },
+    "finder-essence": {
+      "checks": 293,
+      "failures": 0,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-finder-essence.log",
+        "sha256": "1c663b2119e0784db2c4203081d100fae923453ac0e6cb178727e62b0146335f",
+        "bytes": 661
+      }
+    },
+    "observation-layout": {
+      "checks": 839,
+      "failures": 0,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-observation-layout.log",
+        "sha256": "5c7c05249702ba43f8a910b06bab5eff4d7d88cd987d37a82cdb4d2decb34cf9",
+        "bytes": 57
+      }
+    },
+    "protected-finder": {
+      "checks": 63,
+      "failures": 0,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-protected-finder.log",
+        "sha256": "50b68e2e7898727c21a15f54ca4267e450a4fa49914f929aa4bd8ff4692a172e",
+        "bytes": 54
+      }
+    }
+  },
+  "native_finite_total": 109015,
+  "validation": {
+    "native_build": "passed",
+    "release_WASM_build": "passed; existing width and switch warnings retained",
+    "Python_Calculator": "93 passed at combined functional source701c3e4 before the final comment-only reconciliation rebuild; broader unchanged action checks are not claimed to pin the rebuilt DLL",
+    "Python_scope": "single-action finite Calculator/currency tests; no simulator batch or timed solve",
+    "Python_log": {
+      "path": "out/integration-current-mechanics/final-python-calculator.log",
+      "sha256": "38af5be10223ff430f0a31495979b07d76eca85456d2707633838946371926b0",
+      "bytes": 183
+    },
+    "sqlite_test_input": {
+      "source": "C:/Users/Oliver/Documents/poecraft2/data/sqlite/poecraft.db",
+      "snapshot": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\data\\sqlite\\poecraft.db",
+      "sha256": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a",
+      "bytes": 81133568,
+      "read_only": true
+    },
+    "npm": "passed; engine smoke filtered to coverage terminal/neutral proof authority (4/4), remaining package tests passed",
+    "npm_qualification_limit": "finite native smoke and mocked dispatch/lifecycle tests; no actual-worker qualification",
+    "npm_log": {
+      "path": "out/integration-current-mechanics/qualified-npm.log",
+      "sha256": "36309c96adccda876eae08d34e93ac681bc28397420f602893a9a115f39bd462",
+      "bytes": 11505
+    },
+    "TypeScript": "passed",
+    "typecheck_log": {
+      "path": "out/integration-current-mechanics/qualified-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "read_only_native_scope": {
+      "path": "out/integration-current-mechanics/final-worker-read-only-scope.json",
+      "sha256": "0522096c25cfa4193604939f391346a83a029e6b9ea084243f9c3ef38a360ed4",
+      "bytes": 326083
+    },
+    "Python_final_incoming": {
+      "passed": 11,
+      "log": {
+        "path": "out/integration-current-mechanics/qualified-python-incoming.log",
+        "sha256": "a59ddf3404981cf8a50010a9a36228c0b87f7d019338b96467c92c327139b375",
+        "bytes": 101
+      },
+      "identity": {
+        "dll_sha256": "10b0a4d81d015b2f06183513d8d91fc52d7df5da0f36256bb6000746993ea039",
+        "library": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\build\\engine\\poecraft_engine.dll",
+        "artifact": "C:\\Users\\Oliver\\Documents\\poecraft2-integration-overnight\\data\\compiled\\current",
+        "exit_code": 0
+      }
+    },
+    "generated_build_info": {
+      "path": "apps/web/src/generated/build-info.json",
+      "sha256": "49818ddeda1d69cdc701be890ed11126eaa1dad099f3258e79a48ab74044c8a4",
+      "bytes": 1843
+    }
+  },
+  "retained_failed_invocations": [
+    {
+      "kind": "wrong finite paid-reset selector argument; no checks ran",
+      "log": {
+        "path": "out/integration-current-mechanics/final-paid-reset-invocation-error.log",
+        "sha256": "50635adcf8ff70ff73cd498739d4b676368d4079802ee9b5fba632297415379d",
+        "bytes": 117
+      },
+      "disposition": "correct paid-reset subcase rerun passed 1082"
+    },
+    {
+      "kind": "absent isolated SQLite fixture; 53 passed / 40 fixture failures",
+      "log": {
+        "path": "out/integration-current-mechanics/final-python-missing-sqlite-fixture.log",
+        "sha256": "aa34dd749d52b33a3052a3c5bf59948f11d45a51fcad505ce483ed029af202f8",
+        "bytes": 78888
+      },
+      "disposition": "hash-identical isolated read-only snapshot supplied; 93/93 rerun passed"
+    },
+    {
+      "kind": "DOM-only stdin preflight retained idle Node handles after assertions wrote successful result",
+      "log": {
+        "path": "out/integration-current-mechanics/probe-goal-finite-preflight.log",
+        "sha256": "0fb44308d7d7caa9ad5ffe555a8347f1f514981ff26f251e66233090d1870a87",
+        "bytes": 1693
+      },
+      "cleanup": {
+        "path": "out/integration-current-mechanics/probe-goal-finite-cleanup.json",
+        "sha256": "0b020c5f9f2445d8788c05b6361f8c4553b07eb6748e7552be02a70e342ac17a",
+        "bytes": 311
+      },
+      "disposition": "owned exact PID/create-time verified and stopped; outer exit -1 retained; no Solve/native action/actual-worker launch"
+    }
+  ],
+  "strategy_evidence_limits": {
+    "CURRENT_Bow_N2_N3": "frozen owner bytes: 160160.99567405932 -> 51222.5208199995c, success1/off-policy0/complete cost; final-byte economic replay pending",
+    "W1": "focused status/cap/artifact tests only; actual W1 timed replay unrun",
+    "Finder_N6": "old fixed-graph implemented-law observation only; native-law hold remains historical; no corrected-byte or full search economic run yet",
+    "Mechanics_N4_N5": "owner scoped native gates differ; N5 ungated uses Foulborn at3.8926614616672364c; no actual-worker replay",
+    "Conquest": "finite mixed-tag controls only; M12 root differs from historical partial and worker slice failed250ms"
+  },
+  "budget": {
+    "global_native_timed_spent": 6,
+    "integration_native_timed_launches": 0,
+    "integration_actual_worker_launches": 0,
+    "actual_worker_slots": 2,
+    "actual_worker_allocation": "ungranted; parent owns serial scheduling"
+  },
+  "preservation": {
+    "main_head_unchanged": true,
+    "root_0_uninspected_unstaged_unchanged": true,
+    "original_sqlite_sha256_unchanged": "f239ec69f995504d555f34ebd3a2c105128aab54f6d5900fc61bb1b264676a9a",
+    "runtime_price_refresh": false,
+    "push_deployment": false
+  },
+  "remaining_blockers": [
+    "Parent review of concrete test-only fixture adapter patch; existing probe loses disabled families when Calculator rebuilds its goal",
+    "Parent allocation of final two serial actual-worker runs after frozen request review"
+  ],
+  "process_status": "All owned native/build/test processes ended; DOM preflight idle process cleanup recorded; no owned solver/worker survivor"
+}

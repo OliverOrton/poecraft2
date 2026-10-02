@@ -72,9 +72,15 @@ Parent-reported Mechanics N4 checks Alchemy/Scour at 4.656588642517449c with
 success effectively one, zero off-policy mass and `TargetNeutralZero`; Foulborn
 has zero rows/no use. Native exit 2 from a stale expected-status field remains
 recorded alongside runner exit 0. This is scoped original-request recovery,
-not general Breach/Foulborn qualification. Finder's unfinished exact-checker
-work is excluded. Combined compile/focused evidence and eventual final-byte
-worker qualification retain separate identities in the overnight record.
+not general Breach/Foulborn qualification. Subsequent ungated N5 and incoming
+Calculator receipts remain scoped in the currency record below. The later
+isolated integration includes Finder through `45611b9` plus the parent/Astra-
+approved native-group eligibility and terminal-projection repair. Its
+[combined finite receipt](../active/2026-10-02-current-overnight/combined-finite-qualification.json)
+qualifies native/WASM builds separately from owner benchmarks. Finder's
+conservative gate and historical N6 native-law hold remain. Full reconstructed
+search and final-byte worker economics await parent allocation and the reviewed
+frozen-request adapter repair.
 
 ## Currency expansion delta (2026-09-28)
 

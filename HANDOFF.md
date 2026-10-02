@@ -1,19 +1,23 @@
 # Handoff
 
-Oliver's overnight isolated integration is in progress on `dot/integration-20261002`.
-CURRENT is retained through `6a24e99`, Mechanics through `d326305`, and the parent
-selected Finder's pinned chain through `45611b9`. The native-group and terminal
-projection correction is checkpointed separately at `3c38872`: the independent
-native pool matrix passes 36,366 finite checks; checkpoint/assertion identities
-were advanced. Old Finder economic/native-law qualification remains held until
-fresh combined evidence; no historical measurement transfers to these bytes.
-The [CURRENT living record](docs/active/2026-10-02-current-overnight/README.md),
-[Finder record](docs/active/2026-10-02-finder-essence/README.md) and
-[Mechanics record](docs/active/2026-09-28-currency-expansion/README.md) retain
-owner strategy outcomes, commands, hashes and exclusions. Final combined build,
-focused checks and the two parent-owned actual-worker slots remain pending.
-All six global native timed slots are spent. No integration timed solve or worker
-has run. Main/root `0`, runtime/data/prices and deployment remain untouched.
+Oliver's overnight isolated integration is built and finite-validated on
+`dot/integration-20261002`, engine source `792b37e`. CURRENT `6a24e99`, Mechanics
+`d326305` and Finder `45611b9` are retained with the parent/Astra-approved native
+group and terminal correction `3c38872`. The [living record](docs/active/2026-10-02-current-overnight/README.md)
+and [combined receipt](docs/active/2026-10-02-current-overnight/combined-finite-qualification.json)
+pin final bytes: 109,015 finite native checks, 11 incoming Python checks on the
+final DLL, earlier 93 broader Calculator checks, filtered npm and TypeScript pass.
+Historical economic and N6 native-law receipts retain their own bytes and limits.
+
+The [worker preflight](docs/active/2026-10-02-current-overnight/final-worker-preflight.json)
+freezes Bow CURRENT and full reconstructed Amulet Finder on final WASM
+`091305fb659ed2b917be00d97734c99901c50d1410fc01ec9f8f13182aea6767`.
+Read-only native scope is 36/28 priced actions; zero Solve starts or workers.
+The existing DOM probe loses frozen disabled-family restrictions. Its concrete
+seven-line test-only repair is prepared, unapplied, pending parent shared-file
+review. Both actual-worker slots remain ungranted. All six global native timed
+slots are spent; no integration timed solver or worker ran. All owned processes
+ended. Main/root `0`, original database/runtime/prices and deployment are untouched.
 
 Oliver's selected [MM0–MM7 recovery](docs/active/2026-09-29-metamod-recovery/README.md)
 is locally retained with partial acceptance. Last coherent execution commit:

@@ -364,3 +364,46 @@ paths sharing that recurrence was insufficient. No numerical wrongness for its
 specific real-data goal is inferred. No timed solver or actual-worker run was
 used here. Finder/Calculator integration, final release WASM and both final-byte
 worker checks remain pending; historical economic receipts retain their own laws.
+
+
+## Final combined finite checkpoint and worker request freeze
+
+Engine source `792b37e8e1d73a90c754087eda2332d7586db570` integrates CURRENT `6a24e99`,
+Mechanics `d326305`, Finder `45611b9` and native group correction `3c38872`.
+[Combined qualification](combined-finite-qualification.json) pins final native
+and release WASM bytes, runtime and logs: **109,015 finite native checks** pass,
+including protected Finder's positive programme entries and original-root
+fixture. Eleven incoming Python checks pass on the final DLL. Earlier 93 broader
+Calculator/currency checks passed before the final comment-only rebuild. Filtered
+npm (four native smoke checks plus package tests) and TypeScript pass; mocked
+dispatch tests are not actual-worker qualification. The receipt retains the
+wrong paid-reset argument failure, missing isolated SQLite fixture failures,
+corrected passing runs and hash-identical read-only test snapshot. Original
+canonical database contents remain unchanged.
+
+Final WASM SHA-256 is
+`091305fb659ed2b917be00d97734c99901c50d1410fc01ec9f8f13182aea6767`.
+[Worker preflight](final-worker-preflight.json) freezes dirty Bow CURRENT and
+full reconstructed empty-Rare Onyx Amulet Finder requests: 36/28 priced native
+actions, no Solve starts or actual-worker launches. Proposed controls are
+fixed-eight calls, compact transport, diagnostic trace, 240-second automatic
+Finish and the existing 330-second isolated supervisor. Finder uses private
+conditional-protected-scour activation, eight attempts and no saved graph.
+Native N2/N3 used 120-second Finish; N6 checked a fixed pre-correction graph.
+Neither is a timing-matched final-worker comparison.
+
+The DOM probe loses frozen Foulborn-disabled restrictions when Calculator
+rebuilds its goal from an empty `solveDisabledActionFamilies` set. A seven-line
+test-only initialization/assertion patch is saved at
+`out/integration-current-mechanics/probe-fixture-request.patch`, **unapplied**,
+for parent shared-file review. Actual Calculator goal-constructor assertions
+preserve both frozen goals with the proposed initialization. The stdin-only
+DOM helper retained idle Node handles after writing passing assertions; exact
+owned PID/create-time was verified and stopped, with outer exit -1 recorded.
+It made no native calls or worker launch. All owned processes have ended.
+
+Both final worker slots remain ungranted, and all six native timed slots are
+spent. Patch review and parent serial allocation are the remaining blockers.
+No fresh economic, real W1, general Finder/Breach/Foulborn or final-worker
+qualification is claimed. Main/root `0`, original data/runtime/prices, push and
+deployment are untouched.
