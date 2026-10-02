@@ -92,7 +92,7 @@ solver::ActionRegistryBuildOptions registry_build_options(
     }
     solver::ActionRegistryBuildOptions options;
     const Value* actions = root.find("actions");
-    options.dominance_explicit_actions = actions != nullptr;
+    options.primitive_actions_explicit = actions != nullptr;
     if (actions != nullptr) {
         if (actions->type != Type::Array) {
             throw std::runtime_error("goal: actions must be an array");

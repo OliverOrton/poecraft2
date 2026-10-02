@@ -263,6 +263,14 @@ def test_fossil_specials_are_native_terminal_outcomes(key):
     mirrors=bool(fossils["mirrors"][names.index(key)])
     with load_data(ARTIFACT) as d,d.create_cluster_session(BASE+"Small",1,passive_key=KEYS["Small"],passive_count=2) as s,s.create_action_context(17) as ctx:
         original=s.create_item("normal")
+        if key == "Metadata/Items/Currency/CurrencyDelveCraftingMirror" and not mirrors:
+            before = bytes(original._state)
+            with pytest.raises(EngineError, match="Fractured Fossil is unavailable"):
+                s.calculate_currency(original,"fossil:"+key,{"rarity":"rare","slots":[],"allow_extra_modifiers":True})
+            with pytest.raises(EngineError, match="Fractured Fossil is unavailable"):
+                ctx.apply(original,{"type":"fossil","fossils":[key]})
+            assert bytes(original._state) == before
+            return
         result=s.calculate_currency(original,"fossil:"+key,{"rarity":"rare","slots":[],"allow_extra_modifiers":True})
         assert result["legal"] and sum(r["probability"] for r in result["outcomes"])==pytest.approx(1,abs=1e-12)
         child=original.copy();assert ctx.apply(child,{"type":"fossil","fossils":[key]}).applied

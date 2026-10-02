@@ -5575,6 +5575,31 @@ void run_fossil_guard_exact_tests() {
     session->fossil_added_mod_ids.resize(2);
     session->fossil_forced_mod_ids.resize(2);
     session->fossil_sell_price_mod_ids.resize(2);
+    // Default capability discovery discloses unavailable laws as filtered.
+    // Explicit primitive, requested-fossil and fixed dependency envelopes retain
+    // the guard instead, including noncanonical requested key ordering.
+    ActionRegistryBuildOptions discovery;
+    discovery.goal_relevant_actions = true;
+    const auto discovered = build_action_registry(*session, discovery);
+    PC_CHECK(discovered.index_by_id.count("fossil:ordinary_fossil") == 1);
+    PC_CHECK(discovered.index_by_id.count("fossil:Metadata/Items/Currency/CurrencyDelveCraftingMirror") == 0);
+    PC_CHECK(discovered.product_reason_counts.at("filtered_unavailable_fossil_law") == 2);
+    for (const auto& filtered : discovered.product_filtered_actions)
+        if (filtered.reason == "filtered_unavailable_fossil_law")
+            PC_CHECK(filtered.role == ProductActionRole::Filtered);
+    for (unsigned scope = 0; scope < 3; ++scope) {
+        auto requested = discovery;
+        if (scope == 0) requested.primitive_actions_explicit = true;
+        if (scope == 1) requested.requested_fossil_action_ids = {
+            "fossil:ordinary_fossil+Metadata/Items/Currency/CurrencyDelveCraftingMirror"};
+        if (scope == 2) requested.option_dependency_action_ids = {
+            "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMirror"};
+        const auto explicit_registry = build_action_registry(*session, requested);
+        const auto id = scope == 1
+            ? "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMirror+ordinary_fossil"
+            : "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMirror";
+        PC_CHECK(explicit_registry.index_by_id.count(id) == 1);
+    }
     const auto registry = build_action_registry(*session);
     const auto alchemy = registry.index_by_id.at("alchemy");
     auto goal = family_goal_100();

@@ -1170,7 +1170,7 @@ void run_currency_contract_tests(const char* artifact_dir) {
                 pc_solve_options options{}; options.struct_size = sizeof(options); options.abi_version = PC_ABI_VERSION;
                 options.solver_mode = mode;
                 PC_CHECK(pc_solver_solve_begin(solver, &affected, economy, &options, &error) == PC_RESULT_UNSUPPORTED_FEATURE);
-                PC_CHECK(std::strstr(error.message, "Pro") != nullptr);
+                PC_CHECK(std::strstr(error.message, "state cannot be dropped") != nullptr);
                 pc_solve_summary summary{};
                 PC_CHECK(pc_solver_solve(solver, &affected, economy, &options, &summary, &error) == PC_RESULT_UNSUPPORTED_FEATURE);
             }

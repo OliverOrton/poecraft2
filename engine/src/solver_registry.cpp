@@ -258,12 +258,44 @@ struct ProductAdmissionDecision {
     const char* reason = "filtered_not_goal_relevant";
 };
 
+bool default_fossil_law_unavailable(
+    const SessionImpl& session, const ActionRegistryBuildOptions& options,
+    const ActionDescriptor& action) {
+    if (options.primitive_actions_explicit || action.synthetic ||
+        action.params.type != ActionType::Fossil ||
+        !unavailable_fossil_reason(*session.data, action.params.fossil_indices)) return false;
+    for (const auto& requested : options.requested_fossil_action_ids) {
+        if (!requested.starts_with("fossil:")) continue;
+        std::vector<std::string> keys;
+        for (std::size_t begin = 7; begin <= requested.size();) {
+            const auto end = requested.find('+', begin);
+            keys.push_back(requested.substr(begin, end == std::string::npos
+                ? std::string::npos : end - begin));
+            if (end == std::string::npos) break;
+            begin = end + 1;
+        }
+        std::sort(keys.begin(), keys.end());
+        keys.erase(std::unique(keys.begin(), keys.end()), keys.end());
+        std::string canonical = "fossil:";
+        for (const auto& key : keys) {
+            if (canonical.size() > 7) canonical += '+';
+            canonical += key;
+        }
+        if (canonical == action.id) return false;
+    }
+    return std::find(options.option_dependency_action_ids.begin(),
+        options.option_dependency_action_ids.end(), action.id) ==
+        options.option_dependency_action_ids.end();
+}
+
 ProductAdmissionDecision classify_goal_relevant_action(
     const SessionImpl& session,
     const ActionRegistryBuildOptions& options,
     const ActionRegistry& registry,
     const ActionDescriptor& action) {
-    if (options.automatic_dominance && !options.dominance_explicit_actions &&
+    if (default_fossil_law_unavailable(session, options, action))
+        return {ProductActionRole::Filtered, "filtered_unavailable_fossil_law"};
+    if (options.automatic_dominance && !options.primitive_actions_explicit &&
         !action.synthetic && !authored_dominance_action(action.params.type))
         return {ProductActionRole::Filtered, "filtered_dominance_identity_unsupported"};
     if (std::find(
@@ -481,9 +513,10 @@ void retain_goal_relevant_actions(
     decisions.reserve(before);
     for (const ActionDescriptor& action : registry.actions) {
         const bool unsupported_identity = options.automatic_dominance &&
-            !options.dominance_explicit_actions && !action.synthetic &&
+            !options.primitive_actions_explicit && !action.synthetic &&
             !authored_dominance_action(action.params.type);
-        decisions.push_back(options.goal_relevant_actions || unsupported_identity
+        const bool unavailable_law = default_fossil_law_unavailable(session, options, action);
+        decisions.push_back(options.goal_relevant_actions || unsupported_identity || unavailable_law
             ? classify_goal_relevant_action(session, options, registry, action)
             : ProductAdmissionDecision{ProductActionRole::Candidate, "candidate_unfiltered"});
     }

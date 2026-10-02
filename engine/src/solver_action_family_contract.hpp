@@ -847,6 +847,9 @@ inline bool product_reason_matches_contract(
     if (reason == "candidate_unfiltered") {
         return role == ProductActionRole::Candidate;
     }
+    if (reason == "filtered_unavailable_fossil_law") {
+        return group == ProductReasonGroup::Fossil && role == ProductActionRole::Filtered;
+    }
     if (reason == "filtered_dominance_identity_unsupported") {
         return role == ProductActionRole::Filtered;
     }

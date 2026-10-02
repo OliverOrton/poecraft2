@@ -2641,9 +2641,21 @@ void run_public_solver_gate(const char* artifact_dir) {
     solve_summary = stepped_summary;
     const std::string solved_telemetry =
         solver_telemetry_json(solver, &error);
-    PC_CHECK(solved_telemetry.find(
-                 "\"transition_bits_hash\":\"9dde2a4bdd865e2d\"") !=
-             std::string::npos);
+    // The approved count law changes transition probabilities and their bits.
+    // Compare independent blocking/stepped runs and reject the historical hash.
+    const auto transition_hash = [](const std::string& text) {
+        const std::string key = "\"transition_bits_hash\":\"";
+        const auto at = text.find(key);
+        PC_CHECK(at != std::string::npos);
+        if (at == std::string::npos) return std::string{};
+        const auto begin = at + key.size(), end = text.find('"', begin);
+        PC_CHECK(end != std::string::npos);
+        return text.substr(begin, end - begin);
+    };
+    const auto current_transition_hash = transition_hash(solved_telemetry);
+    PC_CHECK(current_transition_hash.size() == 16);
+    PC_CHECK(current_transition_hash == transition_hash(initial_solve_telemetry));
+    PC_CHECK(current_transition_hash != "9dde2a4bdd865e2d");
     // ABI v3 and the expanded action registry change the stable policy identity.
     PC_CHECK(solved_telemetry.find(
                  "\"policy_bits_hash\":\"a5f708da6cf88b51\"") != std::string::npos);

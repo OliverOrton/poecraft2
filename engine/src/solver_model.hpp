@@ -841,7 +841,7 @@ struct ActionRegistryBuildOptions {
     bool automatic_dominance = false;
     // Explicit primitive lists are validated at the carrier boundary rather
     // than silently reduced by its default discovery capability filter.
-    bool dominance_explicit_actions = false;
+    bool primitive_actions_explicit = false;
 };
 
 // --- solver-only planner operators -------------------------------------------
