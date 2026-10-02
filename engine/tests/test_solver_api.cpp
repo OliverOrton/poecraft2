@@ -3072,6 +3072,9 @@ void run_development_checkpoint_replay_gate(const char* artifact_dir) {
     const fs::path truncated =
         fs::temp_directory_path() /
         "poecraft-solver-development-checkpoint-test-truncated.pcsg";
+    const fs::path legacy =
+        fs::temp_directory_path() /
+        "poecraft-solver-development-checkpoint-test-legacy-reforge.pcsg";
     std::error_code remove_error;
     fs::remove(checkpoint, remove_error);
     fs::remove(corrupt, remove_error);
@@ -3093,6 +3096,23 @@ void run_development_checkpoint_replay_gate(const char* artifact_dir) {
     PC_CHECK(pc_solver_development_checkpoint_save(
                  original, checkpoint.string().c_str(), identity,
                  &error) == PC_RESULT_OK);
+    fs::copy_file(checkpoint, legacy, fs::copy_options::overwrite_existing);
+    {
+        std::fstream stream(legacy, std::ios::in | std::ios::out | std::ios::binary);
+        stream.seekp(16); // version follows the fixed 16-byte magic
+        const std::uint32_t old_observation_pruned_law_version = 2;
+        stream.write(reinterpret_cast<const char*>(&old_observation_pruned_law_version),
+            sizeof(old_observation_pruned_law_version));
+        PC_CHECK(static_cast<bool>(stream));
+    }
+    pc_solver_handle stale = nullptr;
+    PC_CHECK(pc_solver_create(session, goal.c_str(), goal.size(), &stale, &error) == PC_RESULT_OK);
+    PC_CHECK(pc_solver_development_checkpoint_load(stale, legacy.string().c_str(), identity,
+        &error) == PC_RESULT_INTERNAL_ERROR);
+    PC_CHECK(std::string(error.message).find("unsupported solver development checkpoint version")
+        != std::string::npos);
+    pc_solver_destroy(stale);
+    fs::remove(legacy, remove_error);
     const std::string original_strategy =
         compile_and_exact_evaluate_public_policy(
             session, original, economy, &error);

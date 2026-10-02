@@ -19,7 +19,8 @@ std::vector<std::uint64_t> compiled_assertion_request_identity(
         const bool request_root_upper,
         const bool request_policy_entries,
         const bool request_dependency_kernels) {
-    std::vector<std::uint64_t> key{2, static_cast<std::uint64_t>(mode),
+    // Version 3 binds the corrected native-group renewal law.
+    std::vector<std::uint64_t> key{3, static_cast<std::uint64_t>(mode),
         request_root_upper, request_policy_entries, request_dependency_kernels};
     const auto append_text = [&](const std::string_view value) {
         key.push_back(value.size());

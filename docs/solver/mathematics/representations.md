@@ -90,6 +90,44 @@ uniform. A changed potential, hidden conditional law or moved decision can
 invalidate that query even though its prefix key is unchanged.
 
 <a id="optimism"></a>
+<a id="native-reforge-group-eligibility"></a>
+### Native reforge eligibility and blocker observations
+
+An observed goal-blocker bit is not a native exclusion group. If goal members
+have groups `{g0,g1}` and `{g0,g2}`, junk with `{g1}` must leave the second member
+available. Likewise, two mutually compatible junk affixes can each block the
+same observed goal. Inferring a conflict from their common blocker bit creates
+a false transitive exclusion and changes the native denominator.
+
+For the physical reforge recurrence, the prepared-base native weighted pool
+removes conflicts with preserved and forced affixes. At each fresh draw,
+complete native bucket-group intersections, open-side capacities, positive
+channel weights and remaining physical-family multiplicities determine support.
+The projected frontier clears the same native conflict/capacity/multiplicity
+support; the factored terminal recurrence uses those exact predecessor supports.
+Goal status and blocker masks remain observations and never prune that support.
+Conditional raw identities inside a bucket share its complete native group
+signature, so expanding them at absorption preserves every probability.
+
+A carrier with one status/token per goal slot still requires single occupancy.
+The native row admits that representation only when all slot members, including
+below-tier members, share a native exclusion group. That common group prevents
+any two members from coexisting. Without this sufficient proof, the row is
+unsupported; removing otherwise legal native outcomes cannot supply the proof.
+This is conservative and does not claim every refused family is nonexclusive.
+
+At absorption, new goal-member groups reconstruct other slots' blocker bits
+using exactly `project_item`'s `blocking_group_ids` relation. Preserved-base
+blockers remain, and all native groups are checked before deferred identities
+are expanded. This repairs the terminal carrier without changing draw weights.
+The scoped finite native-pool oracle and failure disposition live in the
+[overnight record](../../active/2026-10-02-current-overnight/README.md).
+Memo/kernel signatures carry native-group law version 2, compiled assertion
+request identity version 3 binds it, and development checkpoint version 3
+rejects older computed transitions. Historical receipts keep their own law
+identities; physical/compact agreement using one shared recurrence alone does
+not establish native correspondence.
+
 ## 3. An optimistic abstraction need not be an exact quotient
 
 For a lower, equality of kernels is stronger than necessary. Let \(\gamma(q)\) be the concrete members represented by abstract coordinate \(q\). Suppose an abstract Bellman expression \(\bar B(q,a;h)\) obeys

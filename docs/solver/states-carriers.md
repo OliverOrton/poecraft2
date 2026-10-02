@@ -32,6 +32,14 @@ and independent policy checking keep their existing obligations. The universe
 is invariant within the parent context, so its local cache keys and resumed
 admission cursors do not depend on one chosen representative.
 
+Reforge eligibility uses complete native group conflicts, positive weights,
+side capacities and physical-family multiplicities. Goal-blocker masks are
+observations; sharing a blocked goal does not make two affixes conflict. The
+single-status goal carrier requires a common native group across all members,
+including below-tier members, or its reforge row is unsupported. Terminal
+projection retains cross-slot blockers from new goal members and the preserved
+base. [Native group argument](mathematics/representations.md#native-reforge-group-eligibility).
+
 ## Terminal Contract
 
 The implemented goal test requires the requested rarity and slot/tier threshold, and requires occupied explicit-affix count to equal satisfied goal count. Empty explicit slots are permitted. Junk, temporary metamods, below-tier goal members, and blockers may occur during planning but are not terminal success.

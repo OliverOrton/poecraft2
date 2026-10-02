@@ -320,3 +320,47 @@ final combined bytes still require their own qualification. Finder is not
 integrated, and later dirty Finder changes plus Mechanics' incoming-junk
 Calculator repair are not selected by this checkpoint. Both actual-worker slots
 remain unused and parent-controlled.
+
+
+## Native group eligibility and terminal projection correction
+
+Parent-selected follow-up preserved Finder's original 15 physical materialization
+failures. A terminal-only repair exposed 24 independent native-versus-DP
+probability/support failures; expanding the admitted one-goal witness produced
+138 failures. These are real retained counterexamples, not dismissed fixture
+noise. Independent junk affixes can each block one observed goal while remaining
+mutually compatible, and junk can block one tier member while leaving another
+native-compatible. Both dense and projected DP eligibility incorrectly treated
+that observation bit as a physical conflict. The separate Calculator incoming
+carrier fix does not own this recurrence.
+
+The parent and existing Astra review selected a minimal native-group correction.
+Prepared-base native pool filtering and complete fresh bucket-group conflicts
+now own support, alongside capacities, weights, multiplicity and genuine
+exhaustion. Observation masks never prune native draws. The one-status/token
+carrier must prove a common native group across every goal member, including
+below-tier members, or refuse its row as unsupported. New goal members reconstruct
+cross-slot terminal blockers using exactly `project_item`'s relation while
+retaining preserved-base blockers. Finder's conservative cross-goal rejection
+is unchanged. The argument is retained once in
+[native group eligibility](../../solver/mathematics/representations.md#native-reforge-group-eligibility).
+
+The independent native weighted-pool oracle passes **36,366 checks**, zero
+failures: 126 matrix cases across dense/projected/factored paths, full/gated
+complete distributions, 450 materialized successors and 450 native Annul rows,
+with 69 actual V3 terminal commits. It covers both independent-junk pick orders,
+both forced blocker bases, partial target-member exclusion including below tiers,
+forced/fractured setup, and Harvest's targeted first draw. A nonexclusive family
+refuses the row without pruning native outcomes. Checkpoint **46**, assertion
+**384**, CURRENT carrier/W1/Conquest **516**, and bounded artifact **203** checks
+also pass. Old checkpoint format 2 is explicitly rejected; format 3, compiled
+assertion identity 3 and memo/kernel law 2 reject old computed authority.
+
+`native-group-correction.json` pins source, binary, log identities and the failure
+disposition. Original failures, frozen dirty source and later passing evidence
+remain under `out/integration-current-mechanics/`. The pre-correction N6 observation
+is preserved but native-law qualification is held: comparing physical and compact
+paths sharing that recurrence was insufficient. No numerical wrongness for its
+specific real-data goal is inferred. No timed solver or actual-worker run was
+used here. Finder/Calculator integration, final release WASM and both final-byte
+worker checks remain pending; historical economic receipts retain their own laws.

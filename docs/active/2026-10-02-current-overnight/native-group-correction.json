@@ -1,0 +1,119 @@
+{
+  "scope": "Parent/Astra approved finite native-group eligibility and terminal-projection correction; no Finder gate widening or economic qualification.",
+  "base_commit": "04e1d7610be00a333d5428c2b0b8ad3d1929e13a",
+  "source_commit": "pending_code_checkpoint",
+  "source_files_sha256": {
+    "engine/src/solver_reforge.cpp": "41ceeab61dca9516ecbc5ca42c781202bd6137d516a942e428915429da6922b1",
+    "engine/src/solver_development_checkpoint.cpp": "58739e5d2ac66106b748974cda2f12f8c48ac23b0c4769a61a90e50dc3edf6b4",
+    "engine/src/solver_policy_assertion_work.cpp": "ee817820e62170605fc6dfad221f9462c8cc19996a8b0ec9eadbb2baa6fd1471",
+    "engine/tests/test_solver_calc.cpp": "359af269757c8ea4cb4db515b45bbbd5c72f1436f4f77f4ab10143a108051144",
+    "engine/tests/test_solver_api.cpp": "2f68d600914847353b0f798ca7149505c4ab753fd0ac1a67bfa331aeb416b25a"
+  },
+  "native_test_executable_sha256": "d9409995166e7407f54d209696df09c68395c7bcd0f022b4a15b391b8ad0302d",
+  "native_law": {
+    "support": "Prepared-base native pool plus complete fresh native bucket-group intersections, capacities, positive weights, multiplicity and true exhaustion.",
+    "observation_masks": "No eligibility pruning from goal status or blocked-goal observation masks.",
+    "carrier_admission": "Every full goal member mask, including below-tier members, must share a common native group; otherwise the reforge row returns unsupported with no outcomes.",
+    "terminal_projection": "Cross-slot goal-member blocker bits match project_item blocking_group_ids over every group, retain base blockers and precede deferred raw identity expansion.",
+    "identities": {
+      "memo_and_exact_kernel_native_group_law": 2,
+      "compiled_assertion_request_identity": 3,
+      "development_checkpoint_format": 3
+    }
+  },
+  "validation": {
+    "finite_native_pool_oracle": {
+      "selector": "--solver-calc-gated-equivalence-only",
+      "checks": 36366,
+      "failures": 0,
+      "matrix_cases": 126,
+      "materialized_successors": 450,
+      "complete_Annul_rows": 450,
+      "actual_V3_commits": 69,
+      "profiles": [
+        "three mixed goals including cross-goal satisfying/below-tier blockers",
+        "one T1 family with independent junk blockers",
+        "one any-tier family with partially blocked members"
+      ],
+      "implementations": [
+        "dense raw",
+        "projected native support",
+        "factored gated terminal"
+      ],
+      "controls": [
+        "full and gated complete support/probabilities/mass",
+        "both independent junk pick orders",
+        "both forced junk bases",
+        "forced satisfying/below-tier goals",
+        "fractured goal/junk and discarded source junk",
+        "Harvest targeted first draw then native ordinary fill",
+        "nonexclusive-family unsupported refusal"
+      ]
+    },
+    "checkpoint": {
+      "checks": 46,
+      "failures": 0,
+      "legacy_v2_rejected": true
+    },
+    "assertion_service": {
+      "checks": 384,
+      "failures": 0
+    },
+    "Current_carrier_W1_Conquest": {
+      "checks": 516,
+      "failures": 0
+    },
+    "bounded_finish_artifact": {
+      "checks": 203,
+      "failures": 0
+    },
+    "whitespace": "passed"
+  },
+  "before_failure_evidence": {
+    "Finder_original": "finder-original-15-failures.log",
+    "original_new_distribution_failures": {
+      "log": "cross-goal-diagnostic.log",
+      "failures": 24,
+      "after_terminal_only_projection": true
+    },
+    "expanded_admitted_one_goal_failures": {
+      "log": "cross-goal-admitted-before.log",
+      "checks": 26310,
+      "failures": 138,
+      "cases": 72
+    },
+    "initial_exploratory_fixture": {
+      "log": "cross-goal-before.log",
+      "checks": 19273,
+      "failures": 85,
+      "note": "Before terminal repair; side cap later tightened to exercise V3, so this is not a same-fixture red/green comparison."
+    },
+    "frozen_source_and_patch": [
+      "cross-goal-failing-test_solver_calc.cpp",
+      "cross-goal-uncommitted.patch",
+      "cross-goal-counterexample.json"
+    ]
+  },
+  "evidence_sha256": {
+    "finder-original-15-failures.log": "a427364546e6ac7e93fe44dfa16c8ca990b96498446e39b8e7406bd9b5a0a5ae",
+    "cross-goal-diagnostic.log": "d404080ab68e095b52a3b50b6c14afe58a47be96bb2784aae03e8081eca64f9b",
+    "cross-goal-admitted-before.log": "4dd55c5430568c621bdd667a0ca19e918c157e33edb63aee87fb178cc7544c13",
+    "cross-goal-before.log": "926227722b6f7b063d811a84e4e20c95972ca1b5ea6de569c5960a873d8a412c",
+    "cross-goal-failing-test_solver_calc.cpp": "9f06321497193ad46ac67470ed28e75148c18f8219070e70b5ccfa16f3a797fb",
+    "cross-goal-uncommitted.patch": "01853edd0a77ba34944d01714ca1300e54ba2c97f30700fa4112d677c8efac8c",
+    "cross-goal-counterexample.json": "b8b1a4d39bbb989b77aa7f679251cc1c658948161bcd08b37a8b38cca9db3ef0",
+    "native-group-checkpoint-build.log": "4c475ce42ed886850299c9d7e3d722278791caaa6e960f7c6eb7746368cf7318",
+    "native-group-checkpoint-finite.log": "a791314c9049a0c99bc8d748ca786080b5b170c507d1f40024ee08c095ce70ce",
+    "native-group-checkpoint.log": "b02c8abe6f2ef11c71b752ad4d915dcdca0303981eb60436246b737ac4b8ccfb",
+    "native-group-assertion.log": "ac7649385adeebee429821fa2f378902a987abec5a36822f76e7629def2dffee",
+    "native-group-carrier.log": "07d636d02335c3d07835b24bce50a2bfec4619139b6828752009498aa53936c7",
+    "native-group-bounded.log": "b0b55e378d69d131157b98a709dbb886eca9f8848189ef7a520a8bfe851b3407"
+  },
+  "limits": [
+    "Original 15,24 and138 failure logs preserved; the final126-case matrix contains the original mixed-goal and one-goal counterexamples rather than replacing them.",
+    "Pre-correction N6 physical/compact comparison shares the old DP and remains native-law-held; observed acceptance/expansion metrics are preserved without claiming numeric wrongness.",
+    "Focused compact differential rerun awaits selected Finder integration; release WASM and final-byte workers await stable combined source.",
+    "No timed solver or actual-worker invocation; all six global native timed slots spent, two final-byte worker slots unused and parent-controlled.",
+    "Historical Bow and N4/N5 economic receipts remain bound to their own binaries/laws; no economic result is transferred to corrected bytes."
+  ]
+}

@@ -673,6 +673,318 @@ void run_identity_reforge_factorization_tests() {
     }
 }
 
+// Independent ordered native-pool enumeration checks the complete terminal
+// projection, not merely whether a representative can be materialized.
+void run_reforge_cross_goal_projection_tests() {
+    auto session = make_calc_session();
+    std::vector<std::vector<std::uint32_t>> groups(session->mod_count);
+    for (std::uint32_t mod = 0; mod < session->mod_count; ++mod)
+        groups[mod].assign(session->group_ids.begin() + session->group_offsets[mod],
+            session->group_ids.begin() + session->group_offsets[mod + 1]);
+    groups[0].push_back(20); // satisfying Life member blocks Fire via second group
+    groups[1].push_back(21); // below-tier Life member blocks Fire via a different group
+    groups[5].push_back(21);
+    session->group_offsets = {0};
+    session->group_ids.clear();
+    session->group_masks.assign(32, std::vector<std::uint64_t>(session->words, 0));
+    for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+        for (const auto group : groups[mod]) {
+            session->group_ids.push_back(group);
+            pc_bitset_set(session->group_masks[group].data(), mod);
+        }
+        session->group_offsets.push_back(static_cast<std::uint32_t>(session->group_ids.size()));
+    }
+    // Clamp the ordinary rare 4/5/6 target law to four affixes so the
+    // fixture reaches V3's last depth instead of always exhausting early.
+    session->rare_affix_cap = 2;
+    auto data = std::const_pointer_cast<DataImpl>(session->data);
+    data->essence_count = 5;
+    data->essence_item_level_restrictions.assign(5, -1);
+    data->essence_is_corruption_only.assign(5, 0);
+    for (const auto key : {"cross_goal_caster", "cross_goal_satisfied", "cross_goal_below",
+                           "cross_goal_junk_A", "cross_goal_junk_B"}) {
+        data->essence_key_sids.push_back(static_cast<std::uint32_t>(data->strings.size()));
+        data->essence_by_key[key] = static_cast<std::uint32_t>(data->essence_key_sids.size() - 1);
+        data->strings.push_back(key);
+    }
+    session->essence_guaranteed_mod_ids = {4, 0, 1, 2, 5};
+    auto registry = build_action_registry(*session);
+    const auto chaos = registry.index_by_id.at("chaos");
+    const auto annul = registry.index_by_id.at("annul");
+    const auto caster = registry.index_by_id.at("essence:cross_goal_caster");
+    const auto satisfied = registry.index_by_id.at("essence:cross_goal_satisfied");
+    const auto below = registry.index_by_id.at("essence:cross_goal_below");
+    const auto junk_A = registry.index_by_id.at("essence:cross_goal_junk_A");
+    const auto junk_B = registry.index_by_id.at("essence:cross_goal_junk_B");
+    const auto harvest_fire = registry.index_by_id.at("harvest_reforge:fire");
+    const auto harvest_cold = registry.index_by_id.at("harvest_reforge:cold");
+    const std::vector<std::uint32_t> actions{
+        chaos, caster, satisfied, below, annul, junk_A, junk_B, harvest_fire, harvest_cold};
+    GoalSpec goal = family_goal_100();
+    goal.rarity = PC_RARITY_RARE;
+    goal.min_satisfied_slots = 2;
+    for (const auto mod : {5u, 4u}) {
+        GoalSlot slot;
+        slot.family_id = session->family_id[mod];
+        slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    const char* comparison = "";
+    unsigned active_profile = 0, active_implementation = 0, active_variant = 0;
+    CalcContext* diagnostic_calc = nullptr;
+    unsigned diagnostic_rows = 0;
+    const auto check_maps = [&](const std::map<std::uint32_t, double>& actual,
+                               const std::map<std::uint32_t, double>& expected) {
+        PC_CHECK(actual.size() == expected.size());
+        double a = 0, e = 0;
+        for (const auto& [state, p] : actual) {
+            a += p;
+            const auto at = expected.find(state);
+            PC_CHECK(at != expected.end());
+            if (at == expected.end() && diagnostic_rows++ < 3) {
+                const auto dump = [&](const char* kind, std::uint32_t id, double probability) {
+                    const auto& value = diagnostic_calc->state(id);
+                    std::printf("cross-goal mismatch %s profile=%u impl=%u variant=%u %s state=%u p=%.17g flags=%u blocked=%u counts=%u/%u statuses=%u/%u/%u basin=%u\n",
+                        comparison, active_profile, active_implementation, active_variant, kind, id, probability,
+                        value.flags, value.blocked_mask, value.prefix_count, value.suffix_count,
+                        value.slot_status[0], value.slot_status[1], value.slot_status[2], value.goal_progress_retry_basin);
+                };
+                dump("actual", state, p);
+                for (const auto& [id, probability] : expected) dump("expected", id, probability);
+            }
+            if (at != expected.end()) PC_CHECK(near(p, at->second, 1e-12));
+        }
+        for (const auto& [state, p] : expected) { (void)state; e += p; }
+        PC_CHECK(near(a, 1, 1e-12));
+        PC_CHECK(near(e, 1, 1e-12));
+    };
+    std::uint64_t cases = 0, materialized = 0, annul_rows = 0, factored_commits = 0;
+    std::vector<GoalSpec> profiles{goal};
+    auto single = goal;
+    single.slots.resize(1);
+    single.min_satisfied_slots = 1;
+    profiles.push_back(single);
+    // All tiers count: junk sharing only a below-tier member's secondary
+    // group can block the observation while remaining compatible with T1.
+    single.slots[0].min_tier = 0;
+    profiles.push_back(single);
+    for (unsigned profile = 0; profile < profiles.size(); ++profile) {
+      active_profile = profile;
+      for (unsigned implementation = 0; implementation < 3; ++implementation) {
+        CalcContext calc(session, profiles[profile], registry, actions, false, false, true,
+            std::nullopt, {}, false, {}, true, false, implementation != 0,
+            false, implementation == 2);
+        diagnostic_calc = &calc;
+        active_implementation = implementation;
+        ActionContextImpl context(0);
+        context.session = session;
+        for (unsigned variant = 0; variant < 14; ++variant) {
+            active_variant = variant;
+            pc_item_state source;
+            pc_item_clear(&source);
+            source.rarity = PC_RARITY_RARE;
+            std::uint32_t action = chaos;
+            if (variant >= 1 && variant <= 3) action = actions[variant];
+            if ((variant >= 4 && variant <= 7) || variant == 11 || variant == 12) {
+                const auto held = variant == 4 || variant == 12 ? 0u :
+                    variant == 5 ? 1u : variant == 11 ? 2u : 6u;
+                place(&source, session->gen_type[held], held,
+                    static_cast<std::uint16_t>(session->primary_group[held]), PC_MOD_SLOT_FRACTURED);
+                place(&source, PC_SIDE_SUFFIX, 7, 22); // discarded by renewal
+                if (variant == 7) action = satisfied;
+            }
+            if (variant == 8) action = junk_A;
+            if (variant == 9) action = junk_B;
+            if (variant == 10 || variant == 11) action = harvest_fire;
+            if (variant == 12 || variant == 13) action = harvest_cold;
+            // Prepare the native unprotected/fractured boundary independently.
+            pc_item_state base;
+            pc_item_clear(&base);
+            base.rarity = PC_RARITY_RARE;
+            for (const int side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+                const auto* slots = side == PC_SIDE_PREFIX ? source.prefixes : source.suffixes;
+                const auto count = side == PC_SIDE_PREFIX ? source.prefix_count : source.suffix_count;
+                for (unsigned i = 0; i < count; ++i)
+                    if (slots[i].flags & PC_MOD_SLOT_FRACTURED)
+                        place(&base, side, slots[i].mod_id, slots[i].group_id, slots[i].flags);
+            }
+            if (registry.actions[action].params.type == ActionType::Essence) {
+                const auto forced = session->essence_guaranteed_mod_ids[
+                    registry.actions[action].params.essence_index];
+                PC_CHECK(pc_item_add_mod(&base, session->gen_type[forced], forced,
+                    static_cast<std::uint16_t>(session->primary_group[forced]), 0, nullptr) == PC_RESULT_OK);
+            }
+            std::map<std::uint32_t, double> expected;
+            double native_A_then_B = 0, native_B_then_A = 0;
+            const auto first_base_blocker = item_contains_mod(base, 2) ? 2u :
+                item_contains_mod(base, 5) ? 5u : 0u;
+            const auto visit = [&](auto&& self, pc_item_state item, unsigned target,
+                                   double p, unsigned first_blocker) -> void {
+                const auto absorb = [&] {
+                    expected[calc.intern_item(item)] += p;
+                    if (item_contains_mod(item, 2) && item_contains_mod(item, 5)) {
+                        if (first_blocker == 2) native_A_then_B += p;
+                        if (first_blocker == 5) native_B_then_A += p;
+                    }
+                };
+                if (item.prefix_count + item.suffix_count >= target) {
+                    absorb();
+                    return;
+                }
+                const auto cap = rarity_affix_cap(*session, item.rarity);
+                const bool prefix = item.prefix_count < cap, suffix = item.suffix_count < cap;
+                PoolBuildRequest request;
+                request.side_filter = prefix && suffix ? -1 : prefix ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX;
+                const auto pool = get_weighted_pool(context, &item, request);
+                if ((!prefix && !suffix) || pool.total_weight == 0) {
+                    absorb();
+                    return;
+                }
+                for (const auto& row : pool.entries) if (row.final_weight != 0) {
+                    auto next = item;
+                    PC_CHECK(pc_item_add_mod(&next, row.gen_type, row.session_mod_id,
+                        static_cast<std::uint16_t>(row.primary_group), 0, nullptr) == PC_RESULT_OK);
+                    const auto first = first_blocker != 0 ? first_blocker :
+                        row.session_mod_id == 2 || row.session_mod_id == 5 ? row.session_mod_id : 0u;
+                    self(self, next, target, p * row.final_weight / pool.total_weight, first);
+                }
+            };
+            for (unsigned target = 4; target <= 6; ++target) {
+                const auto count = std::min<unsigned>(target, session->rare_affix_cap * 2);
+                if (registry.actions[action].params.type == ActionType::HarvestReforge) {
+                    // Independently enumerate the native targeted first draw,
+                    // followed by the ordinary fill law; do not reuse DP rows.
+                    PoolBuildRequest guaranteed;
+                    guaranteed.weight_kind = PoolWeightKind::TargetedNatural;
+                    guaranteed.target_tag_id = registry.actions[action].params.target_tag_id;
+                    const auto pool = get_weighted_pool(context, &base, guaranteed);
+                    PC_CHECK(pool.total_weight > 0);
+                    for (const auto& row : pool.entries) if (row.final_weight != 0) {
+                        auto next = base;
+                        PC_CHECK(pc_item_add_mod(&next, row.gen_type, row.session_mod_id,
+                            static_cast<std::uint16_t>(row.primary_group), 0, nullptr) == PC_RESULT_OK);
+                        const auto first = first_base_blocker != 0 ? first_base_blocker :
+                            row.session_mod_id == 2 || row.session_mod_id == 5 ? row.session_mod_id : 0u;
+                        visit(visit, next, count, row.final_weight / (3.0 * pool.total_weight), first);
+                    }
+                } else visit(visit, base, count, 1.0 / 3, first_base_blocker);
+            }
+            const auto input = calc.intern_item(source);
+            const auto actual = calc.outcomes(input, action);
+            PC_CHECK(actual.supported);
+            std::map<std::uint32_t, double> actual_mass;
+            bool saw_satisfied_block = false, saw_below_block = false;
+            double actual_independent_junk = 0, native_independent_junk = 0;
+            for (const auto& row : actual.entries) {
+                actual_mass[row.state] += row.probability;
+                const auto state = calc.state(row.state);
+                saw_satisfied_block |= state.slot_status[0] == 2 && (state.blocked_mask & 2u) != 0;
+                saw_below_block |= state.slot_status[0] == 1 && (state.blocked_mask & 2u) != 0;
+                pc_item_state item;
+                const bool valid = calc.materialize(row.state, item);
+                PC_CHECK(valid);
+                if (!valid) continue;
+                ++materialized;
+                if (item_contains_mod(item, 2) && item_contains_mod(item, 5))
+                    actual_independent_junk += row.probability;
+                PC_CHECK(project_item(*session, calc.layout(), item) == state);
+                // The next native Annul must erase/recompute blocker bits too.
+                std::vector<std::pair<int, unsigned>> removable;
+                for (const int side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+                    const auto* slots = side == PC_SIDE_PREFIX ? item.prefixes : item.suffixes;
+                    const auto count = side == PC_SIDE_PREFIX ? item.prefix_count : item.suffix_count;
+                    for (unsigned i = 0; i < count; ++i)
+                        if (!(slots[i].flags & PC_MOD_SLOT_FRACTURED)) removable.emplace_back(side, i);
+                }
+                std::map<std::uint32_t, double> expected_annul, actual_annul;
+                for (const auto& [side, index] : removable) {
+                    auto next = item;
+                    PC_CHECK(pc_item_remove_at(&next, side, index) == PC_RESULT_OK);
+                    expected_annul[calc.intern_item(next)] += 1.0 / removable.size();
+                }
+                if (removable.empty()) expected_annul[row.state] = 1;
+                const auto removed = calc.outcomes(row.state, annul);
+                PC_CHECK(removed.supported);
+                for (const auto& e : removed.entries) actual_annul[e.state] += e.probability;
+                comparison = "Annul";
+                check_maps(actual_annul, expected_annul);
+                ++annul_rows;
+            }
+            comparison = "full renewal";
+            check_maps(actual_mass, expected);
+            if (profile == 0) {
+                if (variant == 0 || variant == 1) {
+                    PC_CHECK(saw_satisfied_block);
+                    PC_CHECK(saw_below_block);
+                }
+                if (variant == 4) PC_CHECK(saw_satisfied_block);
+                if (variant == 5 || variant == 3) PC_CHECK(saw_below_block);
+            } else if (variant == 0 || variant == 8 || variant == 9 || variant == 11) {
+                // The admitted one-goal domain includes independent native
+                // junk blockers. Compare their positive joint mass, not just
+                // two physical/compact implementations of the same roll DP.
+                for (const auto& [state, p] : expected) {
+                    pc_item_state item;
+                    PC_CHECK(calc.materialize(state, item));
+                    if (item_contains_mod(item, 2) && item_contains_mod(item, 5))
+                        native_independent_junk += p;
+                }
+                PC_CHECK(native_independent_junk > 0);
+                PC_CHECK(near(actual_independent_junk, native_independent_junk, 1e-12));
+                if (variant == 0) {
+                    PC_CHECK(native_A_then_B > 0 && native_B_then_A > 0);
+                    PC_CHECK(near(native_A_then_B + native_B_then_A, native_independent_junk, 1e-12));
+                }
+                if (variant == 8 || variant == 11) PC_CHECK(native_A_then_B > 0);
+                if (variant == 9) PC_CHECK(native_B_then_A > 0);
+            }
+            // Compare the complete separately gated row, including retry mass,
+            // with the native law projected through its published boundary.
+            const auto gated = calc.outcomes(input, action, true);
+            PC_CHECK(gated.supported && gated.goal_progress_gated);
+            std::map<std::uint32_t, double> expected_gated, actual_gated;
+            for (const auto& [state, p] : expected) {
+                const auto assessment = calc.assess_goal_state(calc.state(state));
+                if (calc.is_goal_state(calc.state(state))) {
+                    PC_CHECK(gated.gated_terminal_state != kNoId);
+                    expected_gated[gated.gated_terminal_state] += p;
+                } else if (assessment.satisfied_count == 0) {
+                    PC_CHECK(gated.gated_retry_state != kNoId);
+                    expected_gated[gated.gated_retry_state] += p;
+                } else expected_gated[state] += p;
+            }
+            for (const auto& row : gated.entries) actual_gated[row.state] += row.probability;
+            comparison = "gated renewal";
+            check_maps(actual_gated, expected_gated);
+            ++cases;
+        }
+        if (implementation == 2) {
+            PC_CHECK(calc.telemetry().reforge_effort.v3_commits > 0);
+            factored_commits += calc.telemetry().reforge_effort.v3_commits;
+        }
+    }
+    }
+    // A family with independently coexisting members cannot fit one slot.
+    // Refuse its exact row rather than deleting native-compatible draws.
+    auto nonexclusive = make_calc_session();
+    nonexclusive->family_id[3] = 100;
+    const auto invalid_registry = build_action_registry(*nonexclusive);
+    const auto invalid_chaos = invalid_registry.index_by_id.at("chaos");
+    for (unsigned implementation = 0; implementation < 3; ++implementation) {
+        CalcContext invalid(nonexclusive, family_goal_100(), invalid_registry, {invalid_chaos},
+            false, false, true, std::nullopt, {}, false, {}, true, false,
+            implementation != 0, false, implementation == 2);
+        pc_item_state root;
+        pc_item_clear(&root);
+        root.rarity = PC_RARITY_RARE;
+        const auto row = invalid.outcomes(invalid.intern_item(root), invalid_chaos);
+        PC_CHECK(!row.supported && row.entries.empty());
+    }
+    std::printf("finite cross-goal terminal projection: cases=%llu materialized=%llu Annul-rows=%llu V3-commits=%llu; complete native laws checked\n",
+        static_cast<unsigned long long>(cases), static_cast<unsigned long long>(materialized),
+        static_cast<unsigned long long>(annul_rows), static_cast<unsigned long long>(factored_commits));
+}
+
 void run_projected_reforge_frontier_equivalence_tests() {
     ReforgeEffortBreakdown saturated;
     saturated.rows_begun =
@@ -3853,6 +4165,7 @@ void run_solver_calc_tests(const char* artifact_dir) {
         }
         PC_CHECK(same_distribution(before, calc.outcomes(calc.intern_item(empty), chaos)));
     }
+    run_reforge_cross_goal_projection_tests();
     run_foulborn_kernel_tests();
     run_product_dead_feature_reduction_tests();
     run_exact_goal_member_materialization_test();
@@ -3868,6 +4181,7 @@ void run_solver_calc_tests(const char* artifact_dir) {
 }
 
 void run_solver_calc_gated_equivalence_tests() {
+    run_reforge_cross_goal_projection_tests();
     run_projected_reforge_frontier_equivalence_tests();
     run_harvest_targeted_natural_regression();
 }

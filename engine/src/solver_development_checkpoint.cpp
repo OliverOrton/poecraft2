@@ -16,7 +16,8 @@ namespace fs = std::filesystem;
 constexpr std::array<char, 16> kMagic{
     'P', 'C', 'S', 'O', 'L', 'V', 'E', 'G',
     'R', 'A', 'P', 'H', 'V', '1', '\r', '\n'};
-constexpr std::uint32_t kFormatVersion = 2;
+// Version 3 rejects cached transition laws from observation-mask eligibility.
+constexpr std::uint32_t kFormatVersion = 3;
 constexpr std::uint32_t kEndianMarker = 0x01020304u;
 constexpr std::uint64_t kFnvOffset = 14695981039346656037ull;
 constexpr std::uint64_t kFnvPrime = 1099511628211ull;

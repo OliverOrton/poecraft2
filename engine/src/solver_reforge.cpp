@@ -29,8 +29,8 @@
  *
  *   goal buckets   one satisfied + one below-tier bucket per goal slot,
  *                  holding the exact pool weight of the slot's members.
- *                  Any pick against a slot occupies its exclusivity
- *                  group, killing both buckets and its blocker junk.
+ *                  Single occupancy requires a common native group;
+ *                  picks disable only genuinely conflicting groups.
  *   junk buckets   (side, junk class, block mask, family weight) with a
  *                  multiplicity counting families sharing that weight.
  *                  Picking one consumes exactly one family's weight, so
@@ -343,6 +343,9 @@ std::vector<std::uint64_t> reforge_base_observation(
         hash ^= value;
         hash *= 1099511628211ull;
     };
+    // Native-group eligibility law version: memo and externally compared
+    // kernel signatures must not identify observation-pruned rows as equal.
+    mix(2);
     mix(base.rarity);
     mix(base.item_flags);
     mix(base.generic_influence_bits);
@@ -660,11 +663,38 @@ struct ActiveTerminalBranch {
     std::uint32_t available_family_choices = 0;
 };
 
-/* Goal-slot occupancy: satisfied, below-tier, or blocked all mean the
- * slot's exclusivity group is taken for the rest of the roll. */
-std::uint8_t occupied_mask(const RollState& state, std::uint8_t base_mask) {
-    return static_cast<std::uint8_t>(
-        base_mask | state.sat_mask | state.below_mask | state.blocked_mask);
+/* The carrier has one status/token per goal slot. A common native group
+ * proves no two physical members can coexist. Otherwise this representation
+ * must refuse the row, never manufacture that invariant by pruning draws. */
+bool reforge_goal_slots_single_occupancy(
+        const SessionImpl& session, const AbstractLayout& layout) {
+    for (const auto& slot : layout.slots) {
+        std::uint32_t first = kNoId;
+        for (std::size_t word = 0; word < slot.member_mask.size(); ++word) {
+            if (slot.member_mask[word] != 0) {
+                first = static_cast<std::uint32_t>(word * 64 +
+                    std::countr_zero(slot.member_mask[word]));
+                break;
+            }
+        }
+        if (first == kNoId) return false;
+        bool common = false;
+        for (auto index = session.group_offsets[first];
+             index < session.group_offsets[first + 1]; ++index) {
+            const auto& mask = session.group_masks[session.group_ids[index]];
+            if (mask.size() != slot.member_mask.size()) continue;
+            bool contains_all = true;
+            for (std::size_t word = 0; word < mask.size(); ++word) {
+                if ((slot.member_mask[word] & ~mask[word]) != 0) {
+                    contains_all = false;
+                    break;
+                }
+            }
+            if (contains_all) { common = true; break; }
+        }
+        if (!common) return false;
+    }
+    return true;
 }
 
 } // namespace
@@ -787,6 +817,8 @@ CalcContext::evaluate_reforge_cooperatively(
     }
     ++telemetry_.reforge_misses;
     telemetry_timer.miss = true;
+    if (!reforge_goal_slots_single_occupancy(session, layout_))
+        co_return std::make_shared<OutcomeDistribution>(std::move(result));
 
     std::optional<ReforgeEffortRecorder> effort_recorder;
     if (reforge_resource_accounting_) {
@@ -1895,14 +1927,9 @@ CalcContext::evaluate_reforge_cooperatively(
     attribution.exclusion_build_ns = elapsed_ns(exclusion_started);
 
     std::array<std::vector<std::uint64_t>, 2> side_bucket_masks;
-    std::array<std::vector<std::uint64_t>, kMaxGoalSlots>
-        occupied_bucket_masks;
     std::vector<std::vector<std::uint16_t>> family_class_buckets;
     if (use_projected_reforge_frontier_) {
         for (auto& mask : side_bucket_masks) {
-            mask.assign(availability_word_count, 0);
-        }
-        for (auto& mask : occupied_bucket_masks) {
             mask.assign(availability_word_count, 0);
         }
         family_class_buckets.resize(next_family_class);
@@ -1912,32 +1939,12 @@ CalcContext::evaluate_reforge_cooperatively(
             side_bucket_masks[static_cast<std::size_t>(bucket.side)]
                               [b / 64] |=
                 std::uint64_t{1} << (b % 64);
-            if (bucket.kind != BucketKind::Junk) {
-                occupied_bucket_masks[bucket.slot][b / 64] |=
-                    std::uint64_t{1} << (b % 64);
-            } else {
-                for (std::size_t slot = 0;
-                     slot < layout_.slots.size(); ++slot) {
-                    if ((bucket.block_mask & (1u << slot)) != 0) {
-                        occupied_bucket_masks[slot][b / 64] |=
-                            std::uint64_t{1} << (b % 64);
-                    }
-                }
-            }
             family_class_buckets[bucket.family_class].push_back(b);
         }
     }
 
     /* --- base abstract features -------------------------------------------- */
     const AbstractState base_state = project_item(session, layout_, base);
-    std::uint8_t base_occupied = 0;
-    for (std::size_t s = 0; s < layout_.slots.size(); ++s) {
-        if (base_state.slot_status[s] !=
-                static_cast<std::uint8_t>(GoalSlotStatus::Absent) ||
-            (base_state.blocked_mask & (1u << s)) != 0) {
-            base_occupied |= 1u << s;
-        }
-    }
     const std::uint8_t cap = rarity_cap(session, base.rarity);
     const int start_total = base.prefix_count + base.suffix_count;
 
@@ -2543,6 +2550,24 @@ CalcContext::evaluate_reforge_cooperatively(
         for (std::uint8_t i = 0; i < roll.pick_count; ++i) {
             const std::uint16_t bucket_index = roll.picks[i].first;
             const RollBucket& bucket = buckets[bucket_index];
+            if (bucket.kind != BucketKind::Junk) {
+                /* Goal members can block a different observed slot too.
+                 * Match project_item at absorption, after the native roll law
+                 * is complete. These bits describe the terminal observation;
+                 * native group intersections alone determine availability.
+                 * Goal slots have disjoint membership, and every raw choice
+                 * in this bucket shares its complete native group signature. */
+                for (std::size_t s = 0; s < layout_.slots.size(); ++s) {
+                    if (s == bucket.slot) continue;
+                    const auto& groups = layout_.slots[s].blocking_group_ids;
+                    for (const auto group : bucket.exclusion_groups) {
+                        if (std::binary_search(groups.begin(), groups.end(), group)) {
+                            successor.blocked_mask |= 1u << s;
+                            break;
+                        }
+                    }
+                }
+            }
             if (!bucket.raw_choices.empty()) {
                 if (roll.picks[i].second != 1) {
                     throw std::logic_error(
@@ -2659,10 +2684,14 @@ CalcContext::evaluate_reforge_cooperatively(
     };
 
     /*
+     * Goal-blocker bits are observations, not physical exclusion groups.
+     * The prepared-base native pool and complete bucket-group intersection
+     * masks own eligibility. Independent blockers and partially blocked goal
+     * families must retain every native-compatible draw.
      * Projected V2 availability is an exact structural signature, not a
      * heuristic filter. Each interned bit survives precisely when the bucket
-     * has positive natural weight, an open side, an unoccupied observation,
-     * an unexhausted multiplicity, and no group conflict with a prior pick.
+     * has positive natural weight, an open side, an unexhausted multiplicity,
+     * and no native group conflict with a prior pick.
      * Hash buckets are collision checked against the complete bit vector.
      */
     std::vector<std::vector<std::uint64_t>> availability_classes;
@@ -2762,19 +2791,13 @@ CalcContext::evaluate_reforge_cooperatively(
                     ? base.prefix_count
                     : base.suffix_count;
             if (side_count >= cap) continue;
-            if (bucket.kind != BucketKind::Junk) {
-                if ((base_occupied & (1u << bucket.slot)) != 0) continue;
-            } else if ((bucket.block_mask & base_occupied) != 0) {
-                continue;
-            }
             root_words[b / 64] |= std::uint64_t{1} << (b % 64);
         }
         root_availability_class =
             intern_availability(std::move(root_words));
     }
     const auto bucket_remaining =
-        [&](const RollState& roll, std::uint16_t b,
-            std::uint8_t occupied) -> double {
+        [&](const RollState& roll, std::uint16_t b) -> double {
         const RollBucket& bucket = buckets[b];
         const std::uint8_t side_count =
             bucket.side == 0
@@ -2783,11 +2806,6 @@ CalcContext::evaluate_reforge_cooperatively(
                 : static_cast<std::uint8_t>(base.suffix_count +
                                             roll.suffix_picks);
         if (side_count >= cap) return 0.0;
-        if (bucket.kind != BucketKind::Junk) {
-            if (occupied & (1u << bucket.slot)) return 0.0;
-        } else {
-            if (bucket.block_mask & occupied) return 0.0;
-        }
         for (std::uint8_t pick = 0; pick < roll.pick_count; ++pick) {
             if (buckets_conflict[
                     static_cast<std::size_t>(b) * bucket_count +
@@ -2911,8 +2929,6 @@ CalcContext::evaluate_reforge_cooperatively(
             const bool guaranteed_pick = false) {
         const RollBucket& bucket = buckets[b];
         RollState child = roll;
-        const std::uint8_t parent_occupied =
-            occupied_mask(roll, base_occupied);
         if (bucket.side == 0) {
             ++child.prefix_picks;
         } else {
@@ -2982,17 +2998,6 @@ CalcContext::evaluate_reforge_cooperatively(
                 clear_mask(side_bucket_masks[
                     static_cast<std::size_t>(bucket.side)]);
             }
-            const std::uint8_t child_occupied =
-                occupied_mask(child, base_occupied);
-            const std::uint8_t newly_occupied =
-                static_cast<std::uint8_t>(
-                    child_occupied & ~parent_occupied);
-            for (std::size_t slot = 0;
-                 slot < layout_.slots.size(); ++slot) {
-                if ((newly_occupied & (1u << slot)) != 0) {
-                    clear_mask(occupied_bucket_masks[slot]);
-                }
-            }
             child.availability_class =
                 intern_availability(std::move(words));
         }
@@ -3011,18 +3016,14 @@ CalcContext::evaluate_reforge_cooperatively(
          * An empty pool means the engine action does not apply. */
         RollState root;
         root.availability_class = root_availability_class;
-        const std::uint8_t occupied = occupied_mask(root, base_occupied);
         const auto guaranteed_remaining = [&](std::uint16_t b) -> double {
             const RollBucket& bucket = buckets[b];
             if (bucket.guaranteed == 0) return 0.0;
             const std::uint8_t side_count =
                 bucket.side == 0 ? base.prefix_count : base.suffix_count;
             if (side_count >= cap) return 0.0;
-            if (bucket.kind != BucketKind::Junk) {
-                if (occupied & (1u << bucket.slot)) return 0.0;
+            if (bucket.kind != BucketKind::Junk)
                 return static_cast<double>(bucket.guaranteed);
-            }
-            if (bucket.block_mask & occupied) return 0.0;
             return static_cast<double>(bucket.guaranteed) *
                    bucket.multiplicity;
         };
@@ -3278,7 +3279,6 @@ CalcContext::evaluate_reforge_cooperatively(
                 commit_outcome(roll, probability * stop_here);
             }
             if (deeper <= 0.0) continue;
-            const std::uint8_t occupied = occupied_mask(roll, base_occupied);
             double total = 0.0;
             eligible_buckets.clear();
             if (use_projected_reforge_frontier_) {
@@ -3324,7 +3324,7 @@ CalcContext::evaluate_reforge_cooperatively(
                 for (std::uint16_t b = 0;
                      b < static_cast<std::uint16_t>(buckets.size()); ++b) {
                     remaining_by_bucket[b] =
-                        bucket_remaining(roll, b, occupied);
+                        bucket_remaining(roll, b);
                     total += remaining_by_bucket[b];
                     if (remaining_by_bucket[b] > 0.0) {
                         eligible_buckets.push_back(b);
