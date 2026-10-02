@@ -73,13 +73,70 @@ run and not Allflame economics. Fresh exact reevaluation matches each winner.
 | Alchemy/Scour Normal-root retry | C0.956974728261; every miss resets to exact original root; acquisition success 0.318614718615 |
 | Forced checker cap / pre-check Finish | Censored / unserved recorded separately |
 
-168 new checks and 129 existing Finder-binding checks pass. Earlier private
+The original 168 new checks and 129 existing Finder-binding checks pass. Earlier private
 protected Finder checks pass 63. Native compilation and reconstructed corpus
 validate-only pass. Logs and frozen binaries are in `out/finder-overnight/`.
 No full acceptance, Simulator, WASM rebuild or worker qualification is claimed.
 Default native Finder proposal behavior changes within existing conditional
 strategy vocabulary; the protected Scour family remains private. Existing release
 WASM does not contain this source change.
+
+## Candidate graph capture and any-k router qualification
+
+The parent requested exact graph preservation before the first timed invocation.
+The native-only `--finder-candidate-graph-capture` diagnostic extends the existing
+benchmark/corpus worker. It serializes every generated complete candidate when
+recorded, including candidates later unserved, refused or censored. Pending holes
+remain holes with no invented graph. Each file uses generation ordinal plus the
+existing FNV-1a 64-bit decimal graph hash; telemetry preserves that ordinal/hash.
+Every served graph is compared byte for byte to the persisted file before its
+checker starts. Later differential evaluation must use the same captured file
+and bind its SHA256. The protected programme is outside the proposed uniform
+unprotected removal domain.
+
+The sink is absent from the public C ABI and product bindings and is disabled by
+default. It cannot evaluate, seed or accept a policy. The caller keeps its native
+context alive; borrowed context memory, bounded stream/path scratch and temporary
+compiler buffers are charged to the existing memory cap. Compilation plus write
+and served-byte verification time is explicitly reported. Capture time is an
+inclusive part of search timing and verification time of compile timing; it also
+uses the real Finish/watchdog window. No cap is increased. Existing graph files
+are never overwritten, and capture failures abort diagnostic evidence rather
+than imply an economic rejection.
+
+Expanded finite checks pass: **293 native checks**, plus **four focused Python
+checks** for explicit activation, command identity and resume refusal. The final
+capture build includes direct byte verification checks. Existing Finder-binding
+checks pass 129 and protected Finder checks pass 63 on this same final build.
+
+One invalid selector accidentally invoked the default native suite with the
+selector interpreted as an artifact directory. It finished 255,870 checks with
+31 failures, including missing-artifact failures and other native checks, and
+also ran its built-in simulations. This was not valid full acceptance or fresh
+strategy qualification; the raw log is preserved as
+`out/finder-overnight/invalid-selector-default-suite.log`. It is excluded from
+scope qualification. Only the verified selectors above were rerun; no timed
+benchmark invocation was launched by this mistake.
+
+Uniform Annul can remove a held goal. The guard is not physical protection: its
+held-loss outcome returns to the goal/held router and pays reacquisition. For an
+any-two-of-three clean goal, native condition routing gives:
+
+| Item at the router | Native route |
+|---|---|
+| Two matching selected goals | Goal terminal before count test |
+| Held goal plus junk (two occupied) | Reacquire; no Annul |
+| All three selected goals (three occupied) | Goal terminal before count test |
+| Two matching goals plus junk (three occupied) | Annul, then re-test exact goal |
+| Held goal, below-tier blocker and junk (three occupied) | Annul, then re-test exact goal |
+| Held goal absent | Reacquire |
+
+For the two-goal-plus-junk native Annul law, junk removal stops with probability
+1/3, held-goal removal redraws with probability 1/3, and other-goal removal redraws
+with probability 1/3. The production Finder emits the same tested controller
+bytes. Thus `required_satisfied_slots() < slots.size()` does not erase an already
+successful selected affix: the original success predicate is tested first. No
+claim that failed-entry cleanup cannot remove a goal is made.
 
 ## Next parent-controlled qualification
 

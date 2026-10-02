@@ -632,6 +632,7 @@ struct pc_solver {
     solver::FinderGrammarMode finder_grammar =
         solver::FinderGrammarMode::Conditional;
     std::uint32_t finder_attempt_limit = 8;
+    solver::FinderCandidateGraphCapture finder_candidate_graph_capture;
 };
 
 namespace poecraft::solver {
@@ -1486,6 +1487,20 @@ pc_result solver::configure_solver_finder_attempt_limit(
     return PC_RESULT_OK;
 }
 
+pc_result solver::configure_solver_finder_candidate_graph_capture(
+        pc_solver_handle handle, const FinderCandidateGraphCapture capture,
+        pc_error_info* out_error) {
+    if (!handle || handle->solve_work || handle->solved.has_value() ||
+        handle->finder_work || handle->finder_finished || !capture.write) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+            "finder candidate capture requires an idle handle and native sink");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    handle->finder_candidate_graph_capture = capture;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
 pc_result solver::configure_solver_native_continuation_search(
         pc_solver_handle handle, NativeContinuationSearchMode mode,
         pc_error_info* out_error, const double execution_action_price) {
@@ -2238,7 +2253,8 @@ pc_result pc_solver_solve_begin(
                 *solver->calc, solver->session, *start_item,
                 economy_prices(economy), solve_options(*solver, options),
                 solver->finder_ranking, solver->finder_grammar,
-                solver->finder_attempt_limit);
+                solver->finder_attempt_limit,
+                solver->finder_candidate_graph_capture);
         } else {
             auto work = std::make_unique<solver::SolveWork>(
                 *solver->calc, *start_item, economy_prices(economy),

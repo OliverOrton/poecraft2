@@ -80,6 +80,18 @@ enum class FinderGrammarMode : std::uint8_t {
     PrimitiveOnly, Conditional, ConditionalRetention, SelectiveRetention, ConditionalProtectedScour
 };
 
+// Borrowed native-only diagnostic sink. No public ABI or policy authority.
+// The caller keeps context alive and declares its retained/write scratch bytes.
+struct FinderCandidateGraphCapture {
+    void* context = nullptr;
+    void (*write)(void*, std::uint32_t, const std::string&,
+                  const std::string&) = nullptr;
+    void (*verify)(void*, std::uint32_t, const std::string&,
+                   const std::string&) = nullptr;
+    std::uint64_t retained_owned_bytes = 0;
+    std::uint64_t max_write_scratch_bytes = 0;
+};
+
 class SelectiveCompletionProducer;
 class SelectiveProgrammeEntryValidator;
 
@@ -95,7 +107,8 @@ class PolicyFinderWork {
         const SolveOptions& limits,
         FinderRankingMode ranking = FinderRankingMode::Heuristic,
         FinderGrammarMode grammar = FinderGrammarMode::Conditional,
-        std::uint32_t attempt_limit = 8);
+        std::uint32_t attempt_limit = 8,
+        FinderCandidateGraphCapture diagnostic_capture = {});
     ~PolicyFinderWork();
     PolicyFinderWork(const PolicyFinderWork&) = delete;
     PolicyFinderWork& operator=(const PolicyFinderWork&) = delete;
@@ -147,6 +160,7 @@ class PolicyFinderWork {
         std::uint64_t work = 0;
         std::uint64_t peak_owned_bytes = 0;
         StrategyEvalProgress check_progress;
+        std::uint32_t diagnostic_graph_ordinal = 0;
         double checked_cost = 0.0;
         double best_after_checked_cost = 0.0;
         double score = 0.0;
@@ -166,6 +180,12 @@ class PolicyFinderWork {
     FinderRankingMode ranking_;
     FinderGrammarMode grammar_;
     std::uint32_t attempt_limit_ = 8;
+    FinderCandidateGraphCapture diagnostic_capture_;
+    std::uint64_t diagnostic_capture_ns_ = 0;
+    std::uint64_t diagnostic_verify_ns_ = 0;
+    std::uint64_t diagnostic_capture_bytes_ = 0;
+    std::uint64_t diagnostic_capture_peak_scratch_bytes_ = 0;
+    std::uint32_t diagnostic_capture_graphs_ = 0;
     std::uint32_t essence_acquisition_ = kNoId;
     std::uint32_t held_essence_acquisition_ = kNoId;
     std::vector<RankedAction> ranked_;

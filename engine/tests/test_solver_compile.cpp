@@ -4578,6 +4578,162 @@ void run_solver_finder_essence_tests() {
             PC_CHECK(candidate.at("status").string == "unserved_finish");
     }
     {
+        // Native-only capture preserves every generated complete graph without
+        // serving it. Finish and state censorship remain distinct outcomes.
+        struct CapturedGraph { std::uint32_t ordinal; std::string hash, graph; bool served=false; };
+        std::vector<CapturedGraph> captured;
+        FinderCandidateGraphCapture capture;
+        capture.context = &captured;
+        capture.retained_owned_bytes = 1ull << 20;
+        capture.max_write_scratch_bytes = 1ull << 20;
+        capture.write = [](void* context, std::uint32_t ordinal,
+                const std::string& hash, const std::string& graph) {
+            static_cast<std::vector<CapturedGraph>*>(context)->push_back(
+                {ordinal,hash,graph});
+        };
+        capture.verify = [](void* context,std::uint32_t ordinal,
+                const std::string& hash,const std::string& graph) {
+            auto& captured = static_cast<std::vector<CapturedGraph>*>(context)->at(ordinal-1);
+            PC_CHECK(captured.hash == hash && captured.graph == graph);
+            captured.served=true;
+        };
+        CalcContext calc(session,goal,registry,{high,chaos});
+        const auto verify_capture = [&](const PolicyFinderWork& finder) {
+            const std::string telemetry = finder.telemetry_json();
+            const auto report = json::Parser(telemetry.data(),telemetry.size()).parse();
+            PC_CHECK(report.at("diagnostic_candidate_graph_capture").at("graphs").number == captured.size());
+            PC_CHECK(report.at("candidates").as_array().size() == captured.size());
+            std::uint64_t bytes = 0;
+            for (std::size_t i=0; i<captured.size(); ++i) {
+                const auto& graph = captured[i];
+                const auto& record = report.at("candidates").as_array()[i];
+                PC_CHECK(graph.ordinal == i+1);
+                PC_CHECK(record.at("diagnostic_graph_ordinal").number == graph.ordinal);
+                PC_CHECK(record.at("graph_hash").string == graph.hash);
+                PC_CHECK(graph.served == (record.at("started_ns").type != json::Type::Null));
+                std::uint64_t hash = 14695981039346656037ull;
+                for (const unsigned char c : graph.graph) { hash ^= c; hash *= 1099511628211ull; }
+                PC_CHECK(std::to_string(hash) == graph.hash);
+                PC_CHECK(prepare_finder_candidate(calc,session,root,graph.graph).ready());
+                bytes += graph.graph.size();
+            }
+            PC_CHECK(report.at("diagnostic_candidate_graph_capture").at("serialized_bytes").number == bytes);
+        };
+        PolicyFinderWork unserved(calc,session,root,prices,limits,
+            FinderRankingMode::Heuristic,FinderGrammarMode::Conditional,8,capture);
+        unserved.request_bounded_finish(); unserved.step(1);
+        const auto report = json::Parser(unserved.telemetry_json().data(),unserved.telemetry_json().size()).parse();
+        PC_CHECK(unserved.progress().considered == 0);
+        for (const auto& record : report.at("candidates").as_array())
+            PC_CHECK(record.at("status").string == "unserved_finish");
+        verify_capture(unserved);
+        captured.clear();
+        auto tiny = limits; tiny.max_discovered_states = 1;
+        PolicyFinderWork censored(calc,session,root,prices,tiny,
+            FinderRankingMode::Heuristic,FinderGrammarMode::Conditional,8,capture);
+        complete(censored);
+        PC_CHECK(censored.progress().censored > 0);
+        verify_capture(censored);
+        captured.clear();
+        PolicyFinderWork checked(calc,session,root,prices,limits,
+            FinderRankingMode::Heuristic,FinderGrammarMode::Conditional,8,capture);
+        complete(checked); verify_capture(checked);
+        PC_CHECK(checked.best().has_value());
+        if (checked.best()) PC_CHECK(std::abs(checked.best()->expected_cost-0.2) < 1e-9);
+        PolicyFinderWork ordinary(calc,session,root,prices,limits);
+        PC_CHECK(ordinary.telemetry_json().find("diagnostic_candidate_graph_capture") == std::string::npos);
+        auto oversized = capture; oversized.max_write_scratch_bytes = limits.max_solver_owned_bytes;
+        bool bounded = false;
+        try { PolicyFinderWork too_large(calc,session,root,prices,limits,
+            FinderRankingMode::Heuristic,FinderGrammarMode::Conditional,8,oversized); }
+        catch (const std::length_error&) { bounded = true; }
+        PC_CHECK(bounded);
+    }
+    {
+        // Any-two of three slots: successful selected affixes stop before the
+        // count guard. Uniform Annul can lose the held goal; that exit redraws.
+        GoalSpec any_two; any_two.rarity = PC_RARITY_RARE;
+        any_two.min_satisfied_slots = 2;
+        for (const auto mod : {3u,4u,0u}) {
+            GoalSlot wanted; wanted.family_id = session->family_id[mod]; wanted.min_tier = 1;
+            any_two.slots.push_back(wanted);
+        }
+        const auto held = registry.index_by_id.at("essence:finder_held");
+        CalcContext calc(session,any_two,registry,{held,annul});
+        PC_CHECK(any_two.required_satisfied_slots() == 2 && any_two.slots.size() == 3);
+        FinderControlGraph control{{
+            {FinderControlKind::TestGoal,kNoId,5,1},
+            {FinderControlKind::TestSlot,0,2,4},
+            {FinderControlKind::TestAffixCountAtLeast4,3,3,4},
+            {FinderControlKind::RunPrimitive,annul,kNoId,kNoId,0},
+            {FinderControlKind::RunPrimitive,held,kNoId,kNoId,0},
+            {FinderControlKind::GoalTerminal}},0};
+        const auto graph = compile_finder_control_json(calc,root,control,limits);
+        const auto compiled = compile_strategy_json(session,graph.data(),graph.size());
+        const auto make_item = [&](std::initializer_list<unsigned> mods) {
+            auto item = root;
+            for (const auto mod : mods)
+                PC_CHECK(pc_item_add_mod(&item,static_cast<pc_affix_side>(session->gen_type[mod]),
+                    mod,session->primary_group[mod],0,nullptr) == PC_RESULT_OK);
+            return item;
+        };
+        const auto route = [&](const pc_item_state& item) {
+            auto node = compiled->start_node;
+            for (unsigned step=0; step<8; ++step) {
+                const auto& current = compiled->nodes.at(node);
+                if (current.kind == StrategyNodeKind::Operation ||
+                    current.kind == StrategyNodeKind::Terminal) return current.id;
+                bool matched = false;
+                for (const auto& edge : current.edges) {
+                    if (edge.is_default || evaluate_compiled_condition(edge.condition,*session,item)) {
+                        node=edge.target; matched=true; break;
+                    }
+                }
+                PC_CHECK(matched);
+                if (!matched) return std::string("unmatched");
+            }
+            return std::string("open_route");
+        };
+        PC_CHECK(route(make_item({3,4})) == "c5");
+        PC_CHECK(route(make_item({3,6})) == "c4");
+        PC_CHECK(route(make_item({3,4,0})) == "c5");
+        PC_CHECK(route(make_item({3,4,6})) == "c3");
+        PC_CHECK(route(make_item({3,1,6})) == "c3");
+        PC_CHECK(route(make_item({6,7})) == "c4");
+        const auto three = make_item({3,4,6});
+        const auto& exits = calc.outcomes(calc.intern_item(three),annul);
+        PC_CHECK(exits.supported && exits.applicable);
+        double stopped=0, held_lost=0, redraw=0;
+        const auto& held_test = compiled->nodes.at(compiled->node_by_id.at("c1")).edges.front().condition;
+        for (const auto& exit : exits.entries) {
+            pc_item_state item; PC_CHECK(calc.materialize(exit.state,item));
+            const auto next = route(item);
+            if (next == "c5") stopped += exit.probability;
+            if (next == "c4") redraw += exit.probability;
+            if (!evaluate_compiled_condition(held_test,*session,item)) {
+                held_lost += exit.probability; PC_CHECK(next == "c4");
+            }
+        }
+        PC_CHECK(std::abs(stopped-1.0/3) < 1e-12);
+        PC_CHECK(std::abs(held_lost-1.0/3) < 1e-12);
+        PC_CHECK(std::abs(redraw-2.0/3) < 1e-12);
+        bool emitted = false;
+        FinderCandidateGraphCapture capture; capture.context = &emitted;
+        capture.retained_owned_bytes = sizeof(emitted);
+        capture.max_write_scratch_bytes = 65536;
+        struct ExpectedGraph { const std::string* graph; bool* emitted; } expected{&graph,&emitted};
+        capture.context = &expected; capture.retained_owned_bytes = sizeof(expected);
+        capture.write = [](void* context,std::uint32_t,const std::string&,const std::string& bytes) {
+            auto& expected = *static_cast<ExpectedGraph*>(context);
+            if (bytes == *expected.graph) *expected.emitted=true;
+        };
+        PolicyFinderWork finder(calc,session,root,
+            {{"essence:finder_held",0.2},{"annul",0.03}},limits,
+            FinderRankingMode::Heuristic,FinderGrammarMode::Conditional,8,capture);
+        complete(finder); PC_CHECK(emitted);
+        std::printf("reconstructed any-two clean router: N2 goal=stop, miss=redraw; N3 goal=stop, miss=Annul; held loss=1/3 then redraw\n");
+    }
+    {
         // A full ordinary pool cannot reach clean two goals when Annul stops
         // at three affixes. The corrected controller retains the Essence's
         // semantic goal role and continues cleanup at three in either order.

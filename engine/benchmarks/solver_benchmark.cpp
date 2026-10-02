@@ -69,6 +69,7 @@ struct Arguments {
     std::string finder_ranking = "heuristic";
     std::string finder_grammar = "conditional";
     std::uint32_t finder_attempt_limit = 8;
+    bool finder_candidate_graph_capture = false;
     std::string native_goal_terminal = "legacy-clean";
     std::string native_goal_proof = "ordinary-clean";
     bool native_selective_completion_service = false;
@@ -3642,6 +3643,39 @@ std::string run_action_layout_probe(pc_data_handle data, const Value& specificat
     return out.str();
 }
 
+struct FinderGraphCaptureOutput {
+    fs::path directory;
+};
+
+void write_finder_candidate_graph(void* context, const std::uint32_t ordinal,
+        const std::string& hash, const std::string& graph) {
+    const auto& output = *static_cast<const FinderGraphCaptureOutput*>(context);
+    const fs::path path = output.directory /
+        (std::to_string(ordinal) + "-" + hash + ".strategy.json");
+    if (fs::exists(path))
+        throw std::runtime_error("finder capture refuses an existing graph file");
+    write_file(path, graph);
+}
+
+void verify_finder_candidate_graph(void* context, const std::uint32_t ordinal,
+        const std::string& hash, const std::string& graph) {
+    const auto& output = *static_cast<const FinderGraphCaptureOutput*>(context);
+    const fs::path path = output.directory /
+        (std::to_string(ordinal) + "-" + hash + ".strategy.json");
+    std::ifstream stream(path, std::ios::binary);
+    std::array<char,8192> buffer;
+    for (std::size_t offset=0; offset<graph.size();) {
+        const auto count = std::min(buffer.size(),graph.size()-offset);
+        stream.read(buffer.data(),static_cast<std::streamsize>(count));
+        if (stream.gcount() != static_cast<std::streamsize>(count) ||
+            !std::equal(buffer.begin(),buffer.begin()+count,graph.begin()+offset))
+            throw std::runtime_error("finder served graph differs from captured bytes");
+        offset += count;
+    }
+    if (!stream || stream.peek() != std::ifstream::traits_type::eof())
+        throw std::runtime_error("finder captured graph has inconsistent size");
+}
+
 CaseResult run_case(
     pc_data_handle data, const Value& specification,
     const bool skip_verification, const fs::path& strategy_output,
@@ -3651,6 +3685,7 @@ CaseResult run_case(
     const std::string& finder_ranking,
     const std::string& finder_grammar,
     const std::uint32_t finder_attempt_limit,
+    const bool finder_candidate_graph_capture,
     const std::string& native_goal_terminal,
     const std::string& native_goal_proof,
     const bool native_selective_completion_service,
@@ -3720,6 +3755,7 @@ CaseResult run_case(
         return report;
     }
 
+    FinderGraphCaptureOutput finder_capture_output;
     NativeHandles handles;
     try {
         report.actual_status = "running";
@@ -3983,6 +4019,33 @@ CaseResult run_case(
             if (configured != PC_RESULT_OK)
                 throw std::runtime_error(api_error(
                     "configure finder attempt limit", configured, error));
+        }
+        if (finder_candidate_graph_capture) {
+            std::string capture_id = required_string(specification, "id");
+            for (char& c : capture_id)
+                if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                      (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.'))
+                    c = '_';
+            finder_capture_output.directory = fs::absolute(strategy_output /
+                (capture_id + ".candidates"));
+            fs::create_directories(finder_capture_output.directory);
+            poecraft::solver::FinderCandidateGraphCapture capture;
+            capture.context = &finder_capture_output;
+            capture.write = write_finder_candidate_graph;
+            capture.verify = verify_finder_candidate_graph;
+            capture.retained_owned_bytes = sizeof(finder_capture_output) +
+                finder_capture_output.directory.native().capacity() *
+                    sizeof(fs::path::value_type);
+            // Bounded native stream/path buffers; no graph or identity copy.
+            capture.max_write_scratch_bytes = 65536 +
+                4 * finder_capture_output.directory.native().capacity() *
+                    sizeof(fs::path::value_type);
+            const auto configured =
+                poecraft::solver::configure_solver_finder_candidate_graph_capture(
+                    handles.solver, capture, &error);
+            if (configured != PC_RESULT_OK)
+                throw std::runtime_error(api_error(
+                    "configure finder graph capture", configured, error));
         }
         if (const Value* candidate = optional(caps, "candidate_evaluation", Type::Object)) {
             if (candidate->object.size() != 4)
@@ -6343,6 +6406,8 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--solver-mode") args.solver_mode=value("--solver-mode");
         else if (argument == "--finder-ranking") args.finder_ranking=value("--finder-ranking");
         else if (argument == "--finder-grammar") args.finder_grammar=value("--finder-grammar");
+        else if (argument == "--finder-candidate-graph-capture")
+            args.finder_candidate_graph_capture = true;
         else if (argument == "--finder-attempt-limit")
             args.finder_attempt_limit = static_cast<std::uint32_t>(
                 std::stoul(value("--finder-attempt-limit")));
@@ -6490,6 +6555,10 @@ Arguments parse_arguments(int argc, char** argv) {
         args.solver_mode != "current" &&
         args.solver_mode != "strategy_finder")
         throw std::runtime_error("native goal terminal treatment requires a solver mode");
+    if (args.finder_candidate_graph_capture &&
+        (args.solver_mode != "strategy_finder" || args.strategy_output.empty()))
+        throw std::runtime_error(
+            "finder graph capture requires strategy_finder and strategy output");
     if (args.solver_mode != "strategy_finder" &&
         (args.finder_ranking != "heuristic" ||
          args.finder_grammar != "conditional"))
@@ -6838,6 +6907,7 @@ int main(int argc, char** argv) {
                     args.finder_ranking,
                     args.finder_grammar,
                     args.finder_attempt_limit,
+                    args.finder_candidate_graph_capture,
                     args.native_goal_terminal,
                     args.native_goal_proof,
                     args.native_selective_completion_service,

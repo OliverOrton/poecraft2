@@ -372,6 +372,7 @@ def _run_case(
     finder_ranking: str | None = None,
     finder_grammar: str | None = None,
     finder_attempt_limit: int | None = None,
+    finder_candidate_graph_capture: bool = False,
     neutral_extra_ordering: bool = False,
     seed_progress_observation: bool = False,
     native_goal_terminal: str | None = None,
@@ -407,6 +408,7 @@ def _run_case(
         finder_ranking=finder_ranking,
         finder_grammar=finder_grammar,
         finder_attempt_limit=finder_attempt_limit,
+        finder_candidate_graph_capture=finder_candidate_graph_capture,
         neutral_extra_ordering=neutral_extra_ordering,
         seed_progress_observation=seed_progress_observation,
         native_goal_terminal=native_goal_terminal,
@@ -616,6 +618,7 @@ def run_corpus(
     finder_ranking: str | None = None,
     finder_grammar: str | None = None,
     finder_attempt_limit: int | None = None,
+    finder_candidate_graph_capture: bool = False,
     neutral_extra_ordering: bool = False,
     seed_progress_observation: bool = False,
     native_goal_terminal: str | None = None,
@@ -644,6 +647,8 @@ def run_corpus(
     if finder_attempt_limit not in (None, 8, 24) or (
             finder_attempt_limit is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder attempt limit requires strategy_finder mode and 8 or 24")
+    if finder_candidate_graph_capture and solver_mode != "strategy_finder":
+        raise ValueError("finder graph capture requires strategy_finder mode")
     if neutral_extra_ordering and solver_mode != "current":
         raise ValueError("neutral-extra ordering requires current mode")
     if seed_progress_observation and solver_mode != "current":
@@ -723,6 +728,8 @@ def run_corpus(
         treatment["finder_grammar"] = finder_grammar
     if finder_attempt_limit is not None:
         treatment["finder_attempt_limit"] = finder_attempt_limit
+    if finder_candidate_graph_capture:
+        treatment["finder_candidate_graph_capture"] = True
     if neutral_extra_ordering:
         treatment["neutral_extra_ordering"] = True
     if seed_progress_observation:
@@ -828,6 +835,7 @@ def run_corpus(
                     finder_ranking=finder_ranking,
                     finder_grammar=finder_grammar,
                     finder_attempt_limit=finder_attempt_limit,
+                    finder_candidate_graph_capture=finder_candidate_graph_capture,
                     neutral_extra_ordering=neutral_extra_ordering,
                     seed_progress_observation=seed_progress_observation,
                     native_goal_terminal=native_goal_terminal,
@@ -901,6 +909,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Native finder ranking ablation with unchanged candidate grammar and checker.")
     parser.add_argument("--finder-grammar", choices=("primitive", "conditional", "conditional-retention", "selective-retention", "conditional-protected-scour"),
         help="Native finder grammar comparison with unchanged ranking and checker.")
+    parser.add_argument("--finder-candidate-graph-capture", action="store_true",
+        help="Capture every generated native Finder graph, including unserved candidates.")
     parser.add_argument("--finder-attempt-limit", type=int, choices=(8, 24),
         help="Native finder complete-candidate attempt ceiling; default is eight.")
     parser.add_argument("--native-neutral-extra-ordering", action="store_true",
@@ -969,6 +979,7 @@ def main(argv: list[str] | None = None) -> int:
         finder_ranking=args.finder_ranking,
         finder_grammar=args.finder_grammar,
         finder_attempt_limit=args.finder_attempt_limit,
+        finder_candidate_graph_capture=args.finder_candidate_graph_capture,
         neutral_extra_ordering=args.native_neutral_extra_ordering,
         seed_progress_observation=args.native_seed_progress_observation,
         native_goal_terminal=args.native_goal_terminal,

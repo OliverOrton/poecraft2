@@ -357,6 +357,7 @@ def build_solver_case_command(
     finder_ranking: str | None = None,
     finder_grammar: str | None = None,
     finder_attempt_limit: int | None = None,
+    finder_candidate_graph_capture: bool = False,
     neutral_extra_ordering: bool = False,
     seed_progress_observation: bool = False,
     native_goal_terminal: str | None = None,
@@ -374,6 +375,8 @@ def build_solver_case_command(
     if finder_attempt_limit not in (None, 8, 24) or (
             finder_attempt_limit is not None and solver_mode != "strategy_finder"):
         raise ValueError("finder attempt limit requires strategy_finder mode and 8 or 24")
+    if finder_candidate_graph_capture and solver_mode != "strategy_finder":
+        raise ValueError("finder graph capture requires strategy_finder mode")
     if neutral_extra_ordering and solver_mode != "current":
         raise ValueError("neutral-extra ordering requires current mode")
     if seed_progress_observation and solver_mode != "current":
@@ -433,6 +436,8 @@ def build_solver_case_command(
         argv.extend(("--finder-grammar", finder_grammar))
     if finder_attempt_limit is not None:
         argv.extend(("--finder-attempt-limit", str(finder_attempt_limit)))
+    if finder_candidate_graph_capture:
+        argv.append("--finder-candidate-graph-capture")
     if neutral_extra_ordering:
         argv.append("--native-neutral-extra-ordering")
     if seed_progress_observation:
@@ -466,6 +471,7 @@ def resolve_case_execution(
     finder_ranking: str | None = None,
     finder_grammar: str | None = None,
     finder_attempt_limit: int | None = None,
+    finder_candidate_graph_capture: bool = False,
     neutral_extra_ordering: bool = False,
     seed_progress_observation: bool = False,
     native_goal_terminal: str | None = None,
@@ -490,6 +496,7 @@ def resolve_case_execution(
         finder_ranking=finder_ranking,
         finder_grammar=finder_grammar,
         finder_attempt_limit=finder_attempt_limit,
+        finder_candidate_graph_capture=finder_candidate_graph_capture,
         neutral_extra_ordering=neutral_extra_ordering,
         seed_progress_observation=seed_progress_observation,
         native_goal_terminal=native_goal_terminal,

@@ -455,6 +455,35 @@ def test_finder_mode_is_an_explicit_resumable_treatment(tmp_path: Path) -> None:
         )
 
 
+
+def test_finder_graph_capture_is_opt_in_and_binds_resume(tmp_path: Path) -> None:
+    paths = AttemptPaths.legacy(tmp_path / "run", "case-a", "attempt-1")
+    kwargs = dict(
+        executable=tmp_path / "solver.exe", artifact=tmp_path / "artifact",
+        corpus=tmp_path / "manifest.json", case_id="case-a", paths=paths,
+        root=tmp_path, exact_evaluation=True, run_verification=False,
+        goal_progress_gated_reforges=False, solver_mode="strategy_finder",
+    )
+    ordinary = build_solver_case_command(**kwargs)
+    captured = build_solver_case_command(**kwargs, finder_candidate_graph_capture=True)
+    assert "--finder-candidate-graph-capture" not in ordinary.argv
+    assert captured.argv == (*ordinary.argv, "--finder-candidate-graph-capture")
+    assert captured.canonical_document()["identity_sha256"] != ordinary.canonical_document()["identity_sha256"]
+    with pytest.raises(ValueError, match="requires strategy_finder mode"):
+        build_solver_case_command(**(kwargs | {"solver_mode": "current"}),
+                                  finder_candidate_graph_capture=True)
+    manifest = tmp_path / "manifest.json"
+    _write_json(manifest, {"cases": []})
+    args = dict(root=Path.cwd(), executable=Path(sys.executable), artifact=tmp_path,
+                corpus=manifest, tasks=[], solver_mode="strategy_finder")
+    output = tmp_path / "capture"
+    result = run_corpus(**args, output_directory=output,
+                        finder_candidate_graph_capture=True)
+    assert result["treatment"]["finder_candidate_graph_capture"] is True
+    with pytest.raises(ValueError, match="provenance/configuration differs"):
+        run_corpus(**args, output_directory=output)
+
+
 def test_neutral_extra_ordering_is_current_only_treatment(tmp_path: Path) -> None:
     paths = AttemptPaths.legacy(tmp_path / "run", "case-a", "attempt-1")
     kwargs = dict(

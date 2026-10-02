@@ -164,12 +164,13 @@ PolicyFinderWork::PolicyFinderWork(
     const SolveOptions& limits,
     const FinderRankingMode ranking,
     const FinderGrammarMode grammar,
-    const std::uint32_t attempt_limit)
+    const std::uint32_t attempt_limit,
+    const FinderCandidateGraphCapture diagnostic_capture)
     : problem_(problem), session_(std::move(session)),
       original_start_(original_start),
       economy_(std::make_shared<EconomyImpl>()), limits_(limits),
       ranking_(ranking), grammar_(grammar),
-      attempt_limit_(attempt_limit) {
+      attempt_limit_(attempt_limit), diagnostic_capture_(diagnostic_capture) {
     if (session_ == nullptr) {
         throw std::invalid_argument("finder requires a session");
     }
@@ -177,6 +178,11 @@ PolicyFinderWork::PolicyFinderWork(
         throw std::invalid_argument("finder attempt limit must be 8 or 24");
     if (grammar_ == FinderGrammarMode::ConditionalProtectedScour && attempt_limit_ != 8)
         throw std::invalid_argument("protected Scour grammar retains eight attempts");
+    if (diagnostic_capture_.write == nullptr &&
+        (diagnostic_capture_.verify != nullptr ||
+         diagnostic_capture_.retained_owned_bytes != 0 ||
+         diagnostic_capture_.max_write_scratch_bytes != 0))
+        throw std::invalid_argument("finder capture bytes require a native sink");
     economy_->id = "finder-request";
     economy_->prices = std::move(prices);
     std::string request_key = compile_finder_goal_condition(problem_);
@@ -395,6 +401,7 @@ PolicyFinderWork::~PolicyFinderWork() = default;
 std::uint64_t PolicyFinderWork::retained_owned_bytes() const {
     std::uint64_t bytes = sizeof(*this) + 4096 +
         problem_.estimated_owned_bytes() +
+        diagnostic_capture_.retained_owned_bytes +
         (validation_work_ == nullptr ? 0 :
             validation_work_->estimated_owned_bytes()) +
         refinement::economy_owned_bytes(economy_->prices, economy_->id.capacity()) +
@@ -564,6 +571,45 @@ void PolicyFinderWork::record_generated(const Sketch& sketch) {
                     node.kind == FinderControlKind::RunNativeProgram;
             });
     candidate_records_.push_back(std::move(record));
+    if (diagnostic_capture_.write != nullptr) {
+        const auto started = std::chrono::steady_clock::now();
+        // Compile complete generated sketches for capture even if never served.
+        // Pending holes have no complete graph and are not candidate records.
+        // Allow three output-sized compiler buffers plus the caller's bounded
+        // writer scratch. Capture work never evaluates or promotes a candidate.
+        const auto owned = retained_owned_bytes();
+        if (owned > limits_.max_solver_owned_bytes ||
+            diagnostic_capture_.max_write_scratch_bytes >
+                limits_.max_solver_owned_bytes - owned ||
+            limits_.max_strategy_json_bytes >
+                (limits_.max_solver_owned_bytes - owned -
+                    diagnostic_capture_.max_write_scratch_bytes) / 3)
+            throw std::length_error("finder diagnostic capture has no scratch memory");
+        const std::string graph = sketch.control.has_value()
+            ? compile_finder_control_json(
+                problem_, original_start_, *sketch.control, limits_)
+            : compile_finder_candidate_json(
+                problem_, original_start_, sketch.actions, limits_,
+                sketch.return_to_first);
+        CandidateRecord& captured = candidate_records_.back();
+        captured.graph_hash = stable_finder_hash(graph);
+        captured.diagnostic_graph_ordinal = diagnostic_capture_graphs_ + 1;
+        const auto scratch = diagnostic_capture_.max_write_scratch_bytes +
+            3 * graph.capacity() + captured.graph_hash.capacity();
+        diagnostic_capture_peak_scratch_bytes_ = std::max(
+            diagnostic_capture_peak_scratch_bytes_, scratch);
+        counters_.peak_owned_bytes = std::max(
+            counters_.peak_owned_bytes, retained_owned_bytes() + scratch);
+        if (retained_owned_bytes() + scratch > limits_.max_solver_owned_bytes)
+            throw std::length_error("finder diagnostic capture exceeded memory cap");
+        diagnostic_capture_.write(diagnostic_capture_.context,
+            captured.diagnostic_graph_ordinal, captured.graph_hash, graph);
+        ++diagnostic_capture_graphs_;
+        diagnostic_capture_bytes_ += graph.size();
+        diagnostic_capture_ns_ += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - started).count());
+    }
 }
 
 void PolicyFinderWork::schedule_feedback_program() {
@@ -909,8 +955,27 @@ void PolicyFinderWork::start_next_candidate() {
             : compile_finder_candidate_json(
                 problem_, original_start_, sketch.actions, limits_,
                 sketch.return_to_first);
-        candidate_records_[*active_record_].graph_hash =
-            stable_finder_hash(checking_graph_);
+        const std::string graph_hash = stable_finder_hash(checking_graph_);
+        if (diagnostic_capture_.write != nullptr &&
+            candidate_records_[*active_record_].graph_hash != graph_hash)
+            throw std::runtime_error("finder captured graph hash differs from served hash");
+        if (diagnostic_capture_.verify != nullptr) {
+            const auto started = std::chrono::steady_clock::now();
+            const auto owned = retained_owned_bytes();
+            if (owned > limits_.max_solver_owned_bytes ||
+                diagnostic_capture_.max_write_scratch_bytes >
+                    limits_.max_solver_owned_bytes - owned)
+                throw std::length_error("finder diagnostic verify has no scratch memory");
+            counters_.peak_owned_bytes = std::max(counters_.peak_owned_bytes,
+                owned + diagnostic_capture_.max_write_scratch_bytes);
+            diagnostic_capture_.verify(diagnostic_capture_.context,
+                candidate_records_[*active_record_].diagnostic_graph_ordinal,
+                graph_hash, checking_graph_);
+            diagnostic_verify_ns_ += static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - started).count());
+        }
+        candidate_records_[*active_record_].graph_hash = graph_hash;
         FinderCandidatePreparation prepared = prepare_finder_candidate(
             problem_, session_, original_start_, checking_graph_,
             sketch.control.has_value() && !sketch.control->programs.empty()
@@ -1106,7 +1171,7 @@ void PolicyFinderWork::step(const std::uint32_t max_work_items) {
                 record.work =
                     checker_->diagnostic_result().reforge_logical_work_v1;
                 record.peak_owned_bytes = checker_->peak_owned_bytes();
-            record.check_progress = checker_->progress();
+                record.check_progress = checker_->progress();
             }
         }
         charge_active_work();
@@ -1321,9 +1386,25 @@ std::string PolicyFinderWork::telemetry_json() const {
             result += json_string(
                 problem_.registry().actions.at(record.actions[action]).id);
         }
-        result += "]}";
+        result += "]";
+        if (diagnostic_capture_.write != nullptr)
+            result += ",\"diagnostic_graph_ordinal\":" +
+                std::to_string(record.diagnostic_graph_ordinal);
+        result += "}";
     }
-    result += "]}";
+    result += "]";
+    if (diagnostic_capture_.write != nullptr)
+        result += ",\"diagnostic_candidate_graph_capture\":{\"graphs\":" +
+            std::to_string(diagnostic_capture_graphs_) +
+            ",\"serialized_bytes\":" + std::to_string(diagnostic_capture_bytes_) +
+            ",\"capture_ns\":" + std::to_string(diagnostic_capture_ns_) +
+            ",\"served_byte_verify_ns\":" + std::to_string(diagnostic_verify_ns_) +
+            ",\"peak_scratch_bound_bytes\":" +
+                std::to_string(diagnostic_capture_peak_scratch_bytes_) +
+            ",\"retained_sink_bytes\":" +
+                std::to_string(diagnostic_capture_.retained_owned_bytes) +
+            ",\"hash_algorithm\":\"fnv1a64_decimal\"}";
+    result += "}";
     if (result.size() > limits_.max_telemetry_json_bytes)
         throw std::length_error(
             "finder telemetry exceeded max_telemetry_json_bytes");
