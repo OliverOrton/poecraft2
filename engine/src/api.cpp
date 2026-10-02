@@ -1431,6 +1431,12 @@ pc_result pc_item_edit_json(pc_session_handle session, pc_item_state* item,
         if (root.type != Type::Object) throw std::invalid_argument("Item edit must be an object");
         const auto& s = *session->impl;
         auto next = *item;
+        if (const auto* strands = root.find("memory_strands")) {
+            if (strands->type != Type::Number || !std::isfinite(strands->number) ||
+                strands->number < 0 || strands->number > 100 || std::floor(strands->number) != strands->number)
+                throw std::invalid_argument("Memory strands must be an integer from 0 to 100");
+            next.memory_strands = static_cast<std::uint8_t>(strands->number);
+        }
         if (next.lifecycle != PC_ITEM_LIVE) throw std::invalid_argument("Cannot edit an absent item");
         if (const auto* rarity = root.find("rarity")) {
             if (rarity->type != Type::String) throw std::invalid_argument("Rarity must be normal, magic or rare");

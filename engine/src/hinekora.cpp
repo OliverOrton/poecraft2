@@ -379,6 +379,15 @@ void pc_hinekora_lock_invalidate(pc_hinekora_lock_handle lock) {
     }
 }
 void pc_hinekora_lock_destroy(pc_hinekora_lock_handle lock) { delete lock; }
+void pc_hinekora_lock_release_item(pc_action_context_handle context,
+    const pc_item_state* item) {
+    if (!context) return;
+    const auto& f = context->impl->hinekora_foresight;
+    if (f && f->identity == item) {
+        f->active = false;
+        f->identity = nullptr;
+    }
+}
 
 pc_result pc_hinekora_lock_export(pc_hinekora_lock_handle lock,
     const pc_item_state* item, char* buffer, size_t capacity,

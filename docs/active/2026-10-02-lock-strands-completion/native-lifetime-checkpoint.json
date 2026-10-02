@@ -1,0 +1,25 @@
+{
+  "previous_checkpoint": "4467a605da634ae1cfcac4171ca8dfd5f00e2324",
+  "stage": "native lifetime release and bounded strand authoring; product browser qualification ongoing",
+  "source_files": {
+    "engine/include/poecraft/hinekora.h": "bc1b093b107e417964b42ee9bf5b38e569cb65f56e2181579d3b2307e53abf15",
+    "engine/src/hinekora.cpp": "873e7f02f01c2ec38143baa3880702a146a02fca2ff42b60a24bc69a635bb640",
+    "engine/src/api.cpp": "14d19b9286863be3170c7abb1ff0fbf0fdce6b6c84defa73f1384783a6c97095",
+    "bindings/python/poecraft_engine/_binding.py": "856d978d3e4d737cc86fba9c22b7271a28a30a9913b0e9ac6ddd86ad556eec13",
+    "bindings/python/tests/test_hinekora_lock.py": "bfe50831cc2f31211170f21388c49066108b7f344ce51c2e7b89d24541fb9a5f"
+  },
+  "dll_sha256": "d1050a21c590df7cb2e294112b28ba223bff1b53edd9d0c62efa72e3c4a76ea4",
+  "checks": {
+    "engine_shared_header": "passed; two jobs",
+    "python_tests": 60
+  },
+  "logs": {
+    "out/lock-strands-completion/lifetime-native-build.log": "173771ba4321d5bc2a0bdafc2870582c3846be7281ce0c49f3eea3071b2509f9",
+    "out/lock-strands-completion/lifetime-native-tests.log": "a0ed6e5f2cecf87b899a5b5db12f31ce9f833dfd7f3d915057abeda5fd70d75f"
+  },
+  "remaining": [
+    "qualify final WASM, worker and product routes",
+    "memory stochastic laws remain unapproved",
+    "multicurrency and authored Lock strategies unavailable"
+  ]
+}

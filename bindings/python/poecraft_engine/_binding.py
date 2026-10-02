@@ -791,6 +791,8 @@ _lib.pc_hinekora_lock_snapshot_item.argtypes = [_handle, ct.c_char_p, ct.c_size_
 _lib.pc_hinekora_lock_snapshot_item.restype = ct.c_int32
 _lib.pc_hinekora_lock_restore.argtypes = [_handle, ct.POINTER(_ItemState), ct.POINTER(_ActionRequest), ct.c_char_p, ct.c_size_t, ct.POINTER(_handle), ct.POINTER(_ErrorInfo)]
 _lib.pc_hinekora_lock_restore.restype = ct.c_int32
+_lib.pc_hinekora_lock_release_item.argtypes = [_handle, ct.POINTER(_ItemState)]
+_lib.pc_hinekora_lock_release_item.restype = None
 _lib.pc_hinekora_lock_destroy.argtypes = [_handle]
 _lib.pc_bestiary_state_init.argtypes = [
     ct.POINTER(_ItemState),

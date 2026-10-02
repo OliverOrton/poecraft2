@@ -133,3 +133,19 @@ a5e94c6 checkpoints remain available but do not qualify this later behavior.
 held choices without activating a guessed joint law. WASM transport and product
 plumbing are in progress and not yet qualified. All empirical memory laws remain
 held for Oliver approval.
+
+## Passing native lifetime/product-authoring checkpoint
+
+Two-job Engine/shared/header builds and 60 focused Python contracts pass.
+`release_item` detaches the ended item address from its native context without
+clearing a surviving value's foreseeing marker. This prevents allocator reuse
+from assigning the old item's no-refresh record to a fresh root. Handle cleanup
+and ordinary decline continue to grant no free forecast. Native strand-count
+authoring validates 0-100 integers atomically and invalidates on a real observed
+edit, while invalid edits preserve the preview. No memory random law is added.
+
+The first real-worker round trip passed paid preview, persistence, Undo/Redo
+spending, failed import and context recovery. Its expanded fixture found the
+lifetime bug; that failed WASM run is retained. Worker dispatch omission and a
+UI-test invocation/quantity-glyph mismatch are corrected, with logs retained.
+The final browser/module qualification is still in progress.

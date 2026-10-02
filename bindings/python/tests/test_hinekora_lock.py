@@ -343,3 +343,37 @@ def test_same_context_history_rebind_retires_old_handle_atomically():
                 original.invalidate()
                 assert restored.active and replacement._state.item_flags & 16
                 assert restored.commit().applied
+
+
+@pytest.mark.parametrize("invalid", [-1, 101, 1.5, "10", None])
+def test_native_strand_authoring_refuses_invalid_count_without_consuming_lock(invalid):
+    with load_data(ARTIFACT) as data, data.create_session(BASE,86) as session, session.create_action_context(9) as ctx:
+        item = session.create_item("rare")
+        with ctx.hinekora_lock(item,"exalt") as lock:
+            before = _fields(item._state)
+            with pytest.raises(EngineError, match="integer from 0 to 100"):
+                item.edit(memory_strands=invalid)
+            assert _fields(item._state) == before and lock.active
+            item.edit(memory_strands=44)
+            assert not lock.active and item.memory_strands == 44
+            assert not item._state.item_flags & 16
+            item.edit(memory_strands=0)
+            assert not lock.active
+
+
+
+def test_ended_lifetime_cannot_transfer_foresight_to_reused_item_storage():
+    with load_data(ARTIFACT) as data, data.create_session(BASE,86) as session, session.create_action_context(9) as ctx:
+        item = session.create_item("rare")
+        with ctx.hinekora_lock(item,"exalt") as retired:
+            _lib.pc_hinekora_lock_release_item(ctx._handle,ct.byref(item._state))
+            assert item.item_flags & 16
+            with pytest.raises(EngineError,match="original native Lock context"):
+                ctx.apply(item,"exalt")
+            error, active = _error(), ct.c_int32()
+            assert _lib.pc_hinekora_lock_status(retired._handle,ct.byref(item._state),ct.byref(active),ct.byref(error)) != 0
+            # C lifetime fixture: reuse this ended address for a fresh root.
+            fresh = session.create_item("rare")
+            ct.memmove(ct.byref(item._state),ct.byref(fresh._state),ct.sizeof(item._state))
+            with ctx.hinekora_lock(item,"exalt") as paid:
+                assert paid.active and paid.commit().applied

@@ -6,7 +6,9 @@ Pinned source revisions and unresolved owner questions are in the
 
 Memory strands are concrete bounded item state (0–100), preserved through native
 copies, stable-key transport, workspace history, authored inputs, acquisition,
-Simulator traces and Imprint. `pc_action_memory_interaction` separately exposes
+Simulator traces and Imprint. The native item editor validates count authoring
+atomically; this is a manual item edit without currency payment or a sampled
+strand distribution. `pc_action_memory_interaction` separately exposes
 whether an action observes/consumes strands and when it reads them; -1 denotes
 unknown. Harvest and resonators do not consume strands, but their bias interaction
 is unresolved. Remembrance's count distribution is unknown. Unravelling consumes
