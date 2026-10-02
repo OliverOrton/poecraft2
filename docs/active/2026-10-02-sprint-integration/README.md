@@ -15,6 +15,41 @@ containment; and private Foulborn with parsed-operation supplementary scope.
 Only HANDOFF conflicts needed manual reconciliation; production source merged
 cleanly and the combined guards were reviewed before validation.
 
+## Current Fossil refusal and native CI classification checkpoint
+
+The parent-approved native guard is committed at `835a5a1`. It refuses current
+`mirrors=0` Fractured Fossil loadouts before sampled mutation/RNG, exact row
+work or authored compile. Current/Finder refuse selected containing primitives
+or option dependencies, even unpriced, preserving the caller action scope.
+Unrelated Calculator requests remain available. Legacy `mirrors=1` retains its
+previous partial behavior; complete current random-fracture support stays held.
+Finite native controls pass **6,476 checks**, targeted bindings **27 tests**,
+and the complete CI binding lane **140 tests**. TypeScript passes after correcting
+a worker test option spelling. Matching WASM/worker are pending. Failed build,
+root-directory TypeScript and missing fixture-import setup runs remain recorded.
+
+Windows CI on `b04f359` exposes five cause categories across nine targets.
+The hash-verified preserved f08 executable repeats the missing Foulborn fixture
+identity (182,744 checks/one failure), three fossil census failures (3,233/three),
+S8.3 fracture convergence (1,069/one) and the precise continuity selector abort.
+All four historical corpus manifests pin ABI2 and old source while f08/current
+headers declare ABI3; standalone corpus execution is unrun. No blind corpus
+repin or historical benchmark cost change is made while the approved reforge
+count-law owner changes evaluation identity. Two separate test-only fixture
+repairs complete native Foulborn identity and directly enumerate physical named,
+non-mirroring metadata tuples, independent of production registry/choose code.
+Their focused native build/checks are pending.
+
+Temporary finite test instrumentation, removed after diagnosis, locates the
+abort at **IC0 fixture6/service_on**, rather than the adjacent fixture3 trace.
+The intentionally reduced final memory cap revokes the owned graph while the
+historical verified upper `63969.230769229565` remains finite. At the throw both
+graph and retained payloads are empty, global exact closure remains enabled,
+and the explicit final-cap reason is recorded. The test already expects honest
+refusal under this reduced cap. Production ownership/invariant changes await
+parent review; no convergence or proof flag is relaxed. Exact logs and the
+compact baseline classification remain in the receipt and `out/sprint-continuation`.
+
 ## First staged promotion — final matching qualification
 
 The existing integration plus parent-approved Fracture repair is frozen for the

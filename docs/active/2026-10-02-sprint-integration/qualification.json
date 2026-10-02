@@ -1404,18 +1404,25 @@
     "python_checks": 27,
     "python_failures": 0,
     "unrun": [
-      "full CI binding lane",
       "matching WASM build",
       "real worker smoke"
     ],
     "failed": [
       "first native test build lacked currency_outcomes.hpp test include; corrected final build passed",
-      "TypeScript invoked from repository root rather than apps/web; command returned missing compiler message; app-directory rerun pending"
+      "TypeScript invoked from repository root rather than apps/web; command returned missing compiler message; app-directory rerun pending",
+      "first complete binding command omitted bindings/python/tests import root; collection failed; exact CI invocation then passed",
+      "first app TypeScript found three with_implicits option typos in new worker fixture; corrected withImplicits and rerun passed"
     ],
     "logs": [
       "out/sprint-continuation/fossil-guard-native-build-final.log",
       "out/sprint-continuation/fossil-guard-native-tests.log",
-      "out/sprint-continuation/fossil-guard-python-tests.log"
-    ]
+      "out/sprint-continuation/fossil-guard-python-tests.log",
+      "out/sprint-continuation/fossil-guard-python-ci-final.log",
+      "out/sprint-continuation/fossil-guard-typescript-corrected.log"
+    ],
+    "source_commit": "835a5a19c90bfa7ad0f4bc87d8ca33ec1b6c1d18",
+    "python_ci_checks": 140,
+    "python_ci_failures": 0,
+    "typescript": "passed"
   }
 }

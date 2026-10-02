@@ -1,3 +1,21 @@
+# Current Fossil guard and native CI checkpoint (2026-10-02)
+
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and receipt own the approved current Fractured Fossil guard at `835a5a1`: 6,476
+finite native checks, 140 complete binding tests and TypeScript pass. Matching
+WASM/worker remain pending. Containing loadouts refuse centrally with unchanged
+item/RNG/action scope; unrelated Calculator and legacy mirrors1 remain available.
+Complete current outcome law stays held.
+
+Hash-verified f08 baseline repeats four native failure categories. Four old
+corpus manifests are separately source-proven ABI2/old-data pins against ABI3;
+no blind migration is made during the count-law change. Temporary instrumentation
+identifies continuity abort at fixture6/service_on: deliberate reduced final
+memory cap revokes the graph but leaves a finite historical verified scalar.
+Adjacent fixture3 CI output was not the abort identity. Production repair awaits
+parent review. Missing Foulborn identity and fossil census fixtures are separately
+being corrected with independent physical metadata enumeration.
+
 # CI fossil test contract checkpoint (2026-10-02)
 
 The CI failure on promoted `dce3271` reproduces in isolation with current and
