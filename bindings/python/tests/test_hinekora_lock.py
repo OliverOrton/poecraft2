@@ -418,3 +418,63 @@ def test_imported_lock_preview_cannot_introduce_pending_hidden_unveil_offers():
             with pytest.raises(EngineError, match="pending Unveil offers"):
                 replay.restore_hinekora_lock(item.copy(),"exalt",checkpoint)
             assert _fields(item._state) == before and lock.active
+
+
+@pytest.mark.parametrize("field", [7, 8, 9, 10, 11])
+def test_snapshot_rejects_changed_law_or_configuration_before_mutation_or_draw(field):
+    import copy
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(12) as ctx, session.create_action_context(41) as restored, session.create_action_context(41) as control:
+        item = session.create_item("normal")
+        with ctx.hinekora_lock(item, "alchemy") as original:
+            checkpoint = original.export()
+            assert checkpoint["version"] == "fixed-currency-lock-v2"
+            assert checkpoint["session"][7:9] == [2, 0]
+            bad = copy.deepcopy(checkpoint)
+            bad["session"][field] += 1
+            candidate = item.copy(); before = _fields(candidate._state)
+            with pytest.raises(EngineError, match="identity mismatch"):
+                restored.restore_hinekora_lock(candidate, "alchemy", bad)
+            assert _fields(candidate._state) == before and original.active
+            unrelated = session.create_item("normal"); comparison = unrelated.copy()
+            restored.apply(unrelated, "alchemy"); control.apply(comparison, "alchemy")
+            assert _fields(unrelated._state) == _fields(comparison._state)
+
+
+def test_snapshot_without_new_law_identity_is_not_grandfathered():
+    import copy
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(12) as ctx, session.create_action_context(41) as restored:
+        item = session.create_item("normal")
+        with ctx.hinekora_lock(item, "alchemy") as original:
+            checkpoint = original.export()
+            for old_version in [False, True]:
+                bad = copy.deepcopy(checkpoint)
+                if old_version:
+                    bad["version"] = "fixed-currency-lock-v1"
+                else:
+                    bad["session"] = bad["session"][:7]
+                candidate = item.copy(); before = _fields(candidate._state)
+                with pytest.raises(EngineError, match="version|identity mismatch"):
+                    restored.restore_hinekora_lock(candidate, "alchemy", bad)
+                assert _fields(candidate._state) == before and original.active
+
+
+@pytest.mark.parametrize("source_key,target_key,source_count,target_count", [
+    ("affliction_maximum_life", "affliction_maximum_life", 2, 3),
+    ("affliction_chance_to_block_attack_damage", "affliction_chance_to_block_spell_damage", 2, 2),
+])
+def test_cluster_lock_snapshot_binds_passive_identity_and_count(source_key, target_key, source_count, target_count):
+    cluster = "Metadata/Items/Jewels/JewelPassiveTreeExpansionSmall"
+    with load_data(ARTIFACT) as data, data.create_cluster_session(cluster, 84, passive_key=source_key, passive_count=source_count) as session, data.create_cluster_session(cluster, 84, passive_key=target_key, passive_count=target_count) as foreign_session, session.create_action_context(12) as ctx, foreign_session.create_action_context(41) as foreign, foreign_session.create_action_context(41) as control:
+        item = session.create_item("rare")
+        with ctx.hinekora_lock(item, "exalt") as original:
+            checkpoint = original.export()
+            assert checkpoint["session"][7:9] == [2, 2]
+            candidate = foreign_session.create_item("rare")
+            candidate._state.item_flags = 16
+            before = _fields(candidate._state)
+            with pytest.raises(EngineError, match="identity mismatch"):
+                foreign.restore_hinekora_lock(candidate, "exalt", checkpoint)
+            assert _fields(candidate._state) == before and original.active
+            unrelated = foreign_session.create_item("rare"); comparison = unrelated.copy()
+            foreign.apply(unrelated, "exalt"); control.apply(comparison, "exalt")
+            assert _fields(unrelated._state) == _fields(comparison._state)

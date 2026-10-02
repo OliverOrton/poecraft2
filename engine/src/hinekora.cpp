@@ -95,7 +95,11 @@ std::string session_identity(const poecraft::SessionImpl& s) {
     return "[" + std::to_string(d.artifact_schema_version) + "," +
         quoted(d.artifact_data_hash) + "," + quoted(d.artifact_source_hash) + "," +
         quoted(d.artifact_game_data_hash) + "," + quoted(d.artifact_strings_hash) + "," +
-        std::to_string(s.base_index) + "," + std::to_string(s.item_level) + "]";
+        std::to_string(s.base_index) + "," + std::to_string(s.item_level) + "," +
+        std::to_string(poecraft::kRareReforgeCountLawVersion) + "," +
+        std::to_string(static_cast<unsigned>(s.rare_reforge_count_kind)) + "," +
+        std::to_string(s.cluster_index) + "," + std::to_string(s.cluster_passive_index) + "," +
+        std::to_string(s.cluster_passive_count) + "]";
 }
 struct ItemFields {
     std::vector<std::int64_t> values;
@@ -181,7 +185,7 @@ std::string action_json(const poecraft::ActionParameters& a) {
 Value read_snapshot(const poecraft::SessionImpl& session, const char* text, std::size_t size) {
     if (!text || !size || size > 65536) throw std::invalid_argument("Invalid Lock checkpoint size");
     auto root = poecraft::json::Parser(text, size).parse();
-    if (root.at("version").as_string() != "fixed-currency-lock-v1")
+    if (root.at("version").as_string() != "fixed-currency-lock-v2")
         throw std::invalid_argument("Unsupported Lock checkpoint version");
     const auto identity = session_identity(session);
     const auto expected = poecraft::json::Parser(identity.c_str(), identity.size()).parse();
@@ -190,7 +194,7 @@ Value read_snapshot(const poecraft::SessionImpl& session, const char* text, std:
     for (std::size_t i = 0; i < actual.size(); ++i)
         if (actual[i].type != expected.array[i].type ||
             (actual[i].type == poecraft::json::Type::String ? actual[i].string != expected.array[i].string : actual[i].number != expected.array[i].number))
-            throw std::invalid_argument("Lock checkpoint runtime/base/level identity mismatch");
+            throw std::invalid_argument("Lock checkpoint runtime/base/level/law/configuration identity mismatch");
     return root;
 }
 
@@ -412,7 +416,7 @@ pc_result pc_hinekora_lock_export(pc_hinekora_lock_handle lock,
     try {
         auto& f = *lock->impl;
         current(f, item);
-        std::string out = "{\"version\":\"fixed-currency-lock-v1\",\"session\":" + session_identity(*f.session);
+        std::string out = "{\"version\":\"fixed-currency-lock-v2\",\"session\":" + session_identity(*f.session);
         out += ",\"current\":" + item_json(*item) + ",\"input\":" + item_json(f.input);
         out += ",\"action\":" + action_json(f.action) + ",\"active\":" + (f.active ? "true" : "false");
         out += ",\"refresh_allowed\":"; out += f.refresh_allowed ? "true" : "false";

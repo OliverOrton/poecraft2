@@ -27,7 +27,7 @@ items. A clone carries the marker without acquiring the original native address
 identity. Imported marked items without a matching checkpoint remain unavailable.
 No Lock action is admitted to the ordinary solver or strategy vocabulary.
 
-Versioned `fixed-currency-lock-v1` checkpoints preserve an Emulator's already
+Versioned `fixed-currency-lock-v2` checkpoints preserve an Emulator's already
 paid selected outcome and no-refresh record across replacement, reload and
 history. They pin runtime hashes, base, level, every real item field and resolved
 request. Restore is atomic and does not draw, spend or expose an RNG seed/state.
@@ -48,3 +48,8 @@ Multicurrency previews, donor-dependent previews and adaptive Lock valuation
 remain held. The old free-decline Bellman sketch is not an accepted model.
 [Current execution and qualification](../active/2026-10-02-lock-strands-completion/README.md)
 records the selected scope, tests and unresolved approval decisions.
+
+Portable `fixed-currency-lock-v2` snapshots bind the native count-law version and
+kind plus immutable cluster index, passive identity and passive count. Restore
+checks this identity before item/context mutation or RNG consumption. Legacy v1
+snapshots lack this authority and are refused; historical receipts retain v1.

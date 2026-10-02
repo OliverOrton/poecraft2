@@ -625,14 +625,6 @@ int rare_count(ActionContextImpl& context) {
     return law.select(context.rng.next_below(law.denominator));
 }
 
-// Ordinary rare_count is owned by the separate 8:3:1 correction. A configured
-// cluster samples its approved total directly; clamping a six-mod law is wrong.
-int configured_rare_count(ActionContextImpl& context) {
-    if (context.session->is_cluster())
-        return context.rng.next_below(100) < 65 ? 3 : 4;
-    return rare_count(context);
-}
-
 ActionOutcome do_add_one(ActionContextImpl& context, pc_item_state* item,
                          bool foulborn = false) {
     ActionOutcome out;
@@ -948,7 +940,7 @@ ActionOutcome do_harvest_reforge(
     guaranteed.weight_kind = PoolWeightKind::TargetedNatural;
     guaranteed.target_tag_id = tag_id;
     if (!add_random_mod(context, guaranteed, item)) return {};
-    int target = std::min<int>(configured_rare_count(context), session.rare_affix_cap * 2);
+    int target = std::min<int>(rare_count(context), session.rare_affix_cap * 2);
     fill_random_mods(context, PoolBuildRequest{}, item, target);
     const int after = item->prefix_count + item->suffix_count;
     return {true, after - static_cast<int>(kept.size()),
@@ -1104,7 +1096,7 @@ ActionOutcome do_eldritch_chaos(
     pc_item_state* item) {
     const int side = dominant_eldritch(item);
     if (side < 0)
-        return reforge(context, item, PC_RARITY_RARE, configured_rare_count(context),
+        return reforge(context, item, PC_RARITY_RARE, rare_count(context),
                        PoolBuildRequest{});
     pc_mod_slot fractured{};
     bool has_fractured = false;
@@ -1546,13 +1538,13 @@ ActionOutcome apply_action(
         if (item->rarity != PC_RARITY_NORMAL) {
             return {};
         }
-        return reforge(context, item, PC_RARITY_RARE, configured_rare_count(context),
+        return reforge(context, item, PC_RARITY_RARE, rare_count(context),
                        PoolBuildRequest{});
     case ActionType::Chaos:
         if (item->rarity != PC_RARITY_RARE) {
             return {};
         }
-        return reforge(context, item, PC_RARITY_RARE, configured_rare_count(context),
+        return reforge(context, item, PC_RARITY_RARE, rare_count(context),
                        PoolBuildRequest{});
     case ActionType::Exalt:
     case ActionType::FoulbornExalt:
@@ -1581,7 +1573,7 @@ ActionOutcome apply_action(
         const std::uint32_t guaranteed =
             session.essence_guaranteed_mod_ids[action.essence_index];
         if (guaranteed == std::numeric_limits<std::uint32_t>::max()) return {};
-        const int target = configured_rare_count(context);
+        const int target = rare_count(context);
         const ActionTransitionFacts facts =
             action_transition_facts(ActionType::Essence);
         PoolBuildRequest pool_request;
@@ -1612,7 +1604,7 @@ ActionOutcome apply_action(
             facts.respects_metamod_pool_blocks;
         ActionOutcome out = reforge(
             context, item, PC_RARITY_RARE,
-            std::min<int>(configured_rare_count(context), session.rare_affix_cap * 2),
+            std::min<int>(rare_count(context), session.rare_affix_cap * 2),
             pool_request, forced, facts.respects_metamod_side_locks);
         if (out.applied)
             apply_fossil_specials(context, item, action.fossil_indices);
@@ -1629,7 +1621,7 @@ ActionOutcome apply_action(
         const std::vector<KeptSlot> kept = collect_preserved(session, item);
         restore_slots(item, kept);
         const int target = std::min<int>(
-            configured_rare_count(context), session.rare_affix_cap * 2);
+            rare_count(context), session.rare_affix_cap * 2);
         fill_random_mods(
             context, PoolBuildRequest{}, item, target - 1);
         if (!add_veiled_mod(context, item)) return {};
@@ -1800,7 +1792,7 @@ pc_item_state awaken_item(ActionContextImpl& context,
     auto result = awakener_base(*context.session, donor, receiver, a, b);
     PoolBuildRequest request;
     request.respects_metamod_pool_blocks = false;
-    fill_random_mods(context, request, &result, configured_rare_count(context));
+    fill_random_mods(context, request, &result, rare_count(context));
     return result;
 }
 
@@ -1912,8 +1904,10 @@ ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl& context,
         return applied;
     };
     const auto rare_fill = [&](const pc_item_state& base, long double mass, const PoolBuildRequest& request) {
-        fill(base, 3, mass * 0.65L, request);
-        fill(base, 4, mass * 0.35L, request);
+        const auto law = rare_reforge_count_law(s.rare_reforge_count_kind);
+        for (const auto& draw : law.draws)
+            if (draw.weight)
+                fill(base, draw.count, mass * draw.weight / law.denominator, request);
     };
     switch (action.type) {
     case ActionType::Transmute: case ActionType::Alteration: {

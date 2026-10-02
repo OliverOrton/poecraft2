@@ -1,0 +1,57 @@
+{
+  "disposition": "Historical costs, graphs and receipts retain their original law and artifact identity. Updated corpus manifests qualify only input validation on the frozen current runtime; no old result is repriced or recertified.",
+  "corpora": [
+    {
+      "path": "fixtures/solver-benchmarks/v1/manifest.json",
+      "historical_artifact": {
+        "manifest_relative_path": "data/compiled/current/manifest.json",
+        "canonical_source": "data/sqlite/poecraft.db",
+        "engine_abi_version": 2,
+        "artifact_schema_version": 4,
+        "source_version": "repoe-e4eaf06c20e1ddb4",
+        "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+        "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+        "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+      }
+    },
+    {
+      "path": "fixtures/solver-goal-realignment/v1/manifest.json",
+      "historical_artifact": {
+        "manifest_relative_path": "data/compiled/current/manifest.json",
+        "canonical_source": "data/sqlite/poecraft.db",
+        "engine_abi_version": 2,
+        "artifact_schema_version": 4,
+        "source_version": "repoe-e4eaf06c20e1ddb4",
+        "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+        "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+        "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+      }
+    },
+    {
+      "path": "fixtures/solver-goal-realignment/v1/five-mod-manifest.json",
+      "historical_artifact": {
+        "manifest_relative_path": "data/compiled/current/manifest.json",
+        "canonical_source": "data/sqlite/poecraft.db",
+        "engine_abi_version": 2,
+        "artifact_schema_version": 4,
+        "source_version": "repoe-e4eaf06c20e1ddb4",
+        "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+        "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+        "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+      }
+    },
+    {
+      "path": "fixtures/solver-goal-realignment/v1/gate6-manifest.json",
+      "historical_artifact": {
+        "manifest_relative_path": "data/compiled/current/manifest.json",
+        "canonical_source": "data/sqlite/poecraft.db",
+        "engine_abi_version": 2,
+        "artifact_schema_version": 4,
+        "source_version": "repoe-e4eaf06c20e1ddb4",
+        "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
+        "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+        "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+      }
+    }
+  ]
+}

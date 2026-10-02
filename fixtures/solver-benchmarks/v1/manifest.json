@@ -4,18 +4,18 @@
   "artifact": {
     "manifest_relative_path": "data/compiled/current/manifest.json",
     "canonical_source": "data/sqlite/poecraft.db",
-    "engine_abi_version": 2,
+    "engine_abi_version": 3,
     "artifact_schema_version": 4,
-    "source_version": "repoe-e4eaf06c20e1ddb4",
-    "source_data_hash": "76375e02fc21b0bc0d5709ab589aede8b1967b9a2d53b25aaf517a206f592000",
-    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
-    "strings_sha256": "ba2110894e94b533d42e0440b83fab468d848e438ff5e6d6ed976108ac0d507f"
+    "source_version": "repoe-b458174874efbe64",
+    "source_data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+    "game_data_sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+    "strings_sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
   },
   "comparison_profile": {
     "id": "native-wasm-solver-v1",
     "status": "must_match",
     "structural_counts": "must_match",
-    "v_start_absolute_tolerance": 1e-7,
+    "v_start_absolute_tolerance": 1e-07,
     "phase_timings": "reported_not_machine_gated",
     "memory": "reported_not_owner_ceiling",
     "directional_large_pass_geometric_mean_speedup": 5.0,
