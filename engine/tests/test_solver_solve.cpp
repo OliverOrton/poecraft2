@@ -5171,6 +5171,26 @@ void run_bounded_finish_publication_tests() {
     empty.request_bounded_finish();
     const auto early = empty.take_result();
     PC_CHECK(!early.executable && early.compiled.strategy_json.empty());
+    // Retaining only the scalar history of this independently checked graph
+    // simulates losing its owned artifact. Finish must fail integrity when
+    // strict publication has not supplied a replacement.
+    CalcContext lost_calc(session,goal,registry,candidates,false,true,false,std::nullopt,{},true);
+    SolveWork lost(lost_calc,start,prices);
+    auto& lost_impl=SolveWorkTestAccess::get(lost);
+    lost_impl.incumbent_portfolio.best_verified_upper=result.upper_bound;
+    lost_impl.phase=SolvePhase::Done;
+    lost_impl.expansion_active=false;
+    lost_impl.begin_publication_pipeline();
+    bool rejected_lost_artifact=false;
+    for (unsigned i=0;i<10000 && !lost_impl.finalized_result;++i) {
+        try { lost_impl.advance_publication_pipeline(); }
+        catch (const std::logic_error& error) {
+            rejected_lost_artifact=std::string(error.what()).find("lost its verified artifact")!=std::string::npos;
+            std::printf("lost-artifact publication: %s\n",error.what());
+            break;
+        }
+    }
+    PC_CHECK(rejected_lost_artifact);
 }
 
 

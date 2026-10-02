@@ -1317,7 +1317,12 @@ void enforce_bounded_best_policy_contract(
             (report.solve_summary.termination ==
                  PC_SOLVE_TERMINATION_BOUNDED_DISCOVERY_COMPLETE &&
              report.solve_summary.stop_cause ==
-                 PC_SOLVE_STOP_BOUNDED_DISCOVERY_COMPLETE);
+                 PC_SOLVE_STOP_BOUNDED_DISCOVERY_COMPLETE) ||
+            (report.solve_summary.termination ==
+                 PC_SOLVE_TERMINATION_BOUNDED_ENVELOPE_INCOMPLETE &&
+             report.solve_summary.stop_cause ==
+                 PC_SOLVE_STOP_BOUNDED_ENVELOPE_INCOMPLETE &&
+             report.solve_summary.cap_hit_mask == 0);
         report.bounded_best_policy_strict_gap =
             std::isfinite(report.solve_summary.lower_bound) &&
             std::isfinite(report.solve_summary.upper_bound) &&
@@ -1329,6 +1334,7 @@ void enforce_bounded_best_policy_contract(
             report.solve_summary.upper_bound,
             report.solve_summary.evaluated_policy_cost, verification);
 
+        bool incomplete_envelope_evidence = false;
         if (!report.telemetry_json.empty()) {
             const Value telemetry = Parser(
                 report.telemetry_json.data(),
@@ -1357,6 +1363,8 @@ void enforce_bounded_best_policy_contract(
                     enabled != nullptr && enabled->boolean &&
                     closed != nullptr && !closed->boolean &&
                     report.bounded_best_policy_incremental_obligations > 0;
+                incomplete_envelope_evidence =
+                    report.bounded_best_policy_open_obligations;
             }
 
             const Value* refinement = optional(
@@ -1394,6 +1402,13 @@ void enforce_bounded_best_policy_contract(
                       Type::Bool);
             report.bounded_best_policy_cheapest_evaluated_incumbent =
                 cheapest_selected != nullptr && cheapest_selected->boolean;
+        }
+
+        if (report.solve_summary.termination ==
+                PC_SOLVE_TERMINATION_BOUNDED_ENVELOPE_INCOMPLETE) {
+            report.bounded_best_policy_named_stop =
+                report.bounded_best_policy_named_stop &&
+                incomplete_envelope_evidence;
         }
 
         const bool named_stop_required = required(
@@ -5069,6 +5084,8 @@ const char* termination_name(const int32_t termination) {
     case PC_SOLVE_TERMINATION_EXACT_CLOSED: return "exact_closed";
     case PC_SOLVE_TERMINATION_BOUNDED_DISCOVERY_COMPLETE:
         return "bounded_discovery_complete";
+    case PC_SOLVE_TERMINATION_BOUNDED_ENVELOPE_INCOMPLETE:
+        return "bounded_envelope_incomplete";
     case PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY:
         return "no_executable_policy";
     case PC_SOLVE_TERMINATION_NUMERICAL_STABILITY:
@@ -5086,6 +5103,8 @@ const char* stop_cause_name(const int32_t cause) {
     case PC_SOLVE_STOP_EXACT_CLOSED: return "exact_closed";
     case PC_SOLVE_STOP_BOUNDED_DISCOVERY_COMPLETE:
         return "bounded_discovery_complete";
+    case PC_SOLVE_STOP_BOUNDED_ENVELOPE_INCOMPLETE:
+        return "bounded_envelope_incomplete";
     case PC_SOLVE_STOP_TARGET_GAP: return "target_gap";
     case PC_SOLVE_STOP_STATE_CAP: return "state_cap";
     case PC_SOLVE_STOP_TRANSITION_CAP: return "transition_cap";

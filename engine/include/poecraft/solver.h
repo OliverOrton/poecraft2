@@ -524,7 +524,11 @@ typedef enum pc_solve_termination {
      * policy finalization. This is not a resource cap or exact closure. */
     PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH = 6,
     PC_SOLVE_TERMINATION_FINDER_COMPLETE = 7,
-    PC_SOLVE_TERMINATION_BOUNDED_DISCOVERY_COMPLETE = 8
+    PC_SOLVE_TERMINATION_BOUNDED_DISCOVERY_COMPLETE = 8,
+    /* A checked bounded policy survives discovery stopping while the
+     * ordinary action envelope retains unresolved obligations.
+     * No resource cap, Finish request or numerical stop caused this exit. */
+    PC_SOLVE_TERMINATION_BOUNDED_ENVELOPE_INCOMPLETE = 9
 } pc_solve_termination;
 
 /* Precise stopping cause is independent of policy availability. A capped
@@ -547,7 +551,8 @@ typedef enum pc_solve_stop_cause {
     PC_SOLVE_STOP_NUMERICAL_STABILITY = 12,
     PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH = 13,
     PC_SOLVE_STOP_FINDER_COMPLETE = 14,
-    PC_SOLVE_STOP_BOUNDED_DISCOVERY_COMPLETE = 15
+    PC_SOLVE_STOP_BOUNDED_DISCOVERY_COMPLETE = 15,
+    PC_SOLVE_STOP_BOUNDED_ENVELOPE_INCOMPLETE = 16
 } pc_solve_stop_cause;
 
 typedef enum pc_solve_cap_hit {

@@ -80,6 +80,16 @@ the public upper unavailable. The explicit
 `bounded_discovery_complete` stop describes a checked bounded result whose
 global closure is unavailable by profile.
 
+`bounded_envelope_incomplete` instead describes a checked retained policy when
+ordinary discovery returns for publication with a still-open action envelope
+and positive unevaluated, evaluating or unresolved obligations. It requires no
+actual resource cap, Finish request or numerical stop; those keep their own
+names. This stop supplies neither envelope closure nor exactness, and does not
+change the lower or cheapest compatible evaluated upper. A failed final check
+cannot publish that bounded policy. If a previously verified executable upper
+has lost its artifact and no checked replacement survives, publication throws
+an integrity error instead of returning a normal no-policy result.
+
 The early-closure archive demonstrates this distinction. Its numerical values are historical evidence under their pinned requests, not current constants or a default search seed. See [publication](publication.md#direct-assertion-and-closed-domain-routing).
 
 ## Entry-scoped and class-scoped evidence

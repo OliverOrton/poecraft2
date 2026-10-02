@@ -86,6 +86,9 @@ SolveTermination successful_refined_publication_termination(
         resource_cap_hit) {
         return SolveTermination::RefusedResourceCap;
     }
+    if (coarse_termination == SolveTermination::BoundedEnvelopeIncomplete) {
+        return SolveTermination::BoundedEnvelopeIncomplete;
+    }
     if (coarse_termination == SolveTermination::TargetGap) {
         return SolveTermination::TargetGap;
     }
@@ -565,6 +568,17 @@ SolveWork::Impl::run_publication_pipeline() {
              (focused_closure_proved &&
               result.diagnostics.focused_optimality_gap <=
                   exact_gap_proof_tolerance()));
+        const bool action_envelope_incomplete =
+            incremental_action_generation && !incremental_envelope_closed &&
+            (incremental_unevaluated_actions != 0 ||
+             incremental_resource_unresolved_actions != 0 ||
+             (expansion_active && expansion_is_incremental_alternative) ||
+             std::any_of(incremental_alternative_rows.begin(),
+                         incremental_alternative_rows.end(),
+                         [](const IncrementalAlternativeRow& row) {
+                             return row.status != IncrementalAlternativeRow::Status::Admitted &&
+                                    row.status != IncrementalAlternativeRow::Status::NonImproving;
+                         }));
         const bool restore_output_incumbent =
             output_incumbent.has_value() &&
             !current_policy_can_still_be_exact;
@@ -2020,7 +2034,12 @@ SolveWork::Impl::run_publication_pipeline() {
                           ? SolveTermination::RequestedBoundedFinish
                           : numerical_stability_stop
                                 ? SolveTermination::NumericalStability
-                                : SolveTermination::RefusedResourceCap;
+                                : result.diagnostics.resource_cap_hit
+                                      ? SolveTermination::RefusedResourceCap
+                                      : action_envelope_incomplete
+                                            ? SolveTermination::BoundedEnvelopeIncomplete
+                                            : throw std::logic_error(
+                                                  "restored incumbent has no named stop or unresolved action envelope");
             result.lower_bound = certified_global_lower_bound();
             result.upper_bound = incumbent.certified_upper_bound;
             result.evaluated_policy_cost =
@@ -5872,6 +5891,11 @@ SolveWork::Impl::run_publication_pipeline() {
         }
         record_progress_event("selection_sealed", "owned_graph_root_certificate_and_cost");
         consumed = true;
+        if (!result.policy_available &&
+            std::isfinite(incumbent_portfolio.verified_executable_upper())) {
+            throw std::logic_error(
+                "publication lost its verified artifact");
+        }
         co_return std::move(result);
     }
 

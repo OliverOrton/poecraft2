@@ -276,6 +276,8 @@ std::string serialize_solver_telemetry(
         case SolveTermination::ExactClosed: return "exact_closed";
         case SolveTermination::BoundedDiscoveryComplete:
             return "bounded_discovery_complete";
+        case SolveTermination::BoundedEnvelopeIncomplete:
+            return "bounded_envelope_incomplete";
         case SolveTermination::NoExecutablePolicy:
             return "no_executable_policy";
         case SolveTermination::NumericalStability:

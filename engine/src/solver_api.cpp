@@ -1072,6 +1072,8 @@ int32_t solve_termination(const solver::SolveTermination termination) {
         return PC_SOLVE_TERMINATION_REQUESTED_BOUNDED_FINISH;
     case solver::SolveTermination::BoundedDiscoveryComplete:
         return PC_SOLVE_TERMINATION_BOUNDED_DISCOVERY_COMPLETE;
+    case solver::SolveTermination::BoundedEnvelopeIncomplete:
+        return PC_SOLVE_TERMINATION_BOUNDED_ENVELOPE_INCOMPLETE;
     }
     return PC_SOLVE_TERMINATION_NONE;
 }
@@ -1137,6 +1139,8 @@ int32_t solve_stop_cause(const solver::SolveResult& result) {
         return PC_SOLVE_STOP_REQUESTED_BOUNDED_FINISH;
     case solver::SolveTermination::BoundedDiscoveryComplete:
         return PC_SOLVE_STOP_BOUNDED_DISCOVERY_COMPLETE;
+    case solver::SolveTermination::BoundedEnvelopeIncomplete:
+        return PC_SOLVE_STOP_BOUNDED_ENVELOPE_INCOMPLETE;
     case solver::SolveTermination::RefusedResourceCap:
         return PC_SOLVE_STOP_OTHER_RESOURCE_CAP;
     case solver::SolveTermination::None:

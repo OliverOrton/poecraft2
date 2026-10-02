@@ -273,6 +273,7 @@ enum class SolveTermination : std::uint8_t {
     NumericalStability,
     RequestedBoundedFinish,
     BoundedDiscoveryComplete,
+    BoundedEnvelopeIncomplete,
 };
 
 inline bool advance_unreconciled_stable_policy_latch(
