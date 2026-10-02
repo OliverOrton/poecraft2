@@ -1,0 +1,180 @@
+{
+  "schema": "independent_review_checkpoint_v1",
+  "date_utc": "2026-10-02",
+  "branch": "dot/review-20261002",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-review-sprint",
+  "baseline": "f08facbb93204bf721048c21b94080ab582ee9f8",
+  "engine_source": "792b37e8e1d73a90c754087eda2332d7586db570",
+  "main": "ebcd98cdda2c1828cd855f549831951e6ba7470a",
+  "engine_source_diff": "baseline matches engine source; no production changes in review worktree",
+  "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "commands": {
+    "build": [
+      "powershell",
+      "-NoProfile",
+      "-File",
+      "scripts/dev-engine.ps1",
+      "-Task",
+      "Tests",
+      "-Jobs",
+      "2"
+    ],
+    "final_focused": [
+      [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-calc-gated-equivalence-only"
+      ],
+      [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-uniform-removal-only"
+      ],
+      [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "paid-reset"
+      ]
+    ],
+    "baseline_incoming": [
+      "build/engine/poecraft_engine_tests.exe",
+      "--calculator-incoming-only",
+      "C:/Users/Oliver/Documents/poecraft2-integration-overnight/data/compiled/current"
+    ]
+  },
+  "passed": {
+    "build": true,
+    "reforge_checks": 1111656,
+    "uniform_removal_checks": 23202,
+    "paid_root_checks": 1110,
+    "final_checks_total": 1135968,
+    "baseline_incoming_checks": 354,
+    "diff_check": true,
+    "scope_witness_patch_applies": true
+  },
+  "oracle": {
+    "matrix_cases": 378,
+    "materialized_successors": 11808,
+    "independent_annul_rows": 11808,
+    "V3_terminal_commits": 277,
+    "uniform_legal_carriers": 128,
+    "independence": "Concrete native weighted-pool recursion, not production roll buckets; direct physical slot deletion, not either Annul calculator. Terminal native project_item remains the shared observation authority."
+  },
+  "open_finding": {
+    "id": "R1-original-root-action-scope",
+    "status": "confirmed checker-boundary gap; production repair not implemented",
+    "witness": "Unchanged Alchemy/Scour graph accepted under explicit Alchemy-only scope and separately under disabled Basic family with zero admitted candidates.",
+    "accepted_cost": 6.491032608695653,
+    "failing_controls": [
+      15,
+      16
+    ],
+    "failing_assertions": 6,
+    "scope": "Direct internal OriginalRootController assertion. Existing generation/reuse gates may prevent this in current public flows; no invalid selected worker policy is claimed.",
+    "proposed_repair": "Check complete graph primitive/programme scope before granting root-only authority, preserving legitimate generated dependency obligations.",
+    "patch": {
+      "path": "docs/active/2026-10-02-review-sprint/scope-gap.patch",
+      "sha256": "19d11340c14da39729049932e16782ced0e1eadbc524055b6c5f2a3acc3c4947",
+      "bytes": 3291
+    }
+  },
+  "other_failed_checks": [
+    "Initial extended depth fixture omitted the native influence eligibility bits for its two added ordinary identities: 24 test depth/V3 assertions failed while native/DP distribution comparisons agreed. Fixture corrected; final matrix passes.",
+    "Initial Windows text rewrite changed LF/UTF-8 formatting; restored original line endings and unrelated comment bytes before final build/diff review."
+  ],
+  "unrun": [
+    "full suite",
+    "WASM build (no production/ABI/vocabulary change)",
+    "Simulator",
+    "new timed native cases",
+    "new actual workers",
+    "new fast/standard patch reviews (stable commits not yet supplied)",
+    "sprint integration (parent approval pending)"
+  ],
+  "processes": "All owned build/test sessions completed with no live handle.",
+  "new_heavy_timed_slots": 0,
+  "historical_overnight_ledger": "6 native + 2 worker remains exhausted and unchanged",
+  "isolation": "No changes to main, overnight integration, protected root 0, canonical SQLite/runtime, prices, dependencies, remote branches or deployment. No subagents.",
+  "tested_source_files": [
+    {
+      "path": "engine/tests/test_solver_calc.cpp",
+      "sha256": "358316898a65930750bca70fe6858066eb71b6086ccf5490535f41432c9ae683",
+      "bytes": 266904
+    },
+    {
+      "path": "engine/tests/test_solver_compile.cpp",
+      "sha256": "d638689a6b93d52ddc3e06f2bc376803af8dec5e35503b44f364204dfe3ced35",
+      "bytes": 262204
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "sha256": "6f5440b31ac9b0ca318c8775ee8e2a8d60ed32347ce0a022163eacd5950b74d4",
+      "bytes": 726297
+    }
+  ],
+  "binary": {
+    "path": "build/engine/poecraft_engine_tests.exe",
+    "sha256": "75ff04c7b5868068d93350e49993c37db24283ef6d49cedaabba175e936fdfb7",
+    "bytes": 18937361
+  },
+  "logs": [
+    {
+      "path": "out/review-sprint/build-baseline.log",
+      "sha256": "de19ead50c114cd4cf9461b95de4d3fe4c52e360e2885b106b6382702554a6f6",
+      "bytes": 10306
+    },
+    {
+      "path": "out/review-sprint/baseline-solver-calc-gated-equivalence-only.log",
+      "sha256": "a791314c9049a0c99bc8d748ca786080b5b170c507d1f40024ee08c095ce70ce",
+      "bytes": 189
+    },
+    {
+      "path": "out/review-sprint/baseline-solver-uniform-removal-only.log",
+      "sha256": "dffebbd9f1601e1de7d5be1398ce8e8de122ccc2c62c81d411fdf6ee226e0173",
+      "bytes": 211
+    },
+    {
+      "path": "out/review-sprint/baseline-solver-integrity-only.log",
+      "sha256": "af7dec7618a8aa44517aecc61aa651dadc551f2326709c3378cdf1b32991d502",
+      "bytes": 424
+    },
+    {
+      "path": "out/review-sprint/baseline-calculator-incoming-only.log",
+      "sha256": "ede19fbf1ce8cc4b212c42ac41f2d4ff3bd3753c6b168fbd264fbbee366da50e",
+      "bytes": 122
+    },
+    {
+      "path": "out/review-sprint/adversarial-solver-calc-gated-equivalence-only.log",
+      "sha256": "69ad5be41b37b1050794eb859d09a4f3fa5e64ff707ac252915bc918db7dcec8",
+      "bytes": 3738
+    },
+    {
+      "path": "out/review-sprint/adversarial2-solver-calc-gated-equivalence-only.log",
+      "sha256": "9cbf9ca9459aa652bd090ed6494ae353c4260d21048baed0c275d92545464762",
+      "bytes": 482
+    },
+    {
+      "path": "out/review-sprint/adversarial2-solver-integrity-only.log",
+      "sha256": "51526bfe05cc7c530e474c7af55e39c5f280af10552278f940931164bd2318b0",
+      "bytes": 1674
+    },
+    {
+      "path": "out/review-sprint/build-final.log",
+      "sha256": "827d1ffd93001e4d4c013f8cb86e0cae425f68b26774a52415b6c3126bf3ada0",
+      "bytes": 193
+    },
+    {
+      "path": "out/review-sprint/final-solver-calc-gated-equivalence-only.log",
+      "sha256": "9cbf9ca9459aa652bd090ed6494ae353c4260d21048baed0c275d92545464762",
+      "bytes": 482
+    },
+    {
+      "path": "out/review-sprint/final-solver-uniform-removal-only.log",
+      "sha256": "3f2b7156fcc95d0ffc627245abb2747b5ffbb5795c9bd6b2f40d7dcceeafcf90",
+      "bytes": 211
+    },
+    {
+      "path": "out/review-sprint/final-solver-integrity-only.log",
+      "sha256": "871231873599b8acb63655cda34de28b2877f1261f0291f5a434bfec54845b10",
+      "bytes": 424
+    }
+  ]
+}

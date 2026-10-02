@@ -678,6 +678,7 @@ void run_identity_reforge_factorization_tests() {
 // Independent ordered native-pool enumeration checks the complete terminal
 // projection, not merely whether a representative can be materialized.
 void run_reforge_cross_goal_projection_tests() {
+  for (unsigned scenario = 0; scenario < 3; ++scenario) {
     auto session = make_calc_session();
     std::vector<std::vector<std::uint32_t>> groups(session->mod_count);
     for (std::uint32_t mod = 0; mod < session->mod_count; ++mod)
@@ -696,10 +697,30 @@ void run_reforge_cross_goal_projection_tests() {
         }
         session->group_offsets.push_back(static_cast<std::uint32_t>(session->group_ids.size()));
     }
-    // Clamp the ordinary rare 4/5/6 target law to four affixes so the
-    // fixture reaches V3's last depth instead of always exhausting early.
-    session->rare_affix_cap = 2;
+    // Keep the original clamped witness, then exercise distinct 4/5/6
+    // depths. Two extra ordinary identities ensure six affixes are reachable.
+    // The mirrored case also uses unrelated unequal weights on every member.
+    session->rare_affix_cap = scenario == 0 ? 2 : 3;
     auto data = std::const_pointer_cast<DataImpl>(session->data);
+    if (scenario != 0) {
+        session->veiled_prefix_mod_id = session->veiled_suffix_mod_id = kNoId;
+        const std::uint32_t weights[] = {19, 5, 31, 13, 7, 23, 11, 41, 17, 29};
+        session->prefix_mask.assign(session->words, 0);
+        session->suffix_mask.assign(session->words, 0);
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+            if (scenario == 2) {
+                session->gen_type[mod] = 1 - session->gen_type[mod];
+                data->spawn_weights[mod] = session->base_spawn_weight[mod] =
+                    session->base_roll_weight[mod] = weights[mod];
+            }
+            pc_bitset_set(session->normal_random_roll_mask.data(), mod);
+            pc_bitset_set(session->positive_spawn_weight_mask.data(), mod);
+            pc_bitset_set(session->positive_base_weight_mask.data(), mod);
+            pc_bitset_set(session->influence_masks[0].data(), mod);
+            pc_bitset_set((session->gen_type[mod] == PC_SIDE_PREFIX ?
+                session->prefix_mask : session->suffix_mask).data(), mod);
+        }
+    }
     data->essence_count = 5;
     data->essence_item_level_restrictions.assign(5, -1);
     data->essence_is_corruption_only.assign(5, 0);
@@ -792,7 +813,7 @@ void run_reforge_cross_goal_projection_tests() {
                     variant == 5 ? 1u : variant == 11 ? 2u : 6u;
                 place(&source, session->gen_type[held], held,
                     static_cast<std::uint16_t>(session->primary_group[held]), PC_MOD_SLOT_FRACTURED);
-                place(&source, PC_SIDE_SUFFIX, 7, 22); // discarded by renewal
+                place(&source, session->gen_type[7], 7, 22); // discarded by renewal
                 if (variant == 7) action = satisfied;
             }
             if (variant == 8) action = junk_A;
@@ -914,6 +935,17 @@ void run_reforge_cross_goal_projection_tests() {
             }
             comparison = "full renewal";
             check_maps(actual_mass, expected);
+            if (scenario != 0 && variant == 0) {
+                double count_mass[7]{};
+                for (const auto& [state, p] : expected) {
+                    const auto& value = calc.state(state);
+                    count_mass[value.prefix_count + value.suffix_count] += p;
+                }
+                // Native exhaustion may stop the 5/6 targets early. Four,
+                // five and six must nevertheless each carry positive mass.
+                PC_CHECK(count_mass[4] >= 1.0 / 3 - 1e-12);
+                PC_CHECK(count_mass[5] > 0 && count_mass[6] > 0);
+            }
             if (profile == 0) {
                 if (variant == 0 || variant == 1) {
                     PC_CHECK(saw_satisfied_block);
@@ -982,9 +1014,10 @@ void run_reforge_cross_goal_projection_tests() {
         const auto row = invalid.outcomes(invalid.intern_item(root), invalid_chaos);
         PC_CHECK(!row.supported && row.entries.empty());
     }
-    std::printf("finite cross-goal terminal projection: cases=%llu materialized=%llu Annul-rows=%llu V3-commits=%llu; complete native laws checked\n",
-        static_cast<unsigned long long>(cases), static_cast<unsigned long long>(materialized),
+    std::printf("finite cross-goal terminal projection: scenario=%u cases=%llu materialized=%llu Annul-rows=%llu V3-commits=%llu; complete native laws checked\n",
+        scenario, static_cast<unsigned long long>(cases), static_cast<unsigned long long>(materialized),
         static_cast<unsigned long long>(annul_rows), static_cast<unsigned long long>(factored_commits));
+  }
 }
 
 void run_projected_reforge_frontier_equivalence_tests() {

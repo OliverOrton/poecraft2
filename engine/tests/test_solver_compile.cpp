@@ -4921,6 +4921,21 @@ void run_solver_uniform_removal_tests() {
         ++carriers;
         const auto f=full->intern_item(item), q=compact->intern_item(item);
         compare_maps(full_projected(full->outcomes(f,annul)),compact_map(compact->outcomes(q,annul)));
+        // Independent native uniform-removal oracle: delete each occupied
+        // physical slot directly. Neither calculator's Annul row contributes
+        // the expected distribution, and generation weights are irrelevant.
+        std::map<std::uint32_t,double> native_removed;
+        const unsigned count = item.prefix_count + item.suffix_count;
+        for (const int side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+            const unsigned side_count = side == PC_SIDE_PREFIX ? item.prefix_count : item.suffix_count;
+            for (unsigned index = 0; index < side_count; ++index) {
+                auto next = item;
+                PC_CHECK(pc_item_remove_at(&next,side,index) == PC_RESULT_OK);
+                native_removed[compact->intern_item(next)] += 1.0 / count;
+            }
+        }
+        if (count == 0) native_removed[q] = 1;
+        compare_maps(native_removed,compact_map(compact->outcomes(q,annul)));
         // All prior unprotected group identity is wiped by either native
         // renewal. Forced Essence mods, within-roll collisions and exhaustion
         // remain in the same exact native roll DP, independently rebuilt.

@@ -15068,10 +15068,15 @@ void run_paid_root_reset_renewal_tests() {
             root_proof.policy_reachable = work.output_incumbent->policy_reachable;
             const auto& graph = work.output_incumbent->compiled_artifact.strategy_json;
             std::vector<std::uint64_t> root_request_identity;
-            for (unsigned provenance = 0; provenance < 8; ++provenance) {
+            for (unsigned provenance = 0; provenance < 15; ++provenance) {
                 auto requested = root_proof;
                 if (provenance == 2) requested.policy[root].index = alchemy;
                 if (provenance == 3) requested.values[root == 0 ? 1 : 0] = expected;
+                if (provenance == 8) requested.has_exact_start_item = false;
+                if (provenance == 9) requested.policy_reachable[root] = 1;
+                if (provenance == 10) requested.policy.pop_back();
+                if (provenance == 11) requested.policy_reachable.pop_back();
+                if (provenance == 14) requested.exact_start_item.quality = 1;
                 auto scoped = options;
                 if (provenance == 6)
                     scoped.max_solver_owned_bytes =
@@ -15081,7 +15086,7 @@ void run_paid_root_reset_renewal_tests() {
                 refinement::CompiledPolicyAssertionWork assertion(
                     calc, requested, prices, scoped, "original-root provenance control",
                     nullptr, provenance == 5 ? nullptr : &graph, &emitted,
-                    provenance != 4, false, false,
+                    provenance != 4, provenance == 12, provenance == 13,
                     provenance == 1 ? refinement::CompiledPolicyAssertionMode::StatewisePolicy :
                         refinement::CompiledPolicyAssertionMode::OriginalRootController);
                 for (unsigned units = 0; !assertion.progress().done && units < 10000; ++units)
