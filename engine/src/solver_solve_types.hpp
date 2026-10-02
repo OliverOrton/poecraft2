@@ -517,6 +517,7 @@ struct SolveTransitionCache {
     // Native-private supplementary controller grammar; never a public preset.
     bool paid_root_foulborn_salvage = false;
     std::uint32_t paid_root_foulborn_grammar_version = 2;
+    bool product_original_root_continuations = false;
     bool consider_imprint_programs = true;
     bool allow_economic_restart = true;
     std::uint32_t discovered_states = 0;
@@ -1867,6 +1868,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     };
     SelectiveServicePhase selective_service_phase =
         SelectiveServicePhase::NotStarted;
+    std::uint32_t selective_service_orientation = 0;
     std::unique_ptr<CalcContext> selective_service_calc;
     std::unique_ptr<SelectiveCompletionProducer> selective_service_producer;
     std::optional<SelectiveCompletionCandidate> selective_service_candidate;
@@ -1889,7 +1891,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         joint_anytime_attempt_lineage;
     std::uint64_t carrier_ladder_exact_boundary_private_wall_ns = 0;
     bool advance_selective_completion_service();
-    void abandon_selective_completion_service(const char* status);
+    void abandon_selective_completion_service(const char* status, bool try_next_orientation = false);
     bool target_gap_stop = false;
     SolveGapTarget target_gap_fired = SolveGapTarget::None;
     std::uint64_t focused_direct_upper_row =

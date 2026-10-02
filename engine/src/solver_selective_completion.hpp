@@ -25,6 +25,9 @@ struct SelectiveCompletionCandidate {
         SelectiveCompletionVariant::RetentionControl;
 };
 
+SelectiveCompletionVariant product_completion_variant(const CalcContext& problem);
+bool product_completion_has_two_orientations(const CalcContext& problem);
+
 /* Candidate construction only. The caller owns exact evaluation, reached
  * programme-entry validation, incumbent selection and proof authority. One
  * producer has one original-root problem and at most one live admission cursor.
@@ -35,7 +38,8 @@ class SelectiveCompletionProducer {
         CalcContext& problem, const pc_item_state& original_start,
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& limits, SelectiveCompletionVariant variant,
-        std::uint32_t acquisition_action = kNoId);
+        std::uint32_t acquisition_action = kNoId,
+        std::uint32_t held_side = kNoId);
 
     bool advance(std::uint32_t max_work_items = 1);
     bool done() const { return phase_ == Phase::Done; }
@@ -63,9 +67,10 @@ class SelectiveCompletionProducer {
     const std::unordered_map<std::string, double>& prices_;
     SolveOptions limits_;
     SelectiveCompletionVariant variant_;
-    // A Finder proposal may bind one native acquisition descriptor. The
-    // shared Current consumer leaves this unset and retains Chaos discovery.
+    // Proposal selectors may bind a native acquisition descriptor and side.
+    // Full graph evaluation and reached-entry validation own acceptance.
     std::uint32_t requested_acquisition_ = kNoId;
+    std::uint32_t requested_held_side_ = kNoId;
     Phase phase_ = Phase::Begin;
     std::string status_ = "pending";
     std::optional<SelectiveCompletionCandidate> candidate_;

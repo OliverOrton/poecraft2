@@ -147,5 +147,21 @@ witness is replayed; the frozen Finder replay exposed accidental supplementary
 labels on ordinary primitive sketches, now removed with a direct API regression.
 The v2 complete-cycle proposal requires positive aggregate success even when
 the first roll has no direct success. The independent checker owns publication;
-checkpoint format 5 and typed grammar identity exclude v1 cache reuse. Wider
-mixed-side continuations and final real/WASM Finder qualification remain pending.
+checkpoint format 6 and typed grammar/caller/assertion/cache identities exclude
+prior scope reuse. Corrected-source F4 returns a real checked Foulborn graph;
+new-law and final WASM/worker qualification remain with the integration owner.
+
+Ordinary Current additionally derives `product_original_root_continuations`
+only for the default CalculatorProduct profile, automatic pure-side all-required
+Rare goals on a live carrier without sockets/memory/retained enchantments, and
+without explicit gating or positive proof-gap overrides. Native eligibility and
+automatic-kind permission still govern admission. The existing original-root
+service uses ProtectedScour for single-side goals, reroll/repair for mixed 3+1/2,
+and retention for pure 2+2. Both 2+2 held-side orientations receive exact checked
+proposals; Finder reserves both inside its existing eight attempts. A satisfying
+guarantee orders proposals, never proves whole-policy cost. Clean held-side junk
+redraws before a programme; other-side junk remains eligible for native rewrite.
+Every positively reached exact programme entry is re-admitted, all paid setup
+and recovery are priced, and the retained root graph supplies no non-root value,
+positive global lower or exact-closure authority. No compatible hybrid artifact
+handoff is introduced.

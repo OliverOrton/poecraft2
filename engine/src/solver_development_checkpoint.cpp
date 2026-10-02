@@ -16,8 +16,8 @@ namespace fs = std::filesystem;
 constexpr std::array<char, 16> kMagic{
     'P', 'C', 'S', 'O', 'L', 'V', 'E', 'G',
     'R', 'A', 'P', 'H', 'V', '1', '\r', '\n'};
-// Version 5 binds the standalone count law and supplementary root grammar.
-constexpr std::uint32_t kFormatVersion = 5;
+// Version 7 binds the combined count law and product original-root grammar.
+constexpr std::uint32_t kFormatVersion = 7;
 constexpr std::uint32_t kEndianMarker = 0x01020304u;
 constexpr std::uint64_t kFnvOffset = 14695981039346656037ull;
 constexpr std::uint64_t kFnvPrime = 1099511628211ull;
@@ -489,6 +489,7 @@ void write_cache(
     PC_WRITE_CACHE_FIELD(goal_progress_gated_reforges);
     PC_WRITE_CACHE_FIELD(paid_root_foulborn_salvage);
     PC_WRITE_CACHE_FIELD(paid_root_foulborn_grammar_version);
+    PC_WRITE_CACHE_FIELD(product_original_root_continuations);
     PC_WRITE_CACHE_FIELD(consider_imprint_programs);
     PC_WRITE_CACHE_FIELD(allow_economic_restart);
     PC_WRITE_CACHE_FIELD(discovered_states);
@@ -548,6 +549,7 @@ std::shared_ptr<SolveTransitionCache> read_cache(
     PC_READ_CACHE_FIELD(bool, goal_progress_gated_reforges);
     PC_READ_CACHE_FIELD(bool, paid_root_foulborn_salvage);
     PC_READ_CACHE_FIELD(std::uint32_t, paid_root_foulborn_grammar_version);
+    PC_READ_CACHE_FIELD(bool, product_original_root_continuations);
     PC_READ_CACHE_FIELD(bool, consider_imprint_programs);
     PC_READ_CACHE_FIELD(bool, allow_economic_restart);
     PC_READ_CACHE_FIELD(std::uint32_t, discovered_states);

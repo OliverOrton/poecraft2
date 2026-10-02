@@ -2380,6 +2380,7 @@ std::string SolveWork::Impl::progress_trace_json(std::uint64_t after_sequence) c
         ",\"high_impact_uppers\":" + boolean(options.high_impact_executable_uppers) +
         ",\"goal_progress_gated_reforges\":" + boolean(options.goal_progress_gated_reforges) +
         ",\"paid_root_foulborn_salvage_v2\":" + boolean(options.paid_root_foulborn_salvage) +
+        ",\"product_original_root_continuations_v1\":" + boolean(options.product_original_root_continuations) +
         ",\"economic_restart\":" + boolean(options.allow_economic_restart) +
         ",\"imprint_programs\":" + boolean(options.consider_imprint_programs) +
         ",\"max_discovered_states\":" + std::to_string(options.max_discovered_states) +

@@ -356,13 +356,14 @@ Preserve root `0`; commits remain local unless Oliver requests a push.
 
 
 Oliver selected [ordinary Foulborn/output-quality completion](docs/active/2026-10-02-foulborn-completion/README.md)
-from sprint integration b794e009, in sibling poecraft2-foulborn-completion.
-Normal native Current/Finder now exercise all three Foulborn continuations,
-including paid recovery from empty Normal roots; 5920 focused checks pass.
-The original real Current witness replays at 4.11822156262245c. Frozen Finder F2
-failed before graph output, is preserved, and has a passing finite API repair.
-Grammar v2 extends the complete-cycle proposal to zero direct roll success;
-independent original-root checking and zero global lower remain authoritative.
-The living record owns the argument/evidence and parent-coordinated remaining
-comparative arms, final real Finder replay and WASM/worker qualification.
-Local commits only; integration owner handles review, qualified merges and push.
+from b794e009 in sibling poecraft2-foulborn-completion. Local native changes now
+cover ordinary Foulborn all-three root controllers, guaranteed protected Scour
+and both pure 2+2 held-side continuations; 6257 focused checks pass. Exact physical
+root/goal/cost and every positive programme entry remain checked, with zero lower
+and no closure. Twelve real invocations are spent; graphs and compact receipts
+preserve the old-law evidence and expectation mismatches. A capped-publication
+abort is inherited and reproduced on unchanged b794e009; review remains with the
+integration owner. No worker process/real slot remains. The living record owns
+the staged new-law same-graph repricing and occupancy/recovery proposal, source
+identity reconciliation and final WASM/worker holds. Oliver requested a pause
+once the current batch closes; no new programme, deploy or independent push.

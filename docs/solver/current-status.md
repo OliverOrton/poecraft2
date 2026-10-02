@@ -39,17 +39,21 @@ and unresolved ordinary/Abyss jewel laws remain separate owner boundaries.
 ## Ordinary product Foulborn/Finder finite delta (2026-10-02)
 
 The [completion checkpoint](../active/2026-10-02-foulborn-completion/README.md)
-qualifies 5,920 focused native checks, including actual Foulborn Augment/Regal/
-Exalted graphs in both public lanes from incoming and empty Normal roots.
-Product Current derives the versioned selected-add/paid-root capability from
-admitted scope without an explicit gating override, including positive aggregate
-success when Transmute has no direct Rare success. Product Finder reaches
-protected Scour, native renewal/add/recovery and distinct-guarantee seed proposals.
-Zero lower and unavailable closure remain. Checkpoint format 5 separates v1 caches.
-Real Current replays the original witness at 4.11822156262245c. Frozen F2 Finder
-failed before output; its scope-label fix passes direct finite API regressions.
-Comparative quality, final real/WASM Finder and wider continuation/hybrid
-qualification remain pending in the living record.
+records 6,257 passing focused native checks. Both public lanes execute all three
+Foulborn additions from supported incoming/empty Normal roots. Current derives
+selected-add/paid-root capability with finite productive zero-direct-success
+proposals; Finder retains the actual 4.120754140055851c real original-root graph.
+Product Current/Finder also propose guaranteed protected Scour and native mixed
+side retention: pure 2+2 considers both orientations, with paid dominance setup,
+clean held-junk routing and every positive exact programme entry validated.
+Zero global lower/unavailable closure and original-root-only authority remain;
+checkpoint format 6 separates the widened product scope. Twelve real invocations
+are accounted; prior Wrath Finder 2365.270145c is preserved and diverse Conquest's
+pure Anger output is diagnosed. All real costs are historical uniform-count-law
+evidence. An inherited capped-publication abort is reproduced on b794e009 and
+held separately. The integration owner owns corrected-law same-graph repricing,
+bounded current-batch comparisons, cache reconciliation and WASM/worker checks.
+Pause after the current batch; no fresh programme or deployment is selected.
 
 ## Private paid-root Foulborn finite delta (2026-10-02)
 

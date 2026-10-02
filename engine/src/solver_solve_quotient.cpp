@@ -715,6 +715,7 @@ void SolveWork::Impl::build_quotient_graph(
         quotient->kernel_reuse = strict->kernel_reuse;
         quotient->paid_root_foulborn_salvage = strict->paid_root_foulborn_salvage;
         quotient->paid_root_foulborn_grammar_version = strict->paid_root_foulborn_grammar_version;
+        quotient->product_original_root_continuations = strict->product_original_root_continuations;
         quotient->goal_progress_gated_reforges =
             strict->goal_progress_gated_reforges;
         quotient->consider_imprint_programs =

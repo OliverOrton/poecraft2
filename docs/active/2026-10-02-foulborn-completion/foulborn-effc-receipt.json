@@ -1,0 +1,256 @@
+{
+  "source": "effc0328b378603b5a6993e7abfb92181efd4641",
+  "mechanics_law": "historical native uniform ordinary 4/5/6 law; not requalified under approved 8:3:1",
+  "prelaunch": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\prelaunch-foulborn-effc.json",
+    "sha256": "5f9402b46dd91bf3aae327059faa0edd2b5ecbd17c628707545f94aac07b8e20",
+    "bytes": 13712
+  },
+  "executables": [
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\build\\engine\\poecraft_solver_benchmark.exe",
+      "sha256": "3c848152418ddece7baea4d57d3b3241cb5f359dcf3dac4d9dccc5d43d517436",
+      "bytes": 14664239
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\control-source\\build\\engine\\poecraft_solver_benchmark.exe",
+      "sha256": "6cc25e1f23fe92ece5a51aaacb19424e4423f19e8d2761b58ee8cc82e26b7cab",
+      "bytes": 14651563
+    }
+  ],
+  "invocations": 2,
+  "total_authorized_invocations_spent": 12,
+  "no_active_process_or_remaining_slot": true,
+  "records": [
+    {
+      "label": "F3-current-effc-product",
+      "started": {
+        "utc": "2026-10-02T18:37:00.836784+00:00",
+        "pid": 20708,
+        "identity_token": "20708:134354398208178376",
+        "label": "F3-current-effc-product",
+        "code_point": "effc0328b378603b5a6993e7abfb92181efd4641"
+      },
+      "runner_status": "completed",
+      "native_exit": 0,
+      "expectation_met": true,
+      "timed_out": false,
+      "survivor": false,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 4.11822156262245,
+        "expanded_states": 3,
+        "sweeps": 1,
+        "residual": 0,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "numerical_stability",
+        "stop_cause": "numerical_stability",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 280,
+          "candidate": 3,
+          "evaluator_supported": 3,
+          "supported_priced": 3,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": 0,
+        "upper_bound": 4.11822156262245,
+        "evaluated_policy_cost": 4.11822156262245,
+        "absolute_optimality_gap": 4.11822156262245,
+        "relative_optimality_gap": null,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true,
+          "max_compiled_nodes": true,
+          "max_compiled_edges": true,
+          "max_strategy_json_bytes": true
+        }
+      },
+      "exact_strategy_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 3332.225,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 4.11822156262245,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "errors": [],
+      "report": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\foulborn-effc-replays\\F3-current-effc-product\\report.json",
+        "sha256": "3b5544856e282f640741a1e4728cfe9049beb901f185f5656ecd8f9460046e1c",
+        "bytes": 425685
+      },
+      "result": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\foulborn-effc-replays\\F3-current-effc-product\\result.json",
+        "sha256": "5e3def7ec0a6aa27228a51bc3b55086377565c57d76a83643ac950092cde41c5",
+        "bytes": 5128
+      },
+      "graphs": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\foulborn-effc-replays\\F3-current-effc-product\\strategies\\foulborn-normal-root-ordinary-product-replay.strategy.json",
+          "sha256": "6949287739e0cd1915d0ef44c5dbe83f18c55a48812b440beea1cdac96e77e9c",
+          "actions": [
+            {
+              "type": "alchemy"
+            },
+            {
+              "type": "foulborn_exalt"
+            },
+            {
+              "type": "scour"
+            }
+          ],
+          "nodes": 5,
+          "edges": 2310
+        }
+      ],
+      "expected_consumption": [
+        {
+          "key": "alchemy",
+          "quantity": 2.006058785247167
+        },
+        {
+          "key": "foulborn_exalt",
+          "quantity": 0.5498113603399875
+        },
+        {
+          "key": "scour",
+          "quantity": 1.0060587852471599
+        }
+      ]
+    },
+    {
+      "label": "F4-finder-effc-product",
+      "started": {
+        "utc": "2026-10-02T18:37:29.871827+00:00",
+        "pid": 53216,
+        "identity_token": "53216:134354398498554804",
+        "label": "F4-finder-effc-product",
+        "code_point": "effc0328b378603b5a6993e7abfb92181efd4641"
+      },
+      "runner_status": "completed",
+      "native_exit": 2,
+      "expectation_met": false,
+      "timed_out": false,
+      "survivor": false,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": null,
+        "expanded_states": 0,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "finder_complete",
+        "stop_cause": "finder_complete",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 0,
+          "candidate": 0,
+          "evaluator_supported": 0,
+          "supported_priced": 0,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": null,
+        "upper_bound": 4.120754140055851,
+        "evaluated_policy_cost": 4.120754140055851,
+        "absolute_optimality_gap": null,
+        "relative_optimality_gap": null,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {}
+      },
+      "exact_strategy_evaluation": {
+        "completed": true,
+        "time_limited": false,
+        "status": "matched",
+        "wall_ms": 315.3307,
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 4.120754140055851,
+        "solver_cost_delta_absolute": 0,
+        "solver_cost_delta_relative": 0
+      },
+      "errors": [],
+      "report": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\foulborn-effc-replays\\F4-finder-effc-product\\report.json",
+        "sha256": "6edd474f535694585cb5b2bfaa72441f02761692f63ba155bbe6b4e7cfac6fc8",
+        "bytes": 40749
+      },
+      "result": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\foulborn-effc-replays\\F4-finder-effc-product\\result.json",
+        "sha256": "8042afe9a6d496e9b2f9dc5096d3ba7f01b8ebc700350502173a6abb888a0df3",
+        "bytes": 5125
+      },
+      "graphs": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\foulborn-effc-replays\\F4-finder-effc-product\\strategies\\foulborn-normal-root-ordinary-product-replay.strategy.json",
+          "sha256": "6917b21a7b08bd4cf5a6e8bd4942d4974eccec5531d4aa66dbef671ac1e13655",
+          "actions": [
+            {
+              "type": "alchemy"
+            },
+            {
+              "type": "foulborn_exalt"
+            },
+            {
+              "type": "scour"
+            }
+          ],
+          "nodes": 9,
+          "edges": 12,
+          "repo_path": "docs/active/2026-10-02-foulborn-completion/strategies/foulborn-finder-effc.strategy.json"
+        }
+      ],
+      "expectation_disposition": "native exit 2 retains Current-mode expected statuses in a Finder invocation; graph check matched and no internal error",
+      "expected_consumption": [
+        {
+          "key": "alchemy",
+          "quantity": 2.006058785247167
+        },
+        {
+          "key": "foulborn_exalt",
+          "quantity": 0.8030691036801302
+        },
+        {
+          "key": "scour",
+          "quantity": 1.0060587852471636
+        }
+      ]
+    }
+  ]
+}

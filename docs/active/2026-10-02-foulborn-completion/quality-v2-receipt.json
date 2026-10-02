@@ -1,0 +1,643 @@
+{
+  "code_point": "effc0328b378603b5a6993e7abfb92181efd4641",
+  "control_source": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+  "executables": [
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\build\\engine\\poecraft_solver_benchmark.exe",
+      "sha256": "3c848152418ddece7baea4d57d3b3241cb5f359dcf3dac4d9dccc5d43d517436",
+      "bytes": 14664239
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\control-source\\build\\engine\\poecraft_solver_benchmark.exe",
+      "sha256": "6cc25e1f23fe92ece5a51aaacb19424e4423f19e8d2761b58ee8cc82e26b7cab",
+      "bytes": 14651563
+    }
+  ],
+  "prelaunch_sha256": "7aca1e89f0042e6c86163c51c00ece0d6938ed00b95ae9a85f3ac5e8f702659e",
+  "invocations": 8,
+  "total_authorized_invocations_spent_including_F1_F2": 10,
+  "no_host_timeout_or_survivors": true,
+  "scope": "whole-policy output quality, not speed or exact optimum",
+  "expectation_disposition": "all four Finder runs preserve native exit2: expected lacks solver_mode=strategy_finder and uses Current reliability_classified/classified rather than Finder finder_classified/bounded_only. Native exact graph checks are matched; historical expectation false remains.",
+  "records": [
+    {
+      "label": "Q-amulet-current-control",
+      "started": {
+        "utc": "2026-10-02T18:19:25.666609+00:00",
+        "pid": 52604,
+        "identity_token": "52604:134354387656486759",
+        "label": "Q-amulet-current-control",
+        "code_point": "effc0328b378603b5a6993e7abfb92181efd4641"
+      },
+      "runner_status": "completed",
+      "native_exit": 0,
+      "expectation_met": true,
+      "timed_out": false,
+      "survivor": false,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 1278521.9226697178,
+        "expanded_states": 1082,
+        "sweeps": 23033,
+        "residual": 326.355029852828,
+        "skipped_action_count": 8,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "refused_resource_cap",
+        "stop_cause": "reforge_work_cap",
+        "cap_hit_mask": 16,
+        "action_counts": {
+          "registry": 166,
+          "candidate": 28,
+          "evaluator_supported": 28,
+          "supported_priced": 295,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 8
+        },
+        "lower_bound": 1.1429,
+        "upper_bound": 1278521.9226700994,
+        "evaluated_policy_cost": 1278521.9226700994,
+        "absolute_optimality_gap": 1278520.7797700993,
+        "relative_optimality_gap": 1118663.7324088716,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "graphs": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\quality-v2\\Q-amulet-current-control\\strategies\\finder-reconstructed-amulet-wrath-chaos-clean.strategy.json",
+          "sha256": "a0d64871359c8e2573e3afb4ac351ff8cdd990f060961786063fad49b4e6d205",
+          "actions": [
+            {
+              "type": "harvest_augment",
+              "target_tag": "chaos"
+            },
+            {
+              "type": "annul"
+            },
+            {
+              "type": "exalt"
+            },
+            {
+              "type": "bench",
+              "mod_key": "DexMasterItemGenerationCannotChangeSuffixes"
+            },
+            {
+              "type": "scour"
+            }
+          ],
+          "nodes": 14,
+          "edges": 25
+        }
+      ],
+      "exact_evaluation": {
+        "completed": true,
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 1278521.9226700994
+      },
+      "report_sha256": "9279fdc9b0b446fd8512ba4e88824a93e5703ab11cc58831acf6e01656444587",
+      "errors": []
+    },
+    {
+      "label": "Q-amulet-current-candidate",
+      "started": {
+        "utc": "2026-10-02T18:20:58.038756+00:00",
+        "pid": 33944,
+        "identity_token": "33944:134354388580199909",
+        "label": "Q-amulet-current-candidate",
+        "code_point": "effc0328b378603b5a6993e7abfb92181efd4641"
+      },
+      "runner_status": "completed",
+      "native_exit": 0,
+      "expectation_met": true,
+      "timed_out": false,
+      "survivor": false,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 1278521.9226697178,
+        "expanded_states": 1082,
+        "sweeps": 23649,
+        "residual": 218.9601385333808,
+        "skipped_action_count": 8,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "refused_resource_cap",
+        "stop_cause": "reforge_work_cap",
+        "cap_hit_mask": 16,
+        "action_counts": {
+          "registry": 166,
+          "candidate": 28,
+          "evaluator_supported": 28,
+          "supported_priced": 295,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 8
+        },
+        "lower_bound": 1.1429,
+        "upper_bound": 1278521.9226700994,
+        "evaluated_policy_cost": 1278521.9226700994,
+        "absolute_optimality_gap": 1278520.7797700993,
+        "relative_optimality_gap": 1118663.7324088716,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "graphs": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\quality-v2\\Q-amulet-current-candidate\\strategies\\finder-reconstructed-amulet-wrath-chaos-clean.strategy.json",
+          "sha256": "a0d64871359c8e2573e3afb4ac351ff8cdd990f060961786063fad49b4e6d205",
+          "actions": [
+            {
+              "type": "harvest_augment",
+              "target_tag": "chaos"
+            },
+            {
+              "type": "annul"
+            },
+            {
+              "type": "exalt"
+            },
+            {
+              "type": "bench",
+              "mod_key": "DexMasterItemGenerationCannotChangeSuffixes"
+            },
+            {
+              "type": "scour"
+            }
+          ],
+          "nodes": 14,
+          "edges": 25
+        }
+      ],
+      "exact_evaluation": {
+        "completed": true,
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 1278521.9226700994
+      },
+      "report_sha256": "10d9842aa61d3af8bcd2b699a3f5d0618d4fc631e821edfcc6508f8e6d249de6",
+      "errors": []
+    },
+    {
+      "label": "Q-amulet-strategy_finder-control",
+      "started": {
+        "utc": "2026-10-02T18:22:30.196703+00:00",
+        "pid": 12248,
+        "identity_token": "12248:134354389501783260",
+        "label": "Q-amulet-strategy_finder-control",
+        "code_point": "effc0328b378603b5a6993e7abfb92181efd4641"
+      },
+      "runner_status": "completed",
+      "native_exit": 2,
+      "expectation_met": false,
+      "timed_out": false,
+      "survivor": false,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": null,
+        "expanded_states": 0,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "finder_complete",
+        "stop_cause": "finder_complete",
+        "cap_hit_mask": 2147483648,
+        "action_counts": {
+          "registry": 0,
+          "candidate": 0,
+          "evaluator_supported": 0,
+          "supported_priced": 0,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": null,
+        "upper_bound": 59229.75038359062,
+        "evaluated_policy_cost": 59229.75038359062,
+        "absolute_optimality_gap": null,
+        "relative_optimality_gap": null,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "graphs": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\quality-v2\\Q-amulet-strategy_finder-control\\strategies\\finder-reconstructed-amulet-wrath-chaos-clean.strategy.json",
+          "sha256": "1ef3998b6804d6245385d9b710f6d6c5c456d01f16e7bb0b2c625223beb9e9cb",
+          "actions": [
+            {
+              "type": "annul"
+            },
+            {
+              "type": "essence",
+              "essence_key": "Metadata/Items/Currency/CurrencyEssenceWrath3"
+            }
+          ],
+          "nodes": 7,
+          "edges": 9
+        }
+      ],
+      "exact_evaluation": {
+        "completed": true,
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 59229.75038359062
+      },
+      "report_sha256": "e5cea58e85fed8b5eb79a3aa6b968425b0ca0564f0b8afb13b59260218344651",
+      "errors": []
+    },
+    {
+      "label": "Q-amulet-strategy_finder-candidate",
+      "started": {
+        "utc": "2026-10-02T18:22:50.359010+00:00",
+        "pid": 62732,
+        "identity_token": "62732:134354389703414138",
+        "label": "Q-amulet-strategy_finder-candidate",
+        "code_point": "effc0328b378603b5a6993e7abfb92181efd4641"
+      },
+      "runner_status": "completed",
+      "native_exit": 2,
+      "expectation_met": false,
+      "timed_out": false,
+      "survivor": false,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": null,
+        "expanded_states": 0,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "finder_complete",
+        "stop_cause": "finder_complete",
+        "cap_hit_mask": 2147483648,
+        "action_counts": {
+          "registry": 0,
+          "candidate": 0,
+          "evaluator_supported": 0,
+          "supported_priced": 0,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": null,
+        "upper_bound": 2365.2701452478236,
+        "evaluated_policy_cost": 2365.2701452478236,
+        "absolute_optimality_gap": null,
+        "relative_optimality_gap": null,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "graphs": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\quality-v2\\Q-amulet-strategy_finder-candidate\\strategies\\finder-reconstructed-amulet-wrath-chaos-clean.strategy.json",
+          "sha256": "d2674c73cd6229f9dd668528065451620e177731eac1929f8ce4efefd692d83a",
+          "actions": [
+            {
+              "type": "essence",
+              "essence_key": "Metadata/Items/Currency/CurrencyEssenceWrath3"
+            },
+            {
+              "type": "bench",
+              "mod_key": "DexMasterItemGenerationCannotChangeSuffixes"
+            },
+            {
+              "type": "scour"
+            }
+          ],
+          "nodes": 10,
+          "edges": 14
+        }
+      ],
+      "exact_evaluation": {
+        "completed": true,
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 2365.2701452478236
+      },
+      "report_sha256": "9234a3e1f20f810276d94411cf8edf1aeca30ed6e6c71bd0606f49a471e93d53",
+      "errors": []
+    },
+    {
+      "label": "Q-conquest-current-control",
+      "started": {
+        "utc": "2026-10-02T18:23:28.666601+00:00",
+        "pid": 54796,
+        "identity_token": "54796:134354390086497376",
+        "label": "Q-conquest-current-control",
+        "code_point": "effc0328b378603b5a6993e7abfb92181efd4641"
+      },
+      "runner_status": "completed",
+      "native_exit": 0,
+      "expectation_met": true,
+      "timed_out": false,
+      "survivor": false,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 15152726.398274729,
+        "expanded_states": 623,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 1,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 200,
+          "candidate": 38,
+          "evaluator_supported": 38,
+          "supported_priced": 256,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 1
+        },
+        "lower_bound": 3.3482,
+        "upper_bound": 15152726.387790035,
+        "evaluated_policy_cost": 15152726.387790035,
+        "absolute_optimality_gap": 15152723.039590035,
+        "relative_optimality_gap": 4525632.590523277,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "graphs": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\quality-v2\\Q-conquest-current-control\\strategies\\conquest-reconstructed-diverse-tags-clean4.strategy.json",
+          "sha256": "3c973d46fccbf22cd56d0d7b810d3b376aed904e7ff6b2aaacfdcce9dcf6e6d7",
+          "actions": [
+            {
+              "type": "chaos"
+            }
+          ],
+          "nodes": 3,
+          "edges": 3
+        }
+      ],
+      "exact_evaluation": {
+        "completed": true,
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 15152726.387790035
+      },
+      "report_sha256": "d044c6607dc8f2cce5f69d8cea141a7b89ee85c34d429a5738b182ecb9ce565d",
+      "errors": []
+    },
+    {
+      "label": "Q-conquest-current-candidate",
+      "started": {
+        "utc": "2026-10-02T18:25:00.528229+00:00",
+        "pid": 87324,
+        "identity_token": "87324:134354391005120667",
+        "label": "Q-conquest-current-candidate",
+        "code_point": "effc0328b378603b5a6993e7abfb92181efd4641"
+      },
+      "runner_status": "completed",
+      "native_exit": 0,
+      "expectation_met": true,
+      "timed_out": false,
+      "survivor": false,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": 15152726.398274729,
+        "expanded_states": 623,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 1,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 200,
+          "candidate": 38,
+          "evaluator_supported": 38,
+          "supported_priced": 256,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 1
+        },
+        "lower_bound": 3.3482,
+        "upper_bound": 15152726.387790035,
+        "evaluated_policy_cost": 15152726.387790035,
+        "absolute_optimality_gap": 15152723.039590035,
+        "relative_optimality_gap": 4525632.590523277,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "graphs": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\quality-v2\\Q-conquest-current-candidate\\strategies\\conquest-reconstructed-diverse-tags-clean4.strategy.json",
+          "sha256": "3c973d46fccbf22cd56d0d7b810d3b376aed904e7ff6b2aaacfdcce9dcf6e6d7",
+          "actions": [
+            {
+              "type": "chaos"
+            }
+          ],
+          "nodes": 3,
+          "edges": 3
+        }
+      ],
+      "exact_evaluation": {
+        "completed": true,
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 15152726.387790035
+      },
+      "report_sha256": "649ebf17e7e6b409d201da8fc0e0e60dd3c28ba8cc3e02af8b81b0c4c0031c22",
+      "errors": []
+    },
+    {
+      "label": "Q-conquest-strategy_finder-control",
+      "started": {
+        "utc": "2026-10-02T18:26:32.362106+00:00",
+        "pid": 93816,
+        "identity_token": "93816:134354391923434653",
+        "label": "Q-conquest-strategy_finder-control",
+        "code_point": "effc0328b378603b5a6993e7abfb92181efd4641"
+      },
+      "runner_status": "completed",
+      "native_exit": 2,
+      "expectation_met": false,
+      "timed_out": false,
+      "survivor": false,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": null,
+        "expanded_states": 0,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "finder_complete",
+        "stop_cause": "finder_complete",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 0,
+          "candidate": 0,
+          "evaluator_supported": 0,
+          "supported_priced": 0,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": null,
+        "upper_bound": 1564569.0502398629,
+        "evaluated_policy_cost": 1564569.0502398629,
+        "absolute_optimality_gap": null,
+        "relative_optimality_gap": null,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "graphs": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\quality-v2\\Q-conquest-strategy_finder-control\\strategies\\conquest-reconstructed-diverse-tags-clean4.strategy.json",
+          "sha256": "b9eb62dd122328f1e3f37c6c23a1c2db36132c5bc15d68baaddb49c3320640c7",
+          "actions": [
+            {
+              "type": "essence",
+              "essence_key": "Metadata/Items/Currency/CurrencyEssenceAnger6"
+            }
+          ],
+          "nodes": 3,
+          "edges": 3
+        }
+      ],
+      "exact_evaluation": {
+        "completed": true,
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 1564569.0502398629
+      },
+      "report_sha256": "ebf29f3debdc6c462f1a2bdaeeb28e68f2f9d84c3f5d912f6b63409f6d90e316",
+      "errors": []
+    },
+    {
+      "label": "Q-conquest-strategy_finder-candidate",
+      "started": {
+        "utc": "2026-10-02T18:26:36.584634+00:00",
+        "pid": 91636,
+        "identity_token": "91636:134354391965642444",
+        "label": "Q-conquest-strategy_finder-candidate",
+        "code_point": "effc0328b378603b5a6993e7abfb92181efd4641"
+      },
+      "runner_status": "completed",
+      "native_exit": 2,
+      "expectation_met": false,
+      "timed_out": false,
+      "survivor": false,
+      "summary": {
+        "converged": false,
+        "start_state": 0,
+        "start_value": null,
+        "expanded_states": 0,
+        "sweeps": 0,
+        "residual": null,
+        "skipped_action_count": 0,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "finder_complete",
+        "stop_cause": "finder_complete",
+        "cap_hit_mask": 0,
+        "action_counts": {
+          "registry": 0,
+          "candidate": 0,
+          "evaluator_supported": 0,
+          "supported_priced": 0,
+          "skipped_missing_price": 0,
+          "skipped_unsupported": 0
+        },
+        "lower_bound": null,
+        "upper_bound": 1564569.0502398629,
+        "evaluated_policy_cost": 1564569.0502398629,
+        "absolute_optimality_gap": null,
+        "relative_optimality_gap": null,
+        "requested_absolute_optimality_gap": 0,
+        "requested_relative_optimality_gap": 0,
+        "target_met": false,
+        "target_fired": "none"
+      },
+      "graphs": [
+        {
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\quality-v2\\Q-conquest-strategy_finder-candidate\\strategies\\conquest-reconstructed-diverse-tags-clean4.strategy.json",
+          "sha256": "b9eb62dd122328f1e3f37c6c23a1c2db36132c5bc15d68baaddb49c3320640c7",
+          "actions": [
+            {
+              "type": "essence",
+              "essence_key": "Metadata/Items/Currency/CurrencyEssenceAnger6"
+            }
+          ],
+          "nodes": 3,
+          "edges": 3
+        }
+      ],
+      "exact_evaluation": {
+        "completed": true,
+        "status": "matched",
+        "converged": true,
+        "cost_complete": true,
+        "zero_off_policy_mass": true,
+        "cost_reconciled": true,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "total_expected_cost": 1564569.0502398629
+      },
+      "report_sha256": "15f669b26614adc8a844816e5cf737dac2c9d13c3caca2f5a321317f891a99e2",
+      "errors": []
+    }
+  ],
+  "mechanics_law": "historical native uniform ordinary 4/5/6 law; costs comparable within frozen pair, not requalified under approved 8:3:1"
+}

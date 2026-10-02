@@ -3,6 +3,7 @@
 #include "solver_compile_contracts.hpp"
 #include "solver_eval_types.hpp"
 
+#include <array>
 #include <chrono>
 #include <memory>
 #include <deque>
@@ -184,6 +185,7 @@ class PolicyFinderWork {
     FinderRankingMode ranking_;
     FinderGrammarMode grammar_;
     std::uint32_t attempt_limit_ = 8;
+    bool product_conditional_continuations_ = false;
     FinderCandidateGraphCapture diagnostic_capture_;
     std::uint64_t diagnostic_capture_ns_ = 0;
     std::uint64_t diagnostic_verify_ns_ = 0;
@@ -192,6 +194,8 @@ class PolicyFinderWork {
     std::uint32_t diagnostic_capture_graphs_ = 0;
     std::uint32_t essence_acquisition_ = kNoId;
     std::uint32_t held_essence_acquisition_ = kNoId;
+    std::array<std::uint32_t,2> side_essence_acquisitions_{kNoId,kNoId};
+    bool product_two_held_sides_ = false;
     std::vector<RankedAction> ranked_;
     std::deque<Sketch> frontier_;
     std::unordered_set<std::string> seen_;

@@ -5928,6 +5928,9 @@ SolveWork::Impl::run_publication_pipeline() {
             if (calc.registry().product_goal_filtering)
                 result.diagnostics.solution_scope += "_within_candidate_and_generated_programme_grammar";
         }
+        if (options.product_original_root_continuations &&
+            result.diagnostics.solution_scope.find("native_original_root_continuations_v1") == std::string::npos)
+            result.diagnostics.solution_scope += "_with_native_original_root_continuations_v1";
         if (const char* invariant =
                 solve_detail::publication_invariant_invalid_reason(result)) {
             throw std::logic_error(invariant);

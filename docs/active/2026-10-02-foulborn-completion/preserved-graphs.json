@@ -1,0 +1,72 @@
+{
+  "law": "historical uniform ordinary 4/5/6; fresh native evaluation required under corrected law",
+  "preserve_bytes": true,
+  "records": [
+    {
+      "id": "amulet-finder-effc",
+      "source": "effc0328b378603b5a6993e7abfb92181efd4641",
+      "graph": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\docs\\active\\2026-10-02-foulborn-completion\\strategies\\amulet-finder-effc.strategy.json",
+        "sha256": "d2674c73cd6229f9dd668528065451620e177731eac1929f8ce4efefd692d83a",
+        "bytes": 2734
+      },
+      "goal_and_prices": "frozen corpus case identity, unchanged",
+      "old_law_cost": 2365.2701452478236
+    },
+    {
+      "id": "amulet-current-effc",
+      "source": "effc0328b378603b5a6993e7abfb92181efd4641",
+      "graph": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\docs\\active\\2026-10-02-foulborn-completion\\strategies\\amulet-current-effc.strategy.json",
+        "sha256": "a0d64871359c8e2573e3afb4ac351ff8cdd990f060961786063fad49b4e6d205",
+        "bytes": 71849
+      },
+      "goal_and_prices": "frozen corpus case identity, unchanged",
+      "old_law_cost": 1278521.9226700994
+    },
+    {
+      "id": "conquest-chaos-baseline",
+      "source": "effc0328b378603b5a6993e7abfb92181efd4641",
+      "graph": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\docs\\active\\2026-10-02-foulborn-completion\\strategies\\conquest-chaos-baseline.strategy.json",
+        "sha256": "3c973d46fccbf22cd56d0d7b810d3b376aed904e7ff6b2aaacfdcce9dcf6e6d7",
+        "bytes": 2058
+      },
+      "goal_and_prices": "frozen corpus case identity, unchanged",
+      "old_law_cost": 15152726.387790035
+    },
+    {
+      "id": "F3-current-effc-product",
+      "source": "effc0328b378603b5a6993e7abfb92181efd4641",
+      "graph": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\foulborn-effc-replays\\F3-current-effc-product\\strategies\\foulborn-normal-root-ordinary-product-replay.strategy.json",
+        "sha256": "6949287739e0cd1915d0ef44c5dbe83f18c55a48812b440beea1cdac96e77e9c",
+        "bytes": 18476286
+      },
+      "goal_and_prices": "frozen ef06ad original-root Foulborn case",
+      "old_law_cost": 4.11822156262245
+    },
+    {
+      "id": "F4-finder-effc-product",
+      "source": "effc0328b378603b5a6993e7abfb92181efd4641",
+      "graph": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\foulborn-effc-replays\\F4-finder-effc-product\\strategies\\foulborn-normal-root-ordinary-product-replay.strategy.json",
+        "sha256": "6917b21a7b08bd4cf5a6e8bd4942d4974eccec5531d4aa66dbef671ac1e13655",
+        "bytes": 2254
+      },
+      "goal_and_prices": "frozen ef06ad original-root Foulborn case",
+      "old_law_cost": 4.120754140055851
+    },
+    {
+      "id": "conquest-anger6-baseline",
+      "source": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+      "graph": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\docs\\active\\2026-10-02-foulborn-completion\\strategies\\conquest-anger6-baseline.strategy.json",
+        "sha256": "b9eb62dd122328f1e3f37c6c23a1c2db36132c5bc15d68baaddb49c3320640c7",
+        "bytes": 1654
+      },
+      "goal_and_prices": "frozen reconstructed Conquest corpus case",
+      "old_law_cost": 1564569.0502398629
+    }
+  ]
+}

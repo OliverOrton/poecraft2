@@ -163,9 +163,14 @@ PolicyFinderWork::PolicyFinderWork(
       ranking_(ranking), grammar_(
           grammar == FinderGrammarMode::Conditional &&
           limits.solve_profile == SolveProfile::CalculatorProductV1 &&
-          attempt_limit == 8
+          attempt_limit == 8 &&
+          (limits.solve_profile_override_mask & PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES) == 0
               ? FinderGrammarMode::ConditionalProtectedScour : grammar),
-      attempt_limit_(attempt_limit), diagnostic_capture_(diagnostic_capture) {
+      attempt_limit_(attempt_limit), product_conditional_continuations_(
+          grammar == FinderGrammarMode::Conditional &&
+          limits.solve_profile == SolveProfile::CalculatorProductV1 && attempt_limit == 8 &&
+          (limits.solve_profile_override_mask & PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES) == 0),
+      diagnostic_capture_(diagnostic_capture) {
     if (session_ == nullptr) {
         throw std::invalid_argument("finder requires a session");
     }
@@ -276,6 +281,9 @@ PolicyFinderWork::PolicyFinderWork(
         ? side_masks[PC_SIDE_PREFIX] : side_masks[PC_SIDE_SUFFIX];
     double essence_score = std::numeric_limits<double>::infinity();
     double held_score = std::numeric_limits<double>::infinity();
+    std::array<double,2> side_scores{held_score,held_score};
+    product_two_held_sides_ = product_conditional_continuations_ &&
+        product_completion_has_two_orientations(problem_);
     for (const RankedAction& action : ranked_) {
         if (!action.root_legal || action.guaranteed_goal_mask == 0) continue;
         const double score = action.price / std::popcount(action.guaranteed_goal_mask);
@@ -288,6 +296,16 @@ PolicyFinderWork::PolicyFinderWork(
             (score == essence_score && precedes(essence_acquisition_))) {
             essence_score = score;
             essence_acquisition_ = action.index;
+        }
+        for (const auto side : {PC_SIDE_PREFIX,PC_SIDE_SUFFIX}) {
+            const auto mask = action.guaranteed_goal_mask & side_masks[side];
+            if (mask == 0) continue;
+            const double side_score = action.price / std::popcount(mask);
+            if (side_score < side_scores[side] ||
+                (side_score == side_scores[side] && precedes(side_essence_acquisitions_[side]))) {
+                side_scores[side] = side_score;
+                side_essence_acquisitions_[side] = action.index;
+            }
         }
         const auto held = action.guaranteed_goal_mask & held_mask;
         const double held_candidate_score = held == 0
@@ -749,12 +767,12 @@ void PolicyFinderWork::generate_retention_candidate() {
         update_peak();
     };
     const std::uint32_t family_size =
-        grammar_ == FinderGrammarMode::SelectiveRetention ? 2u : 1u;
+        grammar_ == FinderGrammarMode::SelectiveRetention || product_two_held_sides_ ? 2u : 1u;
     if (retention_variant_cursor_ >= family_size) {
         retention_pending_ = false;
         return;
     }
-    if (retention_variant_cursor_ == 1 &&
+    if (grammar_ == FinderGrammarMode::SelectiveRetention && retention_variant_cursor_ == 1 &&
         !selective_followthrough_ready_) {
         retention_status_ = "followthrough_without_completed_parent";
         retention_pending_ = false;
@@ -763,12 +781,15 @@ void PolicyFinderWork::generate_retention_candidate() {
     try {
         if (retention_producer_ == nullptr) {
             const auto variant = grammar_ == FinderGrammarMode::ConditionalProtectedScour
-                ? SelectiveCompletionVariant::ProtectedScour
+                ? (product_conditional_continuations_
+                    ? product_completion_variant(problem_) : SelectiveCompletionVariant::ProtectedScour)
                 : static_cast<SelectiveCompletionVariant>(retention_variant_cursor_);
             retention_producer_ = std::make_unique<
                 SelectiveCompletionProducer>(
                     problem_, original_start_, economy_->prices,
-                    limits_, variant, held_essence_acquisition_);
+                    limits_, variant, product_two_held_sides_
+                        ? side_essence_acquisitions_[retention_variant_cursor_] : held_essence_acquisition_,
+                    product_two_held_sides_ ? retention_variant_cursor_ : kNoId);
         }
         if (!retention_producer_->advance(1)) {
             retention_status_ = "native_generation_incomplete";
@@ -1013,8 +1034,8 @@ void PolicyFinderWork::start_next_candidate() {
         done_ = true;
         return;
     }
-    // The private Scour family reserves one of the existing eight attempts.
-    // It must be serviced before the beam can consume that allowance.
+    // Reserve native continuation proposals within the existing eight attempts.
+    // Mixed 2+2 goals offer each held-side orientation before beam exhaustion.
     if (grammar_ == FinderGrammarMode::ConditionalProtectedScour && retention_pending_) {
         generate_retention_candidate();
         if (retention_pending_ || done_) return;

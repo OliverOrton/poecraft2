@@ -4406,9 +4406,11 @@ void run_solver_protected_finder_tests() {
 
 
 void run_solver_finder_foulborn_product_tests();
+void run_solver_mixed_side_product_tests();
 
 void run_solver_finder_essence_tests() {
     run_solver_finder_foulborn_product_tests();
+    run_solver_mixed_side_product_tests();
     // Reconstructed finite fixtures. These exercise descriptor selection and
     // exact native checking; they are not reproductions of Oliver's phone run.
     const auto make_session = [] {
@@ -4844,6 +4846,24 @@ void run_solver_finder_essence_tests() {
             if (current_default.candidate()) PC_CHECK(current_default.candidate()->acquisition_action == held_chaos);
             auto product_limits = limits;
             apply_solve_profile_defaults(product_limits, SolveProfile::CalculatorProductV1);
+            CalcContext current_calc(held_session,clean,held_registry,{held_chaos,held});
+            const auto current=solve(current_calc,root,held_prices,product_limits);
+            PC_CHECK(current.policy_available && current.options.product_original_root_continuations);
+            PC_CHECK(current.lower_bound==0 && current.closure_unavailable_by_profile);
+            if (current.policy_available) {
+                const auto graph=!current.refined_policy_artifact.strategy_json.empty()
+                    ? current.refined_policy_artifact.strategy_json
+                    : compile_policy_strategy_json(current_calc,current,"product guaranteed protected Scour");
+                const auto checked=evaluate_compiled(held_session,graph,held_prices);
+                PC_CHECK(finder_evaluation_accepted(checked));
+                PC_CHECK(checked.expected_consumption.contains("essence:finder_held") &&
+                    checked.expected_consumption.at("essence:finder_held")>0);
+                PC_CHECK(checked.expected_consumption.contains("scour") && checked.expected_consumption.at("scour")>0);
+                PC_CHECK(checked.expected_consumption.contains("bench:mod9") && checked.expected_consumption.at("bench:mod9")>0);
+                PC_CHECK(std::abs(current.evaluated_policy_cost-checked.total_expected_cost)<1e-8);
+                std::printf("reconstructed product Current guaranteed Scour order=%d cost=%.12g status=%s\n",
+                    reverse,current.evaluated_policy_cost,current.diagnostics.selective_completion_service_status.c_str());
+            }
             PolicyFinderWork finder(calc,held_session,root,held_prices,product_limits);
             complete(finder);
             PC_CHECK(finder.best().has_value());
@@ -5096,6 +5116,182 @@ void run_solver_finder_foulborn_product_tests() {
     }
 
 }
+
+void run_solver_mixed_side_product_tests() {
+    auto session = make_compile_session();
+    auto data=std::const_pointer_cast<DataImpl>(session->data);
+    data->essence_count=2;
+    for (const auto& key:{"mixed_prefix","mixed_suffix"}) {
+        const auto sid=static_cast<std::uint32_t>(data->strings.size());
+        data->strings.push_back(key);data->essence_key_sids.push_back(sid);
+        data->essence_by_key.emplace(key,data->essence_by_key.size());
+    }
+    data->essence_item_level_restrictions.assign(2,-1);
+    data->essence_is_corruption_only.assign(2,0);
+    session->essence_guaranteed_mod_ids={3,5};
+    auto registry = build_action_registry(*session);
+    const auto chaos = registry.index_by_id.at("chaos");
+    const std::array<std::uint32_t,2> essences{
+        registry.index_by_id.at("essence:mixed_prefix"),registry.index_by_id.at("essence:mixed_suffix")};
+    const std::vector<std::uint32_t> actions{chaos,essences[0],essences[1]};
+    GoalSpec goal; goal.rarity = PC_RARITY_RARE; goal.automatic_candidates = true;
+    goal.automatic_candidate_kind_mask = automatic_candidate_kind_bit(AutomaticCandidateKind::EldritchSide);
+    for (auto mod : {3u,4u,5u,6u}) {
+        GoalSlot wanted; wanted.family_id = session->family_id[mod]; wanted.min_tier = 1;
+        goal.slots.push_back(wanted);
+    }
+    SolveOptions caps; apply_solve_profile_defaults(caps,SolveProfile::CalculatorProductV1);
+    caps.max_discovered_states = 10000; caps.max_expanded_states = 10000;
+    caps.max_state_action_rows = 100000; caps.max_transitions = 1000000;
+    caps.max_reforge_work = 1000000; caps.max_solver_owned_bytes = 256ull << 20;
+    std::unordered_map<std::string,double> prices{{"chaos",100},{"essence:mixed_prefix",2},{"essence:mixed_suffix",3},{"eldritch_chaos",0.01},{"eldritch_annul",0.01}};
+    for (unsigned tier=1;tier<=4;++tier) {
+        prices["eldritch_ember:"+std::to_string(tier)]=0.01;
+        prices["eldritch_ichor:"+std::to_string(tier)]=0.01;
+    }
+    for (unsigned dirty=0;dirty<5;++dirty) {
+        pc_item_state root; pc_item_clear(&root); root.rarity=PC_RARITY_RARE;
+        const std::array<std::vector<unsigned>,5> roots{{{}, {0,3,4,5}, {3,5,6,7}, {3,4,5,6,7}, {0,3,4,5,6}}};
+        for (auto mod:roots[dirty])
+            PC_CHECK(pc_item_add_mod(&root,static_cast<pc_affix_side>(session->gen_type[mod]),
+                mod,session->primary_group[mod],0,nullptr)==PC_RESULT_OK);
+        CalcContext baseline_calc(session,goal,registry,{chaos});
+        const auto baseline=evaluate_compiled(session,
+            compile_finder_candidate_json(baseline_calc,root,{chaos},caps),prices);
+        PC_CHECK(finder_evaluation_accepted(baseline));
+        // A human-style guarantee acquisition followed by a correctly
+        // dominated rewrite is the same generic producer in either direction.
+        // Request and validate the exact reached-entry census, not just root EV.
+        for (const auto side:{PC_SIDE_PREFIX,PC_SIDE_SUFFIX}) {
+            CalcContext diagnostic(session,goal,registry,actions,false,false,false,
+                std::nullopt,std::vector<CountObservation>{},false,std::vector<std::uint64_t>{},true);
+            SelectiveCompletionProducer producer(diagnostic,root,prices,caps,
+                SelectiveCompletionVariant::RetentionControl,essences[side],side);
+            for (unsigned i=0;i<40000 && !producer.done();++i) producer.advance();
+            PC_CHECK(producer.done() && producer.candidate().has_value());
+            if (!producer.candidate()) continue;
+            const auto& control=producer.candidate()->control;
+            const auto graph=compile_finder_control_json(diagnostic,root,control,caps);
+            const auto prepared=prepare_finder_candidate(diagnostic,session,root,graph,&control);
+            PC_CHECK(prepared.ready());
+            if (!prepared.ready()) continue;
+            auto economy=std::make_shared<EconomyImpl>();economy->id="mixed-diagnostic";economy->prices=prices;
+            StrategyEvalOptions eval;eval.economy=economy;
+            eval.continuation_entries.push_back({diagnostic.intern_item(root),0,1,root,false});
+            eval.graph_local_provenance.strategy_json=graph;
+            for (unsigned node=0;node<control.nodes.size();++node) {
+                const auto& cn=control.nodes[node];
+                if (cn.kind!=FinderControlKind::RunNativeProgram) continue;
+                const auto& binding=control.programs.at(cn.binding);
+                const auto key=planner_operator_semantic_key(diagnostic.operators().at(binding.operator_index));
+                const auto id="c"+std::to_string(node);
+                eval.graph_local_provenance.decisions.push_back({id,key,false,false});
+                StrategyPolicyDecisionRequest request;request.compiled_node_id=id;
+                request.selected_operator_identity=key;request.graph_local=true;
+                eval.policy_decision_entries.push_back(std::move(request));
+            }
+            const auto checked=evaluate_strategy(*prepared.strategy,eval);
+            PC_CHECK(finder_evaluation_accepted(checked));
+            PC_CHECK(checked.total_expected_cost<baseline.total_expected_cost);
+            PC_CHECK(checked.expected_consumption.contains("eldritch_chaos") && checked.expected_consumption.at("eldritch_chaos")>0);
+            const auto essence_key=registry.actions[essences[side]].id;
+            const bool rewrite_existing_pair=(dirty==3 && side==PC_SIDE_PREFIX) || (dirty==4 && side==PC_SIDE_SUFFIX);
+            const double acquisition_visits=checked.expected_consumption.contains(essence_key)
+                ? checked.expected_consumption.at(essence_key) : 0;
+            PC_CHECK(rewrite_existing_pair ? acquisition_visits==0 : acquisition_visits>0);
+            // The empty original root requires paid native dominance setup.
+            bool paid_setup=false;
+            for (const auto& [id,count]:checked.expected_consumption)
+                paid_setup|=(id.starts_with("eldritch_ember:") || id.starts_with("eldritch_ichor:")) && count>0;
+            PC_CHECK(paid_setup);
+            SelectiveProgrammeEntryValidator validator(diagnostic,session,control,checked.policy_entries,prices,caps);
+            for (unsigned i=0;i<40000 && !validator.done();++i) validator.advance();
+            PC_CHECK(validator.done() && validator.positive_entries()>0);
+            std::printf("mixed-side diagnostic dirty=%u held=%u cost=%.12g acquire=%.12g positive_entries=%u\n",
+                dirty,side,checked.total_expected_cost,acquisition_visits,validator.positive_entries());
+        }
+        CalcContext calc(session,goal,registry,actions);
+        PolicyFinderWork finder(calc,session,root,prices,caps);
+        for (unsigned i=0;i<40000 && !finder.progress().done;++i) finder.step(128);
+        PC_CHECK(finder.progress().done && finder.progress().considered<=8);
+        PC_CHECK(finder.best().has_value());
+        if (finder.best()) {
+            const auto& best=*finder.best();
+            const auto checked=evaluate_compiled(session,best.strategy_json,prices);
+            PC_CHECK(finder_evaluation_accepted(checked));
+            PC_CHECK(best.native_control.has_value());
+            PC_CHECK(best.expected_cost<baseline.total_expected_cost);
+            PC_CHECK(best.strategy_json.find("eldritch_chaos")!=std::string::npos);
+            PC_CHECK(checked.expected_consumption.contains("eldritch_chaos") &&
+                checked.expected_consumption.at("eldritch_chaos")>0);
+            PC_CHECK(std::abs(checked.total_expected_cost-best.expected_cost)<1e-8);
+            std::printf("mixed-side product Finder dirty=%u cost=%.12g\n",dirty,best.expected_cost);
+        }
+        CalcContext current_calc(session,goal,registry,actions);
+        const auto current=solve(current_calc,root,prices,caps);
+        PC_CHECK(current.policy_available);
+        PC_CHECK(current.options.product_original_root_continuations);
+        PC_CHECK(current.lower_bound==0 && current.closure_unavailable_by_profile);
+        if (current.policy_available) {
+            const auto graph=!current.refined_policy_artifact.strategy_json.empty()
+                ? current.refined_policy_artifact.strategy_json
+                : compile_policy_strategy_json(current_calc,current,"mixed-side product fixture");
+            const auto checked=evaluate_compiled(session,graph,prices);
+            PC_CHECK(finder_evaluation_accepted(checked));
+            PC_CHECK(graph.find("eldritch_chaos")!=std::string::npos);
+            PC_CHECK(current.evaluated_policy_cost<baseline.total_expected_cost);
+            PC_CHECK(std::abs(current.evaluated_policy_cost-checked.total_expected_cost)<1e-8);
+            std::printf("mixed-side product Current dirty=%u cost=%.12g status=%s\n",dirty,
+                current.evaluated_policy_cost,current.diagnostics.selective_completion_service_status.c_str());
+        }
+        auto explicit_gate=caps;
+        explicit_gate.solve_profile_override_mask|=PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES;
+        PC_CHECK(!product_original_root_continuation_scope(current_calc,root,explicit_gate));
+        auto gap=caps; gap.max_absolute_optimality_gap=1;
+        PC_CHECK(!product_original_root_continuation_scope(current_calc,root,gap));
+        // Exercise normal public parsing/options/graph transport with the same
+        // caller action set and fully priced automatic native dependencies.
+        pc_session public_session; public_session.impl=session;
+        const std::string request=R"({"version":"v1","rarity":"rare","automatic_candidates":true,"slots":[{"family_mod_key":"mod3","min_tier":1},{"family_mod_key":"mod4","min_tier":1},{"family_mod_key":"mod5","min_tier":1},{"family_mod_key":"mod6","min_tier":1}],"actions":["chaos","essence:mixed_prefix","essence:mixed_suffix"]})";
+        std::string economy_json="{\"version\":\"v1\",\"prices\":{";
+        for (const auto& [id,price]:prices) {
+            if (economy_json.back()!='{') economy_json+=',';
+            economy_json+='"'+id+"\":"+std::to_string(price);
+        }
+        economy_json+="}}";
+        pc_error_info error{}; pc_economy_handle economy=nullptr;
+        PC_CHECK(pc_economy_load_json(economy_json.data(),economy_json.size(),&economy,&error)==PC_RESULT_OK);
+        for (auto mode:{PC_SOLVER_MODE_CURRENT,PC_SOLVER_MODE_STRATEGY_FINDER}) {
+            pc_solver_handle handle=nullptr;
+            PC_CHECK(pc_solver_create(&public_session,request.data(),request.size(),&handle,&error)==PC_RESULT_OK);
+            if (!handle) continue;
+            pc_solve_options options{}; options.struct_size=sizeof(options);options.abi_version=PC_ABI_VERSION;
+            options.solver_mode=mode; options.solve_profile=PC_SOLVE_PROFILE_CALCULATOR_PRODUCT_V1;
+            options.max_states=10000; options.max_discovered_states=10000;options.max_expanded_states=10000;
+            options.max_state_action_rows=100000;options.max_transitions=1000000;
+            options.max_reforge_work=1000000;options.max_solver_owned_bytes=256ull<<20;
+            pc_solve_summary summary{};
+            const auto code=pc_solver_solve(handle,&root,economy,&options,&summary,&error);
+            if(code!=PC_RESULT_OK) std::printf("mixed-side API mode=%u error=%s\n",mode,error.message);
+            PC_CHECK(code==PC_RESULT_OK && summary.policy_available);
+            if(code==PC_RESULT_OK && summary.policy_available) {
+                size_t size=0;
+                PC_CHECK(pc_solver_compile_strategy(handle,nullptr,0,&size,&error)==PC_RESULT_OK);
+                std::string graph(size+1,'\0');
+                PC_CHECK(pc_solver_compile_strategy(handle,graph.data(),graph.size(),&size,&error)==PC_RESULT_OK);
+                graph.resize(size);
+                const auto checked=evaluate_compiled(session,graph,prices);
+                PC_CHECK(finder_evaluation_accepted(checked));
+                PC_CHECK(graph.find("eldritch_chaos")!=std::string::npos);
+                PC_CHECK(checked.total_expected_cost<baseline.total_expected_cost);
+                PC_CHECK(std::abs(summary.evaluated_policy_cost-checked.total_expected_cost)<1e-8);
+            }
+            pc_solver_destroy(handle);
+        }
+        pc_economy_destroy(economy);
+    }
+}
+
 
 void run_solver_uniform_removal_tests() {
     // Exhaustive finite native differential fixtures, never real-data timed

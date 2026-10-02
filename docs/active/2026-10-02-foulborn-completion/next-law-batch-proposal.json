@@ -1,0 +1,136 @@
+{
+  "status": "current-batch staged proposal only; parent slot not granted; heavy slot remains cluster-reserved; pause after batch closure",
+  "owner": "integration owner",
+  "current_worker_branch": "dot/foulborn-completion-20261002",
+  "law": "approved ordinary 8:3:1 implemented consistently by dedicated law owner; fixed-count operations remain fixed",
+  "control": "same integrated source/law/economy as candidate with this native product-continuation delta absent",
+  "candidate": "same integrated source/law/economy plus reviewed continuation commit",
+  "limits": {
+    "max_discovered_states": 200000,
+    "max_state_action_rows": 1215000,
+    "max_transitions": 10000000,
+    "max_reforge_work": 50000000,
+    "max_solver_owned_bytes": 1073741824,
+    "step_work_items": 8,
+    "requested_bounded_finish_seconds": 90,
+    "native_watchdog_seconds": 150,
+    "host_watchdog_seconds": 165
+  },
+  "case_identity": "reuse frozen corpus goals, original roots, runtime and economy hash; Foulborn disabled",
+  "finder_expected_contract": {
+    "solver_mode": "strategy_finder",
+    "solve_status": "finder_classified",
+    "optimality_status": "bounded_only",
+    "compile_status": "compiled",
+    "verification_status": "not_required"
+  },
+  "current_expected_contract": {
+    "solver_mode": "current",
+    "solve_status": "reliability_classified",
+    "optimality_status": "classified",
+    "compile_status": "compiled",
+    "verification_status": "not_required"
+  },
+  "diagnostic_candidates": [
+    {
+      "acquisition": "essence:Anger6",
+      "held_side": "suffix",
+      "held_goals": [
+        "FireResist8 T1",
+        "ChanceToSuppressSpellsHigh5___ T1"
+      ],
+      "target_side": "prefix",
+      "target_goals": [
+        "IncreasedLife12 T1",
+        "LocalIncreasedArmourAndEvasion8 T1"
+      ],
+      "producer": "SelectiveCompletionProducer RetentionControl with native acquisition descriptor and explicit generic side",
+      "junk_handling": "reject extra held-side suffix; keep rewriting prefix junk; original full clean goal wins before every continuation guard",
+      "require": "native action scope, full prices, legal dominance setup charged, exact graph evaluation and complete positive-entry validation"
+    },
+    {
+      "producer": "same generic RetentionControl reflected to held prefixes and rewrite suffixes",
+      "acquisition": "best scoped satisfying native prefix guarantee, or scoped Chaos when none"
+    }
+  ],
+  "diagnostic_invocation_count": "separate parent allocation required; no solver used to invent a baseline",
+  "evaluation": "same original physical root/goal, complete law, full paid cost, success 1, zero off-policy mass, no sampled odds as proof",
+  "runner_owner": "existing solver_corpus_runner/solver_worker; serial deterministic batch, no new supervisor",
+  "exclusions": [
+    "no comparison with historical uniform-law costs",
+    "no speed or unrestricted-optimum claim",
+    "no new claim for Bow51222.520820 because this worker did not rerun it"
+  ],
+  "stages": [
+    {
+      "id": "1_same_graph_new_law",
+      "type": "fresh native exact evaluation, no solver search",
+      "graphs": [
+        "amulet-finder-effc",
+        "conquest-anger6-baseline",
+        "F3-current-effc-product"
+      ],
+      "native_evaluations": 3,
+      "source": "single reviewed integrated 8:3:1 native source, same frozen runtime/root/goal/prices",
+      "comparison": "old-law result versus fresh new-law evaluation of identical graph bytes measures mechanical repricing only",
+      "include": "occupancy and recovery metrics below; use complete native rows/census or exact route mass, never truncated top classes"
+    },
+    {
+      "id": "2_conquest_continuation_control",
+      "type": "smallest whole-policy search comparison after stage1",
+      "case": "conquest-reconstructed-diverse-tags-clean4",
+      "mode": "strategy_finder",
+      "native_solver_invocations": 2,
+      "control": "new-law integrated source without this product-continuation delta",
+      "candidate": "identical new-law integrated source with this delta",
+      "compare": "fresh candidate versus fresh new-law control, and versus the same preserved Anger policy reevaluated under new law",
+      "diagnostic": "native Anger6/clean-held-suffixes/paid dominated prefix rewrite; reflected orientation from same generic producer; separately allocated native checks, no solver used to author it"
+    },
+    {
+      "id": "3_current_product_check_if_needed",
+      "type": "conditional existing-batch qualification only; parent decision required",
+      "case": "same reconstructed Conquest",
+      "mode": "current",
+      "native_solver_invocations_if_granted": 2,
+      "trigger": "Finder/diagnostic show material continuation benefit and the current batch still needs ordinary Current real qualification",
+      "compare": "matched new-law control/candidate; stop after qualified current batch, no new programme"
+    }
+  ],
+  "native_evaluator_owner": "existing pc_strategy_eval_begin/step/finish, fresh compiled graph and one evaluation handle; retain isolated solver_worker supervision/cancellation/watchdog. Lab evaluate-strategy returns recorded evidence and is not a fresh-law evaluation; Python Strategy.evaluate currently executes twice, so do not silently count it as one evaluation.",
+  "occupancy_metrics": {
+    "law_mapping": "native solver_reforge.cpp target clamp max(min(target,2*cap),preserved+guarantee first_depth), sequential side/group eligibility and pool exhaustion; actual final counts are authoritative",
+    "strata": [
+      "both held-side orientations",
+      "complete clean held pair",
+      "held-side junk requiring paid treatment",
+      "other-side junk with a clean held pair that can be rewritten directly",
+      "actual native dominance setup/ready contexts",
+      "actual native retained count and satisfying guarantee; no imagined count-to-occupancy shortcut"
+    ],
+    "probability_metrics": [
+      "final prefix/suffix count joint distribution after acquisition and protected/dominated reforge",
+      "chance held goals survive with no extra held-side junk",
+      "chance target side has no explicit slot for requested bench/add/targeted completion, tested by native legality",
+      "chance full goal succeeds before recovery",
+      "pool exhaustion/clamped-count cases kept separate from chosen target count",
+      "blocked continuation route probability or expected traversal count with its stated denominator"
+    ],
+    "cost_metrics": [
+      "expected acquisition visits/cost",
+      "expected paid annul/reset visits/cost",
+      "expected protection/bench and dominance setup visits/cost",
+      "expected rewritten-side action visits/cost",
+      "expected held-side loss/reacquisition contributions",
+      "reconcile summed material cost with checked whole-policy EV"
+    ],
+    "authority": "complete exact native row mass, complete reached-entry census or exact evaluator route attribution; no representative or truncated top-class probability promoted to proof",
+    "separate_eldritch_law": "in frozen native pin, dominated Eldritch Chaos samples 2/3 target-side affixes at 1/2 each (actions_basic.cpp:1118; solver_reforge.cpp:1976), separate from ordinary rare total 4/5/6. Owner must retain or explicitly review that distinction; no dominance falls back to ordinary reforge."
+  },
+  "law_checkpoint": {
+    "core": "664e7003551e52d69461bf6351b01ca5b1b2e90d",
+    "final_tip": "596e7cf40fdff97fa587345c919832e55135f7cb",
+    "parent_reported_passing_finite_checks": 1352300,
+    "worktree": "C:/Users/Oliver/Documents/poecraft2-reforge-law",
+    "integration": "integration owner combines and reconciles identities; not merged/rebased/tested by this worker"
+  }
+}

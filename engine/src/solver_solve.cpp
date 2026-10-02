@@ -68,6 +68,12 @@ SolveWork::Impl::Impl(
                     "explicit gated policy restriction cannot be widened");
             options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
         }
+        options.product_original_root_continuations =
+            product_original_root_continuation_scope(calc, exact_start_item, options);
+        if (options.product_original_root_continuations) {
+            options.selective_completion_service = true;
+            options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+        }
         // Foulborn changes acquisition probabilities. Existing ordinary-clean
         // lower proofs have not been extended to this family. Retain the
         // existing checked-policy capability and zero global lower only.
@@ -208,6 +214,8 @@ SolveWork::Impl::Impl(
         }
         if (options.paid_root_foulborn_salvage)
             result.diagnostics.solution_scope = paid_root_foulborn_solution_scope(options);
+        if (options.product_original_root_continuations)
+            result.diagnostics.solution_scope += "_with_native_original_root_continuations_v1";
         if (calc.registry().product_goal_filtering) {
             if (result.diagnostics.solution_scope == "globally_optimal_unrestricted")
                 result.diagnostics.solution_scope = "exact_within_candidate_and_generated_programme_grammar";
@@ -652,6 +660,7 @@ SolveWork::Impl::Impl(
             transition_cache->kernel_reuse = options.kernel_reuse;
             transition_cache->paid_root_foulborn_salvage = options.paid_root_foulborn_salvage;
             transition_cache->paid_root_foulborn_grammar_version = options.paid_root_foulborn_grammar_version;
+            transition_cache->product_original_root_continuations = options.product_original_root_continuations;
             transition_cache->goal_progress_gated_reforges =
                 options.goal_progress_gated_reforges;
             transition_cache->consider_imprint_programs =

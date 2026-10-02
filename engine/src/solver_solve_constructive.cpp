@@ -226,11 +226,12 @@ std::uint64_t SolveWork::Impl::economy_identity() const {
 
 std::uint64_t SolveWork::Impl::caller_scope_identity() const {
         std::uint64_t hash = 1469598103934665603ULL;
-        identity_mix(hash, 3); /* caller-scope identity schema */
+        identity_mix(hash, 4); /* caller-scope identity schema */
         identity_mix(hash, calc.action_control().explicit_envelope);
         identity_mix(hash, options.goal_progress_gated_reforges);
         identity_mix(hash, options.paid_root_foulborn_salvage);
         identity_mix(hash, options.paid_root_foulborn_grammar_version);
+        identity_mix(hash, options.product_original_root_continuations);
         identity_mix(hash, options.consider_imprint_programs);
         identity_mix(hash, options.allow_economic_restart);
         identity_mix(hash, calc.candidates().size());
@@ -327,11 +328,12 @@ SolveWork::Impl::executable_continuation_authority_context(
         context.mechanics_artifact.push_back(calc.session().item_level);
 
         context.caller_scope = {
-            3, /* exact caller action-scope identity schema */
+            4, /* exact caller action-scope identity schema */
             calc.action_control().explicit_envelope,
             options.goal_progress_gated_reforges,
             options.paid_root_foulborn_salvage,
             options.paid_root_foulborn_grammar_version,
+            options.product_original_root_continuations,
             options.consider_imprint_programs,
             options.allow_economic_restart,
             calc.candidates().size(),
@@ -6377,9 +6379,10 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset
         if (!complete_reset || std::abs(mass.value() - 1.0) > 1e-12) continue;
         const bool direct_success = success.value() > 0.0;
         const double baseline_value = direct_success
-            ? ((WideFloat{priced.cost} + recovery_cost) / success).value() : kInfinity;
+            ? ((WideFloat{priced.cost} + recovery_cost) / success).value() : 0.0;
         if (direct_success && (!std::isfinite(baseline_value) || baseline_value < 0.0 ||
                 baseline_value >= kValueCeiling)) continue;
+        bool candidate_available = direct_success;
         double value = baseline_value;
         std::uint32_t graph_nodes = 4, graph_edges = 5;
         std::string graph;
@@ -6467,7 +6470,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset
                 }
                 if (selected.empty() || !(selected_success.value() > 0.0)) continue;
                 const double improved = (selected_cost / selected_success).value();
-                if (!std::isfinite(improved) || improved < 0.0 || !(improved < value)) continue;
+                if (!std::isfinite(improved) || improved < 0.0 ||
+                    (candidate_available && !(improved < value))) continue;
                 try {
                     const auto live = estimated_owned_bytes();
                     const auto local = proof_calc.estimated_owned_bytes() + graph.capacity() + 1 +
@@ -6495,15 +6499,17 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset
                     continue;
                 }
                 value = improved;
+                candidate_available = true;
                 supplementary = true;
                 graph_nodes = 5;
                 graph_edges = 6 + static_cast<std::uint32_t>(selected.size());
                 retain_action_reason("proposed:paid_root_foulborn_salvage_v2:selected=" +
-                    std::to_string(selected.size()) + ":baseline=" + finite_json(baseline_value) +
+                    std::to_string(selected.size()) + ":baseline=" +
+                    (direct_success ? finite_json(baseline_value) : "none") +
                     ":value=" + finite_json(value));
             }
         }
-        if (graph.empty() || !std::isfinite(value) || value < 0.0 || value >= kValueCeiling) continue;
+        if (!candidate_available || graph.empty() || !std::isfinite(value) || value < 0.0 || value >= kValueCeiling) continue;
         if ((output_incumbent && !(value < output_incumbent->certified_upper_bound)) ||
             !(value < incumbent_portfolio.verified_executable_upper())) continue;
         BoundedPolicyIncumbent candidate;

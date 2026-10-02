@@ -213,6 +213,7 @@ struct SolveOptions {
     // Native-private observation of the live first-policy seed-row selector.
     bool seed_progress_observation_diagnostic = false;
     bool selective_completion_service = false;
+    bool product_original_root_continuations = false;
     bool projected_reforge_frontier_diagnostic = false;
     bool factored_terminal_reforge_diagnostic = false;
     bool reforge_resource_accounting = true;
@@ -257,6 +258,9 @@ inline bool product_paid_root_foulborn_scope(
     }
     return reset && ((alchemy && exalt) || (transmute && (augment || regal)));
 }
+
+bool product_original_root_continuation_scope(
+    const CalcContext& calc, const pc_item_state& root, const SolveOptions& options);
 
 inline bool paid_root_foulborn_pair(const ActionType roll, const ActionType add) {
     return (roll == ActionType::Alchemy && add == ActionType::FoulbornExalt) ||

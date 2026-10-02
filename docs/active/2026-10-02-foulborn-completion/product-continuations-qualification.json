@@ -1,0 +1,215 @@
+{
+  "base": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+  "preceding_checkpoint": "effc0328b378603b5a6993e7abfb92181efd4641",
+  "law": "historical native ordinary uniform 4/5/6; corrected law integration not performed here",
+  "focused_checks": {
+    "finder_essence_and_normal_api": 815,
+    "foulborn_root": 3710,
+    "paid_reset": 1146,
+    "protected_finder": 66,
+    "assertion": 424,
+    "checkpoint": 46,
+    "selective_target_count": 50
+  },
+  "passing_checks": 6257,
+  "failed_controls": [
+    {
+      "selector": "selective-cap-diagnosis",
+      "failure": "publication lost its verified artifact",
+      "candidate_exit": -1073740791,
+      "base_control_exit": -1073740791,
+      "ancestry": "identical abort on untouched b794e009 archived control test build",
+      "phase": "fixture1 deliberately lowers max owned bytes after generation begins; compatible 63969.230769229565 checked fallback remains before publication",
+      "disposition": "inherited publication acceptance hold; invariant not weakened; integration owner review required",
+      "base_control_binary": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\control-source\\build\\engine\\poecraft_engine_tests.exe",
+        "sha256": "2b35a3600c89cba1585d6a9bc4470984b9ecf91872956830cfa180ff749cba57",
+        "bytes": 19102688
+      },
+      "base_control_source_archive": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\control-source.zip",
+        "sha256": "347a2f67aa114e8bf5f77d3c0ab7da83aa7a4b15b92544314cf7941384e56e99",
+        "bytes": 1951075
+      }
+    }
+  ],
+  "changed_source_identities": [
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_development_checkpoint.cpp",
+      "sha256": "2816b848df7deec30af9760bca0dd2756062fcec8d35ba613a75d57bb1f47bec",
+      "bytes": 44876
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_finder.cpp",
+      "sha256": "e3fc0f522fdc06fa059c77bc8a7ec23fe9b5ec524efae1d9a627c342d12eef59",
+      "bytes": 73704
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_finder.hpp",
+      "sha256": "b0a880ecefbaf7cfc328b9c7c66029d9406a3c3cdc8f51760751f92a5e5349cc",
+      "bytes": 8943
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_policy_assertion_work.cpp",
+      "sha256": "f7fd326a8517bc32207d3ce8668617229da48c2487b54745a04c5cdcf2090df5",
+      "bytes": 55938
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_selective_completion.cpp",
+      "sha256": "535b306b9fecc608700fec62eaa59f0d4ca92eb475265f63a68a8a2b12588f70",
+      "bytes": 32628
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_selective_completion.hpp",
+      "sha256": "01e67fb0fc83df790f0681c1e4b572b039dff894dadf4b36c8a902a5c9ec4286",
+      "bytes": 4748
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_solve.cpp",
+      "sha256": "6c4bf0d142212e0468ce7fbe67e93aa75fc625edc2d362068e7875be4fae513f",
+      "bytes": 39357
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_solve_constructive.cpp",
+      "sha256": "f5fc34e73b57e6f2085a334175b6c5508865f77321a4d0c9960ec717c33c2f17",
+      "bytes": 443208
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_solve_contracts.hpp",
+      "sha256": "e92a70e37c695f91c6ce795e07ec1b8f43a869ce5a044b9c45aa34eecc7b2884",
+      "bytes": 84077
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_solve_expand.cpp",
+      "sha256": "bdafdb451909b2c0963b53363dc7afd61a67fb7be2aa67c9b5611e11e209067e",
+      "bytes": 210413
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_solve_finish.cpp",
+      "sha256": "14c100b3d31045062ee8e1f09d18016892fefe813d38affcd48ea24a28230b79",
+      "bytes": 341649
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_solve_quotient.cpp",
+      "sha256": "d99092982b8a6b0d37f09d41ec5fe1a62dfbb613f497798bb4a5e4d4cf3f8c10",
+      "bytes": 51059
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_solve_selective_completion.cpp",
+      "sha256": "91ab60ec6320c92fc394df64f1289db6c2859c7155c5509e466a763b64a3bb09",
+      "bytes": 18560
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_solve_telemetry.cpp",
+      "sha256": "bff7be83cace6021e117bfae79b7ce6f0a97c9513f986103bb3c613de589fead",
+      "bytes": 180512
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_solve_telemetry_json.cpp",
+      "sha256": "8b08be43d540160728f0a6d78fe5353520a311ae983d2e9182c555b0d2553c47",
+      "bytes": 208511
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\src\\solver_solve_types.hpp",
+      "sha256": "b4f29489689c99c39104e27c93c7cecbcfbe2f79774e5f8d1b85000f25f5ae9e",
+      "bytes": 149460
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\engine\\tests\\test_solver_compile.cpp",
+      "sha256": "ec4d7e1843227e542c782a0033f5e13f284286d623a39c8b2fd1fca0c64fa543",
+      "bytes": 292525
+    }
+  ],
+  "builds": {
+    "tests": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\build\\engine\\poecraft_engine_tests.exe",
+      "sha256": "756eb61a62063bbdcd164f93839850d66f6900a30d102951edb1eeec8fef202a",
+      "bytes": 19181133
+    },
+    "engine_static": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\build\\engine\\libpoecraft_engine.a",
+      "sha256": "eac7fd4b68c1f98715d154f8f7c84fa66b1545ae21240874b3fbda0ca041d2d8",
+      "bytes": 16274358
+    },
+    "benchmark": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\build\\engine\\poecraft_solver_benchmark.exe",
+      "sha256": "2898a81459aae18b790dfdaf5c701e0cbfacfeab79601e22b8384335bc30ba27",
+      "bytes": 14668748
+    },
+    "jobs_maximum": 2,
+    "dll": "not rebuilt separately by final dev-engine Engine target",
+    "wasm": "integration owner, unrun here"
+  },
+  "evidence": [
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\product-template-final.log",
+      "sha256": "61398f8ed5fb84fca94a4f438a0e4c0e5c9efc732c0e852d8766b318ba27245a",
+      "bytes": 4929
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\build-product-template-final.log",
+      "sha256": "cf7b9dd9df6b95d4ce458095e91aa0a729d2686ce45736af4cdf950388527947",
+      "bytes": 426
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\product-controls-failed.txt",
+      "sha256": "ad1dc0c7af059bc6950a45e92d8cc96eb010fe6d5b9d2125274bf6d47259a1bf",
+      "bytes": 581
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\product-controls-final.log",
+      "sha256": "ef53daf52efadf9c8b74693a866003980cb74510eb884bb4f15b1bb9b26aa3e8",
+      "bytes": 4097
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\product-junk-final.log",
+      "sha256": "4486c184eb7ea83e2cb3ecd4ad01f53d057f23c56288edcaa1489bb4ad95ba7b",
+      "bytes": 4790
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\control-tests-build.log",
+      "sha256": "70d6f3dc6cc0eadeb0c096ff5bc685fb4bbefd51e7a413b00a0fc18c5d2935a9",
+      "bytes": 2847
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-foulborn-completion\\out\\foulborn-completion\\control-cap-diagnosis.log",
+      "sha256": "a509e9ecde57167eaf24cb58efe68b8551509579850ba66e3e39ca44be604d13",
+      "bytes": 118
+    }
+  ],
+  "finite_strategies": {
+    "guaranteed_protected_scour_current_and_finder": 5.04325581395,
+    "mixed_empty_prefix_held_current_and_finder": 36.4666746411,
+    "mixed_empty_suffix_held_diagnostic": 90.5509960159,
+    "existing_clean_prefix_pair_suffix_junk": {
+      "cost": 0.31,
+      "essence_expected_visits": 0,
+      "positive_entries": 4
+    },
+    "existing_clean_suffix_pair_prefix_junk": {
+      "cost": 0.21,
+      "essence_expected_visits": 0,
+      "positive_entries": 4
+    }
+  },
+  "proof_boundary": "Current product continuation zero global lower/no exact closure; original-root checked artifact only, every positive entry admitted; no non-root statewise proof",
+  "sampler": "existing target-count selector includes 1000/1000 native trials for inherited one-affix controller; no fresh qualification for new mixed-side strategies",
+  "real_invocations_spent": 12,
+  "new_real_run": "none; no slot granted",
+  "product_checks": "normal native public API Current/Finder, scopes/prices/graph transport and independent physical goal/cost checks",
+  "remaining": [
+    "parent review/reconcile shared checkpoint/caller/assertion/cache identities with count-law owner",
+    "capped-publication inherited hold",
+    "same old graph fresh new-law repricing, then bounded matched continuation comparison if parent grants current-batch slot",
+    "combined DLL/WASM/actual-worker qualification",
+    "no compatible checked hybrid artifact handoff introduced"
+  ],
+  "pause_after_current_batch": true,
+  "law_checkpoint": {
+    "core": "664e7003551e52d69461bf6351b01ca5b1b2e90d",
+    "final_tip": "596e7cf40fdff97fa587345c919832e55135f7cb",
+    "parent_reported_passing_finite_checks": 1352300,
+    "worktree": "C:/Users/Oliver/Documents/poecraft2-reforge-law",
+    "integration": "integration owner combines and reconciles identities; not merged/rebased/tested by this worker"
+  }
+}

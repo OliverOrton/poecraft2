@@ -20,8 +20,8 @@ std::vector<std::uint64_t> compiled_assertion_request_identity(
         const bool request_root_upper,
         const bool request_policy_entries,
         const bool request_dependency_kernels) {
-    // Version 5 binds the expanded supplementary root controller grammar.
-    std::vector<std::uint64_t> key{5, static_cast<std::uint64_t>(mode),
+    // Version 6 binds the product native original-root continuation scope.
+    std::vector<std::uint64_t> key{6, static_cast<std::uint64_t>(mode),
         request_root_upper, request_policy_entries, request_dependency_kernels};
     const auto append_text = [&](const std::string_view value) {
         key.push_back(value.size());
@@ -54,6 +54,7 @@ std::vector<std::uint64_t> compiled_assertion_request_identity(
     key.push_back(options.goal_progress_gated_reforges);
     key.push_back(options.paid_root_foulborn_salvage);
     key.push_back(options.paid_root_foulborn_grammar_version);
+    key.push_back(options.product_original_root_continuations);
     key.push_back(options.allow_economic_restart);
     key.push_back(options.consider_imprint_programs);
     key.push_back(static_cast<std::uint64_t>(options.solve_profile));

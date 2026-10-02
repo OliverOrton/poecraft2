@@ -11,7 +11,7 @@
 namespace poecraft::solver {
 
 void SolveWork::Impl::abandon_selective_completion_service(
-        const char* status) {
+        const char* status, const bool try_next_orientation) {
     result.diagnostics.selective_completion_service_status = status;
     selective_service_validator.reset();
     selective_service_checker.reset();
@@ -22,6 +22,11 @@ void SolveWork::Impl::abandon_selective_completion_service(
     selective_service_calc.reset();
     std::string{}.swap(selective_service_graph);
     selective_service_phase = SelectiveServicePhase::Done;
+    if (try_next_orientation && options.product_original_root_continuations &&
+        product_completion_has_two_orientations(calc) && selective_service_orientation == 0) {
+        ++selective_service_orientation;
+        selective_service_phase = SelectiveServicePhase::NotStarted;
+    }
 }
 
 bool SolveWork::Impl::advance_selective_completion_service() {
@@ -66,6 +71,8 @@ bool SolveWork::Impl::advance_selective_completion_service() {
             // its debit when optional-service refusal swallowed the cap.
             selective_service_calc->set_reforge_work_budget_owner(&calc);
             check_memory();
+            selective_service_checker_charged_active = 0;
+            selective_service_checker_charged_work = 0;
             SolveOptions allowance = options;
             allowance.max_solver_owned_bytes =
                 options.max_solver_owned_bytes - live;
@@ -73,7 +80,12 @@ bool SolveWork::Impl::advance_selective_completion_service() {
                 std::make_unique<SelectiveCompletionProducer>(
                     *selective_service_calc, exact_start_item,
                     prices, allowance,
-                    SelectiveCompletionVariant::RerollVersusRepair);
+                    options.product_original_root_continuations
+                        ? product_completion_variant(*selective_service_calc)
+                        : SelectiveCompletionVariant::RerollVersusRepair, kNoId,
+                    options.product_original_root_continuations &&
+                        product_completion_has_two_orientations(*selective_service_calc)
+                        ? selective_service_orientation : kNoId);
             selective_service_phase =
                 SelectiveServicePhase::Generating;
             result.diagnostics.selective_completion_service_status =
@@ -92,7 +104,7 @@ bool SolveWork::Impl::advance_selective_completion_service() {
                 const std::string status =
                     selective_service_producer->status();
                 abandon_selective_completion_service(
-                    status.c_str());
+                    status.c_str(), true);
                 return true;
             }
             selective_service_candidate =
@@ -107,7 +119,7 @@ bool SolveWork::Impl::advance_selective_completion_service() {
                 old->compiled_artifact.strategy_json ==
                     selective_service_graph) {
                 abandon_selective_completion_service(
-                    "deduplicated_identical_checked_graph");
+                    "deduplicated_identical_checked_graph", true);
                 return true;
             }
             FinderCandidatePreparation prepared =
@@ -117,7 +129,7 @@ bool SolveWork::Impl::advance_selective_completion_service() {
                     &selective_service_candidate->control);
             if (!prepared.ready()) {
                 abandon_selective_completion_service(
-                    ("refused_binding:" + prepared.refusal).c_str());
+                    ("refused_binding:" + prepared.refusal).c_str(), true);
                 return true;
             }
             selective_service_strategy =
@@ -217,7 +229,7 @@ bool SolveWork::Impl::advance_selective_completion_service() {
                 ++result.diagnostics
                     .selective_completion_service_checks;
                 abandon_selective_completion_service(
-                    "refused_exact_graph_check");
+                    "refused_exact_graph_check", true);
                 return true;
             }
             const std::uint64_t live =
@@ -261,7 +273,7 @@ bool SolveWork::Impl::advance_selective_completion_service() {
             if (old != nullptr &&
                 !(cost < old->evaluated_policy_cost)) {
                 abandon_selective_completion_service(
-                    "checked_rejected_expensive");
+                    "checked_rejected_expensive", true);
                 return true;
             }
             refinement::CompiledPolicyAssertion assertion;
@@ -352,7 +364,7 @@ bool SolveWork::Impl::advance_selective_completion_service() {
                     "censored_or_rejected_portfolio");
                 return true;
             }
-            abandon_selective_completion_service("retained");
+            abandon_selective_completion_service("retained", true);
             return true;
         }
     } catch (const SolverResourceLimit& error) {

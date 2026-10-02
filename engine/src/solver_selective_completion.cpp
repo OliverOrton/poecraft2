@@ -20,10 +20,10 @@ SelectiveCompletionProducer::SelectiveCompletionProducer(
     CalcContext& problem, const pc_item_state& original_start,
     const std::unordered_map<std::string, double>& prices,
     const SolveOptions& limits, const SelectiveCompletionVariant variant,
-    const std::uint32_t acquisition_action)
+    const std::uint32_t acquisition_action, const std::uint32_t held_side)
     : problem_(problem), original_start_(original_start), prices_(prices),
       limits_(limits), variant_(variant),
-      requested_acquisition_(acquisition_action) {}
+      requested_acquisition_(acquisition_action), requested_held_side_(held_side) {}
 
 void SelectiveCompletionProducer::refuse(std::string reason) {
     status_ = std::move(reason);
@@ -41,6 +41,54 @@ std::uint64_t SelectiveCompletionProducer::estimated_owned_bytes() const {
             sizeof(FinderProgramBinding);
     }
     return result;
+}
+
+bool product_original_root_continuation_scope(
+        const CalcContext& calc, const pc_item_state& root, const SolveOptions& options) {
+    if (options.solve_profile != SolveProfile::CalculatorProductV1 ||
+        !options.goal_progress_gated_reforges || !options.high_impact_executable_uppers ||
+        options.max_absolute_optimality_gap > 0.0 || options.max_relative_optimality_gap > 0.0 ||
+        (options.solve_profile_override_mask & PC_SOLVE_PROFILE_OVERRIDE_GOAL_PROGRESS_GATED_REFORGES) != 0 ||
+        !calc.goal().automatic_candidates || calc.goal().rarity != PC_RARITY_RARE ||
+        calc.goal().required_satisfied_slots() != calc.goal().slots.size() ||
+        root.rarity != PC_RARITY_RARE || root.lifecycle != PC_ITEM_LIVE ||
+        root.socket_count != 0 || root.link_mask != 0 || root.memory_strands != 0 ||
+        root.enchantment_count != 0) return false;
+    std::array<unsigned,2> slots{};
+    for (const auto& goal : calc.goal().slots) {
+        const auto side = goal_slot_side(calc.session(),goal);
+        if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX) return false;
+        ++slots[side];
+    }
+    const auto held = std::max(slots[0],slots[1]);
+    const auto target = std::min(slots[0],slots[1]);
+    if (held < 2 || held > 3) return false;
+    if (target == 0) return (calc.goal().automatic_candidate_kind_mask &
+        automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod)) != 0;
+    return calc.session().eldritch_eligible && (held == 3 || target == 2) &&
+        (calc.goal().automatic_candidate_kind_mask &
+         automatic_candidate_kind_bit(AutomaticCandidateKind::EldritchSide)) != 0;
+}
+
+SelectiveCompletionVariant product_completion_variant(const CalcContext& problem) {
+    std::array<unsigned,2> slots{};
+    for (const auto& goal : problem.goal().slots) {
+        const auto side = goal_slot_side(problem.session(),goal);
+        if (side == PC_SIDE_PREFIX || side == PC_SIDE_SUFFIX) ++slots[side];
+    }
+    if (std::min(slots[0],slots[1]) == 0) return SelectiveCompletionVariant::ProtectedScour;
+    return std::max(slots[0],slots[1]) == 3
+        ? SelectiveCompletionVariant::RerollVersusRepair : SelectiveCompletionVariant::RetentionControl;
+}
+
+bool product_completion_has_two_orientations(const CalcContext& problem) {
+    std::array<unsigned,2> slots{};
+    for (const auto& goal : problem.goal().slots) {
+        const auto side = goal_slot_side(problem.session(),goal);
+        if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX) return false;
+        ++slots[side];
+    }
+    return slots[0] == 2 && slots[1] == 2;
 }
 
 void SelectiveCompletionProducer::begin() {
@@ -63,6 +111,13 @@ void SelectiveCompletionProducer::begin() {
     held_side_ = side_slots_[PC_SIDE_PREFIX].size() >=
             side_slots_[PC_SIDE_SUFFIX].size()
         ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX;
+    if (requested_held_side_ != kNoId) {
+        if (requested_held_side_ != PC_SIDE_PREFIX && requested_held_side_ != PC_SIDE_SUFFIX) {
+            refuse("invalid_requested_held_side");
+            return;
+        }
+        held_side_ = requested_held_side_;
+    }
     target_side_ = held_side_ == PC_SIDE_PREFIX
         ? PC_SIDE_SUFFIX : PC_SIDE_PREFIX;
     if (side_slots_[held_side_].size() < 2) {
@@ -85,12 +140,14 @@ void SelectiveCompletionProducer::begin() {
         held_mask_ |= 1u << slot;
 
     const std::uint32_t root = problem_.intern_item(original_start_);
+    bool selected_guarantee = false;
     for (const std::uint32_t index : problem_.candidates()) {
         if (index >= problem_.registry().actions.size()) continue;
         const ActionDescriptor& action = problem_.registry().actions[index];
         if (action.synthetic || action.uses_companion_state ||
             (requested_acquisition_ == kNoId
-                ? action.params.type != ActionType::Chaos
+                ? (action.params.type != ActionType::Chaos &&
+                   !(limits_.product_original_root_continuations && action.params.type == ActionType::Essence))
                 : index != requested_acquisition_) ||
             (action.params.type != ActionType::Chaos &&
              action.params.type != ActionType::Essence) ||
@@ -117,11 +174,19 @@ void SelectiveCompletionProducer::begin() {
                 it->second < 0.0) { complete = false; break; }
             price += it->second;
         }
+        const bool guaranteed = action.params.type == ActionType::Essence;
+        // A guarantee orders a product proposal; complete native checking
+        // compares its paid acquisition/rewrite cost with the incumbent.
+        const bool prefer_guarantee = limits_.product_original_root_continuations &&
+            requested_acquisition_ == kNoId;
         if (complete && std::isfinite(price) &&
             (acquisition_action_ == kNoId ||
-             price < acquisition_price_)) {
+             (prefer_guarantee && guaranteed && !selected_guarantee) ||
+             ((!prefer_guarantee || guaranteed == selected_guarantee) &&
+              price < acquisition_price_))) {
             acquisition_action_ = index;
             acquisition_price_ = price;
+            selected_guarantee = guaranteed;
         }
     }
     if (acquisition_action_ == kNoId) {
@@ -155,8 +220,12 @@ void SelectiveCompletionProducer::begin() {
             ? state.prefix_count : state.suffix_count;
         const std::uint32_t held_count = held_side_ == PC_SIDE_PREFIX
             ? state.prefix_count : state.suffix_count;
-        if (variant_ == SelectiveCompletionVariant::ProtectedScour &&
-            (held_count != side_slots_[held_side_].size() || count >= 3)) continue;
+        // The clean controller redraws held-side junk before any programme.
+        // Such a row cannot be its admission template, even when all held
+        // goals are present. Rewritten-side junk remains eligible.
+        if (problem_.goal().terminal.extras == ExtraExplicitPolicy::ForbidUnmatched &&
+            held_count != side_slots_[held_side_].size()) continue;
+        if (variant_ == SelectiveCompletionVariant::ProtectedScour && count >= 3) continue;
         if ((satisfied_goal_mask(state) & held_mask_) != held_mask_ ||
             count == 0 || problem_.is_goal_state(state)) continue;
         pc_item_state exact;
@@ -327,6 +396,11 @@ void SelectiveCompletionProducer::build() {
     const std::uint32_t secondary_binding = repair
         ? bind(secondary_) : kNoId;
     const std::uint32_t goal = append(FinderControlKind::TestGoal);
+    const bool clean_held = problem_.goal().terminal.extras == ExtraExplicitPolicy::ForbidUnmatched &&
+        side_slots_[held_side_].size() < 3;
+    const auto held_junk = clean_held
+        ? append(FinderControlKind::TestSideCountAtLeast,
+            (held_side_ << 8u) | (side_slots_[held_side_].size() + 1)) : kNoId;
     std::vector<std::uint32_t> held_tests;
     for (const std::uint32_t slot : side_slots_[held_side_])
         held_tests.push_back(append(FinderControlKind::TestSlot, slot));
@@ -349,7 +423,11 @@ void SelectiveCompletionProducer::build() {
         FinderControlKind::RunPrimitive, acquisition_action_);
     const std::uint32_t success = append(FinderControlKind::GoalTerminal);
     graph.nodes[goal].on_true = success;
-    graph.nodes[goal].on_false = held_tests.front();
+    graph.nodes[goal].on_false = clean_held ? held_junk : held_tests.front();
+    if (clean_held) {
+        graph.nodes[held_junk].on_true = acquire;
+        graph.nodes[held_junk].on_false = held_tests.front();
+    }
     for (std::size_t i = 0; i < held_tests.size(); ++i) {
         graph.nodes[held_tests[i]].on_true = i + 1 < held_tests.size()
             ? held_tests[i + 1] :
