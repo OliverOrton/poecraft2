@@ -153,12 +153,16 @@ keeps its original success predicate: collecting extra graph observations never
 promotes it to an all-observed-slots objective.
 
 This is a scoped application of [CLM-0005](../claims.md#clm-0005) to fixed-graph
-checking, **not a new lower or optimality issuer**. The native prototype and its
-finite differential evidence are tracked in the
-[Finder Essence record](../../active/2026-10-02-finder-essence/README.md).
+checking, **not a new lower or optimality issuer**. The native implementation,
+finite physical/compact differential evidence and N6 unchanged real-data
+fixed-graph acceptance are tracked in the
+[Finder Essence record](../../active/2026-10-02-finder-essence/README.md#n6-unchanged-graph-result-and-final-disposition).
 Admission/propagation scratch uses the existing owned-byte and round caps; failure
-of any gate retains physical evaluation. Real-data qualification and the general
-claim's native coverage remain separate obligations.
+of any gate retains physical evaluation. N6 qualifies one original-root fixed
+controller under the stated domain; full Finder search and the general claim's
+native coverage remain separate obligations. Cross-goal physical projection
+failures stay excluded by the conservative gate; a later separate repair is not
+qualified by the frozen N6 bytes.
 
 <a id="optimism"></a>
 <a id="native-reforge-group-eligibility"></a>

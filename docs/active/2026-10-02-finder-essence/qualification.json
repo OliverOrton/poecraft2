@@ -1,0 +1,381 @@
+{
+  "schema": "finder_overnight_qualification_v1",
+  "programme": "2026-10-02 isolated Finder Essence and exact unprotected renewal/removal checking",
+  "base_commit": "ebcd98cdda2c1828cd855f549831951e6ba7470a",
+  "branch": "dot/finder-20261002",
+  "native_build_source_commit": "05a8f99c6c476d4400778d819d3ce572e9b2c1c0",
+  "latest_source_checkpoint": "39414f8d4d08fe053d874d05c95c902de4c0cd41",
+  "latest_checkpoint_changes": "tests/documentation only; native benchmark and engine sources match frozen build",
+  "invocation": "N6: granted and consumed once; two serial evaluator arms in one process",
+  "fixture": "Reconstructed empty Rare Onyx Amulet ilvl86; natural T1 LightningDamagePercent5 + ChaosResist6 CLEAN suffix goal; not the exact phone run",
+  "identities": {
+    "executable": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\builds\\finder-fixed-graph.exe",
+      "sha256": "aaf73824f7e407472d37a9fa843c2b4c8b15ca2e18bd314c9251775fb244f969",
+      "size_bytes": 14575164
+    },
+    "graph": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\capture-stage-confirmation\\strategies\\finder-reconstructed-amulet-wrath-chaos-clean.candidates\\6-16532417057234384386.strategy.json",
+      "sha256": "1ef3998b6804d6245385d9b710f6d6c5c456d01f16e7bb0b2c625223beb9e9cb",
+      "size_bytes": 3390,
+      "captured_ordinal": 6,
+      "hash_fnv1a64_decimal": "16532417057234384386",
+      "altered": false,
+      "not_a_policy_seed": true
+    },
+    "runtime": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+      "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "declared_files_verified": true,
+      "files": [
+        {
+          "path": "game-data.json",
+          "size_bytes": 16914460,
+          "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+        },
+        {
+          "path": "strings.json",
+          "size_bytes": 6740473,
+          "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+        }
+      ],
+      "identity": {
+        "artifact_schema_version": 4,
+        "source_data_hash": "d511e23d1289674c4ac869d20ccd62a979af65f58d4aac83a01ac9bbb02c853e",
+        "game_data_sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+        "strings_sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+      }
+    },
+    "request": {
+      "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\docs\\active\\2026-10-02-finder-essence\\corpus\\manifest.json",
+      "manifest_sha256": "af72cc428f6d3f9a4bf6b8002ac059427ef160a07a270929f7127c21cfa45682",
+      "case_path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\docs\\active\\2026-10-02-finder-essence\\corpus\\cases\\finder-reconstructed-amulet-wrath-chaos-clean.json",
+      "case_file_sha256": "24270a8bf378dadf0287fbf4adbbc1292a241b400b012f26944367785b212920",
+      "canonical_case_sha256": "b3728677bae83f21e277b9e5ead1ff9de2866283830204438ac4e099b7bbaf7d",
+      "original_case_unchanged": true,
+      "economy_snapshot_path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\apps\\web\\public\\economy\\snapshots\\de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+      "economy_snapshot_file_sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+      "economy_declared_content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+      "original_manual_overrides": {
+        "base": 1.0
+      }
+    },
+    "command": {
+      "argv": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\builds\\finder-fixed-graph.exe",
+        "--artifact",
+        "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+        "--corpus",
+        "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\docs\\active\\2026-10-02-finder-essence\\corpus\\manifest.json",
+        "--case",
+        "finder-reconstructed-amulet-wrath-chaos-clean",
+        "--solver-mode",
+        "strategy_finder",
+        "--finder-grammar",
+        "conditional-protected-scour",
+        "--finder-attempt-limit",
+        "8",
+        "--fixed-graph-check-pair",
+        "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\capture-stage-confirmation\\strategies\\finder-reconstructed-amulet-wrath-chaos-clean.candidates\\6-16532417057234384386.strategy.json",
+        "--fixed-graph-hash",
+        "16532417057234384386",
+        "--output",
+        "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\N6-identical-graph\\report.json"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight",
+      "host_watchdog_seconds": 165.0,
+      "host_reservation": {
+        "reserved_memory_bytes": 1073741824,
+        "solver_owned_cap_bytes": 1073741824,
+        "worker_headroom_bytes": 0,
+        "reservation_policy_version": "solver_lab_host_reservation_v2",
+        "reservation_source": "solver_cap_plus_explicit_worker_headroom",
+        "authority": "host_scheduler_only"
+      },
+      "identity_sha256": "86e48f797409e831e3856e92fcf90d0dad5e35289a197790fe35103799ebd330"
+    },
+    "checker_limits": {
+      "max_states": 200000,
+      "max_pairs": 1215000,
+      "max_transitions": 10000000,
+      "max_sweeps": 100000,
+      "max_reforge_work": 50000000,
+      "total_owned_cap": 1073741824,
+      "outer_owned_bytes": 6873444,
+      "checker_owned_cap": 1066868380,
+      "max_output_json_bytes": 67108864,
+      "per_arm_seconds": 90,
+      "case_watchdog_seconds": 150
+    }
+  },
+  "frozen_pregrant_receipt": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\frozen-N6-identical-graph-command.json",
+    "sha256": "f41d46f87d634a0632536df1de23ff404637588ef837f87f687fc1d22c70191c",
+    "size_bytes": 6684
+  },
+  "launch_authority": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\N6-launch-authority.json",
+    "sha256": "70624a883f82ff0f229f893022ed0d0e44c89bba372a4125a88aaf93136acd3a",
+    "size_bytes": 580
+  },
+  "process_start": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\N6-process-start.json",
+    "sha256": "aada13d06cd23da860374942a944609fcd4784ce30339b9f99eaa640e0f94bbc",
+    "size_bytes": 1832
+  },
+  "worker_receipt": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\N6-worker-receipt.json",
+    "sha256": "c0d0e26a1a413b2e030dedc3851596daca411340da152f560b2efcbd7bfcb252",
+    "size_bytes": 2869
+  },
+  "report_file": {
+    "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\N6-identical-graph\\report.json",
+    "sha256": "4f437e6496e97f45faa9fe315d004825521f4dcdb5169ee153e97d2746080844",
+    "size_bytes": 5372
+  },
+  "completion": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "process_id": 24288,
+    "process_identity_token": "24288:134354087554725775",
+    "survivor": false,
+    "wall_ms": 1867.775599937886,
+    "completed_at_utc": "2026-10-02T09:59:17.097935+00:00"
+  },
+  "original_root_scope_goal_bound": true,
+  "solver_search_executed": false,
+  "arms": {
+    "physical": {
+      "status": "censored_capacity",
+      "refusal": "solver exceeded max_discovered_states (200000)",
+      "uniform_removal_carrier": false,
+      "accepted": false,
+      "done": false,
+      "subphase": "pair_discovery",
+      "exact_states": 200000,
+      "discovered_pairs": 12842,
+      "pending_pairs": 187159,
+      "stored_transitions": 243016,
+      "wall_ms": 1286.3486,
+      "details_path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\N6-identical-graph\\report.json.physical.eval.json",
+      "details_file": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\N6-identical-graph\\report.json.physical.eval.json",
+        "sha256": "1ae976179d5d8a9eb43ce94476da961c64bb33e80577f079028192659ab484f4",
+        "size_bytes": 5532
+      },
+      "memory": {
+        "owned_bytes_estimate": 78870934,
+        "peak_owned_bytes_estimate": 78870934,
+        "retained_output_owned_bytes_estimate": 3544,
+        "max_owned_bytes": 1066868380,
+        "max_output_json_bytes": 67108864
+      },
+      "reforge_work": {
+        "logical_work_v1": 7675200,
+        "legacy_active_work": 1113953,
+        "evaluator_work": {
+          "v1": 7675200,
+          "v2": 1113953,
+          "v3": 1113953
+        }
+      },
+      "converged": false,
+      "residual_mass": 0,
+      "terminals": {
+        "success": 0,
+        "failure": 0,
+        "stop": 0,
+        "action_not_applied": 0,
+        "no_matching_edge": 0,
+        "unresolved": 0
+      },
+      "accounting": {
+        "pricing": {
+          "status": "disabled",
+          "economy_id": null,
+          "missing_price_keys": []
+        },
+        "totals": {
+          "per_invocation": {
+            "expected_actions": 0,
+            "known_expected_cost": 0,
+            "total_expected_cost": null,
+            "cost_complete": false
+          },
+          "success_normalized": null
+        },
+        "materials": {
+          "per_invocation": [],
+          "success_normalized": null
+        },
+        "reconciliation": {
+          "action_descriptor_visits_difference": 0,
+          "action_descriptor_applied_difference": 0,
+          "node_operation_visits_difference": 0,
+          "material_quantity_differences": {},
+          "cost_dot_product_difference": 0,
+          "section_actions_difference": 0,
+          "section_material_differences": {}
+        }
+      },
+      "expected_actions": 0,
+      "expected_consumption": [],
+      "local_gated_route_rows": 0,
+      "interpretation": "Capacity-censored partial placeholders are not cost, terminal mass, properness or economic bounds."
+    },
+    "compact": {
+      "status": "checked",
+      "refusal": "",
+      "uniform_removal_carrier": true,
+      "accepted": true,
+      "done": true,
+      "subphase": "done",
+      "exact_states": 51,
+      "discovered_pairs": 34,
+      "pending_pairs": 0,
+      "stored_transitions": 233,
+      "wall_ms": 17.567,
+      "details_path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\N6-identical-graph\\report.json.compact.eval.json",
+      "details_file": {
+        "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\N6-identical-graph\\report.json.compact.eval.json",
+        "sha256": "862ea384c434a9f35f148af664ad09f0825cab865fb5bf361cc0b98f48337310",
+        "size_bytes": 48225
+      },
+      "memory": {
+        "owned_bytes_estimate": 1084162,
+        "peak_owned_bytes_estimate": 1907109,
+        "retained_output_owned_bytes_estimate": 3216,
+        "max_owned_bytes": 1066868380,
+        "max_output_json_bytes": 67108864
+      },
+      "reforge_work": {
+        "logical_work_v1": 484224,
+        "legacy_active_work": 114312,
+        "evaluator_work": {
+          "v1": 484224,
+          "v2": 114312,
+          "v3": 114312
+        }
+      },
+      "converged": true,
+      "residual_mass": 0,
+      "terminals": {
+        "success": 1,
+        "failure": 0,
+        "stop": 0,
+        "action_not_applied": 0,
+        "no_matching_edge": 0,
+        "unresolved": 0
+      },
+      "accounting": {
+        "pricing": {
+          "status": "complete",
+          "economy_id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+          "missing_price_keys": []
+        },
+        "totals": {
+          "per_invocation": {
+            "expected_actions": 8531.324557576028,
+            "known_expected_cost": 59229.75038359062,
+            "total_expected_cost": 59229.75038359062,
+            "cost_complete": true
+          },
+          "success_normalized": null
+        },
+        "materials": {
+          "per_invocation": [
+            {
+              "price_key": "annul",
+              "expected_quantity": 6009.750796716121,
+              "price_status": "priced",
+              "unit_price": 9.69,
+              "cost_contribution": 58234.48522017921,
+              "cost_share_percent": 98.31965328746828
+            },
+            {
+              "price_key": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+              "expected_quantity": 2521.57376085991,
+              "price_status": "priced",
+              "unit_price": 0.3947,
+              "cost_contribution": 995.2651634114065,
+              "cost_share_percent": 1.6803467125317162
+            }
+          ],
+          "success_normalized": null
+        },
+        "reconciliation": {
+          "action_descriptor_visits_difference": 1.8189894035458565e-12,
+          "action_descriptor_applied_difference": 0,
+          "node_operation_visits_difference": 1.8189894035458565e-12,
+          "material_quantity_differences": {
+            "annul": 0,
+            "essence:Metadata/Items/Currency/CurrencyEssenceWrath3": 0
+          },
+          "cost_dot_product_difference": 0,
+          "section_actions_difference": 0,
+          "section_material_differences": {}
+        }
+      },
+      "expected_actions": 8531.324557576028,
+      "expected_consumption": [
+        {
+          "key": "annul",
+          "quantity": 6009.750796716121
+        },
+        {
+          "key": "essence:Metadata/Items/Currency/CurrencyEssenceWrath3",
+          "quantity": 2521.57376085991
+        }
+      ],
+      "local_gated_route_rows": 0,
+      "interpretation": "Original-root native fixed-graph acceptance; absorption success 1 and finite expected actions/cost support properness. No explicit properness boolean is reported."
+    }
+  },
+  "causal_disposition": [
+    "N1 generated and served the Essence/Annul candidate: tier identity and legality were admitted; no unserved candidate displacement explains its censor.",
+    "Same unchanged graph and original ceilings: physical path censored at 200000 states, compact path accepted at 51; this demonstrates the checker expansion bottleneck for this graph.",
+    "Cheap Wrath3 acquisition is not cheap total crafting: Annul retry costs contribute 98.31965328746828 percent of C59229.75038359062.",
+    "Physical evaluation did not complete, so no completed real-data cost equality comparison is claimed. Finite physical/compact distributions and controller accounting match in the focused evidence.",
+    "N6 cold arms have fresh work allowances. N1 used cumulative prior candidate debits; their portfolio timings are not matched-arm measurements."
+  ],
+  "unqualified": [
+    "Full real-data Finder search after quotient; remaining candidates, ordering, incumbent competition, finish completion and global optimality.",
+    "Private protected programme setup rejection remains separate.",
+    "Fifteen cross-goal physical projection failures remain outside the conservative quotient gate; Current owns a separate integration-branch repair on later bytes.",
+    "General CLM-0005 native coverage and all lower/optimality authority.",
+    "WASM/browser publication, Simulator/Monte Carlo, worker strategy qualification and full acceptance."
+  ],
+  "focused_evidence": {
+    "finite_uniform_removal_native_checks": 21673,
+    "existing_focused_native_checks": 1840,
+    "total_passing_native_checks": 23513,
+    "capture_python_checks": 4,
+    "finite_log": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\uniform-removal-multiplicity-final.log",
+      "sha256": "b78547a33c9be3747aff76d29a93cf3621ad0b9088d6524efd5ec4e29e5f9927",
+      "size_bytes": 211
+    },
+    "two_goals_two_junk_after_two_annuls": "1/6 on both complete independently enumerated physical and compact laws",
+    "finite_controller_cost_both_paths": 3.56715328467,
+    "baseline_failure_comparison": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\actual-main-failure-comparison.json",
+      "sha256": "7c74037b59fe8550f5163dd8c102e71576d3457d178570e2e8cb71c19b20975d",
+      "size_bytes": 3648
+    },
+    "excluded_physical_cross_goal_failures": {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-finder-overnight\\out\\finder-overnight\\uniform-removal-boundaries.log",
+      "sha256": "a427364546e6ac7e93fe44dfa16c8ca990b96498446e39b8e7406bd9b5a0a5ae",
+      "size_bytes": 2161
+    }
+  },
+  "budget": {
+    "this_session_native_spent": 2,
+    "global_native_spent": 6,
+    "further_native_authorized": false,
+    "workers_spent_this_session": 0,
+    "active_processes": 0
+  },
+  "preservation": "No main edit, canonical/compiled data write, price refresh, push, deployment, child agents or protected root-file access."
+}

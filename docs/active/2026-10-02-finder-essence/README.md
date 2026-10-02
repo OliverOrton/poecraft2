@@ -4,10 +4,13 @@ Oliver selected this isolated overnight Finder scope through the parent session.
 Base: `ebcd98cdda2c1828cd855f549831951e6ba7470a`; branch
 `dot/finder-20261002`, sibling worktree `poecraft2-finder-overnight`.
 No main-checkout changes, pushes, deployment, data/price refresh or child agents.
-Two native timed invocations are reserved; **zero launched** pending the parent
-serial slot. Old MM/P/IC budgets remain spent. The parent subsequently selected
-investigation of the exact renewal/removal checker domain; that dependent change
-is not implemented at this checkpoint.
+Both reserved native invocations were granted and consumed once (N1 and N6).
+All six global native slots are now spent; no further native invocation is
+authorized tonight. No process or survivor remains. The parent approved the
+scoped exact renewal/removal checker after the N1 causal witness; N6 accepts the
+unchanged graph, with expensive paid retries. [Final receipt](qualification.json)
+owns source/build/data/graph identities, outcomes and exclusions. Old MM/P/IC
+budgets remain spent.
 
 ## Causal witnesses and retained change
 
@@ -54,7 +57,8 @@ Eight attempts, one checker, original-root binding, full probability/cost/mass,
 properness and positive reached-programme admission remain. Unserved proposals
 are separately labelled on Finish/cap/attempt exhaustion. Candidate receipts
 retain checker subphase, exact states, processed/pending pairs and transitions.
-No checker law, representation, cap or lower authority changes here.
+This acquisition/capture stage changes no checker law, representation, cap or
+lower authority. The later parent-approved quotient is described below.
 
 ## Focused qualification
 
@@ -138,7 +142,7 @@ bytes. Thus `required_satisfied_slots() < slots.size()` does not erase an alread
 successful selected affix: the original success predicate is tested first. No
 claim that failed-entry cleanup cannot remove a goal is made.
 
-## Next parent-controlled qualification
+## N1 parent-controlled qualification
 
 [Reconstructed corpus](corpus/manifest.json): empty Rare Onyx Amulet, ordinary
 T1 Lightning Damage and Chaos Resistance, clean two-suffix goal. Wrath3 is an
@@ -157,8 +161,8 @@ completed after 13.751 seconds, exit 2, with no timeout or surviving process.
 The original 200,000-state cap censored all three cleanup graphs during pair
 discovery; four pure loops were checked and refused. All seven complete
 generated graphs were served and captured. Eight attempts remain configured;
-the finite grammar exhausted after seven candidates. No real-data policy,
-expected acquisition/cleanup cost, lower bound or optimality claim is available.
+the finite grammar exhausted after seven candidates. At N1, no real-data
+checked policy or expected acquisition/cleanup cost was available. Lower and optimality claims remain unavailable after N6.
 
 Checking consumed 13.101 seconds, 99.34% of search + compile + check time.
 The unprotected Essence/Annul graph reached 200,000 discovered states,
@@ -174,19 +178,18 @@ Frozen executable SHA256:
 The exact unprotected graph is captured as
 `6-16532417057234384386.strategy.json`, SHA256
 `1ef3998b6804d6245385d9b710f6d6c5c456d01f16e7bb0b2c625223beb9e9cb`.
-The graph is an unaccepted diagnostic artifact, not a policy seed. Evidence:
+The graph was unaccepted at N1 and remains a diagnostic artifact, not a policy
+seed. N6 later checks these unchanged bytes from the original root. Evidence:
 `out/finder-overnight/N1-summary.json`, `N1-worker-receipt.json`,
 `N1-process-start.json`, and `capture-stage-confirmation/`.
 The approved argv, cwd and watchdog match the supervised invocation exactly;
 the supervisor normalizes reservation metadata and therefore produces a distinct
 command-object digest. Both command objects are preserved in the receipts.
 
-One of the two reserved native invocations is spent. The remaining global N6
-slot remains ungranted.
-The next approved investigation is the narrow native capability proof and finite
-differential tests for full renewals plus unprotected uniform removal. A later
-full-versus-compact comparison must bind the same captured graph bytes and use
-a new parent serial slot; no new native invocation is authorized by this record.
+After N1, one reserved invocation remained. The parent subsequently approved
+the narrow native capability proof and finite differential tests for full
+renewals plus unprotected uniform removal, then granted N6 on the same graph
+bytes. The final N6 result below supersedes that earlier pending qualification.
 
 ## Broad-suite failure disposition
 
@@ -243,8 +246,9 @@ Existing focused checks pass: Essence/capture 293, bindings 129, protected route
 63, attribution 516, and the shared observation layout 839. The latter exercises
 continuation certificates, selected policy kernels, offers and downstream delayed
 splits without Simulator or Monte Carlo stages. Total passing focused checks:
-23,513. No additional timed native invocation has started. N6 requires parent
-review of this domain/evidence and a frozen identical-graph command.
+23,513. Parent review of this domain/evidence and frozen identical-graph command
+preceded the N6 grant. These finite checks do not constitute an expensive
+real-data benchmark or full acceptance.
 
 The earlier expanded suite exposed 15 physical-reference materialization failures
 on a new synthetic cross-goal blocker case: occupied goal-member identity implies
@@ -319,9 +323,10 @@ new promise that arbitrary physical full-roll projections are supported; the
 cross-goal defect above remains outside the proved domain. No mass dropping,
 renormalization or virtual retry basin is introduced here.
 
-N6 remains ungranted. The command/provenance is frozen under
-`out/finder-overnight/frozen-N6-identical-graph-command.json`; only the parent may
-release that one remaining native slot. The benchmark helper's initial build
+Before the parent grant, command/provenance was frozen under
+`out/finder-overnight/frozen-N6-identical-graph-command.json`. Its pregrant status
+is historical; launch authority and the completion receipt record the later
+explicit grant and one execution. The benchmark helper's initial build
 failure was corrected with the existing nonnegative numeric parser; the final
 local Tests and Benchmark builds pass. No WASM, Simulator, push or main edit.
 
@@ -334,5 +339,81 @@ Validation-only used the same binary bytes; final frozen command omits only
 validation mode and selects a new immutable output. Parent review excerpts:
 `out/finder-overnight/parent-review-implementation.md` (8,220 characters) and
 `parent-review-finite-checks.md` (5,791 characters). These are source projections,
-not a second mathematical argument or qualification authority. No timed native
-process is running and N6 remains ungranted.
+not a second mathematical argument or qualification authority. N6 completion
+is recorded below; no timed native process is running.
+
+## N6 unchanged-graph result and final disposition
+
+The parent granted global native slot N6 after serial-slot clearance. Exactly one
+process ran the frozen command at 2026-10-02 09:59:15.484828 UTC: PID 24288,
+identity `24288:134354087554725775`. It completed at 09:59:17.097935 UTC,
+exit 0, supervisor wall 1,867.776 ms, with no timeout, cancellation or survivor.
+Exit 0 means both diagnostic arms were reported; acceptance is arm-specific.
+No retry or other timed native invocation is authorized. Both this session's
+slots and all six global native slots are spent.
+
+| Unchanged graph6, original ceilings | Physical | Compact |
+|---|---:|---:|
+| Outcome | Capacity censored | Native checked and accepted |
+| States | 200,000 | 51 |
+| Processed/discovered pairs | 12,842 | 34 |
+| Pending pairs | 187,159 | 0 |
+| Stored transitions | 243,016 | 233 |
+| Logical reforge work | 7,675,200 | 484,224 |
+| Active evaluator work v2/v3 | 1,113,953 | 114,312 |
+| Arm wall including diagnostics | 1,286.349 ms | 17.567 ms |
+| Peak owned bytes | 78,870,934 | 1,907,109 |
+
+The physical arm stops during pair discovery at the same state cap and same
+pair/transition counts as N1 graph6. Its partial cost and terminal placeholders
+are not economic bounds or properness results. The compact arm converges with
+residual mass zero and original-goal success mass one; all failure, stop,
+action-not-applied, no-matching-edge and unresolved masses are zero. The existing
+native Finder acceptance owner checks the immutable compiled graph from the
+original request root, action scope and exact CLEAN predicate. Complete absorption
+and finite expected actions/cost establish a proper checked controller within
+this admitted domain; no separate properness boolean is present in the report.
+
+The checked expected total is **C59,229.75038359062**, with complete frozen prices
+and no missing keys, over 8,531.324557576028 expected actions. Its actual paid
+consumption is:
+
+| Material | Expected quantity | Unit price | Cost contribution |
+|---|---:|---:|---:|
+| Annul | 6,009.750796716121 | C9.69 | C58,234.48522017921 (98.3197%) |
+| Wrath3 Essence | 2,521.57376085991 | C0.3947 | C995.2651634114065 (1.6803%) |
+
+Material quantity differences and the cost dot-product difference are zero;
+action/node visit reconciliation differs only by 1.82e-12. Wrath3 is an affordable
+native guarantee, but this reconstructed two-goal CLEAN controller is expensive
+because Annul often destroys a goal and pays reacquisition. No claim of an
+affordable total strategy or advantage over a competing checked policy is made.
+
+The same graph was generated and served at N1, so its missed acceptance was
+checker censoring, not an unserved proposal or a satisfying-tier mismatch.
+The quotient demonstrates native checking of that previously censored graph
+under unchanged ceilings. A completed real-data physical cost equality is not
+available because that arm remains censored; finite complete projected laws and
+controller accounting supply the independent physical/compact comparisons.
+No local gated row or terminal-depth factor activates here; all native full-roll
+mass and within-roll exclusions are retained.
+
+This is **fixed-graph qualification**, not a full real-data Finder rerun. The
+remaining candidates, their order and incumbent competition, Finish completion,
+global cheapest strategy and lower/optimality authority remain unqualified.
+Eight attempts and original-root checking remain in source and focused fixtures.
+No WASM, browser deployment, Simulator/Monte Carlo, worker strategy qualification
+or full acceptance is claimed. The private protected setup rejection remains
+separate. The seventeen baseline-reproduced defects remain unfixed.
+
+The fifteen cross-goal physical projection failures remain excluded from this
+quotient, whose conservative gate is unchanged. Parent assigned a separate
+terminal-projection repair to Current on the integration branch; these N6
+results are bound to frozen pre-repair bytes and claim no qualification of that
+later repair. Finder did not edit the shared repair region.
+
+[Final receipt](qualification.json) records the complete source/build/runtime,
+request/economy and graph identities plus SHA-bound reports. Raw outputs stay
+under `out/finder-overnight/N6-identical-graph/`; launch and completion receipts
+are `N6-launch-authority.json`, `N6-process-start.json` and
+`N6-worker-receipt.json`. The frozen command identity is unchanged.
