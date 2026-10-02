@@ -1165,6 +1165,60 @@ void run_direct_certification_contract_tests() {
             PC_CHECK(work.output_incumbent->independently_evaluated);
             work.incremental_upper_policy_pass=true;
             PC_CHECK(!work.begin_focused_upper_solve());
+            // Snapshots captured before reconciliation must be refused after
+            // rejection, including a completed snapshot awaiting handoff.
+            work.options.carrier_ladder_exact_boundary_mode =
+                CarrierLadderExactBoundaryMode::ResumableContinuation;
+            using Lifecycle = solve_detail::JointPolicyContinuationLifecycle;
+            for (const auto lifecycle : {Lifecycle::WaitingForExactContinuation,
+                                         Lifecycle::CompleteCandidate}) {
+                work.resumable_joint_policy_candidate.emplace();
+                auto& retained = *work.resumable_joint_policy_candidate;
+                retained.continuation.lifecycle = lifecycle;
+                retained.continuation.certified_boundary_values = incumbent.values;
+                PC_CHECK(work.resume_joint_policy_candidate_if_ready() ==
+                    Impl::ResumableJointPolicyAdvance::Released);
+                PC_CHECK(retained.continuation.lifecycle == Lifecycle::Refused);
+                PC_CHECK(retained.continuation.refusal ==
+                    solve_detail::JointPolicyContinuationRefusal::BoundarySnapshotIncompatible);
+                PC_CHECK(retained.continuation.certified_boundary_values.empty());
+            }
+            // Replacing graph metadata cannot reauthorize an old captured
+            // boundary under a different incumbent identity.
+            work.output_incumbent->statewise_values_rejected = false;
+            work.output_incumbent->portfolio_identity = 9;
+            work.resumable_joint_policy_candidate.emplace();
+            auto& stale = *work.resumable_joint_policy_candidate;
+            stale.continuation.lifecycle = Lifecycle::CompleteCandidate;
+            stale.continuation.context.incumbent_identity = 8;
+            stale.continuation.certified_boundary_values = incumbent.values;
+            PC_CHECK(work.resume_joint_policy_candidate_if_ready() ==
+                Impl::ResumableJointPolicyAdvance::Released);
+            PC_CHECK(stale.continuation.refusal ==
+                solve_detail::JointPolicyContinuationRefusal::BoundarySnapshotIncompatible);
+            work.output_incumbent = incumbent;
+            work.resumable_joint_policy_candidate.reset();
+            work.result.values = incumbent.values;
+            work.result_statewise_values_rejected = true;
+            work.incremental_envelope_closed = true;
+            work.focused_lower_completion_proof_values.assign(calc.state_count(), 2.0);
+            work.focused_lower_completion_proof_values[success] = 0.0;
+            const auto lower = work.certified_incremental_lower_values();
+            PC_CHECK(lower[work.result.start_state] == 2.0);
+            work.result.diagnostics.focused_lower_bound = 5.0;
+            work.result.diagnostics.independent_goal_cover_lower_bound = 2.0;
+            PC_CHECK(work.certified_global_lower_bound() == 2.0);
+            PC_CHECK(work.proof_capabilities().positive_global_lower);
+            PC_CHECK(!work.proof_capabilities().global_exact_closure);
+            auto recaptured = incumbent;
+            recaptured.statewise_values_rejected = false;
+            recaptured.policy_reachable.assign(calc.state_count(), 0);
+            recaptured.policy_reachable[work.result.start_state] = 1;
+            recaptured.policy_rows.assign(calc.state_count(),
+                std::numeric_limits<std::uint64_t>::max());
+            recaptured.policy_rows[work.result.start_state] = row_id;
+            work.capture_incumbent_policy(recaptured);
+            PC_CHECK(!recaptured.has_statewise_upper_values());
         }
         Impl::IncrementalAlternativeRow alternative;
         alternative.state=work.result.start_state; alternative.operator_index=exalt;
@@ -1179,6 +1233,21 @@ void run_direct_certification_contract_tests() {
             (reconcile ? Impl::IncrementalAlternativeRow::Status::NonImproving
                        : Impl::IncrementalAlternativeRow::Status::Admitted));
         PC_CHECK(work.output_incumbent->evaluated_policy_cost==10);
+        if (!reconcile) {
+            work.incremental_alternative_rows={alternative};
+            work.incremental_classification_cursor=0;
+            work.incremental_classification_upper=Impl::IncrementalClassificationUpper::ResultValues;
+            PC_CHECK(!work.advance_incremental_classification());
+            PC_CHECK(work.incremental_alternative_rows.front().status==
+                Impl::IncrementalAlternativeRow::Status::Admitted);
+            // A complete prefix without scalar boundaries has no dependency
+            // on a rejected incumbent's copied value table.
+            work.resumable_joint_policy_candidate.emplace();
+            work.resumable_joint_policy_candidate->continuation.lifecycle =
+                solve_detail::JointPolicyContinuationLifecycle::CompleteCandidate;
+            PC_CHECK(work.resume_joint_policy_candidate_if_ready()==
+                Impl::ResumableJointPolicyAdvance::Complete);
+        }
     }
 
     const refinement::CompiledPolicyAssertion off_policy =

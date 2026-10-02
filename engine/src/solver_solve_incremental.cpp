@@ -1205,7 +1205,8 @@ SolveWork::Impl::certified_incremental_lower_values() {
          * heuristic (or its universal zero fallback) until the envelope is
          * complete.
          */
-        if (full_action_envelope && state < result.values.size() &&
+        if (!result_statewise_values_rejected &&
+            full_action_envelope && state < result.values.size() &&
             std::isfinite(result.values[state]) &&
             result.values[state] >= 0.0 &&
             result.values[state] < kValueCeiling) {
@@ -2098,12 +2099,12 @@ void SolveWork::Impl::begin_incremental_classification() {
             break;
         }
     }
-    const bool exact_restricted_values =
-        (incremental_classification_restricted_graph_closed &&
-         incremental_restricted_values_ready &&
-         optimization_converged()) ||
-        (optimization_converged() &&
-         (focused_bound_proved || !focused_mode));
+    const bool exact_restricted_values = !result_statewise_values_rejected &&
+        ((incremental_classification_restricted_graph_closed &&
+          incremental_restricted_values_ready &&
+          optimization_converged()) ||
+         (optimization_converged() &&
+          (focused_bound_proved || !focused_mode)));
     if (exact_restricted_values) {
         incremental_classification_upper =
             IncrementalClassificationUpper::ResultValues;
@@ -2153,7 +2154,8 @@ bool SolveWork::Impl::advance_incremental_classification() {
     if (!incremental_classification_active) return true;
     const std::vector<double>* upper_values = nullptr;
     if (incremental_classification_upper ==
-        IncrementalClassificationUpper::ResultValues) {
+        IncrementalClassificationUpper::ResultValues &&
+        !result_statewise_values_rejected) {
         upper_values = &result.values;
     } else if (incremental_classification_upper ==
                    IncrementalClassificationUpper::OutputIncumbent &&

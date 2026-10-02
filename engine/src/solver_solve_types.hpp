@@ -770,10 +770,15 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     pc_item_state exact_start_item{};
     SolveOptions options;
     GoalProofCapabilities proof_capabilities() const {
-        return goal_proof_capabilities(options.goal_proof_profile);
+        auto capabilities = goal_proof_capabilities(options.goal_proof_profile);
+        // Reconciliation rejection follows copied working values. Independent
+        // lower producers retain their own authority and remain enabled.
+        if (result_statewise_values_rejected) capabilities.global_exact_closure = false;
+        return capabilities;
     }
     std::unordered_map<std::string, double> prices;
     SolveResult result;
+    bool result_statewise_values_rejected = false;
     enum class SetupStage { NotStarted, Preparing, Committed, Refused, Disabled };
     SetupStage goal_cover_stage = SetupStage::NotStarted;
     bool goal_cover_requested = false;

@@ -935,6 +935,7 @@ void SolveWork::Impl::capture_incumbent_state(
 
 void SolveWork::Impl::capture_incumbent_policy(
         BoundedPolicyIncumbent& candidate) {
+        candidate.statewise_values_rejected |= result_statewise_values_rejected;
         const std::uint64_t no_row =
             std::numeric_limits<std::uint64_t>::max();
         const std::size_t state_count = candidate.values.size();
@@ -4615,6 +4616,17 @@ SolveWork::Impl::resume_joint_policy_candidate_if_ready() {
     }
     ResumableJointPolicyCandidateState& retained =
         *resumable_joint_policy_candidate;
+    // A retained boundary snapshot cannot outlive rejection of its source
+    // values. Check even completed candidates before their scalar handoff.
+    if (!retained.continuation.certified_boundary_values.empty() &&
+        (!output_incumbent.has_value() ||
+         !output_incumbent->has_statewise_upper_values() ||
+         output_incumbent->portfolio_identity !=
+             retained.continuation.context.incumbent_identity)) {
+        retained.continuation.release(Refusal::BoundarySnapshotIncompatible);
+        retained.release_owned_payload();
+        return ResumableJointPolicyAdvance::Released;
+    }
     if (retained.continuation.lifecycle == Lifecycle::CompleteCandidate) {
         return ResumableJointPolicyAdvance::Complete;
     }
@@ -5165,6 +5177,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                                         ->independently_evaluated &&
                                     output_incumbent->proper &&
                                     output_incumbent->executable &&
+                                    output_incumbent->has_statewise_upper_values() &&
                                     stop.operator_index != kNoId &&
                                     stop.operator_index <
                                         calc.operators().size() &&
@@ -5195,6 +5208,7 @@ bool SolveWork::Impl::try_install_reachable_incumbent(
                             output_incumbent->independently_evaluated &&
                             output_incumbent->proper &&
                             output_incumbent->executable &&
+                            output_incumbent->has_statewise_upper_values() &&
                             frontier != kNoId &&
                             frontier < calc.operators().size() &&
                             service_state <
@@ -6592,7 +6606,8 @@ solve_detail::classify_public_lower_bound_authority(
 double SolveWork::Impl::certified_global_lower_bound() const {
         if (!proof_capabilities().positive_global_lower) return 0.0;
         return globally_certified_action_envelope_lower_bound(
-            result.diagnostics.focused_lower_bound,
+            result_statewise_values_rejected
+                ? 0.0 : result.diagnostics.focused_lower_bound,
             incremental_action_generation,
             incremental_envelope_closed,
             result.diagnostics.independent_goal_cover_lower_bound);

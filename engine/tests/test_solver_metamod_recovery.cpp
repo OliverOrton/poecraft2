@@ -416,16 +416,34 @@ void run_solver_metamod_recovery_tests(const char* artifact_dir) {
             PC_CHECK(row_parent.materialize(broad_root,representative));
             const auto& representative_pool=get_weighted_pool(context,&representative,request);
             double representative_hit=0;
+            std::map<std::vector<std::uint64_t>,double> representative_law;
+            std::map<std::uint32_t,std::int64_t> group_weight_delta;
+            for (const auto& entry : pool.entries)
+                group_weight_delta[entry.primary_group]-=entry.final_weight;
             for (const auto& entry : representative_pool.entries) {
+                group_weight_delta[entry.primary_group]+=entry.final_weight;
                 auto next=representative;
                 PC_CHECK(pc_item_add_mod(&next,entry.gen_type,entry.session_mod_id,
                     static_cast<std::uint16_t>(entry.primary_group),0,nullptr)==PC_RESULT_OK);
-                if (satisfied_goal_mask(project_item(*bow,row_parent.layout(),next))==15)
-                    representative_hit+=double(entry.final_weight)/double(representative_pool.total_weight);
+                const auto projected=project_item(*bow,row_parent.layout(),next);
+                const double probability=double(entry.final_weight)/double(representative_pool.total_weight);
+                representative_law[exact_abstract_state_key(projected,0)]+=probability;
+                if (satisfied_goal_mask(projected)==15) representative_hit+=probability;
             }
             std::printf("Bow broad representative execution pool total_weight=%llu hit=%.17g suffixes=",static_cast<unsigned long long>(representative_pool.total_weight),representative_hit);
             for (unsigned i=0;i<representative.suffix_count;++i)
                 std::printf("%s%s",i ? "," : "",data->string_at(data->mod_key_sid.at(bow->global_index.at(representative.suffixes[i].mod_id))).c_str());
+            std::printf("\n");
+
+            PC_CHECK(representative_law.size()==broad_law.size());
+            for (const auto& [key,mass] : broad_law)
+                PC_CHECK(std::abs(mass-representative_law[key])<1e-12);
+            PC_CHECK(std::abs(representative_hit-broad_hit)<1e-12);
+            std::printf("Bow representative minus original pool group-weight deltas:");
+            for (const auto& [group,delta] : group_weight_delta)
+                if (delta) std::printf(" %s(%u):%lld",
+                    data->string_at(data->group_key_sids.at(group)).c_str(),
+                    group,static_cast<long long>(delta));
             std::printf("\n");
 
             double l1=0;

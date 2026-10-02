@@ -750,6 +750,7 @@ SolveWork::Impl::run_publication_pipeline() {
                     snapshot.certified_upper_bound =
                         selected.selected_estimate;
                     snapshot.evaluated_policy_cost = kInfinity;
+                    snapshot.statewise_values_rejected |= result_statewise_values_rejected;
                     snapshot.values = result.values;
                     snapshot.policy_rows = policy_rows;
                     snapshot.policy_rows.resize(
@@ -908,6 +909,8 @@ SolveWork::Impl::run_publication_pipeline() {
                 incumbent.policy,
                 result.diagnostics.upper_policy_action_states);
             populate_incumbent_policy(incumbent);
+            result_statewise_values_rejected |= incumbent.statewise_values_rejected;
+            if (result_statewise_values_rejected) incremental_certified_upper_values.clear();
             result.values = std::move(incumbent.values);
             result.policy = std::move(incumbent.policy);
             result.unveil_preferences =
@@ -2597,6 +2600,8 @@ SolveWork::Impl::run_publication_pipeline() {
                     telemetry.fallback_portfolio_owned_bytes = 0;
                 }
                 populate_incumbent_policy(fallback);
+                result_statewise_values_rejected |= fallback.statewise_values_rejected;
+                if (result_statewise_values_rejected) incremental_certified_upper_values.clear();
                 result.values = std::move(fallback.values);
                 result.policy = std::move(fallback.policy);
                 result.unveil_preferences =
@@ -4046,6 +4051,7 @@ SolveWork::Impl::run_publication_pipeline() {
                 BoundedPolicyIncumbent candidate;
                 candidate.certified_upper_bound = assertion.exact_cost;
                 candidate.evaluated_policy_cost = assertion.exact_cost;
+                candidate.statewise_values_rejected |= result_statewise_values_rejected;
                 candidate.values = result.values;
                 if (result.start_state < candidate.values.size()) {
                     candidate.values[result.start_state] =
