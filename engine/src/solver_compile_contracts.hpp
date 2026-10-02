@@ -34,6 +34,15 @@ bool compiled_success_ingress_matches_request(
     const CalcContext& calc, const std::string& strategy_json,
     std::string* refusal = nullptr);
 
+/* Parsed operations must be caller primitives or individual dependency steps
+ * bound by an existing trusted native programme owner. Registry membership or
+ * graph-authored metadata alone grants no permission. Empty bindings are the
+ * conservative supplied-graph boundary used by root-only assertions. */
+bool compiled_operations_match_request(
+    const CalcContext& calc, const StrategyImpl& strategy,
+    const std::unordered_map<std::string, std::uint32_t>& trusted_steps,
+    std::string* refusal = nullptr);
+
 /* A finite, native-bound finder proposal. Indices name nodes in this vector;
  * Hole is search-only and cannot be compiled. Goal ingress is assembled from
  * the original request, never supplied as an arbitrary proposer predicate. */

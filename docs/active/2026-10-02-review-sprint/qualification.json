@@ -6,7 +6,7 @@
   "baseline": "f08facbb93204bf721048c21b94080ab582ee9f8",
   "engine_source": "792b37e8e1d73a90c754087eda2332d7586db570",
   "main": "ebcd98cdda2c1828cd855f549831951e6ba7470a",
-  "engine_source_diff": "baseline matches engine source; no production changes in review worktree",
+  "engine_source_diff": "Baseline matched engine source; initial test-only checkpoint followed by parent-approved narrow operation-scope repair.",
   "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
   "commands": {
     "build": [
@@ -60,7 +60,7 @@
   },
   "open_finding": {
     "id": "R1-original-root-action-scope",
-    "status": "confirmed checker-boundary gap; production repair not implemented",
+    "status": "resolved by approved shared operation-scope gate; original witness preserved against 2e5585d",
     "witness": "Unchanged Alchemy/Scour graph accepted under explicit Alchemy-only scope and separately under disabled Basic family with zero admitted candidates.",
     "accepted_cost": 6.491032608695653,
     "failing_controls": [
@@ -73,7 +73,8 @@
     "patch": {
       "path": "docs/active/2026-10-02-review-sprint/scope-gap.patch",
       "sha256": "19d11340c14da39729049932e16782ced0e1eadbc524055b6c5f2a3acc3c4947",
-      "bytes": 3291
+      "bytes": 3291,
+      "applies_to": "2e5585dcce83b527c7b7d6a9def5f665f472e60b"
     }
   },
   "other_failed_checks": [
@@ -82,12 +83,11 @@
   ],
   "unrun": [
     "full suite",
-    "WASM build (no production/ABI/vocabulary change)",
+    "WASM build for review scope repair",
     "Simulator",
     "new timed native cases",
     "new actual workers",
-    "new fast/standard patch reviews (stable commits not yet supplied)",
-    "sprint integration (parent approval pending)"
+    "combined sprint integration qualification"
   ],
   "processes": "All owned build/test sessions completed with no live handle.",
   "new_heavy_timed_slots": 0,
@@ -176,5 +176,130 @@
       "sha256": "871231873599b8acb63655cda34de28b2877f1261f0291f5a434bfec54845b10",
       "bytes": 424
     }
-  ]
+  ],
+  "scope_repair": {
+    "status": "native build and focused batch passed",
+    "commands": [
+      [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Tests",
+        "-Jobs",
+        "2"
+      ],
+      [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "paid-reset"
+      ],
+      [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-protected-finder-only"
+      ],
+      [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-assertion-service-only"
+      ],
+      [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "finder-bindings"
+      ]
+    ],
+    "checks": {
+      "paid_reset": 1128,
+      "protected_finder": 66,
+      "assertion_service": 384,
+      "finder_bindings": 129,
+      "total": 1707,
+      "failures": 0
+    },
+    "scope": "All parsed operation nodes checked before root-only evaluation; trusted dependency occurrences remain owned by native Finder programme checks.",
+    "files": [
+      {
+        "path": "engine/src/solver_compile_contracts.hpp",
+        "sha256": "ef3028f49b1847a8f2c505bb4306f82015a0425c2bad409f00dc3102b7627b41",
+        "bytes": 6529
+      },
+      {
+        "path": "engine/src/solver_compile.cpp",
+        "sha256": "c35ff10eba88b7377a020ac3b5179128b1e34b51804fae2d13d9397d336ea238",
+        "bytes": 228213
+      },
+      {
+        "path": "engine/src/solver_finder.cpp",
+        "sha256": "eda6d09e0496873f28c17235abf9a659a799d942ab81928f2bed95c5845e45ec",
+        "bytes": 66368
+      },
+      {
+        "path": "engine/src/solver_policy_assertion_work.cpp",
+        "sha256": "199bdfe66251c406478e616571de2224117afc4df0656a4770030a313e48381f",
+        "bytes": 54101
+      },
+      {
+        "path": "engine/tests/test_solver_compile.cpp",
+        "sha256": "7cc5110655c87c65fd7415d839f674595f85ef7019985c89c3b20af6bd745837",
+        "bytes": 262712
+      },
+      {
+        "path": "engine/tests/test_solver_solve.cpp",
+        "sha256": "d36387e1b3447bbb048d51622c34e183e7c2dc0498bc0b5e1943f2c7753fdc0e",
+        "bytes": 727647
+      }
+    ],
+    "binary": {
+      "path": "build/engine/poecraft_engine_tests.exe",
+      "sha256": "509ed0136080e216d7b50cc1a743c8e2bc912a1e224e491ae6b3f9989365273b",
+      "bytes": 18941552
+    },
+    "logs": [
+      {
+        "path": "out/review-sprint/build-scope.log",
+        "sha256": "f2fa30768894c6d4db832fd8af464cbb00fe8a3d4966c861dcd65b5e50b2cf0e",
+        "bytes": 5800
+      },
+      {
+        "path": "out/review-sprint/scope-paid-reset.log",
+        "sha256": "50de318f1dd4f75084aadc3155dc74e236d522fc8edab3dd0a761f737bf65643",
+        "bytes": 424
+      },
+      {
+        "path": "out/review-sprint/scope-protected-finder.log",
+        "sha256": "601e9dd3acdfc3c6c345c2da900cc8e863baf39287d2fa830f27c6233da7ae57",
+        "bytes": 54
+      },
+      {
+        "path": "out/review-sprint/scope-assertion-service.log",
+        "sha256": "ac7649385adeebee429821fa2f378902a987abec5a36822f76e7629def2dffee",
+        "bytes": 56
+      },
+      {
+        "path": "out/review-sprint/scope-finder-bindings.log",
+        "sha256": "02f2716ed4eb5246ab8ffe3212c9f43d9c6ec6829d4bb3a063e3e756f3ad6680",
+        "bytes": 48
+      }
+    ],
+    "setup_failure": "First build log wrapper used a relative destination after the script changed directory and an invalid nested-shell variable escape; corrected absolute log wrapper passed.",
+    "unrun": [
+      "full suite",
+      "Simulator",
+      "WASM rebuild",
+      "timed solves",
+      "actual workers"
+    ],
+    "processes": "Build and all four serial focused cases exited; no owned process remains."
+  },
+  "sprint_integration": {
+    "approved": true,
+    "worktree": "C:/Users/Oliver/Documents/poecraft2-sprint-integration",
+    "branch": "dot/sprint-integration-20261002",
+    "baseline": "f08facbb93204bf721048c21b94080ab582ee9f8",
+    "selected_review_checkpoints": [
+      "2e5585dcce83b527c7b7d6a9def5f665f472e60b",
+      "59b7f319b7dbce82f4284a82f4d7b110c49093a5"
+    ]
+  }
 }

@@ -107,23 +107,10 @@ FinderCandidatePreparation prepare_finder_candidate(
             prepared.strategy.reset();
             return prepared;
         }
-        for (const StrategyNode& node : prepared.strategy->nodes) {
-            if (node.kind != StrategyNodeKind::Operation) continue;
-            const std::uint32_t action = resolve_strategy_action(
-                node, problem.registry());
-            const bool standalone = action != kNoId &&
-                std::find(problem.candidates().begin(),
-                          problem.candidates().end(), action) !=
-                    problem.candidates().end();
-            const auto occurrence = trusted_steps.find(node.id);
-            const bool bound_dependency = occurrence != trusted_steps.end() &&
-                occurrence->second == action;
-            if (!standalone && !bound_dependency) {
-                prepared.refusal =
-                    "finder operation is outside the requested action scope";
-                prepared.strategy.reset();
-                return prepared;
-            }
+        if (!compiled_operations_match_request(problem, *prepared.strategy,
+                trusted_steps, &prepared.refusal)) {
+            prepared.strategy.reset();
+            return prepared;
         }
     } catch (const std::exception& ex) {
         prepared.refusal = ex.what();

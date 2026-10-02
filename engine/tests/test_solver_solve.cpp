@@ -15068,7 +15068,7 @@ void run_paid_root_reset_renewal_tests() {
             root_proof.policy_reachable = work.output_incumbent->policy_reachable;
             const auto& graph = work.output_incumbent->compiled_artifact.strategy_json;
             std::vector<std::uint64_t> root_request_identity;
-            for (unsigned provenance = 0; provenance < 15; ++provenance) {
+            for (unsigned provenance = 0; provenance < 17; ++provenance) {
                 auto requested = root_proof;
                 if (provenance == 2) requested.policy[root].index = alchemy;
                 if (provenance == 3) requested.values[root == 0 ? 1 : 0] = expected;
@@ -15077,6 +15077,16 @@ void run_paid_root_reset_renewal_tests() {
                 if (provenance == 10) requested.policy.pop_back();
                 if (provenance == 11) requested.policy_reachable.pop_back();
                 if (provenance == 14) requested.exact_start_item.quality = 1;
+                std::unique_ptr<CalcContext> changed_scope;
+                if (provenance == 15 || provenance == 16) {
+                    auto restricted_goal = goal;
+                    if (provenance == 16)
+                        restricted_goal.disabled_action_families = solver_action_family_bit(
+                            solver_action_family_for_action(registry.actions[scour]));
+                    changed_scope = std::make_unique<CalcContext>(session, restricted_goal,
+                        registry, std::vector<std::uint32_t>{alchemy});
+                    PC_CHECK(changed_scope->intern_item(start) == root);
+                }
                 auto scoped = options;
                 if (provenance == 6)
                     scoped.max_solver_owned_bytes =
@@ -15084,7 +15094,7 @@ void run_paid_root_reset_renewal_tests() {
                 PolicyCompilationTelemetry emitted;
                 if (provenance == 7) emitted.policy_decision_bindings.resize(1);
                 refinement::CompiledPolicyAssertionWork assertion(
-                    calc, requested, prices, scoped, "original-root provenance control",
+                    changed_scope ? *changed_scope : calc, requested, prices, scoped, "original-root provenance control",
                     nullptr, provenance == 5 ? nullptr : &graph, &emitted,
                     provenance != 4, provenance == 12, provenance == 13,
                     provenance == 1 ? refinement::CompiledPolicyAssertionMode::StatewisePolicy :
@@ -15105,14 +15115,21 @@ void run_paid_root_reset_renewal_tests() {
                     root_request_identity = checked.request_identity;
                 } else {
                     if (checked.executable || checked.proper)
-                        std::printf("unexpected original-root provenance acceptance: %u\n", provenance);
+                        std::printf("unexpected original-root provenance acceptance: %u cost=%.17g candidates=%zu explicit=%u\n", provenance,
+                            checked.exact_cost, (changed_scope ? *changed_scope : calc).candidates().size(),
+                            unsigned((changed_scope ? *changed_scope : calc).action_control().explicit_envelope));
                     PC_CHECK(!checked.executable && !checked.proper);
                     PC_CHECK(!std::isfinite(checked.exact_cost));
                     PC_CHECK(checked.status == (provenance == 6
                         ? refinement::CompiledPolicyAssertionStatus::ResourceCap
                         : refinement::CompiledPolicyAssertionStatus::CompilationFailure));
-                    if (provenance == 1 || provenance == 4)
+                    if (provenance == 1 || provenance == 4 || provenance == 15 || provenance == 16)
                         PC_CHECK(checked.request_identity != root_request_identity);
+                    if (provenance == 15 || provenance == 16) {
+                        PC_CHECK(checked.failure_reason.find("violates caller scope") != std::string::npos);
+                        PC_CHECK(checked.evaluation.raw_pairs_discovered == 0);
+                        PC_CHECK(checked.evaluation.continuation_upper.certified_states == 0);
+                    }
                 }
             }
         }

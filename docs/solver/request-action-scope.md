@@ -46,6 +46,14 @@ same resource law. This does not admit arbitrary dependency closure or let a
 raw graph declare its own permission. The [K2–K4 record](../active/2026-09-25-seed-retention/README.md#k2k3--retained-side-native-finder)
 specifies the narrow benchmark grammar and measured scope.
 
+The supplied-graph `OriginalRootController` assertion independently resolves
+all operation nodes against the original native registry and checks caller
+primitive membership and disabled families before issuing root-only authority.
+Supplied JSON carries no trusted programme binding. Dependency-only operations
+remain with the existing compiler-bound native programme owner and its checks
+on every positively reached exact initiation item. Registry membership, graph
+metadata, prices, and matching root/goal predicates do not grant operation scope.
+
 An explicit product candidate list and the generated-program grammar together require complete accounting. Counting descriptions is not equivalent to identifying every semantic action. [Lower coverage](lower-pruning.md#coverage-and-lower-only-queries) handles explicit and residual-family proof constraints.
 
 ## Product and diagnostic scope

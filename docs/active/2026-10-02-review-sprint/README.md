@@ -3,11 +3,12 @@
 Baseline `f08facbb93204bf721048c21b94080ab582ee9f8` is verified; its engine
 matches `792b37e8e1d73a90c754087eda2332d7586db570`. Work is isolated in
 `poecraft2-review-sprint`, branch `dot/review-20261002`. Main remains `ebcd98cd`;
-the overnight integration remains `f08facbb`. No production source changed.
+the overnight integration remains `f08facbb`. The initial checkpoint changed only
+tests; the parent subsequently approved the narrow R1 production repair below.
 The selected AGENTS/HANDOFF/research/status/overnight records were read; no local
 `.agents/skills` directory was available in the relevant checkouts.
 
-## Finding requiring parent disposition
+## Original R1 witness (preserved historical evidence)
 
 **R1: OriginalRootController checks root and goal, but does not itself enforce
 operation scope.** The unchanged finite Alchemy/Scour graph is accepted as
@@ -21,8 +22,8 @@ public solver result. Current generation and cache-identity gates are separate
 obligations; the existing paid-reset producer already tests the required actions.
 No worker receipt or selected graph has been invalidated by this witness.
 
-The known-failing [scope patch](scope-gap.patch) is deliberately separate from
-the passing retained suite. Apply it to this checkpoint, build with
+The known-failing [scope patch](scope-gap.patch) preserves the original witness
+against checkpoint `2e5585d`. Apply it there, build with
 `powershell -NoProfile -File scripts/dev-engine.ps1 -Task Tests -Jobs 2`, then run
 `build/engine/poecraft_engine_tests.exe --solver-integrity-only paid-reset`.
 Controls 15/16 produce six failed assertions, 1120 total checks. Exact diagnostics
@@ -32,8 +33,8 @@ and hashes are in [qualification.json](qualification.json) and
 Proposed production change, reported before implementation: validate the entire
 supplied graph against the original permitted primitive/programme scope before
 issuing root-only authority. Preserve generated programme dependencies rather
-than applying a naive primitive whitelist. Parent review/ownership is pending;
-no production repair or new scope authority is claimed.
+than applying a naive primitive whitelist. Parent approval was subsequently
+granted; the narrow repair and its qualification are recorded below.
 
 ## Bounded review and retained regressions
 
@@ -134,3 +135,51 @@ any production edit; this branch still contains no production changes.
 
 Stable final commits, owner responses to these findings, Dominance/latency review
 pins, and a parent-selected sprint integration remain pending.
+
+## Approved R1 repair and integration checkpoint
+
+The shared `compiled_operations_match_request` gate resolves every parsed
+operation using the original registry, requires caller primitive membership or
+an individually bound trusted native programme step, and rejects disabled
+families even for dependency steps. Bestiary companion descriptors cannot be
+mistaken for ordinary registry indexes. `OriginalRootController` invokes the
+gate before native evaluation and authority creation, with no trusted bindings:
+supplied graph bytes and metadata cannot declare programme permission.
+
+Finder reuses this same gate with its existing in-memory compiler control,
+byte-equality check and reached-entry programme validation. This preserves the
+legitimate protected programme route without promoting its dependencies to
+standalone caller candidates. Root identity, goal, prices and all native laws
+are unchanged. The canonical scope contract documents this boundary.
+
+The original six failures are retained as active provenance controls 15/16.
+Both now reject before pair discovery or any continuation-upper certificate;
+request identity differs as expected. Positive paid-reset and protected-native-
+programme controls remain valid. The focused serial acceptance batch passes:
+
+- `--solver-integrity-only paid-reset`: 1128 checks, zero failures.
+- `--solver-protected-finder-only`: 66 checks, zero failures.
+- `--solver-assertion-service-only`: 384 checks, zero failures.
+- `--solver-integrity-only finder-bindings`: 129 checks, zero failures.
+
+The two-job native build passes. Total repair checks: **1707**, zero failures.
+An initial log-wrapper invocation failed because the build script changes its
+working directory; rerun with an absolute log path succeeded. No native defect
+or failed assertion was hidden by that setup correction. Full acceptance,
+Simulator, WASM and fresh timed solves were not run for this repair.
+
+The parent approved local merging of reviewed passing checkpoints. A separate
+`poecraft2-sprint-integration` worktree on `dot/sprint-integration-20261002` was
+created from `f08facbb`; only the passing review checkpoints were selected so
+far. Main and the overnight integration remain untouched. Further candidate
+pins require completed owner evidence and source review. The final latency
+qualification remains a responsiveness failure against 250 ms despite its
+reported improvement; it is not relabelled as a pass.
+
+Source review of latency `4caacb9` preserves depth-first raw-choice order and
+probability multiplication, keeps partial rows from acquiring completed
+authority, and destroys the pending outcome cursor before its calculator.
+Dominance `cdf04b8` remains authored-only with singleton explicit identities,
+above-ilvl inventory coverage and full native ordered-pair enumeration;
+expanded qualification was still pending when reviewed. Neither pin was
+silently promoted from its WIP/partial qualification status.

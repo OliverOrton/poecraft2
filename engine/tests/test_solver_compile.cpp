@@ -4354,6 +4354,12 @@ void run_solver_protected_finder_tests() {
         PC_CHECK(best.success_probability >= 1-1e-10);
         if (best.native_control) {
             PC_CHECK(prepare_finder_candidate(calc,session,root,best.strategy_json,&*best.native_control).ready());
+            // Dependency descriptors in the registry are not standalone scope.
+            PC_CHECK(!prepare_finder_candidate(calc,session,root,best.strategy_json).ready());
+            const auto parsed = compile_strategy_json(session, best.strategy_json.data(), best.strategy_json.size());
+            std::string refusal;
+            PC_CHECK(!compiled_operations_match_request(calc, *parsed, {}, &refusal));
+            PC_CHECK(refusal.find("outside the requested action scope") != std::string::npos);
             auto altered = best.strategy_json;
             const auto at = altered.find("scour");
             if (at != std::string::npos) altered.replace(at,5,"annul");

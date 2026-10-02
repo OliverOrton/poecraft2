@@ -100,6 +100,39 @@ bool compiled_success_ingress_matches_request(
     }
 }
 
+bool compiled_operations_match_request(
+        const CalcContext& calc, const StrategyImpl& strategy,
+        const std::unordered_map<std::string, std::uint32_t>& trusted_steps,
+        std::string* refusal) {
+    for (const StrategyNode& node : strategy.nodes) {
+        if (node.kind != StrategyNodeKind::Operation) continue;
+        const auto operation = resolve_strategy_operation(
+            node, calc.registry(), calc.session());
+        // Companion-state operations cannot borrow an ordinary descriptor's
+        // numeric index. They require their own native programme authority.
+        if (!operation.resolved() ||
+            operation.kind == ResolvedStrategyOperationKind::Bestiary ||
+            operation.descriptor_index >= calc.registry().actions.size()) {
+            if (refusal) *refusal = "operation at node '" + node.id +
+                "' has no caller-scoped native descriptor";
+            return false;
+        }
+        const auto action = operation.descriptor_index;
+        const auto& descriptor = calc.registry().actions[action];
+        const bool primitive = std::find(calc.candidates().begin(),
+            calc.candidates().end(), action) != calc.candidates().end();
+        const auto bound = trusted_steps.find(node.id);
+        const bool dependency = bound != trusted_steps.end() && bound->second == action;
+        if (solver_action_disabled(calc.goal(), descriptor) || (!primitive && !dependency)) {
+            if (refusal) *refusal = "operation '" + descriptor.id + "' at node '" +
+                node.id + "' is outside the requested action scope";
+            return false;
+        }
+    }
+    if (refusal) refusal->clear();
+    return true;
+}
+
 static void append_start_implicits_json(
     std::string& json, const SessionImpl& session,
     const pc_item_state& start_item) {

@@ -667,6 +667,19 @@ struct CompiledPolicyAssertionWork::Impl {
                 record_evaluation_time();
                 return;
             }
+            if (mode == CompiledPolicyAssertionMode::OriginalRootController) {
+                std::string scope_refusal;
+                // Supplied graph bytes carry no trusted programme binding.
+                // Native dependency-only graphs use the existing owner that
+                // binds compiler control and validates reached programme entries.
+                if (!compiled_operations_match_request(coarse, *parsed_strategy,
+                        {}, &scope_refusal)) {
+                    finish_failure(CompiledPolicyAssertionStatus::CompilationFailure,
+                        "original-root controller violates caller scope: " + scope_refusal);
+                    record_evaluation_time();
+                    return;
+                }
+            }
             result.parsed_strategy_bytes =
                 strategy_impl_owned_bytes(*parsed_strategy);
             {
