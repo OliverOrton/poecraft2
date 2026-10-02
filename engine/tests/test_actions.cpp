@@ -1200,3 +1200,73 @@ void run_action_tests(const char* artifact_dir) {
     }
     run_integration_tests(artifact_dir);
 }
+
+// Ordered generation rows depend on tags added by the *current* modifier set.
+void run_dynamic_tag_tests() {
+    for (const bool large : {false, true}) {
+        auto session = std::make_shared<SessionImpl>(make_synth_session());
+        auto d = std::const_pointer_cast<DataImpl>(session->data);
+        session->rare_affix_cap = 2;
+        session->has_added_tags = true;
+        session->effective_base_tag_ids = {0, large ? 2u : 1u};
+        session->primary_group = {10, 11, 20};
+        session->group_ids = session->primary_group;
+        session->group_masks.assign(21, {});
+        for (uint32_t i = 0; i < 3; ++i) {
+            session->group_masks[session->primary_group[i]].assign(1, uint64_t{1} << i);
+        }
+        d->spawn_offsets = {0, 1, 2, 3};
+        d->spawn_tag_ids = {0, 0, 0};
+        d->spawn_weights = {100, 100, 100};
+        d->gen_offsets = {0, 3, 6, 6};
+        d->gen_tag_ids = {2, 3, 1, 2, 3, 1};
+        d->gen_weights = {100, 0, 100, 100, 0, 100};
+        d->adds_tag_offsets = {0, 1, 2, 2};
+        d->adds_tag_ids = {3, 3};
+        session->class_offsets = {0, 0, 0, 0};
+        ActionContextImpl context(17);
+        context.session = session;
+        pc_item_state item;
+        pc_item_clear(&item);
+        item.rarity = PC_RARITY_RARE;
+        PoolBuildRequest request;
+        PC_CHECK(intern_item_tag_signature(context, &item) == 0);
+        PC_CHECK(get_weighted_pool(context, &item, request).total_weight == 300);
+        place(&item, PC_SIDE_PREFIX, 0, 10, 0);
+        const auto tagged = intern_item_tag_signature(context, &item);
+        PC_CHECK(tagged != 0);
+        PC_CHECK(get_weighted_pool(context, &item, request).total_weight == (large ? 200 : 100));
+        // A retained implicit contributes its added tags too, even with no explicit.
+        pc_item_state implicit;
+        pc_item_clear(&implicit);
+        implicit.rarity = PC_RARITY_RARE;
+        implicit.implicit_count = 1;
+        implicit.implicits[0].mod_id = 0;
+        PC_CHECK(intern_item_tag_signature(context, &implicit) == tagged);
+        // Cache reuse after removing/replacing a modifier must rebuild the signature.
+        pc_item_clear(&item);
+        item.rarity = PC_RARITY_RARE;
+        PC_CHECK(intern_item_tag_signature(context, &item) == 0);
+        PC_CHECK(get_weighted_pool(context, &item, request).total_weight == 300);
+        for (uint64_t seed = 0; seed < 200; ++seed) {
+            context.rng.reseed(seed);
+            pc_item_clear(&item);
+            ActionParameters action;
+            action.type = ActionType::Transmute;
+            PC_CHECK(apply_action(context, &item, action).applied);
+            unsigned notables = 0;
+            for (uint8_t i = 0; i < item.prefix_count; ++i)
+                if (item.prefixes[i].mod_id < 2) ++notables;
+            PC_CHECK(large || notables <= 1);
+            pc_item_clear(&item);
+            item.rarity = PC_RARITY_RARE;
+            action.type = ActionType::Chaos;
+            PC_CHECK(apply_action(context, &item, action).applied);
+            notables = 0;
+            for (uint8_t i = 0; i < item.prefix_count; ++i)
+                if (item.prefixes[i].mod_id < 2) ++notables;
+            PC_CHECK(large ? notables == 2 : notables <= 1);
+
+        }
+    }
+}

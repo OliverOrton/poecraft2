@@ -11,12 +11,14 @@ import { GameIcon } from "./pc-game-icon";
  *   - listens for a `confirm` CustomEvent with detail {base, itemLevel}.
  */
 
-import { BaseInfo } from "../engine-protocol";
+import { validClusterSelection } from "../cluster-configuration";
+import { BaseInfo, ClusterConfiguration } from "../engine-protocol";
 import { basePickerAttributeCombo, supportedBasePickerBases } from "../base-picker-model";
 
 export interface BasePickerSelection {
     base: string;
     itemLevel: number;
+    cluster?: ClusterConfiguration;
 }
 
 interface ClassEntry {
@@ -51,13 +53,14 @@ export class PcBasePicker extends HTMLElement {
     private selectedSub = ALL_SUB;
     private selectedBase = "";
     private itemLevel = 86;
+    private cluster?: ClusterConfiguration;
 
     connectedCallback(): void {
         this.renderShell();
     }
 
     setBases(bases: BaseInfo[]): void {
-        this.bases = supportedBasePickerBases(bases);
+        this.bases = supportedBasePickerBases(bases, this.hasAttribute("allow-clusters"));
         const byClass = new Map<string, ClassEntry>();
         for (const base of this.bases) {
             const key = base.item_class_key || "Other";
@@ -77,8 +80,9 @@ export class PcBasePicker extends HTMLElement {
         this.renderShell();
     }
 
-    setSelection(base: string, itemLevel: number): void {
+    setSelection(base: string, itemLevel: number, cluster?: ClusterConfiguration): void {
         this.itemLevel = itemLevel;
+        this.cluster = cluster;
         this.selectedBase = base;
         const match = this.bases.find((b) => b.path === base);
         if (match) {
@@ -109,7 +113,8 @@ export class PcBasePicker extends HTMLElement {
     private renderShell(): void {
         const subs = this.subcategoriesForClass(this.selectedClass);
         const bases = this.filteredBases();
-        const canStart = bases.some(base => base.path === this.selectedBase) &&
+        const clusterCatalog = bases.find(base => base.path === this.selectedBase)?.cluster;
+        const canStart = (!clusterCatalog || validClusterSelection(clusterCatalog, this.cluster)) && bases.some(base => base.path === this.selectedBase) &&
             Number.isInteger(this.itemLevel) && this.itemLevel >= 1 && this.itemLevel <= 100;
         const compact = this.hasAttribute("compact");
         renderReact(this, <div className={"pc-base-picker " + (compact ? "is-compact" : "")}>
@@ -136,12 +141,25 @@ export class PcBasePicker extends HTMLElement {
                 </label>}
                 <label className="pc-field"><span>Base</span>
                     <select className="pc-bp-base" disabled={!this.selectedClass} value={this.selectedBase} onChange={event => {
-                        this.selectedBase = event.target.value; this.renderShell();
+                        this.selectedBase = event.target.value; this.cluster = undefined; this.renderShell();
                     }}>
                         <option value="">— Select Base —</option>
                         {bases.map(base => <option key={base.path} value={base.path}>{base.name}</option>)}
                     </select>
                 </label>
+                {clusterCatalog && <>
+                    <label className="pc-field"><span>Small passive type</span>
+                        <select value={this.cluster?.passiveKey ?? ""} onChange={event => {
+                            this.cluster = {passiveKey: event.target.value, passiveCount: this.cluster?.passiveCount ?? clusterCatalog.minPassiveCount}; this.renderShell();
+                        }}><option value="">- Select Passive -</option>
+                            {clusterCatalog.passives.map(p => <option key={p.key} value={p.key} disabled={p.tag.startsWith("old_do_not_use_")}>{p.text.join("; ") || p.name}</option>)}
+                        </select>
+                    </label>
+                    <label className="pc-field"><span>Added passive skills</span>
+                        <input type="number" min={clusterCatalog.minPassiveCount} max={clusterCatalog.maxPassiveCount} value={this.cluster?.passiveCount ?? clusterCatalog.minPassiveCount}
+                            onChange={event => { this.cluster = {passiveKey: this.cluster?.passiveKey ?? "", passiveCount: Number(event.target.value)}; this.renderShell(); }} />
+                    </label>
+                </>}
                 <label className="pc-field"><span>Item Level</span>
                     <input type="number" className="pc-bp-ilvl" min={1} max={100} value={this.itemLevel || ""}
                         onChange={event => { this.itemLevel = Number(event.target.value); this.renderShell(); }} />
@@ -152,7 +170,7 @@ export class PcBasePicker extends HTMLElement {
                     onClick={() => this.dispatchEvent(new CustomEvent("cancel", {bubbles: true}))}>Cancel</button>}
                 <button type="button" className="pc-bp-confirm" disabled={!canStart} onClick={() => {
                     if (canStart) this.dispatchEvent(new CustomEvent<BasePickerSelection>("confirm", {
-                        detail: {base: this.selectedBase, itemLevel: this.itemLevel}, bubbles: true,
+                        detail: {base: this.selectedBase, itemLevel: this.itemLevel, cluster: clusterCatalog ? this.cluster : undefined}, bubbles: true,
                     }));
                 }}>{this.getAttribute("confirm-label") ?? "Start crafting"}</button>
             </div>

@@ -80,6 +80,14 @@ class _SessionOptions(ct.Structure):
     ]
 
 
+class _ClusterSessionOptions(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32), ("abi_version", ct.c_uint32),
+        ("base_metadata_path", ct.c_char_p), ("item_level", ct.c_uint32),
+        ("passive_key", ct.c_char_p), ("passive_count", ct.c_uint32),
+    ]
+
+
 class _ContextOptions(ct.Structure):
     _fields_ = [
         ("struct_size", ct.c_uint32),
@@ -681,6 +689,11 @@ _lib.pc_session_create.argtypes = [
     ct.POINTER(_ErrorInfo),
 ]
 _lib.pc_session_create.restype = ct.c_int32
+_lib.pc_session_create_cluster.argtypes = [_handle, ct.POINTER(_ClusterSessionOptions), ct.POINTER(_handle), ct.POINTER(_ErrorInfo)]
+_lib.pc_session_create_cluster.restype = ct.c_int32
+_lib.pc_session_cluster_configuration_json.argtypes = [_handle, ct.c_char_p, ct.c_size_t, ct.POINTER(ct.c_size_t), ct.POINTER(_ErrorInfo)]
+_lib.pc_session_cluster_configuration_json.restype = ct.c_int32
+
 _lib.pc_session_destroy.argtypes = [_handle]
 _lib.pc_session_get_mod_count.argtypes = [
     _handle,
@@ -1518,6 +1531,19 @@ class Data(_OwnedHandle):
             )
         return tuple(options)
 
+    def create_cluster_session(self, base_key: str, item_level: int, *, passive_key: str, passive_count: int) -> "Session":
+        if type(item_level) is not int or not 1 <= item_level <= 0xffffffff:
+            raise ValueError("item level must be a positive integer")
+        if type(passive_count) is not int or not 1 <= passive_count <= 0xffffffff:
+            raise ValueError("passive count must be a positive integer")
+        if not isinstance(passive_key, str) or not passive_key:
+            raise ValueError("passive key must be a nonempty stable key")
+        options = _ClusterSessionOptions(ct.sizeof(_ClusterSessionOptions), ABI_VERSION,
+            base_key.encode(), item_level, passive_key.encode(), passive_count)
+        handle, error = _handle(), _error()
+        _check(_lib.pc_session_create_cluster(self._handle, ct.byref(options), ct.byref(handle), ct.byref(error)), error)
+        return Session(handle, self, cluster=True)
+
     def create_session(self, base_key: str, item_level: int) -> "Session":
         encoded = base_key.encode()
         options = _SessionOptions(ct.sizeof(_SessionOptions), ABI_VERSION, encoded, item_level)
@@ -1535,11 +1561,22 @@ class Data(_OwnedHandle):
 class Session(_OwnedHandle):
     _destroy = _lib.pc_session_destroy
 
-    def __init__(self, handle: _handle, data: Data):
+    def __init__(self, handle: _handle, data: Data, *, cluster: bool = False):
         super().__init__(handle)
+        self._is_cluster = cluster
         self._data = data
         self._mods_by_key: dict[str, ModInfo] | None = None
         self._next_bestiary_identity = 1
+
+    @property
+    def cluster_configuration(self) -> dict[str, Any] | None:
+        length, error = ct.c_size_t(), _error()
+        result = _lib.pc_session_cluster_configuration_json(self._handle, None, 0, ct.byref(length), ct.byref(error))
+        if result != RESULT_BUFFER_TOO_SMALL:
+            _check(result, error)
+        buffer = ct.create_string_buffer(length.value + 1)
+        _check(_lib.pc_session_cluster_configuration_json(self._handle, buffer, len(buffer), ct.byref(length), ct.byref(error)), error)
+        return json.loads(buffer.value)
 
     def create_bestiary_state(self, item: "Item") -> "BestiaryCraftState":
         if item._session is not self:
@@ -1910,6 +1947,9 @@ class Item:
             raise ValueError(
                 f"{info.key} is a {info.side}, not a {resolved_side}"
             )
+        if self._session._is_cluster:
+            self.edit(add_explicit=info.key, fractured=fractured)
+            return
         result = _lib.pc_item_add_mod(
             ct.byref(self._state),
             expected_side,

@@ -293,6 +293,47 @@ static std::shared_ptr<DataImpl> build_data_impl(
             data->string_at(data->base_metadata_path_sid[i]), i);
     }
 
+    // Fixed configuration metadata, already present in the frozen artifact.
+    if (const auto* c = game.find("cluster_jewels")) {
+        const auto count = read_count(*c);
+        const auto array = [&](const char* key, std::size_t length) {
+            std::vector<std::uint32_t> out;
+            read_u32(*c, key, out);
+            require(out.size() == length, "cluster metadata array length mismatch");
+            return out;
+        };
+        const auto keys = array("key_string_ids", count);
+        const auto sizes = array("size_string_ids", count);
+        const auto minimum = array("min_skills", count), maximum = array("max_skills", count);
+        const auto offsets = array("passive_offsets", count + 1);
+        require(offsets.front() == 0, "cluster passive offsets must start at zero");
+        const auto passive_count = offsets.back();
+        const auto passive_keys = array("passive_key_string_ids", passive_count);
+        const auto passive_tags = array("passive_tag_ids", passive_count);
+        const auto names = array("passive_name_string_ids", passive_count);
+        const auto stats = array("passive_stats_json_string_ids", passive_count);
+        const auto text = array("passive_stat_text_json_string_ids", passive_count);
+        const auto notables = array("notable_indices_json_string_ids", count);
+        const auto sockets = array("socket_indices_json_string_ids", count);
+        const auto small = array("small_indices_json_string_ids", count);
+        const auto string_valid = [&](std::uint32_t sid) { require(sid < data->strings.size(), "invalid cluster string identity"); };
+        for (std::uint32_t i = 0; i < count; ++i) {
+            require(offsets[i] <= offsets[i + 1], "invalid cluster passive offsets");
+            require(minimum[i] > 0 && minimum[i] <= maximum[i], "invalid cluster count bounds");
+            string_valid(keys[i]); string_valid(sizes[i]);
+            string_valid(notables[i]); string_valid(sockets[i]); string_valid(small[i]);
+            ClusterDescriptor cluster{keys[i], sizes[i], minimum[i], maximum[i], notables[i], sockets[i], small[i], {}};
+            require(data->base_by_path.count(data->string_at(keys[i])), "unknown cluster base");
+            for (auto p = offsets[i]; p < offsets[i + 1]; ++p) {
+                string_valid(passive_keys[p]); string_valid(names[p]); string_valid(stats[p]); string_valid(text[p]);
+                require(data->tag_name_by_id.count(passive_tags[p]), "unknown cluster passive tag");
+                cluster.passives.push_back({passive_keys[p], passive_tags[p], names[p], stats[p], text[p]});
+            }
+            require(data->cluster_by_path.emplace(data->string_at(keys[i]), i).second, "duplicate cluster base");
+            data->clusters.push_back(std::move(cluster));
+        }
+    }
+
     // --- mods ---------------------------------------------------------------
     const Value& mods = game.at("mods");
     data->mod_count = read_count(mods);
@@ -356,6 +397,22 @@ static std::shared_ptr<DataImpl> build_data_impl(
     read_u32(classification, "tag_ids", data->class_tag_ids);
     require(data->class_offsets.size() == data->mod_count + 1,
             "classification_tags offsets must be mod_count + 1");
+
+    if (const auto* added = game.find("adds_tags")) {
+        read_u32(*added, "offsets", data->adds_tag_offsets);
+        read_u32(*added, "tag_ids", data->adds_tag_ids);
+        require(data->adds_tag_offsets.size() == data->mod_count + 1 &&
+                data->adds_tag_offsets.front() == 0 &&
+                data->adds_tag_offsets.back() == data->adds_tag_ids.size(),
+                "adds_tags arrays inconsistent");
+        for (std::uint32_t p = 0; p < data->mod_count; ++p)
+            require(data->adds_tag_offsets[p] <= data->adds_tag_offsets[p + 1],
+                    "adds_tags offsets must be ordered");
+        for (const auto tag : data->adds_tag_ids)
+            require(data->tag_name_by_id.count(tag), "unknown added tag");
+    } else {
+        data->adds_tag_offsets.assign(data->mod_count + 1, 0);
+    }
 
     const Value& stats = game.at("stats");
     read_u32(stats, "offsets", data->stat_offsets);

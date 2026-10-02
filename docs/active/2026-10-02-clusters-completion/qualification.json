@@ -1,0 +1,134 @@
+{
+  "schema": "kids_configured_cluster_qualification_v1",
+  "recorded_utc": "2026-10-02T18:24:03.366557+00:00",
+  "baseline": "b794e00960bc9bb83ae3919c16fbc2aede52f67c",
+  "branch": "dot/clusters-completion-20261002",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-clusters-completion",
+  "scope": "Configured native cluster pools, seven basic currencies, terminal-only concrete Calculator and normal Emulator/Calculator configuration/persistence. Full mechanics and solver completion pending owner review.",
+  "source_state": "Uncommitted delta from baseline at receipt creation; implementation byte hashes bind built inputs.",
+  "implementation_sha256": {
+    "apps/web/package.json": "3a025a4fa1c650acbf41de361c25efcc3c4e59e64fb58dfc0b2328d2bc1f8717",
+    "apps/web/src/app/base-picker-model.ts": "7894e5fa43f301bfd75571bcd762a637b5c99f4731b4752ea0d57cb2d0814e29",
+    "apps/web/src/app/cluster-configuration.ts": "9179c887753a12be1e43f80843b10ed5487f0b726ecaac11271bfa3f7ff8c065",
+    "apps/web/src/app/components/pc-base-picker.tsx": "dcdc3521ac6296aabf7d309823013ee135d7df8eee9b1cb25b5ed777c4596e4a",
+    "apps/web/src/app/components/pc-calculator.tsx": "ffb65fe41e180a9bbad8a3d0fe6483b496471982ee155ca93f6d143a2d86d2dc",
+    "apps/web/src/app/components/pc-emulator.tsx": "a507bc3c334de4193d24dfc08bc7531af22202850c2af3892e9745e6807ec4ca",
+    "apps/web/src/app/components/pc-stash.tsx": "aae4d415ef021fa257140b86a4760a485cea77bd7761922f2a0b83951043cdfa",
+    "apps/web/src/app/engine-client.ts": "f130a4cfe8123793f7e93ae8c53e99aa76391280e670df47f10d55fcb5d36c4c",
+    "apps/web/src/app/engine-protocol.ts": "90d733101d3b63a0fe22ea2a80759ea21195a708395e0224a8d7668f82f0bc4b",
+    "apps/web/src/app/engine-wasm.ts": "4a68d22660f84825edf9397e8e04ec8acc7eb798fe320ac831b4bb6462735ef1",
+    "apps/web/src/app/engine-worker.ts": "aa5d96c0a789f9b37782a93c5189004a1399c68f88320431e6fb6abab84ea076",
+    "apps/web/src/app/item-preview.ts": "8c394d832e7feeeb77d927cf5dc00680c441377c197d0dccecc79d9a5272a9c4",
+    "apps/web/src/app/workspace/persistence.ts": "cd91daddd2400d98c10673eea237db2f1c1e1fd7f5d8a70fd0e371e412d014ca",
+    "apps/web/test/cluster-configuration.test.ts": "69b103b08845da51bf3496a876e95e59ad25f3e5cd295a3a56f46c721c8a0170",
+    "apps/web/test/engine-clusters.test.ts": "2af585014b012826937f1d2aa8d3300649dfea7b68a2924c580d1edfafda0574",
+    "bindings/python/poecraft_engine/_binding.py": "a8ba3417fc1ac753117c8663a3f56afa1bbab9b137d57b7e2b5dc61017a99826",
+    "bindings/python/tests/test_clusters.py": "c5869e040674437b82e36bd620d1ff1eba006585afec06b4eb8e5f9ac8ecd415",
+    "bindings/wasm/dist/poecraft_engine.wasm": "bfa89e89e1636eb9d433597308e90c1d71eb9afe1af28506df0c920c6442bf7d",
+    "bindings/wasm/wasm_api.cpp": "69d9005f47f7f226eaa70cbd2ef04213b3e453cc3e1de323ed4a76ea3b2b8776",
+    "engine/include/poecraft/session.h": "d0210646ea20f5b88c019d0c99a8038c2747ec7464577bacdb3f79ab0962112c",
+    "engine/src/actions_basic.cpp": "11356330c74f9b27731d85eb67b639e7b27de5081d95a0a5c7f50b7483ad1b5e",
+    "engine/src/api.cpp": "8b4cd4609ea0fde074a6c5ccc3349b79536b215efa3c3ae87382b56210621c8f",
+    "engine/src/calculator_currency.cpp": "b41c6d56638705c6023ac93b0cf118b6a142d512e74b4b8afd6216dd610fdf41",
+    "engine/src/currency_outcomes.hpp": "bf58e3883655dbc2127c59826649b8dd5df5f629a108428bc891103075df75fb",
+    "engine/src/data_loader.cpp": "208b72c990d69ddaeab99aad2c95018c17478163d0c86a167fb17386d9d7d672",
+    "engine/src/engine_internal.hpp": "8bfdb2a24929710a2a8cab9d3b2b67a9412a5ced176b512e782524cb4fc5ad59",
+    "engine/src/session_builder.cpp": "9ee966a197172ec70aabc573261737c199d8048e87818c81a348d3404e7511d1",
+    "engine/src/solver_api.cpp": "4311f76b7d45073fa7c80cff9bdf296ee65108fb2f2e9507bef52cf2faf61f7b",
+    "engine/tests/test_actions.cpp": "cbc7e1d73efcf29081d777fbcf3c8966bff1078229f7d9a25ea7d46bb4ab3e47",
+    "engine/tests/test_main.cpp": "27542f97866174bf30dbaa8a1750282029e91b60f3d9f021904edcd99107241a",
+    "engine/tests/test_session_builder.cpp": "3b3f93108185857a361e7a63c636a4e5bdbf95030f41c6cee3265cc6aa490793",
+    "engine/tests/tests.hpp": "94c031911d34d25d294e49c12fb8781d593469c198e85b6c6b5cc2a42ed37fae"
+  },
+  "artifacts": {
+    "build/engine/poecraft_engine_tests.exe": "36a9f3b6e470a778b942c963f64ca06980f84990f1fab37d591eecf54ff2085c",
+    "build/engine/poecraft_engine.dll": "ca9129c22d483f1caf4e9d7f9e309abac159e771317f26d868b36baa49f0c597",
+    "bindings/wasm/dist/poecraft_engine.wasm": "bfa89e89e1636eb9d433597308e90c1d71eb9afe1af28506df0c920c6442bf7d",
+    "bindings/wasm/dist/poecraft_engine.mjs": "459bfba1276dfbd92be0b06c8adddcbbf96864dfaa1f12f4ef9d67699e82a297"
+  },
+  "frozen_inputs_sha256": {
+    "data/compiled/current/manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "data/compiled/current/game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+    "data/compiled/current/strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6"
+  },
+  "checks": {
+    "native_clusters": {
+      "selector": "--clusters-only data/compiled/current",
+      "passed_checks": 34769,
+      "failed": 0,
+      "admitted_tuples": 176,
+      "legacy_refusals": 6
+    },
+    "native_incoming": {
+      "passed_checks": 354,
+      "failed": 0
+    },
+    "native_currency_contracts": {
+      "passed_checks": 6246,
+      "failed": 0
+    },
+    "python": {
+      "command": "py -3 with retained os.add_dll_directory(C:/msys64/ucrt64/bin); pytest bindings/python/tests/test_clusters.py bindings/python/tests/test_calculator_incoming.py -q",
+      "passed": 44,
+      "failed": 0
+    },
+    "wasm_build": {
+      "command": "powershell -File scripts/build-wasm.ps1",
+      "EMCC_CORES": 2,
+      "exit_code": 0
+    },
+    "worker_clusters": {
+      "command": "tsx test/engine-clusters.test.ts",
+      "passed_groups": 3,
+      "exit_code": 0
+    },
+    "npm": {
+      "command": "npm test",
+      "POECRAFT_SMOKE_TEST": "Calculator item goals and editors preserve native joint outcomes",
+      "exit_code": 0,
+      "excluded": "Other existing engine smoke cases, including unchanged Simulator and timed solver cases; all subsequent npm tests run."
+    },
+    "ui_followup": {
+      "command": "tsx test/cluster-configuration.test.ts",
+      "passed_groups": 2,
+      "exit_code": 0
+    },
+    "typescript": {
+      "command": "npx tsc --noEmit",
+      "exit_code": 0
+    }
+  },
+  "log_sha256": {
+    "out/clusters-completion/native-final-build.log": "5cc9938e139d62f86f75116d3cdef2446c14b606cefc099b1bab2e51cac90b42",
+    "out/clusters-completion/native-final-tests.log": "fd1a5c2ac4c1e8bf07375a3992b79f863f7cce67f60fd42a5f3b78f596641c8e",
+    "out/clusters-completion/native-incoming-final.log": "ede19fbf1ce8cc4b212c42ac41f2d4ff3bd3753c6b168fbd264fbbee366da50e",
+    "out/clusters-completion/native-currency-final.log": "159b58850bfa6e406fd59ccf683bf8007863e2c2a293ca0cb135c5964b8c88da",
+    "out/clusters-completion/python-final-tests.log": "9481029543d93b817edb50688ddfb8f21286bc4ad0431ca91dc4401250cb5be2",
+    "out/clusters-completion/wasm-build.log": "ba948535ff2a4473f31a8ffe596ef58409593d9bc54f91f868fc2d5cefa12718",
+    "out/clusters-completion/worker-clusters.log": "7074110e33ebd599c63833e82c2fec0ba2d3c12ad460d0908ea07ef3b100dae4",
+    "out/clusters-completion/npm-final-tests.log": "96b6bf1b87bb2e3bed088e3a518d0301ef191fb82b17d51dd02dc725efd43677",
+    "out/clusters-completion/ui-final-tests.log": "0fe20327cb77caf03e03eb25ae4aaf21a7b9e1b4cfe4ac1db161508baac10e64",
+    "out/clusters-completion/typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "research": {
+    "adoption": "pending Oliver review",
+    "source": "https://www.craftofexile.com/packages/package.js?v=1786125802",
+    "snapshot": "out/clusters-completion/coe-package.js",
+    "sha256": "faa6a774f71e32ec261b754a22544826459309e0f894d95db717d6bbaa40f639",
+    "probability_status": "Implemented community 0.65 three / 0.35 four affix model; no official game probability disclosure or empirical bound established."
+  },
+  "unrun": [
+    "Full unfiltered acceptance suite",
+    "Fresh Simulator qualification",
+    "Timed solver cases",
+    "Rendered UI review"
+  ],
+  "remaining_acceptance": [
+    "Owner selection of fixed passive-tree socket law",
+    "Owner selection of rare count distribution and Alchemy/Chaos/Fossil/Harvest scope",
+    "Implement and qualify accepted rare/reforge mechanics",
+    "Parent-coordinated full Current/Finder/authored exact cluster support"
+  ],
+  "promotion": "Local only; integration owner owns merge/push; no deployment.",
+  "process_status": "All selected builds and tests completed; no solver or Simulator process owned."
+}

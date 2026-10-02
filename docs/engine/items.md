@@ -26,6 +26,21 @@ belong to `pc_session`, not to the item. A slot's `mod_id` is therefore valid
 only with the session that produced it. Persistent JSON uses stable mod and
 base keys and resolves them when imported.
 
+Configured ordinary non-unique clusters use the additive
+`pc_session_create_cluster` API with a stable base key, item level, passive key
+and total added-passive count. `pc_session_cluster_configuration_json` exposes
+that immutable identity and canonical passive stats/index metadata. Unconfigured
+cluster creation and legacy `old_do_not_use` passive configurations stay refused.
+Passive-tree socket/index metadata is distinct from equipment `socket_count`;
+no allocation/pathing algorithm or configuration-generation law is inferred.
+
+WASM exports bind the configuration in `cluster`; imports require the same
+base, level, passive key and integer count, then author imported explicits through
+the native editor to validate domain, caps, groups and dynamic eligibility.
+Emulator/Calculator selection, drafts, Stash previews and Undo reopen that
+configuration. [The cluster receipt](../active/2026-10-02-clusters-completion/README.md)
+owns admitted crafting laws and remaining owner review.
+
 The C ABI leaves a passed item unchanged when an action fails. Callers own the
 item's lifetime; session and action-context handles must remain valid while an
 action interprets its IDs.

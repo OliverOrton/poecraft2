@@ -281,11 +281,13 @@ export class EngineClient {
         data: number,
         base: string,
         itemLevel: number,
+        cluster?: import("./engine-protocol").ClusterConfiguration,
     ): Promise<number> {
         const { session } = await this.call<{ session: number }>("createSession", {
             data,
             base,
             itemLevel,
+            cluster,
         });
         return session;
     }

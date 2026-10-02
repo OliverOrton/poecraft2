@@ -446,6 +446,19 @@ void append_slot_array(std::string& out, const char* name,
     out.push_back(']');
 }
 
+std::string cluster_configuration(pc_session_handle session) {
+    if (!session) return "null";
+    size_t length = 0;
+    pc_error_info error = make_error();
+    const auto queried = pc_session_cluster_configuration_json(session, nullptr, 0, &length, &error);
+    if (queried != PC_RESULT_BUFFER_TOO_SMALL && queried != PC_RESULT_OK)
+        throw std::invalid_argument(error.message);
+    std::vector<char> buffer(length + 1);
+    if (pc_session_cluster_configuration_json(session, buffer.data(), buffer.size(), &length, &error) != PC_RESULT_OK)
+        throw std::invalid_argument(error.message);
+    return std::string(buffer.data(), length);
+}
+
 void append_item_state(std::string& out, const pc_item_state& item, pc_session_handle session = nullptr) {
     out += "{\"rarity\":" + std::to_string(item.rarity);
     if (session) {
@@ -455,6 +468,7 @@ void append_item_state(std::string& out, const pc_item_state& item, pc_session_h
         out += ",\"item_state_version\":3,\"base_key\":";
         append_escaped(out, base.metadata_path);
         out += ",\"item_level\":" + std::to_string(base.item_level);
+        out += ",\"cluster\":" + cluster_configuration(session);
     }
     out += ",\"quality\":" + std::to_string(item.quality);
     out += ",\"memory_strands\":" + std::to_string(item.memory_strands);
@@ -1145,6 +1159,25 @@ pc_item_state parse_item_state(const Value& state, pc_session_handle session = n
         if (key->as_string() != base.metadata_path || obj_u32(state, "item_level") != base.item_level)
             throw std::invalid_argument("Imported item base/level does not match its session");
     }
+    const auto expected_cluster = cluster_configuration(session);
+    const auto* supplied_cluster = state.find("cluster");
+    if (expected_cluster != "null") {
+        if (!supplied_cluster || supplied_cluster->type != Type::Object)
+            throw std::invalid_argument("Configured cluster import requires its stable passive identity");
+        const auto expected = Parser(expected_cluster.data(), expected_cluster.size()).parse();
+        const auto& count = supplied_cluster->at("passive_count");
+        const auto& level = supplied_cluster->at("item_level");
+        if (!state.find("base_key") || count.type != Type::Number || !std::isfinite(count.number) ||
+            std::floor(count.number) != count.number || level.type != Type::Number ||
+            !std::isfinite(level.number) || std::floor(level.number) != level.number ||
+            supplied_cluster->at("base").as_string() != expected.at("base").as_string() ||
+            level.number != expected.at("item_level").number ||
+            supplied_cluster->at("passive_key").as_string() != expected.at("passive_key").as_string() ||
+            count.number != expected.at("passive_count").number)
+            throw std::invalid_argument("Imported cluster configuration does not match its session");
+    } else if (supplied_cluster && supplied_cluster->type != Type::Null) {
+        throw std::invalid_argument("Cluster identity cannot be imported into an ordinary session");
+    }
     pc_item_state item{};
     item.rarity = static_cast<uint8_t>(obj_u32(state, "rarity"));
     item.quality = static_cast<uint8_t>(obj_u32(state, "quality"));
@@ -1191,6 +1224,32 @@ pc_item_state parse_item_state(const Value& state, pc_session_handle session = n
         parse_slot_array(state, "implicits", item.implicits, PC_MAX_IMPLICITS, session);
     item.enchantment_count = parse_slot_array(
         state, "enchantments", item.enchantments, PC_MAX_ENCHANTS, session);
+    if (expected_cluster != "null") {
+        // Author the imported explicit set through the native editor. This
+        // adapter must not reproduce affix caps, group or added-tag laws.
+        auto checked = item;
+        pc_item_clear_side(&checked, PC_SIDE_PREFIX);
+        pc_item_clear_side(&checked, PC_SIDE_SUFFIX);
+        pc_error_info error = make_error();
+        const auto influence = "{\"influence_bits\":" + std::to_string(item.generic_influence_bits) + "}";
+        if (pc_item_edit_json(session, &checked, influence.data(), influence.size(), &error) != PC_RESULT_OK)
+            throw std::invalid_argument(error.message);
+        for (const auto side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+            const auto* slots = side == PC_SIDE_PREFIX ? item.prefixes : item.suffixes;
+            const auto count = side == PC_SIDE_PREFIX ? item.prefix_count : item.suffix_count;
+            for (std::uint8_t i = 0; i < count; ++i) {
+                pc_mod_info mod{}; mod.struct_size = sizeof(mod);
+                if (pc_session_get_mod_info(session, slots[i].mod_id, &mod, &error) != PC_RESULT_OK)
+                    throw std::invalid_argument(error.message);
+                if (mod.generation_type != side) throw std::invalid_argument("Imported cluster modifier has the wrong side");
+                std::string edit = "{\"add_explicit\":";
+                append_escaped(edit, mod.key);
+                edit += (slots[i].flags & PC_MOD_SLOT_FRACTURED) ? ",\"fractured\":true}" : "}";
+                if (pc_item_edit_json(session, &checked, edit.data(), edit.size(), &error) != PC_RESULT_OK)
+                    throw std::invalid_argument(error.message);
+            }
+        }
+    }
     return item;
 }
 
@@ -1505,7 +1564,23 @@ const char* pcw_session_open(uint32_t data_id, const char* options_json) {
             : 0;
     pc_session_handle session = nullptr;
     pc_error_info error = make_error();
-    pc_result rc = pc_session_create(*data, &session_options, &session, &error);
+    pc_result rc;
+    if (const auto* config = opts.find("cluster"); config && config->type != Type::Null) {
+        if (!level || level->type != Type::Number || !std::isfinite(level->number) ||
+                level->number < 1 || level->number > UINT32_MAX || std::floor(level->number) != level->number)
+            return fail(PC_RESULT_INVALID_ARGUMENT, "cluster item level must be a positive integer");
+        if (config->type != Type::Object) return fail(PC_RESULT_INVALID_ARGUMENT, "cluster configuration must be an object");
+        const auto* key = config->find("passiveKey");
+        const auto* count = config->find("passiveCount");
+        if (!key || key->type != Type::String || !count || count->type != Type::Number ||
+                !std::isfinite(count->number) || count->number < 1 || count->number > UINT32_MAX ||
+                std::floor(count->number) != count->number)
+            return fail(PC_RESULT_INVALID_ARGUMENT, "cluster requires a stable passive key and integer count");
+        pc_cluster_session_options cluster{sizeof(cluster), PC_ABI_VERSION,
+            session_options.base_metadata_path, session_options.item_level,
+            key->string.c_str(), static_cast<uint32_t>(count->number)};
+        rc = pc_session_create_cluster(*data, &cluster, &session, &error);
+    } else rc = pc_session_create(*data, &session_options, &session, &error);
     if (rc != PC_RESULT_OK) return fail(error);
     std::uint32_t id = g_next_id++;
     g_sessions[id] = session;
@@ -1758,6 +1833,13 @@ const char* pcw_item_add_mod(uint32_t item_id, uint32_t session_id,
     const Value* key = spec.find("key");
     if (key == nullptr || key->type != Type::String) {
         return fail(PC_RESULT_INVALID_ARGUMENT, "add_mod requires a string \"key\"");
+    }
+    if (cluster_configuration(*session) != "null") {
+        std::string edit = "{\"add_explicit\":";
+        append_escaped(edit, key->string.c_str());
+        const auto* fractured = spec.find("fractured");
+        edit += fractured && fractured->type == Type::Bool && fractured->boolean ? ",\"fractured\":true}" : "}";
+        return pcw_item_edit(item_id, session_id, edit.c_str());
     }
     uint32_t count = 0;
     pc_error_info error = make_error();

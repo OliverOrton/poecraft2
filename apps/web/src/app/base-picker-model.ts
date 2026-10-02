@@ -31,8 +31,8 @@ export function compareBasePickerBases(a: BaseInfo, b: BaseInfo): number {
 }
 
 /** Shared input preparation for every consumer of pc-base-picker. */
-export function supportedBasePickerBases(bases: BaseInfo[]): BaseInfo[] {
+export function supportedBasePickerBases(bases: BaseInfo[], allowClusters = false): BaseInfo[] {
     return bases
-        .filter((base) => base.support === 0 && base.name)
+        .filter((base) => (base.support === 0 || (allowClusters && base.support === 1 && base.cluster)) && base.name)
         .sort(compareBasePickerBases);
 }

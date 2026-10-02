@@ -518,6 +518,8 @@ void build_session(SessionImpl& session) {
          i < d.base_tag_offsets[base_index + 1]; ++i) {
         base_set.insert(d.base_tag_ids[i]);
     }
+    if (session.is_cluster())
+        base_set.insert(d.clusters[session.cluster_index].passives[session.cluster_passive_index].tag_id);
     session.effective_base_tag_ids.assign(base_set.begin(), base_set.end());
     std::sort(session.effective_base_tag_ids.begin(),
               session.effective_base_tag_ids.end());
@@ -563,7 +565,10 @@ void build_session(SessionImpl& session) {
     }
 
     std::unordered_set<int> allowed_domains;
-    if (item_class_key == "Jewel") {
+    if (session.is_cluster()) {
+        const auto it = d.domain_code_by_name.find("affliction_jewel");
+        if (it != d.domain_code_by_name.end()) allowed_domains.insert(it->second);
+    } else if (item_class_key == "Jewel") {
         const auto it = d.domain_code_by_name.find("misc");
         if (it != d.domain_code_by_name.end()) allowed_domains.insert(it->second);
     } else if (item_class_key == "AbyssJewel") {
@@ -583,12 +588,20 @@ void build_session(SessionImpl& session) {
 
     auto add_mod = [&](std::uint32_t p, ReachKind kind,
                        const std::string& via) {
+        const int generation = d.mod_gen_type_code[p];
+        if (session.is_cluster() &&
+            (generation == d.gen_prefix_code || generation == d.gen_suffix_code) &&
+            !allowed_domains.count(d.mod_domain_code[p])) return;
         const std::uint32_t global = d.mod_global_ids[p];
         if (session.session_id_by_global_id.count(global)) return;
         const std::uint32_t s =
             static_cast<std::uint32_t>(session.global_index.size());
         session.session_id_by_global_id.emplace(global, s);
         session.global_index.push_back(p);
+        // Ordinary added-tag mechanics need their own solver qualification.
+        if (session.is_cluster() && !d.adds_tag_offsets.empty() &&
+            d.adds_tag_offsets[p] != d.adds_tag_offsets[p + 1])
+            session.has_added_tags = true;
         const int gen = d.mod_gen_type_code[p];
         session.gen_type.push_back(
             gen == d.gen_prefix_code ? 0 : gen == d.gen_suffix_code ? 1 : -1);
@@ -1058,18 +1071,8 @@ void build_session(SessionImpl& session) {
             session.essence_guaranteed_mod_ids[i] = it->second;
         }
     }
-    session.fossil_added_mod_ids.resize(d.fossil_count);
-    session.fossil_forced_mod_ids.resize(d.fossil_count);
-    for (std::uint32_t f = 0; f < d.fossil_count; ++f) {
-        for (std::uint32_t global : fossil_added_globals[f]) {
-            session.fossil_added_mod_ids[f].push_back(
-                session.session_id_by_global_id.at(global));
-        }
-        for (std::uint32_t global : fossil_forced_globals[f]) {
-            session.fossil_forced_mod_ids[f].push_back(
-                session.session_id_by_global_id.at(global));
-        }
-    }
+    map_globals(fossil_added_globals, session.fossil_added_mod_ids);
+    map_globals(fossil_forced_globals, session.fossil_forced_mod_ids);
 
     // Build display families using the same identity as the old UI:
     // exclusion group + ordered stat signature, separated by generation side
@@ -1160,7 +1163,8 @@ std::uint32_t intern_item_tag_signature(
     const SessionImpl& session = *context.session;
     const std::uint8_t bits = item != nullptr ? item->generic_influence_bits : 0;
     const std::uint32_t cached = context.signature_by_influence_bits[bits];
-    if (cached != std::numeric_limits<std::uint32_t>::max()) return cached;
+    if (!session.has_added_tags &&
+        cached != std::numeric_limits<std::uint32_t>::max()) return cached;
     if (context.signature_by_key.empty()) {
         context.signature_by_key.emplace(
             signature_key(session.effective_base_tag_ids), 0);
@@ -1174,12 +1178,28 @@ std::uint32_t intern_item_tag_signature(
                 session.selector_tag_by_influence[code]));
         }
     }
+    if (session.has_added_tags && item != nullptr) {
+        const auto& d = *session.data;
+        const auto add = [&](const pc_mod_slot* slots, std::uint8_t count) {
+            for (std::uint8_t i = 0; i < count; ++i) {
+                if (slots[i].mod_id >= session.mod_count) continue;
+                const auto p = session.global_index[slots[i].mod_id];
+                tags.insert(tags.end(), d.adds_tag_ids.begin() + d.adds_tag_offsets[p],
+                            d.adds_tag_ids.begin() + d.adds_tag_offsets[p + 1]);
+            }
+        };
+        add(item->prefixes, item->prefix_count);
+        add(item->suffixes, item->suffix_count);
+        add(item->implicits, item->implicit_count);
+        add(item->enchantments, item->enchantment_count);
+    }
     std::sort(tags.begin(), tags.end());
     tags.erase(std::unique(tags.begin(), tags.end()), tags.end());
     const std::string key = signature_key(tags);
     const auto found = context.signature_by_key.find(key);
     if (found != context.signature_by_key.end()) {
-        context.signature_by_influence_bits[bits] = found->second;
+        if (!session.has_added_tags)
+            context.signature_by_influence_bits[bits] = found->second;
         return found->second;
     }
 
@@ -1189,7 +1209,7 @@ std::uint32_t intern_item_tag_signature(
         static_cast<std::uint32_t>(context.uncommon_weight_tables.size() + 1);
     context.uncommon_weight_tables.push_back(std::move(table));
     context.signature_by_key.emplace(key, id);
-    context.signature_by_influence_bits[bits] = id;
+    if (!session.has_added_tags) context.signature_by_influence_bits[bits] = id;
     return id;
 }
 

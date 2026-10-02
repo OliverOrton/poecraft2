@@ -104,6 +104,7 @@ export class PcStash extends HTMLElement {
             resourceIdentity: record.id,
             base: record.base,
             itemLevel: record.itemLevel,
+            cluster: record.cluster,
             rarity: record.rarity,
             state: record.state,
         };

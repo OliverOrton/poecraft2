@@ -1,4 +1,6 @@
 #include "tests.hpp"
+#include "../src/handles_internal.hpp"
+#include "../src/currency_outcomes.hpp"
 
 #include "poecraft/api.h"
 #include "poecraft/session.h"
@@ -1164,5 +1166,84 @@ void run_session_builder_tests(const char* artifact_dir,
     PC_CHECK(found_abyss);
     PC_CHECK(found_implicit);
 
+    pc_data_destroy(data);
+}
+
+void run_cluster_configuration_tests(const char* artifact_dir) {
+    PC_CHECK(artifact_dir != nullptr);
+    if (!artifact_dir) return;
+    pc_data_handle data = nullptr;
+    pc_error_info error{};
+    const auto manifest = std::string(artifact_dir) + "/manifest.json";
+    PC_CHECK(pc_data_load_file(manifest.c_str(), &data, &error) == PC_RESULT_OK);
+    if (!data) return;
+    const auto& d = *data->impl;
+    std::size_t admitted = 0, legacy = 0;
+    for (const auto& cluster : d.clusters) {
+        const auto& path = d.string_at(cluster.key_sid);
+        pc_session_options unconfigured{sizeof(unconfigured), PC_ABI_VERSION, path.c_str(), 84};
+        pc_session_handle handle = nullptr;
+        PC_CHECK(pc_session_create(data, &unconfigured, &handle, &error) == PC_RESULT_UNSUPPORTED_FEATURE);
+        for (const auto& passive : cluster.passives) {
+            const auto& key = d.string_at(passive.key_sid);
+            for (std::uint32_t count = cluster.min_skills; count <= cluster.max_skills; ++count) {
+                pc_cluster_session_options options{sizeof(options), PC_ABI_VERSION, path.c_str(), 84, key.c_str(), count};
+                const auto result = pc_session_create_cluster(data, &options, &handle, &error);
+                if (d.tag_name_by_id.at(passive.tag_id).starts_with("old_do_not_use_")) {
+                    PC_CHECK(result == PC_RESULT_UNSUPPORTED_FEATURE); ++legacy; continue;
+                }
+                PC_CHECK(result == PC_RESULT_OK);
+                if (!handle) { std::printf("Cluster create failed: %s %s\n", key.c_str(), error.message); continue; }
+                ++admitted;
+                const auto& session = *handle->impl;
+                PC_CHECK(session.is_cluster());
+                PC_CHECK(session.rare_affix_cap == 2);
+                PC_CHECK(session.cluster_passive_count == count);
+                PC_CHECK(d.string_at(d.clusters[session.cluster_index].passives[session.cluster_passive_index].key_sid) == key);
+                PC_CHECK(std::find(session.effective_base_tag_ids.begin(), session.effective_base_tag_ids.end(), passive.tag_id) != session.effective_base_tag_ids.end());
+                PC_CHECK(session.mod_count > 0);
+                for (auto pos : session.global_index) {
+                    if (d.mod_gen_type_code[pos] == d.gen_prefix_code || d.mod_gen_type_code[pos] == d.gen_suffix_code)
+                        PC_CHECK(d.domain_name(d.mod_domain_code[pos]) == "affliction_jewel");
+                    PC_CHECK(d.mod_required_level[pos] <= 84);
+                }
+                pc_item_state item;
+                pc_item_clear(&item);
+                item.rarity = PC_RARITY_RARE;
+                std::uint32_t cap = 0;
+                PC_CHECK(pc_session_item_max_prefix(handle, &item, &cap, &error) == PC_RESULT_OK && cap == 2);
+                size_t length = 0;
+                PC_CHECK(pc_session_cluster_configuration_json(handle, nullptr, 0, &length, &error) == PC_RESULT_BUFFER_TOO_SMALL);
+                std::vector<char> buffer(length + 1);
+                PC_CHECK(pc_session_cluster_configuration_json(handle, buffer.data(), buffer.size(), &length, &error) == PC_RESULT_OK);
+                const auto config = json::Parser(buffer.data(), length).parse();
+                PC_CHECK(config.at("passive_key").as_string() == key);
+                PC_CHECK(config.at("passive_count").as_int() == count);
+                if (admitted == 1) {
+                    const char* goal = "{\"rarity\":\"rare\",\"slots\":[],\"allow_extra_modifiers\":true}";
+                    pc_solver_handle solver = nullptr;
+                    PC_CHECK(pc_solver_create(handle, goal, std::strlen(goal), &solver, &error) == PC_RESULT_UNSUPPORTED_FEATURE);
+                    PC_CHECK(solver == nullptr);
+                    PC_CHECK(pc_calc_create_goal(handle, goal, std::strlen(goal), &solver, &error) == PC_RESULT_OK);
+                    if (solver) {
+                        std::uint32_t action = 0, entries = 99, state = 0;
+                        PC_CHECK(pc_solver_find_action(solver, "exalt", &action, &error) == PC_RESULT_OK);
+                        PC_CHECK(pc_calc_action_outcomes(solver, &item, action, nullptr, 0, &entries, nullptr, &error) == PC_RESULT_UNSUPPORTED_FEATURE);
+                        PC_CHECK(entries == 0);
+                        PC_CHECK(pc_solver_project_item(solver, &item, &state, &error) == PC_RESULT_UNSUPPORTED_FEATURE);
+                        pc_solver_destroy(solver);
+                    }
+                }
+                pc_session_destroy(handle); handle = nullptr;
+            }
+            for (const auto count : {cluster.min_skills - 1, cluster.max_skills + 1}) {
+                pc_cluster_session_options options{sizeof(options), PC_ABI_VERSION, path.c_str(), 84, key.c_str(), count};
+                PC_CHECK(pc_session_create_cluster(data, &options, &handle, &error) == PC_RESULT_INVALID_ARGUMENT);
+                PC_CHECK(handle == nullptr);
+            }
+        }
+    }
+    PC_CHECK(admitted > 0);
+    std::printf("Configured cluster catalogue: %zu admitted tuples, %zu legacy refusals\n", admitted, legacy);
     pc_data_destroy(data);
 }

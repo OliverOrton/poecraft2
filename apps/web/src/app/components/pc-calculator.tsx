@@ -1,3 +1,4 @@
+import { itemSnapshotCluster } from "../workspace/persistence";
 import { PcCraftControls, type CraftPanel } from "./pc-craft-controls";
 import { disposeReact, renderReact } from "../react-host";
 import { BaseSelectionShell, CalculatorShell } from "./document-shells";
@@ -182,6 +183,7 @@ export class PcCalculator extends HTMLElement {
     private docId = "";
     private base = DEFAULT_BASE;
     private itemLevel = 86;
+    private cluster?: import("../engine-protocol").ClusterConfiguration;
     private freshRarity = "rare";
 
     private session = 0;
@@ -293,7 +295,7 @@ export class PcCalculator extends HTMLElement {
         this.dataId = engine.dataId;
         this.catalog = await this.client.catalog(this.dataId);
         this.bases = (await this.client.listBases(this.dataId)).filter(
-            (base) => base.support === 0,
+            (base) => base.support === 0 || (base.support === 1 && Boolean(base.cluster)),
         );
         const bestiary = await this.client.bestiaryPresentation(this.dataId);
         this.bestiaryActions = bestiary.actions.filter(
@@ -309,6 +311,7 @@ export class PcCalculator extends HTMLElement {
         if (draft) {
             this.base = draft.base;
             this.itemLevel = draft.itemLevel;
+            this.cluster = itemSnapshotCluster(draft);
             this.goalRarity = draft.goalRarity;
             this.goalImplicitKeys = draft.goalImplicitKeys ?? [];
             this.goalInfluenceBits = draft.goalInfluenceBits;
@@ -390,6 +393,7 @@ export class PcCalculator extends HTMLElement {
             this.dataId,
             this.base,
             this.itemLevel,
+            this.cluster,
         );
         if (this.disposed) {
             await this.client.closeSession(session);
@@ -453,7 +457,9 @@ export class PcCalculator extends HTMLElement {
             // The engine owns bounded goal-relevant fossil synthesis. Keep a
             // hand-selected loadout materialized for exact odds even when it
             // falls outside the current automatic beam.
-            this.solver = await this.client.openSolver(this.session, goal);
+            this.solver = this.cluster
+                ? await this.client.openCalcGoal(this.session, this.itemGoal())
+                : await this.client.openSolver(this.session, goal);
         } catch (error) {
             this.calcError =
                 error instanceof Error ? error.message : String(error);
@@ -644,6 +650,7 @@ export class PcCalculator extends HTMLElement {
     private async applyPickerSelection(sel: BasePickerSelection): Promise<void> {
         this.base = sel.base;
         this.itemLevel = sel.itemLevel;
+        this.cluster = sel.cluster;
         this.hasBase = true;
         this.pickerOpen = false;
         this.renderShell();
@@ -709,6 +716,10 @@ export class PcCalculator extends HTMLElement {
     }
 
     private selectTool(tool: "odds" | "solve"): void {
+        if (this.cluster && tool === "solve") {
+            this.setStatus("Cluster strategy solving is awaiting qualification. Single-action Odds are available.");
+            return;
+        }
         this.activeTool = tool;
         this.querySelectorAll<HTMLElement>("[data-calc-pane]").forEach(pane => {
             pane.hidden = pane.dataset.calcPane !== tool;
@@ -1070,6 +1081,7 @@ export class PcCalculator extends HTMLElement {
                 "The current Native Solver Lab profile disables voluntary Restart and automatic Imprint programs. Turn both options off before exporting.",
             );
         }
+        if (this.cluster) throw new Error("Configured cluster Solver Lab export is awaiting exact continuation qualification.");
         const base = this.bases.find((entry) => entry.path === this.base);
         if (!base) throw new Error("The selected base is not available.");
         const pinned = pinEconomy(
@@ -1245,6 +1257,7 @@ export class PcCalculator extends HTMLElement {
             docId: this.docId,
             base: this.base,
             itemLevel: this.itemLevel,
+            cluster: this.cluster,
             state: this.item ? await this.client.exportItem(this.item, this.session) : null,
             goalRarity: this.goalRarity,
             goalImplicitKeys: this.goalImplicitKeys,
@@ -1628,7 +1641,7 @@ export class PcCalculator extends HTMLElement {
         request.donor = {resource_identity: donor.id, base: donor.base, item_level: donor.itemLevel, state: donor.state};
         this.donorModel = await readItemCard(this.client, this.dataId, this.catalog, donor, donor.name);
         this.renderActionPanels();
-        const session = await this.client.createSession(this.dataId, donor.base, donor.itemLevel);
+        const session = await this.client.createSession(this.dataId, donor.base, donor.itemLevel, itemSnapshotCluster(donor));
         let donorItem = 0;
         try {
             donorItem = await this.client.importItem(donor.state, session);
@@ -2427,8 +2440,9 @@ export class PcCalculator extends HTMLElement {
         if (this.pickerOpen) {
             renderReact(this, <BaseSelectionShell key={++this.shellVersion} kind="calculator" />);
             const picker = this.querySelector<PcBasePicker>("pc-base-picker")!;
+            picker.setAttribute("allow-clusters", "");
             picker.setBases(this.bases);
-            picker.setSelection(this.base, this.itemLevel);
+            picker.setSelection(this.base, this.itemLevel, this.cluster);
             picker.addEventListener("confirm", (event) => {
                 const detail = (event as CustomEvent<BasePickerSelection>).detail;
                 void this.guard(() => this.applyPickerSelection(detail));
@@ -2638,10 +2652,10 @@ export class PcCalculator extends HTMLElement {
     }
 
     private baseDisplayName(): string {
-        return (
-            this.bases.find((base) => base.path === this.base)?.name ??
-            baseLabel(this.base)
-        );
+        const base = this.bases.find(base => base.path === this.base);
+        const name = base?.name ?? baseLabel(this.base);
+        const passive = base?.cluster?.passives.find(p => p.key === this.cluster?.passiveKey);
+        return this.cluster ? `${name} | ${this.cluster.passiveCount} passives | ${passive?.text.join("; ") || passive?.name || this.cluster.passiveKey}` : name;
     }
 
     private renderBaseSummary(): void {

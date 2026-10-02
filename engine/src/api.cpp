@@ -606,6 +606,91 @@ pc_result pc_session_create(
     return PC_RESULT_OK;
 }
 
+pc_result pc_session_create_cluster(pc_data_handle data,
+    const pc_cluster_session_options* options, pc_session_handle* out_session,
+    pc_error_info* out_error) {
+    if (!out_session) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null output session");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_session = nullptr;
+    if (!data || !options || !abi_struct_ok(options->struct_size,
+            options->abi_version, sizeof(*options), out_error) ||
+            !options->base_metadata_path || !options->passive_key || options->item_level < 1) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "invalid configured cluster input");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const auto& d = *data->impl;
+    const auto found = d.cluster_by_path.find(options->base_metadata_path);
+    if (found == d.cluster_by_path.end()) {
+        set_error(out_error, PC_RESULT_NOT_FOUND, "cluster base metadata path not found");
+        return PC_RESULT_NOT_FOUND;
+    }
+    const auto& c = d.clusters[found->second];
+    if (options->passive_count < c.min_skills || options->passive_count > c.max_skills) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "cluster passive count is outside canonical bounds");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    std::uint32_t passive = 0;
+    while (passive < c.passives.size() && d.string_at(c.passives[passive].key_sid) != options->passive_key) ++passive;
+    if (passive == c.passives.size()) {
+        set_error(out_error, PC_RESULT_NOT_FOUND, "passive key does not belong to the selected cluster size");
+        return PC_RESULT_NOT_FOUND;
+    }
+    if (d.tag_name_by_id.at(c.passives[passive].tag_id).starts_with("old_do_not_use_")) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, "legacy cluster passive configurations are not admitted");
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
+    try {
+        auto impl = std::make_shared<poecraft::SessionImpl>();
+        impl->data = data->impl;
+        impl->base_index = d.base_by_path.at(options->base_metadata_path);
+        impl->item_level = options->item_level;
+        impl->cluster_index = found->second;
+        impl->cluster_passive_index = passive;
+        impl->cluster_passive_count = options->passive_count;
+        poecraft::build_session(*impl);
+        auto holder = std::make_unique<pc_session>();
+        holder->impl = std::move(impl);
+        *out_session = holder.release();
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
+pc_result pc_session_cluster_configuration_json(pc_session_handle session,
+    char* buffer, size_t buffer_size, size_t* out_length, pc_error_info* out_error) {
+    if (!session || !out_length) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null configuration argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const auto& s = *session->impl;
+    if (!s.is_cluster()) return emit_text("null", buffer, buffer_size, out_length, out_error);
+    const auto& d = *s.data;
+    const auto& c = d.clusters[s.cluster_index];
+    const auto& p = c.passives[s.cluster_passive_index];
+    const auto quoted = [](const std::string& text) {
+        std::string result = "\"";
+        for (const auto ch : text) { if (ch == '"' || ch == '\\') result += '\\'; result += ch; }
+        return result + "\"";
+    };
+    const auto size = d.string_at(c.size_sid);
+    std::string out = "{\"base\":" + quoted(d.string_at(c.key_sid)) +
+        ",\"item_level\":" + std::to_string(s.item_level) +
+        ",\"size\":" + quoted(size) + ",\"passive_key\":" + quoted(d.string_at(p.key_sid)) +
+        ",\"passive_count\":" + std::to_string(s.cluster_passive_count) +
+        ",\"passive_tag\":" + quoted(d.tag_name_by_id.at(p.tag_id)) +
+        ",\"passive_stats\":" + d.string_at(p.stats_sid) +
+        ",\"passive_text\":" + d.string_at(p.text_sid) +
+        ",\"notable_indices\":" + d.string_at(c.notable_indices_sid) +
+        ",\"socket_indices\":" + d.string_at(c.socket_indices_sid) +
+        ",\"small_indices\":" + d.string_at(c.small_indices_sid) + "}";
+    return emit_text(out, buffer, buffer_size, out_length, out_error);
+}
+
 void pc_session_destroy(pc_session_handle session) {
     delete session;
 }
@@ -1450,6 +1535,8 @@ pc_result pc_item_edit_json(pc_session_handle session, pc_item_state* item,
         if (const auto* bits = root.find("influence_bits")) {
             if (bits->type != Type::Number || bits->number < 0 || bits->number > 63 || std::floor(bits->number) != bits->number)
                 throw std::invalid_argument("Invalid influence selection");
+            if (s.is_cluster() && bits->number != 0)
+                throw std::invalid_argument("Configured clusters cannot carry ordinary influence");
             next.generic_influence_bits = static_cast<std::uint8_t>(bits->number);
             if (std::popcount(next.generic_influence_bits) > 2) throw std::invalid_argument("An item can have at most two ordinary influences");
             for (unsigned code = 1; code <= 6; ++code)
@@ -1523,6 +1610,14 @@ pc_result pc_item_edit_json(pc_session_handle session, pc_item_state* item,
         }
         if (const auto* key = root.find("add_explicit")) {
             const auto id = resolve(*key, false);
+            if (s.is_cluster()) {
+                poecraft::ActionContextImpl context(0);
+                context.session = session->impl;
+                const auto& pool = poecraft::get_weighted_pool(context, &next, {});
+                if (std::none_of(pool.entries.begin(), pool.entries.end(),
+                    [&](const auto& row) { return row.session_mod_id == id; }))
+                    throw std::invalid_argument("Cluster modifier is not eligible with the current added tags and groups");
+            }
             const int side = s.gen_type[id];
             if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX) throw std::invalid_argument("Modifier is not an explicit");
             const unsigned cap = next.rarity == PC_RARITY_NORMAL ? 0 : next.rarity == PC_RARITY_MAGIC ? 1 : s.rare_affix_cap;

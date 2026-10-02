@@ -37,6 +37,26 @@ pc_result pc_session_create(
     pc_session_handle* out_session,
     pc_error_info* out_error);
 
+/* Fixed ordinary cluster input. Stable keys are required; no drop/configuration
+ * generation distribution or passive-tree pathing is inferred by this API. */
+typedef struct pc_cluster_session_options {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    const char* base_metadata_path;
+    uint32_t item_level;
+    const char* passive_key;
+    uint32_t passive_count;
+} pc_cluster_session_options;
+
+pc_result pc_session_create_cluster(pc_data_handle data,
+    const pc_cluster_session_options* options, pc_session_handle* out_session,
+    pc_error_info* out_error);
+
+/* Complete pinned configuration as JSON, or null for an ordinary session.
+ * Uses the query-required-count buffer contract. */
+pc_result pc_session_cluster_configuration_json(pc_session_handle session,
+    char* buffer, size_t buffer_size, size_t* out_length, pc_error_info* out_error);
+
 void pc_session_destroy(pc_session_handle session);
 
 /* Resolved identity of a session's base. String fields point into immutable

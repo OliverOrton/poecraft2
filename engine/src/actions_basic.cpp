@@ -449,7 +449,8 @@ void fill_random_mods(
         refill_hints = &hints;
     }
     const WeightedPool* rejection_superset = nullptr;
-    if (refill_hints != nullptr && !context.capture_action_trace) {
+    if (refill_hints != nullptr && !context.capture_action_trace &&
+        !session.has_added_tags) {
         if (context.empty_group_mask.size() != session.words) {
             context.empty_group_mask.assign(session.words, 0);
         }
@@ -1472,6 +1473,16 @@ ActionOutcome apply_action(
             throw std::invalid_argument(reason);
     if (item->item_flags & PC_ITEM_FORESEEN)
         throw std::invalid_argument("Foreseeing item requires its original native Lock context; ordinary action sampling cannot drop foresight");
+    if (session.is_cluster()) {
+        switch (action.type) {
+        case ActionType::Transmute: case ActionType::Alteration:
+        case ActionType::Augment: case ActionType::Regal: case ActionType::Exalt:
+        case ActionType::Annul: case ActionType::Scour:
+            break;
+        default:
+            throw std::invalid_argument("This cluster action law is not yet approved and qualified");
+        }
+    }
     if (item->enchantment_count && action.type != ActionType::Vaal && action.type != ActionType::Dominance)
         throw std::invalid_argument("Crafting on retained enchantments is unavailable until their effect and socket contracts are implemented");
     if (item->memory_strands > 100 || item->lifecycle > PC_ITEM_DESTROYED)
@@ -1790,6 +1801,86 @@ pc_item_state awaken_item(ActionContextImpl& context,
     request.respects_metamod_pool_blocks = false;
     fill_random_mods(context, request, &result, rare_count(context));
     return result;
+}
+
+ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl& context,
+    const pc_item_state& original, const ActionParameters& action,
+    const std::function<void(const pc_item_state&, long double)>& visit,
+    std::uint64_t max_work) {
+    const auto& s = *context.session;
+    if (!s.is_cluster()) throw std::invalid_argument("Concrete cluster outcomes require a configured session");
+    if (!item_craftable(&original)) { visit(original, 1); return {}; }
+    if (original.memory_strands || original.enchantment_count)
+        throw std::invalid_argument("Unsupported cluster input carrier");
+    std::uint64_t work = 0;
+    const auto fill = [&](const pc_item_state& base, int target, long double mass,
+                          const auto& self) -> bool {
+        if (++work > max_work) throw std::length_error("Concrete cluster outcome work limit exceeded");
+        if (base.prefix_count + base.suffix_count >= target) { visit(base, mass); return true; }
+        PoolBuildRequest request;
+        const auto side = open_side_filter(s, &base, request);
+        if (side == -2) { visit(base, mass); return false; }
+        request.side_filter = side;
+        const auto& pool = get_weighted_pool(context, &base, request);
+        if (!pool.total_weight) { visit(base, mass); return false; }
+        // Recursion can add a new tag signature/table. Preserve this row by value.
+        const auto entries = pool.entries;
+        const auto total = pool.total_weight;
+        for (const auto& row : entries) {
+            auto next = base;
+            if (!add_direct_mod(s, &next, row.session_mod_id))
+                throw std::logic_error("Native cluster pool contains an illegal addition");
+            self(next, target, mass * static_cast<long double>(row.final_weight) / total, self);
+        }
+        return true;
+    };
+    switch (action.type) {
+    case ActionType::Transmute: case ActionType::Alteration: {
+        if (original.rarity != (action.type == ActionType::Transmute ? PC_RARITY_NORMAL : PC_RARITY_MAGIC)) {
+            visit(original, 1); return {};
+        }
+        auto base = original;
+        const auto kept = collect_preserved(s, &original, true);
+        restore_slots(&base, kept);
+        base.rarity = PC_RARITY_MAGIC;
+        fill(base, 1, 0.5L, fill);
+        fill(base, 2, 0.5L, fill);
+        return {true, 0, 0};
+    }
+    case ActionType::Augment: case ActionType::Regal: case ActionType::Exalt: {
+        if (original.rarity != (action.type == ActionType::Exalt ? PC_RARITY_RARE : PC_RARITY_MAGIC)) {
+            visit(original, 1); return {};
+        }
+        auto base = original;
+        if (action.type == ActionType::Regal) base.rarity = PC_RARITY_RARE;
+        const auto applied = fill(base, base.prefix_count + base.suffix_count + 1, 1, fill);
+        return {applied || action.type == ActionType::Regal, 0, 0};
+    }
+    case ActionType::Annul: {
+        std::vector<std::pair<int, std::uint8_t>> removable;
+        for (const auto side : {PC_SIDE_PREFIX, PC_SIDE_SUFFIX}) {
+            if (side_locked(s, &original, side)) continue;
+            const auto* slots = side == PC_SIDE_PREFIX ? original.prefixes : original.suffixes;
+            const auto count = side == PC_SIDE_PREFIX ? original.prefix_count : original.suffix_count;
+            for (std::uint8_t i = 0; i < count; ++i)
+                if (!(slots[i].flags & PC_MOD_SLOT_FRACTURED)) removable.emplace_back(side, i);
+        }
+        if (removable.empty()) { visit(original, 1); return {}; }
+        for (const auto& [side, index] : removable) {
+            auto next = original;
+            pc_item_remove_at(&next, side, index);
+            visit(next, 1.0L / removable.size());
+        }
+        return {true, 0, 1};
+    }
+    case ActionType::Scour: {
+        auto next = original;
+        const auto result = do_scour(s, &next);
+        visit(next, 1);
+        return result;
+    }
+    default: throw std::invalid_argument("This cluster action law is not yet approved and qualified");
+    }
 }
 
 } // namespace poecraft

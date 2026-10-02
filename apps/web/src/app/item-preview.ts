@@ -1,13 +1,13 @@
 import type { EngineClient } from "./engine-client";
 import type { Catalog } from "./engine-protocol";
-import type { ItemSnapshot } from "./workspace/persistence";
+import { itemSnapshotCluster, type ItemSnapshot } from "./workspace/persistence";
 import type { ConcreteModListModel } from "./components/pc-mod-list";
 import { influenceLabels } from "./item-display";
 
 /** Read a saved resource through its own native session for shared item cards. */
 export async function readItemCard(client: EngineClient, data: number, catalog: Catalog | null,
     snapshot: ItemSnapshot, name: string): Promise<ConcreteModListModel> {
-    const session = await client.createSession(data, snapshot.base, snapshot.itemLevel);
+    const session = await client.createSession(data, snapshot.base, snapshot.itemLevel, itemSnapshotCluster(snapshot));
     let item = 0;
     try {
         item = await client.importItem(snapshot.state, session);

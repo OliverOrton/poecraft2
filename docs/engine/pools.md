@@ -128,9 +128,13 @@ channels. A classification such as attack, caster, life, or fire does not by
 itself supply a spawn weight. Conversely, a selector row does not make the mod
 part of a Harvest or fossil classification.
 
-The canonical artifact contains `adds_tags`, but the current native
-`DataImpl` does not load or apply runtime tag mutation from that field. Pools
-use the session's effective base/influence tag signature.
+The native loader retains canonical `adds_tags`. Configured cluster sessions
+combine the selected fixed passive tag with tags added by every installed
+explicit, implicit and enchantment modifier. Removing a modifier removes its
+added tags from the next signature. Ordered generation selectors retain their
+first-match behavior. Dynamic signatures and within-reforge pools are rebuilt
+when that set changes; the static rejection-superset shortcut is disabled.
+Ordinary session behavior is unchanged pending separate added-tag qualification.
 
 ## Caching and debugging
 
@@ -152,7 +156,9 @@ and cache behavior. The WASM facade exposes the pool-debug result as JSON.
 
 - Ordinary affix pools support one-item crafting. Native Awakener transactions
   retain an influenced pair from their bound item roles and refill through
-  ordinary pools. Cluster-specific eligibility and recombinator transfer pools
+  ordinary pools. Configured clusters select the affliction-jewel domain and
+  fixed passive tag; [the cluster receipt](../active/2026-10-02-clusters-completion/README.md)
+  owns their admitted actions and Calculator scope. Recombinator transfer pools
   remain unimplemented.
 - The engine has no separate runtime domain-mask inventory; the session
   compiler produces the concrete masks listed above.

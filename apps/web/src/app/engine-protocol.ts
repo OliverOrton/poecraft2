@@ -515,13 +515,25 @@ export interface PoolDebug {
     summary: PoolSummary;
 }
 
+/** Stable configured input identity. The engine validates membership and bounds. */
+export interface ClusterConfiguration {
+    passiveKey: string;
+    passiveCount: number;
+}
+export interface ClusterBaseCatalog {
+    minPassiveCount: number;
+    maxPassiveCount: number;
+    passives: Array<{key: string; name: string; tag: string; text: string[]}>;
+}
+
 export interface BaseInfo {
     path: string;
     name: string;
     item_class_key: string;
     /** Canonical base drop-level requirement; negative means unknown. */
     drop_level: number;
-    /** pc_session_support: 0 ordinary, 1 cluster, 2 unsupported domain. */
+    cluster?: ClusterBaseCatalog;
+    /** pc_session_support: 0 ordinary, 1 configured cluster, 2 unsupported domain. */
     support: number;
 }
 

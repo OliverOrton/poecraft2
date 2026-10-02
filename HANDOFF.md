@@ -87,6 +87,15 @@ non-sampling Fracture selector repeats two assertion failures plus a lost-artifa
 abort on the preserved baseline and current integration; separate debt remains.
 The final matching WASM/DLL after this repair, new owner patches and full product
 acceptance remain pending. No owned process remains.
+# KIDS configured-cluster continuation (2026-10-02)
+
+Work is isolated on `dot/clusters-completion-20261002` from `b794e009` in
+`C:/Users/Oliver/Documents/poecraft2-clusters-completion`. The
+[living record](docs/active/2026-10-02-clusters-completion/README.md) owns the
+native/product pathway, qualification and remaining owner-law review. Full rare
+crafting and cluster solver support are pending explicit review; no continuation
+proof or inherited runtime qualification is promoted. Integration alone owns
+merge/push. No solver process is owned.
 
 # Sprint integration native checkpoint (2026-10-02)
 

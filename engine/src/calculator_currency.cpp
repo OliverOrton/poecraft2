@@ -142,6 +142,23 @@ std::string calculate_currency_json(CalcContext& source,
     if (action == "observe") {
         legal = true;
         add(receiver, 1);
+    } else if (session.is_cluster()) {
+        if (expanded || found_action == calc.registry().index_by_id.end())
+            throw std::invalid_argument("This cluster action law is not yet approved and qualified");
+        const auto& descriptor = calc.registry().actions[found_action->second];
+        if (solver_action_disabled(calc.goal(), descriptor))
+            throw std::invalid_argument("Calculation action belongs to a disabled family");
+        if (action == "restart") {
+            pc_item_state next;
+            pc_item_clear(&next);
+            legal = true;
+            add(next, 1);
+        } else {
+            ActionContextImpl context(0);
+            context.session = source.shared_session();
+            const auto result = visit_cluster_currency_outcomes(context, receiver, descriptor.params, add);
+            legal = result.applied;
+        }
     } else if (!expanded) {
         const auto index = found_action->second;
         const auto& descriptor = calc.registry().actions[index];

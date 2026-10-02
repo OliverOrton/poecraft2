@@ -25,9 +25,18 @@ export interface ItemSnapshot {
     resourceIdentity?: string;
     base: string;
     itemLevel: number;
+    cluster?: import("../engine-protocol").ClusterConfiguration;
     /** Current engine rarity, used when reopening or rebuilding the item. */
     rarity?: string;
     state: unknown;
+}
+
+/** New records store the configuration explicitly; native exports also bind it. */
+export function itemSnapshotCluster(snapshot: Pick<ItemSnapshot, "state" | "cluster">): import("../engine-protocol").ClusterConfiguration | undefined {
+    if (snapshot.cluster) return snapshot.cluster;
+    const c = (snapshot.state as {cluster?: {passive_key?: unknown; passive_count?: unknown}} | null)?.cluster;
+    return c && typeof c.passive_key === "string" && typeof c.passive_count === "number"
+        ? {passiveKey: c.passive_key, passiveCount: c.passive_count} : undefined;
 }
 
 /** Resolve current rarity from new snapshots or legacy state-only records. */
@@ -61,6 +70,7 @@ export interface DraftRecord {
     docId: string;
     base: string;
     itemLevel: number;
+    cluster?: import("../engine-protocol").ClusterConfiguration;
     rarity: string;
     /** Exported item state, or null for an untouched document. */
     state: unknown | null;
@@ -135,6 +145,7 @@ export interface CalculatorDraftRecord {
     docId: string;
     base: string;
     itemLevel: number;
+    cluster?: import("../engine-protocol").ClusterConfiguration;
     /** Exported item state, or null before a base is chosen. */
     state: unknown | null;
     goalRarity: "normal" | "magic" | "rare";

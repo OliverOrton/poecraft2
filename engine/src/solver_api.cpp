@@ -702,6 +702,11 @@ pc_result create_solver(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     *out_solver = nullptr;
+    if (session->impl->is_cluster() && !calculator_only) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
+            "Configured clusters have single-action Calculator support; Current/Finder continuation is unqualified");
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
     try {
         auto holder = std::make_unique<pc_solver>();
         holder->session = session->impl;
@@ -2091,6 +2096,11 @@ pc_result pc_calc_action_outcomes(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     *out_count = 0;
+    if (solver->session->is_cluster()) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
+            "Configured cluster odds require the concrete currency Calculator endpoint; legacy continuation rows are unqualified");
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
     if (action_index >= solver->calc->registry().actions.size()) {
         set_error(out_error, PC_RESULT_NOT_FOUND, "action index out of range");
         return PC_RESULT_NOT_FOUND;
@@ -2602,6 +2612,11 @@ pc_result pc_solver_project_item(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
     }
+    if (solver->session->is_cluster()) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
+            "Configured cluster continuation-state projection is unqualified");
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
     try {
         *out_state_id = solver->calc->intern_item(*item);
     } catch (const std::exception& error) {
@@ -3030,6 +3045,8 @@ pc_result pc_strategy_evaluate(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     try {
+        if (strategy->impl->session->is_cluster())
+            throw solver::StrategyEvalUnsupported("Configured cluster exact strategy continuation is unqualified");
         solver::StrategyEvalWork work(
             strategy->impl, strategy_eval_options(options));
         while (!work.progress().done) work.step(4096);
@@ -3062,6 +3079,8 @@ pc_result pc_strategy_eval_begin(
     }
     *out_work = nullptr;
     try {
+        if (strategy->impl->session->is_cluster())
+            throw solver::StrategyEvalUnsupported("Configured cluster exact strategy continuation is unqualified");
         auto work = std::make_unique<pc_strategy_eval_work>();
         work->impl = std::make_unique<solver::StrategyEvalWork>(
             strategy->impl, strategy_eval_options(options));

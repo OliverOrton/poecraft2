@@ -119,6 +119,17 @@ struct BestiaryCalculation {
     BestiaryActionOutcome outcome{};
 };
 
+struct ClusterPassiveDescriptor {
+    std::uint32_t key_sid = 0, tag_id = 0, name_sid = 0;
+    std::uint32_t stats_sid = 0, text_sid = 0;
+};
+struct ClusterDescriptor {
+    std::uint32_t key_sid = 0, size_sid = 0;
+    std::uint32_t min_skills = 0, max_skills = 0;
+    std::uint32_t notable_indices_sid = 0, socket_indices_sid = 0, small_indices_sid = 0;
+    std::vector<ClusterPassiveDescriptor> passives;
+};
+
 struct DataImpl {
     std::vector<std::string> strings;
 
@@ -165,6 +176,9 @@ struct DataImpl {
     std::vector<std::uint32_t> base_implicit_offsets; // base_count + 1
     std::vector<std::int32_t> base_implicit_global_mod_ids;
     std::unordered_map<std::string, std::uint32_t> base_by_path;
+
+    std::vector<ClusterDescriptor> clusters;
+    std::unordered_map<std::string, std::uint32_t> cluster_by_path;
 
     // item classes
     std::uint32_t item_class_count = 0;
@@ -219,6 +233,10 @@ struct DataImpl {
     std::vector<std::int32_t> gen_weights;
     std::vector<std::uint32_t> class_offsets; // mod_count + 1
     std::vector<std::uint32_t> class_tag_ids;
+
+    // Tags added by installed modifiers (distinct from classification tags).
+    std::vector<std::uint32_t> adds_tag_offsets; // mod_count + 1
+    std::vector<std::uint32_t> adds_tag_ids;
 
     // stats (used for capacity checks and display-family identity)
     std::vector<std::uint32_t> stat_offsets; // mod_count + 1
@@ -338,6 +356,10 @@ struct SessionImpl {
     std::shared_ptr<const DataImpl> data;
     std::uint32_t base_index = 0;
     std::uint32_t item_level = 0;
+    std::uint32_t cluster_index = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t cluster_passive_index = 0, cluster_passive_count = 0;
+    bool is_cluster() const { return cluster_index != std::numeric_limits<std::uint32_t>::max(); }
+
 
     // dense universe: session_mod_id (0..mod_count-1) -> DataImpl mod position
     std::uint32_t mod_count = 0;
@@ -417,6 +439,7 @@ struct SessionImpl {
     std::uint8_t rare_affix_cap = 3;
     RareReforgeCountKind rare_reforge_count_kind = RareReforgeCountKind::Equipment;
     bool eldritch_eligible = false;
+    bool has_added_tags = false;
 
     // Display-family identity is primary exclusion group + ordered stat
     // signature + generation side + acquisition source. It is deliberately

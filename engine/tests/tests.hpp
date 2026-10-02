@@ -91,3 +91,7 @@ void run_solver_uniform_removal_tests();
 void run_solver_observation_layout_tests();
 
 void run_solver_dominance_tests(const char* artifact_dir = nullptr);
+
+void run_dynamic_tag_tests();
+
+void run_cluster_configuration_tests(const char* artifact_dir);

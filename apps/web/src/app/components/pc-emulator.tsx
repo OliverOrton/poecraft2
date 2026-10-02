@@ -1,3 +1,4 @@
+import { itemSnapshotCluster } from "../workspace/persistence";
 import { PcCraftControls, type CraftPanel } from "./pc-craft-controls";
 import { disposeReact, renderReact } from "../react-host";
 import { BaseSelectionShell, EmulatorShell } from "./document-shells";
@@ -75,6 +76,7 @@ export class PcEmulator extends HTMLElement {
     private docId = "";
     private base = DEFAULT_BASE;
     private itemLevel = 86;
+    private cluster?: import("../engine-protocol").ClusterConfiguration;
     private rarity = "normal";
 
     private session = 0;
@@ -138,7 +140,7 @@ export class PcEmulator extends HTMLElement {
         this.dataId = engine.dataId;
         this.catalog = await this.client.catalog(this.dataId);
         this.bases = (await this.client.listBases(this.dataId)).filter(
-            (base) => base.support === 0,
+            (base) => base.support === 0 || (base.support === 1 && Boolean(base.cluster)),
         );
         this.bestiaryActions = (await this.client.bestiaryPresentation(
             this.dataId,
@@ -151,6 +153,7 @@ export class PcEmulator extends HTMLElement {
         if (draft) {
             this.base = draft.base;
             this.itemLevel = draft.itemLevel;
+            this.cluster = itemSnapshotCluster(draft);
             this.rarity = draft.rarity;
             this.history = draft.history;
             this.savedRef = draft.savedRef;
@@ -248,6 +251,7 @@ export class PcEmulator extends HTMLElement {
             this.dataId,
             this.base,
             this.itemLevel,
+            this.cluster,
         );
         if (this.disposed) {
             await this.client.closeSession(session);
@@ -327,7 +331,7 @@ export class PcEmulator extends HTMLElement {
     private async applyAwakener(): Promise<void> {
         const donor = this.donors.find(record => record.id === this.mechanicValues.get("awakener-donor"));
         if (!donor) throw new Error("Choose an available donor from Stash.");
-        const donorSession = await this.client.createSession(this.dataId, donor.base, donor.itemLevel);
+        const donorSession = await this.client.createSession(this.dataId, donor.base, donor.itemLevel, itemSnapshotCluster(donor));
         let donorItem = 0, receiverItem = 0;
         try {
             donorItem = await this.client.importItem(donor.state, donorSession);
@@ -336,7 +340,7 @@ export class PcEmulator extends HTMLElement {
                 {identity: donor.id, role: "donor", session: donorSession, item: donorItem},
                 {identity: this.savedRef ?? this.docId, role: "receiver", session: this.session, item: receiverItem},
             ]});
-            const snapshot = {base: this.base, itemLevel: this.itemLevel, rarity: "rare", state: await this.client.exportItem(receiverItem, this.session)};
+            const snapshot = {base: this.base, itemLevel: this.itemLevel, cluster: this.cluster, rarity: "rare", state: await this.client.exportItem(receiverItem, this.session)};
             const history = this.undoHistory.export();
             const before = [...(history.entries[history.cursor]?.resources ?? [])];
             const receiverRecord = this.savedRef ? await getStash(this.savedRef) : undefined;
@@ -509,10 +513,10 @@ export class PcEmulator extends HTMLElement {
         let session = 0;
         let context = 0;
         let mods = this.modCache;
-        const differentBase = snapshot.base !== this.base || snapshot.itemLevel !== this.itemLevel;
+        const differentBase = snapshot.base !== this.base || snapshot.itemLevel !== this.itemLevel || JSON.stringify(itemSnapshotCluster(snapshot)) !== JSON.stringify(this.cluster);
         try {
             if (differentBase) {
-                session = await this.client.createSession(this.dataId, snapshot.base, snapshot.itemLevel);
+                session = await this.client.createSession(this.dataId, snapshot.base, snapshot.itemLevel, itemSnapshotCluster(snapshot));
                 const count = await this.client.modCount(session);
                 mods = await Promise.all(Array.from({length: count}, (_, id) => this.client.modInfo(session, id)));
             }
@@ -538,6 +542,7 @@ export class PcEmulator extends HTMLElement {
             this.context = context; context = 0;
             this.base = snapshot.base;
             this.itemLevel = snapshot.itemLevel;
+            this.cluster = itemSnapshotCluster(snapshot);
             this.undoHistory.go(index);
             this.spend = frame.spend ?? {counts: {}, untracked: index > 0};
             this.dirty = this.savedStateKey !== JSON.stringify(snapshot);
@@ -564,6 +569,7 @@ export class PcEmulator extends HTMLElement {
         return {
             base: this.base,
             itemLevel: this.itemLevel,
+            cluster: this.cluster,
             rarity: info.rarity as string,
             state: await this.client.exportItem(this.item, this.session),
         };
@@ -574,6 +580,7 @@ export class PcEmulator extends HTMLElement {
             docId: this.docId,
             base: snapshot.base,
             itemLevel: snapshot.itemLevel,
+            cluster: itemSnapshotCluster(snapshot),
             rarity: snapshot.rarity ?? this.rarity,
             state: snapshot.state,
             history: this.history,
@@ -588,7 +595,7 @@ export class PcEmulator extends HTMLElement {
     }
 
     private async persist(): Promise<void> {
-        await putDraft(this.draftFor(this.item ? await this.snapshot() : {base: this.base, itemLevel: this.itemLevel, rarity: this.rarity, state: null}));
+        await putDraft(this.draftFor(this.item ? await this.snapshot() : {base: this.base, itemLevel: this.itemLevel, cluster: this.cluster, rarity: this.rarity, state: null}));
     }
 
     // --- save / save-as / duplicate ----------------------------------------
@@ -643,7 +650,7 @@ export class PcEmulator extends HTMLElement {
         this.savedRef = record.id;
         this.savedName = record.name;
         this.savedCreatedAt = record.createdAt;
-        this.savedStateKey = JSON.stringify({base: record.base, itemLevel: record.itemLevel, rarity: record.rarity, state: record.state});
+        this.savedStateKey = JSON.stringify({base: record.base, itemLevel: record.itemLevel, cluster: itemSnapshotCluster(record), rarity: record.rarity, state: record.state});
         this.dirty = this.savedStateKey !== JSON.stringify(await this.snapshot());
         await this.persist();
         workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
@@ -825,10 +832,10 @@ export class PcEmulator extends HTMLElement {
     }
 
     private baseDisplayName(): string {
-        return (
-            this.bases.find((base) => base.path === this.base)?.name ??
-            baseLabel(this.base)
-        );
+        const base = this.bases.find(base => base.path === this.base);
+        const name = base?.name ?? baseLabel(this.base);
+        const passive = base?.cluster?.passives.find(p => p.key === this.cluster?.passiveKey);
+        return this.cluster ? `${name} | ${this.cluster.passiveCount} passives | ${passive?.text.join("; ") || passive?.name || this.cluster.passiveKey}` : name;
     }
 
     private setStatus(text: string): void {
@@ -1051,8 +1058,9 @@ export class PcEmulator extends HTMLElement {
         if (this.pickerOpen) {
             renderReact(this, <BaseSelectionShell key={++this.shellVersion} kind="emulator" />);
             const picker = this.querySelector<PcBasePicker>("pc-base-picker")!;
+            picker.setAttribute("allow-clusters", "");
             picker.setBases(this.bases);
-            picker.setSelection(this.base, this.itemLevel);
+            picker.setSelection(this.base, this.itemLevel, this.cluster);
             picker.addEventListener("confirm", (event) => {
                 const detail = (event as CustomEvent<BasePickerSelection>).detail;
                 void this.guard(() => this.applyPickerSelection(detail));
@@ -1175,6 +1183,7 @@ export class PcEmulator extends HTMLElement {
     private async applyPickerSelection(sel: BasePickerSelection): Promise<void> {
         this.base = sel.base;
         this.itemLevel = sel.itemLevel;
+        this.cluster = sel.cluster;
         const firstTime = !this.hasBase;
         this.hasBase = true;
         this.pickerOpen = false;

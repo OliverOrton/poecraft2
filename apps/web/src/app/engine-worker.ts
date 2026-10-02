@@ -1,3 +1,4 @@
+import { readClusterCatalog } from "./cluster-configuration";
 /*
  * Engine worker: owns the WASM module and runs all engine work off the UI
  * thread. It speaks the message protocol in engine-protocol.ts and runs in both
@@ -56,6 +57,7 @@ const solveClocks = new Map<number, number>();
 // compact catalog is cached and the bytes are dropped to reclaim memory.
 const dataBundles = new Map<number, Uint8Array>();
 const catalogCache = new Map<number, Catalog>();
+const clusterCatalogs = new Map<number, Record<string, import("./engine-protocol").ClusterBaseCatalog>>();
 
 interface BundleShape {
     manifest: { enums: { influence: Record<string, number> } };
@@ -845,6 +847,7 @@ async function dispatch(
             const bundle = params.bundle as Uint8Array;
             const data = bindings.loadData(bundle);
             dataBundles.set(data, bundle);
+            clusterCatalogs.set(data, readClusterCatalog(bundle));
             return { data };
         }
         case "catalog":
@@ -852,13 +855,14 @@ async function dispatch(
         case "dataSummary":
             return bindings.dataSummary(params.data as number);
         case "listBases":
-            return { bases: bindings.listBases(params.data as number) };
+            return { bases: bindings.listBases(params.data as number).map(base => ({...base, cluster: clusterCatalogs.get(params.data as number)?.[base.path]})) };
         case "bestiaryPresentation":
             return bindings.bestiaryPresentation(params.data as number);
         case "closeData":
             bindings.closeData(params.data as number);
             dataBundles.delete(params.data as number);
             catalogCache.delete(params.data as number);
+            clusterCatalogs.delete(params.data as number);
             return {};
         case "createSession":
             return {
@@ -866,6 +870,7 @@ async function dispatch(
                     params.data as number,
                     params.base as string,
                     (params.itemLevel as number) ?? 0,
+                    params.cluster as import("./engine-protocol").ClusterConfiguration | undefined,
                 ),
             };
         case "closeSession":

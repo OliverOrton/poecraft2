@@ -181,11 +181,11 @@ export class EngineBindings {
         this.module.ccall("pcw_data_close", null, ["number"], [data]);
     }
 
-    createSession(data: number, base: string, itemLevel: number): number {
+    createSession(data: number, base: string, itemLevel: number, cluster?: import("./engine-protocol").ClusterConfiguration): number {
         return this.callJson(
             "pcw_session_open",
             ["number", "string"],
-            [data, JSON.stringify({ base, item_level: itemLevel })],
+            [data, JSON.stringify({ base, item_level: itemLevel, cluster })],
         ).session as number;
     }
 

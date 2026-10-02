@@ -54,6 +54,15 @@ evidence. An inherited capped-publication abort is reproduced on b794e009 and
 held separately. The integration owner owns corrected-law same-graph repricing,
 bounded current-batch comparisons, cache reconciliation and WASM/worker checks.
 Pause after the current batch; no fresh programme or deployment is selected.
+## Configured cluster boundary (2026-10-02)
+
+The [cluster continuation](../active/2026-10-02-clusters-completion/README.md)
+adds native configured affliction pools and concrete single-action Calculator
+enumeration. Configured cluster Current/Finder creation, authored exact
+strategy evaluation, legacy continuation rows and state projection are explicitly
+refused. Native modifier-added tags are not added to an existing solver quotient;
+terminal-only observation merging asserts no subsequent continuation or proof.
+Full cluster solver support remains an acceptance item for parent coordination.
 
 ## Private paid-root Foulborn finite delta (2026-10-02)
 

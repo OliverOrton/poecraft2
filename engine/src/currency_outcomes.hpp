@@ -1,7 +1,15 @@
 #pragma once
 #include "engine_internal.hpp"
+#include <functional>
 
 namespace poecraft {
+// Concrete cluster outcomes rebuild the native pool after every draw; only
+// completed outcomes may be projected into Calculator terminal observations.
+ActionOutcome visit_cluster_currency_outcomes(ActionContextImpl&,
+    const pc_item_state&, const ActionParameters&,
+    const std::function<void(const pc_item_state&, long double)>&,
+    std::uint64_t max_work = 2000000);
+
 // Shared preparation for sampled execution and single-action calculation.
 struct DominanceChoice {
     int side;

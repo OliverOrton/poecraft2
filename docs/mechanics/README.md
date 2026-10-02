@@ -28,6 +28,10 @@ when the product exposes it through an indirect picker, the solver can expose a
 compound option that is not a primitive action, and the Strategy Builder can
 execute vocabulary that its visual palette does not make convenient to author.
 
+Configured cluster inputs have a separate [native mechanic contract](clusters.md).
+Its admitted basic currencies and concrete single-action Calculator scope do
+not imply rare reforge or solver-continuation qualification.
+
 ## Complete Primitive Coverage
 
 The completeness check started with the ordinal `pc_action_type` enum in
