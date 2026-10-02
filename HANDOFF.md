@@ -1,5 +1,16 @@
 # Handoff
 
+Oliver's independent [CURRENT overnight continuation](docs/active/2026-10-02-current-overnight/README.md)
+is paused for the parent's serial CPU hold in isolated branch
+`dot/current-20261002`. W1 code checkpoint is `be034a5`; the carrier-universe
+repair and expanded native controls remain local pending a rebuild. Passing
+checks: metamod 277, bounded Finish/artifact loss 203. All own processes ended.
+Two new timed native cases are reserved, zero spent; no worker is allocated.
+Resume only after the parent releases the CPU hold, then freeze binaries and
+comparison before requesting a timed slot. Historical MM receipts below remain
+unchanged; no returned Bow improvement or final WASM acceptance is claimed.
+
+
 Oliver's selected [MM0–MM7 recovery](docs/active/2026-09-29-metamod-recovery/README.md)
 is locally retained with partial acceptance. Last coherent execution commit:
 `b6c8c4bdfb0d9663ce2db768fa081d31cceaccde`; this handoff update is documentation
