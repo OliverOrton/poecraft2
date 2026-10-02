@@ -1,0 +1,43 @@
+{
+  "baseline": "f08facbb93204bf721048c21b94080ab582ee9f8",
+  "branch": "dot/sprint-integration-20261002",
+  "worktree": "C:/Users/Oliver/Documents/poecraft2-sprint-integration",
+  "source_head": "cf0c45e72a28855e0945d40cb471ebe525d77808",
+  "native_tree": "96cdc54e0611b32e2001448ab5afdcfce053f3ec",
+  "compatible_review_head": "1566719f52be848a7ec54d807e5638ade50cf21c",
+  "native_tree_matches_tested_review": true,
+  "selected_source_pins": [
+    "2e5585dcce83b527c7b7d6a9def5f665f472e60b",
+    "59b7f319b7dbce82f4284a82f4d7b110c49093a5",
+    "3056198df6edc275f69f6aa6735fcfc56be52486",
+    "54e65a18c0e69c93650f66f2b9b032d5ecc8a844",
+    "1566719f52be848a7ec54d807e5638ade50cf21c"
+  ],
+  "checks": {
+    "native": "Compatible review evidence: build plus 1707 focused checks; test-only stale-certificate addendum build plus 1146 paid-reset checks. The earlier reforge/uniform finite laws also passed; see review receipt.",
+    "integration_configure": "passed",
+    "integration_python": "53 passed, 0 failures, 2.23 seconds",
+    "combined_native_rebuild": "unrun; engine tree matches tested review exactly",
+    "combined_wasm": "unrun; inherited module is not the repaired source"
+  },
+  "isolated": {
+    "latency": "87d39775a66a48a38039324deef9fe7318c91069; automatic approval rejected cherry-pick over failed 250ms/increased memory; parent explicitly confirmed keep isolated. No retry.",
+    "foulborn": "448ef4a754945bfe4356b17271303197a7c2feab; owner functional run pending; stripped supplementary metadata control remains a source-review gap.",
+    "dominance": "cdf04b8cad322a93924d930527897a4c13faeb93; bounded authored source reviewed; expanded final qualification pin pending.",
+    "mismatch": "791b82efbd1dfc50171d7ce372de7ea067be3cbe; capture/veto/resume bypass qualification and final pin pending."
+  },
+  "owned_processes": "All own build, configure, and test commands have exited; no live tool session.",
+  "isolation": "Main and overnight integration unchanged; no protected 0 access, data/prices refresh, install, push or deployment.",
+  "logs": [
+    {
+      "path": "out\\sprint-integration\\configure.log",
+      "sha256": "412c40c31b12d63e7aee73476d9461cd02b7c4ba1eaf54aace68f8e1eb5043c9",
+      "bytes": 894
+    },
+    {
+      "path": "out\\sprint-integration\\cluster-pytest.log",
+      "sha256": "5630321ad7104da5e7636fdd36d3791284065e3a3af22e340ade18ff762a251a",
+      "bytes": 101
+    }
+  ]
+}
