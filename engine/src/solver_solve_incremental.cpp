@@ -1557,11 +1557,31 @@ bool SolveWork::Impl::try_begin_renewal_candidate_publication(bool resume_discov
         !result.diagnostics.resource_cap_hit && !expansion_active &&
         !publication_pipeline.initial_candidate_task &&
         publication_pipeline.complete_candidate_attempted_identity == 0 &&
+        publication_pipeline.paid_reset_pending_operator) {
+        const auto op = *publication_pipeline.paid_reset_pending_operator;
+        publication_pipeline.paid_reset_pending_operator.reset();
+        const auto priced = std::find_if(operators.begin(), operators.end(),
+            [&](const auto& candidate) { return candidate.index == op; });
+        if (priced == operators.end()) return false;
+        publication_pipeline.complete_candidate_attempted_identity =
+            static_cast<std::uint64_t>(op) + 1;
+        publication_pipeline.initial_candidate_resume_phase = phase;
+        publication_pipeline.initial_candidate_task.emplace(
+            prepare_paid_root_reset_candidate(*priced));
+        record_progress_event("service_queued", "paid_root_reset_renewal");
+        return true;
+    }
+    if (options.high_impact_executable_uppers && !requested_bounded_finish &&
+        !result.diagnostics.resource_cap_hit && !expansion_active &&
+        !publication_pipeline.initial_candidate_task &&
+        publication_pipeline.complete_candidate_attempted_identity == 0 &&
         !std::isfinite(finalization_verified_upper_bound) &&
         !std::isfinite(incumbent_portfolio.verified_executable_upper()) && output_incumbent &&
         !output_incumbent->independently_evaluated &&
         output_incumbent->policy_materialized &&
-        output_incumbent->kind == "anytime_reachable_proper_policy") {
+        (output_incumbent->kind == "anytime_reachable_proper_policy" ||
+         (output_incumbent->compiled_root_entry_only &&
+          output_incumbent->kind == "paid_root_reset_renewal"))) {
         // This capture has already walked every selected positive-mass exit,
         // including fixed option closure. It can arrive from an upper pass,
         // outside continue_initial_candidate's successful-install branch.

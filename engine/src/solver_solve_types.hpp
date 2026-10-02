@@ -2497,6 +2497,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         // One complete non-renewal candidate before the first verified policy.
         // Row growth cannot re-arm this bounded service slot.
         std::uint64_t complete_candidate_attempted_identity = 0;
+        std::optional<std::uint32_t> paid_reset_pending_operator;
         bool dirty_continuation_attempted = false;
         bool execution_bottleneck_attempted = false;
         bool ordinary_entry_attempted = false;
@@ -2778,6 +2779,15 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
         std::uint64_t row,
         const PricedOperator& priced,
         const OutcomeDistribution& kernel);
+
+    solve_detail::CooperativeTask<bool> try_install_paid_root_reset_incumbent(
+        std::uint32_t state,
+        const PricedOperator& priced,
+        CalcContext& proof_calc,
+        std::uint32_t proof_root,
+        const OutcomeDistribution& complete_kernel);
+    solve_detail::CooperativeTask<bool> prepare_paid_root_reset_candidate(
+        PricedOperator priced);
 
     double certified_global_lower_bound() const;
 

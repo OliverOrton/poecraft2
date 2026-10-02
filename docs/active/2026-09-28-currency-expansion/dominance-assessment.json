@@ -1,0 +1,176 @@
+{
+  "source_reviewed": "ebcd98cdda2c1828cd855f549831951e6ba7470a",
+  "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "read_only_library": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_engine.dll",
+  "library_sha256": "456a253f0eeb97c00ceed95abc266db2fc0ba71df615f43ba18128ab495c0df2",
+  "base": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+  "solver_invocations": 0,
+  "worker_invocations": 0,
+  "capability": "existing_single_action_only",
+  "disposition": "Held: exact authored continuation needs explicit affix identity through observation/refinement/compiler/cache; automatic solver admission is not qualified.",
+  "positive_fixtures": [
+    {
+      "name": "either_elevation",
+      "item_level": 1,
+      "start_mod_keys": [
+        "LocalIncreaseSocketedActiveGemLevelUber1",
+        "AdditionalCriticalStrikeChanceWithSpellsUber2_"
+      ],
+      "influence_bits": 32,
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "fossil_mode": "goal_relevant",
+        "allow_extra_modifiers": false,
+        "min_satisfied_slots": 1,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreaseSocketedActiveGemLevelUberMaven"
+          },
+          {
+            "family_mod_key": "AdditionalCriticalStrikeChanceWithSpellsUberMaven"
+          }
+        ]
+      },
+      "success_probability": 1
+    },
+    {
+      "name": "specific_elevation",
+      "item_level": 1,
+      "start_mod_keys": [
+        "LocalIncreaseSocketedActiveGemLevelUber1",
+        "AdditionalCriticalStrikeChanceWithSpellsUber2_"
+      ],
+      "influence_bits": 32,
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "fossil_mode": "goal_relevant",
+        "allow_extra_modifiers": false,
+        "min_satisfied_slots": 1,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreaseSocketedActiveGemLevelUberMaven"
+          }
+        ]
+      },
+      "success_probability": 0.5
+    },
+    {
+      "name": "either_elevation",
+      "item_level": 86,
+      "start_mod_keys": [
+        "LocalIncreaseSocketedActiveGemLevelUber1",
+        "AdditionalCriticalStrikeChanceWithSpellsUber2_"
+      ],
+      "influence_bits": 32,
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "fossil_mode": "goal_relevant",
+        "allow_extra_modifiers": false,
+        "min_satisfied_slots": 1,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreaseSocketedActiveGemLevelUberMaven"
+          },
+          {
+            "family_mod_key": "AdditionalCriticalStrikeChanceWithSpellsUberMaven"
+          }
+        ]
+      },
+      "success_probability": 1
+    },
+    {
+      "name": "specific_elevation",
+      "item_level": 86,
+      "start_mod_keys": [
+        "LocalIncreaseSocketedActiveGemLevelUber1",
+        "AdditionalCriticalStrikeChanceWithSpellsUber2_"
+      ],
+      "influence_bits": 32,
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "fossil_mode": "goal_relevant",
+        "allow_extra_modifiers": false,
+        "min_satisfied_slots": 1,
+        "slots": [
+          {
+            "family_mod_key": "LocalIncreaseSocketedActiveGemLevelUberMaven"
+          }
+        ]
+      },
+      "success_probability": 0.5
+    }
+  ],
+  "counterexample": [
+    {
+      "name": "upgrade_identity_counterexample",
+      "source_mod_key": "ElementalDamageCannotBeReflectedPercentUber1",
+      "helper_mod_key": "AdditionalCriticalStrikeChanceWithSpellsUber2_",
+      "item_level": 86,
+      "influence_bits": 40,
+      "source_observations": {
+        "side": "prefix",
+        "required_level": 68,
+        "classification_tags": [
+          "influence_mod"
+        ],
+        "all_group_keys": [
+          "ReflectedDamage"
+        ],
+        "flags": 0,
+        "metamod_role": -1,
+        "goal_member": false
+      },
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "fossil_mode": "goal_relevant",
+        "allow_extra_modifiers": false,
+        "slots": [
+          {
+            "family_mod_key": "ElementalDamageCannotBeReflectedPercentUberMaven"
+          }
+        ]
+      },
+      "success_probability": 0.5
+    },
+    {
+      "name": "upgrade_identity_counterexample",
+      "source_mod_key": "PhysicalDamageCannotBeReflectedPercentUber1",
+      "helper_mod_key": "AdditionalCriticalStrikeChanceWithSpellsUber2_",
+      "item_level": 86,
+      "influence_bits": 40,
+      "source_observations": {
+        "side": "prefix",
+        "required_level": 68,
+        "classification_tags": [
+          "influence_mod"
+        ],
+        "all_group_keys": [
+          "ReflectedDamage"
+        ],
+        "flags": 0,
+        "metamod_role": -1,
+        "goal_member": false
+      },
+      "goal": {
+        "version": "v1",
+        "rarity": "rare",
+        "fossil_mode": "goal_relevant",
+        "allow_extra_modifiers": false,
+        "slots": [
+          {
+            "family_mod_key": "ElementalDamageCannotBeReflectedPercentUberMaven"
+          }
+        ]
+      },
+      "success_probability": 0
+    }
+  ],
+  "existing_observations_equal": true,
+  "strict_key_equality_tested": false,
+  "exact_strategy_refusal": "poecraft engine error 1: Exact Dominance strategy evaluation requires elevated tier transitions and is reserved for Pro; use the native sampler"
+}

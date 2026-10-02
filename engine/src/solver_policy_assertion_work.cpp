@@ -790,6 +790,23 @@ struct CompiledPolicyAssertionWork::Impl {
                 result.zero_off_policy &&
                 result.evaluation.cost_complete &&
                 std::isfinite(result.exact_cost)) {
+                // A supplied whole-root controller has no parent decisions
+                // from which to synthesize a second product policy. Preserve
+                // the exact graph whose original-root entry was checked.
+                if (emitted_strategy_json != nullptr && request_root_continuation_upper &&
+                    std::none_of(solved.policy.begin(), solved.policy.end(),
+                        [](const auto& op) { return op.index != kNoId; }) &&
+                    std::none_of(solved.policy_reachable.begin(), solved.policy_reachable.end(),
+                        [](const auto reached) { return reached != 0; })) {
+                    result.certification_strategy_json = result.strategy_json;
+                    result.certification_compilation = result.compilation;
+                    result.paired_default_only = true;
+                    evaluation_work.reset();
+                    parsed_strategy.reset();
+                    economy.reset();
+                    stage = Stage::Done;
+                    return;
+                }
                 result.certification_strategy_json =
                     std::move(result.strategy_json);
                 result.certification_compilation =

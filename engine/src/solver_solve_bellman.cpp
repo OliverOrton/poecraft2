@@ -1935,7 +1935,8 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
             // only between complete rows, and resume the same discovery cursor.
             if (!expansion_active &&
                 (phase == SolvePhase::Expanding || phase == SolvePhase::Iterating) &&
-                output_incumbent && output_incumbent->primitive_renewal_witness.valid &&
+                (publication_pipeline.paid_reset_pending_operator ||
+                 (output_incumbent && output_incumbent->primitive_renewal_witness.valid)) &&
                 !std::isfinite(incumbent_portfolio.verified_executable_upper())) {
                 (void)try_begin_renewal_candidate_publication(true);
             }

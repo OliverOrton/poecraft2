@@ -501,7 +501,7 @@ visible. Canonical SQLite and historical `data/compiled/current` were not edited
 
 ### Validation receipt
 
-Bulk local evidence is under `out/currency-expansion`; the durable rare-root
+Bulk local evidence is under `out/currency-expansion`; the durable normal-root
 request/result projection is [pro-witness.json](pro-witness.json). Tests use the
 existing owners; no new supervision or benchmark layer was introduced.
 
@@ -924,3 +924,85 @@ saved ZIP; all 665 components verify, and the live deployment manifest matches t
 archived bytes. Previous run `36631500946` remains available for rollback. No
 rollback rehearsal or rendered design acceptance is claimed. Only release-record
 documentation follows the deployed source revision.
+
+
+## Overnight integration repair (2026-10-02)
+
+The native action-family tuple includes `foulborn` and `memory`; the Solver Lab
+Python mirror omitted both. Windows CI run `36943669926` exposed the exact-tuple
+failure. The mirror now follows the native owner without relaxing tuple equality,
+unknown-name validation or disabled-family request identity. Ten focused contract
+and patch checks and the service identity check pass. This does not admit Memory
+search. Local repair commit: `67d8475d5488d7dc8b4d9af7de2fcc7b5eb66b8c`.
+
+The frozen [witness](pro-witness.json) starts from a **normal** empty item, not a
+rare root. Its historical result stays frozen. Under its original runtime,
+root, goal, explicit actions and prices, a complete authored Alchemy/Scour retry
+controller has Alchemy success probability `0.4414928760559298`, expected paid
+cost `4.65658864251745`, and expected actions `3.5300844214451907`. This baseline
+exact evaluation is a correctness oracle, not an automatic-search qualification.
+Bulk baseline evidence is in `out/mechanics-overnight/foulborn-oracle-*`.
+
+The Current recovery proposal is limited to an exact normal root with no explicit
+affixes. It requires a complete ungated native renewal row, and every positive
+non-goal exit must admit a deterministic, paid, caller-permitted Scour returning
+to that same root and exact renewal signature. The gated zero-progress carrier
+is virtual and may be empty; it cannot establish Scour legality or reset identity.
+Missing prices, disabled families, protected survivors, changed root flags,
+zero success or incomplete reset laws refuse the candidate.
+The existing first-candidate owner queues one attempt between complete parent
+rows. A private calculator closes the two-operation controller's observations,
+advances the full roll and miss checks cooperatively, and debits reforge work to
+the parent's allowance. Its miss states never enter the parent namespace.
+Generation scratch is released before original-root graph certification.
+
+For success mass `p > 0`, renewal cost `c`, and miss probabilities `q_i` with
+recovery costs `r_i`, the complete cycle satisfies
+`U = c + sum_i q_i (r_i + U)`, hence
+`U = (c + sum_i q_i r_i) / p`. Its success and reset laws reproduce the same
+original-root experiment on every miss, so repeated cycles terminate almost
+surely. This constructs an upper proposal only. The native compiler emits the
+paid operations and exact original goal; the existing graph checker must verify
+original-root execution, properness, scope and complete accounting before
+retention. A supplied root-only controller keeps its checked graph unchanged;
+ordinary statewise policies still use the existing paired product-graph compiler.
+The retained root-only certificate supplies no parent statewise continuation
+values or new lower/exactness authority. Socket/link, strand, absent-resource and
+retained-enchantment carriers remain outside this proposal's representation.
+
+The isolated native test target, benchmark and DLL build successfully. The
+focused recovery case passes 883 checks, including full-context differential
+probabilities on a complete pool, partial protected miss refusal, explicit scope
+exclusion, disabled families, missing prices, zero success, changed root flags,
+quality/split preservation, costly cleanup, exhausted state/transition/work
+capacities, cancellation and stale authority. The existing assertion-owner suite
+passes 384 checks. Bulk logs and actual executable hashes are under
+`out/mechanics-overnight`. No timed solve or worker invocation has run; the frozen
+original-runtime Current request is prepared for the parent's serial slot.
+These fixtures qualify the native slice, not general Foulborn search or an
+original-request performance result. No Simulator or WASM qualification is
+claimed in this worktree.
+
+The compact [Dominance assessment](dominance-assessment.json) preserves the
+verified baseline identities and fixtures. Dominance remains held. Its existing single-action kernel retains ordered
+upgrade/removal pair probabilities and explicit elevation mappings, but the
+strategy evaluator refuses it. Current refinement features cannot distinguish
+all upgrade destinations. A concrete pinned-runtime counterexample replaces
+`ElementalDamageCannotBeReflectedPercentUber1` with
+`PhysicalDamageCannotBeReflectedPercentUber1`, holding the helper
+`AdditionalCriticalStrikeChanceWithSpellsUber2_`, prefix side, level 68, full
+`ReflectedDamage` group, `influence_mod` classification, natural flags and total
+item influence bits 40 fixed. On BodyInt17 at level 86, the clean goal
+`ElementalDamageCannotBeReflectedPercentUberMaven` has terminal probabilities
+`0.5` and `0`. Equality of these existing observations does not imply an equal
+Dominance law. No claim of tested strict-key equality is made.
+
+The positive fixture with `LocalIncreaseSocketedActiveGemLevelUber1` and
+`AdditionalCriticalStrikeChanceWithSpellsUber2_` has probability 1 of either
+requested elevation at threshold one, and probability 0.5 of a specified one,
+at both item levels 1 and 86. Bulk read-only baseline evidence and library identity
+are in `out/mechanics-overnight/dominance-preflight.json`. Any future authored
+Dominance continuation must add a gated full affix-identity representation,
+propagate replacement/survivor identity through refinement and compilation,
+bind the upgrade-map representation in caches, and retain existing unsupported
+carrier and lower-proof guards. This overnight slice adds no Dominance support.

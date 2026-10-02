@@ -14789,6 +14789,258 @@ void run_solver_return_bridge_lifecycle_tests() {
     }
 }
 
+void run_paid_root_reset_renewal_tests() {
+    const auto make_paid_session = [] {
+        auto session = make_solve_session();
+        auto data = std::const_pointer_cast<DataImpl>(session->data);
+        data->mod_type_key_sid = data->mod_key_sid;
+        return session;
+    };
+    {
+        auto session = make_paid_session();
+        auto registry = build_action_registry(*session);
+        const auto alchemy = registry.index_by_id.at("alchemy");
+        const auto scour = registry.index_by_id.at("scour");
+        GoalSpec goal; goal.rarity = PC_RARITY_RARE;
+        goal.terminal.extras = ExtraExplicitPolicy::Allow;
+        GoalSlot slot; slot.family_id = 100; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+        pc_item_state root; pc_item_clear(&root);
+        root.item_flags = PC_ITEM_SPLIT;
+        root.quality = 20; root.socket_count = 2; root.link_mask = 1;
+        CalcContext full(session, goal, registry,
+            {alchemy, scour, registry.index_by_id.at("foulborn_exalt"),
+             registry.index_by_id.at("annul"), registry.index_by_id.at("exalt")});
+        CalcContext narrow(session, goal, registry, {alchemy, scour});
+        const auto full_root = full.intern_item(root);
+        const auto narrow_root = narrow.intern_item(root);
+        const auto full_law = full.outcomes(full_root, alchemy, false);
+        const auto narrow_law = narrow.outcomes(narrow_root, alchemy, false);
+        std::map<std::uint32_t, double> projected_full, projected_narrow;
+        for (const auto& exit : full_law.entries) {
+            if (!(exit.probability > 0)) continue;
+            pc_item_state item; PC_CHECK(full.materialize(exit.state, item));
+            projected_full[narrow.intern_item(item)] += exit.probability;
+            if (!full.is_goal_state(full.state(exit.state))) {
+                const auto reset = full.outcomes(exit.state, scour, false);
+                PC_CHECK(reset.supported && reset.applicable && reset.entries.size() == 1);
+                if (reset.entries.size() == 1)
+                    PC_CHECK(reset.entries.front().state == full_root && reset.entries.front().probability == 1);
+            }
+        }
+        for (const auto& exit : narrow_law.entries)
+            if (exit.probability > 0) projected_narrow[exit.state] += exit.probability;
+        PC_CHECK(projected_full.size() == projected_narrow.size());
+        for (const auto& [state, mass] : projected_narrow)
+            PC_CHECK(near(projected_full[state], mass, 1e-12));
+        std::printf("paid reset full-context differential: full=%zu narrow=%zu classes=%zu/%zu\n",
+            full_law.entries.size(), narrow_law.entries.size(),
+            full.layout().junk_classes.size(), narrow.layout().junk_classes.size());
+    }
+    for (unsigned mode = 0; mode < 18; ++mode) {
+        auto session = make_paid_session();
+        auto registry = build_action_registry(*session);
+        const auto alchemy = registry.index_by_id.at("alchemy");
+        const auto scour = registry.index_by_id.at("scour");
+        GoalSpec goal;
+        goal.rarity = PC_RARITY_RARE;
+        goal.terminal.extras = ExtraExplicitPolicy::Allow;
+        GoalSlot slot; slot.family_id = 100; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+        if (mode == 2)
+            goal.disabled_action_families = solver_action_family_bit(solver_action_family_for_action(registry.actions[scour]));
+        goal.primitive_actions_explicit = true;
+        std::vector<std::uint32_t> admitted{alchemy, scour};
+        if (mode == 8) admitted = {alchemy};
+        if (mode == 0 || mode == 7)
+            admitted.push_back(registry.index_by_id.at("foulborn_exalt"));
+        CalcContext calc(session, goal, registry, admitted);
+        pc_item_state start; pc_item_clear(&start);
+        if (mode == 17) { start.item_flags = PC_ITEM_SPLIT; start.quality = 20; }
+        SolveOptions options;
+        options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
+        options.goal_progress_gated_reforges = true;
+        options.high_impact_executable_uppers = true;
+        options.allow_economic_restart = false;
+        options.state_certificate_control = false;
+        std::unordered_map<std::string, double> prices{{"alchemy", 2}, {"scour", .1}, {"foulborn_exalt", .01}};
+        if (mode == 1) prices.erase("scour");
+        if (mode == 6 || mode == 15) prices["scour"] = 100;
+        SolveWorkTestAccess::Impl work(calc, start, prices, options);
+        const auto root = work.result.start_state;
+        // The virtual gated miss can appear to reset identically while it
+        // omits the real positive-mass miss affixes. It is not the miss law.
+        const auto gated = calc.outcomes(root, alchemy, true);
+        bool saw_virtual_miss = false;
+        for (const auto& exit : gated.entries) {
+            if (exit.probability > 0 && !calc.is_goal_state(calc.state(exit.state))) {
+                saw_virtual_miss |= calc.state(exit.state).goal_progress_retry_basin != 0;
+                const auto virtual_reset = calc.outcomes(exit.state, scour, false);
+                PC_CHECK(virtual_reset.applicable && virtual_reset.entries.size() == 1);
+                if (virtual_reset.entries.size() == 1)
+                    PC_CHECK(virtual_reset.entries.front().state == root);
+            }
+        }
+        PC_CHECK(saw_virtual_miss);
+        CalcContext proof_calc(session, goal, registry, {alchemy, scour});
+        const auto proof_root = proof_calc.intern_item(start);
+        auto full = proof_calc.outcomes(proof_root, alchemy, false);
+        double success = 0;
+        std::uint32_t first_miss = kNoId;
+        for (const auto& exit : full.entries) {
+            if (proof_calc.is_goal_state(proof_calc.state(exit.state))) success += exit.probability;
+            else if (exit.probability > 0) {
+                first_miss = exit.state;
+                PC_CHECK(proof_calc.state(exit.state).prefix_count + proof_calc.state(exit.state).suffix_count > 0);
+                PC_CHECK(action_legal(*session, registry.actions[scour], proof_calc.state(exit.state)));
+            }
+        }
+        PC_CHECK(success > 0 && success < 1 && first_miss != kNoId);
+        if (mode == 3) {
+            // One positive miss fails exact reset; all other misses still reset.
+            pc_item_state protected_miss;
+            PC_CHECK(proof_calc.materialize(first_miss, protected_miss));
+            PC_CHECK(protected_miss.prefix_count > 0);
+            protected_miss.prefixes[0].flags |= PC_MOD_SLOT_FRACTURED;
+            for (auto& exit : full.entries)
+                if (exit.state == first_miss) {
+                    exit.state = proof_calc.intern_item(protected_miss); break;
+                }
+        }
+        if (mode == 4) {
+            full.entries.clear(); full.entries.push_back({first_miss, 1.0});
+        }
+        if (mode == 5) work.result.exact_start_item.item_flags |= PC_ITEM_MIRRORED;
+        if (mode == 12) work.result.exact_start_item.socket_count = 1;
+        if (mode == 13) work.result.exact_start_item.memory_strands = 1;
+        if (mode == 14) work.result.exact_start_item.enchantment_count = 1;
+        const auto priced = std::find_if(work.operators.begin(), work.operators.end(),
+            [&](const auto& op) { return op.index == alchemy; });
+        if (mode == 2) {
+            PC_CHECK(priced == work.operators.end());
+            PC_CHECK(!work.output_incumbent);
+            continue;
+        }
+        PC_CHECK(priced != work.operators.end());
+        if (priced == work.operators.end()) continue;
+        if (mode == 6) {
+            SolveWorkTestAccess::Impl::BoundedPolicyIncumbent cheaper;
+            cheaper.certified_upper_bound = 3;
+            cheaper.portfolio_identity = 123;
+            work.output_incumbent = cheaper;
+        }
+        bool installed = false;
+        const auto parent_states = calc.state_count();
+        if (mode == 7 || mode == 9 || mode == 10 || mode == 11 || mode == 16) {
+            solve_detail::SparsePolicyRowInput row;
+            row.owner_state = root; row.operator_index = alchemy; row.cost = 2;
+            for (const auto& exit : gated.entries)
+                row.transitions.push_back({exit.state, exit.probability});
+            const auto row_id = solve_detail::append_sparse_policy_row(
+                *work.transition_cache, work.priced_rows, row);
+            work.try_install_gated_root_renewal_incumbent(root, row_id, *priced, gated);
+            PC_CHECK(!work.output_incumbent);
+            PC_CHECK(work.publication_pipeline.paid_reset_pending_operator.has_value());
+            if (mode == 9) work.options.max_discovered_states = calc.state_count();
+            if (mode == 10) work.options.max_transitions = work.transition_cache->successors.size();
+            if (mode == 16) work.options.max_reforge_work = calc.telemetry().reforge_logical_work_v1;
+            PC_CHECK(work.try_begin_renewal_candidate_publication(true));
+            if (mode == 9 || mode == 10 || mode == 16) {
+                const auto spent = calc.telemetry().reforge_logical_work_v1;
+                PC_CHECK(work.publication_pipeline.initial_candidate_task->resume());
+                PC_CHECK(!work.publication_pipeline.initial_candidate_task->take_result());
+                work.publication_pipeline.initial_candidate_task.reset();
+                PC_CHECK(!work.output_incumbent);
+                PC_CHECK(calc.telemetry().reforge_logical_work_v1 == spent);
+                PC_CHECK(!work.try_begin_renewal_candidate_publication(true));
+                continue;
+            }
+            if (mode == 11) {
+                bool captured = false;
+                for (unsigned units = 0; units < 10000; ++units) {
+                    const bool complete = work.publication_pipeline.initial_candidate_task->resume();
+                    if (work.output_incumbent && !work.output_incumbent->independently_evaluated) {
+                        captured = true; break;
+                    }
+                    if (complete) break;
+                }
+                PC_CHECK(captured);
+                work.publication_pipeline.initial_candidate_task.reset();
+                PC_CHECK(!work.output_incumbent);
+                PC_CHECK(calc.state_count() == parent_states);
+                PC_CHECK(!work.try_begin_renewal_candidate_publication(true));
+                continue;
+            }
+            for (unsigned units = 0; units < 10000 && work.publication_pipeline.initial_candidate_task; ++units) {
+                const bool complete = work.publication_pipeline.initial_candidate_task->resume();
+                if (complete) break;
+            }
+            PC_CHECK(calc.state_count() == parent_states);
+            PC_CHECK(work.output_incumbent && work.output_incumbent->independently_evaluated);
+            installed = work.output_incumbent.has_value();
+        } else {
+            auto capture = work.try_install_paid_root_reset_incumbent(
+                root, *priced, proof_calc, proof_root, full);
+            bool complete = false;
+            for (unsigned units = 0; units < 10000; ++units)
+                if (capture.resume()) { complete = true; break; }
+            PC_CHECK(complete);
+            if (!complete) continue;
+            installed = capture.take_result();
+        }
+        if (mode != 0 && mode != 7 && mode != 15 && mode != 17) {
+            PC_CHECK(!installed);
+            PC_CHECK(!work.output_incumbent || work.output_incumbent->portfolio_identity == 123);
+            continue;
+        }
+        PC_CHECK(installed && work.output_incumbent.has_value());
+        if (!work.output_incumbent) continue;
+        const double expected = (2 + (1-success)*prices.at("scour"))/success;
+        PC_CHECK(near(work.output_incumbent->certified_upper_bound, expected, 1e-10));
+        PC_CHECK(work.output_incumbent->compiled_root_entry_only);
+        if (mode == 0 || mode == 15 || mode == 17) {
+            PC_CHECK(!work.output_incumbent->independently_evaluated);
+            PC_CHECK(!std::isfinite(work.incumbent_portfolio.verified_executable_upper()));
+            PC_CHECK(work.try_begin_renewal_candidate_publication());
+            for (unsigned units = 0; units < 10000 && work.publication_pipeline.initial_candidate_task; ++units)
+                if (work.publication_pipeline.initial_candidate_task->resume()) break;
+        }
+        const bool verified = work.output_incumbent->independently_evaluated;
+        PC_CHECK(verified);
+        if (!verified) continue;
+        const auto& candidate = *work.output_incumbent;
+        PC_CHECK(near(candidate.evaluated_policy_cost, expected, 1e-10));
+        PC_CHECK(work.retained_incumbent_invalid_reason(candidate) == nullptr);
+        PC_CHECK(work.certified_incumbent_invalid_reason(candidate) == nullptr);
+        PC_CHECK(candidate.compiled_artifact.policy_decision_bindings.empty());
+        PC_CHECK(candidate.compiled_artifact.nodes == 4 && candidate.compiled_artifact.edges == 5);
+        if (mode == 17) {
+            const auto graph = json::Parser(candidate.compiled_artifact.strategy_json.data(),
+                candidate.compiled_artifact.strategy_json.size()).parse();
+            PC_CHECK(graph.at("base_state").at("quality").as_int() == 20);
+            PC_CHECK(graph.at("base_state").at("item_flags").as_int() == PC_ITEM_SPLIT);
+        }
+        PC_CHECK(work.options.goal_proof_profile == GoalProofProfile::TargetNeutralZero);
+        PC_CHECK(work.certified_global_lower_bound() == 0);
+        for (std::size_t state = 0; state < candidate.values.size(); ++state) {
+            PC_CHECK(candidate.policy[state].index == kNoId);
+            PC_CHECK(candidate.policy_reachable[state] == 0);
+            PC_CHECK(candidate.policy_rows[state] == std::numeric_limits<std::uint64_t>::max());
+            if (state != root) PC_CHECK(!std::isfinite(candidate.values[state]));
+        }
+        auto stale = candidate;
+        stale.compiled_artifact.continuation_upper.authority.economy.push_back(1);
+        PC_CHECK(work.retained_incumbent_invalid_reason(stale) != nullptr);
+        stale = candidate;
+        stale.compiled_artifact.continuation_upper.authority.caller_scope.push_back(1);
+        PC_CHECK(work.retained_incumbent_invalid_reason(stale) != nullptr);
+        stale = candidate;
+        stale.values[root == 0 ? 1 : 0] = expected;
+        PC_CHECK(work.retained_incumbent_invalid_reason(stale) != nullptr);
+        std::printf("paid root Scour renewal: p=%.12g cost=%.12g\n", success, expected);
+    }
+}
+
 void run_solver_dirty_continuation_tests() {
     {
         solve_detail::DirtyGuidance guide;
@@ -15234,6 +15486,7 @@ void run_solver_integrity_tests(const char* case_name) {
     else if (name == "continuity") run_current_incumbent_continuity_tests();
     else if (name == "selective-target-count") run_selective_completion_target_count_tests();
     else if (name == "selective-cap-diagnosis") run_selective_completion_target_count_tests(true);
+    else if (name == "paid-reset") run_paid_root_reset_renewal_tests();
     else if (name == "finder-bindings") run_solver_finder_binding_tests();
     else if (name == "automatic-admission-contract") {
         run_resource_stop_reachable_policy_tests();
@@ -15277,6 +15530,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_constructive_renewal_upper_tests();
     run_primitive_destructive_renewal_upper_tests();
     run_goal_progress_gated_reforge_tests();
+    run_paid_root_reset_renewal_tests();
     run_incremental_action_generation_tests();
     run_automatic_eldritch_side_tests();
     run_artifact_solve_tests(artifact_dir);

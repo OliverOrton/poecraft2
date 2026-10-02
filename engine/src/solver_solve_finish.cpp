@@ -6069,10 +6069,44 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
         external >= options.max_solver_owned_bytes) co_return false;
     SolveOptions scoped = options;
     scoped.max_solver_owned_bytes = options.max_solver_owned_bytes - external;
+    if (candidate.compiled_root_entry_only) {
+        const auto rows = transition_cache->rows.size();
+        const auto transitions = transition_cache->successors.size() +
+            transition_cache->choice_successors.size();
+        if (calc.state_count() >= options.max_discovered_states ||
+            rows >= options.max_state_action_rows || transitions >= options.max_transitions ||
+            calc.telemetry().reforge_logical_work_v1 >= options.max_reforge_work)
+            co_return false;
+        scoped.max_reforge_work = options.max_reforge_work -
+            calc.telemetry().reforge_logical_work_v1;
+        const auto limit = [](const std::uint32_t explicit_limit, const std::uint64_t remaining) {
+            return static_cast<std::uint32_t>(std::min<std::uint64_t>(
+                explicit_limit == 0 ? std::numeric_limits<std::uint32_t>::max() : explicit_limit,
+                remaining));
+        };
+        scoped.candidate_evaluation_limits.max_states = limit(
+            scoped.candidate_evaluation_limits.max_states,
+            options.max_discovered_states - calc.state_count());
+        scoped.candidate_evaluation_limits.max_pairs = limit(
+            scoped.candidate_evaluation_limits.max_pairs, options.max_state_action_rows - rows);
+        scoped.candidate_evaluation_limits.max_transitions = limit(
+            scoped.candidate_evaluation_limits.max_transitions, options.max_transitions - transitions);
+    }
     proof.options = scoped;
     { // Release the completed first-policy checker before return construction.
+        PolicyCompilationTelemetry emitted;
+        if (candidate.compiled_root_entry_only) {
+            emitted.nodes = candidate.compiled_artifact.nodes;
+            emitted.edges = candidate.compiled_artifact.edges;
+            emitted.strategy_json_bytes = candidate.compiled_artifact.strategy_json.size();
+        }
         refinement::CompiledPolicyAssertionWork work(
-            calc, proof, prices, scoped, "first reachable proper policy");
+            calc, proof, prices, scoped, "first reachable proper policy", nullptr,
+            candidate.compiled_root_entry_only
+                ? &candidate.compiled_artifact.strategy_json : nullptr,
+            candidate.compiled_root_entry_only ? &emitted : nullptr,
+            candidate.compiled_root_entry_only);
+        std::uint64_t checker_active = 0, checker_logical = 0;
         update_lineage([](auto& lineage) {
             lineage.compilation_attempted = true;
             lineage.compilation_result = "initial_candidate_compilation";
@@ -6091,6 +6125,13 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
                 ? SolvePhase::Compiling : SolvePhase::Certifying;
             finalization_evaluation_progress = progress.evaluation;
             work.step(kCooperativePolicyLiftBatch);
+            if (candidate.compiled_root_entry_only) {
+                const auto& used = work.diagnostic_evaluation();
+                calc.consume_reforge_work(used.reforge_work - checker_active,
+                    used.reforge_logical_work_v1 - checker_logical);
+                checker_active = used.reforge_work;
+                checker_logical = used.reforge_logical_work_v1;
+            }
             // Transfer a completed check before exposing an interrupt boundary.
             if (!work.progress().done)
                 co_await solve_detail::CooperativeCheckpoint{work.retained_bytes()};
@@ -6116,6 +6157,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
         if (!verified) co_return false;
         candidate.certified_upper_bound = assertion.exact_cost;
         candidate.evaluated_policy_cost = assertion.exact_cost;
+        if (candidate.compiled_root_entry_only)
+            candidate.values[result.start_state] = assertion.exact_cost;
         candidate.compiled_artifact = retained_artifact_from_assertion(assertion);
         candidate.compilation_provenance = "initial_compiled_policy_assertion_v1";
         candidate.independently_certified = true;
@@ -6141,6 +6184,8 @@ solve_detail::CooperativeTask<bool> SolveWork::Impl::certify_initial_candidate()
             lineage.portfolio_reason = "independent native graph evaluation";
         });
     }
+    // An original-root graph certificate carries no parent statewise policy.
+    if (candidate.compiled_root_entry_only) co_return true;
     auto returns = try_initial_return_bridges(proof);
     while (!returns.resume()) {
         co_await solve_detail::CooperativeCheckpoint{returns.retained_bytes()};

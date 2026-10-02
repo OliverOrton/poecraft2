@@ -12,7 +12,7 @@ enum class PolicyRouteDefaultMode : std::uint8_t {
     CertificationFailClosed,
 };
 
-/* Finder-only proposal emission. The sequence is a finite native primitive
+/* Native primitive-sequence proposal emission for Finder and Current. The sequence is a finite native primitive
  * controller stage: after each paid operation the exact request goal is tested;
  * the final miss either repeats the final stage or returns to the first.
  * This emits no solve or

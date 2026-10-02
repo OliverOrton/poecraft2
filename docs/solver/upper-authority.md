@@ -350,3 +350,11 @@ Inspect incumbent kind and portfolio identity, stage, independently evaluated co
 This rewrite uses the [preceding reference](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/upper-authority.md) and [flow.md](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/solver/flow.md), [2026-08-30-carrier-ladder-early-executable-closure-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-carrier-ladder-early-executable-closure-v1/README.md), [2026-08-30-early-executable-statewise-upper-rc-consumer-v1](https://github.com/OliverOrton/poecraft2/blob/f3e7c0fa7bd827064a41c48a53c4db372840cf0f/docs/archive/2026-08-30-early-executable-statewise-upper-rc-consumer-v1/README.md). Claim IDs are registered in [the ledger](claims.md); each history states its acceptance basis. The [backbone integration](../archive/2026-09-06-solver-mathematical-backbone-v2/README.md) is complete. Remaining native correspondence is scoped in [research](research.md#open-obligations); an argument link does not confer runtime authority.
 
 [Cheap programme service](../active/2026-09-29-metamod-recovery/README.md) services complete cheap root rows before stochastic proof setup when the root holds goal progress. Terminal rows use the existing reachable-policy constructor and independent compiled assertion before discovery resumes. Nonterminal preparations supply no upper without a complete tail. Verified artifacts survive later resource stops; admitted proposals are not checked policies.
+
+
+The [paid root reset slice](../active/2026-09-28-currency-expansion/README.md#overnight-integration-repair-2026-10-02)
+constructs a fixed renewal/Scour controller from a complete native miss law at an
+empty normal root. Its one cooperative proposal attempt uses a private state
+namespace and the remaining parent allowances. Only original-root graph checking
+can retain its value; cancellation or refusal releases the unverified proposal.
+It supplies no parent statewise continuation or positive lower authority.

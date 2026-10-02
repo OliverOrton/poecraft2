@@ -1,6 +1,7 @@
 #include "solver_solve_types.hpp"
 #include "solver_compile_contracts.hpp"
 #include "solver_sparse_policy.hpp"
+#include "solver_action_family_contract.hpp"
 
 namespace poecraft {
 namespace solver {
@@ -6154,6 +6155,22 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
                 success_probability -
                 kernel.gated_terminal_probability) >
                 probability_tolerance) {
+            // The gated miss carrier is virtual. Paid reset admission must
+            // inspect the complete native roll law, never Scour that carrier.
+            if (!exact_retry && options.high_impact_executable_uppers &&
+                calc.state(state).rarity == PC_RARITY_NORMAL &&
+                calc.state(state).prefix_count == 0 &&
+                calc.state(state).suffix_count == 0 &&
+                publication_pipeline.complete_candidate_attempted_identity == 0 &&
+                !publication_pipeline.paid_reset_pending_operator &&
+                std::any_of(operators.begin(), operators.end(), [&](const auto& reset) {
+                    const auto& op = calc.operators().at(reset.index);
+                    return op.kind == PlannerOperatorKind::Primitive &&
+                        calc.registry().actions.at(op.primitive_action).params.type == ActionType::Scour &&
+                        !solver_action_disabled(calc.goal(), calc.registry().actions.at(op.primitive_action));
+                })) {
+                publication_pipeline.paid_reset_pending_operator = priced.index;
+            }
             reject(
                 !exact_retry
                     ? "nonterminal_retry_signature_changed"
@@ -6246,6 +6263,230 @@ void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
             finite_json(value) + ":validated_non_goal_states=" +
             std::to_string(validated_non_goal_states));
     }
+
+solve_detail::CooperativeTask<bool> SolveWork::Impl::try_install_paid_root_reset_incumbent(
+        const std::uint32_t state,
+        const PricedOperator& priced,
+        CalcContext& proof_calc,
+        const std::uint32_t proof_root,
+        const OutcomeDistribution& complete_kernel) {
+    if (!options.high_impact_executable_uppers ||
+        !result.has_exact_start_item || state != result.start_state ||
+        priced.index >= calc.operators().size() ||
+        calc.state(state).rarity != PC_RARITY_NORMAL ||
+        calc.state(state).prefix_count != 0 ||
+        calc.state(state).suffix_count != 0 ||
+        calc.state(state).goal_progress_retry_basin != 0 ||
+        result.exact_start_item.rarity != PC_RARITY_NORMAL ||
+        result.exact_start_item.prefix_count != 0 ||
+        result.exact_start_item.suffix_count != 0 ||
+        result.exact_start_item.socket_count != 0 || result.exact_start_item.link_mask != 0 ||
+        result.exact_start_item.memory_strands != 0 || result.exact_start_item.enchantment_count != 0 ||
+        result.exact_start_item.lifecycle != PC_ITEM_LIVE ||
+        project_item(session, calc.layout(), result.exact_start_item) != calc.state(state) ||
+        calc.is_goal_state(calc.state(state)) ||
+        proof_root >= proof_calc.state_count() ||
+        project_item(session, proof_calc.layout(), result.exact_start_item) != proof_calc.state(proof_root) ||
+        !complete_kernel.supported || !complete_kernel.applicable ||
+        complete_kernel.goal_progress_gated ||
+        !complete_kernel.choice_groups.empty() ||
+        !complete_kernel.choice_options.empty() ||
+        !std::isfinite(priced.cost) || priced.cost < 0.0) co_return false;
+    const auto& roll = calc.operators().at(priced.index);
+    if (roll.kind != PlannerOperatorKind::Primitive ||
+        roll.primitive_action >= calc.registry().actions.size()) co_return false;
+    const auto& roll_action = calc.registry().actions.at(roll.primitive_action);
+    if (roll_action.synthetic || solver_action_disabled(calc.goal(), roll_action) ||
+        !action_transition_facts(roll_action.params.type).renewal ||
+        !action_legal(session, roll_action, calc.state(state))) co_return false;
+    std::vector<std::uint64_t> root_signature;
+    if (!proof_calc.exact_reforge_kernel_signature(
+            proof_root, roll.primitive_action, root_signature) ||
+        root_signature.empty()) co_return false;
+    // Only caller-admitted, fully priced native primitives may recover a miss.
+    // This does not authorize an automatic dependency or economic Restart.
+    for (const auto& reset : operators) {
+        if (reset.index >= calc.operators().size() ||
+            !std::isfinite(reset.cost) || reset.cost < 0.0) continue;
+        const auto& reset_op = calc.operators().at(reset.index);
+        if (reset_op.kind != PlannerOperatorKind::Primitive ||
+            reset_op.primitive_action >= calc.registry().actions.size()) continue;
+        const auto& reset_action = calc.registry().actions.at(reset_op.primitive_action);
+        if (reset_action.synthetic || reset_action.params.type != ActionType::Scour ||
+            solver_action_disabled(calc.goal(), reset_action)) continue;
+        WideFloat mass{0.0}, success{0.0}, recovery_cost{0.0};
+        bool complete_reset = true;
+        for (const auto& outcome : complete_kernel.entries) {
+            if (!std::isfinite(outcome.probability) || outcome.probability < 0.0 ||
+                outcome.state >= proof_calc.state_count()) { complete_reset = false; break; }
+            if (!(outcome.probability > 0.0)) continue;
+            co_await solve_detail::CooperativeCheckpoint{};
+            mass += WideFloat{outcome.probability};
+            if (proof_calc.is_goal_state(proof_calc.state(outcome.state))) {
+                success += WideFloat{outcome.probability};
+                continue;
+            }
+            if (!action_legal(session, reset_action, proof_calc.state(outcome.state))) {
+                complete_reset = false; break;
+            }
+            const auto& reset_law = proof_calc.outcomes(
+                outcome.state, reset_op.primitive_action, false);
+            if (!reset_law.supported || !reset_law.applicable ||
+                reset_law.goal_progress_gated || !reset_law.choice_groups.empty() ||
+                !reset_law.choice_options.empty() || reset_law.entries.size() != 1 ||
+                reset_law.entries.front().probability != 1.0 ||
+                reset_law.entries.front().state != proof_root) {
+                complete_reset = false; break;
+            }
+            std::vector<std::uint64_t> retry_signature;
+            if (!proof_calc.exact_reforge_kernel_signature(proof_root, roll.primitive_action,
+                    retry_signature) || retry_signature != root_signature) {
+                complete_reset = false; break;
+            }
+            recovery_cost += WideFloat{outcome.probability} * WideFloat{reset.cost};
+        }
+        if (!complete_reset || std::abs(mass.value() - 1.0) > 1e-12 ||
+            !(success.value() > 0.0)) continue;
+        const double value = ((WideFloat{priced.cost} + recovery_cost) / success).value();
+        if (!std::isfinite(value) || value < 0.0 || value >= kValueCeiling ||
+            (output_incumbent && !(value < output_incumbent->certified_upper_bound)) ||
+            !(value < incumbent_portfolio.verified_executable_upper())) continue;
+        BoundedPolicyIncumbent candidate;
+        candidate.compiled_artifact.strategy_json = compile_finder_candidate_json(
+            calc, result.exact_start_item,
+            {roll.primitive_action, reset_op.primitive_action}, options, true);
+        candidate.compiled_artifact.certification_strategy_json =
+            candidate.compiled_artifact.strategy_json;
+        candidate.compiled_artifact.nodes = 4;
+        candidate.compiled_artifact.edges = 5;
+        candidate.compiled_root_entry_only = true;
+        candidate.strict_state_provenance = false;
+        candidate.policy_materialized = true;
+        candidate.values.assign(calc.state_count(), kInfinity);
+        candidate.values[state] = value;
+        candidate.policy.resize(calc.state_count());
+        candidate.policy_reachable.assign(calc.state_count(), 0);
+        candidate.policy_rows.assign(calc.state_count(),
+            std::numeric_limits<std::uint64_t>::max());
+        candidate.certified_upper_bound = value;
+        candidate.evaluated_policy_cost = value;
+        candidate.kind = "paid_root_reset_renewal";
+        candidate.compilation_provenance = "native_paid_reset_proposal_v1";
+        candidate.goal_identity = goal_identity();
+        candidate.economy_identity = economy_identity();
+        candidate.action_vocabulary_identity = action_vocabulary_identity();
+        candidate.action_vocabulary_size = operators.size();
+        candidate.caller_scope_identity = caller_scope_identity();
+        candidate.artifact_identity = artifact_identity();
+        candidate.graph_identity = graph_identity();
+        candidate.source_generation = transition_cache->rows.size();
+        candidate.target_generation = calc.state_count();
+        candidate.graph_row_count = transition_cache->rows.size();
+        candidate.graph_priced_row_count = priced_rows.size();
+        candidate.graph_successor_count = transition_cache->successors.size();
+        candidate.graph_probability_count = transition_cache->probabilities.size();
+        candidate.graph_choice_count = transition_cache->choices.size();
+        candidate.graph_choice_successor_count = transition_cache->choice_successors.size();
+        candidate.graph_choice_option_count = transition_cache->choice_options.size();
+        candidate.graph_prefix_identity = incumbent_graph_prefix_identity(
+            candidate.graph_row_count, candidate.graph_priced_row_count,
+            candidate.graph_successor_count, candidate.graph_probability_count,
+            candidate.graph_choice_count, candidate.graph_choice_successor_count,
+            candidate.graph_choice_option_count);
+        candidate.portfolio_identity = 1469598103934665603ULL;
+        identity_mix_string(candidate.portfolio_identity, candidate.compiled_artifact.strategy_json);
+        identity_mix(candidate.portfolio_identity, candidate.caller_scope_identity);
+        identity_mix(candidate.portfolio_identity, candidate.economy_identity);
+        candidate.retained_owned_bytes = incumbent_owned_bytes(candidate);
+        if (check_solver_byte_cap_fast(candidate.retained_owned_bytes)) co_return false;
+        if (!commit_output_incumbent(std::move(candidate))) co_return false;
+        retain_action_reason("included:paid_root_reset_renewal:" + roll.id + ":" +
+            reset_op.id + ":success=" + finite_json(success.value()) +
+            ":value=" + finite_json(value));
+        co_return true;
+    }
+    co_return false;
+}
+
+solve_detail::CooperativeTask<bool> SolveWork::Impl::prepare_paid_root_reset_candidate(
+        PricedOperator priced) {
+    const auto& roll = calc.operators().at(priced.index);
+    const auto reset = std::find_if(operators.begin(), operators.end(), [&](const auto& op) {
+        const auto& planner = calc.operators().at(op.index);
+        return planner.kind == PlannerOperatorKind::Primitive &&
+            calc.registry().actions.at(planner.primitive_action).params.type == ActionType::Scour &&
+            !solver_action_disabled(calc.goal(), calc.registry().actions.at(planner.primitive_action));
+    });
+    if (reset == operators.end()) co_return false;
+    const auto reset_action = calc.operators().at(reset->index).primitive_action;
+    const auto live = estimated_owned_bytes();
+    if (live >= options.max_solver_owned_bytes) co_return false;
+    const auto allowance = options.max_solver_owned_bytes - live;
+    const auto parent_states = calc.state_count();
+    const auto parent_rows = transition_cache->rows.size();
+    const auto parent_transitions = transition_cache->successors.size() +
+        transition_cache->choice_successors.size();
+    if (parent_states >= options.max_discovered_states ||
+        expanded_count >= options.max_expanded_states ||
+        parent_rows >= options.max_state_action_rows ||
+        parent_transitions >= options.max_transitions ||
+        calc.telemetry().reforge_logical_work_v1 >= options.max_reforge_work)
+        co_return false;
+    // One complete renewal row and at most one deterministic reset row per
+    // represented miss use no more than N rows and 2*N retained transitions.
+    const auto state_allowance = static_cast<std::uint32_t>(std::min<std::uint64_t>({
+        options.max_discovered_states - parent_states,
+        options.max_expanded_states - expanded_count,
+        options.max_state_action_rows - parent_rows,
+        (options.max_transitions - parent_transitions) / 2}));
+    if (state_allowance == 0) co_return false;
+    // The immutable two-operation controller needs only its own native
+    // observation closure. Never intern its misses in the parent namespace.
+    GoalSpec proof_goal = calc.goal();
+    proof_goal.fixed_options.clear();
+    proof_goal.automatic_candidates = false;
+    auto proof_calc = std::make_unique<CalcContext>(
+        calc.shared_session(), proof_goal, calc.registry(),
+        std::vector<std::uint32_t>{roll.primitive_action, reset_action},
+        false, false, false, std::nullopt, std::vector<CountObservation>{},
+        false, std::vector<std::uint64_t>{}, false, false, false, false, true);
+    proof_calc->set_reforge_work_budget_owner(&calc);
+    proof_calc->set_solve_resource_caps(state_allowance,
+        options.max_reforge_work - calc.telemetry().reforge_logical_work_v1,
+        false, allowance);
+    const auto root = proof_calc->intern_item(result.exact_start_item);
+    std::shared_ptr<const OutcomeDistribution> complete;
+    while (!proof_calc->advance_outcomes(root, roll.primitive_action, false, complete, 1))
+        co_await solve_detail::CooperativeCheckpoint{proof_calc->estimated_owned_bytes()};
+    if (!complete || complete->entries.size() > options.max_transitions) co_return false;
+    auto capture = try_install_paid_root_reset_incumbent(
+        result.start_state, priced, *proof_calc, root, *complete);
+    while (!capture.resume()) {
+        if (proof_calc->estimated_owned_bytes() >= allowance) co_return false;
+        co_await solve_detail::CooperativeCheckpoint{
+            proof_calc->estimated_owned_bytes() + capture.retained_bytes()};
+    }
+    const bool installed = capture.take_result();
+    capture.reset();
+    complete.reset();
+    proof_calc.reset();
+    if (!installed) co_return false;
+    // Finish, cancellation or a refused checker releases only this unverified
+    // proposal. It cannot be retried in publication with a fresh allowance.
+    struct UnverifiedProposalGuard {
+        std::optional<BoundedPolicyIncumbent>& selected;
+        std::uint64_t identity;
+        ~UnverifiedProposalGuard() {
+            if (selected && selected->portfolio_identity == identity &&
+                !selected->independently_evaluated) selected.reset();
+        }
+    } release{output_incumbent, output_incumbent->portfolio_identity};
+    co_await solve_detail::CooperativeCheckpoint{};
+    auto check = certify_initial_candidate();
+    while (!check.resume())
+        co_await solve_detail::CooperativeCheckpoint{check.retained_bytes()};
+    co_return check.take_result();
+}
 
 double solve_detail::globally_certified_action_envelope_lower_bound(
         const double restricted_lower_bound,
