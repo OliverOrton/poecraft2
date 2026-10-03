@@ -68,11 +68,11 @@ const access=calculator as unknown as {
 // same base, and Crusader Vaal Regalia. No base/influence exception is allowed.
 const pickerCases=[
     {base:"Metadata/Items/Armours/Shields/ShieldInt12",key:"GainRandomChargeOnBlockInfluence1",influence:2},
-    {base:"Metadata/Items/Armours/Shields/ShieldInt12",key:"BlockPercentInfluence2",influence:1},
+    {base:"Metadata/Items/Armours/Shields/ShieldInt12",key:"AreaOfEffectInfluence1",influence:1},
     {base:"Metadata/Items/Armours/BodyArmours/BodyInt17",key:"EnergyShieldRecoveryRateBodyInfluence2",influence:3}];
 const realGuard=access.guard,realGoalChanged=access.goalChanged;
 access.guard=async work=>work();access.goalChanged=async()=>{};
-access.solver=5;access.item=1;access.pickerActions=[{id:"scour",cost_keys:[]} as unknown as SolverActionInfo];
+access.busy=false;access.solver=5;access.item=1;access.pickerActions=[{id:"scour",cost_keys:[]} as unknown as SolverActionInfo];
 for(const fixture of pickerCases){
     access.base=fixture.base;const target=newCalculatorGoal("influenced","Influenced explicit");
     access.goalList={version:"calculator_goal_list_v1",activeGoalId:target.id,goals:[target]};

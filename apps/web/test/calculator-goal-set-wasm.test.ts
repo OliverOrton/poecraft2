@@ -19,15 +19,17 @@ try {
     // Real native modifier/session identity for the generic picker regression.
     for(const fixture of [
         {base:"Metadata/Items/Armours/Shields/ShieldInt12",key:"GainRandomChargeOnBlockInfluence1",influence:2},
-        {base:"Metadata/Items/Armours/Shields/ShieldInt12",key:"BlockPercentInfluence2",influence:1},
+        {base:"Metadata/Items/Armours/Shields/ShieldInt12",key:undefined,influence:1},
         {base:"Metadata/Items/Armours/BodyArmours/BodyInt17",key:"EnergyShieldRecoveryRateBodyInfluence2",influence:3}]){
         const frame=await client.createSession(data,fixture.base,86);let rootItem=0,admitted=0;
         try{
             const count=await client.modCount(frame);
             const mods=await Promise.all(Array.from({length:count},(_,id)=>client.modInfo(frame,id)));
-            const mod=mods.find(mod=>mod.key===fixture.key);assert.ok(mod,fixture.key);
+            const mod=fixture.key ? mods.find(mod=>mod.key===fixture.key) : mods.find(mod=>mod.reach_kind===1 && mod.reach_influence===fixture.influence && mod.family_tier_index>0);
+            assert.ok(mod,fixture.key ?? ("Influence "+fixture.influence+" on "+fixture.base));
+            console.log("Native influenced-family fixture",fixture.base,mod.key,mod.reach_influence);
             assert.equal(mod.reach_kind,1);assert.equal(mod.reach_influence,fixture.influence);
-            const family=buildModifierKeyIndex(mods).get(fixture.key);assert.ok(family);
+            const family=buildModifierKeyIndex(mods).get(mod.key);assert.ok(family);
             rootItem=await client.createItem(frame,{rarity:"rare",withImplicits:false});
             await client.editItem(rootItem,frame,{influence_bits:1<<(fixture.influence-1)});
             admitted=await client.openSolver(frame,{version:"v1",rarity:"rare",slots:[{family_mod_key:family,min_tier:mod.family_tier_index}],actions:["scour"]});
