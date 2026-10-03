@@ -166,7 +166,8 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
         case "eldritch": panel = <><div className="pc-mechanic-row">
             {select("eldritch-tier", [1,2,3,4].map(tier => ({key: String(tier), name: "Tier " + tier})), "1", "Tier")}
             {action("eldritch_ember", "Ember", true)}{action("eldritch_ichor", "Ichor", true)}
-        </div><div className="pc-craft-options">{["eldritch_exalt", "eldritch_chaos", "eldritch_annul"].map(id => action(id))}</div></>; break;
+        </div><div className="pc-craft-options">{["eldritch_exalt", "eldritch_chaos", "eldritch_annul"].map(id => action(id))}</div>
+            <span className="pc-help">Eldritch Chaos uses assumed 8:3:1 weights for 4/5/6 affix targets, adjusted for the kept side, fractures and side limits. These count odds are provisional.</span></>; break;
         case "influenced": panel = <div className="pc-material-panel">
             {choices("influence", "Influence", m.catalog.influences, entry => "influence:" + entry.key)}
             <div className="pc-material-footer">{action("influence_exalt", calculator ? "Calculate odds" : "Influenced exalt", true)}</div>
