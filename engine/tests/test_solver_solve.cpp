@@ -3246,18 +3246,30 @@ void run_selective_completion_target_count_tests(bool cap_diagnosis = false) {
                     binding.admitted_state, binding.operator_index);
                 PC_CHECK(law.supported && law.legal);
                 double mass = 0, one_suffix_mass = 0, goal_mass = 0;
+                std::array<double, 4> suffix_count_mass{};
                 for (const auto& exit : law.exits) {
                     if (!(exit.probability > 0)) continue;
                     const auto& state = work.selective_service_calc->state(exit.state);
                     mass += exit.probability;
+                    if (state.suffix_count < suffix_count_mass.size())
+                        suffix_count_mass[state.suffix_count] += exit.probability;
                     if (state.suffix_count == 1) one_suffix_mass += exit.probability;
                     if (work.selective_service_calc->is_goal_state(state)) goal_mass += exit.probability;
                     PC_CHECK(state.prefix_count == 3);
-                    PC_CHECK(state.suffix_count == 2 || state.suffix_count == 3);
+                    PC_CHECK(state.suffix_count >= 1 && state.suffix_count <= 3);
                 }
                 PC_CHECK(near(mass, 1));
-                PC_CHECK(one_suffix_mass == 0);
-                if (target_count == 1) PC_CHECK(goal_mass == 0);
+                // Three kept prefixes turn total targets4/5/6 into suffixes1/2/3.
+                // Golden weights and the100/100/400 suffix pool are independent
+                // of the production count helper and reforge recurrence. Exact
+                // goals permit no extras: one wanted suffix has chance1/6;
+                // both wanted suffixes have chance2*(1/6)*(1/5).
+                PC_CHECK(near(suffix_count_mass[0], 0, 1e-12));
+                PC_CHECK(near(suffix_count_mass[1], 8.0 / 12.0, 1e-12));
+                PC_CHECK(near(suffix_count_mass[2], 3.0 / 12.0, 1e-12));
+                PC_CHECK(near(suffix_count_mass[3], 1.0 / 12.0, 1e-12));
+                PC_CHECK(near(one_suffix_mass, 2.0 / 3.0, 1e-12));
+                PC_CHECK(near(goal_mass, target_count == 1 ? 1.0 / 9.0 : 1.0 / 60.0, 1e-12));
                 std::printf("selective target=%u native reroll mass=%.17g one_suffix=%.17g goal=%.17g\n",
                     target_count, mass, one_suffix_mass, goal_mass);
             }
@@ -14594,6 +14606,13 @@ void run_automatic_eldritch_side_tests(
     PC_CHECK(
         retained_transition_solved.diagnostics.automatic_admission_phases
             .transition_entries > retained_transition_cap);
+    std::printf("retained transition fixture: uncapped_retained=%llu automatic_work=%llu cap=%llu replay_retained=%llu replay_automatic=%llu policy=%d\n",
+        static_cast<unsigned long long>(retained_transitions),
+        static_cast<unsigned long long>(automatic_transition_work),
+        static_cast<unsigned long long>(retained_transition_cap),
+        static_cast<unsigned long long>(retained_transition_solved.diagnostics.sparse_transitions),
+        static_cast<unsigned long long>(retained_transition_solved.diagnostics.automatic_admission_phases.transition_entries),
+        retained_transition_solved.policy_available);
     PC_CHECK(std::find(
                  retained_transition_solved.diagnostics.cap_hits.begin(),
                  retained_transition_solved.diagnostics.cap_hits.end(),

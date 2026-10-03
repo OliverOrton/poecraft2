@@ -100,3 +100,5 @@ void run_solver_dominance_tests(const char* artifact_dir = nullptr);
 void run_dynamic_tag_tests();
 
 void run_cluster_configuration_tests(const char* artifact_dir);
+
+void run_solver_product_eldritch_api_tests(const char* artifact_dir);

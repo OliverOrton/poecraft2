@@ -932,6 +932,16 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     PC_CHECK(pc_economy_load_json(
                  economy_json.c_str(), economy_json.size(), &economy,
                  &error) == PC_RESULT_OK);
+    pc_strategy_handle strategy = nullptr;
+    const auto stop_failed_stage = [&](const char* stage, const pc_result result) {
+        std::fprintf(stderr, "product Eldritch fixture failed at %s: result=%d; preserving policy assertion and budgets\n", stage, static_cast<int>(result));
+        if (strategy != nullptr) pc_strategy_destroy(strategy);
+        pc_economy_destroy(economy);
+        pc_solver_destroy(solver);
+        pc_action_context_destroy(context);
+        pc_session_destroy(session);
+        pc_data_destroy(data);
+    };
     pc_solve_options solve_options{};
     solve_options.struct_size = sizeof(solve_options);
     solve_options.abi_version = PC_ABI_VERSION;
@@ -957,6 +967,25 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     PC_CHECK(summary.policy_available == 1);
     const std::string solved_telemetry =
         solver_telemetry_json(solver, &error);
+    if (summary.policy_available != 1) {
+        std::fprintf(stderr, "product Eldritch missing policy: BodyInt17 ilvl86 root=1prefix+3suffix goal=1suffix exact/no extras; states=%u budgets=200000/25000/300000/10000000/100000000/512MiB profile=calculator_product_v1 overrides=28\n", summary.expanded_states);
+        const auto report = parse_solver_api_fixture(solved_telemetry);
+        if (const auto* automatic = report.find("automatic_candidates")) {
+            if (const auto* witnesses = automatic->find("witnesses")) {
+                for (const auto& witness : witnesses->as_array()) {
+                    for (const auto& member : witness.object) {
+                        if (member.second.type == json::Type::String)
+                            std::fprintf(stderr, "automatic witness %s=%s\n", member.first.c_str(), member.second.as_string().c_str());
+                    }
+                }
+            }
+        }
+        const auto path = std::filesystem::temp_directory_path() / "poecraft-product-eldritch-missing-policy.json";
+        std::ofstream(path, std::ios::binary) << solved_telemetry;
+        std::fprintf(stderr, "product Eldritch telemetry: %s\n", path.string().c_str());
+        stop_failed_stage("policy availability", PC_RESULT_OK);
+        return;
+    }
     PC_CHECK(solved_telemetry.find(
                  "\"solve_profile\":{\"id\":"
                  "\"calculator_product_v1\",\"override_mask\":28}") !=
@@ -980,13 +1009,21 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
              std::string::npos);
 
     std::size_t strategy_length = 0;
-    PC_CHECK(pc_solver_compile_strategy(
-                 solver, nullptr, 0, &strategy_length,
-                 &error) == PC_RESULT_OK);
+    const pc_result strategy_length_result = pc_solver_compile_strategy(
+        solver, nullptr, 0, &strategy_length, &error);
+    PC_CHECK(strategy_length_result == PC_RESULT_OK);
+    if (strategy_length_result != PC_RESULT_OK) {
+        stop_failed_stage("strategy length", strategy_length_result);
+        return;
+    }
     std::string strategy_json(strategy_length + 1, '\0');
-    PC_CHECK(pc_solver_compile_strategy(
-                 solver, strategy_json.data(), strategy_json.size(),
-                 &strategy_length, &error) == PC_RESULT_OK);
+    const pc_result strategy_result = pc_solver_compile_strategy(
+        solver, strategy_json.data(), strategy_json.size(), &strategy_length, &error);
+    PC_CHECK(strategy_result == PC_RESULT_OK);
+    if (strategy_result != PC_RESULT_OK) {
+        stop_failed_stage("strategy export", strategy_result);
+        return;
+    }
     PC_CHECK(strategy_json.find("eldritch_annul") != std::string::npos ||
              strategy_json.find("eldritch_chaos") != std::string::npos);
     PC_CHECK(strategy_json.find(
@@ -996,22 +1033,33 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
     PC_CHECK(strategy_json.find(
                  "\"solver_imprint_programs_considered\":false") !=
              std::string::npos);
-    pc_strategy_handle strategy = nullptr;
-    PC_CHECK(pc_strategy_compile_json(
-                 session, strategy_json.c_str(), strategy_length,
-                 &strategy, &error) == PC_RESULT_OK);
+    const pc_result compile_result = pc_strategy_compile_json(
+        session, strategy_json.c_str(), strategy_length, &strategy, &error);
+    PC_CHECK(compile_result == PC_RESULT_OK);
+    if (compile_result != PC_RESULT_OK) {
+        stop_failed_stage("strategy compile", compile_result);
+        return;
+    }
     pc_strategy_eval_options eval_options{};
     eval_options.struct_size = sizeof(eval_options);
     eval_options.abi_version = PC_ABI_VERSION;
     eval_options.economy = economy;
     std::size_t eval_length = 0;
-    PC_CHECK(pc_strategy_evaluate(
-                 strategy, &eval_options, nullptr, 0, &eval_length,
-                 &error) == PC_RESULT_OK);
+    const pc_result eval_length_result = pc_strategy_evaluate(
+        strategy, &eval_options, nullptr, 0, &eval_length, &error);
+    PC_CHECK(eval_length_result == PC_RESULT_OK);
+    if (eval_length_result != PC_RESULT_OK) {
+        stop_failed_stage("evaluation length", eval_length_result);
+        return;
+    }
     std::string eval_json(eval_length + 1, '\0');
-    PC_CHECK(pc_strategy_evaluate(
-                 strategy, &eval_options, eval_json.data(), eval_json.size(),
-                 &eval_length, &error) == PC_RESULT_OK);
+    const pc_result eval_result = pc_strategy_evaluate(
+        strategy, &eval_options, eval_json.data(), eval_json.size(), &eval_length, &error);
+    PC_CHECK(eval_result == PC_RESULT_OK);
+    if (eval_result != PC_RESULT_OK) {
+        stop_failed_stage("evaluation", eval_result);
+        return;
+    }
     PC_CHECK(exact_evaluation_has_eventual_success(eval_json));
 
     pc_simulator_handle simulator = nullptr;
@@ -3562,4 +3610,8 @@ void run_solver_feasibility_tests(const char* artifact_dir) {
         return;
     }
     run_natural_t1_feasibility_gate(artifact_dir);
+}
+
+void run_solver_product_eldritch_api_tests(const char* artifact_dir) {
+    run_public_product_eldritch_gate(artifact_dir);
 }
