@@ -1,0 +1,4 @@
+[0/2] Re-checking globbed directories...
+[1/4] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_api.cpp.obj
+[2/4] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_solve.cpp.obj
+[3/4] Linking CXX executable poecraft_engine_tests.exe

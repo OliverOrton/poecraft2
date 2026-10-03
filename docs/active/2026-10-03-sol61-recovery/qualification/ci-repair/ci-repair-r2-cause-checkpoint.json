@@ -1,0 +1,59 @@
+{
+  "utc": "2026-10-03T21:07:53.754749+00:00",
+  "source_commit": "81aa73a547ffb54fc494ee187c67859ff62e034a",
+  "production_unchanged": true,
+  "processes_terminal": true,
+  "results": [
+    {
+      "phase": "build-tests",
+      "exit_code": 0,
+      "wall_ms": 31932.142099831253,
+      "survivor": false,
+      "timed_out": false
+    },
+    {
+      "phase": "automatic-ledger",
+      "exit_code": 1,
+      "wall_ms": 1855.829200008884,
+      "survivor": false,
+      "timed_out": false
+    },
+    {
+      "phase": "product-eldritch-api",
+      "exit_code": 1,
+      "wall_ms": 2656.4102999400347,
+      "survivor": false,
+      "timed_out": false
+    }
+  ],
+  "retained_cap_cause": {
+    "uncapped_pre_quotient_retained_peak": 1250,
+    "uncapped_final_quotient_retained": 928,
+    "automatic_transient_transition_work": 1506,
+    "replay_cap": 1217,
+    "replay_retained": 1216,
+    "interpretation": "Final quotient storage was used as a peak retained-storage baseline. The guard legitimately refuses the larger pre-quotient graph. Proposed test repair derives the same between-ledgers cap from measured pre-quotient retained peak."
+  },
+  "product_cause_witness": {
+    "root_state": 0,
+    "root_raw_value": 4.2,
+    "dead_end_state": 33,
+    "dead_end_prefixes": 0,
+    "dead_end_suffixes": 3,
+    "dead_end_expanded": true,
+    "dead_end_rows": 0,
+    "dead_end_raw_value": 1000000000000,
+    "propagated_state_20_raw_value": 1000000000001.1,
+    "residual": 0.0001220703125,
+    "sweeps": 100000,
+    "source_gate": "solver_solve_finish.cpp:1088 resource cap disables authoritative extraction; root missing is downstream",
+    "proposed_production_repair": "Initialize completed expanded non-goal states with no admitted finite-price action rows at infinity, the true terminal boundary, before fixed-policy evaluation. Preserve frontier/lower-bound semantics, numerical tolerances, all budgets and root authority. Add bounded independent finite regression and rerun the unchanged product fixture."
+  },
+  "qualification_remaining": [
+    "focused corrected automatic-ledger",
+    "finite no-action-boundary regression",
+    "unchanged product Eldritch API fixture",
+    "full serial native CTest acceptance"
+  ],
+  "push": "held pending repair and full native pass"
+}

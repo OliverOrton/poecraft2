@@ -1,0 +1,9 @@
+successor lower chaos: survive=0 lower=100 exact_h=104.034488
+successor lower scour: survive=0 lower=11 exact_h=11
+successor lower annul: survive=7 lower=5 exact_h=7
+solver automatic Eldritch lower: seed=0.003000000 bellman_rows=3
+automatic admission continuation: resumes=8 suspensions=7 max_leaf_ms=0.184 final_owned=66577
+retained transition fixture: uncapped_retained=928 automatic_work=1506 cap=1217 replay_retained=1216 replay_automatic=1462 policy=1
+FAIL C:/Users/Oliver/Documents/poecraft2-law3-integration/engine/tests/test_solver_solve.cpp:14616: std::find( retained_transition_solved.diagnostics.cap_hits.begin(), retained_transition_solved.diagnostics.cap_hits.end(), "max_transitions") == retained_transition_solved.diagnostics.cap_hits.end()
+solver automatic Eldritch delta: closed=1 outside=171 states=338 expanded=338 admitted=1235 rejected=0 unresolved=0
+solver integrity tests: 412 checks, 1 failures

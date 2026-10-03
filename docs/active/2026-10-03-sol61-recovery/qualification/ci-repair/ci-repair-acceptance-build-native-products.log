@@ -1,0 +1,4 @@
+[0/2] Re-checking globbed directories...
+[1/4] Linking CXX shared library poecraft_engine.dll
+[2/4] Building CXX object CMakeFiles/poecraft_solver_benchmark.dir/benchmarks/solver_benchmark.cpp.obj
+[3/4] Linking CXX executable poecraft_solver_benchmark.exe

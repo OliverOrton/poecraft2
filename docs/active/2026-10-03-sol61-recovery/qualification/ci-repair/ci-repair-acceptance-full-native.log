@@ -1,0 +1,49 @@
+Internal ctest changing into directory: C:/Users/Oliver/Documents/poecraft2-law3-integration/build/engine
+Test project C:/Users/Oliver/Documents/poecraft2-law3-integration/build/engine
+      Start  1: poecraft_header_smoke
+ 1/17 Test  #1: poecraft_header_smoke ................................   Passed    0.01 sec
+      Start  2: poecraft_core
+ 2/17 Test  #2: poecraft_core ........................................   Passed   82.10 sec
+      Start  3: poecraft_solver_abstract
+ 3/17 Test  #3: poecraft_solver_abstract .............................   Passed    0.34 sec
+      Start  4: poecraft_solver_calc
+ 4/17 Test  #4: poecraft_solver_calc .................................   Passed    8.44 sec
+      Start  5: poecraft_solver_family_contract
+ 5/17 Test  #5: poecraft_solver_family_contract ......................   Passed    0.35 sec
+      Start  6: poecraft_solver_solve
+ 6/17 Test  #6: poecraft_solver_solve ................................   Passed   43.36 sec
+      Start  7: poecraft_solver_compile
+ 7/17 Test  #7: poecraft_solver_compile ..............................   Passed    3.67 sec
+      Start  8: poecraft_solver_eval
+ 8/17 Test  #8: poecraft_solver_eval .................................   Passed    5.68 sec
+      Start  9: poecraft_solver_api
+ 9/17 Test  #9: poecraft_solver_api ..................................   Passed    8.80 sec
+      Start 10: poecraft_solver_s8_3
+10/17 Test #10: poecraft_solver_s8_3 .................................   Passed    0.67 sec
+      Start 11: poecraft_solver_refinement
+11/17 Test #11: poecraft_solver_refinement ...........................   Passed    0.02 sec
+      Start 12: poecraft_solver_fragment
+12/17 Test #12: poecraft_solver_fragment .............................   Passed   51.77 sec
+      Start 13: poecraft_solver_quotient_proof
+13/17 Test #13: poecraft_solver_quotient_proof .......................   Passed    0.02 sec
+      Start 14: poecraft_solver_benchmark_validate
+14/17 Test #14: poecraft_solver_benchmark_validate ...................   Passed    0.81 sec
+      Start 15: poecraft_solver_goal_realignment_validate
+15/17 Test #15: poecraft_solver_goal_realignment_validate ............   Passed    0.45 sec
+      Start 16: poecraft_solver_goal_realignment_five_mod_validate
+16/17 Test #16: poecraft_solver_goal_realignment_five_mod_validate ...   Passed    0.34 sec
+      Start 17: poecraft_solver_goal_realignment_gate6_validate
+17/17 Test #17: poecraft_solver_goal_realignment_gate6_validate ......   Passed    0.34 sec
+
+100% tests passed, 0 tests failed out of 17
+
+Label Time Summary:
+native                      = 207.17 sec*proc (17 tests)
+solver                      = 125.06 sec*proc (15 tests)
+solver-corpus-validation    =   1.94 sec*proc (4 tests)
+solver-fragment             =  51.77 sec*proc (1 test)
+solver-policy               =  43.36 sec*proc (1 test)
+solver-quotient-proof       =   0.02 sec*proc (1 test)
+solver-refinement           =   0.02 sec*proc (1 test)
+
+Total Test time (real) = 207.20 sec

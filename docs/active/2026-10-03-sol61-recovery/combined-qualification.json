@@ -814,6 +814,157 @@
     "deployment",
     "dev restart"
   ],
-  "publication": "approved; exact-head push/CI pending",
-  "local_bulk_receipts": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration"
+  "publication": "Original c263 published and delivered; Windows exact-head CI failed. Qualified generic CI repair recorded below; approved publication selected.",
+  "local_bulk_receipts": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration",
+  "ci_repair": {
+    "qualified_utc": "2026-10-03T21:34:01.092540+00:00",
+    "published_head_that_failed": "c263ed2475b5db7c6508c7155450fa04390c339c",
+    "original_windows_run": 37149248774,
+    "original_windows_conclusion": "failure; 15/17 native passed, 300 bindings plus five subtests passed, CI web phases not reached",
+    "stale_count_test_repair": "a7011b813a5ff949bfdf3b533679f724a473e23a",
+    "finite_witness_commit": "81aa73a547ffb54fc494ee187c67859ff62e034a",
+    "qualified_source_commit": "e6f2b8bccdaeb99874f7a6234491a9b3bf5dd651",
+    "qualified_artifact_commit": "9034151dedd1f0162fd075a59fa52453748aab15",
+    "source_engine_tree": "b608549914ec4ba5d73753f34cafc1390ff16bb0",
+    "production_engine_src_tree": "6dbf198aa1e5f863ef278855343f4f52b48e64c3",
+    "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "model_preserved": {
+      "rare_reforge_count_law_version": 3,
+      "action_refinement_contract_version": 5,
+      "evaluator_certificate_version": 3,
+      "assumption": "Oliver-approved 8:3:1 working model; provisional game probabilities"
+    },
+    "root_goal_scope_and_original_product_budgets_preserved": true,
+    "causes": {
+      "count": "Old law-2 expectations corrected with independent golden 8/12,3/12,1/12 count masses and 1/9,1/60 exact-goal probabilities.",
+      "cap": "Final quotient storage928 understated pre-quotient retained peak1250. Replay cap1378 lies below transient work1506; below-peak cap1249 still refuses. Production cap guard unchanged.",
+      "product": "Expanded no-row state33 retained finite seed1e12, contaminating fixed-policy equations; sweep cap then blocked authoritative extraction. Closed uncensored non-goal states without usable priced rows now have infinite terminal values. Open/focused lower, censored/frontier/incumbent values remain unchanged.",
+      "api_fixture": "Missing-policy assertion now exits cleanly before attempting to parse absent strategy JSON; assertion retained."
+    },
+    "independent_finite_checks": 31,
+    "automatic_ledger_checks": 417,
+    "unchanged_product_api_checks": 1849,
+    "unchanged_product_root_policy_value": 4.2,
+    "full_serial_native_targets_passed": 17,
+    "matching_wasm_build": "passed; existing Emscripten6.0.0, EMCC_CORES2/BINARYEN_CORES2",
+    "full_unfiltered_npm": "passed",
+    "typescript": "passed",
+    "binary_identity": {
+      "build/engine/poecraft_engine.dll": {
+        "sha256": "15577381d17a491e897276dbd754921d177b6632722a7cb7382d80423c6a5e74",
+        "bytes": 14533123
+      },
+      "build/engine/poecraft_engine_tests.exe": {
+        "sha256": "918f1b736d7291cb535b73afc5e2e2b7c7e2d6c72e0bf1a363ff589bdb7adfb9",
+        "bytes": 20049673
+      },
+      "build/engine/poecraft_solver_benchmark.exe": {
+        "sha256": "97fb69b6b61070d601f8b8127634bd3d522ac0368e5d23402d8cef8243807900",
+        "bytes": 14987785
+      },
+      "bindings/wasm/dist/poecraft_engine.wasm": {
+        "sha256": "9d65393ce4628bf3cbd6ce2c7ea2f856a43afa49d1d9398c1c0c3902e9fbfbfd",
+        "bytes": 8609359
+      },
+      "bindings/wasm/dist/poecraft_engine.mjs": {
+        "sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+        "bytes": 21788
+      }
+    },
+    "focused_receipts": [
+      {
+        "phase": "build-tests",
+        "exit_code": 0,
+        "wall_ms": 190252.09470000118,
+        "survivor": false,
+        "timed_out": false,
+        "receipt": "qualification/ci-repair/ci-repair-r3-build-tests.receipt.json"
+      },
+      {
+        "phase": "completed-policy-boundary",
+        "exit_code": 0,
+        "wall_ms": 588.1161999423057,
+        "survivor": false,
+        "timed_out": false,
+        "receipt": "qualification/ci-repair/ci-repair-r3-completed-policy-boundary.receipt.json"
+      },
+      {
+        "phase": "automatic-ledger",
+        "exit_code": 0,
+        "wall_ms": 1367.1699000988156,
+        "survivor": false,
+        "timed_out": false,
+        "receipt": "qualification/ci-repair/ci-repair-r3-automatic-ledger.receipt.json"
+      },
+      {
+        "phase": "product-eldritch-api",
+        "exit_code": 0,
+        "wall_ms": 1692.9055000655353,
+        "survivor": false,
+        "timed_out": false,
+        "receipt": "qualification/ci-repair/ci-repair-r3-product-eldritch-api.receipt.json"
+      }
+    ],
+    "acceptance_receipts": [
+      {
+        "phase": "build-native-products",
+        "exit_code": 0,
+        "wall_ms": 13469.446900067851,
+        "survivor": false,
+        "timed_out": false,
+        "receipt": "qualification/ci-repair/ci-repair-acceptance-build-native-products.receipt.json"
+      },
+      {
+        "phase": "full-native",
+        "exit_code": 0,
+        "wall_ms": 207269.0099000465,
+        "survivor": false,
+        "timed_out": false,
+        "receipt": "qualification/ci-repair/ci-repair-acceptance-full-native.receipt.json"
+      },
+      {
+        "phase": "build-wasm",
+        "exit_code": 0,
+        "wall_ms": 379773.51580001414,
+        "survivor": false,
+        "timed_out": false,
+        "receipt": "qualification/ci-repair/ci-repair-acceptance-build-wasm.receipt.json"
+      },
+      {
+        "phase": "data-bundle",
+        "exit_code": 0,
+        "wall_ms": 1404.2009999975562,
+        "survivor": false,
+        "timed_out": false,
+        "receipt": "qualification/ci-repair/ci-repair-acceptance-data-bundle.receipt.json"
+      },
+      {
+        "phase": "full-web",
+        "exit_code": 0,
+        "wall_ms": 98919.01260009035,
+        "survivor": false,
+        "timed_out": false,
+        "receipt": "qualification/ci-repair/ci-repair-acceptance-full-web.receipt.json"
+      },
+      {
+        "phase": "typescript",
+        "exit_code": 0,
+        "wall_ms": 3745.4031999222934,
+        "survivor": false,
+        "timed_out": false,
+        "receipt": "qualification/ci-repair/ci-repair-acceptance-typescript.receipt.json"
+      }
+    ],
+    "portable_receipt_index": "qualification/ci-repair/receipt-index.json",
+    "owned_processes": [],
+    "publication": "approved; qualified repair push/exact-head CI and normal checkout delivery selected",
+    "unrun_or_excluded": [
+      "fresh full Python suite; exact remote CI selected",
+      "new timed solves/Simulator",
+      "additional feature integration",
+      "rendered UI review",
+      "deployment/data refresh/dependency install/dev restart"
+    ],
+    "limits": "No new law, goal/scope widening, budget increase, approximate state merging, certified exact closure or financial-gate claim."
+  }
 }

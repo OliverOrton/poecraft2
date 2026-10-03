@@ -1,0 +1,87 @@
+{
+  "model": {
+    "rare_reforge_count_law_version": 3,
+    "action_refinement_contract_version": 5,
+    "evaluator_certificate_version": 3,
+    "assumption": "Oliver-approved 8:3:1 working model; provisional game probabilities"
+  },
+  "artifact": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "price_refresh": false,
+  "environment": {
+    "PYTHONPATH": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\tools\\ingest;C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\bindings\\python",
+    "POECRAFT_ENGINE_LIBRARY": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\build\\engine\\poecraft_engine.dll",
+    "POECRAFT_TEST_ARTIFACT": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "EMCC_CORES": "2",
+    "BINARYEN_CORES": "2",
+    "POECRAFT_TEST_BROWSER_CHANNEL": "chrome",
+    "POECRAFT_ECONOMY_MODE": "bundled",
+    "POECRAFT_ECONOMY_INDEX_URL": "economy/league-index.json",
+    "PYTHONIOENCODING": "utf-8",
+    "TEMP": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\ci-repair-r2-temp",
+    "TMP": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\ci-repair-r2-temp"
+  },
+  "created_utc": "2026-10-03T21:00:42.133039+00:00",
+  "source_commit": "81aa73a547ffb54fc494ee187c67859ff62e034a",
+  "source_engine_tree": "bdbe3ac1780d48739dce1a75e91107d090faf43c",
+  "production_engine_src_tree": "946dcbb86b0957afa09959c64215ddd4dd2cd6a9",
+  "published_production_engine_src_tree": "946dcbb86b0957afa09959c64215ddd4dd2cd6a9",
+  "LOCAL_owner": "review CI finite witnesses; awaiting grant",
+  "serial": true,
+  "compiler_jobs": 2,
+  "purpose": "Unchanged failing fixtures; expose values and pre/post quotient retained storage. No law, goal, root, scope, or budget edits.",
+  "commands": [
+    {
+      "phase": "build-tests",
+      "argv": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/dev-engine.ps1",
+        "-Task",
+        "Tests",
+        "-Jobs",
+        "2"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+      "watchdog_seconds": 900
+    },
+    {
+      "phase": "automatic-ledger",
+      "argv": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-integrity-only",
+        "automatic-ledger"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+      "watchdog_seconds": 180
+    },
+    {
+      "phase": "product-eldritch-api",
+      "argv": [
+        "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\build\\engine\\poecraft_engine_tests.exe",
+        "--solver-product-eldritch-api-only",
+        "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d"
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration",
+      "watchdog_seconds": 180
+    }
+  ],
+  "pins": {
+    "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\engine\\tests\\test_solver_api.cpp": "cca3dcb905aa2d6b24937f1612980b8438c79a3fd88e94f3739434d7c3d1bbe9",
+    "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\engine\\tests\\test_solver_solve.cpp": "93fa6a62881369724dea33f8b59df289ee9c837b98b1132fe6e5bf65c8be7a7b",
+    "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\engine\\tests\\test_main.cpp": "aec1ff7e4b73bc2f3c924ec0c1089d53d6ee805e56a9f1741c126a99957fdc55",
+    "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\engine\\tests\\tests.hpp": "8bccf6d4d6a66d7c65552d2064d0f7b2050592388fb5b9390bf1d69882fb1211",
+    "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\run-combined-checks.py": "4bb5c4761e53e553e380a24d828909f91bb6c563f38305bb5c2ccad0d243ec75"
+  },
+  "pre_build_binary_identity": {
+    "build\\engine\\poecraft_engine_tests.exe": {
+      "sha256": "dfcb7d3906bccf78d165bf4b269bb714145d6b2dd6e362e62120eb9ccb39d99b",
+      "bytes": 20036313
+    },
+    "build\\engine\\poecraft_engine.dll": {
+      "sha256": "f92e8c19fb2daec2f8d277afc612b4b3d2730a033678e8ca7853994887a57ce4",
+      "bytes": 14532516
+    }
+  }
+}

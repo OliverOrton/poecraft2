@@ -1,0 +1,453 @@
+FAIL C:/Users/Oliver/Documents/poecraft2-law3-integration/engine/tests/test_solver_api.cpp:970: summary.policy_available == 1
+product Eldritch missing policy: BodyInt17 ilvl86 root=1prefix+3suffix goal=1suffix exact/no extras; states=21 budgets=200000/25000/300000/10000000/100000000/512MiB profile=calculator_product_v1 overrides=28
+product finite state=0 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=1 rows=2 action=none
+product finite state=1 query=0 value=3.2000000000000002 prefix=1 suffix=2 goal=0 expanded=1 rows=3 action=none
+product finite state=2 query=0 value=3.2000000000000002 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=3 query=0 value=3.2000000000000002 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=4 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=5 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=6 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=7 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=8 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=9 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=10 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=11 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=1 rows=2 action=none
+product finite state=12 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=13 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=14 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=15 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=16 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=17 query=0 value=4.2000000000000002 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=18 query=0 value=2.2000000000000002 prefix=1 suffix=1 goal=0 expanded=1 rows=3 action=none
+product finite state=19 query=0 value=2.2000000000000002 prefix=1 suffix=1 goal=0 expanded=0 rows=0 action=none
+product finite state=20 query=0 value=1000000000001.1 prefix=1 suffix=3 goal=0 expanded=1 rows=2 action=none
+product finite state=21 query=0 value=2.2000000000000002 prefix=1 suffix=1 goal=0 expanded=0 rows=0 action=none
+product finite state=22 query=0 value=1000000000001.1 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=23 query=0 value=1000000000001.1 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=24 query=0 value=3.2000000000000002 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=25 query=0 value=3.2000000000000002 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=26 query=0 value=3.2000000000000002 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=27 query=0 value=3.2000000000000002 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=28 query=0 value=3.2000000000000002 prefix=1 suffix=2 goal=0 expanded=1 rows=2 action=none
+product finite state=29 query=0 value=3.2000000000000002 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=30 query=0 value=3.2000000000000002 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=31 query=0 value=3.2000000000000002 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=32 query=0 value=1000000000001 prefix=1 suffix=3 goal=0 expanded=1 rows=2 action=none
+product finite state=33 query=0 value=1000000000000 prefix=0 suffix=3 goal=0 expanded=1 rows=0 action=none
+product finite state=34 query=0 value=1000000000002 prefix=2 suffix=3 goal=0 expanded=1 rows=2 action=none
+product finite state=35 query=0 value=1000000000002.3638 prefix=3 suffix=3 goal=0 expanded=1 rows=2 action=none
+product finite state=36 query=0 value=1.2000000000000002 prefix=1 suffix=0 goal=0 expanded=1 rows=2 action=none
+product finite state=37 query=0 value=1000000000001.1 prefix=1 suffix=2 goal=0 expanded=1 rows=2 action=none
+product finite state=38 query=0 value=1000000000001.1 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=39 query=0 value=1000000000001 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=40 query=0 value=1000000000000 prefix=0 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=41 query=0 value=1000000000002 prefix=2 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=42 query=0 value=1000000000002.3638 prefix=3 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=43 query=0 value=1000000000001.1 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=44 query=0 value=1000000000001 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=45 query=0 value=1000000000000 prefix=0 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=46 query=0 value=1000000000002 prefix=2 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=47 query=0 value=1000000000002.3638 prefix=3 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=48 query=0 value=1000000000001.1 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=49 query=0 value=2.2000000000000002 prefix=1 suffix=1 goal=0 expanded=0 rows=0 action=none
+product finite state=50 query=0 value=1000000000001.1 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=51 query=0 value=1000000000001.1 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=52 query=0 value=1000000000001.1 prefix=1 suffix=3 goal=0 expanded=0 rows=0 action=none
+product finite state=53 query=0 value=2.2000000000000002 prefix=1 suffix=1 goal=0 expanded=1 rows=2 action=none
+product finite state=54 query=0 value=1000000000001 prefix=1 suffix=2 goal=0 expanded=1 rows=2 action=none
+product finite state=55 query=0 value=1000000000000 prefix=0 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=56 query=0 value=1000000000002 prefix=2 suffix=2 goal=0 expanded=1 rows=2 action=none
+product finite state=57 query=0 value=1000000000003 prefix=3 suffix=2 goal=0 expanded=1 rows=2 action=none
+product finite state=58 query=0 value=1.1000000000000001 prefix=1 suffix=1 goal=0 expanded=1 rows=2 action=none
+product finite state=59 query=0 value=1000000000001 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=60 query=0 value=1000000000000 prefix=0 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=61 query=0 value=1000000000002 prefix=2 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=62 query=0 value=1000000000003 prefix=3 suffix=2 goal=0 expanded=0 rows=0 action=none
+product finite state=63 query=0 value=1000000000001 prefix=1 suffix=2 goal=0 expanded=0 rows=0 action=none
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist3__
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=legal_permanent_goal_bench_successor
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=legal
+automatic witness disposition=collapsed
+automatic witness reason=exact_kernel_variant_retained_for_price_choice
+automatic witness eligibility_reason=legal_permanent_goal_bench_successor
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist3__
+automatic witness legality_result=legal
+automatic witness disposition=collapsed
+automatic witness reason=exact_kernel_variant_retained_for_price_choice
+automatic witness eligibility_reason=legal_permanent_goal_bench_successor
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=legal_permanent_goal_bench_successor
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=legal
+automatic witness disposition=collapsed
+automatic witness reason=exact_kernel_variant_retained_for_price_choice
+automatic witness eligibility_reason=legal_permanent_goal_bench_successor
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist3__
+automatic witness legality_result=legal
+automatic witness disposition=collapsed
+automatic witness reason=exact_kernel_variant_retained_for_price_choice
+automatic witness eligibility_reason=legal_permanent_goal_bench_successor
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=legal_permanent_goal_bench_successor
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=legal
+automatic witness disposition=collapsed
+automatic witness reason=exact_kernel_variant_retained_for_price_choice
+automatic witness eligibility_reason=legal_permanent_goal_bench_successor
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist3__
+automatic witness legality_result=legal
+automatic witness disposition=collapsed
+automatic witness reason=exact_kernel_variant_retained_for_price_choice
+automatic witness eligibility_reason=legal_permanent_goal_bench_successor
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist3__
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist3__
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist3__
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist3__
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist3__
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist3__
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist3__
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist3__
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_annul:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=eldritch_side
+automatic witness candidate=option:eldritch_side_intent:suffix:eldritch_chaos:direct
+automatic witness legality_result=legal
+automatic witness disposition=included
+automatic witness reason=retained_for_minimum_expected_cost_bellman_step
+automatic witness eligibility_reason=existing_dominance_exact_side_action
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:HelenaMasterColdResist1_
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+automatic witness candidate_kind=permanent_bench
+automatic witness candidate=bench:EinharMasterColdResist2
+automatic witness legality_result=irrelevant
+automatic witness disposition=rejected
+automatic witness reason=exact_invalidity_legality_or_relevance
+automatic witness eligibility_reason=permanent_bench_does_not_advance_goal
+product Eldritch telemetry: C:\Users\Oliver\Documents\poecraft2-law3-integration\out\law3-integration\ci-repair-r2-temp\poecraft-product-eldritch-missing-policy.json
+product Eldritch fixture failed at policy availability: result=0; preserving policy assertion and budgets
+solver product Eldritch API tests: 1711 checks, 1 failures

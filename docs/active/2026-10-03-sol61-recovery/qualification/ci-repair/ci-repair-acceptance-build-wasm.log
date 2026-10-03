@@ -1,0 +1,39 @@
+Compiling cooperative finalization WASM object...
+Compiling poecraft engine to WebAssembly...
+C:\Users\Oliver\Documents\poecraft2-law3-integration\engine\src\solver_abstract.cpp:187:13: warning: 10 enumeration values not handled in switch: 'FoulbornAugment', 'FoulbornRegal', 'FoulbornExalt'... [-Wswitch]
+  187 |     switch (ordinary_add_equivalent(action.params.type)) {
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 warning generated.
+C:\Users\Oliver\Documents\poecraft2-law3-integration\engine\src\solver_options_automatic.cpp:646:27: warning: result of comparison of constant 4611686018427387903 with expression of type 'const std::size_t' (aka 'const unsigned long') is always false [-Wtautological-constant-out-of-range-compare]
+  646 |                     upper >
+      |                     ~~~~~ ^
+  647 |                             std::numeric_limits<std::uint64_t>::max() /
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  648 |                                 sizeof(void*)
+      |                                 ~~~~~~~~~~~~~
+C:\Users\Oliver\Documents\poecraft2-law3-integration\engine\src\solver_options_automatic.cpp:792:35: warning: result of comparison of constant 4611686018427387903 with expression of type 'const std::size_t' (aka 'const unsigned long') is always false [-Wtautological-constant-out-of-range-compare]
+  792 |             cached_capacity_upper >
+      |             ~~~~~~~~~~~~~~~~~~~~~ ^
+  793 |                     std::numeric_limits<std::uint64_t>::max() /
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  794 |                         sizeof(std::uint32_t)
+      |                         ~~~~~~~~~~~~~~~~~~~~~
+2 warnings generated.
+C:\Users\Oliver\Documents\poecraft2-law3-integration\engine\src\solver_solve_audit.cpp:71:13: warning: 7 enumeration values not handled in switch: 'Remembrance', 'Unravelling', 'Dominance'... [-Wswitch]
+   71 |     switch (calc.registry().actions[planner.primitive_action].params.type) {
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 warning generated.
+C:\Users\Oliver\Documents\poecraft2-law3-integration\engine\src\solver_solve_bellman.cpp:1575:34: warning: result of comparison of constant 2049638230412172401 with expression of type 'size_type' (aka 'unsigned long') is always false [-Wtautological-constant-out-of-range-compare]
+ 1575 |             result.values.size() >
+      |             ~~~~~~~~~~~~~~~~~~~~ ^
+ 1576 |                     std::numeric_limits<std::uint64_t>::max() /
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1577 |                         (sizeof(std::uint8_t) + sizeof(double))
+      |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 warning generated.
+In file included from C:\Users\Oliver\Documents\poecraft2-law3-integration\engine\src\solver_compile.cpp:1:
+C:\Users\Oliver\Documents\poecraft2-law3-integration\engine\src\solver_compile_serialization.hpp:216:13: warning: 6 enumeration values not handled in switch: 'Remembrance', 'Unravelling', 'Tempering'... [-Wswitch]
+  216 |     switch (action.params.type) {
+      |             ^~~~~~~~~~~~~~~~~~
+1 warning generated.
+WASM engine written to C:\Users\Oliver\Documents\poecraft2-law3-integration\bindings\wasm\dist\poecraft_engine.mjs

@@ -1,0 +1,68 @@
+{
+  "utc": "2026-10-03T21:24:48.947569+00:00",
+  "source_commit": "e6f2b8bccdaeb99874f7a6234491a9b3bf5dd651",
+  "engine_tree": "b608549914ec4ba5d73753f34cafc1390ff16bb0",
+  "native_targets_passed": 17,
+  "native_binary_identity": {
+    "build\\engine\\poecraft_engine.dll": {
+      "sha256": "15577381d17a491e897276dbd754921d177b6632722a7cb7382d80423c6a5e74",
+      "bytes": 14533123
+    },
+    "build\\engine\\poecraft_engine_tests.exe": {
+      "sha256": "918f1b736d7291cb535b73afc5e2e2b7c7e2d6c72e0bf1a363ff589bdb7adfb9",
+      "bytes": 20049673
+    },
+    "build\\engine\\poecraft_solver_benchmark.exe": {
+      "sha256": "97fb69b6b61070d601f8b8127634bd3d522ac0368e5d23402d8cef8243807900",
+      "bytes": 14987785
+    }
+  },
+  "completed_receipts": [
+    {
+      "phase": "build-native-products",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 33236,
+      "process_identity_token": "33236:134355359654952513",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 13469.446900067851,
+      "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\ci-repair-acceptance-build-native-products.log"
+    },
+    {
+      "phase": "full-native",
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 63608,
+      "process_identity_token": "63608:134355359789683855",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 207269.0099000465,
+      "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\ci-repair-acceptance-full-native.log"
+    }
+  ],
+  "remaining": [
+    "matching WASM",
+    "full web",
+    "TypeScript",
+    "qualified artifact/evidence commit",
+    "approved publication",
+    "exact-head remote CI",
+    "safe normal fast-forward and build:data"
+  ],
+  "current_owned_wasm": {
+    "pid": 37728,
+    "identity_token": "37728:134355361862363532",
+    "started_utc": "2026-10-03T21:23:06.244708+00:00",
+    "watchdog_seconds": 1200
+  },
+  "session_id": 55607,
+  "LOCAL": "review acceptance retained",
+  "push": "held until all required local acceptance passes"
+}

@@ -1,0 +1,46 @@
+{
+  "utc": "2026-10-03T21:19:25.268257+00:00",
+  "source_commit": "e6f2b8bccdaeb99874f7a6234491a9b3bf5dd651",
+  "focused_passed": [
+    {
+      "phase": "build-tests",
+      "wall_ms": 190252.09470000118,
+      "exit_code": 0,
+      "survivor": false
+    },
+    {
+      "phase": "completed-policy-boundary",
+      "wall_ms": 588.1161999423057,
+      "exit_code": 0,
+      "survivor": false
+    },
+    {
+      "phase": "automatic-ledger",
+      "wall_ms": 1367.1699000988156,
+      "exit_code": 0,
+      "survivor": false
+    },
+    {
+      "phase": "product-eldritch-api",
+      "wall_ms": 1692.9055000655353,
+      "exit_code": 0,
+      "survivor": false
+    }
+  ],
+  "checks": {
+    "completed_policy_boundary": 31,
+    "automatic_ledger": 417,
+    "product_eldritch_api": 1849
+  },
+  "product_root_value": 4.2,
+  "retained_cap": {
+    "retained_peak": 1250,
+    "final_quotient_storage": 928,
+    "automatic_work": 1506,
+    "accepted_cap": 1378,
+    "refused_cap": 1249
+  },
+  "LOCAL": "review acceptance active",
+  "acceptance_request": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\ci-repair-acceptance-request.json",
+  "publication": "held until acceptance passes"
+}

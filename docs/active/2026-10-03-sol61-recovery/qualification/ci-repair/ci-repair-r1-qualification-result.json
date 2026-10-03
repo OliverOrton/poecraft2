@@ -1,0 +1,58 @@
+[
+  {
+    "phase": "build-tests",
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 92336,
+    "process_identity_token": "92336:134355329912345275",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 75485.07039994001,
+    "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\ci-repair-r1-build-tests.log"
+  },
+  {
+    "phase": "selective-target-count",
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 24708,
+    "process_identity_token": "24708:134355330672456528",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 579.6751000452787,
+    "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\ci-repair-r1-selective-target-count.log"
+  },
+  {
+    "phase": "automatic-ledger",
+    "exit_code": 1,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 68824,
+    "process_identity_token": "68824:134355330673003743",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 1269.321900093928,
+    "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\ci-repair-r1-automatic-ledger.log"
+  },
+  {
+    "phase": "product-eldritch-api",
+    "exit_code": 1,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 39432,
+    "process_identity_token": "39432:134355330685721191",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 2658.435400109738,
+    "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\ci-repair-r1-product-eldritch-api.log"
+  }
+]

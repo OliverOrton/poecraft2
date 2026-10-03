@@ -1,0 +1,40 @@
+{
+  "head": "c263ed2475b5db7c6508c7155450fa04390c339c",
+  "run_id": 37149248774,
+  "job_id": 111279428424,
+  "conclusion": "failure",
+  "native_passed": 15,
+  "native_total": 17,
+  "python": "300 passed + 5 subtests",
+  "assertions": [
+    "2026-10-03T20:08:55.9897429Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_solve.cpp:3256: state.suffix_count == 2 || state.suffix_count == 3",
+    "2026-10-03T20:08:55.9899253Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_solve.cpp:3256: state.suffix_count == 2 || state.suffix_count == 3",
+    "2026-10-03T20:08:55.9902858Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_solve.cpp:3256: state.suffix_count == 2 || state.suffix_count == 3",
+    "2026-10-03T20:08:55.9904532Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_solve.cpp:3259: one_suffix_mass == 0",
+    "2026-10-03T20:08:55.9906166Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_solve.cpp:3260: goal_mass == 0",
+    "2026-10-03T20:08:55.9911637Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_solve.cpp:3256: state.suffix_count == 2 || state.suffix_count == 3",
+    "2026-10-03T20:08:55.9913763Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_solve.cpp:3256: state.suffix_count == 2 || state.suffix_count == 3",
+    "2026-10-03T20:08:55.9915609Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_solve.cpp:3256: state.suffix_count == 2 || state.suffix_count == 3",
+    "2026-10-03T20:08:55.9917043Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_solve.cpp:3259: one_suffix_mass == 0",
+    "2026-10-03T20:08:56.1027634Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_solve.cpp:14597: std::find( retained_transition_solved.diagnostics.cap_hits.begin(), retained_transition_solved.diagnostics.cap_hits.end(), \"max_transitions\") == retained_transition_solved.diagnostics.cap_hits.end()",
+    "2026-10-03T20:09:26.3475337Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_api.cpp:957: summary.policy_available == 1",
+    "2026-10-03T20:09:26.3477387Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_api.cpp:975: solved_telemetry.find( \"\\\"zero_off_policy\\\":true\") != std::string::npos",
+    "2026-10-03T20:09:26.3479917Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_api.cpp:977: solved_telemetry.find( \"\\\"start_scope\\\":\\\"zero_progress_reroll_and_no_\" \"economic_restart_restrictions\\\"\") != std::string::npos",
+    "2026-10-03T20:09:26.3483686Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_api.cpp:983: pc_solver_compile_strategy( solver, nullptr, 0, &strategy_length, &error) == PC_RESULT_OK",
+    "2026-10-03T20:09:26.3486283Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_api.cpp:987: pc_solver_compile_strategy( solver, strategy_json.data(), strategy_json.size(), &strategy_length, &error) == PC_RESULT_OK",
+    "2026-10-03T20:09:26.3489065Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_api.cpp:990: strategy_json.find(\"eldritch_annul\") != std::string::npos || strategy_json.find(\"eldritch_chaos\") != std::string::npos",
+    "2026-10-03T20:09:26.3493264Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_api.cpp:992: strategy_json.find( \"\\\"solver_policy_scope\\\":\\\"zero_progress_reroll_and_\" \"no_economic_restart_restrictions\\\"\") != std::string::npos",
+    "2026-10-03T20:09:26.3496424Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_api.cpp:996: strategy_json.find( \"\\\"solver_imprint_programs_considered\\\":false\") != std::string::npos",
+    "2026-10-03T20:09:26.3498894Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_api.cpp:1000: pc_strategy_compile_json( session, strategy_json.c_str(), strategy_length, &strategy, &error) == PC_RESULT_OK",
+    "2026-10-03T20:09:26.3501402Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_api.cpp:1008: pc_strategy_evaluate( strategy, &eval_options, nullptr, 0, &eval_length, &error) == PC_RESULT_OK",
+    "2026-10-03T20:09:26.3503901Z FAIL D:/a/poecraft2/poecraft2/engine/tests/test_solver_api.cpp:1012: pc_strategy_evaluate( strategy, &eval_options, eval_json.data(), eval_json.size(), &eval_length, &error) == PC_RESULT_OK"
+  ],
+  "cause_checkpoint": {
+    "confirmed": "Selective-completion counts assert superseded 2/3 suffix law; native law3 keeps3prefix and produces1/2/3suffix at8:3:1, logged one-suffix mass2/3.",
+    "unresolved": [
+      "retained/transient max_transitions fixture line14597",
+      "product Eldritch API fixture no available policy under existing explicit caps"
+    ],
+    "api_abort": "Secondary unhandled JSON parse in test after policy/compile failures; not evidence of an engine memory crash."
+  }
+}

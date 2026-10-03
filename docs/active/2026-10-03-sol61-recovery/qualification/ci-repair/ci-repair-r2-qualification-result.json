@@ -1,0 +1,44 @@
+[
+  {
+    "phase": "build-tests",
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 75052,
+    "process_identity_token": "75052:134355351149489614",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 31932.142099831253,
+    "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\ci-repair-r2-build-tests.log"
+  },
+  {
+    "phase": "automatic-ledger",
+    "exit_code": 1,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 65788,
+    "process_identity_token": "65788:134355351474507626",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 1855.829200008884,
+    "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\ci-repair-r2-automatic-ledger.log"
+  },
+  {
+    "phase": "product-eldritch-api",
+    "exit_code": 1,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 29704,
+    "process_identity_token": "29704:134355351487389882",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 2656.4102999400347,
+    "log": "C:\\Users\\Oliver\\Documents\\poecraft2-law3-integration\\out\\law3-integration\\ci-repair-r2-product-eldritch-api.log"
+  }
+]

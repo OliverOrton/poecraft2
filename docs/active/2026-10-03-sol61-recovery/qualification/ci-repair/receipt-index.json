@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "copied_utc": "2026-10-03T21:34:01.052008+00:00",
+  "files": [
+    {
+      "path": "ci-repair-r1-request.json",
+      "sha256": "548da1a5d8e4de31a53cd63fa994f7a7548d8c61ac48f9369b273a41e80729de",
+      "bytes": 5239
+    },
+    {
+      "path": "ci-repair-r1-qualification-result.json",
+      "sha256": "b5d991b15cfea1f22fb46e945e966e47bf20b4f6ded81a905c6b2abb7a8eee67",
+      "bytes": 2079
+    },
+    {
+      "path": "ci-repair-r1-automatic-ledger.receipt.json",
+      "sha256": "6ae4eef019186fcfab199eb23f47377b22e23c6735cd12d0fd2348e3e805ab65",
+      "bytes": 327
+    },
+    {
+      "path": "ci-repair-r1-build-tests.receipt.json",
+      "sha256": "2c15581835bd403644ae8ec9692f82c884a19ef16d7e9f518cdf60d3367f288e",
+      "bytes": 327
+    },
+    {
+      "path": "ci-repair-r1-product-eldritch-api.receipt.json",
+      "sha256": "37e9a99879bb43d79ef9e658ac9cb1317d4d946d1be3fd06660a0374a17da60d",
+      "bytes": 327
+    },
+    {
+      "path": "ci-repair-r1-selective-target-count.receipt.json",
+      "sha256": "97f0b5c93140ed7038f1d28043dc7a5fb3cadf254e7330f284fc46b6ebbb7a6c",
+      "bytes": 327
+    },
+    {
+      "path": "ci-repair-r1-automatic-ledger.log",
+      "sha256": "ac7490225b39d894fc1395084a9c26e47e076563f822de3f90b35f29aaa78107",
+      "bytes": 928
+    },
+    {
+      "path": "ci-repair-r1-build-tests.log",
+      "sha256": "7e603b22f1c0a68bba16a6fa9045ea60ca2f855acef0b38cc969fd602f6e993f",
+      "bytes": 3540
+    },
+    {
+      "path": "ci-repair-r1-product-eldritch-api.log",
+      "sha256": "01b61dc12d485a98f1bd240eb2d982dcdd83bf5624f185c3277eca0e0eb4e9e0",
+      "bytes": 670
+    },
+    {
+      "path": "ci-repair-r1-selective-target-count.log",
+      "sha256": "d59852b859b4fb8b1d61a0f302764ea8fa9c4a99e720e23895d1d5788d7b0cdf",
+      "bytes": 514
+    },
+    {
+      "path": "ci-repair-r2-request.json",
+      "sha256": "d4fe19f1ab8686746cfd08ff4433867c9a17439866b89274496aec37b546244f",
+      "bytes": 4565
+    },
+    {
+      "path": "ci-repair-r2-qualification-result.json",
+      "sha256": "90604c59ad903bbdcf774245e8e9364dab40673933874accb463e7bca1806eac",
+      "bytes": 1553
+    },
+    {
+      "path": "ci-repair-r2-automatic-ledger.receipt.json",
+      "sha256": "e4a1fe3d62914e7d896765b6194ba6b1c54f7a902de59fe92a15a6e28ee93f34",
+      "bytes": 327
+    },
+    {
+      "path": "ci-repair-r2-build-tests.receipt.json",
+      "sha256": "a8f8983387d07ba9f742802915b72df373ecb2929a40f7bfbaf47e74fe213216",
+      "bytes": 328
+    },
+    {
+      "path": "ci-repair-r2-product-eldritch-api.receipt.json",
+      "sha256": "b891fa28f06f9ea4220d0cac64433f0982e117b355160171ef563b7e6dd7b692",
+      "bytes": 328
+    },
+    {
+      "path": "ci-repair-r2-automatic-ledger.log",
+      "sha256": "3901f37fad8960de4ba8349789740146fc0b5bd15aef87841dbc549b95cff374",
+      "bytes": 1156
+    },
+    {
+      "path": "ci-repair-r2-build-tests.log",
+      "sha256": "a03521e0a3586caf3db2f8eb4eb632cb0679f43ebb94549e8f27b65609a4bb6c",
+      "bytes": 288
+    },
+    {
+      "path": "ci-repair-r2-product-eldritch-api.log",
+      "sha256": "fbe5a3432d536d2c976c8955bdecf05445dba1e9ad2f88ab9f1497db01cad3be",
+      "bytes": 30068
+    },
+    {
+      "path": "ci-repair-r3-request.json",
+      "sha256": "09595520f442b120a18da3591984d3942240562f274c29ca4e85f06e1d0a4f27",
+      "bytes": 5312
+    },
+    {
+      "path": "ci-repair-r3-qualification-result.json",
+      "sha256": "1ec00af6b688f6ab0923adbf629212ed4ddaad3b7600176aa04e25fe2edeec53",
+      "bytes": 2088
+    },
+    {
+      "path": "ci-repair-r3-automatic-ledger.receipt.json",
+      "sha256": "22a5909d7ac632cb6d3263287502dff13927793bc3853a01d0ed1ead80a5a161",
+      "bytes": 328
+    },
+    {
+      "path": "ci-repair-r3-build-tests.receipt.json",
+      "sha256": "4cf8ace5a29a216a035dcf949e9a213c6ff7dc3ffc4bb37a7ce6a1f31cc77376",
+      "bytes": 328
+    },
+    {
+      "path": "ci-repair-r3-completed-policy-boundary.receipt.json",
+      "sha256": "e915e67bbe80c4b971c779ee1358ab03c856ecd6a93a673cc1fbd58b69de9c50",
+      "bytes": 327
+    },
+    {
+      "path": "ci-repair-r3-product-eldritch-api.receipt.json",
+      "sha256": "ab8b75fe610f275c8ad20a2e283aa1bed53b3741d7dbd1d913b5f767fa917ea1",
+      "bytes": 328
+    },
+    {
+      "path": "ci-repair-r3-automatic-ledger.log",
+      "sha256": "de14806c2576266364d8eb14024641f562305ff900e01c401e7127f810ef8d52",
+      "bytes": 971
+    },
+    {
+      "path": "ci-repair-r3-build-tests.log",
+      "sha256": "6a57c3b9778faecd32c18adea55b76632254fe6ff6399f77a9eb2bd257ffcf75",
+      "bytes": 5381
+    },
+    {
+      "path": "ci-repair-r3-completed-policy-boundary.log",
+      "sha256": "583af90b579c4e6d10777975e9ecd6083923d5433e0334446752083a688ff673",
+      "bytes": 47
+    },
+    {
+      "path": "ci-repair-r3-product-eldritch-api.log",
+      "sha256": "7f493b5a16875778a191d3c37f291cf21d7b3dd35bb775d7bec52ecfd8fc10d6",
+      "bytes": 122
+    },
+    {
+      "path": "ci-repair-acceptance-request.json",
+      "sha256": "ff8733e629d8617722f718bea700f5a3259ddaf923d8e7158edebd55960778e7",
+      "bytes": 9030
+    },
+    {
+      "path": "ci-repair-acceptance-qualification-result.json",
+      "sha256": "b163296f4e9c9e0e3a96a47b28aadc15bf429064ab838c4f22746eb5d4a2f496",
+      "bytes": 3101
+    },
+    {
+      "path": "ci-repair-acceptance-build-native-products.receipt.json",
+      "sha256": "eaccf44d6b07c6db80ae5ea6ce9e33818a1e3c80325b022fb44c2c42c8f675c6",
+      "bytes": 328
+    },
+    {
+      "path": "ci-repair-acceptance-build-wasm.receipt.json",
+      "sha256": "031ff5dc7556cf508a46f16f55d409f1d514e7b52cb17104a3eb878c85907ea4",
+      "bytes": 328
+    },
+    {
+      "path": "ci-repair-acceptance-data-bundle.receipt.json",
+      "sha256": "bdca9cda67323569da6023f3465f3709ef91723c3dc39fce5ed52f6a991c4ad8",
+      "bytes": 326
+    },
+    {
+      "path": "ci-repair-acceptance-full-native.receipt.json",
+      "sha256": "18490c76b9f54a359519a8dd865c1de2fec08531f6eb93a65dc29dc720f7dd34",
+      "bytes": 327
+    },
+    {
+      "path": "ci-repair-acceptance-full-web.receipt.json",
+      "sha256": "1b2b9fb4b17dcc87b8385f331f293ea9b280630eefb678a8d1cd5b22690507ea",
+      "bytes": 327
+    },
+    {
+      "path": "ci-repair-acceptance-typescript.receipt.json",
+      "sha256": "6d2112f3780204d5b9daee1b4a1c5e3b1c37e6f3b43115829a549b349157c277",
+      "bytes": 328
+    },
+    {
+      "path": "ci-repair-acceptance-build-native-products.log",
+      "sha256": "a0d026f1cb459381457946ea8a524448e724a32d0efae326d1273413c7b9ebe0",
+      "bytes": 260
+    },
+    {
+      "path": "ci-repair-acceptance-build-wasm.log",
+      "sha256": "f75bce95b4acf921a63a4c764e7f17099f16a595e3033456f2626c0dfd4b5025",
+      "bytes": 3401
+    },
+    {
+      "path": "ci-repair-acceptance-data-bundle.log",
+      "sha256": "e851733be7003e78677082720bf35e2a5ac19bed9a95b69d86f795e17c3e3c21",
+      "bytes": 267
+    },
+    {
+      "path": "ci-repair-acceptance-full-native.log",
+      "sha256": "4b82d24e5ebe39e82a260980a1d5f9ad17a20c6c0830a5ef5d3126363126b671",
+      "bytes": 3044
+    },
+    {
+      "path": "ci-repair-acceptance-full-web.log",
+      "sha256": "19b94b8c919fd0ca917b32d553e2079573cb1e2344d502039de9ae99fdcd71e6",
+      "bytes": 17330
+    },
+    {
+      "path": "ci-repair-acceptance-typescript.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "ci-repair-r2-cause-checkpoint.json",
+      "sha256": "1f195438f77f4987bb1f9abf9c3dea925c405696992ae4ae1d17d985b9b3fe0e",
+      "bytes": 2336
+    },
+    {
+      "path": "ci-repair-first-repro-pass.json",
+      "sha256": "ffbd700d86a9d1dc8d47bb00c8c6d5d2d5df00f5c55090956f6f476f33426944",
+      "bytes": 1256
+    },
+    {
+      "path": "ci-repair-native-pass-checkpoint.json",
+      "sha256": "559499dce12fc59277959b2e12265ad44fc3c0db251c0fd1f8bc3a2496f76f4e",
+      "bytes": 2434
+    },
+    {
+      "path": "windows-ci-failure.json",
+      "sha256": "f47c8597ab14db059b703e21d59962ec9474a37fbbcef10a38a4a7100a20c2b1",
+      "bytes": 4714
+    }
+  ],
+  "historical_request_annotation": "r1 source_engine_tree and pre-build binary_identity inherit the original combined qualification context. Its actual test source is a7011b8 and explicit test pins; r2/r3/current acceptance record their current engine/source trees. Historical receipts are byte-preserved."
+}

@@ -1,0 +1,5 @@
+FAIL C:/Users/Oliver/Documents/poecraft2-law3-integration/engine/tests/test_solver_api.cpp:967: summary.policy_available == 1
+product Eldritch missing policy: BodyInt17 ilvl86 root=1prefix+3suffix goal=1suffix exact/no extras; states=21 budgets=200000/25000/300000/10000000/100000000/512MiB profile=calculator_product_v1 overrides=28
+product Eldritch telemetry: C:\Users\Oliver\Documents\poecraft2-law3-integration\out\law3-integration\ci-repair-r1-temp\poecraft-product-eldritch-missing-policy.json
+product Eldritch fixture failed at policy availability: result=0; preserving policy assertion and budgets
+solver product Eldritch API tests: 1711 checks, 1 failures

@@ -1,0 +1,35 @@
+[0/2] Re-checking globbed directories...
+[1/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_bitset.cpp.obj
+[2/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_main.cpp.obj
+[3/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_item_state.cpp.obj
+[4/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_rng.cpp.obj
+[5/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_data_loader.cpp.obj
+[6/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_blocking.cpp.obj
+[7/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_session_builder.cpp.obj
+[8/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_actions.cpp.obj
+[9/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_bestiary.cpp.obj
+[10/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_recombination.cpp.obj
+[11/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_simulator.cpp.obj
+In file included from C:/Users/Oliver/Documents/poecraft2-law3-integration/engine/tests/test_simulator.cpp:1:
+C:/Users/Oliver/Documents/poecraft2-law3-integration/engine/tests/test_simulator.cpp: In lambda function:
+C:/Users/Oliver/Documents/poecraft2-law3-integration/engine/tests/test_simulator.cpp:815:66: warning: comparison of floating-point type 'const double' with enumeration type 'pc_rarity' is deprecated [-Wdeprecated-enum-float-conversion]
+  815 |                 PC_CHECK(resource.at("item").at("rarity").number == (actions >= 2 ? PC_RARITY_MAGIC : PC_RARITY_NORMAL));
+      |                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:/Users/Oliver/Documents/poecraft2-law3-integration/engine/tests/tests.hpp:29:41: note: in definition of macro 'PC_CHECK'
+   29 | #define PC_CHECK(cond) ::pctest::check((cond), __FILE__, __LINE__, #cond)
+      |                                         ^~~~
+[12/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_abstract.cpp.obj
+[13/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_metamod_recovery.cpp.obj
+[14/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_calc.cpp.obj
+[15/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_compile.cpp.obj
+[16/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_solve.cpp.obj
+[17/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_s8_3.cpp.obj
+[18/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_api.cpp.obj
+[19/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_eval.cpp.obj
+[20/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_refinement.cpp.obj
+[21/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_fragment.cpp.obj
+[22/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_proof.cpp.obj
+[23/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_partition.cpp.obj
+[24/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_bellman.cpp.obj
+[25/27] Building CXX object CMakeFiles/poecraft_engine_tests.dir/tests/test_solver_quotient_lower.cpp.obj
+[26/27] Linking CXX executable poecraft_engine_tests.exe
