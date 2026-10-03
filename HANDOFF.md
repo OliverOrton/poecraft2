@@ -1,15 +1,18 @@
-# Native CI repair continuation; heavy work paused (2026-10-02)
+# Native CI repair qualified (2026-10-03)
 
-Oliver selected remaining Windows native CI repair on delivered `dbc142a2`, then
-paused heavy work for gaming at 21:52 UTC. Isolated
-`dot/local-native-repair-20261002` preserves fracture carrier counts and retains a
-checked feasible graph after optional refinement failure without exact authority.
-Current build passes; final narrowed source/regression tests, matching WASM and
-promotion remain unrun. All owned heavy processes exited. Do not resume heavy
-work or restart his server without explicit resume. The
-[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
-and `native_ci_repair_checkpoint` receipt own evidence and remaining checks.
-Main/overnight checkout are unchanged; no mechanics/design work is selected.
+Oliver resumed this selected repair and explicitly approved normal main delivery
+of tested overnight changes at 04:12:22 UTC. Isolated
+`dot/local-native-repair-20261002` repair source `652c1fab`, qualified checkpoint
+`057b5325`, has 158,188 solver / 1,087 S8 / 63 selective-cap passing checks and
+matching WASM `472f644b…`; real worker filters and TypeScript pass. Bounded artifact
+retention supplies no exact/statewise authority; publication-loss negative control
+still passes. No owned heavy process remains; the serial slot is released.
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `native_ci_repair_qualification` receipt own passed/failed/unrun evidence.
+Actual normal main/remote/CI outcome is in `out/local-native-repair/delivery.json`.
+No deployment, refresh, dev-server restart or other feature integration is selected
+by this checkpoint. Parent coordinates the remaining isolated owners and combined
+qualification; new model approvals supply no game-exact solver authority.
 
 # Combined completion batch delivered; paused (2026-10-02)
 

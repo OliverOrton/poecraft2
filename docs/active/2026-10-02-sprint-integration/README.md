@@ -423,3 +423,43 @@ features are selected. The later three-boundary audit remains a proposal only.
 A second process check after the pause again found **zero tracked owned
 processes** and **zero visible native build/test processes**. No work is scheduled
 automatically; Oliver will choose the overnight resume. No owned process remains.
+
+
+## October 3 native repair qualification
+
+Oliver resumed local qualification at 04:00 UTC, then explicitly approved normal
+main delivery of completed tested changes at 04:12:22 UTC. This supersedes the
+previous pause and local-only dispatch for this selected repair. No deployment,
+other feature integration or new mechanic authority is implied.
+
+Repair source `652c1fab` plus test/contract checkpoint `057b5325` is qualified
+with engine tree `53c70f2226ee0274dd544ea5fdfa3821deec5c68`. Final native solver
+checks **158,188**, full S8 **1,087** and selective-cap **63** pass. The focused
+fracture integrity **636** and price-flip **36** checks also pass. The full target
+includes ordinary-step continuity, the deliberate non-cap lost-artifact negative
+control and independent evaluation of the retained bounded fracture graph.
+
+The first full solver run failed one previously hidden cancellation fixture:
+it assumed an operator was staged after exactly two cooperative yields. The
+fixture now advances to actual staged ownership before cancelling; rollback of
+operators, candidates and caches plus clean retry remain asserted. The full rerun
+passes. Production repair is unchanged from `652c1fab`. No assertion was relaxed
+to admit a historical scalar or failed proof.
+
+Matching two-job WASM build passes; SHA256
+`472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f`.
+Both real-worker Calculator carrier/goal and Fracturing Orb filters pass **4/4**;
+Finish/Cancel control passes. TypeScript initially lacked ignored build metadata
+in the fresh worktree; the existing bundle owner generated it from the unchanged
+frozen snapshot and TypeScript passes. The broad repository suite and generic
+WASM solver smoke containing an unchanged 5,000-run Simulator remain unrun.
+
+The heavy slot is released and all owned heavy processes exited. The artifact
+receipt `out/local-native-repair/qualified-artifacts.json` and
+`native_ci_repair_qualification` in [qualification.json](qualification.json)
+preserve exact commands, identities and failed/unrun evidence. Normal delivery's
+actual local/remote commit and CI projection are written separately to
+`out/local-native-repair/delivery.json`; no delivery is claimed by local
+qualification alone. Main/remote changes require the recorded normal delivery
+step. Other feature owners remain isolated until parent coordination and combined
+qualification. The short later audit remains proposed, not started.

@@ -1768,5 +1768,161 @@
     "no_deployment": true,
     "no_refresh": true,
     "no_extra_agents": true
+  },
+  "native_ci_repair_qualification": {
+    "status": "locally qualified; normal main delivery explicitly approved, no delivery claimed by this receipt",
+    "recorded_utc": "2026-10-03T04:19:48.750633+00:00",
+    "baseline": "dbc142a26f7060c6114453d85f7b4c776077dc2b",
+    "repair_source": "652c1fab913ea2d99e53bce740733e9bbda94359",
+    "qualified_source_commit": "057b5325105bdf165dcbf6da239168975a79dff2",
+    "qualified_engine_tree": "53c70f2226ee0274dd544ea5fdfa3821deec5c68",
+    "max_compiler_jobs": 2,
+    "native_build": {
+      "exit": 0,
+      "log": "out/local-native-repair/resumed-cancellation-build.log",
+      "command": "powershell -NoProfile -File scripts/dev-engine.ps1 -Task Tests -Jobs 2"
+    },
+    "native_checks": [
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-integrity-only fracture",
+        "checks": 636,
+        "failed": 0,
+        "exit": 0,
+        "log": "out/local-native-repair/resumed-fracture.log",
+        "source": "652c1fab",
+        "compatible_with_final": "cancellation fixture change is outside this selector"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-s8-3-only run_fracture_price_flip",
+        "checks": 36,
+        "failed": 0,
+        "exit": 0,
+        "log": "out/local-native-repair/resumed-s8-price-flip.log"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-solve-only C:/Users/Oliver/Documents/poecraft2/data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "checks": 158188,
+        "failed": 0,
+        "exit": 0,
+        "elapsed_seconds": 43.6196216,
+        "log": "out/local-native-repair/resumed-solver-solve-qualified.log",
+        "includes": "ordinary incumbent continuity, deliberate lost-artifact rejection, retained-graph reevaluation and cancellation rollback"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-s8-3-only",
+        "checks": 1087,
+        "failed": 0,
+        "exit": 0,
+        "elapsed_seconds": 0.701166,
+        "log": "out/local-native-repair/resumed-s8-full.log"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-integrity-only selective-cap-diagnosis",
+        "checks": 63,
+        "failed": 0,
+        "exit": 0,
+        "elapsed_seconds": 0.0600273,
+        "log": "out/local-native-repair/resumed-selective-cap.log"
+      }
+    ],
+    "wasm_build": {
+      "exit": 0,
+      "elapsed_seconds": 338.6015592,
+      "command": "EMCC_CORES=2 CMAKE_BUILD_PARALLEL_LEVEL=2 powershell -NoProfile -File scripts/build-wasm.ps1",
+      "log": "out/local-native-repair/resumed-wasm-build.log",
+      "warning": "Existing serialization switch omits unsupported Remembrance/Unravelling/Tempering and three other enum values; warning only, no new mechanics implemented"
+    },
+    "web_checks": [
+      {
+        "command": "POECRAFT_SMOKE_TEST='Calculator item goals and editors preserve native joint outcomes' node node_modules/tsx/dist/cli.mjs test/engine-smoke.test.ts",
+        "passed": 4,
+        "total": 4,
+        "exit": 0,
+        "log": "out/local-native-repair/resumed-wasm-calculator.log"
+      },
+      {
+        "command": "POECRAFT_SMOKE_TEST='Fracturing Orb fractures one random explicit modifier' node node_modules/tsx/dist/cli.mjs test/engine-smoke.test.ts",
+        "passed": 4,
+        "total": 4,
+        "exit": 0,
+        "log": "out/local-native-repair/resumed-wasm-fracture.log"
+      },
+      {
+        "command": "node node_modules/tsx/dist/cli.mjs test/worker-finish-control.test.ts",
+        "exit": 0,
+        "log": "out/local-native-repair/resumed-worker-finish.log"
+      },
+      {
+        "command": "node ../../scripts/build-data-bundle.mjs",
+        "exit": 0,
+        "log": "out/local-native-repair/resumed-build-data-bundle.log",
+        "context": "Existing owner generates ignored build metadata/bundle from unchanged frozen runtime; no refresh"
+      },
+      {
+        "command": "node node_modules/typescript/bin/tsc --noEmit",
+        "exit": 0,
+        "log": "out/local-native-repair/resumed-typescript-qualified.log"
+      }
+    ],
+    "artifacts": {
+      "build/engine/poecraft_engine_tests.exe": {
+        "sha256": "849ad1f3c670a711b9ce30b163f118a2cc7a0924e3f0f873f723c12204a1072d",
+        "bytes": 19508862
+      },
+      "bindings/wasm/dist/poecraft_engine.wasm": {
+        "sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+        "bytes": 8372123
+      },
+      "bindings/wasm/dist/poecraft_engine.mjs": {
+        "sha256": "c3f63141397c06cf966487c0ad5787a338000401dc46f707bba522c959296e9c",
+        "bytes": 21307
+      }
+    },
+    "runtime": {
+      "path": "C:/Users/Oliver/Documents/poecraft2/data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "native_and_worker_prices": "existing deterministic source fixtures unchanged; no price refresh"
+    },
+    "retained_failures": [
+      {
+        "checks": 158189,
+        "failed": 1,
+        "exit": 1,
+        "log": "out/local-native-repair/resumed-solver-solve.log",
+        "cause": "Cancellation fixture assumed actual operator staging after exactly two cooperative yields; test-only semantic boundary correction qualified by full rerun"
+      },
+      {
+        "exit": 2,
+        "log": "out/local-native-repair/resumed-typescript.log",
+        "cause": "Fresh worktree lacked ignored generated build-info.json; existing bundle-generation owner restored setup, TypeScript rerun passed"
+      }
+    ],
+    "authority": {
+      "original_root_goal_scope_prices_retained": true,
+      "native_laws_unchanged": true,
+      "bounded_graph_transfer_only_on_RefinementFailure": true,
+      "fresh_certificate_no_statewise_reconciliation_global_authority": true,
+      "noncap_publication_loss_invariant_unchanged_and_negative_control_passes": true,
+      "final_cap_refusal_unchanged_and_checked": true
+    },
+    "unrun": [
+      "broad whole-repository acceptance suite",
+      "generic WASM solver smoke containing unchanged 5000-run Simulator case",
+      "new long solver benchmarks",
+      "integration of other overnight feature branches",
+      "rendered UI review"
+    ],
+    "heavy_slot_released": true,
+    "owned_heavy_processes_remaining": 0,
+    "publication_approval": {
+      "source_thread": "01a0fe65-6e83-76d9-b710-f09a7cd4e0cb",
+      "user_time_utc": "2026-10-03T04:12:22Z",
+      "exact_user_reply": "1.yes\n2.yes",
+      "scope": "completed tested overnight changes may be normally integrated/pushed to main; no deployment"
+    },
+    "no_extra_agents": true,
+    "no_dependency_install": true,
+    "no_data_price_refresh": true,
+    "dev_server_untouched": true
   }
 }
