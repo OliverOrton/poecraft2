@@ -1,5 +1,10 @@
 # Random recombination solver and blocking programme
 
+**Research snapshot: UNBUILT / UNQUALIFIED.** Branch-only publication for Pro
+research is authorized; the integrator owns the push. Native source remains
+`0211d7a8604ac064c80d40ffd20beb915ef2297f`. Multiple-exclusive blocking and
+advanced joint-law Apply remain held; the uncertainty contract is a proposal.
+
 Selected by Oliver on October 3 2026 at 16:45 UTC. Sequential execution, no subagents.
 Fresh worktree `poecraft2-recombs-solver`, branch `dot/recombs-solver-20261003`.
 Available/local/cached/remote main were all
