@@ -4360,6 +4360,13 @@ void run_solver_growth_tests(const bool blocker) {
         PC_CHECK(!impl.begin_incremental_upper_policy_pass());
         PC_CHECK(impl.phase == SolvePhase::Done && impl.finalized_result.has_value());
         PC_CHECK(impl.incremental_upper_policy_passes_requested == previous_attempts);
+        // finish() releases the optional result, but consumption remains a
+        // permanent publication boundary; no post-finish upper pass may start.
+        impl.consumed = true;
+        impl.finalized_result.reset();
+        PC_CHECK(!impl.begin_incremental_upper_policy_pass());
+        PC_CHECK(impl.phase == SolvePhase::Done && !impl.finalized_result.has_value());
+        PC_CHECK(impl.incremental_upper_policy_passes_requested == previous_attempts);
     }
     SolveOptions product;
     apply_solve_profile_defaults(product, SolveProfile::CalculatorProductV1);
