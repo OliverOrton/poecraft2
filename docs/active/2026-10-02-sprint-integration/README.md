@@ -609,3 +609,31 @@ The approved bounded next step is normal publication of these test diagnostics
 and inspection of exactly one resulting exact-head CI, without blind reruns.
 Actual main/remote/CI evidence is recorded separately after delivery. No production
 fix, cap-case authority, other feature integration or deployment is claimed.
+
+
+## Currency expansion smoke expected-rejection correction prepared
+
+Exact-head Windows CI `37101710211`, job `111142371722`, on `0fecbc40`
+passes all17 native targets and275 bindings. The earlier product Eldritch scope
+case also passes. Web smoke then fails at `engine-smoke.test.ts:2534`: it expects
+`/Pro/` when solving a root carrying73 memory strands. Both native solve entry
+points correctly refuse that unsupported carrier state before profile/mode
+dispatch, with `PC_RESULT_UNSUPPORTED_FEATURE` (4) and the explicit no-state-drop
+guard detail. This is a specific stale fixture expectation; production guard
+behavior is preserved. Native prefix parity remains intermittently unreproduced,
+not proved fixed by this passing native run.
+
+The prepared test-only correction requires an `EngineError` instance, code4 and
+the exact existing guard detail in both Current and Strategy Finder. It also
+checks that the exported remembered root is unchanged after each rejection.
+Existing invalid imports, unavailable/disabled actions, missing-price accounting,
+product solve/compile/evaluation checks and rare original-root witness remain.
+No native source, WASM, mechanics, scope or proof authority changes.
+
+`currency_expansion_guard_fixture_ready` in [qualification.json](qualification.json)
+and `out/local-native-repair/currency-guard-fixture-ready.json` own the specific
+source/contract and proposed checks. All checks are **unrun** pending parent
+coordination: the cap owner retains the local heavy slot. The existing exact smoke
+filter selects this fixture plus the three ABI/data/session setup cases; use it
+for the focused smoke and complete following npm chain, plus TypeScript. No
+native/WASM rebuild or blind remote retry is selected. No new push.

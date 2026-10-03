@@ -1,3 +1,15 @@
+# Currency expansion smoke guard fixture prepared (2026-10-03)
+
+CI `37101710211` on `0fecbc40` passes17 native targets/275 bindings, then web
+smoke2534 expects `/Pro/` for a73-memory-strand root. Native entry guards correctly
+return unsupported-feature4 before profile/mode dispatch. Test-only correction
+requires the exact EngineError/code/detail in both modes and unchanged root; all
+other fixture checks remain. Native/WASM unchanged. Unrun/unpushed; cap owner
+holds the local heavy slot. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `currency_expansion_guard_fixture_ready` own the pending filtered npm/TypeScript
+checks. No owned heavy process. Native parity remains intermittently unreproduced.
+
 # Parity first-mismatch diagnostics qualified (2026-10-03)
 
 Test-only source `05064362` passed the approved two-job Tests build and one

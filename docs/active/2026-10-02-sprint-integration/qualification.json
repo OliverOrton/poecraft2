@@ -2244,5 +2244,64 @@
       "One authorized exact-head post-push CI (pending normal delivery)"
     ],
     "delivery": "Normal main fast-forward/push is authorized for these test-only diagnostics. Actual remote and one post-push CI result will be recorded separately; no deployment."
+  },
+  "currency_expansion_guard_fixture_ready": {
+    "recorded_utc": "2026-10-03T06:32:08.641177+00:00",
+    "status": "test-only expected-rejection correction prepared; build/test unrun; cap owner retains local heavy slot",
+    "baseline": "0fecbc404925548dc978ecdcf4d2aa0e62c91e1a",
+    "ci": {
+      "run_id": 37101710211,
+      "job_id": 111142371722,
+      "conclusion": "failure",
+      "native_targets": "17/17 passed",
+      "bindings": "275 passed",
+      "failing_file": "apps/web/test/engine-smoke.test.ts:2534",
+      "expected": "/Pro/",
+      "actual_code": 4,
+      "actual_detail": "Foresight, memory strands, absent resources and enchantment effects require solver integration; state cannot be dropped",
+      "prior_product_eldritch_scope_case": "passed",
+      "native_parity": "intermittently unreproduced; not proved fixed"
+    },
+    "root_state": {
+      "memory_strands": 73,
+      "modes": [
+        "current",
+        "strategy_finder"
+      ]
+    },
+    "contract": {
+      "native_guards": [
+        "engine/src/solver_api.cpp:2224",
+        "engine/src/solver_api.cpp:2307"
+      ],
+      "code": "engine/include/poecraft/result.h:15 PC_RESULT_UNSUPPORTED_FEATURE = 4",
+      "precedence": "Unsupported concrete carrier-state refusal precedes mode/profile dispatch in both entry points"
+    },
+    "change": {
+      "file": "apps/web/test/engine-smoke.test.ts",
+      "sha256": "5a15759ad1f7ac69366859c3f2a9071113c6dc5a07595602243915c012fffef2",
+      "expected_error": "EngineError instance, code4, exact state-preservation guard detail",
+      "additional_negative_check": "Exported remembered root equals pre-solve snapshot after rejection in both modes",
+      "production_native_wasm_diff": []
+    },
+    "preserved": [
+      "Memory73 clone/imprint roundtrip",
+      "Invalid legacy mod identity rejection",
+      "Memory101 invalid-import rejection",
+      "Unavailable alchemy/tempering actions",
+      "Both ordinary product solve/compile/independent graph evaluations",
+      "Disabled foulborn rejection",
+      "Missing-price accounting",
+      "Rare original-root witness"
+    ],
+    "pending_checks": [
+      "POECRAFT_SMOKE_TEST=currency expansion state and original-root policy contracts; npx tsx test/engine-smoke.test.ts",
+      "Same smoke filter with npm test (complete following web chain)",
+      "npx tsc --noEmit"
+    ],
+    "local_owned_heavy_processes": 0,
+    "build_tests_started": false,
+    "no_new_ci_rerun": true,
+    "no_push": true
   }
 }
