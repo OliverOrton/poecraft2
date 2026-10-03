@@ -43,6 +43,7 @@ import {
     StrategyValidationIssue,
     StrategyViewport,
     cloneStrategy,
+    pinStrategyFeeder,
     createBlankStrategy,
     createStrategyFromItemSnapshot,
     isStrategyDocument,
@@ -94,6 +95,10 @@ import "./pc-strategy-odds";
 type Selection = { kind: "node" | "edge"; id: string } | null;
 
 const OPERATIONS = [
+    "invoke_feeder",
+    "move_resource",
+    "discard_resource",
+    "recombination",
     "acquire_resource",
     "awakener",
     "foulborn_augment",
@@ -135,6 +140,10 @@ const OPERATIONS = [
 
 const PALETTE: Array<[string, string]> = [
     ["start", "Start state"],
+    ["operation:invoke_feeder", "Run saved feeder"],
+    ["operation:move_resource", "Move / recycle item"],
+    ["operation:discard_resource", "Discard item"],
+    ["operation:recombination", "Recombine pair (held)"],
     ["operation:acquire_resource", "Acquire donor"],
     ["operation:awakener", "Awakener's Orb"],
     ["operation:foulborn_augment", "Foulborn Augmentation"],
@@ -179,6 +188,7 @@ const PALETTE: Array<[string, string]> = [
 
 export class PcStrategyEditor extends HTMLElement {
     private resourceOptions: ItemStashRecord[] = [];
+    private feederOptions: StrategyStashRecord[] = [];
     private shellVersion = 0;
     private client!: EngineClient;
     private dataId = 0;
@@ -274,7 +284,9 @@ export class PcStrategyEditor extends HTMLElement {
                 (base) => base.support === 0,
             );
             this.catalog = await this.client.catalog(this.dataId);
-            this.resourceOptions = (await listStash()).filter((record): record is ItemStashRecord =>
+            const stash = await listStash();
+            this.feederOptions = stash.filter((record): record is StrategyStashRecord => record.resourceType === "strategy" && isStrategyDocument(record.strategy));
+            this.resourceOptions = stash.filter((record): record is ItemStashRecord =>
                 record.resourceType !== "strategy" && !Number((record.state as {lifecycle?: number})?.lifecycle ?? 0));
             this.essenceOptions = this.catalog.essences.map((entry) => ({
                 value: entry.key,
@@ -868,6 +880,12 @@ export class PcStrategyEditor extends HTMLElement {
                 <button data-add-donor ${this.resourceOptions.length ? "" : "disabled"}>Add donor template</button>
                 <p class="pc-help">Templates do not consume Stash items. Add Acquire donor before Awakener; every acquisition has a separate price key. Missing prices remain unknown.</p>
                 ${(this.strategy.resources ?? []).map(resource => `<label class="pc-field"><span>${escapeHtml(resource.id)} · ${escapeHtml(resource.name ?? "Donor")} acquisition price key</span><input data-resource-price="${escapeAttribute(resource.id)}" value="${escapeAttribute(resource.acquisition_price_key)}"></label>`).join("")}
+                <label class="pc-field"><span>Saved feeder and output contract</span><select data-feeder-template>${this.feederOptions.flatMap(record => (record.strategy as StrategyDocument).output_contracts?.map(contract => `<option value="${escapeAttribute(JSON.stringify([record.id, contract.id]))}">${escapeHtml(record.name)} · ${escapeHtml(contract.name ?? contract.id)}</option>`) ?? []).join("")}</select></label>
+                <button data-add-feeder>Add paid feeder slot</button>
+                <p class="pc-help">Each invocation buys a fresh starting item and runs the pinned child. Failure, cost limits and output mismatches remain visible. Move or discard an occupied output before invoking again.</p>
+                ${(this.strategy.resources ?? []).filter(resource => resource.feeder).map(resource => `<p class="pc-help">${escapeHtml(resource.id)}: ${escapeHtml(resource.feeder!.strategy_id)} · revision ${escapeHtml(resource.feeder!.revision)} · ${escapeHtml(resource.feeder!.output_contract_id)}</p>`).join("")}
+                <button data-add-output-contract>Add output contract</button>
+                ${(this.strategy.output_contracts ?? []).map(contract => `<details><summary>${escapeHtml(contract.name ?? contract.id)} · ${escapeHtml(contract.base_key)}</summary><pc-condition-editor data-output-contract="${escapeAttribute(contract.id)}"></pc-condition-editor></details>`).join("")}
                 <div class="pc-start-mod-summary">
                     ${(this.strategy.base_state.prefixes?.length ?? 0)} prefixes ·
                     ${(this.strategy.base_state.suffixes?.length ?? 0)} suffixes
@@ -890,7 +908,8 @@ export class PcStrategyEditor extends HTMLElement {
                         ).join("")}
                     </select>
                 </label>
-                ${type === "awakener" || type === "acquire_resource" ? `<label class="pc-field"><span>Donor resource</span><select data-field="resource-id"><option value="">Choose donor</option>${(this.strategy.resources ?? []).map(resource => `<option value="${escapeAttribute(resource.id)}" ${resource.id === (type === "awakener" ? (params.roles as {donor?: string} | undefined)?.donor : params.resource_id) ? "selected" : ""}>${escapeHtml(resource.id)} · ${escapeHtml(resource.name ?? "Donor")}</option>`).join("")}</select></label><p class="pc-help">${type === "awakener" ? "Consumes an acquired donor; receiver is the current item." : "Acquires one replacement donor and charges its acquisition price. It does not replace an available donor."}</p>` : ""}
+                ${type === "awakener" || type === "acquire_resource" || type === "invoke_feeder" || type === "discard_resource" ? `<label class="pc-field"><span>${type === "awakener" ? "Donor resource" : "Resource slot"}</span><select data-field="resource-id"><option value="">Choose slot</option>${type === "discard_resource" ? `<option value="current" ${params.resource_id === "current" ? "selected" : ""}>current</option>` : ""}${(this.strategy.resources ?? []).map(resource => `<option value="${escapeAttribute(resource.id)}" ${resource.id === (type === "awakener" ? (params.roles as {donor?: string} | undefined)?.donor : params.resource_id) ? "selected" : ""}>${escapeHtml(resource.id)} · ${escapeHtml(resource.name ?? "Donor")}</option>`).join("")}</select></label><p class="pc-help">${type === "awakener" ? "Consumes an acquired donor; receiver is the current item." : type === "invoke_feeder" ? "Buys a fresh start, runs the pinned child under the parent limits and checks its actual output. The slot must be empty." : type === "discard_resource" ? "Destroys this live item without resale credit or replacement." : "Acquires one replacement donor and charges its acquisition price. It does not replace an available donor."}</p>` : ""}
+                ${type === "move_resource" || type === "recombination" ? (type === "move_resource" ? ["from", "to"] : ["input_a", "input_b", "output"]).map(field => `<label class="pc-field"><span>${escapeHtml(field.replaceAll("_", " "))}</span><select data-slot-field="${field}"><option value="">Choose slot</option>${["current", ...(this.strategy.resources ?? []).map(resource => resource.id)].map(id => `<option value="${escapeAttribute(id)}" ${params[field] === id ? "selected" : ""}>${escapeHtml(id)}</option>`).join("")}</select></label>`).join("") + `<p class="pc-help">${type === "move_resource" ? "Moves the real item without acquiring a replacement. Source must be live and destination empty; moving to current requires the current base and item level." : "Consumes both inputs and creates one output. Execution is held until the native pair Apply is qualified; mixed-base outputs keep their actual base."}</p>` : ""}
                 ${
                     type === "essence"
                         ? `<label class="pc-field">
@@ -1017,6 +1036,7 @@ export class PcStrategyEditor extends HTMLElement {
             const base_state = createStrategyFromItemSnapshot(snapshot, () => undefined).base_state;
             const id = nextGraphId("donor", (this.strategy.resources ?? []).map(resource => resource.id));
             this.strategy.resources ??= [];
+            if (this.strategy.resources.length >= 7) throw new Error("The native runner supports seven resource slots.");
             this.strategy.resources.push({id, name: record.name, base_state, acquisition_price_key: `resource:${id}`});
             this.markChanged();
         } catch (error) {
@@ -1046,6 +1066,39 @@ export class PcStrategyEditor extends HTMLElement {
     }
 
     private bindNodeInspector(node: StrategyNode, host: HTMLElement): void {
+        host.querySelector<HTMLButtonElement>("[data-add-feeder]")?.addEventListener("click", () => {
+            try {
+                const selected = JSON.parse(host.querySelector<HTMLSelectElement>("[data-feeder-template]")?.value ?? "null") as [string, string] | null;
+                const record = this.feederOptions.find(record => record.id === selected?.[0]);
+                if (!record || !selected) return;
+                const id = nextGraphId("feeder", (this.strategy.resources ?? []).map(resource => resource.id));
+                this.strategy.resources ??= [];
+                if (record.id === this.savedRef) throw new Error("A saved strategy cannot be its own feeder.");
+                if (this.strategy.resources.length >= 7) throw new Error("The native runner supports seven resource slots.");
+                this.strategy.resources.push(pinStrategyFeeder(id, record, selected[1]));
+                this.markChanged();
+            } catch (error) { this.setStatus(error instanceof Error ? error.message : String(error)); }
+        });
+        host.querySelector<HTMLButtonElement>("[data-add-output-contract]")?.addEventListener("click", () => {
+            this.strategy.output_contracts ??= [];
+            if (this.strategy.output_contracts.length >= 32) { this.setStatus("The native compiler supports 32 output contracts."); return; }
+            const id = nextGraphId("output", this.strategy.output_contracts.map(contract => contract.id));
+            this.strategy.output_contracts.push({id, base_key: this.strategy.base_state.base_key, predicate: {type: "rarity_is", rarity: this.strategy.base_state.rarity}});
+            this.markChanged();
+        });
+        host.querySelectorAll<PcConditionEditor>("[data-output-contract]").forEach(editor => {
+            const contract = this.strategy.output_contracts?.find(contract => contract.id === editor.dataset.outputContract);
+            if (!contract) return;
+            editor.setEdge({id: contract.id, from: "", to: "", priority: 0, condition: contract.predicate});
+            editor.setModifierFamilies(this.modifierOptions);
+            editor.addEventListener("condition-change", event => {
+                contract.predicate = (event as CustomEvent<StrategyEdge>).detail.condition ?? {type: "always"};
+                this.markChanged(false);
+            });
+        });
+        host.querySelectorAll<HTMLSelectElement>("[data-slot-field]").forEach(select => select.addEventListener("change", () => {
+            if (node.operation) { node.operation.params[select.dataset.slotField!] = select.value; this.markChanged(); }
+        }));
         host.querySelector<HTMLButtonElement>("[data-add-donor]")?.addEventListener("click", () => {
             const selected = host.querySelector<HTMLSelectElement>("[data-donor-template]")?.value;
             if (selected) void this.addDonorTemplate(selected);
@@ -1765,6 +1818,7 @@ export class PcStrategyEditor extends HTMLElement {
     private async save(): Promise<boolean> {
         if (!this.savedRef) return this.saveAs();
         const record: StrategyStashRecord = {
+            revision: crypto.randomUUID(),
             id: this.savedRef,
             name: this.strategy.name || this.savedName || "Untitled strategy",
             description: this.strategy.description,
@@ -1786,6 +1840,7 @@ export class PcStrategyEditor extends HTMLElement {
         this.strategy.name = name;
         this.markChanged();
         const record: StrategyStashRecord = {
+            revision: crypto.randomUUID(),
             id: `strategy-${crypto.randomUUID()}`,
             name,
             description: this.strategy.description,

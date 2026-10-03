@@ -266,7 +266,32 @@ export type SolverPolicyScope =
     | "unrestricted"
     | "zero_progress_reroll_policy_restriction"
     | "no_economic_restart_policy_restriction"
-    | "zero_progress_reroll_and_no_economic_restart_restrictions";
+    | "zero_progress_reroll_and_no_economic_restart_restrictions"
+    | "gated_search_with_paid_root_foulborn_salvage_v2";
+
+export interface StrategyOutputContract {
+    id: string;
+    name?: string;
+    /** Checked against the actual native output session, as well as the predicate. */
+    base_key: string;
+    predicate: StrategyCondition;
+}
+
+export interface StrategyFeederReference {
+    strategy_id: string;
+    revision: string;
+    /** Exact embedded saved revision; never resolved from mutable Stash during a run. */
+    document_json: string;
+    output_contract_id: string;
+}
+
+export interface StrategyResource {
+    id: string;
+    name?: string;
+    base_state: StrategyBaseState;
+    acquisition_price_key: string;
+    feeder?: StrategyFeederReference;
+}
 
 export interface StrategyDocument {
     version: "v1";
@@ -275,7 +300,8 @@ export interface StrategyDocument {
     start_node_id: string;
     base_state: StrategyBaseState;
     /** Templates are unavailable until an explicit priced acquire_resource node. */
-    resources?: Array<{id: string; name?: string; base_state: StrategyBaseState; acquisition_price_key: string}>;
+    resources?: StrategyResource[];
+    output_contracts?: StrategyOutputContract[];
     nodes: StrategyNode[];
     edges: StrategyEdge[];
     solver_policy_scope?: SolverPolicyScope;
@@ -285,6 +311,96 @@ export interface StrategyDocument {
     ui?: {
         viewport?: StrategyViewport;
     };
+}
+
+/** Snapshot one saved revision into a paid output slot. This adds no live item. */
+export function pinStrategyFeeder(
+    id: string,
+    saved: {id: string; name: string; strategy: unknown; revision?: string; createdAt: number},
+    outputContractId: string,
+): StrategyResource {
+    if (!isStrategyDocument(saved.strategy)) throw new Error("Saved feeder is not a strategy document.");
+    if (!saved.strategy.output_contracts?.some(contract => contract.id === outputContractId))
+        throw new Error("Select a named output contract from the saved child revision.");
+    return {
+        id, name: saved.name, base_state: structuredClone(saved.strategy.base_state),
+        acquisition_price_key: `resource:${id}`,
+        feeder: {strategy_id: saved.id, revision: saved.revision ?? `legacy:${saved.createdAt}`,
+            document_json: JSON.stringify(saved.strategy), output_contract_id: outputContractId},
+    };
+}
+
+/** Resource port assignments are explicit slot names alongside control-flow edges. */
+export function strategyResourcePorts(node: StrategyNode): {inputs: string[]; outputs: string[]} {
+    const params = node.operation?.params ?? {};
+    const text = (key: string) => typeof params[key] === "string" ? params[key] as string : "?";
+    switch (node.operation?.type) {
+        case "invoke_feeder": case "acquire_resource": return {inputs: [], outputs: [text("resource_id")]};
+        case "move_resource": return {inputs: [text("from")], outputs: [text("to")]};
+        case "discard_resource": return {inputs: [text("resource_id")], outputs: []};
+        case "awakener": return {inputs: [String((params.roles as {donor?: string})?.donor ?? "?"), "current"], outputs: ["current"]};
+        case "recombination": return {inputs: [text("input_a"), text("input_b")], outputs: [text("output")]};
+        default: return {inputs: [], outputs: []};
+    }
+}
+
+function validateStrategyResources(strategy: StrategyDocument, issues: StrategyValidationIssue[]): void {
+    const fail = (message: string, nodeId?: string) => issues.push({severity: "error", code: "resource-contract", message, nodeId});
+    const seenRevisions = new Map<string, string>();
+    const visit = (document: StrategyDocument, ancestors: Set<string>, depth: number) => {
+        if (depth > 16) { fail("Feeder nesting exceeds the native limit."); return; }
+        const resources = document.resources ?? [];
+        if (!Array.isArray(resources) || resources.length > 7) { fail("Use at most seven explicit resource slots."); return; }
+        const ids = new Set<string>(["current"]);
+        for (const resource of resources) {
+            if (!/^[A-Za-z0-9_-]+$/.test(resource.id) || ids.has(resource.id)) fail(`Invalid or duplicate resource slot: ${resource.id}.`);
+            ids.add(resource.id);
+            if (!resource.base_state?.base_key || !resource.acquisition_price_key?.trim()) fail(`Resource ${resource.id} requires its starting base and acquisition price key.`);
+            const feeder = resource.feeder;
+            if (!feeder) continue;
+            try {
+                if (!feeder.strategy_id || !feeder.revision || !feeder.output_contract_id) throw new Error("Feeder requires a pinned revision and selected output contract.");
+                if (ancestors.has(feeder.strategy_id)) throw new Error("Feeder strategy reference cycle.");
+                const identity = JSON.stringify([feeder.strategy_id, feeder.revision]);
+                const previous = seenRevisions.get(identity);
+                if (previous !== undefined && previous !== feeder.document_json) throw new Error("One pinned revision contains conflicting documents.");
+                seenRevisions.set(identity, feeder.document_json);
+                const child: unknown = JSON.parse(feeder.document_json);
+                if (!isStrategyDocument(child)) throw new Error("Pinned child is not a strategy document.");
+                if (!child.output_contracts?.some(contract => contract.id === feeder.output_contract_id)) throw new Error("Selected feeder output contract is missing from its pinned revision.");
+                if (child.base_state.base_key !== resource.base_state.base_key || child.base_state.item_level !== resource.base_state.item_level)
+                    throw new Error("Feeder starting session differs from its paid resource template.");
+                visit(child, new Set([...ancestors, feeder.strategy_id]), depth + 1);
+            } catch (error) { fail(`Resource ${resource.id}: ${error instanceof Error ? error.message : String(error)}`); }
+        }
+        const contracts = document.output_contracts ?? [];
+        if (!Array.isArray(contracts) || contracts.length > 32) { fail("Use at most 32 named output contracts."); return; }
+        const contractIds = new Set<string>();
+        for (const contract of contracts) {
+            if (!contract.id || contractIds.has(contract.id) || !contract.base_key || !contract.predicate?.type) fail("Output contracts require unique IDs, actual base identity and a predicate.");
+            contractIds.add(contract.id);
+            validateCondition(contract.predicate, {id: contract.id, from: "", to: "", priority: 0}, issues);
+        }
+        for (const node of document.nodes) {
+            const op = node.operation;
+            if (!op) continue;
+            const params = op.params ?? {};
+            if (["invoke_feeder", "acquire_resource", "discard_resource"].includes(op.type)) {
+                const id = String(params.resource_id ?? "");
+                if (!ids.has(id) || (id === "current" && op.type !== "discard_resource")) fail("Choose a declared output/resource slot.", node.id);
+                const resource = resources.find(resource => resource.id === id);
+                if (op.type === "invoke_feeder" && !resource?.feeder) fail("Invoke feeder needs a pinned child revision.", node.id);
+                if (op.type === "acquire_resource" && resource?.feeder) fail("Run the feeder to acquire its paid starting item and execute the child.", node.id);
+            }
+            if (op.type === "move_resource" && (!ids.has(String(params.from)) || !ids.has(String(params.to)) || params.from === params.to)) fail("Move requires distinct declared source and destination slots.", node.id);
+            if (op.type === "recombination") {
+                if (!ids.has(String(params.input_a)) || !ids.has(String(params.input_b)) || !ids.has(String(params.output)) || params.input_a === params.input_b)
+                    fail("Recombination needs two distinct input slots and an explicit output slot.", node.id);
+                issues.push({severity: "warning", code: "recombination-held", message: "Executable recombination waits for qualified native pair Apply.", nodeId: node.id});
+            }
+        }
+    };
+    visit(strategy, new Set(), 0);
 }
 
 export type ValidationSeverity = "error" | "warning";
@@ -339,7 +455,9 @@ export function isStrategyDocument(value: unknown): value is StrategyDocument {
         candidate.solver_policy_scope ===
             "zero_progress_reroll_and_no_economic_restart_restrictions" ||
         candidate.solver_policy_scope ===
-            "zero_progress_reroll_policy_restriction";
+            "zero_progress_reroll_policy_restriction" ||
+        candidate.solver_policy_scope ===
+            "gated_search_with_paid_root_foulborn_salvage_v2";
     const validImprintProgramScope =
         candidate.solver_imprint_programs_considered === undefined ||
         typeof candidate.solver_imprint_programs_considered === "boolean";
@@ -350,7 +468,11 @@ export function isStrategyDocument(value: unknown): value is StrategyDocument {
         typeof candidate.start_node_id === "string" &&
         Boolean(candidate.base_state) &&
         validSolverPolicyScope &&
-        validImprintProgramScope
+        validImprintProgramScope &&
+        (candidate.resources === undefined || (Array.isArray(candidate.resources) && candidate.resources.every(resource =>
+            resource && typeof resource.id === "string" && typeof resource.acquisition_price_key === "string" && Boolean(resource.base_state)))) &&
+        (candidate.output_contracts === undefined || (Array.isArray(candidate.output_contracts) && candidate.output_contracts.every(contract =>
+            contract && typeof contract.id === "string" && typeof contract.base_key === "string" && Boolean(contract.predicate))))
     );
 }
 
@@ -579,6 +701,11 @@ export function operationLabel(
     const params = operation.params ?? {};
     const catalog = context.catalog;
     switch (operation.type) {
+        case "invoke_feeder": return `Run feeder → ${stringParam(params, "resource_id") || "choose slot"}`;
+        case "move_resource": return `Move ${stringParam(params, "from") || "?"} → ${stringParam(params, "to") || "?"}`;
+        case "discard_resource": return `Discard ${stringParam(params, "resource_id") || "choose slot"}`;
+        case "acquire_resource": return `Acquire ${stringParam(params, "resource_id") || "donor"}`;
+        case "recombination": return "Recombine pair (Apply held)";
         case "restart":
             return "Restart · fresh base";
         case "bestiary:imprint":
@@ -964,6 +1091,7 @@ export function validateStrategy(
     strategy: StrategyDocument,
 ): StrategyValidationIssue[] {
     const issues: StrategyValidationIssue[] = [];
+    validateStrategyResources(strategy, issues);
     const nodeById = new Map<string, StrategyNode>();
     const edgeIds = new Set<string>();
 

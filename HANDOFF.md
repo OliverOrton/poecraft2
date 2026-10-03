@@ -1,3 +1,17 @@
+# Feeder-first source checkpoint; qualification held (2026-10-03)
+
+Oliver resumed this prepared scope at 04:00 UTC. Isolated sibling
+`poecraft2-strategy-feeder`, branch `dot/strategy-feeder-20261003`, starts from
+remote-verified `3ab862fe`. The [living feeder record](docs/active/2026-10-03-strategy-feeder/README.md)
+owns pinned paid native child invocation, actual output predicates, shared parent
+limits, explicit move/discard recycling, item ports and history source. Source is
+UNTESTED; native/web/typecheck and matching WASM remain held pending the parent's
+shared heavy-slot release. No owned heavy process, slot usage or expanded budget.
+Recombination full Apply and exact inventory evaluation remain refused. Local
+commits belong to integration owner 01a0fd2f-7f88-7588-a1ea-bfe1e6991036; no merge,
+push, deployment, data refresh or dev-server restart. Next step: authorized
+two-job native qualification, focused web/typecheck and source-matched WASM.
+
 # Native CI repair qualified (2026-10-03)
 
 Oliver resumed this selected repair and explicitly approved normal main delivery

@@ -56,6 +56,8 @@ export interface ItemStashRecord extends ItemSnapshot {
 }
 
 export interface StrategyStashRecord {
+    /** New saves have a distinct revision; feeder snapshots remain immutable. */
+    revision?: string;
     id: string;
     name: string;
     description: string;

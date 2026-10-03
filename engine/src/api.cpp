@@ -2138,9 +2138,10 @@ pc_result pc_simulator_action_distribution_query(
             return simulator->impl->strategy->nodes[left].id <
                    simulator->impl->strategy->nodes[right].id;
         });
-    *out_entry_count = static_cast<std::uint32_t>(node_indices.size());
-    if (entry_capacity < node_indices.size() ||
-        (entries == nullptr && !node_indices.empty())) {
+    const auto& children = simulator->impl->child_action_counts;
+    *out_entry_count = static_cast<std::uint32_t>(node_indices.size() + children.size());
+    if (entry_capacity < *out_entry_count ||
+        (entries == nullptr && *out_entry_count != 0)) {
         set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
         return PC_RESULT_BUFFER_TOO_SMALL;
     }
@@ -2153,6 +2154,11 @@ pc_result pc_simulator_action_distribution_query(
         entries[i].node_id = node.id.c_str();
         entries[i].action_type = node.action_type;
         entries[i].count = simulator->impl->action_counts[node_index];
+    }
+    for (std::size_t i = 0; i < children.size(); ++i) {
+        auto& row = entries[node_indices.size() + i];
+        row.struct_size = sizeof(row); row.abi_version = PC_ABI_VERSION;
+        row.node_id = children[i].node_id.c_str(); row.action_type = children[i].action_type; row.count = children[i].count;
     }
     clear_error(out_error);
     return PC_RESULT_OK;

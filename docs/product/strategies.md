@@ -217,10 +217,12 @@ See [Workspace](workspace.md) and [Economy](../economy/README.md).
 
 ## Deferred Model Extensions
 
-The current v1 schema has no recombinator/feeder node kinds and no item-flow
-wires. It has no publishing/account resource contract. Aggregate Simulator
-node/edge overlays, empirical focus/trim, recombinator item flow, and
-publishing remain deferred in [Product Notes](NOTES.md), the
+The feeder extension retains operation nodes and existing control-flow edges,
+with explicit resource slot assignments shown as item ports. It has no general
+concurrent scheduler or publishing/account resource contract. Executable
+recombination stays held for the separate pair owner's qualified native Apply.
+Aggregate Simulator node/edge overlays, empirical focus/trim and publishing
+remain deferred in [Product Notes](NOTES.md), the
 [solver roadmap](../future/solver-roadmap.md), and other `future/` references.
 
 Historical UI plans and approved visual evidence are in the
@@ -245,3 +247,71 @@ Vaal models affixes/implicits on ordinary equipment, retaining the 25% socket-on
 branch while ignoring socket changes as Oliver approved. Exact Dominance and
 corruption graph evaluation remain unavailable. Memory actions and the other
 evidence-held currencies refuse compilation with their missing-law reason.
+
+## Feeder extension source contract (2026-10-03)
+
+**Source implemented; native, web and matching WASM qualification are held.**
+The [living feeder record](../active/2026-10-03-strategy-feeder/README.md) owns the
+exact source checkpoint and pending acceptance. The preceding qualified WASM
+does not implement this vocabulary. Current and Finder producers are unchanged;
+this is authored Simulator/Builder work and extends no exact solver authority.
+
+An optional `output_contracts` array names up to 32 contracts, each with `id`,
+`base_key` and a native condition `predicate`. A child must reach its success
+terminal, return a live item, and satisfy both the actual session base identity
+and this predicate. A success label alone is insufficient.
+
+A resource may contain `feeder: {strategy_id, revision, document_json,
+output_contract_id}`. The exact embedded saved revision is immutable during a
+run; changing a Stash record cannot change it. New saves receive distinct revision
+labels; older saved records pin their existing timestamp label and exact JSON.
+Native compilation rejects missing contracts, conflicting documents under one
+reference/revision, logical reference cycles and nesting beyond 16 invocations.
+Seven resource slots remain the native capacity. Configured cluster feeder
+templates remain outside this ordinary resource-session scope.
+
+`invoke_feeder` specifies `params.resource_id`. It requires an empty output slot,
+charges its `acquisition_price_key` for the pinned child's starting item, and
+executes that child natively with the parent's economy and remaining absolute
+action, graph-step and cost budgets. Each invocation is independently seeded
+from the parent's native RNG. Acquisition counts as one resource action and
+child crafting actions also debit the parent. Unknown quotes remain incomplete;
+a cost cap refuses before applying an operation with an unknown price.
+
+The actual returned item/session goes into the slot, including a failed or
+mismatched output. Failure/stop, limits, missing routes, refused child actions
+and output mismatch terminate the parent explicitly. The v1 runner does not
+silently retry a failed child. Costs already incurred remain in the parent;
+sampled materials and action counts include nested invocations. Retained traces
+include stable-key full resource items and child receipts (reference/revision,
+terminal/failure, acquisition and child costs, completeness and actual output
+acceptance). Trace retention remains bounded; aggregate failure/censoring and
+accounting retain all runs.
+
+`move_resource` specifies distinct `params.from`/`params.to` slots, including
+`current`. Source must be live and destination absent. The move copies the actual
+item/session and identity, then marks its source consumed. It never acquires a
+replacement. Mixed-base slot-to-slot moves preserve their session; a move into
+`current` requires the existing compiled base, item level and cluster identity.
+An incompatible move refuses. `discard_resource` explicitly destroys a live
+item without resale credit. Restart remains a separate paid fresh-base action.
+Moving/discarding current invalidates its Imprint checkpoint; consumed resources
+cannot be resurrected by Restart or restore. Pair inputs require distinct live
+identities.
+
+The reversible v1 default is a fresh independently paid child invocation plus
+explicit recycling; this is a proposed design, not a historical user preference.
+The Builder pins a Stash child and selected output contract from Start, authors
+contracts with the existing condition editor, and shows explicit item ports on
+the board. Save/import, clone and draft Undo/Redo preserve the complete reference.
+No crafting interpreter or probability law is added to TypeScript.
+
+`recombination` nodes can store `input_a`, `input_b` and `output` slot assignments,
+but native compilation deliberately refuses them until the pair owner supplies
+qualified full Apply. Its future contract consumes both inputs and creates one
+new item with the explicit native A/B `output_session`; no receiver-index
+reinterpretation is permitted. Mixed-base outputs require conditions over their
+actual session. All inventory/feeder/recycling graphs remain refused by exact
+Calculator evaluation pending its complete inventory kernel and properness
+contract. There is no profit objective, resale pricing, salvage assumption or
+dedicated profit/recombination solver in this source checkpoint.

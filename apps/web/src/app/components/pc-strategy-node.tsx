@@ -8,6 +8,7 @@ import {
     StrategyValidationIssue,
     operationLabel,
     strategyNodeLabel,
+    strategyResourcePorts,
 } from "../strategy-model";
 import { StrategyNodeAnnotation } from "../strategy-eval-presentation";
 
@@ -74,6 +75,7 @@ export class PcStrategyNode extends HTMLElement {
                     ? "Condition router"
                     : "Initial item state";
 
+        const ports = strategyResourcePorts(node);
         const operation = node.operation;
         const materialKey = operation?.type === "essence" ? operation.params?.essence_key : undefined;
         const material = labelContext?.catalog?.essences.find(entry => entry.key === materialKey);
@@ -99,6 +101,10 @@ export class PcStrategyNode extends HTMLElement {
                 {formatModText(strategyNodeLabel(node, labelContext))}
             </div>
             <div className="pc-node-subtitle">{formatModText(subtitle)}</div>
+            {!!(ports.inputs.length || ports.outputs.length) && <div className="pc-node-subtitle" aria-label="Item ports">
+                {!!ports.inputs.length && <div>Items in: {ports.inputs.join(" + ")}</div>}
+                {!!ports.outputs.length && <div>Item out: {ports.outputs.join(" + ")}</div>}
+            </div>}
             {node.kind !== "terminal" && <button className="pc-node-port pc-node-output" title="Drag to connect" aria-label="Output"
                 onPointerDown={event => startPointer("strategy-connect-start", event)} />}
         </>);

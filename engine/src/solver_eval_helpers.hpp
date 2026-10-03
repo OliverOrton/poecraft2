@@ -1137,7 +1137,10 @@ EvalModel derive_model(
     std::vector<ObservationRequirement>& node_observations,
     StrategyEvalResult::ObservationPropagationTelemetry* observation_telemetry,
     MemoryCheck&& check_memory) {
-    if (!strategy.resources.empty()) {
+    if (!strategy.resources.empty() || std::any_of(strategy.nodes.begin(), strategy.nodes.end(), [](const auto& node) {
+        return node.action_type == kStrategyInvokeFeederOperation || node.action_type == kStrategyMoveResourceOperation ||
+               node.action_type == kStrategyDiscardResourceOperation;
+    })) {
         throw std::invalid_argument("Exact multi-item strategy evaluation requires inventory/control identity and is reserved for Pro; donor resources cannot be projected into one item");
     }
 

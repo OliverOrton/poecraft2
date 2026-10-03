@@ -236,7 +236,13 @@ export interface SimulationSummary {
 }
 
 export interface StrategyTraceEntry {
-    resources?: Array<{resource_id: string; acquisitions: number; lifecycle: number; memory_strands: number}>;
+    resources?: Array<{resource_id: string; acquisitions: number; lifecycle: number; memory_strands: number;
+        identity?: string; base_key?: string; item_level?: number; item?: unknown;
+        feeder?: {strategy_id: string; revision: string; output_contract_id: string; terminal_kind: number;
+            failure_reason: number; terminal_node_id: string; detail: string; actions: number;
+            known_cost: number; child_known_cost: number; acquisition_price_key: string;
+            acquisition_cost_complete: boolean; cost_complete: boolean; output_accepted: boolean};
+    }>;
     step_index: number;
     node_id: string;
     node_kind: number;
