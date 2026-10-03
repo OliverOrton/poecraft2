@@ -250,10 +250,11 @@ evidence-held currencies refuse compilation with their missing-law reason.
 
 ## Feeder extension source contract (2026-10-03)
 
-**Source implemented; native, web and matching WASM qualification are held.**
-The [living feeder record](../active/2026-10-03-strategy-feeder/README.md) owns the
-exact source checkpoint and pending acceptance. The preceding qualified WASM
-does not implement this vocabulary. Current and Finder producers are unchanged;
+**Local native C API, web, TypeScript and matching WASM qualification passed.**
+The [living feeder record](../active/2026-10-03-strategy-feeder/README.md) and its
+receipt own exact source/artifact identities, acceptance and exclusions. Integration
+and publication belong to the designated owner; rendered Builder review remains
+with Oliver. Shared-DLL/Python feeder acceptance is unrun. Current and Finder producers are unchanged;
 this is authored Simulator/Builder work and extends no exact solver authority.
 
 An optional `output_contracts` array names up to 32 contracts, each with `id`,

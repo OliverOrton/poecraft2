@@ -25,14 +25,15 @@ private and Current's producer default is unchanged. Real-data economics and
 WASM/worker acceptance remain unqualified; no exact checker quotient is retained
 at the grammar checkpoint.
 
-## Authored feeder source checkpoint (2026-10-03)
+## Authored feeder qualification (2026-10-03)
 
 The isolated [feeder programme](../active/2026-10-03-strategy-feeder/README.md)
 adds pinned paid native child invocations, output predicates and explicit
-resource recycling in source. It is UNTESTED pending the parent's shared heavy
-slot; existing release WASM does not implement this vocabulary. Current/Finder
+resource recycling. Its local native C API/web/TypeScript and matching WASM
+acceptance passed under the resumed programme's own receipt. Current/Finder
 producers and exact closure are unchanged. Exact inventory/feeder evaluation
-and executable recombination stay held. This row transfers no qualification.
+and Builder recombination execution stay held; native pair Apply is qualified
+separately. This row extends no exact authority.
 
 ## Approved reforge count-law correction (2026-10-02)
 

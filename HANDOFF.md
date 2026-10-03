@@ -1,17 +1,20 @@
-# Feeder-first source checkpoint; qualification resumed (2026-10-03)
+# Feeder-first local qualification complete; slot released (2026-10-03)
 
-Oliver resumed this prepared scope at 04:00 UTC. Isolated sibling
-`poecraft2-strategy-feeder`, branch `dot/strategy-feeder-20261003`, starts from
-remote-verified `3ab862fe`. The [living feeder record](docs/active/2026-10-03-strategy-feeder/README.md)
-owns pinned paid native child invocation, actual output predicates, shared parent
-limits, explicit move/discard recycling, item ports and history source at `56245ed0` plus `1654f694`. Source qualification now owns the parent-approved local heavy slot. Align with
-qualified main `1ffba88e`, then run serial native/web/typecheck and matching WASM
-with at most two compiler jobs. No budget expansion.
-Builder recombination execution and exact inventory evaluation remain refused;
-qualified native pair Apply belongs to the recombination owner. Local
-commits belong to integration owner 01a0fd2f-7f88-7588-a1ea-bfe1e6991036; no main integration,
-push, deployment, data refresh or dev-server restart. Next step: authorized
-two-job native qualification, focused web/typecheck and source-matched WASM.
+Isolated `dot/strategy-feeder-20261003` aligns published main `1ffba88e` without
+solver recovery. Source `6ad7d1ca` qualifies pinned paid native children, actual
+output predicates, parent limits, explicit consumption/recycling and immutable
+history. Native300/300, six focused web suites, matching WASM0b800f57, full npm
+(37/37 smoke plus all owners including 1,000-run feeder worker) and final TS pass.
+Initial TS typo/generated-metadata failure repaired; shared DLL/Python acceptance
+and Oliver's rendered Builder review remain unrun. ABI/export unchanged.
+LOCAL released 2026-10-03T12:01:18.7067788Z; all commands ended, no owned heavy survivor.
+The [living feeder record](docs/active/2026-10-03-strategy-feeder/README.md) and
+qualification receipt own exact commands/artifacts/exclusions. Builder recombination
+still refuses pending qualified pair result/session slot integration; exact inventory
+evaluation remains held. Commits local for integration owner
+01a0fd2f-7f88-7588-a1ea-bfe1e6991036; no main integration/push/deploy/dev restart.
+Next: integrator review/publication under Oliver's authorization, and Oliver's
+rendered Builder review. No more heavy work selected by this scope.
 
 # Combined Lock, Calculator and Recomb qualified; publication authorized (2026-10-03)
 

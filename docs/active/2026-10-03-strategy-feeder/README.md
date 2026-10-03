@@ -63,7 +63,7 @@ message could not be delivered because that thread ID is not a live agent in
 this execution environment. The record/final checkpoint supplies the reviewable
 contract; no owner acknowledgement is assumed.
 
-## Qualification and budget
+## Source phase and held budget (historical)
 
 Local source commits: `56245ed0fd3e9a52a051b6a5766db0b8f3793089` (feeder runtime,
 Builder, contracts and prepared tests) plus `1654f69473ded54b61335123e6996b1ee6d81215` (full revision/session-map
@@ -105,20 +105,67 @@ restart, push, main merge, deployment or rendered UI review occurred. Frozen
 data/prices and protected root `0` are untouched. All commits remain local for
 the designated integration owner; publication is gated on their qualification.
 
+## Resumed qualification (2026-10-03)
+
+The parent explicitly granted the local heavy slot for source `28dea6bb`.
+Rechecked published main `1ffba88eb03ba065345f6d51a0c517f5dbe5385b`, retained
+qualified Lock/Calculator/Recomb source, and merged that baseline **into this
+isolated branch** in `0e01e66a`. No solver-recovery production change was selected.
+AGENTS is unchanged. Native pair Apply is now qualified; Builder pair execution
+remains refused until resource-slot integration preserves the real returned item
+and A/B session. The refusal labels now describe that remaining gate accurately.
+
+Final source `6ad7d1cada573936bff256c6641634d5b68e1f58` corrects worker cleanup
+(`dispose`, not `destroy`) and adds finite real-worker recycling, second paid
+acquisition and child-failure witnesses. Native source is identical to the
+tested `0e01e66a` engine tree. The [qualification receipt](qualification.json)
+owns exact trees, command starts/results, artifact/log hashes and exclusions.
+The earlier source-checkpoint receipt above remains historical.
+
+Serial qualification passed:
+
+- Native tests/header build with two jobs; feeder **300 checks, zero failures**,
+  including the approved 1,000-run paid-child witness and finite counterexamples.
+- Six focused web suites: feeder/model/history/resources/layout/Calculator mode.
+- Matching release WASM with compiler/Binaryen/linker workers capped at two.
+- Full unfiltered `npm test`, including standard frozen `build:data`, **37/37**
+  smoke cases and every following owner. The new real worker covers 1,000 paid
+  invocations, exact costs/materials/actions, actual output mismatch, child failure,
+  shared cost/action limits, consumed source identity, a second independently paid
+  output after recycling, and exact-inventory refusal. Existing Lock, Calculator
+  and native pair worker acceptance also pass against this combined artifact.
+- Final `npx tsc --noEmit` and diff whitespace checks.
+
+The first TypeScript attempt failed on the worker cleanup typo and missing fresh
+generated build metadata. The typo was repaired and the standard npm pretest
+generated metadata; final TypeScript passes. Compiler warnings are retained in
+logs. The command initially reported as a shared build actually selects the
+static `Engine` target; static/header checks pass, but a shared DLL and Python
+feeder acceptance were not run. No C ABI layout/export was changed.
+
+WASM **0b800f57410841ebf7efe7ab658ff1c93cfcdb67467ae3ea001c9d6730198f32**
+(8580515 bytes) matches this source. MJS remains
+**23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363**.
+The selected manifest is unchanged at `82fb60a2`; a checkout-local junction
+exposes that immutable snapshot to existing tests that expect `data/compiled/current`.
+Existing installed dependencies are reused through a sibling junction; no install,
+data refresh, server start/restart or deployment occurred.
+
+**Local heavy slot released 2026-10-03T12:01:18.7067788Z.** Every launched command has ended;
+no owned heavy process remains and no further heavy work is planned here.
+The outer tool forces short yields despite requested 300000ms process waits;
+qualification used terminal/event-driven waits, not solver polling or a new
+supervisor. No long solver/economic experiment or research allowance was spent.
+
 ## Next concrete step
 
-After the parent explicitly grants the shared slot, build the native tests via
-`powershell -File scripts/dev-engine.ps1 -Task Tests -Jobs 2`, run the focused
-`build/engine/poecraft_engine_tests.exe --strategy-feeder-only data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d`,
-and select any further existing Simulator checks only for an actual changed
-contract. Run focused web/model/history checks and TypeScript. Rebuild matching
-WASM with at most two compiler jobs (`EMCC_CORES=2`) through its existing script,
-then `npm run test:feeder` against that exact artifact. No inherited WASM can
-qualify new vocabulary. Fix actual failures in this same programme without
-resetting its budgets; report source/artifact hashes and slot release separately.
+Integration owner `01a0fd2f-7f88-7588-a1ea-bfe1e6991036` reviews this local
+qualified branch, reconciles any later main documentation changes and owns
+publication. All commits remain local; this scope did not merge into normal main,
+push or deploy. Oliver owns rendered Builder review; it remains unrun.
 
-Executable recombination and exact inventory/feeder Calculator evaluation remain
-held. Broad failed-child recovery routing, a concurrent multitrack scheduler and
-profit solving are excluded. The future profit objective remains highest
-matching goal sale value and expected net profit/investment, with unknown costs
-incomplete and no assumed salvage/resale values.
+Builder recombination execution and exact inventory/feeder evaluation remain
+held. Broad failed-child recovery routing, configured cluster feeders, a concurrent
+multitrack scheduler and profit solving are excluded. The future profit objective
+remains highest matching goal sale value and expected net profit/investment, with
+unknown costs incomplete and no assumed salvage/resale values.
