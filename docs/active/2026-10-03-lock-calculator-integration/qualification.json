@@ -1,0 +1,181 @@
+{
+  "schema_version": "lock_calculator_integration_v1",
+  "created_utc": "2026-10-03T17:41:33.751515+00:00",
+  "integration_commit": "55a1fd495a87dbbc20be249b18e1e3e5d459eaa6",
+  "parents": [
+    "d29d0682648ecc24cf83aa4284f4b3791fb05793",
+    "3eb0860bacbfae57f115029dcd6578cfae161a46"
+  ],
+  "qualified_engine_tree": "a4009cb21897971974037bd4a50fd81937a56d69",
+  "wasm_sha256": "b175b6d1f246eee75c381b6b4f96dbf7819a185b4b2d1a520552e684ca6a3bc8",
+  "source_review": "passed; exact disjoint-path union",
+  "protected_entry": "base tree entry retained opaque; file not read/materialized/staged",
+  "merge_method": "tree-only disjoint-path merge after protected omitted checkout prevented worktree merge",
+  "calc_preserved_paths": [
+    "apps/web/src/app/components/pc-calculator.tsx",
+    "apps/web/test/calculator-currency-controls.test.ts",
+    "apps/web/test/calculator-goal-set-wasm.test.ts",
+    "apps/web/test/calculator-goal-set.test.ts",
+    "docs/active/2026-10-03-calculator-goal-set/README.md",
+    "docs/product/calculator.md"
+  ],
+  "lock_preserved_paths": [
+    "apps/web/src/app/components/pc-craft-controls.tsx",
+    "apps/web/src/app/components/pc-emulator.tsx",
+    "apps/web/test/hinekora-bindings.test.ts",
+    "apps/web/test/hinekora-controls.test.ts",
+    "bindings/python/tests/test_hinekora_lock.py",
+    "bindings/wasm/dist/poecraft_engine.wasm",
+    "docs/active/2026-10-03-lock-multi-preview/README.md",
+    "docs/active/2026-10-03-lock-multi-preview/currency-ui-qualification.json",
+    "engine/include/poecraft/hinekora.h",
+    "engine/src/hinekora.cpp"
+  ],
+  "solver_law_recovery": "held and excluded",
+  "qualification": "unfiltered full web and TypeScript passed; owner native and rendered evidence reused",
+  "native_wasm_rebuild": "not needed; combined engine equals qualified Lock engine",
+  "local_heavy_commands": 0,
+  "owned_processes": 0,
+  "planned_checks": [
+    {
+      "cwd": "apps/web",
+      "command": "npm.cmd test",
+      "scope": "unfiltered full web chain with retained Lock WASM and both owner regressions"
+    },
+    {
+      "cwd": "apps/web",
+      "command": "npx.cmd --no-install tsc --noEmit",
+      "scope": "shared component interface and Calculator/Emulator callers"
+    }
+  ],
+  "status": "qualified combined source; approved publication prepared",
+  "qualified_source_commit": "55a1fd495a87dbbc20be249b18e1e3e5d459eaa6",
+  "checks": {
+    "local_slot_released_utc": "2026-10-03T18:00:33.173371+00:00",
+    "results": [
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 82896,
+        "process_identity_token": "82896:134355239338421157",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 95609.73110003397,
+        "name": "full-web",
+        "source_commit": "55a1fd495a87dbbc20be249b18e1e3e5d459eaa6",
+        "log_sha256": "3589afce4c4070fea92d092165f038155f71ac8ed7b7c77db26f65c32ca5e308"
+      },
+      {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 15680,
+        "process_identity_token": "15680:134355240294585598",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 3713.157800026238,
+        "name": "typescript",
+        "source_commit": "55a1fd495a87dbbc20be249b18e1e3e5d459eaa6",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "source_commit": "55a1fd495a87dbbc20be249b18e1e3e5d459eaa6",
+    "owned_processes_remaining": 0,
+    "status": "passed"
+  },
+  "request": {
+    "source_commit": "55a1fd495a87dbbc20be249b18e1e3e5d459eaa6",
+    "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-lock-calculator-integration\\apps\\web",
+    "environment": {
+      "POECRAFT_TEST_BROWSER_CHANNEL": "chrome",
+      "POECRAFT_ECONOMY_MODE": "bundled",
+      "POECRAFT_ECONOMY_INDEX_URL": "economy/league-index.json"
+    },
+    "identities": {
+      "package-lock.json": "ead7d72dcb1dbfff9157f577d8b4da4a23e58ffb81af0d91548514818add3f8e",
+      "apps/web/package-lock.json": "244102b6e9a380054cb847b8ecbed3ef3f7956eb79a18bf8562acbc200d5be3c",
+      "apps/web/package.json": "46f905ac43c1ceda3283db0ab89a18ed55902523a7dc85907d5fbe185063bce4",
+      "apps/web/runtime.lock.json": "bafe2c54c2659348c8fa6836564b9300a9ffb0ac5f86d717302176b7239c0ad1",
+      "bindings/wasm/dist/poecraft_engine.wasm": "b175b6d1f246eee75c381b6b4f96dbf7819a185b4b2d1a520552e684ca6a3bc8",
+      "bindings/wasm/dist/poecraft_engine.mjs": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363"
+    },
+    "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "commands": [
+      {
+        "name": "full-web",
+        "argv": [
+          "C:\\Windows\\System32\\cmd.exe",
+          "/d",
+          "/c",
+          "npm.cmd",
+          "test"
+        ],
+        "watchdog_seconds": 600
+      },
+      {
+        "name": "typescript",
+        "argv": [
+          "C:\\Windows\\System32\\cmd.exe",
+          "/d",
+          "/c",
+          "npx.cmd",
+          "--no-install",
+          "tsc",
+          "--noEmit"
+        ],
+        "watchdog_seconds": 180
+      }
+    ],
+    "launcher_correction": "Use PATH-resolved cmd tokens without quoted executable path; previous launcher exited before tests.",
+    "resolved_launchers": {
+      "npm.cmd": {
+        "path": "C:\\Program Files\\nodejs\\npm.cmd",
+        "sha256": "21b46c69ad6e2f231f02a9e120f4ba6c8e75fef5a45637103002eab99f888ab8"
+      },
+      "npx.cmd": {
+        "path": "C:\\Program Files\\nodejs\\npx.cmd",
+        "sha256": "4dd3574f4396fc3b45c52b6ac80fd52be2dd2660d2a153b4cc807dbbfeefa7a0"
+      },
+      "node.exe": {
+        "path": "C:\\Program Files\\nodejs\\node.exe",
+        "sha256": "fda2b2a8857735f7958ba9771a2b24734ff36434e85ae606bcf7744d41d7adc0"
+      }
+    },
+    "compiled_fixture": {
+      "target": "C:\\Users\\Oliver\\Documents\\poecraft2-lock-calculator-integration\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "identities": {
+        "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+        "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+      }
+    },
+    "setup_failure": "r1 missing ignored compiled fixture; linked selected hash-verified runtime without modifying or refreshing it"
+  },
+  "reused_native_qualification": "docs/active/2026-10-03-lock-multi-preview/currency-ui-qualification.json",
+  "reused_calculator_qualification": "d29d0682; exact-head Windows37139709453 and Solver knowledge37139709441 success",
+  "failed_attempts": [
+    {
+      "request": "checks-request.json",
+      "receipt": "checks-results.json",
+      "reason": "Windows launcher quoting failed before tests started"
+    },
+    {
+      "request": "checks-r1-request.json",
+      "receipt": "checks-r1-results.json",
+      "reason": "Ignored data/compiled/current fixture missing; ABI check passed then fixture load stopped"
+    }
+  ],
+  "unrun": [
+    "combined native/WASM rebuild: unnecessary because exact qualified Lock engine/module retained",
+    "new Simulator trials or solver benchmarks",
+    "exact user Lock error reproduction",
+    "new combined rendered production-app walkthrough"
+  ],
+  "model": "independent cached Lock is approximate; legacy fixed requests preserved; no solver authority promoted",
+  "published_ci": "unrun before publication"
+}

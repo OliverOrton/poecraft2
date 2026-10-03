@@ -1,0 +1,15 @@
+# Qualified Lock and Calculator repair integration
+
+Combined source `55a1fd495a87dbbc20be249b18e1e3e5d459eaa6` preserves published Calculator fix `d29d0682648ecc24cf83aa4284f4b3791fb05793` and qualified Lock owner `3eb0860bacbfae57f115029dcd6578cfae161a46`. The patches change disjoint files. A tree-only merge preserves the protected root entry without materializing, reading or staging its file; no owner checkout is changed.
+
+Influenced explicit modifier selection keeps its native family/tier target without authoring an exact influence-set property. Deliberately selected properties, implicits and saved goals retain their requirements. Existing drafts can select Goal item → Item properties → Any influence without deleting modifier targets.
+
+Hinekora's Lock appears in the Basic currency grid. Native Observe reuses a legacy Lock's original normalized request after live item/session checks; other legacy requests remain refused. Busy-state release restores current Lock button eligibility. The modern independent cached-preview model remains approximate and supplies no exact adaptive strategy or solver authority. The user's specific error remains unclassified.
+
+The [qualification receipt](qualification.json) owns exact commands and identities. Unfiltered npm passes the complete chain, and TypeScript passes on the combined source. LOCAL released at 18:00:33 UTC with no survivors. The first launcher quoting failure and subsequent missing ignored fixture failure are retained under ignored `out/lock-calculator-integration`; both were corrected without source or assertion changes. The fixture links the already selected, hash-verified runtime and is not refreshed.
+
+Combined engine tree `a4009cb21897971974037bd4a50fd81937a56d69` equals qualified Lock source. Retained WASM SHA-256 `b175b6d1f246eee75c381b6b4f96dbf7819a185b4b2d1a520552e684ca6a3bc8`, MJS `23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363`, and runtime `82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d` match owner qualification. Native/shared/header plus 65 Python tests and 16 real-browser Lock checks are reused. Calculator controller/worker/full npm/TypeScript and 91 rendered assertions are also retained; its exact-head Windows and Solver knowledge CI passed. No native rebuild or new Simulator run is needed for this disjoint combination.
+
+Qualified normal fast-forward publication is selected under verified overnight approval; exact remote/CI delivery is recorded in `out/lock-calculator-integration/delivery.json`. No deployment, install, data/price refresh or dev-server restart. Eldritch law3/recovery remains held and excluded. Broader UI consistency is a later bounded follow-on; current patches do not change backend laws or redesign the workspace.
+
+After updating a working checkout, regenerate its derived web receipt through existing predev/build:data and refresh the app to create a fresh worker. Existing saved exact influence requirements are preserved. An ignored main DLL is not updated here; native Python use needs a matching build separately.

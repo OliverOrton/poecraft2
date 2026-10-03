@@ -1,3 +1,14 @@
+# Qualified Lock and influenced-target repair integration (2026-10-03)
+
+Combined source55a1fd49 retains Calculator d29d0682 and Lock3eb0860b. Complete
+unfiltered npm and TypeScript pass; exact qualified Lock engine/WASM retained.
+LOCAL released18:00:33UTC,no survivors. The [living integration record](docs/active/2026-10-03-lock-calculator-integration/README.md)
+owns identities, prior setup failures, reused native/rendered evidence and limits.
+Normal approved publication plus exact remote/CI verification is selected. Law3
+recovery stays held; no new mechanics or exact adaptive Lock authority. No install,
+data refresh,dev restart or owner checkout overwrite. Broader UI consistency is
+bounded follow-on work after functional repairs.
+
 # Feeder integration qualified; publication selected (2026-10-03)
 
 Isolated `dot/feeder-integration-20261003` starts qualification at `bba7574a`,
