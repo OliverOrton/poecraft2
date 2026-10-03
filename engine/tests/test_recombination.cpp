@@ -335,6 +335,10 @@ void run_recomb_pair_contracts(const char* artifact_dir) {
     bad = b; bad.role = a.role; refuse_pair(a, bad);
     bad = b; bad.item.prefixes[0].flags = PC_MOD_SLOT_FRACTURED; refuse_pair(a, bad);
     bad = b; bad.item.item_flags = PC_ITEM_CORRUPTED; refuse_pair(a, bad);
+    // A paid Lock is an information carrier. Pair admission must refuse it
+    // on either input until a multi-item foresight law is explicitly approved.
+    bad = b; bad.item.item_flags |= PC_ITEM_FORESEEN; refuse_pair(a, bad);
+    bad = a; bad.item.item_flags |= PC_ITEM_FORESEEN; refuse_pair(bad, b);
     bad = b; bad.item.generic_influence_bits = 1; refuse_pair(a, bad);
     bad = b; bad.item.lifecycle = PC_ITEM_CONSUMED; refuse_pair(a, bad);
     auto independently_loaded = std::make_shared<DataImpl>(*data->impl);
