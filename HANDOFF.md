@@ -4,8 +4,9 @@ Latest `0187f3d8` CI has28 native prefix parity failures in fixture10 before
 selective-service admission; this toggles service, not tracing. Native source and
 WASM match the prior all17-pass `3ab862fe`. Goal-cover20ms cooperative yields are
 a plausible mismatch with equal-step-count comparison, not confirmed harmlessness.
-No assertion/production change. Smallest pending request is one finite continuity
-selector run on preserved executable849ad1f3, with conditional bounded followup.
+No assertion/production change. Exactly one host-bounded continuity run on
+preserved executable849ad1f3 passed51,511 checks in0.952s; no survivor. CI cause
+remains unresolved; no repeats/rebuild authorized. Slot released immediately.
 The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
 and `selective_service_parity_classification` own exact evidence/commands. No new
 heavy run or push; actual five-mod bad_alloc diagnostic has priority and stays

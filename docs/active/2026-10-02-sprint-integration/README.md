@@ -556,3 +556,14 @@ own the compact evidence/request. The actual Rare5modConquest construction
 `std::bad_alloc` task is separate: no CI allocation exception or demonstrated
 connection is present. No Bow/metamod path is reverted. No build/test/push starts
 from this source-only classification; no owned heavy process remains.
+
+
+The parent authorized exactly one preserved-binary continuity run. Existing
+`run_isolated_process` supervised it with a300.0-second host bound. It passed
+**51,511 checks, zero failures** in **0.952s**, exit0, no timeout or survivor;
+fixture10 completed at196 steps. The slot was released immediately. Raw output
+and metadata are `out/local-native-repair/parity-one-run.log` and
+`parity-one-run-result.json`; the qualification receipt owns their projection.
+This non-reproduction does not explain/dismiss CI. No repeat, rebuild or assertion
+change starts; future first-mismatch setup/step capture requires a diagnostic
+instrumentation slot if selected. The five-mod allocation case remains separate.

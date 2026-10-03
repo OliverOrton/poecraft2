@@ -2086,5 +2086,39 @@
     "main_unchanged": true,
     "no_push": true,
     "no_production_fix": true
+  },
+  "selective_service_parity_one_run": {
+    "exit_code": 0,
+    "timed_out": false,
+    "canceled": false,
+    "cancellation_mode": null,
+    "cancellation_ack_ms": null,
+    "process_id": 25264,
+    "process_identity_token": "25264:134354793659746957",
+    "survivor": false,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "wall_ms": 951.8671999685466,
+    "completed_utc": "2026-10-03T05:36:06.926447+00:00",
+    "command": [
+      "C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\build\\engine\\poecraft_engine_tests.exe",
+      "--solver-integrity-only",
+      "continuity"
+    ],
+    "executable_sha256": "849ad1f3c670a711b9ce30b163f118a2cc7a0924e3f0f873f723c12204a1072d",
+    "failure_lines": 0,
+    "summaries": [
+      "solver integrity tests: 51511 checks, 0 failures"
+    ],
+    "first_mismatch_context": null,
+    "fixture10_summary": [
+      "IC0 fixture=10 goals=4 steps=196 done=1 candidate=1 checked=1 admitted=1 checking=1 validating=1 entry_cost=31984.615384614921 status=censored_finish_or_cap"
+    ],
+    "stage_capture_limit": "Preserved binary has standard assertions and fixture summary only; exact first mismatch setup/step values require a diagnostic rebuild if recurrence occurs.",
+    "run_count": 1,
+    "supervisor": "poecraft_ingest.solver_worker.run_isolated_process",
+    "host_watchdog_seconds": 300.0,
+    "stdout_log": "out/local-native-repair/parity-one-run.log",
+    "slot_released": true,
+    "classification": "Non-reproduction does not explain or dismiss CI failure; no repeated run, rebuild or assertion change authorized/performed."
   }
 }
