@@ -787,7 +787,10 @@ bool SolveWork::Impl::schedule_next_incremental_alternative(
 }
 
 bool SolveWork::Impl::begin_incremental_upper_policy_pass() {
-    if (!options.high_impact_executable_uppers ||
+    // Publication transfers result ownership. A completed result cannot
+    // re-enter an upper pass or expose its moved-from workspace vectors.
+    if (finalized_result.has_value() ||
+        !options.high_impact_executable_uppers ||
         !incremental_action_generation ||
         incremental_envelope_closed ||
         !incremental_upper_policy_dirty ||

@@ -9,6 +9,7 @@
 #include "../src/solver_compile_contracts.hpp"
 #include "../src/solver_finder.hpp"
 #include "../src/solver_selective_completion.hpp"
+#include "../src/solver_diagnostic_options.hpp"
 #include "../src/json.hpp"
 #include "../src/solver_dirty_guidance.hpp"
 #include "poecraft/bitset.h"
@@ -4314,6 +4315,52 @@ struct SolveWorkTestAccess {
 }
 
 void run_solver_growth_tests(const bool blocker) {
+    PC_CHECK(exact_checker_state_budget(200000, 800000, 200000) == 200000);
+    PC_CHECK(exact_checker_state_budget(0, 800000, 200000) == 0);
+    PC_CHECK(exact_checker_state_budget(std::nullopt, 800000, 200000) == 800000);
+    PC_CHECK(exact_checker_state_budget(std::nullopt, 0, 200000) == 200000);
+    // Finite witness for the Bow4 crash: a checked incremental upper seed
+    // arrives before lower preparation has initialized the native goal bitmap.
+    // Exercise both an absent bitmap and a stale bitmap after state growth.
+    for (const bool stale_bitmap : {false, true}) {
+        auto session = make_compile_session();
+        const auto registry = build_action_registry(*session);
+        GoalSpec goal; goal.rarity = PC_RARITY_RARE;
+        GoalSlot slot; slot.family_id = session->family_id[0]; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+        CalcContext calc(session, goal, registry, {registry.index_by_id.at("chaos")});
+        pc_item_state root; pc_item_clear(&root); root.rarity = PC_RARITY_RARE;
+        SolveOptions options; apply_solve_profile_defaults(options, SolveProfile::CalculatorProductV1);
+        SolveWork work(calc, root, {{"chaos",100}}, options);
+        auto& impl = SolveWorkTestAccess::get(work);
+        const auto root_id = calc.intern_item(root);
+        auto successful = root;
+        PC_CHECK(pc_item_add_mod(&successful, PC_SIDE_PREFIX, 0,
+            session->primary_group[0], 0, nullptr) == PC_RESULT_OK);
+        const auto goal_id = calc.intern_item(successful);
+        PC_CHECK(!calc.is_goal_state(calc.state(root_id)) && calc.is_goal_state(calc.state(goal_id)));
+        impl.output_incumbent.emplace();
+        impl.output_incumbent->values.assign(calc.state_count(), 10);
+        impl.output_incumbent->values[goal_id] = 0;
+        impl.output_incumbent->policy_rows.assign(calc.state_count(), std::numeric_limits<std::uint64_t>::max());
+        impl.incremental_upper_policy_pass = true;
+        impl.result.goal_states.clear();
+        if (stale_bitmap) impl.result.goal_states.assign(1, 1);
+        PC_CHECK(impl.begin_focused_upper_solve());
+        PC_CHECK(impl.result.goal_states.size() == calc.state_count());
+        PC_CHECK(impl.result.goal_states[root_id] == 0 && impl.result.goal_states[goal_id] == 1);
+        PC_CHECK(impl.result.values[root_id] == 10 && impl.result.values[goal_id] == 0);
+        impl.abort_incremental_upper_policy_pass_for_bounded_finish();
+        impl.finalized_result.emplace();
+        impl.phase = SolvePhase::Done;
+        impl.incremental_action_generation = true;
+        impl.incremental_envelope_closed = false;
+        impl.incremental_upper_policy_dirty = true;
+        const auto previous_attempts = impl.incremental_upper_policy_passes_requested;
+        PC_CHECK(!impl.begin_incremental_upper_policy_pass());
+        PC_CHECK(impl.phase == SolvePhase::Done && impl.finalized_result.has_value());
+        PC_CHECK(impl.incremental_upper_policy_passes_requested == previous_attempts);
+    }
     SolveOptions product;
     apply_solve_profile_defaults(product, SolveProfile::CalculatorProductV1);
     apply_solve_state_budget_overrides(product, 0, 0, 0);

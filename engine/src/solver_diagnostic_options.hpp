@@ -2,6 +2,7 @@
 #define POECRAFT_SOLVER_DIAGNOSTIC_OPTIONS_HPP
 
 #include <cstdint>
+#include <optional>
 
 #include "poecraft/solver.h"
 #include "solver_model.hpp"
@@ -10,6 +11,17 @@
 
 namespace poecraft {
 namespace solver {
+
+// Benchmark checking is a separate budget. A discovery override supplies only
+// an omitted checker cap; even an explicit ABI-zero request stays explicit.
+inline std::uint32_t exact_checker_state_budget(
+        const std::optional<std::uint32_t> explicit_checker_cap,
+        const std::uint32_t discovery_override,
+        const std::uint32_t inherited_discovery_cap) {
+    if (explicit_checker_cap) return *explicit_checker_cap;
+    return discovery_override != 0 ? discovery_override : inherited_discovery_cap;
+}
+
 
 /*
  * Native-only experiments occupy the high end of pc_solve_options'

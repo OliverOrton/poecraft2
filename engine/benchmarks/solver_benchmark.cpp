@@ -185,6 +185,7 @@ struct CaseResult {
     std::string solve_result_class = "not_run";
     std::string compile_status = "not_attempted";
     std::string exact_evaluation_status = "not_requested";
+    std::string resolved_checker_caps = "null";
     std::string simulation_status = "not_requested";
     bool expectation_met = false;
     bool verification_skipped = false;
@@ -4770,11 +4771,11 @@ CaseResult run_case(
                             evaluation_options.abi_version = PC_ABI_VERSION;
                             evaluation_options.epsilon = 1e-12;
                             evaluation_options.max_sweeps = 100000;
-                            evaluation_options.max_states = max_discovered_states_override != 0
-                                ? max_discovered_states_override : optional_u32(
-                                verification, "exact_max_states",
-                                optional_u32(
-                                    caps, "max_discovered_states", 300000));
+                            evaluation_options.max_states = poecraft::solver::exact_checker_state_budget(
+                                verification.find("exact_max_states") != nullptr
+                                    ? std::optional<std::uint32_t>(optional_u32(verification, "exact_max_states", 0))
+                                    : std::nullopt,
+                                max_discovered_states_override, solve_options.max_discovered_states);
                             evaluation_options.max_pairs = optional_u32(
                                 verification, "exact_max_pairs",
                                 static_cast<std::uint32_t>(
@@ -4796,6 +4797,20 @@ CaseResult run_case(
                             evaluation_options.max_owned_bytes = optional_u64(
                                 verification, "exact_max_owned_bytes",
                                 512ull * 1024ull * 1024ull);
+                            const poecraft::solver::StrategyEvalOptions checker_defaults;
+                            std::ostringstream resolved_checker;
+                            resolved_checker << "{\"max_states\":" << (evaluation_options.max_states != 0 ? evaluation_options.max_states : checker_defaults.max_states)
+                                << ",\"max_pairs\":" << (evaluation_options.max_pairs != 0 ? evaluation_options.max_pairs : checker_defaults.max_pairs)
+                                << ",\"max_transitions\":" << (evaluation_options.max_transitions != 0 ? evaluation_options.max_transitions : checker_defaults.max_transitions)
+                                << ",\"max_owned_bytes\":" << (evaluation_options.max_owned_bytes != 0 ? evaluation_options.max_owned_bytes : checker_defaults.max_owned_bytes)
+                                << ",\"max_output_json_bytes\":" << checker_defaults.max_output_json_bytes
+                                << ",\"max_sweeps\":" << evaluation_options.max_sweeps
+                                << ",\"epsilon\":" << evaluation_options.epsilon
+                                << ",\"solver_max_discovered_states\":" << solve_options.max_discovered_states
+                                << ",\"solver_max_expanded_states\":" << solve_options.max_expanded_states
+                                << ",\"solver_max_owned_bytes\":" << solve_options.max_solver_owned_bytes
+                                << ",\"requested_time_limit_seconds\":" << exact_strategy_evaluation_time_limit_seconds << '}';
+                            report.resolved_checker_caps = resolved_checker.str();
                             evaluation_options.economy = handles.economy;
                             result = pc_strategy_eval_begin(
                                 handles.strategy, &evaluation_options,
@@ -5486,7 +5501,10 @@ void append_case_report(
         if (!first_input) out << ',';
         out << "\"run_overrides\":{\"max_discovered_states\":"
             << result.max_discovered_states_override << '}';
+        first_input = false;
     }
+    if (!first_input) out << ',';
+    out << "\"resolved_checker_caps\":" << result.resolved_checker_caps;
     out << "},\n";
     out << "  \"phase_wall_ms\":{\"registry_layout\":";
     append_nullable_number(out, measured, result.registry_layout_ms);

@@ -558,3 +558,32 @@ def test_stage_predecessors_are_hard_gates(tmp_path: Path) -> None:
     )
 
     require_completed_predecessors(tmp_path, "candidate", stage)
+
+
+@pytest.mark.parametrize("field,before_budget,after_budget", [
+    ("run_overrides", {"max_discovered_states": 200000}, {"max_discovered_states": 800000}),
+    ("resolved_checker_caps", {"max_states": 200000, "max_owned_bytes": 1073741824},
+        {"max_states": 800000, "max_owned_bytes": 1073741824}),
+])
+def test_financial_identity_excludes_changed_resolved_budget(
+    field: str, before_budget: dict, after_budget: dict,
+) -> None:
+    before, after = _economic_case(100), _economic_case(50)
+    before["input"][field], after["input"][field] = before_budget, after_budget
+    comparison = compare_runs("before", [before], "after", [after])
+    assert comparison["paired_cases"] == 0
+    assert comparison["economic_gate"]["passed"] is False
+    assert comparison["excluded"][0]["fields"] == [f"input.{field}"]
+    after["input"][field] = copy.deepcopy(before_budget)
+    matched = compare_runs("before", [before], "after", [after])
+    assert matched["paired_cases"] == 1
+    assert matched["economic_gate"]["passed"] is True
+
+
+def test_financial_identity_excludes_omitted_versus_explicit_override() -> None:
+    before, after = _economic_case(100), _economic_case(50)
+    after["input"]["run_overrides"] = {"max_discovered_states": 800000}
+    comparison = compare_runs("before", [before], "after", [after])
+    assert comparison["paired_cases"] == 0
+    assert comparison["economic_gate"]["passed"] is False
+    assert comparison["excluded"][0]["fields"] == ["input.run_overrides"]

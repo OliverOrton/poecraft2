@@ -785,6 +785,8 @@ def _comparison_identity(case: dict[str, Any]) -> dict[str, Any]:
         "product_action_envelope",
         "allowed_mechanic_families",
         "verification",
+        "run_overrides",
+        "resolved_checker_caps",
         "generation",
         "corpus",
     )
