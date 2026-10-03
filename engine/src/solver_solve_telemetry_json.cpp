@@ -382,6 +382,21 @@ std::string serialize_solver_telemetry(
     json += ",\"checked_cost\":" + (diagnostics == nullptr
         ? std::string("null") : telemetry_finite_json(
             diagnostics->selective_completion_service_checked_cost));
+    json += ",\"failure_snapshot\":";
+    if (diagnostics == nullptr || diagnostics->selective_completion_failure_phase.empty()) json += "null";
+    else {
+        json += "{\"phase\":";
+        append_telemetry_json_string(json, diagnostics->selective_completion_failure_phase);
+        json += ",\"subphase\":";
+        append_telemetry_json_string(json, diagnostics->selective_completion_failure_subphase);
+        json += ",\"source_states\":" + std::to_string(diagnostics->selective_completion_failure_source_states);
+        json += ",\"exact_states\":" + std::to_string(diagnostics->selective_completion_failure_exact_states);
+        json += ",\"discovered_pairs\":" + std::to_string(diagnostics->selective_completion_failure_pairs);
+        json += ",\"stored_transitions\":" + std::to_string(diagnostics->selective_completion_failure_transitions);
+        json += ",\"checker_owned_bytes\":" + std::to_string(diagnostics->selective_completion_failure_owned_bytes);
+        json += ",\"checker_peak_owned_bytes\":" + std::to_string(diagnostics->selective_completion_failure_peak_owned_bytes);
+        json += ",\"proposal_index\":" + std::to_string(diagnostics->selective_completion_failure_proposal) + "}";
+    }
     json += "}";
     json += ",\"native_continuation_search\":";
     if (diagnostics == nullptr) json += "null";

@@ -2,6 +2,7 @@
 #include "solver_options_helpers.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -14,7 +15,62 @@ std::uint32_t packed_tiers(const AbstractState& state) {
         (static_cast<std::uint32_t>(state.eater_of_worlds_tier) << 8u);
 }
 
+bool uses_protected_scour(const SelectiveCompletionVariant variant) {
+    return variant == SelectiveCompletionVariant::ProtectedScour ||
+        variant == SelectiveCompletionVariant::ProtectedScourFill;
+}
+
+bool uses_growth(const SelectiveCompletionVariant variant) {
+    return variant == SelectiveCompletionVariant::EldritchGrowthRepair ||
+        variant == SelectiveCompletionVariant::EldritchGrowthWithBlocker;
+}
+
 } // namespace
+
+std::vector<std::uint64_t> finder_program_occurrence_key(
+        const CalcContext& calc, const FinderProgramBinding& binding) {
+    auto key = planner_operator_semantic_key(calc.operators().at(binding.operator_index));
+    if (binding.intent != FinderProgramIntent::ExactOperator) {
+        // A new compiler-owned occurrence has a different immutable identity
+        // from an exact-operator occurrence. The full source native key stays.
+        key.push_back(0x46494e4445524931ull);
+        key.push_back(static_cast<std::uint64_t>(binding.intent));
+        key.push_back(binding.held_goal_mask);
+    }
+    return key;
+}
+
+bool finder_program_is_single_temporary_attempt(const CalcContext& calc,
+        const std::uint32_t state, const std::uint32_t index) {
+    if (index >= calc.operators().size() ||
+        !calc.is_candidate_operator_admitted_for_state(state, index)) return false;
+    const auto& option = calc.operators()[index];
+    if (option.kind != PlannerOperatorKind::FixedOption ||
+        option.option_kind != FixedOptionKind::TemporaryBenchRepeat ||
+        (option.automatic_kind != AutomaticCandidateKind::TemporaryBenchBlocker &&
+         option.automatic_kind != AutomaticCandidateKind::CannotRoll) ||
+        option.primitive_program != std::vector<std::uint32_t>{
+            option.setup_action, option.followup_action, option.cleanup_action} ||
+        option.setup_action == kNoId || option.followup_action == kNoId ||
+        option.cleanup_action == kNoId ||
+        calc.registry().actions.at(option.setup_action).params.type != ActionType::Bench ||
+        calc.registry().actions.at(option.followup_action).params.type != ActionType::Exalt ||
+        calc.registry().actions.at(option.cleanup_action).params.type != ActionType::RemoveCraftedModifiers)
+        return false;
+    const auto* kernel = calc.cached_option_kernel(state, index);
+    return kernel != nullptr && kernel->supported && kernel->legal &&
+        kernel->terminates_almost_surely && kernel->automatic.eligible &&
+        kernel->automatic.setup_complete && kernel->automatic.cleanup_complete &&
+        kernel->automatic.recovery_complete && kernel->automatic.exits_complete &&
+        !kernel->exits.empty() && kernel->retry_states.empty() &&
+        kernel->observation_choice_groups.empty() && !kernel->entry_continues &&
+        // The supported, fully legal three-step programme and empty retry
+        // set certify one attempt. The diagnostic action count is a weighted
+        // floating-point sum and may differ from three by one rounding bit.
+        // Keep the complete native resource obligation exact instead.
+        kernel->expected_resources == option.resource_quantities &&
+        option.resource_quantities == aggregate_resources(calc.registry(), option.primitive_program);
+}
 
 SelectiveCompletionProducer::SelectiveCompletionProducer(
     CalcContext& problem, const pc_item_state& original_start,
@@ -65,19 +121,27 @@ bool product_original_root_continuation_scope(
     if (held < 2 || held > 3) return false;
     if (target == 0) return (calc.goal().automatic_candidate_kind_mask &
         automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod)) != 0;
-    return calc.session().eldritch_eligible && (held == 3 || target == 2) &&
+    if (!calc.session().eldritch_eligible)
+        return target <= 2 && (calc.goal().automatic_candidate_kind_mask &
+            automatic_candidate_kind_bit(AutomaticCandidateKind::ProtectedMetamod)) != 0;
+    return (held == 3 || target == 2) &&
         (calc.goal().automatic_candidate_kind_mask &
          automatic_candidate_kind_bit(AutomaticCandidateKind::EldritchSide)) != 0;
 }
 
-SelectiveCompletionVariant product_completion_variant(const CalcContext& problem) {
+SelectiveCompletionVariant product_completion_variant(const CalcContext& problem,
+        const std::uint32_t held_side) {
     std::array<unsigned,2> slots{};
     for (const auto& goal : problem.goal().slots) {
         const auto side = goal_slot_side(problem.session(),goal);
         if (side == PC_SIDE_PREFIX || side == PC_SIDE_SUFFIX) ++slots[side];
     }
     if (std::min(slots[0],slots[1]) == 0) return SelectiveCompletionVariant::ProtectedScour;
-    return std::max(slots[0],slots[1]) == 3
+    if (!problem.session().eldritch_eligible)
+        return SelectiveCompletionVariant::ProtectedScourFill;
+    const auto held_count = held_side == kNoId
+        ? std::max(slots[0],slots[1]) : slots.at(held_side);
+    return held_count == 3
         ? SelectiveCompletionVariant::RerollVersusRepair : SelectiveCompletionVariant::RetentionControl;
 }
 
@@ -88,12 +152,43 @@ bool product_completion_has_two_orientations(const CalcContext& problem) {
         if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX) return false;
         ++slots[side];
     }
-    return slots[0] == 2 && slots[1] == 2;
+    // A protected reset needs a free target-side slot for its paid bench lock.
+    // Ordinary filling therefore covers at most two target goals. Eldritch
+    // continuations retain their existing three-goal target orientation.
+    if (!problem.session().eldritch_eligible)
+        return slots[0] == 2 && slots[1] == 2;
+    return (slots[0] == 2 && (slots[1] == 2 || slots[1] == 3)) ||
+        (slots[0] == 3 && slots[1] == 2);
+}
+
+std::uint32_t product_completion_proposal_count(const CalcContext& problem) {
+    if (!product_completion_has_two_orientations(problem)) return 1;
+    // Existing proposals stay first. A five-goal Eldritch request additionally
+    // offers incremental growth. The optional blocker remains diagnostic.
+    return problem.session().eldritch_eligible && problem.goal().slots.size() == 5 ? 3 : 2;
+}
+
+SelectiveCompletionVariant product_completion_proposal_variant(
+        const CalcContext& problem, const std::uint32_t proposal) {
+    if (proposal == 2) return SelectiveCompletionVariant::EldritchGrowthRepair;
+    if (proposal == 3) return SelectiveCompletionVariant::EldritchGrowthWithBlocker;
+    return product_completion_variant(problem, product_completion_held_side(problem, proposal));
+}
+
+std::uint32_t product_completion_held_side(const CalcContext& problem,
+        const std::uint32_t orientation) {
+    std::array<unsigned,2> slots{};
+    for (const auto& goal : problem.goal().slots) {
+        const auto side = goal_slot_side(problem.session(), goal);
+        if (side == PC_SIDE_PREFIX || side == PC_SIDE_SUFFIX) ++slots[side];
+    }
+    const auto larger = slots[0] >= slots[1] ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX;
+    return orientation == 0 ? larger : 1u - larger;
 }
 
 void SelectiveCompletionProducer::begin() {
     if (!problem_.goal().automatic_candidates ||
-        (variant_ != SelectiveCompletionVariant::ProtectedScour &&
+        (!uses_protected_scour(variant_) &&
          !problem_.session().eldritch_eligible) ||
         original_start_.rarity != PC_RARITY_RARE) {
         refuse("native_family_not_requested_or_ineligible");
@@ -130,10 +225,24 @@ void SelectiveCompletionProducer::begin() {
         refuse("protected_scour_requires_single_side_all_goals");
         return;
     }
+    if (variant_ == SelectiveCompletionVariant::ProtectedScourFill &&
+        (side_slots_[held_side_].size() > 3 ||
+         side_slots_[target_side_].empty() ||
+         side_slots_[target_side_].size() > 2 ||
+         problem_.goal().required_satisfied_slots() != problem_.goal().slots.size())) {
+        refuse("protected_scour_fill_requires_all_goals_and_target_craft_space");
+        return;
+    }
     if (variant_ == SelectiveCompletionVariant::RerollVersusRepair &&
         (side_slots_[held_side_].size() != 3 ||
          side_slots_[target_side_].empty())) {
         refuse("family_requires_full_three_goal_held_side");
+        return;
+    }
+    if (uses_growth(variant_) &&
+        (side_slots_[held_side_].size() != 2 || side_slots_[target_side_].size() != 3 ||
+         problem_.goal().required_satisfied_slots() != problem_.goal().slots.size())) {
+        refuse("growth_requires_two_held_and_three_target_goals");
         return;
     }
     for (const std::uint32_t slot : side_slots_[held_side_])
@@ -145,6 +254,7 @@ void SelectiveCompletionProducer::begin() {
         if (index >= problem_.registry().actions.size()) continue;
         const ActionDescriptor& action = problem_.registry().actions[index];
         if (action.synthetic || action.uses_companion_state ||
+            solver_action_disabled(problem_.goal(), action) ||
             (requested_acquisition_ == kNoId
                 ? (action.params.type != ActionType::Chaos &&
                    !(limits_.product_original_root_continuations && action.params.type == ActionType::Essence))
@@ -193,15 +303,29 @@ void SelectiveCompletionProducer::begin() {
         refuse("no_priced_root_acquisition");
         return;
     }
-    const OutcomeDistribution& acquisition =
-        problem_.outcomes(root, acquisition_action_);
-    if (!acquisition.supported || !acquisition.applicable ||
-        !acquisition.choice_groups.empty()) {
-        refuse("root_acquisition_law_unavailable");
-        return;
+    if (variant_ == SelectiveCompletionVariant::ProtectedScourFill) {
+        for (const auto index : problem_.candidates()) {
+            if (index >= problem_.registry().actions.size()) continue;
+            const auto& action = problem_.registry().actions[index];
+            if (action.synthetic || action.uses_companion_state ||
+                action.params.type != ActionType::Exalt ||
+                solver_action_disabled(problem_.goal(), action)) continue;
+            bool complete = true;
+            for (const auto& key : action.cost_keys) {
+                const auto it = prices_.find(key);
+                if (it == prices_.end() || !std::isfinite(it->second) || it->second < 0.0) {
+                    complete = false;
+                    break;
+                }
+            }
+            if (complete) { fill_action_ = index; break; }
+        }
+        if (fill_action_ == kNoId) {
+            refuse("no_priced_requested_exalt_fill");
+            return;
+        }
     }
-
-    if (variant_ == SelectiveCompletionVariant::ProtectedScour) {
+    if (uses_protected_scour(variant_)) {
         primary_.intended = ActionType::Scour;
     } else primary_.intended = variant_ ==
             SelectiveCompletionVariant::RetentionControl
@@ -209,47 +333,43 @@ void SelectiveCompletionProducer::begin() {
             ? ActionType::EldritchAnnul : ActionType::EldritchChaos)
         : ActionType::EldritchChaos;
     secondary_.intended = ActionType::EldritchAnnul;
+    tertiary_.intended = ActionType::EldritchExalt;
+    blocker_.intended = ActionType::Exalt;
     const bool repair = variant_ ==
-        SelectiveCompletionVariant::RerollVersusRepair;
-    std::uint32_t primary_rank = 0;
-    std::uint32_t secondary_rank = 0;
-    for (const OutcomeEntry& exit : acquisition.entries) {
-        if (!(exit.probability > 0.0)) continue;
-        const AbstractState& state = problem_.state(exit.state);
-        const std::uint32_t count = target_side_ == PC_SIDE_PREFIX
-            ? state.prefix_count : state.suffix_count;
-        const std::uint32_t held_count = held_side_ == PC_SIDE_PREFIX
-            ? state.prefix_count : state.suffix_count;
-        // The clean controller redraws held-side junk before any programme.
-        // Such a row cannot be its admission template, even when all held
-        // goals are present. Rewritten-side junk remains eligible.
-        if (problem_.goal().terminal.extras == ExtraExplicitPolicy::ForbidUnmatched &&
-            held_count != side_slots_[held_side_].size()) continue;
-        if (variant_ == SelectiveCompletionVariant::ProtectedScour && count >= 3) continue;
-        if ((satisfied_goal_mask(state) & held_mask_) != held_mask_ ||
-            count == 0 || problem_.is_goal_state(state)) continue;
+        SelectiveCompletionVariant::RerollVersusRepair || uses_growth(variant_);
+    // These native-pool items are admission proposals, not reached states.
+    // Enumerating the full root acquisition law here spent the state/work cap
+    // before a candidate existed. Original-root checking and the complete
+    // positive-entry census remain the only acceptance authorities.
+    const auto propose = [&](const std::uint32_t target_count) {
         pc_item_state exact;
-        if (!problem_.materialize(exit.state, exact)) continue;
-        const std::uint32_t rank =
-            variant_ == SelectiveCompletionVariant::RetentionControl
-                ? (count == std::max<std::uint32_t>(
-                    1, side_slots_[target_side_].size()) ? 2u : 1u)
-                : (count == 1 ? 2u : count == 2 ? 1u : 0u);
-        if (rank > primary_rank) {
-            primary_.source = exit.state;
-            primary_rank = rank;
-        }
-        if (repair) {
-            const std::uint32_t repair_rank = count == 3 ? 2u : 1u;
-            if (repair_rank > secondary_rank) {
-                secondary_.source = exit.state;
-                secondary_rank = repair_rank;
-            }
-        }
-    }
+        if (!problem_.propose_native_held_context(original_start_, held_mask_,
+                target_count, acquisition_action_, exact)) return kNoId;
+        const auto state = problem_.intern_item(exact);
+        if ((satisfied_goal_mask(problem_.state(state)) & held_mask_) != held_mask_ ||
+            problem_.is_goal_state(problem_.state(state))) return kNoId;
+        pc_item_state materialized;
+        return problem_.materialize(state, materialized) ? state : kNoId;
+    };
+    const auto primary_count = variant_ == SelectiveCompletionVariant::RetentionControl
+        ? std::max<std::uint32_t>(1, std::min<std::uint32_t>(2,
+            side_slots_[target_side_].size())) : 1u;
+    primary_.source = propose(primary_count);
+    if (repair) secondary_.source = propose(3);
+    if (uses_growth(variant_)) tertiary_.source = propose(1);
+    if (variant_ == SelectiveCompletionVariant::EldritchGrowthWithBlocker)
+        blocker_.source = propose(2);
     if (primary_.source == kNoId ||
-        (repair && secondary_.source == kNoId)) {
-        refuse("no_reached_materializable_held_context");
+        (repair && secondary_.source == kNoId) ||
+        (uses_growth(variant_) && tertiary_.source == kNoId) ||
+        (variant_ == SelectiveCompletionVariant::EldritchGrowthWithBlocker && blocker_.source == kNoId)) {
+        refuse("no_native_pool_materializable_held_proposal");
+        return;
+    }
+    if (variant_ == SelectiveCompletionVariant::ProtectedScourFill &&
+        !action_legal(problem_.session(), problem_.registry().actions.at(fill_action_),
+            problem_.state(primary_.source))) {
+        refuse("native_exalt_fill_ineligible");
         return;
     }
     const std::uint64_t owned = problem_.estimated_owned_bytes() +
@@ -267,7 +387,7 @@ void SelectiveCompletionProducer::begin() {
         limits_.max_imprint_program_work;
     admission_.consider_imprint_programs = limits_.consider_imprint_programs;
     admission_.prices = &prices_;
-    admission_.cheap_programs_only = variant_ == SelectiveCompletionVariant::ProtectedScour;
+    admission_.cheap_programs_only = uses_protected_scour(variant_);
     phase_ = Phase::Primary;
 }
 
@@ -286,9 +406,53 @@ bool SelectiveCompletionProducer::advance_programme(
         return true;
     }
     std::uint32_t selected = kNoId;
+    double selected_price = std::numeric_limits<double>::infinity();
+    const bool temporary = &programme == &blocker_;
+    std::string certificate_refusal;
     for (const std::uint32_t index : batch.admitted_operators) {
         const PlannerOperator& option = problem_.operators().at(index);
-        const bool protected_scour = variant_ == SelectiveCompletionVariant::ProtectedScour;
+        const bool protected_scour = uses_protected_scour(variant_);
+        if (temporary) {
+            if (!finder_program_is_single_temporary_attempt(problem_, state, index)) {
+                if (option.option_kind == FixedOptionKind::TemporaryBenchRepeat && certificate_refusal.empty()) {
+                    const auto* kernel = problem_.cached_option_kernel(state, index);
+                    if (kernel && kernel->automatic.eligible) {
+                        certificate_refusal = ":finite_attempt_source=" + option.id +
+                            ":actions_bits=" + std::to_string(std::bit_cast<std::uint64_t>(kernel->expected_primitive_actions)) +
+                            ":retries=" + std::to_string(kernel->retry_states.size()) +
+                            ":resources_match=" + std::to_string(kernel->expected_resources == option.resource_quantities);
+                        const auto resources = aggregate_resources(problem_.registry(), option.primitive_program);
+                        for (std::size_t r=0; r<option.resource_quantities.size() && r<3; ++r)
+                            certificate_refusal += ":resource=" + option.resource_quantities[r].first +
+                                ":quantity_bits=" + std::to_string(std::bit_cast<std::uint64_t>(option.resource_quantities[r].second));
+                        certificate_refusal += ":aggregate_match=" + std::to_string(resources == option.resource_quantities);
+                    }
+                }
+                continue;
+            }
+            if (
+                option.exit_goal_slots.size() != 1 ||
+                goal_slot_side(problem_.session(), problem_.goal().slots.at(option.exit_goal_slots.front())) != target_side_)
+                continue;
+            const auto& kernel = problem_.option_kernel(state, index);
+            if ((satisfied_goal_mask(problem_.state(state)) & held_mask_) != held_mask_ ||
+                !std::all_of(kernel.exits.begin(), kernel.exits.end(), [&](const OutcomeEntry& exit) {
+                    return (satisfied_goal_mask(problem_.state(exit.state)) & held_mask_) == held_mask_;
+                })) continue;
+            double price = 0.0;
+            bool priced = true;
+            for (const auto& [key, quantity] : kernel.expected_resources) {
+                const auto it = prices_.find(key);
+                if (it == prices_.end() || !std::isfinite(it->second) || it->second < 0.0) {
+                    priced = false; break;
+                }
+                price += it->second * quantity;
+            }
+            if (priced && std::isfinite(price) && price < selected_price) {
+                selected = index; selected_price = price;
+            }
+            continue;
+        }
         if (option.kind != PlannerOperatorKind::FixedOption ||
             option.option_kind != (protected_scour ? FixedOptionKind::ProtectedSide : FixedOptionKind::EldritchSideIntent) ||
             option.automatic_kind != (protected_scour ? AutomaticCandidateKind::ProtectedMetamod : AutomaticCandidateKind::EldritchSide) ||
@@ -306,7 +470,7 @@ bool SelectiveCompletionProducer::advance_programme(
         }
     }
     if (selected == kNoId) {
-        std::string detail;
+        std::string detail = certificate_refusal;
         for (const auto& decision : batch.decisions) {
             if (detail.size() > 1024) break;
             detail += ":" + decision.id + ":" + decision.evidence.reason;
@@ -321,7 +485,7 @@ bool SelectiveCompletionProducer::advance_programme(
     }
     programme.initial = selected;
     programme.ready = state;
-    if (variant_ == SelectiveCompletionVariant::ProtectedScour) {
+    if (uses_protected_scour(variant_) || temporary) {
         programme.direct = selected;
         return true;
     }
@@ -355,25 +519,30 @@ void SelectiveCompletionProducer::build() {
     const auto bind = [&](const Programme& p) {
         const std::uint32_t first = static_cast<std::uint32_t>(
             graph.programs.size());
-        graph.programs.push_back({p.initial, p.source, held_mask_});
+        const auto intent = &p == &tertiary_ ? FinderProgramIntent::NativeMissingEldritchGoal :
+            &p == &blocker_ ? FinderProgramIntent::NativeTemporaryGoalAttempt : FinderProgramIntent::ExactOperator;
+        graph.programs.push_back({p.initial, p.source, held_mask_, intent});
         if (p.ready != p.source)
-            graph.programs.push_back({p.direct, p.ready, held_mask_});
+            graph.programs.push_back({p.direct, p.ready, held_mask_, intent});
         return first;
     };
     const std::uint32_t primary_binding = bind(primary_);
-    if (variant_ == SelectiveCompletionVariant::ProtectedScour) {
+    if (uses_protected_scour(variant_)) {
         const auto goal = append(FinderControlKind::TestGoal);
         const auto acquire = append(FinderControlKind::RunPrimitive, acquisition_action_);
         const auto success = append(FinderControlKind::GoalTerminal);
         const auto programme = append(FinderControlKind::RunNativeProgram, primary_binding);
-        const auto held_junk = append(FinderControlKind::TestSideCountAtLeast,
-            (held_side_ << 8u) | (side_slots_[held_side_].size() + 1));
+        const auto held_junk = side_slots_[held_side_].size() < 3
+            ? append(FinderControlKind::TestSideCountAtLeast,
+                (held_side_ << 8u) | (side_slots_[held_side_].size() + 1)) : kNoId;
         const auto full_craft_side = append(FinderControlKind::TestSideCountAtLeast,
             (target_side_ << 8u) | 3u);
         graph.nodes[goal].on_true = success;
-        graph.nodes[goal].on_false = held_junk;
-        graph.nodes[held_junk].on_true = acquire;
-        graph.nodes[held_junk].on_false = full_craft_side;
+        graph.nodes[goal].on_false = held_junk == kNoId ? full_craft_side : held_junk;
+        if (held_junk != kNoId) {
+            graph.nodes[held_junk].on_true = acquire;
+            graph.nodes[held_junk].on_false = full_craft_side;
+        }
         graph.nodes[full_craft_side].on_true = acquire;
         std::uint32_t previous = full_craft_side;
         for (auto slot : side_slots_[held_side_]) {
@@ -383,7 +552,19 @@ void SelectiveCompletionProducer::build() {
             graph.nodes[test].on_false = acquire;
             previous = test;
         }
-        graph.nodes[previous].on_true = programme;
+        if (variant_ == SelectiveCompletionVariant::ProtectedScourFill) {
+            const auto occupied = append(FinderControlKind::TestSideCountAtLeast,
+                (target_side_ << 8u) | side_slots_[target_side_].size());
+            const auto fill = append(FinderControlKind::RunPrimitive, fill_action_);
+            graph.nodes[previous].on_true = occupied;
+            // Test the unchanged complete goal after each paid operation.
+            // At the requested target occupancy, an unsuccessful attempt is
+            // reset by the admitted paid lock/Scour programme. Filling stops
+            // before it consumes the slot needed for that lock.
+            graph.nodes[occupied].on_true = programme;
+            graph.nodes[occupied].on_false = fill;
+            graph.nodes[fill].next = goal;
+        } else graph.nodes[previous].on_true = programme;
         graph.nodes[programme].next = goal;
         graph.nodes[acquire].next = goal;
         candidate_ = SelectiveCompletionCandidate{std::move(graph), acquisition_action_, acquisition_price_, variant_};
@@ -392,9 +573,12 @@ void SelectiveCompletionProducer::build() {
         return;
     }
     const bool repair = variant_ ==
-        SelectiveCompletionVariant::RerollVersusRepair;
+        SelectiveCompletionVariant::RerollVersusRepair || uses_growth(variant_);
     const std::uint32_t secondary_binding = repair
         ? bind(secondary_) : kNoId;
+    const auto tertiary_binding = uses_growth(variant_) ? bind(tertiary_) : kNoId;
+    const auto blocker_binding = variant_ == SelectiveCompletionVariant::EldritchGrowthWithBlocker
+        ? bind(blocker_) : kNoId;
     const std::uint32_t goal = append(FinderControlKind::TestGoal);
     const bool clean_held = problem_.goal().terminal.extras == ExtraExplicitPolicy::ForbidUnmatched &&
         side_slots_[held_side_].size() < 3;
@@ -413,12 +597,15 @@ void SelectiveCompletionProducer::build() {
         append(FinderControlKind::TestSideCountAtLeast,
             (target_side_ << 8u) |
                 (side_slots_[target_side_].size() == 1 ? 2u : 3u));
-    const std::uint32_t occupied_test = append(
+    // A three-goal target must retain its held side after native rerolls return
+    // two affixes. The unchanged exact goal test still requires all three.
+    const std::uint32_t occupied_test = uses_growth(variant_) ? kNoId : append(
         FinderControlKind::TestSideCountAtLeast,
         (target_side_ << 8u) |
             (variant_ == SelectiveCompletionVariant::RetentionControl
                 ? std::max<std::uint32_t>(
-                    1, side_slots_[target_side_].size()) : 1u));
+                    1, std::min<std::uint32_t>(2,
+                        side_slots_[target_side_].size())) : 1u));
     const std::uint32_t acquire = append(
         FinderControlKind::RunPrimitive, acquisition_action_);
     const std::uint32_t success = append(FinderControlKind::GoalTerminal);
@@ -437,7 +624,7 @@ void SelectiveCompletionProducer::build() {
     graph.nodes[acquire].next = goal;
     if (repair_test != kNoId)
         graph.nodes[repair_test].on_false = occupied_test;
-    graph.nodes[occupied_test].on_false = acquire;
+    if (occupied_test != kNoId) graph.nodes[occupied_test].on_false = acquire;
     const auto branch = [&](const Programme& programme,
             std::uint32_t binding) {
         const std::uint32_t ready_test = append(
@@ -465,7 +652,32 @@ void SelectiveCompletionProducer::build() {
     };
     const std::uint32_t primary_branch = branch(
         primary_, primary_binding);
-    if (variant_ == SelectiveCompletionVariant::RetentionControl) {
+    if (uses_growth(variant_)) {
+        // Keep partial target progress. At full capacity repair only when a
+        // target goal is present; otherwise reroll that side. Below capacity
+        // add through the native dominant-side intent. The blocker proposal
+        // uses an independently admitted finite attempt at two target affixes.
+        const auto repair_branch = branch(secondary_, secondary_binding);
+        const auto fill_branch = branch(tertiary_, tertiary_binding);
+        auto full_miss = primary_branch;
+        for (auto slot : side_slots_[target_side_]) {
+            const auto test = append(FinderControlKind::TestSlot, slot);
+            graph.nodes[test].on_true = repair_branch;
+            graph.nodes[test].on_false = full_miss;
+            full_miss = test;
+        }
+        graph.nodes[repair_test].on_true = full_miss;
+        graph.nodes[repair_test].on_false = fill_branch;
+        if (blocker_binding != kNoId) {
+            const auto two = append(FinderControlKind::TestSideCountAtLeast,
+                (target_side_ << 8u) | 2u);
+            const auto run = append(FinderControlKind::RunNativeProgram, blocker_binding);
+            graph.nodes[two].on_true = run;
+            graph.nodes[two].on_false = fill_branch;
+            graph.nodes[run].next = goal;
+            graph.nodes[repair_test].on_false = two;
+        }
+    } else if (variant_ == SelectiveCompletionVariant::RetentionControl) {
         graph.nodes[occupied_test].on_true = primary_branch;
     } else {
         graph.nodes[occupied_test].on_true = primary_branch;
@@ -490,23 +702,35 @@ bool SelectiveCompletionProducer::advance(
             if (advance_programme(primary_, false, max_work_items) &&
                 !done()) phase_ = primary_.direct == kNoId
                     ? Phase::PrimaryDirect :
-                    (variant_ == SelectiveCompletionVariant::RerollVersusRepair
+                    (variant_ == SelectiveCompletionVariant::RerollVersusRepair || uses_growth(variant_)
                         ? Phase::Secondary : Phase::Build);
             break;
         case Phase::PrimaryDirect:
             if (advance_programme(primary_, true, max_work_items) &&
                 !done()) phase_ =
-                    (variant_ == SelectiveCompletionVariant::RerollVersusRepair)
+                    (variant_ == SelectiveCompletionVariant::RerollVersusRepair || uses_growth(variant_))
                         ? Phase::Secondary : Phase::Build;
             break;
         case Phase::Secondary:
             if (advance_programme(secondary_, false, max_work_items) &&
                 !done()) phase_ = secondary_.direct == kNoId
-                    ? Phase::SecondaryDirect : Phase::Build;
+                    ? Phase::SecondaryDirect : (uses_growth(variant_) ? Phase::Tertiary : Phase::Build);
             break;
         case Phase::SecondaryDirect:
             if (advance_programme(secondary_, true, max_work_items) &&
-                !done()) phase_ = Phase::Build;
+                !done()) phase_ = uses_growth(variant_) ? Phase::Tertiary : Phase::Build;
+            break;
+        case Phase::Tertiary:
+            if (advance_programme(tertiary_, false, max_work_items) && !done())
+                phase_ = tertiary_.direct == kNoId ? Phase::TertiaryDirect :
+                    (variant_ == SelectiveCompletionVariant::EldritchGrowthWithBlocker ? Phase::Blocker : Phase::Build);
+            break;
+        case Phase::TertiaryDirect:
+            if (advance_programme(tertiary_, true, max_work_items) && !done())
+                phase_ = variant_ == SelectiveCompletionVariant::EldritchGrowthWithBlocker ? Phase::Blocker : Phase::Build;
+            break;
+        case Phase::Blocker:
+            if (advance_programme(blocker_, false, max_work_items) && !done()) phase_ = Phase::Build;
             break;
         case Phase::Build:
             build();
@@ -611,10 +835,19 @@ bool SelectiveProgrammeEntryValidator::advance(
             control_.programs.at(bound_node->binding);
         const PlannerOperator& expected =
             problem_.operators().at(binding.operator_index);
+        if (!entry.graph_local || entry.selected_operator_identity !=
+                finder_program_occurrence_key(problem_, binding))
+            throw StrategyEvalUnsupported("native programme occurrence identity mismatch");
         const bool protected_scour = expected.option_kind == FixedOptionKind::ProtectedSide &&
             expected.followup_action != kNoId &&
             problem_.registry().actions.at(expected.followup_action).params.type == ActionType::Scour;
-        if (expected.option_kind != FixedOptionKind::EldritchSideIntent && !protected_scour)
+        const bool temporary = binding.intent == FinderProgramIntent::NativeTemporaryGoalAttempt &&
+            finder_program_is_single_temporary_attempt(problem_, binding.admitted_state, binding.operator_index);
+        const bool missing_eldritch = binding.intent == FinderProgramIntent::NativeMissingEldritchGoal &&
+            expected.option_kind == FixedOptionKind::EldritchSideIntent &&
+            problem_.registry().actions.at(expected.primitive_program.back()).params.type == ActionType::EldritchExalt;
+        if ((expected.option_kind != FixedOptionKind::EldritchSideIntent && !protected_scour && !temporary) ||
+            (binding.intent != FinderProgramIntent::ExactOperator && !temporary && !missing_eldritch))
             throw StrategyEvalUnsupported("unsupported native programme occurrence");
         admission_.cheap_programs_only = protected_scour;
         if (state_ == kNoId) {
@@ -632,7 +865,6 @@ bool SelectiveProgrammeEntryValidator::advance(
         if (batch.status != StateLocalAutomaticBatchStatus::Complete)
             throw std::length_error(
                 "native programme admission resource deferred");
-        const auto expected_key = planner_operator_semantic_key(expected);
         bool admitted = false;
         bool preserves_held = false;
         bool matched_semantic = false;
@@ -640,8 +872,40 @@ bool SelectiveProgrammeEntryValidator::advance(
         for (const std::uint32_t index : batch.admitted_operators) {
             const PlannerOperator& candidate =
                 calc_->operators().at(index);
-            if (planner_operator_semantic_key(candidate) != expected_key)
+            // Admission rederives the full intent from this exact carrier and
+            // the original goal. Only these native state-dependent intent
+            // fields vary; the complete programme, resources and other
+            // semantic fields remain bound to the source occurrence.
+            PlannerOperator reached = expected;
+            if (missing_eldritch || temporary)
+                reached.relevant_goal_mask = candidate.relevant_goal_mask;
+            if (temporary) {
+                reached.exit_goal_slots = candidate.exit_goal_slots;
+                reached.exit_min_satisfied = candidate.exit_min_satisfied;
+            }
+            const auto native_key = planner_operator_semantic_key(candidate);
+            const auto bound_key = planner_operator_semantic_key(reached);
+            if (native_key != bound_key) {
+                if (temporary && candidate.option_kind == FixedOptionKind::TemporaryBenchRepeat &&
+                    admission_detail.size() < 512) {
+                    const auto mismatch = std::mismatch(native_key.begin(), native_key.end(),
+                        bound_key.begin(), bound_key.end());
+                    admission_detail += ":native=" + candidate.id + ":semantic_word=" +
+                        std::to_string(mismatch.first - native_key.begin());
+                    if (mismatch.first != native_key.end() && mismatch.second != bound_key.end())
+                        admission_detail += ":native_word=" + std::to_string(*mismatch.first) +
+                            ":bound_word=" + std::to_string(*mismatch.second);
+                }
                 continue;
+            }
+            if (temporary && !finder_program_is_single_temporary_attempt(*calc_, state_, index)) {
+                const auto* native_kernel = calc_->cached_option_kernel(state_, index);
+                if (native_kernel) admission_detail += ":finite_attempt_refused:actions_bits=" +
+                    std::to_string(std::bit_cast<std::uint64_t>(native_kernel->expected_primitive_actions)) +
+                    ":retries=" + std::to_string(native_kernel->retry_states.size()) +
+                    ":resources_match=" + std::to_string(native_kernel->expected_resources == candidate.resource_quantities);
+                continue;
+            }
             matched_semantic = true;
             const OptionKernel& kernel = calc_->option_kernel(
                 state_, index);
@@ -669,6 +933,14 @@ bool SelectiveProgrammeEntryValidator::advance(
             break;
         }
         if (!admitted || !preserves_held) {
+            if (temporary && !matched_semantic) {
+                for (const auto& decision : batch.decisions) {
+                    if (decision.kind != AutomaticCandidateKind::TemporaryBenchBlocker &&
+                        decision.kind != AutomaticCandidateKind::CannotRoll) continue;
+                    if (admission_detail.size() >= 1024) break;
+                    admission_detail += ":" + decision.id + ":" + decision.evidence.reason;
+                }
+            }
             const AbstractState& observed = calc_->state(state_);
             throw StrategyEvalUnsupported(
                 std::string("native programme reached entry ") +

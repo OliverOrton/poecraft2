@@ -877,20 +877,10 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
                (value.solve_profile_override_mask & bit) != 0;
     };
     if (options->epsilon > 0.0) value.epsilon = options->epsilon;
-    if (options->max_states != 0) value.max_states = options->max_states;
+    solver::apply_solve_state_budget_overrides(value, options->max_states,
+        PC_SOLVE_OPTION_HAS(max_discovered_states) ? options->max_discovered_states : 0,
+        PC_SOLVE_OPTION_HAS(max_expanded_states) ? options->max_expanded_states : 0);
     if (options->max_sweeps != 0) value.max_sweeps = options->max_sweeps;
-    if (PC_SOLVE_OPTION_HAS(max_discovered_states) &&
-        options->max_discovered_states != 0) {
-        value.max_discovered_states = options->max_discovered_states;
-    } else if (options->max_states != 0) {
-        value.max_discovered_states = options->max_states;
-    }
-    if (PC_SOLVE_OPTION_HAS(max_expanded_states) &&
-        options->max_expanded_states != 0) {
-        value.max_expanded_states = options->max_expanded_states;
-    } else if (options->max_states != 0) {
-        value.max_expanded_states = options->max_states;
-    }
     if (PC_SOLVE_OPTION_HAS(max_state_action_rows) &&
         options->max_state_action_rows != 0) {
         value.max_state_action_rows = options->max_state_action_rows;

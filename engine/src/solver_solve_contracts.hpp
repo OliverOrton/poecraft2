@@ -296,6 +296,11 @@ inline void apply_solve_profile_defaults(
     const SolveProfile profile) {
     options.solve_profile = profile;
     if (profile != SolveProfile::CalculatorProductV1) return;
+    // Exact checking of the native side-completion grammar needs the full
+    // first Chaos law. Discovery/checking grow within the existing memory cap;
+    // Bellman expansion and policy refinement retain their smaller budgets.
+    options.max_states = 800000;
+    options.max_discovered_states = 800000;
     options.goal_progress_gated_reforges = true;
     options.allow_economic_restart = false;
     options.consider_imprint_programs = false;
@@ -303,6 +308,19 @@ inline void apply_solve_profile_defaults(
     options.max_absolute_optimality_gap = 0.0;
     options.max_relative_optimality_gap = 0.0;
     options.max_policy_refinement_states = 200000;
+}
+
+// Zero means omitted at the ABI. Legacy max_states also supplies the two
+// specific budgets only when the caller did not specify them independently.
+inline void apply_solve_state_budget_overrides(
+        SolveOptions& options, const std::uint32_t max_states,
+        const std::uint32_t max_discovered_states,
+        const std::uint32_t max_expanded_states) {
+    if (max_states != 0) options.max_states = max_states;
+    if (max_discovered_states != 0) options.max_discovered_states = max_discovered_states;
+    else if (max_states != 0) options.max_discovered_states = max_states;
+    if (max_expanded_states != 0) options.max_expanded_states = max_expanded_states;
+    else if (max_states != 0) options.max_expanded_states = max_states;
 }
 
 enum class SolvePolicyStatus : std::uint8_t {
@@ -850,6 +868,15 @@ struct SolveDiagnostics {
     std::uint32_t selective_completion_service_checks = 0;
     double selective_completion_service_checked_cost =
         std::numeric_limits<double>::infinity();
+    std::string selective_completion_failure_phase;
+    std::string selective_completion_failure_subphase;
+    std::uint64_t selective_completion_failure_source_states = 0;
+    std::uint64_t selective_completion_failure_exact_states = 0;
+    std::uint64_t selective_completion_failure_pairs = 0;
+    std::uint64_t selective_completion_failure_transitions = 0;
+    std::uint64_t selective_completion_failure_owned_bytes = 0;
+    std::uint64_t selective_completion_failure_peak_owned_bytes = 0;
+    std::uint32_t selective_completion_failure_proposal = 0;
     PolicyRefinementTelemetry policy_refinement;
     std::uint32_t expanded_states = 0;
     std::uint32_t sweeps = 0;
@@ -1394,6 +1421,9 @@ validate_executable_policy_entry_upper_reuse(
 struct RetainedCompiledPolicyArtifact {
     std::string strategy_json;
     std::string certification_strategy_json;
+    /* Original-root work measured by the independent checker of this exact
+     * graph. This is simulator compatibility metadata, not cost/closure proof. */
+    double checked_expected_actions = std::numeric_limits<double>::infinity();
     /* Typed evaluator-owned arbitrary-entry authority. It remains attached
      * to the exact ordinary strategy that produced it; public policy values
      * retain their historical coarse/search meaning. */
@@ -1537,6 +1567,10 @@ SolveLowerBoundAuthority classify_public_lower_bound_authority(
 /* One final normalizer shared by direct, strict, and fallback publication.
  * Equality without Exact status is not a global closure certificate. */
 void normalize_publication_result(SolveResult& result);
+
+/* Refresh only the simulator work warning from the selected checked graph.
+ * Primitive evaluator refusals and other compatibility failures survive. */
+void refresh_published_policy_compatibility(SolveResult& result);
 
 /* Returns null only when every public scalar/result-status claim has the
  * executable artifact required to witness it. */

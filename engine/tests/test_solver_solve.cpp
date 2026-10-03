@@ -2430,10 +2430,13 @@ void run_current_incumbent_continuity_tests() {
         options.high_impact_executable_uppers = true;
         options.allow_economic_restart = false;
         options.state_certificate_control = false;
-        if (fixture == 14) options.max_reforge_work = 2500;
-        if (fixture == 15) options.max_reforge_work = 3500;
-        if (fixture == 16) options.max_reforge_work = 4000;
-        if (fixture == 17) options.max_reforge_work = 5000;
+        // These fixed negative controls exhaust generation, checking and
+        // validation. Full acquisition enumeration formerly made4000/5000
+        // insufficient; bounded proposals complete below those obsolete caps.
+        if (fixture == 14) options.max_reforge_work = 2390;
+        if (fixture == 15) options.max_reforge_work = 2500;
+        if (fixture == 16) options.max_reforge_work = 3500;
+        if (fixture == 17) options.max_reforge_work = 3600;
         if (fixture == 13) options.goal_proof_profile = GoalProofProfile::TargetNeutralZero;
         std::unordered_map<std::string, double> prices{
             {"chaos", 100}, {"annul", 5}, {"exalt", 2}};
@@ -2744,12 +2747,397 @@ void run_current_incumbent_continuity_tests() {
     }
 }
 
+// Test-only access to the existing private preflight. Explicit instantiation
+// does not apply access checking to its template argument, so this keeps the
+// production CalcContext declaration and implementation unchanged.
+struct SelectiveScratchPreflightAccess {
+    using Method = void (CalcContext::*)(std::uint64_t) const;
+    friend Method selective_scratch_preflight(SelectiveScratchPreflightAccess);
+};
+template <SelectiveScratchPreflightAccess::Method method>
+struct SelectiveScratchPreflightBinding {
+    friend SelectiveScratchPreflightAccess::Method selective_scratch_preflight(
+            SelectiveScratchPreflightAccess) { return method; }
+};
+template struct SelectiveScratchPreflightBinding<
+    &CalcContext::require_reforge_scratch_bytes>;
+
+struct SelectiveAdmissionCursorAccess {
+    friend auto& selective_admission_cursor(CalcContext&, SelectiveAdmissionCursorAccess);
+};
+template <auto member>
+struct SelectiveAdmissionCursorBinding {
+    friend auto& selective_admission_cursor(
+            CalcContext& calc, SelectiveAdmissionCursorAccess) { return calc.*member; }
+};
+template struct SelectiveAdmissionCursorBinding<
+    &CalcContext::state_local_automatic_admission_cursor_>;
+
+struct SelectiveProducerRefusalAccess {
+    using Method = void (SelectiveCompletionProducer::*)(std::string);
+    friend Method selective_producer_refusal(SelectiveProducerRefusalAccess);
+};
+template <SelectiveProducerRefusalAccess::Method method>
+struct SelectiveProducerRefusalBinding {
+    friend SelectiveProducerRefusalAccess::Method selective_producer_refusal(
+            SelectiveProducerRefusalAccess) { return method; }
+};
+template struct SelectiveProducerRefusalBinding<&SelectiveCompletionProducer::refuse>;
+
+void run_native_held_proposal_tests() {
+    auto session = make_solve_session();
+    session->eldritch_eligible = true;
+    auto registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    goal.automatic_candidates = true;
+    for (const auto family : {100u, 102u, 103u, 104u, 105u}) {
+        GoalSlot slot; slot.family_id = family; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    const auto chaos = registry.index_by_id.at("chaos");
+    CalcContext calc(session, goal, registry, {chaos});
+    calc.set_solve_resource_caps(4, 1000, false, 1024ull * 1024);
+    pc_item_state start; pc_item_clear(&start); start.rarity = PC_RARITY_RARE;
+    PC_CHECK(product_completion_has_two_orientations(calc));
+    PC_CHECK(product_completion_held_side(calc, 0) == PC_SIDE_PREFIX);
+    PC_CHECK(product_completion_held_side(calc, 1) == PC_SIDE_SUFFIX);
+    PC_CHECK(product_completion_variant(calc, PC_SIDE_PREFIX) ==
+        SelectiveCompletionVariant::RerollVersusRepair);
+    PC_CHECK(product_completion_variant(calc, PC_SIDE_SUFFIX) ==
+        SelectiveCompletionVariant::RetentionControl);
+    pc_item_state proposal;
+    PC_CHECK(calc.propose_native_held_context(start, 7u, 1, chaos, proposal));
+    PC_CHECK(proposal.prefix_count == 3 && proposal.suffix_count == 1);
+    PC_CHECK(calc.state_count() == 0); // No acquisition outcomes or certificate.
+    PC_CHECK(proposal.suffixes[0].mod_id == 7); // Native junk preference.
+    PC_CHECK(calc.propose_native_held_context(start, 7u, 3, chaos, proposal));
+    PC_CHECK(proposal.prefix_count == 3 && proposal.suffix_count == 3);
+    PC_CHECK(calc.propose_native_held_context(start, 24u, 2, chaos, proposal));
+    PC_CHECK(proposal.prefix_count == 2 && proposal.suffix_count == 2);
+    PC_CHECK(!calc.propose_native_held_context(start, 9u, 1, chaos, proposal));
+    const auto before_refusal = calc.telemetry().reforge_logical_work_v1;
+    calc.refresh_solve_owned_bytes_cap(std::uint64_t{0});
+    bool refused = false;
+    try { (void)calc.propose_native_held_context(start, 7u, 1, chaos, proposal); }
+    catch (const SolverResourceLimit& error) { refused = error.cap_name() == "max_owned_bytes"; }
+    PC_CHECK(refused);
+    PC_CHECK(calc.telemetry().reforge_logical_work_v1 == before_refusal);
+
+    // The real Begin stage obtains both repair templates inside four states;
+    // a full root acquisition enumeration exceeds this finite allowance.
+    CalcContext generation(session, goal, registry, {chaos}, false, false,
+        false, std::nullopt, {}, false, {}, true);
+    generation.set_solve_resource_caps(4, 1000, false, 1024ull * 1024);
+    SolveOptions limits;
+    limits.max_solver_owned_bytes = 1024ull * 1024;
+    std::unordered_map<std::string, double> prices{{"chaos", 1}};
+    SelectiveCompletionProducer producer(generation, start, prices, limits,
+        SelectiveCompletionVariant::RerollVersusRepair);
+    PC_CHECK(!producer.advance(1));
+    PC_CHECK(!producer.done());
+    PC_CHECK(generation.state_count() == 3);
+    PC_CHECK(generation.telemetry().reforge_effort.rows_completed == 0);
+    PC_CHECK(generation.telemetry().reforge_logical_work_v1 <= 100);
+    CalcContext opposite(session, goal, registry, {chaos}, false, false,
+        false, std::nullopt, {}, false, {}, true);
+    opposite.set_solve_resource_caps(4, 1000, false, 1024ull * 1024);
+    SelectiveCompletionProducer opposite_producer(opposite, start, prices, limits,
+        product_completion_variant(opposite, PC_SIDE_SUFFIX), chaos, PC_SIDE_SUFFIX);
+    PC_CHECK(!opposite_producer.advance(1));
+    PC_CHECK(!opposite_producer.done());
+    PC_CHECK(opposite.state_count() == 2);
+    PC_CHECK(opposite.telemetry().reforge_effort.rows_completed == 0);
+
+    // Native multi-group exclusions remain binding for proposal picks.
+    auto conflict_session = make_solve_session();
+    GoalSpec conflict_goal;
+    for (const auto family : {100u, 101u}) {
+        GoalSlot slot; slot.family_id = family; slot.min_tier = 1;
+        conflict_goal.slots.push_back(slot);
+    }
+    CalcContext conflict(conflict_session, conflict_goal,
+        build_action_registry(*conflict_session), {});
+    PC_CHECK(!conflict.propose_native_held_context(start, 3u, 1,
+        conflict.registry().index_by_id.at("chaos"), proposal));
+    // Larger-side-first also applies to the transposed shape.
+    auto transposed = make_solve_session();
+    transposed->eldritch_eligible = true;
+    for (auto& side : transposed->gen_type) side = 1 - side;
+    std::swap(transposed->prefix_mask, transposed->suffix_mask);
+    CalcContext other(transposed, goal, build_action_registry(*transposed), {});
+    PC_CHECK(product_completion_has_two_orientations(other));
+    PC_CHECK(product_completion_held_side(other, 0) == PC_SIDE_SUFFIX);
+    PC_CHECK(product_completion_held_side(other, 1) == PC_SIDE_PREFIX);
+    std::printf("native held proposal states=%u logical_work=%llu bounded_pool_only=1\n",
+        calc.state_count(), static_cast<unsigned long long>(before_refusal));
+}
+
+void run_selective_generation_scratch_preflight_probe() {
+    using Impl = SolveWorkTestAccess::Impl;
+    auto session = make_solve_session();
+    session->eldritch_eligible = true;
+    auto registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    goal.automatic_candidates = true;
+    for (const auto family : {100u, 102u, 103u, 104u, 105u}) {
+        GoalSlot slot; slot.family_id = family; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    CalcContext calc(session, goal, registry, {registry.index_by_id.at("chaos"),
+        registry.index_by_id.at("annul"), registry.index_by_id.at("exalt")});
+    pc_item_state start; pc_item_clear(&start); start.rarity = PC_RARITY_RARE;
+    SolveOptions options;
+    options.max_solver_owned_bytes = 64ull * 1024 * 1024;
+    options.max_discovered_states = 2;
+    options.goal_progress_gated_reforges = true;
+    options.high_impact_executable_uppers = true;
+    std::unordered_map<std::string, double> prices{
+        {"chaos", 100}, {"annul", 5}, {"exalt", 2}};
+    Impl work(calc, start, prices, options);
+    // Direct component access bypasses the checked-incumbent scheduling gate.
+    // One NotStarted advance only creates the private context and producer;
+    // acquisition enumeration has not begun.
+    (void)work.advance_selective_completion_service();
+    PC_CHECK(work.selective_service_phase == Impl::SelectiveServicePhase::Generating);
+    PC_CHECK(work.selective_service_calc != nullptr);
+    PC_CHECK(work.selective_service_producer != nullptr);
+    if (!work.selective_service_calc) return;
+    auto& private_calc = *work.selective_service_calc;
+    PC_CHECK(private_calc.reforge_work_budget_owner() == &calc);
+    const auto live = work.fast_estimated_owned_bytes();
+    PC_CHECK(live < options.max_solver_owned_bytes);
+    if (live >= options.max_solver_owned_bytes) return;
+    const auto remaining = options.max_solver_owned_bytes - live;
+    const auto requested = remaining + 1;
+    const auto preflight = selective_scratch_preflight(SelectiveScratchPreflightAccess{});
+    const auto refuses = [&] {
+        try { (private_calc.*preflight)(requested); }
+        catch (const SolverResourceLimit& error) {
+            return error.cap_name() == "max_owned_bytes";
+        }
+        return false;
+    };
+    const bool production_refused = refuses();
+    std::printf("selective scratch preflight parent_limit=%llu live=%llu remaining=%llu requested=%llu production_refused=%d\n",
+        static_cast<unsigned long long>(options.max_solver_owned_bytes),
+        static_cast<unsigned long long>(live),
+        static_cast<unsigned long long>(remaining),
+        static_cast<unsigned long long>(requested), production_refused);
+    PC_CHECK(production_refused);
+    // Positive control changes only this test-owned private context, then asks
+    // the same preflight. Neither request allocates the named scratch bytes.
+    private_calc.refresh_solve_owned_bytes_cap(
+        private_calc.fast_estimated_owned_bytes() + remaining);
+    bool boundary_allowed = true;
+    try { (private_calc.*preflight)(remaining); }
+    catch (const SolverResourceLimit&) { boundary_allowed = false; }
+    PC_CHECK(boundary_allowed);
+    const bool installed_cap_refused = refuses();
+    PC_CHECK(installed_cap_refused);
+    PC_CHECK(work.selective_service_phase == Impl::SelectiveServicePhase::Generating);
+    PC_CHECK(work.result.diagnostics.selective_completion_service_checks == 0);
+    std::printf("selective scratch preflight test_local_cap boundary_allowed=%d over_limit_refused=%d checks=%u\n",
+        boundary_allowed, installed_cap_refused,
+        work.result.diagnostics.selective_completion_service_checks);
+
+    // State generation is capped before acquisition, not only after a row.
+    (void)private_calc.intern_item(start);
+    auto one_mod = start;
+    PC_CHECK(pc_item_add_mod(&one_mod, 0, 0, 10, 0, nullptr) == PC_RESULT_OK);
+    (void)private_calc.intern_item(one_mod);
+    auto other_mod = start;
+    PC_CHECK(pc_item_add_mod(&other_mod, 0, 3, 12, 0, nullptr) == PC_RESULT_OK);
+    bool state_refused = false;
+    try { (void)private_calc.intern_item(other_mod); }
+    catch (const SolverResourceLimit& error) {
+        state_refused = error.cap_name() == "max_discovered_states";
+    }
+    PC_CHECK(state_refused && private_calc.state_count() == 2);
+
+    // Growth outside the context consumes its allowance on the next refresh.
+    work.refresh_selective_generation_caps();
+    const auto before_growth = work.options.max_solver_owned_bytes - work.fast_estimated_owned_bytes();
+    work.selective_service_graph.reserve(work.selective_service_graph.capacity() + 4096);
+    work.refresh_selective_generation_caps();
+    bool old_allowance_refused = false;
+    try { (private_calc.*preflight)(before_growth); }
+    catch (const SolverResourceLimit& error) {
+        old_allowance_refused = error.cap_name() == "max_owned_bytes";
+    }
+    PC_CHECK(old_allowance_refused);
+
+    // Nullopt is unlimited; an engaged native zero is a hard refusal.
+    private_calc.refresh_solve_owned_bytes_cap(std::nullopt);
+    bool unlimited_allowed = true;
+    try { (private_calc.*preflight)(requested); }
+    catch (const SolverResourceLimit&) { unlimited_allowed = false; }
+    PC_CHECK(unlimited_allowed);
+    private_calc.refresh_solve_owned_bytes_cap(std::uint64_t{0});
+    bool zero_refused = false;
+    try { (private_calc.*preflight)(0); }
+    catch (const SolverResourceLimit&) { zero_refused = true; }
+    PC_CHECK(zero_refused);
+    work.refresh_selective_generation_caps();
+
+    calc.set_solve_resource_caps(200000, 3, false);
+    private_calc.consume_reforge_work(1, 1);
+    PC_CHECK(calc.telemetry().reforge_logical_work_v1 == 1);
+    PC_CHECK(private_calc.telemetry().reforge_logical_work_v1 == 1);
+    bool work_refused = false;
+    try { private_calc.consume_reforge_work(3, 3); }
+    catch (const SolverResourceLimit& error) {
+        work_refused = error.cap_name() == "max_reforge_work";
+    }
+    PC_CHECK(work_refused);
+    PC_CHECK(calc.telemetry().reforge_logical_work_v1 == 1);
+    PC_CHECK(private_calc.telemetry().reforge_logical_work_v1 == 1);
+
+    // The real Generating entry refuses no-headroom before producer work.
+    work.options.max_solver_owned_bytes = work.fast_estimated_owned_bytes();
+    (void)work.advance_selective_completion_service();
+    PC_CHECK(work.selective_service_phase == Impl::SelectiveServicePhase::Done);
+    PC_CHECK(work.result.diagnostics.selective_completion_service_checks == 0);
+    PC_CHECK(work.result.diagnostics.selective_completion_service_status.find("censored_capacity:") == 0);
+    PC_CHECK(work.selective_service_calc == nullptr && work.selective_service_producer == nullptr);
+}
+
+void run_selective_transient_scratch_tests() {
+    auto session = make_solve_session();
+    session->eldritch_eligible = true;
+    session->eldritch_searing_tier_mod_ids.resize(5);
+    session->eldritch_eater_tier_mod_ids.resize(5);
+    for (unsigned tier = 1; tier <= 4; ++tier) {
+        session->eldritch_searing_tier_mod_ids[tier] = {0};
+        session->eldritch_eater_tier_mod_ids[tier] = {5};
+    }
+    auto registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    goal.automatic_candidates = true;
+    for (const auto family : {100u, 102u, 103u, 104u}) {
+        GoalSlot slot; slot.family_id = family; slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    CalcContext calc(session, goal, registry, {registry.index_by_id.at("chaos"),
+        registry.index_by_id.at("annul"), registry.index_by_id.at("exalt")});
+    calc.set_solve_owned_bytes_budget_owner(&calc);
+    calc.set_solve_resource_caps(200000, 50000000, false, 64ull * 1024 * 1024);
+    pc_item_state start; pc_item_clear(&start); start.rarity = PC_RARITY_RARE;
+    for (const auto mod : {0u, 3u, 4u})
+        PC_CHECK(pc_item_add_mod(&start, 0, mod, session->primary_group[mod], 0, nullptr) == PC_RESULT_OK);
+    const auto state = calc.intern_item(start);
+    std::unordered_map<std::string, double> prices{
+        {"chaos", 100}, {"annul", 5}, {"exalt", 2},
+        {"eldritch_chaos", 0.01}, {"eldritch_annul", 0.01}};
+    AutomaticAdmissionLimits limits;
+    limits.max_solver_owned_bytes = 64ull * 1024 * 1024;
+    limits.prices = &prices;
+    StateLocalAutomaticBatch batch;
+    CalcContext* child = nullptr;
+    for (unsigned step = 0; step < 512; ++step) {
+        const bool done = calc.advance_state_local_automatic_candidates(state, limits, batch, 1);
+        auto& cursor = selective_admission_cursor(calc, SelectiveAdmissionCursorAccess{});
+        if (cursor && cursor->transient_scratch_context != nullptr) {
+            child = cursor->transient_scratch_context;
+            break;
+        }
+        if (done) break;
+    }
+    PC_CHECK(child != nullptr);
+    if (child == nullptr) return;
+    const auto preflight = selective_scratch_preflight(SelectiveScratchPreflightAccess{});
+    const auto aggregate_before = calc.fast_estimated_owned_bytes();
+    const auto child_before = child->fast_estimated_owned_bytes();
+    constexpr std::uint64_t headroom = 4096;
+    calc.refresh_solve_owned_bytes_cap(aggregate_before + headroom);
+    bool boundary_allowed = true, over_refused = false;
+    try { (child->*preflight)(headroom); }
+    catch (const SolverResourceLimit&) { boundary_allowed = false; }
+    try { (child->*preflight)(headroom + 1); }
+    catch (const SolverResourceLimit& error) { over_refused = error.cap_name() == "max_owned_bytes"; }
+    PC_CHECK(boundary_allowed && over_refused);
+    pc_item_state empty; pc_item_clear(&empty); empty.rarity = PC_RARITY_RARE;
+    (void)child->intern_item(empty);
+    const auto child_after = child->fast_estimated_owned_bytes();
+    const auto aggregate_after = calc.fast_estimated_owned_bytes();
+    PC_CHECK(child_after > child_before);
+    PC_CHECK(aggregate_after - aggregate_before == child_after - child_before);
+    bool growth_refused = false;
+    try { (child->*preflight)(headroom); }
+    catch (const SolverResourceLimit&) { growth_refused = true; }
+    PC_CHECK(growth_refused);
+    calc.refresh_solve_owned_bytes_cap(aggregate_after);
+    bool zero_refused = false;
+    try { (child->*preflight)(0); }
+    catch (const SolverResourceLimit&) { zero_refused = true; }
+    PC_CHECK(zero_refused);
+    calc.cancel_state_local_automatic_candidates();
+    PC_CHECK(!selective_admission_cursor(calc, SelectiveAdmissionCursorAccess{}));
+    PC_CHECK(calc.fast_estimated_owned_bytes() < aggregate_after);
+    std::printf("selective transient scratch aggregate_before=%llu child_before=%llu aggregate_after=%llu child_after=%llu boundary=%d over_refused=%d growth_refused=%d zero_refused=%d\n",
+        static_cast<unsigned long long>(aggregate_before), static_cast<unsigned long long>(child_before),
+        static_cast<unsigned long long>(aggregate_after), static_cast<unsigned long long>(child_after),
+        boundary_allowed, over_refused, growth_refused, zero_refused);
+}
+
+void run_retained_policy_compatibility_tests() {
+    // A refused proposal must not clear the warning on the still-selected old
+    // graph. An unmeasured graph cannot borrow the proposed graph's work count.
+    SolveResult selected;
+    selected.policy_available = true;
+    selected.start_state = 7;
+    selected.refined_policy_artifact.strategy_json = "retained-old-graph";
+    selected.diagnostics.policy_compatibility_supported = false;
+    selected.diagnostics.policy_compatibility_state = 7;
+    selected.diagnostics.policy_compatibility_action = "chaos";
+    selected.diagnostics.policy_compatibility_reason =
+        "primitive_renewal_expected_actions_exceed_simulator_cap";
+    solve_detail::refresh_published_policy_compatibility(selected);
+    PC_CHECK(!selected.diagnostics.policy_compatibility_supported);
+    PC_CHECK(selected.diagnostics.policy_compatibility_action == "chaos");
+    PC_CHECK(selected.refined_policy_artifact.strategy_json == "retained-old-graph");
+
+    selected.refined_policy_artifact.checked_expected_actions = 100001;
+    solve_detail::refresh_published_policy_compatibility(selected);
+    PC_CHECK(!selected.diagnostics.policy_compatibility_supported);
+    PC_CHECK(selected.diagnostics.policy_compatibility_reason ==
+        "retained_policy_expected_actions_exceed_simulator_cap");
+
+    // Publication of a checked replacement refreshes just its work warning.
+    selected.refined_policy_artifact.strategy_json = "checked-replacement";
+    selected.refined_policy_artifact.checked_expected_actions = 100000;
+    selected.diagnostics.skipped_unsupported_count = 1;
+    selected.diagnostics.skipped_unsupported = {"unsupported-primitive"};
+    solve_detail::refresh_published_policy_compatibility(selected);
+    PC_CHECK(selected.diagnostics.policy_compatibility_supported);
+    PC_CHECK(selected.diagnostics.policy_compatibility_state == kNoId);
+    PC_CHECK(selected.diagnostics.policy_compatibility_action.empty());
+    PC_CHECK(selected.diagnostics.policy_compatibility_reason.empty());
+    PC_CHECK(selected.diagnostics.skipped_unsupported_count == 1);
+    PC_CHECK(selected.diagnostics.skipped_unsupported ==
+        std::vector<std::string>{"unsupported-primitive"});
+
+    selected.diagnostics.policy_compatibility_supported = false;
+    selected.diagnostics.policy_compatibility_reason = "exact_evaluator_unavailable";
+    solve_detail::refresh_published_policy_compatibility(selected);
+    PC_CHECK(!selected.diagnostics.policy_compatibility_supported);
+    PC_CHECK(selected.diagnostics.policy_compatibility_reason == "exact_evaluator_unavailable");
+}
+
 void run_selective_completion_target_count_tests(bool cap_diagnosis = false) {
+    if (cap_diagnosis) {
+        run_retained_policy_compatibility_tests();
+        run_selective_generation_scratch_preflight_probe();
+        run_selective_transient_scratch_tests();
+        run_native_held_proposal_tests();
+    }
     using Impl = SolveWorkTestAccess::Impl;
     // Component fixture: directly drive the real optional service to isolate
     // its producer/checker/entry validator. This bypasses the Current admission
     // gate and does not claim naturally available pre-Finish ownership.
-    for (unsigned fixture = 0; fixture < (cap_diagnosis ? 3u : 2u); ++fixture) {
+    for (unsigned fixture = 0; fixture < (cap_diagnosis ? 5u : 2u); ++fixture) {
         const unsigned target_count = cap_diagnosis ? 1u : fixture + 1;
         auto session = make_solve_session();
         session->eldritch_eligible = true;
@@ -2785,6 +3173,7 @@ void run_selective_completion_target_count_tests(bool cap_diagnosis = false) {
         }
         Impl work(calc, start, prices, options);
         double original_cost = kInfinity;
+        double original_expected_actions = kInfinity;
         if (cap_diagnosis) {
             // Explicitly schedule checking of a naturally constructed renewal.
             // This isolates publication headroom from the ordinary scheduling
@@ -2810,16 +3199,33 @@ void run_selective_completion_target_count_tests(bool cap_diagnosis = false) {
             PC_CHECK(incumbent != nullptr);
             if (!incumbent) continue;
             original_cost = incumbent->evaluated_policy_cost;
+            original_expected_actions = incumbent->compiled_artifact.checked_expected_actions;
         }
         bool saw_checking = false, saw_validation = false;
+        if (cap_diagnosis && fixture == 4)
+            work.options.candidate_evaluation_limits.max_states = 1;
         bool inspected_native_law = false;
         bool tightened_cap = false;
+        bool injected_refusal = false;
+        std::uint64_t refusal_live = 0;
         for (unsigned step = 0; step < 20000 &&
              work.selective_service_phase != Impl::SelectiveServicePhase::Done; ++step) {
             (void)work.advance_selective_completion_service();
             saw_checking |= work.selective_service_phase == Impl::SelectiveServicePhase::Checking;
             saw_validation |= work.selective_service_phase == Impl::SelectiveServicePhase::Validating;
-            if (cap_diagnosis && fixture != 0 && !tightened_cap &&
+            if (cap_diagnosis && fixture == 3 && !injected_refusal &&
+                work.selective_service_phase == Impl::SelectiveServicePhase::Generating) {
+                // Inject the producer's refused result, not an oversized real
+                // allocation. Exercise the actual outer refusal cleanup while
+                // preserving a naturally checked original-root fallback.
+                const auto refuse = selective_producer_refusal(SelectiveProducerRefusalAccess{});
+                (work.selective_service_producer.get()->*refuse)(
+                    "native_construction_refused:injected_bad_alloc");
+                work.selective_service_graph.reserve(8192);
+                refusal_live = work.fast_estimated_owned_bytes();
+                injected_refusal = true;
+            }
+            if (cap_diagnosis && fixture != 0 && fixture != 3 && fixture != 4 && !tightened_cap &&
                 work.selective_service_phase == (fixture == 1
                     ? Impl::SelectiveServicePhase::Generating : Impl::SelectiveServicePhase::Checking)) {
                 const auto live = work.fast_estimated_owned_bytes();
@@ -2865,6 +3271,26 @@ void run_selective_completion_target_count_tests(bool cap_diagnosis = false) {
             PC_CHECK(saw_validation);
             PC_CHECK(work.result.diagnostics.selective_completion_service_status == "retained");
             PC_CHECK(work.result.diagnostics.selective_completion_service_checks == 1);
+        } else if (fixture == 3) {
+            PC_CHECK(injected_refusal);
+            PC_CHECK(work.result.diagnostics.selective_completion_service_status ==
+                "native_construction_refused:injected_bad_alloc");
+            PC_CHECK(work.selective_service_calc == nullptr && work.selective_service_producer == nullptr);
+            PC_CHECK(work.selective_service_graph.empty() && work.selective_service_graph.capacity() < 8192);
+            PC_CHECK(work.fast_estimated_owned_bytes() < refusal_live);
+            PC_CHECK(work.options.max_solver_owned_bytes - work.fast_estimated_owned_bytes() >
+                work.options.max_solver_owned_bytes - refusal_live);
+        } else if (fixture == 4) {
+            PC_CHECK(saw_checking && !saw_validation);
+            PC_CHECK(work.result.diagnostics.selective_completion_service_status.starts_with("censored_capacity:"));
+            const auto& snapshot = work.result.diagnostics;
+            PC_CHECK(snapshot.selective_completion_failure_phase == "checking");
+            PC_CHECK(snapshot.selective_completion_failure_subphase == "pair_discovery");
+            PC_CHECK(snapshot.selective_completion_failure_source_states >= 2);
+            PC_CHECK(snapshot.selective_completion_failure_exact_states == 1);
+            PC_CHECK(snapshot.selective_completion_failure_owned_bytes > 0);
+            PC_CHECK(work.result.diagnostics.selective_completion_service_checks == 0);
+            PC_CHECK(work.selective_service_checker == nullptr);
         } else {
             PC_CHECK(tightened_cap);
             PC_CHECK(work.result.diagnostics.selective_completion_service_status.find("censored_") == 0);
@@ -2873,11 +3299,22 @@ void run_selective_completion_target_count_tests(bool cap_diagnosis = false) {
         PC_CHECK(owned != nullptr);
         if (owned) {
             PC_CHECK(work.certified_incumbent_invalid_reason(*owned) == nullptr);
-            if (!tightened_cap) {
+            if (!tightened_cap && !injected_refusal && fixture != 4) {
                 PC_CHECK(owned->compiled_root_entry_only);
+                auto parsed = compile_strategy_json(session,
+                    owned->compiled_artifact.strategy_json.data(),
+                    owned->compiled_artifact.strategy_json.size());
+                std::size_t actual_edges = 0;
+                for (const auto& node : parsed->nodes) actual_edges += node.edges.size();
+                PC_CHECK(owned->compiled_artifact.nodes == parsed->nodes.size());
+                PC_CHECK(owned->compiled_artifact.edges == actual_edges);
+                PC_CHECK(std::isfinite(owned->compiled_artifact.checked_expected_actions));
                 PC_CHECK(owned->evaluated_policy_cost ==
                     work.result.diagnostics.selective_completion_service_checked_cost);
-            } else PC_CHECK(owned->evaluated_policy_cost == original_cost);
+            } else {
+                PC_CHECK(owned->evaluated_policy_cost == original_cost);
+                PC_CHECK(owned->compiled_artifact.checked_expected_actions == original_expected_actions);
+            }
         }
         if (owned && !cap_diagnosis) {
             // Reuse a genuinely issued complete bundle under the same request.
@@ -2921,6 +3358,14 @@ void run_selective_completion_target_count_tests(bool cap_diagnosis = false) {
             }
         }
         if (cap_diagnosis) {
+            if (fixture == 0) {
+                // A displaced renewal's warning must be refreshed from the
+                // real checked replacement through the final publication path.
+                work.result.diagnostics.policy_compatibility_supported = false;
+                work.result.diagnostics.policy_compatibility_action = "chaos";
+                work.result.diagnostics.policy_compatibility_reason =
+                    "primitive_renewal_expected_actions_exceed_simulator_cap";
+            }
             std::printf("selective cap fixture=%u after_service_live=%llu limit=%llu compatible=%d\n",
                 fixture, static_cast<unsigned long long>(work.fast_estimated_owned_bytes()),
                 static_cast<unsigned long long>(work.options.max_solver_owned_bytes), owned != nullptr);
@@ -2937,6 +3382,11 @@ void run_selective_completion_target_count_tests(bool cap_diagnosis = false) {
                 published.evaluated_policy_cost,
                 published.diagnostics.policy_publication_failure_reason.c_str());
             if (published.policy_available) {
+                if (fixture == 0) {
+                    PC_CHECK(published.refined_policy_artifact.checked_expected_actions <= 100000);
+                    PC_CHECK(published.diagnostics.policy_compatibility_supported);
+                    PC_CHECK(published.diagnostics.policy_compatibility_reason.empty());
+                }
                 PC_CHECK(std::isfinite(published.evaluated_policy_cost));
                 PC_CHECK(published.evaluated_policy_cost <= original_cost);
             } else {

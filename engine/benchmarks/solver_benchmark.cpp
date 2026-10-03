@@ -208,6 +208,7 @@ struct CaseResult {
     bool has_cooperative_abandon = false;
     std::uint64_t working_set_before = 0;
     std::uint64_t working_set_after = 0;
+    std::uint64_t working_set_peak = 0;
     bool has_native_memory = false;
     pc_native_memory_stats native_memory{};
     bool has_solve_summary = false;
@@ -1546,7 +1547,7 @@ double milliseconds(Clock::time_point begin, Clock::time_point end) {
     return std::chrono::duration<double, std::milli>(end - begin).count();
 }
 
-std::uint64_t process_working_set() {
+std::uint64_t process_working_set(const bool peak = false) {
 #if defined(_WIN32)
     PROCESS_MEMORY_COUNTERS_EX counters{};
     counters.cb = sizeof(counters);
@@ -1554,9 +1555,10 @@ std::uint64_t process_working_set() {
             GetCurrentProcess(),
             reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&counters),
             sizeof(counters))) {
-        return static_cast<std::uint64_t>(counters.WorkingSetSize);
+        return static_cast<std::uint64_t>(peak ? counters.PeakWorkingSetSize : counters.WorkingSetSize);
     }
 #elif defined(__linux__)
+    if (peak) return 0;
     std::ifstream stream("/proc/self/statm");
     std::uint64_t total_pages = 0;
     std::uint64_t resident_pages = 0;
@@ -1568,6 +1570,13 @@ std::uint64_t process_working_set() {
     }
 #endif
     return 0;
+}
+
+void capture_process_memory(CaseResult& report) {
+    report.working_set_after = process_working_set();
+    // OS-maintained lifetime resident peak. Serial experiment arms use one
+    // fresh benchmark process each; this is separate from selected owned bytes.
+    report.working_set_peak = process_working_set(true);
 }
 
 std::string result_name(pc_result result) {
@@ -3891,14 +3900,14 @@ CaseResult run_case(
     if (backend == "native_unit_fixture") {
         report.actual_status = "covered_by_native_unit_gate";
         report.expectation_met = true;
-        report.working_set_after = process_working_set();
+        capture_process_memory(report);
         report.total_ms = milliseconds(total_begin, Clock::now());
         return report;
     }
     if (!optional_bool(specification, "benchmark_enabled", false)) {
         report.actual_status = "not_run_approval_pending";
         report.expectation_met = true;
-        report.working_set_after = process_working_set();
+        capture_process_memory(report);
         report.total_ms = milliseconds(total_begin, Clock::now());
         return report;
     }
@@ -3956,7 +3965,11 @@ CaseResult run_case(
         } else if (solve_profile != "default") {
             throw std::runtime_error("unknown solve_profile: " + solve_profile);
         }
-        solve_options.max_states = optional_u32(caps, "max_states", 200000);
+        poecraft::solver::SolveOptions profile_defaults;
+        if (solve_options.solve_profile == PC_SOLVE_PROFILE_CALCULATOR_PRODUCT_V1)
+            poecraft::solver::apply_solve_profile_defaults(
+                profile_defaults, poecraft::solver::SolveProfile::CalculatorProductV1);
+        solve_options.max_states = optional_u32(caps, "max_states", profile_defaults.max_states);
         solve_options.max_sweeps = optional_u32(caps, "max_sweeps", 100000);
         solve_options.max_discovered_states = optional_u32(
             caps, "max_discovered_states", solve_options.max_states);
@@ -3967,7 +3980,8 @@ CaseResult run_case(
                 max_discovered_states_override;
         }
         solve_options.max_expanded_states = optional_u32(
-            caps, "max_expanded_states", solve_options.max_states);
+            caps, "max_expanded_states", caps.find("max_states") != nullptr ?
+                solve_options.max_states : profile_defaults.max_expanded_states);
         solve_options.max_state_action_rows = optional_u64(
             caps, "max_state_action_rows", 1215000);
         solve_options.max_transitions = optional_u64(
@@ -4441,7 +4455,7 @@ CaseResult run_case(
             }
             report.solve_ms = entry.elapsed_ms;
             report.total_ms = milliseconds(total_begin, now);
-            report.working_set_after = process_working_set();
+            capture_process_memory(report);
             // Source/owner changes are retained immediately, but rewriting the
             // entire accumulated report at every such event makes observation
             // consume the solve window. Persist at the declared trace cadence.
@@ -4747,7 +4761,7 @@ CaseResult run_case(
                             // certification before the separate final checker
                             // consumes the remaining case deadline.
                             report.total_ms = milliseconds(total_begin, Clock::now());
-                            report.working_set_after = process_working_set();
+                            capture_process_memory(report);
                             if (checkpoint) checkpoint(report);
                             const auto evaluation_started = Clock::now();
                             pc_strategy_eval_options evaluation_options{};
@@ -4756,7 +4770,8 @@ CaseResult run_case(
                             evaluation_options.abi_version = PC_ABI_VERSION;
                             evaluation_options.epsilon = 1e-12;
                             evaluation_options.max_sweeps = 100000;
-                            evaluation_options.max_states = optional_u32(
+                            evaluation_options.max_states = max_discovered_states_override != 0
+                                ? max_discovered_states_override : optional_u32(
                                 verification, "exact_max_states",
                                 optional_u32(
                                     caps, "max_discovered_states", 300000));
@@ -5276,7 +5291,7 @@ CaseResult run_case(
     evaluate_cap_checks(specification, report);
     report.expectation_met = evaluate_expectation(
         specification, report, skip_verification, solver_mode);
-    report.working_set_after = process_working_set();
+    capture_process_memory(report);
     report.total_ms = milliseconds(total_begin, Clock::now());
     if (checkpoint) checkpoint(report);
     return report;
@@ -5973,7 +5988,9 @@ void append_case_report(
         static_cast<std::int64_t>(result.working_set_after) -
         static_cast<std::int64_t>(result.working_set_before);
     out << "  \"memory\":{\"measurement_kind\":"
-        << (measured ? "\"working_set_snapshots_not_peak\""
+        << (measured ? (result.working_set_peak != 0
+                           ? "\"working_set_snapshots_and_process_lifetime_peak\""
+                           : "\"working_set_snapshots_not_peak\"")
                      : "\"not_measured\"")
         << ",\"process_working_set_before_bytes\":";
     if (measured) out << result.working_set_before;
@@ -5984,9 +6001,11 @@ void append_case_report(
     out << ",\"process_working_set_delta_bytes\":";
     if (measured) out << delta;
     else out << "null";
-    out << ','
-        << "\"process_working_set_peak_bytes\":null,"
-        << "\"wasm_heap_before_bytes\":null,\"wasm_heap_after_bytes\":null,"
+    out << ",\"process_working_set_peak_bytes\":";
+    if (result.working_set_peak != 0) out << result.working_set_peak;
+    else out << "null";
+    out << ",\"process_working_set_peak_scope\":\"process_lifetime\",";
+    out << "\"wasm_heap_before_bytes\":null,\"wasm_heap_after_bytes\":null,"
         << "\"wasm_heap_growth_bytes\":null,"
         << "\"native_live_owned_bytes\":";
     if (result.has_native_memory) out << result.native_memory.live_owned_bytes;

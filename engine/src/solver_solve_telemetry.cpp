@@ -2111,7 +2111,9 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            diagnostics.policy_compatibility_action.capacity() + 1 +
            diagnostics.policy_compatibility_reason.capacity() + 1 +
            diagnostics.policy_publication_failure_reason.capacity() + 1 +
-           diagnostics.selective_completion_service_status.capacity() + 1 +
+            diagnostics.selective_completion_service_status.capacity() + 1 +
+            diagnostics.selective_completion_failure_phase.capacity() + 1 +
+            diagnostics.selective_completion_failure_subphase.capacity() + 1 +
            diagnostics.incumbent_kind.capacity() + 1 +
            diagnostics.destructive_renewal_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +

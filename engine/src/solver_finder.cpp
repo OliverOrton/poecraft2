@@ -690,8 +690,7 @@ std::string PolicyFinderWork::sketch_identity(const Sketch& sketch) const {
                     "finder native programme has no semantic item identity");
             std::ostringstream semantic;
             semantic << std::hex;
-            for (const std::uint64_t part : planner_operator_semantic_key(
-                    problem_.operators().at(binding.operator_index)))
+            for (const std::uint64_t part : finder_program_occurrence_key(problem_, binding))
                 semantic << part << ',';
             semantic << ":item:";
             for (const auto part : exact_item_state_key(item))
@@ -810,7 +809,8 @@ void PolicyFinderWork::generate_retention_candidate() {
         update_peak();
     };
     const std::uint32_t family_size =
-        grammar_ == FinderGrammarMode::SelectiveRetention || product_two_held_sides_ ? 2u : 1u;
+        product_conditional_continuations_ ? product_completion_proposal_count(problem_) :
+        grammar_ == FinderGrammarMode::SelectiveRetention ? 2u : 1u;
     if (retention_variant_cursor_ >= family_size) {
         retention_pending_ = false;
         return;
@@ -823,16 +823,18 @@ void PolicyFinderWork::generate_retention_candidate() {
     }
     try {
         if (retention_producer_ == nullptr) {
+            const auto held_side = product_two_held_sides_
+                ? product_completion_held_side(problem_, retention_variant_cursor_) : kNoId;
             const auto variant = grammar_ == FinderGrammarMode::ConditionalProtectedScour
                 ? (product_conditional_continuations_
-                    ? product_completion_variant(problem_) : SelectiveCompletionVariant::ProtectedScour)
+                    ? product_completion_proposal_variant(problem_, retention_variant_cursor_) : SelectiveCompletionVariant::ProtectedScour)
                 : static_cast<SelectiveCompletionVariant>(retention_variant_cursor_);
             retention_producer_ = std::make_unique<
                 SelectiveCompletionProducer>(
                     problem_, original_start_, economy_->prices,
                     limits_, variant, product_two_held_sides_
-                        ? side_essence_acquisitions_[retention_variant_cursor_] : held_essence_acquisition_,
-                    product_two_held_sides_ ? retention_variant_cursor_ : kNoId);
+                        ? side_essence_acquisitions_[held_side] : held_essence_acquisition_,
+                    held_side);
         }
         if (!retention_producer_->advance(1)) {
             retention_status_ = "native_generation_incomplete";
@@ -1196,8 +1198,7 @@ void PolicyFinderWork::start_next_candidate() {
                     continue;
                 const FinderProgramBinding& binding =
                     sketch.control->programs.at(control_node.binding);
-                const auto key = planner_operator_semantic_key(
-                    problem_.operators().at(binding.operator_index));
+                const auto key = finder_program_occurrence_key(problem_, binding);
                 const std::string id = "c" + std::to_string(node);
                 options.graph_local_provenance.decisions.push_back(
                     {id, key, false, false});

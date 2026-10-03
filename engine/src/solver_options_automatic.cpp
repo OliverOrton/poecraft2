@@ -293,6 +293,13 @@ std::uint64_t CalcContext::automatic_admission_cursor_bytes() const {
     const StateLocalAutomaticAdmissionCursor& cursor =
         *state_local_automatic_admission_cursor_;
     std::uint64_t bytes = cursor.task.retained_bytes();
+    if (cursor.transient_scratch_context != nullptr) {
+        // The checkpoint already includes the child. Replace that snapshot
+        // with its live bytes while a delegated native row is growing.
+        bytes -= std::min(bytes, cursor.checkpoint_transient_owned_bytes);
+        bytes = automatic_cursor_add(
+            bytes, cursor.transient_scratch_context->fast_estimated_owned_bytes());
+    }
     bytes = automatic_cursor_add(
         bytes,
         cursor.distribution_cache_keys_before.capacity() *
@@ -977,6 +984,14 @@ CalcContext::build_state_local_automatic_candidates(
     constexpr std::size_t kRetainedAutomaticAdmissionContexts = 0;
     bool admission_context_created = false;
     std::unique_ptr<CalcContext> transient_context;
+    struct TransientScratchLease {
+        CalcContext** context = nullptr;
+        std::uint64_t* checkpoint_bytes = nullptr;
+        ~TransientScratchLease() {
+            if (context != nullptr) *context = nullptr;
+            if (checkpoint_bytes != nullptr) *checkpoint_bytes = 0;
+        }
+    } transient_scratch_lease;
     CalcContext* local_pointer = nullptr;
     const auto retained = automatic_admission_contexts_.find(context_key);
     if (retained != automatic_admission_contexts_.end()) {
@@ -1011,6 +1026,16 @@ CalcContext::build_state_local_automatic_candidates(
         }
     }
     CalcContext& local = *local_pointer;
+    if (solve_owned_bytes_budget_owner_ != nullptr) {
+        local.set_solve_owned_bytes_budget_owner(this);
+        if (transient_context != nullptr) {
+            auto& cursor = *state_local_automatic_admission_cursor_;
+            cursor.transient_scratch_context = &local;
+            transient_scratch_lease.context = &cursor.transient_scratch_context;
+            transient_scratch_lease.checkpoint_bytes =
+                &cursor.checkpoint_transient_owned_bytes;
+        }
+    }
     local.set_reforge_work_budget_owner(reforge_work_budget_owner_);
     const std::uint32_t local_states_before = local.state_count();
     local.set_defer_automatic_protected_baseline(true);
@@ -1103,7 +1128,8 @@ CalcContext::build_state_local_automatic_candidates(
         if (limits.max_solver_owned_bytes == 0) return;
         if (!force_bytes) return;
         const std::uint64_t owned_bytes = fast_estimated_owned_bytes() +
-            (transient_context != nullptr
+            (transient_context != nullptr &&
+                     transient_scratch_lease.context == nullptr
                  ? local.fast_estimated_owned_bytes()
                  : 0);
         if (owned_bytes >
@@ -1203,8 +1229,11 @@ CalcContext::build_state_local_automatic_candidates(
         bytes = automatic_cursor_add(
             bytes, automatic_cursor_string_bytes(context_key));
         if (transient_context != nullptr) {
+            const auto local_bytes = local.fast_estimated_owned_bytes();
             bytes = automatic_cursor_add(
-                bytes, local.fast_estimated_owned_bytes());
+                bytes, local_bytes);
+            if (transient_scratch_lease.checkpoint_bytes != nullptr)
+                *transient_scratch_lease.checkpoint_bytes = local_bytes;
         }
         bytes = automatic_cursor_add(
             bytes,
@@ -2025,6 +2054,8 @@ CalcContext::build_state_local_automatic_candidates(
                     }
                     CalcContext& comparison_context =
                         *automatic_comparison_context_;
+                    if (solve_owned_bytes_budget_owner_ != nullptr)
+                        comparison_context.set_solve_owned_bytes_budget_owner(this);
                     comparison_context.set_reforge_work_budget_owner(
                         reforge_work_budget_owner_);
                     comparison_context.set_reforge_resource_accounting(

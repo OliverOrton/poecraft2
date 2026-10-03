@@ -60,12 +60,21 @@ enum class FinderControlKind : std::uint8_t {
     RunPrimitive, RunScourAlchemy, GoalTerminal, FailureTerminal, Hole,
     TestEldritchTiers, TestSideCountAtLeast, RunNativeProgram
 };
+enum class FinderProgramIntent : std::uint8_t {
+    ExactOperator,
+    NativeMissingEldritchGoal,
+    NativeTemporaryGoalAttempt,
+};
 struct FinderProgramBinding {
     // Both handles are local to the original CalcContext. The finder creates
     // them through complete state-local automatic admission, never JSON.
     std::uint32_t operator_index = kNoId;
     std::uint32_t admitted_state = kNoId;
     std::uint32_t held_goal_mask = 0;
+    // Compiler-owned upper proposal rule. Dynamic intent is rederived through
+    // complete native admission at each positive exact entry; action/resource
+    // identity remains fixed. No supplied graph can grant this authority.
+    FinderProgramIntent intent = FinderProgramIntent::ExactOperator;
 };
 struct FinderControlNode {
     // TestAffixCountAtLeast4 retains its legacy kind identity: an unset
@@ -82,6 +91,10 @@ struct FinderControlGraph {
     std::uint32_t entry = kNoId;
     std::vector<FinderProgramBinding> programs;
 };
+std::vector<std::uint64_t> finder_program_occurrence_key(
+    const CalcContext& calc, const FinderProgramBinding& binding);
+bool finder_program_is_single_temporary_attempt(
+    const CalcContext& calc, std::uint32_t state, std::uint32_t option);
 std::string compile_finder_control_json(
     const CalcContext& calc,
     const pc_item_state& start_item,

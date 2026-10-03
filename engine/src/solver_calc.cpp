@@ -1,6 +1,7 @@
 #include "solver_calc_types.hpp"
 
 #include "solver_action_family_contract.hpp"
+#include "solver_options_helpers.hpp"
 #include "solver_dominance.hpp"
 #include "solver_clusters.hpp"
 #include "currency_outcomes.hpp"
@@ -1570,6 +1571,88 @@ std::uint32_t CalcContext::intern_item(const pc_item_state& item) {
     return id;
 }
 
+bool CalcContext::propose_native_held_context(
+        const pc_item_state& original, const std::uint32_t held_goal_mask,
+        const std::uint32_t target_count, const std::uint32_t acquisition_action,
+        pc_item_state& proposal) {
+    if (held_goal_mask == 0 || target_count == 0 || target_count > 3 ||
+        acquisition_action >= registry_.actions.size()) return false;
+    const auto& action = registry_.actions[acquisition_action];
+    if (action.params.type != ActionType::Chaos &&
+        action.params.type != ActionType::Essence) return false;
+    const auto& session = *session_;
+    std::int8_t held_side = -1;
+    for (std::uint32_t slot = 0; slot < goal_.slots.size(); ++slot) {
+        if ((held_goal_mask & (1u << slot)) == 0) continue;
+        const auto side = goal_slot_side(session, goal_.slots[slot]);
+        if ((side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX) ||
+            (held_side != -1 && held_side != side)) return false;
+        held_side = side;
+    }
+    if (held_side == -1) return false;
+
+    // One fresh pool per pick bounds retained native cache growth. Account for
+    // its pool, masks, optional tag-signature weight table and group/tag scratch
+    // before allocation; this does not enumerate any acquisition distribution.
+    const std::uint64_t scratch = sizeof(ActionContextImpl) + 65536ull +
+        static_cast<std::uint64_t>(session.mod_count) * 256ull +
+        session.words * 128ull + session.group_ids.size() * 32ull +
+        session.data->adds_tag_ids.size() * 32ull +
+        session.effective_base_tag_ids.size() * 64ull;
+    proposal = original;
+    proposal.prefix_count = proposal.suffix_count = 0;
+    std::fill(std::begin(proposal.prefixes), std::end(proposal.prefixes), pc_mod_slot{});
+    std::fill(std::begin(proposal.suffixes), std::end(proposal.suffixes), pc_mod_slot{});
+    const auto add = [&](const std::uint32_t mod) {
+        return pc_item_add_mod(&proposal, session.gen_type[mod], mod,
+            static_cast<std::uint16_t>(session.primary_group[mod]), 0,
+            nullptr) == PC_RESULT_OK;
+    };
+    std::uint32_t guaranteed_mask = 0;
+    if (action.params.type == ActionType::Essence) {
+        const auto essence = action.params.essence_index;
+        if (essence >= session.essence_guaranteed_mod_ids.size()) return false;
+        const auto mod = session.essence_guaranteed_mod_ids[essence];
+        if (mod >= session.mod_count || session.gen_type[mod] != held_side) return false;
+        for (std::uint32_t slot = 0; slot < layout_.slots.size(); ++slot)
+            if ((held_goal_mask & (1u << slot)) &&
+                pc_bitset_test(layout_.slots[slot].satisfying_mask.data(), mod))
+                guaranteed_mask |= 1u << slot;
+        if (guaranteed_mask == 0 || !add(mod)) return false;
+    }
+    const auto pick = [&](const std::int8_t side, const std::uint32_t slot) {
+        require_reforge_scratch_bytes(scratch);
+        consume_reforge_work(session.mod_count, session.mod_count);
+        ActionContextImpl pool_context(0);
+        pool_context.session = session_;
+        PoolBuildRequest request;
+        request.side_filter = side;
+        request.respects_metamod_pool_blocks = action.params.type != ActionType::Essence;
+        const auto& pool = get_weighted_pool(pool_context, &proposal, request);
+        for (unsigned preference = 0; preference < (slot == kNoId ? 2u : 1u); ++preference)
+        for (const auto& entry : pool.entries) {
+            if (entry.final_weight == 0) continue;
+            const auto mod = entry.session_mod_id;
+            if (slot != kNoId && !pc_bitset_test(
+                    layout_.slots[slot].satisfying_mask.data(), mod)) continue;
+            // Prefer junk, but do not exclude eligible goal members when a
+            // larger admission context needs them. The producer rejects an
+            // already-terminal template after projection.
+            if (slot == kNoId && preference == 0 &&
+                std::any_of(layout_.slots.begin(), layout_.slots.end(),
+                    [&](const auto& goal) { return pc_bitset_test(goal.satisfying_mask.data(), mod); })) continue;
+            if (add(mod)) return true;
+        }
+        return false;
+    };
+    for (std::uint32_t slot = 0; slot < goal_.slots.size(); ++slot)
+        if ((held_goal_mask & (1u << slot)) && !(guaranteed_mask & (1u << slot)) &&
+            !pick(held_side, slot)) return false;
+    for (std::uint32_t count = 0; count < target_count; ++count)
+        if (!pick(1 - held_side, kNoId)) return false;
+    return true;
+}
+
 bool CalcContext::materialize(
     std::uint32_t state_id,
     pc_item_state& out) const {
@@ -2361,6 +2444,11 @@ ScopedReforgeRowProvenance::~ScopedReforgeRowProvenance() {
 
 void CalcContext::require_reforge_scratch_bytes(
     const std::uint64_t scratch_bytes) const {
+    if (solve_owned_bytes_budget_owner_ != nullptr &&
+        solve_owned_bytes_budget_owner_ != this) {
+        solve_owned_bytes_budget_owner_->require_reforge_scratch_bytes(
+            scratch_bytes);
+    }
     if (!solve_owned_bytes_cap_.has_value()) return;
     const std::uint64_t cap = *solve_owned_bytes_cap_;
     const std::uint64_t owned = fast_estimated_owned_bytes();

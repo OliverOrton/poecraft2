@@ -1890,6 +1890,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     std::vector<JointAnytimeAttemptLineage>
         joint_anytime_attempt_lineage;
     std::uint64_t carrier_ladder_exact_boundary_private_wall_ns = 0;
+    void refresh_selective_generation_caps();
     bool advance_selective_completion_service();
     void abandon_selective_completion_service(const char* status, bool try_next_orientation = false);
     bool target_gap_stop = false;

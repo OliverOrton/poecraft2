@@ -15,6 +15,9 @@ enum class SelectiveCompletionVariant : std::uint8_t {
     RetentionControl,
     RerollVersusRepair,
     ProtectedScour,
+    ProtectedScourFill,
+    EldritchGrowthRepair,
+    EldritchGrowthWithBlocker,
 };
 
 struct SelectiveCompletionCandidate {
@@ -25,8 +28,14 @@ struct SelectiveCompletionCandidate {
         SelectiveCompletionVariant::RetentionControl;
 };
 
-SelectiveCompletionVariant product_completion_variant(const CalcContext& problem);
+SelectiveCompletionVariant product_completion_variant(const CalcContext& problem,
+    std::uint32_t held_side = kNoId);
 bool product_completion_has_two_orientations(const CalcContext& problem);
+std::uint32_t product_completion_proposal_count(const CalcContext& problem);
+SelectiveCompletionVariant product_completion_proposal_variant(
+    const CalcContext& problem, std::uint32_t proposal);
+std::uint32_t product_completion_held_side(const CalcContext& problem,
+    std::uint32_t orientation);
 
 /* Candidate construction only. The caller owns exact evaluation, reached
  * programme-entry validation, incumbent selection and proof authority. One
@@ -52,7 +61,7 @@ class SelectiveCompletionProducer {
   private:
     enum class Phase : std::uint8_t {
         Begin, Primary, PrimaryDirect, Secondary, SecondaryDirect,
-        Build, Done,
+        Tertiary, TertiaryDirect, Blocker, Build, Done,
     };
     struct Programme {
         ActionType intended = ActionType::Chaos;
@@ -80,8 +89,11 @@ class SelectiveCompletionProducer {
     std::uint32_t held_mask_ = 0;
     std::uint32_t acquisition_action_ = kNoId;
     double acquisition_price_ = 0.0;
+    std::uint32_t fill_action_ = kNoId;
     Programme primary_;
     Programme secondary_;
+    Programme tertiary_;
+    Programme blocker_;
     AutomaticAdmissionLimits admission_;
 
     void begin();
