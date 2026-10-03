@@ -567,3 +567,21 @@ and metadata are `out/local-native-repair/parity-one-run.log` and
 This non-reproduction does not explain/dismiss CI. No repeat, rebuild or assertion
 change starts; future first-mismatch setup/step capture requires a diagnostic
 instrumentation slot if selected. The five-mod allocation case remains separate.
+
+
+Test-only first-mismatch instrumentation is now prepared, **unbuilt/unrun**.
+`IC_PARITY_FIRST` records fixture, zero-based step and differing-field mask;
+`IC_PARITY_SIDE` records off/on before-after setup/phase, continuation presence,
+call/setup timing, logical work and graph/queue/cursor/checked identity;
+`IC_PARITY_TRACE` retains each existing bounded native trace. The14 original
+assertions are unchanged. No production clocks/budgets/semantics or WASM changed.
+The native coroutine does not expose which2048-unit/20ms branch won: diagnostics
+explicitly record an unexposed reason, not a reason inferred from elapsed time.
+First/side records are flushed so partial output survives a stopped process.
+
+A future explicit slot must first allow the two-job test build and then one
+existing finite continuity selector through the existing300-second supervisor.
+No command starts automatically, no broad CI retry is selected, and main0187
+stays unchanged. The cap/five-mod owner has priority. Exact design/status is in
+`out/local-native-repair/parity-instrumentation-ready.json` and the qualification
+receipt; CI cause remains open after the one non-reproducing run.

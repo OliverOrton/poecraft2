@@ -2120,5 +2120,56 @@
     "stdout_log": "out/local-native-repair/parity-one-run.log",
     "slot_released": true,
     "classification": "Non-reproduction does not explain or dismiss CI failure; no repeated run, rebuild or assertion change authorized/performed."
+  },
+  "selective_service_parity_instrumentation_ready": {
+    "recorded_utc": "2026-10-03T05:47:54.498522+00:00",
+    "status": "test-only first-mismatch instrumentation prepared, unbuilt/unrun",
+    "source_file": "engine/tests/test_solver_solve.cpp",
+    "diagnostic_labels": [
+      "IC_PARITY_FIRST",
+      "IC_PARITY_SIDE",
+      "IC_PARITY_TRACE"
+    ],
+    "scope": "first pre-admission parity mismatch per existing continuity fixture; no added selector or supervisor",
+    "mask_bits": [
+      "phase",
+      "values",
+      "policy_rows",
+      "graph_identity",
+      "successors",
+      "probabilities",
+      "queue",
+      "expansion_cursor",
+      "global_lower",
+      "verified_identity",
+      "logical_reforge_work",
+      "service_calc_absent",
+      "service_checker_absent",
+      "service_validator_absent"
+    ],
+    "captures": [
+      "fixture and zero-based step iteration",
+      "phase/setup stage before and after each step(1)",
+      "goal-cover/retention/root-checker continuation presence before/after",
+      "per-call steady wall nanoseconds and goal-cover charged time delta",
+      "state/row/kernel/queue sizes, expanded count, expansion state/cursor",
+      "logical work, graph and verified identity, service phase",
+      "existing bounded native progress traces"
+    ],
+    "yield_reason_limit": "Native coroutine does not expose whether2048-unit or20ms branch won. Record not_exposed_unit_or_wall_time; >=20ms is an observed timing indicator only, not an inferred reason.",
+    "preserves": "All14 original PC_CHECK expressions remain unchanged; production source, clocks/budgets/semantics, native laws, bounds/publication guards and WASM unchanged.",
+    "partial_output": "Flush first mismatch and side records before trace formatting; existing supervisor preserves stdout if stopped",
+    "pending_command": "powershell -NoProfile -File scripts/dev-engine.ps1 -Task Tests -Jobs 2, then one instrumented --solver-integrity-only continuity invocation through existing run_isolated_process with300.0-second bound, only after explicit slot grant",
+    "unrun": [
+      "diagnostic build",
+      "instrumented selector",
+      "new broad CI retry"
+    ],
+    "prior_result": "One preserved-binary run passed51511 checks in0.952s; CI root cause remains open",
+    "main_unchanged": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+    "no_push": true,
+    "no_production_fix": true,
+    "owned_heavy_processes_remaining": 0,
+    "priority": "Cap/five-mod diagnostic owns slot; cases remain separate"
   }
 }

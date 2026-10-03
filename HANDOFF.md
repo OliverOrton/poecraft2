@@ -1,3 +1,15 @@
+# Parity first-mismatch instrumentation prepared (2026-10-03)
+
+Test-only records in `test_solver_solve.cpp` capture first mismatch mask, step,
+paired setup/logical progress and timing plus bounded native traces. All14 original
+assertions and production semantics remain unchanged. Actual unit/time yield
+reason is not exposed and is labelled unknown. Unbuilt/unrun; no push/main change.
+Explicit slot needed for two-job test build then one instrumented finite selector;
+cap/five-mod diagnostic retains priority. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `selective_service_parity_instrumentation_ready` own the ready handoff.
+CI parity remains open; prior one-run pass did not resolve it. No owned process.
+
 # Selective-service prefix parity; source classification (2026-10-03)
 
 Latest `0187f3d8` CI has28 native prefix parity failures in fixture10 before
