@@ -1,14 +1,15 @@
-# Web solver scope guard; awaiting coordinated tests (2026-10-03)
+# Web solver scope adapter qualified (2026-10-03)
 
-Delivered `3ab862fe` Windows CI passes all 17 native targets and 275 bindings,
-then the product Eldritch WASM fixture hits a missing web scope value. Isolated
-repair branch now recognizes only native
-`gated_search_with_paid_root_foulborn_salvage_v2`, retaining unknown-value and
-invalid-graph rejection. Tests are unrun; web slot requested after recombination
-and multi-goal. No build/test/push started and no native/WASM change is needed.
+Repair source `7f235bbf` recognizes only the native product v2 scope. Focused
+shape/roundtrip, unknown-scope and invalid-graph controls, TypeScript and complete
+filtered npm chain pass; native/WASM unchanged. Heavy slot released immediately;
+no owned heavy process remains. Normal main delivery approved; actual remote/CI
+outcome lives in `out/local-native-repair/scope-guard-delivery.json`.
 The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
-and `web_solver_scope_guard_checkpoint` receipt own diagnosis and next commands.
-Main remains `3ab862fe`; unqualified multi-goal `e45b92b8` stays separate.
+and `web_solver_scope_guard_qualification` receipt own evidence/exclusions.
+Multi-goal `e45b92b8` is based on pre-repair `dbc142a2`; qualify combined current
+source, not that old isolated native base. Lock `e792c041` source completion is
+unqualified. Feature branches remain separate; parent coordinates their slots.
 
 # Native CI repair qualified (2026-10-03)
 

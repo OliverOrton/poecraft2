@@ -492,3 +492,28 @@ The existing product Eldritch fixture's 10,000-run Simulator tail is unchanged;
 it is not selected as local strategy qualification for this adapter-only change.
 Main remains `3ab862fe`; no new push or deployment. Multi-goal `e45b92b8` is
 unbuilt/untested and must not be integrated as qualified.
+
+
+### Web scope adapter qualified
+
+Source `7f235bbf` passes focused strategy-model and solve-workspace checks,
+including exact v2 roundtrip, unknown v3 refusal and invalid-graph rejection.
+TypeScript and the complete npm test chain pass with the existing Calculator
+carrier/goal smoke selection (4/4). Every later test file in the chain executes.
+`scope-guard-qualified.json` under `out/local-native-repair` and
+`web_solver_scope_guard_qualification` in [qualification.json](qualification.json)
+own exact commands, logs and exclusions. The specific product Eldritch smoke's
+unchanged 10,000-run Simulator tail is unrun locally; normal CI keeps the full
+fixture unchanged. No native/WASM rebuild is required or performed.
+
+The serial slot was released immediately after all test commands exited, before
+receipt/commit work. Main delivery is separately approved. Actual remote/CI
+result is recorded in `out/local-native-repair/scope-guard-delivery.json` after
+normal delivery; local qualification alone claims no remote success.
+
+Lightweight pinned-source review found multi-goal `e45b92b8` forked from
+`dbc142a2`, before the delivered native repair. Its eventual acceptance must
+qualify the current combined source and matching WASM, retaining the repair and
+scope adapter. Lock `e792c041` is based on `3ab862fe`; inspected shared protocol
+hunks are disjoint. Neither source-only feature has been merged or accepted by
+this review. Other native/model/WASM qualification remains with their owners.
