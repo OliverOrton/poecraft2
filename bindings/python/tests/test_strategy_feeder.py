@@ -261,7 +261,7 @@ class FeederBindingTests(unittest.TestCase):
                         example = result.success_examples[0]
                         actual = example.resources[2]
                         self.assertEqual(actual["item_level"], 75)
-                        self.assertEqual(actual["item"]["item_level"], 75)
+                        self.assertEqual(actual["item"]["rarity"], 2)  # Session level is the resource envelope above.
                         self.assertEqual(actual["lifecycle"], 0)
                         self.assertEqual(actual["identity"], "recomb/pair/1")
                         self.assertEqual([resource["lifecycle"] for resource in example.resources[:2]], [1, 1])

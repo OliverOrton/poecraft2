@@ -160,7 +160,7 @@ try {
         assert.equal(returned.item_level, 75); assert.ok([base, otherBase].includes(returned.base_key!));
         assert.equal(mixed.examples.success[0].terminal_node_id, returned.base_key === base ? "end" : "other");
         assert.equal(returned.recombination!.input_a, "donor/1"); assert.equal(returned.recombination!.input_b, "feeder/1");
-        assert.equal((returned.item as {item_level: number}).item_level, 75);
+        assert.equal((returned.item as {rarity: number}).rarity, 2); // Session level is carried by the resource envelope.
         const unsupported = structuredClone(mixedPair);
         unsupported.resources!.at(-1)!.base_state.generic_influence_bits = 1;
         const refused = await pairRun(unsupported, {target_runs: 1});
