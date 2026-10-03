@@ -1,0 +1,9 @@
+{
+  "phase": "simulator",
+  "arm": "amulet3",
+  "pid": 60104,
+  "identity_token": "60104:134355164792092744",
+  "started_utc": "2026-10-03T15:54:39.213893+00:00",
+  "watchdog_seconds": 1800,
+  "LOCAL_owner": "Sol6.1 serial product qualification"
+}

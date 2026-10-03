@@ -1,0 +1,75 @@
+[
+  {
+    "arm": "bow4-dirty",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 83484,
+      "process_identity_token": "83484:134355136467547176",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 101838.64580001682
+    },
+    "status": "bounded_feasible",
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 38497.785744000365,
+      "expanded_states": 927,
+      "sweeps": 8,
+      "residual": 0,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "bounded_envelope_incomplete",
+      "stop_cause": "bounded_envelope_incomplete",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 180,
+        "candidate": 36,
+        "evaluator_supported": 36,
+        "supported_priced": 479,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 0,
+      "upper_bound": 38497.785744000365,
+      "evaluated_policy_cost": 38497.785744000365,
+      "absolute_optimality_gap": 38497.785744000365,
+      "relative_optimality_gap": null,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "service": {
+      "status": "retained",
+      "checks": 1,
+      "checked_cost": 51222.5208199995,
+      "failure_snapshot": null
+    },
+    "graph": {
+      "nodes": 13,
+      "edges": 19,
+      "strategy_json_bytes": 110996,
+      "strategy_output_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-fixed-bow4-r2-bow4-dirty.strategies\\sol61-preserved-bow4-currentmodel-120.strategy.json"
+    },
+    "exact": {
+      "completed": true,
+      "status": "matched",
+      "total_expected_cost": 38497.785744000365,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "cost_complete": true
+    },
+    "economic_gate": {
+      "passed": false,
+      "cost_regressions": [],
+      "missing_independent_cost": [],
+      "requires_complete_matched_cohort": true
+    }
+  }
+]

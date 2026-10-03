@@ -1,0 +1,26 @@
+{
+  "command": [
+    "py",
+    "-3",
+    "-m",
+    "pytest",
+    "tools/ingest/tests/test_solver_reports.py",
+    "-q",
+    "--tb=short",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\pytest-budget-identity-r3"
+  ],
+  "scratch": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\pytest-budget-identity-r3",
+  "source_sha256": "bd80274efdd7cbc81a6e50c243df74453be1771a915f14a98f63b1df91f576bd",
+  "exit_code": 0,
+  "timed_out": false,
+  "canceled": false,
+  "cancellation_mode": null,
+  "cancellation_ack_ms": null,
+  "process_id": 16540,
+  "process_identity_token": "16540:134355137969350386",
+  "survivor": false,
+  "survivor_check": "process_group_kill_then_parent_poll",
+  "wall_ms": 2296.6680999379605
+}

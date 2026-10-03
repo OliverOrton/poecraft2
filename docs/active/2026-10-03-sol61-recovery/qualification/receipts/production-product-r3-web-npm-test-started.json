@@ -1,0 +1,9 @@
+{
+  "phase": "web",
+  "arm": "npm-test",
+  "pid": 66236,
+  "identity_token": "66236:134355172132792838",
+  "started_utc": "2026-10-03T16:06:53.293815+00:00",
+  "watchdog_seconds": 900,
+  "LOCAL_owner": "Sol6.1 serial product qualification"
+}

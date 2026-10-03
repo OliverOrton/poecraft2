@@ -1,0 +1,9 @@
+{
+  "phase": "preflight",
+  "arm": "conquest5",
+  "pid": 83668,
+  "identity_token": "83668:134355164151453065",
+  "started_utc": "2026-10-03T15:53:35.149856+00:00",
+  "watchdog_seconds": 120,
+  "LOCAL_owner": "Sol6.1 serial product qualification"
+}

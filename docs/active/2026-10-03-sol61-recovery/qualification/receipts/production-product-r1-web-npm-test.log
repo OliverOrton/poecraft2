@@ -1,0 +1,21 @@
+
+> @poecraft/web@0.0.0 pretest
+> npm run build:data
+
+
+> @poecraft/web@0.0.0 build:data
+> node ../../scripts/build-data-bundle.mjs
+
+Verified runtime 82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d; ABI 3; bundle 23660953 bytes; build 5b8c35b40c027580ff6d709e36930174d32463565a9b5eaf164f1faba9f10b3d
+
+> @poecraft/web@0.0.0 test
+> tsx test/engine-smoke.test.ts && tsx test/engine-client-transfer.test.ts && tsx test/calculator-delivery.test.ts && tsx test/worker-finish-control.test.ts && tsx test/solver-benchmark-corpus.test.ts && tsx test/bestiary-bindings.test.ts && tsx test/hinekora-bindings.test.ts && tsx test/hinekora-controls.test.ts && tsx test/item-display.test.ts && tsx test/unveil-controls.test.ts && tsx test/calculator-currency-controls.test.ts && tsx test/mod-text.test.ts && tsx test/calculator-goal-item.test.ts && tsx test/calculator-goal-set.test.ts && tsx test/recombination-wasm.test.ts && tsx test/odds-presentation.test.ts && tsx test/solve-workspace.test.ts && tsx test/solver-lab-export.test.ts && tsx test/solver-result-presentation.test.ts && tsx test/workspace-model.test.ts && tsx test/edit-history.test.ts && tsx test/workspace-resources.test.ts && tsx test/craft-costs.test.ts && tsx test/base-picker-model.test.ts && tsx test/cluster-configuration.test.ts && tsx test/engine-clusters.test.ts && tsx test/strategy-model.test.ts && tsx test/strategy-feeder.test.ts && tsx test/engine-feeder.test.ts && tsx test/strategy-layout.test.ts && tsx test/strategy-calculator-mode.test.ts && tsx test/economy-service.test.ts && tsx test/hosted-tester.test.ts
+
+  ok - API shape: ABI version is current
+
+FAILED: Error: ENOENT: no such file or directory, open 'C:\Users\Oliver\AppData\Local\Temp\poecraft2-sol61-production-worktree\data\compiled\current\manifest.json'
+    at readFileSync (node:fs:448:20)
+    at readText (C:\Users\Oliver\AppData\Local\Temp\poecraft2-sol61-production-worktree\apps\web\test\engine-smoke.test.ts:39:12)
+    at buildBundle (C:\Users\Oliver\AppData\Local\Temp\poecraft2-sol61-production-worktree\apps\web\test\engine-smoke.test.ts:43:22)
+    at <anonymous> (C:\Users\Oliver\AppData\Local\Temp\poecraft2-sol61-production-worktree\apps\web\test\engine-smoke.test.ts:500:36)
+    at <anonymous> (C:\Users\Oliver\AppData\Local\Temp\poecraft2-sol61-production-worktree\apps\web\test\engine-smoke.test.ts:2827:19)

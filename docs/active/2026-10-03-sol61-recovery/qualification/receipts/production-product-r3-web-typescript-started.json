@@ -1,0 +1,9 @@
+{
+  "phase": "web",
+  "arm": "typescript",
+  "pid": 90984,
+  "identity_token": "90984:134355173084963879",
+  "started_utc": "2026-10-03T16:08:28.503696+00:00",
+  "watchdog_seconds": 300,
+  "LOCAL_owner": "Sol6.1 serial product qualification"
+}

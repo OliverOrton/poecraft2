@@ -1,0 +1,10 @@
+{
+  "bindings\\wasm\\dist\\poecraft_engine.wasm": {
+    "sha256": "a4388e4bec43d61cb7c184978fa0c161e54812a4101d3d1c588fc753630aa387",
+    "bytes": 8608289
+  },
+  "bindings\\wasm\\dist\\poecraft_engine.mjs": {
+    "sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+    "bytes": 21788
+  }
+}

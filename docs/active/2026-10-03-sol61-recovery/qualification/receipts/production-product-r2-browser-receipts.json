@@ -1,0 +1,17 @@
+[
+  {
+    "arm": "bow5",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 55612,
+      "process_identity_token": "55612:134355175450701229",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 249004.9112997949
+    }
+  }
+]

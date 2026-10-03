@@ -1,0 +1,309 @@
+[
+  {
+    "arm": "bow5",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 49024,
+      "process_identity_token": "49024:134355097696291648",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 127458.52010021918
+    },
+    "status": "bounded_feasible",
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 4071502.8714904664,
+      "expanded_states": 2024,
+      "sweeps": 2,
+      "residual": 8.881784197001252e-15,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 185,
+        "candidate": 41,
+        "evaluator_supported": 41,
+        "supported_priced": 404,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 0,
+      "upper_bound": 4071502.8714904664,
+      "evaluated_policy_cost": 4071502.8714904664,
+      "absolute_optimality_gap": 4071502.8714904664,
+      "relative_optimality_gap": null,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "service": {
+      "status": "retained",
+      "checks": 1,
+      "checked_cost": 4071502.8714904664,
+      "failure_snapshot": null
+    },
+    "graph": {
+      "nodes": 12,
+      "edges": 17,
+      "strategy_json_bytes": 3314,
+      "strategy_output_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-bow5.strategies\\sol61-bow5-matched-currentlaw-120.strategy.json"
+    },
+    "exact": {
+      "completed": true,
+      "status": "matched",
+      "total_expected_cost": 4071502.8714904664,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "cost_complete": true
+    },
+    "economic_gate": {
+      "passed": false,
+      "cost_regressions": [],
+      "missing_independent_cost": [],
+      "requires_complete_matched_cohort": true
+    }
+  },
+  {
+    "arm": "amulet3",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 89996,
+      "process_identity_token": "89996:134355098972928895",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 125416.50200006552
+    },
+    "status": "bounded_feasible",
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 18996.576948551738,
+      "expanded_states": 4965,
+      "sweeps": 0,
+      "residual": null,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 169,
+        "candidate": 31,
+        "evaluator_supported": 31,
+        "supported_priced": 679,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 0,
+      "upper_bound": 18996.576948551738,
+      "evaluated_policy_cost": 18996.576948551738,
+      "absolute_optimality_gap": 18996.576948551738,
+      "relative_optimality_gap": null,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "service": {
+      "status": "retained",
+      "checks": 1,
+      "checked_cost": 18996.576948551738,
+      "failure_snapshot": null
+    },
+    "graph": {
+      "nodes": 10,
+      "edges": 14,
+      "strategy_json_bytes": 2958,
+      "strategy_output_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-amulet3.strategies\\sol61-amulet3-matched-currentlaw-120.strategy.json"
+    },
+    "exact": {
+      "completed": true,
+      "status": "matched",
+      "total_expected_cost": 18996.576948551738,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "cost_complete": true
+    },
+    "economic_gate": {
+      "passed": false,
+      "cost_regressions": [],
+      "missing_independent_cost": [],
+      "requires_complete_matched_cohort": true
+    }
+  },
+  {
+    "arm": "conquest5",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 90096,
+      "process_identity_token": "90096:134355100230274907",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 121952.07419991493
+    },
+    "status": "bounded_feasible",
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 100658.06762279187,
+      "expanded_states": 4685,
+      "sweeps": 2,
+      "residual": 3.552713678800501e-15,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "action_counts": {
+        "registry": 190,
+        "candidate": 28,
+        "evaluator_supported": 28,
+        "supported_priced": 288,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 0,
+      "upper_bound": 100658.06762279187,
+      "evaluated_policy_cost": 100658.06762279187,
+      "absolute_optimality_gap": 100658.06762279187,
+      "relative_optimality_gap": null,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "service": {
+      "status": "retained",
+      "checks": 3,
+      "checked_cost": 100658.06762279187,
+      "failure_snapshot": null
+    },
+    "graph": {
+      "nodes": 26,
+      "edges": 39,
+      "strategy_json_bytes": 6557,
+      "strategy_output_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-conquest5.strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json"
+    },
+    "exact": {
+      "completed": true,
+      "status": "matched",
+      "total_expected_cost": 100658.06762279187,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "cost_complete": true
+    },
+    "economic_gate": {
+      "passed": false,
+      "cost_regressions": [],
+      "missing_independent_cost": [],
+      "requires_complete_matched_cohort": true
+    }
+  },
+  {
+    "arm": "bow4-dirty",
+    "receipt": {
+      "exit_code": 3221225477,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 60356,
+      "process_identity_token": "60356:134355101453081490",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 103563.12549998984
+    }
+  },
+  {
+    "arm": "ring2",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 84984,
+      "process_identity_token": "84984:134355102488723443",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 8379.239100031555
+    },
+    "status": "refused_resource_cap",
+    "summary": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 246066.69309750776,
+      "expanded_states": 50,
+      "sweeps": 0,
+      "residual": 24.91714285715716,
+      "skipped_action_count": 0,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "refused_resource_cap",
+      "stop_cause": "memory_cap",
+      "cap_hit_mask": 4,
+      "action_counts": {
+        "registry": 172,
+        "candidate": 27,
+        "evaluator_supported": 27,
+        "supported_priced": 28,
+        "skipped_missing_price": 0,
+        "skipped_unsupported": 0
+      },
+      "lower_bound": 9.09202186878674,
+      "upper_bound": 246066.69309750776,
+      "evaluated_policy_cost": 246066.69309750776,
+      "absolute_optimality_gap": 246057.60107563896,
+      "relative_optimality_gap": 27063.023453602127,
+      "requested_absolute_optimality_gap": 0,
+      "requested_relative_optimality_gap": 0,
+      "target_met": false,
+      "target_fired": "none"
+    },
+    "service": {
+      "status": "not_requested",
+      "checks": 0,
+      "checked_cost": null,
+      "failure_snapshot": null
+    },
+    "graph": {
+      "nodes": 12,
+      "edges": 19,
+      "strategy_json_bytes": 45596,
+      "strategy_output_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-ring2.strategies\\sol61-ring2-matched-currentlaw-120.strategy.json"
+    },
+    "exact": {
+      "completed": true,
+      "status": "matched",
+      "total_expected_cost": 246066.69309750776,
+      "success_probability": 1,
+      "off_policy_mass": 0,
+      "cost_complete": true
+    },
+    "economic_gate": {
+      "passed": false,
+      "cost_regressions": [],
+      "missing_independent_cost": [],
+      "requires_complete_matched_cohort": true
+    }
+  }
+]

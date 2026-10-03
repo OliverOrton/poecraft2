@@ -1,0 +1,5 @@
+growth fixture=0 proposal=3 cost=4193.82639517 entries=16
+growth fixture=1 proposal=3 cost=4193.82639517 entries=16
+growth fixture=2 proposal=3 cost=13.85 entries=9
+growth fixture=3 proposal=3 cost=12.8466666667 entries=10
+solver blocker growth tests: 93 checks, 0 failures

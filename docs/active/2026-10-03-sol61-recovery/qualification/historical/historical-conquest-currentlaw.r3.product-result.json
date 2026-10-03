@@ -1,0 +1,95 @@
+{
+  "graph_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-conquest5-goal-order-adapted.strategy.json",
+  "graph_sha256": "725fcf645903621ec123961846c82143632bcee9d3a0da30302fc002d167720a",
+  "case_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\frozen-requests\\trace-conquest5.case.json",
+  "artifact_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\runtime-snapshots\\82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+  "economy_identity": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+  "scope": "ordinary_strategy_execution_diagnostic; no imported native programme provenance or solver incumbent admission",
+  "trials": 0,
+  "status": "passed",
+  "product_board_import": "passed",
+  "exact": {
+    "converged": true,
+    "terminals": {
+      "success": 1,
+      "failure": 0,
+      "stop": 0,
+      "action_not_applied": 0,
+      "no_matching_edge": 0,
+      "unresolved": 0,
+      "by_node": [
+        {
+          "node_id": "goal",
+          "kind": "success",
+          "p": 1
+        },
+        {
+          "node_id": "offpolicy",
+          "kind": "failure",
+          "p": 0
+        }
+      ]
+    },
+    "expected_actions": 8114.765909540534,
+    "cost_complete": true,
+    "total_expected_cost": 85310.83838933003,
+    "memory": {
+      "owned_bytes_estimate": 50688511,
+      "peak_owned_bytes_estimate": 66749134,
+      "retained_output_owned_bytes_estimate": 0,
+      "max_owned_bytes": 1073741824,
+      "max_output_json_bytes": 16777216
+    },
+    "consumption": [
+      {
+        "key": "annul",
+        "quantity": 3.994498960988564
+      },
+      {
+        "key": "bench:HelenaMasterFireResist1",
+        "quantity": 247.38089573733282
+      },
+      {
+        "key": "bench:JunMaster2StrengthAndDexterity2",
+        "quantity": 0.5049967174452052
+      },
+      {
+        "key": "chaos",
+        "quantity": 4791.855327090741
+      },
+      {
+        "key": "eldritch_annul",
+        "quantity": 753.3312843732666
+      },
+      {
+        "key": "eldritch_chaos",
+        "quantity": 1205.8329682372969
+      },
+      {
+        "key": "eldritch_ember:1",
+        "quantity": 0.9999999469297075
+      },
+      {
+        "key": "eldritch_exalt",
+        "quantity": 524.2812432899921
+      },
+      {
+        "key": "exalt",
+        "quantity": 338.5818666933841
+      },
+      {
+        "key": "harvest_augment:defences",
+        "quantity": 0.020512624899428726
+      },
+      {
+        "key": "harvest_augment:physical",
+        "quantity": 0.09642341352290063
+      },
+      {
+        "key": "scour",
+        "quantity": 247.8858924547776
+      }
+    ]
+  },
+  "wall_ms": 3180.4843
+}

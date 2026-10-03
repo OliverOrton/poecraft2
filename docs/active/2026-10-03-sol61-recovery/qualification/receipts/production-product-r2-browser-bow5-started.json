@@ -1,0 +1,9 @@
+{
+  "phase": "browser",
+  "arm": "bow5",
+  "pid": 55612,
+  "identity_token": "55612:134355175450701229",
+  "started_utc": "2026-10-03T16:12:25.081753+00:00",
+  "watchdog_seconds": 420,
+  "LOCAL_owner": "Sol6.1 serial product qualification"
+}
