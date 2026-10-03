@@ -438,17 +438,17 @@ def test_imported_lock_preview_cannot_introduce_pending_hidden_unveil_offers():
             assert _fields(item._state) == before and lock.active
 
 
-@pytest.mark.parametrize("field", [7, 8, 9, 10, 11])
-def test_snapshot_rejects_changed_law_or_configuration_before_mutation_or_draw(field):
+@pytest.mark.parametrize("field,delta", [(7, -1), (7, 1), (8, 1), (9, 1), (10, 1), (11, 1)])
+def test_snapshot_rejects_changed_law_or_configuration_before_mutation_or_draw(field, delta):
     import copy
     with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(12) as ctx, session.create_action_context(41) as restored, session.create_action_context(41) as control:
         item = session.create_item("normal")
         with ctx.hinekora_lock(item, "alchemy") as original:
             checkpoint = original.export()
             assert checkpoint["version"] == "fixed-currency-lock-v2"
-            assert checkpoint["session"][7:9] == [2, 0]
+            assert checkpoint["session"][7:9] == [3, 0]
             bad = copy.deepcopy(checkpoint)
-            bad["session"][field] += 1
+            bad["session"][field] += delta
             candidate = item.copy(); before = _fields(candidate._state)
             with pytest.raises(EngineError, match="identity mismatch"):
                 restored.restore_hinekora_lock(candidate, "alchemy", bad)
@@ -486,7 +486,7 @@ def test_cluster_lock_snapshot_binds_passive_identity_and_count(source_key, targ
         item = session.create_item("rare")
         with ctx.hinekora_lock(item, "exalt") as original:
             checkpoint = original.export()
-            assert checkpoint["session"][7:9] == [2, 2]
+            assert checkpoint["session"][7:9] == [3, 2]
             candidate = foreign_session.create_item("rare")
             candidate._state.item_flags = 16
             before = _fields(candidate._state)
