@@ -100,3 +100,100 @@ which side selects first. Do not apply the old 3.25 multimod padding law to thes
 
 The source is unqualified until the programme receipt says otherwise. No Builder
 adapter, WASM export or public product activation is implied by this native API.
+## Pending sensitivity contract: no default first-side probability
+
+This is an unimplemented, unapproved analysis contract. Neither v1/v2 nor the C ABI
+accepts an ambiguity set. The earlier suggested 10% first-side value is withdrawn as
+a default: observations do not establish it. Count normalization, count/selection
+stage, taxonomy and missing-weight policies remain separately identified assumptions.
+The current source/qualification receipt owns their pending approval.
+
+Freeze the candidate count-first kernel, approved positive selection proxies, full
+canonical groups, at-most-one-exclusive output rule, carrier/session mappings and
+complete economic inputs. For each physical pair and carrier c, enumerate two full
+output kernels K(c,P) and K(c,S), filling prefixes or suffixes first. Both keep every
+positive output and already drawn requested count. No desired-only state quotient.
+Use the existing shared observer to evaluate each goal and their union separately.
+
+For an unknown prefix-first chance alpha(c) in [0,1], the pair transition row is
+
+    P(alpha) = .5 * [alpha(A) K(A,P) + (1-alpha(A)) K(A,S)]
+             + .5 * [alpha(B) K(B,P) + (1-alpha(B)) K(B,S)].
+
+Thus one-attempt probability of an event is affine in both parameters; its extrema
+are attained at the four carrier/order vertices. This gives an interval **within
+this declared kernel family**, not a bound on hidden game mechanics. It covers
+carrier-dependent first-side chances, not unknown alternative count laws, weights,
+count-dependent side priority or unresolved origins. Do not infer a narrower interval
+from the sparse survival observations. A narrower band requires explicit support or
+owner-selected assumptions. Keep structural goal union/cooccurrence obligations.
+
+For example, the existing equal-weight triple-prefix toy has success
+`.015 + .16815*q`, where q is the exclusive-only suffix-side-first chance. The full
+candidate family gives 1.5% to 18.315%; .1 supplies just one interior scenario. The
+symmetric equal-weight P+exclusive / S+exclusive example gives 55.527775% under both
+orders, so its one-attempt probability is stable over this particular order family.
+Weights/categories/count model are still conditions of both statements.
+
+### Repeated policies: samples are not certified cost bounds
+
+For one fixed proper policy, expected cost solves (I-P(alpha)) J = c. J is generally
+rational, not affine, in alpha. Evaluating endpoints, or endpoints plus .5, does not
+bound all interior values. A two-state counterexample with cost one per step is:
+state 0 goes to state 1 with probability q and to goal otherwise; state 1 returns to
+state 0 with probability 1-q and goes to goal otherwise. Every constant-q policy is
+proper; J(0) = (1+q)/(1-q+q*q). Values at q=0,.5,1 are 1,2,2, yet q=3/4 gives 28/13.
+Report a finite scenario table as sampled sensitivity, with named configurations and
+the **same policy/economic inputs**, not as a confidence interval or full-family bound.
+If separately optimized policies differ, report the reversal instead of averaging
+policies or calling their separate minima one executable plan.
+
+A possible robust extension allows the row uncertainty independently at every
+state/action/carrier (rectangular ambiguity). This is conservative relative to one
+fixed global q and also covers an unknown state-dependent order rule within the
+candidate family. For the fixed policy, finite nonnegative h and U, both zero on
+goals, must satisfy for every allowed vertex row e at every nonterminal state s:
+
+    h(s) >= 1 + sum_t P_e(s,t) h(t)
+    U(s) >= c(s,policy(s)) + sum_t P_e(s,t) U(t).
+
+The h inequalities telescope up to the stopped goal time, giving expected steps
+at most h(s); finite h establishes almost-sure termination even with changing
+allowed row choices. The U inequalities likewise bound accumulated nonnegative
+cost by U(s). Since the one-step expressions are affine in the row, inequalities
+for all vertices cover their convex hull. This is a sufficient robust properness
+and cost certificate for the declared family; neither existing floating residual
+checks nor a scenario table automatically supplies it. A numerical implementation
+needs a distinct verified-inequality check with conservative rounding/error bounds
+before publishing U as an upper bound. Otherwise publish a numerical estimate only.
+
+A future search can reuse the bounded acquisition/recombine/discard item graph and
+propose policies minimizing verified U among the retained candidates. This is upper
+proposal ordering, not a global robust-optimality certificate. Native caps, complete
+branch discovery and cancellation still apply; a missing h/U certificate reports
+unresolved robust evaluation instead of a finite guarantee.
+
+In the same counterexample, allowing q to vary by state lets nature pick q=1 in
+state 0 and q=0 in state 1, forming a non-goal cycle. A global-q scenario table misses
+this; the h test cannot pass. A robust policy must have a suitable fallback, or return
+no finite robust recommendation. A completely declared goal-reaching feeder acquisition
+can be such a fallback, within its caller-declared cost model, not a native feeder
+certificate. For example, U(blocking policy) below that constant feeder cost proves
+conditional dominance. Lower worst-case cost than another policy is not itself proof
+of dominance in every model; do not merge these result authorities.
+
+### Output and activation boundary
+
+Future result fields must distinguish named scenario values, one-attempt interval
+scope, robust properness/cost evidence, and inconclusive/model-sensitive comparisons.
+Pin data/projection/count/conflict/taxonomy/weight/ambiguity identities, costs, caps and
+all positive branches. Unknown prices, weights or classes remain explicit exclusions.
+Unknown zero weights get no silent 1,000 default; approved finite weight scenarios
+can be compared separately without claiming their endpoints bound all weights.
+
+There is no probability distribution to sample from an ambiguity set. Advanced Apply
+would require an explicitly selected, versioned point law; robust reports must not
+silently select 10%, 50%, an adversarial endpoint or an average. Existing v1/v2 Apply
+and recorded receipt replay remain the declared authorized model. No new selected-mod
+mode, broader solver admission, frontend mechanics or experiment supervisor follows.
+This mathematical contract is source-only and does not grant heavy work or activation.

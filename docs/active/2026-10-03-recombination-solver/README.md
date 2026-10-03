@@ -211,13 +211,13 @@ This is a concrete approval proposal, not a claim of verified current game rules
 Implementation source remains `0211d7a8604ac064c80d40ffd20beb915ef2297f`; no native,
 API, model activation or heavy qualification changed during this research continuation.
 
-**Recommended provisional bundle**, with a new model/configuration identity:
+**Pending candidates**, with a new model/configuration identity. The point-side-order default is withdrawn; the sensitivity-first contract below supersedes that recommendation:
 
 | Decision | Proposed value | Evidence and alternative |
 | --- | --- | --- |
 | Exclusive padding count | On each pooled side, effective count = all non-exclusive physical occurrences + one if any exclusives occur. Duplicates and NNN natural occurrences still count physically. | Best-supported current candidate from the original 3.26 tests and guide. Alternative per-input collapse or old full physical padding gives substantially higher counts; do not silently restore it. |
 | Count and removal order | Draw both requested counts from Oliver's unchanged adopted table before selection. Select one side, removing canonical duplicates, full groups and all remaining exclusives after the first exclusive; then fill the other side using its already drawn count. Pools can exhaust. | Current calculator author describes counts preceding cross-exclusive removal. Recounting the second side after removal is a materially different candidate. Counts are independent under this proposed estimated law except the named bare split exception. |
-| First side | If exactly one nonempty side is entirely exclusive and the other has non-exclusive physical mods, give the pure-exclusive side first chance q=0.10. Otherwise 50/50 for two nonempty sides. | 3.26 first-hand tests suggest strong bias against an all-exclusive side. **0.10 is a modelling scenario, not a fitted/verified frequency.** Exclusive survival is not itself first-side frequency. Alternative q=0.50 is the historical uniform rule; q=0 is the stronger normal-first scenario. Mixed/mixed 50/50 remains an explicit assumption. |
+| First side | **No default point probability.** Analyze both first-side kernels, allowing unknown chances in [0,1] per state/action/carrier under the separately declared candidate count model. | Evidence supports investigating bias, but provides no measured numeric bound. Earlier q=.10 is retained below only as a toy scenario, not a recommendation; q=.50 is historical sensitivity, not verified current law. |
 | Zero proxy | Keep approved positive carrier roll/spawn proxies. Give classified transferable exclusive or allow-listed bench mods lacking such a proxy weight 1,000. Ordinary NNN zero weights remain ineligible. | Original tester tentatively suggested uniform crafted weight around 1,000; no current universal special-weight measurement exists. Alternatives: explicit per-key weights, or retain unsupported-zero exclusions. This fallback needs approval beyond existing positive roll-weight approval. |
 | Bare split 1p0s + 0p1s | Adopt probabilities 1/3 for both, 1/3 prefix only, 1/3 suffix only; no empty branch. Scope only this explicit input shape. | Current primary calculator implements those three rows. Existing v1/v2 refuse this shape. Independent .59 draws instead give 34.81% both and an empty branch. This is another explicit estimated-law choice, not an existing activated rule. |
 
@@ -286,11 +286,12 @@ recycling. The triple-prefix example is deliberately an abstract feasible affix
 layout (A: two desired+one exclusive / one exclusive; B: one desired+two exclusive /
 one exclusive), not a claim that every required craft is presently available.
 
-Optimize the declared point model, and label sensitivity to q=0/.50 and alternative
-fallback weights when comparing the **same policy**. Never call separately optimized
-scenario costs a certified bound on one policy or the game. No q choice is globally
-conservative for all goals. Preserve full output specs, losing mass, prices, inventory
-and proper-policy obligations; no new supervisor or game experiments are required.
+Compare named sensitivity scenarios using the same policy and economic inputs; no
+point law is the default. Separately optimized costs are not one-policy bounds, and
+endpoint costs need not bound interior repeated-policy costs. Robust recommendations
+need explicit family-wide termination/cost evidence, as specified in the canonical
+contract below. Preserve full output specs, losing mass, prices, inventory and proper
+policy obligations. No new supervisor or game experiments are required.
 Keep the approved carrier/rarity/level/tier/roll approximation unchanged. Known bench
 flags need explicit represented output treatment; the original guide describes the
 selected crafted blocker as still crafted/removable. Fracture, generic influence and
@@ -304,6 +305,34 @@ Public Google HTML transport worked after web extraction failed. Sparse primary
 observations do not determine q; no MLE was claimed. Read-only SQL matched active
 canonical bench keys/classes; lightweight Fraction arithmetic evaluated the listed
 formulas only. No native build/test, WASM, benchmark or model activation occurred.
+
+## Sensitivity-first disposition after repair priority
+
+Parent withdrew the unsupported 10% default and selected no new heavy work while the
+urgent solver-repair release is active. No user outreach was made. The active joint
+law remains unchanged; implementation checkpoint is still `0211d7a8`.
+
+The [canonical uncertainty contract](../../engine/recombination-solver.md#pending-sensitivity-contract-no-default-first-side-probability)
+replaces a guessed order frequency with both full first-side kernels per carrier.
+One-attempt goal intervals cover their declared convex hull. Named policy scenario
+costs are sensitivity evidence only; a separately defined robust extension needs
+termination and cost inequalities over every allowed row. The contract preserves the
+argument once, including an interior-cost counterexample and the distinction between
+global-parameter scenarios and state-dependent uncertainty. No implementation or
+qualification is claimed. There is no probability distribution to sample for Apply;
+advanced simulation needs a separately selected point law.
+
+Three genuine owner decisions for **later**, not questions sent during repair:
+
+| Decision | Choice to prepare | Recommended first step |
+| --- | --- | --- |
+| Advanced model scope | Approve provisional pooled-exclusive count collapse/count-first blocking for classified inputs, or retain the current bounded v2 scope. | If expanded, label it estimated and use order uncertainty; leave the bare split exception and other unapproved output categories held. |
+| Missing selection weights | Keep zero-proxy specials/bench fillers excluded, or approve explicit per-key/finite-scenario weights (1,000 is a candidate, not a default). | Preserve positive approved proxies now; additions require concrete registry/weight approval. |
+| Recommendation and Apply | Sensitivity/model-stability reports with advanced Apply held, or choose one explicit point law for optimization and simulation. | Sensitivity first; no automatic winner when model choices reverse ranking. Robust conditional recommendations only after their native evidence passes. |
+
+No builds, native tests, WASM, benchmark, data refresh, new LOCAL lease or native API
+changes were made. Lightweight rational arithmetic verified the illustrative formulas
+only. Native qualification remains queued after the repair/Builder/integration owners.
 
 ## Qualification request and remaining model gate
 

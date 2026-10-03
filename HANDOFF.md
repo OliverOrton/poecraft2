@@ -13,8 +13,9 @@ No subagents, active process or LOCAL lease. Multiple-exclusive blocking optimiz
 still lacks a complete current count/order/zero-proxy-weight law; the receipt separates
 these decisions from implemented metadata/output constraints and ordinary work.
 
-An explicit advanced-law proposal and numeric alternatives are in the living receipt;
-none is activated. Parent owns the approval discussion before changing the joint law.
+The advanced-law 10% default is withdrawn. The living receipt and canonical contract
+now propose sensitivity/explicit model uncertainty, with three later owner decisions.
+No law activation or user outreach; repair release takes priority and new heavy work is held.
 
 Next gate: parent grants serialized LOCAL (maximum two compiler jobs), queued after
 Builder/law, for native header/pair/inventory qualification, then matching WASM and
