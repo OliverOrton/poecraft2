@@ -30,13 +30,31 @@ No reward/profit solver or unapproved mechanic policy is implemented.
 
 ## Gates and qualification
 
-Parent owns serialized shared protocol/persistence/facade/release-WASM
-integration. Slot requested; repair finished and recombination owns the next heavy slot. No compiler, tests, WASM
-build, benchmark or Simulator has started here. Browser review is unrun.
-Source, goal-schema/UI and validation fixtures are prepared; finite qualification
-precedes product activation. `git diff --check` passes. Main advanced to
-`3ab862fece9d52ca733ad01a0869fd06cec84810`; its delta does not change any source
-path owned by this lane. No qualification is transferred from its repair receipt.
+Parent owns integration/publication. The October 3 heavy slot was explicitly
+released to this lane, with at most two compiler jobs. The isolated branch was
+rebased cleanly onto qualified main `0187f3d8334c3b9deb9730a6fa89899c051e9931`;
+the documentation-only HANDOFF conflict retained both owners' entries. The
+source checkpoints are now `7ab718c8` / `e3ebd0f8`, and the native fixture repair
+is `ac67c8ebfdec81de52db7308de8406d78e2069a3`.
+
+The initial native build compiled the changed engine sources but failed because
+the new physical test oracle referenced an unavailable helper. Its independent
+family/group/tier predicate was added, and the two-job incremental rebuild
+passed, including the existing C header smoke build. Against the frozen runtime:
+
+- `--calculator-incoming-only`: **10,681 checks, zero failures**.
+- `--solver-observation-layout-only`: **839 checks, zero failures**.
+- `--solver-calc-only`: **1,775,297 checks, zero failures**. This existing owner
+  includes primitive action frequency controls; no strategy Simulator or timing
+  benchmark was invoked. Its count includes the incoming controls above.
+
+Logs live in `out/calculator-goal-set-qualification/`. The matching WASM build
+started with `EMCC_CORES=2` / `BINARYEN_CORES=2` before the parent's priority update
+for Oliver's five-mod trace investigation. Finish that already-running command
+safely, release the slot immediately, and hold subsequent worker/nonvisual/npm/
+TypeScript checks for the next explicit grant. They remain **unrun**; rendered
+review remains unrun. No normal-checkout changes, refresh, npm dev restart,
+subagents, push, main merge or deployment.
 
 ## Concrete integration seam
 
@@ -168,3 +186,15 @@ that installed dependency directory through an isolated junction if needed;
 do not install or restart npm dev. Record actual combined source/module hashes,
 selector results and inherited failures in this living record after the grant.
 CI owns the current short validation gate; wait for explicit parent release.
+
+## Request lifetime follow-up during qualification
+
+Source review found that Awakener still reloaded the donor from Stash after
+submission and used mutable data identity. The request now deep-copies the
+selected, displayed donor snapshot before its first await, binds its base,
+configured cluster, item level, complete state and data handle, and compares
+that payload in probability identity. Names are excluded. The existing native
+donor law and distinct-resource guards are retained. Focused source fixtures
+cover same-ID changed payload, data-session staleness, frozen donor import and
+handle cleanup. This web-only follow-up is **unrun** pending the next slot;
+it does not change the compiled native source or current WASM build inputs.

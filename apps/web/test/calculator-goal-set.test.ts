@@ -3,7 +3,7 @@ import {readFileSync} from "node:fs";
 import {parseHTML} from "linkedom";
 import {calculatorGoalSet, recoverCalculatorGoalList, newCalculatorGoal, validateCalculatorGoalList,
     selectedCalculatorResult, CalculatorRequestLifetime, type CalculatorGoalList} from "../src/app/calculator-goal-set";
-import type {CalculatorDraftRecord} from "../src/app/workspace/persistence";
+import type {CalculatorDraftRecord,ItemStashRecord} from "../src/app/workspace/persistence";
 import type {CalcResult, CalculatorGoalSet} from "../src/app/engine-protocol";
 
 const legacy: CalculatorDraftRecord = {docId:"draft",base:"base",itemLevel:86,state:{},goalRarity:"magic",
@@ -54,6 +54,8 @@ const calculator=new PcCalculator();
 calculator.innerHTML='<div class="pc-calc-goal-tabs"></div><input data-goal-name><button data-goal-command="add"></button><button data-goal-command="delete"></button><div class="pc-calc-output"></div>';
 const access=calculator as unknown as {
     goalList:CalculatorGoalList;calc:CalcResult|null;calcError:string;session:number;item:number;actionId:string;
+    dataId:number;resourceIdentity:string;donors:ItemStashRecord[];mechanicValues:Map<string,string>;oddsIdentity():string;
+    calculateAwakener(solver:number,item:number,request:Record<string,unknown>,donor:ItemStashRecord|undefined,identity:string|undefined,data:number):Promise<CalcResult>;
     busy:boolean;disposed:boolean;client:Record<string,(...args:unknown[])=>Promise<unknown>>;
     renderGoalTabs():void;renderGoal():void;renderResults():void;renderSolvePanel():void;
     persist():Promise<void>;openSolver():Promise<void>;selectGoal(id:string):Promise<void>;
@@ -82,9 +84,22 @@ resolveResult(result);await pending;
 assert.equal(access.calc,null,"Deleting a goal rejects an older frozen response");
 assert.equal(submitted?.goals.length,2,"Worker request remains frozen after deletion");
 assert.deepEqual(closed,[4,5],"Stale responses still release both native handles");
-for (const change of [()=>{access.session=3;},()=>{access.disposed=true;}]) {
-    access.disposed=false;access.session=2;access.goalList=structuredClone(list);resolveResult=undefined!;
+for (const change of [()=>{access.session=3;},()=>{access.dataId=3;},()=>{access.disposed=true;}]) {
+    access.disposed=false;access.session=2;access.dataId=2;access.goalList=structuredClone(list);resolveResult=undefined!;
     const waiting=access.recalc();while(!resolveResult) await new Promise(resolve=>setTimeout(resolve,0));
     change();resolveResult(result);await waiting;assert.equal(access.calc,null);
 }
+// Same resource ID with changed donor payload is a different probability request.
+access.disposed=false;access.actionId="awakener";
+const donor={id:"donor",base:"donor-base",itemLevel:80,state:{rarity:2},name:"Donor",createdAt:0,updatedAt:0} as ItemStashRecord;
+access.donors=[donor];access.mechanicValues.set("awakener-donor","donor");
+const donorIdentity=access.oddsIdentity(), frozenDonor=structuredClone(donor);
+donor.state={rarity:1};assert.notEqual(access.oddsIdentity(),donorIdentity);
+let submittedDonor:unknown;const donorHandles:number[]=[];
+access.client={createSession:async(data,base,level)=>{assert.equal(data,2);assert.equal(base,"donor-base");assert.equal(level,80);return 6;},
+    importItem:async(state)=>{submittedDonor=structuredClone(state);return 7;},currencyCalc:async()=>result,
+    closeItem:async(id)=>{donorHandles.push(Number(id));},closeSession:async(id)=>{donorHandles.push(Number(id));}};
+await access.calculateAwakener(5,4,{},frozenDonor,"receiver",2);
+assert.deepEqual(submittedDonor,{rarity:2});assert.deepEqual(donorHandles,[7,6]);
+await assert.rejects(access.calculateAwakener(5,4,{},frozenDonor,"donor",2),/distinct donor/);
 console.log("Calculator goal-list, nonvisual tabs, migration and stale-response checks passed");

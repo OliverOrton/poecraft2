@@ -1299,8 +1299,11 @@ export class PcCalculator extends HTMLElement {
     }
 
     private oddsIdentity(): string {
-        return JSON.stringify([this.session, this.item, this.resourceIdentity,
-            calculatorGoalSet(this.goalList, this.actionId), this.mechanicValues.get("awakener-donor")]);
+        const donorId = this.mechanicValues.get("awakener-donor");
+        const donor = this.actionId === "awakener" ? this.donors.find(record => record.id === donorId) : undefined;
+        return JSON.stringify([this.dataId, this.session, this.item, this.resourceIdentity,
+            calculatorGoalSet(this.goalList, this.actionId), donorId,
+            donor && [donor.id, donor.base, donor.itemLevel, itemSnapshotCluster(donor), donor.state]]);
     }
 
     private async recalc(): Promise<void> {
@@ -1308,7 +1311,8 @@ export class PcCalculator extends HTMLElement {
         if (this.item && this.actionId) {
             const submittedItem = this.item, submittedSession = this.session;
             const submittedData = this.dataId, actionId = this.actionId;
-            const donorId = this.mechanicValues.get("awakener-donor");
+            const donor = actionId === "awakener" ? structuredClone(this.donors.find(record =>
+                record.id === this.mechanicValues.get("awakener-donor"))) : undefined;
             const resourceIdentity = this.resourceIdentity;
             const identity = this.oddsIdentity();
             const token = this.oddsLifetime.freeze(identity);
@@ -1334,7 +1338,7 @@ export class PcCalculator extends HTMLElement {
                 const result = bestiary
                     ? await this.client.bestiaryGoalCalc(submittedData, inspector, calculationItem, bestiary.id)
                     : actionId === "awakener"
-                    ? await this.calculateAwakener(inspector, calculationItem, report.request as Record<string, unknown>, donorId, resourceIdentity)
+                    ? await this.calculateAwakener(inspector, calculationItem, report.request as Record<string, unknown>, donor, resourceIdentity, submittedData)
                     : await this.client.currencyCalc(inspector, calculationItem, actionId);
                 report.status = 'completed'; report.result = structuredClone(result);
                 if (current()) this.calc = result;
@@ -1739,14 +1743,12 @@ export class PcCalculator extends HTMLElement {
         this.renderActionPanels();
     }
 
-    private async calculateAwakener(solver: number, receiver: number, request: Record<string, unknown>, donorId = this.mechanicValues.get("awakener-donor"), resourceIdentity = this.resourceIdentity): Promise<CalcResult> {
-        const donor = (await listStash()).find((record): record is ItemStashRecord =>
-            record.resourceType !== "strategy" && record.id === donorId);
+    private async calculateAwakener(solver: number, receiver: number, request: Record<string, unknown>,
+            donor: ItemStashRecord | undefined, resourceIdentity: string | undefined, dataId: number): Promise<CalcResult> {
         if (!donor || donor.id === resourceIdentity) throw new Error("Choose a distinct donor from Stash.");
-        request.donor = {resource_identity: donor.id, base: donor.base, item_level: donor.itemLevel, state: donor.state};
-        this.donorModel = await readItemCard(this.client, this.dataId, this.catalog, donor, donor.name);
-        this.renderActionPanels();
-        const session = await this.client.createSession(this.dataId, donor.base, donor.itemLevel, itemSnapshotCluster(donor));
+        request.donor = {resource_identity: donor.id, base: donor.base, item_level: donor.itemLevel,
+            cluster: itemSnapshotCluster(donor), state: donor.state};
+        const session = await this.client.createSession(dataId, donor.base, donor.itemLevel, itemSnapshotCluster(donor));
         let donorItem = 0;
         try {
             donorItem = await this.client.importItem(donor.state, session);

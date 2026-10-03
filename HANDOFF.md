@@ -27,17 +27,17 @@ No deployment, refresh, dev-server restart or other feature integration is selec
 by this checkpoint. Parent coordinates the remaining isolated owners and combined
 qualification; new model approvals supply no game-exact solver authority.
 
-# Calculator goal-set source checkpoint (2026-10-03)
+# Calculator goal-set native qualification checkpoint (2026-10-03)
 
-Oliver dispatched the bounded multi-goal one-action Calculator on isolated
-`dot/calculator-goal-set-20261003` from verified `dbc142a2`. Native observer,
-versioned goal-list migration, tabs, shared transport types and finite fixtures
-are prepared; qualification is pending. The [living record](docs/active/2026-10-03-calculator-goal-set/README.md)
-owns the contract, integration hunks and gates. Main subsequently advanced to
-`3ab862fe` for repair; none of its changed paths overlap this lane's source.
-Recombination owns the next heavy slot. No builds/tests/WASM/benchmarks/Simulator
-have started here; no release artifact was regenerated. Parent owns serialized
-integration and grants the next slot. No push, main merge or deployment.
+Isolated `dot/calculator-goal-set-20261003` now includes qualified main `0187f3d8`.
+Native source `ac67c8eb` passes 10,681 incoming/goal-set, 839 observation-layout
+and 1,775,297 Calculator checks (overlapping counts). The [living record](docs/active/2026-10-03-calculator-goal-set/README.md)
+owns logs, source identity, contracts and remaining checks. The matching WASM
+build was already running when Oliver prioritized the five-mod trace diagnosis;
+finish that command safely, release the heavy slot, and hold web qualification
+for the next explicit grant. Donor-freezing web follow-up is preserved but unrun.
+No rendered review, push, main merge, publication or deployment. Recombination
+still owns mixed-output-session dispatch; K>1 observed-choice refusal remains.
 
 # Combined completion batch delivered; paused (2026-10-02)
 

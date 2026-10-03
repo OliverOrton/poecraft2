@@ -22,7 +22,7 @@ acceptance: 2026-08-22 @ `1e21260` / `cfd8904`. Scope:
 presentation, and shared economy access. No rendered or visual review was
 performed; that review remains Oliver's.
 
-## Bounded goal-item sets (prepared source; qualification pending)
+## Bounded goal-item sets (native qualified; web qualification pending)
 
 The October 3 Calculator programme adds one shared input/action and up to eight
 editable goal-item tabs. Each retains the v1 rarity, disjoint eight-slot
@@ -56,11 +56,12 @@ value can consume sparse terminal membership through a separate reward map;
 whole-policy expected profit and currency invested, including starting-base
 cost, remain future work. No sale values or salvage assumptions are invented.
 
-This source is not yet qualified or delivered to main. Native finite fixtures,
-nonvisual goal-tab/migration/lifetime fixtures and rebuilt-WASM transport checks
-are prepared in the [living record](../active/2026-10-03-calculator-goal-set/README.md).
-The parent integration owner serializes native tests and release-WASM rebuilding;
-rendered review remains unrun and belongs to Oliver.
+The isolated source includes qualified main `0187f3d8` and passes the finite
+native goal-set/incoming, observation-layout and existing Calculator checks.
+The [living record](../active/2026-10-03-calculator-goal-set/README.md) owns source
+identity, results and pending WASM transport, nonvisual web and TypeScript checks.
+This feature is not yet delivered to main. Parent serializes qualification and
+owns publication; rendered review remains unrun and belongs to Oliver.
 
 ## Contract
 
