@@ -1,0 +1,188 @@
+{
+  "status": "qualified_local_feeder_checkpoint",
+  "programme": "feeder-first Strategy Builder",
+  "branch": "dot/strategy-feeder-20261003",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-strategy-feeder",
+  "published_main_alignment": "1ffba88eb03ba065345f6d51a0c517f5dbe5385b",
+  "source_head": "6ad7d1cada573936bff256c6641634d5b68e1f58",
+  "native_tested_source_head": "0e01e66a209ff561858e3e7f4a3cd8b5f1c3a219",
+  "engine_tree": "1ec6f4c10c010590c7284add865b5ed56c81fe0a",
+  "web_source_tree": "024a8d62020ef09edf372e1389e373615cc5ccb1",
+  "local_commits": [
+    "6ad7d1cada573936bff256c6641634d5b68e1f58",
+    "0e01e66a209ff561858e3e7f4a3cd8b5f1c3a219",
+    "28dea6bba1a7ad6efb0e2916a1761abe05543338",
+    "68a5c622a80325e55a235218ec7d7d2910b12a5e",
+    "1654f69473ded54b61335123e6996b1ee6d81215",
+    "56245ed0fd3e9a52a051b6a5766db0b8f3793089"
+  ],
+  "frozen_runtime": {
+    "directory": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "tree": "2db469327249ce22a554fe3d7b18b07ef2d733a0",
+    "sha256": {
+      "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+      "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+    },
+    "manifest_payload_preflight": "passed"
+  },
+  "test_input_access": "checkout-local data/compiled/current junction to unchanged frozen selected snapshot; normal checkout manifest hash independently equals this selection",
+  "dependencies": "checkout-local node_modules junction to already installed dependencies; no install or dev restart",
+  "artifacts": {
+    "bindings/wasm/dist/poecraft_engine.wasm": {
+      "sha256": "0b800f57410841ebf7efe7ab658ff1c93cfcdb67467ae3ea001c9d6730198f32",
+      "bytes": 8580515
+    },
+    "bindings/wasm/dist/poecraft_engine.mjs": {
+      "sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+      "bytes": 21788
+    },
+    "build/engine/poecraft_engine_tests.exe": {
+      "sha256": "5157c94c3f80788d6bdeb34472e71c19abefd0521d31b2d9f753d1655c882c79",
+      "bytes": 19916632
+    },
+    "build/engine/libpoecraft_engine.a": {
+      "sha256": "a92438956ca4f5cb04d9d662196d81c54392113ef936e36f3594e50c4242dce3",
+      "bytes": 17031790
+    },
+    "build/engine/poecraft_header_smoke.exe": {
+      "sha256": "3d56215e7035ed3b590afc77ecd470d78b240de874ab945cb57b89636ffb7be8",
+      "bytes": 128656
+    }
+  },
+  "command_results": [
+    {
+      "id": "native-build",
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+      "started_utc": "2026-10-03T11:43:34.8227200Z",
+      "log_last_write_utc": "2026-10-03T11:47:41.141823+00:00",
+      "exit_code": 0,
+      "result": "tests and C-header targets built",
+      "log": "out/strategy-feeder/native-build.log",
+      "log_sha256": "ce699d9ec2ea751f2dff615ff3fb3c42a8bebe308005473ba73ad73009ebe9e6"
+    },
+    {
+      "id": "native-feeder",
+      "command": "build/engine/poecraft_engine_tests.exe --strategy-feeder-only data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "started_utc": "2026-10-03T11:47:54.3074736Z",
+      "log_last_write_utc": "2026-10-03T11:48:55.548101+00:00",
+      "exit_code": 0,
+      "result": "300 checks, zero failures; primary paid-child qualification 1000 trials",
+      "log": "out/strategy-feeder/native-feeder.log",
+      "log_sha256": "66880f70e1746be0761519f8088d26a47a9cd8d0c7980081825ee687f7d12db3"
+    },
+    {
+      "id": "web-source",
+      "command": "npx tsx: strategy-feeder, strategy-model, edit-history, workspace-resources, strategy-layout, strategy-calculator-mode (serial)",
+      "started_utc": "2026-10-03T11:49:32.2456723Z",
+      "log_last_write_utc": "2026-10-03T11:49:40.004322+00:00",
+      "exit_code": 0,
+      "result": "six focused suites pass",
+      "log": "out/strategy-feeder/web-source.log",
+      "log_sha256": "e950bd7050bf7e0fdf1bddbeeb7021b7d335922228002f25a507f0dae557ce2f"
+    },
+    {
+      "id": "typecheck",
+      "command": "npx tsc --noEmit",
+      "started_utc": "2026-10-03T11:49:52.1311520Z",
+      "log_last_write_utc": "2026-10-03T11:49:55.824076+00:00",
+      "exit_code": 2,
+      "result": "worker test used nonexistent destroy; fresh generated build-info absent",
+      "log": "out/strategy-feeder/typecheck.log",
+      "log_sha256": "7338ca031847b63fd82ece3b74cd41c5cee21b88903817dc3839665db1cc8a24"
+    },
+    {
+      "id": "shared-build",
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Engine -Jobs 2; poecraft_header_smoke.exe",
+      "started_utc": "2026-10-03T11:51:25.9062578Z",
+      "log_last_write_utc": "2026-10-03T11:51:26.505500+00:00",
+      "exit_code": 0,
+      "result": "STATIC Engine target and C-header smoke pass; no shared DLL was built",
+      "log": "out/strategy-feeder/shared-build.log",
+      "log_sha256": "7716162f3cd3b99cf3b8a8dd6decf324e08c7e941aae7e730baba5e4fc8c075b"
+    },
+    {
+      "id": "wasm-build",
+      "command": "EMCC_CORES=2 BINARYEN_CORES=2 EMCC_CFLAGS=-Wl,--threads=2 powershell -File scripts/build-wasm.ps1",
+      "started_utc": "2026-10-03T11:51:53.2523841Z",
+      "log_last_write_utc": "2026-10-03T11:57:58.594423+00:00",
+      "exit_code": 0,
+      "result": "matching release WASM built, warnings retained",
+      "log": "out/strategy-feeder/wasm-build.log",
+      "log_sha256": "4420526e2836cb866e12d658682343e97c757551b66c993920123c4f5ff3a9f6"
+    },
+    {
+      "id": "npm-test",
+      "command": "npm test in apps/web (standard build:data pretest included)",
+      "started_utc": "2026-10-03T11:58:22.6706577Z",
+      "log_last_write_utc": "2026-10-03T11:59:57.840048+00:00",
+      "exit_code": 0,
+      "result": "unfiltered chain passes: 37/37 smoke and all owners; primary feeder worker qualification 1000 trials plus finite cases",
+      "log": "out/strategy-feeder/npm-test.log",
+      "log_sha256": "fe8ba3dd7f134fab4608b874c018b967796f86eea567302b559229efc832b085"
+    },
+    {
+      "id": "typecheck-final",
+      "command": "npx tsc --noEmit",
+      "started_utc": "2026-10-03T12:00:22.8479165Z",
+      "log_last_write_utc": "2026-10-03T12:00:22.905339+00:00",
+      "exit_code": 0,
+      "result": "passes after dispose repair and standard generated metadata",
+      "log": "out/strategy-feeder/typecheck-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "resolved_failures": [
+    {
+      "id": "typecheck",
+      "resolution": "worker cleanup corrected in 6ad7d1ca; canonical npm pretest produced build-info; final TypeScript exit0"
+    },
+    {
+      "id": "alignment_diff_check",
+      "resolution": "normalize edited isolated files to LF before alignment commit; no heavy command started during this failed preflight"
+    },
+    {
+      "id": "shared_artifact_hash_lookup",
+      "resolution": "the Engine preset is static; receipt names actual .a artifact, and shared DLL qualification is unrun"
+    }
+  ],
+  "qualification_trials": {
+    "native_primary_paid_child": 1000,
+    "wasm_worker_primary_paid_child": 1000,
+    "finite_failure_limit_consumption_witnesses": "additional bounded cases in authored tests",
+    "long_solver_or_economic_experiments": 0,
+    "research_budget_expansion": false
+  },
+  "heavy_slot": {
+    "max_compiler_jobs": 2,
+    "serial_commands": true,
+    "released_utc": "2026-10-03T12:01:18.7067788Z",
+    "owned_survivors": [],
+    "all_command_sessions_terminal": true,
+    "outer_wait_limitation": "write_stdin requested300000ms; functions.exec forces short yields, requiring functions.wait re-entry"
+  },
+  "held_or_unrun": [
+    "Builder recombination resource-slot execution (native pair Apply is qualified in aligned main)",
+    "exact inventory/feeder Calculator kernel and properness",
+    "configured cluster feeder templates",
+    "failed-child recovery routing beyond explicit parent failure",
+    "general concurrent multitrack scheduler",
+    "profit/recombination solver and resale/salvage assumptions",
+    "shared native DLL/Python feeder qualification",
+    "rendered Strategy Builder review owned by Oliver"
+  ],
+  "publication": {
+    "all_commits_local": true,
+    "integration_owner": "01a0fd2f-7f88-7588-a1ea-bfe1e6991036",
+    "feeder_merged_into_main": false,
+    "push": false,
+    "deployment": false
+  },
+  "preservation": {
+    "normal_checkout_files": "no edits by this scope",
+    "protected_root_0": "not inspected/staged/edited/deleted",
+    "canonical_data_and_prices": "unchanged",
+    "solver_recovery": "excluded",
+    "npm_dev_restart": false
+  }
+}

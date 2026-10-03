@@ -11,6 +11,8 @@
 #include <cmath>
 #include <cstring>
 #include <functional>
+#include <iomanip>
+#include <sstream>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -1565,7 +1567,19 @@ void compile_operation(
     const Value& operation,
     StrategyNode& node) {
     const std::string type = string_member(operation, "type");
-    if (type == "acquire_resource" || type == "awakener") {
+    if (type == "recombination")
+        invalid("Executable Builder recombination is held until resource-slot integration preserves the qualified pair Apply output session");
+    if (type == "move_resource" || type == "discard_resource") {
+        const auto& params = require_object_member(operation, "params", Type::Object);
+        node.resource_id = string_member(params, type == "move_resource" ? "to" : "resource_id");
+        node.source_resource_id = string_member(params, "from");
+        node.action_type = type == "move_resource" ? kStrategyMoveResourceOperation : kStrategyDiscardResourceOperation;
+        if (node.resource_id.empty() || (type == "move_resource" &&
+            (node.source_resource_id.empty() || node.source_resource_id == node.resource_id)))
+            invalid("Item moves require distinct explicit source and destination slots");
+        return;
+    }
+    if (type == "acquire_resource" || type == "awakener" || type == "invoke_feeder") {
         const auto& params = require_object_member(operation, "params", Type::Object);
         if (type == "awakener") {
             const auto& roles = require_object_member(params, "roles", Type::Object);
@@ -1576,7 +1590,7 @@ void compile_operation(
             node.price_keys = {"awakener"};
         } else {
             node.resource_id = string_member(params, "resource_id");
-            node.action_type = kStrategyAcquireResourceOperation;
+            node.action_type = type == "invoke_feeder" ? kStrategyInvokeFeederOperation : kStrategyAcquireResourceOperation;
         }
         if (node.resource_id.empty() || node.resource_id == "current")
             invalid("Resource operations require an explicit non-current donor resource id");
@@ -2337,6 +2351,59 @@ void aggregate_failure(
         {reason, node_id, detail, 1});
 }
 
+std::string quote_json(const std::string& value) {
+    std::string out = "\"";
+    for (unsigned char c : value) {
+        if (c == '"' || c == '\\') { out += '\\'; out += c; }
+        else if (c < 32) {
+            static const char* hex = "0123456789abcdef";
+            out += "\\u00"; out += hex[c >> 4]; out += hex[c & 15];
+        } else out += c;
+    }
+    return out + "\"";
+}
+
+std::string number_json(double value) {
+    std::ostringstream out;
+    out << std::setprecision(std::numeric_limits<double>::max_digits10) << value;
+    return out.str();
+}
+
+std::string resource_item_json(const SessionImpl& session, const pc_item_state& item) {
+    std::string out = "{\"rarity\":" + std::to_string(item.rarity) +
+        ",\"quality\":" + std::to_string(item.quality) +
+        ",\"memory_strands\":" + std::to_string(item.memory_strands) +
+        ",\"lifecycle\":" + std::to_string(item.lifecycle) +
+        ",\"item_flags\":" + std::to_string(item.item_flags) +
+        ",\"generic_influence_bits\":" + std::to_string(item.generic_influence_bits) +
+        ",\"searing_exarch_tier\":" + std::to_string(item.searing_exarch_tier) +
+        ",\"eater_of_worlds_tier\":" + std::to_string(item.eater_of_worlds_tier) +
+        ",\"link_mask\":" + std::to_string(item.link_mask) + ",\"socket_count\":" + std::to_string(item.socket_count) + ",\"socket_colors\":[";
+    for (unsigned i = 0; i < item.socket_count; ++i) { if (i) out += ','; out += std::to_string(item.socket_colors[i]); }
+    out += ']';
+    const auto mod_key = [&](std::uint32_t id) {
+        if (id >= session.global_index.size()) return std::string("null");
+        const auto pos = session.global_index[id];
+        return quote_json(session.data->string_at(session.data->mod_key_sid[pos]));
+    };
+    const auto slots = [&](const char* name, const pc_mod_slot* list, unsigned count) {
+        out += ",\""; out += name; out += "\":[";
+        for (unsigned i = 0; i < count; ++i) {
+            if (i) out += ',';
+            const auto& slot = list[i];
+            out += "{\"mod_key\":" + mod_key(slot.mod_id) + ",\"flags\":" + std::to_string(slot.flags) + ",\"rolls\":[";
+            for (unsigned j = 0; j < slot.roll_count; ++j) { if (j) out += ','; out += std::to_string(slot.rolls[j]); }
+            out += "],\"veiled_option_keys\":[";
+            for (unsigned j = 0; j < slot.veiled_option_count; ++j) { if (j) out += ','; out += mod_key(slot.veiled_option_mod_ids[j]); }
+            out += "],\"veiled_chosen_key\":" + mod_key(slot.veiled_chosen_mod_id) + "}";
+        }
+        out += ']';
+    };
+    slots("prefixes", item.prefixes, item.prefix_count); slots("suffixes", item.suffixes, item.suffix_count);
+    slots("implicits", item.implicits, item.implicit_count); slots("enchantments", item.enchantments, item.enchantment_count);
+    return out + "}";
+}
+
 struct RunResult {
     int terminal_kind = PC_TERMINAL_FAILURE;
     int failure_reason = PC_SIM_FAILURE_NONE;
@@ -2348,14 +2415,18 @@ struct RunResult {
     pc_item_state item{};
 };
 
-RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
+// A child shares its parent's total step counter and absolute action/cost limits.
+// Local receipts retain only the child's incremental spend and actions.
+RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace,
+                  std::uint64_t* parent_steps = nullptr, std::uint64_t parent_max_steps = 0,
+                  std::uint64_t action_offset = 0, double cost_offset = 0.0) {
     const StrategyImpl& strategy = *simulator.strategy;
     const SessionImpl& session = *simulator.session;
     const SimulationOptionsInternal& options = simulator.options;
     const std::uint64_t derived_steps =
         static_cast<std::uint64_t>(options.max_actions_per_run) * 4u +
         static_cast<std::uint64_t>(strategy.nodes.size()) * 4u + 16u;
-    const std::uint64_t max_steps =
+    const std::uint64_t max_steps = parent_steps ? parent_max_steps :
         options.max_graph_steps_per_run != 0
             ? options.max_graph_steps_per_run
             : std::min<std::uint64_t>(
@@ -2365,6 +2436,9 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
     result.item = strategy.start_item;
     std::vector<CraftResource> inventory;
     std::vector<std::uint64_t> acquisitions(strategy.resources.size(), 0);
+    std::vector<std::string> feeder_receipts(strategy.resources.size());
+    std::uint64_t current_generation = 1;
+    std::string current_identity = "current/1";
     for (const auto& definition : strategy.resources) {
         auto item = definition.item;
         item.lifecycle = PC_ITEM_CONSUMED; // A template is not a free available donor.
@@ -2376,7 +2450,12 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
             if (i) out += ',';
             out += "{\"resource_id\":\"" + strategy.resources[i].id + "\",\"acquisitions\":" +
                 std::to_string(acquisitions[i]) + ",\"lifecycle\":" + std::to_string(inventory[i].item.lifecycle) +
-                ",\"memory_strands\":" + std::to_string(inventory[i].item.memory_strands) + "}";
+                ",\"memory_strands\":" + std::to_string(inventory[i].item.memory_strands) +
+                ",\"identity\":" + quote_json(inventory[i].identity) +
+                ",\"base_key\":" + quote_json(inventory[i].session->data->string_at(inventory[i].session->data->base_metadata_path_sid[inventory[i].session->base_index])) +
+                ",\"item_level\":" + std::to_string(inventory[i].session->item_level) +
+                ",\"item\":" + resource_item_json(*inventory[i].session, inventory[i].item) +
+                (feeder_receipts[i].empty() ? "" : ",\"feeder\":" + feeder_receipts[i]) + "}";
         }
         return out + "]";
     };
@@ -2385,7 +2464,8 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
     bestiary_state.item = result.item;
     bestiary_state.live_item_identity = 1;
     std::uint32_t node_index = strategy.start_node;
-    std::uint64_t graph_steps = 0;
+    std::uint64_t local_steps = 0;
+    std::uint64_t& graph_steps = parent_steps ? *parent_steps : local_steps;
     bool run_missing_price = false;
 
     auto finish_failure = [&](int reason,
@@ -2452,7 +2532,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
 
         bool applied = false;
         if (node.kind == StrategyNodeKind::Operation) {
-            if (result.actions >= options.max_actions_per_run) {
+            if (action_offset + result.actions >= options.max_actions_per_run) {
                 finish_failure(PC_SIM_FAILURE_ACTION_LIMIT, node, "");
                 break;
             }
@@ -2463,10 +2543,11 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
             const std::vector<std::string>& missing_keys =
                 simulator.node_missing_price_keys[node_index];
 
-            if (!price_known && options.max_cost_per_run > 0.0) {
+            if ((!price_known || (simulator.economy == nullptr && !node.price_keys.empty())) && options.max_cost_per_run > 0.0) {
                 for (const auto& price_key : missing_keys) {
                     ++simulator.missing_prices[price_key];
                 }
+                if (!simulator.economy) for (const auto& key : node.price_keys) ++simulator.missing_prices[key];
                 result.cost_complete = false;
                 run_missing_price = true;
                 ++simulator.summary.missing_price_action_count;
@@ -2475,13 +2556,144 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
             }
             if (price_known && simulator.economy != nullptr &&
                 options.max_cost_per_run > 0.0 &&
-                result.known_cost + price > options.max_cost_per_run) {
+                cost_offset + result.known_cost + price > options.max_cost_per_run) {
                 finish_failure(PC_SIM_FAILURE_COST_LIMIT, node, "");
                 break;
             }
 
             ActionOutcome outcome;
-            if (node.action_type == kStrategyAcquireResourceOperation || node.action_type == kStrategyMultiItemOperation) {
+            bool separately_accounted = false;
+            if (result.item.lifecycle != PC_ITEM_LIVE && node.action_type != kStrategyRestartOperation &&
+                node.action_type != kStrategyMoveResourceOperation && node.action_type != kStrategyDiscardResourceOperation &&
+                node.action_type != kStrategyInvokeFeederOperation && node.action_type != kStrategyAcquireResourceOperation) {
+                finish_failure(PC_SIM_FAILURE_ACTION_NOT_APPLIED, node, "Current item is absent; acquire or move a real live item before crafting");
+                break;
+            }
+            if (node.action_type == kStrategyMoveResourceOperation || node.action_type == kStrategyDiscardResourceOperation) {
+                const auto slot = [&](const std::string& id) -> CraftResource* {
+                    const auto found = std::find_if(strategy.resources.begin(), strategy.resources.end(),
+                        [&](const auto& definition) { return definition.id == id; });
+                    return found == strategy.resources.end() ? nullptr : &inventory.at(found - strategy.resources.begin());
+                };
+                auto* target = slot(node.resource_id);
+                if (node.action_type == kStrategyDiscardResourceOperation) {
+                    auto& item = target ? target->item : result.item;
+                    outcome.applied = item.lifecycle == PC_ITEM_LIVE;
+                    if (outcome.applied) item.lifecycle = PC_ITEM_DESTROYED;
+                } else {
+                    auto* source = slot(node.source_resource_id);
+                    auto& input = source ? source->item : result.item;
+                    auto& output = target ? target->item : result.item;
+                    const auto input_session = source ? source->session : strategy.session;
+                    // Compiled current-item actions/conditions have one fixed session.
+                    // Mixed-base slot-to-slot moves preserve their actual session; moving
+                    // an incompatible base into current refuses rather than reinterpreting IDs.
+                    if (input.lifecycle == PC_ITEM_LIVE && output.lifecycle != PC_ITEM_LIVE &&
+                        (target || (input_session->base_index == session.base_index && input_session->item_level == session.item_level &&
+                                    input_session->cluster_index == session.cluster_index &&
+                                    input_session->cluster_passive_index == session.cluster_passive_index &&
+                                    input_session->cluster_passive_count == session.cluster_passive_count &&
+                                    input_session->data == session.data && input_session->global_index == session.global_index))) {
+                        output = input;
+                        if (target) { target->session = input_session; target->identity = source ? source->identity : current_identity; }
+                        else current_identity = source->identity;
+                        input.lifecycle = PC_ITEM_CONSUMED;
+                        outcome.applied = true;
+                    }
+                }
+                if (outcome.applied && (node.resource_id == "current" || node.source_resource_id == "current")) {
+                    ++bestiary_state.live_item_identity;
+                    bestiary_state.checkpoint_active = false;
+                }
+            } else if (node.action_type == kStrategyInvokeFeederOperation) {
+                const auto found = std::find_if(strategy.resources.begin(), strategy.resources.end(),
+                    [&](const auto& definition) { return definition.id == node.resource_id; });
+                const auto index = static_cast<std::size_t>(found - strategy.resources.begin());
+                auto& resource = inventory.at(index);
+                if (resource.item.lifecycle == PC_ITEM_LIVE) {
+                    finish_failure(PC_SIM_FAILURE_ACTION_NOT_APPLIED, node, "Feeder output slot is occupied; explicitly move or discard it before a fresh paid invocation");
+                    break;
+                }
+                resource.session = found->session;
+                resource.item = found->feeder->start_item;
+                resource.identity = found->id + "/" + std::to_string(++acquisitions[index]);
+                ++result.actions;
+                ++simulator.action_counts[node_index];
+                ++simulator.applied_action_counts[node_index];
+                if (simulator.economy && price_known) { result.known_cost += price; ++simulator.summary.costed_action_count; }
+                else {
+                    result.cost_complete = false;
+                    run_missing_price = true;
+                    ++simulator.summary.missing_price_action_count;
+                    for (const auto& key : missing_keys) ++simulator.missing_prices[key];
+                    if (!simulator.economy) ++simulator.missing_prices[found->acquisition_price_key];
+                }
+                SimulatorImpl child;
+                child.session = found->session;
+                child.strategy = found->feeder;
+                child.economy = simulator.economy;
+                child.options = options;
+                child.options_set = true;
+                child.context = std::make_unique<ActionContextImpl>(simulator.context->rng.next_u64());
+                child.context->session = child.session;
+                child.context->capture_action_trace = false;
+                prepare_simulator_runtime(child);
+                const auto child_result = run_one(child, nullptr, &graph_steps, max_steps,
+                    action_offset + result.actions, cost_offset + result.known_cost);
+                resource.item = child_result.item;
+                result.actions += child_result.actions;
+                result.known_cost += child_result.known_cost;
+                result.cost_complete = result.cost_complete && child_result.cost_complete;
+                run_missing_price = run_missing_price || !child_result.cost_complete;
+                simulator.summary.costed_action_count += child.summary.costed_action_count;
+                simulator.summary.missing_price_action_count += child.summary.missing_price_action_count;
+                for (const auto& row : child.missing_prices) simulator.missing_prices[row.first] += row.second;
+                for (const auto& row : child.material_counts) simulator.material_counts[row.first] += row.second;
+                for (const auto& row : child.action_descriptor_counts) simulator.action_descriptor_counts[row.first] += row.second;
+                for (std::size_t i = 0; i < child.action_counts.size(); ++i) {
+                    if (child.action_counts[i]) {
+                        const auto& child_node = child.strategy->nodes[i];
+                        const auto identity = quote_json(node.id) + "/" + quote_json(child_node.id);
+                        const auto existing = std::find_if(simulator.child_action_counts.begin(), simulator.child_action_counts.end(),
+                            [&](const auto& row) { return row.node_id == identity && row.action_type == child_node.action_type; });
+                        if (existing == simulator.child_action_counts.end()) simulator.child_action_counts.push_back({identity, child_node.action_type, child.action_counts[i]});
+                        else existing->count += child.action_counts[i];
+                        for (const auto& key : child_node.price_keys) simulator.material_counts[key] += child.applied_action_counts[i];
+                        if (!child.action_descriptor_ids[i].empty()) simulator.action_descriptor_counts[child.action_descriptor_ids[i]] += child.action_counts[i];
+                    }
+                }
+                for (const auto& row : child.child_action_counts) {
+                    const auto identity = quote_json(node.id) + "/" + row.node_id;
+                    const auto existing = std::find_if(simulator.child_action_counts.begin(), simulator.child_action_counts.end(),
+                        [&](const auto& other) { return other.node_id == identity && other.action_type == row.action_type; });
+                    if (existing == simulator.child_action_counts.end()) simulator.child_action_counts.push_back({identity, row.action_type, row.count});
+                    else existing->count += row.count;
+                }
+                const bool accepted = child_result.terminal_kind == PC_TERMINAL_SUCCESS && resource.item.lifecycle == PC_ITEM_LIVE &&
+                    found->output_contract.base_key == resource.session->data->string_at(resource.session->data->base_metadata_path_sid[resource.session->base_index]) &&
+                    evaluate_compiled_condition(found->output_contract.predicate, *resource.session, resource.item);
+                feeder_receipts[index] = "{\"strategy_id\":" + quote_json(found->feeder_strategy_id) +
+                    ",\"revision\":" + quote_json(found->feeder_revision) +
+                    ",\"output_contract_id\":" + quote_json(found->output_contract.id) +
+                    ",\"terminal_kind\":" + std::to_string(child_result.terminal_kind) +
+                    ",\"failure_reason\":" + std::to_string(child_result.failure_reason) +
+                    ",\"terminal_node_id\":" + quote_json(child_result.terminal_node_id) +
+                    ",\"detail\":" + quote_json(child_result.detail) +
+                    ",\"actions\":" + std::to_string(child_result.actions) +
+                    ",\"acquisition_price_key\":" + quote_json(found->acquisition_price_key) +
+                    ",\"acquisition_cost_complete\":" + (simulator.economy && price_known ? "true" : "false") +
+                    ",\"child_known_cost\":" + number_json(child_result.known_cost) +
+                    ",\"known_cost\":" + number_json(child_result.known_cost + (simulator.economy && price_known ? price : 0.0)) +
+                    ",\"cost_complete\":" + (child_result.cost_complete && simulator.economy && price_known ? "true" : "false") +
+                    ",\"output_accepted\":" + (accepted ? "true" : "false") + "}";
+                if (!accepted) {
+                    finish_failure(child_result.failure_reason == PC_SIM_FAILURE_NONE ? PC_SIM_FAILURE_ACTION_NOT_APPLIED : child_result.failure_reason,
+                        node, child_result.terminal_kind == PC_TERMINAL_SUCCESS ? "Feeder success terminal did not satisfy the actual output contract" : "Feeder child: " + child_result.detail);
+                    break;
+                }
+                outcome.applied = true;
+                separately_accounted = true;
+            } else if (node.action_type == kStrategyAcquireResourceOperation || node.action_type == kStrategyMultiItemOperation) {
                 const auto found = std::find_if(strategy.resources.begin(), strategy.resources.end(),
                     [&](const auto& definition) { return definition.id == node.resource_id; });
                 const auto index = static_cast<std::size_t>(found - strategy.resources.begin());
@@ -2489,13 +2701,20 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
                 if (node.action_type == kStrategyAcquireResourceOperation) {
                     if (resource.item.lifecycle != PC_ITEM_LIVE) {
                         resource.item = found->item;
+                        resource.session = found->session;
                         resource.identity = found->id + "/" + std::to_string(++acquisitions[index]);
                         outcome.applied = true;
                     }
                 } else {
+                    if (resource.item.lifecycle != PC_ITEM_LIVE || result.item.lifecycle != PC_ITEM_LIVE || resource.identity == current_identity) {
+                        finish_failure(PC_SIM_FAILURE_ACTION_NOT_APPLIED, node, "Two-input operations require distinct live identities");
+                        break;
+                    }
                     try {
-                        std::vector<CraftResource> inputs{resource,
-                            {"current", "receiver", strategy.session, result.item}};
+                        auto donor = resource;
+                        donor.role = "donor"; // Roles belong to this operation, not to the slot's origin.
+                        std::vector<CraftResource> inputs{donor,
+                            {current_identity, "receiver", strategy.session, result.item}};
                         auto transaction = prepare_multi_item_craft(*simulator.context, "awakener", inputs);
                         commit_craft_transaction(inputs, transaction);
                         resource = inputs[0]; result.item = inputs[1].item;
@@ -2509,6 +2728,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
                 const int removed =
                     result.item.prefix_count + result.item.suffix_count;
                 pc_item_clear(&result.item);
+                current_identity = "current/" + std::to_string(++current_generation);
                 if (session.base_implicit_mod_ids.size() <=
                     PC_MAX_IMPLICITS) {
                     for (std::uint32_t mod_id :
@@ -2550,30 +2770,43 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
                     result.item = rollback;
                 }
             }
-            ++result.actions;
-            ++simulator.action_counts[node_index];
-            if (!outcome.applied) {
-                finish_failure(PC_SIM_FAILURE_ACTION_NOT_APPLIED, node, "");
-                break;
-            }
-
-            applied = true;
-            ++simulator.applied_action_counts[node_index];
-            if (price_known && simulator.economy != nullptr) {
-                result.known_cost += price;
-                ++simulator.summary.costed_action_count;
-            } else if (simulator.economy != nullptr) {
-                for (const auto& price_key : missing_keys) {
-                    ++simulator.missing_prices[price_key];
+            if (!separately_accounted) {
+                ++result.actions;
+                ++simulator.action_counts[node_index];
+                if (!outcome.applied) {
+                    finish_failure(PC_SIM_FAILURE_ACTION_NOT_APPLIED, node, "");
+                    break;
                 }
-                result.cost_complete = false;
-                run_missing_price = true;
-                ++simulator.summary.missing_price_action_count;
-            }
+
+                applied = true;
+                ++simulator.applied_action_counts[node_index];
+                if (price_known && simulator.economy != nullptr) {
+                    result.known_cost += price;
+                    ++simulator.summary.costed_action_count;
+                } else if (simulator.economy != nullptr || !node.price_keys.empty()) {
+                    if (!simulator.economy) for (const auto& key : node.price_keys) ++simulator.missing_prices[key];
+                    for (const auto& price_key : missing_keys) {
+                        ++simulator.missing_prices[price_key];
+                    }
+                    result.known_cost += price; // Retain known components of an incomplete material quote.
+                    result.cost_complete = false;
+                    run_missing_price = true;
+                    ++simulator.summary.missing_price_action_count;
+                }
+            } else applied = true;
         }
 
-        const StrategyEdge* edge =
-            select_edge(node, session, result.item, simulator);
+        // A moved/discarded item cannot satisfy ordinary item predicates.
+        const StrategyEdge* edge = nullptr;
+        if (result.item.lifecycle == PC_ITEM_LIVE) edge = select_edge(node, session, result.item, simulator);
+        else {
+            const StrategyEdge* fallback = nullptr;
+            for (const auto& candidate : node.edges) {
+                if (candidate.is_default) fallback = &candidate;
+                else if (candidate.condition.kind == ConditionKind::Always) { edge = &candidate; break; }
+            }
+            if (!edge) edge = fallback;
+        }
         if (trace != nullptr && options.max_trace_entries != 0) {
             TraceEntryInternal entry;
             entry.step_index = static_cast<std::uint32_t>(graph_steps - 1);
@@ -2618,6 +2851,20 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
     if (session == nullptr || strategy_json == nullptr) {
         invalid("null compile input");
     }
+    struct CompileReferences {
+        std::vector<std::string> active;
+        std::unordered_map<std::string, std::string> revisions;
+        std::size_t depth = 0;
+    };
+    static thread_local CompileReferences references;
+    struct CompilationScope {
+        CompileReferences& refs;
+        explicit CompilationScope(CompileReferences& value) : refs(value) {
+            if (!refs.depth) { refs.active.clear(); refs.revisions.clear(); }
+            ++refs.depth;
+        }
+        ~CompilationScope() { if (--refs.depth == 0) { refs.active.clear(); refs.revisions.clear(); } }
+    } compilation_scope(references);
     Value root = json::Parser(strategy_json, strategy_json_size).parse();
     if (root.type != Type::Object) invalid("root must be an object");
     if (string_member(root, "version") != "v1") {
@@ -2632,6 +2879,22 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
         *strategy->session,
         require_object_member(root, "base_state", Type::Object));
 
+    if (const auto* contracts = root.find("output_contracts")) {
+        if (contracts->type != Type::Array || contracts->array.size() > 32)
+            invalid("output_contracts must be an array of at most 32 predicates");
+        for (const auto& value : contracts->array) {
+            StrategyOutputContract contract;
+            contract.id = string_member(value, "id");
+            contract.base_key = string_member(value, "base_key");
+            if (contract.id.empty() || contract.base_key.empty()) invalid("Output contracts require id and actual base_key");
+            if (std::any_of(strategy->output_contracts.begin(), strategy->output_contracts.end(),
+                [&](const auto& other) { return other.id == contract.id; })) invalid("Duplicate output contract id");
+            if (!strategy->session->data->base_by_path.count(contract.base_key)) invalid("Unknown output contract base_key");
+            contract.predicate = compile_condition(*strategy->session,
+                require_object_member(value, "predicate", Type::Object));
+            strategy->output_contracts.push_back(std::move(contract));
+        }
+    }
     if (const auto* resources = root.find("resources")) {
         if (resources->type != Type::Array || resources->array.size() > 7)
             invalid("resources must be an array of at most seven donor definitions");
@@ -2659,6 +2922,34 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
             resource.item = parse_start_item(*resource_session, state);
             resource.acquisition_price_key = string_member(value, "acquisition_price_key");
             if (resource.acquisition_price_key.empty()) resource.acquisition_price_key = "resource:" + resource.id;
+            if (const auto* feeder = value.find("feeder")) {
+                if (feeder->type != Type::Object) invalid("feeder must be an immutable reference object");
+                resource.feeder_strategy_id = string_member(*feeder, "strategy_id");
+                resource.feeder_revision = string_member(*feeder, "revision");
+                const auto document = string_member(*feeder, "document_json");
+                const auto selected = string_member(*feeder, "output_contract_id");
+                if (resource.feeder_strategy_id.empty() || resource.feeder_revision.empty() || document.empty() || selected.empty())
+                    invalid("Feeder requires pinned strategy_id, revision, document_json and output_contract_id");
+                // Bounded synchronous compilation detects logical cycles even when imports
+                // nest separate JSON copies of the same saved reference.
+                const auto revision_identity = quote_json(resource.feeder_strategy_id) + ":" + quote_json(resource.feeder_revision);
+                if (references.active.size() >= 16 || std::find(references.active.begin(), references.active.end(), revision_identity) != references.active.end())
+                    invalid("Feeder reference cycle or nesting limit");
+                const auto previous = references.revisions.find(revision_identity);
+                if (previous != references.revisions.end() && previous->second != document)
+                    invalid("One pinned feeder revision contains conflicting documents");
+                references.revisions.emplace(revision_identity, document);
+                references.active.push_back(revision_identity);
+                try { resource.feeder = compile_strategy_json(resource.session, document.data(), document.size()); }
+                catch (...) { references.active.pop_back(); throw; }
+                references.active.pop_back();
+                const auto contract = std::find_if(resource.feeder->output_contracts.begin(), resource.feeder->output_contracts.end(),
+                    [&](const auto& candidate) { return candidate.id == selected; });
+                if (contract == resource.feeder->output_contracts.end()) invalid("Pinned feeder output contract does not exist");
+                resource.output_contract = *contract;
+                // The pinned child's starting state owns the paid acquisition.
+                resource.item = resource.feeder->start_item;
+            }
             strategy->resources.push_back(std::move(resource));
         }
     }
@@ -2704,11 +2995,22 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
             invalid("unknown node kind: " + kind);
         }
         node.accounting_roles = accounting_roles_member(node_value);
-        if (node.action_type == kStrategyAcquireResourceOperation || node.action_type == kStrategyMultiItemOperation) {
+        if (node.action_type == kStrategyMoveResourceOperation || node.action_type == kStrategyDiscardResourceOperation) {
+            const auto declared = [&](const std::string& id) {
+                return id == "current" || std::any_of(strategy->resources.begin(), strategy->resources.end(),
+                    [&](const auto& definition) { return definition.id == id; });
+            };
+            if (!declared(node.resource_id) || (node.action_type == kStrategyMoveResourceOperation && !declared(node.source_resource_id)))
+                invalid("Item move/discard references an undeclared slot");
+        }
+        if (node.action_type == kStrategyAcquireResourceOperation || node.action_type == kStrategyMultiItemOperation || node.action_type == kStrategyInvokeFeederOperation) {
             const auto resource = std::find_if(strategy->resources.begin(), strategy->resources.end(),
                 [&](const auto& definition) { return definition.id == node.resource_id; });
             if (resource == strategy->resources.end()) invalid("Operation references an undeclared resource: " + node.resource_id);
-            if (node.action_type == kStrategyAcquireResourceOperation) node.price_keys = {resource->acquisition_price_key};
+            if (node.action_type == kStrategyInvokeFeederOperation && !resource->feeder) invalid("Invoke feeder requires a pinned feeder resource");
+            if (node.action_type == kStrategyAcquireResourceOperation && resource->feeder) invalid("A feeder must be invoked, not acquired without executing its child");
+            if (node.action_type == kStrategyAcquireResourceOperation || node.action_type == kStrategyInvokeFeederOperation)
+                node.price_keys = {resource->acquisition_price_key};
         }
         strategy->node_by_id.emplace(
             node.id, static_cast<std::uint32_t>(strategy->nodes.size()));

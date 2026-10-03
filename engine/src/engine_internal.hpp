@@ -1064,6 +1064,15 @@ inline constexpr int kStrategyBestiaryImprintOperation = 1001;
 inline constexpr int kStrategyBestiaryRestoreImprintOperation = 1002;
 inline constexpr int kStrategyAcquireResourceOperation = 1003;
 inline constexpr int kStrategyMultiItemOperation = 1004;
+inline constexpr int kStrategyInvokeFeederOperation = 1100;
+inline constexpr int kStrategyMoveResourceOperation = 1101;
+inline constexpr int kStrategyDiscardResourceOperation = 1102;
+struct StrategyImpl;
+struct StrategyOutputContract {
+    std::string id;
+    std::string base_key;
+    CompiledCondition predicate;
+};
 
 struct StrategyNode {
     std::string id;
@@ -1071,6 +1080,7 @@ struct StrategyNode {
     ActionParameters action;
     int action_type = -1;
     std::string resource_id;
+    std::string source_resource_id;
     std::uint32_t bestiary_action_index =
         std::numeric_limits<std::uint32_t>::max();
     std::vector<std::string> price_keys;
@@ -1100,6 +1110,10 @@ struct StrategyResourceDefinition {
     std::shared_ptr<const SessionImpl> session;
     pc_item_state item{};
     std::string acquisition_price_key;
+    std::string feeder_strategy_id;
+    std::string feeder_revision;
+    std::shared_ptr<const StrategyImpl> feeder;
+    StrategyOutputContract output_contract;
 };
 
 struct StrategyImpl {
@@ -1110,6 +1124,7 @@ struct StrategyImpl {
     std::uint32_t start_node = 0;
     std::vector<StrategyNode> nodes;
     std::vector<StrategyResourceDefinition> resources;
+    std::vector<StrategyOutputContract> output_contracts;
     std::unordered_map<std::string, std::uint32_t> node_by_id;
     std::uint32_t condition_memo_slots = 0;
     std::uint32_t count_memo_slots = 0;
@@ -1205,6 +1220,8 @@ struct SimulatorImpl {
     std::vector<SimulationExampleInternal> success_examples;
     std::vector<SimulationExampleInternal> failure_examples;
     std::vector<FailureSummaryInternal> failure_summaries;
+    struct ChildActionCount { std::string node_id; int action_type; std::uint64_t count; };
+    std::vector<ChildActionCount> child_action_counts;
     std::vector<std::uint64_t> action_counts;
     std::vector<std::uint64_t> accounted_action_counts;
     std::vector<std::uint64_t> applied_action_counts;

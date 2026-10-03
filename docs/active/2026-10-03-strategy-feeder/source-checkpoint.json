@@ -1,0 +1,122 @@
+{
+  "status": "source_checkpoint_unqualified",
+  "programme": "feeder-first Strategy Builder",
+  "branch": "dot/strategy-feeder-20261003",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-strategy-feeder",
+  "baseline": "3ab862fece9d52ca733ad01a0869fd06cec84810",
+  "last_verified_remote_main": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+  "source_head": "68a5c622a80325e55a235218ec7d7d2910b12a5e",
+  "source_commits": [
+    "56245ed0fd3e9a52a051b6a5766db0b8f3793089",
+    "1654f69473ded54b61335123e6996b1ee6d81215",
+    "68a5c622a80325e55a235218ec7d7d2910b12a5e"
+  ],
+  "engine_tree": "244578c05cb181b3c2ed0f1685776306bc3e2bc7",
+  "web_source_tree": "59d80af840c441a39ac83d252da82fd031116cb9",
+  "frozen_product_runtime": {
+    "directory": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "tree": "2db469327249ce22a554fe3d7b18b07ef2d733a0",
+    "sha256": {
+      "manifest.json": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "strings.json": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+      "game-data.json": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e"
+    },
+    "manifest_payload_preflight": "passed"
+  },
+  "inherited_artifacts": {
+    "bindings/wasm/dist/poecraft_engine.mjs": {
+      "sha256": "c3f63141397c06cf966487c0ad5787a338000401dc46f707bba522c959296e9c",
+      "qualifies_feeder": false
+    },
+    "bindings/wasm/dist/poecraft_engine.wasm": {
+      "sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+      "qualifies_feeder": false
+    }
+  },
+  "qualification": {
+    "diff_check": {
+      "status": "passed",
+      "command": "git diff --check and git diff --cached --check"
+    },
+    "native_build": {
+      "status": "unrun_held",
+      "gate": "explicit parent heavy-slot release",
+      "max_compiler_jobs": 2
+    },
+    "native_feeder_tests": {
+      "status": "unrun_held",
+      "selector": "--strategy-feeder-only data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "prepared_paid_child_trials": 1000
+    },
+    "web_model_history_tests": {
+      "status": "unrun_held",
+      "files": [
+        "strategy-feeder.test.ts",
+        "strategy-model.test.ts",
+        "edit-history.test.ts"
+      ]
+    },
+    "typescript": {
+      "status": "unrun_held",
+      "command": "npx tsc --noEmit"
+    },
+    "wasm_rebuild": {
+      "status": "unrun_held",
+      "command": "powershell -File scripts/build-wasm.ps1",
+      "environment": {
+        "EMCC_CORES": "2"
+      }
+    },
+    "wasm_worker_feeder_tests": {
+      "status": "unrun_held",
+      "file": "engine-feeder.test.ts",
+      "prepared_paid_child_trials": 1000
+    },
+    "rendered_review": {
+      "status": "unrun",
+      "owner": "Oliver"
+    }
+  },
+  "failed_execution_checks": [],
+  "resolved_preflight_failures": [
+    {
+      "check": "git tree identity for data/compiled/current",
+      "reason": "untracked directory is absent in sibling",
+      "resolution": "bind committed runtime.lock selected snapshot and verify manifest/payload hashes"
+    }
+  ],
+  "spent": {
+    "native_paid_child_trials": 0,
+    "wasm_paid_child_trials": 0,
+    "solver_invocations": 0,
+    "economic_experiments": 0,
+    "compiler_jobs_launched": 0
+  },
+  "processes": {
+    "owned_heavy_processes": [],
+    "slot_acquired": false,
+    "slot_released": false,
+    "parent_slot_permission": "pending"
+  },
+  "held_scope": [
+    "executable recombination until full native Apply qualification",
+    "exact inventory/feeder evaluation until complete kernel/properness contract",
+    "configured cluster feeder templates",
+    "general concurrent multitrack scheduler",
+    "profit/recombination solver",
+    "failed-child recovery routing beyond explicit terminal failure"
+  ],
+  "publication": {
+    "commits_local": true,
+    "integration_owner": "01a0fd2f-7f88-7588-a1ea-bfe1e6991036",
+    "main_merge": false,
+    "push": false,
+    "deployment": false
+  },
+  "preservation": {
+    "protected_root_0": "not inspected/staged/edited/deleted",
+    "normal_checkout": "no checkout file edits by this scope",
+    "data_prices": "unchanged",
+    "npm_dev_restart": false
+  }
+}

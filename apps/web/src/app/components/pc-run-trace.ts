@@ -1,4 +1,8 @@
 import { StrategyResult, StrategyTrace } from "../engine-protocol";
+const RESOURCE_ACTION_NAMES: Record<number, string> = {
+    1003: "Acquire resource", 1004: "Awakener", 1100: "Run feeder",
+    1101: "Move / recycle item", 1102: "Discard item",
+};
 
 type ResultMode = "distribution" | "trace";
 
@@ -122,7 +126,7 @@ export class PcRunTrace extends HTMLElement {
                                 <div class="pc-action-distribution-row">
                                     <div class="pc-action-distribution-label">
                                         <strong>${escapeHtml(
-                                            ({1003: "Acquire resource", 1004: "Awakener"} as Record<number, string>)[row.action_type] ?? ACTION_NAMES[row.action_type] ??
+                                            ({1003: "Acquire resource", 1004: "Awakener"} as Record<number, string>)[row.action_type] ?? (RESOURCE_ACTION_NAMES[row.action_type] ?? ACTION_NAMES[row.action_type]) ??
                                                 `Action ${row.action_type}`,
                                         )}</strong>
                                         <span>${escapeHtml(row.node_id)}</span>

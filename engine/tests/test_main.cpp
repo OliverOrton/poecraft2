@@ -111,6 +111,13 @@ int main(int argc, char** argv) {
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--strategy-feeder-only") {
+        const char* artifact_dir = argc > 2 ? argv[2] : nullptr;
+        if (!artifact_dir) { std::fprintf(stderr, "strategy feeder tests require an artifact directory\n"); return 2; }
+        run_feeder_tests(artifact_dir);
+        std::printf("strategy feeder tests: %d checks, %d failures\n", pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--core-only") {
         const char* artifact_dir = argc > 2 ? argv[2] : nullptr;
         const char* fixtures_dir = argc > 3 ? argv[3] : nullptr;
