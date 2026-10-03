@@ -40,6 +40,9 @@ try {
     assert.equal(locked.active,true); assert.deepEqual(locked.cost_keys,["hinekora_lock"]);
     assert.deepEqual((await client.hinekoraInfo(context,item,session)).preview,locked.preview);
     assert.deepEqual((await client.hinekoraInfo(context,item,session)).cost_keys,[]);
+    assert.deepEqual((await client.observeHinekoraLock(context,item,session,{type:"exalt",tier:4})).preview,locked.preview);
+    await assert.rejects(client.observeHinekoraLock(context,item,session,{type:"chaos"}),/Unsupported or inapplicable/);
+    assert.deepEqual((await client.hinekoraInfo(context,item,session)).preview,locked.preview);
     assert.ok(Number((await client.itemInfo(item,session)).item_flags) & 16);
     await assert.rejects(client.createHinekoraLock(context,item,session,{type:"exalt"}),/Modify the item/);
     const refused = await client.apply(context,item,{type:"transmute"});

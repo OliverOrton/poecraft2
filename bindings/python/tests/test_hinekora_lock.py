@@ -16,6 +16,24 @@ def _fields(value):
     return value
 
 
+def test_legacy_lock_observes_its_normalized_request_without_refresh_or_rng_draw():
+    with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(17) as ctx, session.create_action_context(17) as control:
+        item = session.create_item("rare"); comparison = item.copy()
+        expected = control.apply(comparison, "exalt")
+        with ctx.hinekora_lock(item, "exalt") as lock:
+            checkpoint = lock.export()
+            for currency in ("exalt", {"type": "exalt", "tier": 4}, "exalt"):
+                preview, outcome = lock.observe(currency)
+                assert _fields(preview._state) == _fields(comparison._state) and outcome == expected
+                assert lock.export() == checkpoint
+            with pytest.raises(EngineError, match="Unsupported or inapplicable"):
+                lock.observe("chaos")
+            assert lock.active and lock.export() == checkpoint
+            ordinary = session.create_item("normal"); same_seed = ordinary.copy()
+            assert ctx.apply(ordinary, "alchemy") == control.apply(same_seed, "alchemy")
+            assert _fields(ordinary._state) == _fields(same_seed._state)
+
+
 @pytest.mark.parametrize("currency,rarity", [("transmute", "normal"), ("alchemy", "normal"),
     ("alteration", "magic"), ("regal", "magic"), ("chaos", "rare"), ("exalt", "rare"),
     ("vaal", "rare"), ("foulborn_regal", "magic"), ("foulborn_exalt", "rare")])

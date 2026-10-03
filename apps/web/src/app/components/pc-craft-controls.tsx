@@ -35,9 +35,9 @@ export interface CraftControlsModel {
     memoryStrands?: number;
     onMemoryStrands?: (count: number) => void;
     lockActive?: boolean;
+    lockApproximate?: boolean;
     lockCurrency?: string;
     lockPreview?: ConcreteModListModel;
-    onLockApply?: () => void;
     onLockCommit?: () => void;
     donors?: CatalogEntry[];
     donorModel?: ConcreteModListModel;
@@ -72,8 +72,8 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
     const action = (id: string, label = craftActionLabel(id), configured = false, disabled = false) => {
         const selected = !configured && m.selectedAction === id;
         const attribute = calculator ? (configured ? "data-derive-action" : "data-select-action") : (configured ? "data-config-action" : "data-simple-action");
-        return <button key={id} {...{[attribute]: id}} className={configured ? "pc-craft-apply" : selected ? "is-selected" : ""} disabled={disabled}
-            onClick={() => configured ? m.onConfigured(id) : m.onSimple(id)}>{!configured && <GameIcon assetKey={"action:" + id} />}{!calculator && m.lockActive && id !== "remove_crafted_modifiers" ? `Preview ${label}` : label}</button>;
+        return <button key={id} {...{[attribute]: id}} className={configured ? "pc-craft-apply" : selected ? "is-selected" : ""} disabled={disabled || (id === "hinekora_lock" && m.lockActive)}
+            onClick={() => configured ? m.onConfigured(id) : m.onSimple(id)}>{!configured && <GameIcon assetKey={"action:" + id} />}{!calculator && m.lockActive && id !== "remove_crafted_modifiers" && id !== "hinekora_lock" ? `Preview ${label}` : label}</button>;
     };
     const choices = (name: string, label: string, entries: Array<{key: string; name: string}>, art: (entry: {key: string; name: string}) => string) =>
         <div className="pc-material-options" role="group" aria-label={label}>
@@ -114,7 +114,8 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
                 : "Double-corruption odds are available in Calculator. Applying the influenced reforge to an item is not supported."}</span>
         </div>; break;
         case "foulborn": panel = <div className="pc-craft-options">{["foulborn_augment", "foulborn_regal", "foulborn_exalt"].map(id => action(id))}</div>; break;
-        case "basic": panel = <><div className="pc-craft-options">{BASIC.map(id => action(id, id === "vaal" ? "Vaal Orb" : craftActionLabel(id)))}{calculator && action("restart", "Restart (fresh base)")}</div>
+        case "basic": panel = <><div className="pc-craft-options">{BASIC.map(id => action(id, id === "vaal" ? "Vaal Orb" : craftActionLabel(id)))}{!calculator && action("hinekora_lock", "Hinekora's Lock")}{calculator && action("restart", "Restart (fresh base)")}</div>
+            {!calculator && !m.lockActive && <div className="pc-help">Hinekora's Lock lets you preview supported currencies for free before applying one. Independent cached previews are an approximate simulation model.</div>}
             {!calculator && <div className="pc-fracture-hint">Fracture rolls a random modifier. Right-click an item modifier or pool tier to set an exact fracture.</div>}
             {!calculator && <div className="pc-help">Vaal Orb models affixes and implicits. Socket changes are ignored; the socket-only outcome still has a 25% chance.</div>}</>; break;
         case "essence": {
@@ -186,19 +187,19 @@ export function CraftControls({model: m}: {model: CraftControlsModel}) {
             onReveal={() => m.onRevealUnveil?.()} onSelect={key => m.onValue("unveil", key)}
             onConfirm={() => m.onConfigured("unveil")} onVeiledCurrency={() => m.onPanel("veiled")} />; break;
     }
-    return <>{!calculator && m.onLockApply && <section aria-label="Hinekora's Lock" className="pc-material-panel">
-        <button data-lock-apply disabled={m.lockActive} onClick={m.onLockApply}>Apply Hinekora's Lock</button>
-        <span className="pc-help">Independent cached previews are an approximate simulation model. One Lock is paid when applied. Preview supported currencies and settings below for free, then apply one result. Veiled currencies, pending Unveil and donor-dependent previews are unavailable.</span>
-        {m.lockActive && <>
+    const lockPreview = !calculator && m.lockActive && <section aria-label="Hinekora's Lock preview" className="pc-material-panel">
+        <span className="pc-help">{m.lockApproximate
+            ? "Independent cached previews (approximate). The Lock is already paid; preview supported currencies and settings for free."
+            : "Saved fixed-request Lock. Its original currency preview stays fixed; other requests remain unavailable."} Veiled currencies, pending Unveil and donor-dependent previews are unavailable.</span>
             <span>{m.lockCurrency ? `Foreseen: ${m.lockCurrency}` : "Lock active: choose a currency to preview"}</span>
             {m.lockPreview && createElement("pc-mod-list", {ref: (element: PcModList | null) => { if (element && m.lockPreview) element.setModel({...m.lockPreview, readOnly: true}); }})}
             <button data-lock-commit disabled={!m.lockCurrency} onClick={m.onLockCommit}>Apply foreseen currency</button>
             <span className="pc-help">Repeated previews stay fixed through Undo and reload. Applying one currency or modifying the item ends every preview. Refused actions preserve the Lock. This model supplies no exact adaptive strategy odds.</span>
-        </>}
-    </section>}<div className="pc-craft-panel-tabs">{PANELS.filter(([key]) => key !== "recombination" || calculator).map(([key, label, icon]) => <button key={key} data-craft-panel={key}
+    </section>;
+    return <><div className="pc-craft-panel-tabs">{PANELS.filter(([key]) => key !== "recombination" || calculator).map(([key, label, icon]) => <button key={key} data-craft-panel={key}
         className={key === m.panel ? "is-active" : ""} onClick={() => m.onPanel(key)}><GameIcon assetKey={"action:" + icon} />{label}</button>)}
         {calculator && <span className="pc-calc-selected">{m.selectedAction ? "Selected: " + m.selectedLabel : "No action selected"}</span>}
-    </div><div className="pc-craft-panel-body">{panel}</div></>;
+    </div><div className="pc-craft-panel-body">{panel}{lockPreview}</div></>;
 }
 
 export class PcCraftControls extends HTMLElement {

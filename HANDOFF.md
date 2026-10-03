@@ -5,12 +5,24 @@ published main d29d0682. Two Recomb input dots/one output and output-only paid
 sources execute sequentially through the existing native atomic pair API;
 actual sessions, recycling, named child outputs, terminal inventory and unknown
 station costs are preserved. Native/model/worker/Python cases are prepared,
-UNRUN; inherited WASM0b800f57 does not match this new source. No heavy process
-or LOCAL slot is held. Parent must grant serialized qualification (max2 jobs).
+UNRUN; inherited WASM0b800f57 does not match this new source. Parent granted LOCAL after release18:27:31UTC for serialized qualification
+(max2 jobs); latest published Lock/Calculator4ad40580 is reconciled. Checks
+below remain pending until the matching commands finish.
 Exact inventory and fancy blocking/exclusive admission remain refused/owned
 separately; no solver allowance, data refresh, dev restart, publication or normal
 checkout edit. The [living feeder record](docs/active/2026-10-03-strategy-feeder/README.md#resumed-typed-port-execution-2026-10-03-source-only)
 and item-flow receipt own exact source/artifact identities and next checks.
+
+# Qualified Lock and influenced-target repair integration (2026-10-03)
+
+Combined source55a1fd49 retains Calculator d29d0682 and Lock3eb0860b. Complete
+unfiltered npm and TypeScript pass; exact qualified Lock engine/WASM retained.
+LOCAL released18:00:33UTC,no survivors. The [living integration record](docs/active/2026-10-03-lock-calculator-integration/README.md)
+owns identities, prior setup failures, reused native/rendered evidence and limits.
+Normal approved publication plus exact remote/CI verification is selected. Law3
+recovery stays held; no new mechanics or exact adaptive Lock authority. No install,
+data refresh,dev restart or owner checkout overwrite. Broader UI consistency is
+bounded follow-on work after functional repairs.
 
 # Feeder integration qualified; publication selected (2026-10-03)
 

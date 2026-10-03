@@ -366,6 +366,10 @@ pc_result pc_hinekora_lock_observe(pc_hinekora_lock_handle lock,
         rc = poecraft::resolve_foresight_request(resolver, *request, action, out_error);
         if (rc != PC_RESULT_OK) return rc;
         auto& f = *lock->impl;
+        if (!f.independent && f.selected && same_action(f.action, action)) {
+            *out_preview = f.preview; result(f.outcome, out_result);
+            error(out_error, PC_RESULT_OK, ""); return PC_RESULT_OK;
+        }
         const auto* r = reservation(f, action);
         if (!f.independent || !r || !r->outcome.applied) {
             error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, "Unsupported or inapplicable Lock observation; no currency was consumed");
