@@ -883,6 +883,12 @@ export class PcEmulator extends HTMLElement {
                 delete button.dataset.disabledBeforeBusy;
             }
         });
+        // React can reuse these buttons while a native action changes Lock
+        // state. Restore the current state after releasing the busy override.
+        const lockApply = this.querySelector<HTMLButtonElement>('[data-simple-action="hinekora_lock"]');
+        if (lockApply) lockApply.disabled = busy || this.awaitingUnveilChoice || Boolean(this.lockInfo?.active);
+        const lockCommit = this.querySelector<HTMLButtonElement>("[data-lock-commit]");
+        if (lockCommit) lockCommit.disabled = busy || this.awaitingUnveilChoice || !this.lockInfo?.currency;
         this.syncHistoryButtons();
     }
 

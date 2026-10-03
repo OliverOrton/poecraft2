@@ -18,7 +18,7 @@ const access=emulator as unknown as {
     client: unknown; catalog: Catalog; item: number; session: number; context: number; busy: boolean;
     lockInfo: HinekoraInfo | null; lockPreview: unknown;
     pendingHistoryEntry: CraftHistoryEntry | null; currentWork: Promise<void>|null; craftCosts: unknown;
-    renderShell():void; renderMechanicControls():void; markChanged():Promise<void>;
+    renderShell():void; renderMechanicControls():void; markChanged():Promise<void>; setBusy(busy:boolean):void;
     applyLock():Promise<void>; applyConfiguredAction(action:CraftAction,commit?:boolean):Promise<void>;
 };
 Object.assign(access,{catalog,item:1,session:2,context:3,busy:false,
@@ -35,11 +35,22 @@ assert.equal(ordinaryLockButton.disabled,false);
 ordinaryLockButton.click(); await access.currentWork;
 assert.deepEqual(observations,[]);assert.deepEqual(actual,[]);
 assert.deepEqual(entries[0].costKeys,["hinekora_lock"]);
+access.setBusy(true);
 access.lockInfo={active:true,cost_keys:[],model:"independent-cached-lock-v1",approximate:true};
+access.renderMechanicControls();
+access.setBusy(false);
+assert.equal(emulator.querySelector<HTMLButtonElement>('[data-simple-action="hinekora_lock"]')!.disabled,true,
+    "Finishing Apply must not restore the old enabled Lock button");
+assert.equal(emulator.querySelector<HTMLButtonElement>('[data-lock-commit]')!.disabled,true);
+access.setBusy(true);
 await access.applyConfiguredAction(configured);
 assert.deepEqual(observations,[configured]);assert.deepEqual(actual,[]);
 assert.deepEqual(entries[1].costKeys,[]);
 access.lockInfo={active:true,currency:configured,cost_keys:[],preview:{}};
+access.renderMechanicControls();
+access.setBusy(false);
+assert.equal(emulator.querySelector<HTMLButtonElement>('[data-lock-commit]')!.disabled,false,
+    "Finishing observation must not restore the old disabled commit button");
 access.lockPreview={kind:"concrete",readOnly:true,itemFlags:0,rarity:"rare",influences:[],implicits:[],suffixes:[],
     prefixes:[{sessionModId:0,key:"Strength1",tierIndex:1,textLines:["+10 Strength"],classificationTags:[],fractured:false,crafted:false,rollValues:[10]}],maxPrefix:3,maxSuffix:3};
 access.renderShell();
@@ -56,6 +67,16 @@ assert.deepEqual(actual,[]);
 model().onLockCommit?.();await access.currentWork;
 assert.deepEqual(actual,[configured]);assert.deepEqual(entries[2].costKeys,["original-essence-price-key"]);
 assert.equal(observations.length,1,"Commit cannot reserve/pay another Lock");
+access.setBusy(true);
+access.lockInfo={active:false,cost_keys:[]};
+access.renderMechanicControls();
+access.setBusy(false);
+assert.equal(emulator.querySelector<HTMLButtonElement>('[data-simple-action="hinekora_lock"]')!.disabled,false,
+    "Finishing consumption must not restore the old disabled Lock button");
+Object.assign(access,{veiledOptions:[1],unveilRevealed:true});
+access.setBusy(false);
+assert.equal(emulator.querySelector<HTMLButtonElement>('[data-simple-action="hinekora_lock"]')!.disabled,true,
+    "Pending Unveil must hold the ordinary Lock control");
 console.log("Lock controls: Apply Lock, free independent-request preview, read-only numerical rolls and separate payment/commit passed");
 
 const {setFallbackPrice,setPrice}=await import("../src/app/workspace/prices");
