@@ -463,3 +463,32 @@ actual local/remote commit and CI projection are written separately to
 qualification alone. Main/remote changes require the recorded normal delivery
 step. Other feature owners remain isolated until parent coordination and combined
 qualification. The short later audit remains proposed, not started.
+
+
+## Latest-head web strategy scope guard checkpoint
+
+Windows run [37096236872](https://github.com/OliverOrton/poecraft2/actions/runs/37096236872),
+job **111126637666**, passes all **17 native targets** and **275 bindings**, then
+fails npm test. The specific fixture is `product Eldritch dependency wins through
+release WASM`; its call at `engine-smoke.test.ts:2161` fails the shape guard in
+`prepareSolverStrategy` at `solve-workspace.ts:208`. The earlier generic browser
+solver and Calculator picker cases passed; this does not show that all native
+solver graphs are invalid.
+
+Source inspection identifies the missing adapter value: native
+`solver_compile.cpp` emits `gated_search_with_paid_root_foulborn_salvage_v2` for
+active product paid-root scope, while the web strategy scope type/shape whitelist
+only accepts the four older values. The local patch recognizes that exact v2
+value. `prepareSolverStrategy`, native parsing/provenance/scope authority and
+board validation are unchanged. Unknown future scope v3 and dangling graphs
+remain explicit negative controls. The real WASM fixture also asserts the native
+scope before preparation so future contract mismatches are specific.
+
+No native source or WASM changes are made; the qualified `472f644b…` artifact is
+reused. All tests for this patch are **unrun** pending the coordinated web-test
+slot after recombination and multi-goal. Prepared commands and exclusions live in
+`web_solver_scope_guard_checkpoint` in [qualification.json](qualification.json).
+The existing product Eldritch fixture's 10,000-run Simulator tail is unchanged;
+it is not selected as local strategy qualification for this adapter-only change.
+Main remains `3ab862fe`; no new push or deployment. Multi-goal `e45b92b8` is
+unbuilt/untested and must not be integrated as qualified.

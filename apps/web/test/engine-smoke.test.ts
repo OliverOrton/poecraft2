@@ -2158,9 +2158,13 @@ test("product Eldritch dependency wins through release WASM", async () => {
         JSON.stringify(automatic),
     );
 
-    const compiled = prepareSolverStrategy(
-        await client.solverCompileStrategy(solver),
+    const nativeCompiled = await client.solverCompileStrategy(solver);
+    assert.equal(
+        (nativeCompiled as { solver_policy_scope?: unknown }).solver_policy_scope,
+        "gated_search_with_paid_root_foulborn_salvage_v2",
+        "product controller scope must survive native graph transfer",
     );
+    const compiled = prepareSolverStrategy(nativeCompiled);
     assert.ok(
         compiled.nodes.some(
             (node) =>

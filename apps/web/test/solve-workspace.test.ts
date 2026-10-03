@@ -176,6 +176,7 @@ import { createDefaultStrategy } from "../src/app/strategy-model";
 
 {
     const compiled = createDefaultStrategy();
+    compiled.solver_policy_scope = "gated_search_with_paid_root_foulborn_salvage_v2";
     compiled.nodes[1].expected_cost = 2.9319;
     compiled.edges[1].condition = {
         type: "observation_signature",
@@ -217,6 +218,14 @@ import { createDefaultStrategy } from "../src/app/strategy-model";
         },
     ]);
     assert.strictEqual(prepared, compiled);
+    assert.equal(prepared.solver_policy_scope,
+                 "gated_search_with_paid_root_foulborn_salvage_v2");
+    assert.throws(() => prepareSolverStrategy({
+        ...compiled, solver_policy_scope: "gated_search_with_paid_root_foulborn_salvage_v3",
+    }), /invalid strategy document/);
+    const invalidGraph = structuredClone(compiled);
+    invalidGraph.edges.push({ id: "dangling", from: "missing", to: "success", priority: 0 });
+    assert.throws(() => prepareSolverStrategy(invalidGraph), /not board-valid/);
     console.log(
         "  ok - uniquely transferred policies preserve opaque exact routers and auto-layout without a full clone",
     );
