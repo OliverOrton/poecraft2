@@ -1,16 +1,19 @@
-# Feeder integration remaining acceptance ready (2026-10-03)
+# Feeder integration qualified; publication selected (2026-10-03)
 
-Isolated `dot/feeder-integration-20261003` source/test checkpoint `e429e69f`
-retains qualified Feeder `d76e3369` production bytes, engine `1ec6f4c1`, web
-`024a8d62`, WASM `0b800f57`/MJS `23c405b9`, ABI/export/layout unchanged. Shared
-DLL/header pass; initial full Python258pass/40missing-SQLite failures includes
-six Feeder passes. Verified frozen SQLite restored; failure evidence retained.
-The [living integration record](docs/active/2026-10-03-feeder-integration/README.md)
-owns the ready full-Python/native-trace/rendered Builder batch and remaining
-UNRUN acceptance. LOCAL released12:39:12UTC, no survivor; diagnostic owns it
-during source preparation. Await a new grant before heavy commands. Publication
-held pending acceptance; Builder recombination/exact inventory remain held.
-No main change, push, deployment, dependency install, data refresh or dev restart.
+Isolated `dot/feeder-integration-20261003` starts qualification at `bba7574a`,
+retaining Feeder `d76e3369` production bytes: engine `1ec6f4c1`, web `024a8d62`,
+WASM `0b800f57`/MJS `23c405b9`, new DLL `c88e0549`, runtime `82fb60a2`. Native
+owner300/300/full npm/TS evidence is reused; new DLL/header,unfiltered Python
+298+5subtests,native trace capture,metadata and rendered52/zero-error pass.
+Four screenshots reviewed; controlled boot/server end-to-end limits retained.
+Missing SQLite and two fixture lifecycle failures are preserved and resolved
+without weakening assertions or changing production code. The
+[living integration record](docs/active/2026-10-03-feeder-integration/README.md)
+owns evidence and disposition. LOCAL released13:13:07UTC,no survivors/browser.
+Verified overnight approval selects qualified normal fast-forward/push followed
+by exact remote/CI checks. Builder recombination/exact inventory remain held;
+no law/scope/goal/bound/controller authority extends. No deployment,data refresh,
+dependency install,dev restart or overwrite of ignored main build metadata.
 
 # Combined features published; exact-head CI green (2026-10-03)
 
