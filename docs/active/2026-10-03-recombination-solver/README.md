@@ -135,3 +135,14 @@ The important held implementation gap is the explicit exclusive classifier plus
 current joint count/side-selection law and non-naturally-rollable selection weights.
 Ordinary desired-independent fillers/full groups are represented by the new solver;
 exclusive-blocker optimization has not been implemented or claimed correct.
+
+## Delivery recheck
+
+Source checkpoint: 3e0c6d71c428b38708052a8d999ba158738209e2 (unqualified).
+Normal checkout HEAD remains 72448deaacca2797058de0559378685ba71a983f and relevant
+tracked paths are unchanged. Prior qualified worktree remains e830a3a54ad3fd2c71660d113c5e5f3f6f72d043.
+Read-only remote recheck at delivery now reports main d29d0682648ecc24cf83aa4284f4b3791fb05793.
+No automatic rebase/merge was performed. The parent/integrator must reconcile that
+advanced baseline before combined qualification or publication. Initial sandbox
+remote access failed; the authorized read-only elevated retry succeeded.
+Source whitespace check passed. Every new build/test/artifact qualification is unrun.
