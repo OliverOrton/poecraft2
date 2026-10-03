@@ -697,3 +697,40 @@ CI inspection. Actual remote head and terminal CI are recorded separately in
 `out/local-native-repair/currency-guard-delivery.json`. Solver recovery c04e42ee,
 Lock e2b6ff70 and other pending features are not integrated by this delivery.
 No local heavy capacity is held during receipt/publication/remote monitoring.
+
+
+## Exact-head evaluation cancellation race; source repair prepared
+
+Normal main delivery is remote-verified at `c00bb449`. Windows CI37109852631,
+job111165480624, passes17 native targets and275 bindings, then stops at the
+unchanged exact-evaluation cancellation smoke (`engine-smoke.test.ts:1099`):
+**Missing expected rejection**. No native parity mismatch is visible. This CI
+does not reach the later guard/resource cases; it neither proves nor disproves
+local Chrome qualification or pinned-browser parity. Solver knowledge37109852682
+passes. The exact failed run and compact failure are preserved in
+`evaluation_cancel_response_race_ready` and the delivery receipt.
+
+Source exposes the response/control ordering behind the failure: abort posts a
+message to the worker, but a successful reply may already be queued. The client
+previously resolved that reply even when the original evaluation signal had
+already aborted. Worker progress does not acknowledge client receipt, so the
+32-node fixture cannot guarantee cross-thread cancellation delivery before
+completion. Actual CI progress/cancel timestamps are absent; this is a source
+path consistent with the observed result, not a measured round-trip trace.
+
+The prepared adapter correction affects `strategyEvaluate` only: capture the
+original signal and reject a successful reply when that signal is already aborted
+before exposing completion. Native error replies and other request types remain
+unchanged. Native worker cleanup still closes evaluator, economy and strategy in
+its existing finally owner. No clocks, work budgets, game laws, native source,
+WASM, scope or proof authority changes. All six original real-WASM rejection
+assertions,1000ms promptness bound and handle checks remain byte-for-byte unchanged.
+
+A finite transport regression forces progress-abort-before-queued-success without
+relying on machine timing. Controls retain ordinary success, native capacity
+errors after an abort, and removal of stale cancellation listeners after
+settlement. It is **unrun**, as are full unfiltered npm and TypeScript on this
+new source. Multi-goal owns the local heavy slot; no command/push begins from
+source readiness. Existing matched WASM472f644b requires no rebuild.
+`out/local-native-repair/evaluation-cancel-race-ready.json` and the qualification
+receipt own exact source hashes, preserved failure and proposed checks.

@@ -2574,5 +2574,64 @@
       "Lock e2b6ff70 and other pending features (not integrated)",
       "Installation, dependency/price/data refresh, deployment"
     ]
+  },
+  "evaluation_cancel_response_race_ready": {
+    "recorded_utc": "2026-10-03T09:05:12.738351+00:00",
+    "status": "evaluation-only queued-success cancellation repair prepared; runtime checks unrun; no push",
+    "baseline_main": "c00bb449102d76442bb6515eb34fd1c1a9bfd21f",
+    "failed_ci": {
+      "run_id": 37109852631,
+      "job_id": 111165480624,
+      "head_sha": "c00bb449102d76442bb6515eb34fd1c1a9bfd21f",
+      "conclusion": "failure",
+      "native": "17/17 passed",
+      "python_bindings": "275 passed",
+      "first_failure": "FAILED: AssertionError [ERR_ASSERTION]: Missing expected rejection.",
+      "location": "apps/web/test/engine-smoke.test.ts:1099",
+      "fixture": "exact evaluation cancellation is prompt and leaks no handles",
+      "timestamp": "2026-10-03T08:47:45.6915345Z",
+      "url": "https://github.com/OliverOrton/poecraft2/actions/runs/37109852631",
+      "parity_first_mismatch_records_visible": 0,
+      "web_guard_and_workspace_cases": "Not reached by this CI; earlier cancellation fixture stops the chain"
+    },
+    "source_classification": {
+      "client": "Abort listener only posts cancel; generic successful response still resolves. strategyEvaluate previously exposed that result without checking its original signal.",
+      "worker": "Progress is posted before native continuation/finish; cross-thread cancel may arrive after success is queued. Native evaluator cleanup remains in finally.",
+      "limitation": "CI has no progress/cancel timing trace. Source demonstrates the allowed ordering consistent with the failure; exact scheduling is not directly observed."
+    },
+    "repair": {
+      "file": "apps/web/src/app/engine-client.ts",
+      "scope": "strategyEvaluate only",
+      "behavior": "Capture original signal; reject an otherwise-successful reply with EngineError1 cancelled if signal is aborted before API completion is observed. Preserve native error replies.",
+      "other_request_types": "Unchanged, including solverSolve Finish/Cancel and runStrategy",
+      "native_worker_cleanup": "Unchanged",
+      "file_sha256": "87d6ab0004822d140342c55fd3ef9b16118586c4454bc0a86691f27f99612be4"
+    },
+    "finite_regression": {
+      "file": "apps/web/test/engine-client-transfer.test.ts",
+      "ordering": "Force progress callback abort before reading a queued successful response, independent of main/worker timing",
+      "controls": [
+        "Ordinary success survives",
+        "Native capacity error8/max_transitions survives an abort",
+        "Late abort after settlement sends no stale cancel"
+      ],
+      "file_sha256": "a7f6fe23106c25828276cb4999cee89b7b0b2c99be7c187f66800ed43f8bbdb3"
+    },
+    "preserved": "Original six real-WASM cancellation rejections,1000ms bound and handle accounting are byte-for-byte unchanged; production native/include/WASM and all game/proof/scope authorities unchanged.",
+    "pending_checks": [
+      "Focused engine-client-transfer finite cases",
+      "Full unfiltered npm test with explicit existing Chrome channel",
+      "npx tsc --noEmit"
+    ],
+    "unrun": [
+      "New finite regression",
+      "Full npm/TypeScript on this new source",
+      "New hosted CI"
+    ],
+    "local_owned_heavy_processes": 0,
+    "slot": "Multi-goal owns slot; no local heavy command starts",
+    "installation": false,
+    "native_wasm_rebuild_needed": false,
+    "solver_feature_integration": false
   }
 }

@@ -471,6 +471,7 @@ export class EngineClient {
         runOptions?: StrategyEvaluationRunOptions,
     ): Promise<StrategyEvalResult> {
         const strategyJson = encodeJson(strategy);
+        const signal = runOptions?.signal;
         return this.call<StrategyEvalResult>(
             "strategyEvaluate",
             {
@@ -485,9 +486,17 @@ export class EngineClient {
             {
                 transfer: [strategyJson.buffer as ArrayBuffer],
                 onEvaluationProgress: runOptions?.onProgress,
-                signal: runOptions?.signal,
+                signal,
             },
-        );
+        ).then((result) => {
+            // A successful worker reply can already be queued when a progress
+            // listener aborts. Discard that reply before exposing it; the worker
+            // still owns native evaluation cleanup. Preserve native error replies.
+            if (signal?.aborted) {
+                throw new EngineError(1, "strategy evaluation cancelled");
+            }
+            return result;
+        });
     }
 
     async loadEconomy(economy: unknown): Promise<number> {

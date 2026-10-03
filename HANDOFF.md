@@ -1,3 +1,16 @@
+# Evaluation queued-success cancellation repair prepared (2026-10-03)
+
+Main c00bb449 is remote-verified. CI37109852631 passes17 native/275 binding
+tests, then unchanged smoke1099 misses a cancellation rejection; knowledge CI
+passes. Client can expose a queued success after progress aborts. Evaluation-only
+source correction discards that success using the original signal; native errors,
+other requests, native cleanup and all six real-WASM rejection/time/handle checks
+remain. Finite ordering regression with success/error/late-abort controls prepared.
+All new checks unrun; no push/heavy command, multi-goal owns local slot. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `evaluation_cancel_response_race_ready` own exact failure/source/pending
+focused/full npm/TypeScript checks. No native/WASM rebuild or feature integration.
+
 # Currency guard/full web chain qualified (2026-10-03)
 
 `9f28a099` passes full unfiltered npm (37/37 smoke and every following file)
