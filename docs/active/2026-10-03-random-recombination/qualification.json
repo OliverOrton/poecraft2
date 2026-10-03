@@ -1,0 +1,167 @@
+{
+  "programme": "2026-10-03-random-recombination",
+  "base_head": "dbc142a26f7060c6114453d85f7b4c776077dc2b",
+  "branch": "dot/recombs-random-20261003",
+  "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-recombs-random",
+  "pair_version": 1,
+  "model_id": "poe1-random-spawn-proxy-preserve-tier-roll-no-upgrade-v1",
+  "projection_id": "structural-output-preserve-tier-roll-v1",
+  "game_odds_estimated": true,
+  "output_approximation_approved_utc": "2026-10-03T04:12:22Z",
+  "source_files_sha256": {
+    "engine/include/poecraft/recombination.h": "c0cffe26ff92ff99c2617e1f0b5fa2e801f3b0d3c5e68ae07b1ca7ce6429a679",
+    "engine/include/poecraft/session.h": "99bf99f94df60f32e90ab89592924331d2d87e0d348abc0bfa82ad7d54333f98",
+    "engine/src/engine_internal.hpp": "b544dd12effee98a43390e25c487e63dd109e38d1a685540a1285fd10b3a9953",
+    "engine/src/session_builder.cpp": "d2ef35ff296eafc1b439f72026dff068ae0d21d0fad6dcd7dd5ddfe1e726e2ce",
+    "engine/src/multi_item.cpp": "0c54d284ed1810a427335ecf7016f53791b367fd2de06878160f0625b520f453",
+    "engine/src/multi_item.hpp": "1619bf5398a53d6571fc9e7ac0b3d1d10125a5f8e8421816fea4390df9404fe3",
+    "engine/src/recombination.cpp": "904d9b0d32e3d72b5399eb95a832509b145d191be9870addf4f24292292e6236",
+    "engine/src/recombination.hpp": "fe3c5810ecb2d51875dfc749d1b22bad931c96d92a17e508d169dc1b134d1915",
+    "engine/src/recombination_api.cpp": "12a3ff647490ac99da0fc1bc1e0944633c37e549e963eb96577b5038c8161326",
+    "engine/engine-sources.txt": "ab5b4bf443c574bfebc49810c6cd7745be70709b7f4b7a1853252e26a9e13897",
+    "engine/CMakeLists.txt": "51ba59e4cfd80f273e6f6e7280bb98c98f53b721ef485cdca298fb36cb12b614",
+    "engine/tests/test_main.cpp": "bf3538a1b2bebf2bba78eee64b76d3152e59b5aa9cc3b7f9bf18af34b8c9241e",
+    "engine/tests/tests.hpp": "7a9ff83828b5920666975209b999518bc069b5ab42c719c2c43b1523db335c76",
+    "engine/tests/test_recombination.cpp": "bff1009d936cda05fc5a6151570561031b7cd9bccdef046068ac0957c522fbbb",
+    "engine/tests/header_smoke.cpp": "d45e6e3e430438041e27d751dbc852feef8b488d40910e08656d616bd3a428c4",
+    "bindings/python/poecraft_engine/_binding.py": "b9636f56926e3621087ea442dc663186b27f01c4103f778a249cb337f5b2d923",
+    "bindings/python/poecraft_engine/__init__.py": "c334ae8bbeea4ff81a821ed3fb2f4114a7768d6b6f7f22789f7701916d3875d1",
+    "bindings/python/tests/test_random_recombination.py": "c18939b59ae441a7fc60c820e8f7d4cf52c3954bd27325f004d93ef305ed118f"
+  },
+  "artifacts": [
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-recombs-random\\build\\engine\\poecraft_engine_tests.exe",
+      "sha256": "5a61dd6d9aac5f8c438d6e647028f7c43a88dd09b286e6fda3f0f5d3d2370d00",
+      "bytes": 19661310
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-recombs-random\\build\\engine\\poecraft_header_smoke.exe",
+      "sha256": "53f4db5bbb5f051d548f2718d327a6fb01757ecf749c4f1a2b0ecde39f08894b",
+      "bytes": 128656
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2-recombs-random\\build\\engine\\poecraft_engine.dll",
+      "sha256": "d800794788b41d8107b1d3c43929c24c07fc32cb4994f188806ed163e9aa646a",
+      "bytes": 14343961
+    }
+  ],
+  "frozen_runtime": [
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+      "sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+      "bytes": 5983
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\game-data.json",
+      "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+      "bytes": 16914460
+    },
+    {
+      "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\strings.json",
+      "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+      "bytes": 6740473
+    }
+  ],
+  "validation": [
+    {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+      "result": "failed_missing_session_header",
+      "log": "out/random-recombination/native-build.log"
+    },
+    {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+      "result": "passed",
+      "log": "out/random-recombination/native-build-retry.log"
+    },
+    {
+      "command": "poecraft_engine_tests.exe --random-recombination-only ORIGINAL_FROZEN_RUNTIME",
+      "checks": 210,
+      "failures": 2,
+      "result": "failed_then_repaired_retained_reach",
+      "log": "out/random-recombination/native-pair-tests.log"
+    },
+    {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+      "result": "passed",
+      "log": "out/random-recombination/native-transfer-rebuild.log"
+    },
+    {
+      "command": "poecraft_header_smoke.exe",
+      "result": "passed"
+    },
+    {
+      "command": "poecraft_engine_tests.exe --random-recombination-only ORIGINAL_FROZEN_RUNTIME",
+      "checks": 210,
+      "failures": 0,
+      "result": "passed",
+      "log": "out/random-recombination/native-pair-tests-final.log"
+    },
+    {
+      "command": "poecraft_engine_tests.exe --currency-contracts-only ORIGINAL_FROZEN_RUNTIME",
+      "checks": 6484,
+      "failures": 0,
+      "result": "passed",
+      "log": "out/random-recombination/native-currency-tests.log"
+    },
+    {
+      "command": "cmake --build build/engine --target poecraft_engine_shared --parallel 2",
+      "result": "passed",
+      "log": "out/random-recombination/native-dll-build.log"
+    },
+    {
+      "command": "PYTHONPATH=tools/ingest;bindings/python POECRAFT_ENGINE_LIBRARY=CANDIDATE_DLL POECRAFT_TEST_ARTIFACT=ORIGINAL_FROZEN_RUNTIME py -3 -m pytest -q bindings/python/tests/test_random_recombination.py bindings/python/tests/test_currency_calculator.py",
+      "passed": 16,
+      "failed": 9,
+      "new_pair_passed": 4,
+      "failed_scope": "existing hard-coded SQLite tests, no such table: base_item",
+      "log": "out/random-recombination/python-pair-tests.log"
+    }
+  ],
+  "heavy_slot": {
+    "prelaunch_clock_utc": "2026-10-03T04:24:49Z",
+    "released_utc": "2026-10-03T04:37:54Z",
+    "max_compiler_jobs": 2,
+    "processes_remaining": [],
+    "log_open_times_utc": {
+      "out/random-recombination/native-build.log": "2026-10-03T04:25:27.987315+00:00",
+      "out/random-recombination/native-build-retry.log": "2026-10-03T04:26:30.391179+00:00",
+      "out/random-recombination/native-transfer-rebuild.log": "2026-10-03T04:35:06.636838+00:00",
+      "out/random-recombination/native-dll-build.log": "2026-10-03T04:36:45.852937+00:00",
+      "out/random-recombination/python-pair-tests.log": "2026-10-03T04:37:41.877859+00:00"
+    }
+  },
+  "compatible_prior_source": {
+    "receipt_constructor": "aacfb432",
+    "transaction_followup_inspected": "ba3ade3230d327879b0f2c54a2e1a4a8e972fbd5",
+    "research_context": "8a50115dc314cb433a1f11a5dc246775a0828b70"
+  },
+  "shared_goal_source_inspected_unqualified": "e45b92b8bd28d6fd0902468d9095ce8c2580e5b7",
+  "main_repair_delta_inspected_not_imported": "3ab862fece9d52ca733ad01a0869fd06cec84810",
+  "unrun": [
+    "shared multi-goal native dispatcher/finalizer",
+    "Calculator UI consumer",
+    "matching WASM facade and rebuild",
+    "web transport",
+    "TypeScript",
+    "broader Calculator SQLite-qualified binding recheck"
+  ],
+  "gold_cost_complete": false,
+  "dust_cost_complete": false,
+  "timed_experiments": 0,
+  "simulator_runs": 0,
+  "solver_scope_changed": false,
+  "data_or_prices_refreshed": false,
+  "main_merged": false,
+  "pushed": false,
+  "deployed": false,
+  "post_test_nonsemantic_changes": {
+    "engine/src/recombination.hpp": {
+      "kind": "newline normalization only",
+      "tested_sha256": "df298f45f0d277b311f3fbd377bdffadb683e86a9e3ceb12d9a98f6068ec01af",
+      "retained_sha256": "fe3c5810ecb2d51875dfc749d1b22bad931c96d92a17e508d169dc1b134d1915"
+    },
+    "bindings/python/poecraft_engine/__init__.py": {
+      "kind": "added existing successfully imported RandomRecombination to __all__"
+    }
+  }
+}

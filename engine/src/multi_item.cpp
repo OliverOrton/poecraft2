@@ -23,6 +23,88 @@ void validate_resources(const std::vector<CraftResource>& resources) {
         if (!resource.role.empty()) require(roles.insert(resource.role).second, "Duplicate input role");
     }
 }
+
+void validate_resource_item(const CraftResource& resource) {
+    const auto& item = resource.item;
+    const auto& session = *resource.session;
+    require(item.lifecycle == PC_ITEM_LIVE, "Two-input result requires live resources");
+    require(item.rarity <= PC_RARITY_RARE && item.memory_strands <= 100,
+            "Resource has invalid rarity or memory state");
+    require(item.prefix_count <= PC_MAX_PREFIXES && item.suffix_count <= PC_MAX_SUFFIXES &&
+            item.implicit_count <= PC_MAX_IMPLICITS && item.enchantment_count <= PC_MAX_ENCHANTS &&
+            item.socket_count <= PC_MAX_SOCKETS, "Resource exceeds item capacity");
+    const auto check_id = [&](uint32_t id) {
+        require(id < session.mod_count && id < session.global_index.size(),
+                "Resource modifier is unavailable in its session");
+        const auto position = session.global_index[id];
+        require(position < session.data->mod_global_ids.size(),
+                "Resource modifier has no canonical identity");
+    };
+    const auto check_slots = [&](const pc_mod_slot* slots, unsigned count, int side) {
+        for (unsigned i = 0; i < count; ++i) {
+            const auto& slot = slots[i];
+            check_id(slot.mod_id);
+            require(slot.mod_id < session.primary_group.size() &&
+                    session.primary_group[slot.mod_id] == slot.group_id,
+                    "Resource modifier has an inconsistent cached group");
+            if (side >= 0) require(slot.mod_id < session.gen_type.size() &&
+                                  session.gen_type[slot.mod_id] == side,
+                                  "Resource modifier is on the wrong affix side");
+            require(slot.roll_count <= PC_MAX_ROLL_VALUES &&
+                    slot.veiled_option_count <= PC_MAX_VEILED_OPTIONS,
+                    "Resource modifier exceeds roll or veil capacity");
+            for (unsigned j = 0; j < slot.veiled_option_count; ++j)
+                check_id(slot.veiled_option_mod_ids[j]);
+            if (slot.veiled_chosen_mod_id != PC_MOD_NONE)
+                check_id(slot.veiled_chosen_mod_id);
+        }
+    };
+    check_slots(item.prefixes, item.prefix_count, PC_SIDE_PREFIX);
+    check_slots(item.suffixes, item.suffix_count, PC_SIDE_SUFFIX);
+    check_slots(item.implicits, item.implicit_count, -1);
+    check_slots(item.enchantments, item.enchantment_count, -1);
+}
+
+bool same_resource_data(const SessionImpl& a, const SessionImpl& b) {
+    if (a.data == b.data) return true;
+    return a.data && b.data && !a.data->artifact_game_data_hash.empty() &&
+           !a.data->artifact_strings_hash.empty() &&
+           a.data->artifact_game_data_hash == b.data->artifact_game_data_hash &&
+           a.data->artifact_strings_hash == b.data->artifact_strings_hash;
+}
+}
+
+CraftTransaction prepare_two_input_result(
+        const std::vector<CraftResource>& inputs, const CraftResource& output,
+        const std::vector<std::string>& consumed_price_keys) {
+    require(inputs.size() == 2, "Two-input result requires exactly two resources");
+    auto all = inputs;
+    all.push_back(output);
+    validate_resources(all);
+    for (const auto& resource : all) {
+        require(resource.session->data != nullptr, "Resource data is missing");
+        validate_resource_item(resource);
+        require(same_resource_data(*inputs[0].session, *resource.session),
+                "Resource data identities are incompatible");
+    }
+    std::set<std::string> keys;
+    for (const auto& key : consumed_price_keys)
+        require(!key.empty() && keys.insert(key).second, "Invalid or repeated consumed price key");
+    CraftTransaction result;
+    for (const auto& input : inputs) {
+        auto consumed = input;
+        consumed.item.lifecycle = PC_ITEM_CONSUMED;
+        result.changes.push_back({input.identity, PC_RESOURCE_CONSUMED, input, consumed});
+    }
+    result.changes.push_back({output.identity, PC_RESOURCE_CREATED, {}, output});
+    result.consumed_price_keys = consumed_price_keys;
+    return result;
+}
+
+void validate_craft_resource(const CraftResource& resource) {
+    validate_resources({resource});
+    require(resource.session->data != nullptr, "Resource data is missing");
+    validate_resource_item(resource);
 }
 
 void commit_craft_transaction(std::vector<CraftResource>& resources,

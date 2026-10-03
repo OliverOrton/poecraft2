@@ -343,7 +343,8 @@ enum class ReachKind : std::uint8_t {
     EldritchImplicit = 9,
     RetainedInfluence = 10,
     RetainedElevated = 11,
-    RetainedEnchantment = 12
+    RetainedEnchantment = 12,
+    RetainedTransfer = 13
 };
 
 /*
@@ -722,6 +723,10 @@ std::shared_ptr<DataImpl> load_data_impl_bundle(const std::string& bundle_text);
  * spec fixtures.
  */
 void build_session(SessionImpl& session);
+/* Retained identities are representable without entering ordinary roll masks.
+ * Build into a fresh SessionImpl; immutable data and existing sessions stay fixed. */
+void build_session(SessionImpl& session,
+    const std::vector<std::uint32_t>& retained_global_mod_ids);
 
 /*
  * Build the normal explicit weighted candidate pool for the current item using

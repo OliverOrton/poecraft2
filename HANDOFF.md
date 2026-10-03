@@ -1,3 +1,18 @@
+# Current Random recombination native pair checkpoint (2026-10-03)
+
+The isolated [living receipt](docs/active/2026-10-03-random-recombination/README.md)
+owns the approved versioned estimated model and native pair C/Python API. Mixed
+ordinary rare bases/levels, count/selection, retained high-tier mapping and
+structural atomic Apply are implemented. Native pair **210** and currency **6484**
+checks pass; all four new Python pair tests pass. Nine existing broader Calculator
+binding cases fail because this sibling has no canonical SQLite fixture.
+
+The heavy slot was released to parent at **04:37:54 UTC**; no owned process remains.
+Shared multi-goal integration/finalizer and matching WASM/web/TypeScript remain
+unrun. Pair outcomes require their selected carrier output session, never receiver
+IDs. Main/npm dev, root `0`, source data/prices and solver scope are untouched.
+Local branch only; no merge, independent push or deployment.
+
 # Combined completion batch delivered; paused (2026-10-02)
 
 The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)

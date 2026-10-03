@@ -23,6 +23,12 @@ struct CraftTransaction {
  * and new identities. No acquisition or automatic replacement is implicit. */
 void commit_craft_transaction(std::vector<CraftResource>& resources,
                               const CraftTransaction& transaction);
+/* Validate a live represented item against its own dense session. */
+void validate_craft_resource(const CraftResource& resource);
+/* Already determined output only; this constructor supplies no game law. */
+CraftTransaction prepare_two_input_result(
+    const std::vector<CraftResource>& inputs, const CraftResource& output,
+    const std::vector<std::string>& consumed_price_keys);
 CraftTransaction prepare_multi_item_craft(ActionContextImpl& context,
     const std::string& action, const std::vector<CraftResource>& resources);
 

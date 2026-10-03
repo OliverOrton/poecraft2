@@ -1,5 +1,7 @@
 #ifndef POECRAFT_TESTS_HPP
 #define POECRAFT_TESTS_HPP
+void run_two_input_result_tests();
+void run_random_recombination_tests(const char* artifact_dir);
 void run_foulborn_weight_tests();
 void run_currency_contract_tests(const char* artifact_dir);
 void run_fossil_guard_exact_tests();
