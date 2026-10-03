@@ -4,7 +4,7 @@ import {parseHTML} from "linkedom";
 import {calculatorGoalSet, recoverCalculatorGoalList, newCalculatorGoal, validateCalculatorGoalList,
     selectedCalculatorResult, CalculatorRequestLifetime, type CalculatorGoalList} from "../src/app/calculator-goal-set";
 import type {CalculatorDraftRecord,ItemStashRecord} from "../src/app/workspace/persistence";
-import type {CalcResult, CalculatorGoalSet} from "../src/app/engine-protocol";
+import type {CalcResult, CalculatorGoalSet, ModInfo, SolverGoal, SolverActionInfo} from "../src/app/engine-protocol";
 
 const legacy: CalculatorDraftRecord = {docId:"draft",base:"base",itemLevel:86,state:{},goalRarity:"magic",
     slots:[{group:"life",minTier:2}],goalImplicitKeys:["implicit"],goalInfluenceBits:2,goalCorrupted:false,
@@ -51,8 +51,11 @@ Object.assign(globalThis,{window:dom.window,document:dom.document,HTMLElement:do
 globalThis.fetch=async()=>new Response(readFileSync(new URL("../public/game-assets/catalog.json",import.meta.url)));
 const {PcCalculator}=await import("../src/app/components/pc-calculator");
 const calculator=new PcCalculator();
-calculator.innerHTML='<div class="pc-calc-goal-tabs"></div><input data-goal-name><button data-goal-command="add"></button><button data-goal-command="delete"></button><div class="pc-calc-output"></div>';
+calculator.innerHTML='<div class="pc-calc-goal-tabs"></div><input data-goal-name><button data-goal-command="add"></button><button data-goal-command="delete"></button><div class="pc-calc-output"></div><div class="pc-calc-solve-panel"></div><div class="pc-calc-status"></div>';
 const access=calculator as unknown as {
+    base:string;solver:number;pickerActions:SolverActionInfo[];modCache:ModInfo[];modKeyToFamily:Map<string,string>;
+    addGoalFromPool(key:string):void;hasItemRequirements():boolean;itemGoal():unknown;solverGoal(mode:string,actions?:string[]):SolverGoal;
+    guard(work:()=>Promise<void>):Promise<void>;goalChanged():Promise<void>;startSolve():Promise<void>;
     goalList:CalculatorGoalList;calc:CalcResult|null;calcError:string;session:number;item:number;actionId:string;
     dataId:number;resourceIdentity:string;donors:ItemStashRecord[];mechanicValues:Map<string,string>;oddsIdentity():string;
     calculateAwakener(solver:number,item:number,request:Record<string,unknown>,donor:ItemStashRecord|undefined,identity:string|undefined,data:number):Promise<CalcResult>;
@@ -61,6 +64,45 @@ const access=calculator as unknown as {
     persist():Promise<void>;openSolver():Promise<void>;selectGoal(id:string):Promise<void>;
     goalCommand(command:string):Promise<void>;recalc():Promise<void>;currentWork:Promise<void>|null;
 };
+// Known runtime metadata: reported Shaper Titanium Spirit Shield, Elder on the
+// same base, and Crusader Vaal Regalia. No base/influence exception is allowed.
+const pickerCases=[
+    {base:"Metadata/Items/Armours/Shields/ShieldInt12",key:"GainRandomChargeOnBlockInfluence1",influence:2},
+    {base:"Metadata/Items/Armours/Shields/ShieldInt12",key:"BlockPercentInfluence2",influence:1},
+    {base:"Metadata/Items/Armours/BodyArmours/BodyInt17",key:"EnergyShieldRecoveryRateBodyInfluence2",influence:3}];
+const realGuard=access.guard,realGoalChanged=access.goalChanged;
+access.guard=async work=>work();access.goalChanged=async()=>{};
+access.solver=5;access.item=1;access.pickerActions=[{id:"scour",cost_keys:[]} as unknown as SolverActionInfo];
+for(const fixture of pickerCases){
+    access.base=fixture.base;const target=newCalculatorGoal("influenced","Influenced explicit");
+    access.goalList={version:"calculator_goal_list_v1",activeGoalId:target.id,goals:[target]};
+    access.modCache=[{key:fixture.key,reach_kind:1,reach_influence:fixture.influence,family_tier_index:1} as ModInfo];
+    access.modKeyToFamily=new Map([[fixture.key,fixture.key]]);
+    access.addGoalFromPool(fixture.key);
+    assert.equal(target.goalInfluenceBits,undefined,"An explicit modifier does not author an exact influence-set goal");
+    assert.equal(access.hasItemRequirements(),false);
+    assert.deepEqual(access.solverGoal("scoped_solve",["scour"]).slots,[{family_mod_key:fixture.key,min_tier:1}]);
+    assert.equal((access.itemGoal() as {influence_bits?:number}).influence_bits,undefined);
+    access.renderSolvePanel();
+    assert.equal(calculator.querySelector<HTMLButtonElement>('[data-solve-cmd="start"]')?.disabled,false);
+    assert.doesNotMatch(calculator.querySelector('.pc-calc-solve-panel')!.textContent!,/does not support these requirements/);
+}
+const explicitOnly=structuredClone(access.goalList);
+for(const property of [{goalInfluenceBits:2},{goalInfluenceBits:0},{goalCorrupted:true},{goalCorrupted:false},{goalImplicitKeys:["implicit"]}]){
+    access.goalList=structuredClone(explicitOnly);Object.assign(access.goalList.goals[0],property);
+    assert.equal(access.hasItemRequirements(),true,"Genuine item-property and implicit requirements remain unsupported");
+    access.renderSolvePanel();assert.match(calculator.querySelector('.pc-calc-solve-panel')!.textContent!,/does not support these requirements/);
+    await access.startSolve();assert.match(calculator.querySelector('.pc-calc-status')!.textContent!,/Use Odds/);
+}
+access.goalList=structuredClone(explicitOnly);access.goalList.goals[0].goalInfluenceBits=2;
+access.addGoalFromPool(pickerCases[2].key);
+assert.equal(access.goalList.goals[0].goalInfluenceBits,2,"Picking a modifier preserves a deliberately authored exact property");
+access.renderSolvePanel();assert.match(calculator.querySelector('.pc-calc-solve-panel')!.textContent!,/Any influence/);
+const heldSlots=structuredClone(access.goalList.goals[0].slots);
+access.goalList.goals[0].goalInfluenceBits=undefined;access.renderSolvePanel();
+assert.deepEqual(access.goalList.goals[0].slots,heldSlots,"Clearing only the property retains all modifier targets");
+assert.equal(calculator.querySelector<HTMLButtonElement>('[data-solve-cmd="start"]')?.disabled,false);
+access.guard=realGuard;access.goalChanged=realGoalChanged;
 Object.assign(access,{goalList:structuredClone(list),busy:false,calc:result,session:2,item:1,actionId:"exalt"});
 access.renderGoalTabs();assert.equal(calculator.querySelectorAll('[role="tab"]').length,2);
 assert.equal(calculator.querySelector('[aria-selected="true"]')?.textContent,"Life");

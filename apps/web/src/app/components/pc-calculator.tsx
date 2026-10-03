@@ -1605,7 +1605,8 @@ export class PcCalculator extends HTMLElement {
             this.setStatus(`Goals are limited to ${MAX_GOAL_SLOTS} modifiers.`);
             return;
         }
-        if (info.reach_influence > 0) this.goalInfluenceBits = (this.goalInfluenceBits ?? 0) | (1 << (info.reach_influence - 1));
+        // An explicit modifier's source is carried by its native family target.
+        // Exact item influence constraints are authored separately in Item properties.
         this.normalizeSuccessThreshold(followedAll);
         void this.guard(() => this.goalChanged());
     }
@@ -1925,7 +1926,10 @@ export class PcCalculator extends HTMLElement {
         if (!host) return;
         host.setAttribute("aria-label", `Strategy finder for selected goal: ${this.activeGoal.name}`);
         if (this.hasItemRequirements()) {
-            host.innerHTML = '<p class="pc-help">This goal includes implicit or item-property requirements. Use Odds to calculate the complete outcome after one action. Strategy finder does not support these requirements yet.</p>';
+            host.innerHTML = '<p class="pc-help">This goal includes implicit or item-property requirements. Use Odds to calculate the complete outcome after one action. Strategy finder does not support these requirements yet.</p>'
+                + (this.goalInfluenceBits !== undefined
+                    ? '<p class="pc-help">Influenced explicit modifier targets are supported. To remove an exact influence-set requirement, open Goal item → Item properties and select Any influence. Your explicit modifier targets stay in place.</p>'
+                    : '');
             return;
         }
         const readiness = solvePriceReadiness(

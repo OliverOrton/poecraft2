@@ -49,6 +49,13 @@ between incoming and terminal contexts: at most 250,000 states, 100,000,000 work
 units and 512 MiB engine-owned scratch; terminal rows additionally cap at
 250,000 and serialized results at 64 MiB. These limits may refuse large requests.
 
+Selecting an influenced explicit modifier authors its native family/tier target;
+it does not select an exact final influence set. Exact influence-set constraints
+are authored separately under Goal item → Item properties. Such constraints,
+implicit requirements and corruption requirements remain unsupported by strategy
+finder. Existing saved constraints are preserved; choose **Any influence** to
+clear only the influence-set requirement while retaining explicit modifier targets.
+
 Strategy finder and Solver Lab export use only the selected, frozen goal and
 remain explicitly labelled. No multi-goal solver, changed exact objective or
 new optimality authority is introduced. A future highest matching-goal sale
