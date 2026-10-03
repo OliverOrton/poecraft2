@@ -48,12 +48,13 @@ passed, including the existing C header smoke build. Against the frozen runtime:
   includes primitive action frequency controls; no strategy Simulator or timing
   benchmark was invoked. Its count includes the incoming controls above.
 
-Logs live in `out/calculator-goal-set-qualification/`. The matching WASM build
-started with `EMCC_CORES=2` / `BINARYEN_CORES=2` before the parent's priority update
-for Oliver's five-mod trace investigation. Finish that already-running command
-safely, release the slot immediately, and hold subsequent worker/nonvisual/npm/
-TypeScript checks for the next explicit grant. They remain **unrun**; rendered
-review remains unrun. No normal-checkout changes, refresh, npm dev restart,
+Logs and the structured `qualification.json` receipt live in
+`out/calculator-goal-set-qualification/`. The matching WASM build completed
+successfully with `EMCC_CORES=2` / `BINARYEN_CORES=2`. It had started before the
+parent's priority update for Oliver's five-mod trace investigation. The slot was
+released immediately after exit (receipt time 05:27:08 UTC); no owned heavy
+process remains. Worker/nonvisual/npm/TypeScript checks are held for the next
+explicit grant and remain **unrun**; rendered review remains unrun. No normal-checkout changes, refresh, npm dev restart,
 subagents, push, main merge or deployment.
 
 ## Concrete integration seam
@@ -90,7 +91,7 @@ is a lane checkpoint and needs reconciliation with the parent's sequencing recor
   retained hybrid-group input, clean/coverage divergence, eight-goal cap,
   duplicate/overlap/Unveil refusal, K=1 scalar parity and conservation. A fixed
   terminal stream gives marginals 0.7/0.8 and union 1 with exactly one traversal;
-  nonconserved mass refuses. These fixtures are written and **unrun**.
+  nonconserved mass refuses. These fixtures passed the native selectors above.
 - `apps/web/test/calculator-goal-set.test.ts`: legacy and versioned recovery,
   presentation-independent request identity, capacity refusal, nonvisual tabs,
   selected native result views and stale deletion/session/disposal handle cleanup.
@@ -103,10 +104,12 @@ is a lane checkpoint and needs reconciliation with the parent's sequencing recor
   finite multi-goal qualification before promotion; no browser benefit or render
   claim is made from source alone.
 
-Next gated step: parent grants the heavy slot after recombination, then focused
-native compile/checks (maximum two jobs), finite action-family controls, parent-
-owned source-matched WASM rebuild and worker test, `npm test` and `npx tsc --noEmit`.
-No timing budget, benchmark, Simulator or additional experiment is authorized.
+Next gated step: parent grants another slot after the prioritized five-mod
+trace investigation, then use the already source-matched module for worker
+transport, nonvisual web, `npm test` and `npx tsc --noEmit`. Native checks and WASM
+build are complete for this checkpoint; do not repeat them without a source
+change or unresolved failure. No timing budget, benchmark, strategy Simulator
+or additional experiment is authorized.
 
 
 ## Pair output-session boundary
@@ -198,3 +201,13 @@ donor law and distinct-resource guards are retained. Focused source fixtures
 cover same-ID changed payload, data-session staleness, frozen donor import and
 handle cleanup. This web-only follow-up is **unrun** pending the next slot;
 it does not change the compiled native source or current WASM build inputs.
+
+## Matching WASM build receipt
+
+Compiled engine tree: `71d7f655086e3816b9366c715a6c891fd12eafc2` (identical native source
+at `ac67c8eb` and `9c57aa45`). The wrapper is unchanged, SHA-256
+`c3f63141397c06cf966487c0ad5787a338000401dc46f707bba522c959296e9c`. Rebuilt module: 8402497 bytes, SHA-256
+`143f21f387dce691753d3bf68a36967f3667a2ea569d950bee42232ef9324518`. Build exit code 0; log retains compiler
+warnings. This proves a matching build, **not worker transport or UI qualification**.
+The module is retained locally for the next gated finite web batch; integrator
+owns any combined release regeneration and publication.
