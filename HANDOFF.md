@@ -1,11 +1,16 @@
-# Lock source merged; combined qualification pending (2026-10-03)
+# Lock and Calculator source integrated; runtime unqualified (2026-10-03)
 
-Isolated dot/features-integration-20261003 starts from green main4b092b0b plus
-receipt db1d8404. Qualified Lock e2b6ff70 is merged as source; its native/WASM
-checks remain individual evidence only. Main evaluation cancellation correction
-and test controls are retained. Calculator source merge follows; parent will
-select Recomb after its terminal receipt. No build, test, browser or publication;
-LOCAL remains with Recomb. The living integration record owns the pending batch.
+Fresh sibling poecraft2-feature-integration, dot/features-integration-20261003,
+retains main4b092b0b/receipt db1d8404 and ordinary Lock 1e2d6eab/Calculator d4c854f8
+source merges. Qualified inputs e2b6ff70 and b269a564 (tested53be4ce8) retain
+ancestry. Main cancellation method/tests/smoke/CI are unchanged; copied fixture
+setup occurs once. No production source conflict. WASM472f644b is an unqualified
+main placeholder pending combined rebuild. Frozen runtime/price/package hashes,
+actual source merges and serial batch are recorded in the
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and actual_source_integration. Recomb terminal checkpoint awaits review; feeder
+and solver recovery excluded. No heavy command/browser/push or owned process.
+Parent LOCAL grant and combined qualification are required before publication.
 
 # Current main CI green; combined features source-reviewed (2026-10-03)
 

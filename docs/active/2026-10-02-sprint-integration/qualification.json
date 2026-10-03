@@ -3150,5 +3150,307 @@
       "Data/price refresh, dependency installation, deployment",
       "Individual feature artifacts as combined qualification"
     ]
+  },
+  "actual_source_integration": {
+    "schema": "poecraft2.feature-source-integration.v1",
+    "recorded_utc": "2026-10-03T10:40:40.867970+00:00",
+    "status": "Lock and Calculator source merged; Recomb terminal receipt pending; combined runtime/rendered qualification unrun",
+    "base": "4b092b0bf73b26a006c81859029ce34147a07e21",
+    "receipt_parent": "db1d8404478ad97f9e62b7bdd3941e5d892edc16",
+    "worktree": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration",
+    "branch": "dot/features-integration-20261003",
+    "source_commit": "d4c854f80c293d64a6f2a7e3451985ad7ad9da38",
+    "engine_tree": "01cb1abf05895c1af556dc160df166e43fd08707",
+    "merges": [
+      {
+        "feature": "Lock",
+        "checkpoint": "e2b6ff700f452e91b6b8d4067762e4b765eb239f",
+        "merge_commit": "1e2d6eabdabadfeff95e3b169689fa93a3f76b9f",
+        "conflicts": [
+          "HANDOFF.md"
+        ]
+      },
+      {
+        "feature": "Calculator goal set",
+        "checkpoint": "b269a564867f061f089ac117aed566d2a98a9767",
+        "tested_source": "53be4ce80d2c54b17f964f0371673f6b3bcc2bc7",
+        "merge_commit": "d4c854f80c293d64a6f2a7e3451985ad7ad9da38",
+        "conflicts": [
+          "bindings/wasm/dist/poecraft_engine.wasm"
+        ]
+      }
+    ],
+    "source_conflict_resolution": "Lock HANDOFF keeps the current main handoff and owner records. No production source conflict. Calculator WASM deliberately restored to main placeholder; it cannot run combined features.",
+    "wasm_placeholder": {
+      "path": "bindings/wasm/dist/poecraft_engine.wasm",
+      "sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+      "bytes": 8372123,
+      "qualified_for_combined": false,
+      "source": "4b092b0bf73b26a006c81859029ce34147a07e21"
+    },
+    "static_passed": [
+      "Exact byte retention of main strategyEvaluate method",
+      "Exact byte retention of main finite client tests, engine smoke, Windows workflow and test.ps1",
+      "Exact byte retention of workspace browser setup prefix; no duplicate copied correction",
+      "Combined Lock methods and CalculatorGoalSet client signature coexist",
+      "Ordinary merge ancestry contains both qualified feature checkpoints",
+      "Frozen runtime manifest matches runtime.lock; price inputs equal main",
+      "git diff --check"
+    ],
+    "static_initial_failure": {
+      "check": "Environment-setting literal occurrence count wrongly expected1; actual main prefix contains setting and explanatory error text",
+      "impact": "Check stopped before HANDOFF rewrite; shell continued and created Calculator merge commit",
+      "resolution": "Rechecked exact browser setup prefix against main; passes. All earlier byte-retention assertions passed. Current checkpoint corrects the handoff; no runtime/qualification claim made."
+    },
+    "unchanged_main_files": [
+      {
+        "path": "apps/web/test/engine-client-transfer.test.ts",
+        "sha256": "1eaff002054ccf113b9550c9c565c4cb92ad240c2a3262a5596e3d6f3438505e",
+        "bytes": 6474
+      },
+      {
+        "path": "apps/web/test/engine-smoke.test.ts",
+        "sha256": "7a6285e46d344daa377d0459a6ade92196b914af214a46c8734cc8a205f359f4",
+        "bytes": 117978
+      },
+      {
+        "path": ".github/workflows/windows.yml",
+        "sha256": "8ec1bba0f7b78a5dd35a76c96f2bb7640570a9ec00f7ce5e9a28805996450415",
+        "bytes": 3418
+      },
+      {
+        "path": "scripts/test.ps1",
+        "sha256": "da0b5ff084046f6bbd00784cc57b748ba08b345f3031dc78d16ad496da0e044e",
+        "bytes": 7947
+      }
+    ],
+    "runtime": {
+      "lock": {
+        "path": "apps/web/runtime.lock.json",
+        "sha256": "bafe2c54c2659348c8fa6836564b9300a9ffb0ac5f86d717302176b7239c0ad1",
+        "bytes": 380
+      },
+      "resolved": {
+        "schema_version": 1,
+        "runtime_directory": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "source_lock": "fixtures/repoe/production-source-manifest.json",
+        "economy": {
+          "mode": "bundled",
+          "index": "economy/league-index.json"
+        }
+      },
+      "files": [
+        {
+          "path": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/manifest.json",
+          "sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+          "bytes": 5983
+        },
+        {
+          "path": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/game-data.json",
+          "sha256": "604e36ae98351b1dd12de65f2c8e91d60bbb1e7951ff27d5212be574104b727e",
+          "bytes": 16914460
+        },
+        {
+          "path": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d/strings.json",
+          "sha256": "463affab617c1f1622b2f97ea4f9497d8626e8a3f833f40e5b40c45a83e784f6",
+          "bytes": 6740473
+        }
+      ],
+      "compiled_link": "C:\\Users\\Oliver\\Documents\\poecraft2-feature-integration\\data\\compiled\\current",
+      "canonical_sqlite_modified": false
+    },
+    "prices": {
+      "mode": "unchanged bundled tracked snapshots",
+      "files": [
+        {
+          "path": "apps/web/public/economy/league-index.json",
+          "sha256": "2d71a5a96a669ac835b6e5bc06750c12ef8e5af3d7d9966c43fec0c62e86a2cd",
+          "bytes": 6144
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/494a62ac05535e4a2671acdb190c74327e4e50b2f403a3aed1d18edad73e29c9.json",
+          "sha256": "992b82f831976ffa6098a68f95e1c3a17ad1ab4f04dc7404f1a302c3599bd696",
+          "bytes": 99568
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/49d5d98e06d6271a6d799a7cee2b8c79f3b7d0319321ed9df90289033a6db615.json",
+          "sha256": "3a6c5f53c7e7e2b05c70fa75471a9f11f63a2ec2981b8e483a9bcbd618ea3ba2",
+          "bytes": 99258
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/4c117949e086de69a41c76fe632d8c9ae95d0f8a62d80f6149ae518dd8bcc00d.json",
+          "sha256": "10bc79bedaa12563f3a4893651ee9dbce747dd60a24f8407d47d68f7d6ffb0af",
+          "bytes": 84915
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/6b0ef5a757e4adc23bd753f9d9f69a2f96ace9c9f4eddf5fddac1424b0973e5f.json",
+          "sha256": "51a7a77833a1d6ab629fe7b07bf8afd3f8952e8b2e931a1ea1f4be0ebcad2d2b",
+          "bytes": 104679
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/7da0b6fe6884582874c8e75bbcc19e2c9cf76388992a68d546f14c967a469702.json",
+          "sha256": "ec93341dff8f7b1b69209ae6fb5589f09d39c686ab824aca46c1ce3176fd4a31",
+          "bytes": 146419
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/8feaa2c8e0ae609baace236430f00d9baef171e56ade19cfadaec83c5ad2527e.json",
+          "sha256": "95774f68dcb610e5669cf866d2d128bce62a1d204b75bfbb39278e29c22891ff",
+          "bytes": 93673
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+          "sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+          "bytes": 94189
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/94964eb5b0bcd8f3d7152dbd12d213dd3b83bc2579b27e1a05c5b73b7cd40f6a.json",
+          "sha256": "f60df63f33655e7ad243a3ac87e60734de8b88a0ee357acc37e1729eba24e7de",
+          "bytes": 87190
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/9dece258da8894eb75cbb28115c89cca3149a03b885510e10ab6c22836dbc2fc.json",
+          "sha256": "f6f5d0ade010423d20303af6714cbf6ff5bd0f8af1f7f03dba6f603ff31442b6",
+          "bytes": 141469
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/a122cad9494aa3361016b6f9c542e029e7aa1465de6d04bd6b5b150b5d26c485.json",
+          "sha256": "05cddc3b8440bed43049ae0e36bb5feba9d9ca28eb4277c101aa9764ed55c88d",
+          "bytes": 143727
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/b199684d293012331b8d4a57dea44a1f7241d5d4664ba6579de94848d82f0cff.json",
+          "sha256": "70ccf9da8b3711853081713087fb9be010d2e2741449e0defdce7e14203e22cb",
+          "bytes": 142844
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/b9dffc0f61e35d25fc2174f9b6922587edd4981f5ebcc49c345e1ea1a1ed8556.json",
+          "sha256": "aed49c066f9acbf723bca828388aa299802315d5252104e57ad1025e86e45621",
+          "bytes": 100525
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/c09d72d5fa7f330924f0e218a33f2954805c22b06331fcb07c5d14b0cece397e.json",
+          "sha256": "9d145f4c39300638154c4c4971d3aa81378a1f309aa17d89cc28db0b1aed1aa9",
+          "bytes": 84135
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/d1e6d94836059ea643b91376890bdc2e9ffa52298d568f726aae4158746f1eb8.json",
+          "sha256": "eefa7576625aac55ccfa26a49fa1031646dd317cd1d860fc45698c435058ea5c",
+          "bytes": 86915
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+          "sha256": "df87fc765172887c097909643f20a10210a2ac82f0348f474ffcd56012d27b92",
+          "bytes": 141941
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/fea4d53e86df578a17c8b549ced2d7a7f85a53fb41b852667483364427d58bad.json",
+          "sha256": "ee0efb7d27519909f4188fcbd09171506b6a1d7070f9ae3dc1b1d2284cdb0e00",
+          "bytes": 99312
+        },
+        {
+          "path": "apps/web/public/economy/snapshots/ff59e7f60886430318976be46a4ea971fc20c8381274be2ef18c8a92193feb82.json",
+          "sha256": "c4d2d610c7ca8f67185edd655b45a6235893e1ac31b70e051bf52e6025df779d",
+          "bytes": 151536
+        }
+      ],
+      "refresh": false
+    },
+    "dependencies": {
+      "mode": "Existing main node_modules junction; no install",
+      "package_lock": {
+        "path": "apps/web/package-lock.json",
+        "sha256": "244102b6e9a380054cb847b8ecbed3ef3f7956eb79a18bf8562acbc200d5be3c",
+        "bytes": 61622
+      },
+      "package": {
+        "path": "apps/web/package.json",
+        "sha256": "ae3a1c389ba1060ebd5252c4e3dbbee883123126de9fa934b3a7cb89da975e4c",
+        "bytes": 2761
+      },
+      "existing_target": "C:/Users/Oliver/Documents/poecraft2/apps/web/node_modules"
+    },
+    "batch_preconditions": [
+      "Parent selects/reviews terminal qualified Recomb checkpoint before final source freeze",
+      "Explicit parent serial LOCAL grant",
+      "Resolve exact tool/runtime/data/price identities and commands in deterministic existing supervisor before timing",
+      "No feature push until combined qualification"
+    ],
+    "next_batch": [
+      {
+        "command": "powershell -NoProfile -File scripts/dev-engine.ps1 -Task Tests -Jobs 2",
+        "cwd": "integration root"
+      },
+      {
+        "command": "Resolved project CMake --build build/engine --target poecraft_engine_shared poecraft_header_smoke --parallel 2",
+        "cwd": "integration root"
+      },
+      {
+        "command": "build/engine/poecraft_header_smoke.exe",
+        "cwd": "integration root"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --calculator-incoming-only data/compiled/current",
+        "cwd": "integration root"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-observation-layout-only",
+        "cwd": "integration root"
+      },
+      {
+        "command": "build/engine/poecraft_engine_tests.exe --solver-calc-only data/compiled/current",
+        "cwd": "integration root"
+      },
+      {
+        "command": "py -3 -B -m pytest bindings/python/tests/test_hinekora_lock.py bindings/python/tests/test_hinekora_multi_preview.py -q -p no:cacheprovider --basetemp out/feature-integration/pytest-tmp",
+        "cwd": "integration root",
+        "env": {
+          "PYTHONPATH": "tools/ingest;bindings/python",
+          "POECRAFT_ENGINE_LIBRARY": "Resolved combined build/engine/poecraft_engine.dll"
+        }
+      },
+      {
+        "command": "powershell -NoProfile -File scripts/build-wasm.ps1",
+        "cwd": "integration root",
+        "env": {
+          "EMCC_CORES": "2"
+        }
+      },
+      {
+        "command": "npm run build:data",
+        "cwd": "apps/web",
+        "purpose": "Owned frozen runtime packaging; no ingest/economy refresh"
+      },
+      {
+        "command": "npx tsx test/calculator-goal-set-wasm.test.ts",
+        "cwd": "apps/web"
+      },
+      {
+        "command": "npm test",
+        "cwd": "apps/web",
+        "env": {
+          "POECRAFT_TEST_BROWSER_CHANNEL": "chrome",
+          "POECRAFT_SMOKE_TEST": null
+        }
+      },
+      {
+        "command": "npx tsc --noEmit",
+        "cwd": "apps/web"
+      }
+    ],
+    "pending_recomb_batch": "Append owner-selected finite controls after qualified terminal receipt and integration review; do not guess a selector or weaken mixed-frame obligations.",
+    "rendered_coverage": "Existing combined_source_review.rendered_plan: goal-list persistence/scope/union, independent Lock lifecycle/full previews/spend, incoming carrier and donor/mixed-frame staleness. Actual rendered execution unrun.",
+    "combined_runtime_qualified": false,
+    "rendered_qualified": false,
+    "solver_authority_promoted": false,
+    "local_heavy_commands": 0,
+    "owned_processes": 0,
+    "excluded": [
+      "Pending feeder source",
+      "Pending solver recovery/Bow5 economics/product controls",
+      "Price/data refresh",
+      "Dependency installation",
+      "Feature publication"
+    ]
   }
 }

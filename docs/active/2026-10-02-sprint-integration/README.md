@@ -861,3 +861,31 @@ existing server. combined_source_review owns exact source/artifact identities,
 integration order, test and rendered plans. No merge, build, browser launch,
 combined qualification or feature publication occurred in this source-only pass.
 Pending solver recovery/Bow5 economic and product checks are excluded.
+
+
+## Lock and Calculator source integration performed (2026-10-03)
+
+The parent authorized actual source integration. Fresh sibling
+poecraft2-feature-integration, branch dot/features-integration-20261003,
+starts at main4b092b0b plus receipt db1d8404. Ordinary Lock merge1e2d6eab
+and Calculator merge d4c854f8 contain their qualified checkpoints with ancestry
+preserved. Only Lock HANDOFF and Calculator WASM required conflict handling;
+all production source/shared API additions merged automatically. Main's evaluation
+cancellation method, finite controls, full smoke file and hosted browser setup are
+byte-for-byte retained. Workspace browser setup matches main exactly; goal-list
+IndexedDB assertions are added once. An initial static occurrence-count mistake
+is recorded and corrected by exact prefix comparison before this checkpoint.
+
+The WASM binary is deliberately the old main472f644b placeholder. It is explicitly
+unqualified for combined source and must be rebuilt after final feature selection.
+The new worktree has its own frozen runtime junction and uses existing main
+node_modules without installation. Runtime manifest/game-data/strings, runtime
+lock, bundled economy inputs and package metadata are hashed in
+actual_source_integration. No canonical data, prices or dependencies changed.
+
+Recomb's terminal qualified checkpoint is still awaited for review/integration;
+feeder and solver recovery remain excluded. The receipt records the exact
+serial native/Lock-Python/WASM/worker/full-npm/TypeScript batch, with two compiler
+jobs and retained checks. No LOCAL heavy command, browser session or feature push
+has occurred. Rendered coverage remains prepared and unrun; combined source and
+runtime qualification are separate obligations.
