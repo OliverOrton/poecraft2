@@ -14563,9 +14563,35 @@ void run_automatic_eldritch_side_tests(
         deferred_closure_telemetry.find(
             "parent_eldritch_kernel_generation_max_reforge_work") ==
         std::string::npos);
-    const SolveResult prefix_solved = solve(
-        prefix_solve_calc, repair_prefix, prices,
-        prefix_solve_options);
+    const auto retained_fixture_solve = [&](CalcContext& fixture_calc,
+                                            const SolveOptions& fixture_options,
+                                            const char* label) {
+        SolveWork work(fixture_calc, repair_prefix, prices, fixture_options);
+        auto& impl = SolveWorkTestAccess::get(work);
+        std::uint64_t observed_peak = 0;
+        const auto observe = [&]() {
+            for (const auto& graph : {impl.transition_cache, impl.focused_strict_transition_cache}) {
+                if (graph) observed_peak = std::max<std::uint64_t>(observed_peak,
+                    graph->successors.size() + graph->choice_successors.size());
+            }
+        };
+        while (!work.progress().done) {
+            observe();
+            work.step(4096);
+            observe();
+        }
+        const auto solved = work.finish();
+        observe();
+        std::printf("retained finite %s: observed_peak=%llu final=%llu active=%llu strict=%llu strict_states=%u quotient_states=%u\n",
+            label, static_cast<unsigned long long>(observed_peak),
+            static_cast<unsigned long long>(solved.diagnostics.sparse_transitions),
+            static_cast<unsigned long long>(impl.transition_cache ? impl.transition_cache->successors.size() + impl.transition_cache->choice_successors.size() : 0),
+            static_cast<unsigned long long>(impl.focused_strict_transition_cache ? impl.focused_strict_transition_cache->successors.size() + impl.focused_strict_transition_cache->choice_successors.size() : 0),
+            solved.diagnostics.strict_discovered_states, solved.diagnostics.quotient_states);
+        return solved;
+    };
+    const SolveResult prefix_solved = retained_fixture_solve(
+        prefix_solve_calc, prefix_solve_options, "uncapped");
     PC_CHECK(prefix_solved.policy_available);
     PC_CHECK(
         eligible_completion_lower <=
@@ -14597,9 +14623,8 @@ void run_automatic_eldritch_side_tests(
         session, goal, registry, candidates);
     SolveOptions retained_transition_options = prefix_solve_options;
     retained_transition_options.max_transitions = retained_transition_cap;
-    const SolveResult retained_transition_solved = solve(
-        retained_transition_calc, repair_prefix, prices,
-        retained_transition_options);
+    const SolveResult retained_transition_solved = retained_fixture_solve(
+        retained_transition_calc, retained_transition_options, "capped");
     PC_CHECK(
         retained_transition_solved.diagnostics.sparse_transitions <=
         retained_transition_cap);

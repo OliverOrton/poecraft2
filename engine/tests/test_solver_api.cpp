@@ -10,6 +10,7 @@
 #include "../src/json.hpp"
 #include "../src/solver_solve_contracts.hpp"
 #include "../src/solver_diagnostic_options.hpp"
+#include "../src/solver_solve_types.hpp"
 
 #include <algorithm>
 #include <array>
@@ -960,6 +961,8 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
         PC_SOLVE_PROFILE_OVERRIDE_HIGH_IMPACT_EXECUTABLE_UPPERS |
         PC_SOLVE_PROFILE_OVERRIDE_POLICY_REFINEMENT_STATES;
     solve_options.solver_flags = PC_SOLVER_FLAG_DISABLE_IMPRINT_PROGRAMS;
+    auto& diagnostic_calc =
+        poecraft::solver::solver_lower_diagnostic_calculator(solver);
     pc_solve_summary summary{};
     PC_CHECK(pc_solver_solve(
                  solver, &start, economy, &solve_options, &summary,
@@ -969,8 +972,23 @@ void run_public_product_eldritch_gate(const char* artifact_dir) {
         solver_telemetry_json(solver, &error);
     if (summary.policy_available != 1) {
         std::fprintf(stderr, "product Eldritch missing policy: BodyInt17 ilvl86 root=1prefix+3suffix goal=1suffix exact/no extras; states=%u budgets=200000/25000/300000/10000000/100000000/512MiB profile=calculator_product_v1 overrides=28\n", summary.expanded_states);
+        for (std::uint32_t state = 0; state < diagnostic_calc.state_count() && state < 64; ++state) {
+            double value = 0.0;
+            const char* action = nullptr;
+            const auto query = pc_solver_state_value(solver, state, &value, &action, &error);
+            const auto& carrier = diagnostic_calc.state(state);
+            const auto& graph = diagnostic_calc.solve_transition_cache();
+            std::fprintf(stderr, "product finite state=%u query=%d value=%.17g prefix=%u suffix=%u goal=%d expanded=%d rows=%u action=%s\n",
+                state, static_cast<int>(query), value,
+                static_cast<unsigned>(carrier.prefix_count), static_cast<unsigned>(carrier.suffix_count),
+                diagnostic_calc.is_goal_state(carrier),
+                graph && state < graph->expanded.size() ? graph->expanded[state] : -1,
+                graph && state < graph->state_rows.size() ? graph->state_rows[state].count : 0,
+                action ? action : "none");
+        }
         const auto report = parse_solver_api_fixture(solved_telemetry);
-        if (const auto* automatic = report.find("automatic_candidates")) {
+        const auto* control = report.find("action_control");
+        if (const auto* automatic = control ? control->find("automatic_candidates") : nullptr) {
             if (const auto* witnesses = automatic->find("witnesses")) {
                 for (const auto& witness : witnesses->as_array()) {
                     for (const auto& member : witness.object) {
