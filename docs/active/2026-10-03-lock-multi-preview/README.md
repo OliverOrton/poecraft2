@@ -95,3 +95,52 @@ handle exists. Remaining work after clearance: native Engine/shared/header at
 two jobs, focused Python Lock tests against that DLL, matching two-job WASM,
 the existing nine-file web `test:lock` chain and TypeScript. Heavy work will be
 serial and the slot released immediately after those checks complete.
+
+## Alignment and prepared qualification (awaiting slot)
+
+Parent selected qualified main `0187f3d8334c3b9deb9730a6fa89899c051e9931`.
+The isolated branch merges that main without rewriting `e792c041`; the only
+conflict was the two prepended HANDOFF entries, both retained. The native/WASM
+inputs from main are unchanged by this web scope-adapter patch. Applicable
+AGENTS and local skill availability are unchanged. Multi-goal now owns the
+serial qualification slot; Lock is next and awaits an explicit parent grant.
+
+Prepared independent worker fixtures now serialize application, observation and
+consumption history, Undo before any request, observe Chaos/Exalt repeatedly in
+changed order, and Redo the consumed state with separate Lock/currency counts.
+Incomplete imports must preserve the current live Lock byte-for-byte. Existing
+native fixtures cover complete configured requests, equal-visible consumption,
+refused/no-op actions, decline, exact item identity and no RNG use on restoration
+or observation. Source review also renamed a pytest parameter that conflicted
+with its reserved `request` fixture. No test has executed at this checkpoint.
+
+After the explicit grant, run these existing owners sequentially from this
+worktree. Use the already installed web dependencies; do not install, refresh
+data/prices, restart the dev server or run broad/long solver work. Capture output
+under `out/lock-multi-preview/` and retain any failed invocation. Check exit
+status after each command before continuing dependent work.
+
+```powershell
+$env:CMAKE_BUILD_PARALLEL_LEVEL = "2"
+powershell -NoProfile -File scripts/dev-engine.ps1 -Task Engine -Jobs 2
+. scripts/engine-build-common.ps1
+$lockCMake = Find-PoeCraftCMake
+& $lockCMake --build build/engine --target poecraft_engine_shared poecraft_header_smoke --parallel 2
+& ./build/engine/poecraft_header_smoke.exe
+$env:PYTHONPATH = "tools/ingest;bindings/python"
+$env:POECRAFT_ENGINE_LIBRARY = (Resolve-Path build/engine/poecraft_engine.dll).Path
+py -3 -m pytest bindings/python/tests/test_hinekora_lock.py bindings/python/tests/test_hinekora_multi_preview.py -q -p no:cacheprovider --basetemp out/lock-multi-preview/pytest-tmp
+$env:EMCC_CORES = "2"
+powershell -NoProfile -File scripts/build-wasm.ps1
+Push-Location apps/web
+node ../../scripts/build-data-bundle.mjs
+npm run test:lock
+npx tsc --noEmit
+Pop-Location
+```
+
+Record source/engine tree, all changed native/facade hashes, the tested DLL and
+matching WASM/MJS SHA256, frozen runtime identity and test outcomes in the same
+receipt. Generated bundle metadata is setup from the frozen selection, not a
+data refresh. Release the heavy slot promptly after executable checks complete;
+documentation and local source/artifact commits need no continued heavy slot.

@@ -1,8 +1,8 @@
 {
-  "status": "source implemented; executable qualification unrun awaiting parent heavy-slot clearance",
-  "recorded_utc": "2026-10-03T04:50:22.3591558Z",
+  "status": "aligned source and replay fixtures ready; executable qualification unrun awaiting explicit parent heavy-slot grant",
+  "recorded_utc": "2026-10-03T05:08:52.9024623Z",
   "baseline": "3ab862fece9d52ca733ad01a0869fd06cec84810",
-  "live_remote_main": "3ab862fece9d52ca733ad01a0869fd06cec84810",
+  "live_remote_main": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
   "remote_verification": "connected GitHub read-only fetch_commit(main); direct git proxy unavailable",
   "branch": "dot/lock-multi-preview-exec-20261003",
   "worktree": "C:/Users/Oliver/Documents/poecraft2-lock-multi-preview-exec",
@@ -21,7 +21,7 @@
     "engine/src/hinekora.cpp": "bb50299b6ff57c7c95b72b1f05e1f960a3392340540fb3e026c1349ffbd012e0",
     "engine/src/hinekora_internal.hpp": "777ff7a6beb364ffe373641ef2b7284bb367fa07b22c778e700cd09010e48b30",
     "bindings/python/poecraft_engine/_binding.py": "157ab47010b2095c73c46c8819970589df799818c86cf5d706e194a1bfa356cc",
-    "bindings/python/tests/test_hinekora_multi_preview.py": "07f5e6ae8c054849b4820d1543d29b39e3d222fffcc489ff14b83d7832345ca0",
+    "bindings/python/tests/test_hinekora_multi_preview.py": "23d3c5230efcce5593e72e17e9dc500e718cc6b2a67b1dfdd59e29faef084b16",
     "bindings/wasm/wasm_api.cpp": "0414bc0a4e5acb4ed8e2f2f41be16ddc1f6e686bcc9aacfc87972c63757f94ad",
     "apps/web/src/app/engine-client.ts": "5662d275f176fc3561749a4ea199914fff3aa085e003f099260c5d65b6b4ea39",
     "apps/web/src/app/engine-protocol.ts": "b9f5c17da9c0b48fafad1a9c6ec156672a5a8dd5706f9c24fd91c48c7f9a0d7c",
@@ -29,7 +29,7 @@
     "apps/web/src/app/engine-worker.ts": "523fd49e675853c58ace33987ec1cdef11bdf6f1630839e75b0112016a34bee7",
     "apps/web/src/app/components/pc-craft-controls.tsx": "22940d84e7d52a83d190e3dc966e6be1fb6b034961cabd6efdd2fcbf26a57c7d",
     "apps/web/src/app/components/pc-emulator.tsx": "064efd9cac414653e0f8dbff49f51fbe762d8d193792e30e984bad041a829528",
-    "apps/web/test/hinekora-bindings.test.ts": "de6c9b16e740308715d225ab3c7bce85c9ac7390444bdc7b0d8a76925ce900ea",
+    "apps/web/test/hinekora-bindings.test.ts": "cb4c0b2660ac7d7eee35fbd68e903fafe35cb70d7d087954b91fd421a4938af3",
     "apps/web/test/hinekora-controls.test.ts": "70862d3e1d1b7e95a7d367932bd9e3fa36b893df6bb49a310ef25470d894e576"
   },
   "runtime": {
@@ -56,7 +56,9 @@
     "active_owner_at_launch": "recombination task 01a0ffef-253d-729e-97fc-e234985d0033",
     "request_pending": true,
     "grant_received": false,
-    "solver_runs": 0
+    "solver_runs": 0,
+    "current_owner": "multi-goal 01a0ffee-23a8-74a2-be97-7281728a5023",
+    "queue_position": "next after explicit parent grant"
   },
   "exclusions": [
     "ordinary Calculator/Current/Finder/authored Simulator admission",
@@ -66,5 +68,12 @@
     "dev server restart",
     "push/merge/deploy",
     "subagents"
-  ]
+  ],
+  "alignment": {
+    "qualified_main": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
+    "original_source_commit": "e792c0416db955e9ee33fead462eb155626005cc",
+    "method": "merge; original source commit retained as ancestor",
+    "conflicts": "HANDOFF entries only; both retained",
+    "native_and_facade_unchanged_from_original_source": true
+  }
 }

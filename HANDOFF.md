@@ -1,14 +1,27 @@
 # Persistent multi-preview Lock execution (2026-10-03)
 
 Oliver resumed and approved the independent cached approximate model. Isolated
-`dot/lock-multi-preview-exec-20261003` from remote-verified `3ab862fe` owns native Lock,
+`dot/lock-multi-preview-exec-20261003`, aligned with qualified main `0187f3d8`, owns native Lock,
 bindings and Emulator controls; the [living record](docs/active/2026-10-03-lock-multi-preview/README.md)
 owns interface decisions, checkpoint consistency and focused acceptance.
 Source implementation is retained; builds/tests/matching WASM await parent heavy
-slot clearance. No owned heavy process started. Recombination owns the current
-slot; maximum two compiler jobs. Calculator goals stay with their selected owner.
+slot clearance. No owned heavy process started. Multi-goal owns the current
+slot and Lock is next; maximum two compiler jobs. Calculator goals stay with their selected owner.
 No model-selection approval remains; solver/Unveil/donor admissions remain held.
 Commits stay local for integration owner; no push/merge/deployment or refresh.
+
+# Web solver scope adapter qualified (2026-10-03)
+
+Repair source `7f235bbf` recognizes only the native product v2 scope. Focused
+shape/roundtrip, unknown-scope and invalid-graph controls, TypeScript and complete
+filtered npm chain pass; native/WASM unchanged. Heavy slot released immediately;
+no owned heavy process remains. Normal main delivery approved; actual remote/CI
+outcome lives in `out/local-native-repair/scope-guard-delivery.json`.
+The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `web_solver_scope_guard_qualification` receipt own evidence/exclusions.
+Multi-goal `e45b92b8` is based on pre-repair `dbc142a2`; qualify combined current
+source, not that old isolated native base. Lock `e792c041` source completion is
+unqualified. Feature branches remain separate; parent coordinates their slots.
 
 # Native CI repair qualified (2026-10-03)
 

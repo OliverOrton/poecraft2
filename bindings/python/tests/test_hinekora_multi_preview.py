@@ -45,20 +45,20 @@ def test_reload_before_observation_preserves_seen_and_unseen_requests_without_rn
                     assert ctx.apply(replacement2, "chaos").applied and not reload.active
 
 
-@pytest.mark.parametrize("request", ["transmute", "veiled_exalt", {"type": "harvest_reforge", "target_tag": "fire"}, "unravelling"])
-def test_refused_observation_and_action_preserve_paid_lock_atomically(request):
+@pytest.mark.parametrize("currency", ["transmute", "veiled_exalt", {"type": "harvest_reforge", "target_tag": "fire"}, "unravelling"])
+def test_refused_observation_and_action_preserve_paid_lock_atomically(currency):
     with load_data(ARTIFACT) as data, data.create_session(BASE, 86) as session, session.create_action_context(7) as ctx:
         item = session.create_item("rare")
         with ctx.hinekora_lock(item) as lock:
             preview = _fields(lock.observe("exalt")[0]._state)
             before = lock.export()
             with pytest.raises(EngineError, match="Unsupported or inapplicable"):
-                lock.observe(request)
+                lock.observe(currency)
             assert lock.export() == before and lock.active
-            if request == "transmute":
-                assert not ctx.apply(item, request).applied
-            elif request == "veiled_exalt":
-                with pytest.raises(EngineError): ctx.apply(item, request)
+            if currency == "transmute":
+                assert not ctx.apply(item, currency).applied
+            elif currency == "veiled_exalt":
+                with pytest.raises(EngineError): ctx.apply(item, currency)
             assert lock.active and _fields(lock.preview()[0]._state) == preview
             assert ctx.apply(item, "scour").applied and not lock.active
 

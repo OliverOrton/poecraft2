@@ -136,11 +136,15 @@ try {
     assert.equal(appliedLock.model, "independent-cached-lock-v1"); assert.equal(appliedLock.approximate, true);
     assert.deepEqual(appliedLock.cost_keys, ["hinekora_lock"]);
     const applicationCheckpoint = await client.exportItem(multiItem, session);
+    const multiSpend = addCraftSpend(emptyCraftSpend(), appliedLock.cost_keys);
+    const multiHistory = new EditHistory<{state: unknown; spend: typeof multiSpend}>();
+    multiHistory.reset({state: applicationCheckpoint, spend: multiSpend});
     const seenExalt = await client.observeHinekoraLock(multiContext, multiItem, session, {type: "exalt"});
     const seenChaos = await client.observeHinekoraLock(multiContext, multiItem, session, {type: "chaos"});
     assert.deepEqual(seenExalt.cost_keys, []); assert.deepEqual(seenChaos.cost_keys, []);
     assert.deepEqual((await client.observeHinekoraLock(multiContext, multiItem, session, {type: "exalt", tier: 4})).preview, seenExalt.preview);
     const beforeRefusal = await client.exportItem(multiItem, session);
+    multiHistory.record({state: beforeRefusal, spend: addCraftSpend(multiSpend, seenExalt.cost_keys)});
     await assert.rejects(client.observeHinekoraLock(multiContext, multiItem, session, {type: "veiled_exalt"}), /Unsupported or inapplicable/);
     assert.deepEqual(await client.exportItem(multiItem, session), beforeRefusal);
     assert.equal((await client.apply(multiContext, multiItem, {type: "transmute"})).applied, false);
@@ -150,12 +154,37 @@ try {
     assert.equal((await client.hinekoraInfo(replayContext, replayItem, session)).preview, undefined);
     assert.deepEqual((await client.observeHinekoraLock(replayContext, replayItem, session, {type: "chaos"})).preview, seenChaos.preview);
     assert.deepEqual((await client.observeHinekoraLock(replayContext, replayItem, session, {type: "exalt"})).preview, seenExalt.preview);
+    const replayBeforeRefusal = await client.exportItem(replayItem, session);
+    const incompleteMulti = structuredClone(applicationCheckpoint) as {foresight: {snapshot: string}};
+    const incompleteSnapshot = JSON.parse(incompleteMulti.foresight.snapshot);
+    incompleteSnapshot.reservations.pop(); incompleteMulti.foresight.snapshot = JSON.stringify(incompleteSnapshot);
+    await assert.rejects(client.importItem(incompleteMulti, session, replayContext), /Incomplete Lock reservation domain/);
+    assert.deepEqual(await client.exportItem(replayItem, session), replayBeforeRefusal);
     assert.equal((await client.apply(replayContext, replayItem, {type: "exalt"})).applied, true);
     assert.equal((await client.hinekoraInfo(replayContext, replayItem, session)).active, false);
     assert.deepEqual(physical(await client.exportItem(replayItem, session)), physical(seenExalt.preview));
-    const multiSpend = addCraftSpend(addCraftSpend(emptyCraftSpend(), appliedLock.cost_keys), seenExalt.cost_keys);
+    multiHistory.record({state: await client.exportItem(replayItem, session), spend: addCraftSpend(multiSpend, ["exalt"])});
+    const restoredMultiHistory = new EditHistory<{state: unknown; spend: typeof multiSpend}>();
+    restoredMultiHistory.restore(JSON.parse(JSON.stringify(multiHistory.export())), multiHistory.at(2)!);
+    assert.equal(restoredMultiHistory.length, 3, "Paid independent checkpoints remain portable through history serialization");
+    const multiUndo = restoredMultiHistory.go(0)!;
+    const multiUndoContext = await client.createContext(session, 997); contexts.push(multiUndoContext);
+    const multiUndoItem = await client.importItem(multiUndo.state, session, multiUndoContext); items.push(multiUndoItem);
+    assert.equal((await client.hinekoraInfo(multiUndoContext, multiUndoItem, session)).preview, undefined);
+    for (const request of [{type: "chaos"}, {type: "exalt"}, {type: "chaos"}, {type: "exalt"}] as const) {
+        const observed = await client.observeHinekoraLock(multiUndoContext, multiUndoItem, session, request);
+        assert.deepEqual(observed.preview, request.type === "chaos" ? seenChaos.preview : seenExalt.preview);
+        assert.deepEqual(observed.cost_keys, []);
+    }
+    assert.deepEqual(multiUndo.spend.counts, {hinekora_lock: 1});
+    const multiRedo = restoredMultiHistory.go(2)!;
+    const multiRedoContext = await client.createContext(session, 998); contexts.push(multiRedoContext);
+    const multiRedoItem = await client.importItem(multiRedo.state, session, multiRedoContext); items.push(multiRedoItem);
+    assert.equal((await client.hinekoraInfo(multiRedoContext, multiRedoItem, session)).active, false);
+    await assert.rejects(client.observeHinekoraLock(multiRedoContext, multiRedoItem, session, {type: "chaos"}), /consumed or invalidated/);
+    assert.deepEqual(multiRedo.spend.counts, {hinekora_lock: 1, exalt: 1});
     assert.deepEqual(multiSpend.counts, {hinekora_lock: 1});
-    console.log("Independent Lock worker: selection-free application, switching, normalized aliases, atomic refusal, unseen checkpoint replay and one Lock payment passed");
+    console.log("Independent Lock worker: selection-free application, switching, aliases, atomic failed import, unseen replay, Undo/Redo and separate spending passed");
     console.log("Lock worker: paid preview, exact restore, failed import, Undo/Redo spend, context cleanup and native strand editing passed");
 } finally {
     for (const item of items) await client.closeItem(item).catch(()=>{});

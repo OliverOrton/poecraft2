@@ -1924,5 +1924,105 @@
     "no_dependency_install": true,
     "no_data_price_refresh": true,
     "dev_server_untouched": true
+  },
+  "web_solver_scope_guard_checkpoint": {
+    "recorded_utc": "2026-10-03T04:43:20.596410+00:00",
+    "baseline": "3ab862fece9d52ca733ad01a0869fd06cec84810",
+    "status": "local patch prepared, all tests unrun pending coordinated test slot",
+    "ci_run": 37096236872,
+    "ci_job": 111126637666,
+    "ci_url": "https://github.com/OliverOrton/poecraft2/actions/runs/37096236872",
+    "ci_result": "All 17 native targets and 275 bindings pass; npm test fails in product Eldritch dependency wins through release WASM at engine-smoke.test.ts:2161, prepareSolverStrategy:208",
+    "source_contract": "Native solver_compile.cpp emits gated_search_with_paid_root_foulborn_salvage_v2 when paid-root scope is active; strategy-model.ts whitelist/types omit that declared value",
+    "change": "Recognize only the exact native v2 scope in the web document shape guard and type. Preserve all native/compiler/board validation and unknown-scope rejection.",
+    "regressions": [
+      "Declared v2 scope survives clone/roundtrip",
+      "Unknown v3 scope refused by shape guard and prepareSolverStrategy",
+      "Dangling graph still fails board validation",
+      "Real product Eldritch fixture asserts raw transferred native scope before preparation"
+    ],
+    "native_source_unchanged": true,
+    "wasm_unchanged": true,
+    "test_commands_prepared": [
+      "node node_modules/tsx/dist/cli.mjs test/strategy-model.test.ts",
+      "node node_modules/tsx/dist/cli.mjs test/solve-workspace.test.ts",
+      "node node_modules/typescript/bin/tsc --noEmit",
+      "POECRAFT_SMOKE_TEST='Calculator item goals and editors preserve native joint outcomes' npm test"
+    ],
+    "unrun": [
+      "all local tests/typecheck for this patch",
+      "specific product Eldritch real-WASM fixture; its existing 10000-run Simulator tail is unchanged and not selected as local strategy qualification",
+      "new main CI"
+    ],
+    "heavy_slot": "recombination owns, multi-goal next; web test slot requested afterward",
+    "multi_goal": "e45b92b8bd28d6fd0902468d9095ce8c2580e5b7 remains unbuilt/untested and unmerged",
+    "main_unchanged": true,
+    "no_push": true,
+    "no_deployment": true
+  },
+  "web_solver_scope_guard_qualification": {
+    "recorded_utc": "2026-10-03T04:59:55.964683+00:00",
+    "status": "web adapter locally qualified; normal main delivery approved",
+    "baseline": "3ab862fece9d52ca733ad01a0869fd06cec84810",
+    "qualified_source": "7f235bbff9f87d9a216848c226c8cfd47b2eb465",
+    "ci_failure": {
+      "run": 37096236872,
+      "job": 111126637666,
+      "fixture": "product Eldritch dependency wins through release WASM",
+      "stack": "engine-smoke.test.ts:2161 -> prepareSolverStrategy:208",
+      "result": "All 17 native targets and 275 bindings passed; document shape whitelist omitted the exact declared native v2 product scope"
+    },
+    "change": "Add gated_search_with_paid_root_foulborn_salvage_v2 to the web scope type/shape guard; keep prepareSolverStrategy and graph validation unchanged",
+    "checks": [
+      {
+        "command": "node node_modules/tsx/dist/cli.mjs test/strategy-model.test.ts",
+        "exit": 0,
+        "log": "out/local-native-repair/scope-guard-model.log",
+        "includes": "known v2 accepted and roundtripped; unknown v3 and invalid scope refused"
+      },
+      {
+        "command": "node node_modules/tsx/dist/cli.mjs test/solve-workspace.test.ts",
+        "exit": 0,
+        "log": "out/local-native-repair/scope-guard-workspace.log",
+        "includes": "exact scope preserved; unknown v3 refused; dangling graph still board-invalid; exact routers preserved"
+      },
+      {
+        "command": "node node_modules/typescript/bin/tsc --noEmit",
+        "exit": 0,
+        "log": "out/local-native-repair/scope-guard-typescript.log"
+      },
+      {
+        "command": "POECRAFT_SMOKE_TEST='Calculator item goals and editors preserve native joint outcomes' npm test",
+        "exit": 0,
+        "log": "out/local-native-repair/scope-guard-web-chain.log",
+        "scope": "4/4 initial real-worker smoke including selected Calculator case; every later test file in the complete npm chain ran"
+      }
+    ],
+    "native_source_unchanged": true,
+    "native_rebuild_not_required": true,
+    "wasm_unchanged": true,
+    "wasm_sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+    "runtime_manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "native_authority": "Scope metadata recognition supplies no native programme admission, reachability, lower-bound or exactness claim; all native goal/scope/certificate guards remain unchanged",
+    "unrun": [
+      "Unfiltered engine-smoke suite including the existing product Eldritch 10000-run Simulator tail; unchanged strategy not locally requalified",
+      "new exact-head CI until delivery"
+    ],
+    "heavy_slot_released": true,
+    "owned_heavy_processes_remaining": 0,
+    "source_only_review": [
+      {
+        "checkpoint": "e45b92b8bd28d6fd0902468d9095ce8c2580e5b7",
+        "finding": "merge-base with delivered native repair is dbc142a2; repeat qualification against current combined main, retaining repair and web scope guard. No qualified feature acceptance yet."
+      },
+      {
+        "checkpoint": "e792c0416db955e9ee33fead462eb155626005cc",
+        "finding": "based on 3ab862fe; inspected shared protocol hunks are disjoint. Source completion is not acceptance."
+      }
+    ],
+    "feature_branches_unmerged": true,
+    "no_deployment": true,
+    "no_price_data_refresh": true,
+    "no_dev_server_restart": true
   }
 }
