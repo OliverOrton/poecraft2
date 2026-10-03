@@ -1,6 +1,6 @@
 # Persistent multi-preview Hinekora programme
 
-## Targeted currency UI/error follow-up (source checkpoint)
+## Targeted currency UI/error follow-up (qualified)
 
 Oliver selected normal-currency integration and reported an engine error using
 Lock. The isolated `dot/lock-currency-ui-20261003` worktree starts from published,
@@ -29,14 +29,32 @@ pending the exact message and phase; this reproduced bug is not asserted to be
 their error. The corrupt-input scratch case used an unsupported edit field and
 is excluded from conclusions pending corrected fixture preparation.
 
-Source diff checks pass. Changed-source native/shared/WASM, worker/web/TypeScript
-and rendered normal-currency flows are **unrun**. Both baseline worker processes
-have ended; LOCAL is released for the waiting Calculator owner while source is
-prepared. Obtain a fresh parent grant before qualification. No user stash/history,
-main files, data/prices, existing server, push or deployment has been changed.
-The prior qualified receipts below remain historical and do not qualify this delta.
+The real-browser check also reproduced stale busy-state restoration: finishing
+Apply could re-enable the active Lock, and finishing observation could leave the
+commit button disabled. The controller now restores those controls from current
+Lock state. A focused regression covers Apply, observation, consumption and the
+pending-Unveil hold.
 
-Current qualification: two-job native Engine/shared/header and matching WASM
+Qualification of source `72e4922e2dafcf411ea6a30c104573b47231a082` passes:
+native Engine/shared/header, **65** Python Lock tests, matching WASM, all nine
+`test:lock` files, TypeScript, and **16** rendered real-worker/WASM flow checks
+with zero unhandled browser errors or failed requests. The rendered flows cover
+the normal currency grid, paid application, free stable cross-request previews,
+refusal, commit/payment, Undo/Redo, reload, item-edit invalidation and legacy
+fixed-request inspection/refusal/commit. Screenshots were inspected.
+Native/binding sources are identical to build checkpoint `d2ee8c27`; the later
+follow-up changes only UI/tests and commits the matching WASM. See
+`currency-ui-qualification.json` for exact identities, recovered harness errors,
+logs and retained baseline/browser failure evidence.
+
+All owned commands, browser and temporary server ended by 17:28:01 UTC; LOCAL
+is released. No user stash/history, main files, data/prices, existing server,
+push or deployment has been changed. Combined-feature integration/publication
+remains with the integrator. The user's particular reported error still awaits
+its exact message/phase; both reproduced bugs are fixed. Earlier receipts below
+remain historical and do not qualify this delta.
+
+Earlier programme qualification: two-job native Engine/shared/header and matching WASM
 builds pass; all **64** focused fixed/independent Lock Python tests, the real
 worker/Emulator contracts, all nine `test:lock` files and TypeScript pass.
 Every owned heavy process ended at 07:40:31 UTC and the serial slot is released.
