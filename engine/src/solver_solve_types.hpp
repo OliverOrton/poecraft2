@@ -3344,6 +3344,7 @@ struct SolveWork::Impl : solve_detail::ProofPatternManager {
     void prepare_exact_outer_quotient();
 
     void prepare_iteration();
+    void initialize_completed_policy_boundaries();
 
     double operator_q(
         const std::uint32_t state,

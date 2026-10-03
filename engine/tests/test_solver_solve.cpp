@@ -3694,6 +3694,136 @@ void run_joint_product_fracture_publication_tests() {
     PC_CHECK(calc.state_count() == states_before);
 }
 
+void run_completed_policy_boundary_tests() {
+    // Finite graph laws are specified independently: a completed state with
+    // no usable row has no path to the goal; a censored row is not that proof.
+    auto session = make_solve_session();
+    auto registry = build_action_registry(*session);
+    const auto annul = registry.index_by_id.at("annul");
+    const auto scour = registry.index_by_id.at("scour");
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 100;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    CalcContext calc(session, goal, registry, {annul, scour});
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    PC_CHECK(pc_item_add_mod(&start, PC_SIDE_PREFIX, 3,
+        session->primary_group[3], 0, nullptr) == PC_RESULT_OK);
+    SolveOptions options;
+    options.allow_economic_restart = false;
+    options.state_certificate_control = false;
+    SolveWorkTestAccess::Impl work(calc, start,
+        {{"annul", 1.0}, {"scour", 2.0}}, options);
+    const auto root = work.result.start_state;
+    pc_item_state empty;
+    pc_item_clear(&empty);
+    const auto dead = calc.intern_item(empty);
+    empty.rarity = PC_RARITY_MAGIC;
+    const auto frontier = calc.intern_item(empty);
+    empty.rarity = PC_RARITY_RARE;
+    PC_CHECK(pc_item_add_mod(&empty, PC_SIDE_PREFIX, 0,
+        session->primary_group[0], 0, nullptr) == PC_RESULT_OK);
+    const auto terminal = calc.intern_item(empty);
+    const auto n = calc.state_count();
+    const auto reset = [&] {
+        work.transition_cache = std::make_shared<SolveTransitionCache>();
+        work.transition_cache->state_rows.resize(n);
+        work.priced_rows.clear();
+        work.result.values.assign(n, 17.0);
+        work.result.values[terminal] = 0.0;
+        work.result.goal_states.assign(n, 0);
+        work.result.goal_states[terminal] = 1;
+        work.result.expanded.assign(n, 0);
+        work.result.expanded[root] = work.result.expanded[dead] = 1;
+        work.result.expanded[terminal] = 1;
+        work.result.behavioral_representative_by_state.clear();
+        work.queue.clear();
+        work.expansion_active = false;
+        work.focused_lower_mode = false;
+        work.focused_bound_proved = false;
+        work.incremental_action_generation = false;
+        work.incremental_envelope_closed = true;
+        work.result.diagnostics.state_cap_hit = false;
+        work.result.diagnostics.resource_cap_hit = false;
+    };
+    const auto add = [&](std::uint32_t owner, double cost, bool admitted,
+                         std::uint32_t successor) {
+        solve_detail::SparsePolicyRowInput row;
+        row.owner_state = owner;
+        row.operator_index = annul;
+        row.cost = cost;
+        row.admitted = admitted;
+        row.transitions = {{successor, 1.0}};
+        return solve_detail::append_sparse_policy_row(
+            *work.transition_cache, work.priced_rows, row);
+    };
+    reset();
+    work.initialize_completed_policy_boundaries();
+    PC_CHECK(std::isinf(work.result.values[root]));
+    PC_CHECK(std::isinf(work.result.values[dead]));
+    PC_CHECK(work.result.values[frontier] == 17.0);
+    PC_CHECK(work.result.values[terminal] == 0.0);
+    for (const auto cost : {1.0, kInfinity, -1.0}) {
+        reset();
+        add(root, cost, cost != 1.0, terminal);
+        work.initialize_completed_policy_boundaries();
+        PC_CHECK(std::isinf(work.result.values[root]));
+    }
+    reset();
+    add(root, 0.0, true, terminal);
+    work.initialize_completed_policy_boundaries();
+    PC_CHECK(work.result.values[root] == 17.0); // free usable action retained
+    for (unsigned censored = 0; censored < 7; ++censored) {
+        reset();
+        add(root, 1.0, censored == 3, terminal); // partial rows do not close scope
+        if (censored == 0) work.result.expanded[root] = 0;
+        if (censored == 1) work.expansion_active = true;
+        if (censored == 2) work.queue.push_back(root);
+        if (censored == 3) work.result.diagnostics.resource_cap_hit = true;
+        if (censored == 4) work.result.diagnostics.state_cap_hit = true;
+        if (censored == 5) work.focused_lower_mode = true;
+        if (censored == 6) {
+            work.incremental_action_generation = true;
+            work.incremental_envelope_closed = false;
+        }
+        work.initialize_completed_policy_boundaries();
+        PC_CHECK(work.result.values[root] == 17.0);
+        PC_CHECK(work.result.values[terminal] == 0.0);
+    }
+    reset();
+    work.focused_bound_proved = true;
+    work.initialize_completed_policy_boundaries();
+    PC_CHECK(work.result.values[root] == 17.0); // certified incumbent retained
+
+    // Independent two-route witness: cost 1 enters a dead end; cost 2 reaches
+    // the goal. The dead route is infinite, so Howard must settle at exactly 2.
+    reset();
+    add(root, 1.0, true, dead);
+    const auto proper = add(root, 2.0, true, terminal);
+    work.result.values.assign(n, kValueCeiling);
+    work.result.values[terminal] = 0.0;
+    work.initialize_completed_policy_boundaries();
+    PC_CHECK(std::isinf(work.result.values[dead]));
+    work.expanded = work.result.expanded;
+    work.expanded_count = 3;
+    work.policy_initialized = false;
+    work.policy_iteration_failed = false;
+    work.policy_stable = false;
+    work.policy_rows.assign(n, std::numeric_limits<std::uint64_t>::max());
+    work.reset_policy_iteration_units();
+    for (unsigned unit = 0; unit < 64 && !work.optimization_converged(); ++unit)
+        work.run_policy_iteration_unit();
+    PC_CHECK(work.optimization_converged());
+    PC_CHECK(work.policy_rows[root] == proper);
+    PC_CHECK(work.result.values[root] == 2.0);
+    PC_CHECK(std::isinf(work.result.values[dead]));
+    PC_CHECK(work.result.values[terminal] == 0.0);
+}
+
 void run_target_neutral_proof_consumer_tests() {
     auto session = make_solve_session();
     auto registry = build_action_registry(*session);
@@ -14565,7 +14695,8 @@ void run_automatic_eldritch_side_tests(
         std::string::npos);
     const auto retained_fixture_solve = [&](CalcContext& fixture_calc,
                                             const SolveOptions& fixture_options,
-                                            const char* label) {
+                                            const char* label,
+                                            std::uint64_t* retained_peak = nullptr) {
         SolveWork work(fixture_calc, repair_prefix, prices, fixture_options);
         auto& impl = SolveWorkTestAccess::get(work);
         std::uint64_t observed_peak = 0;
@@ -14588,10 +14719,12 @@ void run_automatic_eldritch_side_tests(
             static_cast<unsigned long long>(impl.transition_cache ? impl.transition_cache->successors.size() + impl.transition_cache->choice_successors.size() : 0),
             static_cast<unsigned long long>(impl.focused_strict_transition_cache ? impl.focused_strict_transition_cache->successors.size() + impl.focused_strict_transition_cache->choice_successors.size() : 0),
             solved.diagnostics.strict_discovered_states, solved.diagnostics.quotient_states);
+        if (retained_peak) *retained_peak = observed_peak;
         return solved;
     };
+    std::uint64_t uncapped_retained_peak = 0;
     const SolveResult prefix_solved = retained_fixture_solve(
-        prefix_solve_calc, prefix_solve_options, "uncapped");
+        prefix_solve_calc, prefix_solve_options, "uncapped", &uncapped_retained_peak);
     PC_CHECK(prefix_solved.policy_available);
     PC_CHECK(
         eligible_completion_lower <=
@@ -14601,11 +14734,10 @@ void run_automatic_eldritch_side_tests(
                 std::fabs(prefix_solved.evaluated_policy_cost)));
     /* Automatic admission may inspect a much larger transient exact kernel
      * than the sparse row ultimately retained by Solve. max_transitions owns
-     * only that retained graph; replay the deterministic solve with a cap
-     * strictly between retained storage and transient admission work and
-     * require the automatic work ledger to pass through it without consuming
-     * it. Leave bounded per-row insertion headroom because entry-relative
-     * self transitions are checked before sparse normalization. */
+     * only that retained graph, including its pre-quotient storage. Final
+     * quotient storage can be smaller than the peak needed to construct it.
+     * Replay with a cap strictly between the measured retained peak and
+     * transient admission work, preserving both sides of that boundary. */
     const std::uint64_t retained_transitions =
         prefix_solved.diagnostics.sparse_transitions;
     const std::uint64_t automatic_transition_work =
@@ -14613,11 +14745,12 @@ void run_automatic_eldritch_side_tests(
             .transition_entries;
     PC_CHECK(retained_transitions > 0);
     PC_CHECK(
-        automatic_transition_work > retained_transitions);
+        automatic_transition_work > uncapped_retained_peak);
+    PC_CHECK(uncapped_retained_peak >= retained_transitions);
     const std::uint64_t retained_transition_cap =
-        retained_transitions +
-        (automatic_transition_work - retained_transitions) / 2;
-    PC_CHECK(retained_transition_cap > retained_transitions);
+        uncapped_retained_peak +
+        (automatic_transition_work - uncapped_retained_peak) / 2;
+    PC_CHECK(retained_transition_cap > uncapped_retained_peak);
     PC_CHECK(retained_transition_cap < automatic_transition_work);
     CalcContext retained_transition_calc(
         session, goal, registry, candidates);
@@ -14644,6 +14777,20 @@ void run_automatic_eldritch_side_tests(
                  "max_transitions") ==
              retained_transition_solved.diagnostics.cap_hits.end());
     PC_CHECK(retained_transition_solved.policy_available);
+    // The same graph must still refuse a cap below its retained construction
+    // peak. Transient work is excluded; actually retained rows remain bounded.
+    CalcContext below_peak_calc(session, goal, registry, candidates);
+    SolveOptions below_peak_options = prefix_solve_options;
+    below_peak_options.max_transitions = uncapped_retained_peak - 1;
+    const auto below_peak = retained_fixture_solve(
+        below_peak_calc, below_peak_options, "below-peak");
+    PC_CHECK(below_peak.diagnostics.resource_cap_hit);
+    PC_CHECK(std::find(below_peak.diagnostics.cap_hits.begin(),
+        below_peak.diagnostics.cap_hits.end(), "max_transitions") !=
+        below_peak.diagnostics.cap_hits.end());
+    PC_CHECK(below_peak.diagnostics.sparse_transitions <=
+        below_peak_options.max_transitions);
+    PC_CHECK(!below_peak.converged);
     PC_CHECK(
         retained_transition_solved.diagnostics
             .automatic_admission_phases.discovered_states > 0);
@@ -16607,6 +16754,7 @@ void run_solver_joint_policy_continuation_tests() {
     run_first_proper_candidate_retention_tests();
     run_joint_product_fracture_publication_tests();
     run_target_neutral_proof_consumer_tests();
+    run_completed_policy_boundary_tests();
     run_native_mutual_retry_seed_tests();
     run_resumable_joint_policy_continuation_fixture_tests();
 }
@@ -16758,6 +16906,7 @@ void run_solver_integrity_tests(const char* case_name) {
     else if (name == "incremental") run_incremental_action_generation_tests();
     else if (name == "fracture") run_primitive_destructive_renewal_upper_tests(false);
     else if (name == "joint-fracture") run_joint_product_fracture_publication_tests();
+    else if (name == "completed-policy-boundary") run_completed_policy_boundary_tests();
     else throw std::invalid_argument("unknown solver integrity subcase");
 }
 
@@ -16777,6 +16926,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_initial_terminal_debt_continuation_tests();
     run_first_proper_candidate_retention_tests();
     run_joint_product_fracture_publication_tests();
+    run_completed_policy_boundary_tests();
     run_native_mutual_retry_seed_tests();
     run_resumable_joint_policy_continuation_fixture_tests();
     run_carrier_ladder_row_service_witness_classification_tests();

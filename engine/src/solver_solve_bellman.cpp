@@ -109,6 +109,38 @@ bool SolveWork::Impl::optimization_converged() const {
                residual <= acceptable_residual();
     }
 
+void SolveWork::Impl::initialize_completed_policy_boundaries() {
+        /* A fully examined non-goal state with no legal, priced row is an
+         * infinite terminal boundary, not the finite numerical seed ceiling.
+         * Censored rows and open/focused lower graphs cannot prove that absence;
+         * preserve their existing frontier bounds and incumbent values. */
+        if (focused_lower_mode || focused_bound_proved || expansion_active ||
+            !queue.empty() || result.diagnostics.state_cap_hit ||
+            result.diagnostics.resource_cap_hit ||
+            (incremental_action_generation && !incremental_envelope_closed)) {
+            return;
+        }
+        for (std::uint32_t state = 0; state < result.values.size(); ++state) {
+            if (!result.expanded[state] || result.goal_states[state] ||
+                (!result.behavioral_representative_by_state.empty() &&
+                 result.behavioral_representative_by_state[state] != state)) {
+                continue;
+            }
+            bool usable = false;
+            for (const std::uint64_t row_index :
+                 state_row_indices(*transition_cache, state)) {
+                const auto& priced = priced_rows.at(row_index);
+                if (transition_cache->rows.at(row_index).admitted &&
+                    priced.operator_index != kNoId &&
+                    std::isfinite(priced.cost) && priced.cost >= 0.0) {
+                    usable = true;
+                    break;
+                }
+            }
+            if (!usable) result.values[state] = kInfinity;
+        }
+    }
+
 void SolveWork::Impl::prepare_iteration() {
         const auto started = std::chrono::steady_clock::now();
         if (!cache_pending &&
@@ -223,6 +255,7 @@ void SolveWork::Impl::prepare_iteration() {
         result.diagnostics.reforge_logical_work_v1 =
             calc.telemetry().reforge_logical_work_v1;
         prepare_priced_rows();
+        initialize_completed_policy_boundaries();
         if (focused_bound_proved) {
             const std::uint64_t no_row =
                 std::numeric_limits<std::uint64_t>::max();
