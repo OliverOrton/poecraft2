@@ -3,7 +3,15 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 
 const bundle = await build({entryPoints: ["src/app/workspace/persistence.ts"], bundle: true, write: false, format: "iife", globalName: "storage"});
-const browser = await chromium.launch({headless: true});
+// Optional local qualification with installed Chrome; CI keeps pinned Chromium.
+const browserChannel = process.env.POECRAFT_TEST_BROWSER_CHANNEL;
+assert.ok(browserChannel === undefined || browserChannel === "chrome",
+    "POECRAFT_TEST_BROWSER_CHANNEL must be unset or chrome");
+// launch() uses a fresh temporary profile; no persistent/user profile is supplied.
+const browser = await chromium.launch({
+    headless: true,
+    ...(browserChannel ? {channel: browserChannel} : {}),
+});
 try {
     const page = await browser.newPage();
     await page.route("https://workspace.test/", route => route.fulfill({contentType: "text/html", body: "<title>Storage contract test</title>"}));
@@ -32,7 +40,15 @@ try {
         const failed = [await p.getStash("donor"), await p.getStash("receiver"), await p.getDraft("work")];
         let alias = false;
         try { await p.commitWorkspaceResources([consumed,consumed], [a,a], beforeDraft); } catch { alias = true; }
-        return {a,b,after,undo,redo,failed,staleSave,staleUndo,alias};
+        const goalList = {version:"calculator_goal_list_v1",activeGoalId:"life",goals:[
+            {id:"clean",name:"Magic clean",goalRarity:"magic",slots:[],allowExtraModifiers:false},
+            {id:"life",name:"Life coverage",goalRarity:"rare",slots:[{group:"life",minTier:2}],minSatisfiedSlots:1,
+                allowExtraModifiers:true,goalImplicitKeys:["implicit"],goalInfluenceBits:2,goalCorrupted:false}]};
+        await p.putCalculatorDraft({docId:"calculator",base:"base",itemLevel:86,state:b.state,
+            goalRarity:"rare",slots:[{group:"life",minTier:2}],goalList,actionId:"exalt",fossilKeys:[],updatedAt:1});
+        goalList.goals[0].name="Changed after saving";
+        const calculator = await p.getCalculatorDraft("calculator");
+        return {a,b,after,undo,redo,failed,staleSave,staleUndo,alias,calculator};
     });
     assert.equal(result.after[0].state.lifecycle, 1);
     assert.equal(result.after[0].state.memory_strands, 20);
@@ -44,5 +60,14 @@ try {
     assert.equal(result.failed[1].name, "External edit");
     assert.equal(result.failed[2].spend, 7);
     assert.ok(result.staleSave && result.staleUndo && result.alias);
+    assert.equal(result.calculator.goalList.goals[0].name,"Magic clean");
+    assert.equal(result.calculator.goalList.activeGoalId,"life");
+    await page.reload();
+    await page.addScriptTag({content: bundle.outputFiles[0].text});
+    const reloadedCalculator=await page.evaluate(async()=> (window as unknown as {storage:any}).storage.getCalculatorDraft("calculator"));
+    assert.deepEqual(reloadedCalculator,result.calculator,"Complete goal-list state survives an actual IndexedDB reload");
+    await page.evaluate(async()=> (window as unknown as {storage:any}).storage.deleteDraft("calculator"));
+    assert.equal(await page.evaluate(async()=> (window as unknown as {storage:any}).storage.getCalculatorDraft("calculator")),undefined);
+    console.log("Calculator IndexedDB: versioned goal-list payload, ordering, names, selection, reload and deletion passed");
     console.log("Workspace resources: atomic apply, Undo/Redo, memory, spend and stale/alias rejection passed");
 } finally { await browser.close(); }

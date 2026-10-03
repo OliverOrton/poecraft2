@@ -2530,8 +2530,20 @@ test("currency expansion state and original-root policy contracts", async () => 
     const economy = await client.loadEconomy(economySpec);
     const solver = await client.openSolver(sessionId, goal);
     try {
+        const rememberedBeforeSolve = await client.exportItem(remembered, sessionId);
         for (const mode of ["current", "strategy_finder"] as const) {
-            await assert.rejects(client.solverSolve(solver, remembered, economy, {solver_mode: mode}), /Pro/);
+            // Unsupported carrier state is refused before solve-profile checks.
+            await assert.rejects(
+                client.solverSolve(solver, remembered, economy, {solver_mode: mode}),
+                (error: unknown) => {
+                    assert.ok(error instanceof EngineError);
+                    assert.equal(error.code, 4); // PC_RESULT_UNSUPPORTED_FEATURE
+                    assert.equal(error.detail,
+                        "Foresight, memory strands, absent resources and enchantment effects require solver integration; state cannot be dropped");
+                    return true;
+                },
+            );
+            assert.deepEqual(await client.exportItem(remembered, sessionId), rememberedBeforeSolve);
             const result = await client.solverSolve(solver, item, economy, {solver_mode: mode, solve_profile: "calculator_product_v1"});
             assert.equal(result.cancelled, false);
             if (result.cancelled) assert.fail("unexpected cancellation");
