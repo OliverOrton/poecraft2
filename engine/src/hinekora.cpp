@@ -183,9 +183,10 @@ std::string action_json(const poecraft::ActionParameters& a) {
         a.target_tag_id, a.source_tag_id, a.influence_code, a.tier});
 }
 Value read_snapshot(const poecraft::SessionImpl& session, const char* text, std::size_t size) {
-    if (!text || !size || size > 65536) throw std::invalid_argument("Invalid Lock checkpoint size");
+    if (!text || !size || size > 16 * 1024 * 1024) throw std::invalid_argument("Invalid Lock checkpoint size");
     auto root = poecraft::json::Parser(text, size).parse();
-    if (root.at("version").as_string() != "fixed-currency-lock-v2")
+    if (root.at("version").as_string() != "fixed-currency-lock-v2" &&
+        root.at("version").as_string() != "independent-cached-lock-v1")
         throw std::invalid_argument("Unsupported Lock checkpoint version");
     const auto identity = session_identity(session);
     const auto expected = poecraft::json::Parser(identity.c_str(), identity.size()).parse();
@@ -211,6 +212,36 @@ bool currency(poecraft::ActionType type) {
         return true;
     default: return false;
     }
+}
+// Complete finite domain of the existing allowlist. Runtime identity pins the
+// universe, and aliases resolve to the same native parameters before lookup.
+std::vector<poecraft::ActionParameters> requests(const poecraft::SessionImpl& session) {
+    using T = poecraft::ActionType;
+    std::vector<poecraft::ActionParameters> out;
+    for (int type = 0; type <= static_cast<int>(T::DoubleCorruption); ++type) {
+        if (!currency(static_cast<T>(type))) continue;
+        poecraft::ActionParameters a; a.type = static_cast<T>(type);
+        if (a.type == T::Essence) {
+            for (unsigned i = 0; i < session.data->essence_count; ++i) {
+                a.essence_index = i; out.push_back(a);
+            }
+        } else if (a.type == T::InfluenceExalt) {
+            std::vector<int> codes;
+            for (const auto& entry : session.data->influence_exalt_code_by_name)
+                if (entry.second > 0) codes.push_back(entry.second);
+            std::sort(codes.begin(), codes.end());
+            codes.erase(std::unique(codes.begin(), codes.end()), codes.end());
+            for (auto code : codes) { a.influence_code = code; out.push_back(a); }
+        } else if (a.type == T::EldritchEmber || a.type == T::EldritchIchor) {
+            for (unsigned tier = 1; tier <= 4; ++tier) { a.tier = tier; out.push_back(a); }
+        } else out.push_back(a);
+    }
+    return out;
+}
+const poecraft::HinekoraReservation* reservation(const poecraft::HinekoraForesight& f,
+    const poecraft::ActionParameters& action) {
+    for (const auto& r : f.reservations) if (same_action(r.action, action)) return &r;
+    return nullptr;
 }
 pc_result check(pc_hinekora_lock_handle lock, const pc_item_state* item,
                 pc_error_info* out_error) {
@@ -238,7 +269,14 @@ ActionOutcome apply_with_foresight(ActionContextImpl& context,
         throw std::invalid_argument("Foreseeing item requires its original native Lock context; copied/imported foresight cannot be dropped");
     if (f && f->identity == item && !active && !f->refresh_allowed && same(f->input, *item))
         throw std::invalid_argument("Modify the item before applying currency to invalidated unchanged foresight; its information cannot be dropped");
-    if (active && same_action(f->action, action)) {
+    if (active && f->independent && currency(action.type)) {
+        const auto* r = reservation(*f, action);
+        if (!r || !r->outcome.applied) return {};
+        *item = r->preview;
+        f->active = false; f->refresh_allowed = true;
+        return r->outcome;
+    }
+    if (active && f->selected && same_action(f->action, action)) {
         *item = f->preview;
         f->active = false;
         f->refresh_allowed = true;
@@ -270,6 +308,75 @@ ActionOutcome apply_with_foresight(ActionContextImpl& context,
 const char* pc_hinekora_lock_cost_key(void) { return "hinekora_lock"; }
 int32_t pc_hinekora_lock_currency_supported(int32_t action_type) {
     return currency(static_cast<poecraft::ActionType>(action_type)) ? 1 : 0;
+}
+pc_result pc_hinekora_lock_apply(pc_action_context_handle context,
+    pc_item_state* item, pc_hinekora_lock_handle* out_lock, pc_error_info* out_error) {
+    if (out_lock) *out_lock = nullptr;
+    if (!context || !item || !out_lock) {
+        error(out_error, PC_RESULT_INVALID_ARGUMENT, "null Lock application argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        const auto& previous = context->impl->hinekora_foresight;
+        if (item->item_flags & PC_ITEM_FORESEEN)
+            throw std::invalid_argument("Modify the item before applying another Lock; foresight is already live or imported");
+        if (previous && ((previous->identity == item && same(previous->input, *item) && !previous->refresh_allowed) ||
+            (previous->identity != item && previous->active)))
+            throw std::invalid_argument("Modify the item before applying another Lock; decline does not refresh foresight");
+        if (pending_veil(*item))
+            throw std::invalid_argument("Lock preview with pending Unveil offers requires an approved disclosure model");
+        auto f = std::make_shared<poecraft::HinekoraForesight>();
+        f->session = context->impl->session; f->identity = item; f->input = *item;
+        f->independent = true; f->selected = false;
+        poecraft::ActionContextImpl sampled(0); sampled.session = f->session;
+        sampled.rng = context->impl->rng;
+        bool applicable = false;
+        for (const auto& action : requests(*f->session)) {
+            poecraft::HinekoraReservation r; r.action = action; r.preview = f->input;
+            const auto before = sampled.rng;
+            try { r.outcome = poecraft::apply_action(sampled, &r.preview, action); }
+            catch (const std::invalid_argument&) { r.outcome = {}; }
+            if (!r.outcome.applied) { sampled.rng = before; r.preview = f->input; }
+            applicable |= r.outcome.applied;
+            f->reservations.push_back(std::move(r));
+        }
+        if (!applicable) throw std::invalid_argument("No supported currency is applicable to this item; no Lock was consumed");
+        auto holder = std::make_unique<pc_hinekora_lock>(); holder->impl = f;
+        if (previous) previous->active = false;
+        context->impl->rng = sampled.rng;
+        context->impl->hinekora_foresight = std::move(f);
+        item->item_flags |= PC_ITEM_FORESEEN;
+        *out_lock = holder.release();
+        error(out_error, PC_RESULT_OK, ""); return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, ex.what()); return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
+}
+pc_result pc_hinekora_lock_observe(pc_hinekora_lock_handle lock,
+    const pc_item_state* item, const pc_action_request* request,
+    pc_item_state* out_preview, pc_action_result* out_result, pc_error_info* out_error) {
+    if (!request || !out_preview || !out_result || out_preview == item) {
+        error(out_error, PC_RESULT_INVALID_ARGUMENT, "Lock observation requires request and separate output/result");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        auto rc = check(lock, item, out_error); if (rc != PC_RESULT_OK) return rc;
+        poecraft::ActionContextImpl resolver(0); resolver.session = lock->impl->session;
+        poecraft::ActionParameters action;
+        rc = poecraft::resolve_foresight_request(resolver, *request, action, out_error);
+        if (rc != PC_RESULT_OK) return rc;
+        auto& f = *lock->impl;
+        const auto* r = reservation(f, action);
+        if (!f.independent || !r || !r->outcome.applied) {
+            error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, "Unsupported or inapplicable Lock observation; no currency was consumed");
+            return PC_RESULT_UNSUPPORTED_FEATURE;
+        }
+        f.action = r->action; f.preview = r->preview; f.outcome = r->outcome; f.selected = true;
+        *out_preview = r->preview; result(r->outcome, out_result);
+        error(out_error, PC_RESULT_OK, ""); return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what()); return PC_RESULT_INVALID_ARGUMENT;
+    }
 }
 pc_result pc_hinekora_lock_create(pc_action_context_handle context,
     pc_item_state* item, const pc_action_request* request,
@@ -355,6 +462,10 @@ pc_result pc_hinekora_lock_preview(pc_hinekora_lock_handle lock,
     }
     auto rc = check(lock, item, out_error);
     if (rc != PC_RESULT_OK) return rc;
+    if (!lock->impl->selected) {
+        error(out_error, PC_RESULT_NOT_FOUND, "Observe a supported request before inspecting or committing a selected preview");
+        return PC_RESULT_NOT_FOUND;
+    }
     *out_preview = lock->impl->preview;
     result(lock->impl->outcome, out_result);
     error(out_error, PC_RESULT_OK, "");
@@ -368,6 +479,10 @@ pc_result pc_hinekora_lock_commit(pc_hinekora_lock_handle lock,
     }
     auto rc = check(lock, item, out_error);
     if (rc != PC_RESULT_OK) return rc;
+    if (!lock->impl->selected) {
+        error(out_error, PC_RESULT_NOT_FOUND, "Observe a supported request before committing a selected preview");
+        return PC_RESULT_NOT_FOUND;
+    }
     *item = lock->impl->preview;
     lock->impl->active = false;
     lock->impl->refresh_allowed = true;
@@ -416,13 +531,23 @@ pc_result pc_hinekora_lock_export(pc_hinekora_lock_handle lock,
     try {
         auto& f = *lock->impl;
         current(f, item);
-        std::string out = "{\"version\":\"fixed-currency-lock-v2\",\"session\":" + session_identity(*f.session);
+        std::string out = "{\"version\":" + quoted(f.independent ? "independent-cached-lock-v1" : "fixed-currency-lock-v2") + ",\"session\":" + session_identity(*f.session);
         out += ",\"current\":" + item_json(*item) + ",\"input\":" + item_json(f.input);
         out += ",\"action\":" + action_json(f.action) + ",\"active\":" + (f.active ? "true" : "false");
         out += ",\"refresh_allowed\":"; out += f.refresh_allowed ? "true" : "false";
-        if (f.active) {
+        if (f.active && f.selected) {
             out += ",\"preview\":" + item_json(f.preview);
             out += ",\"outcome\":" + array_json({f.outcome.applied ? 1 : 0, f.outcome.added, f.outcome.removed});
+        }
+        if (f.independent) {
+            out += ",\"selected\":"; out += f.selected ? "true" : "false";
+            out += ",\"reservations\":[";
+            for (std::size_t i = 0; i < f.reservations.size(); ++i) {
+                const auto& r = f.reservations[i]; if (i) out += ',';
+                out += "[" + action_json(r.action) + "," + item_json(r.preview) + "," +
+                    array_json({r.outcome.applied ? 1 : 0, r.outcome.added, r.outcome.removed}) + "]";
+            }
+            out += ']';
         }
         out += '}';
         *out_length = out.size();
@@ -460,25 +585,36 @@ pc_result pc_hinekora_lock_restore(pc_action_context_handle context,
     const char* text, size_t size, pc_hinekora_lock_handle* out_lock,
     pc_error_info* out_error) {
     if (out_lock) *out_lock = nullptr;
-    if (!context || !item || !request || !out_lock) {
+    if (!context || !item || !out_lock) {
         error(out_error, PC_RESULT_INVALID_ARGUMENT, "Lock restore requires context, item, request and output");
         return PC_RESULT_INVALID_ARGUMENT;
     }
     try {
         const auto& session = *context->impl->session;
         const auto root = read_snapshot(session, text, size);
+        const bool independent = root.at("version").as_string() == "independent-cached-lock-v1";
+        const bool selected = !independent || root.at("selected").as_bool();
         poecraft::ActionParameters action;
-        auto rc = poecraft::resolve_foresight_request(*context->impl, *request, action, out_error);
-        if (rc != PC_RESULT_OK) return rc;
-        const auto expected_action = action_json(action);
-        if (!currency(action.type) || integers(root.at("action")) !=
-            integers(poecraft::json::Parser(expected_action.c_str(), expected_action.size()).parse()))
-            throw std::invalid_argument("Lock checkpoint currency request identity mismatch");
+        if (selected) {
+            if (!request) throw std::invalid_argument("Selected Lock checkpoint requires its currency request");
+            auto rc = poecraft::resolve_foresight_request(*context->impl, *request, action, out_error);
+            if (rc != PC_RESULT_OK) return rc;
+            const auto expected_action = action_json(action);
+            if (!currency(action.type) || integers(root.at("action")) !=
+                integers(poecraft::json::Parser(expected_action.c_str(), expected_action.size()).parse()))
+                throw std::invalid_argument("Lock checkpoint currency request identity mismatch");
+        } else {
+            const auto empty_action = action_json(action);
+            if (request || root.find("preview") || root.find("outcome") || integers(root.at("action")) !=
+                integers(poecraft::json::Parser(empty_action.c_str(), empty_action.size()).parse()))
+                throw std::invalid_argument("Unselected Lock checkpoint contains a selected request or outcome");
+        }
         const auto saved_current = read_item(root.at("current"), session);
         if (!same(saved_current, *item) || saved_current.item_flags != item->item_flags)
             throw std::invalid_argument("Lock checkpoint full current item identity mismatch");
         auto f = std::make_shared<poecraft::HinekoraForesight>();
         f->session = context->impl->session; f->identity = item; f->action = action;
+        f->independent = independent; f->selected = selected;
         f->input = read_item(root.at("input"), session);
         f->active = root.at("active").as_bool();
         f->refresh_allowed = root.at("refresh_allowed").as_bool();
@@ -489,17 +625,44 @@ pc_result pc_hinekora_lock_restore(pc_action_context_handle context,
         if (f->active) {
             if (f->refresh_allowed || !(item->item_flags & PC_ITEM_FORESEEN) || !same(f->input, *item))
                 throw std::invalid_argument("Lock checkpoint active item identity/state mismatch");
-            f->preview = read_item(root.at("preview"), session);
-            if (pending_veil(f->preview))
-                throw std::invalid_argument("Lock preview with pending Unveil offers requires an approved disclosure model");
-            const auto outcome = integers(root.at("outcome"));
-            if ((f->preview.item_flags & PC_ITEM_FORESEEN) || outcome.size() != 3 || outcome[0] != 1 ||
-                outcome[1] < 0 || outcome[1] > PC_MAX_PREFIXES + PC_MAX_SUFFIXES ||
-                outcome[2] < 0 || outcome[2] > PC_MAX_PREFIXES + PC_MAX_SUFFIXES)
-                throw std::invalid_argument("Invalid Lock checkpoint outcome");
-            f->outcome = {true, static_cast<int>(outcome[1]), static_cast<int>(outcome[2])};
+            if (f->selected) {
+                f->preview = read_item(root.at("preview"), session);
+                if (pending_veil(f->preview))
+                    throw std::invalid_argument("Lock preview with pending Unveil offers requires an approved disclosure model");
+                const auto outcome = integers(root.at("outcome"));
+                if ((f->preview.item_flags & PC_ITEM_FORESEEN) || outcome.size() != 3 || outcome[0] != 1 ||
+                    outcome[1] < 0 || outcome[1] > PC_MAX_PREFIXES + PC_MAX_SUFFIXES ||
+                    outcome[2] < 0 || outcome[2] > PC_MAX_PREFIXES + PC_MAX_SUFFIXES)
+                    throw std::invalid_argument("Invalid Lock checkpoint outcome");
+                f->outcome = {true, static_cast<int>(outcome[1]), static_cast<int>(outcome[2])};
+            }
         } else if (item->item_flags & PC_ITEM_FORESEEN)
             throw std::invalid_argument("Inactive Lock checkpoint cannot retain a foresight marker");
+        if (independent) {
+            const auto domain = requests(session);
+            const auto& entries = root.at("reservations").as_array();
+            if (entries.size() != domain.size()) throw std::invalid_argument("Incomplete Lock reservation domain");
+            for (std::size_t i = 0; i < domain.size(); ++i) {
+                const auto& row = entries[i].as_array();
+                const auto encoded = action_json(domain[i]);
+                if (row.size() != 3 || integers(row[0]) != integers(poecraft::json::Parser(encoded.c_str(), encoded.size()).parse()))
+                    throw std::invalid_argument("Lock reservation request identity mismatch");
+                poecraft::HinekoraReservation r; r.action = domain[i]; r.preview = read_item(row[1], session);
+                const auto outcome = integers(row[2]);
+                if (outcome.size() != 3 || (outcome[0] != 0 && outcome[0] != 1) || outcome[1] < 0 || outcome[1] > 6 || outcome[2] < 0 || outcome[2] > 6 ||
+                    pending_veil(r.preview) || (r.preview.item_flags & PC_ITEM_FORESEEN))
+                    throw std::invalid_argument("Invalid Lock reservation outcome");
+                r.outcome = {outcome[0] == 1, static_cast<int>(outcome[1]), static_cast<int>(outcome[2])};
+                if (!r.outcome.applied && (!same(r.preview, f->input) || outcome[1] || outcome[2]))
+                    throw std::invalid_argument("Invalid refused Lock reservation");
+                f->reservations.push_back(std::move(r));
+            }
+            if (f->active && f->selected) {
+                const auto* r = reservation(*f, f->action);
+                if (!r || !r->outcome.applied || !same(r->preview, f->preview) || r->outcome.added != f->outcome.added || r->outcome.removed != f->outcome.removed)
+                    throw std::invalid_argument("Selected Lock outcome disagrees with its reservation");
+            }
+        }
         auto holder = std::make_unique<pc_hinekora_lock>(); holder->impl = f;
         const auto& previous = context->impl->hinekora_foresight;
         if (previous && previous->active) {

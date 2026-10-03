@@ -68,7 +68,6 @@ export class PcEmulator extends HTMLElement {
     private bestiaryActions: BestiaryActionInfo[] = [];
     private checkpointPresent = false;
     private memoryStrands = 0;
-    private lockNext = false;
     private lockInfo: import("../engine-protocol").HinekoraInfo | null = null;
     private lockPreview: ConcreteModListModel | undefined;
     private donors: ItemStashRecord[] = [];
@@ -383,12 +382,18 @@ export class PcEmulator extends HTMLElement {
         await this.markChanged();
     }
 
-    private async applyConfiguredAction(action: CraftAction): Promise<void> {
-        if (this.lockNext && !this.lockInfo?.active) {
-            const locked = await this.client.createHinekoraLock(this.context, this.item, this.session, action);
-            this.lockNext = false;
-            this.pendingHistoryEntry = {action: "Hinekora's Lock", applied: true, added: 0, removed: 0,
-                costKeys: locked.cost_keys, detail: `Foresee ${action.type}; currency not spent`};
+    private async applyLock(): Promise<void> {
+        const locked = await this.client.applyHinekoraLock(this.context, this.item, this.session);
+        this.pendingHistoryEntry = {action: "Hinekora's Lock", applied: true, added: 0, removed: 0,
+            costKeys: locked.cost_keys, detail: "Independent cached previews (approximate); currencies not spent"};
+        await this.markChanged();
+    }
+
+    private async applyConfiguredAction(action: CraftAction, commit = false): Promise<void> {
+        if (this.lockInfo?.active && !commit && action.type !== "remove_crafted_modifiers") {
+            await this.client.observeHinekoraLock(this.context, this.item, this.session, action);
+            this.pendingHistoryEntry = {action: `Preview ${action.type}`, applied: false, added: 0, removed: 0,
+                costKeys: [], detail: "Free observation; paid Lock remains active"};
             await this.markChanged();
             return;
         }
@@ -965,15 +970,15 @@ export class PcEmulator extends HTMLElement {
             checkpoint: this.checkpointPresent,
             memoryStrands: this.memoryStrands,
             onMemoryStrands: count => { void this.guard(() => this.setMemoryStrands(count)); },
-            lockNext: this.lockNext, lockActive: this.lockInfo?.active,
+            lockActive: this.lockInfo?.active,
             lockCurrency: this.lockInfo?.currency && [craftActionLabel(this.lockInfo.currency.type),
                 this.lockInfo.currency.essence && (this.catalog.essences.find(entry => entry.key === this.lockInfo?.currency?.essence)?.name ?? this.lockInfo.currency.essence),
                 this.lockInfo.currency.influence, this.lockInfo.currency.tier && `Tier ${this.lockInfo.currency.tier}`].filter(Boolean).join(" / "),
             lockPreview: this.lockPreview,
-            onLockNext: enabled => { this.lockNext = enabled; this.renderMechanicControls(); },
+            onLockApply: () => { void this.guard(() => this.applyLock()); },
             onLockCommit: () => {
                 const currency = this.lockInfo?.currency;
-                if (currency) void this.guard(() => this.applyConfiguredAction(currency));
+                if (currency) void this.guard(() => this.applyConfiguredAction(currency, true));
             },
             donors: this.donors.map(record => ({key: record.id, name: record.name})), donorModel: this.donorModel,
             onAwakener: () => { void this.guard(() => this.applyAwakener()); },

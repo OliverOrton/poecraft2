@@ -98,6 +98,8 @@ export interface CraftAction {
 
 export interface HinekoraInfo {
     active: boolean;
+    model?: "independent-cached-lock-v1";
+    approximate?: boolean;
     currency?: CraftAction;
     preview?: unknown;
     cost_keys: string[];

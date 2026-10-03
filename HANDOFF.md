@@ -1,3 +1,15 @@
+# Persistent multi-preview Lock execution (2026-10-03)
+
+Oliver resumed and approved the independent cached approximate model. Isolated
+`dot/lock-multi-preview-exec-20261003` from remote-verified `3ab862fe` owns native Lock,
+bindings and Emulator controls; the [living record](docs/active/2026-10-03-lock-multi-preview/README.md)
+owns interface decisions, checkpoint consistency and focused acceptance.
+Source implementation is retained; builds/tests/matching WASM await parent heavy
+slot clearance. No owned heavy process started. Recombination owns the current
+slot; maximum two compiler jobs. Calculator goals stay with their selected owner.
+No model-selection approval remains; solver/Unveil/donor admissions remain held.
+Commits stay local for integration owner; no push/merge/deployment or refresh.
+
 # Native CI repair qualified (2026-10-03)
 
 Oliver resumed this selected repair and explicitly approved normal main delivery

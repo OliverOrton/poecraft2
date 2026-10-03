@@ -127,6 +127,35 @@ try {
     await client.editItem(reopenedItem,session,{memory_strands:44});
     assert.equal((await client.hinekoraInfo(reopened,reopenedItem,session)).active,false);
     assert.equal((await client.itemInfo(reopenedItem,session)).memory_strands,44);
+    // New approved independent model: apply before selection, switch freely,
+    // replay unseen requests from the application checkpoint, and pay once.
+    const multiContext = await client.createContext(session, 317); contexts.push(multiContext);
+    const multiItem = await client.createItem(session, {rarity: "rare"}); items.push(multiItem);
+    const appliedLock = await client.applyHinekoraLock(multiContext, multiItem, session);
+    assert.equal(appliedLock.active, true); assert.equal(appliedLock.preview, undefined);
+    assert.equal(appliedLock.model, "independent-cached-lock-v1"); assert.equal(appliedLock.approximate, true);
+    assert.deepEqual(appliedLock.cost_keys, ["hinekora_lock"]);
+    const applicationCheckpoint = await client.exportItem(multiItem, session);
+    const seenExalt = await client.observeHinekoraLock(multiContext, multiItem, session, {type: "exalt"});
+    const seenChaos = await client.observeHinekoraLock(multiContext, multiItem, session, {type: "chaos"});
+    assert.deepEqual(seenExalt.cost_keys, []); assert.deepEqual(seenChaos.cost_keys, []);
+    assert.deepEqual((await client.observeHinekoraLock(multiContext, multiItem, session, {type: "exalt", tier: 4})).preview, seenExalt.preview);
+    const beforeRefusal = await client.exportItem(multiItem, session);
+    await assert.rejects(client.observeHinekoraLock(multiContext, multiItem, session, {type: "veiled_exalt"}), /Unsupported or inapplicable/);
+    assert.deepEqual(await client.exportItem(multiItem, session), beforeRefusal);
+    assert.equal((await client.apply(multiContext, multiItem, {type: "transmute"})).applied, false);
+    assert.equal((await client.hinekoraInfo(multiContext, multiItem, session)).active, true);
+    const replayContext = await client.createContext(session, 829); contexts.push(replayContext);
+    const replayItem = await client.importItem(JSON.parse(JSON.stringify(applicationCheckpoint)), session, replayContext); items.push(replayItem);
+    assert.equal((await client.hinekoraInfo(replayContext, replayItem, session)).preview, undefined);
+    assert.deepEqual((await client.observeHinekoraLock(replayContext, replayItem, session, {type: "chaos"})).preview, seenChaos.preview);
+    assert.deepEqual((await client.observeHinekoraLock(replayContext, replayItem, session, {type: "exalt"})).preview, seenExalt.preview);
+    assert.equal((await client.apply(replayContext, replayItem, {type: "exalt"})).applied, true);
+    assert.equal((await client.hinekoraInfo(replayContext, replayItem, session)).active, false);
+    assert.deepEqual(physical(await client.exportItem(replayItem, session)), physical(seenExalt.preview));
+    const multiSpend = addCraftSpend(addCraftSpend(emptyCraftSpend(), appliedLock.cost_keys), seenExalt.cost_keys);
+    assert.deepEqual(multiSpend.counts, {hinekora_lock: 1});
+    console.log("Independent Lock worker: selection-free application, switching, normalized aliases, atomic refusal, unseen checkpoint replay and one Lock payment passed");
     console.log("Lock worker: paid preview, exact restore, failed import, Undo/Redo spend, context cleanup and native strand editing passed");
 } finally {
     for (const item of items) await client.closeItem(item).catch(()=>{});

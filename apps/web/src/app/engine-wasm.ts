@@ -316,7 +316,7 @@ export class EngineBindings {
         );
     }
 
-    hinekora(context: number, item: number, session: number, operation: "create" | "inspect", currency?: CraftAction): import("./engine-protocol").HinekoraInfo {
+    hinekora(context: number, item: number, session: number, operation: "create" | "inspect" | "apply_lock" | "observe", currency?: CraftAction): import("./engine-protocol").HinekoraInfo {
         return this.callJson("pcw_hinekora", ["number", "number", "number", "string"],
             [context, item, session, JSON.stringify({operation, currency_json: currency && JSON.stringify(currency)})]) as unknown as import("./engine-protocol").HinekoraInfo;
     }

@@ -10,6 +10,20 @@ typedef struct pc_hinekora_lock* pc_hinekora_lock_handle;
 const char* pc_hinekora_lock_cost_key(void);
 int32_t pc_hinekora_lock_currency_supported(int32_t action_type);
 
+/* Approved simulation-only independent cached requests, version 1. Apply pays
+ * one Lock and reserves the finite supported normalized request table without
+ * choosing an actual currency. Observe chooses/reveals an applicable entry,
+ * free and stable across repeated observations and checkpoint restoration.
+ * No exact cross-currency game law or adaptive solver authority is claimed.
+ * Reservations are persisted as full outcomes, never RNG seed/state. */
+pc_result pc_hinekora_lock_apply(pc_action_context_handle context,
+    pc_item_state* item, pc_hinekora_lock_handle* out_lock,
+    pc_error_info* out_error);
+pc_result pc_hinekora_lock_observe(pc_hinekora_lock_handle lock,
+    const pc_item_state* item, const pc_action_request* currency,
+    pc_item_state* out_preview, pc_action_result* out_result,
+    pc_error_info* out_error);
+/* Legacy fixed-request creation/checkpoints remain supported below. */
 /* Fixed-currency foresight for the existing native item projection. One live
  * foresight per action context; it is bound to this caller-owned item address,
  * session and complete currency request. Creation spends one Lock and reserves
@@ -52,7 +66,9 @@ void pc_hinekora_lock_destroy(pc_hinekora_lock_handle lock);
 void pc_hinekora_lock_release_item(pc_action_context_handle context,
     const pc_item_state* item);
 /* Versioned emulator checkpoint, not a probability/reachability certificate.
- * Contains only the selected cached outcome, never an RNG seed/state. Snapshot
+ * Fixed checkpoints contain the selected outcome; independent checkpoints
+ * contain the complete reserved domain, including unseen outcomes. Neither
+ * exports an RNG seed/state. Snapshot
  * identity pins runtime hashes, base/level, full real item fields and request.
  * Export retains a declined/inactivated no-refresh tombstone. Restore is an
  * explicit history/import replacement: it rebinds this paid state without
@@ -67,6 +83,7 @@ pc_result pc_hinekora_lock_export(pc_hinekora_lock_handle lock,
 pc_result pc_hinekora_lock_snapshot_item(pc_action_context_handle context,
     const char* snapshot_json, size_t size, pc_item_state* out_item,
     pc_error_info* out_error);
+/* currency may be null only for an independent checkpoint with no selection. */
 pc_result pc_hinekora_lock_restore(pc_action_context_handle context,
     pc_item_state* item, const pc_action_request* currency,
     const char* snapshot_json, size_t size,

@@ -1,0 +1,70 @@
+{
+  "status": "source implemented; executable qualification unrun awaiting parent heavy-slot clearance",
+  "recorded_utc": "2026-10-03T04:50:22.3591558Z",
+  "baseline": "3ab862fece9d52ca733ad01a0869fd06cec84810",
+  "live_remote_main": "3ab862fece9d52ca733ad01a0869fd06cec84810",
+  "remote_verification": "connected GitHub read-only fetch_commit(main); direct git proxy unavailable",
+  "branch": "dot/lock-multi-preview-exec-20261003",
+  "worktree": "C:/Users/Oliver/Documents/poecraft2-lock-multi-preview-exec",
+  "prepared_source_preserved": "C:/Users/Oliver/Documents/poecraft2-lock-multi-preview",
+  "model": "independent-cached-lock-v1",
+  "approval": {
+    "model_approved_utc": "2026-10-03T04:12:00Z",
+    "simulation_only": true,
+    "source_thread": "01a0fe65-6e83-76d9-b710-f09a7cd4e0cb",
+    "exact_reply": "1.yes\\n2.yes",
+    "resumed_utc": "2026-10-03T04:00:00Z",
+    "exact_adaptive_authority": false
+  },
+  "source_sha256": {
+    "engine/include/poecraft/hinekora.h": "ae517ce783ed3a302aedf0d37978ea9b07fc8443d3d741786211287aeabcbb68",
+    "engine/src/hinekora.cpp": "bb50299b6ff57c7c95b72b1f05e1f960a3392340540fb3e026c1349ffbd012e0",
+    "engine/src/hinekora_internal.hpp": "777ff7a6beb364ffe373641ef2b7284bb367fa07b22c778e700cd09010e48b30",
+    "bindings/python/poecraft_engine/_binding.py": "157ab47010b2095c73c46c8819970589df799818c86cf5d706e194a1bfa356cc",
+    "bindings/python/tests/test_hinekora_multi_preview.py": "07f5e6ae8c054849b4820d1543d29b39e3d222fffcc489ff14b83d7832345ca0",
+    "bindings/wasm/wasm_api.cpp": "0414bc0a4e5acb4ed8e2f2f41be16ddc1f6e686bcc9aacfc87972c63757f94ad",
+    "apps/web/src/app/engine-client.ts": "5662d275f176fc3561749a4ea199914fff3aa085e003f099260c5d65b6b4ea39",
+    "apps/web/src/app/engine-protocol.ts": "b9f5c17da9c0b48fafad1a9c6ec156672a5a8dd5706f9c24fd91c48c7f9a0d7c",
+    "apps/web/src/app/engine-wasm.ts": "806e8b8010311bb3e05848549baae35f471f94f8dddc1164cb3041722f29a7c8",
+    "apps/web/src/app/engine-worker.ts": "523fd49e675853c58ace33987ec1cdef11bdf6f1630839e75b0112016a34bee7",
+    "apps/web/src/app/components/pc-craft-controls.tsx": "22940d84e7d52a83d190e3dc966e6be1fb6b034961cabd6efdd2fcbf26a57c7d",
+    "apps/web/src/app/components/pc-emulator.tsx": "064efd9cac414653e0f8dbff49f51fbe762d8d193792e30e984bad041a829528",
+    "apps/web/test/hinekora-bindings.test.ts": "de6c9b16e740308715d225ab3c7bce85c9ac7390444bdc7b0d8a76925ce900ea",
+    "apps/web/test/hinekora-controls.test.ts": "70862d3e1d1b7e95a7d367932bd9e3fa36b893df6bb49a310ef25470d894e576"
+  },
+  "runtime": {
+    "frozen": true,
+    "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+    "directory": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d"
+  },
+  "checks": {
+    "diff_check": "passed",
+    "failed_tests": [],
+    "unrun": [
+      "native Engine/shared-DLL/header build at two jobs",
+      "focused Python fixed and independent Lock tests",
+      "matching two-job WASM build",
+      "existing npm test:lock nine-file chain",
+      "TypeScript tsc --noEmit",
+      "full acceptance and rendered UI review (not required for this source checkpoint)"
+    ],
+    "executed_tests": []
+  },
+  "heavy_slot": {
+    "maximum_compiler_jobs": 2,
+    "owned_processes": 0,
+    "active_owner_at_launch": "recombination task 01a0ffef-253d-729e-97fc-e234985d0033",
+    "request_pending": true,
+    "grant_received": false,
+    "solver_runs": 0
+  },
+  "exclusions": [
+    "ordinary Calculator/Current/Finder/authored Simulator admission",
+    "pending Unveil and donor-dependent previews",
+    "Divine roll optimization",
+    "data/price refresh",
+    "dev server restart",
+    "push/merge/deploy",
+    "subagents"
+  ]
+}

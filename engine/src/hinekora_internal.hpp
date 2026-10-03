@@ -3,6 +3,11 @@
 #include "engine_internal.hpp"
 #include "poecraft/hinekora.h"
 namespace poecraft {
+struct HinekoraReservation {
+    ActionParameters action;
+    pc_item_state preview{};
+    ActionOutcome outcome;
+};
 struct HinekoraForesight {
     std::shared_ptr<const SessionImpl> session;
     pc_item_state* identity = nullptr;
@@ -10,6 +15,9 @@ struct HinekoraForesight {
     pc_item_state preview{};
     ActionParameters action;
     ActionOutcome outcome;
+    bool independent = false;
+    bool selected = true;
+    std::vector<HinekoraReservation> reservations;
     bool active = true;
     bool refresh_allowed = false;
 };
