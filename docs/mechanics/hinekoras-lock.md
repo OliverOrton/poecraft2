@@ -6,8 +6,9 @@ item ends all foresight. Its `independent-cached-lock-v1` model is explicitly
 approximate and simulation-only, approved by Oliver at 04:12 UTC. It supplies
 no game-exact cross-currency correlation or adaptive solver authority. The
 [programme record](../active/2026-10-03-lock-multi-preview/README.md) owns interface,
-restoration decisions and qualification status. Native/WASM qualification of
-this continuation is pending; prior receipts qualify the fixed-request slice.
+restoration decisions and qualification status. Native and matching WASM/worker
+qualification of this isolated continuation passes; the receipt separates its
+exact identities from prior fixed-request receipts and future combined integration.
 
 Each paid Lock reserves the supported finite native request domain before any
 selection. Observation is free and stable; synonymous requests resolve to the

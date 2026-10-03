@@ -1,6 +1,6 @@
 {
-  "status": "aligned source and replay fixtures ready; executable qualification unrun awaiting explicit parent heavy-slot grant",
-  "recorded_utc": "2026-10-03T06:29:16.5186023Z",
+  "status": "qualified isolated native/WASM/worker/Emulator implementation; heavy slot released; integration pending",
+  "recorded_utc": "2026-10-03T07:43:40.4985038Z",
   "baseline": "3ab862fece9d52ca733ad01a0869fd06cec84810",
   "live_remote_main": "0187f3d8334c3b9deb9730a6fa89899c051e9931",
   "remote_verification": "connected GitHub read-only fetch_commit(main); direct git proxy unavailable",
@@ -21,7 +21,7 @@
     "engine/src/hinekora.cpp": "bb50299b6ff57c7c95b72b1f05e1f960a3392340540fb3e026c1349ffbd012e0",
     "engine/src/hinekora_internal.hpp": "777ff7a6beb364ffe373641ef2b7284bb367fa07b22c778e700cd09010e48b30",
     "bindings/python/poecraft_engine/_binding.py": "157ab47010b2095c73c46c8819970589df799818c86cf5d706e194a1bfa356cc",
-    "bindings/python/tests/test_hinekora_multi_preview.py": "23d3c5230efcce5593e72e17e9dc500e718cc6b2a67b1dfdd59e29faef084b16",
+    "bindings/python/tests/test_hinekora_multi_preview.py": "4d3770a04b6c44556d74b66697a5ef7b9657cbb03cfda403e4864130505175ac",
     "bindings/wasm/wasm_api.cpp": "0414bc0a4e5acb4ed8e2f2f41be16ddc1f6e686bcc9aacfc87972c63757f94ad",
     "apps/web/src/app/engine-client.ts": "5662d275f176fc3561749a4ea199914fff3aa085e003f099260c5d65b6b4ea39",
     "apps/web/src/app/engine-protocol.ts": "b9f5c17da9c0b48fafad1a9c6ec156672a5a8dd5706f9c24fd91c48c7f9a0d7c",
@@ -41,24 +41,37 @@
     "diff_check": "passed",
     "failed_tests": [],
     "unrun": [
-      "native Engine/shared-DLL/header build at two jobs",
-      "focused Python fixed and independent Lock tests",
-      "matching two-job WASM build",
-      "existing npm test:lock nine-file chain",
-      "TypeScript tsc --noEmit",
-      "full acceptance and rendered UI review (not required for this source checkpoint)"
+      "full repository acceptance suite",
+      "rendered UI review",
+      "long solver benchmarks",
+      "authored Simulator trials",
+      "combined-feature integration qualification"
     ],
-    "executed_tests": []
+    "executed_tests": [
+      "header smoke: exit 0",
+      "64 focused Python tests: passed",
+      "all nine npm test:lock files including real worker and Emulator controls: passed",
+      "TypeScript --noEmit: exit 0"
+    ]
   },
   "heavy_slot": {
     "maximum_compiler_jobs": 2,
     "owned_processes": 0,
     "active_owner_at_launch": "recombination task 01a0ffef-253d-729e-97fc-e234985d0033",
-    "request_pending": true,
-    "grant_received": false,
+    "request_pending": false,
+    "grant_received": true,
     "solver_runs": 0,
-    "current_owner": "priority solver cap repair (parent coordinated)",
-    "queue_position": "Lock next; await explicit parent slot grant"
+    "current_owner": "released; parent coordinates the next owner",
+    "queue_position": "qualification complete",
+    "released": true,
+    "heavy_commands_completed_utc": "2026-10-03T07:40:31.3560622Z",
+    "completed_sessions": [
+      83223,
+      37741,
+      17513,
+      93506,
+      13832
+    ]
   },
   "exclusions": [
     "ordinary Calculator/Current/Finder/authored Simulator admission",
@@ -81,7 +94,7 @@
     "assistant_selected_scope": "Finish the build/test qualification for Lock, multi-goal Calculator, recombination and feeders, fixing failures within those scopes.",
     "exact_user_reply": "1. yes and you can run whatever tests you need when i dont tell you im using my computer(like i did earlier)\n2. go for it",
     "qualification_permission_resolved": true,
-    "current_slot_grant": false,
+    "current_slot_grant": true,
     "native_binding_wasm_worker_web_typescript_authorized_after_grant": true,
     "max_compiler_jobs": 2,
     "preserve_source_checkpoint": "69b60e81781dffc3d16e1ce1bcf08e491f738a1a",
@@ -89,5 +102,102 @@
     "observed_main_delta": "solver test diagnostics and documentation; Lock/native/WASM implementation inputs unchanged",
     "independent_model_already_approved": true,
     "no_adaptive_exact_solver_authority": true
+  },
+  "execution": {
+    "native_source_commit": "3a7b80b9d275b7d8b0517969723e94aeeabbe395",
+    "engine_tree": "38f7455bd83fd912beeae2ad607599bcd5c4f308",
+    "native_build": {
+      "source": "3a7b80b9d275b7d8b0517969723e94aeeabbe395",
+      "max_compiler_jobs": 2,
+      "started_utc": "2026-10-03T07:29:14.5117247Z",
+      "completed_utc": "2026-10-03T07:32:07.1653525Z",
+      "native_engine_exit": 0,
+      "shared_header_exit": 0,
+      "header_smoke_exit": 0,
+      "dll_sha256": "195e7d3da273d861f9e7c424ff0171c3bfa8be2afe4bd5cee6d2075905c72a35"
+    },
+    "native_build_logs": [
+      "out/lock-multi-preview/native-build.log",
+      "out/lock-multi-preview/native-shared-header-build.log",
+      "out/lock-multi-preview/header-smoke.log"
+    ],
+    "python_qualified": {
+      "started_utc": "2026-10-03T07:33:18.0039809Z",
+      "completed_utc": "2026-10-03T07:33:35.5382262Z",
+      "exit": 0,
+      "dll_sha256": "195e7d3da273d861f9e7c424ff0171c3bfa8be2afe4bd5cee6d2075905c72a35"
+    },
+    "python_passed": 64,
+    "python_elapsed_seconds": 17.01,
+    "python_log": "out/lock-multi-preview/python-lock-tests-qualified.log",
+    "retained_failed_invocations": [
+      {
+        "cause": "New test helper import was absolute; corrected to package-relative import before rerun",
+        "log": "out/lock-multi-preview/python-lock-tests.log",
+        "exit": 2,
+        "stage": "test collection; no tests ran"
+      }
+    ],
+    "wasm_status": "passed",
+    "wasm_log": "out/lock-multi-preview/wasm-build.log",
+    "web_status": "all nine test:lock files and TypeScript passed",
+    "no_new_solver_run": true,
+    "no_strategy_simulator": true,
+    "wasm_build": {
+      "started_utc": "2026-10-03T07:34:17.662071Z",
+      "completed_utc": "2026-10-03T07:39:15.3844038Z",
+      "exit": 0,
+      "max_compiler_jobs": 2,
+      "wasm_sha256": "ce4a8bc6c744fd16a0c792cee8728a4f25be95896037e8e4fac8678c85e1995b",
+      "mjs_sha256": "c3f63141397c06cf966487c0ad5787a338000401dc46f707bba522c959296e9c"
+    },
+    "web_checks": {
+      "started_utc": "2026-10-03T07:40:20.552314Z",
+      "wasm_sha256": "ce4a8bc6c744fd16a0c792cee8728a4f25be95896037e8e4fac8678c85e1995b",
+      "build_data_exit": 0,
+      "lock_chain_exit": 0,
+      "typescript_exit": 0,
+      "completed_utc": "2026-10-03T07:40:31.3560622Z"
+    },
+    "web_logs": [
+      "out/lock-multi-preview/build-data-bundle.log",
+      "out/lock-multi-preview/web-lock-tests.log",
+      "out/lock-multi-preview/typescript.log"
+    ],
+    "exact_commands": [
+      "CMAKE_BUILD_PARALLEL_LEVEL=2 powershell -NoProfile -File scripts/dev-engine.ps1 -Task Engine -Jobs 2",
+      "cmake --build build/engine --target poecraft_engine_shared poecraft_header_smoke --parallel 2",
+      "build/engine/poecraft_header_smoke.exe",
+      "PYTHONPATH=tools/ingest;bindings/python POECRAFT_ENGINE_LIBRARY=build/engine/poecraft_engine.dll py -3 -m pytest bindings/python/tests/test_hinekora_lock.py bindings/python/tests/test_hinekora_multi_preview.py -q -p no:cacheprovider --basetemp out/lock-multi-preview/pytest-tmp-qualified",
+      "EMCC_CORES=2 CMAKE_BUILD_PARALLEL_LEVEL=2 powershell -NoProfile -File scripts/build-wasm.ps1",
+      "apps/web: node ../../scripts/build-data-bundle.mjs",
+      "apps/web: npm.cmd run test:lock",
+      "apps/web: node node_modules/typescript/bin/tsc --noEmit"
+    ],
+    "native_and_facade_source_unchanged_after_build": true,
+    "artifact_records": {
+      "build/engine/poecraft_engine.dll": {
+        "sha256": "195e7d3da273d861f9e7c424ff0171c3bfa8be2afe4bd5cee6d2075905c72a35",
+        "bytes": 14247307
+      },
+      "build/engine/poecraft_header_smoke.exe": {
+        "sha256": "59fd52458db9e8156da5800479ea61ac82ecdd541172f4c78effe17ffeccb339",
+        "bytes": 128656
+      },
+      "bindings/wasm/dist/poecraft_engine.wasm": {
+        "sha256": "ce4a8bc6c744fd16a0c792cee8728a4f25be95896037e8e4fac8678c85e1995b",
+        "bytes": 8394083
+      },
+      "bindings/wasm/dist/poecraft_engine.mjs": {
+        "sha256": "c3f63141397c06cf966487c0ad5787a338000401dc46f707bba522c959296e9c",
+        "bytes": 21307
+      }
+    }
+  },
+  "integration": {
+    "owner": "01a0fd2f-7f88-7588-a1ea-bfe1e6991036",
+    "status": "local isolated qualification complete; combine/rebuild/qualify with other feature deltas before integration",
+    "source_checkpoint_preserved": "69b60e81781dffc3d16e1ce1bcf08e491f738a1a",
+    "independent_push_merge_deploy": false
   }
 }

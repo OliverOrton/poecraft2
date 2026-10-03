@@ -1,5 +1,13 @@
 # Persistent multi-preview Hinekora programme
 
+Current qualification: two-job native Engine/shared/header and matching WASM
+builds pass; all **64** focused fixed/independent Lock Python tests, the real
+worker/Emulator contracts, all nine `test:lock` files and TypeScript pass.
+Every owned heavy process ended at 07:40:31 UTC and the serial slot is released.
+This supersedes the historical pending-slot checkpoints below. Integration and
+publication remain with the integrator; the independent model supplies no
+adaptive exact solver authority.
+
 Selected by Oliver, resumed at 04:00 UTC on October 3. His 04:12 reply
 `1.yes\n2.yes` approves the proposed initial models; the first yes approves
 independent cached Lock requests, explicitly approximate/simulation-only.
@@ -157,3 +165,42 @@ Preserve aligned source checkpoint `69b60e81781dffc3d16e1ce1bcf08e491f738a1a`.
 Observed main `0fecbc404925548dc978ecdcf4d2aa0e62c91e1a` adds only solver-test
 diagnostics and documentation since `0187f3d8`; it changes no Lock/native/WASM
 implementation input. No heavy command, process or handle has started here.
+
+## Passing native qualification checkpoint
+
+Native Engine/shared/header builds pass at two jobs from source `3a7b80b9`,
+engine tree `38f7455bd83fd912beeae2ad607599bcd5c4f308`. DLL SHA256:
+`195e7d3da273d861f9e7c424ff0171c3bfa8be2afe4bd5cee6d2075905c72a35`.
+All 64 focused Python Lock tests pass in 17.01 seconds, including legacy primitive
+marginal comparisons and the new lifecycle/request/persistence contracts. The
+first invocation stopped during collection: the new test used an absolute
+instead of package-relative helper import. That one-line test-only repair is
+retained; native/facade source and DLL are unchanged. The failed log and both
+invocation results remain under `out/lock-multi-preview/` and in the same receipt.
+Matching WASM and product qualification remain pending at this native stage.
+
+## Qualified isolated product checkpoint; heavy slot released
+
+Matching two-job WASM build passes in 297.72 seconds. WASM SHA256:
+`ce4a8bc6c744fd16a0c792cee8728a4f25be95896037e8e4fac8678c85e1995b`.
+MJS SHA256 is unchanged:
+`c3f63141397c06cf966487c0ad5787a338000401dc46f707bba522c959296e9c`.
+The frozen bundle owner validates runtime/ABI without refreshing data or prices.
+The complete nine-file `npm run test:lock` chain and TypeScript pass on that module.
+Real-worker cases cover selection-free application, normalized aliases and repeated
+cross-request observations, failed import atomicity, unseen reservation replay,
+serialized Undo/Redo, invalidation and separate Lock/currency spending. Emulator
+controls show the model disclosure, read-only full numerical preview and exact
+selected request; absent prices stay visibly unpriced. Legacy refusal, no-refresh,
+context cleanup and strand/editor checks remain passing.
+
+No production native/facade correction was needed after the source checkpoint.
+The only execution repair is the one-line test helper import. Existing WASM enum
+and range-comparison warnings remain warnings; the build succeeds. The initial
+Python collection failure stays recorded separately from the 64 passing tests.
+All source/runtime/artifact identities, commands and logs are in the same receipt.
+The full repository suite, rendered UI review, long solver benchmarks, authored
+Simulator and combined-feature integration qualification remain unrun. Those are
+not claimed by this isolated acceptance. No push, main integration, deployment,
+server restart or data/economy refresh occurred. All heavy handles have completed
+and the slot was released immediately; only local artifact/receipt commits follow.

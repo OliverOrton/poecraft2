@@ -2,7 +2,7 @@
 import copy
 import pytest
 from poecraft_engine import EngineError, load_data
-from test_hinekora_lock import ARTIFACT, BASE, _fields
+from .test_hinekora_lock import ARTIFACT, BASE, _fields
 
 
 def test_apply_without_selection_observe_switch_and_commit_complete_identity():

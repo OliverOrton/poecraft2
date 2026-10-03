@@ -4,9 +4,10 @@ Oliver resumed and approved the independent cached approximate model. Isolated
 `dot/lock-multi-preview-exec-20261003`, aligned with qualified main `0187f3d8`, owns native Lock,
 bindings and Emulator controls; the [living record](docs/active/2026-10-03-lock-multi-preview/README.md)
 owns interface decisions, checkpoint consistency and focused acceptance.
-Source implementation is retained; builds/tests/matching WASM await parent heavy
-slot clearance. No owned heavy process started. Multi-goal owns the current
-slot and Lock is next; maximum two compiler jobs. Calculator goals stay with their selected owner.
+Native/shared/header, 64 focused Python tests, matching WASM, the full nine-file
+Lock worker/web chain and TypeScript pass. The serial heavy slot is released;
+all owned processes ended at 07:40:31 UTC. Source/artifact/failure/unrun receipts
+are in the living record. Calculator goals stay with their selected owner.
 No model-selection approval remains; solver/Unveil/donor admissions remain held.
 Commits stay local for integration owner; no push/merge/deployment or refresh.
 
