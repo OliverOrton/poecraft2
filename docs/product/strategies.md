@@ -220,7 +220,7 @@ See [Workspace](workspace.md) and [Economy](../economy/README.md).
 The feeder extension retains operation nodes and existing control-flow edges,
 with explicit resource slot assignments shown as item ports. It has no general
 concurrent scheduler or publishing/account resource contract. Executable
-recombination stays held for the separate pair owner's qualified native Apply.
+recombination stays held pending resource-slot integration of the qualified native pair Apply.
 Aggregate Simulator node/edge overlays, empirical focus/trim and publishing
 remain deferred in [Product Notes](NOTES.md), the
 [solver roadmap](../future/solver-roadmap.md), and other `future/` references.
@@ -309,8 +309,8 @@ the board. Save/import, clone and draft Undo/Redo preserve the complete referenc
 No crafting interpreter or probability law is added to TypeScript.
 
 `recombination` nodes can store `input_a`, `input_b` and `output` slot assignments,
-but native compilation deliberately refuses them until the pair owner supplies
-qualified full Apply. Its future contract consumes both inputs and creates one
+but Builder compilation deliberately refuses them pending resource-slot integration
+of the pair owner's qualified full Apply. The native pair contract consumes both inputs and creates one
 new item with the explicit native A/B `output_session`; no receiver-index
 reinterpretation is permitted. Mixed-base outputs require conditions over their
 actual session. All inventory/feeder/recycling graphs remain refused by exact

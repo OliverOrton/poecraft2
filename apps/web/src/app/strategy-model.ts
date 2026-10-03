@@ -396,7 +396,7 @@ function validateStrategyResources(strategy: StrategyDocument, issues: StrategyV
             if (op.type === "recombination") {
                 if (!ids.has(String(params.input_a)) || !ids.has(String(params.input_b)) || !ids.has(String(params.output)) || params.input_a === params.input_b)
                     fail("Recombination needs two distinct input slots and an explicit output slot.", node.id);
-                issues.push({severity: "warning", code: "recombination-held", message: "Executable recombination waits for qualified native pair Apply.", nodeId: node.id});
+                issues.push({severity: "warning", code: "recombination-held", message: "Builder recombination execution waits for resource-slot integration of the qualified native pair Apply.", nodeId: node.id});
             }
         }
     };
@@ -705,7 +705,7 @@ export function operationLabel(
         case "move_resource": return `Move ${stringParam(params, "from") || "?"} → ${stringParam(params, "to") || "?"}`;
         case "discard_resource": return `Discard ${stringParam(params, "resource_id") || "choose slot"}`;
         case "acquire_resource": return `Acquire ${stringParam(params, "resource_id") || "donor"}`;
-        case "recombination": return "Recombine pair (Apply held)";
+        case "recombination": return "Recombine pair (Builder held)";
         case "restart":
             return "Restart · fresh base";
         case "bestiary:imprint":

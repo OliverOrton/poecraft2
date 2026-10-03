@@ -52,7 +52,35 @@ try {
     const mismatched = await execute(failure, {target_runs: 1});
     assert.equal(mismatched.summary.success_count, 0); assert.equal(mismatched.summary.known_total_cost, 9);
     assert.equal(mismatched.traces[0].entries.at(-1)!.resources![0].feeder!.output_accepted, false);
+    const recycled = structuredClone(parent);
+    recycled.nodes.push(
+        {id: "discard", kind: "operation", operation: {type: "discard_resource", params: {resource_id: "current"}}, position: {x: 3, y: 0}},
+        {id: "move", kind: "operation", operation: {type: "move_resource", params: {from: "feeder", to: "current"}}, position: {x: 4, y: 0}});
+    recycled.edges[1].to = "discard";
+    recycled.edges.push({id: "empty", from: "discard", to: "move", priority: 0}, {id: "again", from: "move", to: "craft", priority: 0});
+    const twice = await execute(recycled, {target_runs: 1, max_actions_per_run: 6});
+    assert.equal(twice.summary.action_limit_count, 1);
+    assert.equal(twice.summary.total_actions, 6);
+    assert.equal(twice.summary.known_total_cost, 18);
+    const entries = twice.traces[0].entries;
+    const moved = entries.find(entry => entry.node_id === "move")!;
+    assert.equal(moved.resources![0].lifecycle, 1); // consumed after the real move
+    assert.equal(moved.resources![0].identity, "feeder/1");
+    assert.equal(moved.known_cumulative_cost, 9); // move/discard did not reacquire
+    const replacement = entries.at(-1)!.resources![0];
+    assert.equal(replacement.identity, "feeder/2");
+    assert.equal(replacement.acquisitions, 2);
+    assert.equal(replacement.feeder!.known_cost, 9);
+    assert.ok(twice.sampled_accounting.materials.some(row => row.price_key === "resource:feeder" && row.count === 2));
+    const stopped = structuredClone(parent);
+    const stoppedChild = JSON.parse(stopped.resources![0].feeder!.document_json) as StrategyDocument;
+    stoppedChild.nodes.at(-1)!.terminal = "failure";
+    stopped.resources![0].feeder!.document_json = JSON.stringify(stoppedChild);
+    const failed = await execute(stopped, {target_runs: 1});
+    assert.equal(failed.summary.success_count, 0);
+    assert.equal(failed.summary.known_total_cost, 9);
+    assert.equal(failed.traces[0].entries.at(-1)!.resources![0].feeder!.output_accepted, false);
     await assert.rejects(client.strategyEvaluate(session, parent), /inventory\/control identity/);
     await client.closeEconomy(economy); await client.closeSession(session);
     console.log("WASM worker feeder cost, output predicate, limits, resources and exact-refusal checks passed.");
-} finally { client.destroy(); }
+} finally { client.dispose(); await worker.terminate(); }
