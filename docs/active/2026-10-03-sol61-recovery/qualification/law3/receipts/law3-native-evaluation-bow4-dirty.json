@@ -1,0 +1,119 @@
+{
+  "arm": "bow4-dirty",
+  "source_commit": "b11f4c58f0a7c979f2c66b71892295795944e045",
+  "model": {
+    "rare_reforge_count_law_version": 3,
+    "assumption": "owner-approved single-side ordinary-total 8:3:1; provisional game model"
+  },
+  "policy_sha256": "e32b550faf63157812628d5bea6a6d5d900848ff7c8944e0bfba25b503a6d347",
+  "input_case_sha256": "e54d87308c2aca8b5e508b40eb0868419f80c1ddcea765827466f010fad5406b",
+  "root": {
+    "base_key": "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20",
+    "item_level": 86,
+    "rarity": "rare",
+    "item_flags": 0,
+    "generic_influence_bits": 0,
+    "searing_exarch_tier": 0,
+    "eater_of_worlds_tier": 0,
+    "prefixes": [
+      {
+        "mod_key": "LocalIncreaseSocketedGemLevel1"
+      },
+      {
+        "mod_key": "LocalAddedPhysicalDamageTwoHand9"
+      },
+      {
+        "mod_key": "LocalAddedColdDamageTwoHand10"
+      }
+    ],
+    "suffixes": [
+      {
+        "mod_key": "Dexterity7"
+      },
+      {
+        "mod_key": "LocalIncreasedAttackSpeed3"
+      }
+    ],
+    "implicits": []
+  },
+  "economy": {
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "fallback_price": null,
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "missing_price_decisions": {
+      "base": "quality_ladder_fixture_input_1_chaos"
+    },
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "version": "v1"
+  },
+  "evaluation_options": {
+    "max_states": 800000,
+    "max_pairs": 1215000,
+    "max_transitions": 10000000,
+    "max_owned_bytes": 1073741824,
+    "max_output_json_bytes": 16777216
+  },
+  "native_library_sha256": "7b8fba3dbf363a750f2f141874be973b5cd2e6dd3a52d39189fef8c13c32c7c7",
+  "started_utc": "2026-10-03T17:49:26.325604+00:00",
+  "scope": "ordinary strategy execution; no imported native incumbent provenance",
+  "status": "proper",
+  "converged": true,
+  "terminals": {
+    "success": 1,
+    "failure": 0,
+    "stop": 0,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "unresolved": 0,
+    "by_node": [
+      {
+        "node_id": "goal",
+        "kind": "success",
+        "p": 1
+      },
+      {
+        "node_id": "offpolicy",
+        "kind": "failure",
+        "p": 0
+      }
+    ]
+  },
+  "cost_complete": true,
+  "total_expected_cost": 38497.785744000365,
+  "comparable_expected_cost": 38497.785744000365,
+  "expected_actions": 451.00000000000443,
+  "consumption": [
+    {
+      "key": "bench:JunMaster2LocalAccuracyRatingStrengthDexterity2",
+      "quantity": 90.20000000000086
+    },
+    {
+      "key": "bench:StrMasterItemGenerationCannotChangePrefixes",
+      "quantity": 90.20000000000086
+    },
+    {
+      "key": "exalt",
+      "quantity": 90.20000000000086
+    },
+    {
+      "key": "scour",
+      "quantity": 180.4000000000017
+    }
+  ],
+  "memory": {
+    "owned_bytes_estimate": 1006071,
+    "peak_owned_bytes_estimate": 1829881,
+    "retained_output_owned_bytes_estimate": 0,
+    "max_owned_bytes": 1073741824,
+    "max_output_json_bytes": 16777216
+  },
+  "raw_result_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-bow4-dirty.raw.json",
+  "raw_result_sha256": "306332de1df40aab298f588285a8a24453a5ca7879ef4082dd6486f92abf918d",
+  "elapsed_seconds": 0.27363909990526736
+}

@@ -1,0 +1,2011 @@
+{
+  "schema_version": "sol61_law3_component_qualification_v1",
+  "created_utc": "2026-10-03T18:36:43.010795+00:00",
+  "qualified_source_commit": "b11f4c58f0a7c979f2c66b71892295795944e045",
+  "base_main": "72448deaacca2797058de0559378685ba71a983f",
+  "source_delta": {
+    "base": "72448deaacca2797058de0559378685ba71a983f",
+    "source_tip": "b11f4c58f0a7c979f2c66b71892295795944e045",
+    "paths": [
+      "docs/decisions.md",
+      "docs/mechanics/eldritch-and-influence.md",
+      "engine/benchmarks/solver_benchmark.cpp",
+      "engine/src/actions_basic.cpp",
+      "engine/src/reforge_count_law.hpp",
+      "engine/src/solver_api.cpp",
+      "engine/src/solver_calc.cpp",
+      "engine/src/solver_calc_types.hpp",
+      "engine/src/solver_compile.cpp",
+      "engine/src/solver_compile_contracts.hpp",
+      "engine/src/solver_diagnostic_options.hpp",
+      "engine/src/solver_eval_types.hpp",
+      "engine/src/solver_finder.cpp",
+      "engine/src/solver_model.hpp",
+      "engine/src/solver_options.cpp",
+      "engine/src/solver_options_automatic.cpp",
+      "engine/src/solver_reforge.cpp",
+      "engine/src/solver_selective_completion.cpp",
+      "engine/src/solver_selective_completion.hpp",
+      "engine/src/solver_solve_contracts.hpp",
+      "engine/src/solver_solve_finish.cpp",
+      "engine/src/solver_solve_focused.cpp",
+      "engine/src/solver_solve_incremental.cpp",
+      "engine/src/solver_solve_selective_completion.cpp",
+      "engine/src/solver_solve_telemetry.cpp",
+      "engine/src/solver_solve_telemetry_json.cpp",
+      "engine/src/solver_solve_types.hpp",
+      "engine/tests/test_main.cpp",
+      "engine/tests/test_solver_api.cpp",
+      "engine/tests/test_solver_calc.cpp",
+      "engine/tests/test_solver_compile.cpp",
+      "engine/tests/test_solver_solve.cpp",
+      "engine/tests/tests.hpp",
+      "tools/ingest/poecraft_ingest/solver_reports.py",
+      "tools/ingest/tests/test_solver_reports.py"
+    ],
+    "patch_sha256": "67cbb00444f0e61c05fbf88a368218f7b4a32f004144dda6f4f59d8240d223ce",
+    "patch_bytes": 201323,
+    "integration": "Apply only selected source commits/delta onto main4ad40580; preserve latest LockObserve and UI. Both historical aae5 artifact and current component WASM are excluded from source delta. Combined rebuild required."
+  },
+  "source_delta_commits": [
+    "5f7dbd274b38c93027593b5dcd9f7f9f053cb478",
+    "1e7a50b272f7e09b2a67443398a34ec7fdef5a6c",
+    "afa83210196a2e07c00ccc6650881b44ae1b0e84",
+    "6a9db0f817fdcce35e66ffb8a5e54ddc704fdfba",
+    "b11f4c58f0a7c979f2c66b71892295795944e045"
+  ],
+  "model": {
+    "rare_reforge_count_law_version": 3,
+    "action_refinement_contract_version": 5,
+    "evaluator_certificate_version": 3,
+    "assumption": "Oliver-approved ordinary-total4/5/6 at8:3:1, count all preserved mods, fill selected side up to capacity; provisional game model"
+  },
+  "prior_model_receipts": "../qualification.json retained unchanged; historical model2 evidence is not relabeled",
+  "native_focused_checks": {
+    "count_law": 363236,
+    "checkpoint": 64,
+    "eldritch_growth": 84
+  },
+  "reporter_tests": 29,
+  "native_binary_identity": {
+    "build\\engine\\poecraft_engine_tests.exe": "200654e8f444bfc0c4de79f2643bbd75f2e15a1df5222e57fd95e1695ddbe3b6",
+    "build\\engine\\poecraft_solver_benchmark.exe": "dc1fa0651bbf66bd1e8de5564fd6c5086ada6406640b4df6b563a9afadef289d"
+  },
+  "native_library_sha256": "7b8fba3dbf363a750f2f141874be973b5cd2e6dd3a52d39189fef8c13c32c7c7",
+  "wasm_identity": {
+    "bindings\\wasm\\dist\\poecraft_engine.wasm": {
+      "sha256": "0ac738f597a3d82e3e6438d17e77c3812e50cd7d360aad9621b9035893e4ca48",
+      "bytes": 8608606
+    },
+    "bindings\\wasm\\dist\\poecraft_engine.mjs": {
+      "sha256": "23c405b984e19595b4007259d8d45fe713ea31a534c091c2ef9433ffbe2f1363",
+      "bytes": 21788
+    }
+  },
+  "policy_matrix": [
+    {
+      "case": "conquest5-historical",
+      "policy_sha256": "725fcf645903621ec123961846c82143632bcee9d3a0da30302fc002d167720a",
+      "native_cost_parity": {
+        "expected_cost": 85970.67347138176,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "terminals": {
+        "success": 1,
+        "failure": 0,
+        "stop": 0,
+        "action_not_applied": 0,
+        "no_matching_edge": 0,
+        "unresolved": 0,
+        "by_node": [
+          {
+            "node_id": "goal",
+            "kind": "success",
+            "p": 1
+          },
+          {
+            "node_id": "offpolicy",
+            "kind": "failure",
+            "p": 0
+          }
+        ]
+      },
+      "expected_cost": 85970.67347138171,
+      "expected_actions": 8193.695927203275,
+      "wasm_memory": {
+        "initial_linear_memory_bytes": 134217728,
+        "current_linear_memory_bytes": 278396928,
+        "peak_observed_linear_memory_bytes": 278396928,
+        "linear_memory_growth_only": true,
+        "configured_maximum_linear_memory_bytes": 4294967296,
+        "process_rss_bytes": 454590464,
+        "process_rss_peak_observed_bytes": 456708096,
+        "process_lifetime_max_rss_bytes": 477507584,
+        "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+      },
+      "simulator_summary": {
+        "completed_runs": 1000,
+        "success_count": 1000,
+        "failure_count": 0,
+        "stop_count": 0,
+        "total_actions": 8474007,
+        "action_limit_count": 0,
+        "cost_limit_count": 0,
+        "step_limit_count": 0,
+        "no_matching_edge_count": 0,
+        "action_not_applied_count": 0,
+        "missing_price_run_count": 0,
+        "costed_action_count": 8474007,
+        "missing_price_action_count": 0,
+        "known_total_cost": 86462422.51906995,
+        "cost_status": "complete",
+        "seed": 27092026,
+        "target_runs": 1000
+      },
+      "simulator_qualification": {
+        "requested_runs": 1000,
+        "max_actions_per_run": 1000000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 1000000000,
+        "success_count": 1000,
+        "failures": [],
+        "meaning": "finite execution qualification; censored runs do not estimate uncapped policy EV"
+      }
+    },
+    {
+      "case": "conquest5-current",
+      "policy_sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+      "native_cost_parity": {
+        "expected_cost": 101311.35474896732,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "terminals": {
+        "success": 1,
+        "failure": 0,
+        "stop": 0,
+        "action_not_applied": 0,
+        "no_matching_edge": 0,
+        "unresolved": 0,
+        "by_node": [
+          {
+            "node_id": "c6",
+            "kind": "success",
+            "p": 1
+          }
+        ]
+      },
+      "expected_cost": 101311.35474896732,
+      "expected_actions": 23321.649759118343,
+      "wasm_memory": {
+        "initial_linear_memory_bytes": 134217728,
+        "current_linear_memory_bytes": 278396928,
+        "peak_observed_linear_memory_bytes": 278396928,
+        "linear_memory_growth_only": true,
+        "configured_maximum_linear_memory_bytes": 4294967296,
+        "process_rss_bytes": 456364032,
+        "process_rss_peak_observed_bytes": 456364032,
+        "process_lifetime_max_rss_bytes": 470220800,
+        "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+      },
+      "simulator_summary": {
+        "completed_runs": 1000,
+        "success_count": 1000,
+        "failure_count": 0,
+        "stop_count": 0,
+        "total_actions": 23726027,
+        "action_limit_count": 0,
+        "cost_limit_count": 0,
+        "step_limit_count": 0,
+        "no_matching_edge_count": 0,
+        "action_not_applied_count": 0,
+        "missing_price_run_count": 0,
+        "costed_action_count": 23726027,
+        "missing_price_action_count": 0,
+        "known_total_cost": 103931894.16999942,
+        "cost_status": "complete",
+        "seed": 27092026,
+        "target_runs": 1000
+      },
+      "simulator_qualification": {
+        "requested_runs": 1000,
+        "max_actions_per_run": 1000000,
+        "max_graph_steps_per_run": 4000000,
+        "max_cost_per_run": 1000000000,
+        "success_count": 1000,
+        "failures": [],
+        "meaning": "finite execution qualification; censored runs do not estimate uncapped policy EV"
+      }
+    },
+    {
+      "case": "bow4-dirty",
+      "policy_sha256": "e32b550faf63157812628d5bea6a6d5d900848ff7c8944e0bfba25b503a6d347",
+      "native_cost_parity": {
+        "expected_cost": 38497.785744000365,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "terminals": {
+        "success": 1,
+        "failure": 0,
+        "stop": 0,
+        "action_not_applied": 0,
+        "no_matching_edge": 0,
+        "unresolved": 0,
+        "by_node": [
+          {
+            "node_id": "goal",
+            "kind": "success",
+            "p": 1
+          },
+          {
+            "node_id": "offpolicy",
+            "kind": "failure",
+            "p": 0
+          }
+        ]
+      },
+      "expected_cost": 38497.785744000365,
+      "expected_actions": 451.00000000000443,
+      "wasm_memory": {
+        "initial_linear_memory_bytes": 134217728,
+        "current_linear_memory_bytes": 278396928,
+        "peak_observed_linear_memory_bytes": 278396928,
+        "linear_memory_growth_only": true,
+        "configured_maximum_linear_memory_bytes": 4294967296,
+        "process_rss_bytes": 412758016,
+        "process_rss_peak_observed_bytes": 420429824,
+        "process_lifetime_max_rss_bytes": 462819328,
+        "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+      },
+      "simulator_evidence": "Unchanged strategy; prior qualification/qualification.json retained. Fresh law3 native and WASM exact costs are identical; no repeated Simulator run."
+    },
+    {
+      "case": "amulet3",
+      "policy_sha256": "713403e86ba47e362aac1dc6eb56f970e4544dd8a6b353e9d18fd0c7965ab26f",
+      "native_cost_parity": {
+        "expected_cost": 18996.576948551738,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "terminals": {
+        "success": 1,
+        "failure": 0,
+        "stop": 0,
+        "action_not_applied": 0,
+        "no_matching_edge": 0,
+        "unresolved": 0,
+        "by_node": [
+          {
+            "node_id": "c2",
+            "kind": "success",
+            "p": 1
+          }
+        ]
+      },
+      "expected_cost": 18996.576948551738,
+      "expected_actions": 47055.97225374125,
+      "wasm_memory": {
+        "initial_linear_memory_bytes": 134217728,
+        "current_linear_memory_bytes": 400949248,
+        "peak_observed_linear_memory_bytes": 400949248,
+        "linear_memory_growth_only": true,
+        "configured_maximum_linear_memory_bytes": 4294967296,
+        "process_rss_bytes": 528203776,
+        "process_rss_peak_observed_bytes": 528203776,
+        "process_lifetime_max_rss_bytes": 533475328,
+        "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+      },
+      "simulator_evidence": "Unchanged strategy; prior qualification/qualification.json retained. Fresh law3 native and WASM exact costs are identical; no repeated Simulator run."
+    },
+    {
+      "case": "bow5",
+      "policy_sha256": "b6114194af1611cb68dc86994cbcc086f01e9804ecb3ffbca863593f5fb9f38c",
+      "native_cost_parity": {
+        "expected_cost": 4071502.8714904664,
+        "tolerance_relative": 1e-09,
+        "status": "passed"
+      },
+      "terminals": {
+        "success": 1,
+        "failure": 0,
+        "stop": 0,
+        "action_not_applied": 0,
+        "no_matching_edge": 0,
+        "unresolved": 0,
+        "by_node": [
+          {
+            "node_id": "c2",
+            "kind": "success",
+            "p": 1
+          }
+        ]
+      },
+      "expected_cost": 4071502.8714904664,
+      "expected_actions": 2643099.363149086,
+      "wasm_memory": {
+        "initial_linear_memory_bytes": 134217728,
+        "current_linear_memory_bytes": 400949248,
+        "peak_observed_linear_memory_bytes": 400949248,
+        "linear_memory_growth_only": true,
+        "configured_maximum_linear_memory_bytes": 4294967296,
+        "process_rss_bytes": 559910912,
+        "process_rss_peak_observed_bytes": 559910912,
+        "process_lifetime_max_rss_bytes": 562044928,
+        "rss_scope": "fresh Node process, including worker; observations at product response boundaries"
+      },
+      "simulator_evidence": "Unchanged strategy; prior qualification/qualification.json retained. Fresh law3 native and WASM exact costs are identical; no repeated Simulator run."
+    }
+  ],
+  "native_solve": [
+    {
+      "arm": "conquest5",
+      "receipt": {
+        "exit_code": 0,
+        "timed_out": false,
+        "canceled": false,
+        "cancellation_mode": null,
+        "cancellation_ack_ms": null,
+        "process_id": 69684,
+        "process_identity_token": "69684:134355242100990772",
+        "survivor": false,
+        "survivor_check": "process_group_kill_then_parent_poll",
+        "wall_ms": 121913.63650001585
+      },
+      "status": "bounded_feasible",
+      "summary": {
+        "converged": false,
+        "policy_available": true,
+        "policy_status": "bounded_feasible",
+        "termination": "requested_bounded_finish",
+        "stop_cause": "requested_bounded_finish",
+        "cap_hit_mask": 0,
+        "expanded_states": 4045,
+        "lower_bound": 0,
+        "upper_bound": 101311.35474896732,
+        "evaluated_policy_cost": 101311.35474896732
+      },
+      "candidate_service": {
+        "status": "retained",
+        "checks": 3,
+        "checked_cost": 101311.35474896732,
+        "failure_snapshot": null
+      },
+      "compiled_graph": {
+        "nodes": 26,
+        "edges": 39,
+        "strategy_json_bytes": 6557,
+        "strategy_output_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\law3-conquest-solve-r1-conquest5.strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json"
+      },
+      "exact": {
+        "completed": true,
+        "status": "matched",
+        "total_expected_cost": 101311.35474896732,
+        "success_probability": 1,
+        "off_policy_mass": 0,
+        "cost_complete": true
+      },
+      "economic_gate": {
+        "passed": false,
+        "cost_regressions": [],
+        "missing_independent_cost": [],
+        "requires_complete_matched_cohort": true
+      }
+    }
+  ],
+  "fresh_browser_solve": {
+    "status": "passed",
+    "usable_strategy": true,
+    "source_commit": "b11f4c58f0a7c979f2c66b71892295795944e045",
+    "wasm_sha256": "0ac738f597a3d82e3e6438d17e77c3812e50cd7d360aad9621b9035893e4ca48",
+    "browser_version": "152.0.7977.83",
+    "error": null,
+    "solve_summary": {
+      "converged": false,
+      "policy_available": true,
+      "policy_status": "bounded_feasible",
+      "termination": "requested_bounded_finish",
+      "stop_cause": "requested_bounded_finish",
+      "cap_hit_mask": 0,
+      "expanded_states": 6313,
+      "lower_bound": 0,
+      "upper_bound": 101311.35474896732,
+      "evaluated_policy_cost": 101311.35474896732
+    },
+    "request_options": {
+      "solve_profile": "calculator_product_v1"
+    },
+    "operations": [
+      "chaos",
+      "eldritch_annul",
+      "eldritch_chaos",
+      "eldritch_ember",
+      "eldritch_exalt"
+    ],
+    "page_errors": [],
+    "console_errors": [],
+    "worker": {
+      "step_count": 1312126,
+      "max_step_ms": 533.9000000953674,
+      "finalization_ms": 75
+    },
+    "memory": {
+      "native_peak_owned_bytes": 305805921,
+      "wasm_memory_bytes": 1085538304
+    },
+    "raw_bytes": 43530405,
+    "LOCAL_released_utc": "2026-10-03T18:23:26.351258+00:00"
+  },
+  "web": {
+    "npm_test": "passed",
+    "typescript": "passed",
+    "browser_channel": "installed Chrome; repository-supported channel",
+    "rendered_visual_review": "not requested"
+  },
+  "integration": {
+    "selected_source": "b11f4c58f0a7c979f2c66b71892295795944e045",
+    "latest_main": "4ad4058086cbaa766a7178aad7ac5625eb8772a8",
+    "common_changed_paths": [
+      "bindings/wasm/dist/poecraft_engine.wasm"
+    ],
+    "latest_main_engine_delta": [
+      "engine/include/poecraft/hinekora.h",
+      "engine/src/hinekora.cpp"
+    ],
+    "pins": {
+      "engine/include/poecraft/hinekora.h": {
+        "production": "ae517ce783ed3a302aedf0d37978ea9b07fc8443d3d741786211287aeabcbb68",
+        "main": "74eca3a79115382459f1e59e2fbaa0918e431a84600ff4d7c678a5eb681c21d3"
+      },
+      "engine/src/hinekora.cpp": {
+        "production": "bb50299b6ff57c7c95b72b1f05e1f960a3392340540fb3e026c1349ffbd012e0",
+        "main": "1652ad924835c71c093315c1ed46e7f2dcfb5f277758d26007d2b2057f826b01"
+      }
+    },
+    "disposition": "Source deltas do not overlap except generated WASM. Latest main adds cached same-action Lock Observe return in hinekora.cpp plus contract comments in hinekora.h. Law3 source references shared count identity in Hinekora but does not edit these files. A combined engine rebuild is required before replacing main WASM; 0ac738f5 remains qualified only for b11 source. Latest Calculator/Lock UI must remain on main.",
+    "publication_ready": false,
+    "required_action": "Combine source delta with latest main4ad40580 and retain LockObserve fix/UI; rebuild and qualify combined native/WASM before replacing main artifact.",
+    "component_artifact_only": true
+  },
+  "exclusions": [
+    "All costs conditional on the approved provisional model; no verified game-rate claim.",
+    "Law2/law3 and budget/verification differences excluded by typed financial identity; no matched-model gate pass.",
+    "Bounded feasible execution recovery, not certified optimal closure.",
+    "No main edits, frozen data/price changes, npm dev restart, merge/push/deployment.",
+    "Large-case cancellation latency not separately measured; existing web cancellation tests passed."
+  ],
+  "receipt_index": [
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-diagnostic-worktree\\out\\selective-cap-repair\\historical-conquest5-goal-order-adapted.strategy.json",
+      "portable_path": "policies/conquest5-historical.strategy.json",
+      "original_sha256": "725fcf645903621ec123961846c82143632bcee9d3a0da30302fc002d167720a",
+      "original_bytes": 320194,
+      "stored_sha256": "725fcf645903621ec123961846c82143632bcee9d3a0da30302fc002d167720a",
+      "stored_bytes": 320194,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\law3-conquest-solve-r1-conquest5.strategies\\sol61-trace-conquest5-currentmodel-120.strategy.json",
+      "portable_path": "policies/conquest5-current.strategy.json",
+      "original_sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+      "original_bytes": 6557,
+      "stored_sha256": "d65787d11ad895d5925ce9dd4d0aefde483e53bc25df3a80a6a9dfe7a0d7e053",
+      "stored_bytes": 6557,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-fixed-bow4-r2-bow4-dirty.strategies\\sol61-preserved-bow4-currentmodel-120.strategy.json",
+      "portable_path": "policies/bow4-dirty.strategy.json",
+      "original_sha256": "e32b550faf63157812628d5bea6a6d5d900848ff7c8944e0bfba25b503a6d347",
+      "original_bytes": 110996,
+      "stored_sha256": "e32b550faf63157812628d5bea6a6d5d900848ff7c8944e0bfba25b503a6d347",
+      "stored_bytes": 110996,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-amulet3.strategies\\sol61-amulet3-matched-currentlaw-120.strategy.json",
+      "portable_path": "policies/amulet3.strategy.json",
+      "original_sha256": "713403e86ba47e362aac1dc6eb56f970e4544dd8a6b353e9d18fd0c7965ab26f",
+      "original_bytes": 2958,
+      "stored_sha256": "713403e86ba47e362aac1dc6eb56f970e4544dd8a6b353e9d18fd0c7965ab26f",
+      "stored_bytes": 2958,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\production-default-r1-bow5.strategies\\sol61-bow5-matched-currentlaw-120.strategy.json",
+      "portable_path": "policies/bow5.strategy.json",
+      "original_sha256": "b6114194af1611cb68dc86994cbcc086f01e9804ecb3ffbca863593f5fb9f38c",
+      "original_bytes": 3314,
+      "stored_sha256": "b6114194af1611cb68dc86994cbcc086f01e9804ecb3ffbca863593f5fb9f38c",
+      "stored_bytes": 3314,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-conquest-solve-r1-conquest5-comparison.json",
+      "portable_path": "receipts/law3-conquest-solve-r1-conquest5-comparison.json",
+      "original_sha256": "ff96d3127183a62074a9d50951cafcfb4cd31823152aa5bc050445219196270b",
+      "original_bytes": 768,
+      "stored_sha256": "ff96d3127183a62074a9d50951cafcfb4cd31823152aa5bc050445219196270b",
+      "stored_bytes": 768,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-conquest-solve-r1-conquest5-preflight-started.json",
+      "portable_path": "receipts/law3-conquest-solve-r1-conquest5-preflight-started.json",
+      "original_sha256": "fe8e819fe889f6e1287ca05ba027abe5484b5c85825d2c1184f653f65a235b5c",
+      "original_bytes": 153,
+      "stored_sha256": "fe8e819fe889f6e1287ca05ba027abe5484b5c85825d2c1184f653f65a235b5c",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-conquest-solve-r1-conquest5-preflight.log",
+      "portable_path": "receipts/law3-conquest-solve-r1-conquest5-preflight.log",
+      "original_sha256": "c3b29d4a3f644c54e4c62fef066fa2afa719bc44a1368c26e15df66267ec8e29",
+      "original_bytes": 46,
+      "stored_sha256": "c3b29d4a3f644c54e4c62fef066fa2afa719bc44a1368c26e15df66267ec8e29",
+      "stored_bytes": 46,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-conquest-solve-r1-conquest5-preflight.receipt.json",
+      "portable_path": "receipts/law3-conquest-solve-r1-conquest5-preflight.receipt.json",
+      "original_sha256": "2804884c73a605e36260d61f15c8202ea207b1141e48b17d63c6be538b3ff998",
+      "original_bytes": 327,
+      "stored_sha256": "2804884c73a605e36260d61f15c8202ea207b1141e48b17d63c6be538b3ff998",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-conquest-solve-r1-conquest5-started.json",
+      "portable_path": "receipts/law3-conquest-solve-r1-conquest5-started.json",
+      "original_sha256": "50f2c198e5c5f64ce51f0857ad3ad642950828d83d779bca14e8ad804ac44526",
+      "original_bytes": 153,
+      "stored_sha256": "50f2c198e5c5f64ce51f0857ad3ad642950828d83d779bca14e8ad804ac44526",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-conquest-solve-r1-conquest5.log",
+      "portable_path": "receipts/law3-conquest-solve-r1-conquest5.log",
+      "original_sha256": "04d0c599704b46f6d49b78570c35cb13c3b2d70b3cebc3cbcb2ab6f0505aa0ff",
+      "original_bytes": 73,
+      "stored_sha256": "04d0c599704b46f6d49b78570c35cb13c3b2d70b3cebc3cbcb2ab6f0505aa0ff",
+      "stored_bytes": 73,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-conquest-solve-r1-conquest5.receipt.json",
+      "portable_path": "receipts/law3-conquest-solve-r1-conquest5.receipt.json",
+      "original_sha256": "fc9841bd49da6dfa7d8ba5029ddeef8f6fe832302d6d479ff424c13de011b08d",
+      "original_bytes": 328,
+      "stored_sha256": "fc9841bd49da6dfa7d8ba5029ddeef8f6fe832302d6d479ff424c13de011b08d",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-conquest-solve-r1-runtime-request.json",
+      "portable_path": "receipts/law3-conquest-solve-r1-runtime-request.json",
+      "original_sha256": "9bbc3aaa6ef7973caba8f21d4f2163fcad970dfcf73bc13009feb12e13ab3340",
+      "original_bytes": 3293,
+      "stored_sha256": "9bbc3aaa6ef7973caba8f21d4f2163fcad970dfcf73bc13009feb12e13ab3340",
+      "stored_bytes": 3293,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-conquest-solve-r1-runtime-result.json",
+      "portable_path": "receipts/law3-conquest-solve-r1-runtime-result.json",
+      "original_sha256": "91e51e221e0789f257b763b833bdd6a96fb4c1ef19aca85d43284f756b496365",
+      "original_bytes": 2399,
+      "stored_sha256": "91e51e221e0789f257b763b833bdd6a96fb4c1ef19aca85d43284f756b496365",
+      "stored_bytes": 2399,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-latest-main-overlap.json",
+      "portable_path": "receipts/law3-latest-main-overlap.json",
+      "original_sha256": "c61f37ae9dbd3580f2756a355d26751d9e61f410474739c502b9df4b9510818d",
+      "original_bytes": 1215,
+      "stored_sha256": "c61f37ae9dbd3580f2756a355d26751d9e61f410474739c502b9df4b9510818d",
+      "stored_bytes": 1215,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-amulet3-started.json",
+      "portable_path": "receipts/law3-native-evaluation-amulet3-started.json",
+      "original_sha256": "76acba7b03dbb4bef4b1d94a7cb00ae4512385e4b2b0a766c489a65397015a1e",
+      "original_bytes": 173,
+      "stored_sha256": "76acba7b03dbb4bef4b1d94a7cb00ae4512385e4b2b0a766c489a65397015a1e",
+      "stored_bytes": 173,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-amulet3.json",
+      "portable_path": "receipts/law3-native-evaluation-amulet3.json",
+      "original_sha256": "11459376f756b8b9352579514fbb236518719be998fa664ab1403d060c2cf0a7",
+      "original_bytes": 3214,
+      "stored_sha256": "11459376f756b8b9352579514fbb236518719be998fa664ab1403d060c2cf0a7",
+      "stored_bytes": 3214,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-amulet3.log",
+      "portable_path": "receipts/law3-native-evaluation-amulet3.log",
+      "original_sha256": "a5fe51332f3ab9b1524433ee21a6979a4d66afa1aabd681590b7700c5ad70d64",
+      "original_bytes": 420,
+      "stored_sha256": "a5fe51332f3ab9b1524433ee21a6979a4d66afa1aabd681590b7700c5ad70d64",
+      "stored_bytes": 420,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-amulet3.raw.json",
+      "portable_path": "receipts/law3-native-evaluation-amulet3.raw.json",
+      "original_sha256": "8a81d0f6ee5ffd8c57bab9c95b12a2fc5df9e9a3910cc209c7859147814b492c",
+      "original_bytes": 97958,
+      "stored_sha256": "8a81d0f6ee5ffd8c57bab9c95b12a2fc5df9e9a3910cc209c7859147814b492c",
+      "stored_bytes": 97958,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-amulet3.receipt.json",
+      "portable_path": "receipts/law3-native-evaluation-amulet3.receipt.json",
+      "original_sha256": "eb8015adf94fcf974bf117bfd48a6d1f2826d27f2a8705253142b9f5dc2cc0f2",
+      "original_bytes": 327,
+      "stored_sha256": "eb8015adf94fcf974bf117bfd48a6d1f2826d27f2a8705253142b9f5dc2cc0f2",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-bow4-dirty-started.json",
+      "portable_path": "receipts/law3-native-evaluation-bow4-dirty-started.json",
+      "original_sha256": "a437e18ba321d866d03618341992c23d7f489c9e539b10a407a6e05f8f9b9e4a",
+      "original_bytes": 176,
+      "stored_sha256": "a437e18ba321d866d03618341992c23d7f489c9e539b10a407a6e05f8f9b9e4a",
+      "stored_bytes": 176,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-bow4-dirty.json",
+      "portable_path": "receipts/law3-native-evaluation-bow4-dirty.json",
+      "original_sha256": "c87134bcc621e014f735042b6d7828c164376b201aee7883ac77aeed975968ae",
+      "original_bytes": 3705,
+      "stored_sha256": "c87134bcc621e014f735042b6d7828c164376b201aee7883ac77aeed975968ae",
+      "stored_bytes": 3705,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-bow4-dirty.log",
+      "portable_path": "receipts/law3-native-evaluation-bow4-dirty.log",
+      "original_sha256": "2f1d23c76164fca3b1af8aa96ee1515d5e8eb0242c1c4ab3f265677ca20fd76e",
+      "original_bytes": 481,
+      "stored_sha256": "2f1d23c76164fca3b1af8aa96ee1515d5e8eb0242c1c4ab3f265677ca20fd76e",
+      "stored_bytes": 481,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-bow4-dirty.raw.json",
+      "portable_path": "receipts/law3-native-evaluation-bow4-dirty.raw.json",
+      "original_sha256": "306332de1df40aab298f588285a8a24453a5ca7879ef4082dd6486f92abf918d",
+      "original_bytes": 26390,
+      "stored_sha256": "306332de1df40aab298f588285a8a24453a5ca7879ef4082dd6486f92abf918d",
+      "stored_bytes": 26390,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-bow4-dirty.receipt.json",
+      "portable_path": "receipts/law3-native-evaluation-bow4-dirty.receipt.json",
+      "original_sha256": "596f622f8bb3b8c3774a0e0521d452b142469e7bc58597eebd10ed7465bda485",
+      "original_bytes": 327,
+      "stored_sha256": "596f622f8bb3b8c3774a0e0521d452b142469e7bc58597eebd10ed7465bda485",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-bow5-started.json",
+      "portable_path": "receipts/law3-native-evaluation-bow5-started.json",
+      "original_sha256": "e2816e3351e4b70556fdefd766871223ac29a64b6232685528d142d72ca4dc35",
+      "original_bytes": 170,
+      "stored_sha256": "e2816e3351e4b70556fdefd766871223ac29a64b6232685528d142d72ca4dc35",
+      "stored_bytes": 170,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-bow5.json",
+      "portable_path": "receipts/law3-native-evaluation-bow5.json",
+      "original_sha256": "8fdb8c51816cc9e55520bda069582569788f657ad80f153460fa69b7cb11451b",
+      "original_bytes": 3253,
+      "stored_sha256": "8fdb8c51816cc9e55520bda069582569788f657ad80f153460fa69b7cb11451b",
+      "stored_bytes": 3253,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-bow5.log",
+      "portable_path": "receipts/law3-native-evaluation-bow5.log",
+      "original_sha256": "d73f54588c32b82d950863896e3b4846fb45da35b0adfcc0d416309fb44f7d09",
+      "original_bytes": 418,
+      "stored_sha256": "d73f54588c32b82d950863896e3b4846fb45da35b0adfcc0d416309fb44f7d09",
+      "stored_bytes": 418,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-bow5.raw.json",
+      "portable_path": "receipts/law3-native-evaluation-bow5.raw.json",
+      "original_sha256": "c14fb123b910e03889549dea8de76599dac5efcf4fc931d92ac25c5f3d2a81c1",
+      "original_bytes": 104261,
+      "stored_sha256": "c14fb123b910e03889549dea8de76599dac5efcf4fc931d92ac25c5f3d2a81c1",
+      "stored_bytes": 104261,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-bow5.receipt.json",
+      "portable_path": "receipts/law3-native-evaluation-bow5.receipt.json",
+      "original_sha256": "6ba81bcb0ebafcac85eb3795af189177a7c309972ff7953e2f16db5bca7574b5",
+      "original_bytes": 328,
+      "stored_sha256": "6ba81bcb0ebafcac85eb3795af189177a7c309972ff7953e2f16db5bca7574b5",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-conquest5-current-started.json",
+      "portable_path": "receipts/law3-native-evaluation-conquest5-current-started.json",
+      "original_sha256": "e2518adccb8090422e58d54c1453b6740de653922e2f3b497969eb3d82d7787c",
+      "original_bytes": 183,
+      "stored_sha256": "e2518adccb8090422e58d54c1453b6740de653922e2f3b497969eb3d82d7787c",
+      "stored_bytes": 183,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-conquest5-current.json",
+      "portable_path": "receipts/law3-native-evaluation-conquest5-current.json",
+      "original_sha256": "3545b77c155b6c1e6a222de0dbc28acf788d0a742d10a5823bf98be20022fc2b",
+      "original_bytes": 3340,
+      "stored_sha256": "3545b77c155b6c1e6a222de0dbc28acf788d0a742d10a5823bf98be20022fc2b",
+      "stored_bytes": 3340,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-conquest5-current.log",
+      "portable_path": "receipts/law3-native-evaluation-conquest5-current.log",
+      "original_sha256": "8c41b91d80577325fc127a0e54663cff4c17ab0c3d5f57df7b25c14754540cfb",
+      "original_bytes": 432,
+      "stored_sha256": "8c41b91d80577325fc127a0e54663cff4c17ab0c3d5f57df7b25c14754540cfb",
+      "stored_bytes": 432,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-conquest5-current.raw.json",
+      "portable_path": "receipts/law3-native-evaluation-conquest5-current.raw.json",
+      "original_sha256": "dec5e3d33167421276489e6ea05eb5e1195d3c930fd6e4c21b4f36ac669475e0",
+      "original_bytes": 134262,
+      "stored_sha256": "dec5e3d33167421276489e6ea05eb5e1195d3c930fd6e4c21b4f36ac669475e0",
+      "stored_bytes": 134262,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-conquest5-current.receipt.json",
+      "portable_path": "receipts/law3-native-evaluation-conquest5-current.receipt.json",
+      "original_sha256": "357401e4a9cceb6e1a4bfa5a615b06831df0006feac7a2e04e067d5fdfca4673",
+      "original_bytes": 327,
+      "stored_sha256": "357401e4a9cceb6e1a4bfa5a615b06831df0006feac7a2e04e067d5fdfca4673",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-conquest5-historical-started.json",
+      "portable_path": "receipts/law3-native-evaluation-conquest5-historical-started.json",
+      "original_sha256": "3f127137098367fbcafe0aea0770db1f63b84f7d9d884b5b8357285fdab68bf2",
+      "original_bytes": 186,
+      "stored_sha256": "3f127137098367fbcafe0aea0770db1f63b84f7d9d884b5b8357285fdab68bf2",
+      "stored_bytes": 186,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-conquest5-historical.json",
+      "portable_path": "receipts/law3-native-evaluation-conquest5-historical.json",
+      "original_sha256": "a860bc34a8194dcfe8046b2b2b9709ea2134833638c7026ae9600e7aafa12205",
+      "original_bytes": 3994,
+      "stored_sha256": "a860bc34a8194dcfe8046b2b2b9709ea2134833638c7026ae9600e7aafa12205",
+      "stored_bytes": 3994,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-conquest5-historical.log",
+      "portable_path": "receipts/law3-native-evaluation-conquest5-historical.log",
+      "original_sha256": "71f4e1ab769b1acc692a635942154ff6ed21d3dc6e2a1082e61eb858f601a68b",
+      "original_bytes": 487,
+      "stored_sha256": "71f4e1ab769b1acc692a635942154ff6ed21d3dc6e2a1082e61eb858f601a68b",
+      "stored_bytes": 487,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-conquest5-historical.raw.json",
+      "portable_path": "receipts/law3-native-evaluation-conquest5-historical.raw.json",
+      "original_sha256": "9ca727d4a0f482799b3500d78f2ec27259a748359107bb83ea8de15261e0c1f6",
+      "original_bytes": 687079,
+      "stored_sha256": "9ca727d4a0f482799b3500d78f2ec27259a748359107bb83ea8de15261e0c1f6",
+      "stored_bytes": 687079,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-conquest5-historical.receipt.json",
+      "portable_path": "receipts/law3-native-evaluation-conquest5-historical.receipt.json",
+      "original_sha256": "e73135eae7136af948acca592ed5c220399558ec250d9bb1a7b3ea0aa14d400d",
+      "original_bytes": 327,
+      "stored_sha256": "e73135eae7136af948acca592ed5c220399558ec250d9bb1a7b3ea0aa14d400d",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-receipts.json",
+      "portable_path": "receipts/law3-native-evaluation-receipts.json",
+      "original_sha256": "42feb4bb89c853af9c76a3492c3283d91165c38cf23da1e5a9cf0e0fdde49e3f",
+      "original_bytes": 1904,
+      "stored_sha256": "42feb4bb89c853af9c76a3492c3283d91165c38cf23da1e5a9cf0e0fdde49e3f",
+      "stored_bytes": 1904,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-request.json",
+      "portable_path": "receipts/law3-native-evaluation-request.json",
+      "original_sha256": "8eed91a55b65ce3aad46fdb144e79d0df60f873b4e827be1441d34bea2f68b22",
+      "original_bytes": 10501,
+      "stored_sha256": "8eed91a55b65ce3aad46fdb144e79d0df60f873b4e827be1441d34bea2f68b22",
+      "stored_bytes": 10501,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-summary.json",
+      "portable_path": "receipts/law3-native-evaluation-summary.json",
+      "original_sha256": "febb05dbca82c0300ba1d6534b658eb45452294e4f72671571f5c9daf1833241",
+      "original_bytes": 3278,
+      "stored_sha256": "febb05dbca82c0300ba1d6534b658eb45452294e4f72671571f5c9daf1833241",
+      "stored_bytes": 3278,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-library-r1-request.json",
+      "portable_path": "receipts/law3-native-library-r1-request.json",
+      "original_sha256": "d39298197470c7885c5466a6f58aac4c7336a4d0af6c8ecb5202df60dd4251b5",
+      "original_bytes": 20633,
+      "stored_sha256": "d39298197470c7885c5466a6f58aac4c7336a4d0af6c8ecb5202df60dd4251b5",
+      "stored_bytes": 20633,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-library-r1-started.json",
+      "portable_path": "receipts/law3-native-library-r1-started.json",
+      "original_sha256": "a9d02bca3c35286d831e82a094b7570e398f4a5ae972e34ce7dd3ea37c7dece2",
+      "original_bytes": 153,
+      "stored_sha256": "a9d02bca3c35286d831e82a094b7570e398f4a5ae972e34ce7dd3ea37c7dece2",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-library-r1.log",
+      "portable_path": "receipts/law3-native-library-r1.log",
+      "original_sha256": "7716162f3cd3b99cf3b8a8dd6decf324e08c7e941aae7e730baba5e4fc8c075b",
+      "original_bytes": 65,
+      "stored_sha256": "7716162f3cd3b99cf3b8a8dd6decf324e08c7e941aae7e730baba5e4fc8c075b",
+      "stored_bytes": 65,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-library-r1.receipt.json",
+      "portable_path": "receipts/law3-native-library-r1.receipt.json",
+      "original_sha256": "b0b200df61054de92dd80f6c224f814c312e15121f5bd063d7a6517e272a69fc",
+      "original_bytes": 327,
+      "stored_sha256": "b0b200df61054de92dd80f6c224f814c312e15121f5bd063d7a6517e272a69fc",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-library-r2-request.json",
+      "portable_path": "receipts/law3-native-library-r2-request.json",
+      "original_sha256": "be4319dc573ec06f1f2e42eab24219b0a67909df3d4bbef663918e479e3166ff",
+      "original_bytes": 20738,
+      "stored_sha256": "be4319dc573ec06f1f2e42eab24219b0a67909df3d4bbef663918e479e3166ff",
+      "stored_bytes": 20738,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-library-r2-started.json",
+      "portable_path": "receipts/law3-native-library-r2-started.json",
+      "original_sha256": "d88fcbdf0382b4f3e4471943df46eae2c536c16f3f561a942b43e6894c2bfba9",
+      "original_bytes": 153,
+      "stored_sha256": "d88fcbdf0382b4f3e4471943df46eae2c536c16f3f561a942b43e6894c2bfba9",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-library-r2.log",
+      "portable_path": "receipts/law3-native-library-r2.log",
+      "original_sha256": "29993a297ff49bc5657073e6f3b8d978fb0c90027da8b9bcbf4fd3c1401a3fec",
+      "original_bytes": 96,
+      "stored_sha256": "29993a297ff49bc5657073e6f3b8d978fb0c90027da8b9bcbf4fd3c1401a3fec",
+      "stored_bytes": 96,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-library-r2.receipt.json",
+      "portable_path": "receipts/law3-native-library-r2.receipt.json",
+      "original_sha256": "fd6eef6d35e0709157c4756fcddb84f1f1ce6ba75f1a6523c86c190ef650e8bb",
+      "original_bytes": 327,
+      "stored_sha256": "fd6eef6d35e0709157c4756fcddb84f1f1ce6ba75f1a6523c86c190ef650e8bb",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-build-benchmark-started.json",
+      "portable_path": "receipts/law3-native-r1-build-benchmark-started.json",
+      "original_sha256": "e407bd99701745ec95c5310414bab081a9dad7984fea48e283a13e2462992e15",
+      "original_bytes": 153,
+      "stored_sha256": "e407bd99701745ec95c5310414bab081a9dad7984fea48e283a13e2462992e15",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-build-benchmark.log",
+      "portable_path": "receipts/law3-native-r1-build-benchmark.log",
+      "original_sha256": "8ba6638dc8a5f890b8936ce8078a0ff39ef60039947bedeec1fcbdcfdc6e3b74",
+      "original_bytes": 327,
+      "stored_sha256": "8ba6638dc8a5f890b8936ce8078a0ff39ef60039947bedeec1fcbdcfdc6e3b74",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-build-benchmark.receipt.json",
+      "portable_path": "receipts/law3-native-r1-build-benchmark.receipt.json",
+      "original_sha256": "c13516de8bec0c6d29f24ee2ace7e84cf3b90881209d76b2d3099e3120a3007e",
+      "original_bytes": 328,
+      "stored_sha256": "c13516de8bec0c6d29f24ee2ace7e84cf3b90881209d76b2d3099e3120a3007e",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-build-tests-started.json",
+      "portable_path": "receipts/law3-native-r1-build-tests-started.json",
+      "original_sha256": "534713df5f5bc6673867f835acfe31484d00819e83582a120258ad3f059f5496",
+      "original_bytes": 153,
+      "stored_sha256": "534713df5f5bc6673867f835acfe31484d00819e83582a120258ad3f059f5496",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-build-tests.log",
+      "portable_path": "receipts/law3-native-r1-build-tests.log",
+      "original_sha256": "1dadbd37e75957f313c7ade71349a0591c60ea544b756c4bffc73dd2a59c43bf",
+      "original_bytes": 17061,
+      "stored_sha256": "1dadbd37e75957f313c7ade71349a0591c60ea544b756c4bffc73dd2a59c43bf",
+      "stored_bytes": 17061,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-build-tests.receipt.json",
+      "portable_path": "receipts/law3-native-r1-build-tests.receipt.json",
+      "original_sha256": "9d06b3da052c18c0c7c37c02e5a80c7c7c78933aa5f9dd541dae2928d46ec8ab",
+      "original_bytes": 328,
+      "stored_sha256": "9d06b3da052c18c0c7c37c02e5a80c7c7c78933aa5f9dd541dae2928d46ec8ab",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-built-binary-identity.json",
+      "portable_path": "receipts/law3-native-r1-built-binary-identity.json",
+      "original_sha256": "4cf50346368f03b0e504b79016d010f125da6c5fe0a0a4fde267845a33286535",
+      "original_bytes": 239,
+      "stored_sha256": "4cf50346368f03b0e504b79016d010f125da6c5fe0a0a4fde267845a33286535",
+      "stored_bytes": 239,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-checkpoint-started.json",
+      "portable_path": "receipts/law3-native-r1-checkpoint-started.json",
+      "original_sha256": "100c55f2a46ecba77f69e31d11a7fb4eeb920bd7d605a3bd9d1a01f58d2ad3f7",
+      "original_bytes": 151,
+      "stored_sha256": "100c55f2a46ecba77f69e31d11a7fb4eeb920bd7d605a3bd9d1a01f58d2ad3f7",
+      "stored_bytes": 151,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-checkpoint.log",
+      "portable_path": "receipts/law3-native-r1-checkpoint.log",
+      "original_sha256": "ebdff5eb09f4437cc5009a48df12b296b3d1ef07ebeae571ede7d06fa5373ce8",
+      "original_bytes": 340,
+      "stored_sha256": "ebdff5eb09f4437cc5009a48df12b296b3d1ef07ebeae571ede7d06fa5373ce8",
+      "stored_bytes": 340,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-checkpoint.receipt.json",
+      "portable_path": "receipts/law3-native-r1-checkpoint.receipt.json",
+      "original_sha256": "8f0f1aebec58218d9320d6a79c6b74a94141894344ae059a037c1f17fc761283",
+      "original_bytes": 335,
+      "stored_sha256": "8f0f1aebec58218d9320d6a79c6b74a94141894344ae059a037c1f17fc761283",
+      "stored_bytes": 335,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-count-law-started.json",
+      "portable_path": "receipts/law3-native-r1-count-law-started.json",
+      "original_sha256": "7ddf41640e70a00a2ad00ea98fa942c16f3559b426e728d5b532fc344708e43d",
+      "original_bytes": 153,
+      "stored_sha256": "7ddf41640e70a00a2ad00ea98fa942c16f3559b426e728d5b532fc344708e43d",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-count-law.log",
+      "portable_path": "receipts/law3-native-r1-count-law.log",
+      "original_sha256": "5bfc978e2b4115c148d4b82f4989c791d22570527b7e5aad0ce13f658bbe919e",
+      "original_bytes": 43156,
+      "stored_sha256": "5bfc978e2b4115c148d4b82f4989c791d22570527b7e5aad0ce13f658bbe919e",
+      "stored_bytes": 43156,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-count-law.receipt.json",
+      "portable_path": "receipts/law3-native-r1-count-law.receipt.json",
+      "original_sha256": "e5bcf4a2fd63163c5573532eacf96aab7993734bf2a65f1fb23f1a3394699dd9",
+      "original_bytes": 327,
+      "stored_sha256": "e5bcf4a2fd63163c5573532eacf96aab7993734bf2a65f1fb23f1a3394699dd9",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-growth-started.json",
+      "portable_path": "receipts/law3-native-r1-growth-started.json",
+      "original_sha256": "1a1700eb5a1caf0382db6a43a0b5c29606b57ab6725acf07f134cbf123f5975c",
+      "original_bytes": 153,
+      "stored_sha256": "1a1700eb5a1caf0382db6a43a0b5c29606b57ab6725acf07f134cbf123f5975c",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-growth.log",
+      "portable_path": "receipts/law3-native-r1-growth.log",
+      "original_sha256": "319d5ebd1dec95212e716fb61253c43f0f41e0c76cda5a712d236f50d8ca9efe",
+      "original_bytes": 262,
+      "stored_sha256": "319d5ebd1dec95212e716fb61253c43f0f41e0c76cda5a712d236f50d8ca9efe",
+      "stored_bytes": 262,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-growth.receipt.json",
+      "portable_path": "receipts/law3-native-r1-growth.receipt.json",
+      "original_sha256": "72a34c4fef3d74d33363bbc50e39a1ef5a3a3d7188f293773cf13c44319a2ac5",
+      "original_bytes": 327,
+      "stored_sha256": "72a34c4fef3d74d33363bbc50e39a1ef5a3a3d7188f293773cf13c44319a2ac5",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-qualification-request.json",
+      "portable_path": "receipts/law3-native-r1-qualification-request.json",
+      "original_sha256": "a7638267ac1dfe02491fc888761e8e48c36e7f911a0d1a9f02217b1819775f40",
+      "original_bytes": 23555,
+      "stored_sha256": "a7638267ac1dfe02491fc888761e8e48c36e7f911a0d1a9f02217b1819775f40",
+      "stored_bytes": 23555,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-qualification-result.json",
+      "portable_path": "receipts/law3-native-r1-qualification-result.json",
+      "original_sha256": "b30ef48b84be67b0a02caa67a97951814355cb82c8bda98178d58e6dd7d0fdd6",
+      "original_bytes": 3190,
+      "stored_sha256": "b30ef48b84be67b0a02caa67a97951814355cb82c8bda98178d58e6dd7d0fdd6",
+      "stored_bytes": 3190,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-reporter-started.json",
+      "portable_path": "receipts/law3-native-r1-reporter-started.json",
+      "original_sha256": "bc5c28f080cdad783c240adc89f6ceae731812f35b5a3c79bf918f039b946049",
+      "original_bytes": 151,
+      "stored_sha256": "bc5c28f080cdad783c240adc89f6ceae731812f35b5a3c79bf918f039b946049",
+      "stored_bytes": 151,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-reporter.log",
+      "portable_path": "receipts/law3-native-r1-reporter.log",
+      "original_sha256": "44721b54e87842281fd11fe536f1537a243f78793294cc89d45e7b1a431ed0b5",
+      "original_bytes": 101,
+      "stored_sha256": "44721b54e87842281fd11fe536f1537a243f78793294cc89d45e7b1a431ed0b5",
+      "stored_bytes": 101,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-reporter.receipt.json",
+      "portable_path": "receipts/law3-native-r1-reporter.receipt.json",
+      "original_sha256": "fd4c4c7f95e8a3a78342b62725af9665a50e773212763ad92701545a1ad32ae3",
+      "original_bytes": 324,
+      "stored_sha256": "fd4c4c7f95e8a3a78342b62725af9665a50e773212763ad92701545a1ad32ae3",
+      "stored_bytes": 324,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r1-source.patch",
+      "portable_path": "receipts/law3-native-r1-source.patch",
+      "original_sha256": "ff1b7961b4355d07f43652060c4d2ee042afa9aba3cc0a872ab9350476bb0910",
+      "original_bytes": 982096,
+      "stored_sha256": "ff1b7961b4355d07f43652060c4d2ee042afa9aba3cc0a872ab9350476bb0910",
+      "stored_bytes": 982096,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-build-benchmark-started.json",
+      "portable_path": "receipts/law3-native-r2-build-benchmark-started.json",
+      "original_sha256": "cbd619476bf50ca7e966de7e59637c78b973a145960f33fe120819131652b667",
+      "original_bytes": 153,
+      "stored_sha256": "cbd619476bf50ca7e966de7e59637c78b973a145960f33fe120819131652b667",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-build-benchmark.log",
+      "portable_path": "receipts/law3-native-r2-build-benchmark.log",
+      "original_sha256": "7716162f3cd3b99cf3b8a8dd6decf324e08c7e941aae7e730baba5e4fc8c075b",
+      "original_bytes": 65,
+      "stored_sha256": "7716162f3cd3b99cf3b8a8dd6decf324e08c7e941aae7e730baba5e4fc8c075b",
+      "stored_bytes": 65,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-build-benchmark.receipt.json",
+      "portable_path": "receipts/law3-native-r2-build-benchmark.receipt.json",
+      "original_sha256": "9021475ec1c9beccbf3fce96ef1533d6597e9ac7948dddf806537354d366598b",
+      "original_bytes": 327,
+      "stored_sha256": "9021475ec1c9beccbf3fce96ef1533d6597e9ac7948dddf806537354d366598b",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-build-tests-started.json",
+      "portable_path": "receipts/law3-native-r2-build-tests-started.json",
+      "original_sha256": "6b294d2d9f059e59e83cf9f0c7ca1950890de2f8e0abd5cb8292e00e703834d1",
+      "original_bytes": 153,
+      "stored_sha256": "6b294d2d9f059e59e83cf9f0c7ca1950890de2f8e0abd5cb8292e00e703834d1",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-build-tests.log",
+      "portable_path": "receipts/law3-native-r2-build-tests.log",
+      "original_sha256": "827d1ffd93001e4d4c013f8cb86e0cae425f68b26774a52415b6c3126bf3ada0",
+      "original_bytes": 193,
+      "stored_sha256": "827d1ffd93001e4d4c013f8cb86e0cae425f68b26774a52415b6c3126bf3ada0",
+      "stored_bytes": 193,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-build-tests.receipt.json",
+      "portable_path": "receipts/law3-native-r2-build-tests.receipt.json",
+      "original_sha256": "5ff7f2ae7db450cd9720da73c06a778636c119f148f1d4b252a8c7f2fef883f1",
+      "original_bytes": 328,
+      "stored_sha256": "5ff7f2ae7db450cd9720da73c06a778636c119f148f1d4b252a8c7f2fef883f1",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-built-binary-identity.json",
+      "portable_path": "receipts/law3-native-r2-built-binary-identity.json",
+      "original_sha256": "62d5b4828366d0d29c81dd5db52b0fc7266959e49103295100cb6ff80e3678dd",
+      "original_bytes": 239,
+      "stored_sha256": "62d5b4828366d0d29c81dd5db52b0fc7266959e49103295100cb6ff80e3678dd",
+      "stored_bytes": 239,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-checkpoint-started.json",
+      "portable_path": "receipts/law3-native-r2-checkpoint-started.json",
+      "original_sha256": "3317880cec4c4ddbf5536af7bb142f914bdbac9fd085784f96267307887eba71",
+      "original_bytes": 153,
+      "stored_sha256": "3317880cec4c4ddbf5536af7bb142f914bdbac9fd085784f96267307887eba71",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-checkpoint.log",
+      "portable_path": "receipts/law3-native-r2-checkpoint.log",
+      "original_sha256": "893a897b8a5db947382b4ba93541f2f7f1b7976d083f6e23692b3acde4c1606a",
+      "original_bytes": 48,
+      "stored_sha256": "893a897b8a5db947382b4ba93541f2f7f1b7976d083f6e23692b3acde4c1606a",
+      "stored_bytes": 48,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-checkpoint.receipt.json",
+      "portable_path": "receipts/law3-native-r2-checkpoint.receipt.json",
+      "original_sha256": "c32782141a71d8b3009e7a1b7bf7f8606a0ce70a3a331b9204588690f2c137b2",
+      "original_bytes": 325,
+      "stored_sha256": "c32782141a71d8b3009e7a1b7bf7f8606a0ce70a3a331b9204588690f2c137b2",
+      "stored_bytes": 325,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-count-law-started.json",
+      "portable_path": "receipts/law3-native-r2-count-law-started.json",
+      "original_sha256": "5385bd4ff4b90be1a787befa02dbd2d8c21b08a35ffbf72ab8554183be6cfbbc",
+      "original_bytes": 153,
+      "stored_sha256": "5385bd4ff4b90be1a787befa02dbd2d8c21b08a35ffbf72ab8554183be6cfbbc",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-count-law.log",
+      "portable_path": "receipts/law3-native-r2-count-law.log",
+      "original_sha256": "048992854e5e47c69bd57b9e0f097fb04d6efd2cc683d1437dce6978d52a5092",
+      "original_bytes": 1970,
+      "stored_sha256": "048992854e5e47c69bd57b9e0f097fb04d6efd2cc683d1437dce6978d52a5092",
+      "stored_bytes": 1970,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-count-law.receipt.json",
+      "portable_path": "receipts/law3-native-r2-count-law.receipt.json",
+      "original_sha256": "fa9bc56bbbe308a4d913b595cd94410b19b05d5e983ee1763dce95d739921e91",
+      "original_bytes": 327,
+      "stored_sha256": "fa9bc56bbbe308a4d913b595cd94410b19b05d5e983ee1763dce95d739921e91",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-growth-started.json",
+      "portable_path": "receipts/law3-native-r2-growth-started.json",
+      "original_sha256": "7ae838b830daf942e41abf55a5e32b6992226bc24bb952eb54b74d6a2e52da18",
+      "original_bytes": 153,
+      "stored_sha256": "7ae838b830daf942e41abf55a5e32b6992226bc24bb952eb54b74d6a2e52da18",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-growth.log",
+      "portable_path": "receipts/law3-native-r2-growth.log",
+      "original_sha256": "319d5ebd1dec95212e716fb61253c43f0f41e0c76cda5a712d236f50d8ca9efe",
+      "original_bytes": 262,
+      "stored_sha256": "319d5ebd1dec95212e716fb61253c43f0f41e0c76cda5a712d236f50d8ca9efe",
+      "stored_bytes": 262,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-growth.receipt.json",
+      "portable_path": "receipts/law3-native-r2-growth.receipt.json",
+      "original_sha256": "6b89bda0ac1edd41e789c0efc855be0ffd453c4dd171839e2a609adf0eab6fa2",
+      "original_bytes": 327,
+      "stored_sha256": "6b89bda0ac1edd41e789c0efc855be0ffd453c4dd171839e2a609adf0eab6fa2",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-qualification-request.json",
+      "portable_path": "receipts/law3-native-r2-qualification-request.json",
+      "original_sha256": "f8db5f236ba648f71c7ee4139820069921b13b0cdafac0de80fdb0c6d0c59cc9",
+      "original_bytes": 23706,
+      "stored_sha256": "f8db5f236ba648f71c7ee4139820069921b13b0cdafac0de80fdb0c6d0c59cc9",
+      "stored_bytes": 23706,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-qualification-result.json",
+      "portable_path": "receipts/law3-native-r2-qualification-result.json",
+      "original_sha256": "72a29030611ba054e49107e7995424d46803f36f06f97b2f6d1fdea899df0b66",
+      "original_bytes": 3183,
+      "stored_sha256": "72a29030611ba054e49107e7995424d46803f36f06f97b2f6d1fdea899df0b66",
+      "stored_bytes": 3183,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-reporter-started.json",
+      "portable_path": "receipts/law3-native-r2-reporter-started.json",
+      "original_sha256": "bb14dfd99823adff27723032f7f0244a952ee242f9d97b90563027a062263897",
+      "original_bytes": 153,
+      "stored_sha256": "bb14dfd99823adff27723032f7f0244a952ee242f9d97b90563027a062263897",
+      "stored_bytes": 153,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-reporter.log",
+      "portable_path": "receipts/law3-native-r2-reporter.log",
+      "original_sha256": "66af3f864b308f7f453879b6ba81aaa94275ccc707e19f901f95597ccf472bae",
+      "original_bytes": 101,
+      "stored_sha256": "66af3f864b308f7f453879b6ba81aaa94275ccc707e19f901f95597ccf472bae",
+      "stored_bytes": 101,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-reporter.receipt.json",
+      "portable_path": "receipts/law3-native-r2-reporter.receipt.json",
+      "original_sha256": "6db133a91b48cf0bb8a6617edf21bf9d7defbc0a531de4a079a4727f6d680ffe",
+      "original_bytes": 328,
+      "stored_sha256": "6db133a91b48cf0bb8a6617edf21bf9d7defbc0a531de4a079a4727f6d680ffe",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-r2-source.patch",
+      "portable_path": "receipts/law3-native-r2-source.patch",
+      "original_sha256": "c5c8af1a8c416652dd2f34bc89587af765bca5904ce00f8a27513734c8f03f0d",
+      "original_bytes": 2518,
+      "stored_sha256": "c5c8af1a8c416652dd2f34bc89587af765bca5904ce00f8a27513734c8f03f0d",
+      "stored_bytes": 2518,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-browser-conquest5-started.json",
+      "portable_path": "receipts/law3-product-browser-conquest5-started.json",
+      "original_sha256": "d4f130c51259c209008306ef41fe82085a62cc53535ff755f4cda058cba4c9a1",
+      "original_bytes": 254,
+      "stored_sha256": "d4f130c51259c209008306ef41fe82085a62cc53535ff755f4cda058cba4c9a1",
+      "stored_bytes": 254,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-browser-conquest5.json",
+      "portable_path": "receipts/law3-product-browser-conquest5.json.gz",
+      "original_sha256": "909b564314701167a99825da3df144fe03a438472b0cb2271e4f1f44dc54b099",
+      "original_bytes": 43530405,
+      "stored_sha256": "dc7847f056d2ff24f600f1b6337ae5a04f220fcae7acfb70b4966306f8ca56e9",
+      "stored_bytes": 637607,
+      "encoding": "gzip"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-browser-conquest5.log",
+      "portable_path": "receipts/law3-product-browser-conquest5.log.gz",
+      "original_sha256": "68b0baa34bc0387b556a7fd539b75ce7e07ade35cd3ac9bbd62cdb4219afb8e1",
+      "original_bytes": 12891413,
+      "stored_sha256": "8985148160906afc6190231b00ee463c4a8e6b5a21db0a68d3a664906f70401e",
+      "stored_bytes": 196097,
+      "encoding": "gzip"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-browser-conquest5.receipt.json",
+      "portable_path": "receipts/law3-product-browser-conquest5.receipt.json",
+      "original_sha256": "2cb498a181dff64b44a5c0726921028e25a5d81a94a5acc291547bd99a9e5dc1",
+      "original_bytes": 326,
+      "stored_sha256": "2cb498a181dff64b44a5c0726921028e25a5d81a94a5acc291547bd99a9e5dc1",
+      "stored_bytes": 326,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-browser-receipts.json",
+      "portable_path": "receipts/law3-product-browser-receipts.json",
+      "original_sha256": "56227348a6882b7f640cb71526add9295862930c6bce959afd6f259f17fb4fb2",
+      "original_bytes": 426,
+      "stored_sha256": "56227348a6882b7f640cb71526add9295862930c6bce959afd6f259f17fb4fb2",
+      "stored_bytes": 426,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-browser-request.json",
+      "portable_path": "receipts/law3-product-browser-request.json",
+      "original_sha256": "35b54e517175a5f1fd67d4e9310858db8db039885ed4f91f4e70946f5f4ffc74",
+      "original_bytes": 4997,
+      "stored_sha256": "35b54e517175a5f1fd67d4e9310858db8db039885ed4f91f4e70946f5f4ffc74",
+      "stored_bytes": 4997,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-completion-summary.json",
+      "portable_path": "receipts/law3-product-completion-summary.json",
+      "original_sha256": "56512b9f8f78a02cdd7914e8cedf529521909b1430a9b344df6167b9ac2e79cb",
+      "original_bytes": 1206,
+      "stored_sha256": "56512b9f8f78a02cdd7914e8cedf529521909b1430a9b344df6167b9ac2e79cb",
+      "stored_bytes": 1206,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-amulet3-started.json",
+      "portable_path": "receipts/law3-product-preflight-amulet3-started.json",
+      "original_sha256": "ae7e6b86564346337cee586366cdb4d242ac13f13bdb7c25f5b0934c59bf05d4",
+      "original_bytes": 256,
+      "stored_sha256": "ae7e6b86564346337cee586366cdb4d242ac13f13bdb7c25f5b0934c59bf05d4",
+      "stored_bytes": 256,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-amulet3.json",
+      "portable_path": "receipts/law3-product-preflight-amulet3.json",
+      "original_sha256": "814522b262e99109412b067108af301585d87c01ec6912d3509c3662c4ecb5bc",
+      "original_bytes": 2647,
+      "stored_sha256": "814522b262e99109412b067108af301585d87c01ec6912d3509c3662c4ecb5bc",
+      "stored_bytes": 2647,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-amulet3.log",
+      "portable_path": "receipts/law3-product-preflight-amulet3.log",
+      "original_sha256": "973110fa57902719f03ea7bb90a94c4f7c0f231a25c5e1f2bd177096637b7f44",
+      "original_bytes": 202,
+      "stored_sha256": "973110fa57902719f03ea7bb90a94c4f7c0f231a25c5e1f2bd177096637b7f44",
+      "stored_bytes": 202,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-amulet3.receipt.json",
+      "portable_path": "receipts/law3-product-preflight-amulet3.receipt.json",
+      "original_sha256": "9570740b7903d585c1cd32616051e3d927e46c9d3c3ccdd846e88bf2cd24b09d",
+      "original_bytes": 327,
+      "stored_sha256": "9570740b7903d585c1cd32616051e3d927e46c9d3c3ccdd846e88bf2cd24b09d",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-bow4-dirty-started.json",
+      "portable_path": "receipts/law3-product-preflight-bow4-dirty-started.json",
+      "original_sha256": "a9af1bde9841f82d780a8755f5e886e44fedc70d9762aba090d1069a7e336e0a",
+      "original_bytes": 259,
+      "stored_sha256": "a9af1bde9841f82d780a8755f5e886e44fedc70d9762aba090d1069a7e336e0a",
+      "stored_bytes": 259,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-bow4-dirty.json",
+      "portable_path": "receipts/law3-product-preflight-bow4-dirty.json",
+      "original_sha256": "5b6cbcfd1e6bdaa39110841c1cc687f83d88aa116f38ca6a1298fdd67191ecf0",
+      "original_bytes": 2831,
+      "stored_sha256": "5b6cbcfd1e6bdaa39110841c1cc687f83d88aa116f38ca6a1298fdd67191ecf0",
+      "stored_bytes": 2831,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-bow4-dirty.log",
+      "portable_path": "receipts/law3-product-preflight-bow4-dirty.log",
+      "original_sha256": "da3cccfed51b176a6d4b6563882700d90f4615f6dcc2b3414b12d84f47aa09d8",
+      "original_bytes": 204,
+      "stored_sha256": "da3cccfed51b176a6d4b6563882700d90f4615f6dcc2b3414b12d84f47aa09d8",
+      "stored_bytes": 204,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-bow4-dirty.receipt.json",
+      "portable_path": "receipts/law3-product-preflight-bow4-dirty.receipt.json",
+      "original_sha256": "fc48af756d3a9910f25e28eeffec5877cde667417d2ee5dd259098906785f69d",
+      "original_bytes": 327,
+      "stored_sha256": "fc48af756d3a9910f25e28eeffec5877cde667417d2ee5dd259098906785f69d",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-bow5-started.json",
+      "portable_path": "receipts/law3-product-preflight-bow5-started.json",
+      "original_sha256": "9049cc6575a2960414e48d6750291fc1a031a4c68b384898c34d67b80c99ba96",
+      "original_bytes": 253,
+      "stored_sha256": "9049cc6575a2960414e48d6750291fc1a031a4c68b384898c34d67b80c99ba96",
+      "stored_bytes": 253,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-bow5.json",
+      "portable_path": "receipts/law3-product-preflight-bow5.json",
+      "original_sha256": "ad8d86958c1bd9da5185a77d13ae16ed9401b155b0485440f7eb24ce02889a85",
+      "original_bytes": 2668,
+      "stored_sha256": "ad8d86958c1bd9da5185a77d13ae16ed9401b155b0485440f7eb24ce02889a85",
+      "stored_bytes": 2668,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-bow5.log",
+      "portable_path": "receipts/law3-product-preflight-bow5.log",
+      "original_sha256": "54444d1325fc11d439d29e7d6f0534ad0d24071e3e27c8352d700094d3ad22d9",
+      "original_bytes": 199,
+      "stored_sha256": "54444d1325fc11d439d29e7d6f0534ad0d24071e3e27c8352d700094d3ad22d9",
+      "stored_bytes": 199,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-bow5.receipt.json",
+      "portable_path": "receipts/law3-product-preflight-bow5.receipt.json",
+      "original_sha256": "71519163b54b032fe8abd6cce813b357f994b7c03b7507a772ac9dacb944afbb",
+      "original_bytes": 327,
+      "stored_sha256": "71519163b54b032fe8abd6cce813b357f994b7c03b7507a772ac9dacb944afbb",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-conquest5-current-started.json",
+      "portable_path": "receipts/law3-product-preflight-conquest5-current-started.json",
+      "original_sha256": "b8040223e6524fd8b9cd9374e5e7e6fa7058019ed40d8732fbde9d8d0e2c9bc2",
+      "original_bytes": 266,
+      "stored_sha256": "b8040223e6524fd8b9cd9374e5e7e6fa7058019ed40d8732fbde9d8d0e2c9bc2",
+      "stored_bytes": 266,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-conquest5-current.json",
+      "portable_path": "receipts/law3-product-preflight-conquest5-current.json",
+      "original_sha256": "5884180eb45d9027d7d95f466f1493a130153f6d29f2b76346935a7cc61f4e41",
+      "original_bytes": 2749,
+      "stored_sha256": "5884180eb45d9027d7d95f466f1493a130153f6d29f2b76346935a7cc61f4e41",
+      "stored_bytes": 2749,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-conquest5-current.log",
+      "portable_path": "receipts/law3-product-preflight-conquest5-current.log",
+      "original_sha256": "f14fec64e5bda7d38d63c8dd588bf1f16b8dbf3194cbd836b6d4f1a29868cc8e",
+      "original_bytes": 203,
+      "stored_sha256": "f14fec64e5bda7d38d63c8dd588bf1f16b8dbf3194cbd836b6d4f1a29868cc8e",
+      "stored_bytes": 203,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-conquest5-current.receipt.json",
+      "portable_path": "receipts/law3-product-preflight-conquest5-current.receipt.json",
+      "original_sha256": "10826f047275db6e8f285e86f731f432dcc6f981c174ab538cabfdd8cceab092",
+      "original_bytes": 327,
+      "stored_sha256": "10826f047275db6e8f285e86f731f432dcc6f981c174ab538cabfdd8cceab092",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-conquest5-historical-started.json",
+      "portable_path": "receipts/law3-product-preflight-conquest5-historical-started.json",
+      "original_sha256": "26c086c3399e00b425a6e377e43f5029c1c6aba2eb1547a103a99bd5ef90d14b",
+      "original_bytes": 269,
+      "stored_sha256": "26c086c3399e00b425a6e377e43f5029c1c6aba2eb1547a103a99bd5ef90d14b",
+      "stored_bytes": 269,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-conquest5-historical.json",
+      "portable_path": "receipts/law3-product-preflight-conquest5-historical.json",
+      "original_sha256": "d9b25a12fe81fc4f63182cdc8a27e4d1f8514cc167c21de8dbd64e4faf24bdd1",
+      "original_bytes": 3446,
+      "stored_sha256": "d9b25a12fe81fc4f63182cdc8a27e4d1f8514cc167c21de8dbd64e4faf24bdd1",
+      "stored_bytes": 3446,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-conquest5-historical.log",
+      "portable_path": "receipts/law3-product-preflight-conquest5-historical.log",
+      "original_sha256": "b79d2e447a709b3c124743dfb252048c5279ce68f75fa28901e637fc88f73e01",
+      "original_bytes": 206,
+      "stored_sha256": "b79d2e447a709b3c124743dfb252048c5279ce68f75fa28901e637fc88f73e01",
+      "stored_bytes": 206,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-conquest5-historical.receipt.json",
+      "portable_path": "receipts/law3-product-preflight-conquest5-historical.receipt.json",
+      "original_sha256": "36fce35048315b9b1ef3b51eb79ac7235430036c7c863c74fb12e2e48779b9a2",
+      "original_bytes": 325,
+      "stored_sha256": "36fce35048315b9b1ef3b51eb79ac7235430036c7c863c74fb12e2e48779b9a2",
+      "stored_bytes": 325,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-data-bundle-started.json",
+      "portable_path": "receipts/law3-product-preflight-data-bundle-started.json",
+      "original_sha256": "0bce873a08c0441b53eb78e46dd9f967e58e9ef464f789474b9490d83eecc432",
+      "original_bytes": 260,
+      "stored_sha256": "0bce873a08c0441b53eb78e46dd9f967e58e9ef464f789474b9490d83eecc432",
+      "stored_bytes": 260,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-data-bundle.log",
+      "portable_path": "receipts/law3-product-preflight-data-bundle.log",
+      "original_sha256": "65354fba2a89f68bb7a74019fcb1f393e4e7e0ef50126cae744e1884560ae484",
+      "original_bytes": 267,
+      "stored_sha256": "65354fba2a89f68bb7a74019fcb1f393e4e7e0ef50126cae744e1884560ae484",
+      "stored_bytes": 267,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-data-bundle.receipt.json",
+      "portable_path": "receipts/law3-product-preflight-data-bundle.receipt.json",
+      "original_sha256": "6b6e18d71407cb972af100234efae2b2d0bbc3221462b0c25255c77be13a6794",
+      "original_bytes": 328,
+      "stored_sha256": "6b6e18d71407cb972af100234efae2b2d0bbc3221462b0c25255c77be13a6794",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-receipts.json",
+      "portable_path": "receipts/law3-product-preflight-receipts.json",
+      "original_sha256": "19c2b0111477240e7019e66e7961aa01a385534179e596e9dc03a23d6fb515b2",
+      "original_bytes": 2551,
+      "stored_sha256": "19c2b0111477240e7019e66e7961aa01a385534179e596e9dc03a23d6fb515b2",
+      "stored_bytes": 2551,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-preflight-request.json",
+      "portable_path": "receipts/law3-product-preflight-request.json",
+      "original_sha256": "0e6c6fbf81dad408c3abccac70c750cb35b2eb9affa45f8a0449dff0c8474bcd",
+      "original_bytes": 11008,
+      "stored_sha256": "0e6c6fbf81dad408c3abccac70c750cb35b2eb9affa45f8a0449dff0c8474bcd",
+      "stored_bytes": 11008,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-simulator-conquest5-current-started.json",
+      "portable_path": "receipts/law3-product-simulator-conquest5-current-started.json",
+      "original_sha256": "3d39beaebf05254bf9fe2d3281b18b079ee31a557482b065fd8dc2fe0923a459",
+      "original_bytes": 267,
+      "stored_sha256": "3d39beaebf05254bf9fe2d3281b18b079ee31a557482b065fd8dc2fe0923a459",
+      "stored_bytes": 267,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-simulator-conquest5-current.json",
+      "portable_path": "receipts/law3-product-simulator-conquest5-current.json",
+      "original_sha256": "86940848c26e2175d94a206d7d7505d67b9c7738b03168b493b8e5ac59070ec8",
+      "original_bytes": 3693,
+      "stored_sha256": "86940848c26e2175d94a206d7d7505d67b9c7738b03168b493b8e5ac59070ec8",
+      "stored_bytes": 3693,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-simulator-conquest5-current.log",
+      "portable_path": "receipts/law3-product-simulator-conquest5-current.log",
+      "original_sha256": "28f6a7e2add0fbd9a390dcdb3292e4d7aa3008529a759a2956c2a0263453fe68",
+      "original_bytes": 204,
+      "stored_sha256": "28f6a7e2add0fbd9a390dcdb3292e4d7aa3008529a759a2956c2a0263453fe68",
+      "stored_bytes": 204,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-simulator-conquest5-current.receipt.json",
+      "portable_path": "receipts/law3-product-simulator-conquest5-current.receipt.json",
+      "original_sha256": "e6abd6f94b6b35cca1fcb3a4c254e6b589d639e1f782240c03f1819b3bd6ae6c",
+      "original_bytes": 328,
+      "stored_sha256": "e6abd6f94b6b35cca1fcb3a4c254e6b589d639e1f782240c03f1819b3bd6ae6c",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-simulator-conquest5-historical-started.json",
+      "portable_path": "receipts/law3-product-simulator-conquest5-historical-started.json",
+      "original_sha256": "8c321332b8102271e4e128e31494e6063f72ed8480dd2828fb6426645972c7a3",
+      "original_bytes": 268,
+      "stored_sha256": "8c321332b8102271e4e128e31494e6063f72ed8480dd2828fb6426645972c7a3",
+      "stored_bytes": 268,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-simulator-conquest5-historical.json",
+      "portable_path": "receipts/law3-product-simulator-conquest5-historical.json",
+      "original_sha256": "e20a4de59c1e30040fd7db3f811a9d8fd88c20b96dddf86baa7fbb86c3a0b45e",
+      "original_bytes": 4387,
+      "stored_sha256": "e20a4de59c1e30040fd7db3f811a9d8fd88c20b96dddf86baa7fbb86c3a0b45e",
+      "stored_bytes": 4387,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-simulator-conquest5-historical.log",
+      "portable_path": "receipts/law3-product-simulator-conquest5-historical.log",
+      "original_sha256": "49b4b914b544d688059eaf206ce6fd6187e828ba0d0ed5cc0ab6c9ba0a524586",
+      "original_bytes": 207,
+      "stored_sha256": "49b4b914b544d688059eaf206ce6fd6187e828ba0d0ed5cc0ab6c9ba0a524586",
+      "stored_bytes": 207,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-simulator-conquest5-historical.receipt.json",
+      "portable_path": "receipts/law3-product-simulator-conquest5-historical.receipt.json",
+      "original_sha256": "8d3dc51e751ffe427604b18b7e4528d2e1c46ffd357a5ffc81eae6054d5decee",
+      "original_bytes": 326,
+      "stored_sha256": "8d3dc51e751ffe427604b18b7e4528d2e1c46ffd357a5ffc81eae6054d5decee",
+      "stored_bytes": 326,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-simulator-receipts.json",
+      "portable_path": "receipts/law3-product-simulator-receipts.json",
+      "original_sha256": "5c79ea923aee929a225bd09f64bcbdeb65558dd05a84848092178c4651b44f7b",
+      "original_bytes": 868,
+      "stored_sha256": "5c79ea923aee929a225bd09f64bcbdeb65558dd05a84848092178c4651b44f7b",
+      "stored_bytes": 868,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-simulator-request.json",
+      "portable_path": "receipts/law3-product-simulator-request.json",
+      "original_sha256": "11bb450ac03e75dbc25faeeddadbd0c8cbedfd48835dbc2d5f52832ae99aa181",
+      "original_bytes": 6657,
+      "stored_sha256": "11bb450ac03e75dbc25faeeddadbd0c8cbedfd48835dbc2d5f52832ae99aa181",
+      "stored_bytes": 6657,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-web-npm-test-started.json",
+      "portable_path": "receipts/law3-product-web-npm-test-started.json",
+      "original_sha256": "2b600bcac0d829f0719f61d6aae02fe9a23346ecefb5dd6b45554ddfb4a62e5b",
+      "original_bytes": 251,
+      "stored_sha256": "2b600bcac0d829f0719f61d6aae02fe9a23346ecefb5dd6b45554ddfb4a62e5b",
+      "stored_bytes": 251,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-web-npm-test.log",
+      "portable_path": "receipts/law3-product-web-npm-test.log",
+      "original_sha256": "47f6f65f23c0437129e1cd48a97c80b80b1e0c097c5f2feca684253e41c0722e",
+      "original_bytes": 17330,
+      "stored_sha256": "47f6f65f23c0437129e1cd48a97c80b80b1e0c097c5f2feca684253e41c0722e",
+      "stored_bytes": 17330,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-web-npm-test.receipt.json",
+      "portable_path": "receipts/law3-product-web-npm-test.receipt.json",
+      "original_sha256": "78a5edb19c79460524fbdad124ce07ee45ee1cdfebebb7fd30b043b9256a889f",
+      "original_bytes": 327,
+      "stored_sha256": "78a5edb19c79460524fbdad124ce07ee45ee1cdfebebb7fd30b043b9256a889f",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-web-receipts.json",
+      "portable_path": "receipts/law3-product-web-receipts.json",
+      "original_sha256": "e7f6a623f9e64a40a62768630c9e3c245fc590043db78437447bef4cfda90a3c",
+      "original_bytes": 849,
+      "stored_sha256": "e7f6a623f9e64a40a62768630c9e3c245fc590043db78437447bef4cfda90a3c",
+      "stored_bytes": 849,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-web-request.json",
+      "portable_path": "receipts/law3-product-web-request.json",
+      "original_sha256": "c413eccb58ac86060c1184a307b092a1e3a19c344215e2598a75f3a30665f504",
+      "original_bytes": 4977,
+      "stored_sha256": "c413eccb58ac86060c1184a307b092a1e3a19c344215e2598a75f3a30665f504",
+      "stored_bytes": 4977,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-web-typescript-started.json",
+      "portable_path": "receipts/law3-product-web-typescript-started.json",
+      "original_sha256": "0083be9833fb2d5604c8fac6ece45eeefec9e343aff4fc576233cc3768bddc77",
+      "original_bytes": 253,
+      "stored_sha256": "0083be9833fb2d5604c8fac6ece45eeefec9e343aff4fc576233cc3768bddc77",
+      "stored_bytes": 253,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-web-typescript.log",
+      "portable_path": "receipts/law3-product-web-typescript.log",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_bytes": 0,
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-product-web-typescript.receipt.json",
+      "portable_path": "receipts/law3-product-web-typescript.receipt.json",
+      "original_sha256": "65628c7ca76c79e53a762a166f3c126505c311a7be2864e4a20c70a9d6fb8b8e",
+      "original_bytes": 327,
+      "stored_sha256": "65628c7ca76c79e53a762a166f3c126505c311a7be2864e4a20c70a9d6fb8b8e",
+      "stored_bytes": 327,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-reviewable-source-delta.patch",
+      "portable_path": "receipts/law3-reviewable-source-delta.patch",
+      "original_sha256": "67cbb00444f0e61c05fbf88a368218f7b4a32f004144dda6f4f59d8240d223ce",
+      "original_bytes": 201323,
+      "stored_sha256": "67cbb00444f0e61c05fbf88a368218f7b4a32f004144dda6f4f59d8240d223ce",
+      "stored_bytes": 201323,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-source-delta-identity.json",
+      "portable_path": "receipts/law3-source-delta-identity.json",
+      "original_sha256": "8d5a914e50d77c7be7ff4d0d078f2e1305aa26c6dd180d34c3ce389c3a4b18ee",
+      "original_bytes": 1990,
+      "stored_sha256": "8d5a914e50d77c7be7ff4d0d078f2e1305aa26c6dd180d34c3ce389c3a4b18ee",
+      "stored_bytes": 1990,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-wasm-r1-identity.json",
+      "portable_path": "receipts/law3-wasm-r1-identity.json",
+      "original_sha256": "1bbfa7192e0ab8fbc1f1762db91a687a02f91410093b4c254b300533086735c6",
+      "original_bytes": 326,
+      "stored_sha256": "1bbfa7192e0ab8fbc1f1762db91a687a02f91410093b4c254b300533086735c6",
+      "stored_bytes": 326,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-wasm-r1-request.json",
+      "portable_path": "receipts/law3-wasm-r1-request.json",
+      "original_sha256": "b3ce295197d8ee8edfef2bdbbee2ee685ecfac0036a113a494d0d97a5de59931",
+      "original_bytes": 20768,
+      "stored_sha256": "b3ce295197d8ee8edfef2bdbbee2ee685ecfac0036a113a494d0d97a5de59931",
+      "stored_bytes": 20768,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-wasm-r1-started.json",
+      "portable_path": "receipts/law3-wasm-r1-started.json",
+      "original_sha256": "c945f73d0d946b4507185f2a680bae4b68c4b1b67f5a716cd683089213e4f8a4",
+      "original_bytes": 154,
+      "stored_sha256": "c945f73d0d946b4507185f2a680bae4b68c4b1b67f5a716cd683089213e4f8a4",
+      "stored_bytes": 154,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-wasm-r1.log",
+      "portable_path": "receipts/law3-wasm-r1.log",
+      "original_sha256": "a3f8e17c6844814f4242e55ce8dc2647baf037942f3031148e9f1437b2450077",
+      "original_bytes": 3545,
+      "stored_sha256": "a3f8e17c6844814f4242e55ce8dc2647baf037942f3031148e9f1437b2450077",
+      "stored_bytes": 3545,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-wasm-r1.receipt.json",
+      "portable_path": "receipts/law3-wasm-r1.receipt.json",
+      "original_sha256": "a6d202dba90e7665dac14e8d4d0df0d88883d4ff504bbc608a29f68bf1bed9e9",
+      "original_bytes": 328,
+      "stored_sha256": "a6d202dba90e7665dac14e8d4d0df0d88883d4ff504bbc608a29f68bf1bed9e9",
+      "stored_bytes": 328,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\law3-conquest-solve-r1-conquest5.json",
+      "portable_path": "receipts/native-solve/law3-conquest-solve-r1-conquest5.json.gz",
+      "original_sha256": "4b0e504c0cd50417f06c0f16a4e765509779d00db567dd56197811661d2b8cf4",
+      "original_bytes": 27472762,
+      "stored_sha256": "e15776abb51aa19e4aad47824da279ba8f0b9cb81c304741064163610d6a31b4",
+      "stored_bytes": 704852,
+      "encoding": "gzip"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\comparisons\\law3-conquest-solve-r1-conquest5.partial.json",
+      "portable_path": "receipts/native-solve/law3-conquest-solve-r1-conquest5.partial.json.gz",
+      "original_sha256": "0c6109d4e58e8ac142bab4d011623e2e4b9b5c535953a1c8e3477e8347a04d91",
+      "original_bytes": 27472789,
+      "stored_sha256": "662da37b4317ecb011e14da62c5b569424423864989c90db4063bccceb025495",
+      "stored_bytes": 704862,
+      "encoding": "gzip"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\amulet3.json",
+      "portable_path": "cases/amulet3.json",
+      "original_sha256": "9e2eb59392c8934dd6e15b115ec066fee53efe092154f2b0343a93dec70be95b",
+      "original_bytes": 7291,
+      "stored_sha256": "9e2eb59392c8934dd6e15b115ec066fee53efe092154f2b0343a93dec70be95b",
+      "stored_bytes": 7291,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow4-dirty.json",
+      "portable_path": "cases/bow4-dirty.json",
+      "original_sha256": "e54d87308c2aca8b5e508b40eb0868419f80c1ddcea765827466f010fad5406b",
+      "original_bytes": 7421,
+      "stored_sha256": "e54d87308c2aca8b5e508b40eb0868419f80c1ddcea765827466f010fad5406b",
+      "stored_bytes": 7421,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\bow5.json",
+      "portable_path": "cases/bow5.json",
+      "original_sha256": "9257aec8f005c5a5869240f8629cd80234fee9ff5c8cf02d3d44250770b9522c",
+      "original_bytes": 4803,
+      "stored_sha256": "9257aec8f005c5a5869240f8629cd80234fee9ff5c8cf02d3d44250770b9522c",
+      "stored_bytes": 4803,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\conquest5.json",
+      "portable_path": "cases/conquest5.json",
+      "original_sha256": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+      "original_bytes": 6920,
+      "stored_sha256": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+      "stored_bytes": 6920,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\manifest.json",
+      "portable_path": "cases/manifest.json",
+      "original_sha256": "fca6c237159327f5e77a36b20510939186a650b0c69465f3eea46588b69acbe3",
+      "original_bytes": 1131,
+      "stored_sha256": "fca6c237159327f5e77a36b20510939186a650b0c69465f3eea46588b69acbe3",
+      "stored_bytes": 1131,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\quality-cohort\\ring2.json",
+      "portable_path": "cases/ring2.json",
+      "original_sha256": "887c0d8736dd77a70a2dbd4d7ac24c186c6f20a08645b9606f08ddc8130fae9c",
+      "original_bytes": 4149,
+      "stored_sha256": "887c0d8736dd77a70a2dbd4d7ac24c186c6f20a08645b9606f08ddc8130fae9c",
+      "stored_bytes": 4149,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\product-cases\\conquest5.json",
+      "portable_path": "cases/conquest5-product.json",
+      "original_sha256": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+      "original_bytes": 7942,
+      "stored_sha256": "49bc43f7fa8616ab0f798d8e5c5a2e0c3e79342a51a1636446f2d80e65147642",
+      "stored_bytes": 7942,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\apps\\web\\test\\sol61-policy-qualification.ts",
+      "portable_path": "probes/sol61-policy-qualification.ts",
+      "original_sha256": "f71cddd121754f52066583901e1452873d6967b28193ee45127631c08b14be1a",
+      "original_bytes": 7200,
+      "stored_sha256": "f71cddd121754f52066583901e1452873d6967b28193ee45127631c08b14be1a",
+      "stored_bytes": 7200,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\apps\\web\\test\\sol61-worker-bootstrap.mjs",
+      "portable_path": "probes/sol61-worker-bootstrap.mjs",
+      "original_sha256": "8818b38dd0642f344c4d55ff0ba1acdc301b72b2c321f5b1070a60ffe4df2ec9",
+      "original_bytes": 1620,
+      "stored_sha256": "8818b38dd0642f344c4d55ff0ba1acdc301b72b2c321f5b1070a60ffe4df2ec9",
+      "stored_bytes": 1620,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\apps\\web\\test\\sol61-browser-solve.mjs",
+      "portable_path": "probes/sol61-browser-solve.mjs",
+      "original_sha256": "d48bbde5d9611a2c2f19a805230639b121e30c62645c1c0f4e542d93a98cfd73",
+      "original_bytes": 8299,
+      "stored_sha256": "d48bbde5d9611a2c2f19a805230639b121e30c62645c1c0f4e542d93a98cfd73",
+      "stored_bytes": 8299,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\qualify-production.py",
+      "portable_path": "probes/qualify-production.py",
+      "original_sha256": "31fc19d1e08d34dd73515a2c00c74a2d2952f816b525b81166e5821f94b4f89b",
+      "original_bytes": 6205,
+      "stored_sha256": "31fc19d1e08d34dd73515a2c00c74a2d2952f816b525b81166e5821f94b4f89b",
+      "stored_bytes": 6205,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\measure-production.py",
+      "portable_path": "probes/measure-production.py",
+      "original_sha256": "4dbfe4c9a3de5cd2552fd10a830b030c086d30f693273fe41e46e1cef3dad4f0",
+      "original_bytes": 7866,
+      "stored_sha256": "4dbfe4c9a3de5cd2552fd10a830b030c086d30f693273fe41e46e1cef3dad4f0",
+      "stored_bytes": 7866,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\build-production-wasm-r3.py",
+      "portable_path": "probes/build-production-wasm-r3.py",
+      "original_sha256": "a3ebfaffc644aff42fcd7db7f381797fd46e103ed187001e14dfdfbeb37b7283",
+      "original_bytes": 3759,
+      "stored_sha256": "a3ebfaffc644aff42fcd7db7f381797fd46e103ed187001e14dfdfbeb37b7283",
+      "stored_bytes": 3759,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\qualify-product.py",
+      "portable_path": "probes/qualify-product.py",
+      "original_sha256": "e86f734c3d3792e42bb52b283a40b911764a4f6b68fac124fcef181a7ec48d73",
+      "original_bytes": 7339,
+      "stored_sha256": "e86f734c3d3792e42bb52b283a40b911764a4f6b68fac124fcef181a7ec48d73",
+      "stored_bytes": 7339,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\evaluate-law3-native.py",
+      "portable_path": "probes/evaluate-law3-native.py",
+      "original_sha256": "b1eee58665a13b712b7e7326ab4a610ed9a71c623a0bdb6835335c6fe32b5fc4",
+      "original_bytes": 4184,
+      "stored_sha256": "b1eee58665a13b712b7e7326ab4a610ed9a71c623a0bdb6835335c6fe32b5fc4",
+      "stored_bytes": 4184,
+      "encoding": "original bytes"
+    },
+    {
+      "original_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\package-qualification.py",
+      "portable_path": "probes/package-qualification.py",
+      "original_sha256": "f7b2862115b4e0bbf69c70f5e110b90490c699bde648a92bf07fc7739b82da7e",
+      "original_bytes": 19647,
+      "stored_sha256": "f7b2862115b4e0bbf69c70f5e110b90490c699bde648a92bf07fc7739b82da7e",
+      "stored_bytes": 19647,
+      "encoding": "original bytes"
+    }
+  ],
+  "portable_replay": "gzip files decompress to byte-identical originals. Original paths/source pins retained; probes are snapshots. Archive alone does not authorize replay."
+}

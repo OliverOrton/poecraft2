@@ -1,0 +1,32 @@
+[
+  {
+    "arm": "npm-test",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 14880,
+      "process_identity_token": "14880:134355250058750963",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 94381.86260010116
+    }
+  },
+  {
+    "arm": "typescript",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 45952,
+      "process_identity_token": "45952:134355251002590420",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 3834.173999959603
+    }
+  }
+]

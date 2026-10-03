@@ -1,0 +1,92 @@
+[
+  {
+    "arm": "data-bundle",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 52976,
+      "process_identity_token": "52976:134355249611490631",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1365.4893999919295
+    }
+  },
+  {
+    "arm": "conquest5-historical",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 57800,
+      "process_identity_token": "57800:134355249625175598",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 3351.0598000139
+    }
+  },
+  {
+    "arm": "conquest5-current",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 60672,
+      "process_identity_token": "60672:134355249658689430",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 1638.764699921012
+    }
+  },
+  {
+    "arm": "bow4-dirty",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 55804,
+      "process_identity_token": "55804:134355249675088447",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 969.5760000031441
+    }
+  },
+  {
+    "arm": "amulet3",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 56448,
+      "process_identity_token": "56448:134355249684803385",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 5429.262900026515
+    }
+  },
+  {
+    "arm": "bow5",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 44916,
+      "process_identity_token": "44916:134355249739102411",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 7869.612600188702
+    }
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "phase": "preflight",
+  "arm": "data-bundle",
+  "pid": 52976,
+  "identity_token": "52976:134355249611490631",
+  "started_utc": "2026-10-03T18:16:01.164359+00:00",
+  "watchdog_seconds": 180,
+  "LOCAL_owner": "Sol6.1 serial product qualification"
+}

@@ -1,0 +1,133 @@
+{
+  "arm": "conquest5-historical",
+  "source_commit": "b11f4c58f0a7c979f2c66b71892295795944e045",
+  "model": {
+    "rare_reforge_count_law_version": 3,
+    "assumption": "owner-approved single-side ordinary-total 8:3:1; provisional game model"
+  },
+  "policy_sha256": "725fcf645903621ec123961846c82143632bcee9d3a0da30302fc002d167720a",
+  "input_case_sha256": "b19c588b2f004fac7db6dae7fddb3f384693a18d722245f96f4a7c27d0dcd299",
+  "root": {
+    "base_key": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+    "item_level": 86,
+    "rarity": "rare",
+    "item_flags": 0,
+    "generic_influence_bits": 0,
+    "searing_exarch_tier": 0,
+    "eater_of_worlds_tier": 0,
+    "prefixes": [],
+    "suffixes": []
+  },
+  "economy": {
+    "content_sha256": "de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "fallback_price": null,
+    "id": "economy:allflame:de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0",
+    "league_key": "allflame",
+    "league_name": "Allflame",
+    "manual_overrides": {
+      "base": 5
+    },
+    "missing_price_decisions": {
+      "base": "owner-provided trace override5"
+    },
+    "snapshot_path": "apps/web/public/economy/snapshots/de282eecf6cfdab50666412b94791b68634944ff31921b95e52eeae7758c0fe0.json",
+    "source_cutoff_at_utc": "2026-08-09T18:34:48Z",
+    "version": "v1"
+  },
+  "evaluation_options": {
+    "max_states": 800000,
+    "max_pairs": 1215000,
+    "max_transitions": 10000000,
+    "max_owned_bytes": 1073741824,
+    "max_output_json_bytes": 16777216
+  },
+  "native_library_sha256": "7b8fba3dbf363a750f2f141874be973b5cd2e6dd3a52d39189fef8c13c32c7c7",
+  "started_utc": "2026-10-03T17:49:18.957858+00:00",
+  "scope": "ordinary strategy execution; no imported native incumbent provenance",
+  "status": "proper",
+  "converged": true,
+  "terminals": {
+    "success": 1,
+    "failure": 0,
+    "stop": 0,
+    "action_not_applied": 0,
+    "no_matching_edge": 0,
+    "unresolved": 0,
+    "by_node": [
+      {
+        "node_id": "goal",
+        "kind": "success",
+        "p": 1
+      },
+      {
+        "node_id": "offpolicy",
+        "kind": "failure",
+        "p": 0
+      }
+    ]
+  },
+  "cost_complete": true,
+  "total_expected_cost": 85970.67347138176,
+  "comparable_expected_cost": 85970.67347138176,
+  "expected_actions": 8193.695927203276,
+  "consumption": [
+    {
+      "key": "annul",
+      "quantity": 3.9944825155162493
+    },
+    {
+      "key": "bench:HelenaMasterFireResist1",
+      "quantity": 253.50223457395765
+    },
+    {
+      "key": "bench:JunMaster2StrengthAndDexterity2",
+      "quantity": 0.5049957074216577
+    },
+    {
+      "key": "chaos",
+      "quantity": 4791.855425474881
+    },
+    {
+      "key": "eldritch_annul",
+      "quantity": 737.475069750163
+    },
+    {
+      "key": "eldritch_chaos",
+      "quantity": 1234.3263918079679
+    },
+    {
+      "key": "eldritch_ember:1",
+      "quantity": 0.9999999469297075
+    },
+    {
+      "key": "eldritch_exalt",
+      "quantity": 572.2100823398773
+    },
+    {
+      "key": "exalt",
+      "quantity": 344.70307876671853
+    },
+    {
+      "key": "harvest_augment:defences",
+      "quantity": 0.020512624899428726
+    },
+    {
+      "key": "harvest_augment:physical",
+      "quantity": 0.09642341352290063
+    },
+    {
+      "key": "scour",
+      "quantity": 254.0072302813793
+    }
+  ],
+  "memory": {
+    "owned_bytes_estimate": 56191486,
+    "peak_owned_bytes_estimate": 74531215,
+    "retained_output_owned_bytes_estimate": 0,
+    "max_owned_bytes": 1073741824,
+    "max_output_json_bytes": 16777216
+  },
+  "raw_result_path": "C:\\Users\\Oliver\\AppData\\Local\\Temp\\poecraft2-sol61-production-worktree\\out\\selective-cap-repair\\law3-native-evaluation-conquest5-historical.raw.json",
+  "raw_result_sha256": "9ca727d4a0f482799b3500d78f2ec27259a748359107bb83ea8de15261e0c1f6",
+  "elapsed_seconds": 5.395153099903837
+}

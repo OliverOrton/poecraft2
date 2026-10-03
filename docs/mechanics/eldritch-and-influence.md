@@ -11,8 +11,10 @@ influence-exalt application, exact calculator, solver registry/options, and
 product controls and catalog.
 
 The 2026-10-03 single-side count rule below supersedes the older two-or-three
-target assumption. Its source implementation is pending matching native/WASM
-qualification; the earlier verification stamp does not qualify this delta.
+target assumption. Its isolated native/WASM component qualification is recorded
+in [the law3 receipts](../active/2026-10-03-sol61-recovery/qualification/law3/qualification.json).
+Publication still requires a combined rebuild preserving main's Lock Observe
+repair; the earlier verification stamp does not qualify this delta.
 
 ## Scope
 

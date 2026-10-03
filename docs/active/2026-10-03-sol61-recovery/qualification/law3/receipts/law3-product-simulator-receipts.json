@@ -1,0 +1,32 @@
+[
+  {
+    "arm": "conquest5-historical",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 8164,
+      "process_identity_token": "8164:134355249819391565",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 12622.867899946868
+    }
+  },
+  {
+    "arm": "conquest5-current",
+    "receipt": {
+      "exit_code": 0,
+      "timed_out": false,
+      "canceled": false,
+      "cancellation_mode": null,
+      "cancellation_ack_ms": null,
+      "process_id": 71896,
+      "process_identity_token": "71896:134355249945639183",
+      "survivor": false,
+      "survivor_check": "process_group_kill_then_parent_poll",
+      "wall_ms": 11169.233600143343
+    }
+  }
+]
