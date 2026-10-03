@@ -22,6 +22,46 @@ acceptance: 2026-08-22 @ `1e21260` / `cfd8904`. Scope:
 presentation, and shared economy access. No rendered or visual review was
 performed; that review remains Oliver's.
 
+## Bounded goal-item sets (prepared source; qualification pending)
+
+The October 3 Calculator programme adds one shared input/action and up to eight
+editable goal-item tabs. Each retains the v1 rarity, disjoint eight-slot
+family/group/tier/threshold, clean/coverage, implicit, influence and corruption
+predicate. The native action law runs once; `goal_results` contains native
+marginals and `any_goal_probability` counts overlapping terminal outcomes once.
+`matched_goal_ids` and per-goal `goal_observations` label terminal observations,
+without continuation-state or solver proof authority. Exactness remains
+conditional on the existing action law/model, including estimated providers.
+
+The Calculator-only request is `calculator_goal_set_v1`, with stable-ID
+`{id, goal}` entries and shared `actions`. Names, ordering, active selection and
+future value maps are excluded from probability identity. Drafts persist a
+`calculator_goal_list_v1` list; legacy scalar drafts recover as one stable goal.
+Names and selection remain presentation state. Frozen requests reject results
+after semantic edits, deletion, session changes and disposal; native handles
+still close. Stash/Emulator seeding preserves configured cluster identity.
+
+K>1 observed-choice actions, including Unveil, refuse without an explicit
+common policy. K=1 retains its existing choice behavior. Unqualified mechanics,
+Lock foresight, lifecycle and carrier guards remain. Goal caps refuse instead
+of truncating. Multi-goal contexts split aggregate state/work/scratch limits
+between incoming and terminal contexts: at most 250,000 states, 100,000,000 work
+units and 512 MiB engine-owned scratch; terminal rows additionally cap at
+250,000 and serialized results at 64 MiB. These limits may refuse large requests.
+
+Strategy finder and Solver Lab export use only the selected, frozen goal and
+remain explicitly labelled. No multi-goal solver, changed exact objective or
+new optimality authority is introduced. A future highest matching-goal sale
+value can consume sparse terminal membership through a separate reward map;
+whole-policy expected profit and currency invested, including starting-base
+cost, remain future work. No sale values or salvage assumptions are invented.
+
+This source is not yet qualified or delivered to main. Native finite fixtures,
+nonvisual goal-tab/migration/lifetime fixtures and rebuilt-WASM transport checks
+are prepared in the [living record](../active/2026-10-03-calculator-goal-set/README.md).
+The parent integration owner serializes native tests and release-WASM rebuilding;
+rendered review remains unrun and belongs to Oliver.
+
 ## Contract
 
 The 2026-09-27 continuity migration adds **Allow extra modifiers** to Goal item.

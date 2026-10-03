@@ -13,6 +13,18 @@ unrun. Pair outcomes require their selected carrier output session, never receiv
 IDs. Main/npm dev, root `0`, source data/prices and solver scope are untouched.
 Local branch only; no merge, independent push or deployment.
 
+# Calculator goal-set source checkpoint (2026-10-03)
+
+Oliver dispatched the bounded multi-goal one-action Calculator on isolated
+`dot/calculator-goal-set-20261003` from verified `dbc142a2`. Native observer,
+versioned goal-list migration, tabs, shared transport types and finite fixtures
+are prepared; qualification is pending. The [living record](docs/active/2026-10-03-calculator-goal-set/README.md)
+owns the contract, integration hunks and gates. Main subsequently advanced to
+`3ab862fe` for repair; none of its changed paths overlap this lane's source.
+Recombination owns the next heavy slot. No builds/tests/WASM/benchmarks/Simulator
+have started here; no release artifact was regenerated. Parent owns serialized
+integration and grants the next slot. No push, main merge or deployment.
+
 # Combined completion batch delivered; paused (2026-10-02)
 
 The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)

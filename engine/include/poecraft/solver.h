@@ -309,7 +309,14 @@ pc_result pc_calc_currency_outcomes_json(
 pc_result pc_calc_create_inspector(pc_session_handle session,
     pc_solver_handle* out_solver, pc_error_info* out_error);
 
-/* Read-only one-action goal. Accepts v1 explicit slots (including empty),
+/* Read-only one-action goal. Also accepts Calculator-only
+ * {version:"calculator_goal_set_v1", goals:[{id,goal:<v1>}], actions:[...]},
+ * with 1..8 unique stable IDs and independently validated eight-slot goals.
+ * Its one action returns goal_results and any_goal_probability; overlapping
+ * goals share terminal mass. Names/order/selection are not probability inputs.
+ * K>1 observed-choice actions refuse without an explicit common policy.
+ * Result IDs/membership never carry continuation or solver proof authority.
+ * Accepts v1 explicit slots (including empty),
  * implicit_mod_keys, exact influence_bits and optional corrupted boolean.
  * All selected implicit/property requirements must match the same successor.
  * Strategy solving on this handle is refused. Destroy with pc_solver_destroy. */
