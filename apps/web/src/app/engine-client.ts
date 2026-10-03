@@ -355,6 +355,20 @@ export class EngineClient {
         return state;
     }
 
+    async openRecombinationPair(request: import("./engine-protocol").RecombinationPairRequest): Promise<number> {
+        const result = await this.call<{pair: number}>("openRecombinationPair", {request});
+        return result.pair;
+    }
+    closeRecombinationPair(pair: number): Promise<void> {
+        return this.call("closeRecombinationPair", {pair});
+    }
+    recombinationCalculate(pair: number, goals: import("./engine-protocol").CalculatorGoalSet): Promise<CalcResult> {
+        return this.call("recombinationCalculate", {pair, goals});
+    }
+    recombinationApply(pair: number, context: number, request: import("./engine-protocol").RecombinationApplyRequest): Promise<import("./engine-protocol").RecombinationApplyResult> {
+        return this.call("recombinationApply", {pair, context, request});
+    }
+
     multiItemApply(context: number, request: import("./engine-protocol").MultiItemRequest): Promise<import("./engine-protocol").MultiItemResult> {
         return this.call("multiItemApply", {context, request});
     }

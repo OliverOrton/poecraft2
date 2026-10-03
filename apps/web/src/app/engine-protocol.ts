@@ -116,6 +116,30 @@ export interface MultiItemRequest {
     action: "awakener";
     resources: Array<{identity: string; role: string; session: number; item: number}>;
 }
+export interface RecombinationPairRequest {
+    resources: [{identity: string; role: string; session: number; item: number},
+                {identity: string; role: string; session: number; item: number}];
+}
+export interface RecombinationApplyRequest {
+    output_identity: string;
+    resources: Array<{identity: string; role: string; session: number; item: number}>;
+}
+/** Native atomic receipt; costs remain incomplete until gold/dust are known. */
+export interface RecombinationApplyResult {
+    pair_version: 1;
+    model_id: string;
+    game_odds_estimated: true;
+    carrier: 0 | 1;
+    output_session: number;
+    output_item: number;
+    base_metadata_path: string;
+    item_level: number;
+    gold_cost: null;
+    dust_cost: null;
+    cost_complete: false;
+    cost_keys: string[];
+    resources: Array<{identity: string; effect: number; before: unknown; after: unknown}>;
+}
 export interface MultiItemResult {
     cost_keys: string[];
     resources: Array<{identity: string; effect: number; before: unknown; after: unknown}>;
@@ -700,6 +724,9 @@ export type CarrierProperty =
 
 /** One abstract successor class from the calculation engine. */
 export interface CalcOutcome {
+    carrier?: 0 | 1;
+    base_metadata_path?: string;
+    item_level?: number;
     matched_goal_ids?: string[];
     goal_observations?: Array<{id: string; slots: number[]; blocked?: number; is_goal: boolean; goal_properties_satisfied: boolean}>;
     /** Property-only refills need no explicit enumeration; counts/affix flags are omitted. */
@@ -722,6 +749,19 @@ export interface CalcOutcome {
 }
 
 export interface CalcResult {
+    pair_version?: 1;
+    model_id?: string;
+    projection_id?: string;
+    goal_projection_id?: string;
+    game_odds_estimated?: boolean;
+    model_projection_exact?: boolean;
+    apply_supported?: boolean;
+    cost_complete?: boolean;
+    gold_cost?: number | null;
+    dust_cost?: number | null;
+    data_identity?: string[];
+    unobserved_properties?: string[];
+    carriers?: Array<{carrier: 0 | 1; probability: number; base_metadata_path: string; item_level: number}>;
     /** Native union probability, counted once per shared terminal outcome. */
     any_goal_probability?: number;
     goal_results?: CalculatorGoalResult[];

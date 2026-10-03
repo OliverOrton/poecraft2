@@ -266,6 +266,19 @@ export class EngineBindings {
         return this.callJson("pcw_item_export", ["number", "number"], [item, session]).state;
     }
 
+    openRecombinationPair(request: import("./engine-protocol").RecombinationPairRequest): number {
+        return this.callJson("pcw_recombination_pair_open", ["string"], [JSON.stringify(request)]).pair as number;
+    }
+    closeRecombinationPair(pair: number): void {
+        this.module.ccall("pcw_recombination_pair_close", null, ["number"], [pair]);
+    }
+    recombinationCalculate(pair: number, goals: import("./engine-protocol").CalculatorGoalSet): CalcResult {
+        return this.callJson("pcw_recombination_pair_calculate", ["number", "string"], [pair, JSON.stringify(goals)]) as unknown as CalcResult;
+    }
+    recombinationApply(pair: number, context: number, request: import("./engine-protocol").RecombinationApplyRequest): import("./engine-protocol").RecombinationApplyResult {
+        return this.callJson("pcw_recombination_pair_apply", ["number", "number", "string"], [pair, context, JSON.stringify(request)]) as unknown as import("./engine-protocol").RecombinationApplyResult;
+    }
+
     multiItemApply(context: number, request: unknown): import("./engine-protocol").MultiItemResult {
         return this.callJson("pcw_multi_item_apply", ["number", "string"], [context, JSON.stringify(request)]) as unknown as import("./engine-protocol").MultiItemResult;
     }

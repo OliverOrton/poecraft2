@@ -29,6 +29,8 @@
 #include "poecraft/bestiary.h"
 #include "poecraft/hinekora.h"
 #include "poecraft/multi_item.h"
+#include "poecraft/recombination.h"
+#include "handles_internal.hpp"
 #include "poecraft/api.h"
 #include "poecraft/item_state.h"
 #include "poecraft/session.h"
@@ -107,6 +109,7 @@ std::unordered_map<std::uint32_t, pc_strategy_handle> g_strategies;
 std::unordered_map<std::uint32_t, pc_economy_handle> g_economies;
 std::unordered_map<std::uint32_t, pc_simulator_handle> g_simulators;
 std::unordered_map<std::uint32_t, pc_solver_handle> g_solvers;
+std::unordered_map<std::uint32_t, pc_recombination_pair_handle> g_recombination_pairs;
 /* Last complete native progress for each live solver. Compact ordinary steps
  * update this once; a reporting boundary serializes it without doing more
  * solver work. It is observational WASM-host storage, not solver authority. */
@@ -2035,6 +2038,117 @@ const char* pcw_multi_item_apply(uint32_t context_id, const char* request_json) 
         }
         return respond(out + "]}");
     } catch (const std::exception& e) { return fail(PC_RESULT_INVALID_ARGUMENT, e.what()); }
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_recombination_pair_open(const char* request_json) {
+    try {
+        const auto request = Parser(request_json, std::strlen(request_json)).parse();
+        const auto& values = request.at("resources").as_array();
+        if (values.size() != 2) return fail(PC_RESULT_INVALID_ARGUMENT, "Random recombination needs two inputs");
+        pc_craft_resource resources[2]{};
+        for (unsigned i = 0; i < 2; ++i) {
+            const auto sid = obj_u32(values[i], "session"), iid = obj_u32(values[i], "item");
+            const auto* session = find(g_sessions, sid); auto* item = find(g_items, iid);
+            if (!session || !item || g_item_sessions.at(iid) != sid)
+                return fail(PC_RESULT_INVALID_ARGUMENT, "Pair item must belong to its interpreting session");
+            resources[i] = {values[i].at("identity").as_string().c_str(),
+                values[i].at("role").as_string().c_str(), *session, item};
+        }
+        pc_recombination_pair_handle handle = nullptr; pc_error_info error = make_error();
+        const auto rc = pc_recombination_pair_create(&resources[0], &resources[1], PC_RECOMBINATION_PAIR_VERSION, &handle, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
+        std::unique_ptr<pc_recombination_pair, decltype(&pc_recombination_pair_destroy)> owned(handle, pc_recombination_pair_destroy);
+        const auto id = g_next_id++;
+        std::string out = "{\"ok\":true,\"pair\":" + std::to_string(id) + "}";
+        g_recombination_pairs.emplace(id, handle); owned.release();
+        return respond(std::move(out));
+    } catch (const std::exception& ex) { return fail(PC_RESULT_INVALID_ARGUMENT, ex.what()); }
+}
+EMSCRIPTEN_KEEPALIVE
+void pcw_recombination_pair_close(uint32_t id) {
+    const auto found = g_recombination_pairs.find(id);
+    if (found != g_recombination_pairs.end()) { pc_recombination_pair_destroy(found->second); g_recombination_pairs.erase(found); }
+}
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_recombination_pair_calculate(uint32_t id, const char* goal_json) {
+    const auto* pair = find(g_recombination_pairs, id);
+    if (!pair || !goal_json) return fail(PC_RESULT_NOT_FOUND, "Unknown recombination pair or goal set");
+    try {
+        size_t length = 0; pc_error_info error = make_error();
+        const auto size = std::strlen(goal_json);
+        auto rc = pc_recombination_pair_goal_outcomes_json(*pair, goal_json, size, nullptr, 0, &length, &error);
+        if (rc != PC_RESULT_BUFFER_TOO_SMALL) return fail(error);
+        std::vector<char> buffer(length + 1);
+        rc = pc_recombination_pair_goal_outcomes_json(*pair, goal_json, size, buffer.data(), buffer.size(), &length, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
+        return respond(std::string(buffer.data(), length));
+    } catch (const std::exception& ex) { return fail(PC_RESULT_INVALID_ARGUMENT, ex.what()); }
+}
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_recombination_pair_apply(uint32_t id, uint32_t context_id, const char* request_json) {
+    const auto* pair = find(g_recombination_pairs, id); const auto* context = find(g_contexts, context_id);
+    if (!pair || !context) return fail(PC_RESULT_NOT_FOUND, "Unknown recombination pair or context");
+    const auto saved_rng = (*context)->impl->rng;
+    std::vector<std::pair<pc_item_state*, pc_item_state>> saved_items;
+    const auto output_session_id = g_next_id++, output_item_id = g_next_id++;
+    pc_recombination_result result{};
+    const auto rollback = [&] {
+        (*context)->impl->rng = saved_rng;
+        for (const auto& [address, before] : saved_items) *address = before;
+        pc_session_destroy(result.output_session); result.output_session = nullptr;
+        g_sessions.erase(output_session_id); g_items.erase(output_item_id);
+        g_item_sessions.erase(output_item_id); g_bestiary_states.erase(output_item_id);
+    };
+    try {
+        const auto request = Parser(request_json, std::strlen(request_json)).parse();
+        const auto& input = request.at("resources").as_array();
+        if (input.size() < 2 || input.size() > PC_MAX_CRAFT_RESOURCES)
+            throw std::invalid_argument("Invalid recombination inventory count");
+        std::vector<pc_craft_resource> resources;
+        for (const auto& value : input) {
+            const auto sid = obj_u32(value, "session"), iid = obj_u32(value, "item");
+            const auto* session = find(g_sessions, sid); auto* item = find(g_items, iid);
+            if (!session || !item || g_item_sessions.at(iid) != sid)
+                throw std::invalid_argument("Inventory item must belong to its interpreting session");
+            resources.push_back({value.at("identity").as_string().c_str(), value.at("role").as_string().c_str(), *session, item});
+            saved_items.emplace_back(item, *item);
+        }
+        // Allocate all registry nodes before consuming resources. Native or
+        // facade serialization errors restore the inputs and RNG together.
+        g_sessions.emplace(output_session_id, nullptr);
+        g_items.emplace(output_item_id, pc_item_state{});
+        g_item_sessions.emplace(output_item_id, output_session_id);
+        reset_bestiary_state(output_item_id, pc_item_state{});
+        pc_error_info error = make_error();
+        const auto rc = pc_recombination_pair_apply(*pair, *context, resources.data(), uint32_t(resources.size()),
+            request.at("output_identity").as_string().c_str(), &result, &error);
+        if (rc != PC_RESULT_OK) { rollback(); return fail(error); }
+        const auto& s = *result.output_session->impl;
+        std::string out = "{\"ok\":true,\"pair_version\":1,\"game_odds_estimated\":true,\"model_id\":";
+        append_escaped(out, result.model_id);
+        out += ",\"carrier\":" + std::to_string(result.carrier) + ",\"output_session\":" + std::to_string(output_session_id);
+        out += ",\"output_item\":" + std::to_string(output_item_id) + ",\"base_metadata_path\":";
+        append_escaped(out, s.data->string_at(s.data->base_metadata_path_sid.at(s.base_index)).c_str());
+        out += ",\"item_level\":" + std::to_string(s.item_level);
+        out += ",\"gold_cost\":null,\"dust_cost\":null,\"cost_complete\":false,\"cost_keys\":[],\"resources\":[";
+        for (unsigned i = 0; i < result.transaction.resource_count; ++i) {
+            const auto& change = result.transaction.resources[i];
+            pc_session_handle interpreting = result.output_session;
+            for (const auto& resource : resources) if (std::strcmp(resource.identity, change.identity) == 0) interpreting = resource.session;
+            if (i) out += ',';
+            out += "{\"identity\":"; append_escaped(out, change.identity);
+            out += ",\"effect\":" + std::to_string(change.effect) + ",\"before\":";
+            append_item_state(out, change.before, interpreting);
+            out += ",\"after\":"; append_item_state(out, change.after, interpreting); out += '}';
+        }
+        out += "]}";
+        g_sessions.at(output_session_id) = result.output_session;
+        g_items.at(output_item_id) = result.output_item;
+        reset_bestiary_state(output_item_id, result.output_item);
+        result.output_session = nullptr; // transferred to the registry
+        return respond(std::move(out));
+    } catch (const std::exception& ex) { rollback(); return fail(PC_RESULT_INVALID_ARGUMENT, ex.what()); }
 }
 
 // Reconstruct an item from a previously exported state document and register it

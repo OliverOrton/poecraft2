@@ -120,3 +120,21 @@ Dispatcher tests are authored for carrier-specific implicits, original tier
 binding, overlapping union, mass conservation and typed refusal. Builds/tests
 are held for the parent's next serial heavy-slot grant. The next small commit
 adds dedicated WASM/worker pair APIs and the two-input Calculator panel.
+
+The dedicated adapter exposes pair open/calculate/Apply/close across WASM,
+worker protocol and EngineClient. Apply preallocates output registry entries
+and restores native RNG and all input states on facade failures. Returned full
+before/after receipts carry the independently owned output session, actual
+base/level, model identity and explicit unknown gold/dust. Builder remains the
+owner of priced acquisition, retries/recycling and inventory budgets; Calculator
+continues to observe read-only inputs rather than modifying Stash records.
+
+The Calculator panel selects Random only and a distinct second Stash input,
+uses the bounded shared goal set without strategy actions, freezes the input
+request, and publishes native carrier-aware results. The UI labels estimated
+odds and unknown gold/dust; it does not present a game-exact optimality claim.
+Finite tests cover the real WASM worker law/Apply/RNG/collision/replay/stored
+Redo receipt and the dedicated UI route. These new tests and sources remain
+unbuilt/unrun until the parent grants the next heavy slot. Installed web
+dependencies are referenced through an isolated node_modules junction;
+the normal checkout and its development server are unchanged.

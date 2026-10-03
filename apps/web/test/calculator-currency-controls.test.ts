@@ -49,6 +49,18 @@ awakener.click();
 await access.currentWork;
 assert.equal(selected, "awakener");
 
+access.activeCraftPanel = "recombination";
+access.renderActionPanels();
+const randomModel = (controls as unknown as {model: CraftControlsModel}).model;
+controls.setModel({...randomModel, donors: [{key: "second", name: "Second input"}]});
+const random = controls.querySelector<HTMLButtonElement>('[data-select-action="random_recombination"]')!;
+assert.ok(random && !random.disabled);
+assert.match(controls.textContent ?? "", /Second input from Stash/);
+assert.match(controls.textContent ?? "", /Estimated odds/);
+assert.match(controls.textContent ?? "", /Gold and dust cost is unknown/);
+assert.doesNotMatch(controls.textContent ?? "", /selected-mod|predictable/i);
+random.click(); await access.currentWork;
+assert.equal(selected, "random_recombination");
 const calls: unknown[][] = [];
 const result: CalcResult = {supported: true, legal: true, success_probability: 0.03,
     slot_satisfied: [], implicit_satisfied: [0.07, 0.13], outcomes: [],
@@ -135,6 +147,18 @@ editAccess.inputChanged = async () => {};
 await editAccess.addInputMod("vaal-implicit", "implicit");
 await editAccess.addInputMod("shaper-mod", "prefix");
 assert.deepEqual(calls, [[1, 2, {add_implicit: "vaal-implicit"}], [1, 2, {add_explicit: "shaper-mod", fractured: false}]]);
+// The dedicated pair route carries the shared goal set without creating a
+// receiver-only currency inspector or adding a registry strategy action.
+const pairAccess = calculator as unknown as {calculateRandomRecombination: (...args: unknown[]) => Promise<CalcResult>};
+pairAccess.calculateRandomRecombination = async (...args) => { calls.push(["randomPair", ...args]); return {...result, game_odds_estimated: true, cost_complete: false}; };
+calls.length = 0; access.actionId = "random_recombination";
+await access.recalc();
+assert.equal(calls[0][0], "randomPair");
+assert.equal((calls[0][3] as {version: string}).version, "calculator_goal_set_v1");
+assert.deepEqual((calls[0][3] as {actions: string[]}).actions, []);
+assert.deepEqual(calls.map(call => call[0]), ["randomPair", "closeItem"]);
+access.renderResults();
+assert.match(calculator.querySelector(".pc-calc-output")?.textContent ?? "", /Gold and dust cost is unknown/);
 const {loadGameAssets} = await import("../src/app/game-assets");
 const {disposeReact} = await import("../src/app/react-host");
 await loadGameAssets();

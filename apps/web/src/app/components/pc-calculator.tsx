@@ -39,6 +39,7 @@ import {
     BestiaryActionInfo,
     BestiarySolverOptionInfo,
     CalcResult,
+    CalculatorGoalSet,
     Catalog,
     EngineError,
     EconomyIdentity,
@@ -370,7 +371,7 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         this.item = item;
-        if (this.actionId === "awakener") await this.loadDonors();
+        if (this.actionId === "awakener" || this.actionId === "random_recombination") await this.loadDonors();
         await this.openSolver();
         await this.refresh();
         await this.recalc();
@@ -1309,10 +1310,11 @@ export class PcCalculator extends HTMLElement {
             const submittedItem = this.item, submittedSession = this.session;
             const submittedData = this.dataId, actionId = this.actionId;
             const donorId = this.mechanicValues.get("awakener-donor");
-            const resourceIdentity = this.resourceIdentity;
+            const resourceIdentity = this.resourceIdentity ?? this.docId;
             const identity = this.oddsIdentity();
             const token = this.oddsLifetime.freeze(identity);
-            const goal = structuredClone(this.goalList.goals.length === 1
+            const goal = structuredClone(actionId === "random_recombination"
+                ? calculatorGoalSet(this.goalList, "") : this.goalList.goals.length === 1
                 ? this.itemGoal() : calculatorGoalSet(this.goalList, actionId));
             const current = () => this.oddsLifetime.accepts(token, this.oddsIdentity(), this.disposed);
             const report = beginDiagnosticRun('calculator-odds', {
@@ -1325,17 +1327,23 @@ export class PcCalculator extends HTMLElement {
                 calculationItem = await this.client.cloneItem(submittedItem);
                 (report.request as {state: unknown}).state = await this.client.exportItem(calculationItem, submittedSession);
                 if (!current()) return;
-                inspector = await this.client.openCalcGoal(submittedSession, goal);
-                const actions = (await this.client.solverActions(inspector)).filter(
-                    action => !this.cluster || Boolean((action.cluster_support ?? 0) & 2));
-                if (!current()) return;
-                this.pickerActions = actions;
-                const bestiary = this.bestiaryActions.find(action => action.id === actionId);
-                const result = bestiary
-                    ? await this.client.bestiaryGoalCalc(submittedData, inspector, calculationItem, bestiary.id)
-                    : actionId === "awakener"
-                    ? await this.calculateAwakener(inspector, calculationItem, report.request as Record<string, unknown>, donorId, resourceIdentity)
-                    : await this.client.currencyCalc(inspector, calculationItem, actionId);
+                let result: CalcResult;
+                if (actionId === "random_recombination") {
+                    result = await this.calculateRandomRecombination(calculationItem, submittedSession,
+                        goal as CalculatorGoalSet, report.request as Record<string, unknown>, donorId, resourceIdentity);
+                } else {
+                    inspector = await this.client.openCalcGoal(submittedSession, goal);
+                    const actions = (await this.client.solverActions(inspector)).filter(
+                        action => !this.cluster || Boolean((action.cluster_support ?? 0) & 2));
+                    if (!current()) return;
+                    this.pickerActions = actions;
+                    const bestiary = this.bestiaryActions.find(action => action.id === actionId);
+                    result = bestiary
+                        ? await this.client.bestiaryGoalCalc(submittedData, inspector, calculationItem, bestiary.id)
+                        : actionId === "awakener"
+                        ? await this.calculateAwakener(inspector, calculationItem, report.request as Record<string, unknown>, donorId, resourceIdentity)
+                        : await this.client.currencyCalc(inspector, calculationItem, actionId);
+                }
                 report.status = 'completed'; report.result = structuredClone(result);
                 if (current()) this.calc = result;
             } catch (error) {
@@ -1699,12 +1707,12 @@ export class PcCalculator extends HTMLElement {
             memoryStrands: this.itemMemoryStrands,
             donors: this.donors.map(record => ({key: record.id, name: record.name})), donorModel: this.donorModel,
             onAwakener: () => { this.selectAction("awakener"); },
-            onPanel: panel => { this.activeCraftPanel = panel; this.renderActionPanels(); if (panel === "awakener") void this.guard(() => this.loadDonors()); },
+            onPanel: panel => { this.activeCraftPanel = panel; this.renderActionPanels(); if (panel === "awakener" || panel === "recombination") void this.guard(() => this.loadDonors()); },
             onValue: (name, value) => {
                 this.mechanicValues.set(name, value);
                 if (name === "awakener-donor") { void this.guard(async () => {
                     await this.loadDonors();
-                    if (this.actionId === "awakener") await this.recalc();
+                    if (this.actionId === "awakener" || this.actionId === "random_recombination") await this.recalc();
                     await this.persist();
                 }); return; }
                 if (name === "essence-type") this.mechanicValues.delete("essence-key");
@@ -1737,6 +1745,32 @@ export class PcCalculator extends HTMLElement {
         const donor = this.donors.find(record => record.id === this.mechanicValues.get("awakener-donor"));
         this.donorModel = donor ? await readItemCard(this.client, this.dataId, this.catalog, donor, donor.name) : undefined;
         this.renderActionPanels();
+    }
+
+    private async calculateRandomRecombination(receiver: number, receiverSession: number, goals: CalculatorGoalSet,
+            request: Record<string, unknown>, donorId: string | undefined, resourceIdentity: string): Promise<CalcResult> {
+        const donor = (await listStash()).find((record): record is ItemStashRecord =>
+            record.resourceType !== "strategy" && record.id === donorId);
+        if (!donor || donor.id === resourceIdentity) throw new Error("Choose a distinct second input from Stash.");
+        request.second_input = {resource_identity: donor.id, base: donor.base, item_level: donor.itemLevel, state: structuredClone(donor.state)};
+        const session = await this.client.createSession(this.dataId, donor.base, donor.itemLevel, itemSnapshotCluster(donor));
+        let donorItem = 0, pair = 0;
+        try {
+            donorItem = await this.client.importItem(donor.state, session);
+            pair = await this.client.openRecombinationPair({resources: [
+                {identity: resourceIdentity, role: "input_a", session: receiverSession, item: receiver},
+                {identity: donor.id, role: "input_b", session, item: donorItem},
+            ]});
+            const result = await this.client.recombinationCalculate(pair, goals);
+            const currentDonor = (await listStash()).find(record => record.id === donor.id);
+            if (JSON.stringify(currentDonor) !== JSON.stringify(donor))
+                throw new Error("The second input changed during calculation. Calculate again with its current state.");
+            return result;
+        } finally {
+            if (pair) await this.client.closeRecombinationPair(pair);
+            if (donorItem) await this.client.closeItem(donorItem);
+            await this.client.closeSession(session);
+        }
     }
 
     private async calculateAwakener(solver: number, receiver: number, request: Record<string, unknown>, donorId = this.mechanicValues.get("awakener-donor"), resourceIdentity = this.resourceIdentity): Promise<CalcResult> {
@@ -1783,6 +1817,7 @@ export class PcCalculator extends HTMLElement {
 
     /** Human label for a registry action id, resolved through the catalog. */
     private actionLabel(id: string): string {
+        if (id === "random_recombination") return "Random recombination";
         const bestiary = this.bestiaryActions.find(
             (action) => action.id === id,
         );
@@ -1865,6 +1900,7 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         host.innerHTML = `
+            ${calc.game_odds_estimated ? '<p class="pc-help">Estimated Random recombination odds. Selected tiers and recorded rolls are preserved; unverified upgrades are omitted.</p>' : ""}
             ${this.renderGoalSummary(calc)}
             ${this.renderExactResult(this.selectedCalc ?? calc)}
             ${this.renderCost(calc.any_goal_probability ?? calc.success_probability) + this.renderOutcomes(this.selectedCalc ?? calc)}`;
@@ -2260,11 +2296,12 @@ export class PcCalculator extends HTMLElement {
                     <strong>${formatExpectedAttempts(calc.success_probability)}</strong>
                 </span>
             </div>
-            <p class="pc-calc-answer-note">Expected attempts assumes every try starts from this same input item.</p>
+            <p class="pc-calc-answer-note">${this.actionId === "random_recombination" ? "Expected attempts assumes each try starts with a fresh copy of both inputs." : "Expected attempts assumes every try starts from this same input item."}</p>
         </section>`;
     }
 
     private renderCost(successProbability: number): string {
+        if (this.actionId === "random_recombination") return '<section class="pc-calc-section"><h4>Cost</h4><p>Gold and dust cost is unknown. Each try consumes both inputs; acquisition and retry costs are not included.</p></section>';
         const keys = this.selectedCostKeys();
         if (keys.length === 0) {
             return "";
@@ -2431,6 +2468,7 @@ export class PcCalculator extends HTMLElement {
             .map(
                 (outcome) => `<tr class="${isSuccess(outcome) ? "is-success" : ""}">
                     <td class="pc-calc-p">${formatProbabilityExact(outcome.probability)}</td>
+                    ${calc.carriers ? `<td>${escapeHtml(this.bases.find(base => base.path === outcome.base_metadata_path)?.name ?? outcome.base_metadata_path ?? "")} · ilvl ${outcome.item_level}</td>` : ""}
                     <td>${outcome.terminal ? titleCase(outcome.terminal) : RARITY_NAMES[outcome.rarity] ?? outcome.rarity}</td>
                     <td>${outcome.terminal ? "â€”" : outcome.affixes_unobserved ? "Unconstrained" : `${outcome.prefixes}P/${outcome.suffixes}S`}</td>
                     ${this.slots
@@ -2464,7 +2502,7 @@ export class PcCalculator extends HTMLElement {
                     <div class="pc-calc-goal-legend">${slotLegend}</div>
                     <table class="pc-calc-table">
                         <thead><tr>
-                            <th>Chance</th><th>Rarity</th><th>Affixes</th>
+                            <th>Chance</th>${calc.carriers ? "<th>Output base</th>" : ""}<th>Rarity</th><th>Affixes</th>
                             ${slotHeaders}<th>Flags</th>
                         </tr></thead>
                         <tbody>${rows}</tbody>
