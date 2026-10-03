@@ -49,7 +49,15 @@ export function CalculatorShell({freshRarity, allowExtraModifiers}: {freshRarity
                     <div className="pc-calc-item-scroll"><Element tag="pc-mod-list" data-role="input-item" /></div>
                 </article>
                 <article className="pc-calc-context-card pc-calc-goal" data-context-card="goal">
-                    <header className="pc-calc-context-header"><h3>Goal item</h3><button type="button" data-copy-input-goal>Copy input to goal</button></header>
+                    <header className="pc-calc-context-header"><h3>Goal items</h3><button type="button" data-copy-input-goal>Copy input to goal</button></header>
+                    <div className="pc-calc-goal-tabs" role="tablist" aria-label="Goal items" />
+                    <div className="pc-calc-goal-edit"><label>Goal name <input data-goal-name maxLength={80} /></label>
+                        <button type="button" data-goal-command="add">Add goal</button>
+                        <button type="button" data-goal-command="duplicate">Duplicate</button>
+                        <button type="button" data-goal-command="delete">Delete</button>
+                        <button type="button" data-goal-command="left" aria-label="Move goal left">←</button>
+                        <button type="button" data-goal-command="right" aria-label="Move goal right">→</button>
+                    </div>
                     <div className="pc-calc-item-settings"><div className="pc-calc-goal-controls">
                         <label><span>Finished rarity</span><select data-role="goal-rarity">
                             <option value="normal">Normal</option><option value="magic">Magic</option><option value="rare">Rare</option>
@@ -70,7 +78,7 @@ export function CalculatorShell({freshRarity, allowExtraModifiers}: {freshRarity
             <aside className="pc-calc-tools">
                 <nav className="pc-calc-tool-tabs" aria-label="Calculator results">
                     <button data-calc-tool="odds" aria-pressed="true">Odds</button>
-                    <button data-calc-tool="solve" aria-pressed="false">Strategy finder</button>
+                    <button data-calc-tool="solve" aria-pressed="false">Strategy finder · selected goal</button>
                 </nav>
                 <section className="pc-calc-results" data-calc-pane="odds"><div className="pc-calc-output" /></section>
                 <section className="pc-calc-solve" data-calc-pane="solve" hidden><div className="pc-calc-solve-panel" /></section>

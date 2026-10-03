@@ -549,7 +549,7 @@ export class EngineBindings {
         return this.callJson("pcw_calc_inspector", ["number"], [session]).solver as number;
     }
 
-    openCalcGoal(session: number, goal: import("./engine-protocol").CalculatorItemGoal): number {
+    openCalcGoal(session: number, goal: import("./engine-protocol").CalculatorItemGoal | import("./engine-protocol").CalculatorGoalSet): number {
         return this.callJson("pcw_calc_goal", ["number", "string"], [session, JSON.stringify(goal)]).solver as number;
     }
     bestiaryGoalCalc(data: number, solver: number, item: number, action: string): CalcResult {

@@ -1,3 +1,6 @@
+import {createCalculatorGoalList, recoverCalculatorGoalList, calculatorGoalSet,
+    selectedCalculatorResult, newCalculatorGoal, MAX_CALCULATOR_GOALS,
+    CalculatorRequestLifetime, type CalculatorGoalDraft} from "../calculator-goal-set";
 import { clusterEnchantmentText } from "../cluster-configuration";
 import { itemSnapshotCluster } from "../workspace/persistence";
 import { PcCraftControls, type CraftPanel } from "./pc-craft-controls";
@@ -215,13 +218,28 @@ export class PcCalculator extends HTMLElement {
     private activeContext: "input" | "goal" = "goal";
     private activeTool: "odds" | "solve" = "odds";
 
-    private goalRarity: "normal" | "magic" | "rare" = "rare";
-    private goalImplicitKeys: string[] = [];
-    private goalInfluenceBits: number | undefined;
-    private goalCorrupted: boolean | undefined;
-    private allowExtraModifiers = false;
-    private slots: CalculatorGoalSlot[] = [];
-    private minSatisfiedSlots = 1;
+    private goalList = createCalculatorGoalList();
+    private oddsLifetime = new CalculatorRequestLifetime();
+    private get activeGoal(): CalculatorGoalDraft {
+        return this.goalList.goals.find(goal => goal.id === this.goalList.activeGoalId)!;
+    }
+    private get selectedCalc(): CalcResult | null {
+        return selectedCalculatorResult(this.calc, this.goalList.activeGoalId);
+    }
+    private get goalRarity(): "normal" | "magic" | "rare" { return this.activeGoal.goalRarity; }
+    private set goalRarity(value: "normal" | "magic" | "rare") { this.activeGoal.goalRarity = value; }
+    private get goalImplicitKeys(): string[] { return this.activeGoal.goalImplicitKeys ?? (this.activeGoal.goalImplicitKeys = []); }
+    private set goalImplicitKeys(value: string[]) { this.activeGoal.goalImplicitKeys = value; }
+    private get goalInfluenceBits(): number | undefined { return this.activeGoal.goalInfluenceBits; }
+    private set goalInfluenceBits(value: number | undefined) { this.activeGoal.goalInfluenceBits = value; }
+    private get goalCorrupted(): boolean | undefined { return this.activeGoal.goalCorrupted; }
+    private set goalCorrupted(value: boolean | undefined) { this.activeGoal.goalCorrupted = value; }
+    private get allowExtraModifiers(): boolean { return this.activeGoal.allowExtraModifiers === true; }
+    private set allowExtraModifiers(value: boolean) { this.activeGoal.allowExtraModifiers = value; }
+    private get slots(): CalculatorGoalSlot[] { return this.activeGoal.slots; }
+    private set slots(value: CalculatorGoalSlot[]) { this.activeGoal.slots = value; }
+    private get minSatisfiedSlots(): number { return this.activeGoal.minSatisfiedSlots ?? this.activeGoal.slots.length; }
+    private set minSatisfiedSlots(value: number) { this.activeGoal.minSatisfiedSlots = value; }
     private actionId = "";
     private fossilKeys: string[] = [];
     private selectedFossils: string[] = [];
@@ -314,14 +332,7 @@ export class PcCalculator extends HTMLElement {
             this.base = draft.base;
             this.itemLevel = draft.itemLevel;
             this.cluster = itemSnapshotCluster(draft);
-            this.goalRarity = draft.goalRarity;
-            this.goalImplicitKeys = draft.goalImplicitKeys ?? [];
-            this.goalInfluenceBits = draft.goalInfluenceBits;
-            this.goalCorrupted = draft.goalCorrupted;
-            this.allowExtraModifiers = draft.allowExtraModifiers === true;
-            this.slots = draft.slots;
-            this.minSatisfiedSlots =
-                draft.minSatisfiedSlots ?? draft.slots.length;
+            this.goalList = recoverCalculatorGoalList(draft);
             this.normalizeSuccessThreshold();
             this.actionId = draft.actionId;
             this.mechanicValues = craftValuesFromAction(this.catalog, this.actionId);
@@ -377,6 +388,7 @@ export class PcCalculator extends HTMLElement {
     // --- engine lifecycle ---------------------------------------------------
 
     private async openSession(): Promise<void> {
+        this.oddsLifetime.invalidate();
         if (this.disposed) {
             return;
         }
@@ -424,25 +436,18 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         this.modCache = cache;
-        this.goalImplicitKeys = this.goalImplicitKeys.filter(key => cache.some(mod => mod.key === key));
-        this.modifierOptions = this.catalog
-            ? buildModifierOptions(cache, this.catalog)
-            : [];
+        this.modifierOptions = this.catalog ? buildModifierOptions(cache, this.catalog) : [];
         this.modKeyToFamily = buildModifierKeyIndex(cache);
-        // Drop goal slots that do not exist in the new session. A goal that
-        // meant "all" continues to mean all after the base changes.
-        const oldSlotCount = this.slots.length;
-        const followedAll =
-            oldSlotCount === 0 ||
-            this.effectiveMinSatisfiedSlots() === oldSlotCount;
-        this.slots = this.slots.filter((slot) =>
-            slot.group
-                ? this.groupIdByKey(slot.group) !== undefined
-                : this.modifierOptions.some(
-                      (option) => option.value === slot.familyModKey,
-                  ),
-        );
-        this.normalizeSuccessThreshold(followedAll);
+        // Apply the existing session migration to every tab. A threshold that
+        // followed all available slots continues to follow all after migration.
+        for (const goal of this.goalList.goals) {
+            goal.goalImplicitKeys = (goal.goalImplicitKeys ?? []).filter(key => cache.some(mod => mod.key === key));
+            const followedAll = goal.slots.length === 0 || (goal.minSatisfiedSlots ?? goal.slots.length) === goal.slots.length;
+            goal.slots = goal.slots.filter(slot => slot.group ? this.groupIdByKey(slot.group) !== undefined :
+                this.modifierOptions.some(option => option.value === slot.familyModKey));
+            goal.minSatisfiedSlots = followedAll ? goal.slots.length :
+                (goal.slots.length ? Math.min(goal.slots.length, Math.max(1, goal.minSatisfiedSlots ?? goal.slots.length)) : 0);
+        }
     }
 
     /** (Re)open the solver for the current goal. Requires >= 1 slot. */
@@ -459,9 +464,14 @@ export class PcCalculator extends HTMLElement {
             // The engine owns bounded goal-relevant fossil synthesis. Keep a
             // hand-selected loadout materialized for exact odds even when it
             // falls outside the current automatic beam.
-            this.solver = this.cluster
-                ? await this.client.openCalcGoal(this.session, this.itemGoal())
-                : await this.client.openSolver(this.session, goal);
+            const session = this.session;
+            const opened = this.cluster
+                ? await this.client.openCalcGoal(session, this.itemGoal())
+                : await this.client.openSolver(session, goal);
+            if (this.disposed || session !== this.session) {
+                await this.client.closeSolver(opened); return;
+            }
+            this.solver = opened;
         } catch (error) {
             this.calcError =
                 error instanceof Error ? error.message : String(error);
@@ -478,13 +488,14 @@ export class PcCalculator extends HTMLElement {
     private solverGoal(
         mode: "odds" | "product_envelope" | "scoped_solve",
         actions?: readonly string[],
+        target: CalculatorGoalDraft = this.activeGoal,
     ): SolverGoal {
         const goal = buildCalculatorSolverGoal(
             {
-                rarity: this.goalRarity,
-                allowExtraModifiers: this.allowExtraModifiers,
-                minSatisfiedSlots: this.effectiveMinSatisfiedSlots(),
-                slots: this.slots.map((slot) =>
+                rarity: target.goalRarity,
+                allowExtraModifiers: target.allowExtraModifiers === true,
+                minSatisfiedSlots: target.minSatisfiedSlots ?? target.slots.length,
+                slots: target.slots.map((slot) =>
                     slot.group
                         ? { group: slot.group, min_tier: slot.minTier }
                         : {
@@ -522,6 +533,72 @@ export class PcCalculator extends HTMLElement {
         return goal;
     }
 
+    private async selectGoal(id: string): Promise<void> {
+        if (!this.goalList.goals.some(goal => goal.id === id)) return;
+        this.goalList.activeGoalId = id;
+        // Search artifacts remain bound to the selected frozen goal.
+        this.clearSolveResult();
+        const odds = this.calc;
+        await this.openSolver();
+        if (!this.disposed) this.calc = odds;
+        this.renderGoal(); this.renderResults(); this.renderSolvePanel();
+        await this.persist();
+    }
+
+    private renderGoalTabs(): void {
+        const tabs = this.querySelector<HTMLElement>(".pc-calc-goal-tabs");
+        if (!tabs) return;
+        tabs.innerHTML = this.goalList.goals.map(goal => `<button type="button" role="tab"
+            aria-selected="${goal.id === this.goalList.activeGoalId}" data-goal-id="${goal.id}">${escapeHtml(goal.name)}</button>`).join("");
+        tabs.querySelectorAll<HTMLButtonElement>("[data-goal-id]").forEach(button => {
+            button.disabled = this.busy;
+            button.addEventListener("click", () => {
+                if (this.busy || this.disposed) return;
+                // Selecting/renaming/reordering leaves probability semantics intact.
+                void this.guard(() => this.selectGoal(button.dataset.goalId!));
+            });
+        });
+        const name = this.querySelector<HTMLInputElement>("[data-goal-name]");
+        if (name) name.value = this.activeGoal.name;
+        this.querySelectorAll<HTMLButtonElement>("[data-goal-command]").forEach(button => {
+            const command = button.dataset.goalCommand;
+            const index = this.goalList.goals.indexOf(this.activeGoal);
+            button.disabled = this.busy || ((command === "add" || command === "duplicate") && this.goalList.goals.length === MAX_CALCULATOR_GOALS) ||
+                (command === "delete" && this.goalList.goals.length === 1) || (command === "left" && index === 0) ||
+                (command === "right" && index === this.goalList.goals.length - 1);
+        });
+    }
+
+    private async goalCommand(command: string): Promise<void> {
+        const goals = this.goalList.goals, index = goals.indexOf(this.activeGoal);
+        if (command === "left" || command === "right") {
+            const to = index + (command === "left" ? -1 : 1);
+            if (to < 0 || to >= goals.length) return;
+            [goals[index],goals[to]] = [goals[to],goals[index]];
+            this.renderGoal(); this.renderResults(); await this.persist(); return;
+        }
+        if (command === "delete") {
+            if (goals.length === 1) return;
+            goals.splice(index,1); this.goalList.activeGoalId = goals[Math.min(index,goals.length-1)].id;
+        } else if (command === "add" || command === "duplicate") {
+            if (goals.length >= MAX_CALCULATOR_GOALS) throw new Error("Calculator allows at most eight goal items.");
+            const goal = command === "duplicate" ? {...structuredClone(this.activeGoal), id: crypto.randomUUID(), name: `${this.activeGoal.name.slice(0,70)} copy`} :
+                newCalculatorGoal(crypto.randomUUID(), `Goal ${goals.length+1}`);
+            goals.push(goal); this.goalList.activeGoalId = goal.id;
+        } else return;
+        await this.goalChanged();
+    }
+
+    private renderGoalSummary(calc: CalcResult): string {
+        if (!calc.goal_results) return "";
+        return `<section class="pc-calc-goal-summary"><h3>Any goal: ${formatProbabilityExact(calc.any_goal_probability ?? calc.success_probability)}</h3>
+            <p class="pc-help">One selected action. Overlapping goals count once in Any goal.</p>
+            <ul>${this.goalList.goals.map(goal => {
+                const result = calc.goal_results!.find(result => result.id === goal.id);
+                return `<li>${escapeHtml(goal.name)}: ${result ? formatProbabilityExact(result.success_probability) : "Unavailable"}</li>`;
+            }).join("")}</ul></section>`;
+    }
+
     private async copyInputToGoal(): Promise<void> {
         this.goalRarity = this.itemRarity as typeof this.goalRarity;
         this.slots = [...this.itemPrefixes, ...this.itemSuffixes].flatMap(mod => {
@@ -549,6 +626,7 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         this.disposed = true;
+        this.oddsLifetime.invalidate();
         this.unsubscribePrices?.();
         this.unsubscribePrices = null;
         workspace().unregisterDocument(this.docId);
@@ -615,6 +693,7 @@ export class PcCalculator extends HTMLElement {
     }
 
     private async inputChanged(): Promise<void> {
+        this.oddsLifetime.invalidate();
         this.clearSolveResult();
         await this.refresh();
         await this.recalc();
@@ -686,6 +765,7 @@ export class PcCalculator extends HTMLElement {
     }
 
     private async goalChanged(): Promise<void> {
+        this.oddsLifetime.invalidate();
         await this.openSolver();
         this.renderGoal();
         await this.recalc();
@@ -786,6 +866,7 @@ export class PcCalculator extends HTMLElement {
 
     private async startSolve(): Promise<void> {
         if (this.hasItemRequirements()) { this.setStatus("Use Odds for implicit and item-property requirements."); return; }
+        const frozenGoal = structuredClone(this.activeGoal);
         const imprintCostKeys = this.bestiaryOption
             ? this.imprintCreationCostKeys()
             : [];
@@ -838,7 +919,7 @@ export class PcCalculator extends HTMLElement {
             submitted_at_utc: new Date().toISOString(),
             base_path: this.base,
             item_level: this.itemLevel,
-            goal_envelope: this.solverGoal("product_envelope"),
+            goal_envelope: this.solverGoal("product_envelope", undefined, frozenGoal),
             solve_options: calculatorSolveOptions(
                 this.allowExtraModifiers ? 0 : this.solveAbsoluteGapTarget,
                 this.allowExtraModifiers ? 0 : this.solveRelativeGapPercentTarget,
@@ -1217,58 +1298,66 @@ export class PcCalculator extends HTMLElement {
         }
     }
 
+    private oddsIdentity(): string {
+        const donorId = this.mechanicValues.get("awakener-donor");
+        const donor = this.actionId === "awakener" ? this.donors.find(record => record.id === donorId) : undefined;
+        return JSON.stringify([this.dataId, this.session, this.item, this.resourceIdentity,
+            calculatorGoalSet(this.goalList, this.actionId), donorId,
+            donor && [donor.id, donor.base, donor.itemLevel, itemSnapshotCluster(donor), donor.state]]);
+    }
+
     private async recalc(): Promise<void> {
-        this.calc = null;
-        this.calcError = "";
+        this.calc = null; this.calcError = "";
         if (this.item && this.actionId) {
-            const submittedItem = this.item;
-            const actionId = this.actionId;
+            const submittedItem = this.item, submittedSession = this.session;
+            const submittedData = this.dataId, actionId = this.actionId;
+            const donor = actionId === "awakener" ? structuredClone(this.donors.find(record =>
+                record.id === this.mechanicValues.get("awakener-donor"))) : undefined;
+            const resourceIdentity = this.resourceIdentity;
+            const identity = this.oddsIdentity();
+            const token = this.oddsLifetime.freeze(identity);
+            const goal = structuredClone(this.goalList.goals.length === 1
+                ? this.itemGoal() : calculatorGoalSet(this.goalList, actionId));
+            const current = () => this.oddsLifetime.accepts(token, this.oddsIdentity(), this.disposed);
             const report = beginDiagnosticRun('calculator-odds', {
-                base: this.base, item_level: this.itemLevel, action: actionId,
-                goal: this.itemGoal(), economy: pinEconomy(), state: null as unknown,
+                base: this.base, item_level: this.itemLevel, cluster: this.cluster, action: actionId,
+                goal, economy: pinEconomy(), state: null as unknown,
                 pricing_note: 'Exact action probabilities do not consume prices.',
             });
             let calculationItem = 0, inspector = 0;
             try {
                 calculationItem = await this.client.cloneItem(submittedItem);
-                (report.request as {state: unknown}).state = await this.client.exportItem(calculationItem, this.session);
-                inspector = await this.client.openCalcGoal(this.session, this.itemGoal());
-                this.pickerActions = (await this.client.solverActions(inspector)).filter(
+                (report.request as {state: unknown}).state = await this.client.exportItem(calculationItem, submittedSession);
+                if (!current()) return;
+                inspector = await this.client.openCalcGoal(submittedSession, goal);
+                const actions = (await this.client.solverActions(inspector)).filter(
                     action => !this.cluster || Boolean((action.cluster_support ?? 0) & 2));
-                const bestiary = this.bestiaryActions.find(
-                    (action) => action.id === actionId,
-                );
-                if (bestiary) {
-                    this.calc = await this.client.bestiaryGoalCalc(this.dataId, inspector, calculationItem, bestiary.id);
-                } else {
-                    const calculator = inspector;
-                    this.calc = actionId === "awakener"
-                        ? await this.calculateAwakener(calculator, calculationItem, report.request as Record<string, unknown>)
-                        : await this.client.currencyCalc(calculator, calculationItem, actionId);
-                }
-                report.status = 'completed';
-                report.result = structuredClone(this.calc);
+                if (!current()) return;
+                this.pickerActions = actions;
+                const bestiary = this.bestiaryActions.find(action => action.id === actionId);
+                const result = bestiary
+                    ? await this.client.bestiaryGoalCalc(submittedData, inspector, calculationItem, bestiary.id)
+                    : actionId === "awakener"
+                    ? await this.calculateAwakener(inspector, calculationItem, report.request as Record<string, unknown>, donor, resourceIdentity, submittedData)
+                    : await this.client.currencyCalc(inspector, calculationItem, actionId);
+                report.status = 'completed'; report.result = structuredClone(result);
+                if (current()) this.calc = result;
             } catch (error) {
-                report.status = 'error';
-                report.error = error instanceof Error ? error.message : String(error);
-                this.calcError =
-                    error instanceof EngineError &&
-                    error.message.includes("unknown action")
-                        ? "This action is not available for this base and item level."
-                        : error instanceof Error
-                          ? error.message
-                          : String(error);
+                report.status = 'error'; report.error = error instanceof Error ? error.message : String(error);
+                if (current()) this.calcError = error instanceof EngineError && error.message.includes("unknown action")
+                    ? "This action is not available for this base and item level."
+                    : error instanceof Error ? error.message : String(error);
             } finally {
                 if (calculationItem) await this.client.closeItem(calculationItem);
                 if (inspector) await this.client.closeSolver(inspector);
             }
         }
-        this.renderGoal(); // per-slot odds live inline on the goal rows
-        this.renderResults();
+        if (!this.disposed) { this.renderGoal(); this.renderResults(); }
     }
 
     private async persist(): Promise<void> {
         const draft: CalculatorDraftRecord = {
+            goalList: structuredClone(this.goalList),
             resourceIdentity: this.resourceIdentity,
             docId: this.docId,
             base: this.base,
@@ -1529,8 +1618,10 @@ export class PcCalculator extends HTMLElement {
     }
 
     private renderGoal(): void {
+        this.renderGoalTabs();
+        const calc = this.selectedCalc;
         const showOdds = Boolean(
-            this.calc && this.calc.legal && this.calc.supported,
+            calc && calc.legal && calc.supported,
         );
         this.syncModPoolSelections();
         this.goalModList?.setModel({
@@ -1544,7 +1635,7 @@ export class PcCalculator extends HTMLElement {
                 maxPrefix: this.itemMaxPrefix,
                 maxSuffix: this.itemMaxSuffix,
                 slotProbabilities: showOdds
-                    ? this.calc?.slot_satisfied
+                    ? calc?.slot_satisfied
                     : undefined,
                 formatProbability: formatProbabilityExact,
                 groupLabel: (groupKey) => {
@@ -1561,7 +1652,7 @@ export class PcCalculator extends HTMLElement {
                 ...(this.goalImplicitKeys.some(key => this.modCache.find(mod => mod.key === key)?.reach_via === "implicit:eater_of_worlds") ? ["Eater of Worlds"] : []),
             ],
             implicits: this.goalImplicitKeys.map((key, index) => ({key, textLines: this.modCache.find(mod => mod.key === key)?.text_lines ?? [key],
-                probabilityLabel: showOdds && this.calc?.implicit_satisfied?.[index] !== undefined ? formatProbabilityExact(this.calc.implicit_satisfied[index]) : undefined})),
+                probabilityLabel: showOdds && calc?.implicit_satisfied?.[index] !== undefined ? formatProbabilityExact(calc.implicit_satisfied[index]) : undefined})),
         });
 
         const rarity = this.querySelector<HTMLSelectElement>(
@@ -1652,14 +1743,12 @@ export class PcCalculator extends HTMLElement {
         this.renderActionPanels();
     }
 
-    private async calculateAwakener(solver: number, receiver: number, request: Record<string, unknown>): Promise<CalcResult> {
-        const donor = (await listStash()).find((record): record is ItemStashRecord =>
-            record.resourceType !== "strategy" && record.id === this.mechanicValues.get("awakener-donor"));
-        if (!donor || donor.id === this.resourceIdentity) throw new Error("Choose a distinct donor from Stash.");
-        request.donor = {resource_identity: donor.id, base: donor.base, item_level: donor.itemLevel, state: donor.state};
-        this.donorModel = await readItemCard(this.client, this.dataId, this.catalog, donor, donor.name);
-        this.renderActionPanels();
-        const session = await this.client.createSession(this.dataId, donor.base, donor.itemLevel, itemSnapshotCluster(donor));
+    private async calculateAwakener(solver: number, receiver: number, request: Record<string, unknown>,
+            donor: ItemStashRecord | undefined, resourceIdentity: string | undefined, dataId: number): Promise<CalcResult> {
+        if (!donor || donor.id === resourceIdentity) throw new Error("Choose a distinct donor from Stash.");
+        request.donor = {resource_identity: donor.id, base: donor.base, item_level: donor.itemLevel,
+            cluster: itemSnapshotCluster(donor), state: donor.state};
+        const session = await this.client.createSession(dataId, donor.base, donor.itemLevel, itemSnapshotCluster(donor));
         let donorItem = 0;
         try {
             donorItem = await this.client.importItem(donor.state, session);
@@ -1778,8 +1867,9 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         host.innerHTML = `
-            ${this.renderExactResult(calc)}
-            ${this.renderCost(calc.success_probability) + this.renderOutcomes(calc)}`;
+            ${this.renderGoalSummary(calc)}
+            ${this.renderExactResult(this.selectedCalc ?? calc)}
+            ${this.renderCost(calc.any_goal_probability ?? calc.success_probability) + this.renderOutcomes(this.selectedCalc ?? calc)}`;
         this.bindPriceInputs(host);
     }
 
@@ -1798,6 +1888,7 @@ export class PcCalculator extends HTMLElement {
     private renderSolvePanel(): void {
         const host = this.querySelector<HTMLElement>(".pc-calc-solve-panel");
         if (!host) return;
+        host.setAttribute("aria-label", `Strategy finder for selected goal: ${this.activeGoal.name}`);
         if (this.hasItemRequirements()) {
             host.innerHTML = '<p class="pc-help">This goal includes implicit or item-property requirements. Use Odds to calculate the complete outcome after one action. Strategy finder does not support these requirements yet.</p>';
             return;
@@ -1949,7 +2040,7 @@ export class PcCalculator extends HTMLElement {
                   : this.solveCancelled
                     ? "Solve cancelled. Adjust the goal or prices, then start again."
                   : `${readiness.pricedActions.toLocaleString()} of ${readiness.totalActions.toLocaleString()} actions priced.`;
-        host.innerHTML = `
+        host.innerHTML = `<p class="pc-help">Strategy finder and Solver Lab export use only the selected goal: ${escapeHtml(this.activeGoal.name)}.</p>
             <header class="pc-calc-solve-header">
                 <div>
                     <h3>Solve to Strategy</h3>
@@ -2154,7 +2245,7 @@ export class PcCalculator extends HTMLElement {
     private renderExactResult(calc: CalcResult): string {
         return `<section class="pc-calc-answer">
             <span class="pc-calc-answer-kicker">Exact result</span>
-            <span class="pc-calc-answer-target">${escapeHtml(this.successTargetLabel())}</span>
+            <span class="pc-calc-answer-target">${this.goalList.goals.length > 1 ? `${escapeHtml(this.activeGoal.name)}: ` : ""}${escapeHtml(this.successTargetLabel())}</span>
             <strong class="pc-calc-answer-value">${formatProbabilityExact(calc.success_probability)}</strong>
             <span class="pc-calc-answer-action">after ${escapeHtml(this.actionLabel(this.actionId))}</span>
             <div class="pc-calc-answer-details">
@@ -2203,7 +2294,7 @@ export class PcCalculator extends HTMLElement {
                     <strong>${priced.complete ? formatChaosValue(priced.total) : "set prices above"}</strong>
                 </span>
                 <span>
-                    <small>Estimated action spend per success</small>
+                    <small>Estimated action spend per ${this.goalList.goals.length > 1 ? "Any goal hit" : "success"}</small>
                     <strong>${
                         priced.complete
                             ? Number.isFinite(spendPerSuccess)
@@ -2432,6 +2523,7 @@ export class PcCalculator extends HTMLElement {
                 delete button.dataset.disabledBeforeBusy;
             }
         });
+        this.renderGoalTabs();
     }
 
     private async guard(work: () => Promise<void>): Promise<void> {
@@ -2439,6 +2531,7 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         this.setBusy(true);
+        this.oddsLifetime.invalidate();
         const pending = work();
         this.currentWork = pending;
         try {
@@ -2479,6 +2572,14 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         renderReact(this, <CalculatorShell key={++this.shellVersion} freshRarity={this.freshRarity} allowExtraModifiers={this.allowExtraModifiers} />);
+        this.querySelector<HTMLInputElement>("[data-goal-name]")?.addEventListener("change", event => {
+            if (this.busy) return;
+            this.activeGoal.name = (event.currentTarget as HTMLInputElement).value.slice(0,80);
+            this.renderGoal(); this.renderResults(); void this.persist();
+        });
+        this.querySelectorAll<HTMLButtonElement>("[data-goal-command]").forEach(button => {
+            button.addEventListener("click", () => void this.guard(() => this.goalCommand(button.dataset.goalCommand!)));
+        });
         this.querySelectorAll<HTMLButtonElement>("[data-calc-tool]").forEach(button => {
             button.addEventListener("click", () => this.selectTool(button.dataset.calcTool as typeof this.activeTool));
         });

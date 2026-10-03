@@ -142,6 +142,18 @@ No deployment, refresh, dev-server restart or other feature integration is selec
 by this checkpoint. Parent coordinates the remaining isolated owners and combined
 qualification; new model approvals supply no game-exact solver authority.
 
+# Calculator goal-set qualified local checkpoint (2026-10-03)
+
+Isolated `dot/calculator-goal-set-20261003`, qualified source `53be4ce8`, includes
+main `0187f3d8`. Native, retained matching WASM worker, nonvisual goal/donor/lifetime,
+real Chrome IndexedDB, complete npm and TypeScript checks pass. The [living record](docs/active/2026-10-03-calculator-goal-set/README.md)
+owns exact source/module identities, native counts, corrected inherited `/Pro/`
+assertion and raw receipts. Web slot released at 08:52 UTC; no owned heavy process
+remains. Parent owns combined integration/publication and recombination's mixed
+output-session dispatcher. K>1 observed-choice refusal remains. Rendered
+Calculator review and pinned-browser parity remain unrun. No push, main merge,
+publication, refresh, dev restart or deployment occurred here.
+
 # Combined completion batch delivered; paused (2026-10-02)
 
 The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)

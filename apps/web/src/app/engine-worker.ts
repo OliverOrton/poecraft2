@@ -1035,7 +1035,7 @@ async function dispatch(
         case "openCalcInspector":
             return {solver: bindings.openCalcInspector(params.session as number)};
         case "openCalcGoal":
-            return {solver: bindings.openCalcGoal(params.session as number, params.goal as import("./engine-protocol").CalculatorItemGoal)};
+            return {solver: bindings.openCalcGoal(params.session as number, params.goal as import("./engine-protocol").CalculatorItemGoal | import("./engine-protocol").CalculatorGoalSet)};
         case "bestiaryGoalCalc":
             return bindings.bestiaryGoalCalc(params.data as number, params.solver as number, params.item as number, params.action as string);
         case "editItem":
