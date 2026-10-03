@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {Worker,type TransferListItem} from "node:worker_threads";
+import {buildModifierKeyIndex} from "../src/app/modifier-options";
 import {EngineClient,type EngineTransport} from "../src/app/engine-client";
 import type {CalculatorGoalSet,CalculatorItemGoal,ClientMessage,WorkerMessage} from "../src/app/engine-protocol";
 const root=new URL("../../../",import.meta.url);
@@ -15,6 +16,28 @@ const transport:EngineTransport={postMessage:(message:ClientMessage,transfer?:Tr
 const client=new EngineClient(transport);let session=0,item=0;
 try {
     await client.whenReady();const data=await client.loadData(bundle);
+    // Real native modifier/session identity for the generic picker regression.
+    for(const fixture of [
+        {base:"Metadata/Items/Armours/Shields/ShieldInt12",key:"GainRandomChargeOnBlockInfluence1",influence:2},
+        {base:"Metadata/Items/Armours/Shields/ShieldInt12",key:"BlockPercentInfluence2",influence:1},
+        {base:"Metadata/Items/Armours/BodyArmours/BodyInt17",key:"EnergyShieldRecoveryRateBodyInfluence2",influence:3}]){
+        const frame=await client.createSession(data,fixture.base,86);let rootItem=0,admitted=0;
+        try{
+            const count=await client.modCount(frame);
+            const mods=await Promise.all(Array.from({length:count},(_,id)=>client.modInfo(frame,id)));
+            const mod=mods.find(mod=>mod.key===fixture.key);assert.ok(mod,fixture.key);
+            assert.equal(mod.reach_kind,1);assert.equal(mod.reach_influence,fixture.influence);
+            const family=buildModifierKeyIndex(mods).get(fixture.key);assert.ok(family);
+            rootItem=await client.createItem(frame,{rarity:"rare",withImplicits:false});
+            await client.editItem(rootItem,frame,{influence_bits:1<<(fixture.influence-1)});
+            admitted=await client.openSolver(frame,{version:"v1",rarity:"rare",slots:[{family_mod_key:family,min_tier:mod.family_tier_index}],actions:["scour"]});
+            const before=await client.exportItem(rootItem,frame);
+            const outcome=await client.solverCalc(admitted,rootItem,"scour");
+            assert.ok(outcome.supported && outcome.legal);
+            assert.deepEqual(await client.exportItem(rootItem,frame),before);
+        }finally{if(admitted)await client.closeSolver(admitted);if(rootItem)await client.closeItem(rootItem);await client.closeSession(frame);}
+    }
+
     session=await client.createSession(data,"Metadata/Items/Armours/BodyArmours/BodyInt17",86);
     item=await client.createItem(session,{rarity:"magic",withImplicits:true});
     const before=await client.exportItem(item,session);
