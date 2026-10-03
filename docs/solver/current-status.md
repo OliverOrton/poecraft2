@@ -37,8 +37,10 @@ unrun. Current/Finder
 producers and exact closure are unchanged. Exact inventory/feeder evaluation
 stay held. A later typed-port Builder recombination source checkpoint delegates
 to the existing qualified pair Apply. Matching native/DLL/WASM/web and final
-TypeScript pass; full rendered acceptance remains incomplete at the priority
-solver-delivery pause. LOCAL is released. Ordinary rare kernel refusals remain;
+TypeScript pass. Its final controlled Chrome fixture passes 122 assertions and
+the actual native worker 1,000-run UI check; earlier failures are retained. Visual
+review/full-server rendering remain unrun, and latest solver-main combination
+is not qualified here. LOCAL is released. Ordinary rare kernel refusals remain;
 fancy blocking/exclusive admission is separate owner work. This row extends no
 exact authority.
 

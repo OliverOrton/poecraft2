@@ -10,12 +10,13 @@ WASM, web and final TypeScript evidence. The
 [bounded qualification receipt](itemflow-qualification-pause.json) is current;
 the earlier source receipt is a historical, unqualified snapshot.
 
-**Partial qualification:** complete rendered acceptance and screenshot review
-remain pending. The real browser's fixed 1,000-run summary passed, then the
-fixture confused trace `node_id` with `terminal_node_id`. Its earlier attempt
-omitted the add-condition step. Those fixture failures are retained, not counted
-as passing rendered acceptance. This branch extends no exact inventory authority,
-exclusive admission, profit solver or game-exact probability law.
+**Builder component qualification passed:** the parent-selected final renderer
+retry passed 122 assertions and the real 1,000-run native worker check. Earlier
+fixture failures are retained. Captured screenshot visual review remains Oliver's;
+full product-server rendering is unrun. The branch remains qualified against
+`4ad40580`; published solver main `29d9e666` is not merged or jointly qualified
+here. This branch extends no exact inventory authority, exclusive admission,
+profit solver or game-exact probability law.
 
 Committed evidence is limited to source/tests, the matching release WASM and
 compact repository-relative receipts. Bulk logs, native DLL, temporary renderer
@@ -23,9 +24,10 @@ fixtures, screenshots and local browser data remain outside Git. Protected
 root `0` was not read, edited or staged. The integration owner is authorized to
 publish this review branch; this scope does not push or merge into main.
 
-Heavy work remains paused for solver priority. No queued autorun exists. Respect
-the October 3 America/Vancouver wind-down at16:45 and quiet window17:00–22:00;
-resumption requires a parent grant after that window.
+The final retry closed Chrome and released LOCAL at 21:48:34.2794359 UTC with no
+owned survivors. No queued autorun exists. Respect the October 3 America/Vancouver
+wind-down at 16:45 and quiet window 17:00-22:00; resumption requires a parent grant
+after that window.
 
 Oliver resumed this prepared scope at 2026-10-03 04:00 UTC. This fresh execution
 uses isolated sibling `C:/Users/Oliver/Documents/poecraft2-strategy-feeder`, branch
@@ -208,7 +210,7 @@ No new research programme, supervisor or experiment allowance was introduced.
 Local source `6fe9e9d3` adds the typed board connections, native sequential paid
 dependency execution, actual-session atomic pair outputs, explicit recycling,
 actual-base conditions and selected named child outputs described in the
-[product contract](../../product/strategies.md#typed-builder-item-flow-source-checkpoint-qualification-pending).
+[product contract](../../product/strategies.md#typed-builder-item-flow-component-qualified-combined-integration-pending).
 Receipts retain nested child inventories and actual failure outputs. The new
 additive C query exposes terminal resource JSON to Python/WASM examples; public
 struct layouts and existing facade exports are unchanged. Matching artifacts
@@ -260,7 +262,7 @@ Oliver's unless separately selected. All commits stay local for designated
 integration owner; no independent main merge,
 push or deployment is authorized here.
 
-## Matching qualification; priority pause (2026-10-03)
+## Matching qualification; priority pause (2026-10-03; historical)
 
 Parent granted LOCAL after18:27:31 and selected published4ad40580. Merge
 b032faeb preserved Lock/Calculator and both HANDOFF entries. Source d3889277
@@ -286,3 +288,37 @@ artifacts, failed/reused checks and remaining work; bulk logs/fixtures/screensho
 stay in out/strategy-feeder. Resume rendered correction/acceptance only if the
 parent selects it and grants the slot. Native/web evidence is preserved; no
 solver experiment, data/economy refresh, dev restart, push or deployment occurred.
+
+
+## Final controlled rendered acceptance (2026-10-03)
+
+After solver delivery the parent granted LOCAL for one prepared fixture retry,
+bounded to a 300-second native-worker wait. The sole fixture correction changed
+the retained trace entry's field from `terminal_node_id` to `node_id`; terminal
+examples keep `terminal_node_id`. Product source, every assertion, native/WASM
+bytes and the fixed 1,000-run witness were preserved. No latest-main merge, new
+feature, rebuild or extra suite was performed.
+
+The Chrome DOM fixture ran 21:47:07.902-21:48:06.869 UTC and passed **122 assertions**
+with zero page errors. Normal physical mouse gestures connected paid donor A and
+pinned feeder B, verified the visible Start entry and bound inspectors, reconnected
+and undid an invalid duplicate input, and persisted the actual-base condition.
+Actual UI Run N called the source-matched native worker: **1,000 successes,
+4,000 actions, 13,000 known cost**, with missing station costs correctly incomplete
+on all runs. Retained trace assertions checked real item level 75, actual-base
+routing, two consumed inputs and one live output. The trace DOM showed actual
+output, resource inventory and incomplete cost. Both prior renderer fixture
+failures remain in bulk evidence and the compact receipt.
+
+Chrome finally closed; **LOCAL released 2026-10-03T21:48:34.2794359Z**, with an empty
+owned-process snapshot. Port and trace screenshots were captured and hashed;
+Oliver's visual review is unrun. This is controlled Builder rendering and actual
+worker acceptance, not full product-server qualification. The
+[current compact receipt](itemflow-qualification-pause.json) pins exact evidence.
+Bulk fixtures/logs/screenshots stay outside Git.
+
+Next concrete step: integration owner publishes the local review branch and
+combines it with solver main `29d9e666` under its own qualification. The engine
+and web trees remain 8d8551d6/493ad965; matching WASM remains 816efea6. No combined
+latest-main qualification is claimed. Exact inventory, fancy pair laws, profit
+solving and concurrent scheduling remain held. No heavy slot is held or queued.

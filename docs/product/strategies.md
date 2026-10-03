@@ -254,7 +254,8 @@ evidence-held currencies refuse compilation with their missing-law reason.
 The [living feeder record](../active/2026-10-03-strategy-feeder/README.md) and its
 receipt own exact source/artifact identities, acceptance and exclusions. Integration
 and publication belong to the designated owner; rendered Builder review remains
-with Oliver. Shared-DLL/Python feeder acceptance is unrun. Current and Finder producers are unchanged;
+with Oliver. Matching shared-DLL and scoped Python feeder acceptance now pass.
+Current and Finder producers are unchanged;
 this is authored Simulator/Builder work and extends no exact solver authority.
 
 An optional `output_contracts` array names up to 32 contracts, each with `id`,
@@ -309,7 +310,7 @@ contracts with the existing condition editor, and shows explicit item ports on
 the board. Save/import, clone and draft Undo/Redo preserve the complete reference.
 No crafting interpreter or probability law is added to TypeScript.
 
-### Typed Builder item flow (source checkpoint; qualification pending)
+### Typed Builder item flow (component qualified; combined integration pending)
 
 Recombination has two input dots (`input_a`, `input_b`) and one `output` dot.
 New Donor item and Saved feeder blocks set `source_only: true`: they have only
@@ -365,7 +366,9 @@ this scope. Future profit remains highest matching goal sale value and expected
 net profit/investment, without guessed salvage.
 
 Matching native/header/DLL, focused Python, WASM, full web and final TypeScript
-acceptance now pass. Full rendered acceptance is incomplete after two fixture
-assumptions; it is paused for the parent-selected priority solver delivery. The
-living feeder record retains failures and scoped evidence. No exact inventory
-or broader pair-law authority is promoted.
+acceptance pass. The final controlled Chrome Builder fixture passed 122 assertions
+and actual UI/native-worker Run N 1000; prior fixture failures are retained.
+Oliver owns screenshot visual review, and full product-server rendering remains
+unrun. The living feeder record pins this component's 4ad40580 baseline; integration
+with later solver main 29d9e666 requires its own combined qualification. No exact
+inventory or broader pair-law authority is promoted.

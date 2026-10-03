@@ -1,16 +1,19 @@
-# Builder qualification paused for solver priority; LOCAL free (2026-10-03)
+# Builder component qualified; LOCAL released (2026-10-03)
 
-Source d3889277 on published4ad40580 passes native/header105 pair+300 feeder,
-actual DLL226334d4, scoped Python, WASM816efea6/MJS23c405b9, full npm37/37/all
-suites, layout and final TypeScript. The browser's real Run N1000 summary passed,
-then a trace-field fixture assumption failed. Complete rendered acceptance and
-screen review remain pending; failures are retained, no full-server claim.
-LOCAL released19:14:35.8221843UTC, zero owned survivors/browser closed; do not
-resume heavy work until parent selects it after priority solver delivery.
-The [living feeder record](docs/active/2026-10-03-strategy-feeder/README.md#matching-qualification-priority-pause-2026-10-03)
-and qualification/pause receipt own evidence and remaining scope. Exact inventory,
-exclusive admission and selection law authority remain separate/refused. Local
-commits only for designated integration owner; no data refresh/dev restart/push.
+Source d3889277 on published 4ad40580 passes native/header 105 pair+300 feeder,
+actual DLL 226334d4, scoped Python, WASM816efea6/MJS23c405b9, full npm 37/37/all
+suites, layout and final TypeScript. The parent-selected final controlled Chrome
+fixture passed 122 assertions and actual UI/native-worker Run N 1000: 1,000 successes,
+4,000 actions, 13,000 known cost with missing station costs incomplete. Earlier
+fixture failures are retained; Oliver's screenshot visual review and full-server
+rendering remain unrun. LOCAL released 21:48:34.2794359 UTC, Chrome closed and zero
+owned survivors. No heavy process is held or queued.
+The [living feeder record](docs/active/2026-10-03-strategy-feeder/README.md#final-controlled-rendered-acceptance-2026-10-03)
+and compact receipt own evidence. Integration owner publishes the local review
+branch and combines solver main 29d9e666; that combined source/artifact is not
+qualified here. Exact inventory, exclusive admission and pair-law authority stay
+separate/refused. No data refresh/dev restart/push; commits local. Quiet window
+October 3 America/Vancouver 17:00-22:00, wind-down 16:45; parent grant required later.
 
 # Qualified Lock and influenced-target repair integration (2026-10-03)
 
