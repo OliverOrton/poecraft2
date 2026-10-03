@@ -668,3 +668,32 @@ will not claim pinned-browser parity. Native/WASM remains unchanged at472f644b.
 [qualification.json](qualification.json) owns exact versions, retained failure
 and pending commands. Diagnostic has priority; no heavy command or push starts
 from this source-only checkpoint.
+
+
+### Full web chain qualified with installed Chrome
+
+Source `9f28a099` passes **full unfiltered npm test** in44.583s, including
+**37/37 engine smoke cases** and every following file through hosted-tester,
+then TypeScript in3.586s. The original expected-state correction remains strict
+in both modes, and workspace atomic resource/Undo/Redo/stale/alias assertions
+execute in a real browser. Playwright1.58.2 uses installed Chrome152.0.7977.83
+via the validated explicit channel and a fresh temporary profile. Chrome
+executable SHA256 `caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733`
+is unchanged before/after. Both supervised process groups exit without survivors;
+the local heavy slot is released immediately, before receipt work.
+
+This is installed-Chrome local qualification; it does not establish parity with
+the missing pinned Chromium145/revision1208. Unset channel retains CI's original
+pinned default. The original unfiltered f9e46c6a browser-availability failure is
+preserved. No assertion is bypassed, no browser/dependency installation occurs
+and native/WASM stays unchanged at472f644b. Native prefix parity remains
+intermittently unreproduced, not proved fixed.
+
+`currency_guard_chrome_qualification` in [qualification.json](qualification.json)
+and `out/local-native-repair/currency-guard-qualified.json` own exact commands,
+versions, process evidence and exclusions. The parent explicitly resumes the
+authorized normal main delivery of these qualified test corrections and hosted
+CI inspection. Actual remote head and terminal CI are recorded separately in
+`out/local-native-repair/currency-guard-delivery.json`. Solver recovery c04e42ee,
+Lock e2b6ff70 and other pending features are not integrated by this delivery.
+No local heavy capacity is held during receipt/publication/remote monitoring.

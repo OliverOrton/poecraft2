@@ -1,15 +1,16 @@
-# Optional local Chrome test channel prepared (2026-10-03)
+# Currency guard/full web chain qualified (2026-10-03)
 
-`f9e46c6a` full unfiltered engine smoke passes37/37; npm stops later at missing
-pinned Playwright browser in workspace-resources. TypeScript passes. Failed log
-preserved; no survivor, local slot released. Optional test-only Chrome override
-is now prepared; unset keeps pinned Chromium. Real-browser assertions/cleanup
-unchanged; launch uses a fresh temporary profile. Playwright1.58.2 / installed
-Chrome152.0.7977.83 compatibility is unrun, with no pinned-browser parity claim.
-The [living integration record](docs/active/2026-10-02-sprint-integration/README.md)
-and `currency_guard_optional_chrome_channel_ready` own exact evidence/pending
-full npm/TypeScript checks. No install/push/native-WASM change. Diagnostic has
-next slot priority; source-only work is complete, no heavy command running.
+`9f28a099` passes full unfiltered npm (37/37 smoke and every following file)
+and TypeScript with Playwright1.58.2 / installed Chrome152.0.7977.83 in a fresh
+temporary profile. Native/WASM and all guard/resource assertions remain unchanged.
+Prior missing pinned-browser failure is retained; pinned-browser parity is unrun.
+Local slot released immediately, no survivor; normal qualified test-only main
+publication and hosted CI inspection are authorized. The
+[living integration record](docs/active/2026-10-02-sprint-integration/README.md)
+and `currency_guard_chrome_qualification` own exact receipts/exclusions. Actual
+remote/CI result lives in `out/local-native-repair/currency-guard-delivery.json`.
+Solver recovery c04e42ee, Lock e2b6ff70 and pending features stay separate. Native
+parity remains intermittently unreproduced; no local heavy command is selected.
 
 # Currency expansion smoke guard fixture prepared (2026-10-03)
 

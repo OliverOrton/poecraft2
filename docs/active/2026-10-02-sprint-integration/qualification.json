@@ -2423,5 +2423,156 @@
     "no_native_wasm_build": true,
     "owned_heavy_processes_remaining": 0,
     "slot": "Diagnostic has next priority; no local heavy command granted"
+  },
+  "currency_guard_chrome_qualification": {
+    "recorded_utc": "2026-10-03T08:28:25.842670+00:00",
+    "status": "Full unfiltered local web chain and TypeScript qualified with installed Chrome; pinned-browser qualification unrun",
+    "source": "9f28a09939c1f0d8a2ff66efa2a1ce7b1dbaefe6",
+    "baseline_delivered_main": "0fecbc404925548dc978ecdcf4d2aa0e62c91e1a",
+    "test_corrections": [
+      "Exact unsupported carrier-state EngineError/code/detail and unchanged-root rejection in both modes",
+      "Validated optional installed Chrome channel; unset retains original pinned default"
+    ],
+    "qualification": {
+      "started_utc": "2026-10-03T08:23:08.588308+00:00",
+      "source": "9f28a09939c1f0d8a2ff66efa2a1ce7b1dbaefe6",
+      "wasm_sha256": "472f644bed756caee538868b714e4d144989e9ec1990232f82562d2f80b7424f",
+      "runtime": {
+        "schema_version": 1,
+        "runtime_directory": "data/runtime-snapshots/82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "manifest_sha256": "82fb60a25160877bb6da0c6494ceb52370b89f0b47f422d61d49e509dfe7326d",
+        "source_lock": "fixtures/repoe/production-source-manifest.json",
+        "economy": {
+          "mode": "bundled",
+          "index": "economy/league-index.json"
+        }
+      },
+      "smoke_filter": null,
+      "browser_channel": "chrome",
+      "playwright_version": "1.58.2",
+      "chrome_version": "152.0.7977.83",
+      "chrome_executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "chrome_executable_sha256": "caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733",
+      "profile": "Playwright chromium.launch owns a fresh temporary profile; no persistent/user profile",
+      "commands": [
+        [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npm test"
+        ],
+        [
+          "cmd.exe",
+          "/d",
+          "/s",
+          "/c",
+          "npx tsc --noEmit"
+        ]
+      ],
+      "watchdog_seconds": [
+        900,
+        300
+      ],
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2-local-native-repair\\apps\\web",
+      "no_install": true,
+      "no_native_build": true,
+      "pinned_browser_parity": false,
+      "results": [
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 30484,
+          "process_identity_token": "30484:134354893885894653",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 44582.60059985332,
+          "name": "npm",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npm test"
+          ],
+          "source": "9f28a09939c1f0d8a2ff66efa2a1ce7b1dbaefe6",
+          "watchdog_seconds": 900.0,
+          "log": "out/local-native-repair/chrome-full-npm.log",
+          "summary": [
+            "  ...",
+            "# Subtest: artwork packaging rejects wrong runtime, dangling references and corrupt image bytes",
+            "ok 5 - artwork packaging rejects wrong runtime, dangling references and corrupt image bytes",
+            "  ---",
+            "  duration_ms: 5.5314",
+            "  ...",
+            "1..5",
+            "# tests 5",
+            "# suites 0",
+            "# pass 5",
+            "# fail 0",
+            "# cancelled 0",
+            "# skipped 0",
+            "# todo 0",
+            "# duration_ms 78.8862"
+          ],
+          "smoke_summaries": [
+            "37/37 passed",
+            "Lock worker: paid preview, exact restore, failed import, Undo/Redo spend, context cleanup and native strand editing passed",
+            "Lock controls: selected-request preview, read-only numerical rolls and separate payment/commit passed",
+            "solver lab Calculator export tests passed",
+            "Edit history: snapshots, branching, recovery, grouping and limits passed",
+            "Workspace resources: atomic apply, Undo/Redo, memory, spend and stale/alias rejection passed",
+            "Craft spend: repeated quantities, unknown consumption, history trimming/branching and Harvest material recipes passed"
+          ],
+          "errors": []
+        },
+        {
+          "exit_code": 0,
+          "timed_out": false,
+          "canceled": false,
+          "cancellation_mode": null,
+          "cancellation_ack_ms": null,
+          "process_id": 29584,
+          "process_identity_token": "29584:134354894331729059",
+          "survivor": false,
+          "survivor_check": "process_group_kill_then_parent_poll",
+          "wall_ms": 3585.8656000345945,
+          "name": "typescript",
+          "command": [
+            "cmd.exe",
+            "/d",
+            "/s",
+            "/c",
+            "npx tsc --noEmit"
+          ],
+          "source": "9f28a09939c1f0d8a2ff66efa2a1ce7b1dbaefe6",
+          "watchdog_seconds": 300.0,
+          "log": "out/local-native-repair/chrome-full-typescript.log",
+          "summary": [],
+          "smoke_summaries": [],
+          "errors": []
+        }
+      ],
+      "completed_utc": "2026-10-03T08:23:56.761883+00:00",
+      "chrome_executable_sha256_after": "caf423e184f0bcefe2ee5bef40539a3c005c63beb44e3321c0834929a13af733",
+      "chrome_executable_unchanged": true,
+      "owned_processes_remaining": 0
+    },
+    "preserves": "All native guards, exact scope/proof authorities and original workspace resource assertion/cleanup body unchanged; no production native/include/WASM diff",
+    "prior_failed_run": "Original f9e46c6a full npm failure remains in currency-guard-full-*; pinned browser absent, not an assertion failure",
+    "slot_release": "Reported immediately when local commands finished, before receipt/commit work; no owned heavy process",
+    "remaining": [
+      "Pinned-browser parity unrun locally",
+      "Authorized exact-head hosted CI pending delivery",
+      "Native prefix parity cause remains intermittently unreproduced, not proved fixed"
+    ],
+    "excluded": [
+      "Solver recovery c04e42ee (native-only qualification; not integrated)",
+      "Lock e2b6ff70 and other pending features (not integrated)",
+      "Installation, dependency/price/data refresh, deployment"
+    ]
   }
 }
