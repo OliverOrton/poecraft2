@@ -22,7 +22,7 @@ acceptance: 2026-08-22 @ `1e21260` / `cfd8904`. Scope:
 presentation, and shared economy access. No rendered or visual review was
 performed; that review remains Oliver's.
 
-## Bounded goal-item sets (native qualified; web qualification pending)
+## Bounded goal-item sets (qualified isolated source; integration pending)
 
 The October 3 Calculator programme adds one shared input/action and up to eight
 editable goal-item tabs. Each retains the v1 rarity, disjoint eight-slot
@@ -57,11 +57,14 @@ whole-policy expected profit and currency invested, including starting-base
 cost, remain future work. No sale values or salvage assumptions are invented.
 
 The isolated source includes qualified main `0187f3d8` and passes the finite
-native goal-set/incoming, observation-layout and existing Calculator checks.
+native goal-set/incoming, observation-layout and existing Calculator checks,
+matching WASM worker transport, nonvisual tabs/migration/lifetime controls,
+actual Chrome IndexedDB save/reload/delete, complete npm chain and TypeScript.
 The [living record](../active/2026-10-03-calculator-goal-set/README.md) owns source
-identity, results and pending WASM transport, nonvisual web and TypeScript checks.
-This feature is not yet delivered to main. Parent serializes qualification and
-owns publication; rendered review remains unrun and belongs to Oliver.
+identity, results and the corrected inherited assertion failure. This feature is
+not yet delivered to main. Parent owns combined integration and publication;
+rendered Calculator review remains unrun and belongs to Oliver. Browser storage
+checks used installed Chrome, without a claim of pinned-browser parity.
 
 ## Contract
 
